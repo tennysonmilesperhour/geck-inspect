@@ -1,4 +1,5 @@
 import { authRedirect } from '@/lib/nativeAuth';
+import { redirectFromSearch, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { isNativePlatform, detectPlatform } from '@/lib/revenuecat';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -44,6 +45,13 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   // ID guest hand-off use it); ?mode=forgot opens the reset form.
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get('mode');
+  // A claim link or collection invite sent the visitor here with
+  // ?redirect= or ?next=; remember it so they land back there after signing
+  // in, confirming their email, or coming back from Google.
+  useEffect(() => {
+    const target = redirectFromSearch(window.location.search);
+    if (target) rememberPostAuthRedirect(target);
+  }, []);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

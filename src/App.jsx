@@ -15,7 +15,8 @@ import NavigationTracker from '@/lib/NavigationTracker'
 import PostHogPageTracker from '@/lib/PostHogPageTracker'
 import GA4PageTracker from '@/lib/GA4PageTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { redirectFromSearch, takePostAuthRedirect } from '@/lib/postAuthRedirect';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { RevenueCatProvider } from '@/lib/RevenueCatContext';
@@ -166,15 +167,32 @@ const LazyFallback = (
   </div>
 );
 
-// A signed-in user on /AuthPortal normally just bounces to the dashboard.
-// The one exception is the password reset link, which lands here as
+// A signed-in user on /AuthPortal normally just bounces to the dashboard,
+// or back to the claim link or invite that sent them to sign in
+// (?redirect= or ?next=, see src/lib/postAuthRedirect.js). The one
+// exception is the password reset link, which lands here as
 // /AuthPortal?mode=reset with a recovery session and needs the
 // choose-a-new-password form.
 const AuthPortalAuthed = () => {
   const location = useLocation();
   const mode = new URLSearchParams(location.search).get('mode');
   if (mode === 'reset') return <SetNewPassword />;
-  return <Navigate to="/" replace />;
+  const target = redirectFromSearch(location.search);
+  return <Navigate to={target || '/'} replace />;
+};
+
+// After an email confirmation or Google sign-in the app opens on
+// /MyGeckos; if the person came from a claim link or invite, go there.
+const PostAuthRedirect = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const target = takePostAuthRedirect();
+    if (target && target !== location.pathname + location.search) navigate(target, { replace: true });
+  }, [isAuthenticated]);
+  return null;
 };
 
 const AuthenticatedApp = () => {
@@ -426,6 +444,7 @@ function App() {
                 <NavigationTracker />
                 <PostHogPageTracker />
                 <GA4PageTracker />
+                <PostAuthRedirect />
                 <AuthenticatedApp />
               </Router>
               <Toaster />

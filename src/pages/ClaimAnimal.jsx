@@ -3,14 +3,21 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
-import { ArrowRightLeft, ShieldCheck, Clock, Check } from 'lucide-react';
+import { ArrowRightLeft, ShieldCheck, Clock, Check, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const C = {
-  forest: '#e2e8f0', moss: '#94a3b8', sage: '#10b981',
-  paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b',
-  goldLight: 'rgba(245,158,11,0.15)', red: '#ef4444', muted: '#64748b', slate: '#cbd5e1',
-  cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)',
-};
+// The page a buyer opens from a transfer link. It uses the app's own
+// cards, colors and buttons (it had its own palette and fonts until
+// 29 Sep 2026, P10).
+const card = 'rounded-xl border border-slate-800 bg-slate-900 p-5 sm:p-6';
+
+function CenteredState({ children }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+      <div className="text-center max-w-md mx-auto px-4">{children}</div>
+    </div>
+  );
+}
 
 export default function ClaimAnimal() {
   const { token } = useParams();
@@ -139,10 +146,10 @@ export default function ClaimAnimal() {
   // Loading
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.warmWhite }}>
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="space-y-4 w-full max-w-md mx-auto px-4">
-          <div className="animate-pulse rounded-xl h-48" style={{ backgroundColor: C.paleSage }} />
-          <div className="animate-pulse rounded-xl h-12" style={{ backgroundColor: C.paleSage }} />
+          <div className="animate-pulse rounded-xl h-48 bg-slate-900" />
+          <div className="animate-pulse rounded-xl h-12 bg-slate-900" />
         </div>
       </div>
     );
@@ -151,40 +158,27 @@ export default function ClaimAnimal() {
   // Success state
   if (claimed) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.warmWhite }}>
-        <div className="text-center max-w-md mx-auto px-4">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ backgroundColor: C.paleSage }}
-          >
-            <Check size={32} style={{ color: C.sage }} />
-          </div>
-          <h1 className="text-2xl mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>
-            {animal?.successHeading || 'Welcome to your new animal!'}
-          </h1>
-          <p className="text-sm mb-6" style={{ color: C.muted }}>
-            <strong>{animal?.name}</strong> has been added to your collection with full history intact.
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Link
-              to={animal?.collectionPath || '/MyGeckos'}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium text-white"
-              style={{ backgroundColor: C.sage }}
-            >
-              View My Collection
-            </Link>
-            {animal?.passport_code && (
-              <Link
-                to={`/passport/${animal.passport_code}`}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium border"
-                style={{ borderColor: C.sage, color: C.sage }}
-              >
-                View Passport
-              </Link>
-            )}
-          </div>
+      <CenteredState>
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-500/15">
+          <Check size={32} className="text-emerald-400" />
         </div>
-      </div>
+        <h1 className="text-2xl font-bold mb-2 text-slate-100">
+          {animal?.successHeading || 'Welcome to your new animal!'}
+        </h1>
+        <p className="text-sm mb-6 text-slate-400">
+          <strong className="text-slate-200">{animal?.name}</strong> has been added to your collection with full history intact.
+        </p>
+        <div className="flex gap-3 justify-center flex-wrap">
+          <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white min-h-11">
+            <Link to={animal?.collectionPath || '/MyGeckos'}>View my collection</Link>
+          </Button>
+          {animal?.passport_code && (
+            <Button asChild variant="outline" className="border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 bg-transparent min-h-11">
+              <Link to={`/passport/${animal.passport_code}`}>View passport</Link>
+            </Button>
+          )}
+        </div>
+      </CenteredState>
     );
   }
 
@@ -206,22 +200,14 @@ export default function ClaimAnimal() {
     };
     const e = messages[error] || messages.error;
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.warmWhite }}>
-        <div className="text-center max-w-md mx-auto px-4">
-          <Clock size={48} style={{ color: C.muted }} className="mx-auto mb-4" />
-          <h1 className="text-2xl mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>
-            {e.title}
-          </h1>
-          <p className="text-sm mb-6" style={{ color: C.muted }}>{e.msg}</p>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
-            style={{ backgroundColor: C.sage }}
-          >
-            Go to Geck Inspect
-          </Link>
-        </div>
-      </div>
+      <CenteredState>
+        <Clock size={48} className="mx-auto mb-4 text-slate-500" />
+        <h1 className="text-2xl font-bold mb-2 text-slate-100">{e.title}</h1>
+        <p className="text-sm mb-6 text-slate-400">{e.msg}</p>
+        <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white min-h-11">
+          <Link to="/">Go to Geck Inspect</Link>
+        </Button>
+      </CenteredState>
     );
   }
 
@@ -229,40 +215,29 @@ export default function ClaimAnimal() {
   const profileImg = animal?.image_urls?.[0];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="max-w-md mx-auto px-4 py-12">
         <div className="text-center mb-6">
-          <ArrowRightLeft size={32} style={{ color: C.sage }} className="mx-auto mb-3" />
-          <h1 className="text-2xl" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>
-            Ownership Transfer
-          </h1>
-          <p className="text-sm mt-1" style={{ color: C.muted }}>
-            Someone is transferring an animal to you
-          </p>
+          <ArrowRightLeft size={32} className="mx-auto mb-3 text-emerald-400" />
+          <h1 className="text-2xl font-bold text-slate-100">Ownership transfer</h1>
+          <p className="text-sm mt-1 text-slate-400">Someone is transferring an animal to you</p>
         </div>
 
         {/* Animal summary */}
-        <div
-          className="rounded-xl border p-6 mb-6"
-          style={{ borderColor: C.border, backgroundColor: C.cardBg }}
-        >
+        <div className={`${card} mb-6`}>
           <div className="flex items-center gap-4">
             {profileImg ? (
               <img src={profileImg} alt={animal?.name} className="w-20 h-20 rounded-xl object-cover" />
             ) : (
-              <div className="w-20 h-20 rounded-xl flex items-center justify-center text-3xl" style={{ backgroundColor: C.paleSage }}>
+              <div className="w-20 h-20 rounded-xl flex items-center justify-center text-3xl bg-emerald-500/10">
                 {animal?.emoji || '🦎'}
               </div>
             )}
-            <div>
-              <h2 className="text-lg font-semibold" style={{ color: C.forest, fontFamily: "'DM Serif Display', serif" }}>
-                {animal?.name || 'Unknown'}
-              </h2>
-              <p className="text-sm" style={{ color: C.muted }}>
-                {animal?.subtitle || 'Animal'}
-              </p>
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold text-slate-100 break-words">{animal?.name || 'Unknown'}</h2>
+              <p className="text-sm text-slate-400">{animal?.subtitle || 'Animal'}</p>
               {animal?.passport_code && (
-                <code className="text-xs font-mono px-1.5 py-0.5 rounded mt-1 inline-block" style={{ backgroundColor: C.paleSage, color: C.muted }}>
+                <code className="text-xs font-mono px-2 py-0.5 rounded-full mt-1 inline-block bg-slate-800 text-slate-400">
                   {animal.passport_code}
                 </code>
               )}
@@ -270,16 +245,16 @@ export default function ClaimAnimal() {
           </div>
 
           {transfer.message && (
-            <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: C.paleSage }}>
-              <p className="text-xs uppercase tracking-wider mb-1" style={{ color: C.muted }}>Message from seller</p>
-              <p className="text-sm" style={{ color: C.slate }}>{transfer.message}</p>
+            <div className="mt-4 p-3 rounded-lg bg-slate-800/60 border border-slate-800">
+              <p className="text-xs uppercase tracking-wider mb-1 text-slate-500">Message from seller</p>
+              <p className="text-sm text-slate-300 whitespace-pre-wrap">{transfer.message}</p>
             </div>
           )}
 
           {transfer.sale_price && (
             <div className="mt-4 flex items-center gap-2">
-              <span className="text-sm" style={{ color: C.muted }}>Sale price:</span>
-              <span className="text-lg font-semibold" style={{ color: C.forest }}>
+              <span className="text-sm text-slate-400">Sale price:</span>
+              <span className="text-lg font-semibold text-slate-100">
                 ${Number(transfer.sale_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -288,24 +263,16 @@ export default function ClaimAnimal() {
 
         {/* Price contribution opt-in */}
         {transfer.sale_price && (
-          <label
-            className="flex items-start gap-3 rounded-xl border p-4 mb-6 cursor-pointer"
-            style={{ borderColor: C.border, backgroundColor: C.cardBg }}
-          >
+          <label className={`${card} flex items-start gap-3 mb-6 cursor-pointer !p-4`}>
             <input
               type="checkbox"
               checked={contributePrice}
               onChange={e => setContributePrice(e.target.checked)}
-              className="mt-1 rounded"
-              style={{ accentColor: C.sage }}
+              className="mt-1 h-4 w-4 rounded accent-emerald-500"
             />
             <div>
-              <p className="text-sm font-medium" style={{ color: C.slate }}>
-                Contribute this sale price to market data
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                Anonymized, helps breeders understand morph pricing trends.
-              </p>
+              <p className="text-sm font-medium text-slate-200">Contribute this sale price to market data</p>
+              <p className="text-xs mt-0.5 text-slate-400">Anonymized, helps breeders understand morph pricing trends.</p>
             </div>
           </label>
         )}
@@ -313,34 +280,26 @@ export default function ClaimAnimal() {
         {/* Auth gate / claim button */}
         {!currentUser ? (
           <div className="space-y-3">
-            <Link
-              to={`/AuthPortal?redirect=/claim/${token}`}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium text-white"
-              style={{ backgroundColor: C.sage }}
-            >
-              Create your free account to claim
-            </Link>
-            <p className="text-xs text-center" style={{ color: C.muted }}>
-              Already have an account? <Link to={`/AuthPortal?redirect=/claim/${token}`} className="underline" style={{ color: C.sage }}>Sign in</Link>
+            <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700 text-white min-h-12">
+              <Link to={`/AuthPortal?mode=signup&redirect=/claim/${token}`}>Create your free account to claim</Link>
+            </Button>
+            <p className="text-xs text-center text-slate-400">
+              Already have an account?{' '}
+              <Link to={`/AuthPortal?redirect=/claim/${token}`} className="underline text-emerald-300">Sign in</Link>
             </p>
           </div>
         ) : (
-          <button
+          <Button
             onClick={handleClaim}
             disabled={claiming}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: C.sage }}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white min-h-12"
           >
-            {claiming ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <ShieldCheck size={18} />
-            )}
-            {claiming ? 'Claiming...' : 'Accept Ownership'}
-          </button>
+            {claiming ? <Loader2 size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
+            {claiming ? 'Claiming...' : 'Accept ownership'}
+          </Button>
         )}
 
-        <p className="text-xs text-center mt-6" style={{ color: C.muted }}>
+        <p className="text-xs text-center mt-6 text-slate-500">
           Transfer expires {transfer.expires_at ? format(new Date(transfer.expires_at), 'MMM d, yyyy') : 'in 72 hours'}
         </p>
       </div>
