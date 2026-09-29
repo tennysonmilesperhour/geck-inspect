@@ -1089,7 +1089,9 @@ serve(async (req) => {
     // The eval pipeline sends `model: "claude-haiku-4-5"` for cheap iteration
     // and "claude-sonnet-4-6" for benchmark runs. Production callers
     // (Recognition.jsx, TrainModel.jsx) omit `model` and get the env default.
-    model = resolveModel(body?.model);
+    // Only admins and the eval account may choose: any member could name
+    // the most expensive model, which costs several times the default.
+    model = (isAdmin || isEvalAccount) ? resolveModel(body?.model) : CLAUDE_MODEL;
 
     // Surface tag for the spend-log sink. Eval script sends
     // surface='morph_id_eval' + the shared secret header; admin callers
