@@ -5,7 +5,7 @@ import { MORPH_ID_CAPABILITIES, labelFor } from './morphTaxonomy';
 
 export default function MorphIdCoverageCard() {
   return (
-    <Card className="bg-slate-900/70 border-slate-700">
+    <Card>
       <CardContent className="p-5">
         <details>
           <summary className="list-none cursor-pointer flex items-start justify-between gap-4">

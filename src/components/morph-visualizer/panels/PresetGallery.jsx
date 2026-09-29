@@ -29,7 +29,7 @@ export default function PresetGallery({ onApply, currentPresetId, layout = 'colu
             <button
               key={p.id}
               onClick={() => onApply(p.id)}
-              className={`text-left rounded-md border p-2 transition ${
+              className={`touch:min-h-11 text-left rounded-md border p-2 transition ${
                 active
                   ? 'bg-emerald-900/60 border-emerald-500 ring-2 ring-emerald-500/30'
                   : 'bg-slate-900 border-slate-700 hover:border-slate-500'

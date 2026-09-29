@@ -194,7 +194,7 @@ export default function InstallAppButton() {
             type="button"
             onClick={handleDismiss}
             aria-label="Dismiss notifications prompt"
-            className="absolute top-1/2 -translate-y-1/2 right-2 p-1 rounded text-emerald-50/80 hover:text-white hover:bg-emerald-800/40 transition-colors"
+            className="absolute top-1/2 -translate-y-1/2 right-2 p-1 touch-hit rounded text-emerald-50/80 hover:text-white hover:bg-emerald-800/40 transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -309,7 +309,7 @@ export default function InstallAppButton() {
           type="button"
           onClick={handleDismiss}
           aria-label="Dismiss install prompt"
-          className="absolute top-1/2 -translate-y-1/2 right-2 p-1 rounded text-emerald-50/80 hover:text-white hover:bg-emerald-800/40 transition-colors"
+          className="absolute top-1/2 -translate-y-1/2 right-2 p-1 touch-hit rounded text-emerald-50/80 hover:text-white hover:bg-emerald-800/40 transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>

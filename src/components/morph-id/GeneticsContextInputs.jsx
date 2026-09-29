@@ -78,7 +78,7 @@ export default function GeneticsContextInputs({ value = {}, onChange }) {
                 type="button"
                 onClick={() => toggleHet(g.id)}
                 title={g.notes}
-                className={`px-3 py-1 rounded-full text-xs transition-colors border ${
+                className={`px-3 py-1 touch:min-h-11 rounded-full text-xs transition-colors border ${
                   on
                     ? 'bg-purple-600 text-white border-purple-500'
                     : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'

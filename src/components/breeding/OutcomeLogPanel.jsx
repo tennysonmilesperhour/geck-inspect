@@ -131,7 +131,7 @@ export default function OutcomeLogPanel({ sire, dam, outcomes }) {
                 rows: comparison,
               })
             }
-            className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 border border-slate-600 rounded px-2 py-1"
+            className="inline-flex items-center gap-1 touch:min-h-11 text-xs text-slate-400 hover:text-slate-200 border border-slate-600 rounded px-2 py-1"
             title="Download your season scorecard as an image"
           >
             <ImageDown className="w-3.5 h-3.5" /> Season card

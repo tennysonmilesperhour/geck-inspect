@@ -807,7 +807,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           to={dashUrl}
           data-tutorial-id="Dashboard"
           data-tutorial-label="Dashboard"
-          className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
+          className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
             isActive ? 'active' : 'text-gray-300 hover:bg-gray-700 hover:text-foreground'
           }`}
         >
@@ -894,7 +894,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 onClick={handleNavClick}
                 data-tutorial-id={item.page_name}
                 data-tutorial-label={item.display_name}
-                className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item
+                className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item
                   ${isActive
                     ? "active"
                     : "text-gray-300 hover:bg-gray-700 hover:text-foreground"
@@ -964,7 +964,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               {user ? (
                 <Link
                   to={createPageUrl('MyProfile')}
-                  className={`flex items-center gap-3 rounded-lg hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 transition-colors ${tierRingClass(user)}`}
+                  className={`flex items-center gap-3 touch:min-h-11 rounded-lg hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 transition-colors ${tierRingClass(user)}`}
                   aria-label={`Open ${getDisplayName(user)}'s profile`}
                 >
                   <img
@@ -1006,7 +1006,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 <nav className="space-y-1 px-2">
                   <Link
                     to={createPageUrl("AdminPanel")}
-                    className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
+                    className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
                       location.pathname === createPageUrl("AdminPanel")
                         ? "active"
                         : "text-gray-300 hover:bg-gray-700 hover:text-foreground"
@@ -1034,7 +1034,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           <SidebarFooter className="px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-emerald-900/40">
             <div className="space-y-3">
-              <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
+              <Link to="/PrivacyPolicy" className="flex items-center touch:min-h-11 text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
               <Link to={createPageUrl("Membership")} className="block">
                 <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                   <Star className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -1169,7 +1169,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   <nav className="space-y-1 px-2">
                     <Link
                       to={createPageUrl("AdminPanel")}
-                      className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
+                      className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
                         location.pathname === createPageUrl("AdminPanel")
                           ? "active"
                           : "text-gray-300 hover:bg-gray-700 hover:text-foreground"

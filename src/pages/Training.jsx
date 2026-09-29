@@ -182,7 +182,7 @@ export default function TrainingPage() {
           <TabsContent value="stats" className="space-y-6">
             <StatsGrid stats={stats} />
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-emerald-400" />
@@ -219,7 +219,7 @@ export default function TrainingPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-base font-semibold text-slate-100">Top labeled morphs</CardTitle>
               </CardHeader>
@@ -249,7 +249,7 @@ export default function TrainingPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-base font-semibold text-slate-100">Gap analysis</CardTitle>
               </CardHeader>
@@ -293,7 +293,7 @@ export default function TrainingPage() {
 
 function StatsTile({ label, value, icon: Icon, gradient }) {
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardContent className="p-4 md:p-6">
         <div className="flex items-center justify-between">
           <div>

@@ -12,7 +12,7 @@ import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
  * the user should do soon, pulled from their actual data:
  *
  *   - Eggs due to hatch in the next 14 days (Incubating status + lay_date
- *     + 65–90 day incubation window)
+ *     + 65 to 90 day incubation window)
  *   - Geckos that haven't been weighed in the last 30 days
  *   - Future breeding plans whose target season is "Ready now"
  *   - Active breeding plans with no recorded activity in 30+ days (stale)
@@ -60,7 +60,7 @@ export function buildActions({ geckos, eggs, plans, weights, futurePlans, feedin
     for (const egg of incubating) {
         const laid = parseLocalDate(egg.lay_date);
         const daysIn = differenceInDays(now, laid);
-        // crested gecko eggs hatch ~65–90 days after lay
+        // crested gecko eggs hatch ~65 to 90 days after lay
         if (daysIn >= 60 && daysIn <= 100) {
             const daysUntilLikely = Math.max(0, 75 - daysIn);
             actions.push({
@@ -237,7 +237,7 @@ export default function NextActions({ currentUserEmail }) {
                                         className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/40 px-3 py-2"
                                     >
                                         <Icon className={`w-4 h-4 shrink-0 ${a.iconTint}`} />
-                                        <Link to={a.href} className="flex-1 min-w-0 hover:underline">
+                                        <Link to={a.href} className="flex-1 min-w-0 touch:min-h-11 touch:flex touch:flex-col touch:justify-center hover:underline">
                                             <p className="text-sm font-medium text-slate-100 truncate">{a.label}</p>
                                             <p className="text-[11px] text-slate-500 truncate">{a.detail}</p>
                                         </Link>
@@ -245,7 +245,7 @@ export default function NextActions({ currentUserEmail }) {
                                             type="button"
                                             onClick={() => markFed(a)}
                                             disabled={markingId === a.id}
-                                            className="shrink-0 inline-flex items-center gap-1.5 min-h-9 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 px-3 text-xs font-semibold text-white"
+                                            className="shrink-0 inline-flex items-center gap-1.5 min-h-9 touch:min-h-11 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 px-3 text-xs font-semibold text-white"
                                         >
                                             {markingId === a.id
                                                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -259,7 +259,7 @@ export default function NextActions({ currentUserEmail }) {
                                 <Link
                                     key={a.id}
                                     to={a.href}
-                                    className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500/40 px-3 py-2.5 transition-colors group"
+                                    className="touch:min-h-11 flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500/40 px-3 py-2.5 transition-colors group"
                                 >
                                     <Icon className={`w-4 h-4 shrink-0 ${a.iconTint}`} />
                                     <div className="flex-1 min-w-0">

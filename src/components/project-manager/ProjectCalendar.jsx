@@ -94,7 +94,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
     const startDayOfWeek = days[0]?.getDay() || 0; // 0=Sun
 
     return (
-        <div className="bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
                 <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(m => subMonths(m, 1))}>
@@ -153,7 +153,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                                     <button
                                         type="button"
                                         onClick={() => setExpandedDay(key)}
-                                        className="text-[10px] text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer w-full text-left"
+                                        className="touch:min-h-11 text-[10px] text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer w-full text-left"
                                     >
                                         +{events.length - 3} more
                                     </button>
@@ -184,7 +184,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                                 <button
                                     type="button"
                                     onClick={() => setExpandedDay(null)}
-                                    className="text-slate-400 hover:text-slate-200 text-xl leading-none"
+                                    className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200 text-xl leading-none"
                                 >
                                     ✕
                                 </button>
@@ -203,7 +203,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                             <button
                                 type="button"
                                 onClick={() => setExpandedDay(null)}
-                                className="mt-4 w-full text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg py-2 hover:bg-slate-800 transition-colors"
+                                className="touch:min-h-11 mt-4 w-full text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg py-2 hover:bg-slate-800 transition-colors"
                             >
                                 Back to Calendar
                             </button>

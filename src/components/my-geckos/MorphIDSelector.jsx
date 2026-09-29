@@ -65,7 +65,7 @@ export default function MorphIDSelector({ selectedMorphs = [], onMorphsChange, d
                   key={m}
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMorph(m); }}
-                  className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full hover:bg-red-600 transition-colors"
+                  className="touch:min-h-11 text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full hover:bg-red-600 transition-colors"
                   title="Click to remove"
                 >
                   {m} \u2715
@@ -95,7 +95,7 @@ export default function MorphIDSelector({ selectedMorphs = [], onMorphsChange, d
                         key={morph}
                         type="button"
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMorph(morph); }}
-                        className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+                        className={`touch:min-h-11 text-xs px-2.5 py-1 rounded-full border transition-all ${
                           isSelected
                             ? `${badge} text-white border-transparent shadow-sm ring-2 ring-white/30`
                             : 'bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400 hover:bg-slate-600'

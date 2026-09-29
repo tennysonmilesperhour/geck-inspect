@@ -190,7 +190,7 @@ export default function MorphGuideEditor() {
   };
 
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card>
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -272,7 +272,7 @@ export default function MorphGuideEditor() {
                     size="sm"
                     variant="outline"
                     onClick={() => openEdit(r)}
-                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+                    className="touch:min-w-11 border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </Button>
@@ -280,7 +280,7 @@ export default function MorphGuideEditor() {
                     size="sm"
                     variant="outline"
                     onClick={() => setDeleteTarget(r)}
-                    className="border-rose-900/50 bg-rose-950/30 hover:bg-rose-950/50 text-rose-300"
+                    className="touch:min-w-11 border-rose-900/50 bg-rose-950/30 hover:bg-rose-950/50 text-rose-300"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>

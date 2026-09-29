@@ -11,7 +11,7 @@ function GuideCard({ guide }) {
   return (
     <Link
       to={`${SERIES_PATH}/${guide.id}`}
-      className="group rounded-2xl border border-slate-800 bg-slate-900/40 hover:border-emerald-500/40 hover:bg-slate-900 transition-colors p-5 md:p-6 flex flex-col"
+      className="touch:min-h-11 group rounded-2xl border border-slate-800 bg-slate-900/40 hover:border-emerald-500/40 hover:bg-slate-900 transition-colors p-5 md:p-6 flex flex-col"
     >
       <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-2">
         Guide {guide.number}
@@ -47,7 +47,7 @@ function SeriesIndex() {
           <div className="relative max-w-5xl mx-auto px-4 md:px-6 py-12 md:py-16">
             <Link
               to="/CareGuide"
-              className="flex w-fit items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-300 mb-6"
+              className="touch:min-h-11 flex w-fit items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-300 mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
               Care Guide
@@ -101,7 +101,7 @@ function SeriesGuide({ guideId }) {
           <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
             <Link
               to={SERIES_PATH}
-              className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-300"
+              className="touch:min-h-11 inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-300"
             >
               <ArrowLeft className="w-4 h-4" />
               All five guides
@@ -109,7 +109,7 @@ function SeriesGuide({ guideId }) {
             <button
               type="button"
               onClick={() => setNavOpen((v) => !v)}
-              className="text-xs text-slate-400 hover:text-emerald-300"
+              className="touch:min-h-11 text-xs text-slate-400 hover:text-emerald-300"
             >
               {navOpen ? 'Hide' : 'Jump to'} other guides
             </button>

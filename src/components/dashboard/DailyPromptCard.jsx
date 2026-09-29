@@ -57,7 +57,7 @@ export default function DailyPromptCard() {
                 </div>
                 <Link
                     to={createPageUrl(prompt.to)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 font-medium text-sm shrink-0 self-start md:self-auto"
+                    className="touch:min-h-11 inline-flex items-center gap-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 font-medium text-sm shrink-0 self-start md:self-auto"
                 >
                     {prompt.cta} <ArrowRight className="w-4 h-4" />
                 </Link>

@@ -172,7 +172,7 @@ export default function IdLogicSettings({ value, onChange }) {
   }, [settings.founderFormat, settings.hatchlingFormat, previewPrefix, yearNow]);
 
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card>
       <CardHeader>
         <CardTitle className="text-slate-100 flex items-center gap-2">
           <GitBranch className="w-5 h-5" /> Gecko ID Logic
@@ -192,7 +192,7 @@ export default function IdLogicSettings({ value, onChange }) {
                 key={p.id}
                 type="button"
                 onClick={() => onChange?.({ ...p.settings })}
-                className="text-left rounded-lg border border-slate-700 bg-slate-800/40 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-2 transition-colors"
+                className="touch:min-h-11 text-left rounded-lg border border-slate-700 bg-slate-800/40 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-2 transition-colors"
               >
                 <p className="text-sm font-semibold text-slate-200">{p.label}</p>
                 <p className="text-xs text-slate-500 mt-0.5 leading-snug">{p.blurb}</p>
@@ -216,7 +216,7 @@ export default function IdLogicSettings({ value, onChange }) {
                   key={m.id}
                   type="button"
                   onClick={() => set({ inheritanceMode: m.id })}
-                  className={`text-left rounded-xl border px-4 py-3 transition-colors ${
+                  className={`touch:min-h-11 text-left rounded-xl border px-4 py-3 transition-colors ${
                     active
                       ? 'border-emerald-500/60 bg-emerald-500/10'
                       : 'border-slate-700 bg-slate-800/40 hover:border-slate-600'

@@ -653,7 +653,7 @@ export default function MyGeckosPage() {
                 <>
                 <div className="mb-6">
                     {/* Toolbar, single row: search (grows) + sort + view + filters */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/60">
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-2 rounded-xl border border-slate-700 bg-slate-900">
                         <div className="relative flex-1 min-w-0">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <Input
@@ -841,7 +841,7 @@ export default function MyGeckosPage() {
                                                     ) : (
                                                         <div className="space-y-2">
                                                             {speciesGeckos.map(gecko => (
-                                                                <div key={gecko.id} className="bg-slate-900 border border-slate-700 rounded-lg p-2 md:p-4 hover:border-emerald-600 transition-colors cursor-pointer flex items-center gap-3" onClick={() => handleOpenDetailModal(gecko)}>
+                                                                <div key={gecko.id} className="bg-slate-900 border border-slate-700 rounded-xl p-2 md:p-4 hover:border-emerald-600 transition-colors cursor-pointer flex items-center gap-3" onClick={() => handleOpenDetailModal(gecko)}>
                                                                     <img src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" decoding="async" />
                                                                     <div className="flex-1 min-w-0">
                                                                         <h3 className="font-bold text-slate-100 truncate">{gecko.name}</h3>

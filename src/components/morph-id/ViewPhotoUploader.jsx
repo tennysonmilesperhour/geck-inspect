@@ -52,7 +52,7 @@ function Slot({ label, hint, required, item, onPick, onRemove }) {
         <button
           type="button"
           onClick={onPick}
-          className={`w-full aspect-square flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-3 text-center transition-colors ${
+          className={`touch:min-h-11 w-full aspect-square flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-3 text-center transition-colors ${
             required
               ? 'border-amber-600/60 hover:border-emerald-500 text-slate-300'
               : 'border-slate-600 hover:border-emerald-500 text-slate-400'
@@ -179,7 +179,7 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
             <button
               type="button"
               onClick={() => pick('extra')}
-              className="aspect-square self-end flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-600 hover:border-emerald-500 hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-emerald-300"
+              className="touch:min-h-11 aspect-square self-end flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-600 hover:border-emerald-500 hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-emerald-300"
             >
               <Upload className="w-5 h-5 mb-1" />
               <span className="text-xs">Add photo</span>

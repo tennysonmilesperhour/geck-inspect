@@ -53,7 +53,7 @@ function PinToggle({ id, pinnedIds, onTogglePin }) {
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onTogglePin(id); }}
-      className={`inline-flex items-center justify-center w-6 h-6 rounded transition-colors ${
+      className={`relative touch-hit inline-flex items-center justify-center w-6 h-6 rounded transition-colors ${
         isPinned
           ? 'text-emerald-300 hover:bg-emerald-500/10'
           : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800'
@@ -183,7 +183,7 @@ function MarketIndexCard({ index, pinProps }) {
   const change = index.change_pct ?? 0;
   const basis = index.price_basis;
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={Activity}
         title="Geck Inspect Market Index"
@@ -253,7 +253,7 @@ function MarketIndexCard({ index, pinProps }) {
 // =================== Top Movers ======================================
 function TopMoversCard({ movers, onDrillDown, pinProps }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={TrendingUp}
         title="Top Movers"
@@ -282,7 +282,7 @@ function MoverColumn({ title, rows, direction, onDrillDown }) {
             <button
               key={r.combo_id}
               onClick={() => onDrillDown?.({ combo_id: r.combo_id })}
-              className="w-full text-left bg-slate-800/40 hover:bg-slate-800 border border-slate-800/60 hover:border-emerald-500/40 rounded-lg px-3 py-2 flex items-center gap-3 transition-colors"
+              className="touch:min-h-11 w-full text-left bg-slate-800/40 hover:bg-slate-800 border border-slate-800/60 hover:border-emerald-500/40 rounded-lg px-3 py-2 flex items-center gap-3 transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-slate-100 truncate">{r.combo_name}</div>
@@ -309,7 +309,7 @@ function MoverColumn({ title, rows, direction, onDrillDown }) {
 function EventsCard({ events, pinProps }) {
   const sorted = [...events].sort((a, b) => a.date.localeCompare(b.date));
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={CalendarDays}
         title="Market Calendar"
@@ -342,11 +342,11 @@ function formatEventDate(iso) {
 function PeakIndicatorGrid({ peaks, onDrillDown, pinProps }) {
   const sorted = [...peaks].sort((a, b) => b.score - a.score).slice(0, 6);
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={Gauge}
         title="Peak Indicator, Hold, Sell, or Accumulate"
-        subtitle="Composite 0–100 score. Higher = market heat, lower = early / undervalued."
+        subtitle="Composite 0 to 100 score. Higher = market heat, lower = early / undervalued."
         right={
           <div className="flex items-center gap-2">
             <MethodologyPopover title="How the peak score is calculated">
@@ -378,7 +378,7 @@ function PeakCard({ p, onClick }) {
     emerald: 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300',
   }[lbl.color] || 'bg-slate-800/40 border-slate-700/60 text-slate-300';
   return (
-    <button onClick={onClick} className={`text-left rounded-lg border p-3 hover:brightness-110 transition-all ${colorClass}`}>
+    <button onClick={onClick} className={`touch:min-h-11 text-left rounded-lg border p-3 hover:brightness-110 transition-all ${colorClass}`}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0">
           <div className="text-xs uppercase tracking-wider opacity-80">{lbl.label}</div>
@@ -406,7 +406,7 @@ function ScoreBar({ score }) {
 
 // =================== Skeleton ========================================
 function Skeleton({ h = 120 }) {
-  return <div className="rounded-xl border border-slate-800 bg-slate-900/40 animate-pulse" style={{ height: h }} />;
+  return <div className="rounded-xl border border-slate-700 bg-slate-900 animate-pulse" style={{ height: h }} />;
 }
 
 // =================== PriceBasisBadge =================================

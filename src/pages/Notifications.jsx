@@ -264,7 +264,7 @@ export default function NotificationsPage() {
                     </Button>
                 </PageHeader>
 
-                <Card className="bg-slate-900 border-slate-800">
+                <Card>
                     <CardContent className="p-4 md:p-6">
                         {displayNotifications.length === 0 ? (
                             <EmptyState
@@ -313,7 +313,7 @@ export default function NotificationsPage() {
                                                     )}
                                                 </p>
                                             </div>
-                                            <div className="flex flex-col md:flex-row gap-1.5 shrink-0">
+                                            <div className="flex flex-col md:flex-row gap-1.5 touch:gap-2 shrink-0">
                                                 {isUnread && (
                                                     <Button
                                                         size="sm"
@@ -342,7 +342,7 @@ export default function NotificationsPage() {
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() => handleDelete(notification.id)}
-                                                    className="h-7 w-7 p-0 text-slate-500 hover:text-rose-400"
+                                                    className="touch:min-w-11 h-7 w-7 p-0 text-slate-500 hover:text-rose-400"
                                                     title="Delete"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />

@@ -46,7 +46,7 @@ export default function OnboardingRolePrompt({ isOpen, onChoose, onDismiss }) {
           <button
             type="button"
             onClick={() => choose('keeper')}
-            className="group rounded-xl border border-slate-700 bg-slate-800/60 hover:border-emerald-500/60 hover:bg-emerald-950/30 p-5 text-left transition-colors"
+            className="touch:min-h-11 group rounded-xl border border-slate-700 bg-slate-800/60 hover:border-emerald-500/60 hover:bg-emerald-950/30 p-5 text-left transition-colors"
           >
             <Home className="w-7 h-7 text-emerald-400 mb-3" />
             <div className="font-semibold text-slate-100">I keep them as pets</div>
@@ -58,7 +58,7 @@ export default function OnboardingRolePrompt({ isOpen, onChoose, onDismiss }) {
           <button
             type="button"
             onClick={() => choose('breeder')}
-            className="group rounded-xl border border-slate-700 bg-slate-800/60 hover:border-emerald-500/60 hover:bg-emerald-950/30 p-5 text-left transition-colors"
+            className="touch:min-h-11 group rounded-xl border border-slate-700 bg-slate-800/60 hover:border-emerald-500/60 hover:bg-emerald-950/30 p-5 text-left transition-colors"
           >
             <GitBranch className="w-7 h-7 text-emerald-400 mb-3" />
             <div className="font-semibold text-slate-100">I breed them</div>

@@ -38,7 +38,7 @@ export default function ArbitrageRadar({ filters, onDrillDown }) {
   }, [filters.timeframe, minSample]);
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={Radar}
         title="Arbitrage radar, cross-region opportunities"
@@ -123,7 +123,7 @@ export default function ArbitrageRadar({ filters, onDrillDown }) {
 
       <div className="mt-3 pt-3 border-t border-slate-800 text-[10px] text-slate-500">
         Shipping estimates are illustrative. Live freight varies by carrier, season, and animal weight.
-        Import friction is a 0–1 score capturing CITES-adjacent friction; treat AU (0.95) and JP (0.8) opportunities as long-dated, not turnaround trades.
+        Import friction is a 0 to 1 score capturing CITES-adjacent friction; treat AU (0.95) and JP (0.8) opportunities as long-dated, not turnaround trades.
       </div>
     </div>
   );

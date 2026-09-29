@@ -105,7 +105,7 @@ export default function ClassificationForm({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Image Viewer */}
-        <Card className="bg-slate-900 border-slate-700 sticky top-24">
+        <Card className="sticky top-24">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sage-900">
                     <ImageIcon className="w-5 h-5" />
@@ -155,7 +155,7 @@ export default function ClassificationForm({
         </Card>
 
         {/* Classification Form */}
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sage-900">
                     <BrainCircuit className="w-5 h-5" />
@@ -233,7 +233,7 @@ export default function ClassificationForm({
                                 <div
                                     key={trait}
                                     onClick={() => handleMultiSelectChange('secondary_traits', trait)}
-                                    className={`p-2 rounded-md cursor-pointer transition-colors ${
+                                    className={`p-2 touch:py-2.5 rounded-md cursor-pointer transition-colors ${
                                         classification.secondary_traits.includes(trait) 
                                             ? 'bg-sage-600 text-white' 
                                             : 'hover:bg-sage-100'
@@ -254,7 +254,7 @@ export default function ClassificationForm({
                                     <button
                                         type="button"
                                         onClick={() => handleMultiSelectChange('secondary_traits', trait)}
-                                        className="ml-2"
+                                        className="relative touch-hit ml-2"
                                     >
                                         <X className="w-3 h-3" />
                                     </button>

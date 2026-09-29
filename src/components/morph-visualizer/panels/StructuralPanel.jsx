@@ -23,7 +23,7 @@ export default function StructuralPanel({ structural, onChange }) {
               <button
                 key={t.id}
                 onClick={() => onChange(t.id, !on)}
-                className={`w-full text-left px-2.5 py-1.5 rounded border text-xs transition ${
+                className={`touch:min-h-11 w-full text-left px-2.5 py-1.5 rounded border text-xs transition ${
                   on ? 'bg-emerald-700 border-emerald-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
                 }`}
                 title={t.description}
@@ -40,12 +40,12 @@ export default function StructuralPanel({ structural, onChange }) {
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-slate-200 font-medium">{t.name}</span>
               </div>
-              <div className="flex gap-1 flex-wrap">
+              <div className="flex gap-1 touch:gap-2 flex-wrap">
                 {t.options.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => onChange(t.id, opt)}
-                    className={`px-2 py-0.5 text-[11px] rounded border transition capitalize ${
+                    className={`px-2 py-0.5 touch:min-h-11 touch:min-w-11 text-[11px] rounded border transition capitalize ${
                       current === opt
                         ? 'bg-slate-700 border-slate-400 text-slate-100'
                         : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'

@@ -53,7 +53,7 @@ export default function PolygenicPanel({ sireTags, damTags }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-slate-100 w-full"
+        className="flex items-center gap-1.5 touch:min-h-11 text-sm text-slate-300 hover:text-slate-100 w-full"
       >
         {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <Brush className="w-4 h-4 text-purple-400" />

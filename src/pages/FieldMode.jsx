@@ -556,7 +556,7 @@ export default function FieldModePage() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col overscroll-none">
+    <div data-field-mode className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col overscroll-none">
       <Seo title="Field Mode" noIndex />
 
       {/* Big transient checkmark */}

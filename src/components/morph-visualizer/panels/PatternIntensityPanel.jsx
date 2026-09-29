@@ -29,14 +29,14 @@ export default function PatternIntensityPanel({ patterns, onChange }) {
                 <span className="text-sm text-slate-100 font-medium">{p.name}</span>
                 <span className="text-[11px] text-slate-400 font-mono">{STEP_LABELS[value]}</span>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 touch:gap-2">
                 {[0, 1, 2, 3, 4].map((step) => {
                   const active = step <= value && value > 0;
                   return (
                     <button
                       key={step}
                       onClick={() => onChange(p.id, step)}
-                      className={`h-5 flex-1 rounded-sm transition-all ${
+                      className={`relative touch-hit h-5 flex-1 rounded-sm transition-all ${
                         step === 0
                           ? value === 0
                             ? 'bg-slate-700 ring-1 ring-slate-500'

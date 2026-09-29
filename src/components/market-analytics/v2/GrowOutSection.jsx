@@ -26,7 +26,7 @@ export default function GrowOutSection({ agg, onOpenTrait }) {
   const months = GROW_OUT_MONTHS[from];
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={Hourglass}
         title="Grow-out radar, hold or sell?"
@@ -38,7 +38,7 @@ export default function GrowOutSection({ agg, onOpenTrait }) {
                 <button
                   key={s.code}
                   onClick={() => setFrom(s.code)}
-                  className={`text-[11px] px-2 py-1 rounded transition-colors ${from === s.code ? 'bg-emerald-500/20 text-emerald-200' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`touch:min-h-11 text-[11px] px-2 py-1 rounded transition-colors ${from === s.code ? 'bg-emerald-500/20 text-emerald-200' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   {s.label}
                 </button>

@@ -136,7 +136,7 @@ export default function SystemHealth() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-slate-100">System Health</CardTitle>
@@ -163,7 +163,7 @@ export default function SystemHealth() {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-slate-100 text-base">Build & environment</CardTitle>
         </CardHeader>
@@ -184,7 +184,7 @@ export default function SystemHealth() {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-slate-100 text-base">External dashboards</CardTitle>
         </CardHeader>
@@ -199,7 +199,7 @@ export default function SystemHealth() {
               href={link.url}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 px-4 py-3 text-sm transition-colors"
+              className="touch:min-h-11 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 px-4 py-3 text-sm transition-colors"
             >
               <span className="text-slate-200">{link.label}</span>
               <ExternalLink className="w-4 h-4 text-slate-500" />

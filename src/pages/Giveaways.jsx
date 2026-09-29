@@ -390,7 +390,7 @@ function GiveawayCard({ giveaway, user, myEntries, onEntered, onPickWinner, onRe
   };
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-emerald-500/40 transition-colors flex flex-col">
+    <div className="group relative rounded-xl overflow-hidden border border-slate-700 bg-slate-900 hover:border-emerald-500/40 transition-colors flex flex-col">
       {/* Hero image */}
       <div className="aspect-[16/10] bg-slate-800 relative">
         <img
@@ -582,7 +582,7 @@ export default function Giveaways() {
         {/* Top nav (public-facing so unauth visitors can browse) */}
         {!isAuthenticated && (
           <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <Link to="/" className="touch:min-h-11 flex items-center gap-3 hover:opacity-90 transition-opacity">
               <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
               <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
             </Link>
@@ -598,7 +598,7 @@ export default function Giveaways() {
           {!isAuthenticated && (
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 mb-6"
+              className="touch:min-h-11 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 mb-6"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Geck Inspect
@@ -636,7 +636,7 @@ export default function Giveaways() {
           <div className="inline-flex gap-1 rounded-lg border border-slate-800 bg-slate-900/60 p-1 mb-6">
             <button
               onClick={() => setFilter('active')}
-              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+              className={`touch:min-h-11 px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
                 filter === 'active'
                   ? 'bg-emerald-700 text-white'
                   : 'text-slate-400 hover:text-slate-200'
@@ -646,7 +646,7 @@ export default function Giveaways() {
             </button>
             <button
               onClick={() => setFilter('ended')}
-              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+              className={`touch:min-h-11 px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
                 filter === 'ended'
                   ? 'bg-emerald-700 text-white'
                   : 'text-slate-400 hover:text-slate-200'
@@ -662,12 +662,12 @@ export default function Giveaways() {
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className="aspect-[3/4] rounded-2xl border border-slate-800 bg-slate-900/40 animate-pulse"
+                  className="aspect-[3/4] rounded-xl border border-slate-700 bg-slate-900 animate-pulse"
                 />
               ))}
             </div>
           ) : visible.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center">
+            <div className="rounded-xl border border-slate-700 bg-slate-900 p-12 text-center">
               <Gift className="w-12 h-12 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-300 font-semibold mb-1">
                 No {filter === 'active' ? 'active' : 'ended'} giveaways yet

@@ -120,7 +120,7 @@ export default function FeaturedBreeders() {
                 <Link
                   key={b.id || b.email}
                   to={`/PublicProfile?email=${encodeURIComponent(b.email)}`}
-                  className="group flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500/40 p-3 transition-colors"
+                  className="touch:min-h-11 group flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500/40 p-3 transition-colors"
                 >
                   <img
                     src={b.profile_image_url || DEFAULT_AVATAR}

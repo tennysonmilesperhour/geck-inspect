@@ -11,7 +11,7 @@ const TIPS = [
 
 export default function PhotoTipsCard() {
   return (
-    <Card className="bg-slate-900/60 border-slate-700">
+    <Card>
       <CardContent className="p-5">
         <p className="text-xs uppercase tracking-wide text-slate-400 mb-3">Photo tips for an accurate ID</p>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">

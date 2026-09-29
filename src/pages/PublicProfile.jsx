@@ -337,7 +337,7 @@ export default function PublicProfile() {
 
             <div className="max-w-5xl mx-auto px-4 md:px-8 mt-6 md:mt-8 pb-4 md:pb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-1 space-y-6">
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardHeader><CardTitle className="text-slate-200">About</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
                             <p className="text-slate-300">{profileUser.bio || 'No bio provided.'}</p>
@@ -351,7 +351,7 @@ export default function PublicProfile() {
                                 <div className="flex flex-wrap gap-2 pt-2">
                                     {safeExternalUrl(profileUser.website_url) && (
                                         <a href={safeExternalUrl(profileUser.website_url)} target="_blank" rel="noopener noreferrer">
-                                            <Button size="sm" variant="outline" className="border-slate-600 hover:bg-slate-700">
+                                            <Button size="sm" variant="outline" className="touch:min-w-11 border-slate-600 hover:bg-slate-700">
                                                 <Globe className="w-4 h-4" />
                                             </Button>
                                         </a>
@@ -366,21 +366,21 @@ export default function PublicProfile() {
                                     )}
                                     {profileUser.instagram_handle && (
                                         <a href={`https://instagram.com/${encodeURIComponent(String(profileUser.instagram_handle).replace(/^@/, ''))}`} target="_blank" rel="noopener noreferrer">
-                                            <Button size="sm" variant="outline" className="border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
+                                            <Button size="sm" variant="outline" className="touch:min-w-11 border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
                                                 <Instagram className="w-4 h-4" />
                                             </Button>
                                         </a>
                                     )}
                                     {safeExternalUrl(profileUser.facebook_url) && (
                                         <a href={safeExternalUrl(profileUser.facebook_url)} target="_blank" rel="noopener noreferrer">
-                                            <Button size="sm" variant="outline" className="border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
+                                            <Button size="sm" variant="outline" className="touch:min-w-11 border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
                                                 <Facebook className="w-4 h-4" />
                                             </Button>
                                         </a>
                                     )}
                                     {safeExternalUrl(profileUser.youtube_url) && (
                                         <a href={safeExternalUrl(profileUser.youtube_url)} target="_blank" rel="noopener noreferrer">
-                                            <Button size="sm" variant="outline" className="border-red-500/50 hover:bg-red-500/20 text-red-400">
+                                            <Button size="sm" variant="outline" className="touch:min-w-11 border-red-500/50 hover:bg-red-500/20 text-red-400">
                                                 <Youtube className="w-4 h-4" />
                                             </Button>
                                         </a>
@@ -398,7 +398,7 @@ export default function PublicProfile() {
                     </Card>
 
                     {profileUser.store_policy && (
-                        <Card className="bg-slate-900 border-slate-700">
+                        <Card>
                             <CardHeader><CardTitle className="text-slate-200 flex items-center gap-2"><FileText className="w-4 h-4" />Store Policy</CardTitle></CardHeader>
                             <CardContent>
                                 <p className="text-sm text-slate-300 whitespace-pre-wrap">{profileUser.store_policy}</p>

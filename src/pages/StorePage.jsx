@@ -40,7 +40,7 @@ function GeckInspectPill() {
     return (
         <Link
             to="/"
-            className="fixed top-4 right-4 z-50 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/60 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-white/90 hover:bg-black/80 hover:border-emerald-400/40 hover:text-emerald-200 transition-colors shadow-lg"
+            className="touch-hit fixed top-4 right-4 z-50 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/60 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-white/90 hover:bg-black/80 hover:border-emerald-400/40 hover:text-emerald-200 transition-colors shadow-lg"
             aria-label="Go to Geck Inspect"
         >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden />
@@ -77,7 +77,7 @@ function GeckoLightbox({ gecko, onClose }) {
             <button
                 type="button"
                 onClick={onClose}
-                className="absolute top-4 right-4 z-10 inline-flex items-center justify-center rounded-full w-10 h-10 bg-white/10 hover:bg-white/20 text-white"
+                className="touch-hit absolute top-4 right-4 z-10 inline-flex items-center justify-center rounded-full w-10 h-10 bg-white/10 hover:bg-white/20 text-white"
                 aria-label="Close"
             >
                 <X className="w-5 h-5" />
@@ -203,7 +203,7 @@ function GeckoTile({ gecko, onOpen, variant = 'large' }) {
         <button
             type="button"
             onClick={() => onOpen(gecko)}
-            className={`group block text-left w-full ${meta.tile} transition-opacity`}
+            className={`touch:min-h-11 group block text-left w-full ${meta.tile} transition-opacity`}
         >
             <div className={`${aspect} bg-stone-900 overflow-hidden rounded-md relative`}>
                 <img
@@ -687,7 +687,7 @@ export default function StorePage() {
                                                         href={link.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="group flex items-center justify-between gap-3 py-3 text-sm hover:text-emerald-200 transition-colors"
+                                                        className="touch:min-h-11 group flex items-center justify-between gap-3 py-3 text-sm hover:text-emerald-200 transition-colors"
                                                     >
                                                         <span className="font-medium text-stone-100 group-hover:text-emerald-200">
                                                             {link.label || meta.label}
@@ -733,7 +733,7 @@ export default function StorePage() {
                             {owner.id && (
                                 <Link
                                     to={createPageUrl(`PublicProfile?userId=${owner.id}`)}
-                                    className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.15em] text-stone-400 hover:text-emerald-300 whitespace-nowrap"
+                                    className="touch:min-h-11 inline-flex items-center gap-1 text-xs uppercase tracking-[0.15em] text-stone-400 hover:text-emerald-300 whitespace-nowrap"
                                 >
                                     Public profile
                                     <ArrowUpRight className="w-3.5 h-3.5" />

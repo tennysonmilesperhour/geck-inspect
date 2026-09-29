@@ -95,7 +95,7 @@ function ChipGroup({ value, onChange, options, columns = 3 }) {
             type="button"
             onClick={() => onChange(o.value)}
             title={o.blurb || o.label}
-            className={`rounded-md border px-2 py-1.5 text-xs font-semibold transition-colors text-left ${
+            className={`touch:min-h-11 rounded-md border px-2 py-1.5 text-xs font-semibold transition-colors text-left ${
               active
                 ? 'border-emerald-500 bg-emerald-500/15 text-emerald-100'
                 : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-600'
@@ -355,7 +355,7 @@ export default function CustomShirtStudio() {
           <button
             type="button"
             onClick={() => { setDesign(createDefaultShirtDesign()); setAdded(false); setUploadError(null); }}
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200"
+            className="touch:min-h-11 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Start over
           </button>
@@ -370,7 +370,7 @@ export default function CustomShirtStudio() {
             out close to the screen; the shirt drawing is a guide to placement.
           </p>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+          <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-3">
             <div className="flex items-baseline justify-between">
               <span className="text-sm text-slate-300">One shirt</span>
               <span className="text-lg font-bold text-emerald-200">{formatCents(unitPrice)}</span>

@@ -169,7 +169,7 @@ export default function ErrorLogsViewer() {
                     { label: 'Warnings', value: totals.warnings, accent: 'text-amber-300' },
                     { label: 'Affected users', value: totals.uniqueUsers, accent: 'text-emerald-300' },
                 ].map((s) => (
-                    <Card key={s.label} className="bg-slate-900 border-slate-800">
+                    <Card key={s.label}>
                         <CardContent className="p-4">
                             <p className="text-[10px] uppercase tracking-wider text-slate-500">
                                 {s.label}
@@ -182,7 +182,7 @@ export default function ErrorLogsViewer() {
                 ))}
             </div>
 
-            <Card className="bg-slate-900 border-slate-800">
+            <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between flex-wrap gap-3">
                         <CardTitle className="text-slate-100 flex items-center gap-2">
@@ -264,7 +264,7 @@ export default function ErrorLogsViewer() {
                                 <button
                                     key={log.id}
                                     onClick={() => setSelected(log)}
-                                    className={`w-full text-left flex items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
+                                    className={`touch:min-h-11 w-full text-left flex items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
                                         log.resolved
                                             ? 'border-slate-800 bg-slate-800/20 opacity-70'
                                             : 'border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700'

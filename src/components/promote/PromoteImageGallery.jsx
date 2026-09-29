@@ -291,7 +291,7 @@ export default function PromoteImageGallery({
               <button
                 type="button"
                 onClick={() => setFilterTag('')}
-                className={`px-2 py-0.5 rounded-full border ${
+                className={`touch:min-h-11 px-2 py-0.5 rounded-full border ${
                   filterTag === ''
                     ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
                     : 'border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/30'
@@ -304,7 +304,7 @@ export default function PromoteImageGallery({
                   key={t}
                   type="button"
                   onClick={() => setFilterTag(t)}
-                  className={`px-2 py-0.5 rounded-full border ${
+                  className={`touch:min-h-11 px-2 py-0.5 rounded-full border ${
                     filterTag === t
                       ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
                       : 'border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/30'
@@ -342,7 +342,7 @@ export default function PromoteImageGallery({
                     <button
                       type="button"
                       onClick={() => mode === 'picker' && toggleSelect(img.id)}
-                      className="block w-full aspect-square bg-emerald-950/40"
+                      className="touch:min-h-11 touch:min-w-11 block w-full aspect-square bg-emerald-950/40"
                       disabled={mode !== 'picker'}
                     >
                       <img
@@ -372,7 +372,7 @@ export default function PromoteImageGallery({
                           <button
                             type="button"
                             onClick={() => handleSaveTags(img)}
-                            className="text-emerald-300 hover:text-emerald-100"
+                            className="touch:min-h-11 touch:min-w-11 text-emerald-300 hover:text-emerald-100"
                           >
                             <Check className="w-3 h-3" />
                           </button>
@@ -384,7 +384,7 @@ export default function PromoteImageGallery({
                             setEditingTagsFor(img.id);
                             setTagDraft((img.label_tags || []).join(', '));
                           }}
-                          className="w-full text-left text-[10px] text-emerald-200/80 hover:text-emerald-100 truncate"
+                          className="touch:min-h-11 w-full text-left text-[10px] text-emerald-200/80 hover:text-emerald-100 truncate"
                         >
                           {(img.label_tags || []).length === 0
                             ? '+ tag'
@@ -396,7 +396,7 @@ export default function PromoteImageGallery({
                     <button
                       type="button"
                       onClick={() => handleDelete(img)}
-                      className="absolute top-1 right-1 bg-red-900/80 hover:bg-red-700 rounded p-0.5 text-red-100"
+                      className="touch-hit absolute top-1 right-1 bg-red-900/80 hover:bg-red-700 rounded p-0.5 text-red-100"
                       title="Delete"
                     >
                       <Trash2 className="w-3 h-3" />

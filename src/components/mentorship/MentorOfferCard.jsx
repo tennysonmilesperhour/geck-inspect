@@ -104,7 +104,7 @@ export default function MentorOfferCard({
                 <div className="flex items-start justify-between gap-3 mb-4">
                     <Link
                         to={profileUrl}
-                        className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity"
+                        className="touch:min-h-11 flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity"
                     >
                         <img
                             src={avatarUrl}

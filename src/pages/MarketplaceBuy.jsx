@@ -121,7 +121,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
     const isRegular = size === 'regular';
 
     return (
-        <Card className="overflow-hidden group-hover:border-emerald-500/50 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-colors duration-200 h-full flex flex-col bg-slate-900 border-slate-800">
+        <Card className="overflow-hidden group-hover:border-emerald-500/50 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-colors duration-200 h-full flex flex-col">
             <div className="aspect-square w-full overflow-hidden relative">
                 <SmartImage
                     src={gecko.image_urls?.[0]}
@@ -144,7 +144,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                             e.stopPropagation();
                             onToggleLike(gecko.id);
                         }}
-                        className={`absolute top-2 right-2 ${isRegular ? 'h-7 w-7' : ''} bg-black/50 hover:bg-black/70 ${isLiked ? 'text-pink-500' : 'text-white'}`}
+                        className={`absolute top-2 right-2 ${isRegular ? 'h-7 w-7' : ''} touch:min-h-0 touch:min-w-0 touch-hit bg-black/50 hover:bg-black/70 ${isLiked ? 'text-pink-500' : 'text-white'}`}
                     >
                         <Heart className={`${isRegular ? 'w-4 h-4' : 'w-5 h-5'} ${isLiked ? 'fill-pink-500' : ''}`} />
                     </Button>
@@ -170,7 +170,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                         <Link
                             to={createPageUrl(`PublicProfile?userId=${owner?.id}`)}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-2 group min-w-0"
+                            className="flex items-center gap-2 group min-w-0 touch:min-h-11"
                         >
                             <img
                                 src={owner?.profile_image_url || initialsAvatarUrl(owner?.full_name || '')}
@@ -197,7 +197,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                            <TrustPanel email={owner.email} variant="compact" />
                        </div>
                     )}
-                    <div className={`flex items-center ${isRegular ? 'gap-1' : 'gap-2'}`}>
+                    <div className={`flex items-center ${isRegular ? 'gap-1' : 'gap-2'} touch:gap-2`}>
                         <Button
                             variant="outline"
                             size="sm"
@@ -448,12 +448,12 @@ export default function MarketplaceBuyPage() {
                         <PageSettingsPanel title="Marketplace Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Card Size</Label>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 touch:gap-2">
                                     {[['regular', 'Compact'], ['large', 'Spacious']].map(([val, lbl]) => (
                                         <button
                                             key={val}
                                             onClick={() => setBuyPrefs({ cardSize: val })}
-                                            className={`px-3 py-1 text-xs rounded ${buyPrefs.cardSize === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                            className={`px-3 py-1 touch:min-h-11 text-xs rounded ${buyPrefs.cardSize === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                                         >
                                             {lbl}
                                         </button>
@@ -497,7 +497,7 @@ export default function MarketplaceBuyPage() {
                     first line, the sort full width below) instead of each
                     control taking a mostly empty full-width row, or the
                     search being squeezed to a sliver on tablets. */}
-                <div className="mb-4 flex flex-col lg:flex-row gap-2 lg:gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/60">
+                <div className="mb-4 flex flex-col lg:flex-row gap-2 lg:gap-3 p-2 rounded-xl border border-slate-700 bg-slate-900">
                     <div className="relative flex-1 min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <Input
@@ -508,7 +508,7 @@ export default function MarketplaceBuyPage() {
                         />
                     </div>
                     <div className="flex flex-wrap items-center gap-2 lg:gap-3">
-                        <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 rounded-md p-0.5">
+                        <div className="flex items-center gap-1 touch:gap-2 bg-slate-950 border border-slate-700 rounded-md p-0.5">
                             {[
                                 { value: 'all', label: 'All' },
                                 { value: 'Male', label: '♂' },
@@ -518,7 +518,7 @@ export default function MarketplaceBuyPage() {
                                     key={opt.value}
                                     type="button"
                                     onClick={() => setSexFilter(opt.value)}
-                                    className={`px-3 h-8 rounded text-sm font-medium transition-colors ${
+                                    className={`px-3 h-8 touch:min-h-11 touch:min-w-11 rounded text-sm font-medium transition-colors ${
                                         sexFilter === opt.value
                                             ? 'bg-emerald-600 text-white'
                                             : 'text-slate-400 hover:text-slate-200'
@@ -544,11 +544,11 @@ export default function MarketplaceBuyPage() {
                         </Select>
                         {/* Card size toggle, 'regular' packs the grid like
                             MyGeckos, 'large' shows a roomier 4-up layout. */}
-                        <div className="ml-auto sm:ml-0 flex items-center gap-1 bg-slate-950 border border-slate-700 rounded-md p-0.5">
+                        <div className="ml-auto sm:ml-0 flex items-center gap-1 touch:gap-2 bg-slate-950 border border-slate-700 rounded-md p-0.5">
                             <button
                                 type="button"
                                 onClick={() => setCardSize('regular')}
-                                className={`flex items-center gap-1 px-2.5 h-8 rounded text-xs font-medium transition-colors ${
+                                className={`flex items-center justify-center gap-1 px-2.5 h-8 touch:min-h-11 touch:min-w-11 rounded text-xs font-medium transition-colors ${
                                     cardSize === 'regular'
                                         ? 'bg-emerald-600 text-white'
                                         : 'text-slate-400 hover:text-slate-200'
@@ -562,7 +562,7 @@ export default function MarketplaceBuyPage() {
                             <button
                                 type="button"
                                 onClick={() => setCardSize('large')}
-                                className={`flex items-center gap-1 px-2.5 h-8 rounded text-xs font-medium transition-colors ${
+                                className={`flex items-center justify-center gap-1 px-2.5 h-8 touch:min-h-11 touch:min-w-11 rounded text-xs font-medium transition-colors ${
                                     cardSize === 'large'
                                         ? 'bg-emerald-600 text-white'
                                         : 'text-slate-400 hover:text-slate-200'
@@ -578,7 +578,7 @@ export default function MarketplaceBuyPage() {
                 </div>
 
                 {/* Morph filter toggles */}
-                <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                <div className="mb-4 flex flex-wrap items-center gap-1.5 touch:gap-2">
                     <span className="text-xs text-slate-500 mr-1 flex items-center gap-1">
                         <Filter className="w-3 h-3" /> Morphs:
                     </span>
@@ -587,7 +587,7 @@ export default function MarketplaceBuyPage() {
                             key={morph}
                             type="button"
                             onClick={() => toggleFilter(morph)}
-                            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                            className={`px-2.5 py-1 touch:min-h-11 rounded-full text-xs font-medium border transition-colors ${
                                 activeFilters.has(morph)
                                     ? 'bg-emerald-600 text-white border-emerald-500'
                                     : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-500 hover:text-slate-200'
@@ -600,7 +600,7 @@ export default function MarketplaceBuyPage() {
                         <button
                             type="button"
                             onClick={() => setActiveFilters(new Set())}
-                            className="px-2.5 py-1 rounded-full text-xs font-medium text-red-400 border border-red-800 hover:bg-red-900/30 transition-colors"
+                            className="px-2.5 py-1 touch:min-h-11 rounded-full text-xs font-medium text-red-400 border border-red-800 hover:bg-red-900/30 transition-colors"
                         >
                             Clear all
                         </button>

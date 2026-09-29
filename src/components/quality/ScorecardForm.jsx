@@ -218,7 +218,7 @@ export default function ScorecardForm({ criteria = [] }) {
             id="scorecard-gecko"
             value={selectedId}
             onChange={(e) => handleSelectGecko(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 touch:min-h-11 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
           >
             <option value="">Select a gecko...</option>
             {geckos.map((g) => (
@@ -288,7 +288,7 @@ export default function ScorecardForm({ criteria = [] }) {
                   <p className="text-slate-400 text-xs leading-relaxed mt-0.5">{c.blurb}</p>
                 </div>
               </div>
-              <div className="flex gap-1.5 flex-shrink-0" role="group" aria-label={`Score for ${c.name}`}>
+              <div className="flex gap-1.5 touch:gap-2 flex-shrink-0" role="group" aria-label={`Score for ${c.name}`}>
                 {POINT_OPTIONS.map((pt) => {
                   const active = scores[c.n] === pt;
                   return (
@@ -297,7 +297,7 @@ export default function ScorecardForm({ criteria = [] }) {
                       type="button"
                       onClick={() => setCriterionScore(c.n, pt)}
                       aria-pressed={active}
-                      className={`w-12 h-9 rounded-md border text-sm font-mono font-semibold transition-colors ${
+                      className={`w-12 h-9 touch:min-h-11 rounded-md border text-sm font-mono font-semibold transition-colors ${
                         active
                           ? 'bg-emerald-600 border-emerald-500 text-white'
                           : 'bg-slate-800/40 border-slate-700 text-slate-400 hover:bg-slate-800'
@@ -343,7 +343,7 @@ export default function ScorecardForm({ criteria = [] }) {
               type="button"
               onClick={handleSave}
               disabled={!selectedGecko || !allScored || isSaving}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-semibold px-4 py-2 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-semibold px-4 py-2 touch:min-h-11 transition-colors"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {isSaving ? 'Saving...' : 'Save score to this gecko'}

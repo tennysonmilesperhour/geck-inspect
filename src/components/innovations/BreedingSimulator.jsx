@@ -32,7 +32,7 @@ export default function BreedingSimulator({ sire, dam }) {
 
   if (!sire || !dam) {
     return (
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardContent className="py-8 text-center text-slate-500">
           <FlaskConical className="w-8 h-8 mx-auto mb-2 opacity-40" />
           Select both parents to run the breeding simulator.
@@ -53,7 +53,7 @@ export default function BreedingSimulator({ sire, dam }) {
   }
 
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex flex-wrap items-center gap-2 text-slate-100">
           <FlaskConical className="w-5 h-5 text-purple-400" />

@@ -23,7 +23,7 @@ export default function PriceMapSection({ agg, filters, onOpenTrait }) {
   const focus = filters.age;
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={Grid3x3}
         title="Price Map, trait x age"
@@ -65,7 +65,7 @@ export default function PriceMapSection({ agg, filters, onOpenTrait }) {
               return (
                 <tr key={r.name}>
                   <td className="text-xs text-slate-300 py-0.5 pr-2 align-middle">
-                    <button onClick={() => onOpenTrait?.(r.name)} className="truncate max-w-[180px] hover:text-emerald-300 text-left">{r.name}</button>
+                    <button onClick={() => onOpenTrait?.(r.name)} className="touch:min-h-11 truncate max-w-[180px] hover:text-emerald-300 text-left">{r.name}</button>
                   </td>
                   {r.cells.map((c) => (
                     <td key={c.age} className={`p-0 align-middle ${focus !== 'all' && focus !== c.age ? 'opacity-40' : ''}`}>

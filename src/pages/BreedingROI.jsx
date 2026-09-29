@@ -91,7 +91,7 @@ export default function BreedingROI() {
           <PageHeader
             icon={TrendingUp}
             title="New Breeding Project"
-            eyebrow={<button onClick={() => setView('list')} className="flex items-center gap-1 text-sm text-emerald-400"><ChevronLeft size={16} /> Back</button>}
+            eyebrow={<button onClick={() => setView('list')} className="touch:min-h-11 flex items-center gap-1 text-sm text-emerald-400"><ChevronLeft size={16} /> Back</button>}
           />
 
           {/* Progress */}
@@ -129,10 +129,10 @@ export default function BreedingROI() {
                   <div className="col-span-2"><label className="text-xs block mb-1 text-slate-500">Morph</label><input value={o.morph_combination} onChange={e => { const n = [...wizard.outcomes]; n[i].morph_combination = e.target.value; setWizard(p => ({ ...p, outcomes: n })); }} className={`w-full rounded-lg px-2 py-1.5 text-sm ${INPUT_CLS}`} /></div>
                   <div><label className="text-xs block mb-1 text-slate-500">Prob %</label><input type="number" value={o.probability} onChange={e => { const n = [...wizard.outcomes]; n[i].probability = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className={`w-full rounded-lg px-2 py-1.5 text-sm ${INPUT_CLS}`} /></div>
                   <div><label className="text-xs block mb-1 text-slate-500">Mid $</label><input type="number" value={o.price_mid} onChange={e => { const n = [...wizard.outcomes]; n[i].price_mid = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className={`w-full rounded-lg px-2 py-1.5 text-sm ${INPUT_CLS}`} /></div>
-                  <button onClick={() => setWizard(p => ({ ...p, outcomes: p.outcomes.filter((_, j) => j !== i) }))} className="col-span-2 sm:col-span-1 justify-self-start sm:justify-self-auto text-xs py-1.5 rounded text-red-400">Remove</button>
+                  <button onClick={() => setWizard(p => ({ ...p, outcomes: p.outcomes.filter((_, j) => j !== i) }))} className="touch:min-h-11 col-span-2 sm:col-span-1 justify-self-start sm:justify-self-auto text-xs py-1.5 rounded text-red-400">Remove</button>
                 </div>
               ))}
-              <button onClick={() => setWizard(p => ({ ...p, outcomes: [...p.outcomes, { morph_combination: '', probability: 0, price_low: 0, price_mid: 0, price_high: 0 }] }))} className="text-sm text-emerald-400">+ Add outcome</button>
+              <button onClick={() => setWizard(p => ({ ...p, outcomes: [...p.outcomes, { morph_combination: '', probability: 0, price_low: 0, price_mid: 0, price_high: 0 }] }))} className="touch:min-h-11 text-sm text-emerald-400">+ Add outcome</button>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => setWizard(p => ({ ...p, step: 1 }))}>Back</Button>
                 <Button onClick={() => setWizard(p => ({ ...p, step: 3 }))}>Next: Costs</Button>
@@ -206,7 +206,7 @@ export default function BreedingROI() {
             icon={TrendingUp}
             title={selected.name}
             description={<>{selected.sire_name} x {selected.dam_name}</>}
-            eyebrow={<button onClick={() => { setView('list'); setSelected(null); }} className="flex items-center gap-1 text-sm text-emerald-400"><ChevronLeft size={16} /> Back</button>}
+            eyebrow={<button onClick={() => { setView('list'); setSelected(null); }} className="touch:min-h-11 flex items-center gap-1 text-sm text-emerald-400"><ChevronLeft size={16} /> Back</button>}
           />
 
           {m.profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2 mb-4 bg-red-500/15"><AlertTriangle size={16} className="text-red-400" /><span className="text-sm text-red-400">Projected to lose money at current market prices.</span></div>}

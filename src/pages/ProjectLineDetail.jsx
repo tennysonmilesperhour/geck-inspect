@@ -34,7 +34,7 @@ const RARITY_COLORS = {
 
 function Section({ icon: Icon, title, children }) {
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+    <section className="rounded-xl border border-slate-700 bg-slate-900 p-6">
       <div className="flex items-center gap-2 mb-4 text-emerald-300">
         <Icon className="w-4 h-4" />
         <h2 className="text-sm font-semibold uppercase tracking-wider">{title}</h2>
@@ -205,7 +205,7 @@ export default function ProjectLineDetailPage() {
           <div className="relative max-w-5xl mx-auto px-4 md:px-6 py-10 md:py-14">
             <Link
               to="/MorphGuide?tab=lines"
-              className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-300 mb-6"
+              className="touch:min-h-11 inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-300 mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
               All project lines
@@ -256,7 +256,7 @@ export default function ProjectLineDetailPage() {
                         href={line.founderUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:text-emerald-300 inline-flex items-center gap-1"
+                        className="touch:min-h-11 hover:text-emerald-300 inline-flex items-center gap-1"
                       >
                         {line.founder}
                         <ExternalLink className="w-3 h-3" />
@@ -302,7 +302,7 @@ export default function ProjectLineDetailPage() {
                     href={line.morphMarketSearchUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20"
+                    className="touch:min-h-11 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20"
                   >
                     See live examples on MorphMarket
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -335,7 +335,7 @@ export default function ProjectLineDetailPage() {
               </p>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/30 p-8 text-center">
+            <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
               <div className="text-xs uppercase tracking-wider text-slate-500 mb-2">Tagged reference photos</div>
               <p className="text-sm text-slate-400 max-w-md mx-auto">
                 No community photos tagged for {line.name} yet. See current examples on MorphMarket.
@@ -345,7 +345,7 @@ export default function ProjectLineDetailPage() {
                   href={line.morphMarketSearchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/20"
+                  className="touch:min-h-11 mt-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/20"
                 >
                   See live examples on MorphMarket
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -370,7 +370,7 @@ export default function ProjectLineDetailPage() {
                     to={`/MorphGuide/${rm.slug}`}
                     className="group block"
                   >
-                    <div className="aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-900/40 relative">
+                    <div className="aspect-square rounded-xl overflow-hidden border border-slate-700 bg-slate-900 relative">
                       <img
                         src={rm.url}
                         alt={`${rm.name} morph example`}
@@ -447,7 +447,7 @@ export default function ProjectLineDetailPage() {
                   <Link
                     key={m.slug}
                     to={`/MorphGuide/${m.slug}`}
-                    className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-emerald-200"
+                    className="touch:min-h-11 inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-emerald-200"
                   >
                     {m.name}
                     <ArrowRight className="w-3 h-3" />
@@ -459,7 +459,7 @@ export default function ProjectLineDetailPage() {
 
           {/* Other lines */}
           {otherLines.length > 0 && (
-            <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+            <section className="rounded-xl border border-slate-700 bg-slate-900 p-6">
               <div className="flex items-center gap-2 mb-4 text-slate-300">
                 <BookOpen className="w-4 h-4 text-emerald-400" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider">

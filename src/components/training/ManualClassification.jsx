@@ -142,7 +142,7 @@ export default function ManualClassification() {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
                 <CardHeader>
                     <CardTitle className="text-slate-100">Upload Gecko Image</CardTitle>
                 </CardHeader>
@@ -177,7 +177,7 @@ export default function ManualClassification() {
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
                 <CardHeader>
                     <CardTitle className="text-slate-100">Classify Traits</CardTitle>
                 </CardHeader>
@@ -228,7 +228,7 @@ export default function ManualClassification() {
                                     key={trait}
                                     type="button"
                                     onClick={() => handleTraitToggle(trait)}
-                                    className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                                    className={`px-3 py-1 touch:min-h-11 rounded-full text-xs transition-colors ${
                                         formData.secondary_traits?.includes(trait)
                                             ? 'bg-emerald-600 text-white'
                                             : 'bg-slate-700 text-slate-300 hover:bg-slate-600'

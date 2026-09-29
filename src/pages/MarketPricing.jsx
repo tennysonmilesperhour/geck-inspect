@@ -154,7 +154,7 @@ export default function MarketPricing() {
         </PageHeader>
 
         {!signedIn ? (
-          <Card className="bg-slate-900 border-slate-700">
+          <Card>
             <CardContent className="p-4 md:p-6">
               <p className="text-base font-semibold text-slate-100">Sign in to see asking-price ranges by trait, age and sex.</p>
               <p className="text-sm text-slate-400 mt-3">
@@ -166,7 +166,7 @@ export default function MarketPricing() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-slate-900 border-slate-700">
+          <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-slate-100 text-base">Asking prices by trait</CardTitle>
               <div className="flex flex-wrap gap-2 pt-2">
@@ -237,7 +237,7 @@ export default function MarketPricing() {
           </Card>
         )}
 
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-slate-100 text-base">Sales logged by Geck Inspect breeders</CardTitle>
             <p className="text-sm text-slate-400">What animals actually sold for, shared without names.</p>

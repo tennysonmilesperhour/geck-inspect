@@ -270,7 +270,7 @@ export default function BreederConsultantPage() {
 
     return (
         <div className="flex flex-col h-full bg-slate-950 p-4">
-            <Card className="flex-1 flex flex-col bg-slate-900 border-slate-700">
+            <Card className="flex-1 flex flex-col">
                 <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 border-b border-slate-700">
                     <CardTitle className="text-slate-100 flex items-center gap-2"><Sparkles className="text-emerald-400"/> AI Breeder Consultant</CardTitle>
                 </CardHeader>
@@ -343,7 +343,7 @@ export default function BreederConsultantPage() {
                                 type="button"
                                 onClick={() => handleChip(chip)}
                                 disabled={inputBlocked}
-                                className="text-xs px-3 py-1.5 rounded-full border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors disabled:opacity-50"
+                                className="touch:min-h-11 text-xs px-3 py-1.5 rounded-full border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors disabled:opacity-50"
                             >
                                 {chip.label}
                             </button>

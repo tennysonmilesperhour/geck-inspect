@@ -52,7 +52,7 @@ export default function TraitPicker({ value = [], onChange, compact = false }) {
               <button
                 type="button"
                 onClick={() => toggle(id)}
-                className="ml-2 hover:text-white"
+                className="relative touch-hit ml-2 hover:text-white"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -75,7 +75,7 @@ export default function TraitPicker({ value = [], onChange, compact = false }) {
                     key={trait.id}
                     type="button"
                     onClick={() => toggle(trait.id)}
-                    className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                    className={`px-3 py-1 touch:min-h-11 rounded-full text-xs transition-colors ${
                       selected
                         ? 'bg-emerald-600 text-white'
                         : 'bg-slate-700 text-slate-200 hover:bg-slate-600'

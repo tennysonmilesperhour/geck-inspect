@@ -363,7 +363,7 @@ export default function PairingPlannerPage() {
                       key={key}
                       type="button"
                       onClick={() => setGoal(key)}
-                      className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition ${
+                      className={`touch:min-h-11 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition ${
                         goal === key
                           ? 'border-emerald-600 bg-emerald-900/40 text-emerald-200'
                           : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-600'

@@ -127,7 +127,7 @@ export default function EnclosureClimate({ user }) {
   );
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900/50 backdrop-blur-sm p-4 space-y-3">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Thermometer className="w-4 h-4 text-emerald-400 shrink-0" />

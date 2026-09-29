@@ -73,13 +73,15 @@ export default function GuideSlideshow({ guide }) {
           type="button"
           onClick={prev}
           disabled={index === 0}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 hover:border-emerald-500/50 hover:text-emerald-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 touch:min-h-11 text-sm font-medium text-slate-200 hover:border-emerald-500/50 hover:text-emerald-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Previous
         </button>
 
-        <div className="flex items-center gap-1 overflow-x-auto max-w-[45%] md:max-w-[55%]">
+        {/* The dots are 8 px and too dense to tap, so touch screens rely on
+            Previous and Next (the counter above shows the position). */}
+        <div className="flex touch:hidden items-center gap-1 overflow-x-auto max-w-[45%] md:max-w-[55%]">
           {slides.map((_, i) => (
             <button
               key={i}
@@ -99,7 +101,7 @@ export default function GuideSlideshow({ guide }) {
           type="button"
           onClick={next}
           disabled={index === total - 1}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-600/20 px-4 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-600/30 hover:border-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-600/20 px-4 py-2 touch:min-h-11 text-sm font-semibold text-emerald-200 hover:bg-emerald-600/30 hover:border-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           Next
           <ChevronRight className="w-4 h-4" />

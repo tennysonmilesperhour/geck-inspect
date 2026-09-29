@@ -520,7 +520,7 @@ function MyProfileScreen() {
 
                         <TabsContent value="overview" className="space-y-6">
                             {isEditing ? (
-                                <Card className="bg-slate-900 border-slate-700">
+                                <Card>
                                     <CardHeader>
                                         <CardTitle className="text-slate-100">Edit Profile Information</CardTitle>
                                     </CardHeader>
@@ -599,7 +599,7 @@ function MyProfileScreen() {
                             ) : (
                             <>
                             {/* Achievement Progress */}
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader>
                                     <CardTitle className="text-xl text-slate-100">Achievement Progress</CardTitle>
                                 </CardHeader>
@@ -651,7 +651,7 @@ function MyProfileScreen() {
 
                             {/* Earned Badges */}
                             {userBadges.length > 0 && (
-                                <Card className="bg-slate-900 border-slate-700">
+                                <Card>
                                     <CardHeader>
                                         <CardTitle className="text-xl text-slate-100">Earned Badges</CardTitle>
                                     </CardHeader>
@@ -672,7 +672,7 @@ function MyProfileScreen() {
                             )}
 
                             {/* About Section */}
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader><CardTitle className="text-slate-200">About</CardTitle></CardHeader>
                                 <CardContent className="space-y-4">
                                     <p className="text-slate-300">{user.bio || 'No bio provided.'}</p>
@@ -686,28 +686,28 @@ function MyProfileScreen() {
                                         <div className="flex flex-wrap gap-2 pt-2">
                                             {user.website_url && (
                                                 <a href={user.website_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="border-slate-600 hover:bg-slate-700">
+                                                    <Button size="sm" variant="outline" className="touch:min-w-11 border-slate-600 hover:bg-slate-700">
                                                         <Globe className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.instagram_handle && (
                                                 <a href={`https://instagram.com/${user.instagram_handle}`} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
+                                                    <Button size="sm" variant="outline" className="touch:min-w-11 border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
                                                         <Instagram className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.facebook_url && (
                                                 <a href={user.facebook_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
+                                                    <Button size="sm" variant="outline" className="touch:min-w-11 border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
                                                         <Facebook className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.youtube_url && (
                                                 <a href={user.youtube_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="border-red-500/50 hover:bg-red-500/20 text-red-400">
+                                                    <Button size="sm" variant="outline" className="touch:min-w-11 border-red-500/50 hover:bg-red-500/20 text-red-400">
                                                         <Youtube className="w-4 h-4" />
                                                     </Button>
                                                 </a>
@@ -828,7 +828,7 @@ function MyProfileScreen() {
 
                         <TabsContent value="settings" className="space-y-6">
                             {/* Privacy Settings */}
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader>
                                     <CardTitle className="text-slate-100">Privacy Settings</CardTitle>
                                 </CardHeader>
@@ -887,7 +887,7 @@ function MyProfileScreen() {
                             </Card>
 
                             {/* Notification Settings */}
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader>
                                     <CardTitle className="text-slate-100">Notification Settings</CardTitle>
                                 </CardHeader>

@@ -30,7 +30,7 @@ export function SourceBadge({ sourceId, size = 'sm' }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 ${colors} ${size === 'xs' ? 'text-[10px]' : 'text-[11px]'} leading-none`}>
+        <button className={`touch:min-h-11 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 ${colors} ${size === 'xs' ? 'text-[10px]' : 'text-[11px]'} leading-none`}>
           <Icon className="w-3 h-3" />{src.short}
         </button>
       </PopoverTrigger>
@@ -77,7 +77,7 @@ export function ConfidenceChip({ confidence, sampleSize, sources = [], methodolo
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 ${palette} ${size === 'xs' ? 'text-[10px]' : 'text-[11px]'} leading-none`}>
+        <button className={`touch:min-h-11 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 ${palette} ${size === 'xs' ? 'text-[10px]' : 'text-[11px]'} leading-none`}>
           <Icon className="w-3 h-3" />{tier.label} · {Math.round(confidence * 100)}
         </button>
       </PopoverTrigger>
@@ -120,7 +120,7 @@ export function MethodologyPopover({ title, children }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300">
+        <button className="touch:min-h-11 inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300">
           <Info className="w-3 h-3" />Methodology
         </button>
       </PopoverTrigger>
@@ -223,7 +223,7 @@ export function HeatmapCell({ value, min, max, confidence, onClick, label }) {
   return (
     <button
       onClick={onClick}
-      className="relative rounded text-[10px] tabular-nums font-medium text-white w-full h-10 border border-slate-800 hover:border-emerald-500/60 transition-colors"
+      className="touch:min-h-11 relative rounded text-[10px] tabular-nums font-medium text-white w-full h-10 border border-slate-800 hover:border-emerald-500/60 transition-colors"
       style={{ background: bg }}
       title={label}
     >

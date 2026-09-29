@@ -49,29 +49,29 @@ export default function StoreLayout({ children, breadcrumbs }) {
     <nav className="flex items-center gap-1 overflow-x-auto">
       <Link
         to="/Store"
-        className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded whitespace-nowrap"
+        className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center whitespace-nowrap"
       >
         Shop all
       </Link>
       <Link
         to="/Store/c/gifts"
-        className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
+        className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
       >
         <Gift className="w-3.5 h-3.5" /> Gifts
       </Link>
       <Link
         to="/Store/stickers"
-        className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
+        className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
       >
         <Sticker className="w-3.5 h-3.5" /> Custom stickers
       </Link>
-      <Link to="/Store/c/apparel" className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded whitespace-nowrap">
+      <Link to="/Store/c/apparel" className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center whitespace-nowrap">
         Apparel
       </Link>
-      <Link to="/Store/c/diet" className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded whitespace-nowrap">
+      <Link to="/Store/c/diet" className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center whitespace-nowrap">
         Diet
       </Link>
-      <Link to="/Store/c/enclosures" className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded whitespace-nowrap">
+      <Link to="/Store/c/enclosures" className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center whitespace-nowrap">
         Enclosures
       </Link>
     </nav>
@@ -80,7 +80,7 @@ export default function StoreLayout({ children, breadcrumbs }) {
   const cartChip = (
     <Link
       to="/Store/cart"
-      className="relative inline-flex items-center gap-1.5 px-2 py-1 rounded text-slate-200 hover:bg-slate-800 shrink-0"
+      className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center relative inline-flex items-center gap-1.5 px-2 py-1 rounded text-slate-200 hover:bg-slate-800"
     >
       <ShoppingCart className="w-4 h-4" />
       <span className="text-sm hidden sm:inline">Cart</span>
@@ -145,7 +145,7 @@ export default function StoreLayout({ children, breadcrumbs }) {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/95 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link to="/Store" className="flex items-center gap-2 shrink-0 group">
+          <Link to="/Store" className="touch:min-h-11 touch:min-w-11 flex items-center gap-2 shrink-0 group">
             <img
               src={APP_LOGO}
               alt="Geck Inspect"
@@ -210,9 +210,9 @@ export default function StoreLayout({ children, breadcrumbs }) {
       <footer className="border-t border-slate-800 mt-12">
         <div className="max-w-6xl mx-auto px-4 py-6 text-xs text-slate-500 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6">
           <span>© Geck Inspect. Supplies for crested gecko keepers and breeders.</span>
-          <Link to="/PrivacyPolicy" className="hover:text-slate-300">Privacy</Link>
-          <Link to="/Terms" className="hover:text-slate-300">Terms</Link>
-          <Link to="/Contact" className="hover:text-slate-300">Contact</Link>
+          <Link to="/PrivacyPolicy" className="inline-flex items-center touch:min-h-11 hover:text-slate-300">Privacy</Link>
+          <Link to="/Terms" className="inline-flex items-center touch:min-h-11 hover:text-slate-300">Terms</Link>
+          <Link to="/Contact" className="inline-flex items-center touch:min-h-11 hover:text-slate-300">Contact</Link>
           <span className="ml-auto">
             Some links are affiliate links, see disclosure on product pages.
           </span>

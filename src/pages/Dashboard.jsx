@@ -592,7 +592,7 @@ export default function Dashboard() {
                                                 <Link
                                                     key={l.label}
                                                     to={l.href}
-                                                    className="text-xs text-slate-300 hover:text-emerald-300 rounded-md px-2 py-1.5 hover:bg-slate-800/60 transition-colors"
+                                                    className="touch:min-h-11 inline-flex items-center text-xs text-slate-300 hover:text-emerald-300 rounded-md px-2 py-1.5 hover:bg-slate-800/60 transition-colors"
                                                 >
                                                     → {l.label}
                                                 </Link>

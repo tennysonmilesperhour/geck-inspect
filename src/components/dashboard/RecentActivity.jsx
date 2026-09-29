@@ -22,7 +22,7 @@ const Tile = memo(function Tile({ image, uploader: _uploader, onClick }) {
         <button
             type="button"
             onClick={onClick}
-            className="tile"
+            className="touch:min-h-11 tile"
             style={{
                 contain: 'layout paint',
                 willChange: 'auto',

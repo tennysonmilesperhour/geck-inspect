@@ -219,7 +219,7 @@ export default function OtherReptilesPage() {
                                         <button
                                             key={d}
                                             onClick={() => setReptilePrefs({ feedingAlertDays: d })}
-                                            className={`px-3 py-1 text-xs rounded ${reptilePrefs.feedingAlertDays === d ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                            className={`touch:min-h-11 px-3 py-1 text-xs rounded ${reptilePrefs.feedingAlertDays === d ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                                         >
                                             {d}
                                         </button>

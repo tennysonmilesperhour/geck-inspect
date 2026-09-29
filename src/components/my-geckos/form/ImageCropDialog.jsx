@@ -100,10 +100,10 @@ export default function ImageCropDialog({ imageUrl, initialCrop, onSave, onClose
           </div>
           <div className="flex items-center justify-between gap-2">
             <div className="flex gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => rotateBy(-90)} title="Rotate left 90°">
+              <Button type="button" variant="outline" size="sm" className="touch:min-w-11" onClick={() => rotateBy(-90)} title="Rotate left 90°">
                 <RotateCcw className="w-4 h-4" />
               </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => rotateBy(90)} title="Rotate right 90°">
+              <Button type="button" variant="outline" size="sm" className="touch:min-w-11" onClick={() => rotateBy(90)} title="Rotate right 90°">
                 <RotateCw className="w-4 h-4" />
               </Button>
               <span className="text-xs text-slate-400 self-center">{rotation}&deg;</span>

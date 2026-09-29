@@ -29,7 +29,7 @@ import {
 const SORT_OPTIONS = [
   { key: 'volume_sold',     label: 'Volume (sold)' },
   { key: 'median_sold',     label: 'Median sold price' },
-  { key: 'spread_pct',      label: 'Ask–sold spread' },
+  { key: 'spread_pct',      label: 'Ask-sold spread' },
   { key: 'avg_days_listed', label: 'Days listed' },
   { key: 'active_listings', label: 'Active listings' },
 ];
@@ -87,7 +87,7 @@ export default function TraitComboExplorer({ filters, onDrillDown }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       <div className="lg:col-span-3 space-y-4">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <SectionHeader
             icon={Layers}
             title="Trait Combinations, ranked"
@@ -179,7 +179,7 @@ function SortControl({ sortKey, setSortKey, sortDir, setSortDir }) {
       </select>
       <button
         onClick={() => setSortDir((d) => d === 'asc' ? 'desc' : 'asc')}
-        className="p-1 rounded hover:bg-slate-800 text-slate-400"
+        className="touch:min-h-11 touch:min-w-11 p-1 rounded hover:bg-slate-800 text-slate-400"
         aria-label="toggle sort direction"
       >
         {sortDir === 'asc' ? <SortAsc className="w-3.5 h-3.5" /> : <SortDesc className="w-3.5 h-3.5" />}
@@ -196,14 +196,14 @@ function EmptyState() {
 function ComboDetail({ combo, history, blend, onDrillDown }) {
   if (!combo) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-xs text-slate-500">
+      <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 text-xs text-slate-500">
         Select a combination to see its price history.
       </div>
     );
   }
   return (
     <>
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
         <div className="mb-2">
           <div className="text-[10px] uppercase tracking-wider text-emerald-400/80">Headline</div>
           <div className="text-xl font-bold text-slate-100">{combo.combo_name}</div>
@@ -211,7 +211,7 @@ function ComboDetail({ combo, history, blend, onDrillDown }) {
             <span className="text-2xl text-emerald-300 font-bold tabular-nums">${combo.median_sold.toLocaleString()}</span>
             <span className="text-[10px] text-slate-500">median sold</span>
             <span className="text-xs text-slate-400 tabular-nums">
-              range ${combo.band.low.toLocaleString()}–${combo.band.high.toLocaleString()}
+              range ${combo.band.low.toLocaleString()} to ${combo.band.high.toLocaleString()}
             </span>
           </div>
           <div className="flex items-center gap-2 mt-2">
@@ -258,7 +258,7 @@ function ComboDetail({ combo, history, blend, onDrillDown }) {
           </div>
           <button
             onClick={() => onDrillDown?.({ combo_id: combo.combo_id })}
-            className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300"
+            className="touch:min-h-11 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300"
           >
             See underlying transactions →
           </button>
@@ -274,7 +274,7 @@ function ComboDetail({ combo, history, blend, onDrillDown }) {
 function BlendedSourceCard({ blend }) {
   if (!blend?.contributions?.length) return null;
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={Layers}
         title="Blended price, contribution by source"
@@ -316,7 +316,7 @@ function KeyMetricsCard({ combo }) {
     { label: 'Active listings', value: combo.active_listings, hint: 'current supply' },
   ];
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader title="Key metrics" />
       <div className="grid grid-cols-2 gap-3">
         {metrics.map((m) => (

@@ -67,7 +67,7 @@ export default function DataExportCard({ user }) {
   };
 
   return (
-    <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+    <Card>
       <CardHeader>
         <CardTitle className="text-slate-100 flex items-center gap-2">
           <Download className="w-5 h-5" />

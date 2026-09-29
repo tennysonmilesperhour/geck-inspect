@@ -83,7 +83,7 @@ export default function ScrapedDataReview() {
     }
 
     return (
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-white text-lg font-semibold flex items-center gap-2">
@@ -146,7 +146,7 @@ export default function ScrapedDataReview() {
                                                     href={record.source_website} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer"
-                                                    className="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 transition-colors"
+                                                    className="touch:min-h-11 text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 transition-colors"
                                                 >
                                                     <ExternalLink className="w-3 h-3" />
                                                     View Original Source

@@ -320,7 +320,7 @@ const FutureBreedingPlans = forwardRef(function FutureBreedingPlans({ geckos, cu
             };
 
             return (
-              <Card key={plan.id} className="bg-slate-900 border-slate-800 overflow-hidden">
+              <Card key={plan.id} className="overflow-hidden">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

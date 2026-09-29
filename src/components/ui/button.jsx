@@ -30,12 +30,17 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
-      // On touch screens every size grows to a 44 px tap target (40 px for
-      // sm, which sits in dense rows); desktop sizes are unchanged. min-*
-      // rather than h-* so a call site's own h-8 or h-7 still grows.
+      // On touch screens every size grows to the 44 px minimum tap target;
+      // desktop sizes are unchanged. min-* rather than h-* so a call site's
+      // own h-8 or h-7 still grows. Only the icon size sets a min width:
+      // on a text button an explicit min-width would replace the flex
+      // default that stops it shrinking below its label, so labels would
+      // overflow in tight rows. An icon-only sm button adds touch:min-w-11
+      // at the call site. A control that must stay compact passes
+      // touch:min-h-0 touch:min-w-0 and adds touch-hit instead.
       size: {
         default: "h-9 px-4 py-2 touch:min-h-11",
-        sm: "h-8 rounded-md px-3 text-xs touch:min-h-10",
+        sm: "h-8 rounded-md px-3 text-xs touch:min-h-11",
         lg: "h-10 rounded-md px-8 touch:min-h-11",
         icon: "h-9 w-9 touch:min-h-11 touch:min-w-11",
       },

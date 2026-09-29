@@ -68,7 +68,7 @@ function BenchCard({ animal, selected, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`text-left rounded-lg border px-3 py-2 transition-colors ${
+      className={`touch:min-h-11 text-left rounded-lg border px-3 py-2 transition-colors ${
         selected
           ? 'border-purple-500/80 bg-purple-950/40'
           : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'
@@ -204,7 +204,7 @@ export default function ClutchLab() {
                 key={p.id}
                 type="button"
                 onClick={() => startPuzzle(p.id)}
-                className="w-full text-left rounded-xl border border-slate-700 bg-slate-900 hover:border-purple-600/60 p-4 transition-colors"
+                className="touch:min-h-11 w-full text-left rounded-xl border border-slate-700 bg-slate-900 hover:border-purple-600/60 p-4 transition-colors"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-slate-100 font-semibold">

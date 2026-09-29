@@ -156,7 +156,7 @@ function CategoryNav({ categories, activeId, onSelect, sectionCounts }) {
               key={cat.id}
               type="button"
               onClick={() => onSelect(cat.id)}
-              className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+              className={`touch:min-h-11 w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
                 active
                   ? 'bg-emerald-600/15 border border-emerald-500/30 text-emerald-200'
                   : 'border border-transparent text-slate-300 hover:bg-slate-800/60 hover:text-slate-100'
@@ -216,7 +216,7 @@ function SectionCard({ section }) {
   return (
     <article
       id={section.id}
-      className="scroll-mt-24 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8"
+      className="scroll-mt-24 rounded-xl border border-slate-700 bg-slate-900 p-6 md:p-8"
     >
       <header className="mb-5 flex flex-wrap items-center gap-3">
         <h3 className="text-2xl md:text-[28px] font-bold text-slate-100">
@@ -226,7 +226,7 @@ function SectionCard({ section }) {
               rendered by src/pages/CareGuideTopic.jsx. */}
           <a
             href={`/CareGuide/${section.id}`}
-            className="hover:text-emerald-300 transition-colors"
+            className="touch:inline-flex touch:items-center touch:min-h-11 hover:text-emerald-300 transition-colors"
           >
             {section.title}
           </a>
@@ -247,7 +247,7 @@ function SectionCard({ section }) {
       <footer className="mt-5 pt-4 border-t border-slate-800/60 text-xs text-slate-500">
         <a
           href={`/CareGuide/${section.id}`}
-          className="text-emerald-300 hover:text-emerald-200 font-semibold"
+          className="inline-flex items-center touch:min-h-11 text-emerald-300 hover:text-emerald-200 font-semibold"
         >
           Permalink: /CareGuide/{section.id} →
         </a>
@@ -259,7 +259,7 @@ function SectionCard({ section }) {
 function CommunitySection({ section }) {
   if (!section) return null;
   return (
-    <article className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8">
+    <article className="rounded-xl border border-slate-700 bg-slate-900 p-6 md:p-8">
       <header className="mb-5 flex items-center gap-3">
         <h3 className="text-2xl font-bold text-slate-100">{section.title}</h3>
         <span className="inline-flex items-center rounded-full border border-slate-700 px-2.5 py-0.5 text-[11px] font-semibold text-slate-400">
@@ -287,7 +287,7 @@ function CommunitySection({ section }) {
           href={section.source_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center gap-1.5 text-sm text-emerald-400 hover:text-emerald-300"
+          className="touch:min-h-11 mt-4 inline-flex items-center gap-1.5 text-sm text-emerald-400 hover:text-emerald-300"
         >
           <ExternalLink className="w-3.5 h-3.5" />
           Source
@@ -437,7 +437,7 @@ export default function CareGuidePage() {
               <a
                 href="/downloads/geck-inspect-care-guide.pdf"
                 download
-                className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 transition-colors"
+                className="touch:min-h-11 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Download Care Guide as PDF
@@ -495,7 +495,7 @@ export default function CareGuidePage() {
               <KeepersGuideTabs categoryId={activeCategory.id} />
 
               {localSections.length === 0 && communitySections.length === 0 ? (
-                <Card className="bg-slate-900/40 border-slate-800">
+                <Card>
                   <CardContent className="py-10 text-center text-slate-400">
                     {q ? 'No topics match your search.' : 'No content yet for this category.'}
                   </CardContent>
@@ -512,35 +512,35 @@ export default function CareGuidePage() {
               )}
 
               {/* Cross-guide CTAs */}
-              <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+              <div className="mt-10 rounded-xl border border-slate-700 bg-slate-900 p-6">
                 <h3 className="text-lg font-semibold text-slate-100 mb-3">
                   Keep learning
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   <a
                     href="/CareGuide/series"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 text-sm font-semibold text-emerald-200 transition-colors"
+                    className="touch:min-h-11 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 text-sm font-semibold text-emerald-200 transition-colors"
                   >
                     Keeper&apos;s Guide Series
                     <ChevronRight className="w-3.5 h-3.5" />
                   </a>
                   <a
                     href="/MorphGuide"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
+                    className="touch:min-h-11 inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
                   >
                     Morph Guide
                     <ChevronRight className="w-3.5 h-3.5" />
                   </a>
                   <a
                     href="/GeneticsGuide"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
+                    className="touch:min-h-11 inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
                   >
                     Genetics Guide
                     <ChevronRight className="w-3.5 h-3.5" />
                   </a>
                   <a
                     href="/Gallery"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
+                    className="touch:min-h-11 inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
                   >
                     Community Gallery
                     <ChevronRight className="w-3.5 h-3.5" />

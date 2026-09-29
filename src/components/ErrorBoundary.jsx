@@ -43,7 +43,7 @@ export default class ErrorBoundary extends React.Component {
                                 try { window.sessionStorage?.removeItem('gi:chunk-reload'); } catch {}
                                 window.location.reload();
                             }}
-                            className="mt-4 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            className="mt-4 px-6 py-2 touch:min-h-11 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
                         >
                             Reload Page
                         </button>

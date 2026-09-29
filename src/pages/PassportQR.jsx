@@ -92,7 +92,7 @@ export default function PassportQR() {
         {/* Back link */}
         <Link
           to={`/passport/${passportCode}`}
-          className="inline-flex items-center gap-1 text-sm mb-6 text-emerald-400 hover:text-emerald-300 transition-colors print:hidden"
+          className="touch:min-h-11 inline-flex items-center gap-1 text-sm mb-6 text-emerald-400 hover:text-emerald-300 transition-colors print:hidden"
         >
           <ArrowLeft size={16} /> Back to passport
         </Link>

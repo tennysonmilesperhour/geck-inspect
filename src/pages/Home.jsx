@@ -941,38 +941,38 @@ export default function Home() {
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Reference</div>
-              <ul className="space-y-2 text-slate-400">
-                <li><Link to="/MorphGuide" className="hover:text-white">Morph Guide</Link></li>
-                <li><Link to="/CareGuide" className="hover:text-white">Care Guide</Link></li>
-                <li><Link to="/GeneticsGuide" className="hover:text-white">Genetics Guide</Link></li>
-                <li><Link to="/calculator" className="hover:text-white">Morph & Breeding Calculator</Link></li>
-                <li><Link to="/pedigree-tracker" className="hover:text-white">Pedigree Tracker</Link></li>
-                <li><Link to="/breeding-records" className="hover:text-white">Breeding Records</Link></li>
-                <li><Link to="/QualityScale" className="hover:text-white">Quality Scale</Link></li>
-                <li><Link to="/crested-gecko-price" className="hover:text-white">Price Guide</Link></li>
-                <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
+              <ul className="space-y-2 touch:space-y-0 text-slate-400">
+                <li><Link to="/MorphGuide" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Morph Guide</Link></li>
+                <li><Link to="/CareGuide" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Care Guide</Link></li>
+                <li><Link to="/GeneticsGuide" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Genetics Guide</Link></li>
+                <li><Link to="/calculator" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Morph & Breeding Calculator</Link></li>
+                <li><Link to="/pedigree-tracker" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Pedigree Tracker</Link></li>
+                <li><Link to="/breeding-records" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Breeding Records</Link></li>
+                <li><Link to="/QualityScale" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Quality Scale</Link></li>
+                <li><Link to="/crested-gecko-price" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Price Guide</Link></li>
+                <li><Link to="/blog" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Blog</Link></li>
               </ul>
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Browse morphs</div>
-              <ul className="space-y-2 text-slate-400">
-                <li><Link to="/MorphGuide/category/pattern" className="hover:text-white">Pattern morphs</Link></li>
-                <li><Link to="/MorphGuide/category/base" className="hover:text-white">Base colors</Link></li>
-                <li><Link to="/MorphGuide/inheritance/recessive" className="hover:text-white">Recessive morphs</Link></li>
-                <li><Link to="/MorphGuide/inheritance/co-dominant" className="hover:text-white">Co-dominant morphs</Link></li>
-                <li><Link to="/MorphGuide/inheritance/polygenic" className="hover:text-white">Polygenic morphs</Link></li>
+              <ul className="space-y-2 touch:space-y-0 text-slate-400">
+                <li><Link to="/MorphGuide/category/pattern" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Pattern morphs</Link></li>
+                <li><Link to="/MorphGuide/category/base" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Base colors</Link></li>
+                <li><Link to="/MorphGuide/inheritance/recessive" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Recessive morphs</Link></li>
+                <li><Link to="/MorphGuide/inheritance/co-dominant" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Co-dominant morphs</Link></li>
+                <li><Link to="/MorphGuide/inheritance/polygenic" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Polygenic morphs</Link></li>
               </ul>
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Company</div>
-              <ul className="space-y-2 text-slate-400">
-                <li><Link to="/Membership" className="hover:text-white">Pricing</Link></li>
-                <li><Link to="/About" className="hover:text-white">About</Link></li>
-                <li><Link to="/Contact" className="hover:text-white">Contact</Link></li>
-                <li><Link to="/MarketplaceVerification" className="hover:text-white">Marketplace Trust</Link></li>
-                <li><Link to="/Terms" className="hover:text-white">Terms</Link></li>
-                <li><Link to="/PrivacyPolicy" className="hover:text-white">Privacy</Link></li>
-                <li><Link to={createPageUrl('AuthPortal')} className="hover:text-white">Sign in</Link></li>
+              <ul className="space-y-2 touch:space-y-0 text-slate-400">
+                <li><Link to="/Membership" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Pricing</Link></li>
+                <li><Link to="/About" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">About</Link></li>
+                <li><Link to="/Contact" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Contact</Link></li>
+                <li><Link to="/MarketplaceVerification" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Marketplace Trust</Link></li>
+                <li><Link to="/Terms" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Terms</Link></li>
+                <li><Link to="/PrivacyPolicy" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Privacy</Link></li>
+                <li><Link to={createPageUrl('AuthPortal')} className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Sign in</Link></li>
               </ul>
             </div>
           </div>

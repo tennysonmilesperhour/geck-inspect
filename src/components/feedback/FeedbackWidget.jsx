@@ -25,8 +25,9 @@ import {
 } from 'lucide-react';
 
 /**
- * Side-tab feedback widget, a slim vertical tab hugging the right edge of
- * every authenticated page. Opens a dialog where the user picks a feedback
+ * Feedback widget: a slim vertical tab hugging the right edge of every
+ * authenticated page on desktop, and a round button beside the bottom nav
+ * pills on phones. Opens a dialog where the user picks a feedback
  * type (general, bug, feature request) plus an optional 1-5 star rating,
  * then fires straight into support_messages. Admins triage it from the
  * support inbox with the "Feedback" filter.
@@ -42,13 +43,13 @@ const TYPES = [
 
 function StarRow({ value, onChange }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 touch:gap-2">
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
           type="button"
           onClick={() => onChange(value === n ? 0 : n)}
-          className="p-1 transition-transform hover:scale-110"
+          className="inline-flex items-center justify-center p-1 touch:min-h-11 touch:min-w-11 transition-transform hover:scale-110"
           aria-label={`${n} star${n > 1 ? 's' : ''}`}
         >
           <Star
@@ -133,15 +134,20 @@ export default function FeedbackWidget() {
 
   return (
     <>
-      {/* Side-tab launcher */}
+      {/* Launcher. On phones a round 44 px button in the bottom nav band,
+          right of the section pills, where it covers no page text (a tab
+          on the right edge sat on top of whatever line was behind it).
+          Below 350 px there is no room beside the pills, so it moves just
+          above them. From md up it is the slim tab on the right edge. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Send feedback"
+        title="Send feedback"
         data-feedback-trigger
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center gap-1.5 rounded-l-md bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 px-1.5 py-2.5 md:py-3 text-xs font-semibold tracking-wider uppercase transition-all hover:px-2 active:scale-95 print:hidden"
+        className="fixed z-[60] right-2 bottom-[calc(max(6px,env(safe-area-inset-bottom))+6px)] max-[349px]:bottom-[calc(4.75rem+env(safe-area-inset-bottom))] h-11 w-11 rounded-full md:right-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:h-auto md:w-auto md:rounded-none md:rounded-l-md md:flex-col md:gap-1.5 md:px-1.5 md:py-3 md:hover:px-2 touch:min-h-11 touch:min-w-11 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 text-xs font-semibold tracking-wider uppercase transition-all active:scale-95 print:hidden"
       >
-        <MessageSquare className="w-3.5 h-3.5" />
+        <MessageSquare className="w-5 h-5 md:w-3.5 md:h-3.5" />
         <span className="hidden md:inline [writing-mode:vertical-rl] rotate-180">Feedback</span>
       </button>
 
@@ -196,7 +202,7 @@ export default function FeedbackWidget() {
                         key={t.id}
                         type="button"
                         onClick={() => setType(t.id)}
-                        className={`flex flex-col items-center gap-1.5 rounded-lg border px-2 py-3 text-xs font-medium transition-colors ${
+                        className={`touch:min-h-11 flex flex-col items-center gap-1.5 rounded-lg border px-2 py-3 text-xs font-medium transition-colors ${
                           active
                             ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-200'
                             : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-800'

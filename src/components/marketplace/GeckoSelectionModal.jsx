@@ -110,7 +110,7 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-slate-100">Enter Missing Prices</h2>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
+            <button onClick={onClose} className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -188,7 +188,7 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
               {selectedGeckos.size} selected
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
+          <button onClick={onClose} className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -215,7 +215,7 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
               <button
                 key={gecko.id}
                 onClick={() => toggleGecko(gecko.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                className={`touch:min-h-11 w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
                   selectedGeckos.has(gecko.id)
                     ? 'bg-emerald-900/40 border-emerald-700/50'
                     : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800'

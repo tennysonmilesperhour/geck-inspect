@@ -95,7 +95,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={
-          'inline-flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-2 text-sm font-semibold text-emerald-200 transition-colors ' +
+          'inline-flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-2 touch:min-h-11 text-sm font-semibold text-emerald-200 transition-colors ' +
           className
         }
         aria-haspopup="menu"
@@ -115,7 +115,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
               type="button"
               onClick={nativeShare}
               role="menuitem"
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 touch:min-h-11 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
             >
               <Share2 className="w-4 h-4 text-emerald-300" />
               <span className="flex-1 text-left">More apps…</span>
@@ -129,7 +129,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
             rel="noopener noreferrer"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 touch:min-h-11 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
           >
             <Twitter className="w-4 h-4 text-sky-300" />
             <span className="flex-1 text-left">X (Twitter)</span>
@@ -142,7 +142,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
             rel="noopener noreferrer"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 touch:min-h-11 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
           >
             <Facebook className="w-4 h-4 text-blue-400" />
             <span className="flex-1 text-left">Facebook</span>
@@ -153,7 +153,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
             type="button"
             onClick={shareToInstagram}
             role="menuitem"
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 touch:min-h-11 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
           >
             <Instagram className="w-4 h-4 text-pink-400" />
             <span className="flex-1 text-left">
@@ -168,7 +168,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
             type="button"
             onClick={copyLink}
             role="menuitem"
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 touch:min-h-11 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
           >
             {copied ? (
               <>

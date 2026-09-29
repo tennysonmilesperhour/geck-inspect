@@ -338,7 +338,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-6xl w-full max-h-[90vh] flex flex-col bg-slate-900 border-slate-700">
+      <Card className="max-w-6xl w-full max-h-[90vh] flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-slate-700 p-4 sm:p-6">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <CardTitle className="text-slate-100 truncate">{gecko.name}</CardTitle>
@@ -348,7 +348,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 touch:gap-2 flex-shrink-0">
             <EventTracker
               entityId={gecko.id}
               entityType="gecko"
@@ -388,13 +388,13 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => setShowSlideshow(false)}
-                      className={`text-xs px-3 py-1 rounded-full transition-colors ${!showSlideshow ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                      className={`text-xs px-3 py-1 touch:min-h-11 rounded-full transition-colors ${!showSlideshow ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
                     >
                       Latest
                     </button>
                     <button
                       onClick={() => { setShowSlideshow(true); setSlideshowIndex(0); }}
-                      className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 transition-colors ${showSlideshow ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                      className={`text-xs px-3 py-1 touch:min-h-11 rounded-full flex items-center gap-1 transition-colors ${showSlideshow ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
                     >
                       <Camera className="w-3 h-3" /> Growth Slideshow
                     </button>
@@ -404,12 +404,12 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 {showSlideshow && slideshowAvailable && currentSlide ? (
                   <div className="space-y-2">
                     {/* Life-stage tabs, one per tagged photo */}
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 touch:gap-2">
                       {taggedSlides.map((slide, idx) => (
                         <button
                           key={slide.url}
                           onClick={() => setSlideshowIndex(idx)}
-                          className={`text-xs px-2 py-1 rounded transition-colors ${slideshowIndex === idx ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+                          className={`text-xs px-2 py-1 touch:min-h-11 rounded transition-colors ${slideshowIndex === idx ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                         >
                           {LIFE_STAGE_LABELS[slide.stage] || slide.stage}
                         </button>
@@ -421,7 +421,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         type="button"
                         onClick={() => setSlideshowIndex((i) => Math.max(0, i - 1))}
                         disabled={slideshowIndex === 0}
-                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
+                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 touch:min-h-11 touch:min-w-11 touch:inline-flex touch:items-center touch:justify-center rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
@@ -449,7 +449,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         type="button"
                         onClick={() => setSlideshowIndex((i) => Math.min(taggedSlides.length - 1, i + 1))}
                         disabled={slideshowIndex === taggedSlides.length - 1}
-                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
+                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 touch:min-h-11 touch:min-w-11 touch:inline-flex touch:items-center touch:justify-center rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
                       >
                         <ChevronRight className="w-5 h-5" />
                       </button>
@@ -1074,7 +1074,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                               await Gecko.update(gecko.id, { archive_reason: opt.value });
                               if (onUpdate) onUpdate();
                             }}
-                            className={`text-xs px-2 py-1 rounded border transition-colors ${
+                            className={`text-xs px-2 py-1 touch:min-h-11 touch:min-w-11 rounded border transition-colors ${
                               gecko.archive_reason === opt.value
                                 ? 'border-yellow-500 bg-yellow-900/40 text-yellow-300'
                                 : 'border-slate-600 text-slate-400 hover:bg-slate-700'

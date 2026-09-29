@@ -59,7 +59,7 @@ export default function VisualSiblings({ gecko, user }) {
   };
 
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">

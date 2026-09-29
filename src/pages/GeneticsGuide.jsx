@@ -185,7 +185,7 @@ export default function GeneticsGuide() {
               <a
                 href="/downloads/geck-inspect-genetics-guide.pdf"
                 download
-                className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 transition-colors"
+                className="touch:min-h-11 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Download Genetics Guide as PDF
@@ -215,7 +215,7 @@ export default function GeneticsGuide() {
             <TabsContent value="guide">
               {/* Level toggles */}
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div className="flex items-center gap-2 p-1 rounded-xl border border-slate-800 bg-slate-900 self-start">
+                <div className="flex items-center gap-2 p-1 rounded-xl border border-slate-700 bg-slate-900 self-start">
                   {Object.keys(LEVEL_META).map((level) => {
                     const meta = LEVEL_META[level];
                     const isActive = activeLevel === level;
@@ -227,7 +227,7 @@ export default function GeneticsGuide() {
                           setActiveLevel(level);
                           window.scrollTo({ top: 280, behavior: 'smooth' });
                         }}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        className={`touch:min-h-11 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                           isActive
                             ? `bg-gradient-to-r ${meta.accent} text-white shadow-md`
                             : 'text-slate-400 hover:text-slate-200'
@@ -254,7 +254,7 @@ export default function GeneticsGuide() {
                         key={section.id}
                         type="button"
                         onClick={() => scrollToSection(section.id)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/80 hover:bg-slate-800 hover:border-emerald-500/40 px-3 py-1 text-xs text-slate-300 transition-colors"
+                        className="touch:min-h-11 inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/80 hover:bg-slate-800 hover:border-emerald-500/40 px-3 py-1 text-xs text-slate-300 transition-colors"
                       >
                         <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-800 text-[10px] font-bold text-emerald-400">
                           {i + 1}
@@ -293,7 +293,7 @@ export default function GeneticsGuide() {
                         </div>
 
                         {/* Section card */}
-                        <Card className="bg-slate-900/70 border-slate-800">
+                        <Card>
                           <CardHeader className="pb-3">
                             <div className="flex items-start gap-3 flex-wrap">
                               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -420,7 +420,7 @@ export default function GeneticsGuide() {
         {showBackToTop && (
           <button
             onClick={scrollToTop}
-            className="fixed right-6 z-50 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full p-3 shadow-lg transition-all"
+            className="touch-hit fixed right-6 z-50 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full p-3 shadow-lg transition-all"
             style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
             aria-label="Back to top"
           >

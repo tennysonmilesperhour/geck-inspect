@@ -457,7 +457,7 @@ function TemplateButton({ icon: Icon, label, description, active, onClick }) {
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-start gap-3 p-4 rounded-xl text-left transition-all border-2 ${
+      className={`touch:min-h-11 flex items-start gap-3 p-4 rounded-xl text-left transition-all border-2 ${
         active ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700 bg-slate-900'
       }`}
     >

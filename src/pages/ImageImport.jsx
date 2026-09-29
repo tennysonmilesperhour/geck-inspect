@@ -109,7 +109,7 @@ export default function ImageImport() {
                         title="AI Image Import"
                         description="Snap photos of notecards, screenshots, or records and let AI extract your gecko data automatically."
                     />
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-6 md:p-8 text-center">
                             <Lock className="w-10 h-10 text-amber-400 mx-auto mb-4" />
                             <p className="text-sm md:text-base text-slate-300">
@@ -311,7 +311,7 @@ export default function ImageImport() {
                 {/* STEP 1: Upload */}
                 {step === 'upload' && (
                     <div className="space-y-6">
-                        <Card className="bg-slate-900 border-slate-700">
+                        <Card>
                             <CardContent className="p-4 md:p-6 space-y-4">
                                 <div>
                                     <Label className="text-slate-300">Import Mode</Label>
@@ -359,7 +359,7 @@ export default function ImageImport() {
                                                     <img src={img.url} alt={img.name} className="w-full aspect-square object-cover rounded-lg border border-slate-700" />
                                                     <button
                                                         onClick={() => removeImage(i)}
-                                                        className="absolute top-1 right-1 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        className="touch-hit absolute top-1 right-1 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
                                                         <X className="w-3 h-3 text-white" />
                                                     </button>
@@ -391,7 +391,7 @@ export default function ImageImport() {
 
                 {/* STEP 2: Processing */}
                 {step === 'processing' && (
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-8 md:p-12 text-center">
                             <Loader2 className="w-16 h-16 animate-spin text-violet-400 mx-auto mb-4" />
                             <h2 className="text-xl font-bold text-slate-100 mb-2">Analyzing Images...</h2>
@@ -424,7 +424,7 @@ export default function ImageImport() {
                                     <div className="flex items-start gap-3">
                                         <button
                                             onClick={() => toggleRecord(record._id)}
-                                            className={`mt-1 w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center ${record._selected ? 'bg-emerald-600 border-emerald-600' : 'border-slate-500'}`}
+                                            className={`relative touch-hit mt-1 w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center ${record._selected ? 'bg-emerald-600 border-emerald-600' : 'border-slate-500'}`}
                                         >
                                             {record._selected && <Check className="w-3 h-3 text-white" />}
                                         </button>
@@ -493,7 +493,7 @@ export default function ImageImport() {
                         ))}
 
                         {extractedRecords.length === 0 && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardContent className="p-8 text-center">
                                     <p className="text-slate-400">No records were extracted. Try uploading clearer images or a different mode.</p>
                                     <Button variant="outline" onClick={() => setStep('upload')} className="mt-4">Try Again</Button>
@@ -505,7 +505,7 @@ export default function ImageImport() {
 
                 {/* STEP 3b: Importing */}
                 {step === 'importing' && (
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-8 md:p-12 text-center">
                             <Loader2 className="w-16 h-16 animate-spin text-emerald-400 mx-auto mb-4" />
                             <h2 className="text-xl font-bold text-slate-100 mb-2">Importing Records...</h2>
@@ -516,7 +516,7 @@ export default function ImageImport() {
 
                 {/* STEP 4: Done */}
                 {step === 'done' && importResults && (
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-8 text-center space-y-4">
                             <div className="w-16 h-16 rounded-full bg-emerald-600 flex items-center justify-center mx-auto">
                                 <Check className="w-8 h-8 text-white" />

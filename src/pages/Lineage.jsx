@@ -1140,7 +1140,7 @@ export default function Lineage() {
                                     {filteredSelectableGeckos.map((gecko, idx) => (
                                         <button
                                             key={gecko.id}
-                                            className={`w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-3 transition-colors ${idx !== 0 ? 'border-t border-slate-700/60' : ''}`}
+                                            className={`touch:min-h-11 w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-3 transition-colors ${idx !== 0 ? 'border-t border-slate-700/60' : ''}`}
                                             onMouseDown={() => handleSearchSelect(gecko)}
                                         >
                                             <SmartImage
@@ -1209,7 +1209,7 @@ export default function Lineage() {
                                         <button
                                             key={n}
                                             onClick={() => { setLineagePrefs({ defaultGenerations: n }); setGenerations(Number(n)); }}
-                                            className={`px-3 py-1 text-xs rounded ${lineagePrefs.defaultGenerations === n ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                            className={`touch:min-h-11 px-3 py-1 text-xs rounded ${lineagePrefs.defaultGenerations === n ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                                         >
                                             {n}
                                         </button>
@@ -1223,7 +1223,7 @@ export default function Lineage() {
                                         <button
                                             key={z}
                                             onClick={() => { setLineagePrefs({ defaultZoom: z }); setScale(Number(z) / 100); }}
-                                            className={`px-2 py-1 text-xs rounded ${lineagePrefs.defaultZoom === z ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                            className={`touch:min-h-11 px-2 py-1 text-xs rounded ${lineagePrefs.defaultZoom === z ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                                         >
                                             {z}%
                                         </button>
@@ -1240,7 +1240,7 @@ export default function Lineage() {
                 <button
                     type="button"
                     onClick={() => setDetailPanelOpen(o => !o)}
-                    className="md:hidden flex-shrink-0 flex items-center justify-center gap-1.5 w-full py-1.5 text-xs text-slate-400 bg-slate-900/60 border-b border-slate-800 hover:bg-slate-900/80 active:bg-slate-900 transition-colors"
+                    className="touch:min-h-11 md:hidden flex-shrink-0 flex items-center justify-center gap-1.5 w-full py-1.5 text-xs text-slate-400 bg-slate-900/60 border-b border-slate-800 hover:bg-slate-900/80 active:bg-slate-900 transition-colors"
                     aria-expanded={detailPanelOpen}
                     aria-controls="lineage-detail-strip"
                 >
@@ -1320,19 +1320,19 @@ export default function Lineage() {
                             <div className="flex items-center gap-2 flex-wrap">
                                 <a
                                     href={`/GeckoDetail?id=${selectedGeckoId}`}
-                                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded border border-emerald-600/50 bg-emerald-600/10 text-emerald-300 hover:bg-emerald-600/20 transition-colors"
+                                    className="touch:min-h-11 inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded border border-emerald-600/50 bg-emerald-600/10 text-emerald-300 hover:bg-emerald-600/20 transition-colors"
                                 >
                                     Full profile <ExternalLink className="w-3 h-3" />
                                 </a>
                                 <a
                                     href={`/Pedigree?geckoId=${selectedGeckoId}`}
-                                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors"
+                                    className="touch:min-h-11 inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors"
                                 >
                                     Pedigree chart <ExternalLink className="w-3 h-3" />
                                 </a>
                                 <button
                                     onClick={() => handleSelectGecko(null)}
-                                    className="inline-flex items-center justify-center p-1.5 rounded border border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition-colors"
+                                    className="touch:min-h-11 touch:min-w-11 inline-flex items-center justify-center p-1.5 rounded border border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition-colors"
                                     aria-label="Clear selection"
                                 >
                                     <X className="w-3 h-3" />
@@ -1350,7 +1350,7 @@ export default function Lineage() {
                                     <button
                                         key={g.id}
                                         onClick={() => handleSelectGecko(g.id)}
-                                        className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs flex-shrink-0 transition-colors ${
+                                        className={`touch:min-h-11 flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs flex-shrink-0 transition-colors ${
                                             g.id === selectedGeckoId
                                                 ? 'bg-emerald-600/20 border-emerald-500/60 text-emerald-200'
                                                 : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'

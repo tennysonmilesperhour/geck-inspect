@@ -128,7 +128,7 @@ function ModerationList({
                 aria-label={`${actionLabel} item`}
                 variant="outline"
                 onClick={() => setDeleteTarget(item)}
-                className="border-rose-900/50 bg-rose-950/30 hover:bg-rose-950/50 text-rose-300 shrink-0"
+                className="touch:min-w-11 border-rose-900/50 bg-rose-950/30 hover:bg-rose-950/50 text-rose-300 shrink-0"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
@@ -169,7 +169,7 @@ function ModerationList({
 
 export default function ContentModeration() {
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card>
       <CardHeader>
         <CardTitle className="text-slate-100">Content Moderation</CardTitle>
         <p className="text-sm text-slate-400">

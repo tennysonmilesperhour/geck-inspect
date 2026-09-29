@@ -33,7 +33,7 @@ export default function BaseColorPicker({ selected, onSelect }) {
             <button
               key={c.id}
               onClick={() => onSelect(c.id)}
-              className={`group relative rounded-md border-2 transition-all overflow-hidden ${
+              className={`touch:min-h-11 group relative rounded-md border-2 transition-all overflow-hidden ${
                 isSelected ? 'border-emerald-400 scale-[1.03] shadow-lg shadow-emerald-500/30' : 'border-slate-700 hover:border-slate-500'
               }`}
               title={c.name}

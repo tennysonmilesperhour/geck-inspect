@@ -154,7 +154,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
   };
 
   return (
-    <Card className="bg-slate-900 border-slate-700 overflow-hidden">
+    <Card className="overflow-hidden">
       <CardHeader className="border-b border-slate-800">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>

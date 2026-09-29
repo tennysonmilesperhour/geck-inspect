@@ -30,7 +30,7 @@ export default function GeneticsModal({ isOpen, onClose, sire, dam }) {
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-slate-400 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-lg p-2 transition-colors flex-shrink-0"
+                        className="text-slate-400 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-lg p-2 touch:min-h-11 touch:min-w-11 touch:inline-flex touch:items-center touch:justify-center transition-colors flex-shrink-0"
                         aria-label="Close"
                     >
                         <X className="w-5 h-5" />

@@ -48,7 +48,7 @@ function TransferRow({ transfer, animal, direction }) {
   const img = animal?.image_urls?.[0];
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-slate-900 hover:border-slate-600 transition-colors">
+    <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-600 transition-colors">
       {img ? (
         <img src={img} alt={animal?.name || 'Animal'} className="w-12 h-12 rounded-lg object-cover shrink-0" />
       ) : (
@@ -81,7 +81,7 @@ function TransferRow({ transfer, animal, direction }) {
           href={`/passport/${animal.passport_code}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/20 shrink-0"
+          className="touch:min-h-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/20 shrink-0"
           title="View the animal's current passport, including any changes the new owner has made"
         >
           <ExternalLink className="w-3.5 h-3.5" />

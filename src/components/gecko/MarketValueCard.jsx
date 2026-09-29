@@ -85,7 +85,7 @@ export default function MarketValueCard({ gecko }) {
 
   if (state.status === 'loading') {
     return (
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         {header}
         <CardContent className="px-4 pb-4 flex items-center gap-2 text-sm text-slate-500">
           <Loader2 className="w-4 h-4 animate-spin" /> Checking market listings...
@@ -99,7 +99,7 @@ export default function MarketValueCard({ gecko }) {
 
   if (!estimate) {
     return (
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         {header}
         <CardContent className="px-4 pb-4 space-y-3">
           <p className="text-sm text-slate-400">
@@ -108,7 +108,7 @@ export default function MarketValueCard({ gecko }) {
           </p>
           <Link
             to={createPageUrl('MyGeckos')}
-            className="inline-flex text-sm font-medium text-emerald-400 hover:text-emerald-300"
+            className="touch:min-h-11 inline-flex text-sm font-medium text-emerald-400 hover:text-emerald-300"
           >
             Add traits in My Geckos
           </Link>
@@ -125,7 +125,7 @@ export default function MarketValueCard({ gecko }) {
   const showPortfolioLink = !isKeeperMode();
 
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       {header}
       <CardContent className="px-4 pb-4 space-y-3">
         <div>

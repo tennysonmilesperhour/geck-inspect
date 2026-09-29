@@ -23,7 +23,7 @@ function FilterChip({ active, onClick, children }) {
         <button
             type="button"
             onClick={onClick}
-            className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+            className={`touch:min-h-11 px-3 py-1.5 rounded-full text-sm border transition-colors ${
                 active
                     ? 'bg-emerald-600 border-emerald-500 text-white'
                     : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-emerald-600 hover:text-emerald-300'
@@ -288,7 +288,7 @@ export default function MentorshipPage() {
 
                         {/* Marketplace grid */}
                         {offers.length === 0 ? (
-                            <div className="text-center py-20 bg-slate-900 border border-slate-800 rounded-xl px-6">
+                            <div className="text-center py-20 bg-slate-900 border border-slate-700 rounded-xl px-6">
                                 <Sparkles className="w-12 h-12 mx-auto text-emerald-500 mb-4" />
                                 <h2 className="text-2xl font-semibold text-slate-100 mb-2">
                                     Be a founding mentor
@@ -318,7 +318,7 @@ export default function MentorshipPage() {
                                 )}
                             </div>
                         ) : filteredOffers.length === 0 ? (
-                            <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-xl">
+                            <div className="text-center py-16 bg-slate-900 border border-slate-700 rounded-xl">
                                 <p className="text-slate-400">
                                     No offers match those filters yet. Try a different
                                     type or specialty.

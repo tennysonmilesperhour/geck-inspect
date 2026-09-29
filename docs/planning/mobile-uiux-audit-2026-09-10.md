@@ -199,10 +199,19 @@ backlog above:
 - Item 8: Quality Scale, morph pages and breeder pages drop their public
   logo bar and footer inside the app shell (`useInAppShell`).
 
-Still open: item 2 (section membership), item 3 (one card surface
-token), item 4 (secondary emerald ramps inside cards) and item 5 (touch
-targets). The page conventions are in `docs/ENGINEERING.md` under
-"Page layout conventions".
+A second pass the same day closed item 3 (cards: `<Card>` draws the one
+surface, about 250 call-site skins and 170 raw panels were normalised)
+and item 5 (touch targets: every control is at least 44 px on touch
+screens, through the shared components plus `touch:min-h-11` and
+`touch-hit` on hand-built controls). The Breeding Season timeline also
+opens at today on phones instead of January, the Feedback button moved
+from the right edge (where it covered page text) to the bottom nav band
+beside the section pills, and empty progress bars no longer draw as a
+full light bar.
+
+Still open: item 2 (section membership) and item 4 (secondary emerald
+ramps inside cards). The page conventions are in `docs/ENGINEERING.md`
+under "Page layout conventions".
 
 ## 5. How to re-run the phone pass
 

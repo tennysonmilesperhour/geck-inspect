@@ -70,7 +70,7 @@ function PatternGradeBadge({ grade }) {
 
 function StatChip({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-lg bg-slate-900 border border-slate-800 px-3 py-2">
+    <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 border border-slate-700 px-3 py-2">
       <Icon size={14} className="text-emerald-400 shrink-0" />
       <span className="text-xs uppercase tracking-wider text-slate-500">{label}</span>
       <span className="text-sm font-medium ml-auto text-slate-200 truncate">{value || '-'}</span>
@@ -109,7 +109,7 @@ function PhotoCarousel({ images }) {
   const [idx, setIdx] = useState(0);
   if (!images || images.length === 0) {
     return (
-      <div className="w-full h-72 sm:h-96 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800">
+      <div className="w-full h-72 sm:h-96 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-700">
         <div className="text-center">
           <div className="text-6xl mb-2">🦎</div>
           <p className="text-sm text-slate-500">No photos yet</p>
@@ -140,7 +140,9 @@ function PhotoCarousel({ images }) {
           >
             <ChevronRight size={20} className="text-slate-100" />
           </button>
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {/* The 8 px dots are too dense to tap, so on touch screens they
+              only show the position; the arrows do the paging. */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 touch:pointer-events-none">
             {images.map((_, i) => (
               <button
                 key={i}
@@ -291,7 +293,7 @@ function VetRecordCard({ record }) {
   return (
     <button
       type="button"
-      className="w-full text-left rounded-xl border border-slate-800 bg-slate-950/60 p-4 transition hover:border-slate-700"
+      className="touch:min-h-11 w-full text-left rounded-xl border border-slate-800 bg-slate-950/60 p-4 transition hover:border-slate-700"
       onClick={() => setExpanded(!expanded)}
       aria-expanded={expanded}
     >

@@ -170,7 +170,9 @@ export default function HeroSlideshow() {
           <div className="text-[11px] text-slate-400">
             Real animals from the founder's collection, tracked in Geck Inspect.
           </div>
-          <div className="flex items-center gap-1.5">
+          {/* The 6 px dots are too dense to tap, so on touch screens they
+              only show the position and the slides advance on their own. */}
+          <div className="flex touch:pointer-events-none items-center gap-1.5">
             {slides.map((_, i) => (
               <button
                 key={i}

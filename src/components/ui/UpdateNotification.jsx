@@ -75,7 +75,7 @@ export default function UpdateNotification() {
       </Button>
       <button
         onClick={() => setShowBanner(false)}
-        className="text-slate-400 hover:text-slate-200 transition-colors flex-shrink-0"
+        className="relative touch-hit text-slate-400 hover:text-slate-200 transition-colors flex-shrink-0"
         aria-label="Dismiss"
       >
         <X className="w-4 h-4" />

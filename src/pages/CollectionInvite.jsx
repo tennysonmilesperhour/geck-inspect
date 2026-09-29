@@ -55,7 +55,7 @@ export default function CollectionInvite() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-      <Card className="bg-slate-900 border-slate-700 max-w-lg w-full">
+      <Card className="max-w-lg w-full">
         <CardHeader>
           <CardTitle className="text-slate-100 flex items-center gap-2">
             <Users2 className="w-5 h-5" />

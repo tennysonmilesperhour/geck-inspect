@@ -58,7 +58,7 @@ export default function StoreOrders() {
             <Link
               key={o.id}
               to={`/Store/orders/${o.order_number}`}
-              className="flex items-center justify-between rounded-md border border-slate-800 bg-slate-900/40 hover:bg-slate-900 px-4 py-3"
+              className="touch:min-h-11 flex items-center justify-between rounded-md border border-slate-800 bg-slate-900/40 hover:bg-slate-900 px-4 py-3"
             >
               <div>
                 <div className="text-sm font-semibold text-slate-100">{o.order_number}</div>

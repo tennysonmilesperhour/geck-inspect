@@ -98,7 +98,7 @@ export default function SupportContactCard({ title = 'Need help?' }) {
     }
 
     return (
-        <Card className="bg-slate-900/50 border-slate-700">
+        <Card>
             <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                     <LifeBuoy className="w-5 h-5 text-emerald-400" />

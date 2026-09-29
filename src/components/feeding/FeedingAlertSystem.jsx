@@ -210,7 +210,7 @@ export default function FeedingAlertSystem({ user, enabled }) {
               </div>
               <button
                 onClick={() => handleDismiss(alert.id)}
-                className="text-slate-400 hover:text-slate-200 flex-shrink-0"
+                className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200 flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>

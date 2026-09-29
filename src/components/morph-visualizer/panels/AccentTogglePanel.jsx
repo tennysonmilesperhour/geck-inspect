@@ -20,7 +20,7 @@ export default function AccentTogglePanel({ accents, onToggle }) {
             <button
               key={a.id}
               onClick={() => onToggle(a.id)}
-              className={`text-left px-2 py-1.5 rounded border text-xs transition ${
+              className={`touch:min-h-11 text-left px-2 py-1.5 rounded border text-xs transition ${
                 on
                   ? 'bg-emerald-700 border-emerald-500 text-white'
                   : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'

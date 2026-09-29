@@ -157,7 +157,7 @@ export default function HealthScreenCard({ gecko, user }) {
       : null;
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700">
+    <Card>
       <CardHeader className="pb-3 pt-4 px-4">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">

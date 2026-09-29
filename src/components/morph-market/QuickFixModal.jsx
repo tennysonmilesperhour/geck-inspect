@@ -178,7 +178,7 @@ export default function QuickFixModal({ gecko, open, onClose, onSaved, missing =
                       key={trait}
                       type="button"
                       onClick={() => applySuggestion(trait)}
-                      className="text-[11px] px-2 py-0.5 rounded-full border border-emerald-700/60 bg-emerald-950/30 text-emerald-200 hover:bg-emerald-900/40"
+                      className="touch:min-h-11 text-[11px] px-2 py-0.5 rounded-full border border-emerald-700/60 bg-emerald-950/30 text-emerald-200 hover:bg-emerald-900/40"
                       title={`Used by ${count} of ${total} sibling${total === 1 ? '' : 's'}`}
                     >
                       {trait} <span className="text-emerald-400/70">{count}/{total}</span>
@@ -218,7 +218,7 @@ export default function QuickFixModal({ gecko, open, onClose, onSaved, missing =
                   <button
                     type="button"
                     onClick={() => removeImage(url)}
-                    className="absolute top-0 right-0 bg-slate-900/80 text-rose-300 hover:text-rose-200 p-0.5 rounded-bl"
+                    className="touch-hit absolute top-0 right-0 bg-slate-900/80 text-rose-300 hover:text-rose-200 p-0.5 rounded-bl"
                     title="Remove"
                   >
                     <X className="w-3 h-3" />

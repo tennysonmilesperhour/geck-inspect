@@ -243,7 +243,7 @@ function TaxonomyHub({
                 <Link
                   key={c.id}
                   to={`/MorphGuide/category/${c.id}`}
-                  className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:text-emerald-200 transition-colors"
+                  className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:text-emerald-200 transition-colors"
                 >
                   {c.label}
                 </Link>
@@ -259,7 +259,7 @@ function TaxonomyHub({
                 <Link
                   key={inh.id}
                   to={`/MorphGuide/inheritance/${inh.id}`}
-                  className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:text-emerald-200 transition-colors"
+                  className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:text-emerald-200 transition-colors"
                 >
                   {inh.label}
                 </Link>

@@ -75,7 +75,7 @@ export default function MorphSubmissionReview() {
     }
 
     return (
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
             <CardContent className="p-6">
                 <h2 className="text-2xl font-bold text-slate-100 mb-4">Review Morph Guide Submissions</h2>
                 {submissions.length === 0 ? (

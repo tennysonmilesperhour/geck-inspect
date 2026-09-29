@@ -126,7 +126,7 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40" onClick={onClose}></div>
-      <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-2xl h-[90vh] z-50 bg-slate-900 border-slate-700 flex flex-col">
+      <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-2xl h-[90vh] z-50 flex flex-col">
         <CardHeader className="flex-shrink-0 border-b border-slate-800">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -140,7 +140,7 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
             <button
               type="button"
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-200"
+              className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200"
               aria-label="Close"
             >
               <X className="w-5 h-5" />

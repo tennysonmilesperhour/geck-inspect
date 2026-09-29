@@ -93,7 +93,7 @@ function NearbyHubs() {
   };
 
   return (
-    <Card className="border-slate-800 bg-slate-900/60">
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base text-slate-200 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-emerald-400" />
@@ -356,7 +356,7 @@ export default function BreederShipping() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 {/* Step 1: Quote */}
-                <Card className="border-slate-800 bg-slate-900/60">
+                <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg text-slate-200 flex items-center gap-2">
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 text-xs font-bold">
@@ -372,7 +372,7 @@ export default function BreederShipping() {
 
                 {/* Step 2: Book (only after quote) */}
                 {activeQuote && (
-                  <Card className="border-slate-800 bg-slate-900/60">
+                  <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg text-slate-200 flex items-center gap-2">
                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 text-xs font-bold">
@@ -393,14 +393,14 @@ export default function BreederShipping() {
                 <NearbyHubs />
 
                 {/* Quick tips card */}
-                <Card className="border-slate-800 bg-slate-900/60">
+                <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm text-slate-300">Shipping tips</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-xs text-slate-400">
                     <p>
                       <strong className="text-slate-200">Schedule wisely.</strong> Ship
-                      Mon–Wed to avoid weekend holds at carrier hubs.
+                      Monday to Wednesday to avoid weekend holds at carrier hubs.
                     </p>
                     <p>
                       <strong className="text-slate-200">Check the weather.</strong> Avoid

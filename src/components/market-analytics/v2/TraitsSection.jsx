@@ -50,7 +50,7 @@ export default function TraitsSection({ agg, filters, selected, onSelect }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-      <div className="lg:col-span-3 min-w-0 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="lg:col-span-3 min-w-0 rounded-xl border border-slate-700 bg-slate-900 p-4">
         <SectionHeader
           icon={Layers}
           title="Traits, ranked"
@@ -68,7 +68,7 @@ export default function TraitsSection({ agg, filters, selected, onSelect }) {
               </select>
               <button
                 onClick={() => setDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-                className="inline-flex items-center justify-center w-7 h-7 rounded border border-slate-700 text-slate-300 hover:bg-slate-800"
+                className="relative touch-hit inline-flex items-center justify-center w-7 h-7 rounded border border-slate-700 text-slate-300 hover:bg-slate-800"
                 aria-label="Flip sort direction"
               >
                 {dir === 'asc' ? <SortAsc className="w-3.5 h-3.5" /> : <SortDesc className="w-3.5 h-3.5" />}
@@ -146,7 +146,7 @@ function TraitDetail({ t, axis, periods }) {
   const weekly = axis.map((k) => t.weekly?.[k]).filter(Boolean);
   const trend = axis.map((k, i) => ({ label: weekLabel(k), median: t.sparkline[i] }));
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[10px] uppercase tracking-wider text-slate-500">Trait</div>

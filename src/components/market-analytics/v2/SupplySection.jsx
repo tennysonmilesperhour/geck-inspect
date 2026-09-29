@@ -23,7 +23,7 @@ export default function SupplySection({ agg, pipeline, pipelineIsExample, pipeli
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-      <div className="lg:col-span-3 min-w-0 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="lg:col-span-3 min-w-0 rounded-xl border border-slate-700 bg-slate-900 p-4">
         <SectionHeader
           icon={Sprout}
           title="Supply shift, share of new listings"
@@ -56,7 +56,7 @@ export default function SupplySection({ agg, pipeline, pipelineIsExample, pipeli
         </div>
       </div>
 
-      <div className="lg:col-span-2 min-w-0 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="lg:col-span-2 min-w-0 rounded-xl border border-slate-700 bg-slate-900 p-4">
         <SectionHeader
           icon={Egg}
           title="Your pipeline"

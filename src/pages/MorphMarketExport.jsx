@@ -107,7 +107,7 @@ function maturityLabel(months) {
 function FilterPanel({ filters, setFilters, onReset }) {
   const update = (patch) => setFilters((f) => ({ ...f, ...patch }));
   return (
-    <Card className="border-slate-800 bg-slate-900/60">
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
           <Filter className="w-4 h-4 text-emerald-400" />
@@ -289,7 +289,7 @@ function GeckoTile({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
       <button
         type="button"
         onClick={() => onToggle(gecko.id)}
-        className="text-left w-full focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-xl"
+        className="touch:min-h-11 text-left w-full focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-xl"
       >
         <div className="relative aspect-square bg-slate-950">
           {thumb ? (
@@ -342,7 +342,7 @@ function GeckoTile({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onAddOne(gecko.id); }}
-          className="inline-flex items-center gap-1 rounded bg-emerald-600/90 hover:bg-emerald-500 text-white text-[10px] px-1.5 py-0.5"
+          className="touch:min-h-11 touch:min-w-11 inline-flex items-center gap-1 rounded bg-emerald-600/90 hover:bg-emerald-500 text-white text-[10px] px-1.5 py-0.5"
           title="Add this gecko straight to the batch"
         >
           <Plus className="w-3 h-3" />
@@ -350,7 +350,7 @@ function GeckoTile({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
-          className="inline-flex items-center gap-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-[10px] px-1.5 py-0.5 border border-slate-700"
+          className="touch:min-h-11 inline-flex items-center gap-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-[10px] px-1.5 py-0.5 border border-slate-700"
           title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
         >
           {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
@@ -380,7 +380,7 @@ function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
       <button
         type="button"
         onClick={() => onToggle(gecko.id)}
-        className="flex items-center gap-3 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-md"
+        className="touch:min-h-11 flex items-center gap-3 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-md"
       >
         <div className="w-10 h-10 rounded bg-slate-950 shrink-0 overflow-hidden">
           {thumb ? (
@@ -424,7 +424,7 @@ function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onAddOne(gecko.id); }}
-          className="inline-flex items-center gap-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] px-2 py-1"
+          className="touch:min-h-11 touch:min-w-11 inline-flex items-center gap-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] px-2 py-1"
           title="Add this gecko straight to the batch"
         >
           <Plus className="w-3 h-3" />
@@ -432,7 +432,7 @@ function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
-          className="inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-1 border border-slate-700"
+          className="touch:min-h-11 inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-1 border border-slate-700"
           title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
         >
           {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
@@ -491,7 +491,7 @@ function EditableCell({ value, displayValue, config, onCommit }) {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="text-left w-full truncate hover:bg-slate-800/60 rounded px-1 -mx-1 py-0.5 -my-0.5"
+        className="touch:min-h-11 text-left w-full truncate hover:bg-slate-800/60 rounded px-1 -mx-1 py-0.5 -my-0.5"
         title="Click to edit"
       >
         {displayValue || <span className="text-slate-500 italic">empty</span>}
@@ -537,7 +537,7 @@ function EditableCell({ value, displayValue, config, onCommit }) {
 function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
   if (geckos.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-6 text-center">
+      <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-6 text-center">
         <p className="text-sm text-slate-400">No geckos in the batch yet.</p>
         <p className="text-xs text-slate-500 mt-1">
           Filter and select on the left, then click "Add to batch" to stage them for export.
@@ -582,7 +582,7 @@ function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
                       <button
                         type="button"
                         onClick={() => onQuickFix(g)}
-                        className="inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-0.5 border border-slate-700"
+                        className="touch:min-h-11 inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-0.5 border border-slate-700"
                         title={missing.length > 0 ? `Fix: ${missing.join(', ')}` : 'Edit MorphMarket fields'}
                       >
                         {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
@@ -614,7 +614,7 @@ function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
                       <button
                         type="button"
                         onClick={() => onRemove(g.id)}
-                        className="text-slate-500 hover:text-rose-400 inline-flex items-center"
+                        className="touch:min-h-11 touch:min-w-11 text-slate-500 hover:text-rose-400 inline-flex items-center"
                         title="Remove from batch"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -958,7 +958,7 @@ export default function MorphMarketExport() {
             title="MorphMarket Bulk Export"
             description="Build a curated MorphMarket CSV from your collection."
           />
-          <Card className="border-slate-700 bg-slate-900">
+          <Card>
             <CardContent className="p-6 md:p-8 text-center">
               <Crown className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
               <p className="text-sm md:text-base text-slate-300">
@@ -1011,7 +1011,7 @@ export default function MorphMarketExport() {
               onReset={() => setFilters(DEFAULT_FILTERS)}
             />
 
-            <Card className="border-slate-800 bg-slate-900/60">
+            <Card>
               <CardContent className="p-4 md:p-6 space-y-2 text-xs text-slate-400">
                 <p className="text-base font-semibold text-slate-100">Tips</p>
                 <p>Click a tile to select it. Click again to deselect. Use "Select all" to grab everything matching the current filter.</p>
@@ -1038,7 +1038,7 @@ export default function MorphMarketExport() {
                     <button
                       type="button"
                       onClick={() => setViewMode('grid')}
-                      className={`px-2 h-9 text-xs inline-flex items-center gap-1 ${
+                      className={`touch:min-h-11 px-2 h-9 text-xs inline-flex items-center gap-1 ${
                         viewMode === 'grid' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
                       }`}
                       title="Tile view"
@@ -1049,7 +1049,7 @@ export default function MorphMarketExport() {
                     <button
                       type="button"
                       onClick={() => setViewMode('list')}
-                      className={`px-2 h-9 text-xs inline-flex items-center gap-1 border-l border-slate-700 ${
+                      className={`touch:min-h-11 px-2 h-9 text-xs inline-flex items-center gap-1 border-l border-slate-700 ${
                         viewMode === 'list' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
                       }`}
                       title="List view"
@@ -1103,7 +1103,7 @@ export default function MorphMarketExport() {
               </div>
 
               {filtered.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
+                <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
                   <p className="text-slate-300 font-semibold">No geckos match these filters</p>
                   <p className="text-sm text-slate-500 mt-1">
                     {pool.length === 0

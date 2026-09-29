@@ -287,7 +287,7 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
                       <Facebook className="inline w-3.5 h-3.5 mr-1 text-blue-400" />
                       {c.account_handle}
                     </span>
-                    <Button size="sm" variant="ghost" onClick={() => handleDisconnect(c, c.account_handle)}>
+                    <Button size="sm" className="touch:min-w-11" variant="ghost" onClick={() => handleDisconnect(c, c.account_handle)}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
@@ -298,7 +298,7 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
                       <Instagram className="inline w-3.5 h-3.5 mr-1 text-pink-400" />
                       @{c.account_handle}
                     </span>
-                    <Button size="sm" variant="ghost" onClick={() => handleDisconnect(c, `@${c.account_handle}`)}>
+                    <Button size="sm" className="touch:min-w-11" variant="ghost" onClick={() => handleDisconnect(c, `@${c.account_handle}`)}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>

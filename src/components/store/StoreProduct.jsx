@@ -164,7 +164,7 @@ export default function StoreProduct() {
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
-                  className={`aspect-square overflow-hidden rounded border ${
+                  className={`touch:min-h-11 touch:min-w-11 aspect-square overflow-hidden rounded border ${
                     i === activeImage ? 'border-emerald-500' : 'border-slate-800'
                   }`}
                 >

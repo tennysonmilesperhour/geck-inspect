@@ -206,19 +206,19 @@ export default function MorphVisualizer() {
 
           {/* LEFT, primary trait builders (the ones that change the look most) */}
           <div className="space-y-4 order-2 xl:order-1">
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardContent className="p-4">
                 <BaseColorPicker selected={selections.baseColor} onSelect={setBaseColor} />
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardContent className="p-4">
                 <MorphGenotypePanel mendelian={selections.mendelian} onChange={setMendelian} />
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardContent className="p-4">
                 <PatternIntensityPanel patterns={selections.patterns} onChange={setPatternIntensity} />
               </CardContent>
@@ -227,7 +227,7 @@ export default function MorphVisualizer() {
 
           {/* CENTER, canvas + reasoning */}
           <div className="space-y-4 order-1 xl:order-2">
-            <Card className="bg-slate-900 border-slate-700 shadow-2xl">
+            <Card className="shadow-2xl">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <CardTitle className="flex items-center gap-2 text-slate-200 text-base">
@@ -239,7 +239,7 @@ export default function MorphVisualizer() {
                     <div className="flex rounded-md border border-slate-700 bg-slate-800 overflow-hidden">
                       <button
                         onClick={() => setView('side')}
-                        className={`px-2.5 py-1 text-xs flex items-center gap-1 transition ${
+                        className={`px-2.5 py-1 touch:min-h-11 text-xs flex items-center gap-1 transition ${
                           view === 'side'
                             ? 'bg-emerald-700 text-white'
                             : 'text-slate-300 hover:bg-slate-700'
@@ -249,7 +249,7 @@ export default function MorphVisualizer() {
                       </button>
                       <button
                         onClick={() => setView('top')}
-                        className={`px-2.5 py-1 text-xs flex items-center gap-1 transition ${
+                        className={`px-2.5 py-1 touch:min-h-11 text-xs flex items-center gap-1 transition ${
                           view === 'top'
                             ? 'bg-emerald-700 text-white'
                             : 'text-slate-300 hover:bg-slate-700'
@@ -294,7 +294,7 @@ export default function MorphVisualizer() {
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardContent className="p-4">
                 <GeneticsReasoningPanel phenotype={phenotype} selections={selections} />
               </CardContent>
@@ -303,25 +303,25 @@ export default function MorphVisualizer() {
 
           {/* RIGHT, secondary modifiers + rarity/value */}
           <div className="space-y-4 order-3">
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardContent className="p-4">
                 <AccentTogglePanel accents={selections.accents} onToggle={toggleAccent} />
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardContent className="p-4">
                 <StructuralPanel structural={selections.structural} onChange={setStructural} />
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardContent className="p-4">
                 <EnvironmentalPanel environmental={selections.environmental} onChange={setEnvironmental} />
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
               <CardContent className="p-4">
                 <RarityValuePanel phenotype={phenotype} selections={selections} />
               </CardContent>
@@ -333,7 +333,7 @@ export default function MorphVisualizer() {
             more presets at once and doesn't force either side column to grow
             tall. */}
         <div className="mt-4 md:mt-6">
-          <Card className="bg-slate-900 border-slate-700">
+          <Card>
             <CardContent className="p-4">
               <PresetGallery onApply={applyPreset} currentPresetId={activePresetId} layout="row" />
             </CardContent>

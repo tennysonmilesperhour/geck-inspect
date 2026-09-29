@@ -22,7 +22,7 @@ const ImagePreview = ({ file, onRemove }) => (
       type="button"
       onClick={onRemove}
       aria-label="Remove photo"
-      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+      className="touch-hit absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
     >
       <X className="w-4 h-4" />
     </button>
@@ -144,7 +144,7 @@ export default function MorphGuideSubmissionPage() {
           </Alert>
         )}
 
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <form onSubmit={handleSubmit}>
             <CardHeader>
               <CardTitle>Your Submission</CardTitle>

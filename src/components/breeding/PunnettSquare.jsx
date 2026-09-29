@@ -75,7 +75,7 @@ export default function PunnettSquare({ sirePair, damPair, outcomes }) {
                   onMouseEnter={() => setHover({ row, col })}
                   onFocus={() => setHover({ row, col })}
                   onBlur={() => setHover(null)}
-                  className={`rounded border px-2 py-2 text-left transition-colors cursor-default ${
+                  className={`touch:min-h-11 rounded border px-2 py-2 text-left transition-colors cursor-default ${
                     active
                       ? 'border-purple-400 bg-purple-950/50'
                       : 'border-slate-700 bg-slate-900/50'

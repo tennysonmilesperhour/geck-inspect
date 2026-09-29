@@ -161,7 +161,7 @@ export default function AnnotatedImage({ imageUrl, annotations = [], className }
 
   return (
     <div className={className}>
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardContent className="p-4">
           <div className="relative">
             <img
@@ -217,7 +217,7 @@ export default function AnnotatedImage({ imageUrl, annotations = [], className }
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleAnnotation(annotation.morph)}
-                      className="p-1 h-8 w-8"
+                      className="touch:min-w-11 p-1 h-8 w-8"
                     >
                       {visibleAnnotations.has(annotation.morph) ? (
                         <Eye className="w-4 h-4" />

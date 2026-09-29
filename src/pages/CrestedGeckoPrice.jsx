@@ -177,14 +177,14 @@ export default function CrestedGeckoPrice() {
           <div className="flex flex-wrap gap-3">
             <Link
               to="/QualityScale"
-              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
+              className="touch:min-h-11 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
             >
               Grade your gecko on the Quality Scale
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/AuthPortal?mode=signup"
-              className="inline-flex items-center gap-2 border border-slate-600 hover:bg-slate-800 text-slate-200 text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
+              className="touch:min-h-11 inline-flex items-center gap-2 border border-slate-600 hover:bg-slate-800 text-slate-200 text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
             >
               Get a free automatic estimate
               <ArrowRight className="w-4 h-4" />

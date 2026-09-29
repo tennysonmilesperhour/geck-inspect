@@ -62,9 +62,9 @@ export default function MarketAnalyticsLive({ user }) {
       <div className="space-y-4" aria-busy="true" aria-label="Loading market data">
         <div className="h-10 rounded-lg bg-slate-900/60 border border-slate-800 animate-pulse" />
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          {[0, 1, 2, 3, 4].map((i) => <div key={i} className="h-20 rounded-xl bg-slate-900/60 border border-slate-800 animate-pulse" />)}
+          {[0, 1, 2, 3, 4].map((i) => <div key={i} className="h-20 rounded-xl bg-slate-900 border border-slate-700 animate-pulse" />)}
         </div>
-        <div className="h-64 rounded-xl bg-slate-900/60 border border-slate-800 animate-pulse" />
+        <div className="h-64 rounded-xl bg-slate-900 border border-slate-700 animate-pulse" />
       </div>
     );
   }

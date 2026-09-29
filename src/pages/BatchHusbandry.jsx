@@ -230,7 +230,7 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
     <div className="max-w-2xl mx-auto">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm mb-4 hover:underline text-emerald-400"
+        className="touch:min-h-11 flex items-center gap-1.5 text-sm mb-4 hover:underline text-emerald-400"
       >
         <ChevronLeft size={16} /> Back to Groups
       </button>
@@ -281,7 +281,7 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
             {/* Fed / Refused toggle */}
             <button
               onClick={() => toggleStatus(row.gecko.id)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex-shrink-0 ${
+              className={`touch:min-h-11 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex-shrink-0 ${
                 statuses[row.gecko.id] === 'fed'
                   ? 'bg-emerald-500/10 text-emerald-400'
                   : 'bg-amber-500/15 text-amber-300'
@@ -418,7 +418,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
     <div className="max-w-2xl mx-auto">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm mb-4 hover:underline text-emerald-400"
+        className="touch:min-h-11 flex items-center gap-1.5 text-sm mb-4 hover:underline text-emerald-400"
       >
         <ChevronLeft size={16} /> Back to Groups
       </button>

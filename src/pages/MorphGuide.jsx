@@ -262,7 +262,7 @@ function LineCard({ line }) {
 
 function InheritanceLegend() {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <div className="flex items-center gap-2 mb-3 text-slate-300">
         <Dna className="w-4 h-4 text-emerald-400" />
         <span className="text-xs font-semibold uppercase tracking-wider">Inheritance models</span>
@@ -705,7 +705,7 @@ export default function MorphGuidePage() {
           <div
             role="tablist"
             aria-label="Morph guide sections"
-            className="inline-flex rounded-2xl border border-slate-800 bg-slate-900/60 p-1"
+            className="inline-flex rounded-xl border border-slate-700 bg-slate-900 p-1"
           >
             <button
               role="tab"
@@ -754,7 +754,7 @@ export default function MorphGuidePage() {
               </div>
 
               {/* Search + filters for lines */}
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+              <div className="rounded-xl border border-slate-700 bg-slate-900 p-5">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -805,7 +805,7 @@ export default function MorphGuidePage() {
               </div>
 
               {/* Confidence legend */}
-              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+              <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
                 <div className="flex items-center gap-2 mb-3 text-slate-300">
                   <ShieldCheck className="w-4 h-4 text-violet-400" />
                   <span className="text-xs font-semibold uppercase tracking-wider">Confidence levels</span>
@@ -833,7 +833,7 @@ export default function MorphGuidePage() {
 
               {/* Lines grid */}
               {filteredLinesWithImages.length === 0 ? (
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center">
+                <div className="rounded-xl border border-slate-700 bg-slate-900 p-12 text-center">
                   <GitBranch className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                   <p className="text-slate-300 font-semibold mb-1">No lines match those filters</p>
                   <Button
@@ -937,7 +937,7 @@ export default function MorphGuidePage() {
           )}
 
           {/* Filters */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+          <div className="rounded-xl border border-slate-700 bg-slate-900 p-5">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -1024,12 +1024,12 @@ export default function MorphGuidePage() {
               {[...Array(9)].map((_, i) => (
                 <div
                   key={i}
-                  className="aspect-[4/3] rounded-2xl border border-slate-800 bg-slate-900/40 animate-pulse"
+                  className="aspect-[4/3] rounded-xl border border-slate-700 bg-slate-900 animate-pulse"
                 />
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center">
+            <div className="rounded-xl border border-slate-700 bg-slate-900 p-12 text-center">
               <Dna className="w-12 h-12 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-300 font-semibold mb-1">No morphs match those filters</p>
               <p className="text-slate-500 text-sm mb-5">
@@ -1059,7 +1059,7 @@ export default function MorphGuidePage() {
           </>}
 
           {/* Related guides CTA */}
-          <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8">
+          <div className="mt-10 rounded-xl border border-slate-700 bg-slate-900 p-6 md:p-8">
             <div className="flex items-center gap-2 mb-3 text-emerald-300">
               <Sparkles className="w-4 h-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">Keep reading</span>

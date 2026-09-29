@@ -56,7 +56,7 @@ export default function BlogDashboard({ onNavigate, onCreatePost, onGenerate }) 
         <ActionTile icon={SettingsIcon} label="Blog settings"      onClick={() => onNavigate?.('settings')} />
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-slate-100">Recent posts</h3>
@@ -110,7 +110,7 @@ function StatTile({ label, value, icon: Icon, accent = 'emerald' }) {
     blue:    'text-blue-300 bg-blue-500/10 border-blue-500/30',
   };
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card>
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -130,7 +130,7 @@ function ActionTile({ icon: Icon, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-emerald-500/40 hover:bg-slate-900 px-4 py-3 text-left transition-colors"
+      className="touch:min-h-11 flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-emerald-500/40 hover:bg-slate-900 px-4 py-3 text-left transition-colors"
     >
       <span className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
         <Icon className="w-4 h-4 text-emerald-300" />

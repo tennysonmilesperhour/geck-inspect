@@ -631,12 +631,12 @@ export default function MessagesPage() {
                         <PageSettingsPanel title="Message Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Preview Lines</Label>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 touch:gap-2">
                                     {['1', '2', '3'].map(n => (
                                         <button
                                             key={n}
                                             onClick={() => setMsgPrefs({ previewLines: n })}
-                                            className={`px-3 py-1 text-xs rounded ${msgPrefs.previewLines === n ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                            className={`px-3 py-1 touch:min-h-11 touch:min-w-11 text-xs rounded ${msgPrefs.previewLines === n ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                                         >
                                             {n}
                                         </button>
@@ -770,7 +770,7 @@ export default function MessagesPage() {
                                 profileMap
                             );
                             return (
-                            <Card className="bg-slate-900 border-slate-800 h-full flex flex-col">
+                            <Card className="h-full flex flex-col">
                                 <CardHeader className="pb-4 border-b border-slate-800">
                                     <div className="flex items-center justify-between gap-3">
                                         <CardTitle className="flex items-center gap-3 text-slate-100 min-w-0">
@@ -778,7 +778,7 @@ export default function MessagesPage() {
                                                 type="button"
                                                 onClick={() => setSelectedConversation(null)}
                                                 aria-label="Back to conversations"
-                                                className="lg:hidden -ml-1 p-1 rounded-md hover:bg-slate-800 text-slate-300"
+                                                className="lg:hidden relative touch-hit -ml-1 p-1 rounded-md hover:bg-slate-800 text-slate-300"
                                             >
                                                 <ArrowLeft className="w-5 h-5" />
                                             </button>
@@ -808,7 +808,7 @@ export default function MessagesPage() {
                                                 <button
                                                     type="button"
                                                     aria-label="Conversation actions"
-                                                    className="p-2 rounded-md hover:bg-slate-800 text-slate-300 shrink-0"
+                                                    className="relative touch-hit p-2 rounded-md hover:bg-slate-800 text-slate-300 shrink-0"
                                                 >
                                                     <MoreVertical className="w-5 h-5" />
                                                 </button>
@@ -1003,7 +1003,7 @@ export default function MessagesPage() {
                             </Card>
                             );
                         })() : (
-                            <Card className="bg-slate-900 border-slate-800 h-full flex items-center justify-center">
+                            <Card className="h-full flex items-center justify-center">
                                 <EmptyState
                                     icon={MessageSquare}
                                     title="No Conversation Selected"
@@ -1065,7 +1065,7 @@ export default function MessagesPage() {
                                         key={profile.email}
                                         type="button"
                                         onClick={() => startConversationWith(profile)}
-                                        className="w-full flex items-center gap-3 py-2 px-2 rounded-md hover:bg-slate-800 text-left"
+                                        className="touch:min-h-11 w-full flex items-center gap-3 py-2 px-2 rounded-md hover:bg-slate-800 text-left"
                                     >
                                         <img
                                             src={profile.profile_image_url || initialsAvatarUrl(name, 64)}

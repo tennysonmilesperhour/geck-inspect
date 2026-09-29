@@ -71,7 +71,7 @@ export default function Shipping() {
       <div className="min-h-screen bg-slate-950 text-slate-100">
         {/* Top nav */}
         <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+          <Link to="/" className="touch:min-h-11 flex items-center gap-3 hover:opacity-90 transition-opacity">
             <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
             <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
           </Link>
@@ -86,7 +86,7 @@ export default function Shipping() {
         <section className="max-w-5xl mx-auto px-6 pt-10 pb-16">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 mb-6"
+            className="touch:min-h-11 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 mb-6"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Geck Inspect
@@ -147,7 +147,7 @@ export default function Shipping() {
               return (
                 <div
                   key={f.title}
-                  className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6"
+                  className="rounded-xl border border-slate-700 bg-slate-900 p-6"
                 >
                   <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6 text-emerald-400" />
@@ -162,7 +162,7 @@ export default function Shipping() {
 
         {/* How it will work */}
         <section className="max-w-4xl mx-auto px-6 pb-20">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 md:p-10">
+          <div className="rounded-xl border border-slate-700 bg-slate-900 p-8 md:p-10">
             <h2 className="text-2xl md:text-3xl font-bold mb-6">How it will work</h2>
             <ol className="space-y-5">
               <li className="flex gap-4">
@@ -243,7 +243,7 @@ export default function Shipping() {
 
         {/* About Zero's Geckos */}
         <section className="max-w-4xl mx-auto px-6 pb-16">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 md:p-10">
+          <div className="rounded-xl border border-slate-700 bg-slate-900 p-8 md:p-10">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">About Zero&rsquo;s Geckos Shipping</h2>
             <p className="text-slate-300 leading-relaxed mb-4">
               Zero&rsquo;s Geckos Shipping Project is an independent service run by a keeper who built
@@ -313,7 +313,7 @@ export default function Shipping() {
                 href={ZERO_SHIPPING_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-slate-300 inline-flex items-center gap-1"
+                className="touch:min-h-11 hover:text-slate-300 inline-flex items-center gap-1"
               >
                 Zero&rsquo;s Geckos
                 <ExternalLink className="w-3 h-3" />

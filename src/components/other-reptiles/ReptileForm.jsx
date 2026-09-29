@@ -170,7 +170,7 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40" onClick={onCancel}></div>
-            <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-2xl max-h-[90vh] z-50 bg-slate-900 border-slate-700 flex flex-col">
+            <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-2xl max-h-[90vh] z-50 flex flex-col">
                 <CardHeader className="flex-shrink-0">
                     <CardTitle className="text-2xl text-slate-100">
                         {reptile ? `Edit ${reptile.name}` : 'Add New Reptile'}

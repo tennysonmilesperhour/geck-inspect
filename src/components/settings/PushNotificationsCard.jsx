@@ -119,7 +119,7 @@ export default function PushNotificationsCard({
 
   return (
     <section id="push-notifications">
-      <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-slate-100 flex items-center gap-2">
             <Bell className="w-5 h-5" />

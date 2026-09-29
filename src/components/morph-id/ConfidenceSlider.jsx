@@ -38,7 +38,7 @@ export default function ConfidenceSlider({
             key={p.value}
             type="button"
             onClick={() => onChange(p.value)}
-            className={`text-xs px-2 py-1 rounded-full transition-colors ${
+            className={`text-xs px-2 py-1 touch:min-h-11 touch:min-w-11 rounded-full transition-colors ${
               value === p.value
                 ? 'bg-emerald-600 text-white'
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'

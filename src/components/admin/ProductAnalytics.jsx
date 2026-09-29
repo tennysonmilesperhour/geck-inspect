@@ -291,7 +291,7 @@ function KpiCard({ label, value, delta, accent = 'emerald', sublabel }) {
   }[accent];
 
   return (
-    <Card className="bg-slate-900 border-slate-800 relative overflow-hidden">
+    <Card className="relative overflow-hidden">
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${accentBar}`} />
       <CardContent className="p-5 pl-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>
@@ -315,7 +315,7 @@ function FunnelCard({ funnel, computed }) {
   const stages = computed?.stages || [];
   const top = stages[0]?.count || 0;
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-slate-100 text-base flex items-center gap-2">
           <Funnel className="w-4 h-4 text-emerald-400" />
@@ -626,7 +626,7 @@ function LiveMetrics() {
 
       {/* Active users chart + top pages */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-slate-100 text-base flex items-center gap-2">
               <MousePointerClick className="w-4 h-4 text-slate-400" />
@@ -648,7 +648,7 @@ function LiveMetrics() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-slate-100 text-base flex items-center gap-2">
               <Link2 className="w-4 h-4 text-slate-400" />
@@ -686,7 +686,7 @@ function LiveMetrics() {
       </div>
 
       {/* Product event breakdown */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-slate-100 text-base flex items-center gap-2">
             <Activity className="w-4 h-4 text-slate-400" />
@@ -832,7 +832,7 @@ function PostHogEmbeds() {
   return (
     <div className="space-y-6">
       {/* Header / project deep links */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div>
             <CardTitle className="text-white flex items-center gap-2">
@@ -880,7 +880,7 @@ function PostHogEmbeds() {
 
       {/* Configure mode: edit project + dashboards inline */}
       {editing && !loading && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base text-white">Configuration</CardTitle>
           </CardHeader>
@@ -1006,7 +1006,7 @@ function PostHogEmbeds() {
       {/* Render mode: dashboards as iframes */}
       {!loading &&
         sortedDashboards.map((d) => (
-          <Card key={d.id} className="bg-slate-900/50 border-slate-800">
+          <Card key={d.id}>
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <div>
                 <CardTitle className="text-white text-lg">
@@ -1050,7 +1050,7 @@ function PostHogEmbeds() {
         ))}
 
       {/* Starter suggestions reference */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white text-base flex items-center gap-2">
             <Funnel className="w-4 h-4 text-emerald-400" />
@@ -1079,7 +1079,7 @@ function PostHogEmbeds() {
       </Card>
 
       {/* Event reference */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white text-base flex items-center gap-2">
             <Repeat className="w-4 h-4 text-emerald-400" />
@@ -1116,7 +1116,7 @@ function PostHogEmbeds() {
       </Card>
 
       {/* Identify-users note */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white text-base flex items-center gap-2">
             <Users className="w-4 h-4 text-emerald-400" />

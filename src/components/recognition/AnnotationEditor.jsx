@@ -96,7 +96,7 @@ export default function AnnotationEditor({ imageUrl, annotations, onSave, classN
 
   return (
     <div className={className}>
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Pencil className="w-5 h-5" />
@@ -198,7 +198,7 @@ export default function AnnotationEditor({ imageUrl, annotations, onSave, classN
                   </span>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="sm" className="touch:min-w-11"
                     onClick={() => deleteAnnotation(index)}
                   >
                     <Trash2 className="w-4 h-4" />

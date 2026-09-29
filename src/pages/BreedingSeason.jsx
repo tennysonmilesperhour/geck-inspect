@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import Seo from '@/components/seo/Seo';
@@ -239,7 +239,7 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
                 while the timeline scrolls sideways. */}
             <Link
                 to={createPageUrl('Breeding')}
-                className="sticky left-0 self-start max-w-[calc(100vw-4.5rem)] md:static md:self-auto md:w-56 flex-shrink-0 flex items-start gap-3 group pt-1"
+                className="touch:min-h-11 sticky left-0 self-start max-w-[calc(100vw-4.5rem)] md:static md:self-auto md:w-56 flex-shrink-0 flex items-start gap-3 group pt-1"
                 title="Open Breeding Management"
             >
                 <div className="flex flex-shrink-0">
@@ -434,6 +434,27 @@ export default function BreedingSeasonPage() {
         return rows;
     }, [plans, eggsByPlan, geckos, selectedYear, today]);
 
+    // On a phone the year timeline is wider than the screen and opened at
+    // January, so late-season clutches sat out of view until you swiped.
+    // Scroll it so today is centred when the current season is showing.
+    const timelineScrollRef = useRef(null);
+    const monthAxisRef = useRef(null);
+    useLayoutEffect(() => {
+        const scroller = timelineScrollRef.current;
+        const axis = monthAxisRef.current;
+        if (!scroller || !axis) return;
+        if (scroller.scrollWidth <= scroller.clientWidth) return;
+        if (selectedYear !== today.getFullYear()) {
+            scroller.scrollLeft = 0;
+            return;
+        }
+        const scrollerBox = scroller.getBoundingClientRect();
+        const axisBox = axis.getBoundingClientRect();
+        const axisStart = axisBox.left - scrollerBox.left + scroller.scrollLeft;
+        const todayX = axisStart + yearFraction(today, selectedYear) * axisBox.width;
+        scroller.scrollLeft = Math.max(0, todayX - scroller.clientWidth / 2);
+    }, [selectedYear, today, seasonRows.length]);
+
     const seasonTotals = useMemo(() => {
         let laid = 0; let hatched = 0; let incubating = 0;
         for (const row of seasonRows) {
@@ -483,7 +504,7 @@ export default function BreedingSeasonPage() {
                 </PageHeader>
 
                 {isLoading ? (
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 md:p-6">
                             <Skeleton className="h-5 w-64 bg-slate-800 mb-6" />
                             <PairRowSkeleton />
@@ -493,7 +514,7 @@ export default function BreedingSeasonPage() {
                     </Card>
                 ) : plans.length === 0 ? (
                     /* Empty state: no breeding plans at all */
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-8 md:p-12 text-center">
                             <Heart className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
                             <h2 className="text-xl font-bold text-slate-100 mb-2">Your season starts with a pairing</h2>
@@ -511,7 +532,7 @@ export default function BreedingSeasonPage() {
                         </CardContent>
                     </Card>
                 ) : (
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 md:p-6">
                             {/* Season summary + legend */}
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
@@ -549,12 +570,12 @@ export default function BreedingSeasonPage() {
                                     </p>
                                 </div>
                             ) : (
-                                <div className="overflow-x-auto">
+                                <div ref={timelineScrollRef} className="overflow-x-auto">
                                     <div className="min-w-[640px] md:min-w-[760px]">
                                         {/* Month header, aligned with the pair rows below */}
                                         <div className="flex items-center gap-4 pb-1 border-b border-slate-700">
                                             <div className="hidden md:block w-56 flex-shrink-0" />
-                                            <div className="flex-1 grid grid-cols-12">
+                                            <div ref={monthAxisRef} className="flex-1 grid grid-cols-12">
                                                 {MONTH_LABELS.map(label => (
                                                     <div key={label} className="text-[10px] uppercase tracking-wide text-slate-500 text-center">
                                                         {label}

@@ -351,7 +351,7 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
     || filters.timeframe !== '12m';
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 flex flex-wrap items-center gap-2">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 flex flex-wrap items-center gap-2">
       <FilterPresets
         presets={presets}
         activePreset={activePreset}
@@ -371,7 +371,7 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
       {/* Regions */}
       <Popover>
         <PopoverTrigger asChild>
-          <button className="inline-flex items-center gap-1.5 text-xs text-slate-200 hover:bg-slate-800 rounded px-2 py-1 border border-slate-700">
+          <button className="touch:min-h-11 inline-flex items-center gap-1.5 text-xs text-slate-200 hover:bg-slate-800 rounded px-2 py-1 border border-slate-700">
             <MapIcon className="w-3.5 h-3.5 text-slate-400" />
             {filters.regions.length === 0 ? 'All regions' : `${filters.regions.length} region${filters.regions.length > 1 ? 's' : ''}`}
           </button>
@@ -384,7 +384,7 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
                 <button
                   key={r.code}
                   onClick={() => toggleRegion(r.code)}
-                  className={`text-left text-xs px-2 py-1 rounded border transition-colors ${
+                  className={`touch:min-h-11 text-left text-xs px-2 py-1 rounded border transition-colors ${
                     on ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-200'
                        : 'bg-slate-950 border-slate-700 text-slate-300 hover:bg-slate-800'
                   }`}
@@ -416,7 +416,7 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
       {/* Sources, internal vs external toggle popover */}
       <Popover>
         <PopoverTrigger asChild>
-          <button className="inline-flex items-center gap-1.5 text-xs text-slate-200 hover:bg-slate-800 rounded px-2 py-1 border border-slate-700">
+          <button className="touch:min-h-11 inline-flex items-center gap-1.5 text-xs text-slate-200 hover:bg-slate-800 rounded px-2 py-1 border border-slate-700">
             <Settings2 className="w-3.5 h-3.5 text-slate-400" />
             {filters.sources.length === 0 ? 'All sources' : `${filters.sources.length} source${filters.sources.length > 1 ? 's' : ''}`}
           </button>
@@ -431,7 +431,7 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
       {anyFilter && (
         <button
           onClick={() => setFilters(DEFAULT_FILTERS)}
-          className="ml-auto inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200"
+          className="touch:min-h-11 ml-auto inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200"
         >
           <X className="w-3 h-3" />Reset filters
         </button>
@@ -454,7 +454,7 @@ function FilterPresets({ presets, activePreset, onLoadPreset, onSavePreset, onDe
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className={`inline-flex items-center gap-1.5 text-xs rounded px-2 py-1 border transition-colors ${
+          className={`touch:min-h-11 inline-flex items-center gap-1.5 text-xs rounded px-2 py-1 border transition-colors ${
             activePreset
               ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
               : 'text-slate-200 hover:bg-slate-800 border-slate-700'
@@ -479,7 +479,7 @@ function FilterPresets({ presets, activePreset, onLoadPreset, onSavePreset, onDe
                 >
                   <button
                     onClick={() => onLoadPreset(name)}
-                    className={`flex-1 text-left text-xs truncate ${
+                    className={`touch:min-h-11 flex-1 text-left text-xs truncate ${
                       isActive ? 'text-emerald-200' : 'text-slate-200'
                     }`}
                   >
@@ -487,7 +487,7 @@ function FilterPresets({ presets, activePreset, onLoadPreset, onSavePreset, onDe
                   </button>
                   <button
                     onClick={() => onDeletePreset(name)}
-                    className="text-slate-500 hover:text-red-300 shrink-0"
+                    className="touch:min-h-11 touch:min-w-11 text-slate-500 hover:text-red-300 shrink-0"
                     aria-label={`Delete preset ${name}`}
                     title="Delete preset"
                   >
@@ -506,7 +506,7 @@ function FilterPresets({ presets, activePreset, onLoadPreset, onSavePreset, onDe
         <button
           onClick={handleSave}
           disabled={!canSave && !activePreset}
-          className="w-full inline-flex items-center gap-1.5 text-xs px-2 py-1.5 rounded text-emerald-200 hover:bg-emerald-500/10 disabled:text-slate-500 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+          className="touch:min-h-11 w-full inline-flex items-center gap-1.5 text-xs px-2 py-1.5 rounded text-emerald-200 hover:bg-emerald-500/10 disabled:text-slate-500 disabled:hover:bg-transparent disabled:cursor-not-allowed"
           title={!canSave && !activePreset ? 'Change a filter first to save a preset' : 'Save the current filter state as a preset'}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -524,7 +524,7 @@ function TimeframeSelector({ value, onChange }) {
         <button
           key={t.code}
           onClick={() => onChange(t.code)}
-          className={`text-[11px] px-2 py-1 rounded transition-colors ${
+          className={`touch:min-h-11 text-[11px] px-2 py-1 rounded transition-colors ${
             value === t.code ? 'bg-emerald-500/20 text-emerald-200' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
@@ -550,7 +550,7 @@ function MultiPillSelect({ label, values, options, onChange }) {
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className={`inline-flex items-center gap-1.5 text-xs rounded px-2 py-1 border transition-colors ${
+          className={`touch:min-h-11 inline-flex items-center gap-1.5 text-xs rounded px-2 py-1 border transition-colors ${
             safe.length > 0
               ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
               : 'text-slate-200 hover:bg-slate-800 border-slate-700'
@@ -567,7 +567,7 @@ function MultiPillSelect({ label, values, options, onChange }) {
             <button
               key={code}
               onClick={() => toggle(code)}
-              className={`w-full text-left text-xs px-2 py-1 rounded flex items-center gap-2 transition-colors ${
+              className={`touch:min-h-11 w-full text-left text-xs px-2 py-1 rounded flex items-center gap-2 transition-colors ${
                 on ? 'bg-emerald-500/15 text-emerald-200' : 'hover:bg-slate-800 text-slate-300'
               }`}
             >
@@ -585,7 +585,7 @@ function MultiPillSelect({ label, values, options, onChange }) {
             <div className="h-px bg-slate-700/60 my-1" />
             <button
               onClick={() => onChange([])}
-              className="w-full text-left text-[11px] text-slate-400 hover:text-slate-200 px-2 py-1 rounded hover:bg-slate-800"
+              className="touch:min-h-11 w-full text-left text-[11px] text-slate-400 hover:text-slate-200 px-2 py-1 rounded hover:bg-slate-800"
             >
               Clear {label.toLowerCase()}
             </button>
@@ -609,7 +609,7 @@ function SourceGroup({ title, kind, selected, toggle }) {
             <button
               key={s.id}
               onClick={() => toggle(s.id)}
-              className={`w-full text-left text-xs px-2 py-1 rounded border transition-colors ${
+              className={`touch:min-h-11 w-full text-left text-xs px-2 py-1 rounded border transition-colors ${
                 on ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
                    : 'bg-transparent border-transparent text-slate-300 hover:bg-slate-800'
               }`}
@@ -640,7 +640,7 @@ function SubNav({ section, setSection, pinnedCount = 0 }) {
           <button
             key={s.key}
             onClick={() => setSection(s.key)}
-            className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md transition-colors ${
+            className={`touch:min-h-11 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md transition-colors ${
               on ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/30'
                  : 'text-slate-300 hover:bg-slate-800 border border-transparent'
             }`}
@@ -661,7 +661,7 @@ function SubNav({ section, setSection, pinnedCount = 0 }) {
 
 function PinnedEmptyState({ onGoToOverview }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
+    <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
       <Pin className="w-6 h-6 text-slate-600 mx-auto mb-2" />
       <h3 className="text-sm font-semibold text-slate-200 mb-1">No pinned cards yet</h3>
       <p className="text-xs text-slate-500 max-w-md mx-auto mb-3">

@@ -156,7 +156,7 @@ function NodeCard({ node, x, y, onClick }) {
     const slug =
       looksLikeBreederName(node.label) ? breederSlug(node.label) : null;
     const inner = (
-      <div className="w-full h-full rounded-xl border border-slate-700 bg-slate-900/80 p-3 flex flex-col justify-center">
+      <div className="w-full h-full rounded-xl border border-slate-700 bg-slate-900 p-3 flex flex-col justify-center">
         <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">
           Breeder reference
         </p>
@@ -500,7 +500,7 @@ export default function Pedigree() {
                   variant="outline"
                   size="sm"
                   onClick={() => adjustScale((s) => Math.max(0.3, s - 0.1))}
-                  className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
+                  className="touch:min-w-11 bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
                   title="Zoom out"
                 >
                   <ZoomOut className="w-4 h-4" />
@@ -512,7 +512,7 @@ export default function Pedigree() {
                   variant="outline"
                   size="sm"
                   onClick={() => adjustScale((s) => Math.min(2, s + 0.1))}
-                  className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
+                  className="touch:min-w-11 bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
                   title="Zoom in"
                 >
                   <ZoomIn className="w-4 h-4" />
@@ -521,7 +521,7 @@ export default function Pedigree() {
                   variant="outline"
                   size="sm"
                   onClick={() => { setHasUserZoomed(false); setScale(1); }}
-                  className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
+                  className="touch:min-w-11 bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
                   title="Reset zoom"
                 >
                   <RotateCcw className="w-4 h-4" />

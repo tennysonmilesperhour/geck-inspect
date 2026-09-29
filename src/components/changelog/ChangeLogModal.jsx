@@ -162,7 +162,7 @@ export default function ChangeLogModal({ isOpen, onClose }) {
                             return (
                                 <div key={entry.id} className={`border rounded-lg overflow-hidden ${isNew ? 'border-emerald-600' : 'border-slate-700'}`}>
                                     <button
-                                        className="w-full flex items-center justify-between px-4 py-3 bg-slate-800 hover:bg-slate-700 text-left"
+                                        className="touch:min-h-11 w-full flex items-center justify-between px-4 py-3 bg-slate-800 hover:bg-slate-700 text-left"
                                         onClick={() => toggle(entry.id)}
                                     >
                                         <div>

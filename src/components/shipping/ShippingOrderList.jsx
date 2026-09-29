@@ -40,7 +40,7 @@ function OrderRow({ order }) {
   };
 
   return (
-    <Card className="border-slate-800 bg-slate-900/60">
+    <Card>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -139,7 +139,7 @@ function OrderRow({ order }) {
 export default function ShippingOrderList({ orders }) {
   if (!orders || orders.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
+      <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
         <Package className="w-10 h-10 text-slate-600 mx-auto mb-3" />
         <p className="text-slate-300 font-semibold">No shipments yet</p>
         <p className="text-sm text-slate-500 mt-1">

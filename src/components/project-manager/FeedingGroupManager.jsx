@@ -315,7 +315,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                             <button
                                 type="button"
                                 onClick={() => setForm({ ...form, feeding_reminder_enabled: !(form.feeding_reminder_enabled !== false) })}
-                                className={`flex items-center gap-1.5 px-3 h-9 rounded-md text-sm font-semibold transition-colors ${
+                                className={`touch:min-h-11 flex items-center gap-1.5 px-3 h-9 rounded-md text-sm font-semibold transition-colors ${
                                     form.feeding_reminder_enabled !== false
                                         ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
                                         : 'bg-slate-700 hover:bg-slate-600 text-slate-300'

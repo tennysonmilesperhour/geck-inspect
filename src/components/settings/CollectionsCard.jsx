@@ -195,7 +195,7 @@ export default function CollectionsCard({ user }) {
   };
 
   return (
-    <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+    <Card>
       <CardHeader>
         <CardTitle className="text-slate-100 flex items-center gap-2">
           <Users2 className="w-5 h-5" />
@@ -505,7 +505,7 @@ function CollectionRow({
             variant="ghost"
             size="sm"
             onClick={onDelete}
-            className="text-slate-400 hover:text-red-300"
+            className="touch:min-w-11 text-slate-400 hover:text-red-300"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -517,7 +517,7 @@ function CollectionRow({
           {others.map((m) => (
             <li
               key={m.id}
-              className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-slate-800/60 border border-slate-700/60 text-sm"
+              className="flex touch:flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-md bg-slate-800/60 border border-slate-700/60 text-sm"
             >
               <div className="min-w-0">
                 <div className="text-slate-200 truncate">{m.member_email}</div>
@@ -537,7 +537,7 @@ function CollectionRow({
                   </Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 touch:gap-2">
                 {m.status === 'pending' && m.invite_token && (
                   <>
                     <Button

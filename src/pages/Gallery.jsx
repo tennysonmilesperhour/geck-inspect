@@ -151,12 +151,12 @@ export default function Gallery() {
                         <PageSettingsPanel title="Gallery Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Grid Columns</Label>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 touch:gap-2">
                                     {['3', '4', '6'].map(cols => (
                                         <button
                                             key={cols}
                                             onClick={() => setGalleryPrefs({ gridColumns: cols })}
-                                            className={`px-3 py-1 text-xs rounded ${galleryPrefs.gridColumns === cols ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                            className={`px-3 py-1 touch:min-h-11 touch:min-w-11 text-xs rounded ${galleryPrefs.gridColumns === cols ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                                         >
                                             {cols}
                                         </button>

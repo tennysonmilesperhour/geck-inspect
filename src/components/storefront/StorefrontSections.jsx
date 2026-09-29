@@ -202,7 +202,7 @@ function AvailableTile({ gecko, theme, onInquire }) {
         <button
           type="button"
           onClick={() => onInquire(gecko)}
-          className={`mx-3 mb-3 inline-flex items-center justify-center gap-1.5 rounded-lg border ${theme.outlineBtn} text-xs font-semibold py-2 transition-colors`}
+          className={`touch:min-h-11 mx-3 mb-3 inline-flex items-center justify-center gap-1.5 rounded-lg border ${theme.outlineBtn} text-xs font-semibold py-2 transition-colors`}
         >
           <Mail className="w-3.5 h-3.5" />
           Inquire / reserve

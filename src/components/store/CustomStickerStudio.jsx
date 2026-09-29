@@ -580,7 +580,7 @@ export default function CustomStickerStudio() {
                     {(design.attacks || []).length > 1 && (
                       <button
                         type="button"
-                        className="text-rose-300 hover:text-rose-200"
+                        className="touch:min-h-11 touch:min-w-11 text-rose-300 hover:text-rose-200"
                         onClick={() => { setDesign((d) => removeAttack(d, i)); setAdded(false); }}
                         aria-label={`Remove move ${i + 1}`}
                       >
@@ -794,7 +794,7 @@ export default function CustomStickerStudio() {
           <button
             type="button"
             onClick={() => { setDesign(createDefaultDesign()); setAdded(false); setUploadError(null); }}
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200"
+            className="touch:min-h-11 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Start over
           </button>
@@ -873,7 +873,7 @@ export default function CustomStickerStudio() {
                 <button
                   type="button"
                   onClick={() => { setDesign(createDefaultDesign()); setAdded(false); }}
-                  className="text-xs text-slate-400 hover:text-slate-200"
+                  className="touch:min-h-11 text-xs text-slate-400 hover:text-slate-200"
                 >
                   Build another one
                 </button>

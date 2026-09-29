@@ -254,7 +254,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                             onClick={goPrev}
                             disabled={index === 0}
                             aria-label="Previous"
-                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-white/15 text-white/90 hover:bg-black/80 hover:border-emerald-400/40 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 touch-hit rounded-full bg-black/60 backdrop-blur-sm border border-white/15 text-white/90 hover:bg-black/80 hover:border-emerald-400/40 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </button>
@@ -263,7 +263,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                             type="button"
                             onClick={goNext}
                             aria-label="Next"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-white/15 text-white/90 hover:bg-black/80 hover:border-emerald-400/40 flex items-center justify-center transition-colors"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 touch-hit rounded-full bg-black/60 backdrop-blur-sm border border-white/15 text-white/90 hover:bg-black/80 hover:border-emerald-400/40 flex items-center justify-center transition-colors"
                         >
                             <ChevronRight className="w-4 h-4" />
                         </button>
@@ -280,7 +280,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                         <button
                             type="button"
                             onClick={() => setCorrecting((v) => !v)}
-                            className="mt-2 inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300"
+                            className="mt-2 inline-flex items-center gap-1.5 touch:min-h-11 text-xs text-emerald-400 hover:text-emerald-300"
                         >
                             {correcting ? <X className="w-3.5 h-3.5" /> : <Tags className="w-3.5 h-3.5" />}
                             {correcting ? 'Cancel' : 'Add or correct classifications'}
@@ -294,7 +294,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                                 <select
                                     value={suggestedMorph}
                                     onChange={(e) => setSuggestedMorph(e.target.value)}
-                                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-2 text-sm text-slate-100 focus:border-emerald-600 focus:outline-none"
+                                    className="mt-1 w-full touch:min-h-11 rounded-md border border-slate-700 bg-slate-950 px-2.5 py-2 text-sm text-slate-100 focus:border-emerald-600 focus:outline-none"
                                 >
                                     <option value="">Not sure</option>
                                     {MORPH_OPTIONS.map((m) => (
@@ -305,7 +305,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
 
                             <div>
                                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Traits you can see</span>
-                                <div className="mt-1.5 flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                                <div className="mt-1.5 flex flex-wrap gap-1.5 touch:gap-2 max-h-28 touch:max-h-40 overflow-y-auto pr-1">
                                     {MORPH_OPTIONS.filter((m) => TRAIT_CATEGORIES.has(m.category) && m.slug !== suggestedMorph).map((m) => {
                                         const on = traits.includes(m.slug);
                                         return (
@@ -314,7 +314,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                                                 type="button"
                                                 onClick={() => toggleTrait(m.slug)}
                                                 aria-pressed={on}
-                                                className={`rounded-full border px-2.5 py-1 text-[11px] leading-none transition-colors ${
+                                                className={`touch:min-h-11 rounded-full border px-2.5 py-1 text-[11px] leading-none transition-colors ${
                                                     on
                                                         ? 'border-emerald-500 bg-emerald-500/20 text-emerald-100'
                                                         : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500'
@@ -332,7 +332,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                                 <select
                                     value={baseColor}
                                     onChange={(e) => setBaseColor(e.target.value)}
-                                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-2 text-sm text-slate-100 capitalize focus:border-emerald-600 focus:outline-none"
+                                    className="mt-1 w-full touch:min-h-11 rounded-md border border-slate-700 bg-slate-950 px-2.5 py-2 text-sm text-slate-100 capitalize focus:border-emerald-600 focus:outline-none"
                                 >
                                     <option value="">Not sure</option>
                                     {BASE_COLORS.map((c) => <option key={c} value={c}>{c}</option>)}

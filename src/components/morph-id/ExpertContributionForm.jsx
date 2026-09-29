@@ -124,7 +124,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="space-y-6">
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader>
             <CardTitle className="text-slate-100 flex items-center gap-2">
               <Camera className="w-5 h-5" /> Photos
@@ -141,7 +141,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader>
             <CardTitle className="text-slate-100 flex items-center gap-2">
               <Info className="w-5 h-5" /> Photo quality
@@ -152,7 +152,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader>
             <CardTitle className="text-slate-100">Genetics & life stage</CardTitle>
           </CardHeader>
@@ -163,7 +163,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
       </div>
 
       <div className="space-y-6">
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader>
             <CardTitle className="text-slate-100 flex items-center gap-2">
               <Sparkles className="w-5 h-5" /> Morph classification

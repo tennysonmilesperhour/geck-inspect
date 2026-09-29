@@ -206,7 +206,7 @@ export default function MultiPhotoUploader({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="aspect-square flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-600 hover:border-emerald-500 hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-emerald-300"
+            className="touch:min-h-11 aspect-square flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-600 hover:border-emerald-500 hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-emerald-300"
           >
             <Upload className="w-6 h-6 mb-1" />
             <span className="text-xs">Add photo</span>

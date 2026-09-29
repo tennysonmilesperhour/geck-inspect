@@ -251,7 +251,7 @@ export default function BreedingPairsPage() {
                 {isLoading ? (
                     <div className="text-center text-slate-400">Loading breeding pairs...</div>
                 ) : sortedPlans.length === 0 ? (
-                     <Card className="text-center py-16 bg-slate-900 rounded-lg border border-slate-700">
+                     <Card className="text-center py-16 rounded-lg border">
                         <CardContent>
                             <HeartHandshake className="w-16 h-16 mx-auto mb-4 text-slate-500" />
                             <h3 className="text-xl font-semibold text-slate-100">No breeding pairs yet</h3>
@@ -501,7 +501,7 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
     };
 
     return (
-        <Card className="bg-slate-900 border-slate-700 shadow-lg flex flex-col">
+        <Card className="shadow-lg flex flex-col">
             <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle className="text-xl text-slate-100">{sire?.name || 'Sire'} x {dam?.name || 'Dam'}</CardTitle>
@@ -517,13 +517,13 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
                                 onEdit(plan);
                             }}
                             title="Edit Plan"
-                            className="border-emerald-700/60 text-slate-100"
+                            className="touch:min-w-11 border-emerald-700/60 text-slate-100"
                         >
                             <Pencil className="w-4 h-4" />
                         </Button>
                         <AlertDialog open={planToDelete === plan.id} onOpenChange={(open) => { if (!open) setPlanToDelete(null); }}>
                              <Button
-                                 size="sm"
+                                 size="sm" className="touch:min-w-11"
                                  variant="destructive"
                                  onClick={() => setPlanToDelete(plan.id)}
                                  title="Delete Plan"

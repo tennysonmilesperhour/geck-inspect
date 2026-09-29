@@ -37,7 +37,7 @@ function ParentPicker({ label, accent, geckos, selectedId, onSelect, excludeId }
             type="button"
             role="combobox"
             aria-expanded={open}
-            className={`w-full h-10 flex items-center justify-between gap-2 rounded-md bg-slate-800 px-3 text-sm text-slate-100 border ${borderClass} focus:outline-none focus:ring-2 transition`}
+            className={`w-full h-10 touch:min-h-11 flex items-center justify-between gap-2 rounded-md bg-slate-800 px-3 text-sm text-slate-100 border ${borderClass} focus:outline-none focus:ring-2 transition`}
           >
             <span className={`truncate ${selected ? '' : 'text-slate-400'}`}>
               {selected

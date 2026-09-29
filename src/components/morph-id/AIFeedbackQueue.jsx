@@ -225,7 +225,7 @@ export default function AIFeedbackQueue() {
 
   if (isLoading) {
     return (
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardContent className="p-8 text-center text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin inline mr-2" /> Loading review queue…
         </CardContent>
@@ -235,7 +235,7 @@ export default function AIFeedbackQueue() {
 
   if (!isExpertReviewer && !isAdmin) {
     return (
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardHeader>
           <CardTitle className="text-slate-100 flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-400" /> Expert review queue
@@ -252,7 +252,7 @@ export default function AIFeedbackQueue() {
 
   if (!current) {
     return (
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardHeader>
           <CardTitle className="text-slate-100 flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-400" /> Review queue empty
@@ -276,7 +276,7 @@ export default function AIFeedbackQueue() {
     : 'at an unknown time';
 
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -304,7 +304,7 @@ export default function AIFeedbackQueue() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="ghost" size="sm" onClick={load}>
+            <Button variant="ghost" size="sm" className="touch:min-w-11" onClick={load}>
               <RefreshCw className="w-4 h-4" />
             </Button>
           </div>

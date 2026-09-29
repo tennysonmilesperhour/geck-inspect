@@ -55,7 +55,7 @@ export default function PageSettingsPanel({ title = 'Page Settings', children, c
                                 <Settings className="w-4 h-4 text-emerald-400" />
                                 {title}
                             </h3>
-                            <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-200">
+                            <button onClick={() => setOpen(false)} aria-label="Close settings" className="relative touch-hit text-slate-400 hover:text-slate-200">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
@@ -66,7 +66,7 @@ export default function PageSettingsPanel({ title = 'Page Settings', children, c
                             <Link
                                 to={createPageUrl('Settings')}
                                 onClick={() => setOpen(false)}
-                                className="flex items-center justify-between text-[11px] text-slate-500 hover:text-emerald-400 transition-colors"
+                                className="flex items-center justify-between touch:min-h-11 text-[11px] text-slate-500 hover:text-emerald-400 transition-colors"
                             >
                                 <span>All settings</span>
                                 <ArrowRight className="w-3 h-3" />

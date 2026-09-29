@@ -151,7 +151,7 @@ const SECTION_TITLES = {
 
 function AdminPlaceholder({ title, description, icon: Icon }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-center space-y-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-8 text-center space-y-4">
       <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
         <Icon className="w-7 h-7 text-emerald-400" />
       </div>
@@ -323,7 +323,7 @@ export default function AdminPanel() {
                         <li key={item.id}>
                           <button
                             onClick={() => setSection(item.id)}
-                            className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors ${
+                            className={`touch:min-h-11 w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors ${
                               isActive
                                 ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
                                 : 'text-slate-300 hover:bg-slate-800/60 border border-transparent'

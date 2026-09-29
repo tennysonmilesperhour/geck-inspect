@@ -37,7 +37,7 @@ export default function WebImportPanel({ onApply }) {
   };
 
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardHeader>
         <CardTitle className="text-slate-100 flex items-center gap-2">
           <Wand2 className="w-5 h-5 text-emerald-400" />

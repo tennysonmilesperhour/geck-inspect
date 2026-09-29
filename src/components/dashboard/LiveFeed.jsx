@@ -25,7 +25,7 @@ const REACTION_META = {
 
 function EventReactions({ event, currentUserEmail, reactions, onToggle }) {
     return (
-        <div className="flex items-center gap-1.5 mt-2">
+        <div className="flex items-center gap-1.5 touch:gap-2 mt-2">
             {Object.entries(REACTION_META).map(([key, meta]) => {
                 const Icon = meta.icon;
                 const count = reactions.filter((r) => r.reaction === key).length;
@@ -39,7 +39,7 @@ function EventReactions({ event, currentUserEmail, reactions, onToggle }) {
                         disabled={!currentUserEmail}
                         onClick={() => onToggle(event, key, mine)}
                         title={meta.label}
-                        className={`group inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border transition-colors ${
+                        className={`group inline-flex items-center touch:justify-center gap-1 touch:min-h-11 touch:min-w-11 rounded-full px-2 py-0.5 text-xs border transition-colors ${
                             mine
                                 ? 'border-slate-500 bg-slate-700/60 text-slate-100'
                                 : 'border-slate-800 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600'

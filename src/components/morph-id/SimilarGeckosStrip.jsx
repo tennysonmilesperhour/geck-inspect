@@ -17,7 +17,7 @@ function friendlyEmbedError(raw) {
 function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }) {
   const fromRecognition = source === 'recognition';
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardContent className="p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Images className="w-4 h-4 text-emerald-400" />

@@ -138,7 +138,7 @@ export default function MyListingsPage() {
         const primaryImage = gecko.image_urls && gecko.image_urls.length > 0 ? gecko.image_urls[0] : null;
 
         return (
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
                 <div className="relative">
                     {primaryImage ? (
                         <img 
@@ -249,7 +249,7 @@ export default function MyListingsPage() {
 
                 {/* Analytics Overview */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 text-center">
                             <ShoppingCart className="w-6 h-6 text-blue-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-slate-100">{analytics.totalListings}</div>
@@ -257,7 +257,7 @@ export default function MyListingsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 text-center">
                             <DollarSign className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-slate-100">${analytics.totalValue}</div>
@@ -265,7 +265,7 @@ export default function MyListingsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 text-center">
                             <TrendingUp className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-slate-100">{analytics.sold}</div>
@@ -273,7 +273,7 @@ export default function MyListingsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 text-center">
                             <Calendar className="w-6 h-6 text-blue-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-slate-100">{analytics.active}</div>
@@ -282,7 +282,7 @@ export default function MyListingsPage() {
                     </Card>
 
                     {/* Fifth tile spans the phone row so it doesn't sit alone. */}
-                    <Card className="bg-slate-900 border-slate-700 col-span-2 md:col-span-1">
+                    <Card className="col-span-2 md:col-span-1">
                         <CardContent className="p-4 text-center">
                             <MessageCircle className="w-6 h-6 text-orange-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-slate-100">{analytics.inquiries}</div>
@@ -301,7 +301,7 @@ export default function MyListingsPage() {
                     {/* Active Listings */}
                     <TabsContent value="active">
                         {activeListings.length === 0 ? (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardContent className="p-8 text-center">
                                     <ShoppingCart className="w-12 h-12 text-slate-500 mx-auto mb-4" />
                                     <h3 className="text-lg font-semibold text-slate-100 mb-2">No active listings</h3>
@@ -325,7 +325,7 @@ export default function MyListingsPage() {
                     {/* Sold Listings */}
                     <TabsContent value="sold">
                         {soldGeckos.length === 0 ? (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardContent className="p-8 text-center">
                                     <TrendingUp className="w-12 h-12 text-slate-500 mx-auto mb-4" />
                                     <h3 className="text-lg font-semibold text-slate-100 mb-2">No sales yet</h3>
@@ -344,7 +344,7 @@ export default function MyListingsPage() {
                     {/* Analytics */}
                     <TabsContent value="analytics">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader>
                                     <CardTitle>Sales Over Time (Last 6 Months)</CardTitle>
                                 </CardHeader>
@@ -363,7 +363,7 @@ export default function MyListingsPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader>
                                     <CardTitle>Morph Distribution</CardTitle>
                                 </CardHeader>

@@ -565,7 +565,7 @@ export default function PageManagement() {
             <button
               type="button"
               onClick={() => handleDeleteRow(page)}
-              className="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
+              className="touch:min-h-11 touch:min-w-11 text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
               aria-label={`Delete ${page.display_name}`}
               title="Remove this page from page_config"
             >
@@ -579,7 +579,7 @@ export default function PageManagement() {
 
   return (
     <div className="space-y-4">
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>

@@ -79,7 +79,7 @@ export default function BlogLogs() {
           No log entries yet.
         </div>
       ) : (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardContent className="p-0 divide-y divide-slate-800">
             {filtered.map((log) => (
               <div key={log.id} className="p-4 flex flex-col md:flex-row gap-2 md:items-center md:justify-between">

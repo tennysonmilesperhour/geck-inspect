@@ -51,7 +51,7 @@ export default function SupplyPipeline({ filters: _filters }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
         <SectionHeader
           icon={Sprout}
           title="Supply pipeline, projected hatchlings (9-month)"
@@ -124,7 +124,7 @@ function PipelineTable({ pipeline }) {
   }).sort((a, b) => b.next3 - a.next3);
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={CalendarDays}
         title="Per-combo pipeline"

@@ -803,7 +803,7 @@ export default function PromoteComposer({
                     key={p.post_id}
                     type="button"
                     onClick={() => applyInspiration(p)}
-                    className="flex-shrink-0 w-40 text-left rounded-md border border-emerald-800/40 bg-emerald-950/50 hover:border-emerald-500/60 hover:bg-emerald-900/40 transition-colors p-2"
+                    className="touch:min-h-11 flex-shrink-0 w-40 text-left rounded-md border border-emerald-800/40 bg-emerald-950/50 hover:border-emerald-500/60 hover:bg-emerald-900/40 transition-colors p-2"
                     title="Use this as a style anchor for the next generation"
                   >
                     <div className="text-[10px] uppercase tracking-wider text-emerald-300/70">
@@ -931,7 +931,7 @@ export default function PromoteComposer({
                       <button
                         type="button"
                         onClick={() => setSelectedCustomVoiceId(active ? null : v.id)}
-                        className={`text-[11px] px-2 py-0.5 rounded-l border transition-colors ${
+                        className={`touch:min-h-11 text-[11px] px-2 py-0.5 rounded-l border transition-colors ${
                           active
                             ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
                             : 'bg-emerald-950/40 border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/40'
@@ -943,7 +943,7 @@ export default function PromoteComposer({
                         type="button"
                         onClick={() => handleDeleteVoice(v.id)}
                         title="Delete voice"
-                        className="text-[11px] px-1 py-0.5 rounded-r border border-l-0 border-emerald-800/50 bg-emerald-950/40 text-emerald-300/60 hover:text-red-300 hover:bg-red-900/30"
+                        className="touch:min-h-11 touch:min-w-11 text-[11px] px-1 py-0.5 rounded-r border border-l-0 border-emerald-800/50 bg-emerald-950/40 text-emerald-300/60 hover:text-red-300 hover:bg-red-900/30"
                       >
                         ×
                       </button>
@@ -953,7 +953,7 @@ export default function PromoteComposer({
                 <button
                   type="button"
                   onClick={() => setShowNewVoiceForm((s) => !s)}
-                  className="text-[11px] px-2 py-0.5 rounded-full border border-dashed border-emerald-700/60 text-emerald-300/80 hover:text-emerald-100 hover:bg-emerald-900/40"
+                  className="touch:min-h-11 text-[11px] px-2 py-0.5 rounded-full border border-dashed border-emerald-700/60 text-emerald-300/80 hover:text-emerald-100 hover:bg-emerald-900/40"
                 >
                   {showNewVoiceForm ? 'Cancel' : '+ Train a voice'}
                 </button>
@@ -1077,7 +1077,7 @@ export default function PromoteComposer({
                     <button
                       type="button"
                       onClick={() => setHookSuggestions([])}
-                      className="text-emerald-400/70 hover:text-emerald-200 text-[10px]"
+                      className="touch:min-h-11 text-emerald-400/70 hover:text-emerald-200 text-[10px]"
                     >
                       dismiss
                     </button>
@@ -1087,7 +1087,7 @@ export default function PromoteComposer({
                       key={i}
                       type="button"
                       onClick={() => applyHook(h)}
-                      className="block w-full text-left text-xs text-emerald-100 rounded bg-emerald-950/50 hover:bg-emerald-800/40 border border-emerald-800/40 hover:border-emerald-600/60 px-2 py-1.5 transition-colors"
+                      className="touch:min-h-11 block w-full text-left text-xs text-emerald-100 rounded bg-emerald-950/50 hover:bg-emerald-800/40 border border-emerald-800/40 hover:border-emerald-600/60 px-2 py-1.5 transition-colors"
                     >
                       {h}
                     </button>
@@ -1138,7 +1138,7 @@ export default function PromoteComposer({
                               key={tag}
                               type="button"
                               onClick={() => toggleHashtag(tag)}
-                              className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
+                              className={`touch:min-h-11 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
                                 isActive
                                   ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
                                   : 'bg-emerald-950/30 border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/40 hover:text-emerald-100'
@@ -1255,7 +1255,7 @@ export default function PromoteComposer({
                     <button
                       type="button"
                       onClick={() => setPickedImages([])}
-                      className="text-[11px] text-emerald-300/60 hover:text-emerald-100"
+                      className="touch:min-h-11 text-[11px] text-emerald-300/60 hover:text-emerald-100"
                     >
                       Clear
                     </button>
@@ -1273,7 +1273,7 @@ export default function PromoteComposer({
                       <button
                         type="button"
                         onClick={() => setScheduleAt('')}
-                        className="text-[11px] text-emerald-300/60 hover:text-emerald-100"
+                        className="touch:min-h-11 text-[11px] text-emerald-300/60 hover:text-emerald-100"
                       >
                         clear
                       </button>

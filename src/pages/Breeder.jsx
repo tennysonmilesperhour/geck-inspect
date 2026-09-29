@@ -376,7 +376,7 @@ export default function Breeder() {
             Inside the app the shell already has a header. */}
         {!inAppShell && (
           <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <Link to="/" className="touch:min-h-11 flex items-center gap-3 hover:opacity-90 transition-opacity">
               <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
               <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
             </Link>
@@ -391,10 +391,10 @@ export default function Breeder() {
         {mode === 'loading' && (
           <div className="max-w-5xl mx-auto px-6 pt-10 pb-24">
             <div className="animate-pulse space-y-6">
-              <div className="h-48 rounded-2xl bg-slate-900/60 border border-slate-800" />
+              <div className="h-48 rounded-xl bg-slate-900 border border-slate-700" />
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="aspect-square rounded-xl bg-slate-900/60 border border-slate-800" />
+                  <div key={i} className="aspect-square rounded-xl bg-slate-900 border border-slate-700" />
                 ))}
               </div>
             </div>
@@ -456,7 +456,7 @@ export default function Breeder() {
                   type="button"
                   onClick={() => { setInquiryGecko(null); setInquiryOpen(true); }}
                   disabled={!profile.created_by}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg ${theme.solidBtn} disabled:bg-slate-700 text-white font-semibold text-sm whitespace-nowrap shadow-lg transition-colors`}
+                  className={`touch:min-h-11 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg ${theme.solidBtn} disabled:bg-slate-700 text-white font-semibold text-sm whitespace-nowrap shadow-lg transition-colors`}
                 >
                   <Mail className="w-4 h-4" />
                   Contact breeder
@@ -514,7 +514,7 @@ export default function Breeder() {
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <FileText className={`w-5 h-5 ${theme.icon}`} /> Store policy
                 </h2>
-                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
+                <div className="rounded-xl border border-slate-700 bg-slate-900 p-6">
                   <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
                     {storePolicy}
                   </p>
@@ -528,7 +528,7 @@ export default function Breeder() {
               {reviews.length > 0 ? (
                 <div className="space-y-3">
                   {reviews.map((r) => (
-                    <div key={r.id} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+                    <div key={r.id} className="rounded-xl border border-slate-700 bg-slate-900 p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <StarRow rating={r.rating || 0} />
                         {r.is_verified && (
@@ -576,7 +576,7 @@ export default function Breeder() {
             <section className="max-w-5xl mx-auto px-6 pt-10 pb-12">
               <Link
                 to="/"
-                className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 mb-6"
+                className="touch:min-h-11 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 mb-6"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Geck Inspect
@@ -651,7 +651,7 @@ export default function Breeder() {
               )}
 
               {!errorMsg && inferredGeckos.length === 0 && (
-                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-10 text-center">
+                <div className="rounded-xl border border-slate-700 bg-slate-900 p-10 text-center">
                   <p className="text-slate-400">
                     No geckos in the Geck Inspect community are currently attributed to{' '}
                     <span className="text-white">{displayName}</span>.

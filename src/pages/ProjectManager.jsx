@@ -372,7 +372,7 @@ export default function ProjectManager() {
                                         const progress = getProjectProgress(project.id);
                                         const isExpanded = expandedProjects.has(project.id);
                                         return (
-                                            <Card key={project.id} className="bg-slate-900 border-slate-700">
+                                            <Card key={project.id}>
                                                 <CardHeader className="cursor-pointer" onClick={() => toggleProjectExpand(project.id)}>
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex-1">

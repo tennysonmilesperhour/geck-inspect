@@ -287,7 +287,7 @@ function CycleToggle({ value, onChange }) {
             role="tab"
             aria-selected={active}
             onClick={() => onChange(opt.key)}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+            className={`touch:min-h-11 flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
               active
                 ? opt.key === 'lifetime'
                   ? 'bg-amber-500 text-slate-950'
@@ -816,7 +816,7 @@ export default function MembershipPage() {
                             )
                           }
                           disabled={anyBusy}
-                          className="text-sm text-emerald-400 hover:text-emerald-300 underline underline-offset-4 disabled:opacity-50"
+                          className="touch:min-h-11 text-sm text-emerald-400 hover:text-emerald-300 underline underline-offset-4 disabled:opacity-50"
                         >
                           {trialBusy
                             ? 'Starting your trial...'

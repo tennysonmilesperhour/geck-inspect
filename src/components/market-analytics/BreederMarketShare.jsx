@@ -40,7 +40,7 @@ export default function BreederMarketShare({ filters }) {
     return () => { mounted = false; };
   }, [filters.regions, filters.timeframe]);
 
-  if (!data) return <div className="rounded-xl border border-slate-800 bg-slate-900/40 animate-pulse h-64" />;
+  if (!data) return <div className="rounded-xl border border-slate-700 bg-slate-900 animate-pulse h-64" />;
 
   const top10 = data.breeders.slice(0, 10);
   const top10Share = top10.reduce((s, b) => s + b.share_pct, 0);
@@ -63,14 +63,14 @@ export default function BreederMarketShare({ filters }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
         <SectionHeader
           icon={Users}
           title="Market concentration (HHI)"
           subtitle="Can any one breeder move the market? Higher = yes."
           right={
             <MethodologyPopover title="Herfindahl-Hirschman Index">
-              <p>HHI = sum of (market-share %)², range 0–10,000. Below 1,500 is a competitive market; 1,500–2,500 is moderately concentrated; above 2,500 is highly concentrated.</p>
+              <p>HHI = sum of (market-share %)², range 0 to 10,000. Below 1,500 is a competitive market; 1,500 to 2,500 is moderately concentrated; above 2,500 is highly concentrated.</p>
               <p>We compute HHI on revenue share inside the current region and timeframe filters. In a concentrated segment a single breeder's release calendar meaningfully moves prices, watch those events closely.</p>
             </MethodologyPopover>
           }
@@ -96,7 +96,7 @@ export default function BreederMarketShare({ filters }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <SectionHeader icon={Award} title="Top breeders by revenue" />
           <div className="space-y-2">
             {top10.map((b) => (
@@ -125,7 +125,7 @@ export default function BreederMarketShare({ filters }) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <SectionHeader
             icon={Layers3}
             title="Revenue by lineage tier"

@@ -161,7 +161,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
             </AlertDialogContent>
         </AlertDialog>
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <Card className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-slate-900 border-slate-700">
+            <Card className="max-w-4xl w-full max-h-[90vh] flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-700">
                     <div className="flex items-center gap-4">
                         <CardTitle className="text-slate-100">{reptile.name}</CardTitle>

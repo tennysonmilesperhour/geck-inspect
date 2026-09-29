@@ -76,13 +76,15 @@ export default function PhotoSlideshow({
         <button
           type="button"
           onClick={() => setIsPaused((p) => !p)}
-          className="hover:text-emerald-300"
+          className="relative touch-hit hover:text-emerald-300"
           aria-label={isPaused ? 'Play slideshow' : 'Pause slideshow'}
         >
           {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
         </button>
       </div>
-      <div className="absolute bottom-2 right-2 flex gap-1">
+      {/* The 8 px dots are too dense to tap; touch screens use the arrows
+          and the counter instead. */}
+      <div className="absolute bottom-2 right-2 flex touch:hidden gap-1">
         {normalized.map((_, i) => (
           <button
             key={i}

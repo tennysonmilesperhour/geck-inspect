@@ -103,19 +103,19 @@ export default function StoreLanding() {
         <div className="mt-5 flex gap-2 flex-wrap">
           <Link
             to="/Store/c/gifts"
-            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 rounded-md"
+            className="touch:min-h-11 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 rounded-md"
           >
             <Gift className="w-4 h-4" /> Browse gifts
           </Link>
           <Link
             to="/Store/stickers"
-            className="inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
+            className="touch:min-h-11 inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
           >
             <Sticker className="w-4 h-4" /> Custom pet stickers
           </Link>
           <Link
             to="/Store/c/apparel"
-            className="inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
+            className="touch:min-h-11 inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
           >
             <Shirt className="w-4 h-4" /> Apparel
           </Link>
@@ -138,7 +138,7 @@ export default function StoreLanding() {
           <nav aria-label="Supply categories" className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <Link key={category.id} to={`/Store/c/${category.slug}`}
-                className="rounded-md border border-slate-700 px-3 py-2 text-sm text-emerald-200 hover:bg-slate-800">
+                className="touch:min-h-11 inline-flex items-center rounded-md border border-slate-700 px-3 py-2 text-sm text-emerald-200 hover:bg-slate-800">
                 {category.name}
               </Link>
             ))}
@@ -163,7 +163,7 @@ export default function StoreLanding() {
       <section className="mb-10">
         <Link
           to="/Store/stickers"
-          className="group flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-emerald-700/30 bg-gradient-to-r from-emerald-950/50 to-slate-950 p-5 hover:border-emerald-600/60 transition-colors"
+          className="touch:min-h-11 group flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-emerald-700/30 bg-gradient-to-r from-emerald-950/50 to-slate-950 p-5 hover:border-emerald-600/60 transition-colors"
         >
           <Sticker className="w-8 h-8 text-emerald-400 shrink-0" />
           <div className="flex-1">
@@ -182,7 +182,7 @@ export default function StoreLanding() {
         </Link>
         <Link
           to="/Store/tees"
-          className="group mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-slate-700/60 bg-slate-900/40 hover:bg-slate-900 p-5 transition-colors"
+          className="touch:min-h-11 group mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-slate-700/60 bg-slate-900/40 hover:bg-slate-900 p-5 transition-colors"
         >
           <Shirt className="w-8 h-8 text-emerald-400 shrink-0" />
           <div className="flex-1">
@@ -202,7 +202,7 @@ export default function StoreLanding() {
       <section className="mb-10">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold text-slate-100">Keeper essentials</h2>
-          <Link to="/Store/c/diet" className="text-xs text-emerald-300 hover:text-emerald-200">
+          <Link to="/Store/c/diet" className="inline-flex items-center touch:min-h-11 text-xs text-emerald-300 hover:text-emerald-200">
             Start with food →
           </Link>
         </div>
@@ -223,7 +223,7 @@ export default function StoreLanding() {
         )}
       </section>
 
-      <section className="rounded-xl border border-slate-800 bg-slate-900/30 p-5 md:p-7">
+      <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 md:p-7">
         <h2 className="text-lg font-bold text-slate-100 mb-1">
           Why "Geck Inspect Supplies"?
         </h2>

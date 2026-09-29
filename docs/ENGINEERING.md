@@ -131,6 +131,29 @@ chrome inside the app shell (`useInAppShell` from `src/lib/appShell.js`).
 Check new layouts at 390 px wide: button rows wrap, grids declare a phone
 column count, and nothing scrolls sideways.
 
+Cards use `<Card>` with no colour classes: it draws the one house surface
+(`bg-slate-900`, `border-slate-700`, `rounded-xl`), and slate follows the
+user's theme. Pass colours only for a real variant (an amber warning, an
+emerald success panel). `.gecko-card` is the Dashboard and landing glass
+style and stays separate.
+
+Every tappable control is at least 44 by 44 px on touch screens (Apple's
+minimum); a mouse keeps the denser desktop sizes. The `touch:` Tailwind
+variant (`@media (pointer: coarse)`, phones and tablets) carries this.
+`Button`, `SelectTrigger`, `Input`, `TabsTrigger` and menu rows do it
+themselves with `touch:min-h-11`, so a call site can pass `h-8` for
+desktop density and a phone still gets 44 px. Only the icon size of
+`Button` also sets a minimum width: on a text button an explicit
+`min-width` replaces the flex default that stops it shrinking below its
+label, so labels would spill over their neighbours in tight rows. An
+icon-only `size="sm"` button adds `touch:min-w-11` at the call site. A
+hand-built control adds `touch:min-h-11` (and `touch:min-w-11` when it
+is icon-only). A small icon that can't grow without breaking its layout,
+such as the remove X on a photo, keeps its size and adds `touch-hit`
+(defined in `src/index.css`), which draws an invisible 44 px tap area
+around it on touch screens. Breadcrumbs and links inside a sentence stay
+text size.
+
 ## Verification and delivery
 
 ```bash

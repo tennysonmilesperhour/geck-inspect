@@ -86,7 +86,7 @@ export default function PushEnableBanner({ user }) {
       <span className="flex-1 leading-snug">{copy}</span>
       <Link
         to={`${createPageUrl('Settings')}#push-notifications`}
-        className="flex-shrink-0 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors"
+        className="flex-shrink-0 inline-flex items-center touch:min-h-11 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors"
       >
         Enable
       </Link>
@@ -94,7 +94,7 @@ export default function PushEnableBanner({ user }) {
         type="button"
         onClick={handleDismiss}
         aria-label="Dismiss push notification reminder"
-        className="flex-shrink-0 rounded-md p-1 text-emerald-200/70 hover:text-emerald-50 hover:bg-emerald-800/40 transition-colors"
+        className="touch:min-h-11 touch:min-w-11 flex-shrink-0 rounded-md p-1 text-emerald-200/70 hover:text-emerald-50 hover:bg-emerald-800/40 transition-colors"
       >
         <X className="h-4 w-4" />
       </button>

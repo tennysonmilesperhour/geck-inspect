@@ -197,7 +197,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-slate-600 hover:border-emerald-500/70 bg-slate-800/50 flex flex-col items-center justify-center gap-2 overflow-hidden text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="touch:min-h-11 w-full aspect-[4/3] rounded-xl border-2 border-dashed border-slate-600 hover:border-emerald-500/70 bg-slate-800/50 flex flex-col items-center justify-center gap-2 overflow-hidden text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               aria-label={photoUrl ? 'Change photo' : 'Add a photo'}
             >
               {uploading ? (
@@ -213,7 +213,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               )}
             </button>
             {photoUrl && !uploading && (
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1">
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="touch:min-h-11 text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1">
                 <ImagePlus className="w-3.5 h-3.5" /> Change photo
               </button>
             )}

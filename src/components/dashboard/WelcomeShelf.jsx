@@ -143,7 +143,7 @@ export default function WelcomeShelf({ currentUser }) {
                                         That's you
                                     </p>
                                 ) : (
-                                    <div className="mt-2 space-y-1.5">
+                                    <div className="mt-2 space-y-1.5 touch:space-y-2">
                                         <Button
                                             size="sm"
                                             onClick={() => handleFollowToggle(k)}

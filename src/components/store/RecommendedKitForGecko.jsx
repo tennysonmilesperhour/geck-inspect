@@ -89,7 +89,7 @@ export default function RecommendedKitForGecko({ gecko, compact = false }) {
         </div>
         <Link
           to="/Store"
-          className="text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
+          className="touch:min-h-11 text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
         >
           <ShoppingBag className="w-3.5 h-3.5" /> Browse all
         </Link>

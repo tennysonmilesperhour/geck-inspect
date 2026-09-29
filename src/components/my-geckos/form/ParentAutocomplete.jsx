@@ -74,7 +74,7 @@ export default function ParentAutocomplete({
             <button
               key={g.id}
               type="button"
-              className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-2"
+              className="w-full text-left px-3 py-2 touch:min-h-11 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-2"
               onMouseDown={() => {
                 onSelect(g);
                 setShowSuggestions(false);

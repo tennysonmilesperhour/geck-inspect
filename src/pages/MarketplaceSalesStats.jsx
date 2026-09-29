@@ -126,18 +126,18 @@ function CostRow({ cost, onDelete, onUpdate, linkOptions }) {
           <div>
             <Label className="text-xs text-slate-400">Category</Label>
             <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-              className="w-full h-8 mt-1 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-sm px-2">
+              className="w-full h-8 touch:min-h-11 mt-1 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-sm px-2">
               {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
           <div className="col-span-2">
             <Label className="text-xs text-slate-400">Tied to (optional)</Label>
             <CostLinkSelect value={form.link} onChange={link => setForm(f => ({ ...f, link }))} linkOptions={linkOptions}
-              className="w-full h-8 mt-1 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-sm px-2" />
+              className="w-full h-8 touch:min-h-11 mt-1 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-sm px-2" />
           </div>
         </div>
         <div className="flex gap-2 justify-end">
-          <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="h-7 text-slate-400"><X className="w-3 h-3" /></Button>
+          <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="touch:min-w-11 h-7 text-slate-400"><X className="w-3 h-3" /></Button>
           <Button size="sm" onClick={handleSave} className="h-9 md:h-7 bg-slate-600 hover:bg-slate-500 text-white"><Check className="w-3 h-3 mr-1" />Save</Button>
         </div>
       </div>
@@ -175,7 +175,7 @@ function QuarterSection({ quarterKey, items, renderItem, labelFor = getCategoryL
   return (
     <div className="bg-slate-800/60 border border-emerald-900/60 rounded-xl overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-700/40 transition-colors">
+        className="touch:min-h-11 w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-700/40 transition-colors">
         <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
           <Calendar className="w-4 h-4 text-emerald-500 flex-shrink-0" />
           <span className="font-semibold text-slate-100 whitespace-nowrap">{year}, {QUARTER_LABELS[quarter]}</span>
@@ -271,7 +271,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
       <div className="bg-slate-800/80 border border-amber-700/40 rounded-xl p-5 space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-bold text-slate-100">Edit Reserve, {form.gecko_name}</h3>
-          <button onClick={() => { setForm(sale); setEditing(false); }} className="text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
+          <button onClick={() => { setForm(sale); setEditing(false); }} className="relative touch-hit text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -428,11 +428,11 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
         {payments.length > 0 && (
           <div className="mt-3 space-y-1.5">
             {payments.map((p, idx) => (
-              <div key={idx} className="flex items-center gap-2 text-xs">
+              <div key={idx} className="flex items-center gap-2 touch:min-h-11 text-xs">
                 <button
                   onClick={() => togglePayment(idx)}
                   disabled={savingPayment === idx}
-                  className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                  className={`relative touch-hit w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
                     p.paid
                       ? 'bg-emerald-600 border-emerald-500 text-white'
                       : 'bg-slate-700 border-slate-600 text-transparent hover:border-emerald-500'
@@ -454,7 +454,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
       </div>
 
       {/* Actions */}
-      <div className="border-t border-slate-700/50 px-4 py-2.5 flex items-center gap-2 bg-slate-900/30">
+      <div className="border-t border-slate-700/50 px-4 py-2.5 flex items-center gap-2 touch:flex-wrap bg-slate-900/30">
         <Button size="sm" variant="ghost" onClick={() => setEditing(true)} className="h-7 text-xs text-slate-300 hover:text-white hover:bg-slate-700">
           <Edit2 className="w-3 h-3 mr-1" />Edit
         </Button>
@@ -639,7 +639,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
         <div className="bg-slate-800/50 border border-amber-700/40 rounded-xl p-5 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-bold text-slate-100">Create Reserve / Pending Sale</h3>
-            <button onClick={resetForm} className="text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
+            <button onClick={resetForm} className="relative touch-hit text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -675,7 +675,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
                       ) : filtered.map(g => (
                         <button key={g.id} type="button"
                           onMouseDown={(e) => { e.preventDefault(); selectGeckoForSale(g); }}
-                          className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-600 flex items-center gap-2">
+                          className="w-full text-left px-3 py-1.5 touch:min-h-11 text-xs text-slate-200 hover:bg-slate-600 flex items-center gap-2">
                           {g.image_urls?.[0] && <img src={g.image_urls[0]} alt="" className="w-5 h-5 rounded object-cover" />}
                           <span className="truncate">{g.name}</span>
                           {g.asking_price && <span className="text-emerald-400 ml-auto">${g.asking_price}</span>}
@@ -715,7 +715,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
                 { key: '_useShipDate', label: 'Projected Ship Date', icon: Package, active: 'bg-purple-900/40 border-purple-600/50 text-purple-300' },
               ].map(({ key, label, icon: Icon, active }) => (
                 <button key={key} onClick={() => setNewSale(f => ({ ...f, [key]: !f[key] }))}
-                  className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 border transition-colors ${
+                  className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 touch:min-h-11 border transition-colors ${
                     newSale[key]
                       ? active
                       : 'bg-slate-800 border-slate-600 text-slate-400 hover:text-slate-200'
@@ -1256,12 +1256,12 @@ export default function MarketplaceSalesStats() {
             <PageSettingsPanel title="Sales Stats Settings">
               <div>
                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
-                <div className="flex gap-1">
+                <div className="flex gap-1 touch:flex-wrap touch:gap-2">
                   {[['money', 'Money'], ['sales', 'Sales'], ['pricing', 'Pricing'], ['waitlists', 'Waitlists']].map(([val, lbl]) => (
                     <button
                       key={val}
                       onClick={() => setStatsPrefs({ defaultTab: val })}
-                      className={`px-3 py-1 text-xs rounded ${businessTabFor(statsPrefs.defaultTab) === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                      className={`px-3 py-1 touch:min-h-11 text-xs rounded ${businessTabFor(statsPrefs.defaultTab) === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                     >
                       {lbl}
                     </button>
@@ -1274,12 +1274,12 @@ export default function MarketplaceSalesStats() {
               </div>
               <div>
                 <Label className="text-slate-300 text-sm mb-1 block">Currency</Label>
-                <div className="flex gap-1">
+                <div className="flex gap-1 touch:gap-2">
                   {['$', '\u20AC', '\u00A3', '\u00A5'].map(c => (
                     <button
                       key={c}
                       onClick={() => setStatsPrefs({ currency: c })}
-                      className={`px-3 py-1 text-xs rounded ${statsPrefs.currency === c ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                      className={`px-3 py-1 touch:min-h-11 touch:min-w-11 text-xs rounded ${statsPrefs.currency === c ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                     >
                       {c}
                     </button>
@@ -1365,14 +1365,14 @@ export default function MarketplaceSalesStats() {
                     <div>
                       <Label className="text-xs text-slate-400">Category</Label>
                       <select value={newCost.category} onChange={e => setNewCost(f => ({ ...f, category: e.target.value }))}
-                        className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
+                        className="w-full h-9 touch:min-h-11 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
                         {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                       </select>
                     </div>
                     <div className="sm:col-span-2">
                       <Label className="text-xs text-slate-400">Tied to (optional)</Label>
                       <CostLinkSelect value={newCost.link} onChange={link => setNewCost(f => ({ ...f, link }))} linkOptions={linkOptions}
-                        className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2" />
+                        className="w-full h-9 touch:min-h-11 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2" />
                       <p className="text-[11px] text-slate-500 mt-1">Tie a cost to a pairing (incubation, the female&apos;s extra food) or to one gecko (a vet visit) to see profit per pairing.</p>
                     </div>
                   </div>
@@ -1435,22 +1435,22 @@ export default function MarketplaceSalesStats() {
                       <p className="text-slate-400 text-sm mb-6">Choose how you'd like to add a sale to your records</p>
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <button onClick={() => { setSelectionModalOpen(true); setAddSaleModalOpen(false); setSaleMode('collection'); }}
-                          className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                          className="touch:min-h-11 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
                           <p className="font-bold text-slate-100 text-base mb-2">From Collection</p>
                           <p className="text-xs text-slate-400">Select an existing gecko</p>
                         </button>
                         <button onClick={() => { setSelectionModalOpen(true); setAddSaleModalOpen(false); setSaleMode('listings'); }}
-                          className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                          className="touch:min-h-11 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
                           <p className="font-bold text-slate-100 text-base mb-2">From Listings</p>
                           <p className="text-xs text-slate-400">Active marketplace listings</p>
                         </button>
                         <button onClick={() => { setSaleMode('manual'); setAddSaleModalOpen(false); }}
-                          className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                          className="touch:min-h-11 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
                           <p className="font-bold text-slate-100 text-base mb-2">Manual Entry</p>
                           <p className="text-xs text-slate-400">Enter details directly</p>
                         </button>
                         <button onClick={() => setAddSaleModalOpen(false)}
-                          className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                          className="touch:min-h-11 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
                           <p className="font-bold text-slate-100 text-base mb-2">Cancel</p>
                           <p className="text-xs text-slate-400">Close this menu</p>
                         </button>
@@ -1472,7 +1472,7 @@ export default function MarketplaceSalesStats() {
                   <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 space-y-3">
                     <div className="flex justify-between items-center">
                       <h3 className="text-sm font-semibold text-slate-200">Add Gecko Sale</h3>
-                      <button onClick={() => setSaleMode(null)} className="text-slate-400 hover:text-slate-200">
+                      <button onClick={() => setSaleMode(null)} className="relative touch-hit text-slate-400 hover:text-slate-200">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
@@ -1495,7 +1495,7 @@ export default function MarketplaceSalesStats() {
                       <div>
                         <Label className="text-xs text-slate-400">Category</Label>
                         <select value={newRevenue.category} onChange={e => setNewRevenue(f => ({ ...f, category: e.target.value }))}
-                          className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
+                          className="w-full h-9 touch:min-h-11 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
                           {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                         </select>
                       </div>
@@ -1565,7 +1565,7 @@ export default function MarketplaceSalesStats() {
                                   <select value={item.category || ''}
                                     onChange={e => handleSaleCategoryChange(item.id, e.target.value)}
                                     aria-label="Sale type"
-                                    className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
+                                    className="h-7 touch:min-h-11 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
                                     <option value="">Sale type</option>
                                     {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                                   </select>
@@ -1632,7 +1632,7 @@ export default function MarketplaceSalesStats() {
                 <h3 className="text-base font-semibold text-slate-100 flex items-center gap-1.5">
                   <Globe className="w-4 h-4 text-emerald-400" /> Market analytics
                 </h3>
-                <Suspense fallback={<div className="h-64 rounded-xl bg-slate-900/60 border border-slate-800 animate-pulse" />}>
+                <Suspense fallback={<div className="h-64 rounded-xl bg-slate-900 border border-slate-700 animate-pulse" />}>
                   <MarketAnalytics user={user} />
                 </Suspense>
               </section>

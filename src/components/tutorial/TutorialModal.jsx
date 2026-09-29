@@ -442,7 +442,9 @@ export default function TutorialModal({ isOpen, onClose }) {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: 440,
+                // Never wider than a phone screen, or the close button
+                // lands off the right edge.
+                width: 'min(440px, calc(100vw - 2rem))',
               }
             : pinnedStyle;
 
@@ -461,7 +463,7 @@ export default function TutorialModal({ isOpen, onClose }) {
 
             <button
                 onClick={handleFinish}
-                className="absolute top-2 right-2 text-slate-500 hover:text-slate-200 rounded-full p-1"
+                className="absolute top-2 right-2 touch-hit text-slate-500 hover:text-slate-200 rounded-full p-1"
                 aria-label="Close tutorial"
             >
                 <X className="w-4 h-4" />
@@ -489,14 +491,14 @@ export default function TutorialModal({ isOpen, onClose }) {
                         <div className="mt-3 flex flex-col gap-2">
                             <a
                                 href="/Contact"
-                                className="inline-flex items-center justify-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200 text-xs font-medium px-3 py-2"
+                                className="inline-flex items-center justify-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200 text-xs font-medium px-3 py-2 touch:min-h-11"
                             >
                                 <MessageSquare className="w-3.5 h-3.5" />
                                 Contact me about a migration
                             </a>
                             <button
                                 onClick={() => setMigrationMode(false)}
-                                className="text-xs text-slate-400 hover:text-slate-200 self-start"
+                                className="text-xs touch:min-h-11 text-slate-400 hover:text-slate-200 self-start"
                             >
                                 Back to welcome
                             </button>
@@ -509,7 +511,7 @@ export default function TutorialModal({ isOpen, onClose }) {
                         {isIntro && (
                             <button
                                 onClick={() => setMigrationMode(true)}
-                                className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-md border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-2"
+                                className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-md border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-2 touch:min-h-11"
                             >
                                 <ArrowRightLeft className="w-3.5 h-3.5" />
                                 I&apos;m migrating an existing collection
@@ -532,7 +534,7 @@ export default function TutorialModal({ isOpen, onClose }) {
                 </Button>
                 <button
                     onClick={handleFinish}
-                    className="text-xs text-slate-500 hover:text-slate-300"
+                    className="text-xs touch:min-h-11 text-slate-500 hover:text-slate-300"
                 >
                     Skip tour
                 </button>

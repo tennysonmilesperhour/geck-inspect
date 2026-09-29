@@ -99,7 +99,7 @@ export default function BlogAIGenerator({ onDraftCreated }) {
 
   if (!enabled) {
     return (
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardContent className="p-8 text-center text-slate-400">
           <Sparkles className="w-8 h-8 mx-auto mb-3 text-amber-400" />
           AI generation is disabled in Blog Settings. Turn on
@@ -112,7 +112,7 @@ export default function BlogAIGenerator({ onDraftCreated }) {
 
   return (
     <div className="space-y-5">
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
             <Wand2 className="w-4 h-4 text-emerald-400" />
@@ -236,7 +236,7 @@ export default function BlogAIGenerator({ onDraftCreated }) {
                     key={t.id}
                     type="button"
                     onClick={() => toggleTag(t.id)}
-                    className={`text-xs px-2 py-1 rounded-md border ${
+                    className={`touch:min-h-11 text-xs px-2 py-1 rounded-md border ${
                       active
                         ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'
                         : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'

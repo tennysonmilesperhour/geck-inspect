@@ -351,7 +351,7 @@ export default function GeneticCalculatorTool({
                             <button
                               type="button"
                               onClick={() => setMode('manual')}
-                              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                              className={`touch:min-h-11 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                                 mode === 'manual'
                                   ? 'bg-purple-600/20 border-purple-500/60 text-purple-200'
                                   : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -363,7 +363,7 @@ export default function GeneticCalculatorTool({
                             <button
                               type="button"
                               onClick={() => setMode('collection')}
-                              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                              className={`touch:min-h-11 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                                 mode === 'collection'
                                   ? 'bg-purple-600/20 border-purple-500/60 text-purple-200'
                                   : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -402,11 +402,11 @@ export default function GeneticCalculatorTool({
                             genetics? Learn by playing.
                           </p>
                           <span className="flex items-center gap-4 whitespace-nowrap">
-                            <Link to="/calculator/reverse" className="text-sm text-purple-300 hover:text-purple-200 underline">
+                            <Link to="/calculator/reverse" className="inline-flex items-center touch:min-h-11 text-sm text-purple-300 hover:text-purple-200 underline">
                               Reverse calculator
                               <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
                             </Link>
-                            <Link to="/calculator/learn" className="text-sm text-purple-300 hover:text-purple-200 underline">
+                            <Link to="/calculator/learn" className="inline-flex items-center touch:min-h-11 text-sm text-purple-300 hover:text-purple-200 underline">
                               Clutch Lab
                               <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
                             </Link>
@@ -565,7 +565,7 @@ export default function GeneticCalculatorTool({
                     without naming competitors. */}
                 {!pageBreadcrumb && (
                   <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                       <div className="flex items-center gap-2 mb-2">
                         <Dna className="w-4 h-4 text-purple-400" />
                         <h2 className="text-sm font-semibold text-slate-100">Built crested-gecko-first</h2>
@@ -575,7 +575,7 @@ export default function GeneticCalculatorTool({
                         <Link to="/GeneticsGuide" className="text-purple-300 hover:text-purple-200">genetics guide</Link>.
                       </p>
                     </div>
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                       <div className="flex items-center gap-2 mb-2">
                         <Users className="w-4 h-4 text-emerald-400" />
                         <h2 className="text-sm font-semibold text-slate-100">Pulls from your collection</h2>
@@ -586,7 +586,7 @@ export default function GeneticCalculatorTool({
                         <Link to="/pedigree-tracker" className="text-emerald-300 hover:text-emerald-200">pedigree</Link>.
                       </p>
                     </div>
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                       <div className="flex items-center gap-2 mb-2">
                         <ArrowRight className="w-4 h-4 text-sky-400" />
                         <h2 className="text-sm font-semibold text-slate-100">Free, no account needed</h2>

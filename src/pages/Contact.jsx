@@ -86,7 +86,7 @@ export default function Contact() {
 
         <div className="mt-10 space-y-5">
           {CHANNELS.map(({ icon: Icon, title, body, cta }) => (
-            <div key={title} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+            <div key={title} className="rounded-xl border border-slate-700 bg-slate-900 p-6">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
                   <Icon className="w-5 h-5 text-emerald-300" />

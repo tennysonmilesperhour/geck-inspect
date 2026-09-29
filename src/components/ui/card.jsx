@@ -2,10 +2,14 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+// One card surface for the whole app: slate-900 with a slate-700 hairline.
+// Pages used to pass eight slightly different skins (slate-800 borders,
+// 40 to 70 percent translucent fills, backdrop blur); pass a className
+// only for a real variant, such as an amber warning or an inset panel.
 const Card = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
+    className={cn("rounded-xl border border-slate-700 bg-slate-900 text-slate-100 shadow", className)}
     {...props} />
 ))
 Card.displayName = "Card"

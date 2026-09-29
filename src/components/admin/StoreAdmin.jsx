@@ -68,7 +68,7 @@ function SettingsCard({ settings, onChange, onSave, saving }) {
   ];
 
   return (
-    <Card className="bg-slate-900/50 border-slate-800">
+    <Card>
       <CardHeader>
         <CardTitle className="text-white text-base flex items-center gap-2">
           <Power className="w-4 h-4 text-emerald-400" /> Store settings
@@ -208,7 +208,7 @@ function ProductRow({ p, onUpdate, busy }) {
           <Button
             size="sm"
             variant="ghost"
-            className="text-slate-400 hover:bg-slate-800 h-7 px-2 text-[11px]"
+            className="touch:min-w-11 text-slate-400 hover:bg-slate-800 h-7 px-2 text-[11px]"
             onClick={() => window.open(`/Store/p/${p.slug}`, '_blank', 'noopener,noreferrer')}
           >
             <ExternalLink className="w-3 h-3" />
@@ -317,7 +317,7 @@ export default function StoreAdmin() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div>
             <CardTitle className="text-white flex items-center gap-2">
@@ -352,7 +352,7 @@ export default function StoreAdmin() {
             saving={saving}
           />
 
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-3">
               <div>
                 <CardTitle className="text-white text-base">
@@ -380,7 +380,7 @@ export default function StoreAdmin() {
                       <button
                         key={s}
                         onClick={() => setStatusFilter(s)}
-                        className={`text-xs px-2.5 py-1 rounded border ${
+                        className={`touch:min-h-11 text-xs px-2.5 py-1 rounded border ${
                           statusFilter === s
                             ? 'bg-emerald-500/15 text-emerald-300 border-emerald-700/40'
                             : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-600'
@@ -398,7 +398,7 @@ export default function StoreAdmin() {
                       <button
                         key={m}
                         onClick={() => setModeFilter(m)}
-                        className={`text-xs px-2.5 py-1 rounded border ${
+                        className={`touch:min-h-11 text-xs px-2.5 py-1 rounded border ${
                           modeFilter === m
                             ? 'bg-emerald-500/15 text-emerald-300 border-emerald-700/40'
                             : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-600'

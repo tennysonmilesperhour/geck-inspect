@@ -115,7 +115,7 @@ export default function BlogSettingsPanel() {
 
   return (
     <div className="space-y-5">
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
             <SettingsIcon className="w-4 h-4 text-emerald-400" /> Blog settings

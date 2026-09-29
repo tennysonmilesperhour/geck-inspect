@@ -58,7 +58,7 @@ function StatCard({ icon: Icon, label, value, sublabel, accent = 'emerald', seri
   const strokeColor = SPARK_COLORS[accent] || SPARK_COLORS.emerald;
   const gradId = `spark-${accent}`;
   return (
-    <Card className="bg-slate-900 border-slate-800 overflow-hidden">
+    <Card className="overflow-hidden">
       <CardContent className="p-5 pb-0">
         <div className="flex items-start justify-between">
           <div>
@@ -241,7 +241,7 @@ export default function AdminOverview({ onNavigate }) {
       </div>
 
       {/* Quick links */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-slate-100 text-base">Quick actions</CardTitle>
         </CardHeader>
@@ -256,7 +256,7 @@ export default function AdminOverview({ onNavigate }) {
               <button
                 key={item.id}
                 onClick={() => onNavigate?.(item.id)}
-                className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-emerald-500/40 px-4 py-3 text-left transition-colors"
+                className="touch:min-h-11 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-emerald-500/40 px-4 py-3 text-left transition-colors"
               >
                 <item.icon className="w-4 h-4 text-emerald-400" />
                 <span className="text-sm font-medium text-slate-200">{item.label}</span>
@@ -268,7 +268,7 @@ export default function AdminOverview({ onNavigate }) {
 
       {/* Recent activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader>
             <CardTitle className="text-slate-100 text-base flex items-center gap-2">
               <Users className="w-4 h-4" /> Newest users
@@ -300,7 +300,7 @@ export default function AdminOverview({ onNavigate }) {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader>
             <CardTitle className="text-slate-100 text-base flex items-center gap-2">
               <MessageSquare className="w-4 h-4" /> Latest forum posts

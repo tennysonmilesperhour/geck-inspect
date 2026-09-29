@@ -336,7 +336,7 @@ function ListingCard({
                   gecko already in the batch, one click from the download. */}
               <Link
                 to={`${createPageUrl('MorphMarketExport')}?add=${encodeURIComponent(gecko.id)}`}
-                className="inline-flex items-center gap-1 text-[10px] text-slate-400 hover:text-emerald-300 transition-colors py-0.5"
+                className="touch:min-h-11 inline-flex items-center gap-1 text-[10px] text-slate-400 hover:text-emerald-300 transition-colors py-0.5"
                 title="Add this listing to your MorphMarket CSV batch"
               >
                 <ExternalLink className="w-3 h-3" /> Send to MorphMarket
@@ -344,7 +344,7 @@ function ListingCard({
               <button
                 type="button"
                 onClick={() => onUnlist(gecko)}
-                className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors py-0.5"
+                className="touch:min-h-11 text-[10px] text-slate-500 hover:text-rose-400 transition-colors py-0.5"
               >
                 Remove
               </button>
@@ -701,7 +701,7 @@ export default function MarketplaceSellPage() {
             description="Visible on the public marketplace right now."
           />
           {liveListings.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
+            <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
               <DollarSign className="w-10 h-10 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-300 font-semibold">No active listings yet</p>
               <p className="text-sm text-slate-500 mt-1">
@@ -800,7 +800,7 @@ export default function MarketplaceSellPage() {
             }
           />
           {availableToList.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
+            <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
               <Plus className="w-10 h-10 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-300 font-semibold">No other geckos in your collection</p>
               <p className="text-sm text-slate-500 mt-1">Add some geckos to your collection first.</p>
@@ -837,7 +837,7 @@ export default function MarketplaceSellPage() {
           gecko marked. Sits above the mobile bottom nav so it doesn't
           collide with it. */}
       {selectMode && selectedIds.size > 0 && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-12 md:bottom-6 z-40 w-[min(96vw,640px)]">
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-6 z-40 w-[min(96vw,640px)]">
           <div className="rounded-xl border border-emerald-700/50 bg-slate-900/95 backdrop-blur-md shadow-2xl shadow-black/40 p-3 flex items-center gap-3">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-emerald-500 text-white shrink-0">

@@ -197,7 +197,7 @@ function BasisChip({ valuation }) {
 
 function StatCard({ icon: Icon, label, value, sub }) {
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardContent className="p-4 md:p-6">
         <div className="flex items-center gap-2 mb-2">
           <Icon className="w-4 h-4 text-emerald-400" />
@@ -423,7 +423,7 @@ export default function Portfolio() {
         </div>
 
         {/* Trend */}
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-slate-100">Value over time</CardTitle>
           </CardHeader>
@@ -468,7 +468,7 @@ export default function Portfolio() {
         </Card>
 
         {/* Top value-driving morphs */}
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-slate-100">Top value-driving morphs</CardTitle>
           </CardHeader>
@@ -504,7 +504,7 @@ export default function Portfolio() {
         </Card>
 
         {/* Per-animal table */}
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-slate-100">Per-animal valuation</CardTitle>
           </CardHeader>
@@ -524,7 +524,7 @@ export default function Portfolio() {
                   return (
                     <tr key={gecko.id} className="border-b border-slate-800/60 hover:bg-slate-800/30">
                       <td className="py-2.5 px-3">
-                        <Link to={createPageUrl(`GeckoDetail?id=${gecko.id}`)} className="flex items-center gap-3 group">
+                        <Link to={createPageUrl(`GeckoDetail?id=${gecko.id}`)} className="touch:min-h-11 flex items-center gap-3 group">
                           {photo ? (
                             <img src={photo} alt={gecko.name || 'Gecko'} className="w-10 h-10 shrink-0 rounded-lg object-cover bg-slate-800" />
                           ) : (

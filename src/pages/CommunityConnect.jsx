@@ -65,7 +65,7 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
     const cardCover = breeder.cover_image_url || coverImage;
 
     return (
-        <Card className="bg-slate-900 border-slate-700 hover:border-emerald-500/50 transition-all overflow-hidden flex flex-col">
+        <Card className="hover:border-emerald-500/50 transition-all overflow-hidden flex flex-col">
             {/* Cover Image, always rendered for consistent card height */}
             <div className="h-24 w-full overflow-hidden flex-shrink-0">
                 {cardCover ? (
@@ -259,7 +259,7 @@ function ForumTab() {
             )}
 
             {showCreatePost && (
-                <Card className="bg-slate-900 border-slate-700">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-slate-100">Create a New Post</CardTitle>
                     </CardHeader>
@@ -299,10 +299,10 @@ function ForumTab() {
                 return (
                     <div key={category.id}>
                         <h2 className="text-xl font-bold text-slate-200 mb-3">{category.name}</h2>
-                        <Card className="bg-slate-900 border-slate-700">
+                        <Card>
                             <CardContent className="p-0 divide-y divide-slate-700">
                                 {categoryPosts.map(post => (
-                                    <Link key={post.id} to={`/ForumPost?id=${post.id}`} className="p-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors cursor-pointer block">
+                                    <Link key={post.id} to={`/ForumPost?id=${post.id}`} className="touch:min-h-11 p-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors cursor-pointer block">
                                         <div className="flex items-center gap-4">
                                             <MessageSquare className="w-5 h-5 text-slate-500 flex-shrink-0" />
                                             <div>
@@ -415,7 +415,7 @@ function FollowingFeed({ currentUser, following, allUsers }) {
 
     if (!currentUser) {
         return (
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
                 <CardContent className="py-8 text-center">
                     <Users className="w-12 h-12 mx-auto text-slate-500 mb-4" />
                     <p className="text-slate-400">Log in to see updates from breeders you follow.</p>
@@ -426,7 +426,7 @@ function FollowingFeed({ currentUser, following, allUsers }) {
 
     if (following.length === 0) {
         return (
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
                 <CardContent className="py-8 text-center">
                     <UserPlus className="w-12 h-12 mx-auto text-slate-500 mb-4" />
                     <p className="text-slate-400">You're not following anyone yet.</p>
@@ -445,7 +445,7 @@ function FollowingFeed({ currentUser, following, allUsers }) {
     }
 
     return (
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
             <CardHeader className="cursor-pointer select-none" onClick={() => setCollapsed(!collapsed)}>
                 <CardTitle className="text-slate-100 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-emerald-400" />
@@ -484,7 +484,7 @@ function FollowingFeed({ currentUser, following, allUsers }) {
                                             {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
                                         </p>
                                         {link && (
-                                            <Link to={link} className="text-xs text-emerald-500 hover:text-emerald-400 flex items-center gap-0.5">
+                                            <Link to={link} className="touch:min-h-11 text-xs text-emerald-500 hover:text-emerald-400 flex items-center gap-0.5">
                                                 View <ExternalLink className="w-3 h-3" />
                                             </Link>
                                         )}

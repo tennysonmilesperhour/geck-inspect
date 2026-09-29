@@ -39,7 +39,7 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
       <button
         ref={anchorRef}
         onClick={() => setOpen((o) => !o)}
-        className="gecko-header-action"
+        className="touch:min-h-11 gecko-header-action"
         aria-label="Notifications"
       >
         <Bell />
@@ -74,7 +74,7 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
                     e.stopPropagation();
                     onMarkAllRead();
                   }}
-                  className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+                  className="touch:min-h-11 shrink-0 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
                   title="Mark all as read"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
@@ -117,7 +117,7 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
                           e.stopPropagation();
                           onMarkRead(n.id);
                         }}
-                        className="shrink-0 mt-0.5 text-slate-500 hover:text-emerald-400 transition-colors"
+                        className="touch:min-h-11 touch:min-w-11 shrink-0 mt-0.5 text-slate-500 hover:text-emerald-400 transition-colors"
                         title="Mark as read"
                       >
                         <Check className="w-3.5 h-3.5" />
@@ -132,7 +132,7 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
             <Link
               to={createPageUrl('Notifications')}
               onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-1.5 px-4 py-2.5 border-t border-emerald-900/30 text-xs font-medium text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30 transition-colors"
+              className="touch:min-h-11 flex items-center justify-center gap-1.5 px-4 py-2.5 border-t border-emerald-900/30 text-xs font-medium text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30 transition-colors"
             >
               See all notifications
               <ArrowRight className="w-3 h-3" />

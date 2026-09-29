@@ -53,7 +53,7 @@ export default function MorphPicker({
             <button
               type="button"
               onClick={() => onPrimaryChange?.(null)}
-              className="text-xs text-slate-500 hover:text-slate-300"
+              className="text-xs touch:min-h-11 touch:min-w-11 text-slate-500 hover:text-slate-300"
             >
               clear
             </button>
@@ -66,7 +66,7 @@ export default function MorphPicker({
               type="button"
               onClick={() => onPrimaryChange?.(m.id)}
               title={m.notes}
-              className={`text-left px-3 py-2 rounded-md text-sm transition-colors border ${
+              className={`touch:min-h-11 text-left px-3 py-2 rounded-md text-sm transition-colors border ${
                 primary === m.id
                   ? 'bg-emerald-600 text-white border-emerald-500'
                   : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
@@ -100,7 +100,7 @@ export default function MorphPicker({
                   type="button"
                   onClick={() => toggleGenetic(g.id)}
                   title={g.notes}
-                  className={`px-3 py-1.5 rounded-full text-xs transition-colors border ${
+                  className={`px-3 py-1.5 touch:min-h-11 rounded-full text-xs transition-colors border ${
                     selected
                       ? 'bg-purple-600 text-white border-purple-500'
                       : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'

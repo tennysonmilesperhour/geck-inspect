@@ -51,15 +51,15 @@ export default function PageNotFound({}) {
                     </div>
 
                     <nav className="pt-2 flex flex-wrap gap-2 justify-center text-sm">
-                      <Link to="/" className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Home</Link>
-                      <Link to="/MorphGuide" className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Morph Guide</Link>
-                      <Link to="/CareGuide" className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Care Guide</Link>
-                      <Link to="/GeneticsGuide" className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Genetics</Link>
-                      <Link to="/Contact" className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Contact</Link>
+                      <Link to="/" className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Home</Link>
+                      <Link to="/MorphGuide" className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Morph Guide</Link>
+                      <Link to="/CareGuide" className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Care Guide</Link>
+                      <Link to="/GeneticsGuide" className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Genetics</Link>
+                      <Link to="/Contact" className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:text-emerald-200 px-3 py-1.5 text-slate-300 transition-colors">Contact</Link>
                     </nav>
 
                     {isFetched && authData.isAuthenticated && authData.user?.role === 'admin' && (
-                        <div className="mt-8 p-4 bg-slate-900 rounded-lg border border-slate-800">
+                        <div className="mt-8 p-4 bg-slate-900 rounded-xl border border-slate-700">
                             <p className="text-sm font-medium text-slate-300">Admin note</p>
                             <p className="text-sm text-slate-500 leading-relaxed mt-1">
                                 This route isn't registered in App.jsx or pages.config.js. If it should exist, wire it up.

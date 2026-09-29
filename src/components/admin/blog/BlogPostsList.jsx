@@ -148,14 +148,14 @@ export default function BlogPostsList({ onCreatePost, onEditPost }) {
         <ul className="space-y-2">
           {filtered.map((post) => (
             <li key={post.id}>
-              <Card className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-colors">
+              <Card className="hover:border-slate-700 transition-colors">
                 <CardContent className="p-4">
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <button
                           onClick={() => onEditPost?.(post)}
-                          className="text-sm md:text-base font-semibold text-slate-100 hover:text-emerald-300 truncate text-left"
+                          className="touch:min-h-11 text-sm md:text-base font-semibold text-slate-100 hover:text-emerald-300 truncate text-left"
                         >
                           {post.title || '(untitled)'}
                         </button>
@@ -186,7 +186,7 @@ export default function BlogPostsList({ onCreatePost, onEditPost }) {
                           href={`/blog/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center text-xs px-2.5 py-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+                          className="touch:min-h-11 inline-flex items-center text-xs px-2.5 py-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
                         >
                           <ExternalLink className="w-3.5 h-3.5 mr-1" /> View
                         </a>

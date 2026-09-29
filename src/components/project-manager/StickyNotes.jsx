@@ -76,13 +76,13 @@ function NoteCard({ note, onDelete, onUpdate, isGrid }) {
                 <div className="flex gap-1 flex-shrink-0">
                     {isEditing ? (
                         <>
-                            <button type="button" onClick={handleSave} style={{ color: color.text }} className="text-xs font-bold hover:opacity-70 px-1">Save</button>
-                            <button type="button" onClick={handleCancel} style={{ color: color.text }} className="text-xs hover:opacity-70 px-1">✕</button>
+                            <button type="button" onClick={handleSave} style={{ color: color.text }} className="touch:min-h-11 text-xs font-bold hover:opacity-70 px-1">Save</button>
+                            <button type="button" onClick={handleCancel} style={{ color: color.text }} className="touch:min-h-11 touch:min-w-11 text-xs hover:opacity-70 px-1">✕</button>
                         </>
                     ) : (
                         <>
-                            <button type="button" onClick={() => setIsEditing(true)} style={{ color: color.text }} className="text-xs hover:opacity-70 px-1">✏️</button>
-                            <button type="button" onClick={() => onDelete(note.id)} style={{ color: color.text }} className="text-xs hover:opacity-70 px-1">🗑</button>
+                            <button type="button" onClick={() => setIsEditing(true)} style={{ color: color.text }} className="touch:min-h-11 touch:min-w-11 text-xs hover:opacity-70 px-1">✏️</button>
+                            <button type="button" onClick={() => onDelete(note.id)} style={{ color: color.text }} className="touch:min-h-11 touch:min-w-11 text-xs hover:opacity-70 px-1">🗑</button>
                         </>
                     )}
                 </div>
@@ -191,14 +191,14 @@ export default function StickyNotes() {
                     <button
                         type="button"
                         onClick={() => setViewMode('grid')}
-                        className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                        className={`touch:min-h-11 touch:min-w-11 p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                     >
                         <Grid3x3 className="w-4 h-4" />
                     </button>
                     <button
                         type="button"
                         onClick={() => setViewMode('list')}
-                        className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                        className={`touch:min-h-11 touch:min-w-11 p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                     >
                         <List className="w-4 h-4" />
                     </button>
@@ -247,7 +247,7 @@ export default function StickyNotes() {
                     />
                     <div className="flex gap-2 justify-end">
                         <Button variant="outline" type="button" onClick={() => setShowForm(false)} className="border-slate-600 text-slate-300">Cancel</Button>
-                        <button type="button" onClick={handleAdd} style={{ backgroundColor: selectedColorObj.header, color: selectedColorObj.text }} className="px-3 py-1.5 text-sm font-semibold rounded-md hover:opacity-90">Add Note</button>
+                        <button type="button" onClick={handleAdd} style={{ backgroundColor: selectedColorObj.header, color: selectedColorObj.text }} className="touch:min-h-11 px-3 py-1.5 text-sm font-semibold rounded-md hover:opacity-90">Add Note</button>
                     </div>
                 </div>
             )}

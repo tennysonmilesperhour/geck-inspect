@@ -292,7 +292,7 @@ export default function PromotePage() {
           <button
             type="button"
             onClick={() => setView('active')}
-            className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+            className={`touch:min-h-11 text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
               view === 'active'
                 ? 'bg-emerald-700/60 text-emerald-50'
                 : 'text-emerald-200/80 hover:text-emerald-100'
@@ -307,7 +307,7 @@ export default function PromotePage() {
             type="button"
             onClick={() => setView('archive')}
             disabled={archivedCount === 0}
-            className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors flex items-center gap-1 ${
+            className={`touch:min-h-11 text-xs font-semibold px-3 py-1.5 rounded transition-colors flex items-center gap-1 ${
               view === 'archive'
                 ? 'bg-emerald-700/60 text-emerald-50'
                 : archivedCount === 0

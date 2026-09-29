@@ -126,7 +126,7 @@ function TaxonomyList({ title, icon: Icon, Entity, kind }) {
   };
 
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
           <Icon className="w-4 h-4 text-emerald-400" /> {title}
@@ -249,7 +249,7 @@ function TaxonomyList({ title, icon: Icon, Entity, kind }) {
                     size="sm"
                     variant="outline"
                     onClick={() => startEdit(item)}
-                    className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs h-7"
+                    className="touch:min-w-11 border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs h-7"
                   >
                     <Edit className="w-3 h-3" />
                   </Button>

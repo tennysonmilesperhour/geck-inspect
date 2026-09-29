@@ -271,7 +271,7 @@ export default function UserManagement() {
     }
 
     return (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
             <CardHeader>
                 <CardTitle className="text-slate-100 flex items-center gap-2">
                     <Users className="w-5 h-5" />
@@ -364,7 +364,7 @@ export default function UserManagement() {
                                 
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button size="sm" variant="ghost" className="hover:bg-slate-700">
+                                        <Button size="sm" variant="ghost" className="touch:min-w-11 hover:bg-slate-700">
                                             <MoreVertical className="w-4 h-4" />
                                         </Button>
                                     </DropdownMenuTrigger>

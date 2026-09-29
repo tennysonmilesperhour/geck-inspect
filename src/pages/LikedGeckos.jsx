@@ -111,7 +111,7 @@ function LikedGeckosScreen() {
                         {likedGeckos.map(gecko => {
                             const owner = owners[gecko.created_by];
                             return (
-                                <Card key={gecko.id} className="overflow-hidden bg-slate-900 border-slate-700 hover:border-pink-500/50 transition-all">
+                                <Card key={gecko.id} className="overflow-hidden hover:border-pink-500/50 transition-all">
                                     <div className="aspect-square w-full overflow-hidden relative group">
                                         <Link to={createPageUrl(`GeckoDetail?id=${gecko.id}`)}>
                                             <SmartImage
@@ -151,7 +151,7 @@ function LikedGeckosScreen() {
                                             <div className="mt-3 pt-3 border-t border-slate-700">
                                                 <Link 
                                                     to={createPageUrl(`PublicProfile?email=${encodeURIComponent(owner.email)}`)}
-                                                    className="flex items-center gap-2 text-sm text-slate-300 hover:text-emerald-400"
+                                                    className="touch:min-h-11 flex items-center gap-2 text-sm text-slate-300 hover:text-emerald-400"
                                                 >
                                                     <img 
                                                         src={owner.profile_image_url || initialsAvatarUrl(owner.full_name)}

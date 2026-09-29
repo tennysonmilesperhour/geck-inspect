@@ -185,11 +185,11 @@ export default function ShippingBookingForm({ quote, onBooked }) {
   return (
     <form onSubmit={handleBook} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+        <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-1">
           <h4 className="text-sm font-semibold text-slate-200 mb-3">Sender (you)</h4>
           <AddressFields values={sender} onChange={updateSender} prefix="Sender" />
         </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+        <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-1">
           <h4 className="text-sm font-semibold text-slate-200 mb-3">Recipient (buyer)</h4>
           <AddressFields values={recipient} onChange={updateRecipient} prefix="Recipient" />
         </div>

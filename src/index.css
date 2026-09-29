@@ -65,6 +65,23 @@ html, body {
    specificity, so a `block` or `flex` class on the link still wins. */
 :where(a:has(> button)) { display: inline-block; }
 
+/* Invisible 44px tap area for a small control that can't grow without
+   breaking its layout: a switch, a checkbox, the remove X on a photo.
+   Touch screens only (the same condition as the `touch:` variant; a
+   mouse is precise), and it changes nothing visually. The element must
+   be positioned: add `relative` unless it is already absolute or fixed. */
+@media (pointer: coarse) {
+  .touch-hit::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    transform: translate(-50%, -50%);
+  }
+}
+
 /* Inside the app shell "a screen" means the scroll area between the
    top bar and the bottom nav, not the full 100vh. Pages set
    min-h-screen for their background fill; resolving it against the
@@ -982,3 +999,8 @@ body:has([role="dialog"][data-state="open"]) [data-feedback-trigger],
 body:has([role="alertdialog"][data-state="open"]) [data-feedback-trigger],
 body:has([role="dialog"][data-state="open"]) [data-floating-notice],
 body:has([role="alertdialog"][data-state="open"]) [data-floating-notice] { display: none; }
+
+/* Field Mode is a full-screen rack-side logger with its own bottom bar.
+   Floating UI would sit on its gecko list and its "Exit field mode" link. */
+body:has([data-field-mode]) [data-feedback-trigger],
+body:has([data-field-mode]) [data-floating-notice] { display: none; }

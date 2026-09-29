@@ -134,7 +134,7 @@ export default function TrustPanel({ email, variant = 'compact' }) {
 
   // Full variant: every signal as an icon row inside a card.
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-5">
       <div className="flex items-center justify-between gap-3 mb-4">
         <h3 className="text-sm font-bold text-white uppercase tracking-wide">
           Track record

@@ -127,7 +127,7 @@ export default function CommunityTrainingStats() {
   }[metrics.length];
 
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardContent className="p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export default function CommunityTrainingStats() {
           </div>
           <Link
             to={createPageUrl('Training')}
-            className="text-xs font-medium text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
+            className="touch:min-h-11 text-xs font-medium text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
           >
             Help make it smarter <ArrowRight className="w-3 h-3" />
           </Link>

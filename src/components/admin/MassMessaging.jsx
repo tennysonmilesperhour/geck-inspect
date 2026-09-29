@@ -263,7 +263,7 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
   const selectedGroupInfo = TARGET_GROUPS.find((g) => g.value === targetGroup);
 
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card>
       <CardHeader>
         <CardTitle className="text-slate-100 flex items-center gap-2">
           <Megaphone className="w-5 h-5" />

@@ -113,7 +113,7 @@ function FilterBar({ filters, setFilters, coverage }) {
   const fmt = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   const any = filters.age !== 'all' || filters.query;
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 flex flex-wrap items-center gap-2">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 flex flex-wrap items-center gap-2">
       <span className="inline-flex items-center gap-1.5 text-xs text-slate-300 rounded px-2 py-1 border border-slate-700">
         <CalendarRange className="w-3.5 h-3.5 text-slate-400" />
         {fmt(coverage.first_seen)} to {fmt(coverage.last_seen)}
@@ -126,7 +126,7 @@ function FilterBar({ filters, setFilters, coverage }) {
           <button
             key={a.code}
             onClick={() => setFilters((f) => ({ ...f, age: a.code }))}
-            className={`text-[11px] px-2 py-1 rounded transition-colors ${
+            className={`touch:min-h-11 text-[11px] px-2 py-1 rounded transition-colors ${
               filters.age === a.code ? 'bg-emerald-500/20 text-emerald-200' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -151,7 +151,7 @@ function FilterBar({ filters, setFilters, coverage }) {
       {any && (
         <button
           onClick={() => setFilters(DEFAULT_FILTERS)}
-          className="ml-auto inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200"
+          className="touch:min-h-11 ml-auto inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200"
         >
           <X className="w-3 h-3" />Reset filters
         </button>
@@ -171,7 +171,7 @@ function SubNav({ section, setSection, pinnedCount }) {
           <button
             key={s.key}
             onClick={() => setSection(s.key)}
-            className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md transition-colors ${
+            className={`touch:min-h-11 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md transition-colors ${
               on ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/30'
                  : 'text-slate-300 hover:bg-slate-800 border border-transparent'
             }`}
@@ -190,11 +190,11 @@ function SubNav({ section, setSection, pinnedCount }) {
 
 function PinnedEmptyState({ onGo }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
+    <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
       <Pin className="w-6 h-6 text-slate-600 mx-auto mb-2" />
       <h3 className="text-sm font-semibold text-slate-200 mb-1">No pinned cards yet</h3>
       <p className="text-xs text-slate-500 max-w-md mx-auto mb-3">Pin cards from the Overview to build your own at-a-glance dashboard.</p>
-      <button onClick={onGo} className="text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5">Go to Overview</button>
+      <button onClick={onGo} className="touch:min-h-11 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5">Go to Overview</button>
     </div>
   );
 }

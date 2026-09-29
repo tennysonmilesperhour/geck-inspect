@@ -60,7 +60,7 @@ function AppearanceSection() {
                         type="button"
                         onClick={() => onPick(t.id)}
                         aria-pressed={selected}
-                        className={`text-left rounded-lg border p-4 transition-colors flex items-start gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                        className={`touch:min-h-11 text-left rounded-lg border p-4 transition-colors flex items-start gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                             selected
                                 ? 'border-primary bg-primary/10'
                                 : 'border-slate-700 bg-slate-800/50 hover:border-slate-500'
@@ -149,7 +149,7 @@ function LookingForSection({ formData, handleChange }) {
                 {formData.looking_for.map((item) => (
                     <Badge key={item} className="flex items-center gap-1 bg-emerald-900/50 text-emerald-200 border-emerald-600">
                         {item}
-                        <button onClick={() => removeItem(item)}><X className="w-3 h-3" /></button>
+                        <button onClick={() => removeItem(item)} aria-label={`Remove ${item}`} className="relative touch-hit"><X className="w-3 h-3" /></button>
                     </Badge>
                 ))}
             </div>
@@ -198,7 +198,7 @@ function FavoritePagesSection({ selected, onChange }) {
                             onClick={() => toggle(item.page_name)}
                             disabled={disabled}
                             aria-pressed={checked}
-                            className={`relative flex items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                            className={`touch:min-h-11 relative flex items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                                 checked
                                     ? 'border-emerald-500 bg-emerald-900/30 text-emerald-100'
                                     : disabled
@@ -627,7 +627,7 @@ export default function SettingsPage() {
                                 <a
                                     key={s.id}
                                     href={`#${s.id}`}
-                                    className="block text-sm text-slate-300 hover:text-emerald-300 hover:bg-slate-900/60 rounded-md px-2 py-1.5 transition-colors"
+                                    className="flex items-center touch:min-h-11 text-sm text-slate-300 hover:text-emerald-300 hover:bg-slate-900/60 rounded-md px-2 py-1.5 transition-colors"
                                 >
                                     {s.label}
                                 </a>
@@ -645,7 +645,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="appearance">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-slate-100 flex items-center gap-2">
                             <Palette className="w-5 h-5" />
@@ -662,7 +662,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="favorite-pages">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-slate-100 flex items-center gap-2">
                             <Star className="w-5 h-5" />
@@ -682,7 +682,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="keeper-mode">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-slate-100 flex items-center gap-2">
                             <Eye className="w-5 h-5" />
@@ -705,7 +705,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="profile-photos">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-slate-100">Profile Photos</CardTitle>
                     </CardHeader>
@@ -735,7 +735,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="basic-information">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader><CardTitle className="text-slate-100">Basic Information</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -786,7 +786,7 @@ export default function SettingsPage() {
                                 {formData.specialties.map((specialty) => (
                                     <Badge key={specialty} variant="secondary" className="flex items-center gap-1 bg-slate-700 text-slate-200 border-slate-600">
                                         {specialty}
-                                        <button onClick={() => removeSpecialty(specialty)}><X className="w-3 h-3" /></button>
+                                        <button onClick={() => removeSpecialty(specialty)} aria-label={`Remove ${specialty}`} className="relative touch-hit"><X className="w-3 h-3" /></button>
                                     </Badge>
                                 ))}
                             </div>
@@ -797,7 +797,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="contact-information">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Mail className="w-5 h-5"/>Contact Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div><Label htmlFor="email_contact" className="text-slate-300">Contact Email</Label><Input id="email_contact" value={formData.email_contact} onChange={(e) => handleChange('email_contact', e.target.value)} placeholder="your.email@example.com" className="bg-slate-800 border-slate-600 text-slate-100" /></div>
@@ -808,7 +808,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="social-media">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Globe className="w-5 h-5"/>Social Media & Website</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -823,7 +823,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="store-policy">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-slate-100 flex items-center gap-2"><FileText className="w-5 h-5"/>Store Policy</CardTitle>
                         <CardDescription className="text-slate-400">
@@ -863,7 +863,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="privacy-settings">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Eye className="w-5 h-5"/>Privacy Settings</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         {renderSwitch('is-public-profile', 'Show in Community Directory / Make Profile Public', 'Allow others to find you and view your profile and collection', formData.is_public_profile, (checked) => handleChange('is_public_profile', checked))}
@@ -877,7 +877,7 @@ export default function SettingsPage() {
                                     href={`/PublicProfile?userId=${user.id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-sm text-emerald-300 hover:text-emerald-200 underline-offset-2 hover:underline"
+                                    className="touch:min-h-11 inline-flex items-center gap-2 text-sm text-emerald-300 hover:text-emerald-200 underline-offset-2 hover:underline"
                                 >
                                     <Eye className="w-4 h-4" />
                                     Preview my profile as a visitor would see it
@@ -922,7 +922,7 @@ export default function SettingsPage() {
                 )}
 
                 <section id="email-notifications">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Mail className="w-5 h-5"/>Email Notifications</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
                         {renderSwitch('email-enabled', 'Enable Email Notifications', 'Master toggle for all email notifications', formData.email_notifications_enabled, (checked) => handleChange('email_notifications_enabled', checked))}
@@ -954,7 +954,7 @@ export default function SettingsPage() {
                 />
 
                 <section id="calendar-alerts">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Calendar className="w-5 h-5"/>Calendar Alerts</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
                           {renderSwitch('calendar-enabled', 'Enable Calendar Alerts', 'Auto-download .ics files for breeding events', formData.calendar_alerts_enabled, (checked) => handleChange('calendar_alerts_enabled', checked))}
@@ -968,7 +968,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="feeding-alerts">
-                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                 <Card>
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Clock className="w-5 h-5"/>Feeding Alerts</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
                           {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'One reminder a day by push and email when any feeding group or reptile is due, even with the app closed', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
@@ -984,7 +984,7 @@ export default function SettingsPage() {
                 </section>
 
                 <section id="default-sorts">
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-slate-100 flex items-center gap-2">
                             <ArrowUpDown className="w-5 h-5"/>
@@ -1113,7 +1113,7 @@ export default function SettingsPage() {
                     };
                     return (
                         <section id="membership">
-                            <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                            <Card>
                                 <CardHeader>
                                     <CardTitle className="text-slate-100 flex items-center gap-2">
                                         <CreditCard className="w-5 h-5 text-emerald-400" />
@@ -1162,7 +1162,7 @@ export default function SettingsPage() {
                     const isPaid = tier === 'keeper' || tier === 'breeder' || tier === 'enterprise';
                     return (
                         <section id="morph-id">
-                            <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                            <Card>
                                 <CardHeader>
                                     <CardTitle className="text-slate-100 flex items-center gap-2">
                                         <Crown className="w-5 h-5 text-amber-400" />

@@ -45,7 +45,7 @@ export default function SetNewPassword() {
 
   return (
     <div className="flex-1 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-slate-900 border-slate-700 shadow-xl">
+      <Card className="w-full max-w-md shadow-xl">
         <CardContent className="pt-6 space-y-5">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-white">Choose a new password</h1>

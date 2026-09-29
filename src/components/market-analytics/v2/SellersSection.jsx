@@ -23,7 +23,7 @@ export default function SellersSection({ agg, anonymize = true }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2 min-w-0 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <div className="lg:col-span-2 min-w-0 rounded-xl border border-slate-700 bg-slate-900 p-4">
           <SectionHeader
             icon={Users}
             title="Seller size"
@@ -50,7 +50,7 @@ export default function SellersSection({ agg, anonymize = true }) {
           <p className="text-[10px] text-slate-500 mt-3">{s.unattributed_listings.toLocaleString()} listings had no seller name on the scrape and are left out of this tab.</p>
         </div>
 
-        <div className="lg:col-span-3 min-w-0 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <div className="lg:col-span-3 min-w-0 rounded-xl border border-slate-700 bg-slate-900 p-4">
           <SectionHeader
             icon={Award}
             title="Top sellers by sales value"
@@ -101,7 +101,7 @@ export default function SellersSection({ agg, anonymize = true }) {
 
 function Tile({ label, value, sub, accent }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-3 min-w-0">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-3 min-w-0">
       <div className="text-[11px] text-slate-400">{label}</div>
       <div className={`text-xl font-bold tabular-nums mt-1 ${accent ? 'text-emerald-300' : 'text-slate-100'}`}>{value}</div>
       <div className="text-[10px] text-slate-500 mt-0.5 truncate">{sub}</div>

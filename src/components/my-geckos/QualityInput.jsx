@@ -64,7 +64,7 @@ export default function QualityInput({ value, onChange }) {
           to="/QualityScale"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-emerald-400 hover:text-emerald-300 underline"
+          className="text-xs text-emerald-400 hover:text-emerald-300 underline touch:inline-flex touch:items-center touch:min-h-11"
         >
           How to score
         </Link>
@@ -79,7 +79,7 @@ export default function QualityInput({ value, onChange }) {
               key={tier.id}
               type="button"
               onClick={() => handleTierClick(tier)}
-              className={`flex flex-col items-center justify-center rounded-lg border px-2 py-2 text-xs font-semibold leading-tight transition-colors ${
+              className={`touch:min-h-11 flex flex-col items-center justify-center rounded-lg border px-2 py-2 text-xs font-semibold leading-tight transition-colors ${
                 isActive ? tier.btnActive : tier.btnIdle
               }`}
               aria-pressed={isActive}
@@ -137,7 +137,7 @@ export default function QualityInput({ value, onChange }) {
           <button
             type="button"
             onClick={handleClear}
-            className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200"
+            className="inline-flex items-center gap-1 touch:min-h-11 touch:min-w-11 text-xs text-slate-400 hover:text-slate-200"
           >
             <X size={12} />
             Clear

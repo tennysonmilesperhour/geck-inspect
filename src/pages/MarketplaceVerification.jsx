@@ -93,7 +93,7 @@ const VERIFICATION_JSON_LD = [
 
 function Section({ icon: Icon, title, children }) {
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 md:p-8">
+    <section className="rounded-xl border border-slate-700 bg-slate-900 p-6 md:p-8">
       <h2 className="text-xl md:text-2xl font-bold text-white mb-3 flex items-center gap-2">
         <Icon className="w-5 h-5 text-emerald-400" />
         {title}

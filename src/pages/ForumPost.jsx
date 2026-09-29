@@ -291,7 +291,7 @@ export default function ForumPostPage() {
                 <div className="max-w-xl mx-auto text-center space-y-4">
                     <h1 className="text-2xl font-bold text-slate-100">Post hidden</h1>
                     <p className="text-slate-400">You blocked this author. Manage blocked accounts in Settings.</p>
-                    <Link className="inline-block underline text-emerald-400 hover:text-emerald-300" to="/Forum">Return to the forum</Link>
+                    <Link className="inline-block touch:inline-flex touch:items-center touch:min-h-11 underline text-emerald-400 hover:text-emerald-300" to="/Forum">Return to the forum</Link>
                 </div>
             </div>
         );
@@ -318,12 +318,12 @@ export default function ForumPostPage() {
 
         return (
             <div key={comment.id} className={isReply ? 'ml-6 md:ml-10 mt-3' : ''}>
-                <Card className="bg-slate-900 border-slate-800">
+                <Card>
                     <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-1.5">
                             <Link
                                 to={createPageUrl(`PublicProfile?email=${encodeURIComponent(comment.created_by || '')}`)}
-                                className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                                className="relative touch-hit text-sm font-semibold text-emerald-400 hover:text-emerald-300"
                             >
                                 {comment.author_name || 'Anonymous'}
                             </Link>
@@ -386,7 +386,7 @@ export default function ForumPostPage() {
                 <div>
                     <Link
                         to={createPageUrl('Forum')}
-                        className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mb-4"
+                        className="inline-flex items-center gap-2 touch:min-h-11 text-emerald-400 hover:text-emerald-300 mb-4"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Back to Forum
@@ -398,7 +398,7 @@ export default function ForumPostPage() {
                     )}
                 </div>
 
-                <Card className="bg-slate-900 border-slate-800">
+                <Card>
                     {/* items-start keeps the signed-in "Report or block" ghost
                         button at its own width instead of stretching across
                         the card between the title and the byline. */}

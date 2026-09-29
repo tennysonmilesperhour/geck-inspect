@@ -229,17 +229,17 @@ export default function StoreCart() {
                       {formatCents(item.unit_price_cents_snapshot ?? p?.our_price_cents)} each
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => handleQty(item, item.quantity - 1)}>
+                      <Button size="sm" className="touch:min-w-11" variant="ghost" disabled={busy} onClick={() => handleQty(item, item.quantity - 1)}>
                         <Minus className="w-3.5 h-3.5" />
                       </Button>
                       <span className="w-7 text-center text-sm text-slate-200">{item.quantity}</span>
-                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => handleQty(item, item.quantity + 1)}>
+                      <Button size="sm" className="touch:min-w-11" variant="ghost" disabled={busy} onClick={() => handleQty(item, item.quantity + 1)}>
                         <Plus className="w-3.5 h-3.5" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-rose-300 hover:bg-rose-500/10 ml-auto"
+                        className="touch:min-w-11 text-rose-300 hover:bg-rose-500/10 ml-auto"
                         disabled={busy}
                         onClick={() => handleRemove(item)}
                       >

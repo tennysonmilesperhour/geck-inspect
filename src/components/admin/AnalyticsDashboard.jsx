@@ -122,7 +122,7 @@ function KpiCard({ label, value, delta, accent = 'emerald', sublabel }) {
   }[accent];
 
   return (
-    <Card className="bg-slate-900 border-slate-800 relative overflow-hidden">
+    <Card className="relative overflow-hidden">
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${accentBar}`} />
       <CardContent className="p-5 pl-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -144,7 +144,7 @@ function KpiCard({ label, value, delta, accent = 'emerald', sublabel }) {
 
 function ChartCard({ title, icon: Icon, children, subtitle }) {
   return (
-    <Card className="bg-slate-900 border-slate-800">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-slate-100 text-base flex items-center gap-2">
           {Icon && <Icon className="w-4 h-4 text-slate-400" />}
@@ -658,7 +658,7 @@ export default function AnalyticsDashboard() {
 
       {/* Engagement strip */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardContent className="p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
               Active users this period
@@ -669,7 +669,7 @@ export default function AnalyticsDashboard() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardContent className="p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
               Cohort activation
@@ -680,7 +680,7 @@ export default function AnalyticsDashboard() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardContent className="p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
               Return rate
@@ -782,7 +782,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Power users */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-slate-100 text-base flex items-center gap-2">
             <Flame className="w-4 h-4 text-amber-400" />
@@ -834,14 +834,14 @@ export default function AnalyticsDashboard() {
         <TabsContent value="engagement" className="space-y-6 mt-4">
           {/* Telemetry KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-slate-900 border-slate-800">
+            <Card>
               <CardContent className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active users</p>
                 <p className="text-3xl font-bold text-white mt-1.5">{activeCount.toLocaleString()}</p>
                 <p className="text-xs text-slate-500 mt-1">{activeRatio}% of total</p>
               </CardContent>
             </Card>
-            <Card className="bg-slate-900 border-slate-800">
+            <Card>
               <CardContent className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Return rate</p>
                 <p className="text-3xl font-bold text-white mt-1.5">{retentionRate}%</p>
@@ -865,7 +865,7 @@ export default function AnalyticsDashboard() {
           </div>
 
           {totalEvents === 0 ? (
-            <Card className="bg-slate-900 border-slate-800">
+            <Card>
               <CardContent className="p-10 text-center text-sm text-slate-500">
                 No telemetry captured in this window yet. Events will appear once
                 users interact with instrumented pages.
@@ -901,7 +901,7 @@ export default function AnalyticsDashboard() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <Card className="bg-slate-900 border-slate-800">
+              <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-slate-100 text-base flex items-center gap-2">
                     <Link2 className="w-4 h-4 text-slate-400" />
@@ -945,14 +945,14 @@ export default function AnalyticsDashboard() {
 
         <TabsContent value="features" className="space-y-6 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-slate-900 border-slate-800">
+            <Card>
               <CardContent className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Page views</p>
                 <p className="text-3xl font-bold text-white mt-1.5">{pageViewCount.toLocaleString()}</p>
                 <p className="text-xs text-slate-500 mt-1">page_view events in window</p>
               </CardContent>
             </Card>
-            <Card className="bg-slate-900 border-slate-800">
+            <Card>
               <CardContent className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Feature events</p>
                 <p className="text-3xl font-bold text-white mt-1.5">
@@ -961,7 +961,7 @@ export default function AnalyticsDashboard() {
                 <p className="text-xs text-slate-500 mt-1">all non-page_view events</p>
               </CardContent>
             </Card>
-            <Card className="bg-slate-900 border-slate-800">
+            <Card>
               <CardContent className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Distinct features</p>
                 <p className="text-3xl font-bold text-white mt-1.5">{featureEvents.length.toLocaleString()}</p>
@@ -971,7 +971,7 @@ export default function AnalyticsDashboard() {
           </div>
 
           {featureEvents.length === 0 ? (
-            <Card className="bg-slate-900 border-slate-800">
+            <Card>
               <CardContent className="p-10 text-center text-sm text-slate-500">
                 No feature events recorded yet. Call <code className="text-slate-300">trackEvent(name, props)</code> from
                 user flows to see them here.
@@ -1002,7 +1002,7 @@ export default function AnalyticsDashboard() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <Card className="bg-slate-900 border-slate-800">
+              <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-slate-100 text-base flex items-center gap-2">
                     <Activity className="w-4 h-4 text-slate-400" />
@@ -1039,7 +1039,7 @@ export default function AnalyticsDashboard() {
         </TabsContent>
 
         <TabsContent value="retention" className="space-y-6 mt-4">
-          <Card className="bg-slate-900 border-slate-800">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-slate-100 text-base flex items-center gap-2">
                 <Users className="w-4 h-4 text-slate-400" />

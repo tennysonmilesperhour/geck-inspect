@@ -179,7 +179,7 @@ export default function StoreCategory() {
             <Link
               key={sub.id}
               to={`/Store/c/${sub.slug}`}
-              className="rounded-md border border-slate-800 bg-slate-900/40 hover:bg-slate-900 hover:border-slate-700 transition-colors px-3 py-2 text-sm text-slate-200"
+              className="touch:min-h-11 flex items-center rounded-md border border-slate-800 bg-slate-900/40 hover:bg-slate-900 hover:border-slate-700 transition-colors px-3 py-2 text-sm text-slate-200"
             >
               {sub.name}
             </Link>

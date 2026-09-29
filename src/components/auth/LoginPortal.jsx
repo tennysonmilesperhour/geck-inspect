@@ -197,14 +197,14 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
               type="button"
               onClick={handleResendConfirmation}
               disabled={isLoading}
-              className="text-emerald-400 hover:text-emerald-300 underline text-sm disabled:opacity-50 block mx-auto"
+              className="text-emerald-400 hover:text-emerald-300 underline text-sm touch:min-h-11 disabled:opacity-50 block mx-auto"
             >
               {isLoading ? 'Sending...' : 'Resend confirmation email'}
             </button>
           )}
           <button
             onClick={() => { setIsSignUp(false); setIsForgot(false); setSignUpSent(false); setResetSent(false); }}
-            className="text-emerald-400 hover:text-emerald-300 underline text-sm"
+            className="text-emerald-400 hover:text-emerald-300 underline text-sm touch:min-h-11"
           >
             Back to sign in
           </button>
@@ -228,7 +228,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
         </div>
 
         {/* Auth card */}
-        <Card className="bg-slate-900 border-slate-700 shadow-xl">
+        <Card className="shadow-xl">
           <CardContent className="pt-6 space-y-5">
 
             {isForgot ? (
@@ -266,7 +266,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                 <button
                   type="button"
                   onClick={() => setIsForgot(false)}
-                  className="w-full text-center text-sm text-slate-400 hover:text-white"
+                  className="w-full text-center text-sm touch:min-h-11 text-slate-400 hover:text-white"
                 >
                   Back to sign in
                 </button>
@@ -278,7 +278,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                   <button
                     type="button"
                     onClick={() => setIsSignUp(false)}
-                    className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 touch:min-h-11 rounded-md text-sm font-medium transition-colors ${
                       !isSignUp
                         ? 'bg-emerald-600 text-white shadow'
                         : 'text-slate-400 hover:text-white'
@@ -289,7 +289,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                   <button
                     type="button"
                     onClick={() => setIsSignUp(true)}
-                    className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 touch:min-h-11 rounded-md text-sm font-medium transition-colors ${
                       isSignUp
                         ? 'bg-emerald-600 text-white shadow'
                         : 'text-slate-400 hover:text-white'
@@ -348,7 +348,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                         <button
                           type="button"
                           onClick={() => setIsForgot(true)}
-                          className="text-xs text-emerald-400 hover:text-emerald-300"
+                          className="text-xs touch:min-h-11 text-emerald-400 hover:text-emerald-300"
                         >
                           Forgot password?
                         </button>
@@ -374,7 +374,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                   </div>
 
                   {!isSignUp && (
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <label className="flex items-center gap-2 touch:min-h-11 cursor-pointer select-none">
                       <Checkbox
                         checked={rememberMe}
                         onCheckedChange={(checked) => setRememberMe(!!checked)}

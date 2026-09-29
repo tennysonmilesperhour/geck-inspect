@@ -472,7 +472,7 @@ export default function MyStore() {
                 ) : (
                     <>
                         {/* Identity */}
-                        <Card className="bg-slate-900/60 border-slate-800">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="text-base font-semibold text-slate-100">Identity</CardTitle>
                                 <CardDescription className="text-slate-400">
@@ -534,7 +534,7 @@ export default function MyStore() {
                         </Card>
 
                         {/* About + header image */}
-                        <Card className="bg-slate-900/60 border-slate-800">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="text-base font-semibold text-slate-100">About</CardTitle>
                                 <CardDescription className="text-slate-400">
@@ -584,7 +584,7 @@ export default function MyStore() {
                         </Card>
 
                         {/* Public breeder profile */}
-                        <Card className="bg-slate-900/60 border-slate-800">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
                                     <User className="w-4 h-4 text-emerald-400" /> Public breeder profile
@@ -658,7 +658,7 @@ export default function MyStore() {
                         </Card>
 
                         {/* Mini-site appearance */}
-                        <Card className="bg-slate-900/60 border-slate-800">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
                                     <Palette className="w-4 h-4 text-emerald-400" /> Mini-site appearance
@@ -737,7 +737,7 @@ export default function MyStore() {
                         </Card>
 
                         {/* Featured geckos */}
-                        <Card className="bg-slate-900/60 border-slate-800">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
                                     Featured geckos
@@ -766,7 +766,7 @@ export default function MyStore() {
                                                     type="button"
                                                     key={g.id}
                                                     onClick={() => toggleGecko(g.id)}
-                                                    className={`text-left rounded-lg overflow-hidden border transition-all ${
+                                                    className={`touch:min-h-11 text-left rounded-lg overflow-hidden border transition-all ${
                                                         selected
                                                             ? 'border-emerald-400 ring-2 ring-emerald-400/40'
                                                             : 'border-slate-700 hover:border-slate-500'
@@ -795,7 +795,7 @@ export default function MyStore() {
                         </Card>
 
                         {/* Featured breeding pairs */}
-                        <Card className="bg-slate-900/60 border-slate-800">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
                                     <GitBranch className="w-4 h-4 text-emerald-400" /> Featured breeding pairs
@@ -824,7 +824,7 @@ export default function MyStore() {
                                                     type="button"
                                                     key={p.id}
                                                     onClick={() => togglePlan(p.id)}
-                                                    className={`text-left rounded-lg border p-3 transition-colors ${
+                                                    className={`touch:min-h-11 text-left rounded-lg border p-3 transition-colors ${
                                                         selected
                                                             ? 'border-pink-400 bg-pink-500/10'
                                                             : 'border-slate-700 hover:border-slate-500 bg-slate-950/40'
@@ -850,7 +850,7 @@ export default function MyStore() {
                         </Card>
 
                         {/* Policies */}
-                        <Card className="bg-slate-900/60 border-slate-800">
+                        <Card>
                             <CardHeader>
                                 <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
                                     <div>
@@ -887,7 +887,7 @@ export default function MyStore() {
                         </Card>
 
                         {/* Contact + external links */}
-                        <Card className="bg-slate-900/60 border-slate-800">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="text-base font-semibold text-slate-100">Contact and links</CardTitle>
                                 <CardDescription className="text-slate-400">

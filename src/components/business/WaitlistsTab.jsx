@@ -222,7 +222,7 @@ function NewWaitlistForm({ plans, geckosById, currency, breederId, onCancel, onC
   };
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 space-y-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-4">
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="wl-plan" className="text-slate-200">Pairing</Label>
@@ -358,7 +358,7 @@ function WaitlistCard({
   };
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900/50" data-waitlist-card>
+    <div className="rounded-xl border border-slate-700 bg-slate-900" data-waitlist-card>
       <div className="p-4 flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">

@@ -150,7 +150,9 @@ export default function ProductTour() {
           <div className="text-[11px] text-slate-400">
             A quick visual tour of Geck Inspect.
           </div>
-          <div className="flex items-center gap-1.5">
+          {/* The 6 px dots are too dense to tap, so on touch screens they
+              only show the position and the slides advance on their own. */}
+          <div className="flex touch:pointer-events-none items-center gap-1.5">
             {visible.map((_, i) => (
               <button
                 key={i}

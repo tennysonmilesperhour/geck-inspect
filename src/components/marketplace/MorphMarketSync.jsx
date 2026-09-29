@@ -53,7 +53,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
 
   if (!hasAccess) {
     return (
-      <Card className="border-slate-800 bg-slate-900/60">
+      <Card>
         <CardContent className="p-4 md:p-6 text-center">
           <div className="space-y-3">
             <Crown className="w-8 h-8 text-emerald-400 mx-auto" />
@@ -139,7 +139,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
 
   return (
     <>
-      <Card className="border-slate-800 bg-slate-900/60">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-slate-200 flex items-center gap-2">
             <FileSpreadsheet className="w-4 h-4 text-emerald-400" />

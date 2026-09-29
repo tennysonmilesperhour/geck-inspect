@@ -30,7 +30,7 @@ export function PinToggle({ id, pins, onTogglePin }) {
     <button
       type="button"
       onClick={() => onTogglePin(id)}
-      className={`inline-flex items-center justify-center w-6 h-6 rounded transition-colors ${
+      className={`relative touch-hit inline-flex items-center justify-center w-6 h-6 rounded transition-colors ${
         on ? 'text-emerald-300 hover:bg-emerald-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800'
       }`}
       aria-label={on ? 'Unpin from dashboard' : 'Pin to dashboard'}
@@ -109,7 +109,7 @@ function IndexCard({ index, pinProps }) {
   const ticks = Array.from({ length: (hi - lo) / 100 + 1 }, (_, i) => lo + i * 100);
   const latest = index.series.find((s) => s.week === index.latest_week);
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={Activity}
         title="Geck Inspect Asking Price Index"
@@ -183,7 +183,7 @@ function MoversCard({ movers, periods, onOpenTrait, pinProps }) {
   const prices = all.flatMap((r) => [r.earlier[1], r.recent[1]]);
   const scale = { min: Math.min(...prices), max: Math.max(...prices) };
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 h-full">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 h-full">
       <SectionHeader
         icon={TrendingUp}
         title="Top Movers"
@@ -220,7 +220,7 @@ function MoverColumn({ title, rows, direction, scale, onOpenTrait }) {
             <button
               key={r.name}
               onClick={() => onOpenTrait?.(r.name)}
-              className="w-full text-left bg-slate-800/40 hover:bg-slate-800 border border-slate-800/60 hover:border-emerald-500/40 rounded-lg px-3 py-2 flex items-center gap-3 transition-colors"
+              className="touch:min-h-11 w-full text-left bg-slate-800/40 hover:bg-slate-800 border border-slate-800/60 hover:border-emerald-500/40 rounded-lg px-3 py-2 flex items-center gap-3 transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-slate-100 truncate">{r.name}</div>
@@ -265,7 +265,7 @@ function CoverageCard({ agg, pinProps }) {
   const CAP = Math.max(sizes[1] || sizes[0] || 1, 1);
   const months = [...new Set(weeks.map((w) => new Date(`${w}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })))];
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 h-full">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4 h-full">
       <SectionHeader
         icon={DatabaseZap}
         title="Data Coverage"
@@ -314,7 +314,7 @@ function LegendRow({ swatch, label }) {
 // =================== Market temperature ==============================
 function TemperatureCard({ temps, periods, onOpenTrait, pinProps }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={Gauge}
         title="Market Temperature, sell, hold or buy"

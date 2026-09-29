@@ -15,7 +15,7 @@ export default function GeckoIdGuide() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg">
+        <Card className="border-border shadow-lg">
             <Collapsible open={isOpen} onOpenChange={setIsOpen}>
                 <CollapsibleTrigger asChild>
                     <CardHeader className="cursor-pointer hover:bg-muted/60 transition-colors">
@@ -24,7 +24,7 @@ export default function GeckoIdGuide() {
                                 <Info className="w-5 h-5 text-primary" />
                                 <CardTitle className="text-lg">Understanding Gecko ID Codes</CardTitle>
                             </div>
-                            <Button variant="ghost" size="sm" className="p-1">
+                            <Button variant="ghost" size="sm" className="touch:min-w-11 p-1">
                                 {isOpen ? (
                                     <ChevronUp className="w-4 h-4" />
                                 ) : (

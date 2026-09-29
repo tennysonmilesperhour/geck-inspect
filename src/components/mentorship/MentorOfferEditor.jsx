@@ -255,7 +255,7 @@ export default function MentorOfferEditor({ open, onOpenChange, offer = null, on
                                             type="button"
                                             onClick={() => removeSpecialty(s)}
                                             aria-label={`Remove ${s}`}
-                                            className="ml-1 p-0.5 rounded hover:bg-slate-700"
+                                            className="touch:min-h-11 touch:min-w-11 ml-1 p-0.5 rounded hover:bg-slate-700"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
@@ -293,7 +293,7 @@ export default function MentorOfferEditor({ open, onOpenChange, offer = null, on
                                         key={s}
                                         type="button"
                                         onClick={() => addSpecialty(s)}
-                                        className="text-[11px] px-2 py-0.5 rounded-full border border-slate-700 text-slate-400 hover:border-emerald-600 hover:text-emerald-300 transition-colors"
+                                        className="touch:min-h-11 text-[11px] px-2 py-0.5 rounded-full border border-slate-700 text-slate-400 hover:border-emerald-600 hover:text-emerald-300 transition-colors"
                                     >
                                         + {s}
                                     </button>

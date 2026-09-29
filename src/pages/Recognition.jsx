@@ -241,7 +241,7 @@ export default function Recognition() {
         )}
 
         {!morphIdLocked && (
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardContent className="p-4 md:p-6 space-y-5">
             {isLoadingAuth ? (
               <div className="py-10 text-center text-slate-400">

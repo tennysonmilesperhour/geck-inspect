@@ -158,7 +158,7 @@ export default function PedigreeTracker() {
 
           <Link
             to="/AuthPortal"
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
+            className="touch:min-h-11 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
           >
             Start tracking your lineage free
             <ArrowRight className="w-4 h-4" />

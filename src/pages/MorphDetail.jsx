@@ -299,7 +299,7 @@ export default function MorphDetail() {
         {/* Top nav. Inside the app the shell already has a header. */}
         {!inAppShell && (
           <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <Link to="/" className="flex items-center gap-3 touch:min-h-11 hover:opacity-90 transition-opacity">
               <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
               <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
             </Link>
@@ -366,7 +366,7 @@ export default function MorphDetail() {
 
           {/* Hero image */}
           {heroImage && (
-            <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 mb-10">
+            <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900 mb-10">
               <img
                 src={heroImage}
                 alt={`Example ${morphName} crested gecko`}
@@ -402,7 +402,7 @@ export default function MorphDetail() {
           {(inheritance || localMorph?.priceTier) && (
             <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
               {inheritance && (
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+                <div className="rounded-xl border border-slate-700 bg-slate-900 p-5">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-300 mb-2">
                     <Dna className="w-3.5 h-3.5" />
                     Inheritance
@@ -416,7 +416,7 @@ export default function MorphDetail() {
                 </div>
               )}
               {localMorph?.priceTier && (
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+                <div className="rounded-xl border border-slate-700 bg-slate-900 p-5">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-300 mb-2">
                     <Star className="w-3.5 h-3.5" />
                     Price tier
@@ -552,7 +552,7 @@ export default function MorphDetail() {
                 <GitBranch className="w-5 h-5 text-emerald-400" />
                 Breeding information
               </h2>
-              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 text-slate-300 leading-relaxed">
+              <div className="rounded-xl border border-slate-700 bg-slate-900 p-5 text-slate-300 leading-relaxed">
                 {record.breeding_info.split(/\n+/).map((p, i) => (
                   <p key={i} className={i > 0 ? 'mt-3' : ''}>
                     {p}
@@ -581,7 +581,7 @@ export default function MorphDetail() {
                 {referenceImages.map((img, i) => (
                   <div
                     key={`ref-${i}`}
-                    className="aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-900 relative group"
+                    className="aspect-square rounded-xl overflow-hidden border border-slate-700 bg-slate-900 relative group"
                   >
                     {img.source_url ? (
                       <a href={img.source_url} target="_blank" rel="noopener noreferrer">
@@ -627,7 +627,7 @@ export default function MorphDetail() {
                 {communityImages.map((img) => (
                   <div
                     key={img.id}
-                    className="aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-900"
+                    className="aspect-square rounded-xl overflow-hidden border border-slate-700 bg-slate-900"
                   >
                     <img
                       src={img.image_url}
@@ -676,7 +676,7 @@ export default function MorphDetail() {
                   {faqs.map(({ question, answer }) => (
                     <details
                       key={question}
-                      className="group rounded-xl border border-slate-800 bg-slate-900/50 hover:border-slate-700 open:border-emerald-500/30 p-5 transition-colors"
+                      className="group rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-700 open:border-emerald-500/30 p-5 transition-colors"
                     >
                       <summary className="cursor-pointer list-none flex items-start touch:items-center touch:min-h-11 justify-between gap-4">
                         <h3 className="text-base md:text-lg font-semibold text-slate-100 leading-snug">

@@ -41,7 +41,7 @@ export default function TrialOfferModal({ open, onOpenChange, tier, trialAlready
                 type="button"
                 onMouseEnter={() => setHovering('trial')}
                 onMouseLeave={() => setHovering(null)}
-                className={`w-full text-left rounded-lg border-2 p-4 transition-all ${
+                className={`touch:min-h-11 w-full text-left rounded-lg border-2 p-4 transition-all ${
                   hovering === 'trial'
                     ? 'border-emerald-400 bg-emerald-900/30'
                     : 'border-emerald-600/60 bg-emerald-900/20 hover:border-emerald-400'
@@ -76,7 +76,7 @@ export default function TrialOfferModal({ open, onOpenChange, tier, trialAlready
               type="button"
               onMouseEnter={() => setHovering('card')}
               onMouseLeave={() => setHovering(null)}
-              className={`w-full text-left rounded-lg border p-4 transition-all ${
+              className={`touch:min-h-11 w-full text-left rounded-lg border p-4 transition-all ${
                 hovering === 'card'
                   ? 'border-emerald-500/60 bg-emerald-900/20'
                   : 'border-emerald-800/40 bg-emerald-950/30 hover:border-emerald-600/40'
@@ -104,7 +104,7 @@ export default function TrialOfferModal({ open, onOpenChange, tier, trialAlready
               type="button"
               onMouseEnter={() => setHovering('upgrade')}
               onMouseLeave={() => setHovering(null)}
-              className={`w-full text-left rounded-lg border p-4 transition-all ${
+              className={`touch:min-h-11 w-full text-left rounded-lg border p-4 transition-all ${
                 hovering === 'upgrade'
                   ? 'border-emerald-500/60 bg-emerald-900/20'
                   : 'border-emerald-800/40 bg-emerald-950/30 hover:border-emerald-600/40'

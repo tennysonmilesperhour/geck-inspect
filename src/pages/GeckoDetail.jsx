@@ -181,7 +181,7 @@ export default function GeckoDetail() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {/* Left: Image + basic info */}
                     <div className="space-y-4">
-                        <Card className="bg-slate-900 border-slate-700 overflow-hidden">
+                        <Card className="overflow-hidden">
                             <div className="aspect-square w-full bg-slate-800">
                                 <img
                                     src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
@@ -220,7 +220,7 @@ export default function GeckoDetail() {
 
                         {/* Additional images */}
                         {gecko.image_urls?.length > 1 && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardContent className="p-3">
                                     <div className="grid grid-cols-3 gap-1.5">
                                         {gecko.image_urls.map((url, i) => (
@@ -238,7 +238,7 @@ export default function GeckoDetail() {
                         )}
 
                         {hasFireStatePhotos(gecko) && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardContent className="p-3">
                                     <FireStatePair
                                         gecko={gecko}
@@ -251,11 +251,11 @@ export default function GeckoDetail() {
                         {/* Lightbox */}
                         {lightboxIndex !== null && gecko.image_urls?.length > 0 && (
                             <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setLightboxIndex(null)}>
-                                <button className="absolute top-4 right-4 text-white hover:text-slate-300 z-10" onClick={() => setLightboxIndex(null)}>
+                                <button className="touch-hit absolute top-4 right-4 text-white hover:text-slate-300 z-10" onClick={() => setLightboxIndex(null)}>
                                     <X className="w-8 h-8" />
                                 </button>
                                 <button
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
+                                    className="touch-hit absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
                                     disabled={lightboxIndex === 0}
                                     onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => Math.max(0, prev - 1)); }}
                                 >
@@ -268,7 +268,7 @@ export default function GeckoDetail() {
                                     onClick={e => e.stopPropagation()}
                                 />
                                 <button
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
+                                    className="touch-hit absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
                                     disabled={lightboxIndex === gecko.image_urls.length - 1}
                                     onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => Math.min(gecko.image_urls.length - 1, i + 1)); }}
                                 >
@@ -280,12 +280,12 @@ export default function GeckoDetail() {
 
                         {/* Owner card */}
                         {owner && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardContent className="p-4">
                                     <h3 className="text-base font-semibold text-slate-100 mb-3 flex items-center gap-2">
                                         <UserIcon className="w-4 h-4 text-emerald-400" /> Breeder
                                     </h3>
-                                    <Link to={createPageUrl(`PublicProfile?userId=${owner.id}`)} className="flex items-center gap-3 hover:opacity-80 transition-opacity mb-3">
+                                    <Link to={createPageUrl(`PublicProfile?userId=${owner.id}`)} className="touch:min-h-11 flex items-center gap-3 hover:opacity-80 transition-opacity mb-3">
                                         <img
                                             src={owner.profile_image_url || initialsAvatarUrl(owner.full_name || 'B')}
                                             alt={owner.full_name}
@@ -323,7 +323,7 @@ export default function GeckoDetail() {
                     <div className="lg:col-span-2 space-y-4">
                         {/* Morphs & Traits */}
                         {(gecko.morphs_traits || gecko.morph_tags?.length > 0) && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader className="pb-2 pt-4 px-4">
                                     <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
                                         <Tag className="w-4 h-4 text-emerald-400" /> Morphs & Traits
@@ -354,7 +354,7 @@ export default function GeckoDetail() {
 
                         {/* Notes */}
                         {gecko.notes && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader className="pb-2 pt-4 px-4">
                                     <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
                                         <StickyNote className="w-4 h-4 text-emerald-400" /> Notes
@@ -368,7 +368,7 @@ export default function GeckoDetail() {
 
                         {/* Weight Chart */}
                         {weightRecords.length > 0 && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader className="pb-2 pt-4 px-4">
                                     <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
                                         <LineChartIcon className="w-4 h-4 text-emerald-400" /> Weight History
@@ -382,7 +382,7 @@ export default function GeckoDetail() {
 
                         {/* Shed Forecast */}
                         {shedPrediction && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardHeader className="pb-2 pt-4 px-4">
                                     <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
                                         <Droplets className="w-4 h-4 text-emerald-400" /> Next Shed Window
@@ -415,7 +415,7 @@ export default function GeckoDetail() {
                         <VisualSiblings gecko={gecko} user={currentUser} />
 
                         {/* Parentage */}
-                        <Card className="bg-slate-900 border-slate-700">
+                        <Card>
                             <CardHeader className="pb-2 pt-4 px-4">
                                 <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
                                     <GitBranch className="w-4 h-4 text-emerald-400" /> Lineage
@@ -453,7 +453,7 @@ export default function GeckoDetail() {
 
                         {/* Price */}
                         {gecko.asking_price && (
-                            <Card className="bg-slate-900 border-slate-700">
+                            <Card>
                                 <CardContent className="p-4 flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-base font-semibold text-slate-100">
                                         <DollarSign className="w-4 h-4 text-emerald-400" />

@@ -357,7 +357,7 @@ export default function Hatchery() {
                 </div>
             </div>
 
-            <Card className="bg-slate-900 border-slate-700 overflow-hidden">
+            <Card className="overflow-hidden">
                 <CardContent className="p-5 sm:p-6 space-y-5">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                         <div className="flex items-start gap-3">
@@ -440,7 +440,7 @@ export default function Hatchery() {
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-700">
+            <Card>
                 <CardContent className="p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                         <div className="relative sm:col-span-2 md:col-span-1">
@@ -606,7 +606,7 @@ export default function Hatchery() {
                                 )}
 
                                 {egg.status === 'Incubating' && !egg.archived && (
-                                    <div className="pt-2 border-t border-slate-700 flex flex-wrap gap-1.5">
+                                    <div className="pt-2 border-t border-slate-700 flex flex-wrap gap-1.5 touch:gap-2">
                                         <Button
                                             size="sm"
                                             onClick={(e) => handleHatchEgg(egg, e)}
@@ -640,7 +640,7 @@ export default function Hatchery() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={(e) => handleArchiveEgg(egg.id, true, e)}
-                                        className="h-5 text-[10px] md:text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700 px-1.5 md:px-2"
+                                        className="relative h-5 touch:min-h-0 touch:min-w-0 touch-hit text-[10px] md:text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700 px-1.5 md:px-2"
                                     >
                                         <Archive className="w-2.5 h-2.5 md:w-3 md:h-3 md:mr-1" />
                                         <span className="hidden md:inline">Archive</span>
@@ -652,7 +652,7 @@ export default function Hatchery() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={(e) => handleArchiveEgg(egg.id, false, e)}
-                                        className="h-5 text-[10px] md:text-xs text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 px-1.5 md:px-2"
+                                        className="relative h-5 touch:min-h-0 touch:min-w-0 touch-hit text-[10px] md:text-xs text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 px-1.5 md:px-2"
                                     >
                                         <ArchiveRestore className="w-2.5 h-2.5 md:w-3 md:h-3 md:mr-1" />
                                         <span className="hidden md:inline">Restore</span>
@@ -665,7 +665,7 @@ export default function Hatchery() {
             </div>
 
             {filteredEggs.length === 0 && (
-                <Card className="bg-slate-900 border-slate-700">
+                <Card>
                     <CardContent className="text-center py-12">
                         <EggIcon className="w-16 h-16 mx-auto text-slate-500 mb-4" />
                         <p className="text-slate-400">No eggs found matching your filters</p>

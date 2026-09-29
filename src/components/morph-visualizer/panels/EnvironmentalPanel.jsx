@@ -31,12 +31,12 @@ export default function EnvironmentalPanel({ environmental, onChange }) {
           return (
             <div key={t.id} className="bg-slate-900 border border-slate-700 rounded-md px-2.5 py-1.5">
               <span className="text-xs text-slate-200 font-medium block mb-1">{t.name}</span>
-              <div className="flex gap-1 flex-wrap">
+              <div className="flex gap-1 touch:gap-2 flex-wrap">
                 {t.options.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => onChange(t.id, opt)}
-                    className={`px-2 py-0.5 text-[11px] rounded border transition ${
+                    className={`px-2 py-0.5 touch:min-h-11 touch:min-w-11 text-[11px] rounded border transition ${
                       current === opt
                         ? 'bg-slate-700 border-slate-400 text-slate-100'
                         : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'

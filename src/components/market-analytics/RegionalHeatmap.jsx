@@ -55,7 +55,7 @@ export default function RegionalHeatmap({ filters, onDrillDown }) {
   const fmt = METRICS.find((m) => m.code === metric)?.format ?? ((v) => v);
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
       <SectionHeader
         icon={MapIcon}
         title="Regional heatmap, combo × market"
@@ -132,7 +132,7 @@ export default function RegionalHeatmap({ filters, onDrillDown }) {
           </div>
           <span className="text-slate-500">· opacity ∝ confidence</span>
         </div>
-        <div>{metric === 'median_sold' ? `range ${fmt(min)}–${fmt(max)}` : `range ${min}–${max}`}</div>
+        <div>{metric === 'median_sold' ? `range ${fmt(min)} to ${fmt(max)}` : `range ${min} to ${max}`}</div>
       </div>
     </div>
   );

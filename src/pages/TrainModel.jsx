@@ -174,7 +174,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 md:p-8">
                 <div className="w-full max-w-md text-center">
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="px-5 py-8 md:px-8 md:py-10">
                             <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500/15 flex items-center justify-center mb-4">
                                 <Brain className="w-7 h-7 text-emerald-400" />
@@ -203,7 +203,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
 
                 {/* Training Statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 md:p-6">
                             <div className="flex items-center gap-3">
                                 <Database className="w-8 h-8 text-blue-500" />
@@ -215,7 +215,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 md:p-6">
                             <div className="flex items-center gap-3">
                                 <CheckCircle className="w-8 h-8 text-green-500" />
@@ -227,7 +227,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 md:p-6">
                             <div className="flex items-center gap-3">
                                 <Target className="w-8 h-8 text-purple-500" />
@@ -239,7 +239,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-900 border-slate-700">
+                    <Card>
                         <CardContent className="p-4 md:p-6">
                             <div className="flex items-center gap-3">
                                 <TrendingUp className="w-8 h-8 text-emerald-500" />
@@ -253,7 +253,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
                 </div>
 
                 {/* External inventory (geck-data) */}
-                <Card className="bg-slate-900 border-slate-700">
+                <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Globe className="w-5 h-5" />
@@ -300,7 +300,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
                 </Card>
 
                 {/* Training Progress */}
-                <Card className="bg-slate-900 border-slate-700">
+                <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <BarChart3 className="w-5 h-5" />
@@ -341,7 +341,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
                     </TabsList>
                     
                     <TabsContent value="current">
-                        <Card className="bg-slate-900 border-slate-700">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Brain className="w-5 h-5" />
@@ -403,7 +403,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
                     </TabsContent>
 
                     <TabsContent value="llm">
-                        <Card className="bg-slate-900 border-slate-700">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Eye className="w-5 h-5" />

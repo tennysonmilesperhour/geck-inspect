@@ -39,7 +39,7 @@ export default function KeepersGuideTabs({ categoryId }) {
           </div>
           <Link
             to="/CareGuide/series"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-emerald-300"
+            className="touch:min-h-11 inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-emerald-300"
           >
             All five guides
             <ArrowRight className="w-3 h-3" />

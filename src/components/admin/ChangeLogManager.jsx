@@ -256,7 +256,7 @@ Return a JSON object with { "title": "short catchy headline, 3-6 words", "bullet
       </div>
 
       {isCreating && (
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardHeader>
             <CardTitle className="text-slate-100 text-base">
               {editingId ? 'Edit entry' : 'New deploy log entry'}
@@ -388,7 +388,7 @@ Return a JSON object with { "title": "short catchy headline, 3-6 words", "bullet
       ) : (
         <div className="space-y-3">
           {entries.map((entry) => (
-            <Card key={entry.id} className="bg-slate-900 border-slate-800">
+            <Card key={entry.id}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -450,7 +450,7 @@ Return a JSON object with { "title": "short catchy headline, 3-6 words", "bullet
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDelete(entry.id)}
-                      className="text-red-400 hover:text-red-300 h-8"
+                      className="touch:min-w-11 text-red-400 hover:text-red-300 h-8"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

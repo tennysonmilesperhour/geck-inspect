@@ -77,7 +77,7 @@ export default function PhotoQualityInputs({ value = {}, onChange }) {
                 key={flag.id}
                 type="button"
                 onClick={() => toggleFlag(flag.id)}
-                className={`px-3 py-1 rounded-full text-xs transition-colors border border-slate-700 ${tone}`}
+                className={`px-3 py-1 touch:min-h-11 rounded-full text-xs transition-colors border border-slate-700 ${tone}`}
               >
                 {flag.label}
               </button>

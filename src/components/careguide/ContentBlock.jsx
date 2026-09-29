@@ -55,7 +55,7 @@ function Callout({ tone = 'info', title, items }) {
 
 function DataTable({ headers, rows, caption }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 overflow-hidden">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 overflow-hidden">
       {caption && (
         <div className="px-4 py-2 bg-slate-900 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
           {caption}

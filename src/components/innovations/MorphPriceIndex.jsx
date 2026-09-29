@@ -44,14 +44,14 @@ export default function MorphPriceIndex({ gecko, sellerPrice }) {
   if (!gecko || isGuest) return null;
   if (state === 'loading') {
     return (
-      <Card className="bg-slate-900 border-slate-700 animate-pulse">
+      <Card className="animate-pulse">
         <CardContent className="py-4 text-center text-slate-500 text-sm">Loading listing prices...</CardContent>
       </Card>
     );
   }
   if (!priced) {
     return (
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardContent className="py-4 text-center text-slate-500 text-sm">
           {state === 'error'
             ? 'Listing prices could not load right now.'
@@ -71,7 +71,7 @@ export default function MorphPriceIndex({ gecko, sellerPrice }) {
   const pct = (v) => `${Math.min(100, Math.max(0, (v / scaleMax) * 100)).toFixed(0)}%`;
 
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2 text-slate-100">
           <BarChart3 className="w-4 h-4 text-emerald-400" />

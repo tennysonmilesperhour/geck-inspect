@@ -77,11 +77,11 @@ export default function TransactionDrilldown({ open, onClose, criteria }) {
             <button
               onClick={handleExport}
               disabled={!rows.length}
-              className="inline-flex items-center gap-1 text-xs text-slate-300 hover:text-white disabled:opacity-40 border border-slate-700 bg-slate-900 hover:bg-slate-800 rounded px-2.5 py-1"
+              className="touch:min-h-11 inline-flex items-center gap-1 text-xs text-slate-300 hover:text-white disabled:opacity-40 border border-slate-700 bg-slate-900 hover:bg-slate-800 rounded px-2.5 py-1"
             >
               <Download className="w-3.5 h-3.5" />Export CSV
             </button>
-            <button onClick={onClose} className="p-1 rounded hover:bg-slate-800 text-slate-400">
+            <button onClick={onClose} className="touch:min-h-11 touch:min-w-11 p-1 rounded hover:bg-slate-800 text-slate-400">
               <X className="w-4 h-4" />
             </button>
           </div>

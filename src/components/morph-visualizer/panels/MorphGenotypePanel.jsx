@@ -48,14 +48,14 @@ export default function MorphGenotypePanel({ mendelian, onChange }) {
                 )}
               </div>
 
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-1.5 touch:gap-2 flex-wrap">
                 {options.map((opt) => {
                   const label = opt === Z.ABSENT ? 'Not Carried' : zygosityLabel(m.id, opt);
                   return (
                     <button
                       key={opt}
                       onClick={() => onChange(m.id, opt)}
-                      className={`px-2 py-1 text-xs rounded border transition ${
+                      className={`px-2 py-1 touch:min-h-11 text-xs rounded border transition ${
                         current === opt ? BAND_STYLES[opt] : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500'
                       }`}
                     >

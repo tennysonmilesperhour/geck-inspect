@@ -97,7 +97,7 @@ export default function HatchClutch({ phenotypes, labelFor }) {
             <button
               type="button"
               onClick={reset}
-              className="text-xs text-slate-400 hover:text-slate-200 inline-flex items-center gap-1"
+              className="text-xs text-slate-400 hover:text-slate-200 inline-flex items-center gap-1 touch:min-h-11"
             >
               <RotateCcw className="w-3 h-3" /> reset
             </button>
@@ -105,7 +105,7 @@ export default function HatchClutch({ phenotypes, labelFor }) {
           <button
             type="button"
             onClick={hatchClutch}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full border border-purple-500/60 bg-purple-600/20 text-purple-200 hover:bg-purple-600/30 inline-flex items-center gap-1.5"
+            className="text-xs font-semibold px-3 py-1.5 touch:min-h-11 rounded-full border border-purple-500/60 bg-purple-600/20 text-purple-200 hover:bg-purple-600/30 inline-flex items-center gap-1.5"
           >
             <Egg className="w-3.5 h-3.5" />
             Hatch a clutch

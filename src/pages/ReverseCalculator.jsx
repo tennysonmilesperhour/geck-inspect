@@ -115,7 +115,7 @@ function RouteCard({ route, rank, eggs }) {
         ))}
         <Link
           to={route.permalink}
-          className="ml-auto text-xs text-purple-300 hover:text-purple-200 underline inline-flex items-center gap-1"
+          className="ml-auto touch:min-h-11 text-xs text-purple-300 hover:text-purple-200 underline inline-flex items-center gap-1"
         >
           Open in calculator <ArrowRight className="w-3 h-3" />
         </Link>

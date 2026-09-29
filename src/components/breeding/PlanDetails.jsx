@@ -258,14 +258,14 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
         };
 
         const config = statusConfig[egg.status] || { className: "bg-transparent text-slate-400 border-slate-400", text: egg.status };
-        const baseClasses = "cursor-pointer text-xs font-semibold px-3 py-2 rounded-md border w-full text-center h-9 truncate transition-colors flex items-center justify-center";
+        const baseClasses = "cursor-pointer text-xs font-semibold px-3 py-2 rounded-md border w-full text-center h-9 touch:min-h-11 truncate transition-colors flex items-center justify-center";
 
         // Only Incubating eggs get the dropdown (limited to Infertile/Failed)
         if (egg.status === 'Incubating') {
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className={`${baseClasses} ${config.className}`}>
+                        <button className={`touch:min-h-11 ${baseClasses} ${config.className}`}>
                             {config.text}
                         </button>
                     </DropdownMenuTrigger>

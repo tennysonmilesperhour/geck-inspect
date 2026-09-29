@@ -226,7 +226,7 @@ export default function SupportInbox() {
     };
 
     return (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
             <CardHeader>
                 <CardTitle className="text-slate-100 flex items-center gap-2">
                     <LifeBuoy className="w-5 h-5 text-emerald-400" />
@@ -245,7 +245,7 @@ export default function SupportInbox() {
                             <button
                                 key={s.value}
                                 onClick={() => setActiveStatus(s.value)}
-                                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                                className={`touch:min-h-11 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                                     isActive
                                         ? s.color
                                         : 'border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700'
@@ -266,7 +266,7 @@ export default function SupportInbox() {
                             <button
                                 key={s.value}
                                 onClick={() => setActiveSource(s.value)}
-                                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                                className={`touch:min-h-11 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                                     isActive
                                         ? s.color
                                         : 'border-slate-800 bg-slate-900 text-slate-500 hover:bg-slate-800'
@@ -307,7 +307,7 @@ export default function SupportInbox() {
                             <button
                                 key={msg.id}
                                 onClick={() => openMessage(msg)}
-                                className="w-full text-left flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500/40 p-3 transition-colors"
+                                className="touch:min-h-11 w-full text-left flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500/40 p-3 transition-colors"
                             >
                                 <div
                                     className="w-9 h-9 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0"

@@ -144,7 +144,7 @@ export default function BlogPost() {
         {post.category && (
           <Link
             to={`/blog/category/${post.category.slug}`}
-            className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-4 hover:bg-emerald-500/20"
+            className="touch:min-h-11 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-4 hover:bg-emerald-500/20"
           >
             <BookOpen className="w-3.5 h-3.5" />
             {post.category.label}
@@ -243,7 +243,7 @@ export default function BlogPost() {
                 <li key={i}>
                   <Link
                     to={link.path || link.href}
-                    className="inline-flex items-center gap-1.5 text-emerald-300 hover:underline"
+                    className="touch:min-h-11 inline-flex items-center gap-1.5 text-emerald-300 hover:underline"
                   >
                     {link.label} <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
@@ -265,7 +265,7 @@ export default function BlogPost() {
                     href={c.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-slate-300 hover:text-emerald-300"
+                    className="touch:min-h-11 inline-flex items-center gap-1.5 text-slate-300 hover:text-emerald-300"
                   >
                     {c.label} <ExternalLink className="w-3.5 h-3.5" />
                   </a>
@@ -281,7 +281,7 @@ export default function BlogPost() {
               <Link
                 key={t.slug}
                 to={`/blog/tag/${t.slug}`}
-                className="text-xs px-2.5 py-1 rounded-md bg-slate-800/70 border border-slate-700 text-slate-300 hover:border-emerald-500/30 hover:text-emerald-300"
+                className="touch:min-h-11 inline-flex items-center text-xs px-2.5 py-1 rounded-md bg-slate-800/70 border border-slate-700 text-slate-300 hover:border-emerald-500/30 hover:text-emerald-300"
               >
                 #{t.name}
               </Link>
@@ -290,7 +290,7 @@ export default function BlogPost() {
         )}
 
         {showAuthorBox && (post.authorName || post.authorBio) && (
-          <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/40 p-5 flex items-start gap-4">
+          <section className="mt-10 rounded-xl border border-slate-700 bg-slate-900 p-5 flex items-start gap-4">
             {post.authorAvatarUrl && (
               <img
                 src={post.authorAvatarUrl}

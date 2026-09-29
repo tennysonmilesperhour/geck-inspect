@@ -66,7 +66,7 @@ export function ReadinessNote({ gecko, readiness, name }) {
 export function ReadinessCard({ gecko, readiness }) {
   if (!readiness) return null;
   return (
-    <Card className="bg-slate-900 border-slate-700">
+    <Card>
       <CardHeader className="pb-2 pt-4 px-4">
         <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
           <HeartHandshake className="w-4 h-4 text-emerald-400" /> Breeding readiness
@@ -74,7 +74,7 @@ export function ReadinessCard({ gecko, readiness }) {
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <ReadinessNote gecko={gecko} readiness={readiness} />
-        <Link to="/CareGuide/breeding-readiness" className="text-xs text-emerald-400 hover:text-emerald-300 mt-2 inline-block">
+        <Link to="/CareGuide/breeding-readiness" className="text-xs text-emerald-400 hover:text-emerald-300 mt-2 inline-flex items-center touch:min-h-11">
           Care guide: breeding readiness
         </Link>
       </CardContent>

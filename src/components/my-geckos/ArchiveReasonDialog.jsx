@@ -61,7 +61,7 @@ export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoNa
             <button
               key={value}
               onClick={() => handleSelectReason(value)}
-              className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+              className={`touch:min-h-11 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${
                 selected === value ? color.replace('hover:', '') : 'border-slate-700 text-slate-400 bg-slate-800 hover:bg-slate-700'
               }`}
             >

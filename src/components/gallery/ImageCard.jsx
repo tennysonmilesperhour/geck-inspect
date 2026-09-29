@@ -4,7 +4,7 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 export default function ImageCard({ image, onImageSelect, thumbnail = false }) {
   return (
     <Card 
-      className="overflow-hidden group cursor-pointer bg-slate-900 border-slate-700 shadow-lg hover:shadow-emerald-500/10 transition-all duration-300"
+      className="overflow-hidden group cursor-pointer shadow-lg hover:shadow-emerald-500/10 transition-all duration-300"
       onClick={() => onImageSelect(image)}
     >
       <div className="relative aspect-square">

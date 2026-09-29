@@ -24,7 +24,7 @@ export default function RarityValuePanel({ phenotype, selections }) {
         Rarity &amp; Estimated Value
       </h3>
 
-      <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 space-y-3">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl p-3 space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[10px] text-slate-500 uppercase tracking-wide">Rarity tier</div>
@@ -45,7 +45,7 @@ export default function RarityValuePanel({ phenotype, selections }) {
             <div className="flex items-center text-emerald-300 text-lg font-bold">
               <DollarSign className="w-4 h-4" />
               {valueFloor}
-              <span className="text-slate-500 mx-1 text-sm">–</span>
+              <span className="text-slate-500 mx-1 text-sm">to</span>
               {valueCeiling}
             </div>
           </div>

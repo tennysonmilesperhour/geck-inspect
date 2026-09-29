@@ -306,7 +306,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main column */}
         <div className="lg:col-span-2 space-y-5">
-          <Card className="bg-slate-900 border-slate-800">
+          <Card>
             <CardContent className="p-5 space-y-4">
               <div>
                 <Label className="text-xs text-slate-400 mb-1.5 block">Title</Label>
@@ -351,7 +351,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-slate-100">Author override</CardTitle>
             </CardHeader>
@@ -392,7 +392,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
 
         {/* Sidebar */}
         <div className="space-y-5">
-          <Card className="bg-slate-900 border-slate-800">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-slate-100">Publish</CardTitle>
             </CardHeader>
@@ -422,7 +422,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
                     href={previewBase}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-xs px-2.5 py-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+                    className="touch:min-h-11 inline-flex items-center text-xs px-2.5 py-1.5 rounded-md border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
                   >
                     <Eye className="w-3.5 h-3.5 mr-1" /> Preview
                   </a>
@@ -462,7 +462,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-slate-100">Taxonomy</CardTitle>
             </CardHeader>
@@ -497,7 +497,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
                         key={t.id}
                         type="button"
                         onClick={() => toggleTag(t.id)}
-                        className={`text-xs px-2 py-1 rounded-md border transition-colors ${
+                        className={`touch:min-h-11 text-xs px-2 py-1 rounded-md border transition-colors ${
                           active
                             ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'
                             : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
@@ -525,7 +525,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4" /> Featured image
@@ -575,7 +575,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-slate-100">SEO</CardTitle>
             </CardHeader>

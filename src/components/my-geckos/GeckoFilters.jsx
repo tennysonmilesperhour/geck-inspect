@@ -66,7 +66,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
     const _allMorphs = Object.values(MORPH_CATEGORIES).flatMap(c => c.morphs);
 
     return (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
+        <div className="rounded-xl border border-slate-700 bg-slate-900 overflow-hidden">
             <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}

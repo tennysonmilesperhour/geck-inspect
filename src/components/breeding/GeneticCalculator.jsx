@@ -303,7 +303,7 @@ export default function GeneticCalculator({ sire, dam }) {
                   eggs,
                 })
               }
-              className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-200 border border-slate-600 rounded px-2 py-1"
+              className="inline-flex items-center gap-1 touch:min-h-11 text-slate-400 hover:text-slate-200 border border-slate-600 rounded px-2 py-1"
               title="Download this pairing's odds as an image for Facebook groups and Discord"
             >
               <ImageDown className="w-3.5 h-3.5" /> Clutch card
@@ -339,7 +339,7 @@ export default function GeneticCalculator({ sire, dam }) {
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-200 border border-slate-600 rounded px-2 py-1"
+                  className="inline-flex items-center gap-1 touch:min-h-11 text-slate-400 hover:text-slate-200 border border-slate-600 rounded px-2 py-1"
                   title="Copy a link that unfurls as a rich odds card in Discord and Facebook"
                 >
                   {shared ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
@@ -351,7 +351,7 @@ export default function GeneticCalculator({ sire, dam }) {
             <select
               value={clutches}
               onChange={(e) => setClutches(Number(e.target.value))}
-              className="bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-slate-200"
+              className="touch:min-h-11 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-slate-200"
               aria-label="Clutches per season"
             >
               {Array.from({ length: MAX_CLUTCHES_PER_SEASON }, (_, i) => i + 1).map((n) => (
@@ -378,7 +378,7 @@ export default function GeneticCalculator({ sire, dam }) {
                 key={o.phenotype_description}
                 type="button"
                 onClick={() => setSelectedKey(o.phenotype_description)}
-                className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${
+                className={`touch:min-h-11 w-full text-left rounded-lg border px-3 py-2 transition-colors ${
                   isActive
                     ? 'border-purple-500/70 bg-purple-950/30'
                     : 'border-slate-700 bg-slate-900/40 hover:border-slate-500'
@@ -426,7 +426,7 @@ export default function GeneticCalculator({ sire, dam }) {
                         key={l.slug}
                         to={`/MorphGuide/${l.slug}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-xs text-purple-300 hover:text-purple-200 underline inline-flex items-center gap-0.5"
+                        className="text-xs text-purple-300 hover:text-purple-200 underline inline-flex items-center gap-0.5 touch:min-h-11"
                       >
                         {l.name} in the Morph Guide
                         <ExternalLink className="w-3 h-3" />
@@ -442,7 +442,7 @@ export default function GeneticCalculator({ sire, dam }) {
                         <Link
                           to={`/calculator?sire=${encodeURIComponent(encodeParentState(childState))}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-xs text-emerald-300 hover:text-emerald-200 underline ml-auto"
+                          className="text-xs text-emerald-300 hover:text-emerald-200 underline ml-auto touch:inline-flex touch:items-center touch:min-h-11"
                           title="Plan the next generation with this offspring as a parent"
                         >
                           Breed this baby next
@@ -467,7 +467,7 @@ export default function GeneticCalculator({ sire, dam }) {
               <button
                 type="button"
                 onClick={() => setShuffleSeed((s) => s + 1)}
-                className="text-xs text-slate-400 hover:text-slate-200 inline-flex items-center gap-1"
+                className="text-xs text-slate-400 hover:text-slate-200 inline-flex items-center gap-1 touch:min-h-11"
                 title="Reshuffle which eggs hit. The odds do not change; the scatter is the point."
               >
                 <Shuffle className="w-3 h-3" /> shuffle
@@ -555,7 +555,7 @@ export default function GeneticCalculator({ sire, dam }) {
         <button
           type="button"
           onClick={() => setShowLocusMath((v) => !v)}
-          className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-slate-100"
+          className="flex items-center gap-1.5 touch:min-h-11 text-sm text-slate-300 hover:text-slate-100"
         >
           {showLocusMath ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           Show the gene-by-gene math
@@ -584,7 +584,7 @@ export default function GeneticCalculator({ sire, dam }) {
                     <span className="font-semibold text-slate-100">{trait?.name || lp.locus}</span>
                     <Badge className={badge.cls}>{badge.label}</Badge>
                     {slug && (
-                      <Link to={`/MorphGuide/${slug}`} className="text-xs text-purple-300 underline ml-auto">
+                      <Link to={`/MorphGuide/${slug}`} className="text-xs text-purple-300 underline ml-auto touch:inline-flex touch:items-center touch:min-h-11">
                         Morph Guide
                       </Link>
                     )}

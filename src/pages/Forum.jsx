@@ -146,7 +146,7 @@ export default function ForumPage() {
                     <Skeleton className="h-11 w-full rounded-lg" />
                     <div className="space-y-4">
                         {Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
+                            <div key={i} className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-3">
                                 <Skeleton className="h-5 w-2/3" />
                                 <Skeleton className="h-3 w-full" />
                                 <Skeleton className="h-3 w-4/5" />
@@ -231,7 +231,7 @@ export default function ForumPage() {
 
                 {/* Create post form */}
                 {showCreatePost && (
-                    <Card className="bg-slate-900 border-slate-800">
+                    <Card>
                         <CardHeader>
                             <CardTitle className="text-slate-100">Create a new post</CardTitle>
                         </CardHeader>
@@ -309,19 +309,22 @@ export default function ForumPage() {
                                 {category.name}
                                 <span className="text-sm text-slate-500 font-normal">({categoryPosts.length})</span>
                             </h2>
-                            {!isCatCollapsed && <Card className="bg-slate-900 border-slate-800">
+                            {!isCatCollapsed && <Card>
                                 <CardContent className="p-0 divide-y divide-slate-800">
                                     {categoryPosts.map((post) => (
                                         <div
                                             key={post.id}
-                                            className="p-4 flex items-center justify-between hover:bg-slate-800/60 transition-colors"
+                                            className="relative p-4 flex items-center justify-between hover:bg-slate-800/60 transition-colors"
                                         >
                                             <div className="flex items-center gap-4 min-w-0">
                                                 <MessageSquare className="w-5 h-5 text-slate-500 shrink-0" />
                                                 <div className="min-w-0">
+                                                    {/* The title link stretches over the whole row
+                                                        (after:inset-0), so the full highlighted row is
+                                                        the tap target, not just one line of text. */}
                                                     <Link
                                                         to={`${createPageUrl('ForumPost')}?id=${post.id}`}
-                                                        className="text-base md:text-lg font-semibold text-slate-100 hover:text-emerald-300 transition-colors truncate block"
+                                                        className="text-base md:text-lg font-semibold text-slate-100 hover:text-emerald-300 transition-colors truncate block after:absolute after:inset-0"
                                                     >
                                                         {post.title}
                                                     </Link>
@@ -351,7 +354,7 @@ export default function ForumPage() {
                 })}
 
                 {filteredPosts.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-10 text-center">
+                    <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-10 text-center">
                         <MessageSquare className="w-8 h-8 text-slate-600 mx-auto mb-2" />
                         <p className="text-slate-300 font-semibold mb-1">
                             {search ? 'No posts match that search.' : 'No posts yet.'}

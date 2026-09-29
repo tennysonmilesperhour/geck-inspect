@@ -220,7 +220,7 @@ function TaskRow({ task, onToggle, onDelete, busy }) {
       <button
         onClick={() => onToggle(task)}
         disabled={busy}
-        className="mt-0.5 shrink-0"
+        className="touch:min-h-11 touch:min-w-11 mt-0.5 shrink-0"
         title={isDone ? 'Mark pending' : 'Mark done'}
       >
         {isDone ? (
@@ -247,7 +247,7 @@ function TaskRow({ task, onToggle, onDelete, busy }) {
             <Button
               size="sm"
               variant="ghost"
-              className="text-slate-500 hover:text-rose-300 h-6 px-1"
+              className="touch:min-w-11 text-slate-500 hover:text-rose-300 h-6 px-1"
               onClick={() => onDelete(task)}
               disabled={busy}
               title="Delete task"
@@ -267,7 +267,7 @@ function TaskRow({ task, onToggle, onDelete, busy }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-xs text-emerald-300 hover:text-emerald-200 mt-2"
+            className="touch:min-h-11 inline-flex items-center gap-1 text-xs text-emerald-300 hover:text-emerald-200 mt-2"
           >
             {task.link_label || 'Open link'} <ExternalLink className="w-3 h-3" />
           </a>
@@ -406,7 +406,7 @@ export default function AdminTasks() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div>
             <CardTitle className="text-white flex items-center gap-2">
@@ -456,7 +456,7 @@ export default function AdminTasks() {
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`text-xs px-2.5 py-1 rounded border ${
+              className={`touch:min-h-11 text-xs px-2.5 py-1 rounded border ${
                 filter === f.id
                   ? 'bg-emerald-500/15 text-emerald-300 border-emerald-700/40'
                   : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-600'
@@ -479,7 +479,7 @@ export default function AdminTasks() {
       </div>
 
       {adding && (
-        <Card className="bg-slate-900/40 border-slate-800">
+        <Card>
           <CardContent className="p-4 space-y-3">
             <Input
               placeholder="Task title"
@@ -532,7 +532,7 @@ export default function AdminTasks() {
           <Loader2 className="w-4 h-4 animate-spin" /> Loading…
         </div>
       ) : tasks.length === 0 ? (
-        <Card className="bg-slate-900/30 border-dashed border-slate-700">
+        <Card className="border-dashed">
           <CardContent className="p-8 text-center text-sm text-slate-400">
             No tasks yet. Hit Auto-generate to scan the store, or add one manually.
           </CardContent>

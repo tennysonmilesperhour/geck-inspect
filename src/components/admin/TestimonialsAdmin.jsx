@@ -185,7 +185,7 @@ export default function TestimonialsAdmin() {
         </div>
       </div>
 
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white text-lg">
             {editingId ? 'Edit testimonial' : 'New testimonial'}
@@ -307,7 +307,7 @@ export default function TestimonialsAdmin() {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-900 border-slate-700">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white text-lg">All testimonials</CardTitle>
         </CardHeader>

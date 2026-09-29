@@ -100,7 +100,7 @@ export default function BuyerInquiryModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+          className="touch-hit absolute top-3 right-3 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -119,7 +119,7 @@ export default function BuyerInquiryModal({
             <button
               type="button"
               onClick={onClose}
-              className="mt-4 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm"
+              className="touch:min-h-11 mt-4 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm"
             >
               Done
             </button>
@@ -233,7 +233,7 @@ export default function BuyerInquiryModal({
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-700/50 text-white font-semibold text-sm transition-colors"
+                className="touch:min-h-11 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-700/50 text-white font-semibold text-sm transition-colors"
               >
                 {submitting ? (
                   <>

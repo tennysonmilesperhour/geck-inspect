@@ -60,7 +60,7 @@ export default function QualityBadge({
     <Link
       to="/QualityScale"
       onClick={(e) => e.stopPropagation()}
-      className="inline-flex"
+      className="relative touch-hit inline-flex"
       aria-label="Learn about the Geck Inspect Quality Scale"
     >
       {inner}

@@ -257,7 +257,7 @@ export default function GrowthReel({ gecko, weights = [], user }) {
   };
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700">
+    <Card>
       <CardHeader className="pb-3 pt-4 px-4">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
@@ -341,7 +341,7 @@ export default function GrowthReel({ gecko, weights = [], user }) {
                 key={option}
                 type="button"
                 onClick={() => setSpeed(option)}
-                className={`px-1.5 py-0.5 rounded text-xs font-medium transition-colors ${
+                className={`touch:min-h-11 px-1.5 py-0.5 rounded text-xs font-medium transition-colors ${
                   speed === option
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                     : 'text-slate-400 hover:text-slate-200 border border-transparent'

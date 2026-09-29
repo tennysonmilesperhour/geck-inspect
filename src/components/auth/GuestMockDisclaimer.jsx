@@ -97,14 +97,14 @@ export default function GuestMockDisclaimer() {
               <div className="mt-2.5 flex items-center gap-2">
                 <Link
                   to={createPageUrl('AuthPortal')}
-                  className="inline-flex items-center gap-1 rounded-md bg-yellow-300/25 hover:bg-yellow-300/40 px-2.5 py-1.5 text-[11px] font-semibold text-yellow-50"
+                  className="inline-flex items-center gap-1 touch:min-h-11 rounded-md bg-yellow-300/25 hover:bg-yellow-300/40 px-2.5 py-1.5 text-[11px] font-semibold text-yellow-50"
                 >
                   <LogIn className="w-3 h-3" />
                   Sign in
                 </Link>
                 <Link
                   to={SIGNUP_URL}
-                  className="inline-flex items-center gap-1 rounded-md bg-emerald-500/80 hover:bg-emerald-400/90 px-2.5 py-1.5 text-[11px] font-semibold text-white"
+                  className="inline-flex items-center gap-1 touch:min-h-11 rounded-md bg-emerald-500/80 hover:bg-emerald-400/90 px-2.5 py-1.5 text-[11px] font-semibold text-white"
                 >
                   <UserPlus className="w-3 h-3" />
                   Create account
@@ -116,7 +116,7 @@ export default function GuestMockDisclaimer() {
             <>
               <Link
                 to={SIGNUP_URL}
-                className="md:hidden shrink-0 inline-flex items-center gap-1 min-h-9 rounded-md bg-emerald-500/80 hover:bg-emerald-400/90 px-3 text-xs font-semibold text-white"
+                className="md:hidden shrink-0 inline-flex items-center gap-1 min-h-9 touch:min-h-11 rounded-md bg-emerald-500/80 hover:bg-emerald-400/90 px-3 text-xs font-semibold text-white"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 Sign up
@@ -124,7 +124,7 @@ export default function GuestMockDisclaimer() {
               <button
                 type="button"
                 onClick={() => setExpanded(true)}
-                className="md:hidden shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 rounded hover:bg-yellow-300/20 text-yellow-100/80 hover:text-yellow-50"
+                className="md:hidden shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 touch:min-h-11 touch:min-w-11 rounded hover:bg-yellow-300/20 text-yellow-100/80 hover:text-yellow-50"
                 aria-label="Show guest demo details"
                 aria-expanded="false"
               >
@@ -135,7 +135,7 @@ export default function GuestMockDisclaimer() {
           <button
             type="button"
             onClick={handleDismiss}
-            className="shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 md:min-h-0 md:min-w-0 md:p-1 rounded hover:bg-yellow-300/20 text-yellow-100/80 hover:text-yellow-50"
+            className="shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 md:min-h-0 md:min-w-0 md:p-1 touch:min-h-11 touch:min-w-11 rounded hover:bg-yellow-300/20 text-yellow-100/80 hover:text-yellow-50"
             aria-label="Dismiss guest demo notice"
           >
             <X className="w-3.5 h-3.5" />

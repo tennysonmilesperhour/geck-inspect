@@ -142,7 +142,7 @@ export default function CommunityPulse() {
                                 <li key={item.key}>
                                     <Link
                                         to={item.href}
-                                        className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-slate-800/60 transition-colors"
+                                        className="touch:min-h-11 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-slate-800/60 transition-colors"
                                     >
                                         <span className={`shrink-0 ${meta.tint}`}>
                                             <Icon className="w-4 h-4" />
