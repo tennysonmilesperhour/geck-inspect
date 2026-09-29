@@ -37,7 +37,13 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 - [x] Server-side feeding reminders, one combined message a day
 - [x] Low-traffic pages hidden from navigation (URLs still work)
 
-**Phase 1 shipped 27 Sep**, plus five bugs from the functional audit (Settings never saving, card weights, Batch Husbandry weigh-ins, endless hatch alerts, CSP reports). Next: Phase 2, starting with a Morph ID holdout evaluation, which needs to be run outside the sandbox.
+**Phase 1 shipped 27 Sep**, plus five bugs from the functional audit (Settings never saving, card weights, Batch Husbandry weigh-ins, endless hatch alerts, CSP reports). The Morph ID evaluation now runs from GitHub Actions (morph-id-eval).
+
+**Parked 29 Sep: Morph ID accuracy.** Function version 61 is live and staying. Last eval (run 20, all 220 test geckos): a breeder-tagged pattern is in the top three 75.9% of the time, the first answer matches 43.6%, and it gives an answer 95% of the time. No simple rule is left to add. Full results are in section 2A of `docs/planning/vip-audit-2026-09-27.md`. When we come back:
+- [ ] Once about 20 real two-photo (top and side) identifications have been reviewed (Admin Panel > Morph ID review), compare them with the one-photo eval. The eval set has one photo per gecko, so it cannot show whether the side view helps.
+- [ ] Work on the biggest misses: Extreme Harlequin called Harlequin (14), Tricolor called Extreme Harlequin (14), Pinstripe called Harlequin (11). Plain Harlequin is still the first answer 84 times against 39 geckos labeled Harlequin.
+- [ ] Fingerprint the 1,890 second listing photos for the photo lookup, after Replicate is topped up to at least $5.
+- [ ] Find out why "best match" almost never shows (1 of 220 answers).
 
 ---
 
