@@ -121,7 +121,7 @@ These are the published references the hobby treats as authoritative. Geck Inspe
 - NEHERP (care)
 - Pangea Reptile (diet brand + content)
 - Repashy (diet brand + content)
-- Tenny's Crested Geckos (market data, sister site)
+- Tenny's Crested Geckos (market data). Not a sister site: an unrelated breeder who shares Tennyson's first name (see CLAUDE.md).
 
 ## What this means for product decisions
 

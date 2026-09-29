@@ -1,11 +1,21 @@
-> Launch priority: close the remaining release gates in [the September 6 repair ledger](docs/launch-repairs-2026-09-06.md) before adding new features.
-
 # ROADMAP.md - Geck Inspect
 
-Last updated: September 2026
-Source: Landscape analysis recommendations (full doc in /docs/landscape-analysis-vol1.docx and /docs/landscape-analysis-vol2.docx)
+Last updated: 29 September 2026
+Source: Landscape analysis recommendations (full doc in /docs/landscape-analysis-vol1.docx and /docs/landscape-analysis-vol2.docx), updated by the 27 September VIP audit (docs/planning/vip-audit-2026-09-27.md).
 
-This is the active priority list. Items are formatted so Claude Code can act on them. Each item has a definition of done. Check items off when they ship.
+This is the active priority list. Items are formatted so Claude Code can act on them. Each item has a definition of done. Check items off when they ship. The launch repair ledger (docs/launch-repairs-2026-09-06.md) has no open boxes left; its two carried items are F43 and F55 below.
+
+---
+
+## NOW (as of 29 September 2026)
+
+The VIP audit's phased plan is complete (sections 2E and 2F of the audit). With about 50 accounts, getting people in and keeping them matters more than new features. In order:
+
+- [ ] **A. Measure activation (from about 11 October).** Phase 1 shipped 27 Sep to fix "19 of 24 new accounts never return on a second day". After two weeks of data, compare: share of new accounts that add a gecko in session one, day-2 and day-7 return, and the `guest_tour` funnel (start, each stop, finish, sign-up click). The answer decides whether onboarding needs another round. (Claude can run this from production data.)
+- [ ] **B. Distribution.** Publish the comparison article (item 4; draft ready for review), and start breeder outreach (item 5, Tennyson). The weekly Search Console report (item 3) already runs every Monday.
+- [ ] **C. Real-phone pass.** Add Gecko and Morph ID on an actual iPhone (F55), the guided demo, joining a waitlist with terms, and claiming a transfer as a brand-new account. Every check so far used a simulated phone. (Tennyson)
+- [ ] **D. Decisions waiting on Tennyson.** Breeder price: DECISIONS.md decision 27 proposes $5.99 to $9.99 once shipping works or leaves the feature list; waitlists now add real value to the plan. CSP: move F43 from report-only to enforced (was due around 4 Oct). Top up Replicate to at least $5 (the Morph ID photo work below needs it) and retire the old GECK_DATA_SUPABASE_URL and SERVICE_KEY secrets.
+- [ ] **E. Morph ID accuracy (parked).** The four items under VIP AUDIT FOLLOW-UPS. The first waits on about 20 reviewed real two-photo identifications.
 
 ---
 
@@ -53,9 +63,12 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 
 ---
 
-## URGENT (next 30 days, before May 31, 2026)
+## FROM THE MAY 2026 PLAN: FIRST 30 DAYS
 
-### [ ] 1. Audit geckinspect.com for crested-gecko specificity
+These were written in May with May deadlines. Each carries a status line from the 29 Sep review; the "Why" text is kept as written.
+
+### [x] 1. Audit geckinspect.com for crested-gecko specificity
+**Status (29 Sep):** Done. The hero reads "For new and small crested gecko breeders" and "The crested gecko app for the business side of breeding... Built only for crested geckos" (decision 32), the multi-species callout is gone (27 Sep), and examples across the app use crested gecko morphs.
 **Why:** The earlier plan referenced a May 15 competitor launch; revalidate current competition before using that deadline. Geck Inspect's only defensible moat is being unmistakably crested-gecko-first.
 **What changes:**
 - Home page hero must mention crested geckos in the first sentence
@@ -67,6 +80,7 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 **Definition of done:** A first-time visitor can tell within 5 seconds that this is specifically for crested geckos, not for reptiles in general.
 
 ### [ ] 2. Confirm and document current pricing
+**Status (29 Sep):** Documented: Free (10 geckos), Keeper $2.99/mo, Breeder $5.99/mo, Enterprise $99.99/mo, with the reasoning in DECISIONS.md decision 27, which also proposes raising Breeder to $9.99. Open until Tennyson decides on the raise (NOW, item D). For comparison, from search snippets of each company's pricing page on 29 Sep (confirm before quoting): ReptiDex $4.99 / $9.99, Breed Ledger $29 / $49, HatchLedger $39 / $79 / $179, The Reptile Keeper Plus £7.99.
 **Why:** Market has clustered at specific price points. Need to know if Geck Inspect is aligned, justified, or leaving money on the table.
 
 **Reference pricing:**
@@ -79,7 +93,8 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 
 **Definition of done:** Current Geck Inspect pricing is documented in DECISIONS.md with reasoning for each tier. If a change is warranted, it is scheduled.
 
-### [ ] 3. Set up SEO baseline tracking
+### [x] 3. Set up SEO baseline tracking
+**Status (29 Sep):** Done. Search Console and GA4 feed a weekly growth report (`.github/workflows/growth-report.yml`, Mondays 11:00 UTC) into docs/growth-reports/, latest 28 Sep, and a weekly SEO audit runs too (docs/seo-audits/).
 **Why:** Dusty's blog is actively ranking for category-defining searches. Need to know what's working and what isn't on the Geck Inspect side.
 
 **What to do:**
@@ -91,6 +106,7 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 **Definition of done:** Search Console is configured, baseline rankings are documented, and weekly tracking is automated or scheduled.
 
 ### [ ] 4. Publish a comparison article
+**Status (29 Sep):** Draft ready for Tennyson's review: docs/drafts/crested-gecko-software-2026.md, with a fact-check list of every competitor claim and its source at the top. Not published: the blog pipeline has been paused since 15 July at Tennyson's request, so publishing is his call.
 **Why:** Dusty's blog ranks for "best kennel management software 2026" with his own products framed favorably. Geck Inspect needs a counter-piece from the crested-gecko-specific angle.
 
 **Topic:** "Crested Gecko Software in 2026: An Honest Comparison" (or similar)
@@ -104,6 +120,7 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 **Definition of done:** Article is published on geckinspect.com/blog (or equivalent), shared on r/cresties, MorphMarket Reptile Community, Pangea forums, and relevant Facebook groups.
 
 ### [ ] 5. Outreach to GSGC and high-profile breeders
+**Status (29 Sep):** Open (Tennyson). Worth doing now that the business tools, passports, buyer packet and waitlists give an established breeder something concrete to try.
 **Why:** Dusty's biggest credibility gap is one year of crested gecko breeding experience. The strongest counter is endorsements from established breeders.
 
 **Targets (in priority order):**
@@ -123,6 +140,7 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 **Definition of done:** Outreach sent to all six. At least one positive conversation initiated with a long-tenured breeder.
 
 ### [ ] 6. Book NRBE Daytona attendance
+**Status (29 Sep):** The date (15 to 16 August 2026) has passed. Replace with the next show worth attending (STRATEGY.md lists Tinley Park in October, Repticon year-round); if Tennyson went to Daytona, note what he learned here.
 **Why:** August 15-16, 2026. The most important crested gecko event of the year. 100,000 sq ft. GSGC competitions held here. Skipping this means absence from the conversation that sets the breeding-season tone.
 
 **Decision required:**
@@ -136,9 +154,10 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 
 ---
 
-## STRATEGIC (next 90 days, by August 2026)
+## FROM THE MAY 2026 PLAN: NEXT 90 DAYS
 
-### [ ] 7. Ship native iOS or polished PWA
+### [x] 7. Ship native iOS or polished PWA
+**Status (29 Sep):** The PWA path is done: geckinspect.com installs to the home screen (public/manifest.json, InstallAppButton), works offline for collection records (decision 29) and sends web push for reminders and messages (src/lib/webPush.js). The native app is item 16 (docs/native-shell-plan.md; a Capacitor Android project exists, no store release yet).
 **Why:** Single biggest functional gap. Every serious competitor has mobile. Geck Inspect is the only major platform that does not.
 
 **Two paths:**
@@ -151,7 +170,8 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 
 **Billing note:** RevenueCat is wired on web today (Web Billing via Stripe). When packaging for App Store / Play Store, follow the "App-store billing readiness" appendix at the bottom of this file. Do not ship a mobile build using the Web SDK / Stripe inside the app shell, both stores will reject it.
 
-### [ ] 8. Pick and ship one moat feature
+### [x] 8. Pick and ship one moat feature
+**Status (29 Sep):** Done through item 19: the genetics calculator (Cappuccino complex, possible hets, reverse calculator, Clutch Lab, outcome logging) was chosen as the moat and shipped 18 Aug. Options B and C also exist: Govee enclosure sensors (src/lib/iotClient.js) and QR passports with transfers, provenance certificates and buyer packets. Option A (structure AI grading) stays on the "Not now" list in the VIP audit.
 **Why:** Need a feature nobody else can replicate in 6 months.
 
 **Candidates (ranked by ROI):**
@@ -182,6 +202,7 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 **Definition of done:** One option is shipped in beta and announced publicly.
 
 ### [ ] 9. Open the keeper market product
+**Status (29 Sep):** Built: the Keeper plan ($2.99), server-side feeding reminders, weight charts with the healthy range for the gecko's age, vet records, shareable passports, one free Morph ID, the care guide and the forum. Open against its definition of done (100 active users); NOW item A measures whether new keepers stay.
 **Why:** Doubles TAM. Generates AI training data. Top of funnel for breeder upgrades.
 
 **What to build:**
@@ -196,7 +217,8 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 
 **Definition of done:** Geckinspect.com Keeper (or branded equivalent) is live with at least 100 active users.
 
-### [ ] 10. Build MorphMarket export integration
+### [x] 10. Build MorphMarket export integration
+**Status (29 Sep):** Done as far as MorphMarket allows (it has no write API): a MorphMarket bulk-import CSV from the Promote composer and a card in Business Tools > Pricing, plus the MorphMarket sync card for Breeder accounts. Still to do: check the CSV against MorphMarket's current importer (VIP audit 2C).
 **Why:** Most breeders use MorphMarket as their primary sales channel. One-click export reduces friction. Cltch already does this for ball pythons.
 
 **What to build:**
@@ -206,8 +228,9 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 
 **Definition of done:** A breeder can list a gecko on MorphMarket from inside Geck Inspect in under 60 seconds.
 
-### [ ] 11. Set up content infrastructure
-**Why:** Long-form SEO content is the proven distribution channel. HatchLedger, Built By Dusty, Tenny's Crested Geckos all use this.
+### [x] 11. Set up content infrastructure
+**Status (29 Sep):** Infrastructure done: the blog is live at /blog with posts in src/data/blog-posts.js, sitemap, JSON-LD and FAQ schema, internal links to the guides, and an autonomous pipeline (.github/workflows/blog-pipeline.yml). The pipeline has been paused since 15 July at Tennyson's request; do not re-enable it without him asking. The editorial calendar waits on that.
+**Why:** Long-form SEO content is the proven distribution channel. HatchLedger, Built By Dusty and other breeders' sites all use this. (Tenny's Crested Geckos, tennyscrestedgeckos.com, is an unrelated breeder who shares Tennyson's first name; it is not ours. See CLAUDE.md.)
 
 **What to build:**
 - Blog at geckinspect.com/blog (if not already)
@@ -219,12 +242,13 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 - "Best Crested Gecko Apps 2026"
 - "Complete Guide to Lilly White Genetics"
 - "Setting Up Your First Crested Gecko Breeding Season"
-- "Crested Gecko Prices in 2026" (leveraging Tenny's data)
+- "Crested Gecko Prices in 2026" (from Geck Inspect's own listing data, the same numbers behind the value estimates)
 - "Phantom in Crested Geckos: What We Know and Don't Know"
 
 **Definition of done:** Blog infrastructure is live. First 3 articles published. Editorial calendar is documented for the next 6 months.
 
-### [ ] 12. Add AI shed prediction
+### [x] 12. Add AI shed prediction
+**Status (29 Sep):** Built: each gecko page shows its next shed window with a confidence level (src/lib/shedPrediction.js), falling back to a typical juvenile or adult cycle when no sheds are logged. Not yet checked against a labeled dataset (the 80% target), and it does not send a push reminder yet.
 **Why:** The Reptile Keeper has "Shed Forecast" as a flagship AI differentiator. Adding shed prediction to Geck Inspect's AI feature set creates a second AI moment in the product.
 
 **What to build:**
@@ -278,6 +302,7 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 **Definition of done:** Geck Inspect supports multi-currency checkout and has region-aware content for at least US, UK, EU.
 
 ### [ ] 16. Mobile portfolio complete
+**Status (29 Sep):** Planning, with a decided path in docs/native-shell-plan.md and the store billing steps in the appendix below. A Capacitor Android project is in the repo; nothing is in either store yet.
 **Why:** By 12 months out, expectation is full mobile parity.
 
 **What to ship:**
@@ -299,7 +324,8 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 
 **Definition of done:** Trademark filed. Defensive domains registered. Social handles claimed.
 
-### [ ] 18. Data export and ownership messaging
+### [x] 18. Data export and ownership messaging
+**Status (29 Sep):** Done. Settings has an export card (roster as CSV, collection and care records as JSON), the pricing page and the landing page say records export to CSV or PDF on every plan (27 Sep), and gecko pages export PDFs (certificates, buyer packet, worksheets).
 **Why:** ReptiDex makes a point of "your records belong to you." Cltch promises full export. Lock-in fears are real.
 
 **What to do:**
