@@ -246,9 +246,6 @@ export const NAV_REGISTRY = [
     page: 'Training', section: 'discover',
   },
   {
-    page: 'GeckAnswers', section: 'discover',
-  },
-  {
     page: 'MorphGuideSubmission', section: 'discover',
     palette: { group: 'Reference', label: 'Submit a Morph', icon: 'BookOpen', keywords: ['contribute', 'add morph', 'submit'] },
   },

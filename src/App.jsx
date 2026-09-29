@@ -109,8 +109,6 @@ const PassportQR            = lazy(() => import('./pages/PassportQR'));
 const ClaimAnimal           = lazy(() => import('./pages/ClaimAnimal'));
 const CollectionInvite      = lazy(() => import('./pages/CollectionInvite'));
 const Waitlist              = lazy(() => import('./pages/Waitlist'));
-// P5, Geck Answers (public read, auth to post)
-const GeckAnswersPublic     = lazy(() => import('./pages/GeckAnswers'));
 // Editorial blog, long-form genetics, breeding, and care articles. Lives
 // under /blog/<slug>, indexable, prerendered, and JSON-LD wired through
 // the same pipeline as MorphGuide / CareGuide topic pages.
@@ -316,8 +314,9 @@ const AuthenticatedApp = () => {
           <Route path="/claim/:token" element={<ClaimAnimal />} />
           <Route path="/collection-invite/:token" element={<CollectionInvite />} />
           <Route path="/waitlist/:slug" element={<Waitlist />} />
-          {/* P5, Geck Answers (public read) */}
-          <Route path="/GeckAnswers" element={<GeckAnswersPublic />} />
+          {/* Geck Answers was folded into the Forum on 29 Sep 2026 (its
+              starter questions are the Forum's Questions and Answers). */}
+          <Route path="/GeckAnswers" element={<Navigate to="/Forum" replace />} />
           {/* Editorial blog */}
           <Route path="/blog" element={<BlogIndex />} />
           <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />

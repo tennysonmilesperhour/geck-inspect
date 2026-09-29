@@ -112,10 +112,6 @@ const STEP_BLURBS = {
         title: 'Forum',
         body: 'Community discussion board. Ask husbandry questions, share breeding results, post morph-ID requests, and chat with other keepers without leaving the app.',
     },
-    GeckAnswers: {
-        title: 'Geck Answers',
-        body: 'Stack-Overflow-style Q&A for crested geckos. Search past questions, upvote the best answers, and the original asker can mark a Best Answer to settle a thread.',
-    },
     Gallery: {
         title: 'Image Gallery',
         body: 'Community photo feed. Post pictures of your geckos, like other keepers\' shots, and browse morph examples filtered by trait.',

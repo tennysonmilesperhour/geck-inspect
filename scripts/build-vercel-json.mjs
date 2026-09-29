@@ -81,7 +81,7 @@ const CASE_REDIRECTS = [
   { from: '/gallery', to: '/Gallery' },
   { from: '/forum', to: '/Forum' },
   { from: '/communityconnect', to: '/CommunityConnect' },
-  { from: '/geckanswers', to: '/GeckAnswers' },
+  { from: '/geckanswers', to: '/Forum' },
   { from: '/membership', to: '/Membership' },
   { from: '/about', to: '/About' },
   { from: '/contact', to: '/Contact' },

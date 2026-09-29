@@ -357,7 +357,7 @@
     },
     {
       "source": "/geckanswers",
-      "destination": "/GeckAnswers",
+      "destination": "/Forum",
       "permanent": true
     },
     {

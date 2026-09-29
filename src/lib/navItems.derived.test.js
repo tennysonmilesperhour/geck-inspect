@@ -53,7 +53,7 @@ const EXPECTED_SECTION = {
   Recognition: 'discover', MorphVisualizer: 'discover', MorphGuide: 'discover', MorphGuideSubmission: 'discover',
   GeneticsGuide: 'discover', GeneticCalculatorTool: 'discover', Gallery: 'discover', CareGuide: 'discover',
   CareGuideTopic: 'discover', Forum: 'discover', ForumPost: 'discover', BreederConsultant: 'discover',
-  GeckAnswers: 'discover', PrintableWorksheets: 'discover', ImageImport: 'discover',
+  PrintableWorksheets: 'discover', ImageImport: 'discover',
   Training: 'discover', TrainModel: 'discover', Marketplace: 'discover', MarketplaceBuy: 'discover',
   MarketplaceVerification: 'discover', MarketPricing: 'discover', BreedingROI: 'discover', BreedingLoans: 'discover',
   Breeder: 'discover',

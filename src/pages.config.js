@@ -67,7 +67,6 @@ const Training              = lazy(() => import('./pages/Training'));
 const MarketPricing         = lazy(() => import('./pages/MarketPricing'));
 const BreedingROI           = lazy(() => import('./pages/BreedingROI'));
 const BreedingLoans         = lazy(() => import('./pages/BreedingLoans'));
-const GeckAnswers           = lazy(() => import('./pages/GeckAnswers'));
 const BatchHusbandry        = lazy(() => import('./pages/BatchHusbandry'));
 const PrintableWorksheets   = lazy(() => import('./pages/PrintableWorksheets'));
 const ImageImport           = lazy(() => import('./pages/ImageImport'));
@@ -130,7 +129,6 @@ export const PAGES = {
     "MarketPricing": MarketPricing,
     "BreedingROI": BreedingROI,
     "BreedingLoans": BreedingLoans,
-    "GeckAnswers": GeckAnswers,
     "BatchHusbandry": BatchHusbandry,
     "PrintableWorksheets": PrintableWorksheets,
     "ImageImport": ImageImport,

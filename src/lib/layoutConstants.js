@@ -21,7 +21,6 @@ import {
   Upload,
   Shield,
   DollarSign,
-  HelpCircle,
   Utensils,
   Printer,
   Store,
@@ -39,7 +38,6 @@ export const publicNavItems = [
   { title: 'Forum',             url: createPageUrl('Forum'),             icon: MessageSquare },
   { title: 'Image Gallery',     url: createPageUrl('Gallery'),           icon: Database },
   { title: 'Marketplace',       url: createPageUrl('Marketplace'),       icon: ShoppingCart },
-  { title: 'Geck Answers',      url: createPageUrl('GeckAnswers'),       icon: HelpCircle },
 ];
 
 // User-only navigation, shown to signed-in users.
