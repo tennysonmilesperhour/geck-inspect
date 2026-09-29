@@ -117,7 +117,10 @@ export default function MarketPricing() {
       base_morph: sale.base_morph.trim(),
       sale_price: Number(sale.sale_price),
       source: 'user_submitted',
-      submitted_by: user?.id,
+      // submitted_by is a uuid; user.id is the profile id, which for 87 of
+      // 135 accounts is an old-platform id that is not a uuid, so their
+      // sale never saved (fixed 29 Sep 2026). auth_user_id is the sign-in id.
+      submitted_by: user?.auth_user_id || null,
       created_by: user?.email,
     });
     setSaving(false);

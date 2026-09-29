@@ -89,14 +89,17 @@ export default function Recognition() {
   const isFreeTier =
     Boolean(user) && !isGuest && !isAdmin && getTierLimits(user).monthlyMorphIDCredits === 0;
   const freeUsageQuery = useQuery({
-    queryKey: ['morph-id-lifetime-usage', user?.id],
-    enabled: isFreeTier && Boolean(user?.id),
+    // Usage rows are keyed by the sign-in id (auth_user_id). user.id is the
+    // profile id, which differs for every free account, so this lookup found
+    // nothing and a used free try still showed as available (fixed 29 Sep 2026).
+    queryKey: ['morph-id-lifetime-usage', user?.auth_user_id],
+    enabled: isFreeTier && Boolean(user?.auth_user_id),
     staleTime: 60 * 1000,
     queryFn: async () => {
       const { data, error: usageError } = await supabase
         .from('morph_id_usage')
         .select('credits_consumed')
-        .eq('user_id', user.id);
+        .eq('user_id', user.auth_user_id);
       if (usageError) throw usageError;
       return (data || []).reduce((sum, row) => sum + (Number(row.credits_consumed) || 0), 0);
     },

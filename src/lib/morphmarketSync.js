@@ -253,7 +253,7 @@ export function parseMorphMarketCSV(csvText) {
     const sex = get('Sex');
     if (/male/i.test(sex) && !/female/i.test(sex)) record.sex = 'Male';
     else if (/female/i.test(sex)) record.sex = 'Female';
-    else record.sex = 'Unknown';
+    else record.sex = 'Unsexed'; // the app's value for unsexed geckos (was 'Unknown', which no sex filter matched)
 
     // Price
     const price = get('Price');
