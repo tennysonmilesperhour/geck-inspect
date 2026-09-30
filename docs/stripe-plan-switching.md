@@ -1,6 +1,6 @@
 # Stripe plan switching
 
-Status checked September 30, 2026. The code, overage removal, and test/live default portal settings are shipped. Tennyson approved configuration and the dedicated discounted live test. Sandbox switching passes. The live application flow remains pending confirmation of its disposable test account.
+Status checked September 30, 2026. The code, overage removal, and test/live default portal settings are shipped. Tennyson approved configuration and the dedicated discounted live test. Sandbox switching passes. The disposable account is confirmed. Its live Checkout correctly applies the 100% discount but still requires a real payment method; the flow is waiting for the user to complete that step.
 
 ## Dashboard setup
 
@@ -40,7 +40,7 @@ In test mode, subscription sub_1ULQc1LBdc4xGjxqnVojeMpA reproduced Stripe's reje
 
 For the live integration, use a dedicated test account and a 100% discount that remains valid through upgrades and interval changes. Verify the checkout and every confirmation show $0 before submitting. Subscribe to Keeper monthly, choose Breeder on Membership, confirm the toast and portal redirect, switch to Breeder, switch to annual, then cancel. Never use the existing paying subscription for this test.
 
-After each step verify exactly one subscription for the test customer; the same subscription id in profiles; the expected membership_tier, membership_billing_cycle and subscription_status; processed stripe_webhook_logs; and no new Second live Stripe subscription error. Clean up the test subscription, customer and promotion code. A disposable app signup was created but is not email-confirmed. Automatic approval review blocked confirming it with its stored signup token; explicit approval for that method was requested. No live test customer or subscription exists yet. A single-redemption 100% forever coupon GSj9OGsG and associated promotion code are prepared and unused. Remove them after the test. Sandbox results do not verify live application profile synchronization.
+After each step verify exactly one subscription for the test customer; the same subscription id in profiles; the expected membership_tier, membership_billing_cycle and subscription_status; processed stripe_webhook_logs; and no new Second live Stripe subscription error. Clean up the test subscription, customer and promotion code. The disposable signup was email-confirmed on September 30 at 16:51 UTC. Starting Keeper created customer cus_VMA4F60CV0JmZZ and a Checkout session. The single-redemption 100% forever coupon GSj9OGsG applies successfully: Checkout shows $0 due today and $0/month. Submission requires a real card because payment_method_collection uses Stripe's default. The user was asked to complete that private step or authorize optional payment-method collection for fully discounted subscriptions. No live test subscription exists yet. Remove the test customer and coupon after the test. Sandbox results do not verify live application profile synchronization.
 
 ## Checks completed
 
