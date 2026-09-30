@@ -45,6 +45,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { format, subDays, startOfDay } from 'date-fns';
+import MarketHabitCard from '@/components/admin/MarketHabitCard';
 
 /**
  * Product Analytics, the admin command center for product usage.
@@ -623,6 +624,8 @@ function LiveMetrics() {
         <KpiCard label="Product events" value={computed.productCurrCount} delta={computed.productDelta} accent="rose" sublabel={`last ${period} days`} />
         <KpiCard label="New signups" value={computed.signupsCurr} delta={computed.signupsDelta} accent="emerald" sublabel={`last ${period} days`} />
       </div>
+
+      <MarketHabitCard />
 
       {/* Active users chart + top pages */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
