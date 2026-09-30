@@ -35,7 +35,7 @@ export default function ProductCard({ product, vendorName }) {
             alt={primary.alt || product.name}
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+            className={`w-full h-full ${primary.kind === 'supplier_example' ? 'object-contain bg-white' : 'object-cover'} group-hover:scale-[1.02] transition-transform duration-300`}
           />
         ) : product.slug === CUSTOM_SHIRT_SLUG ? (
           <ShirtPreview design={createDefaultShirtDesign()} />

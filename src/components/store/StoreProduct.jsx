@@ -146,7 +146,7 @@ export default function StoreProduct() {
                 alt={main.alt || product.name}
                 loading="eager"
                 decoding="async"
-                className="w-full h-full object-cover"
+                className={`w-full h-full ${main.kind === 'supplier_example' ? 'object-contain bg-white' : 'object-cover'}`}
               />
             ) : product.slug === CUSTOM_SHIRT_SLUG ? (
               <ShirtPreview design={createDefaultShirtDesign()} />
