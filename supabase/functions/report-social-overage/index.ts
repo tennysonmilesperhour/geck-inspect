@@ -28,8 +28,12 @@
 //   SUPABASE_SERVICE_ROLE_KEY
 //   STRIPE_SECRET_KEY
 //   STRIPE_OVERAGE_PRICE_ID    price of the metered overage line
+//
+// Callers: the monthly-overage-billing cron job (it sends the Vault secret
+// notification_service_role_key), server code holding the service-role
+// key, or a signed-in admin. JWT verification is off at the gateway
+// because the cron's secret is not a JWT, so the check happens here.
 
-import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
@@ -67,8 +71,39 @@ function priorMonthKey(): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
+function constantTimeEq(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+// Before this check any signed-in member could report Stripe usage for a
+// month of their choosing and read back other members' ids.
+async function isAuthorizedCaller(req: Request): Promise<boolean> {
+  const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!token || !SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
+  if (constantTimeEq(token, SERVICE_ROLE_KEY)) return true;
+  try {
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+    const { data: isCron } = await admin.rpc("verify_notification_dispatch_secret", { p_secret: token });
+    if (isCron === true) return true;
+    const { data: { user } } = await admin.auth.getUser(token);
+    if (!user?.email) return false;
+    const { data: profile } = await admin.from("profiles")
+      .select("role")
+      .eq("email", user.email)
+      .maybeSingle();
+    return profile?.role === "admin";
+  } catch (err) {
+    console.warn("report-social-overage: caller check failed", err);
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (!(await isAuthorizedCaller(req))) return json({ error: "unauthorized" }, 401);
   if (!STRIPE_SECRET_KEY) return json({ error: "STRIPE_SECRET_KEY not set" }, 500);
   if (!STRIPE_OVERAGE_PRICE_ID) {
     return json({
@@ -82,6 +117,9 @@ Deno.serve(async (req) => {
   let body: { month_key?: string } = {};
   try { body = await req.json(); } catch { /* allow empty body for cron */ }
   const monthKey = body.month_key || priorMonthKey();
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthKey)) {
+    return json({ error: "month_key must look like YYYY-MM" }, 400);
+  }
 
   const { data: rows, error: rowsErr } = await supabase
     .from("social_post_usage")
