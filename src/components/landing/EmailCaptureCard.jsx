@@ -15,12 +15,15 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
   const [website, setWebsite] = useState(''); // honeypot
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [alreadySent, setAlreadySent] = useState(false);
   const [error, setError] = useState('');
+  const [showDownloads, setShowDownloads] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitting) return;
     setError('');
+    setShowDownloads(false);
     if (!email.trim()) {
       setError('Please enter your email.');
       return;
@@ -30,8 +33,22 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
       const { data, error: fnErr } = await supabase.functions.invoke('subscribe-and-send-guides', {
         body: { email: email.trim(), source, website },
       });
-      if (fnErr) throw fnErr;
+      if (fnErr) {
+        // Refusals (too many sign-ups, a bad address) carry their reason
+        // in the body, which invoke() doesn't parse.
+        let reason = '';
+        try {
+          if (typeof fnErr.context?.json === 'function') reason = (await fnErr.context.json())?.error || '';
+        } catch {
+          reason = '';
+        }
+        // Unless the address was the problem, link the PDFs: they are
+        // public, and only the email is limited.
+        setShowDownloads(fnErr.context?.status !== 400);
+        throw new Error(reason || fnErr.message);
+      }
       if (data?.error) throw new Error(data.error);
+      setAlreadySent(data?.skipped === 'recently_sent');
       setSubmitted(true);
     } catch (err) {
       console.warn('Email capture failed:', err);
@@ -82,7 +99,9 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
                 {/* The email can fail quietly (the function reports delivered: 0),
                     so the PDFs are linked here too. */}
                 <div className="text-sm">
-                  Sent. Check your inbox, including spam. Or download them now:{' '}
+                  {alreadySent
+                    ? 'We already emailed the guides to this address today. Check your inbox, including spam. Or download them now:'
+                    : 'Sent. Check your inbox, including spam. Or download them now:'}{' '}
                   <a href="/downloads/geck-inspect-care-guide.pdf" className="underline hover:text-white">Care Guide</a>
                   {' and '}
                   <a href="/downloads/geck-inspect-genetics-guide.pdf" className="underline hover:text-white">Genetics Guide</a>.
@@ -136,7 +155,17 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
             )}
 
             {error && !submitted && (
-              <div className="mt-3 text-xs text-red-300">{error}</div>
+              <div className="mt-3 text-xs text-red-300">
+                {error}
+                {showDownloads && (
+                  <>
+                    {' '}You can download them now:{' '}
+                    <a href="/downloads/geck-inspect-care-guide.pdf" className="underline hover:text-white">Care Guide</a>
+                    {' and '}
+                    <a href="/downloads/geck-inspect-genetics-guide.pdf" className="underline hover:text-white">Genetics Guide</a>.
+                  </>
+                )}
+              </div>
             )}
 
             <p className="mt-3 text-[11px] text-slate-500">

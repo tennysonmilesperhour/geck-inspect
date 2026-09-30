@@ -2,8 +2,11 @@
 //
 // The homepage lead-magnet form posts to this function. It:
 //   1. Validates the payload (email shape, length caps, honeypot).
-//   2. Upserts a row in `newsletter_subscribers` (idempotent on email).
-//   3. Sends an email via Resend with download links for the Care
+//   2. Allows one email per address per day and a few per network per
+//      hour, counted in `guide_email_sends`, so a script cannot use the
+//      form to send mail to strangers.
+//   3. Upserts a row in `newsletter_subscribers` (idempotent on email).
+//   4. Sends an email via Resend with download links for the Care
 //      Guide and Genetics Guide PDFs (hosted as static assets on the
 //      site at /downloads/<filename>.pdf).
 //
@@ -39,6 +42,25 @@ function json(body: unknown, status = 200) {
     status,
     headers: { "content-type": "application/json", ...CORS },
   });
+}
+
+// A real reader asks once. These only stop scripts; a busy expo booth on
+// one Wi-Fi network can still sign up ten people an hour.
+const LIMIT_PER_ADDRESS_PER_DAY = 1;
+const LIMIT_PER_NETWORK_PER_HOUR = 10;
+
+// A keyed hash of the caller's IP, so repeat senders can be counted
+// without storing the address itself.
+async function networkKey(req: Request): Promise<string | null> {
+  const raw = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
+    (req.headers.get("x-real-ip") || "").trim();
+  if (!raw || !SERVICE_ROLE_KEY) return null;
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", enc.encode(SERVICE_ROLE_KEY), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(raw));
+  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
 }
 
 function isPlausibleEmail(s: string): boolean {
@@ -127,6 +149,39 @@ serve(async (req) => {
     auth: { persistSession: false },
   });
 
+  // Rate limits. Counting fails closed: the form links the PDFs directly,
+  // so a refusal never keeps a reader from the guides.
+  const ipKey = await networkKey(req);
+  const countSince = async (column: string, value: string, since: string) => {
+    const { count, error } = await supabase
+      .from("guide_email_sends")
+      .select("id", { count: "exact", head: true })
+      .eq(column, value)
+      .gte("created_at", since);
+    if (error) throw error;
+    return count ?? 0;
+  };
+  try {
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const [byAddress, byNetwork] = await Promise.all([
+      countSince("email", email, dayAgo),
+      ipKey ? countSince("ip_hash", ipKey, hourAgo) : Promise.resolve(0),
+    ]);
+    if (byAddress >= LIMIT_PER_ADDRESS_PER_DAY) {
+      return json({ ok: true, delivered: 0, skipped: "recently_sent" });
+    }
+    if (byNetwork >= LIMIT_PER_NETWORK_PER_HOUR) {
+      return json({
+        error: "Too many sign-ups from this network in the last hour. Please try again later.",
+        code: "rate_limited",
+      }, 429);
+    }
+  } catch (err) {
+    console.warn("subscribe-and-send-guides: rate-limit check failed", err);
+    return json({ error: "Could not send the guides right now." }, 500);
+  }
+
   // Idempotent upsert. Re-subscribing is fine, just refreshes
   // updated_at and clears any unsubscribed_at flag.
   const { error: upsertErr } = await supabase
@@ -149,6 +204,15 @@ serve(async (req) => {
 
   if (!RESEND_API_KEY) {
     return json({ ok: true, delivered: 0, skipped: "no-resend-key" });
+  }
+
+  // Logged before sending so a quick second request already counts it.
+  const { error: logErr } = await supabase
+    .from("guide_email_sends")
+    .insert({ email, ip_hash: ipKey });
+  if (logErr) {
+    console.warn("subscribe-and-send-guides: send log failed", logErr);
+    return json({ error: "Could not send the guides right now." }, 500);
   }
 
   const subject = "Your free crested gecko Care & Genetics Guides";
