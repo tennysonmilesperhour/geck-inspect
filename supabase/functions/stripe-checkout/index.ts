@@ -12,6 +12,7 @@
 //   STRIPE_BREEDER_PRICE_ID     price_... overrides the monthly Breeder price
 //   STRIPE_ENTERPRISE_PRICE_ID  price_... overrides the monthly Enterprise price
 //   STRIPE_OVERAGE_PRICE_ID     price_... (metered $0.50/post overage line).
+//   STRIPE_OVERAGE_ENABLED      must be "true" to attach the metered line.
 //                               When set, attached as a second line item on
 //                               every new subscription so the monthly
 //                               report-social-overage cron has somewhere to
@@ -333,8 +334,9 @@ Deno.serve(async (req: Request) => {
   sessionForm.set("line_items[0][price]", priceId);
   sessionForm.set("line_items[0][quantity]", "1");
 
-  // Optional metered overage line. Attached when STRIPE_OVERAGE_PRICE_ID is
-  // set so the report-social-overage cron has a subscription_item to post
+  // Social posting is paused. Explicitly opt in only when it returns; a
+  // metered add-on prevents plan switching in the Stripe customer portal.
+  // The report-social-overage cron uses this subscription_item to post
   // usage records against. Metered prices do NOT take a quantity field on
   // line_items (the quantity is reported per-period via usage records).
   // Monthly subscriptions only: the overage price bills monthly, and
@@ -342,7 +344,7 @@ Deno.serve(async (req: Request) => {
   // ("Checkout does not support multiple prices with different billing
   // intervals"), which made every annual checkout fail.
   const overagePriceId = Deno.env.get("STRIPE_OVERAGE_PRICE_ID");
-  if (overagePriceId && cycle === "monthly") {
+  if (Deno.env.get("STRIPE_OVERAGE_ENABLED") === "true" && overagePriceId && cycle === "monthly") {
     sessionForm.set("line_items[1][price]", overagePriceId);
   }
 

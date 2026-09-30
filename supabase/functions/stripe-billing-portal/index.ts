@@ -18,7 +18,9 @@
 // One-time Stripe dashboard setup: Settings, Billing, Customer portal
 // must be activated (Stripe returns "No configuration provided" until
 // it is). Turn on "Cancel subscriptions" and "Update payment method"
-// there. Plan switching is optional.
+// there. Enable plan switching for Keeper and Breeder, including monthly
+// and annual prices. Leave Enterprise out. Subscriptions must have only
+// their membership item; metered add-ons prevent portal plan changes.
 //
 // Body shape: { returnUrl?: string }
 // Response:   { url: string } or { error: string, message?: string }

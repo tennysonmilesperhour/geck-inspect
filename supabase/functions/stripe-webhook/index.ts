@@ -67,8 +67,11 @@ function priceIdToPlan(priceId: string | null | undefined): { tier: string; cycl
   return null;
 }
 
-function priceIdToTier(priceId: string | null | undefined): string | null {
-  return priceIdToPlan(priceId)?.tier || null;
+// Select the catalog price, never the position of a metered add-on.
+function membershipLine(lines: any[] | undefined): any | undefined {
+  return lines?.find((line) => priceIdToPlan(
+    line.price?.id || line.pricing?.price_details?.price,
+  ));
 }
 
 // Subscription states that still bill or can bill again.
@@ -389,12 +392,13 @@ Deno.serve(async (req: Request) => {
             console.warn(`ignored ${event.type} for ${sub.id}: ${profile.stripe_subscription_id} is current`);
             break;
           }
-          const priceId = sub.items?.data?.[0]?.price?.id;
+          const item = membershipLine(sub.items?.data);
+          const priceId = item?.price?.id;
           const plan = priceIdToPlan(priceId);
           const cycle = plan?.cycle || sub.metadata?.billing_cycle || null;
           // Stripe API versions from 2025-03 moved current_period_end from
           // the subscription to each subscription item.
-          const periodEnd = sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end ?? null;
+          const periodEnd = sub.current_period_end ?? item?.current_period_end ?? null;
           await upsertProfileByEmail(profile.email, {
             stripe_subscription_id: sub.id,
             subscription_status: sub.status,
@@ -456,8 +460,9 @@ Deno.serve(async (req: Request) => {
             if (receiptError) throw receiptError;
           }
           if (profile?.email) {
-            const priceId = inv.lines?.data?.[0]?.price?.id || inv.lines?.data?.[0]?.pricing?.price_details?.price;
-            const tier = priceIdToTier(priceId) || "keeper";
+            const line = membershipLine(inv.lines?.data);
+            const plan = priceIdToPlan(line?.price?.id || line?.pricing?.price_details?.price);
+            const tier = plan?.tier || "keeper";
             try {
               const { data: reward, error } = await supabase.rpc("award_referral_reward", {
                 p_referred_email: profile.email,
