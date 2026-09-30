@@ -1,6 +1,6 @@
 # Stripe plan switching
 
-Status checked September 30, 2026. The code, overage removal, and test/live default portal settings are shipped. Tennyson approved configuration and the dedicated discounted live test. Sandbox switching passes. The disposable account is confirmed. Its live Checkout correctly applies the 100% discount but still requires a real payment method; the flow is waiting for the user to complete that step.
+Status checked September 30, 2026. Code, overage removal, and both default portals are shipped. The live Keeper to Breeder test passed with one unchanged subscription id and the correct profile. Annual scheduling and portal cancellation also passed. Cleanup is in progress.
 
 ## Dashboard setup
 
@@ -36,11 +36,19 @@ Live default configuration bpc_1UC0v0LBdc4xGjxq2sqr5p86 and test default bpc_1UL
 
 In test mode, subscription sub_1ULQc1LBdc4xGjxqnVojeMpA reproduced Stripe's rejection: "This PortalSession cannot update subscription ... because it has multiple items." Removing only the metered item without proration made the subscription update portal available. A browser Keeper monthly to Breeder monthly confirmation kept exactly one subscription and the same id. The API showed the Breeder monthly price and active status. A downgrade preview scheduled Keeper monthly at October 30 renewal. A confirmed annual change created schedule sub_sched_1ULQmILBdc4xGjxqtMRg2QGy for Breeder annual on October 30, with exactly one subscription and the current monthly price retained until then. The test schedule/subscription was then canceled without invoice or proration and the disposable test customer deleted. The test catalog and default portal remain available.
 
-## Live verification still required
+## Live verification
 
-For the live integration, use a dedicated test account and a 100% discount that remains valid through upgrades and interval changes. Verify the checkout and every confirmation show $0 before submitting. Subscribe to Keeper monthly, choose Breeder on Membership, confirm the toast and portal redirect, switch to Breeder, switch to annual, then cancel. Never use the existing paying subscription for this test.
+Tennyson completed the real-card step privately. The dedicated customer was cus_VMA4F60CV0JmZZ and the only subscription was sub_1ULSp0LBdc4xGjxqZJR1W9fe. Checkout and upgrade invoices both paid $0; no payment was collected.
 
-After each step verify exactly one subscription for the test customer; the same subscription id in profiles; the expected membership_tier, membership_billing_cycle and subscription_status; processed stripe_webhook_logs; and no new Second live Stripe subscription error. Clean up the test subscription, customer and promotion code. The disposable signup was email-confirmed on September 30 at 16:51 UTC. Starting Keeper created customer cus_VMA4F60CV0JmZZ and a Checkout session. The single-redemption 100% forever coupon GSj9OGsG applies successfully: Checkout shows $0 due today and $0/month. Submission requires a real card because payment_method_collection uses Stripe's default. The user was asked to complete that private step or authorize optional payment-method collection for fully discounted subscriptions. No live test subscription exists yet. Remove the test customer and coupon after the test. Sandbox results do not verify live application profile synchronization.
+- Checkout set the profile to keeper/monthly/active. All checkout, subscription-created and invoice events processed.
+- Choosing Start Breeder on Membership opened the existing customer's portal. The transient toast was not captured. Dashboard showed exactly one subscription before and after upgrading. The profile became breeder/monthly/active with the same subscription id; subscription.updated and invoice events processed.
+- Selecting Breeder annual showed $0 and scheduled the change for October 30. Schedule sub_sched_1ULSs0LBdc4xGjxqn7v0GsKU was attached to the same subscription. The profile correctly remained breeder/monthly/active. The future annual activation was not exercised because cleanup cancels before renewal.
+- Portal cancellation released the annual schedule and set cancel_at to October 30. The processed event uses cancel_at with cancel_at_period_end=false; that flag alone is not a reliable cancellation indicator. Membership remains active until actual cancellation.
+- No Second live Stripe subscription errors appeared during the run.
+
+Discount caveat: the single-use 100% forever coupon GSj9OGsG survived the immediate upgrade, but the annual schedule operation removed its discount despite a $0 confirmation preview. The portal then estimated $60 at renewal. The coupon was invalid after its one redemption; this run does not establish whether the redemption limit caused the schedule behavior. Do not rely on a consumed single-use coupon surviving a scheduled plan change. The test was canceled before renewal with no charge. Promotion code promo_1ULQeFLBdc4xGjxqrtEHBXaY is inactive and the coupon is expired (1/1 redemptions), so neither can be reused.
+
+Cleanup: portal cancellation is verified; immediate deletion of the disposable Stripe customer is awaiting action-time approval. The disposable app login remains available with no collection records.
 
 ## Checks completed
 
