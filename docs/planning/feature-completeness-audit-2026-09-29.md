@@ -128,17 +128,31 @@ These come first because each one can cost money, leak a member's data or damage
 
 **0.1 Close the breeder inquiry email relay (S).** `supabase/functions/send-breeder-inquiry` takes the recipient address from the request and has no rate limit, so anyone can send email from alerts@geckinspect.com to any address, with a reply-to they choose. Look the breeder's address up on the server from the breeder's slug, honour `accepts_inquiries`, and limit inquiries per sender email and per network. Done when an arbitrary recipient is refused and the sixth inquiry in an hour from one sender is refused.
 
+Status 29 Sep: done (send-breeder-inquiry v20, migration 20260929214653). The recipient now comes from the breeder's slug, `accepts_inquiries` is honoured, and sends are limited to 5 per sender and 10 per network per hour and 30 per breeder per day. Checked live: no slug is refused (400), an unknown slug is refused (404). The rate limits were not exercised live, because that means sending real email.
+
 **0.2 Stop double billing on plan changes (S to M, D1).** A paying Keeper who picks Breeder (or switches monthly to annual) gets a second subscription on top of the first (`stripe-checkout/index.ts:242-294`), and the webhook applies events from either subscription, so the tier flips back when the old one renews and drops to Free when it is cancelled (`stripe-webhook/index.ts:337-371`). Refuse checkout while a subscription is active or trialing and send the member to the billing portal; ignore webhook events for any subscription that is not the profile's current one. Done when a test-mode Keeper to Breeder upgrade leaves exactly one subscription.
+
+Status 30 Sep: done in code (stripe-checkout v33, stripe-webhook v36, Membership page). Checkout asks Stripe whether the member already has a live subscription and refuses with `already_subscribed`; the Membership page then opens the billing portal. The webhook ignores events from any subscription that is not the member's current one while that one is live. Still needed from Tennyson: turn on plan switching in the Stripe customer portal (D1), then run the test-mode Keeper to Breeder upgrade.
 
 **0.3 Keep Morph ID's model choice on the server (S).** `recognize-gecko-morph/index.ts:1092` uses the `model` sent by any caller, so any member can run the most expensive model (about five times the normal cost). Honour it only for admins and the evaluation account, then deploy. Done when a member request naming another model still runs the default.
 
+Status 29 Sep: done (recognize-gecko-morph v62; the live files match the repo byte for byte).
+
 **0.4 Deleting a collection keeps its geckos visible (S).** The database sets a deleted collection's geckos to no collection, and the app only shows geckos in collections you can access, so they vanish from My Geckos, Field Mode and the Dashboard (the confirm text promises they can be reassigned). Move them to the owner's default collection before deleting. Done when a deleted collection's geckos appear in the default one.
+
+Status 30 Sep: done (migration 20260930061301). A trigger moves each gecko to its owner's default collection before the delete, making the default if needed; a gecko a collaborator added goes back to theirs. Tested in a rolled-back transaction.
 
 **0.5 Throttle the free guide email (S).** `subscribe-and-send-guides` needs no sign-in and has only a honeypot, so a script can send the guide email to any address. Allow one send per address per day and a few per network per hour. Done when a repeat request inside a day is refused.
 
+Status 30 Sep: done (subscribe-and-send-guides v20, table `guide_email_sends`). Tested against Resend's test inbox: a repeat inside a day is skipped and the eleventh send from one network in an hour is refused; the form links the PDFs either way.
+
 **0.6 Check the caller on report-social-overage (S).** Anyone can trigger Stripe usage reporting for a chosen month and read back member ids (`report-social-overage/index.ts:70-84`). Require the service role or an admin.
 
+Status 30 Sep: done (report-social-overage v17, migration 20260930052140). Only the service role, the Vault dispatch secret or an admin gets through. The monthly job sent no credentials and had been refused every month; it now sends the Vault secret.
+
 **0.7 Deploy the three small function fixes found in the audit (S).** (a) `send-email` and `send-push` have no mapping for `waitlist_signup`, `marketplace_inquiry` or the referral notices, so a waitlist signup never reaches the breeder by email or push (only the bell); add the aliases. (b) `csp-report` stores the full blocked address, which put a member email in the error log; keep the path only, and clear the stored query strings. (c) `stripe-checkout` marks the Keeper promo used when the checkout page opens, so closing the tab loses it; the webhook already marks it on completion, so remove the early mark.
+
+Status 30 Sep: done. (a) send-email v24 and send-push v22 route the waitlist, inquiry and referral notices. (b) csp-report v10 keeps paths only, and the 21 stored reports that held an email were scrubbed. (c) stripe-checkout v33 no longer marks the Keeper promo before checkout completes.
 
 **0.8 Stop exposing owner emails on public rows (M).** Public geckos and all gecko photos carry `created_by`, which holds the owner's email address, and both are readable without signing in. Serve a display name instead and stop returning the email column to anonymous readers (a view or a column grant). Done when a signed-out request for a public gecko returns no email.
 
