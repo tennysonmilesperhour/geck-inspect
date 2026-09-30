@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Gift, Shirt, Sparkles, Wrench, Sticker } from 'lucide-react';
 import StoreLayout from '@/components/store/StoreLayout';
@@ -8,6 +8,7 @@ import { FtcDisclosureBlock } from '@/components/store/FtcDisclosure';
 import Seo from '@/components/seo/Seo';
 import { SITE_URL } from '@/lib/organization-schema';
 import { supabase } from '@/lib/supabaseClient';
+import { fetchStoreCatalog } from '@/lib/store/catalog';
 
 const HERO_TILES = [
   { to: '/Store/stickers',        label: 'Custom stickers',   Icon: Sticker,  blurb: 'Your gecko on a sticker, six themes. $10 each.' },
@@ -38,7 +39,11 @@ const LANDING_JSON_LD = [
 ];
 
 export default function StoreLanding() {
-  const [featured, setFeatured] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [query, setQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(24);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,34 +51,33 @@ export default function StoreLanding() {
     let cancelled = false;
     async function load() {
       try {
-        const [productsResult, categoriesResult] = await Promise.all([supabase
-          .from('store_products')
-          .select(`
-            id, slug, name, short_description, our_price_cents,
-            compare_at_price_cents, images, fulfillment_mode, vendor_id,
-            free_shipping_eligible, is_featured, status, vendor_product_url, vendor_extra
-          `)
-          .eq('status', 'active')
-          .eq('is_featured', true)
-          .order('updated_date', { ascending: false })
-          .limit(24),
+        setLoading(true);
+        setLoadError(false);
+        const [catalog, categoriesResult] = await Promise.all([
+          fetchStoreCatalog(supabase),
           supabase.from('store_categories').select('id, slug, name')
             .eq('is_active', true).is('parent_id', null)
             .order('display_order', { ascending: true }),
         ]);
         if (!cancelled) {
-          setFeatured(productsResult.data || []);
+          setProducts(catalog);
           setCategories(categoriesResult.data || []);
         }
       } catch (e) {
-        console.warn('store landing featured load failed', e);
+        console.warn('store catalog load failed', e);
+        if (!cancelled) setLoadError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [retry]);
+
+  const filtered = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    return products.filter((p) => !term || `${p.name} ${p.short_description || ''}`.toLowerCase().includes(term));
+  }, [products, query]);
 
   return (
     <StoreLayout>
@@ -201,25 +205,42 @@ export default function StoreLanding() {
 
       <section className="mb-10">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-slate-100">Keeper essentials</h2>
+          <h2 className="text-lg font-bold text-slate-100">All products</h2>
           <Link to="/Store/c/diet" className="inline-flex items-center touch:min-h-11 text-xs text-emerald-300 hover:text-emerald-200">
             Start with food →
           </Link>
         </div>
-        {loading ? (
+        <label className="block text-sm text-slate-300 mb-4">
+          Search all products
+          <input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(24); }}
+            placeholder="Search supplies, brands or equipment"
+            className="block mt-2 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 min-h-11 text-slate-100" />
+        </label>
+        {!loading && !loadError && <p role="status" className="text-sm text-slate-400 mb-3">Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} products</p>}
+        {loadError ? (
+          <div role="alert" className="text-sm text-slate-300 py-6">
+            Products couldn’t load. <button type="button" onClick={() => setRetry((n) => n + 1)} className="underline min-h-11">Try again</button>
+          </div>
+        ) : loading ? (
           <div className="h-40 flex items-center justify-center text-slate-500 text-sm">
             Loading…
           </div>
-        ) : featured.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/20 p-8 text-center text-sm text-slate-400">
-            We're seeding the catalog right now, check back in a day or two.
+            {query ? 'No products match your search. Try a different name or brand.' : 'No products are available right now.'}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {featured.map((p) => (
+            {filtered.slice(0, visibleCount).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
+        )}
+        {!loading && !loadError && visibleCount < filtered.length && (
+          <button type="button" onClick={() => setVisibleCount((n) => n + 24)}
+            className="mt-5 min-h-11 rounded-md bg-emerald-600 hover:bg-emerald-500 px-5 py-2 font-semibold text-white">
+            Load more products
+          </button>
         )}
       </section>
 

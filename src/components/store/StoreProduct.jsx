@@ -1,3 +1,5 @@
+import ShirtPreview from '@/components/store/ShirtPreview';
+import { createDefaultShirtDesign, CUSTOM_SHIRT_SLUG } from '@/lib/store/customShirt';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import StoreLayout from '@/components/store/StoreLayout';
@@ -146,6 +148,8 @@ export default function StoreProduct() {
                 decoding="async"
                 className="w-full h-full object-cover"
               />
+            ) : product.slug === CUSTOM_SHIRT_SLUG ? (
+              <ShirtPreview design={createDefaultShirtDesign()} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-500">
                 No image
@@ -156,6 +160,11 @@ export default function StoreProduct() {
             <p className="mt-2 text-xs text-slate-500">
               Temporary AI-generated image. Use the Amazon link to see the real
               listing photos, packaging, price, and availability.
+            </p>
+          )}
+          {main?.kind === 'supplier_example' && (
+            <p className="mt-2 text-xs text-slate-400">
+              Supplier product photo. The Amazon search may include different sizes, pack counts or variants; check the seller’s listing before ordering.
             </p>
           )}
           {images.length > 1 && (

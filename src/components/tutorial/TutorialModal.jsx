@@ -31,112 +31,7 @@ import {
  * step list.
  */
 
-// Blurbs keyed by page_name. Any nav item not listed here gets a
-// generic fallback blurb ("Open <Display Name> to..."). Two synthetic
-// keys cover the section-overview steps the tour inserts before each
-// section's items: __section_manage and __section_discover.
-const STEP_BLURBS = {
-    __section_manage: {
-        title: 'Manage, your animals + business',
-        body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings, sales stats, and shipping. We\'ll walk through each tile next.',
-    },
-    __section_discover: {
-        title: 'Discover, tools, community, reference',
-        body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the visualizer, the care guide, the marketplace, the forum, and Q&A. Switching to it now so we can walk those tiles.',
-    },
-    Dashboard: {
-        title: 'Dashboard',
-        body: 'Your home base. Daily to-do list, gecko of the day, community pulse, featured breeders, weight-trend snapshots, and quick stats across your collection.',
-    },
-    MyGeckos: {
-        title: 'My Geckos',
-        body: 'Your full collection. Add geckos, log weights, set status (Holdback / For Sale / Proven / etc.), tag morphs, attach photos, and jump into individual profiles.',
-    },
-    Breeding: {
-        title: 'Breeding',
-        body: 'Create breeding pairs, log copulation events, track eggs from lay through incubation, and auto-hatch confirmed eggs into new gecko records that inherit lineage.',
-    },
-    BreedingPairs: {
-        title: 'Breeding Pairs',
-        body: 'Dedicated view of every active and historical pair. See pairing dates, predicted hatch windows, and per-pair offspring outcomes at a glance.',
-    },
-    Lineage: {
-        title: 'Lineage',
-        body: 'Visualize multi-generation family trees, drag to reposition, and add placeholder ancestors for geckos you bought from other breeders so the tree stays complete.',
-    },
-    MyProfile: {
-        title: 'My Profile',
-        body: 'Your public-facing breeder page. Bio, location, social links, geckos for sale, breeding projects, store policy, and the cover image other keepers see first.',
-    },
-    MarketplaceSalesStats: {
-        title: 'Sales Stats',
-        body: 'Year-over-year revenue, per-morph profit, cost tracking (food, equipment, shipping), and best-selling pairings, the numbers behind your breeding business.',
-    },
-    OtherReptiles: {
-        title: 'Other Reptiles',
-        body: 'Track non-gecko reptiles you keep (leopard geckos, ball pythons, blue tongue skinks) with the same feeding reminders and weight logs as the main collection.',
-    },
-    Recognition: {
-        title: 'Morph ID',
-        body: 'Compare up to five photos and get a ranked visual shortlist, evidence markers, and a clear request when better photos are needed. Great for narrowing an unboxing-day or hatchling call.',
-    },
-    MorphVisualizer: {
-        title: 'Morph Visualizer',
-        body: 'Stack base color, Mendelian morphs, polygenic patterns, and accents on a stylized gecko to preview a pairing before you commit eggs to it. Includes rarity and value estimates.',
-    },
-    BreederConsultant: {
-        title: 'AI Consultant',
-        body: 'Ask anything about crested gecko care, breeding, genetics, or pricing. Trained on real keeper knowledge and our morph guide, no generic chatbot answers.',
-    },
-    ProjectManager: {
-        title: 'Season Planner',
-        body: 'Plan your breeding season, schedule feeding groups, set up future pairings, and track season-long tasks from cooldown through hatchling weaning.',
-    },
-    GeneticsGuide: {
-        title: 'Genetics Guide',
-        body: 'A hands-on crested gecko genetics primer: dominant, co-dominant, recessive, and polygenic traits explained with worked examples.',
-    },
-    Training: {
-        title: 'Train Model',
-        body: 'Help the AI improve by labeling community gecko photos. Earn badges as you contribute, your labels go straight into the next Morph ID training run.',
-    },
-    MorphGuide: {
-        title: 'Morph Guide',
-        body: 'Reference for every named crested gecko morph: base colors, color modifiers, pattern types, structural traits, and named combinations. Each entry has its own deep page with reference photos and inheritance notes.',
-    },
-    CareGuide: {
-        title: 'Care Guide',
-        body: 'Husbandry reference: enclosure setup, temperature and humidity ranges, CGD diet brands, handling, shedding, common health issues, and breeding readiness, all sourced from working keepers.',
-    },
-    Forum: {
-        title: 'Forum',
-        body: 'Community discussion board. Ask husbandry questions, share breeding results, post morph-ID requests, and chat with other keepers without leaving the app.',
-    },
-    Gallery: {
-        title: 'Image Gallery',
-        body: 'Community photo feed. Post pictures of your geckos, like other keepers\' shots, and browse morph examples filtered by trait.',
-    },
-    Marketplace: {
-        title: 'Marketplace',
-        body: 'Buy and sell geckos through Geck Inspect. The page splits into Buy (browse listings) and Sell (publish your own). Both filter by morph, sex, age, and price.',
-    },
-    MarketplaceBuy: {
-        title: 'Buy Geckos',
-        body: 'Live listings from breeders across the community. Filter by morph, sex, age, and price; like to save; message the seller without leaving the app.',
-    },
-    MarketplaceSell: {
-        title: 'Sell Geckos',
-        body: 'Publish any gecko in your collection (set status to "For Sale" first). Photos, price, and morph tags pull straight from the gecko\'s profile.',
-    },
-    MyListings: {
-        title: 'My Listings',
-        body: 'Manage every active listing in one place, edit price, swap photos, mark as sold, or unlist with one click.',
-    },
-    BreedingROI: {
-        title: 'Breeding ROI',
-        body: 'Project the cost-versus-revenue of a planned breeding season, including food, equipment depreciation, and a per-clutch revenue estimate based on morph rarity.',
-    },
-};
+import { STEP_BLURBS } from '@/data/tutorial-steps';
 
 const TOOLTIP_WIDTH = 360;
 
@@ -241,14 +136,11 @@ export default function TutorialModal({ isOpen, onClose }) {
                     body: `The ${section.label} tab.`,
                 },
             };
-            const items = (itemsBySection.get(section.id) || []).map((item) => ({
+            const items = (itemsBySection.get(section.id) || []).filter((item) => STEP_BLURBS[item.page_name]).map((item) => ({
                 pageName: item.page_name,
                 label: item.display_name,
                 sectionId: section.id,
-                blurb: STEP_BLURBS[item.page_name] || {
-                    title: item.display_name,
-                    body: `Open ${item.display_name} to use this part of the app.`,
-                },
+                blurb: STEP_BLURBS[item.page_name],
             }));
             return [header, ...items];
         });

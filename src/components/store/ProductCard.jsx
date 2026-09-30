@@ -1,3 +1,5 @@
+import ShirtPreview from '@/components/store/ShirtPreview';
+import { createDefaultShirtDesign, CUSTOM_SHIRT_SLUG } from '@/lib/store/customShirt';
 import { Link } from 'react-router-dom';
 import { formatCents, fulfillmentBadge, isCartEligible } from '@/lib/store/format';
 import { FtcDisclosureInline } from '@/components/store/FtcDisclosure';
@@ -35,6 +37,8 @@ export default function ProductCard({ product, vendorName }) {
             decoding="async"
             className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
           />
+        ) : product.slug === CUSTOM_SHIRT_SLUG ? (
+          <ShirtPreview design={createDefaultShirtDesign()} />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">
             No image
