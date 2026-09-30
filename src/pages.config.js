@@ -29,6 +29,7 @@ const BreedingSeason        = lazy(() => import('./pages/BreedingSeason'));
 const PairingPlanner        = lazy(() => import('./pages/PairingPlanner'));
 const FieldMode             = lazy(() => import('./pages/FieldMode'));
 const Portfolio             = lazy(() => import('./pages/Portfolio'));
+const Market                = lazy(() => import('./pages/Market'));
 const CareGuide             = lazy(() => import('./pages/CareGuide'));
 const CommunityConnect      = lazy(() => import('./pages/CommunityConnect'));
 const Forum                 = lazy(() => import('./pages/Forum'));
@@ -63,7 +64,7 @@ const Settings              = lazy(() => import('./pages/Settings'));
 const TrainModel            = lazy(() => import('./pages/TrainModel'));
 const Training              = lazy(() => import('./pages/Training'));
 
-// P2–P8 Feature pages
+// P2 to P8 feature pages
 const MarketPricing         = lazy(() => import('./pages/MarketPricing'));
 const BreedingROI           = lazy(() => import('./pages/BreedingROI'));
 const BreedingLoans         = lazy(() => import('./pages/BreedingLoans'));
@@ -89,6 +90,7 @@ export const PAGES = {
     "PairingPlanner": PairingPlanner,
     "FieldMode": FieldMode,
     "Portfolio": Portfolio,
+    "Market": Market,
     "CareGuide": CareGuide,
     "CommunityConnect": CommunityConnect,
     "Dashboard": Dashboard,
@@ -125,7 +127,7 @@ export const PAGES = {
     "Settings": Settings,
     "TrainModel": TrainModel,
     "Training": Training,
-    // P2–P8 Feature pages
+    // P2 to P8 feature pages
     "MarketPricing": MarketPricing,
     "BreedingROI": BreedingROI,
     "BreedingLoans": BreedingLoans,

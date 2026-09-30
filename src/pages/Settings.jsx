@@ -22,7 +22,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard, LogOut
+  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard, LogOut, TrendingUp
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -255,13 +255,14 @@ const initialFormData = {
     phone_contact: '',
     business_address: '',
     email_notifications_enabled: true,
-    email_notification_types: ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
+    email_notification_types: ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements', 'market_alert', 'market_brief'],
     push_notifications_enabled: false,
-    push_notification_types: ['new_message', 'marketplace_inquiry', 'hatch_alert', 'feeding_due', 'new_comment', 'new_reply', 'announcement'],
+    push_notification_types: ['new_message', 'marketplace_inquiry', 'hatch_alert', 'feeding_due', 'new_comment', 'new_reply', 'announcement', 'market_alert', 'market_brief'],
     calendar_alerts_enabled: true,
     calendar_alert_types: ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
     feeding_alerts_enabled: true,
     feeding_late_reminders_enabled: false,
+    market_brief_enabled: false,
     cgd_reorder_reminders_enabled: true,
     palm_street_sync_enabled: false,
     email_on_new_follower: true,
@@ -289,7 +290,9 @@ const notificationTypes = [
     { key: 'gecko_of_day', label: 'Gecko of the Day', description: 'When your gecko photo is selected as featured' },
     { key: 'forum_replies', label: 'Forum Activity', description: 'Replies to your forum posts and comments' },
     { key: 'breeding_updates', label: 'Breeding & Care Updates', description: 'Hatch alerts, breeding plan updates, and feeding and weigh-in reminders' },
-    { key: 'announcements', label: 'Platform Announcements', description: 'Important news and feature updates' }
+    { key: 'announcements', label: 'Platform Announcements', description: 'Important news and feature updates' },
+    { key: 'market_alert', label: 'Watchlist Matches', description: 'When a new listing or a price cut matches one of your market watches' },
+    { key: 'market_brief', label: 'Morning Market Brief', description: 'The daily crested gecko market brief, once you switch it on below' }
 ];
 
 // Push preference keys, these match the actual `Notification.type`
@@ -313,7 +316,9 @@ const pushNotificationTypes = [
     { key: 'level_up', label: 'Level Up & Achievements', description: 'New badges or milestones' },
     { key: 'expert_status', label: 'Expert Status', description: 'Changes to your expert verification' },
     { key: 'submission_approved', label: 'Morph Submissions', description: 'When your morph submission is approved' },
-    { key: 'announcement', label: 'Platform Announcements', description: 'Important news and feature updates' }
+    { key: 'announcement', label: 'Platform Announcements', description: 'Important news and feature updates' },
+    { key: 'market_alert', label: 'Watchlist Matches', description: 'When a new listing or a price cut matches one of your market watches' },
+    { key: 'market_brief', label: 'Morning Market Brief', description: 'The daily crested gecko market brief, once you switch it on' }
 ];
 
 const calendarAlertTypes = [
@@ -387,13 +392,14 @@ export default function SettingsPage() {
                         phone_contact: currentUser.phone_contact || '',
                         business_address: currentUser.business_address || '',
                         email_notifications_enabled: currentUser.email_notifications_enabled !== false,
-                        email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
+                        email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements', 'market_alert', 'market_brief'],
                         push_notifications_enabled: currentUser.push_notifications_enabled === true,
-                        push_notification_types: currentUser.push_notification_types || ['new_message', 'marketplace_inquiry', 'hatch_alert', 'feeding_due', 'new_comment', 'new_reply', 'announcement'],
+                        push_notification_types: currentUser.push_notification_types || ['new_message', 'marketplace_inquiry', 'hatch_alert', 'feeding_due', 'new_comment', 'new_reply', 'announcement', 'market_alert', 'market_brief'],
                         calendar_alerts_enabled: currentUser.calendar_alerts_enabled !== false,
                         calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
                         feeding_alerts_enabled: currentUser.feeding_alerts_enabled !== false,
                         feeding_late_reminders_enabled: currentUser.feeding_late_reminders_enabled === true,
+                        market_brief_enabled: currentUser.market_brief_enabled === true,
                         cgd_reorder_reminders_enabled: currentUser.cgd_reorder_reminders_enabled !== false,
                         palm_street_sync_enabled: currentUser.palm_street_sync_enabled || false,
                         email_on_new_follower: currentUser.email_on_new_follower !== false, // Default true
@@ -565,6 +571,7 @@ export default function SettingsPage() {
         { id: 'email-notifications', label: 'Email' },
         { id: 'calendar-alerts', label: 'Calendar' },
         { id: 'feeding-alerts', label: 'Feeding Alerts' },
+        { id: 'market-alerts', label: 'Market' },
         { id: 'default-sorts', label: 'Defaults' },
         { id: 'id-logic', label: 'Gecko IDs' },
         { id: 'membership', label: 'Membership' },
@@ -976,6 +983,16 @@ export default function SettingsPage() {
                              </>
                          )}
                          {renderSwitch('cgd-reorder-reminder', 'CGD Reorder Reminder', 'Notify me roughly 14 days before my CGD is estimated to run out, based on my collection size and order history. Disable to stop these reminders.', formData.cgd_reorder_reminders_enabled, (checked) => handleChange('cgd_reorder_reminders_enabled', checked))}
+                     </CardContent>
+                 </Card>
+                </section>
+
+                <section id="market-alerts">
+                 <Card>
+                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><TrendingUp className="w-5 h-5"/>Market</CardTitle></CardHeader>
+                     <CardContent className="space-y-6">
+                          {renderSwitch('market-brief-enabled', 'Morning Market Brief', 'One short message each morning when there is fresh crested gecko market news: new listings and price cuts in your morphs, rare morphs listed, and how the market value of your geckos moved. Nothing is sent on quiet days.', formData.market_brief_enabled, (checked) => handleChange('market_brief_enabled', checked))}
+                          <p className="text-sm text-slate-400">Watchlist matches arrive whenever a listing fits one of your watches. Manage watches on the Market page. Both follow your email and push choices above.</p>
                      </CardContent>
                  </Card>
                 </section>

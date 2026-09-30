@@ -6,6 +6,7 @@ import { Scale, EggIcon, Calendar, Target, ChevronRight, CheckCircle2, Sparkles,
 import { differenceInDays, format } from 'date-fns';
 import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
 import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
+import MarketTodayStrip from '@/components/dashboard/MarketTodayStrip';
 
 /**
  * "Your Next Actions" widget, a personal todo-shaped list of things
@@ -280,6 +281,7 @@ export default function NextActions({ currentUserEmail }) {
                         Calculated from your feeding schedules, collection, eggs, weights, and breeding plans.
                     </p>
                 )}
+                <MarketTodayStrip />
             </CardContent>
         </Card>
     );

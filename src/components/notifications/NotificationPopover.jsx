@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Bell, ArrowRight, Check, CheckCheck, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart } from 'lucide-react';
+import { Bell, ArrowRight, Check, CheckCheck, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart, Egg, Utensils, Scale, Newspaper, ListOrdered, TrendingUp, Sunrise } from 'lucide-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
 
@@ -22,6 +22,13 @@ const ICONS = {
   future_breeding_ready: <Star className="w-4 h-4 text-emerald-400" />,
   marketplace_inquiry: <ShoppingCart className="w-4 h-4 text-amber-400" />,
   gecko_of_the_day: <Star className="w-4 h-4 text-yellow-400" />,
+  hatch_alert: <Egg className="w-4 h-4 text-amber-300" />,
+  feeding_due: <Utensils className="w-4 h-4 text-emerald-400" />,
+  weighin_reminder: <Scale className="w-4 h-4 text-sky-400" />,
+  weekly_digest: <Newspaper className="w-4 h-4 text-slate-300" />,
+  waitlist_signup: <ListOrdered className="w-4 h-4 text-emerald-300" />,
+  market_alert: <TrendingUp className="w-4 h-4 text-emerald-400" />,
+  market_brief: <Sunrise className="w-4 h-4 text-amber-300" />,
 };
 
 /**

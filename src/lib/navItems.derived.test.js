@@ -37,6 +37,7 @@ const EXPECTED_FALLBACK = {
   ],
   public: [
     { page_name: 'Dashboard', display_name: 'Dashboard', icon: 'BarChart3', category: 'public', requires_auth: false, is_enabled: true, order: 1 },
+    { page_name: 'Market', display_name: 'Market', icon: 'TrendingUp', category: 'public', requires_auth: true, is_enabled: true, order: 1.5 },
     { page_name: 'Marketplace', display_name: 'Marketplace', icon: 'ShoppingCart', category: 'public', requires_auth: false, is_enabled: true, order: 2 },
     { page_name: 'MarketplaceSalesStats', display_name: 'Business Tools', icon: 'BarChart3', category: 'public', requires_auth: true, is_enabled: true, order: 3 },
   ],
@@ -56,6 +57,7 @@ const EXPECTED_SECTION = {
   PrintableWorksheets: 'discover', ImageImport: 'discover',
   Training: 'discover', TrainModel: 'discover', Marketplace: 'discover', MarketplaceBuy: 'discover',
   MarketplaceVerification: 'discover', MarketPricing: 'discover', BreedingROI: 'discover', BreedingLoans: 'discover',
+  Market: 'discover',
   Breeder: 'discover',
 };
 
@@ -87,6 +89,7 @@ const EXPECTED_PALETTE = [
   ['Forum', 'Forum', 'Community'],
   ['Messages', 'Messages', 'Community'],
   ['Notifications', 'Notifications', 'Community'],
+  ['Market', 'Market Today', 'Marketplace'],
   ['Marketplace', 'Marketplace', 'Marketplace'],
   ['MarketplaceBuy', 'Buy Geckos', 'Marketplace'],
   ['MarketplaceSell', 'Sell Geckos', 'Marketplace'],
