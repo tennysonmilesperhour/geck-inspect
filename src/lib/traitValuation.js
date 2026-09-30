@@ -32,7 +32,7 @@
  * as another species (gargoyle, leopard) are never priced from it.
  */
 
-import { patternGradeForScore } from './quality';
+import { patternGradeForScore } from './quality.js';
 
 const WORD_FIXES = new Map([
   ['dalmation', 'dalmatian'],
