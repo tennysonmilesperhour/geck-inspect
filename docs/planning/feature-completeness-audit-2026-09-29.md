@@ -67,6 +67,7 @@ Estimates after today's fixes, least finished first. "Hidden" means not in navig
 | Support | Feedback, Support inbox | Partial | 70% | Replies are not recorded on the ticket |
 | Passport and transfers | /passport, /claim | Partial | 70% | Buyers see no weight history; transfers use pop-up prompts |
 | Membership and billing | /Membership, Stripe | Partial | 70% | An upgrade starts a second subscription |
+| Market (brief, live feed, watchlist, Guess the Price, your listings) | /Market | Partial | 70% | US listings unchecked since early September until the MorphMarket feed is back on; see docs/planning/market-habit-2026-09-30.md |
 | MorphMarket export | Business Tools | Polish | 75% | CSV never checked against MorphMarket's importer |
 | Forum | /Forum | Polish | 75% | No editing, photos or view counts |
 | Messages and notifications | /Messages, /Notifications | Polish | 75% | Buyer inquiries have no inbox; no native push |
@@ -248,6 +249,7 @@ The sandbox cannot reach the live API, so these can only be confirmed by hand. T
 7. One Govee sensor, if D6 keeps sensors.
 8. The two-row MorphMarket test import (step 19).
 9. Delete a disposable account end to end (step 3).
+10. After the MorphMarket feed is back on: save a watch on /Market, wait for a matching listing, and confirm the bell, the email and the push. Switch on the morning brief and confirm it arrives on a morning with news.
 
 ## 9. The finish line
 
