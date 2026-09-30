@@ -178,7 +178,7 @@ export default function CollectionsCard({ user }) {
       });
       return;
     }
-    if (!confirm(`Delete collection "${col.name}" and all its memberships? Geckos in this collection will be unparented (you can reassign them later).`)) {
+    if (!confirm(`Delete collection "${col.name}"? Its geckos move to your default collection (a gecko someone else added goes back to theirs), and anyone you shared it with loses access.`)) {
       return;
     }
     try {
