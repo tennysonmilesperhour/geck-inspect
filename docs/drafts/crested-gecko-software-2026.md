@@ -1,6 +1,6 @@
 # DRAFT: Crested gecko apps in 2026, an honest comparison
 
-Status: draft for Tennyson's review, 29 September 2026. Not published. The blog pipeline has been paused since 15 July at his request, so publishing is his call. When approved, this converts to one entry in `src/data/blog-posts.js` (fields below).
+Status: **shelved 30 September 2026**, with all blog work, until Tennyson says otherwise. Do not edit, publish or build on it until then. Written 29 September 2026 and never published. When approved, this converts to one entry in `src/data/blog-posts.js` (fields below).
 
 ## Before publishing
 

@@ -76,12 +76,12 @@ How to think about feature decisions
 Geck Inspect competes in a real but specialized market. Before suggesting product direction, feature additions, or strategic pivots, read these files:
 
 STRATEGY.md - the competitive landscape, where Geck Inspect sits, and what the market gaps are
-ROADMAP.md - current priorities, 90-day plan, and action items in a checkable format
+ROADMAP.md - points to the active plan, lists what is shelved, and says what each old roadmap item became
 DECISIONS.md - log of important architectural and product choices already made
 
 The single most important strategic fact: the closest competitor is Dusty Mumphrey's three-product ecosystem (Geckistry, ReptiDex, Breed Ledger). Breed Ledger launches May 15, 2026. Geck Inspect's defensible position is being crested-gecko-FIRST, while every competitor is multi-species or marketplace-focused. Do not suggest features or messaging that dilute the species-first identity.
 Reference material (do not auto-load)
-The full deep-dive analysis lives in /docs/ as Word documents. These are for human reference and should not be pulled into context unless explicitly asked. They are large and the key takeaways are already captured in STRATEGY.md and ROADMAP.md.
+The full deep-dive analysis lives in /docs/ as Word documents. These are for human reference and should not be pulled into context unless explicitly asked. They are large and the key takeaways are already captured in STRATEGY.md.
 
 /docs/landscape-analysis-vol1.docx (34 pages, comprehensive competitor analysis)
 /docs/landscape-analysis-vol2.docx (18 pages, supplemental research, market sizing, unit economics)
@@ -117,17 +117,19 @@ Crested gecko terminology should always be specific (Lilly White, Harlequin, Pha
 
 **Domain disambiguation.** `tennyscrestedgeckos.com` is NOT Tennyson's site. Another breeder happens to share the first name. Do not put that domain on the landing page, in the founder section, in marketing copy, or anywhere a visitor could read it as Tennyson's brand. The strategy docs (INTENT.md, DECISIONS.md, CONTEXT.md) historically referenced it as a "founder credibility" signal; that was a mistake based on the name collision and is being unwound. If a future doc or generated copy reintroduces it, treat that as a bug. The right founder credibility signal is Tennyson's actual breeding operation under whatever brand name he chooses to publish; ask before assuming.
 
+**Blog posts and articles are shelved** (30 Sep 2026) until Tennyson says otherwise. Do not write, draft, publish or suggest articles or blog posts, and do not re-enable the blog pipeline. That includes roadmap answers and SEO or growth-report follow-ups: the weekly growth report still lists blog topic ideas, and those are data, not tasks.
+
 Project files
 Where the project documentation actually lives:
 
 STRATEGY.md (root) - competitive landscape and market position
-ROADMAP.md (root) - active priorities and action items
+ROADMAP.md (root) - points to the active plan and lists what is shelved
 docs/CONTEXT.md - what this project is and why it exists
 docs/INTENT.md - what we are trying to accomplish
 docs/DECISIONS.md - log of important choices
 docs/MIGRATIONS.md - how the database schema is managed and why the deploy scripts must not replay migrations
 docs/planning/ - older audit and planning documents, kept for history
 docs/planning/launch-review-2026-09-04.md - the pre-launch review (62 findings with status) and its open items. Start here to continue that work.
-docs/planning/vip-audit-2026-09-27.md - post-launch audit: usage data, competitor research, and the phased plan (activation first). Start here for product work.
-docs/planning/feature-completeness-audit-2026-09-29.md: the audit of every feature, how finished each one is, the decisions waiting on Tennyson, and the step-by-step plan to finish the app (least finished first). Start here for completion work.
+docs/planning/vip-audit-2026-09-27.md - post-launch audit: usage data, competitor research, and a phased plan that was completed 29 Sep. Kept for history.
+docs/planning/feature-completeness-audit-2026-09-29.md - the active plan: how finished each feature is, the decisions waiting on Tennyson, and the step-by-step plan to finish the app (least finished first). Start here for product work.
 IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md and this file; do not invent those documents' contents.
