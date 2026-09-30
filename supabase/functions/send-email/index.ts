@@ -65,6 +65,14 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   announcement: "announcements",
   // Sunday summary from enqueue_weekly_digest(); rides the announcements preference.
   weekly_digest: "announcements",
+  // A buyer joining a waitlist or asking about a listing is a message to
+  // the breeder. Before these lines both were dropped for every member,
+  // because no one can switch on a key with those names.
+  waitlist_signup: "new_message",
+  marketplace_inquiry: "new_message",
+  referral_reward: "announcements",
+  referral_grant_ended: "announcements",
+  submission_approved: "level_up",
 };
 
 const CORS = {

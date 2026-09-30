@@ -162,8 +162,15 @@ serve(async (req) => {
     : [];
   // Types with no toggle of their own ride a related one. The weekly
   // weigh-in reminder had no push key at all, so it never reached a phone;
-  // it now follows the "Feeding & weigh-in reminders" toggle.
-  const PREF_ALIAS: Record<string, string> = { weighin_reminder: "feeding_due" };
+  // it now follows the "Feeding & weigh-in reminders" toggle. A waitlist
+  // signup follows "Marketplace inquiries" and the referral notices follow
+  // "Announcements" for the same reason.
+  const PREF_ALIAS: Record<string, string> = {
+    weighin_reminder: "feeding_due",
+    waitlist_signup: "marketplace_inquiry",
+    referral_reward: "announcement",
+    referral_grant_ended: "announcement",
+  };
   if (!allowed.includes(PREF_ALIAS[type] || type)) {
     return json({ delivered: 0, pruned: 0, skipped: "type-not-allowed" });
   }

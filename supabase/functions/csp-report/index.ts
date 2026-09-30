@@ -28,6 +28,13 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const ALLOWED_DOCUMENT = /^https:\/\/(www\.)?geckinspect\.com(\/|$)/;
 const MAX_REPORTS_PER_REQUEST = 5;
 
+// Keep scheme, host and path only. A blocked address can carry a query
+// string with personal data (21 stored reports held a member's email
+// address that way), and the path is all the enforce decision needs.
+function withoutQuery(value: string): string {
+  return value.split(/[?#]/)[0];
+}
+
 function pick(report: Record<string, unknown>, ...keys: string[]): string {
   for (const key of keys) {
     const value = report[key];
@@ -97,9 +104,9 @@ Deno.serve(async (req: Request) => {
     if (!ALLOWED_DOCUMENT.test(documentUri)) continue;
 
     const directive = pick(report, "effective-directive", "violated-directive", "effectiveDirective").slice(0, 80) || "unknown";
-    const blocked = pick(report, "blocked-uri", "blockedURL").slice(0, 300);
+    const blocked = withoutQuery(pick(report, "blocked-uri", "blockedURL")).slice(0, 300);
     const message = `CSP ${directive} blocked ${blocked || "(inline)"}`.slice(0, 1000);
-    const url = documentUri.split("?")[0].slice(0, 500);
+    const url = withoutQuery(documentUri).slice(0, 500);
 
     // One row per distinct violation per page per hour is enough to decide
     // whether the policy is safe to enforce.
@@ -122,7 +129,7 @@ Deno.serve(async (req: Request) => {
         source: "csp-report",
         directive,
         blocked_uri: blocked,
-        source_file: pick(report, "source-file", "sourceFile").slice(0, 300) || null,
+        source_file: withoutQuery(pick(report, "source-file", "sourceFile")).slice(0, 300) || null,
         line_number: pick(report, "line-number", "lineNumber") || null,
         disposition: pick(report, "disposition") || null,
         original_policy_length: pick(report, "original-policy", "originalPolicy").length,
