@@ -71,6 +71,29 @@ function priceIdToTier(priceId: string | null | undefined): string | null {
   return priceIdToPlan(priceId)?.tier || null;
 }
 
+// Subscription states that still bill or can bill again.
+const LIVE_STATUSES = new Set(["active", "trialing", "past_due", "unpaid", "paused"]);
+
+// API versions from 2025-03 (this account runs 2026-04-22.dahlia) moved an
+// invoice's subscription id under parent.subscription_details.
+function invoiceSubscriptionId(inv: any): string | null {
+  return inv?.parent?.subscription_details?.subscription ?? inv?.subscription ?? null;
+}
+
+// Each member has one current subscription, profiles.stripe_subscription_id.
+// Events from any other subscription are ignored while the current one is
+// live. A member with two subscriptions used to flip back to the old plan
+// when it renewed and drop to Free when it was cancelled. A new
+// subscription takes over once the current one has ended.
+function isCurrentSubscription(
+  profile: { stripe_subscription_id?: string | null; subscription_status?: string | null },
+  subscriptionId: string | null,
+): boolean {
+  if (!subscriptionId || !profile.stripe_subscription_id) return true;
+  if (profile.stripe_subscription_id === subscriptionId) return true;
+  return !LIVE_STATUSES.has(profile.subscription_status || "");
+}
+
 function monthlyPriceIdForTier(tier: string): string | null {
   const envKey = `STRIPE_${tier.toUpperCase()}_PRICE_ID`;
   return Deno.env.get(envKey) || PRICE_CATALOG[tier]?.monthly || null;
@@ -261,10 +284,24 @@ Deno.serve(async (req: Request) => {
     if (!customerId) return null;
     const { data } = await supabase
       .from("profiles")
-      .select("id, email")
+      .select("id, email, membership_tier, stripe_subscription_id, subscription_status")
       .eq("stripe_customer_id", customerId)
       .maybeSingle();
     return data || null;
+  };
+
+  // Logged where the nightly error triage reads, so a second live
+  // subscription is noticed and refunded by hand.
+  const flagSecondSubscription = async (email: string, current: string, incoming: string) => {
+    const message = `Second live Stripe subscription for one member: ${incoming} while ${current} is live`;
+    console.error(message);
+    await supabase.from("error_logs").insert({
+      level: "error",
+      message,
+      user_email: email,
+      context: { source: "stripe-webhook", current, incoming, event_id: event.id },
+      created_by: "stripe-webhook",
+    }).then(() => {}, () => {});
   };
 
   // Writes the billing columns for an account.
@@ -313,6 +350,16 @@ Deno.serve(async (req: Request) => {
           const cycle = session.metadata?.billing_cycle || null;
           const isKeeperPromoTrial = session.metadata?.keeper_promo_trial === "1";
           const isStandardTrial = session.metadata?.free_trial === "1";
+          // Checkout refuses members who already pay, so this only happens
+          // when two checkouts were opened before either finished.
+          if (
+            profile?.stripe_subscription_id &&
+            session.subscription &&
+            profile.stripe_subscription_id !== session.subscription &&
+            LIVE_STATUSES.has(profile.subscription_status || "")
+          ) {
+            await flagSecondSubscription(email, profile.stripe_subscription_id, session.subscription);
+          }
           await upsertProfileByEmail(email, {
             stripe_customer_id: session.customer,
             stripe_subscription_id: session.subscription,
@@ -338,6 +385,10 @@ Deno.serve(async (req: Request) => {
         const sub = event.data.object;
         const profile = await findProfileFromCustomer(sub.customer);
         if (profile?.email) {
+          if (!isCurrentSubscription(profile, sub.id)) {
+            console.warn(`ignored ${event.type} for ${sub.id}: ${profile.stripe_subscription_id} is current`);
+            break;
+          }
           const priceId = sub.items?.data?.[0]?.price?.id;
           const plan = priceIdToPlan(priceId);
           const cycle = plan?.cycle || sub.metadata?.billing_cycle || null;
@@ -360,6 +411,10 @@ Deno.serve(async (req: Request) => {
         const sub = event.data.object;
         const profile = await findProfileFromCustomer(sub.customer);
         if (profile?.email) {
+          if (!isCurrentSubscription(profile, sub.id)) {
+            console.warn(`ignored ${event.type} for ${sub.id}: ${profile.stripe_subscription_id} is current`);
+            break;
+          }
           await upsertProfileByEmail(profile.email, {
             subscription_status: "canceled",
             membership_tier: "free",
@@ -371,7 +426,7 @@ Deno.serve(async (req: Request) => {
       case "invoice.payment_failed": {
         const inv = event.data.object;
         const profile = await findProfileFromCustomer(inv.customer);
-        if (profile?.email) {
+        if (profile?.email && isCurrentSubscription(profile, invoiceSubscriptionId(inv))) {
           await upsertProfileByEmail(profile.email, {
             subscription_status: "past_due",
           });
@@ -393,7 +448,7 @@ Deno.serve(async (req: Request) => {
             const { error: receiptError } = await supabase.from("payment_events").upsert({
               id: `stripe-invoice:${inv.id}`, user_email: profile.email,
               stripe_event_id: event.id, stripe_invoice_id: inv.id,
-              stripe_customer_id: inv.customer, stripe_subscription_id: inv.subscription || null,
+              stripe_customer_id: inv.customer, stripe_subscription_id: invoiceSubscriptionId(inv),
               event_type: "invoice.paid", status: "paid", amount_cents: inv.amount_paid,
               currency: inv.currency, membership_tier: profile.membership_tier,
               event_timestamp: new Date(event.created * 1000).toISOString(),

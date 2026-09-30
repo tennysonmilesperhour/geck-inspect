@@ -449,6 +449,18 @@ export default function MembershipPage() {
         } catch {
           // not JSON
         }
+        // Checkout would start a second subscription for a member who
+        // already pays, so plan and billing cycle changes happen in the
+        // billing portal, which switches the existing one.
+        if (parsed?.code === 'already_subscribed') {
+          setLoadingAction(null);
+          toast({
+            title: 'Change plans in the billing portal',
+            description: 'You already have a membership, so the switch happens there and you are never charged twice.',
+          });
+          await handleManageBilling();
+          return;
+        }
         throw new Error(parsed?.error || parsed?.message || detail);
       }
       if (data?.url) {

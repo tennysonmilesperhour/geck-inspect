@@ -31,9 +31,15 @@
 //        when the checkout completes, so the same account cannot claim a
 //        second one
 //   intent='keeper_trial' AND tier='keeper' AND profile.keeper_trial_used=false
-//     -> KEEPER_PROMO_TRIAL_DAYS trial, marks keeper_trial_used=true (the
-//        one-time first-timer promo the Promote page offers)
+//     -> KEEPER_PROMO_TRIAL_DAYS trial (the one-time first-timer promo the
+//        Promote page offers); the webhook marks keeper_trial_used=true when
+//        the checkout completes, so closing the tab does not spend it
 //   anything else (the default)               -> no trial, billed immediately
+//
+// Plan changes. Checkout always starts a new subscription, so a member
+// who already pays is refused (409, code already_subscribed) and the
+// Membership page sends them to the billing portal, which switches the
+// existing subscription instead of adding a second one.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -89,6 +95,10 @@ function resolvePriceId(tier: string, cycle: Cycle): string | null {
   if (cycle === "monthly" && MONTHLY_ENV_OVERRIDES[tier]) return MONTHLY_ENV_OVERRIDES[tier]!;
   return PRICE_CATALOG[tier]?.[cycle] || null;
 }
+
+// Subscription states that still bill or can bill again. A member with one
+// of these changes plans in the billing portal, never through Checkout.
+const LIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing", "past_due", "unpaid", "paused"]);
 
 const DEFAULT_RETURN_URL = "https://geckinspect.com/Membership";
 const ALLOWED_RETURN_PREFIXES = [
@@ -259,6 +269,33 @@ Deno.serve(async (req: Request) => {
     if (saveErr) console.error("could not save stripe_customer_id:", saveErr.message);
   }
 
+  // Ask Stripe, not the profile, whether this member already pays: the
+  // profile can lag a webhook. A Keeper who picked Breeder used to end up
+  // with two subscriptions billing side by side. Fails closed, since a
+  // missed check could start a second subscription.
+  try {
+    const q = new URLSearchParams({ customer: customerId!, status: "all", limit: "20" });
+    const subs = await stripeRequest(`/subscriptions?${q}`, "GET", stripeKey);
+    const live = (subs?.data || []).find((s: { status?: string }) =>
+      LIVE_SUBSCRIPTION_STATUSES.has(s?.status || "")
+    );
+    if (live) {
+      return jsonResponse(
+        {
+          error: "You already have a membership. Change your plan or billing cycle in the billing portal so you are never charged twice.",
+          code: "already_subscribed",
+        },
+        409,
+      );
+    }
+  } catch (err) {
+    console.error("subscription check failed:", (err as Error).message);
+    return jsonResponse(
+      { error: "Could not check your current membership. Try again in a minute." },
+      502,
+    );
+  }
+
   // Trial-period decision tree. Zero means no trial, which is the default:
   // someone who clicks "Get Keeper" is buying a membership and expects the
   // first charge today. Only an explicit trial intent adds free days.
@@ -335,21 +372,10 @@ Deno.serve(async (req: Request) => {
       stripeKey,
       sessionForm,
     );
-    // The Keeper promo is burned here, at session creation, which is how it
-    // has always worked. The standard trial is burned by the webhook when
-    // the checkout actually completes (metadata[free_trial]), so opening
-    // Checkout and closing the tab does not cost a member their one trial.
-    if (isKeeperPromoTrial) {
-      const now = new Date().toISOString();
-      await admin
-        .from("profiles")
-        .update({
-          keeper_trial_used: true,
-          keeper_trial_started_at: now,
-          updated_date: now,
-        })
-        .eq("email", user.email);
-    }
+    // Both trials are spent by the webhook when the checkout completes
+    // (metadata[keeper_promo_trial] and metadata[free_trial]). The Keeper
+    // promo used to be marked here, so opening Checkout and closing the
+    // tab lost it.
     return jsonResponse({ url: session.url, id: session.id });
   } catch (err) {
     return jsonResponse({ error: (err as Error).message }, 502);
