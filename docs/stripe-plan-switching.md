@@ -1,6 +1,6 @@
 # Stripe plan switching
 
-Status checked September 30, 2026. The code and removal of the existing overage item are shipped. Portal setup and the full switching test remain pending. Tennyson approved the live overage removal and a dedicated 100% discounted live test. Permission to configure the portals was requested separately and is still pending.
+Status checked September 30, 2026. The code, overage removal, and test/live default portal settings are shipped. Tennyson approved configuration and the dedicated discounted live test. Sandbox switching passes. The live application flow remains pending confirmation of its disposable test account.
 
 ## Dashboard setup
 
@@ -11,8 +11,8 @@ In both test mode and live mode, open Settings > Billing > Customer portal, sele
 1. Enable Customers can switch plans.
 2. Include Keeper and Breeder only, with each plan's monthly and annual prices. Exclude Enterprise and Posting Overage. Test mode has separate price IDs; use the test catalog there.
 3. Allow billing interval changes. Prorate upgrades and invoice immediately.
-4. Schedule eligible downgrades and shorter billing intervals at period end. Stripe documents that end-of-period downgrades are limited to prices on the same product. Keeper and Breeder are separate products, so do not promise delayed cross-tier downgrades without verifying the actual preview. If unsupported, resolve that policy before rollout.
-5. Under Business information, check legal links. At inspection, both were missing. Set Terms to https://geckinspect.com/Terms and Privacy to https://geckinspect.com/PrivacyPolicy in Public business information. Keep support email morphiclabsdata@gmail.com. Set the return link to https://geckinspect.com/Membership.
+4. Schedule eligible downgrades and shorter billing intervals at period end. The actual sandbox preview schedules Breeder monthly to Keeper monthly at period end even though they are separate products. Breeder monthly to annual also schedules at period end because the annual price is cheaper on a monthly basis; the profile must remain monthly until the scheduled change occurs.
+5. Under Business information, check legal links. Both are now saved. Set Terms to https://geckinspect.com/Terms and Privacy to https://geckinspect.com/PrivacyPolicy in Public business information. Keep support email morphiclabsdata@gmail.com. Set the return link to https://geckinspect.com/Membership.
 6. Save and inspect a portal session before calling this complete.
 
 Live catalog:
@@ -30,13 +30,17 @@ Social posting remains paused. Checkout only attaches its monthly metered item w
 
 Removed item si_VCQpLSZviCFTKC from subscription sub_1UC1y9LBdc4xGjxqeHTerQUR on September 30 at about 16:30 UTC. The Dashboard showed zero usage. Proration and billing-anchor reset were unchecked. The same subscription now has only the Keeper item, si_VCQpRiR741IvKb. The real webhook is processed and the profile remains keeper/monthly/active. Next invoice remains $2.99 on October 4.
 
-## Verification still required
+## Portal verification completed
 
-First reproduce the portal limitation with a test-mode subscription containing a membership and metered item, then remove the metered item and verify switching becomes available. This reproduction has not run.
+Live default configuration bpc_1UC0v0LBdc4xGjxq2sqr5p86 and test default bpc_1ULQc0LBdc4xGjxqn7JSnJ4p have switching enabled for the four Keeper/Breeder prices only, quantity changes disabled, immediate invoiced prorations, and period-end cheaper-plan/shorter-interval changes. Both return to Membership. Live settings were reloaded to verify persistence. Public support email and Contact, Terms, and PrivacyPolicy links are saved.
+
+In test mode, subscription sub_1ULQc1LBdc4xGjxqnVojeMpA reproduced Stripe's rejection: "This PortalSession cannot update subscription ... because it has multiple items." Removing only the metered item without proration made the subscription update portal available. A browser Keeper monthly to Breeder monthly confirmation kept exactly one subscription and the same id. The API showed the Breeder monthly price and active status. A downgrade preview scheduled Keeper monthly at October 30 renewal. A confirmed annual change created schedule sub_sched_1ULQmILBdc4xGjxqtMRg2QGy for Breeder annual on October 30, with exactly one subscription and the current monthly price retained until then. The test schedule/subscription was then canceled without invoice or proration and the disposable test customer deleted. The test catalog and default portal remain available.
+
+## Live verification still required
 
 For the live integration, use a dedicated test account and a 100% discount that remains valid through upgrades and interval changes. Verify the checkout and every confirmation show $0 before submitting. Subscribe to Keeper monthly, choose Breeder on Membership, confirm the toast and portal redirect, switch to Breeder, switch to annual, then cancel. Never use the existing paying subscription for this test.
 
-After each step verify exactly one subscription for the test customer; the same subscription id in profiles; the expected membership_tier, membership_billing_cycle and subscription_status; processed stripe_webhook_logs; and no new Second live Stripe subscription error. Clean up the test subscription, customer and promotion code. No live test records have been created yet.
+After each step verify exactly one subscription for the test customer; the same subscription id in profiles; the expected membership_tier, membership_billing_cycle and subscription_status; processed stripe_webhook_logs; and no new Second live Stripe subscription error. Clean up the test subscription, customer and promotion code. A disposable app signup was created but is not email-confirmed. Automatic approval review blocked confirming it with its stored signup token; explicit approval for that method was requested. No live test customer or subscription exists yet. A single-redemption 100% forever coupon GSj9OGsG and associated promotion code are prepared and unused. Remove them after the test. Sandbox results do not verify live application profile synchronization.
 
 ## Checks completed
 
