@@ -1,5 +1,5 @@
 {
-  "lastRun": "2026-09-29T16:50:53.635Z",
+  "lastRun": "2026-10-01T17:20:54.832Z",
   "signatures": {
     "5a866ee3a287": {
       "status": "skipped",
@@ -30,6 +30,16 @@
       "lastMessage": "Failed to fetch dynamically imported module: https://geckinspect.com/assets/CustomStickerStudio-Z-tvUI5H.js",
       "lastCount": 1,
       "updatedAt": "2026-09-29T16:50:53.635Z"
+    },
+    "b2d02786c30f": {
+      "status": "open_pr",
+      "reason": null,
+      "prUrl": "https://github.com/tennysonmilesperhour/geck-inspect/pull/90",
+      "branch": "error-triage/b2d02786c30f-2026-10-01",
+      "title": "Fix: use UPDATE instead of upsert in updateMyUserData to avoid INSERT trigger permission error",
+      "lastMessage": "permission denied for function generate_referral_code",
+      "lastCount": 1,
+      "updatedAt": "2026-10-01T17:20:54.832Z"
     }
   }
 }
