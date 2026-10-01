@@ -28,19 +28,40 @@ export const User = new Proxy({}, {
         if (error) throw error;
         try {
           // A form field with no matching profiles column makes PostgREST
-          // reject the whole upsert (PGRST204). That silently broke every
+          // reject the whole update (PGRST204). That silently broke every
           // Settings save from April to September 2026. Drop the unknown
           // field, report it so the column gets added, and save the rest.
-          const row = { email: user.email, ...data, updated_date: new Date().toISOString() };
+          //
+          // We use UPDATE (not upsert) because the profiles table has a
+          // BEFORE INSERT trigger (profiles_set_referral_code) that calls
+          // generate_referral_code(), which is not executable by the
+          // authenticated role. INSERT ON CONFLICT fires the BEFORE INSERT
+          // trigger even when the row already exists, causing a permission
+          // error on every upsert for every signed-in user.
+          const updateRow = { ...data, updated_date: new Date().toISOString() };
           for (let attempt = 0; ; attempt += 1) {
-            const { error: profileError } = await supabase.from('profiles')
-              .upsert(row, { onConflict: 'email' });
-            if (!profileError) break;
+            const { error: profileError, count } = await supabase.from('profiles')
+              .update(updateRow)
+              .eq('email', user.email)
+              .select('email', { count: 'exact', head: true });
+            if (!profileError && (count ?? 1) > 0) break;
+            if (!profileError && (count ?? 1) === 0) {
+              // Profile row missing — fall back to upsert so the data is not lost.
+              reportError(new Error('updateMyUserData: no profile row found, falling back to upsert'), {
+                component: 'entities/all',
+                extra: { op: 'updateMyUserData' },
+              });
+              const upsertRow = { email: user.email, ...data, updated_date: new Date().toISOString() };
+              const { error: upsertError } = await supabase.from('profiles')
+                .upsert(upsertRow, { onConflict: 'email' });
+              if (upsertError) throw upsertError;
+              break;
+            }
             const missing = profileError.code === 'PGRST204'
               ? /'([^']+)' column/.exec(profileError.message || '')?.[1]
               : null;
-            if (attempt >= 10 || !missing || !(missing in row) || missing === 'email') throw profileError;
-            delete row[missing];
+            if (attempt >= 10 || !missing || !(missing in updateRow) || missing === 'email') throw profileError;
+            delete updateRow[missing];
             reportError(profileError, { component: 'entities/all', extra: { op: 'updateMyUserData', dropped_column: missing } });
           }
         } catch (err) {
