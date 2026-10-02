@@ -164,9 +164,11 @@ serve(async (req) => {
   // weigh-in reminder had no push key at all, so it never reached a phone;
   // it now follows the "Feeding & weigh-in reminders" toggle. A waitlist
   // signup follows "Marketplace inquiries" and the referral notices follow
-  // "Announcements" for the same reason.
+  // "Announcements" for the same reason. A vet follow-up is a care
+  // reminder too, so it rides the feeding and weigh-in toggle.
   const PREF_ALIAS: Record<string, string> = {
     weighin_reminder: "feeding_due",
+    vet_followup: "feeding_due",
     waitlist_signup: "marketplace_inquiry",
     referral_reward: "announcement",
     referral_grant_ended: "announcement",

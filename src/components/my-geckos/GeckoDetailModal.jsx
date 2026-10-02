@@ -13,6 +13,7 @@ import LoadingSpinner from '../shared/LoadingSpinner';
 import SmartImage from '../shared/SmartImage';
 import EventTracker from './EventTracker';
 import BreedingHistory from './BreedingHistory';
+import VetRecordsSection from '@/components/gecko/VetRecordsSection';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import WeightChart from '@/components/shared/WeightChart';
@@ -851,6 +852,14 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <p className="text-slate-400 text-center py-4 text-sm">No events recorded yet.</p>
                 )}
               </div>
+
+              {/* Vet visits: logged here, shown on the passport, with a
+                  reminder on the follow-up date. */}
+              <VetRecordsSection
+                gecko={gecko}
+                canEdit={canEdit && !isGuestMode()}
+                currentUserEmail={currentUser?.email || null}
+              />
 
               {/* Who did what, when this gecko sits in a shared collection.
                   Renders nothing for geckos that were never shared. */}

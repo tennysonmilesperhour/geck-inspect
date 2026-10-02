@@ -16,6 +16,7 @@ import HiddenHetPanel from '@/components/gecko/HiddenHetPanel';
 import VisualSiblings from '@/components/gecko/VisualSiblings';
 import HealthScreenCard from '@/components/health/HealthScreenCard';
 import MarketValueCard from '@/components/gecko/MarketValueCard';
+import VetRecordsSection from '@/components/gecko/VetRecordsSection';
 import {
     Loader2, ArrowLeft, Calendar, GitBranch, StickyNote,
     DollarSign, LineChart as LineChartIcon, MapPin, Tag, User as UserIcon,
@@ -376,6 +377,21 @@ export default function GeckoDetail() {
                                 </CardHeader>
                                 <CardContent className="px-4 pb-4">
                                     <WeightChart records={weightRecords} gecko={gecko} height={180} />
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Vet visits, owner only: anyone else sees them on the
+                            passport's Vet tab. */}
+                        {isOwner && (
+                            <Card>
+                                <CardContent className="px-4 py-4">
+                                    <VetRecordsSection
+                                        gecko={gecko}
+                                        currentUserEmail={currentUser?.email || null}
+                                        headingClassName="text-base font-semibold text-slate-100 mb-3 flex items-center gap-2"
+                                        iconClassName="w-4 h-4 text-emerald-400"
+                                    />
                                 </CardContent>
                             </Card>
                         )}
