@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import StoreLayout from '@/components/store/StoreLayout';
 import AddToCartButton from '@/components/store/AddToCartButton';
+import { isAwaitingCheckout } from '@/lib/store/checkoutFlags';
 import AmazonProductWidget from '@/components/store/AmazonProductWidget';
 import { FtcDisclosureBlock } from '@/components/store/FtcDisclosure';
 import Seo from '@/components/seo/Seo';
@@ -65,6 +66,7 @@ export default function StoreProduct() {
   const main = images[activeImage] || images[0] || null;
   const badge = product ? fulfillmentBadge(product.fulfillment_mode, vendor?.name) : null;
   const isAffiliate = product?.fulfillment_mode === 'affiliate_redirect';
+  const awaiting = isAwaitingCheckout(product);
 
   const breadcrumbs = useMemo(() => {
     const out = [{ label: 'Supplies', to: '/Store' }];
@@ -75,7 +77,9 @@ export default function StoreProduct() {
 
   const jsonLd = useMemo(() => {
     if (!product) return null;
-    const offer = !isAffiliate && product.our_price_cents != null ? {
+    // No Offer while the item cannot be ordered: search results must not
+    // show it as in stock and for sale.
+    const offer = !isAffiliate && !awaiting && product.our_price_cents != null ? {
       '@type': 'Offer',
       price: ((product.our_price_cents || 0) / 100).toFixed(2),
       priceCurrency: 'USD',
@@ -102,7 +106,7 @@ export default function StoreProduct() {
         })),
       },
     ];
-  }, [product, vendor, images, breadcrumbs, isAffiliate]);
+  }, [product, vendor, images, breadcrumbs, isAffiliate, awaiting]);
 
   if (loading) {
     return (
@@ -210,7 +214,13 @@ export default function StoreProduct() {
             )}
           </div>
 
-          {badge?.label && (
+          {awaiting ? (
+            <div role="note" className="rounded-md border border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-300">
+              Not available to order yet. Geck Inspect checkout is not open,
+              so this item is shown for reference only. Items marked Affiliate
+              can be bought now from the seller.
+            </div>
+          ) : badge?.label && (
             <div className="text-xs text-slate-300">
               {badge.label}
             </div>

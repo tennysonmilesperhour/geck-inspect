@@ -9,15 +9,19 @@ import Seo from '@/components/seo/Seo';
 import { SITE_URL } from '@/lib/organization-schema';
 import { supabase } from '@/lib/supabaseClient';
 import { fetchStoreCatalog } from '@/lib/store/catalog';
+import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 
-const HERO_TILES = [
-  { to: '/Store/stickers',        label: 'Custom stickers',   Icon: Sticker,  blurb: 'Your gecko on a sticker, six themes. $10 each.' },
-  { to: '/Store/tees',            label: 'Custom tee',        Icon: Shirt,    blurb: 'Your gecko on a shirt. Pick colour, size and print.' },
-  { to: '/Store/c/apparel',       label: 'Apparel',           Icon: Shirt,    blurb: 'Original Geck Inspect tees, hoodies, hats.' },
+// needsCheckout: only sold through Geck Inspect's own checkout, so the
+// tile is hidden while STORE_CHECKOUT_ENABLED is false.
+const ALL_HERO_TILES = [
+  { to: '/Store/stickers',        label: 'Custom stickers',   Icon: Sticker,  blurb: 'Your gecko on a sticker, six themes. $10 each.', needsCheckout: true },
+  { to: '/Store/tees',            label: 'Custom tee',        Icon: Shirt,    blurb: 'Your gecko on a shirt. Pick colour, size and print.', needsCheckout: true },
+  { to: '/Store/c/apparel',       label: 'Apparel',           Icon: Shirt,    blurb: 'Original Geck Inspect tees, hoodies, hats.', needsCheckout: true },
   { to: '/Store/c/gifts',         label: 'Gift ideas',        Icon: Gift,     blurb: 'For keepers, breeders, and the people who love them.' },
   { to: '/Store/c/diet',          label: 'Diet',              Icon: Sparkles, blurb: 'CGD staples and species-specific food.' },
   { to: '/Store/c/enclosures',    label: 'Enclosures',        Icon: Wrench,   blurb: 'Tubs, glass, PVC, every life stage.' },
 ];
+const HERO_TILES = ALL_HERO_TILES.filter((t) => STORE_CHECKOUT_ENABLED || !t.needsCheckout);
 
 const LANDING_JSON_LD = [
   {
@@ -25,8 +29,9 @@ const LANDING_JSON_LD = [
     '@id': `${SITE_URL}/Store#collection`,
     name: 'Geck Inspect Supplies',
     url: `${SITE_URL}/Store`,
-    description:
-      'Reptile supplies, habitat equipment, original apparel and gift ideas. Sold by Geck Inspect, with select partner items.',
+    description: STORE_CHECKOUT_ENABLED
+      ? 'Reptile supplies, habitat equipment, original apparel and gift ideas. Sold by Geck Inspect, with select partner items.'
+      : 'Reptile supplies, habitat equipment and gift ideas from partner sellers.',
     isPartOf: { '@id': `${SITE_URL}/#website` },
   },
   {
@@ -83,7 +88,9 @@ export default function StoreLanding() {
     <StoreLayout>
       <Seo
         title="Reptile supplies, gifts, and apparel, Geck Inspect"
-        description="Shop reptile enclosures, lighting, heating, misting, substrate and feeding supplies, plus original Geck Inspect apparel and gifts."
+        description={STORE_CHECKOUT_ENABLED
+          ? 'Shop reptile enclosures, lighting, heating, misting, substrate and feeding supplies, plus original Geck Inspect apparel and gifts.'
+          : 'Find reptile enclosures, lighting, heating, misting, substrate and feeding supplies from partner sellers, sorted for crested gecko keepers.'}
         path="/Store"
         keywords={[
           'crested gecko supplies',
@@ -100,9 +107,9 @@ export default function StoreLanding() {
           Supplies for reptile keepers and breeders.
         </h1>
         <p className="text-slate-300 mt-3 max-w-2xl text-sm md:text-base leading-relaxed">
-          Browse enclosures, lighting, feeding supplies and habitat equipment,
-          alongside original Geck Inspect apparel. Check each product against
-          your animal’s species, size and care requirements.
+          {STORE_CHECKOUT_ENABLED
+            ? 'Browse enclosures, lighting, feeding supplies and habitat equipment, alongside original Geck Inspect apparel. Check each product against your animal’s species, size and care requirements.'
+            : 'Browse enclosures, lighting, feeding supplies and habitat equipment. Check each product against your animal’s species, size and care requirements.'}
         </p>
         <div className="mt-5 flex gap-2 flex-wrap">
           <Link
@@ -111,20 +118,33 @@ export default function StoreLanding() {
           >
             <Gift className="w-4 h-4" /> Browse gifts
           </Link>
-          <Link
-            to="/Store/stickers"
-            className="touch:min-h-11 inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
-          >
-            <Sticker className="w-4 h-4" /> Custom pet stickers
-          </Link>
-          <Link
-            to="/Store/c/apparel"
-            className="touch:min-h-11 inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
-          >
-            <Shirt className="w-4 h-4" /> Apparel
-          </Link>
+          {STORE_CHECKOUT_ENABLED && (
+            <>
+              <Link
+                to="/Store/stickers"
+                className="touch:min-h-11 inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
+              >
+                <Sticker className="w-4 h-4" /> Custom pet stickers
+              </Link>
+              <Link
+                to="/Store/c/apparel"
+                className="touch:min-h-11 inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
+              >
+                <Shirt className="w-4 h-4" /> Apparel
+              </Link>
+            </>
+          )}
         </div>
       </section>
+
+      {!STORE_CHECKOUT_ENABLED && (
+        <div role="note" className="mb-6 rounded-lg border border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-300 leading-relaxed">
+          <strong className="text-slate-100">How buying works right now:</strong>{' '}
+          products marked Affiliate open the seller’s page, where you buy them.
+          Geck Inspect’s own checkout is not open yet, so items we would sell
+          ourselves are marked Not available yet and cannot be ordered.
+        </div>
+      )}
 
       <div className="mb-6">
         <FtcDisclosureBlock />
@@ -150,7 +170,7 @@ export default function StoreLanding() {
         </section>
       )}
 
-      <section className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-10">
+      <section className={`grid grid-cols-2 ${HERO_TILES.length > 3 ? 'md:grid-cols-6' : 'md:grid-cols-3'} gap-3 mb-10`}>
         {HERO_TILES.map(({ to, label, blurb, Icon }) => (
           <Link
             key={to}
@@ -164,6 +184,7 @@ export default function StoreLanding() {
         ))}
       </section>
 
+      {STORE_CHECKOUT_ENABLED && (
       <section className="mb-10">
         <Link
           to="/Store/stickers"
@@ -202,6 +223,7 @@ export default function StoreLanding() {
           </span>
         </Link>
       </section>
+      )}
 
       <section className="mb-10">
         <div className="flex items-center justify-between mb-3">

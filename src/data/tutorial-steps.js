@@ -4,7 +4,7 @@ export const STEP_BLURBS = {
         title: 'Market',
         body: 'Review current crested gecko asking prices and changes in the market. Watch for morphs within your budget and compare listing trends with your own collection; asking prices are not confirmed sale prices.',
     },
-    Store: {"title": "Supplies", "body": "Browse reptile food, enclosures, lighting and care equipment, or design a custom gecko sticker or shirt. Affiliate products open the seller\u2019s listing for current prices and availability."},
+    Store: {"title": "Supplies", "body": "Browse reptile food, enclosures, lighting and care equipment. Affiliate products open the seller\u2019s listing, where you buy them at current prices. Items Geck Inspect will sell itself are marked Not available yet until its checkout opens."},
     Promote: {"title": "Promote", "body": "Choose a gecko from your collection and draft a social post tailored to your selected platform. Review its photos, morph details and generated wording before copying or sharing the post."},
     Portfolio: {"title": "Collection Portfolio", "body": "See estimated values for individual geckos and your collection total, based on comparable listings. Follow changes over time and review which traits contribute to the estimates; these are guides, not guaranteed sale prices."},
     PairingPlanner: {"title": "Pairing Planner", "body": "Choose a breeding goal and compare possible sire-and-dam combinations in your collection. Review predicted traits, estimated offspring values and pairing warnings before deciding which animals to pair."},

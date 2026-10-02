@@ -9,6 +9,7 @@ import { CUSTOM_SHIRT_SLUG } from '@/lib/store/customShirt';
 import { captureEvent } from '@/lib/posthog';
 import { supabase } from '@/lib/supabaseClient';
 import { safeExternalUrl } from '@/lib/safeExternalUrl';
+import { isAwaitingCheckout } from '@/lib/store/checkoutFlags';
 
 /**
  * AddToCartButton handles all four fulfillment modes.
@@ -21,6 +22,10 @@ import { safeExternalUrl } from '@/lib/safeExternalUrl';
  *
  * The custom sticker product is the one exception: it can't be added to
  * the cart without a design, so it sends the customer to the builder.
+ *
+ * While Geck Inspect's own checkout is closed (STORE_CHECKOUT_ENABLED),
+ * anything that would go through it shows a disabled "Not available yet"
+ * button instead, so nobody fills a cart that cannot be paid for.
  */
 export default function AddToCartButton({ product, compact = false, quantity = 1 }) {
   const [busy, setBusy] = useState(false);
@@ -29,6 +34,20 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
   if (!product) return null;
   const cartEligible = isCartEligible(product.fulfillment_mode);
   const vendorUrl = safeExternalUrl(product.vendor_product_url);
+
+  if (isAwaitingCheckout(product)) {
+    return (
+      <Button
+        size={compact ? 'sm' : 'default'}
+        variant="outline"
+        className="w-full"
+        disabled
+        title="Geck Inspect checkout is not open yet"
+      >
+        {compact ? 'Not available yet' : 'Not available to order yet'}
+      </Button>
+    );
+  }
 
   if (product.slug === CUSTOM_SHIRT_SLUG) {
     return (

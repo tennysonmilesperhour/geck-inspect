@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { formatCents, fulfillmentBadge, isCartEligible } from '@/lib/store/format';
 import { FtcDisclosureInline } from '@/components/store/FtcDisclosure';
 import AddToCartButton from '@/components/store/AddToCartButton';
+import { isAwaitingCheckout } from '@/lib/store/checkoutFlags';
 
 const TONE_CLASSES = {
   emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-700/40',
@@ -22,6 +23,9 @@ export default function ProductCard({ product, vendorName }) {
   const badge = fulfillmentBadge(product.fulfillment_mode, vendorName);
   const showAffiliate = product.fulfillment_mode === 'affiliate_redirect';
   const hasDisplayPrice = product.our_price_cents != null;
+  // Sold through Geck Inspect while checkout is closed: shown for
+  // reference, clearly marked, never offered.
+  const awaiting = isAwaitingCheckout(product);
 
   return (
     <div className="group flex flex-col rounded-lg border border-slate-800 bg-slate-900/40 hover:border-slate-700 transition-colors overflow-hidden">
@@ -75,11 +79,11 @@ export default function ProductCard({ product, vendorName }) {
           </div>
           <span
             className={`text-[10px] font-semibold uppercase tracking-wider rounded border px-1.5 py-0.5 ${
-              TONE_CLASSES[badge.tone] || TONE_CLASSES.slate
+              awaiting ? TONE_CLASSES.slate : (TONE_CLASSES[badge.tone] || TONE_CLASSES.slate)
             }`}
-            title={badge.label}
+            title={awaiting ? 'Geck Inspect checkout is not open yet' : badge.label}
           >
-            {badge.tone === 'amber' ? 'Affiliate' : badge.tone === 'sky' ? 'Partner ship' : 'Geck Inspect'}
+            {awaiting ? 'Coming later' : badge.tone === 'amber' ? 'Affiliate' : badge.tone === 'sky' ? 'Partner ship' : 'Geck Inspect'}
           </span>
         </div>
         <div className="mt-auto pt-2">

@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { fetchCart, cartItemCount } from '@/lib/store/cart';
 import { useAuth } from '@/lib/AuthContext';
+import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 
 const APP_LOGO = 'https://i.imgur.com/gfaW2Yg.png';
 
@@ -32,6 +33,8 @@ export default function StoreLayout({ children, breadcrumbs }) {
   const location = useLocation();
 
   useEffect(() => {
+    // No cart while checkout is closed, so nothing to count.
+    if (!STORE_CHECKOUT_ENABLED) return undefined;
     let cancelled = false;
     async function refresh() {
       try {
@@ -59,15 +62,22 @@ export default function StoreLayout({ children, breadcrumbs }) {
       >
         <Gift className="w-3.5 h-3.5" /> Gifts
       </Link>
-      <Link
-        to="/Store/stickers"
-        className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
-      >
-        <Sticker className="w-3.5 h-3.5" /> Custom stickers
-      </Link>
-      <Link to="/Store/c/apparel" className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center whitespace-nowrap">
-        Apparel
-      </Link>
+      {/* Custom stickers and Geck Inspect apparel can only be bought
+          through our own checkout, so they leave the menu while it is
+          closed (STORE_CHECKOUT_ENABLED). */}
+      {STORE_CHECKOUT_ENABLED && (
+        <Link
+          to="/Store/stickers"
+          className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
+        >
+          <Sticker className="w-3.5 h-3.5" /> Custom stickers
+        </Link>
+      )}
+      {STORE_CHECKOUT_ENABLED && (
+        <Link to="/Store/c/apparel" className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center whitespace-nowrap">
+          Apparel
+        </Link>
+      )}
       <Link to="/Store/c/diet" className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center whitespace-nowrap">
         Diet
       </Link>
@@ -77,7 +87,7 @@ export default function StoreLayout({ children, breadcrumbs }) {
     </nav>
   );
 
-  const cartChip = (
+  const cartChip = STORE_CHECKOUT_ENABLED ? (
     <Link
       to="/Store/cart"
       className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center relative inline-flex items-center gap-1.5 px-2 py-1 rounded text-slate-200 hover:bg-slate-800"
@@ -90,7 +100,7 @@ export default function StoreLayout({ children, breadcrumbs }) {
         </span>
       )}
     </Link>
-  );
+  ) : null;
 
   // ---------------------------------------------------------------------
   // Embedded mode, slim sub-nav only. The parent Layout owns the brand,
@@ -127,7 +137,11 @@ export default function StoreLayout({ children, breadcrumbs }) {
 
         <div className="border-t border-slate-800/60 mt-12">
           <div className="max-w-6xl mx-auto px-4 py-4 text-[11px] text-slate-500 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
-            <span>Supplies, sold by Geck Inspect, with select partner items.</span>
+            <span>
+              {STORE_CHECKOUT_ENABLED
+                ? 'Supplies, sold by Geck Inspect, with select partner items.'
+                : 'Supplies from partner sellers. Geck Inspect checkout is not open yet.'}
+            </span>
             <span className="md:ml-auto">
               Some links are affiliate links, see disclosure on product pages.
             </span>
