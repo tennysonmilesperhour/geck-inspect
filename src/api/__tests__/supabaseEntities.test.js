@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildInsertRecord, buildUpdateRecord, parseSort } from '../supabaseEntities';
+import { buildInsertRecord, buildUpdateRecord, isDateColumn, parseSort } from '../supabaseEntities';
 
 describe('parseSort default column by table', () => {
   it('defaults created_date-convention tables to created_date desc', () => {
@@ -82,6 +82,21 @@ describe('audit columns on writes', () => {
     expect(row.due_date).toBeNull();
     expect(row.description).toBe('');
     expect(buildUpdateRecord('Egg', { hatch_date_actual: '', status: 'Hatched' }, now).hatch_date_actual).toBeNull();
+  });
+
+  it('sends a blank vet follow-up date as null (saving a visit without one failed)', () => {
+    const row = buildInsertRecord('VetRecord', { animal_id: 'g1', date: '2026-10-02', follow_up: '', reason: '' }, 'a@b.co', now);
+    expect(row.follow_up).toBeNull();
+    expect(row.reason).toBe('');
+    expect(buildUpdateRecord('VetRecord', { follow_up: '' }, now).follow_up).toBeNull();
+    expect(buildUpdateRecord('VetRecord', { follow_up: '2026-10-16' }, now).follow_up).toBe('2026-10-16');
+  });
+
+  it('knows the date columns the name pattern misses', () => {
+    expect(isDateColumn('follow_up')).toBe(true);
+    expect(isDateColumn('expected_return')).toBe(true);
+    expect(isDateColumn('hatch_date_actual')).toBe(true);
+    expect(isDateColumn('vet_name')).toBe(false);
   });
 
   it('keeps a caller-supplied created_date', () => {
