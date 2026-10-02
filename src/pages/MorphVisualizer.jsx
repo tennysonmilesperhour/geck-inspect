@@ -1,3 +1,8 @@
+// Hidden since 2 Oct 2026 (decision D7 in the feature completeness audit):
+// this page is not registered in pages.config.js and /MorphVisualizer
+// redirects to /MorphGuide (src/lib/retiredPages.js). The code is kept so
+// it can be finished later; to bring it back, register it again and remove
+// it from RETIRED_PAGES, the sitemap and the prerendered navigation.
 import { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Layers, Sparkles, RotateCcw, HardHat, Eye, Compass } from 'lucide-react';

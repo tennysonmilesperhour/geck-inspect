@@ -31,7 +31,6 @@ const FieldMode             = lazy(() => import('./pages/FieldMode'));
 const Portfolio             = lazy(() => import('./pages/Portfolio'));
 const Market                = lazy(() => import('./pages/Market'));
 const CareGuide             = lazy(() => import('./pages/CareGuide'));
-const CommunityConnect      = lazy(() => import('./pages/CommunityConnect'));
 const Forum                 = lazy(() => import('./pages/Forum'));
 const ForumPost             = lazy(() => import('./pages/ForumPost'));
 const Gallery               = lazy(() => import('./pages/Gallery'));
@@ -49,7 +48,6 @@ const Membership            = lazy(() => import('./pages/Membership'));
 const Messages              = lazy(() => import('./pages/Messages'));
 const MorphGuide            = lazy(() => import('./pages/MorphGuide'));
 const MorphGuideSubmission  = lazy(() => import('./pages/MorphGuideSubmission'));
-const MorphVisualizer       = lazy(() => import('./pages/MorphVisualizer'));
 const MyGeckos              = lazy(() => import('./pages/MyGeckos'));
 const MyListings            = lazy(() => import('./pages/MyListings'));
 const MyStore               = lazy(() => import('./pages/MyStore'));
@@ -61,13 +59,11 @@ const ProjectManager        = lazy(() => import('./pages/ProjectManager'));
 const PublicProfile         = lazy(() => import('./pages/PublicProfile'));
 const Recognition           = lazy(() => import('./pages/Recognition'));
 const Settings              = lazy(() => import('./pages/Settings'));
-const TrainModel            = lazy(() => import('./pages/TrainModel'));
 const Training              = lazy(() => import('./pages/Training'));
 
 // P2 to P8 feature pages
 const MarketPricing         = lazy(() => import('./pages/MarketPricing'));
 const BreedingROI           = lazy(() => import('./pages/BreedingROI'));
-const BreedingLoans         = lazy(() => import('./pages/BreedingLoans'));
 const BatchHusbandry        = lazy(() => import('./pages/BatchHusbandry'));
 const PrintableWorksheets   = lazy(() => import('./pages/PrintableWorksheets'));
 const ImageImport           = lazy(() => import('./pages/ImageImport'));
@@ -92,7 +88,6 @@ export const PAGES = {
     "Portfolio": Portfolio,
     "Market": Market,
     "CareGuide": CareGuide,
-    "CommunityConnect": CommunityConnect,
     "Dashboard": Dashboard,
     "Forum": Forum,
     "ForumPost": ForumPost,
@@ -112,7 +107,6 @@ export const PAGES = {
     "Messages": Messages,
     "MorphGuide": MorphGuide,
     "MorphGuideSubmission": MorphGuideSubmission,
-    "MorphVisualizer": MorphVisualizer,
     "MyGeckos": MyGeckos,
     "MyListings": MyListings,
     "MyProfile": MyProfile,
@@ -125,12 +119,10 @@ export const PAGES = {
     "PublicProfile": PublicProfile,
     "Recognition": Recognition,
     "Settings": Settings,
-    "TrainModel": TrainModel,
     "Training": Training,
     // P2 to P8 feature pages
     "MarketPricing": MarketPricing,
     "BreedingROI": BreedingROI,
-    "BreedingLoans": BreedingLoans,
     "BatchHusbandry": BatchHusbandry,
     "PrintableWorksheets": PrintableWorksheets,
     "ImageImport": ImageImport,

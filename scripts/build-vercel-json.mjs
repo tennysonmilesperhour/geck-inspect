@@ -30,6 +30,7 @@ import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getAllSpaPathPatterns } from './seo-routes.mjs';
+import { RETIRED_PAGES } from '../src/lib/retiredPages.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -61,7 +62,6 @@ const CASE_REDIRECTS = [
   { from: '/care-guide', to: '/CareGuide' },
   { from: '/care-guide/:topic', to: '/CareGuide/:topic' },
   { from: '/genetics-guide', to: '/GeneticsGuide' },
-  { from: '/morph-visualizer', to: '/MorphVisualizer' },
   { from: '/morphguide', to: '/MorphGuide' },
   { from: '/morphguide/:slug', to: '/MorphGuide/:slug' },
   { from: '/morphguide/category/:categoryId', to: '/MorphGuide/category/:categoryId' },
@@ -74,13 +74,11 @@ const CASE_REDIRECTS = [
   // which is the marketed and sitemap-canonical URL.
   { from: '/geneticcalculatortool', to: '/calculator' },
   { from: '/GeneticCalculatorTool', to: '/calculator' },
-  { from: '/morphvisualizer', to: '/MorphVisualizer' },
   { from: '/marketplace', to: '/Marketplace' },
   { from: '/marketplacebuy', to: '/MarketplaceBuy' },
   { from: '/marketplaceverification', to: '/MarketplaceVerification' },
   { from: '/gallery', to: '/Gallery' },
   { from: '/forum', to: '/Forum' },
-  { from: '/communityconnect', to: '/CommunityConnect' },
   { from: '/geckanswers', to: '/Forum' },
   { from: '/membership', to: '/Membership' },
   { from: '/about', to: '/About' },
@@ -101,15 +99,14 @@ const CASE_REDIRECTS = [
 const GONE_REDIRECTS = [
   { from: '/Morphs', to: '/MorphGuide' },
   { from: '/morphs', to: '/MorphGuide' },
-  // Hidden until finished (Sept 2026): unfinished surfaces next to paid
-  // ones cost trust. Send stale links home.
-  { from: '/Mentorship', to: '/' },
-  { from: '/mentorship', to: '/' },
-  { from: '/Shipping', to: '/' },
-  { from: '/shipping', to: '/' },
-  { from: '/Giveaways', to: '/' },
-  { from: '/giveaways', to: '/' },
-  { from: '/BreederShipping', to: '/' },
+  // Retired pages (src/lib/retiredPages.js): unfinished surfaces next to
+  // paid ones cost trust. Each old URL, in its PascalCase and lowercase
+  // spelling, goes to the closest live page.
+  ...RETIRED_PAGES.flatMap(({ page, to }) => {
+    const spellings = [...new Set([`/${page}`, `/${page.toLowerCase()}`])];
+    return spellings.map((from) => ({ from, to }));
+  }),
+  { from: '/morph-visualizer', to: '/MorphGuide' },
 ];
 
 /*

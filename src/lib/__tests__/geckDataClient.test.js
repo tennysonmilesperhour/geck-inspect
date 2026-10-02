@@ -28,8 +28,4 @@ describe('shared reference data contract', () => {
     await client.getMorphReferenceImages('Albino', { species: 'Eublepharis macularius' });
     expect(mock.queries.some(q => q.table === 'market_listings')).toBe(false);
   });
-  it('distinguishes a failed inventory query from a real zero count', async () => {
-    mock.responses.listing_images = { data: null, count: null, error: { message: 'permission denied' } };
-    expect(await client.getGeckDataTrainingStats()).toEqual({ data: null, error: 'permission denied' });
-  });
 });

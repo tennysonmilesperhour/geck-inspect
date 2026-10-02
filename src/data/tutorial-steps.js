@@ -12,11 +12,11 @@ export const STEP_BLURBS = {
     FieldMode: {"title": "Field Mode", "body": "Log a weight, feeding, shed or note while handling an animal. Large controls make one-handed entry easier, recent animals are quick to find, and a short undo window lets you correct an accidental log."},
     __section_manage: {
         title: 'Manage, your animals + business',
-        body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings, sales stats, and shipping. We\'ll walk through each tile next.',
+        body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings and sales stats. We\'ll walk through each tile next.',
     },
     __section_discover: {
         title: 'Discover, tools, community, reference',
-        body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the visualizer, the care guide, the marketplace, the forum, and Q&A. Switching to it now so we can walk those tiles.',
+        body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the care guide, the marketplace and the forum. Switching to it now so we can walk those tiles.',
     },
     Dashboard: {
         title: 'Dashboard',
@@ -53,10 +53,6 @@ export const STEP_BLURBS = {
     Recognition: {
         title: 'Morph ID',
         body: 'Compare up to five photos and get a ranked visual shortlist, evidence markers, and a clear request when better photos are needed. Great for narrowing an unboxing-day or hatchling call.',
-    },
-    MorphVisualizer: {
-        title: 'Morph Visualizer',
-        body: 'Stack base color, Mendelian morphs, polygenic patterns, and accents on a stylized gecko to preview a pairing before you commit eggs to it. Includes rarity and value estimates.',
     },
     BreederConsultant: {
         title: 'AI Consultant',

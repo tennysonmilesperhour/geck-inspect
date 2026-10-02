@@ -12,6 +12,7 @@ import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLo
 import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
 import DataExportCard from '@/components/settings/DataExportCard';
 import IotSettingsCard from '@/components/iot/IotSettingsCard';
+import { IOT_SENSORS_ENABLED } from '@/lib/iotClient';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -153,7 +154,7 @@ function LookingForSection({ formData, handleChange }) {
                     </Badge>
                 ))}
             </div>
-            <p className="text-xs text-slate-500">These will be displayed on your public profile in Community Connect</p>
+            <p className="text-xs text-slate-500">These will be displayed on your public profile.</p>
         </div>
     );
 }
@@ -576,7 +577,7 @@ export default function SettingsPage() {
         { id: 'id-logic', label: 'Gecko IDs' },
         { id: 'membership', label: 'Membership' },
         { id: 'morph-id', label: 'Morph ID' },
-        { id: 'enclosure-sensors', label: 'Enclosure Sensors' },
+        ...(IOT_SENSORS_ENABLED ? [{ id: 'enclosure-sensors', label: 'Enclosure Sensors' }] : []),
         { id: 'data-export', label: 'Your Data' },
         { id: 'danger-zone', label: 'Danger Zone' },
     ];
@@ -1220,9 +1221,11 @@ export default function SettingsPage() {
                     );
                 })()}
 
-                <section id="enclosure-sensors">
-                    <IotSettingsCard user={user} />
-                </section>
+                {IOT_SENSORS_ENABLED && (
+                    <section id="enclosure-sensors">
+                        <IotSettingsCard user={user} />
+                    </section>
+                )}
 
                 <section id="data-export">
                     <DataExportCard user={user} />

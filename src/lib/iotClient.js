@@ -17,6 +17,12 @@
 import { supabase } from '@/lib/supabaseClient';
 
 const PROVIDER = 'govee';
+
+// Decision D6 (feature completeness audit, 29 Sep 2026): the sensor
+// settings card and the Dashboard readings stay hidden until one real
+// Govee device test passes. The table and the iot-poll function stay as
+// they are; flip this to true to bring the screens back.
+export const IOT_SENSORS_ENABLED = false;
 const CONNECTION_COLUMNS =
   'id, provider, is_active, api_key, device_mappings, last_polled_at, last_readings';
 

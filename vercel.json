@@ -206,22 +206,22 @@
       "permanent": true
     },
     {
+      "source": "/BreedingLoans",
+      "destination": "/Breeding",
+      "permanent": true
+    },
+    {
+      "source": "/breedingloans",
+      "destination": "/Breeding",
+      "permanent": true
+    },
+    {
       "source": "/Mentorship",
       "destination": "/",
       "permanent": true
     },
     {
       "source": "/mentorship",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/Shipping",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/shipping",
       "destination": "/",
       "permanent": true
     },
@@ -236,8 +236,58 @@
       "permanent": true
     },
     {
+      "source": "/Shipping",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/shipping",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/BreederShipping",
       "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/breedershipping",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/TrainModel",
+      "destination": "/Training",
+      "permanent": true
+    },
+    {
+      "source": "/trainmodel",
+      "destination": "/Training",
+      "permanent": true
+    },
+    {
+      "source": "/CommunityConnect",
+      "destination": "/Forum",
+      "permanent": true
+    },
+    {
+      "source": "/communityconnect",
+      "destination": "/Forum",
+      "permanent": true
+    },
+    {
+      "source": "/MorphVisualizer",
+      "destination": "/MorphGuide",
+      "permanent": true
+    },
+    {
+      "source": "/morphvisualizer",
+      "destination": "/MorphGuide",
+      "permanent": true
+    },
+    {
+      "source": "/morph-visualizer",
+      "destination": "/MorphGuide",
       "permanent": true
     },
     {
@@ -263,11 +313,6 @@
     {
       "source": "/genetics-guide",
       "destination": "/GeneticsGuide",
-      "permanent": true
-    },
-    {
-      "source": "/morph-visualizer",
-      "destination": "/MorphVisualizer",
       "permanent": true
     },
     {
@@ -321,11 +366,6 @@
       "permanent": true
     },
     {
-      "source": "/morphvisualizer",
-      "destination": "/MorphVisualizer",
-      "permanent": true
-    },
-    {
       "source": "/marketplace",
       "destination": "/Marketplace",
       "permanent": true
@@ -348,11 +388,6 @@
     {
       "source": "/forum",
       "destination": "/Forum",
-      "permanent": true
-    },
-    {
-      "source": "/communityconnect",
-      "destination": "/CommunityConnect",
       "permanent": true
     },
     {

@@ -39,37 +39,6 @@ export const geckData = ANON_KEY
     })
   : null;
 
-/**
- * Counts of shared ingestion inventory across species. These counts do not
- * imply labeling quality, image rights, or suitability for Morph ID training.
- */
-export async function getGeckDataTrainingStats() {
-  if (!geckData) {
-    return { data: null, error: 'geck-data anon key not configured' };
-  }
-  try {
-    const [listingImages, externalRefs, taxonomy, listings] = await Promise.all([
-      geckData.from('listing_images').select('id', { count: 'exact', head: true }),
-      geckData.from('external_reference_images').select('id', { count: 'exact', head: true }),
-      geckData.from('morph_taxonomy').select('id', { count: 'exact', head: true }),
-      geckData.from('market_listings').select('id', { count: 'exact', head: true }),
-    ]);
-    const failure = [listingImages, externalRefs, taxonomy, listings].find(result => result.error);
-    if (failure) return { data: null, error: failure.error.message };
-    return {
-      data: {
-        listing_images: listingImages.count ?? 0,
-        external_reference_images: externalRefs.count ?? 0,
-        morph_taxonomy: taxonomy.count ?? 0,
-        market_listings: listings.count ?? 0,
-      },
-      error: null,
-    };
-  } catch (e) {
-    return { data: null, error: e.message ?? String(e) };
-  }
-}
-
 function normMorph(s) {
   return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 }

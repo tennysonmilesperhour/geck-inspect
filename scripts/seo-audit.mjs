@@ -337,9 +337,9 @@ function isKnownSpaOnlyRoute(p) {
   // link to, Googlebot will hydrate them.
   const allowlist = [
     '/Dashboard', '/MyGeckos', '/Gallery', '/Marketplace', '/MarketplaceBuy',
-    '/MarketplaceSell', '/Forum', '/CommunityConnect', '/AuthPortal',
-    '/Membership', '/Settings', '/Notifications', '/Messages', '/Shipping',
-    '/Giveaways', '/AdminPanel', '/MorphVisualizer', '/GeckAnswers',
+    '/MarketplaceSell', '/Forum', '/AuthPortal',
+    '/Membership', '/Settings', '/Notifications', '/Messages',
+    '/AdminPanel', '/GeckAnswers',
     '/Home',
   ];
   if (allowlist.includes(p)) return true;

@@ -58,6 +58,7 @@ import {
   BREEDER_ONLY_PAGES,
   KEEPER_MODE_STORAGE_KEY,
 } from '@/lib/navItems';
+import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
 
 
 function LayoutContent({ children, currentPageName: _currentPageName }) {
@@ -709,9 +710,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       }
     }
 
-    // Start with the DB rows that are explicitly enabled.
+    // Start with the DB rows that are explicitly enabled. Retired pages
+    // are skipped even if an old page_config row still says enabled.
     const enabled = dedupedConfigs
-      .filter(p => p.is_enabled !== false)
+      .filter(p => p.is_enabled !== false && !RETIRED_PAGE_NAMES.has(p.page_name))
       .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
 
     const dbNav = {

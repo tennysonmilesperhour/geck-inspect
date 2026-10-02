@@ -158,9 +158,6 @@ export const NAV_REGISTRY = [
     sidebar: { category: 'public', order: 3, label: 'Business Tools', icon: 'BarChart3', requiresAuth: true },
     palette: { group: 'Breeding', label: 'Business Tools', icon: 'BarChart3', keywords: ['roi', 'profit', 'cost', 'revenue', 'money', 'sales', 'expenses', 'business'] },
   },
-  // Breeding Loans left the menus on 28 Sep 2026 (no loan was ever
-  // recorded). The page still routes for old links.
-  { page: 'BreedingLoans', section: 'discover', breederOnly: true },
   {
     page: 'ProjectManager', section: 'manage', breederOnly: true,
     sidebar: { category: 'tools', order: 7, label: 'Season Planner', icon: 'CalendarDays', requiresAuth: true },
@@ -184,9 +181,6 @@ export const NAV_REGISTRY = [
     page: 'Forum', section: 'discover',
     sidebar: { category: 'collection', order: 8, label: 'Forum', icon: 'MessageSquare', requiresAuth: false },
     palette: { group: 'Community', label: 'Forum', icon: 'MessageSquare', keywords: ['discussion', 'posts'] },
-  },
-  {
-    page: 'CommunityConnect',
   },
   {
     page: 'Messages',
@@ -228,11 +222,6 @@ export const NAV_REGISTRY = [
     page: 'MorphGuide', section: 'discover',
     sidebar: { category: 'tools', order: 3, label: 'Morph Guide', icon: 'BookOpen', requiresAuth: false },
     palette: { group: 'Reference', label: 'Morph Guide', icon: 'Dna', keywords: ['morphs', 'harlequin', 'dalmatian', 'lilly white'] },
-  },
-  {
-    page: 'MorphVisualizer', section: 'discover',
-    sidebar: { category: 'tools', order: 2, label: 'Morph Visualizer', icon: 'Layers', requiresAuth: false },
-    palette: { group: 'Reference', label: 'Morph Visualizer', icon: 'Sparkles', keywords: ['simulator', 'preview'] },
   },
   {
     page: 'GeneticsGuide', section: 'discover',
@@ -291,17 +280,18 @@ export const NAV_REGISTRY = [
   { page: 'MorphMarketExport', breederOnly: true },
   { page: 'CareGuideTopic', section: 'discover' },
   { page: 'ForumPost', section: 'discover' },
-  { page: 'TrainModel', section: 'discover' },
   { page: 'MarketplaceVerification', section: 'discover' },
   { page: 'MarketPricing', section: 'discover' },
   { page: 'Breeder', section: 'discover' },
 ];
 
 // Focus pass (27 Sep 2026, docs/planning/vip-audit-2026-09-27.md P7):
-// Genetic Calculator Tool, Community Connect, Train the AI Model and Geck
-// Answers no longer appear in the command palette. They had zero or one
-// signed-in visitor in 90 days; the palette already links /calculator
-// directly. Their URLs keep working.
+// Genetic Calculator Tool and Geck Answers no longer appear in the command
+// palette; the palette already links /calculator directly.
+//
+// Retired 2 Oct 2026 (feature completeness audit, step 5): Breeding Loans,
+// Community Connect, the AI Training Center (/TrainModel) and the Morph
+// Visualizer. Their old URLs redirect; see src/lib/retiredPages.js.
 
 // ---- Derived: SECTION_FOR_PAGE ----------------------------------------
 // Fallback section assignment for every known page. Used when the DB has

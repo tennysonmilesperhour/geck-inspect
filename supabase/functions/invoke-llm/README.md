@@ -14,7 +14,6 @@ response_json_schema, model, max_tokens })`). Through it, the function
 backs:
 
 - `src/lib/blog-api.js` (blog draft generation)
-- `src/pages/TrainModel.jsx`
 - `src/pages/BreederConsultant.jsx`
 - `src/components/admin/MassMessaging.jsx`
 - `src/components/admin/ChangeLogManager.jsx`
