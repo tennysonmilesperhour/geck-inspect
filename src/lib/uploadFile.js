@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits, formatBytes } from '@/lib/tierLimits';
 import { convertHeicForUpload, downscaleImage, isHeicFile } from '@/lib/imageResize';
 import { imageStoragePath } from '@/lib/imageStoragePath';
+import { loadUserProfile } from '@/lib/userProfile';
 
 const BUCKET = 'geck-inspect-media';
 
@@ -41,19 +42,12 @@ export async function getUserStorageBytes() {
   }
 }
 
-async function fetchCurrentUserProfile() {
+// The same signed-in user shape AuthContext builds (profile plus app
+// store entitlements), so the storage quota uses the one plan resolver
+// (resolveTier) and an app store subscriber is not held to the Free cap.
+async function fetchCurrentUserProfile(authUser) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    // profiles.id is a legacy text id, not the auth uid. Look up by email
-    // like AuthContext does, otherwise every paying member reads as free
-    // tier here and hits the free storage cap.
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('membership_tier, subscription_status')
-      .eq('email', user.email)
-      .maybeSingle();
-    return profile || {};
+    return (await loadUserProfile(authUser)) || {};
   } catch {
     return null;
   }
@@ -68,7 +62,13 @@ const ALLOWED_MIME_TYPES = new Set([
   'image/avif',
 ]);
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+// The stored photo must be 10 MB or less. That is checked AFTER the
+// resize below, because a large phone photo (often 12 MB or more) shrinks
+// to well under 1 MB, so refusing the original turned away photos that
+// would have fit. The original only has to pass a generous sanity cap so
+// the browser is never asked to decode something absurd.
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB, after resizing
+export const MAX_ORIGINAL_SIZE = 50 * 1024 * 1024; // 50 MB, before resizing
 
 /**
  * Upload a File/Blob to the geck-inspect-media bucket and return a
@@ -92,12 +92,9 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     );
   }
 
-  // Validate file size on the ORIGINAL, reject uploads larger than 10 MB.
-  // (The cap is a guard against absurd inputs; the resize below is what
-  // shrinks a normal photo before it is stored.)
-  if (file.size > MAX_FILE_SIZE) {
+  if (file.size > MAX_ORIGINAL_SIZE) {
     throw new Error(
-      `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed: 10 MB.`
+      `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Choose a photo under 50 MB.`
     );
   }
 
@@ -113,6 +110,15 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   const browserSafeFile = await convertHeicForUpload(file);
   const upload = await downscaleImage(browserSafeFile);
 
+  // Size limit on what is actually stored. Resizing falls back to the
+  // original when it cannot help (an animated GIF, a decode error), so a
+  // file can still be too big here.
+  if (upload.size > MAX_FILE_SIZE) {
+    throw new Error(
+      `Photo is too large (${(upload.size / 1024 / 1024).toFixed(1)} MB even after resizing). Maximum allowed: 10 MB.`
+    );
+  }
+
   // Namespace by user ID (UUID) so public URLs don't leak emails.
   const { data: { user } } = await supabase.auth.getUser();
   const path = imageStoragePath(user?.id, upload.type, folder);
@@ -122,7 +128,7 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   // migration may not yet be applied, or the network may be flaky).
   if (user) {
     const [profile, usedBytes] = await Promise.all([
-      fetchCurrentUserProfile(),
+      fetchCurrentUserProfile(user),
       getUserStorageBytes(),
     ]);
     const limits = getTierLimits(profile);

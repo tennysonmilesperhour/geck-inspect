@@ -11,6 +11,7 @@ import {
     ArrowLeft, ArrowRight, Check, Columns3, Sparkles,
 } from 'lucide-react';
 import { importGeckosFromCSV } from '@/functions/importGeckosFromCSV';
+import { geckoLimitFor } from '@/lib/geckoLimit';
 import { generateCSVTemplate } from '@/functions/generateCSVTemplate';
 import { parseCSV, readFileAsText, transformRows } from './csv/csvParser';
 import { autoMapColumns, TEMPLATE_FIELDS, requiredFieldsCovered } from './csv/columnMapper';
@@ -24,7 +25,7 @@ const STEPS = [
     { key: 'results', label: 'Results' },
 ];
 
-export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
+export default function CSVImportModal({ isOpen, onClose, onImportComplete, user = null }) {
     const { toast } = useToast();
 
     // --- workflow state ---
@@ -108,6 +109,9 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                 importMode,
                 createBreedingPairs,
                 importEggs,
+                // Free 10, Keeper 50. The database refuses a free account's
+                // 11th gecko anyway; this skips those rows with a clear note.
+                geckoLimit: geckoLimitFor(user),
             });
 
             setImportResults(data.results);
@@ -496,6 +500,13 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                                     <div className="grid grid-cols-2 gap-3">
                                         <StatCard value={importResults.pairsCreated ?? 0} label="Breeding Pairs" color="green" />
                                         <StatCard value={importResults.eggsCreated ?? 0}  label="Eggs"            color="green" />
+                                    </div>
+                                )}
+
+                                {importResults.skippedForLimit > 0 && (
+                                    <div className="rounded-lg border border-amber-600/40 bg-amber-950/30 p-3 text-sm text-amber-200">
+                                        {importResults.skippedForLimit} new {importResults.skippedForLimit === 1 ? 'gecko was' : 'geckos were'} not added because your plan&apos;s gecko limit is full.{' '}
+                                        <a href="/Membership" className="underline underline-offset-2 hover:text-amber-100">See plans</a>
                                     </div>
                                 )}
 

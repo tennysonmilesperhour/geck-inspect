@@ -35,7 +35,8 @@ import ArchiveReasonDialog from '../components/my-geckos/ArchiveReasonDialog';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import PlanLimitModal, { getGeckoLimit } from '../components/subscription/PlanLimitChecker';
+import PlanLimitModal from '../components/subscription/PlanLimitChecker';
+import { geckoLimitStatus } from '@/lib/geckoLimit';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { inferSeasonLabel, compareSeasonLabels } from '@/lib/seasons';
 import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
@@ -70,7 +71,10 @@ export default function MyGeckosPage() {
     const [isWeighInOpen, setIsWeighInOpen] = useState(false);
     const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
     const [activeTab, setActiveTab] = useState('collection'); // 'collection' or 'transfers'
-    const [sortBy, setSortBy] = useState('date_added'); // sorting option
+    // The "Default Sort" in this page's settings panel is remembered on
+    // this device; the toolbar sort changes only the current view.
+    const [collectionPrefs, setCollectionPrefs] = usePageSettings('my_geckos_prefs', { defaultSort: 'date_added' });
+    const [sortBy, setSortBy] = useState(collectionPrefs.defaultSort || 'date_added'); // sorting option
     const [filters, setFilters] = useState({
         sexes: [],
         statuses: [],
@@ -83,6 +87,8 @@ export default function MyGeckosPage() {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
+    // 'sold' when the dialog was opened by choosing Sold in the gecko form.
+    const [archiveDialogReason, setArchiveDialogReason] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
     const [idSettings] = usePageSettings('gecko_id_settings', {
         founderFormat: '{PREFIX}{NUM}-{YY}',
@@ -257,13 +263,24 @@ export default function MyGeckosPage() {
             setArchiveDialogGeckoId(geckoId);
             return;
         }
+        // Restoring a gecko adds it back to the active count, so the plan
+        // limit applies, the same as adding a new one. The database only
+        // checks new rows, never edits, so this check lives here.
+        if (!shouldArchive) {
+            const target = geckos.find((g) => g.id === geckoId);
+            const ownsIt = target && String(target.created_by || '').toLowerCase() === String(user?.email || '').toLowerCase();
+            if (ownsIt && geckoLimitStatus(user, geckos).atLimit) {
+                setShowUpgradeModal(true);
+                return;
+            }
+        }
 
         try {
             // Archiving as sold also saves the sold price and sale type
             // (see ArchiveReasonDialog). Unarchiving clears them, since the
             // gecko is back in the collection and no longer counts as a sale.
             const updateData = shouldArchive
-                ? { archived: true, archived_date: todayLocalISO(), archive_reason: reason || null, ...(reason === 'sold' ? saleFields : {}) }
+                ? { archived: true, archived_date: todayLocalISO(), archive_reason: reason || null, ...(reason === 'sold' ? { status: 'Sold', ...saleFields } : {}) }
                 : { archived: false, archived_date: null, archive_reason: null, sold_price: null, sale_category: null };
 
             await retryApiCall(async () => Gecko.update(geckoId, updateData));
@@ -272,6 +289,7 @@ export default function MyGeckosPage() {
             // the user sees the action complete even if the follow-up reload
             // is slow or fails.
             setArchiveDialogGeckoId(null);
+            setArchiveDialogReason(null);
             setIsDetailModalOpen(false);
             setIsFormOpen(false);
             setSelectedGecko(null);
@@ -321,8 +339,7 @@ export default function MyGeckosPage() {
         // Clear router state so a refresh doesn't reopen the form.
         if (location.state?.geckoDraft) window.history.replaceState({}, '');
 
-        const limit = getGeckoLimit(user);
-        if (geckos.filter((g) => !g.archived).length >= limit) {
+        if (geckoLimitStatus(user, geckos).atLimit) {
             setShowUpgradeModal(true);
             return;
         }
@@ -355,7 +372,7 @@ export default function MyGeckosPage() {
     // full 20-field form. Existing collections keep the full form.
     function openAddFlow() {
         const live = geckos.filter((g) => !g.archived).length;
-        if (live >= getGeckoLimit(user)) {
+        if (geckoLimitStatus(user, geckos).atLimit) {
             setShowUpgradeModal(true);
             return;
         }
@@ -481,7 +498,7 @@ export default function MyGeckosPage() {
                             </div>
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
-                                <Select value={sortBy} onValueChange={setSortBy}>
+                                <Select value={collectionPrefs.defaultSort} onValueChange={(v) => { setCollectionPrefs({ defaultSort: v }); setSortBy(v); }}>
                                     <SelectTrigger className="w-full h-8 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -1032,6 +1049,10 @@ export default function MyGeckosPage() {
                                         onSubmit={handleFormSubmit}
                                         onCancel={handleFormCancel}
                                         onArchive={handleArchiveGecko}
+                                        onMarkSold={(geckoId) => {
+                                            setArchiveDialogReason('sold');
+                                            setArchiveDialogGeckoId(geckoId);
+                                        }}
                                         feedingGroups={feedingGroups}
                                         idSettings={idSettings}
                                     />
@@ -1047,6 +1068,11 @@ export default function MyGeckosPage() {
                     <QuickAddGecko
                         open={isQuickAddOpen}
                         user={user}
+                        slotsLeftAtOpen={geckoLimitStatus(user, geckos).slotsLeft}
+                        onLimitReached={() => {
+                            setIsQuickAddOpen(false);
+                            setShowUpgradeModal(true);
+                        }}
                         onClose={() => setIsQuickAddOpen(false)}
                         onSaved={(gecko) => {
                             announceSavedGecko(gecko, true);
@@ -1066,6 +1092,7 @@ export default function MyGeckosPage() {
                 )}
 
                 <CSVImportModal
+                    user={user}
                     isOpen={isImportModalOpen}
                     onClose={() => setIsImportModalOpen(false)}
                     onImportComplete={handleImportComplete}
@@ -1101,8 +1128,9 @@ export default function MyGeckosPage() {
                     gecko={archiveDialogGecko}
                     defaultSaleCategory={archiveDialogGecko ? (saleCategoryFor(archiveDialogGecko, bredInHouseIds({ geckos })) || '') : ''}
                     geckoName={archiveDialogGecko?.name || 'Gecko'}
+                    initialReason={archiveDialogReason}
                     onConfirm={handleArchiveReasonConfirm}
-                    onCancel={() => setArchiveDialogGeckoId(null)}
+                    onCancel={() => { setArchiveDialogGeckoId(null); setArchiveDialogReason(null); }}
                 />
 
                 {/* Plan Limit Modal */}
@@ -1110,7 +1138,7 @@ export default function MyGeckosPage() {
                     isOpen={showUpgradeModal}
                     onClose={() => setShowUpgradeModal(false)}
                     limitType="geckos"
-                    currentCount={geckos.length}
+                    currentCount={geckoLimitStatus(user, geckos).limit}
                 />
             </div>
         </div>
