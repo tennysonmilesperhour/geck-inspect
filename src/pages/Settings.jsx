@@ -22,8 +22,9 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard, LogOut, TrendingUp
+  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard, LogOut, TrendingUp
 } from 'lucide-react';
+import { resolveTier } from '@/lib/tierLimits';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
@@ -240,7 +241,6 @@ const initialFormData = {
     cover_image_url: '',
     is_public_profile: true,
     show_username_on_images: true,
-    allow_profile_clicks: true,
     show_breeders_publicly: true,
     website_url: '',
     instagram_handle: '',
@@ -258,20 +258,14 @@ const initialFormData = {
     email_notification_types: ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements', 'market_alert', 'market_brief'],
     push_notifications_enabled: false,
     push_notification_types: ['new_message', 'marketplace_inquiry', 'hatch_alert', 'feeding_due', 'new_comment', 'new_reply', 'announcement', 'market_alert', 'market_brief'],
-    calendar_alerts_enabled: true,
-    calendar_alert_types: ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
     feeding_alerts_enabled: true,
     feeding_late_reminders_enabled: false,
     market_brief_enabled: false,
     cgd_reorder_reminders_enabled: true,
-    palm_street_sync_enabled: false,
     email_on_new_follower: true,
     email_on_new_message: true,
     email_on_following_activity: true,
-    default_gecko_sort: 'name',
-    default_reptile_sort: 'name',
-    default_gallery_sort: '-created_date',
-    default_breeding_sort: '-created_date',
+    default_breeding_sort: 'incubation_longest',
     hatch_alert_days: 60,
     is_featured_breeder: false,
     store_policy: '',
@@ -321,12 +315,19 @@ const pushNotificationTypes = [
     { key: 'market_brief', label: 'Morning Market Brief', description: 'The daily crested gecko market brief, once you switch it on' }
 ];
 
-const calendarAlertTypes = [
-    { key: 'egg_lay_estimate', label: 'Estimated Egg Laying', description: 'Get alerts for when your females are likely to lay eggs (30-45 days after pairing)' },
-    { key: 'hatch_estimate', label: 'Estimated Hatch Dates', description: 'Get alerts for when eggs are expected to hatch (75-80 days after laying)' },
-    { key: 'breeding_reminders', label: 'Breeding Season Reminders', description: 'Seasonal reminders for pairing and breeding activities' },
-    { key: 'weight_check_reminders', label: 'Weight Check Reminders', description: 'Monthly reminders to weigh and check your breeding animals' }
+// The Hatchery's sort options. default_breeding_sort is read only by the
+// Hatchery (Breeding page, Hatchery tab), so the choices here must be the
+// Hatchery's own values. They used to be the breeding plan sorts, which
+// the Hatchery did not recognise, so the setting silently did nothing.
+const HATCHERY_SORT_OPTIONS = [
+    { value: 'incubation_longest', label: 'Longest Incubating' },
+    { value: 'incubation_shortest', label: 'Shortest Incubating' },
+    { value: 'hatch_date_asc', label: 'Hatching Soonest' },
+    { value: 'hatch_date_desc', label: 'Hatching Latest' },
+    { value: 'lay_date_desc', label: 'Lay Date (Newest)' },
+    { value: 'lay_date_asc', label: 'Lay Date (Oldest)' },
 ];
+const HATCHERY_SORT_VALUES = new Set(HATCHERY_SORT_OPTIONS.map((o) => o.value));
 
 export default function SettingsPage() {
     const [user, setUser] = useState(null);
@@ -377,7 +378,6 @@ export default function SettingsPage() {
                         cover_image_url: currentUser.cover_image_url || '',
                         is_public_profile: currentUser.is_public_profile !== false, // Default true
                         show_username_on_images: currentUser.show_username_on_images !== false,
-                        allow_profile_clicks: currentUser.allow_profile_clicks !== false,
                         show_breeders_publicly: currentUser.show_breeders_publicly !== false,
                         website_url: currentUser.website_url || '',
                         instagram_handle: currentUser.instagram_handle || '',
@@ -395,20 +395,18 @@ export default function SettingsPage() {
                         email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements', 'market_alert', 'market_brief'],
                         push_notifications_enabled: currentUser.push_notifications_enabled === true,
                         push_notification_types: currentUser.push_notification_types || ['new_message', 'marketplace_inquiry', 'hatch_alert', 'feeding_due', 'new_comment', 'new_reply', 'announcement', 'market_alert', 'market_brief'],
-                        calendar_alerts_enabled: currentUser.calendar_alerts_enabled !== false,
-                        calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
                         feeding_alerts_enabled: currentUser.feeding_alerts_enabled !== false,
                         feeding_late_reminders_enabled: currentUser.feeding_late_reminders_enabled === true,
                         market_brief_enabled: currentUser.market_brief_enabled === true,
                         cgd_reorder_reminders_enabled: currentUser.cgd_reorder_reminders_enabled !== false,
-                        palm_street_sync_enabled: currentUser.palm_street_sync_enabled || false,
                         email_on_new_follower: currentUser.email_on_new_follower !== false, // Default true
                         email_on_new_message: currentUser.email_on_new_message !== false, // Default true
                         email_on_following_activity: currentUser.email_on_following_activity !== false, // Default true
-                        default_gecko_sort: currentUser.default_gecko_sort || 'name',
-                        default_reptile_sort: currentUser.default_reptile_sort || 'name',
-                        default_gallery_sort: currentUser.default_gallery_sort || '-created_date',
-                        default_breeding_sort: currentUser.default_breeding_sort || '-created_date',
+                        // Older saves hold breeding plan sort values the
+                        // Hatchery never understood; show its real default.
+                        default_breeding_sort: HATCHERY_SORT_VALUES.has(currentUser.default_breeding_sort)
+                            ? currentUser.default_breeding_sort
+                            : 'incubation_longest',
                         hatch_alert_days: currentUser.hatch_alert_days || 60,
                         is_featured_breeder: currentUser.is_featured_breeder === true,
                         morph_id_show_value_estimate: currentUser.morph_id_show_value_estimate === true,
@@ -555,6 +553,12 @@ export default function SettingsPage() {
         );
     }
 
+    // One plan resolver for the whole app (src/lib/tierLimits.js): it
+    // counts Stripe, app store, grandfathered and admin plans alike, so an
+    // app store subscriber is never shown Free here.
+    const tier = resolveTier(user);
+    const hasBreederPerks = tier === 'breeder' || tier === 'enterprise';
+
     const sectionNav = [
         { id: 'appearance', label: 'Appearance' },
         { id: 'favorite-pages', label: 'Favorite Pages' },
@@ -565,14 +569,11 @@ export default function SettingsPage() {
         { id: 'social-media', label: 'Social' },
         { id: 'store-policy', label: 'Store Policy' },
         { id: 'privacy-settings', label: 'Privacy' },
-        ...((user?.membership_tier === 'breeder' || user?.subscription_status === 'grandfathered')
-            ? [{ id: 'breeder-perks', label: 'Breeder Perks' }]
-            : []),
+        ...(hasBreederPerks ? [{ id: 'breeder-perks', label: 'Breeder Perks' }] : []),
         { id: 'email-notifications', label: 'Email' },
-        { id: 'calendar-alerts', label: 'Calendar' },
         { id: 'feeding-alerts', label: 'Feeding Alerts' },
         { id: 'market-alerts', label: 'Market' },
-        { id: 'default-sorts', label: 'Defaults' },
+        { id: 'default-sorts', label: 'Hatchery' },
         { id: 'id-logic', label: 'Gecko IDs' },
         { id: 'membership', label: 'Membership' },
         { id: 'morph-id', label: 'Morph ID' },
@@ -875,9 +876,7 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4">
                         {renderSwitch('is-public-profile', 'Show in Community Directory / Make Profile Public', 'Allow others to find you and view your profile and collection', formData.is_public_profile, (checked) => handleChange('is_public_profile', checked))}
                         {renderSwitch('show-breeders-publicly', 'Show My Breeders Publicly', 'Display the Breeders tab on your public profile so other keepers can see your active breeding pairs. Turn off to keep that collection private.', formData.show_breeders_publicly, (checked) => handleChange('show_breeders_publicly', checked))}
-                        {renderSwitch('show-username', 'Show Username on Images', 'Display your name on images you upload', formData.show_username_on_images, (checked) => handleChange('show_username_on_images', checked))}
-                        {renderSwitch('allow-clicks', 'Allow Profile Clicks', 'Let others click your name to view your profile', formData.allow_profile_clicks, (checked) => handleChange('allow_profile_clicks', checked))}
-                        {renderSwitch('palm-sync', 'Sync with PalmStreet', 'Allows PalmStreet users to find your public profile', formData.palm_street_sync_enabled, (checked) => handleChange('palm_street_sync_enabled', checked))}
+                        {renderSwitch('show-username', 'Show My Name on Gallery Photos', 'Photos you share to the community Gallery say who uploaded them, with a link to your profile. Turn off and they show "a community member" instead.', formData.show_username_on_images, (checked) => handleChange('show_username_on_images', checked))}
                         {user?.id && (
                             <div className="pt-2">
                                 <a
@@ -900,7 +899,7 @@ export default function SettingsPage() {
 
                 {/* Breeder/Enterprise-tier only: opt in to be featured on the home dashboard
                     and run a custom store page. Grandfathered users automatically qualify. */}
-                {(user?.membership_tier === 'breeder' || user?.membership_tier === 'enterprise' || user?.subscription_status === 'grandfathered') && (
+                {hasBreederPerks && (
                 <section id="breeder-perks">
                     <Card className="bg-emerald-950/20 border-emerald-900/40 backdrop-blur-sm">
                         <CardHeader>
@@ -924,7 +923,7 @@ export default function SettingsPage() {
                 </section>
                 )}
 
-                {(user?.membership_tier === 'breeder' || user?.membership_tier === 'enterprise' || user?.subscription_status === 'grandfathered') && (
+                {hasBreederPerks && (
                     <BreederStoreCard userEmail={user?.email} />
                 )}
 
@@ -957,20 +956,6 @@ export default function SettingsPage() {
                     renderNotificationSwitch={renderNotificationSwitch}
                 />
 
-                <section id="calendar-alerts">
-                <Card>
-                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Calendar className="w-5 h-5"/>Calendar Alerts</CardTitle></CardHeader>
-                     <CardContent className="space-y-6">
-                          {renderSwitch('calendar-enabled', 'Enable Calendar Alerts', 'Auto-download .ics files for breeding events', formData.calendar_alerts_enabled, (checked) => handleChange('calendar_alerts_enabled', checked))}
-                         {formData.calendar_alerts_enabled && (
-                             <div className="space-y-3">
-                                 {calendarAlertTypes.map(alertType => renderNotificationSwitch(alertType, formData.calendar_alert_types.includes(alertType.key), () => toggleArrayItem('calendar_alert_types', alertType.key)))}
-                             </div>
-                         )}
-                     </CardContent>
-                 </Card>
-                </section>
-
                 <section id="feeding-alerts">
                  <Card>
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Clock className="w-5 h-5"/>Feeding Alerts</CardTitle></CardHeader>
@@ -982,7 +967,7 @@ export default function SettingsPage() {
                                  <p className="text-sm text-slate-400">Alerts also appear in the bottom right corner while feeding is overdue. Glow turns yellow when due, orange after 2+ weeks, red after 3+ weeks.</p>
                              </>
                          )}
-                         {renderSwitch('cgd-reorder-reminder', 'CGD Reorder Reminder', 'Notify me roughly 14 days before my CGD is estimated to run out, based on my collection size and order history. Disable to stop these reminders.', formData.cgd_reorder_reminders_enabled, (checked) => handleChange('cgd_reorder_reminders_enabled', checked))}
+                         {renderSwitch('cgd-reorder-reminder', 'CGD Reorder Reminder', 'Notify me roughly 14 days before my CGD is estimated to run out. The estimate uses your collection size and your CGD orders from the Geck Inspect store, so it starts after your first store order.', formData.cgd_reorder_reminders_enabled, (checked) => handleChange('cgd_reorder_reminders_enabled', checked))}
                      </CardContent>
                  </Card>
                 </section>
@@ -1002,86 +987,28 @@ export default function SettingsPage() {
                     <CardHeader>
                         <CardTitle className="text-slate-100 flex items-center gap-2">
                             <ArrowUpDown className="w-5 h-5"/>
-                            Default Sort Preferences
+                            Hatchery Preferences
                         </CardTitle>
                         <CardDescription className="text-slate-400">
-                            Set your preferred default sorting for different pages
+                            How the Hatchery tab on the Breeding page opens. My Geckos, Other Reptiles, the Gallery and your breeding plans each remember their own sort from the settings button at the top of that page.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="gecko-sort" className="text-slate-300">My Geckos Default Sort</Label>
-                                <Select value={formData.default_gecko_sort} onValueChange={(v) => handleChange('default_gecko_sort', v)}>
-                                    <SelectTrigger className="bg-slate-800 border-slate-600">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="name">Name (A-Z)</SelectItem>
-                                        <SelectItem value="-name">Name (Z-A)</SelectItem>
-                                        <SelectItem value="hatch_date">Oldest First</SelectItem>
-                                        <SelectItem value="-hatch_date">Newest First</SelectItem>
-                                        <SelectItem value="weight_grams">Lightest First</SelectItem>
-                                        <SelectItem value="-weight_grams">Heaviest First</SelectItem>
-                                        <SelectItem value="status">Status (A-Z)</SelectItem>
-                                        <SelectItem value="-status">Status (Z-A)</SelectItem>
-                                        <SelectItem value="display_order">Custom Order</SelectItem>
-                                        <SelectItem value="-created_date">Recently Added</SelectItem>
-                                        <SelectItem value="created_date">Oldest Added</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            
-                            <div>
-                                <Label htmlFor="reptile-sort" className="text-slate-300">Other Reptiles Default Sort</Label>
-                                <Select value={formData.default_reptile_sort} onValueChange={(v) => handleChange('default_reptile_sort', v)}>
-                                    <SelectTrigger className="bg-slate-800 border-slate-600">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="name">Name (A-Z)</SelectItem>
-                                        <SelectItem value="-name">Name (Z-A)</SelectItem>
-                                        <SelectItem value="species">Species (A-Z)</SelectItem>
-                                        <SelectItem value="-species">Species (Z-A)</SelectItem>
-                                        <SelectItem value="birth_date">Oldest First</SelectItem>
-                                        <SelectItem value="-birth_date">Newest First</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            
-                            <div>
-                                <Label htmlFor="gallery-sort" className="text-slate-300">Gallery Default Sort</Label>
-                                <Select value={formData.default_gallery_sort} onValueChange={(v) => handleChange('default_gallery_sort', v)}>
-                                    <SelectTrigger className="bg-slate-800 border-slate-600">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="-created_date">Newest First</SelectItem>
-                                        <SelectItem value="created_date">Oldest First</SelectItem>
-                                        <SelectItem value="-confidence_score">Highest Confidence</SelectItem>
-                                        <SelectItem value="confidence_score">Lowest Confidence</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            
-                            <div>
-                                <Label htmlFor="breeding-sort" className="text-slate-300">Breeding Plans Default Sort</Label>
+                                <Label htmlFor="breeding-sort" className="text-slate-300">Hatchery Default Sort</Label>
                                 <Select value={formData.default_breeding_sort} onValueChange={(v) => handleChange('default_breeding_sort', v)}>
-                                    <SelectTrigger className="bg-slate-800 border-slate-600">
+                                    <SelectTrigger id="breeding-sort" className="bg-slate-800 border-slate-600">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="newest">Newest First</SelectItem>
-                                        <SelectItem value="time_newest">Paired Most Recently</SelectItem>
-                                        <SelectItem value="time_oldest">Paired Longest Ago</SelectItem>
-                                        <SelectItem value="eggs_high">Most Eggs</SelectItem>
-                                        <SelectItem value="eggs_low">Least Eggs</SelectItem>
-                                        <SelectItem value="last_egg_recent">Latest Egg Drop</SelectItem>
-                                        <SelectItem value="last_egg_oldest">Oldest Egg Drop</SelectItem>
+                                        {HATCHERY_SORT_OPTIONS.map((o) => (
+                                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
-                            
+
                             <div>
                                 <Label htmlFor="hatch-alert-days" className="text-slate-300">Hatch Alert (Days Incubating)</Label>
                                 <Input
@@ -1106,11 +1033,16 @@ export default function SettingsPage() {
 
                 {(() => {
                     const isGrandfathered = user?.subscription_status === 'grandfathered';
-                    const tier = isGrandfathered ? 'breeder' : (user?.membership_tier || 'free');
                     const isLifetime = user?.membership_billing_cycle === 'lifetime';
-                    const isPaid = tier === 'keeper' || tier === 'breeder' || tier === 'enterprise';
-                    // Only Stripe-backed subscriptions have billing to manage.
-                    const canManageBilling = isPaid && !isGrandfathered && !isLifetime;
+                    const isPaid = tier !== 'free';
+                    // Only a Stripe subscription has billing to manage here.
+                    // Grandfathered, lifetime, referral and comped plans
+                    // have no recurring bill.
+                    const canManageBilling = isPaid && !isGrandfathered && !isLifetime && Boolean(user?.stripe_subscription_id);
+                    // The plan came from the app store (RevenueCat), which
+                    // handles its own billing.
+                    const isAppStorePlan = isPaid && !canManageBilling && !isGrandfathered
+                        && ['keeper', 'breeder'].includes(user?.revenuecat_tier);
                     const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
                     const handleManageBilling = async () => {
                         setPortalBusy(true);
@@ -1135,7 +1067,7 @@ export default function SettingsPage() {
                                     </CardTitle>
                                     <CardDescription className="text-slate-400">
                                         You are on the {tierLabel} plan
-                                        {isGrandfathered ? ' (grandfathered, free for life).' : isLifetime ? ' (lifetime access, no renewals).' : '.'}
+                                        {isGrandfathered ? ' (grandfathered, free for life).' : isLifetime ? ' (lifetime access, no renewals).' : isAppStorePlan ? ' (billed through the app store).' : '.'}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex flex-wrap items-center gap-3">
@@ -1161,7 +1093,11 @@ export default function SettingsPage() {
                                     <p className="basis-full text-xs text-slate-500">
                                         {canManageBilling
                                             ? 'Manage billing opens your secure Stripe portal to change plans, update your card, download invoices, or cancel.'
-                                            : 'Paid plans can be cancelled anytime from this page. The free trial is optional and offered on the Membership page.'}
+                                            : isAppStorePlan
+                                                ? 'Your plan renews through the App Store. Change or cancel it in your device subscription settings.'
+                                                : isPaid
+                                                    ? 'Your plan has no recurring bill, so there is nothing to manage here.'
+                                                    : 'Paid plans can be cancelled anytime from this page. The free trial is optional and offered on the Membership page.'}
                                     </p>
                                 </CardContent>
                             </Card>
@@ -1170,10 +1106,7 @@ export default function SettingsPage() {
                 })()}
 
                 {(() => {
-                    const tier = user?.subscription_status === 'grandfathered'
-                        ? 'breeder'
-                        : (user?.membership_tier || 'free');
-                    const isPaid = tier === 'keeper' || tier === 'breeder' || tier === 'enterprise';
+                    const isPaid = tier !== 'free';
                     return (
                         <section id="morph-id">
                             <Card>

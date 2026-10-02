@@ -85,7 +85,7 @@ export default function Gallery() {
         missing.forEach((email) => knownEmailsRef.current.add(email));
         const { data, error } = await supabase
             .rpc('read_profiles', { p_emails: missing })
-            .select('id, email, full_name, business_name, profile_image_url, is_expert, is_featured_breeder')
+            .select('id, email, full_name, business_name, profile_image_url, is_expert, is_featured_breeder, show_username_on_images')
             .in('email', missing);
         if (error || !data) return;
         setUsers((prev) => [...prev, ...data]);
