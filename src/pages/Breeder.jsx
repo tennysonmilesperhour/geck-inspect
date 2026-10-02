@@ -140,15 +140,26 @@ export default function Breeder() {
           // casing ("For Sale", "for_sale", "available_for_sale", etc).
           // Only public geckos appear, capped at 12 for the grid.
           if (ownerEmail) {
-            const [{ data: geckos }, { data: revs }, { data: ownerProf }, { data: storePage }] = await Promise.all([
-              supabase
-                .from('geckos')
-                .select('id, name, morphs_traits, image_urls, asking_price, passport_code, sex, status')
-                .eq('created_by', ownerEmail)
-                .eq('is_public', true)
-                .or('status.ilike.%sale%,status.eq.For Sale')
-                .order('asking_price', { ascending: true, nullsFirst: false })
-                .limit(12),
+            // Signed-out visitors cannot read geckos.created_by (it holds
+            // the owner's email), so listings are matched on the owner's
+            // profile id instead.
+            const { data: ownerProf } = await supabase
+              .rpc('read_profiles', { p_emails: [ownerEmail] })
+              .select('id, store_policy')
+              .eq('email', ownerEmail)
+              .maybeSingle();
+            if (cancelled) return;
+            const [{ data: geckos }, { data: revs }, { data: storePage }] = await Promise.all([
+              ownerProf?.id
+                ? supabase
+                    .from('geckos')
+                    .select('id, name, morphs_traits, image_urls, asking_price, passport_code, sex, status')
+                    .eq('owner_profile_id', ownerProf.id)
+                    .eq('is_public', true)
+                    .or('status.ilike.%sale%,status.eq.For Sale')
+                    .order('asking_price', { ascending: true, nullsFirst: false })
+                    .limit(12)
+                : Promise.resolve({ data: [] }),
               bp.user_id
                 ? supabase
                     .from('breeder_reviews')
@@ -157,11 +168,6 @@ export default function Breeder() {
                     .order('created_date', { ascending: false })
                     .limit(20)
                 : Promise.resolve({ data: [] }),
-              supabase
-                .rpc('read_profiles', { p_emails: [ownerEmail] })
-                .select('store_policy')
-                .eq('email', ownerEmail)
-                .maybeSingle(),
               // Mini-site settings carrier. RLS only exposes published
               // rows to visitors, and we filter on is_published here too
               // so owners preview exactly what the public sees.
@@ -220,7 +226,7 @@ export default function Breeder() {
         const pattern = `%${safe}%`;
         const { data, error } = await supabase
           .from('geckos')
-          .select('id, name, sex, status, image_urls, dam_name, sire_name, notes, created_by')
+          .select('id, name, sex, status, image_urls, dam_name, sire_name, notes, owner_profile_id')
           .or(`dam_name.ilike.${pattern},sire_name.ilike.${pattern},notes.ilike.${pattern}`)
           .limit(500);
         if (error) throw error;
@@ -236,7 +242,7 @@ export default function Breeder() {
         });
 
         setInferredGeckos(matches);
-        setUniqueOwners(new Set(matches.map((g) => g.created_by).filter(Boolean)).size);
+        setUniqueOwners(new Set(matches.map((g) => g.owner_profile_id).filter(Boolean)).size);
       } catch (err) {
         if (!cancelled) {
           setErrorMsg(err.message || 'Failed to load breeder');

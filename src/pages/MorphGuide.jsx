@@ -384,7 +384,7 @@ export default function MorphGuidePage() {
           .not('primary_morph', 'is', null)
           .not('image_url', 'is', null)
           .eq('verified', true)
-          .not('created_by', 'is', null)
+          .not('owner_profile_id', 'is', null)
           .limit(500);
         if (!cancelled) setCommunityImages(data || []);
       } catch (err) {

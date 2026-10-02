@@ -21,6 +21,7 @@ import FireStatePair from '@/components/shared/FireStatePair';
 import { hasFireStatePhotos } from '@/lib/fireStatePhotos';
 import OwnershipChain from '@/components/passport/OwnershipChain';
 import { exportProvenanceCertificate } from '@/lib/certificateExport';
+import { geckoSelect } from '@/lib/publicColumns';
 
 // The passport is the page buyers see when they scan a tub label or open a
 // shared link. It used its own palette tokens and two display fonts; since
@@ -400,9 +401,12 @@ export default function AnimalPassport() {
     const load = async () => {
       setIsLoading(true);
       try {
+        // Signed-out visitors read the public columns only: created_by holds
+        // the owner's email (see publicColumns.js).
+        const columns = geckoSelect(Boolean(currentUser?.email));
         const { data: geckos, error: gErr } = await supabase
           .from('geckos')
-          .select('*')
+          .select(columns)
           .eq('passport_code', passportCode)
           .limit(1);
         if (gErr) throw gErr;
@@ -422,8 +426,8 @@ export default function AnimalPassport() {
         const [
           sireRes, damRes, ownerRes, feedRes, weightRes, shedRes, vetRes
         ] = await Promise.allSettled([
-          g.sire_id ? supabase.from('geckos').select('*').eq('id', g.sire_id).maybeSingle() : null,
-          g.dam_id ? supabase.from('geckos').select('*').eq('id', g.dam_id).maybeSingle() : null,
+          g.sire_id ? supabase.from('geckos').select(columns).eq('id', g.sire_id).maybeSingle() : null,
+          g.dam_id ? supabase.from('geckos').select(columns).eq('id', g.dam_id).maybeSingle() : null,
           supabase.from('ownership_records').select('*').eq('animal_id', g.id).order('acquired_date', { ascending: true }),
           supabase.from('feeding_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }).limit(30),
           supabase.from('weight_records').select('*').eq('gecko_id', g.id).order('record_date', { ascending: true }),

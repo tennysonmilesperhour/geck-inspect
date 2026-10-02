@@ -61,7 +61,7 @@ const COMMUNITY_JSON_LD = [
 
 // Breeder Card Component
 function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, geckoCounts, coverImage }) {
-    const counts = geckoCounts[breeder.email] || { selling: 0, breeding: 0, keeping: 0 };
+    const counts = geckoCounts[breeder.id] || { selling: 0, breeding: 0, keeping: 0 };
     const cardCover = breeder.cover_image_url || coverImage;
 
     return (
@@ -539,22 +539,24 @@ export default function CommunityConnectPage() {
 
                 // Fetch initial 24 breeders and the per-breeder gecko counts.
                 // The counts (keeping / selling / breeding plus a cover
-                // image) come from the community_gecko_counts() function so
+                // image) come from the community_owner_gecko_counts() function so
                 // the browser never downloads the whole geckos table.
                 const initialBreeders = await fetchBreederBatch(0);
-                const { data: countRows, error: countsError } = await supabase.rpc('community_gecko_counts');
+                const { data: countRows, error: countsError } = await supabase.rpc('community_owner_gecko_counts');
                 if (countsError) console.warn('Community gecko counts failed:', countsError);
 
                 const counts = {};
                 const coverImages = {};
                 for (const row of countRows || []) {
-                    if (!row.created_by) continue;
-                    counts[row.created_by] = {
+                    // Keyed by profile id: signed-out visitors never see
+                    // breeder emails.
+                    if (!row.owner_profile_id) continue;
+                    counts[row.owner_profile_id] = {
                         selling: row.selling || 0,
                         breeding: row.breeding || 0,
                         keeping: row.keeping || 0,
                     };
-                    if (row.cover_image) coverImages[row.created_by] = row.cover_image;
+                    if (row.cover_image) coverImages[row.owner_profile_id] = row.cover_image;
                 }
                 setGeckoCounts(counts);
                 setGeckoCoverImages(coverImages);
@@ -646,8 +648,8 @@ export default function CommunityConnectPage() {
         
         return matchesSearch && matchesLocation;
     }).sort((a, b) => {
-        const aCount = geckoCounts[a.email] || { selling: 0, breeding: 0, keeping: 0 };
-        const bCount = geckoCounts[b.email] || { selling: 0, breeding: 0, keeping: 0 };
+        const aCount = geckoCounts[a.id] || { selling: 0, breeding: 0, keeping: 0 };
+        const bCount = geckoCounts[b.id] || { selling: 0, breeding: 0, keeping: 0 };
         const aTotalGeckos = aCount.selling + aCount.breeding + aCount.keeping;
         const bTotalGeckos = bCount.selling + bCount.breeding + bCount.keeping;
         
@@ -776,7 +778,7 @@ export default function CommunityConnectPage() {
                                             onFollow={handleFollow}
                                             onUnfollow={handleUnfollow}
                                             geckoCounts={geckoCounts}
-                                            coverImage={geckoCoverImages[breeder.email]}
+                                            coverImage={geckoCoverImages[breeder.id]}
                                         />
                                     ))}
                                 </div>

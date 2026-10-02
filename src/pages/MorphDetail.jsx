@@ -146,12 +146,14 @@ export default function MorphDetail() {
           // Reviewed photos from members only. gecko_images also holds about
           // 3,800 scraped marketplace listing photos (created_by is null),
           // which the caption below would otherwise call keeper uploads.
+          // owner_profile_id is set exactly when a member uploaded the photo,
+          // and unlike created_by it is readable when signed out.
           const { data: imgs } = await supabase
             .from('gecko_images')
             .select('id, image_url, primary_morph')
             .ilike('primary_morph', `%${firstWord}%`)
             .eq('verified', true)
-            .not('created_by', 'is', null)
+            .not('owner_profile_id', 'is', null)
             .limit(8);
           if (!cancelled) setCommunityImages(imgs || []);
         } catch {
