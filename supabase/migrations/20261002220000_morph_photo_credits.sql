@@ -162,6 +162,7 @@ begin
     when 'waitlist_signup'        then 'New waitlist signup'
     when 'market_alert'           then 'Watchlist match'
     when 'market_brief'           then 'Your crested gecko market today'
+    when 'vet_followup'           then 'Vet follow-up'
     else 'Geck Inspect'
   end;
   v_body := coalesce(NEW.content, '');
