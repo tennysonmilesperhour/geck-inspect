@@ -2,6 +2,9 @@
  * Curated morph/trait tag catalog for crested geckos: the tags users can
  * attach to a gecko via MorphIDSelector, grouped for the picker UI.
  *
+ * Every tag here must produce a genotype or a "not used" reason in
+ * lib/genetics/tagTranslation.js; a test and the drift check enforce it.
+ *
  * Plain JS (no JSX) so both the React components and the Node drift
  * check (scripts/check-genetics-consistency.mjs) can import it. Genetic
  * FACTS (inheritance, spellings, lethality) are owned by the Foundation
@@ -15,6 +18,11 @@
  * Notes on intentional omissions:
  *   - Super Lilly White is embryonic-lethal (Lilly x Lilly loses ~25% of
  *     eggs). No animal walks around as one, so it isn't a taggable state.
+ *   - Moonglow is a line-bred look, not a proven gene (the engine says
+ *     so too), so it sits with the color traits and has no Het tag.
+ *   - A bare "Phantom" tag means a visual Phantom (two copies of the
+ *     recessive). "Het Phantom" is the hidden single copy. White Wall
+ *     is the engine's Whiteout. (Decision D13.)
  *   - Albino is not a proven crested gecko trait. Leucistic / axanthic
  *     animals get mislabeled as albino; keep the axanthic tag instead.
  */
@@ -27,7 +35,6 @@ export const MORPH_CATEGORIES = {
       "Lilly White",
       "Cappuccino", "Super Cappuccino",
       "Soft Scale", "Super Soft Scale",
-      "Moonglow",
       "Empty Back", "Super Empty Back",
       "White Wall",
     ],
@@ -37,6 +44,7 @@ export const MORPH_CATEGORIES = {
     badge: "bg-rose-700",
     morphs: [
       "Axanthic",
+      "Phantom",
     ],
   },
   "Combo Morphs": {
@@ -60,7 +68,7 @@ export const MORPH_CATEGORIES = {
       "Het Axanthic", "Possible Het Axanthic",
       "Het Cappuccino", "Possible Het Cappuccino",
       "Het Soft Scale", "Possible Het Soft Scale",
-      "Het Moonglow", "Possible Het Moonglow",
+      "Het Phantom", "Possible Het Phantom",
       "Het Empty Back", "Possible Het Empty Back",
     ],
   },
@@ -76,7 +84,6 @@ export const MORPH_CATEGORIES = {
       "Patternless",
       "Bicolor",
       "Tricolor",
-      "Phantom",
       "Whiteout",
     ],
   },
@@ -126,6 +133,7 @@ export const MORPH_CATEGORIES = {
     badge: "bg-amber-700",
     morphs: [
       "Hypo",
+      "Moonglow",
       "Translucent",
       "High White",
       "High Contrast",

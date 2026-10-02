@@ -3,12 +3,11 @@ import Seo from '@/components/seo/Seo';
 import { api } from '@/api/appClient';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { basicHatchlingValue } from '@/lib/traitValuation';
-import { buildAnimal, eggValue } from '@/lib/pairingValue';
+import { predictGeckoPair, eggValue } from '@/lib/pairingValue';
+import { translateMorphTags } from '@/lib/genetics/tagTranslation';
 import useFemaleReadiness from '@/hooks/useFemaleReadiness';
 import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
 import {
-  predict,
-  detectRisks,
   displayText,
   outcomeCombos,
   outcomeTraits,
@@ -250,17 +249,18 @@ export default function PairingPlannerPage() {
 
     const rows = [];
     for (const sire of sireList) {
-      const sireAnimal = buildAnimal(sire);
       for (const dam of females) {
         let prediction;
         try {
-          prediction = predict(sireAnimal, buildAnimal(dam));
+          prediction = predictGeckoPair(sire, dam);
         } catch (e) {
           console.warn('predict failed for pair', sire.id, dam.id, e);
           continue;
         }
         const phenotypes = prediction.offspring_phenotypes || [];
-        const warnings = detectRisks(prediction) || [];
+        // The engine's risk checks, already run per scenario. A risk that
+        // needs a possible het to prove out still counts here.
+        const warnings = prediction.warnings || [];
         const blocked = isBlocked(warnings);
 
         const score = scoreDistribution(phenotypes);
@@ -281,6 +281,10 @@ export default function PairingPlannerPage() {
           top,
           warnings,
           blocked,
+          unusedTags: [
+            ...translateMorphTags(sire.morph_tags).notUsed,
+            ...translateMorphTags(dam.morph_tags).notUsed,
+          ].map((t) => t.tag),
         });
       }
     }
@@ -512,7 +516,7 @@ function Thumb({ gecko, ring }) {
 
 function PairingCard({ row, rank, goal, usingStaticWeights, readiness }) {
   const damNotReady = readiness && (readiness.level === 'not_yet' || readiness.level === 'nearly');
-  const { sire, dam, top, warnings, blocked, score } = row;
+  const { sire, dam, top, warnings, blocked, score, unusedTags = [] } = row;
 
   let scoreLabel = null;
   if (goal === 'morph') scoreLabel = `${score}% chance per egg`;
@@ -570,9 +574,16 @@ function PairingCard({ row, rank, goal, usingStaticWeights, readiness }) {
             >
               <AlertTriangle className="w-3 h-3" />
               {displayText(w.message).split('.')[0]}
+              {w.conditional ? ' (if a possible het proves out)' : ''}
             </Badge>
           ))}
         </div>
+      )}
+
+      {unusedTags.length > 0 && (
+        <p className="text-[11px] text-slate-500 mb-3" title={unusedTags.join(', ')}>
+          {unusedTags.length} {unusedTags.length === 1 ? 'tag' : 'tags'} not used in the odds: {unusedTags.join(', ')}
+        </p>
       )}
 
       {/* Top outcomes */}

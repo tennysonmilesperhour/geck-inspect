@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { Dna, AlertTriangle, ChevronDown, ChevronRight, Shuffle, ExternalLink, ImageDown, Share2, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getTrait, getComboMorph, displayText, outcomeCombos, outcomeTraits } from '@/lib/genetics';
-import { predictWeighted, tagsToSpec } from '@/lib/genetics/predictWeighted';
+import { predictWeighted } from '@/lib/genetics/predictWeighted';
+import { translateMorphTags } from '@/lib/genetics/tagTranslation';
 import {
   MORPH_GUIDE_SLUGS,
   COMPLEX_LOCUS,
@@ -64,7 +65,54 @@ function severityClasses(severity) {
 
 function animalToSpec(animal) {
   if (animal?.genotype_spec) return animal.genotype_spec;
-  return tagsToSpec(animal?.morph_tags || []);
+  return translateMorphTags(animal?.morph_tags || []).spec;
+}
+
+/**
+ * How a collection gecko's tags were read: which ones the odds could not
+ * use, and which were counted as a maybe. Manual-mode parents are built
+ * from a spec, so their chips are not re-read.
+ */
+function tagReading(animal) {
+  if (!animal || animal.source === 'manual') return { notUsed: [], notes: [] };
+  const { notUsed, notes } = translateMorphTags(animal.morph_tags || []);
+  return { notUsed, notes };
+}
+
+/**
+ * "N tags not used": every tag that cannot change the odds is listed
+ * with its reason, so a gecko never quietly computes as a normal.
+ */
+function TagsNotUsed({ sire, dam }) {
+  const sireReading = tagReading(sire);
+  const damReading = tagReading(dam);
+  const rows = [
+    ...sireReading.notUsed.map((t) => ({ ...t, who: sire?.name || 'Sire' })),
+    ...damReading.notUsed.map((t) => ({ ...t, who: dam?.name || 'Dam' })),
+  ];
+  const notes = [...sireReading.notes, ...damReading.notes];
+  if (rows.length === 0 && notes.length === 0) return null;
+  return (
+    <div className="rounded-lg p-3 border bg-slate-800/70 border-slate-600 text-slate-200 text-sm leading-snug space-y-1.5">
+      {rows.length > 0 && (
+        <details>
+          <summary className="cursor-pointer font-medium">
+            {rows.length} {rows.length === 1 ? 'tag' : 'tags'} not used in these odds
+          </summary>
+          <ul className="mt-2 space-y-1 text-xs text-slate-300">
+            {rows.map((t) => (
+              <li key={`${t.who}:${t.tag}`}>
+                <span className="text-slate-100">{t.who}: {t.tag}.</span> {t.reason}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {notes.map((n) => (
+        <p key={n} className="text-xs text-purple-200">{n}</p>
+      ))}
+    </div>
+  );
 }
 
 function outcomeLabel(outcome) {
@@ -170,13 +218,16 @@ export default function GeneticCalculator({ sire, dam }) {
 
   if (!prediction) {
     return (
-      <div className="text-center py-12 text-slate-400">
-        <Dna className="w-10 h-10 mx-auto mb-3 opacity-40" />
-        <p className="font-medium mb-1">Nothing to calculate yet.</p>
-        <p className="text-sm">
-          Pick at least one gene on either parent. Proven genes: Lilly White, Axanthic, Phantom,
-          Empty Back, and the Cappuccino complex (Cappuccino, Sable, Luwak).
-        </p>
+      <div className="space-y-4">
+        <div className="text-center py-12 text-slate-400">
+          <Dna className="w-10 h-10 mx-auto mb-3 opacity-40" />
+          <p className="font-medium mb-1">Nothing to calculate yet.</p>
+          <p className="text-sm">
+            Pick at least one gene on either parent. Proven genes: Lilly White, Axanthic, Phantom,
+            Empty Back, and the Cappuccino complex (Cappuccino, Sable, Luwak).
+          </p>
+        </div>
+        <TagsNotUsed sire={sire} dam={dam} />
       </div>
     );
   }
@@ -236,6 +287,8 @@ export default function GeneticCalculator({ sire, dam }) {
           ))}
         </div>
       </div>
+
+      <TagsNotUsed sire={sire} dam={dam} />
 
       {/* Safety warnings: always rendered, never filterable */}
       {warnings.length > 0 && (

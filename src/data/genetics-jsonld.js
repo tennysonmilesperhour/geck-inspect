@@ -4,7 +4,7 @@
  */
 
 const GENETICS_GUIDE_PUBLISHED = '2025-09-15T00:00:00Z';
-const GENETICS_GUIDE_MODIFIED = '2026-04-17T00:00:00Z';
+const GENETICS_GUIDE_MODIFIED = '2026-10-02T00:00:00Z';
 
 // Editorial author identity. Mirrors the shape in src/lib/editorial.js,
 // kept inline here because this file is consumed both by JSX (for JSON-LD
@@ -146,7 +146,7 @@ const GENETICS_GUIDE_JSON_LD = [
         name: 'What is the difference between a morph and a trait in crested gecko breeding?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'A morph has a proven, predictable single-gene inheritance pattern, Lilly White, Axanthic, Cappuccino, Soft Scale, and White Wall qualify. A trait is a phenotypic characteristic like harlequin, pinstripe, flame, or dalmatian that is usually polygenic and does not follow a simple Mendelian inheritance pattern.',
+          text: 'A morph has a proven, predictable single-gene inheritance pattern. Lilly White, Axanthic, Cappuccino, Soft Scale, White Wall, and Phantom qualify. A trait is a look like flame or base color shade that is usually polygenic and does not follow a simple Mendelian inheritance pattern. Harlequin, Pinstripe, and Dalmatian sit in between: traditionally called polygenic traits, they are modeled by Foundation Genetics as single genes whose strength is still set by many smaller genes.',
         },
       },
       {

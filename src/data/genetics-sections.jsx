@@ -226,7 +226,8 @@ const SECTIONS = [
           <>
             <BulletList items={[
               'A MORPH is a genetically distinct variant with a known, predictable inheritance pattern that has been demonstrated through controlled breeding. Lilly White, Axanthic, and Cappuccino are morphs.',
-              'A TRAIT (or "line") is a phenotypic characteristic whose precise genetics aren\'t fully mapped, usually polygenic. Harlequin, pinstripe, flame, and dalmatian are traits.',
+              'A TRAIT (or "line") is a phenotypic characteristic whose precise genetics aren\'t fully mapped, usually polygenic. Flame, most base color shades, and crest quality are traits.',
+              'Harlequin, Pinstripe, and Dalmatian sit in between. The hobby has long called them polygenic traits, while Foundation Genetics models each as a single gene (Harlequin incomplete dominant, Pinstripe and Dalmatian dominant). Both views agree that how strongly each one shows is shaped by many smaller genes.',
               'Both are legitimate and both add value to breeding projects. The distinction matters for pricing, documentation, and what you can promise buyers.',
               'A useful test: "If I pair two visuals of this, can I predict the offspring ratios?" If yes, it\'s a proven morph. If the answer is "my best animals tend to come from my best animals," it\'s polygenic.',
             ]} />
@@ -239,10 +240,10 @@ const SECTIONS = [
           <>
             <BulletList items={[
               'Inheritance: INCOMPLETE DOMINANT. Single copy = visual Lilly White. Two copies = Super Lilly White, which is embryonic-lethal, fertilized eggs develop partially then fail to hatch. Never pair two Lilly Whites together.',
-              'Visual expression: distinct areas of pure white or pale cream, usually on the lateral body walls, tail, and sometimes the head. Not to be confused with "whitewall" traits, fire-up pale markings, or cream harlequin extension.',
+              'Visual expression: distinct areas of pure white or pale cream, usually on the lateral body walls, tail, and sometimes the head. Not to be confused with White Wall (a separate gene, see below), fire-up pale markings, or cream harlequin extension.',
               'Discovered: in 2014 by Lilly Exotics. Named for the breeder, not the color.',
               'Pairing strategy: Lilly White × Normal produces ~50% visual Lilly White + ~50% normal. This is the ONLY safe way to produce more LW.',
-              'Price: high-quality visual LW typically $500–$1500+ depending on base trait combinations and breeder reputation.',
+              'Price: high-quality visual LW typically $500 to $1500+ depending on base trait combinations and breeder reputation.',
             ]} />
             <Callout items={[
               'LW × Normal → 50% visual LW, 50% normal (SAFE)',
@@ -275,7 +276,7 @@ const SECTIONS = [
               'Visual expression: a signature connected dorsal pattern that runs from the nape down the spine, usually in warm chocolate tones. Body coloration tends toward rich browns. Eye rims and crest lines often darker than normal.',
               'Super form health: Super Cappuccinos (homozygous CAPP/CAPP) have documented health concerns including reduced nostril size and breathing difficulty. Breeding specifically for the super form is not recommended. A Frappuccino is something separate, the Cappuccino + Lilly White combo, not the homozygous super form.',
               'Pairing strategy: Cappuccino × Normal is the safest pairing. It produces ~50% Cappuccino, ~50% normal offspring, and no Super Cappuccinos.',
-              'Price: visual Cappuccino commonly $400–$1200+. Super Cappuccino pricing is contentious given the documented health concerns.',
+              'Price: visual Cappuccino commonly $400 to $1200+. Super Cappuccino pricing is contentious given the documented health concerns.',
             ]} />
             <Callout items={[
               'Cappuccino × Normal → 50% visual Cappuccino, 50% normal (SAFEST)',
@@ -297,23 +298,28 @@ const SECTIONS = [
         )
       },
       {
-        title: 'White Wall',
+        title: 'White Wall (Whiteout)',
         content: (
           <BulletList items={[
-            'Inheritance: INCOMPLETE DOMINANT. Single copy = White Wall (a distinct white stripe along the lateral belly wall, below the lateral pattern zone). Two copies may produce a more pronounced "Super White Wall" with additional white extension.',
+            'Inheritance: INCOMPLETE DOMINANT. Single copy = White Wall (a distinct white stripe along the lateral belly wall, below the lateral pattern zone). Two copies = Super White Wall, with more white extension.',
+            'Same gene, two names: Foundation Genetics and the Geck Inspect calculator list it as Whiteout (also spelled Whitewall), the gene AC Reptiles worked out. A White Wall tag on your gecko is read as Whiteout. It sits at a different spot in the DNA from Lilly White.',
+            'Super form health: unlike Super Lilly White, Super White Wall is healthy and breeds normally, which is why some breeders use it to stack white without the lethal risk.',
             'Visual expression: a clean white lateral band that sits below where the harlequin extension would normally appear. It\'s structural, comes from documented lineage, not random pale coloration.',
-            'Pairing strategy: White Wall × Normal is the typical approach. The gene stacks well with harlequin, pinstripe, and cappuccino traits.',
+            'Pairing strategy: White Wall × Normal gives about half White Wall babies. White Wall × White Wall adds about a quarter Super White Walls. The gene stacks well with Harlequin, Pinstripe, and Cappuccino.',
             'Often confused with White-Spot or generic pale markings, require lineage to verify.',
           ]} />
         )
       },
       {
-        title: 'Phantom Pinstripe, polygenic, not Mendelian',
+        title: 'Phantom',
         content: (
           <BulletList items={[
-            'Despite the name, Phantom Pinstripe is NOT a proven recessive morph. It\'s a pattern-expression style within the pinstripe family, a pinstripe that is partial, broken, or nearly invisible.',
-            'Some older guides list Phantom as a separate recessive. That has not been replicated in controlled breeding. Treat it as a polygenic pattern trait.',
-            'If you\'re buying an animal marketed as "het phantom," ask for the pairing documentation and manage your expectations, the outcome is not predictable by Punnett square.',
+            'Inheritance: RECESSIVE. Foundation Genetics identifies Phantom as a simple recessive gene. Two copies make a visual Phantom. One copy (Het Phantom) looks normal but can pass the gene on.',
+            'In Geck Inspect, a plain "Phantom" tag means a visual Phantom. Use "Het Phantom" or "Possible Het Phantom" for a gecko that may carry one hidden copy.',
+            'Visual expression: Phantom adds dark pigment and mutes pattern. Depending on base color and pattern it shows up as Bicolor, Patternless, Buckskin, Charcoal, or Cream animals. It fades near the tail base and on the sides, which is why pinstripes and wall markings can still show through.',
+            'Phantom Pinstripe is the hobby name for a pinstripe whose raised dorsal scales stay the base color instead of turning cream. Older guides treated it as a polygenic pinstripe style. Foundation Genetics links the look to the Phantom gene, so a Phantom Pinstripe gecko may be a visual Phantom. Ask the breeder whether the line has proven out.',
+            'Pairing strategies: Phantom × Phantom → 100% visual. Phantom × Het → 50% visual, 50% het. Het × Het → 25% visual, 50% het, 25% non-carrier.',
+            'Buying a "het Phantom": a het looks normal, so the claim is only as good as the pairing records. Ask which parent was visual and whether any babies have proven out.',
           ]} />
         )
       },
@@ -324,7 +330,7 @@ const SECTIONS = [
     title: 'Polygenic Traits, The Real Art',
     level: 'Beginner',
     icon: Palette,
-    intro: 'Most of what makes a crested gecko visually stunning is NOT a single gene. Base color, harlequin extension, pinstripe fullness, dalmatian spotting, flame contrast, all polygenic. Understanding how to work with polygenic traits separates serious breeders from hobbyists.',
+    intro: 'Most of what makes a crested gecko visually stunning is NOT a single gene. Base color shade, harlequin extension, pinstripe fullness, dalmatian spot count, flame contrast, all polygenic. (Foundation Genetics models Harlequin, Pinstripe, and Dalmatian themselves as single genes; how far each one goes is still polygenic.) Understanding how to work with polygenic traits separates serious breeders from hobbyists.',
     subsections: [
       {
         title: 'What Makes a Trait Polygenic?',
@@ -350,7 +356,7 @@ const SECTIONS = [
               'Xanthophores, the top layer. They produce yellow and red pigments (pteridines and carotenoids). Axanthic geckos have these cells genetically disabled.',
               'Iridophores, the middle layer. They contain reflective crystal platelets that bounce light back through the skin, producing brightness, shimmer, and the "fired up" visual effect.',
               'Melanophores, the deepest layer. They produce melanin (dark pigment) and are responsible for the dark base under everything else. These are what spread to create the "fired up" dark state.',
-              'Most polygenic coloration in the hobby (red base, yellow base, olive, buckskin) is driven by differential expression in the xanthophore and iridophore layers.',
+              'Most polygenic coloration in the hobby (red, yellow, olive, and buckskin shades) is driven by differential expression in the xanthophore and iridophore layers. Foundation Genetics does model two base colors as single genes, Red Base (recessive) and Yellow Base (dominant); the exact shade on top of either is still polygenic.',
             ]} />
             <PigmentLayers />
           </>
@@ -360,7 +366,7 @@ const SECTIONS = [
         title: 'Firing Up and Firing Down',
         content: (
           <BulletList items={[
-            'Crested geckos can dramatically change color over 30–90 minutes depending on temperature, stress, humidity, and circadian cues. This is "firing up" (dark/saturated) or "firing down" (pale/washed out).',
+            'Crested geckos can dramatically change color over 30 to 90 minutes depending on temperature, stress, humidity, and circadian cues. This is "firing up" (dark/saturated) or "firing down" (pale/washed out).',
             'The mechanism: melanophores contain granules of melanin that can spread out to darken the skin or clump up to lighten it. Iridophore reflectivity also shifts.',
             'This isn\'t genetics, it\'s physiology. Two animals with identical alleles can look dramatically different at different times of day.',
             'Photographing geckos for breeding records: fire them up consistently by misting and waiting 20 minutes in their usual enclosure. Fired-down photos make it very hard to compare animals across a collection.',
@@ -387,13 +393,13 @@ const SECTIONS = [
         title: 'Pattern Types (polygenic)',
         content: (
           <BulletList items={[
-            'Patternless, solid base color, no dorsal or lateral pattern',
+            'Patternless, solid base color, no dorsal or lateral pattern (often how a visual Phantom looks)',
             'Harlequin, high-contrast lateral pattern extending up the body',
             'Extreme Harlequin, near-full pattern coverage, can merge with flame patterns',
             'Pinstripe, raised cream dorsal stripe (partial to 100%)',
             'Flame, lateral "flame" markings rising from belly up the sides',
             'Tiger / Brindle, lateral banding or broken striping',
-            'Dalmatian, sparse to extreme spotting across the body. "Super Dalmatian" is the polygenic extreme, not a proven Mendelian super form.',
+            'Dalmatian, sparse to extreme spotting across the body. Foundation Genetics models Dalmatian as a dominant gene, with Super Dalmatian as two copies; spot count on top of that is polygenic.',
             'Bicolor / Tricolor, two or three distinct color zones (usually head, body, tail)',
           ]} />
         )
@@ -404,7 +410,7 @@ const SECTIONS = [
           <BulletList items={[
             'Crest quality (size, symmetry, portholes, crown shape) is polygenic. Selective breeding for dramatic crests is one of the most rewarding long-term projects.',
             'Furred trait, elongated tubercles giving a fuzzy appearance. Not a proven Mendelian morph; emerges from selective breeding.',
-            'Empty Back, absence of dorsal pattern. Widely held to be polygenic or at most a dominant expression; not confirmed as a single Mendelian gene.',
+            'Empty Back, absence of dorsal pattern. Foundation Genetics models it as an incomplete dominant gene: one copy clears the back, two copies (Super Empty Back) clear it further, and the super form is healthy.',
           ]} />
         )
       },
@@ -439,7 +445,7 @@ const SECTIONS = [
         content: (
           <BulletList items={[
             'Heritability is a technical term (h²) for the proportion of variation in a trait that\'s actually due to genetics vs environment. It ranges from 0 (pure environment) to 1 (pure genetics).',
-            'For crested gecko color traits, realistic heritability sits around 0.3–0.6, meaningful but not absolute. That\'s why selection works over generations but individual results vary.',
+            'For crested gecko color traits, realistic heritability sits around 0.3 to 0.6, meaningful but not absolute. That\'s why selection works over generations but individual results vary.',
             'High-heritability traits respond quickly to selection. Low-heritability traits (things influenced heavily by incubation temperature, diet, stress) barely respond no matter how carefully you pair.',
             'Selection differential: the gap between the average of your breeders and the average of your whole collection. The larger the gap, the more "pressure" you\'re applying. You can\'t just pick one amazing pair and expect everything to shift, you need to be culling the bottom of your lines too.',
             'Response to selection = heritability × selection differential. This is the math behind why selective breeding is slow. A "one generation overnight transformation" is almost always polygenic luck, not a real shift.',
@@ -600,7 +606,7 @@ const SECTIONS = [
             'Progeny testing means: you believe an animal carries a gene, so you pair it with a known animal and examine the offspring to find out.',
             'Testing a suspected het recessive: pair it with a known visual. ~50% of offspring should be visual if the "het" is real. If you get a clutch of 6+ with zero visuals, the het claim is suspect.',
             'Testing a suspected incomplete dominant: pair it with a known non-carrier. ~50% of offspring should show the visual form. Most cases prove themselves in the first clutch.',
-            'Sample sizes matter. "Zero out of 2 eggs" proves nothing, the math still allows a real het to produce two non-visuals in a row 25% of the time. You need at least 6–10 offspring before drawing conclusions.',
+            'Sample sizes matter. "Zero out of 2 eggs" proves nothing, the math still allows a real het to produce two non-visuals in a row 25% of the time. You need at least 6 to 10 offspring before drawing conclusions.',
             'Write down the pairing, the parents\' documented genetics, the clutch dates, and every offspring phenotype. This becomes the evidence base if you want to prove or disprove a claim publicly.',
           ]} />
         )

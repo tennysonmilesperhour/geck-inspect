@@ -125,7 +125,7 @@ export default function GeneticsGuide() {
     <>
       <Seo
         title="Crested Gecko Genetics Guide"
-        description="Interactive crested gecko (Correlophus ciliatus) genetics reference: dominant, recessive, and incomplete-dominant inheritance explained with Punnett squares and diagrams. Covers proven morphs (Lilly White, Axanthic, Cappuccino, Soft Scale, White Wall), polygenic traits (harlequin, pinstripe, dalmatian, flame), lethal alleles, pigment biology, selective breeding strategy, and 80+ glossary terms."
+        description="Interactive crested gecko (Correlophus ciliatus) genetics reference: dominant, recessive, and incomplete-dominant inheritance explained with Punnett squares and diagrams. Covers proven morphs (Lilly White, Axanthic, Cappuccino, Soft Scale, White Wall, Phantom), pattern genes and polygenic traits (Harlequin, Pinstripe, Dalmatian, Flame) with both the hobby and Foundation Genetics views, lethal alleles, pigment biology, selective breeding strategy, and 80+ glossary terms."
         path="/GeneticsGuide"
         type="article"
         author="Geck Inspect"

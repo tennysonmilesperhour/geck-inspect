@@ -21,7 +21,7 @@
  *   foundationGenetics: 'optional paragraph explaining the Foundation Genetics single-locus model when it differs from the traditional label',
  *   rarity: 'common',                     // common | uncommon | rare | very_rare
  *   priceTier: '$',                       // $ | $$ | $$$ | $$$$  (see PRICE_TIERS)
- *   priceRange: '$80–$250',               // USD estimate for a typical adult
+ *   priceRange: '$80 to $250',               // USD estimate for a typical adult
  *   summary: 'short one-liner',
  *   description: 'long paragraph(s)',
  *   keyFeatures: ['bullet points'],
@@ -139,9 +139,9 @@ export const RARITY = {
 };
 
 export const PRICE_TIERS = {
-  $: { label: 'Entry ($50–$150)', description: 'Affordable morphs great for first animals.' },
-  $$: { label: 'Mid ($150–$400)', description: 'Established morphs with solid market demand.' },
-  $$$: { label: 'High ($400–$1,000)', description: 'Sought-after morphs and strong combos.' },
+  $: { label: 'Entry ($50 to $150)', description: 'Affordable morphs great for first animals.' },
+  $$: { label: 'Mid ($150 to $400)', description: 'Established morphs with solid market demand.' },
+  $$$: { label: 'High ($400 to $1,000)', description: 'Sought-after morphs and strong combos.' },
   $$$$: { label: 'Premium ($1,000+)', description: 'Top-tier breeders, rare combos, and proven project animals.' },
 };
 
@@ -163,7 +163,7 @@ export const MORPHS = [
       'The hobby has two ways of reading Harlequin genetics, and this guide presents both. The traditional framing calls it polygenic: pattern quality visibly improves through selective pairing and no simple ratio predicts outcomes. Foundation Genetics models an underlying single gene that is incomplete dominant: one copy makes a Harlequin, two copies are the genetic basis for Extreme Harlequin expression, while polygenic modifiers still decide how bold and high the pattern climbs. Both models agree on practice: pair your best-patterned animals and expect a quality gradient, not a Punnett-square guarantee.',
     rarity: 'common',
     priceTier: '$$',
-    priceRange: '$120–$400',
+    priceRange: '$120 to $400',
     summary:
       'High-contrast pattern morph with bold markings covering the legs and climbing high up the dorsum.',
     description:
@@ -193,11 +193,11 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'uncommon',
     priceTier: '$$$',
-    priceRange: '$350–$900',
+    priceRange: '$350 to $900',
     summary:
       'The top tier of harlequin pattern, high-coverage, high-contrast, often with solid cream flanks and legs.',
     description:
-      'Extreme harlequin is the highest expression of the harlequin polygenic trait: pattern that nearly consumes the base color on the legs, flanks, and sometimes the dorsum. Top extreme harlequin animals can appear nearly cream-and-dark-red all over. The line between harlequin and extreme harlequin is a judgment call rather than a bright line, but experienced keepers use coverage (≥60–70% of flanks) as a rough threshold.',
+      'Extreme harlequin is the highest expression of the harlequin polygenic trait: pattern that nearly consumes the base color on the legs, flanks, and sometimes the dorsum. Top extreme harlequin animals can appear nearly cream-and-dark-red all over. The line between harlequin and extreme harlequin is a judgment call rather than a bright line, but experienced keepers use coverage (≥60 to 70% of flanks) as a rough threshold.',
     keyFeatures: [
       'Extensive pattern coverage on flanks and legs, often approaching 70%+ of the lateral surface',
       'Pattern frequently continues across the shoulders and neck',
@@ -228,11 +228,11 @@ export const MORPHS = [
       'Two readings coexist in the hobby. Traditionally Pinstripe is described as polygenic because completeness (partial to full) responds to selective breeding. Foundation Genetics models it as a dominant gene: one copy produces pinstriping, and homozygous animals often show more complete or stronger stripes. The polygenic part is real either way; it lives in the modifiers that decide how complete the stripe is, not in whether the trait is present.',
     rarity: 'common',
     priceTier: '$$',
-    priceRange: '$120–$350',
+    priceRange: '$120 to $350',
     summary:
       'Raised cream scales running along the dorsal ridge from neck to tail base.',
     description:
-      'Pinstripe is a polygenic pattern trait where the raised scales along the dorsal ridge become cream or yellow, forming a bright parallel line down the back. Pinstripe quality is judged by percentage, "full pinstripe" describes 100% coverage from the back of the neck to the base of the tail. Partial pinstripe (50–90%) is far more common than full.',
+      'Pinstripe is a polygenic pattern trait where the raised scales along the dorsal ridge become cream or yellow, forming a bright parallel line down the back. Pinstripe quality is judged by percentage, "full pinstripe" describes 100% coverage from the back of the neck to the base of the tail. Partial pinstripe (50 to 90%) is far more common than full.',
     keyFeatures: [
       'Two parallel cream/yellow stripes along the raised dorsal scales',
       'Percentage graded: 100% = "full pinstripe", 75% = "75% pin", etc.',
@@ -256,9 +256,13 @@ export const MORPHS = [
     aliases: ['Phantom', 'Reverse Pin'],
     category: 'pattern',
     inheritance: 'polygenic',
+    // Dual-model note (D13): the traditional label stays; the paragraph
+    // below gives the Foundation Genetics reading.
+    foundationGenetics:
+      'The traditional hobby reading treats Phantom Pinstripe as a polygenic pinstripe style kept going by selection. Foundation Genetics links the look to Phantom, a simple recessive gene: two copies add dark pigment and mute pattern, and on a pinstriped animal the raised dorsal scales stay the base color instead of turning cream. Under that reading a Phantom Pinstripe is a visual Phantom with Pinstripe, and one hidden copy (Het Phantom) looks normal. In Geck Inspect a plain "Phantom" tag means a visual Phantom; ask the breeder whether the line has proven out before paying for a Phantom or Het Phantom claim.',
     rarity: 'rare',
     priceTier: '$$$',
-    priceRange: '$500–$1,500',
+    priceRange: '$500 to $1,500',
     summary:
       'Raised dorsal scales that remain dark (unpigmented cream) while the flanks carry bright pattern, a reversed look.',
     description:
@@ -291,14 +295,14 @@ export const MORPHS = [
       'Two readings coexist. The traditional view treats Dalmatian spotting as polygenic since spot count varies wildly and climbs with selective pairing. Foundation Genetics models a dominant gene: one copy gives a visible Dalmatian (passing to about half of offspring), two copies give denser spotting and pass spots to every offspring. Spot count on top of that base is modifier-driven, and spots keep developing with age, so a sparse hatchling can mature into a heavily spotted adult.',
     rarity: 'common',
     priceTier: '$$',
-    priceRange: '$100–$400',
+    priceRange: '$100 to $400',
     summary:
       'Discrete dark spots scattered across the body, black is most common, red and occasionally white also occur.',
     description:
       'Dalmatian is a polygenic trait producing discrete, round dark spots across the gecko\'s body. Spot count ranges from a few dozen on a "light dalmatian" to hundreds on a "super dalmatian." Spots typically develop with age, a hatchling may show a handful, while the same animal at 18 months may be peppered head to tail. Red dalmatian spots are rarer and often co-occur with a red base.',
     keyFeatures: [
       'Discrete round dark spots, not pattern smudging or flecking',
-      'Spots darken and increase in count as the gecko ages, peaking around 12–18 months',
+      'Spots darken and increase in count as the gecko ages, peaking around 12 to 18 months',
       'Quality graded by spot count, contrast, and distribution',
       'Stacks with virtually every other trait: dalmatian harlequin, dalmatian pinstripe, super dalmatian combo animals are common',
     ],
@@ -324,7 +328,7 @@ export const MORPHS = [
       'Under the traditional polygenic reading, Super Dalmatian is simply the far end of the spot-count spectrum reached through selective breeding. Foundation Genetics reads it as the homozygous form of a dominant Dalmatian gene, with polygenic modifiers stacking the 100+ spot counts on top. Practical upshot from both models: pairing two heavily spotted animals is how you get there, and a Super Dalmatian passes spotting to every offspring.',
     rarity: 'uncommon',
     priceTier: '$$$',
-    priceRange: '$300–$800',
+    priceRange: '$300 to $800',
     summary:
       'Extreme dalmatian with 100+ well-defined spots covering nearly the entire body.',
     description:
@@ -351,7 +355,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'common',
     priceTier: '$',
-    priceRange: '$60–$180',
+    priceRange: '$60 to $180',
     summary:
       'A pattern type with color restricted to the dorsum, flanks stay a solid base color.',
     description:
@@ -384,7 +388,7 @@ export const MORPHS = [
       'The traditional hobby reading treats Tiger as a polygenic pattern style. Foundation Genetics goes further: it models tiger as a fixed dominant trait present to some degree in every crested gecko, which cannot be bred out. Under that model, the ratio of tiger to other pattern traits decides whether an animal shows subtle freckling, classic vertical tigering, or heavy brindle. Both views agree that pairing strongly tigered animals intensifies the look.',
     rarity: 'uncommon',
     priceTier: '$$',
-    priceRange: '$150–$400',
+    priceRange: '$150 to $400',
     summary:
       'Horizontal dark banding across the dorsum, running perpendicular to the spine.',
     description:
@@ -412,7 +416,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'uncommon',
     priceTier: '$$',
-    priceRange: '$180–$450',
+    priceRange: '$180 to $450',
     summary:
       'Heavier, more irregular banding than tiger, often described as "broken" or "marbled" tiger.',
     description:
@@ -439,7 +443,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'rare',
     priceTier: '$$$',
-    priceRange: '$400–$1,000',
+    priceRange: '$400 to $1,000',
     summary:
       'Dominant, coverage-heavy brindle with dark pattern consuming most of the dorsum and flanks.',
     description:
@@ -459,7 +463,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'uncommon',
     priceTier: '$$',
-    priceRange: '$150–$400',
+    priceRange: '$150 to $400',
     summary:
       'Intermediate expression between tiger and brindle, sold as a single "T/B" category in much of the hobby.',
     description:
@@ -481,7 +485,7 @@ export const MORPHS = [
     inheritance: 'incomplete-dominant',
     rarity: 'uncommon',
     priceTier: '$$$',
-    priceRange: '$400–$1,000',
+    priceRange: '$400 to $1,000',
     summary:
       'Incomplete-dominant trait that reduces scale size and texture, the animal looks smoother and more velvety.',
     description:
@@ -511,7 +515,7 @@ export const MORPHS = [
     inheritance: 'incomplete-dominant',
     rarity: 'rare',
     priceTier: '$$$$',
-    priceRange: '$1,200–$3,500',
+    priceRange: '$1,200 to $3,500',
     summary:
       'Homozygous form of soft scale, dramatically reduced scales and a near-leather appearance.',
     description:
@@ -523,7 +527,7 @@ export const MORPHS = [
       'High value because of the small pool of proven super animals',
     ],
     history:
-      'First confirmed around 2022–2023 as early soft scale projects matured to the F2 generation.',
+      'First confirmed around 2022 to 2023 as early soft scale projects matured to the F2 generation.',
     combinesWith: ['lilly-white', 'axanthic', 'cappuccino', 'white-wall'],
   },
   {
@@ -534,7 +538,7 @@ export const MORPHS = [
     inheritance: 'incomplete-dominant',
     rarity: 'rare',
     priceTier: '$$$$',
-    priceRange: '$1,500–$4,000',
+    priceRange: '$1,500 to $4,000',
     summary:
       'Structural trait producing a bright white flank that does not fire down, hence "wall of white."',
     description:
@@ -561,7 +565,7 @@ export const MORPHS = [
     inheritance: 'incomplete-dominant',
     rarity: 'rare',
     priceTier: '$$$$',
-    priceRange: '$1,500–$4,000',
+    priceRange: '$1,500 to $4,000',
     summary:
       'Variant of white wall characterized by isolated bright white spots rather than a solid wall.',
     description:
@@ -581,7 +585,7 @@ export const MORPHS = [
     inheritance: 'incomplete-dominant',
     rarity: 'uncommon',
     priceTier: '$$$',
-    priceRange: '$400–$1,200',
+    priceRange: '$400 to $1,200',
     summary:
       'Structural pattern trait creating a distinctive "saddle" mark on the back with a clean dorsal contrast.',
     description:
@@ -609,7 +613,7 @@ export const MORPHS = [
     inheritance: 'incomplete-dominant',
     rarity: 'rare',
     priceTier: '$$$$',
-    priceRange: '$1,500–$3,500',
+    priceRange: '$1,500 to $3,500',
     summary:
       'A combo of Cappuccino and Lilly White, brighter and whiter than a standard Lilly White with dramatic head spotting.',
     description:
@@ -629,7 +633,7 @@ export const MORPHS = [
     inheritance: 'incomplete-dominant',
     rarity: 'uncommon',
     priceTier: '$$$',
-    priceRange: '$300–$900',
+    priceRange: '$300 to $900',
     summary:
       'Proven incomplete-dominant trait producing bold white markings, the super form is lethal.',
     description:
@@ -660,7 +664,7 @@ export const MORPHS = [
     inheritance: 'recessive',
     rarity: 'rare',
     priceTier: '$$$$',
-    priceRange: '$1,500–$4,000',
+    priceRange: '$1,500 to $4,000',
     summary:
       'Proven recessive trait that removes yellow and red pigment, animals appear black, gray, and white.',
     description:
@@ -690,7 +694,7 @@ export const MORPHS = [
     inheritance: 'line-bred',
     rarity: 'rare',
     priceTier: '$$$',
-    priceRange: '$500–$1,500',
+    priceRange: '$500 to $1,500',
     summary:
       'Line-bred trait reducing black pigment, warmer, brighter animals with pale bellies and reduced dark markings.',
     description:
@@ -711,7 +715,7 @@ export const MORPHS = [
     inheritance: 'line-bred',
     rarity: 'common',
     priceTier: '$',
-    priceRange: '$50–$150',
+    priceRange: '$50 to $150',
     summary:
       'Line-bred trait for solid-colored animals with no discernible pattern, often the base for breeding projects.',
     description:
@@ -732,7 +736,7 @@ export const MORPHS = [
     inheritance: 'line-bred',
     rarity: 'rare',
     priceTier: '$$$',
-    priceRange: '$500–$1,500',
+    priceRange: '$500 to $1,500',
     summary:
       'Line-bred ultra-pale, near-white patternless animal, essentially a "super-cream" patternless with no visible markings.',
     description:
@@ -752,7 +756,7 @@ export const MORPHS = [
     inheritance: 'line-bred',
     rarity: 'rare',
     priceTier: '$$$',
-    priceRange: '$400–$1,200',
+    priceRange: '$400 to $1,200',
     summary:
       'Line-bred trait producing a degree of skin translucency, organs and bone structure faintly visible.',
     description:
@@ -779,7 +783,7 @@ export const MORPHS = [
       'Base color is traditionally described as polygenic: reds deepen across generations of selective pairing. Foundation Genetics instead treats Red Base as a suspected recessive gene: two copies produce strong red tones, and single-copy carriers often show a pink cheek blush as a het marker. If the recessive model holds, two non-red animals with blushed cheeks can produce visual reds, which the purely polygenic model would not predict.',
     rarity: 'uncommon',
     priceTier: '$$',
-    priceRange: '$180–$450',
+    priceRange: '$180 to $450',
     summary:
       'Polygenic base color showing true red tones, distinct from red dalmatian or rose-brown animals.',
     description:
@@ -800,7 +804,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'uncommon',
     priceTier: '$$',
-    priceRange: '$150–$350',
+    priceRange: '$150 to $350',
     summary:
       'Polygenic base color in warm orange tones, common and widely produced.',
     description:
@@ -825,7 +829,7 @@ export const MORPHS = [
       'Traditionally lumped in with polygenic base color. Foundation Genetics models Yellow Base as a dominant, naturally hypo-melanistic base that serves as the substrate for combos like Cream and Buckskin. In practice both readings converge: yellow-based animals readily produce yellow-based offspring, and the depth of the yellow still responds to selective pairing.',
     rarity: 'common',
     priceTier: '$',
-    priceRange: '$80–$200',
+    priceRange: '$80 to $200',
     summary:
       'Polygenic base color with bright yellow ground color, common and beginner-friendly.',
     description:
@@ -845,7 +849,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'uncommon',
     priceTier: '$$',
-    priceRange: '$150–$400',
+    priceRange: '$150 to $400',
     summary:
       'Polygenic base color producing a distinctive olive-green or khaki tone.',
     description:
@@ -865,7 +869,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'uncommon',
     priceTier: '$$',
-    priceRange: '$150–$400',
+    priceRange: '$150 to $400',
     summary:
       'Polygenic base color with rich deep-brown tones, like dark chocolate.',
     description:
@@ -885,7 +889,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'rare',
     priceTier: '$$$',
-    priceRange: '$400–$1,000',
+    priceRange: '$400 to $1,000',
     summary:
       'Polygenic base color showing an unusual purple-gray tone, rare and sought-after.',
     description:
@@ -905,7 +909,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'common',
     priceTier: '$',
-    priceRange: '$60–$180',
+    priceRange: '$60 to $180',
     summary:
       'Warm tan or leather-colored base, a classic "starter" color with pleasant earthy tones.',
     description:
@@ -927,7 +931,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'uncommon',
     priceTier: '$$',
-    priceRange: '$150–$450',
+    priceRange: '$150 to $450',
     summary:
       'Cream color applied to harlequin or pinstripe pattern, bright, clean, and highly sought after.',
     description:
@@ -947,7 +951,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'uncommon',
     priceTier: '$$$',
-    priceRange: '$300–$800',
+    priceRange: '$300 to $800',
     summary:
       'Three distinct colors in roughly equal amounts, usually on a Harlequin. Common enough to be sold as its own morph.',
     description:
@@ -967,7 +971,7 @@ export const MORPHS = [
     inheritance: 'polygenic',
     rarity: 'common',
     priceTier: '$',
-    priceRange: '$80–$200',
+    priceRange: '$80 to $200',
     summary:
       'Animal with two clear contrasting colors, typically a base plus one pattern color.',
     description:

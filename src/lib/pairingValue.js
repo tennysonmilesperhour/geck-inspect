@@ -7,21 +7,19 @@
  * Shared by the Pairing Planner ("Maximize predicted value") and the
  * pairing value panel on each breeding plan, so the two always agree.
  */
-import { predict, tagToGenotype, outcomeTraits, outcomeCombos } from '@/lib/genetics';
+import { outcomeTraits, outcomeCombos } from '@/lib/genetics';
+import { predictWeighted } from '@/lib/genetics/predictWeighted';
+import { tagsToSpec } from '@/lib/genetics/tagTranslation';
 import { basicHatchlingValue, valueFromTraitTable } from '@/lib/traitValuation';
 
-export function buildAnimal(gecko) {
-  const result = tagToGenotype(gecko?.morph_tags || []);
-  return {
-    id: gecko?.id,
-    species: 'correlophus_ciliatus',
-    genotype: result.genotype,
-    status: 'active',
-    is_breeder: true,
-    owner_id: gecko?.id,
-    created_at: '',
-    updated_at: '',
-  };
+/**
+ * Odds for a pair of collection geckos. Tags go through the shared app
+ * tag translation (so Soft Scale, White Wall, Phantom and Possible Het
+ * tags count), and possible hets are weighted rather than dropped.
+ * Throws if the engine fails, like predict().
+ */
+export function predictGeckoPair(sire, dam) {
+  return predictWeighted(tagsToSpec(sire?.morph_tags || []), tagsToSpec(dam?.morph_tags || []));
 }
 
 export function outcomeLabel(phenotype) {
@@ -87,7 +85,7 @@ export function pairingEggValue(sire, dam, priceIndex) {
   if (!sire || !dam) return null;
   let prediction;
   try {
-    prediction = predict(buildAnimal(sire), buildAnimal(dam));
+    prediction = predictGeckoPair(sire, dam);
   } catch {
     return null;
   }

@@ -114,6 +114,9 @@ export function buildParentFromState(id, name, state) {
     image_urls: [],
     morph_tags: stateToChips(state),
     genotype_spec: stateToSpec(state),
+    // Chips are labels only; the spec is the source of truth, so the
+    // calculator does not re-read these as collection tags.
+    source: 'manual',
   };
 }
 

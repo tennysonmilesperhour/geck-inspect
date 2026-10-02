@@ -13,6 +13,16 @@
  *   2. src/components/my-geckos/morphTagCatalog.js  (tag picker groups)
  *   3. src/lib/marketAnalytics/taxonomy.js          (analytics kinds)
  *   4. src/components/morph-id/morphTaxonomy.js     (ML training labels)
+ *   5. every tag in the tag picker, run through lib/genetics/tagTranslation.js
+ *   6. the Genetics Guide (src/data/genetics-sections.jsx, genetics-jsonld.js,
+ *      src/pages/GeneticsGuide.jsx)
+ *   7. the genetics glossary (src/data/genetics-glossary.js)
+ *   8. project lines (src/data/project-lines.js)
+ *   9. the Morph Visualizer trait data (src/components/morph-visualizer/data/traits.js)
+ *
+ * Prose surfaces (6 to 9) follow the dual-model policy below: text may
+ * call an engine-modeled gene polygenic or unproven only if the same
+ * passage also names the engine's model or credits Foundation Genetics.
  *
  * Exits 1 with a readable report on any mismatch; 0 when clean.
  */
@@ -22,6 +32,13 @@ import { MORPHS } from '../src/data/morph-guide.js';
 import { MORPH_CATEGORIES } from '../src/components/my-geckos/morphTagCatalog.js';
 import { CANONICAL_MORPHS } from '../src/lib/marketAnalytics/taxonomy.js';
 import { GENETIC_TRAITS } from '../src/components/morph-id/morphTaxonomy.js';
+import { translateMorphTags } from '../src/lib/genetics/tagTranslation.js';
+import { GLOSSARY_GROUPS } from '../src/data/genetics-glossary.js';
+import { PROJECT_LINES } from '../src/data/project-lines.js';
+import { TRAITS_BY_ID as VISUALIZER_TRAITS_BY_ID } from '../src/components/morph-visualizer/data/traits.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
 const problems = [];
 const note = (surface, msg) => problems.push(`[${surface}] ${msg}`);
@@ -47,6 +64,11 @@ traitByName.set('super cappuccino', traitByName.get('cappuccino'));
 traitByName.set('frappuccino', traitByName.get('cappuccino'));
 traitByName.set('super soft scale', traitByName.get('softscale'));
 traitByName.set('super empty back', traitByName.get('empty back') || traitByName.get('empty_back'));
+// Decision D13: White Wall is the engine's Whiteout, and Phantom Pinstripe
+// is how the recessive Phantom reads on a pinstriped animal.
+traitByName.set('white wall', traitByName.get('whiteout'));
+traitByName.set('super white wall', traitByName.get('whiteout'));
+traitByName.set('phantom pinstripe', traitByName.get('phantom'));
 
 const findTrait = (label) => traitByName.get(String(label).toLowerCase().trim());
 
@@ -157,6 +179,169 @@ for (const t of GENETIC_TRAITS) {
   if (trait.dominance !== 'unconfirmed' && inh && inh !== trait.dominance && !inh.startsWith('proto')) {
     note('morphTaxonomy', `${t.id}: inheritance '${t.inheritance}' but engine says '${trait.dominance}'`);
   }
+}
+
+// ---------- 5. every picker tag reaches the engine ---------------------
+// Done-when for audit step 24: each tag produces a genotype or a visible
+// "not used" reason. Tags in the proven-genetics groups must produce a
+// genotype; a reason there means the group is wrong.
+for (const [group, cat] of Object.entries(MORPH_CATEGORIES)) {
+  for (const tag of cat.morphs) {
+    const { used, notUsed, spec } = translateMorphTags([tag]);
+    const hasGenotype = used.length > 0 && Object.keys(spec.loci).length > 0;
+    if (!hasGenotype && notUsed.length === 0) {
+      note('tag-translation', `'${tag}' neither sets a genotype nor gives a not-used reason`);
+    }
+    if (group.startsWith('Proven Genetics') && !hasGenotype) {
+      note('tag-translation', `'${tag}' sits in '${group}' but the engine cannot compute it`);
+    }
+  }
+}
+
+// ---------- prose helpers (dual-model policy) ---------------------------
+const MODELED = new Set(['recessive', 'dominant', 'incomplete_dominant', 'fixed_dominant']);
+// Words too common in ordinary prose to treat as gene names ("fire up").
+const PROSE_SKIP = new Set(['fire', 'bel', 'blizzard']);
+const escapeRe = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const proseNames = [...traitByName.entries()]
+  .filter(([name, t]) => t && MODELED.has(t.dominance) && !PROSE_SKIP.has(name))
+  .map(([name, t]) => ({ re: new RegExp(`\\b${escapeRe(name)}\\b`, 'i'), trait: t }));
+
+const normalizeProse = (text) => String(text || '').toLowerCase().replace(/[-_]/g, ' ');
+
+function mentionsModel(text, dominance) {
+  let norm = normalizeProse(text);
+  const phrase = DOMINANCE_PHRASE[dominance];
+  if (dominance === 'dominant') {
+    norm = norm.replace(/incomplete dominant|fixed dominant|co dominant|codominant/g, '');
+  }
+  return norm.includes(phrase);
+}
+
+const DOUBT = /\bpolygenic\b|not mendelian|not a proven|not proven|line[\s-]?bred|not a single gene|not confirmed as a single/i;
+
+// A comma list of short phrases (SEO keywords) makes no claims.
+const isKeywordList = (text) =>
+  text.includes(',') && !/[.!?]/.test(text) && text.split(',').every((c) => c.trim().split(/\s+/).length <= 4);
+
+/**
+ * A sentence that calls a modeled gene polygenic or unproven must also
+ * give the engine's view: name that gene's engine model in the same
+ * sentence, or the passage credits Foundation Genetics (the dual-model
+ * explanation). A sentence that denies the engine model outright ("not
+ * a proven recessive") fails even when it names the model.
+ */
+function checkPassage(surface, where, text) {
+  if (isKeywordList(text)) return;
+  const credited = /foundation genetics/i.test(text);
+  for (const sentence of String(text).split(/(?<=[.!?])\s+|\n/)) {
+    const traits = new Map();
+    for (const { re, trait } of proseNames) {
+      if (re.test(sentence)) traits.set(trait.id, trait);
+    }
+    for (const trait of traits.values()) {
+      const phrase = DOMINANCE_PHRASE[trait.dominance];
+      const denied = new RegExp(`\\bnot (a |an )?(proven |separate |single )?${phrase}`).test(normalizeProse(sentence));
+      if (denied) {
+        note(surface, `${where}: denies that ${trait.name} is ${phrase}, which is the engine model`);
+        continue;
+      }
+      if (!DOUBT.test(sentence) || credited) continue;
+      if (!mentionsModel(sentence, trait.dominance)) {
+        note(surface, `${where}: calls ${trait.name} polygenic or unproven without the engine model '${phrase}' (or a Foundation Genetics note)`);
+      }
+    }
+  }
+}
+
+/** A passage about one gene must state that gene's engine model. */
+function checkAbout(surface, where, label, text) {
+  const name = String(label).replace(/\s*\(.*\)\s*$/, '').replace(/,.*$/, '').trim();
+  // Super forms and combo names are about one form of a gene; the gene's
+  // own passage carries its model.
+  if (/^super\b/i.test(name) || name.toLowerCase() === 'frappuccino') return;
+  const trait = findTrait(name);
+  if (!trait || !MODELED.has(trait.dominance)) return;
+  if (!mentionsModel(text, trait.dominance)) {
+    note(surface, `${where}: about ${trait.name} but never says '${DOMINANCE_PHRASE[trait.dominance]}' (the engine model)`);
+  }
+}
+
+const here = dirname(fileURLToPath(import.meta.url));
+const readSource = (rel) => readFileSync(resolve(here, '..', rel), 'utf8');
+
+/** String literals in a source file, with line numbers. */
+function stringLiterals(source) {
+  const out = [];
+  const re = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g;
+  let m;
+  while ((m = re.exec(source))) {
+    const text = (m[1] ?? m[2] ?? m[3] ?? '').replace(/\\'/g, "'");
+    if (text.length < 12) continue;
+    out.push({ text, line: source.slice(0, m.index).split('\n').length });
+  }
+  return out;
+}
+
+// ---------- 6. Genetics Guide -----------------------------------------
+const GUIDE_FILES = ['src/data/genetics-sections.jsx', 'src/data/genetics-jsonld.js', 'src/pages/GeneticsGuide.jsx'];
+for (const file of GUIDE_FILES) {
+  const source = readSource(file);
+  for (const { text, line } of stringLiterals(source)) {
+    checkPassage('genetics-guide', `${file}:${line}`, text);
+  }
+}
+// Each guide subsection titled after a gene must state its model.
+{
+  const source = readSource('src/data/genetics-sections.jsx');
+  const titles = [...source.matchAll(/title:\s*'((?:[^'\\]|\\.)*)'/g)];
+  titles.forEach((m, idx) => {
+    const end = idx + 1 < titles.length ? titles[idx + 1].index : source.length;
+    const body = source.slice(m.index, end);
+    const line = source.slice(0, m.index).split('\n').length;
+    checkAbout('genetics-guide', `src/data/genetics-sections.jsx:${line} '${m[1]}'`, m[1], body);
+  });
+}
+
+// ---------- 7. glossary -----------------------------------------------
+for (const group of GLOSSARY_GROUPS) {
+  for (const { term, def } of group.entries) {
+    checkAbout('glossary', `'${term}'`, term, def);
+    checkPassage('glossary', `'${term}'`, `${term}: ${def}`);
+  }
+}
+
+// ---------- 8. project lines ------------------------------------------
+const entryText = (value) => {
+  if (typeof value === 'string') return [value];
+  if (Array.isArray(value)) return value.flatMap(entryText);
+  if (value && typeof value === 'object') return Object.values(value).flatMap(entryText);
+  return [];
+};
+for (const line of PROJECT_LINES) {
+  const text = entryText(line).join(' \n');
+  checkPassage('project-lines', line.slug, text);
+  // A line named after a gene ("Phantom Line", "Cho Cho") must say what
+  // the engine says that gene is.
+  checkAbout('project-lines', line.slug, line.name.replace(/\s+line$/i, ''), text);
+}
+
+// ---------- 9. Morph Visualizer trait data -----------------------------
+const VISUALIZER_TYPES = new Set(['recessive', 'dominant', 'incomplete_dominant']);
+for (const t of Object.values(VISUALIZER_TRAITS_BY_ID)) {
+  const trait = findTrait(t.name);
+  const type = t.genetics?.type;
+  const summary = t.genetics?.summary || '';
+  if (trait && MODELED.has(trait.dominance)) {
+    if (VISUALIZER_TYPES.has(type)) {
+      if (type !== trait.dominance) {
+        note('visualizer', `${t.name}: type '${type}' but engine says '${trait.dominance}'`);
+      }
+    } else if (!mentionsModel(summary, trait.dominance)) {
+      note('visualizer', `${t.name}: shown as '${type}' but the summary does not give the engine model '${DOMINANCE_PHRASE[trait.dominance]}'`);
+    }
+  }
+  checkPassage('visualizer', t.name, `${summary} ${t.description || ''}`);
 }
 
 // 'Lily White' (one l) must never appear as a display label anywhere checked.
