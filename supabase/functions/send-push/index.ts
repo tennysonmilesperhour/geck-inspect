@@ -170,6 +170,8 @@ serve(async (req) => {
     waitlist_signup: "marketplace_inquiry",
     referral_reward: "announcement",
     referral_grant_ended: "announcement",
+    // A rejected Morph Guide photo follows the "Morph Submissions" switch.
+    submission_rejected: "submission_approved",
   };
   if (!allowed.includes(PREF_ALIAS[type] || type)) {
     return json({ delivered: 0, pruned: 0, skipped: "type-not-allowed" });
