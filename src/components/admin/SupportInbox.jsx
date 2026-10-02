@@ -20,7 +20,18 @@ import {
     DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { DELETION_REQUEST_SUBJECT, eraseAccount, erasureSummary } from '@/lib/accountErasure';
 import {
     LifeBuoy,
     Loader2,
@@ -36,6 +47,7 @@ import {
     Bug,
     Lightbulb,
     Star,
+    UserX,
 } from 'lucide-react';
 import { formatDistanceToNowStrict, format } from 'date-fns';
 
@@ -48,6 +60,9 @@ import { formatDistanceToNowStrict, format } from 'date-fns';
  * - Status can be moved via the dropdown; changes persist immediately
  * - "Reply via DM" button drops the admin into Messages prefilled with
  *   the user's email as the recipient
+ * - An open "Account deletion request" ticket gets an "Erase account"
+ *   button that runs the admin-delete-account edge function; on success
+ *   the function closes the ticket itself
  */
 
 const STATUSES = [
@@ -113,6 +128,9 @@ export default function SupportInbox() {
     const [selected, setSelected] = useState(null);
     const [adminNotes, setAdminNotes] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [confirmErase, setConfirmErase] = useState(false);
+    const [isErasing, setIsErasing] = useState(false);
+    const [eraseError, setEraseError] = useState('');
     const { toast } = useToast();
 
     const loadMessages = async () => {
@@ -172,10 +190,11 @@ export default function SupportInbox() {
     const openMessage = (msg) => {
         setSelected(msg);
         setAdminNotes(msg.admin_notes || '');
+        setEraseError('');
     };
 
     const closeMessage = () => {
-        if (isSaving) return;
+        if (isSaving || isErasing) return;
         setSelected(null);
         setAdminNotes('');
     };
@@ -211,6 +230,29 @@ export default function SupportInbox() {
         } catch (err) {
             toast({ title: 'Update failed', description: err.message, variant: 'destructive' });
         }
+    };
+
+    const isOpenDeletionRequest = (msg) =>
+        msg?.subject === DELETION_REQUEST_SUBJECT &&
+        !!msg.user_email &&
+        !['resolved', 'archived'].includes(msg.status);
+
+    const handleErase = async () => {
+        if (!selected?.id || isErasing) return;
+        setIsErasing(true);
+        setEraseError('');
+        try {
+            const result = await eraseAccount({ supportMessageId: selected.id });
+            toast({ title: 'Account erased', description: erasureSummary(result) });
+            setConfirmErase(false);
+            setSelected(null);
+            await loadMessages();
+        } catch (err) {
+            setEraseError(err.message || 'Account erasure failed.');
+            setConfirmErase(false);
+            toast({ title: 'Account not erased', description: err.message, variant: 'destructive' });
+        }
+        setIsErasing(false);
     };
 
     const handleDelete = async (msg) => {
@@ -404,6 +446,36 @@ export default function SupportInbox() {
                                     </div>
                                 </div>
 
+                                {isOpenDeletionRequest(selected) && (
+                                    <div className="rounded-lg border border-red-900 bg-red-950/30 p-4 space-y-2">
+                                        <p className="text-sm font-semibold text-red-200 flex items-center gap-1.5">
+                                            <UserX className="w-4 h-4" />
+                                            Erase this account
+                                        </p>
+                                        <p className="text-xs text-slate-300">
+                                            Deletes the login, profile, geckos, photos and messages of{' '}
+                                            <span className="text-slate-100">{selected.user_email}</span>.
+                                            Records other members depend on (claimed transfers, lineage
+                                            parents, forum threads, reviews) stay with the name removed.
+                                            The ticket closes itself when it is done.
+                                        </p>
+                                        {eraseError && (
+                                            <p role="alert" className="rounded-md border border-red-500/40 bg-red-950/60 p-2 text-xs text-red-200">
+                                                {eraseError}
+                                            </p>
+                                        )}
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            disabled={isErasing}
+                                            onClick={() => setConfirmErase(true)}
+                                        >
+                                            {isErasing && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                                            Erase account
+                                        </Button>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
                                         <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
@@ -467,6 +539,33 @@ export default function SupportInbox() {
                     )}
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={confirmErase} onOpenChange={(open) => !isErasing && setConfirmErase(open)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Erase {selected?.user_email}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This permanently deletes their login, profile, geckos, photos and messages, and
+                            removes their name from records other members depend on. It cannot be undone.
+                            Make sure any Stripe subscription is cancelled first.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isErasing}>Keep the account</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isErasing}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleErase();
+                            }}
+                            className="bg-red-600 hover:bg-red-500 text-white"
+                        >
+                            {isErasing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            Erase permanently
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </Card>
     );
 }

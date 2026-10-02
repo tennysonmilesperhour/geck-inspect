@@ -24,7 +24,7 @@ import {
     Egg,
     Utensils,
     Scale,
-    Newspaper, ListOrdered, TrendingUp, Sunrise,
+    Newspaper, ListOrdered, TrendingUp, Sunrise, UserX,
 } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
@@ -75,6 +75,7 @@ const notificationIcons = {
     waitlist_signup: <ListOrdered className="w-5 h-5 text-emerald-300" />,
     market_alert: <TrendingUp className="w-5 h-5 text-emerald-400" />,
     market_brief: <Sunrise className="w-5 h-5 text-amber-300" />,
+    account_deletion_request: <UserX className="w-5 h-5 text-red-400" />,
 };
 
 const typeLabels = {
@@ -100,6 +101,7 @@ const typeLabels = {
     waitlist_signup: 'Waitlist',
     market_alert: 'Watchlist',
     market_brief: 'Market Brief',
+    account_deletion_request: 'Deletion Request',
 };
 
 export default function NotificationsPage() {
