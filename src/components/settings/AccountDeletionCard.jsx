@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
+import { DELETION_REQUEST_SUBJECT } from '@/lib/accountErasure';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
-const SUBJECT = 'Account deletion request';
+// The admin alert trigger and the erasure function match on this subject.
+const SUBJECT = DELETION_REQUEST_SUBJECT;
 export default function AccountDeletionCard({ user }) {
   const [request, setRequest] = useState(null);
   const [busy, setBusy] = useState(false);

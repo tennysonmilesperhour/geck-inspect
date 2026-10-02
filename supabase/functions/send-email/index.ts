@@ -78,6 +78,11 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   submission_rejected: "level_up",
 };
 
+// Alerts for the admin team. They go to admins whatever their email
+// settings say (a deletion request has a 30-day legal clock), and never to
+// anyone who is not an admin.
+const ADMIN_ALERT_TYPES = new Set(["account_deletion_request"]);
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -252,7 +257,7 @@ serve(async (req) => {
 
   const { data: profile, error: profileErr } = await supabase
     .from("profiles")
-    .select("email_notifications_enabled, email_notification_types")
+    .select("role, email_notifications_enabled, email_notification_types")
     .eq("email", userEmail)
     .maybeSingle();
 
@@ -260,16 +265,22 @@ serve(async (req) => {
     console.warn("send-email: profile lookup failed", profileErr);
     return json({ delivered: 0, skipped: "profile-lookup-failed" });
   }
-  if (!profile || profile.email_notifications_enabled !== true) {
-    return json({ delivered: 0, skipped: "master-off" });
-  }
+  if (ADMIN_ALERT_TYPES.has(type)) {
+    if (!profile || profile.role !== "admin") {
+      return json({ delivered: 0, skipped: "not-admin" });
+    }
+  } else {
+    if (!profile || profile.email_notifications_enabled !== true) {
+      return json({ delivered: 0, skipped: "master-off" });
+    }
 
-  const allowed: string[] = Array.isArray(profile.email_notification_types)
-    ? profile.email_notification_types
-    : [];
-  const prefKey = TYPE_TO_EMAIL_KEY[type] || type;
-  if (!allowed.includes(prefKey)) {
-    return json({ delivered: 0, skipped: "type-not-allowed" });
+    const allowed: string[] = Array.isArray(profile.email_notification_types)
+      ? profile.email_notification_types
+      : [];
+    const prefKey = TYPE_TO_EMAIL_KEY[type] || type;
+    if (!allowed.includes(prefKey)) {
+      return json({ delivered: 0, skipped: "type-not-allowed" });
+    }
   }
 
   const html = renderHtml(title, body, url);

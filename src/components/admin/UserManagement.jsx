@@ -35,6 +35,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from '@/components/ui/textarea';
+import { eraseAccount, erasureSummary } from '@/lib/accountErasure';
 
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Newest first' },
@@ -75,6 +76,7 @@ export default function UserManagement() {
     const [actionType, setActionType] = useState('');
     const [messageContent, setMessageContent] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [actionError, setActionError] = useState('');
     const [showUserDetail, setShowUserDetail] = useState(false);
     const { toast } = useToast();
 
@@ -184,6 +186,7 @@ export default function UserManagement() {
     const handleUserAction = async (user, action) => {
         setSelectedUser(user);
         setActionType(action);
+        setActionError('');
         setShowUserDetail(false);
         
         if (action === 'message') {
@@ -195,6 +198,7 @@ export default function UserManagement() {
         if (!selectedUser || !actionType) return;
         
         setIsProcessing(true);
+        setActionError('');
         try {
             switch (actionType) {
                 case 'makeAdmin':
@@ -225,10 +229,14 @@ export default function UserManagement() {
                     });
                     toast({ title: "Success", description: `${selectedUser.full_name} is no longer an expert.` });
                     break;
-                case 'delete':
-                    await User.delete(selectedUser.id);
-                    toast({ title: "Success", description: `${selectedUser.full_name} has been deleted.` });
+                case 'delete': {
+                    // Full erasure (data, photos, messages and the login)
+                    // through the admin-delete-account edge function. Deleting
+                    // the profile row alone left everything else behind.
+                    const result = await eraseAccount({ profileId: selectedUser.id, email: selectedUser.email });
+                    toast({ title: "Account erased", description: erasureSummary(result) });
                     break;
+                }
                 case 'message':
                     if (messageContent.trim()) {
                         // From the signed-in admin's own account, so the member's
@@ -257,7 +265,12 @@ export default function UserManagement() {
             setMessageContent('');
         } catch (error) {
             console.error(`Failed to ${actionType}:`, error);
-            toast({ title: "Error", description: "An error occurred.", variant: "destructive" });
+            if (actionType === 'delete') setActionError(error.message);
+            toast({
+                title: actionType === 'delete' ? "Account not erased" : "Error",
+                description: actionType === 'delete' ? error.message : "An error occurred.",
+                variant: "destructive",
+            });
         }
         setIsProcessing(false);
     };
@@ -520,15 +533,20 @@ export default function UserManagement() {
             <Dialog open={!!selectedUser && !!actionType && actionType !== 'message' && !showUserDetail} onOpenChange={() => { setSelectedUser(null); setActionType(''); }}>
                 <DialogContent className="bg-slate-900 border-slate-700 text-white">
                     <DialogHeader>
-                        <DialogTitle>Confirm Action</DialogTitle>
+                        <DialogTitle>{actionType === 'delete' ? 'Erase account' : 'Confirm Action'}</DialogTitle>
                         <DialogDescription>
-                            {actionType === 'delete' && `Are you sure you want to permanently delete ${selectedUser?.full_name}? This action cannot be undone.`}
+                            {actionType === 'delete' && `Permanently erase ${selectedUser?.full_name || selectedUser?.email}'s account? This deletes their login, profile, geckos, photos and messages. Records other members depend on (transfers, lineage parents, forum threads, reviews) stay, with their name removed. This cannot be undone.`}
                             {actionType === 'makeAdmin' && `Grant admin privileges to ${selectedUser?.full_name}?`}
                             {actionType === 'removeAdmin' && `Remove admin privileges from ${selectedUser?.full_name}?`}
                             {actionType === 'makeExpert' && `Grant expert verification status to ${selectedUser?.full_name}?`}
                             {actionType === 'removeExpert' && `Remove expert status from ${selectedUser?.full_name}?`}
                         </DialogDescription>
                     </DialogHeader>
+                    {actionError && (
+                        <p role="alert" className="rounded-md border border-red-500/40 bg-red-950/40 p-3 text-sm text-red-200">
+                            {actionError}
+                        </p>
+                    )}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => { setSelectedUser(null); setActionType(''); }}>
                             Cancel
@@ -539,7 +557,7 @@ export default function UserManagement() {
                             variant={actionType === 'delete' ? 'destructive' : 'default'}
                         >
                             {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            Confirm
+                            {actionType === 'delete' ? 'Erase account' : 'Confirm'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

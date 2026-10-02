@@ -9,3 +9,8 @@ verify_jwt = false
 # the customer UUID from that session, never from a request body.
 [functions.revenuecat-sync]
 verify_jwt = true
+
+# Account erasure. Every caller is a signed-in admin, so the gateway rejects
+# anonymous calls; the handler then checks the admin role itself.
+[functions.admin-delete-account]
+verify_jwt = true

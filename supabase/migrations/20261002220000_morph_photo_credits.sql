@@ -163,6 +163,7 @@ begin
     when 'market_alert'           then 'Watchlist match'
     when 'market_brief'           then 'Your crested gecko market today'
     when 'vet_followup'           then 'Vet follow-up'
+    when 'account_deletion_request' then 'Account deletion request'
     else 'Geck Inspect'
   end;
   v_body := coalesce(NEW.content, '');
