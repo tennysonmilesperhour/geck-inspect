@@ -196,8 +196,8 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                     <DialogDescription className="text-center text-slate-400 mt-2">
                         {isGeckoLimit ? (
                             <>
-                                You've reached the limit of <strong className="text-white">{currentCount} geckos</strong> on your current plan.
-                                Upgrade to add more geckos to your collection.
+                                You've reached the limit of <strong className="text-white">{currentCount} active geckos</strong> on your current plan.
+                                Every gecko you have stays. Archive one you no longer keep to free a slot, or upgrade to add more.
                             </>
                         ) : isPairLimit ? (
                             <>
@@ -259,10 +259,6 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                                     </li>
                                 </>
                             )}
-                            <li className="flex items-center gap-2 text-slate-300">
-                                <Check className="w-4 h-4 text-emerald-400" />
-                                <span>Priority support</span>
-                            </li>
                         </ul>
                     </div>
 

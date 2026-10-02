@@ -32,7 +32,7 @@ import ParentAutocomplete from './form/ParentAutocomplete';
 // Back-compat alias so the rest of this file doesn't need to change
 const initialFormData = INITIAL_FORM_DATA;
 
-export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onArchive, breedingPlan = null, feedingGroups: feedingGroupsProp = null, idSettings = null }) {
+export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onArchive, onMarkSold, breedingPlan = null, feedingGroups: feedingGroupsProp = null, idSettings = null }) {
     const { toast } = useToast();
     const saveRequestId = useRef(crypto.randomUUID());
     const savingRef = useRef(false);
@@ -788,7 +788,21 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="status">Status</Label>
-                            <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale || isArchived}>
+                            <Select
+                                value={formData.status}
+                                onValueChange={(v) => {
+                                    // A saved gecko marked Sold goes through the
+                                    // archive dialog, which asks for the sale
+                                    // price so Business Tools records the sale
+                                    // and the gecko leaves the active count.
+                                    if (v === 'Sold' && gecko?.id && onMarkSold) {
+                                        onMarkSold(gecko.id);
+                                        return;
+                                    }
+                                    handleChange('status', v);
+                                }}
+                                disabled={isForSale || isArchived}
+                            >
                                 <SelectTrigger aria-label="Status" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                     <SelectItem value="Pet" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Pet</SelectItem>

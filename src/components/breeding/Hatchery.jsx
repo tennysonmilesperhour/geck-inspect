@@ -21,6 +21,9 @@ import {
     getIncubationProfile,
 } from '@/lib/incubationProfiles';
 
+// Must match the sort options in Settings (Hatchery Preferences).
+const HATCHERY_SORTS = ['incubation_longest', 'incubation_shortest', 'hatch_date_asc', 'hatch_date_desc', 'lay_date_desc', 'lay_date_asc'];
+
 export default function Hatchery() {
     const { toast } = useToast();
     const [eggs, setEggs] = useState([]);
@@ -52,7 +55,10 @@ export default function Hatchery() {
         const loadUserPreference = async () => {
             try {
                 const currentUser = await User.me();
-                if (currentUser?.default_breeding_sort) {
+                // Settings > Hatchery Preferences. Older accounts may hold a
+                // breeding plan sort value from before that setting was
+                // fixed; ignore anything this list does not offer.
+                if (HATCHERY_SORTS.includes(currentUser?.default_breeding_sort)) {
                     setSortBy(currentUser.default_breeding_sort);
                 }
                 if (currentUser?.incubation_temperature_range) {

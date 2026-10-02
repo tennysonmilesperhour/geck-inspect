@@ -126,6 +126,9 @@ function parseMorphTags(raw) {
  * @param {string}  options.importMode, 'create_and_update' or 'create_only'
  * @param {boolean} options.createBreedingPairs, upsert BreedingPlan for each (sire, dam) pair resolved from rows
  * @param {boolean} options.importEggs, create Egg records from rows that have egg_lay_date + a resolved pair
+ * @param {number}  [options.geckoLimit], the plan's active gecko limit (Infinity or omitted for none).
+ *   New geckos stop at the limit; rows past it are skipped with a warning
+ *   and existing geckos are still updated (decision D12).
  * @returns {{ success: boolean, results: { processed, created, updated, pairsCreated, eggsCreated, errors, warnings } }}
  */
 export async function importGeckosFromCSV({
@@ -133,11 +136,13 @@ export async function importGeckosFromCSV({
   importMode = 'create_and_update',
   createBreedingPairs = false,
   importEggs = false,
+  geckoLimit = Infinity,
 }) {
   const results = {
     processed: 0,
     created: 0,
     updated: 0,
+    skippedForLimit: 0,
     pairsCreated: 0,
     eggsCreated: 0,
     errors: [],
@@ -161,6 +166,13 @@ export async function importGeckosFromCSV({
     results.errors.push('Failed to load existing geckos: ' + err.message);
     return { success: false, data: { success: false, results } };
   }
+
+  // New geckos this import may still add under the plan limit. Counted
+  // like the database trigger: owned, not archived.
+  const limit = Number.isFinite(geckoLimit) ? geckoLimit : Infinity;
+  let slotsLeft = limit === Infinity
+    ? Infinity
+    : Math.max(0, limit - existingGeckos.filter((g) => !g.archived).length);
 
   // Build lookup maps
   const byIdCode = new Map();
@@ -267,9 +279,17 @@ export async function importGeckosFromCSV({
         if (geckoIdCode) byIdCode.set(geckoIdCode.toLowerCase(), geckoRecord);
         byId.set(existing.id, geckoRecord);
       } else {
+        if (slotsLeft <= 0) {
+          results.skippedForLimit++;
+          results.warnings.push(
+            `${rowLabel}: "${name}" skipped, your plan holds up to ${limit} active geckos. Archive geckos you no longer keep or upgrade, then import again.`
+          );
+          continue;
+        }
         // Create new
         geckoRecord = await Gecko.create(cleanData);
         results.created++;
+        slotsLeft--;
         if (geckoRecord.gecko_id_code) {
           byIdCode.set(geckoRecord.gecko_id_code.toLowerCase(), geckoRecord);
         }

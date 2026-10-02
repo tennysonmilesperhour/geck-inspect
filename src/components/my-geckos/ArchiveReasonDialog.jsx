@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Skull, DollarSign, HelpCircle } from 'lucide-react';
@@ -14,10 +14,21 @@ const REASONS = [
  * Asks why a gecko is being archived. "Passed Away" and "Other" confirm
  * straight away; "Sold" first asks what it sold for, so Business Tools
  * has the real price. onConfirm(reason, extraFields).
+ *
+ * initialReason="sold" opens straight on the sale questions, used when
+ * a member picks "Sold" as the status in the gecko form.
  */
-export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoName, gecko, defaultSaleCategory = '' }) {
+export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoName, gecko, defaultSaleCategory = '', initialReason = null }) {
   const [selected, setSelected] = useState(null);
   const [sale, setSale] = useState(() => initialSaleDetails(gecko, defaultSaleCategory));
+
+  useEffect(() => {
+    if (open && initialReason === 'sold') {
+      setSelected('sold');
+      setSale(initialSaleDetails(gecko, defaultSaleCategory));
+    }
+    // Only when the dialog opens; the member can still pick another reason.
+  }, [open, initialReason]);
 
   const reset = () => {
     setSelected(null);

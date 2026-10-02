@@ -18,7 +18,7 @@ function memoryStorage() {
 globalThis.window = globalThis;
 globalThis.localStorage = memoryStorage();
 
-const { buildReferralLink, applyPendingReferral } = await import('../referral');
+const { buildReferralLink, applyPendingReferral, accountPredatesReferral } = await import('../referral');
 
 describe('buildReferralLink', () => {
   it('returns an empty string without a code', () => {
@@ -72,5 +72,33 @@ describe('applyPendingReferral', () => {
     await applyPendingReferral({ email: 'keeper@example.com' });
     expect(localStorage.getItem('geck_inspect_pending_referral')).toBe('ab12cd34');
     warn.mockRestore();
+  });
+});
+
+describe('referrals are for new accounts only', () => {
+  beforeEach(() => {
+    rpc.mockReset();
+    localStorage.clear();
+  });
+
+  it('skips an account that existed before the link was opened', async () => {
+    localStorage.setItem('geck_inspect_pending_referral', 'ab12cd34');
+    localStorage.setItem('geck_inspect_pending_referral_at', String(Date.parse('2026-10-01T12:00:00Z')));
+    await applyPendingReferral({ email: 'old@example.com', created_date: '2026-03-01T00:00:00Z' });
+    expect(rpc).not.toHaveBeenCalled();
+    expect(localStorage.getItem('geck_inspect_pending_referral')).toBeNull();
+  });
+
+  it('applies the code for an account created after the link was opened', async () => {
+    localStorage.setItem('geck_inspect_pending_referral', 'ab12cd34');
+    localStorage.setItem('geck_inspect_pending_referral_at', String(Date.parse('2026-10-01T12:00:00Z')));
+    rpc.mockResolvedValue({ data: true, error: null });
+    await applyPendingReferral({ email: 'new@example.com', created_date: '2026-10-01T12:03:00Z' });
+    expect(rpc).toHaveBeenCalledWith('apply_referral_code', { p_code: 'ab12cd34' });
+  });
+
+  it('leaves the decision to the database when either date is unknown', () => {
+    expect(accountPredatesReferral({ created_date: '2026-01-01T00:00:00Z' }, null)).toBe(false);
+    expect(accountPredatesReferral({}, Date.now())).toBe(false);
   });
 });

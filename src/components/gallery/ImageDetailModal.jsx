@@ -21,12 +21,14 @@ export default function ImageDetailModal({ data, onClose }) {
         ? image.primary_morph.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
         : 'Unknown';
 
-    const uploaderName =
-        uploader?.full_name ||
-        uploader?.breeder_name ||
-        uploader?.email?.split('@')[0] ||
-        image.created_by?.split('@')[0] ||
-        'A community member';
+    // Settings > Privacy > "Show My Name on Gallery Photos". Off, or a
+    // private profile (read_profiles returns no row for it), shows a
+    // neutral label with no profile link. The email prefix is never used
+    // as a fallback name, since it would leak part of a private address.
+    const showUploader = Boolean(uploader) && uploader.show_username_on_images !== false;
+    const uploaderName = showUploader
+        ? (uploader.full_name || uploader.business_name || uploader.breeder_name || 'A community member')
+        : 'a community member';
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
@@ -35,7 +37,7 @@ export default function ImageDetailModal({ data, onClose }) {
                     <DialogTitle className="text-2xl text-slate-100">{morphDisplayName}</DialogTitle>
                     <DialogDescription className="text-slate-400">
                         Uploaded by{' '}
-                        {uploader ? (
+                        {showUploader ? (
                             <Link to={createPageUrl(`PublicProfile?userId=${uploader.id}`)} className="text-emerald-400 hover:underline">
                                 {uploaderName}
                             </Link>

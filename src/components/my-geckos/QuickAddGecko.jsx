@@ -12,6 +12,7 @@ import { UploadFile } from '@/integrations/Core';
 import { supabase } from '@/lib/supabaseClient';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { captureEvent } from '@/lib/posthog';
+import { isGeckoLimitError } from '@/lib/geckoLimit';
 
 // Crested geckos on CGD are usually fed every 2 to 3 days.
 const DEFAULT_FEEDING_INTERVAL_DAYS = 3;
@@ -29,9 +30,11 @@ const SEXES = ['Unsexed', 'Female', 'Male'];
  * the first point on the growth chart.
  *
  * Props: open, user, onClose(), onSaved(gecko), onMoreDetails(draft),
- * onLogWeight(gecko).
+ * onLogWeight(gecko), slotsLeftAtOpen (how many more active geckos the
+ * plan allows when the dialog opened; Infinity for unlimited plans),
+ * onLimitReached() (opens the upgrade prompt).
  */
-export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight }) {
+export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, slotsLeftAtOpen = Infinity, onLimitReached }) {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const requestIdRef = useRef(crypto.randomUUID());
@@ -46,6 +49,11 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(null);
   const [addedCount, setAddedCount] = useState(0);
+  // The plan limit is checked when the dialog opens; each save here uses
+  // one more slot, so "Add another" stops at the limit instead of letting
+  // a free account pass 10 (the database refuses it anyway).
+  const slotsAtOpenRef = useRef(slotsLeftAtOpen);
+  const atLimit = slotsAtOpenRef.current - addedCount <= 0;
 
   const resetForAnother = () => {
     requestIdRef.current = crypto.randomUUID();
@@ -143,6 +151,11 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
       onSaved?.(gecko);
     } catch (err) {
       console.error('Quick add failed:', err);
+      if (isGeckoLimitError(err) && onLimitReached) {
+        setSaving(false);
+        onLimitReached();
+        return;
+      }
       toast({ title: 'Gecko could not be saved', description: err.message || 'Your entries are still here. Please try again.', variant: 'destructive' });
     }
     setSaving(false);
@@ -175,9 +188,15 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
                   </Button>
                 </Link>
               )}
-              <Button variant="outline" className="w-full min-h-11 border-slate-600 text-slate-100" onClick={resetForAnother}>
-                <PlusCircle className="w-4 h-4 mr-2" /> Add another gecko
-              </Button>
+              {atLimit ? (
+                <Button variant="outline" className="w-full min-h-11 border-slate-600 text-slate-100" onClick={() => onLimitReached?.()}>
+                  <PlusCircle className="w-4 h-4 mr-2" /> Plan limit reached, see plans
+                </Button>
+              ) : (
+                <Button variant="outline" className="w-full min-h-11 border-slate-600 text-slate-100" onClick={resetForAnother}>
+                  <PlusCircle className="w-4 h-4 mr-2" /> Add another gecko
+                </Button>
+              )}
               <Button variant="ghost" className="w-full min-h-11 text-slate-300" onClick={() => onClose?.()}>
                 Done
               </Button>

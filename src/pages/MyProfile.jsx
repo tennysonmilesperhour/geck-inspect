@@ -221,10 +221,8 @@ function MyProfileScreen() {
             // Same default as Settings and the column: an empty list here was
             // saved back and turned off every email type.
             email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
-            calendar_alerts_enabled: currentUser.calendar_alerts_enabled ?? true,
             is_public_profile: currentUser.is_public_profile ?? true,
             show_username_on_images: currentUser.show_username_on_images ?? true,
-            allow_profile_clicks: currentUser.allow_profile_clicks ?? true,
             sidebar_badge_preference: currentUser.sidebar_badge_preference || 'collection'
         });
     };
@@ -853,8 +851,8 @@ function MyProfileScreen() {
                                     
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <Label htmlFor="show-username" className="text-slate-200 font-medium">Show Username on Images</Label>
-                                            <p className="text-sm text-slate-400">Display your name on photos you upload</p>
+                                            <Label htmlFor="show-username" className="text-slate-200 font-medium">Show My Name on Gallery Photos</Label>
+                                            <p className="text-sm text-slate-400">Photos you share to the community Gallery name you as the uploader</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs text-slate-400">
@@ -864,23 +862,6 @@ function MyProfileScreen() {
                                                 id="show-username"
                                                 checked={editData.show_username_on_images}
                                                 onCheckedChange={(checked) => handleSettingChange('show_username_on_images', checked)}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <Label htmlFor="allow-clicks" className="text-slate-200 font-medium">Allow Profile Clicks</Label>
-                                            <p className="text-sm text-slate-400">Let others click to view your profile</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-slate-400">
-                                                {editData.allow_profile_clicks ? 'Allow' : 'Block'}
-                                            </span>
-                                            <Switch
-                                                id="allow-clicks"
-                                                checked={editData.allow_profile_clicks}
-                                                onCheckedChange={(checked) => handleSettingChange('allow_profile_clicks', checked)}
                                             />
                                         </div>
                                     </div>
@@ -939,23 +920,6 @@ function MyProfileScreen() {
                                             ))}
                                         </div>
                                     )}
-
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <Label htmlFor="calendar-alerts" className="text-slate-200 font-medium">Calendar Alerts</Label>
-                                            <p className="text-sm text-slate-400">Breeding event reminders</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-slate-400">
-                                                {editData.calendar_alerts_enabled ? 'Enabled' : 'Disabled'}
-                                            </span>
-                                            <Switch
-                                                id="calendar-alerts"
-                                                checked={editData.calendar_alerts_enabled}
-                                                onCheckedChange={(checked) => handleSettingChange('calendar_alerts_enabled', checked)}
-                                            />
-                                        </div>
-                                    </div>
                                 </CardContent>
                             </Card>
 

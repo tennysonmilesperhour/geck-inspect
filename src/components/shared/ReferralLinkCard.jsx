@@ -11,8 +11,12 @@ import { buildReferralLink } from '@/lib/referral';
 // Every signed-in member has a link. When someone who signed up through it
 // starts a paid plan, the referrer gets one free month of Keeper (a month
 // credited to the next bill if they already subscribe); the reward is
-// settled server-side by award_referral_reward(). Renders nothing for
-// guests and signed-out visitors, since there is no link to share.
+// settled server-side by award_referral_reward(). Only a brand new
+// account that has never had a plan can be referred (apply_referral_code).
+// Grandfathered Breeder members already have Breeder free for life, so a
+// Keeper month would give them nothing: they see the link without a
+// reward promise. Renders nothing for guests and signed-out visitors,
+// since there is no link to share.
 export default function ReferralLinkCard({ className = '' }) {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
@@ -21,6 +25,7 @@ export default function ReferralLinkCard({ className = '' }) {
 
   const link = buildReferralLink(user.referral_code);
   const paidReferrals = Number(user.referral_signup_count) || 0;
+  const isGrandfathered = user.subscription_status === 'grandfathered';
 
   const handleCopy = async () => {
     if (!link) return;
@@ -43,12 +48,20 @@ export default function ReferralLinkCard({ className = '' }) {
               Refer a keeper
             </span>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-emerald-100/80">
-            Share your link with another crested gecko keeper. When they start a
-            paid plan, you get{' '}
-            <span className="font-semibold text-emerald-200">a free month of Keeper</span>.
-            Already subscribed? A month comes off your next bill.
-          </p>
+          {isGrandfathered ? (
+            <p className="mt-2 text-sm leading-relaxed text-emerald-100/80">
+              Share your link with another crested gecko keeper. Your Breeder plan
+              is already free for life, so there is no reward to add, but every
+              new keeper helps the community grow.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm leading-relaxed text-emerald-100/80">
+              Share your link with a crested gecko keeper who is new to Geck
+              Inspect. When they sign up through it and start a paid plan, you get{' '}
+              <span className="font-semibold text-emerald-200">a free month of Keeper</span>.
+              Already subscribed? A month comes off your next bill.
+            </p>
+          )}
           {paidReferrals > 0 && (
             <p className="mt-1.5 text-xs text-emerald-300/80">
               {paidReferrals} paid {paidReferrals === 1 ? 'referral' : 'referrals'} so far
