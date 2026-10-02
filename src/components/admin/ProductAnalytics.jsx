@@ -185,13 +185,6 @@ const EVENT_REFERENCE = [
     ],
   },
   {
-    category: 'Community',
-    events: [
-      { name: 'giveaway_created', what: 'A creator launched a new giveaway.' },
-      { name: 'giveaway_entered', what: 'A user entered an existing giveaway.' },
-    ],
-  },
-  {
     category: 'Automatic',
     events: [
       { name: 'page_view', what: 'First-party SPA pageview, one user_events row per navigation.' },

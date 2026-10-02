@@ -9,6 +9,7 @@ vi.mock('@/lib/posthog', () => ({ captureEvent: vi.fn() }));
 vi.mock('@/lib/supabaseClient', () => ({ supabase: { from: vi.fn() } }));
 vi.mock('@/lib/store/cart', () => ({ addToCart: vi.fn() }));
 import AddToCartButton from '@/components/store/AddToCartButton';
+import { isAwaitingCheckout } from '@/lib/store/checkoutFlags';
 
 const product = {
   slug: 'amazon-fixture', fulfillment_mode: 'affiliate_redirect',
@@ -38,4 +39,29 @@ describe('affiliate shopping links', () => {
       expect(html).not.toContain('href=');
       expect(html).toContain(' disabled=');
     });
+});
+
+describe('closed checkout', () => {
+  it('never offers add to cart or a builder for items sold through Geck Inspect', () => {
+    for (const p of [
+      { slug: 'gi-tee', fulfillment_mode: 'direct_pod' },
+      { slug: 'gi-food', fulfillment_mode: 'direct_self' },
+      { slug: 'partner-tub', fulfillment_mode: 'dropship_wholesale' },
+      { slug: 'custom-pet-sticker', fulfillment_mode: 'direct_pod' },
+      { slug: 'custom-gecko-tee', fulfillment_mode: 'direct_pod' },
+    ]) {
+      const html = renderToStaticMarkup(<AddToCartButton product={p} />);
+      expect(html, p.slug).toContain('Not available to order yet');
+      expect(html, p.slug).toContain(' disabled=');
+      expect(html, p.slug).not.toContain('href=');
+      expect(html, p.slug).not.toMatch(/Add to cart|Build your/);
+    }
+  });
+
+  it('treats only non-affiliate products as awaiting checkout, and none once it opens', () => {
+    expect(isAwaitingCheckout({ fulfillment_mode: 'direct_self' }, false)).toBe(true);
+    expect(isAwaitingCheckout({ slug: 'custom-pet-sticker' }, false)).toBe(true);
+    expect(isAwaitingCheckout({ fulfillment_mode: 'affiliate_redirect' }, false)).toBe(false);
+    expect(isAwaitingCheckout({ fulfillment_mode: 'direct_self' }, true)).toBe(false);
+  });
 });

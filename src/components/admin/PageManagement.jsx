@@ -32,6 +32,7 @@ import {
   flattenNavItems,
 } from '@/lib/navItems';
 import { dataCache } from '@/lib/layoutCache';
+import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
 
 // Tell the rest of the app (sidebar in Layout.jsx, route gating in
 // App.jsx) that page_config rows have changed. Both listen on this
@@ -214,7 +215,10 @@ export default function PageManagement() {
     const missing = flattenNavItems(FALLBACK_NAV_ITEMS)
       .filter((f) => !dbNames.has(f.page_name))
       .map(syntheticRowFor);
-    return [...canonical, ...missing];
+    // Retired pages have no route any more, so their old rows are not
+    // shown: toggling them would do nothing.
+    const live = canonical.filter((p) => !RETIRED_PAGE_NAMES.has(p.page_name));
+    return [...live, ...missing];
   }, [pages, canonical]);
 
   // Group + sort. Disabled pages live in the "hidden" bucket regardless

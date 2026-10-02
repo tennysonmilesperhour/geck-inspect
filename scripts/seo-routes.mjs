@@ -392,17 +392,6 @@ export const STATIC_ROUTES = [
     },
   },
   {
-    path: '/MorphVisualizer',
-    priority: 0.7,
-    changefreq: 'monthly',
-    lastmod: dateOf('src/pages/MorphVisualizer.jsx'),
-    meta: {
-      title: 'Crested Gecko Morph Visualizer: Interactive Trait Simulator',
-      description:
-        'Free interactive crested gecko trait simulator. Pick a base color, set morph genotype zygosity, dial pattern intensity, toggle accents, and watch the resulting phenotype render in real time with rarity and value estimates.',
-    },
-  },
-  {
     path: '/Gallery',
     priority: 0.8,
     changefreq: 'daily',
@@ -411,17 +400,6 @@ export const STATIC_ROUTES = [
       title: 'Crested Gecko Photo Gallery',
       description:
         'Browse crested gecko photos from breeders worldwide. Filter by morph, color, and trait to compare Lilly Whites, Harlequins, Phantoms, Cappuccinos, and more.',
-    },
-  },
-  {
-    path: '/CommunityConnect',
-    priority: 0.7,
-    changefreq: 'daily',
-    lastmod: dateOf('src/pages/CommunityConnect.jsx'),
-    meta: {
-      title: 'Community, Find Crested Gecko Breeders & Forum',
-      description:
-        'Find crested gecko breeders and keepers, follow their collections, and join discussions on the Geck Inspect community forum.',
     },
   },
   {

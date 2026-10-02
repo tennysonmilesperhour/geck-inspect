@@ -5,6 +5,7 @@ import {
   BREEDER_ONLY_PAGES,
   PALETTE_ITEMS,
 } from './navItems';
+import { RETIRED_PAGES, RETIRED_PAGE_NAMES } from './retiredPages';
 
 // These fixtures are the exact structures that used to be hand-maintained
 // across navItems.js and CommandPalette.jsx before they were unified into
@@ -28,7 +29,6 @@ const EXPECTED_FALLBACK = {
   ],
   tools: [
     { page_name: 'Recognition', display_name: 'Morph ID', icon: 'Search', category: 'tools', requires_auth: false, is_enabled: true, order: 1 },
-    { page_name: 'MorphVisualizer', display_name: 'Morph Visualizer', icon: 'Layers', category: 'tools', requires_auth: false, is_enabled: true, order: 2 },
     { page_name: 'MorphGuide', display_name: 'Morph Guide', icon: 'BookOpen', category: 'tools', requires_auth: false, is_enabled: true, order: 3 },
     { page_name: 'GeneticsGuide', display_name: 'Genetics Guide', icon: 'Dna', category: 'tools', requires_auth: false, is_enabled: true, order: 4 },
     { page_name: 'Gallery', display_name: 'Image Gallery', icon: 'Images', category: 'tools', requires_auth: false, is_enabled: true, order: 5 },
@@ -51,12 +51,12 @@ const EXPECTED_SECTION = {
   ClaimAnimal: 'manage', LikedGeckos: 'manage', ProjectManager: 'manage', MarketplaceSalesStats: 'manage',
   MyListings: 'manage',
   BatchHusbandry: 'manage', Store: 'manage', MarketplaceSell: 'manage', Promote: 'manage',
-  Recognition: 'discover', MorphVisualizer: 'discover', MorphGuide: 'discover', MorphGuideSubmission: 'discover',
+  Recognition: 'discover', MorphGuide: 'discover', MorphGuideSubmission: 'discover',
   GeneticsGuide: 'discover', GeneticCalculatorTool: 'discover', Gallery: 'discover', CareGuide: 'discover',
   CareGuideTopic: 'discover', Forum: 'discover', ForumPost: 'discover', BreederConsultant: 'discover',
   PrintableWorksheets: 'discover', ImageImport: 'discover',
-  Training: 'discover', TrainModel: 'discover', Marketplace: 'discover', MarketplaceBuy: 'discover',
-  MarketplaceVerification: 'discover', MarketPricing: 'discover', BreedingROI: 'discover', BreedingLoans: 'discover',
+  Training: 'discover', Marketplace: 'discover', MarketplaceBuy: 'discover',
+  MarketplaceVerification: 'discover', MarketPricing: 'discover', BreedingROI: 'discover',
   Market: 'discover',
   Breeder: 'discover',
 };
@@ -65,7 +65,6 @@ const EXPECTED_BREEDER_ONLY = [
   'Breeding', 'BreedingSeason', 'PairingPlanner', 'Portfolio', 'BreedingPairs', 'Lineage',
   'Pedigree', 'Promote', 'MarketplaceSalesStats', 'MyListings',
   'BatchHusbandry', 'ProjectManager', 'MorphMarketExport', 'BreedingROI',
-  'BreedingLoans',
 ];
 
 // The palette rows in their original display order (icons compared
@@ -95,7 +94,6 @@ const EXPECTED_PALETTE = [
   ['MarketplaceSell', 'Sell Geckos', 'Marketplace'],
   ['MyListings', 'My Listings', 'Marketplace'],
   ['MorphGuide', 'Morph Guide', 'Reference'],
-  ['MorphVisualizer', 'Morph Visualizer', 'Reference'],
   ['GeneticsGuide', 'Genetics Guide', 'Reference'],
   ['CareGuide', 'Care Guide', 'Reference'],
   ['Recognition', 'AI Morph Recognition', 'Reference'],
@@ -126,6 +124,25 @@ describe('navItems derived structures preserve prior behavior', () => {
     for (const item of PALETTE_ITEMS) {
       expect(item.icon, `icon for ${item.page}`).toBeTruthy();
       expect(Array.isArray(item.keywords), `keywords for ${item.page}`).toBe(true);
+    }
+  });
+});
+
+describe('retired pages stay out of navigation', () => {
+  it('no sidebar, section, keeper-mode or palette entry names a retired page', () => {
+    const named = [
+      ...Object.values(FALLBACK_NAV_ITEMS).flat().map((i) => i.page_name),
+      ...Object.keys(SECTION_FOR_PAGE),
+      ...BREEDER_ONLY_PAGES,
+      ...PALETTE_ITEMS.map((i) => i.page),
+    ];
+    expect(named.filter((p) => RETIRED_PAGE_NAMES.has(p))).toEqual([]);
+  });
+
+  it('every retired page redirects to a live page, not to another retired one', () => {
+    for (const { page, to } of RETIRED_PAGES) {
+      expect(to.startsWith('/'), page).toBe(true);
+      expect(RETIRED_PAGE_NAMES.has(to.slice(1)), page).toBe(false);
     }
   });
 });

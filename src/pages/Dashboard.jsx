@@ -23,6 +23,7 @@ import RecentActivity from '../components/dashboard/RecentActivity';
 import FeaturedBreeders from '../components/dashboard/FeaturedBreeders';
 import NextActions from '../components/dashboard/NextActions';
 import EnclosureClimate from '../components/iot/EnclosureClimate';
+import { IOT_SENSORS_ENABLED } from '@/lib/iotClient';
 import CommunityPulse from '../components/dashboard/CommunityPulse';
 import { default as GeckoOfTheDayComponent } from '../components/dashboard/GeckoOfTheDay';
 import MyStoreButton from '../components/dashboard/MyStoreButton';
@@ -499,8 +500,10 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
                         {/* Left column, Next Actions + Community Pulse */}
                         <div className="xl:col-span-4 space-y-6">
-                            {/* Govee enclosure readings; renders nothing without a connection */}
-                            {user && <EnclosureClimate user={user} />}
+                            {/* Govee enclosure readings; hidden until a real device
+                                test passes (IOT_SENSORS_ENABLED), and renders
+                                nothing without a connection */}
+                            {IOT_SENSORS_ENABLED && user && <EnclosureClimate user={user} />}
                             {dashPrefs.showCommunityPulse && <CommunityPulse />}
                             {dashPrefs.showLiveFeed && <LiveFeed currentUserEmail={user?.email} />}
                         </div>

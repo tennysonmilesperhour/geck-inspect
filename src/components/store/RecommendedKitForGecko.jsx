@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingBag, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { formatCents } from '@/lib/store/format';
+import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 
 /**
  * RecommendedKitForGecko, small aside that turns the gecko-app context
@@ -50,13 +51,17 @@ export default function RecommendedKitForGecko({ gecko, compact = false }) {
           setLoading(false);
           return;
         }
-        const { data } = await supabase
+        let query = supabase
           .from('store_products')
           .select(`
             id, slug, name, short_description, our_price_cents, images,
             fulfillment_mode, lifecycle_stage_tags, status, is_featured
           `)
-          .eq('status', 'active')
+          .eq('status', 'active');
+        // Recommend only what can be bought today: while Geck Inspect
+        // checkout is closed that means affiliate products.
+        if (!STORE_CHECKOUT_ENABLED) query = query.eq('fulfillment_mode', 'affiliate_redirect');
+        const { data } = await query
           .contains('lifecycle_stage_tags', [stage])
           .order('is_featured', { ascending: false })
           .limit(compact ? 3 : 4);
@@ -121,7 +126,7 @@ export default function RecommendedKitForGecko({ gecko, compact = false }) {
                   {p.name}
                 </div>
                 <div className="text-[11px] text-emerald-300 mt-0.5">
-                  {formatCents(p.our_price_cents)}
+                  {p.fulfillment_mode === 'affiliate_redirect' ? 'Est. ' : ''}{formatCents(p.our_price_cents)}
                 </div>
               </div>
             </Link>

@@ -13,11 +13,6 @@ export default defineConfig({
   root: here,
   base: './',
   plugins: [react()],
-  define: {
-    // Lets the current (v1) tab fall back to its labeled preview fixtures
-    // when the snapshot cannot be fetched, which is always the case here.
-    'import.meta.env.VITE_ALLOW_MOCK_FALLBACK': JSON.stringify('true'),
-  },
   resolve: {
     alias: [
       { find: '@/lib/supabaseClient', replacement: path.resolve(here, 'supabaseStub.js') },

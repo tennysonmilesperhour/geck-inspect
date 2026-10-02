@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 // The app's retrying loader, like every other route: after a deploy an old
 // tab asks for chunk names that no longer exist, and React's plain lazy()
 // sent that straight to the error screen.
 import { lazy } from '@/lib/lazyWithRetry';
 import StoreLayout from '@/components/store/StoreLayout';
+import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 
 const StoreLanding = lazy(() => import('@/components/store/StoreLanding'));
 const StoreCategory = lazy(() => import('@/components/store/StoreCategory'));
@@ -37,7 +38,15 @@ const Spinner = () => (
  *   /Store/checkout/success           → post-Stripe-redirect confirmation
  *   /Store/orders                     → user order history (auth)
  *   /Store/orders/:orderNumber        → order detail (token query param for guests)
+ *
+ * While checkout is closed (STORE_CHECKOUT_ENABLED in
+ * src/lib/store/checkoutFlags.js) the sticker builder, the tee builder
+ * and the cart redirect to the landing page: each one ends in a payment
+ * that cannot be made yet. The code stays so checkout can be switched on
+ * with that one flag.
  */
+const toStoreHome = <Navigate to="/Store" replace />;
+
 export default function Store() {
   return (
     <Suspense fallback={<StoreLayout><Spinner /></StoreLayout>}>
@@ -45,9 +54,9 @@ export default function Store() {
         <Route index element={<StoreLanding />} />
         <Route path="c/*" element={<StoreCategory />} />
         <Route path="p/:slug" element={<StoreProduct />} />
-        <Route path="stickers" element={<CustomStickerStudio />} />
-        <Route path="tees" element={<CustomShirtStudio />} />
-        <Route path="cart" element={<StoreCart />} />
+        <Route path="stickers" element={STORE_CHECKOUT_ENABLED ? <CustomStickerStudio /> : toStoreHome} />
+        <Route path="tees" element={STORE_CHECKOUT_ENABLED ? <CustomShirtStudio /> : toStoreHome} />
+        <Route path="cart" element={STORE_CHECKOUT_ENABLED ? <StoreCart /> : toStoreHome} />
         <Route path="checkout/success" element={<StoreCheckoutSuccess />} />
         <Route path="orders" element={<StoreOrders />} />
         <Route path="orders/:orderNumber" element={<StoreOrderDetail />} />

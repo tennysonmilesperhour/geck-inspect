@@ -4,7 +4,7 @@ export const STEP_BLURBS = {
         title: 'Market',
         body: 'Review current crested gecko asking prices and changes in the market. Watch for morphs within your budget and compare listing trends with your own collection; asking prices are not confirmed sale prices.',
     },
-    Store: {"title": "Supplies", "body": "Browse reptile food, enclosures, lighting and care equipment, or design a custom gecko sticker or shirt. Affiliate products open the seller\u2019s listing for current prices and availability."},
+    Store: {"title": "Supplies", "body": "Browse reptile food, enclosures, lighting and care equipment. Affiliate products open the seller\u2019s listing, where you buy them at current prices. Items Geck Inspect will sell itself are marked Not available yet until its checkout opens."},
     Promote: {"title": "Promote", "body": "Choose a gecko from your collection and draft a social post tailored to your selected platform. Review its photos, morph details and generated wording before copying or sharing the post."},
     Portfolio: {"title": "Collection Portfolio", "body": "See estimated values for individual geckos and your collection total, based on comparable listings. Follow changes over time and review which traits contribute to the estimates; these are guides, not guaranteed sale prices."},
     PairingPlanner: {"title": "Pairing Planner", "body": "Choose a breeding goal and compare possible sire-and-dam combinations in your collection. Review predicted traits, estimated offspring values and pairing warnings before deciding which animals to pair."},
@@ -12,11 +12,11 @@ export const STEP_BLURBS = {
     FieldMode: {"title": "Field Mode", "body": "Log a weight, feeding, shed or note while handling an animal. Large controls make one-handed entry easier, recent animals are quick to find, and a short undo window lets you correct an accidental log."},
     __section_manage: {
         title: 'Manage, your animals + business',
-        body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings, sales stats, and shipping. We\'ll walk through each tile next.',
+        body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings and sales stats. We\'ll walk through each tile next.',
     },
     __section_discover: {
         title: 'Discover, tools, community, reference',
-        body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the visualizer, the care guide, the marketplace, the forum, and Q&A. Switching to it now so we can walk those tiles.',
+        body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the care guide, the marketplace and the forum. Switching to it now so we can walk those tiles.',
     },
     Dashboard: {
         title: 'Dashboard',
@@ -53,10 +53,6 @@ export const STEP_BLURBS = {
     Recognition: {
         title: 'Morph ID',
         body: 'Compare up to five photos and get a ranked visual shortlist, evidence markers, and a clear request when better photos are needed. Great for narrowing an unboxing-day or hatchling call.',
-    },
-    MorphVisualizer: {
-        title: 'Morph Visualizer',
-        body: 'Stack base color, Mendelian morphs, polygenic patterns, and accents on a stylized gecko to preview a pairing before you commit eggs to it. Includes rarity and value estimates.',
     },
     BreederConsultant: {
         title: 'AI Consultant',

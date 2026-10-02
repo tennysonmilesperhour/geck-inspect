@@ -166,7 +166,6 @@ function buildWriterSystem({ styleGuide, voiceExamples, factCheck, knownMorphs }
         '  /GeneticsGuide                    , long-form genetics encyclopedia',
         '  /GeneticCalculatorTool            , Punnett calculator',
         '  /CareGuide, /CareGuide/<topic>    , care guide',
-        '  /MorphVisualizer                  , visual morph simulator',
         '  /blog/<slug>                      , other blog posts',
       ].join('\n'),
     },

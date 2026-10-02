@@ -1088,7 +1088,7 @@ serve(async (req) => {
     // Per-request model override (defaults to env-configured CLAUDE_MODEL).
     // The eval pipeline sends `model: "claude-haiku-4-5"` for cheap iteration
     // and "claude-sonnet-4-6" for benchmark runs. Production callers
-    // (Recognition.jsx, TrainModel.jsx) omit `model` and get the env default.
+    // (Recognition.jsx) omit `model` and get the env default.
     // Only admins and the eval account may choose: any member could name
     // the most expensive model, which costs several times the default.
     model = (isAdmin || isEvalAccount) ? resolveModel(body?.model) : CLAUDE_MODEL;

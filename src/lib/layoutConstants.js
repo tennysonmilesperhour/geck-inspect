@@ -9,7 +9,6 @@
 import {
   BarChart3,
   Search,
-  Layers,
   FlaskConical,
   BookOpen,
   Heart,
@@ -31,7 +30,6 @@ import { createPageUrl } from '@/utils';
 export const publicNavItems = [
   { title: 'Dashboard',         url: createPageUrl('Dashboard'),         icon: BarChart3 },
   { title: 'Morph ID',          url: createPageUrl('Recognition'),       icon: Search },
-  { title: 'Morph Visualizer',  url: createPageUrl('MorphVisualizer'),   icon: Layers },
   { title: 'AI Consultant',     url: createPageUrl('BreederConsultant'), icon: FlaskConical },
   { title: 'Morph Guide',       url: createPageUrl('MorphGuide'),        icon: BookOpen },
   { title: 'Care Guide',        url: createPageUrl('CareGuide'),         icon: Heart },

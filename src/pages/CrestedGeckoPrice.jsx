@@ -96,7 +96,7 @@ const FAQ = [
   {
     question: 'How do I get an accurate value for my specific gecko?',
     answer:
-      'Grade it on the free Geck Inspect Quality Scale (a 10-point rubric for structure, head, pattern, and color), which places the animal in a Pet, Breeder, High-end, or Investment tier. Combine that tier with its morph using the ranges on this page. For a trait-by-trait estimate you can also run the animal through the Morph Visualizer, which produces a rarity tier and an estimated retail range.',
+      'Grade it on the free Geck Inspect Quality Scale (a 10-point rubric for structure, head, pattern, and color), which places the animal in a Pet, Breeder, High-end, or Investment tier. Combine that tier with its morph using the ranges on this page. Members can also add the gecko to their collection and open Portfolio for a trait-by-trait estimate based on comparable listings.',
   },
   {
     question: 'Can Geck Inspect estimate my gecko\'s value automatically?',

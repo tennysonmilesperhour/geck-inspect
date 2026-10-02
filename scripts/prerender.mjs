@@ -702,10 +702,8 @@ function injectNoscriptBody(html, route) {
             <a href="/crested-gecko-price">Price Guide</a>
             <a href="/blog">Blog</a>
             <a href="/QualityScale">Quality Scale</a>
-            <a href="/MorphVisualizer">Morph Visualizer</a>
             <a href="/Gallery">Gallery</a>
             <a href="/Forum">Forum</a>
-            <a href="/CommunityConnect">Community</a>
             <a href="/Marketplace">Marketplace</a>
             <a href="/MarketplaceBuy">Buy</a>
             <a href="/MarketplaceVerification">Verification</a>

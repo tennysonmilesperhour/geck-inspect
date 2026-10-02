@@ -29,6 +29,7 @@ import ScrollToTop from '@/components/shared/ScrollToTop';
 import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
 import { captureSignupGrantFromUrl } from '@/lib/store/signupGrant';
+import { RETIRED_PAGES } from '@/lib/retiredPages';
 
 // Pull ?ref=<code> off the URL into localStorage as early as possible,
 // before any router renders, so the param is captured even on the very
@@ -123,6 +124,12 @@ const BlogTagPage           = lazy(() => import('./pages/BlogTagPage'));
 const Store                 = lazy(() => import('./pages/Store'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
+
+// Redirects for retired pages, shared by the signed-out and signed-in
+// route sets so an old link never ends on "Page not found".
+const retiredRoutes = RETIRED_PAGES.map(({ page, to }) => (
+  <Route key={`retired-${page}`} path={`/${page}`} element={<Navigate to={to} replace />} />
+));
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
@@ -281,12 +288,10 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Home />} />
           <Route path="/Home" element={<Home />} />
           <Route path="/Breeder" element={<Breeder />} />
-          {/* Mentorship, Shipping and Giveaways are hidden until they are
-              finished. vercel.json 301s these at the edge; this covers
-              client-side navigation from stale links. */}
-          <Route path="/Shipping" element={<Navigate to="/" replace />} />
-          <Route path="/Giveaways" element={<Navigate to="/" replace />} />
-          <Route path="/Mentorship" element={<Navigate to="/" replace />} />
+          {/* Retired pages (src/lib/retiredPages.js). vercel.json 301s
+              these at the edge; this covers client-side navigation from
+              stale links. */}
+          {retiredRoutes}
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/category/:categoryId" element={<MorphCategoryHub />} />
           <Route path="/MorphGuide/inheritance/:inheritanceId" element={<MorphInheritanceHub />} />
@@ -408,6 +413,7 @@ const AuthenticatedApp = () => {
         <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
         <Route path="/Subscription" element={<Navigate to="/Membership" replace />} />
         <Route path="/GeckAnswers" element={<Navigate to="/Forum" replace />} />
+        {retiredRoutes}
         <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
         {/* /calculator alias inside the authenticated layout so signed-in
             users hitting the cleaner URL keep their app chrome. */}
