@@ -200,7 +200,7 @@ export const PATTERN_TRAITS = [
     genetics: {
       type: GENETICS_TYPE.POLYGENIC,
       summary:
-        'Polygenic. High-contrast lateral markings rising from the belly up the flanks, sometimes onto the dorsum. Ladder: trace → partial → strong → extreme.',
+        'Foundation Genetics models Harlequin as an incomplete dominant gene; how high the markings climb is polygenic. High-contrast lateral markings rising from the belly up the flanks, sometimes onto the dorsum. Ladder: trace → partial → strong → extreme.',
     },
     epistasis: {},
     visual: { layer: 'harlequin', intensityDriven: true },
@@ -231,7 +231,7 @@ export const PATTERN_TRAITS = [
     genetics: {
       type: GENETICS_TYPE.POLYGENIC,
       summary:
-        'Polygenic. Raised cream scales along the lateral edges of the dorsum. Percentage describes how much of the dorsal edge is covered (0 → 100%).',
+        'Foundation Genetics models Pinstripe as a dominant gene; how complete the stripe is stays polygenic. Raised cream scales along the lateral edges of the dorsum. Percentage describes how much of the dorsal edge is covered (0 → 100%).',
     },
     epistasis: {},
     visual: { layer: 'pinstripe', intensityDriven: true },
@@ -247,7 +247,7 @@ export const PATTERN_TRAITS = [
     genetics: {
       type: GENETICS_TYPE.POLYGENIC,
       summary:
-        'Polygenic. Dark, ink-like spots of irregular size. Can be red, black, or ink-spot depending on base genes.',
+        'Foundation Genetics models Dalmatian as a dominant gene; spot count is polygenic. Dark, ink-like spots of irregular size. Can be red, black, or ink-spot depending on base genes.',
     },
     epistasis: {},
     visual: { layer: 'dalmatian', intensityDriven: true, spotHex: '#241a15' },
@@ -263,7 +263,7 @@ export const PATTERN_TRAITS = [
     genetics: {
       type: GENETICS_TYPE.POLYGENIC,
       summary:
-        'Polygenic. Dark lateral banding running top-to-bottom across the ribs. Brindle is a broken-up variant.',
+        'Traditionally called polygenic. Foundation Genetics treats Tiger as a fixed dominant trait every crested gecko carries; how much shows varies. Dark lateral banding running top-to-bottom across the ribs. Brindle is a broken-up variant.',
     },
     epistasis: {},
     visual: { layer: 'tiger', intensityDriven: true },
@@ -293,7 +293,7 @@ export const PATTERN_TRAITS = [
     category: 'pattern',
     genetics: {
       type: GENETICS_TYPE.POLYGENIC,
-      summary: 'Polygenic (or induced by Empty Back / Super Cappuccino). A clean body with no lateral or dorsal pattern.',
+      summary: 'Usually a polygenic look. Empty Back, Super Cappuccino, or a visual Phantom can also produce it. A clean body with no lateral or dorsal pattern.',
     },
     epistasis: { suppressesLateralPattern: true, suppressesDorsalPattern: true },
     visual: { layer: 'patternless' },
@@ -307,9 +307,12 @@ export const PATTERN_TRAITS = [
     name: 'Phantom',
     category: 'pattern',
     genetics: {
-      type: GENETICS_TYPE.LINEBRED,
+      // Decision D13: Phantom is the Foundation Genetics recessive. It
+      // stays on the pattern dial because the visualizer draws how
+      // strongly the look reads, not a genotype.
+      type: GENETICS_TYPE.RECESSIVE,
       summary:
-        'Linebred. Reduced warm pigment saturation, looks muted, ghostly, desaturated. Believed polygenic, not Mendelian.',
+        'Recessive (Foundation Genetics). Two copies make a visual Phantom: added dark pigment and muted, ghostly pattern. One copy looks normal. The dial sets how strongly the look reads.',
     },
     epistasis: { desaturate: 0.35 },
     visual: { layer: 'phantom' },

@@ -452,21 +452,22 @@ export const PROJECT_LINES = [
     priceTier: '$$$',
     priceRange: '$300-$900',
     summary:
-      'NAMING COLLISION: Phantom is a recognized pattern descriptor (Phantom Pinstripe) and is also used loosely as a line name for animals with ghostly, reduced-contrast patterning. Always ask which the seller means.',
+      'NAMING COLLISION: Phantom is a recessive gene (per Foundation Genetics), the name of a pinstripe look (Phantom Pinstripe), and a loose line name for animals with ghostly, reduced-contrast patterning. Always ask which the seller means.',
     description:
-      'Phantom is one of the trickier terms in crested gecko vocabulary. Most commonly, "Phantom Pinstripe" refers to a pinstripe animal where the dorsal stripe is incomplete or broken, creating a ghostly look. Some breeders also use "Phantom line" to describe project animals with low-contrast, washed-out patterning in general. The term is not standardized, and buyers should always ask the seller for their specific definition before assuming.',
+      'Phantom is one of the trickier terms in crested gecko vocabulary. Foundation Genetics identifies Phantom as a simple recessive gene: two copies add dark pigment and mute pattern, and one copy (Het Phantom) looks normal. In Geck Inspect a plain "Phantom" tag means a visual Phantom. "Phantom Pinstripe" is the hobby name for a pinstripe whose raised dorsal scales stay the base color, a look Foundation Genetics links to the same gene. Some breeders also use "Phantom line" for any project animal with low-contrast, washed-out patterning, which may or may not involve the gene. Ask the seller which they mean before assuming.',
     visualIdentity: [
       'Reduced contrast between pattern and base (ghostly appearance)',
       'In Phantom Pinstripe: incomplete or broken dorsal pinstripe',
       'In broader Phantom usage: low-saturation overall expression',
     ],
     identificationTips: [
-      'Always ask the seller: "Do you mean Phantom Pinstripe specifically, or a Phantom line phenotype more broadly?"',
+      'Always ask the seller: "Do you mean the Phantom gene (visual or het), Phantom Pinstripe, or a Phantom line look more broadly?"',
+      'A visual Phantom bred to another visual Phantom should give all Phantom babies; that is the cleanest proof the gene is there',
       'Phantom Pinstripe is well-recognized; broader Phantom lines are not standardized',
       'Compare contrast levels between Phantom and standard animals from the same breeder',
     ],
     verificationAdvice: [
-      'Get specific: is this Phantom Pinstripe (pattern descriptor) or a project line (selective breeding)?',
+      'Get specific: is this the Phantom gene (ask for the pairing records behind any Het Phantom claim), Phantom Pinstripe, or a project line (selective breeding)?',
       'For project line claims, ask for multi-generation photos showing consistent low-contrast expression',
       'Phantom is sometimes used as a premium tag for animals that simply have weak pattern; buyer beware',
       'No central registry exists for Phantom lines; rely on breeder reputation',
@@ -474,7 +475,7 @@ export const PROJECT_LINES = [
     morphMarketSearchUrl: 'https://www.morphmarket.com/morphpedia/crested-geckos/phantom-pinstripe/',
     relatedMorphs: ['pinstripe'],
     caveats: [
-      'Phantom Pinstripe is a well-defined pattern descriptor. "Phantom line" as a broader project is loosely defined and varies by breeder.',
+      'Phantom the gene is a recessive per Foundation Genetics, and Phantom Pinstripe is a well-defined pattern descriptor. "Phantom line" as a broader project is loosely defined and varies by breeder.',
     ],
   },
 ];
