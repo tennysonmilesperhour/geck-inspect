@@ -18,7 +18,7 @@ const { readColumns } = await import('@/api/supabaseEntities');
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const MIGRATION = resolve(
   __dirname,
-  '../../../supabase/migrations/20261002230000_anon_hide_owner_email_columns.sql',
+  '../../../supabase/migrations/20261002235000_anon_hide_owner_email_columns.sql',
 );
 
 /** The column list of the `grant select (...) on public.<table> to anon` in the migration. */

@@ -8,7 +8,7 @@
  * in step with created_by, and look the name up with read_profiles.
  *
  * The database migration
- * supabase/migrations/20261002230000_anon_hide_owner_email_columns.sql
+ * supabase/migrations/20261002235000_anon_hide_owner_email_columns.sql
  * grants the anon role exactly these columns. Once it is applied, a
  * signed-out `select *` on these tables fails, so every signed-out read must
  * use these lists. A test keeps the two in step.
