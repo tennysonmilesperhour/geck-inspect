@@ -29,6 +29,7 @@ import {
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
+import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
 import { useInAppShell } from '@/lib/appShell';
 
 const LOGO_URL = APP_LOGO_URL;
@@ -67,12 +68,29 @@ export default function MorphDetail() {
   const inAppShell = useInAppShell();
   const [record, setRecord] = useState(null);
   const [communityImages, setCommunityImages] = useState([]);
+  // Approved Morph Guide photo submissions, credited by display name.
+  const [submittedPhotos, setSubmittedPhotos] = useState([]);
   const [referenceImages, setReferenceImages] = useState([]);
   const [relatedMorphs, setRelatedMorphs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   const displayName = useMemo(() => morphDisplayName(slug), [slug]);
+
+  // Member photos approved from /MorphGuideSubmission. Loaded on their own
+  // so a failed morph_guides request does not hide them; any error (or the
+  // database function not existing yet) leaves the list empty.
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    setSubmittedPhotos([]);
+    fetchMorphCommunityPhotos(slug).then((rows) => {
+      if (!cancelled) setSubmittedPhotos(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   useEffect(() => {
     if (!slug) return;
@@ -213,7 +231,8 @@ export default function MorphDetail() {
 
   // --- success state ---
   const morphName = record.morph_name;
-  const heroImage = sanitizeImage(record.example_image_url) || communityImages[0]?.image_url || DEFAULT_GECKO_IMAGE;
+  const memberPhotos = [...submittedPhotos, ...communityImages];
+  const heroImage = sanitizeImage(record.example_image_url) || memberPhotos[0]?.image_url || DEFAULT_GECKO_IMAGE;
   const rarityLabel = RARITY_LABELS[record.rarity] || record.rarity || 'Unknown';
   const rarityColor = RARITY_COLORS[record.rarity] || 'bg-slate-700/40 text-slate-300 border-slate-600';
   // Prefer local dataset's key features over DB field so the
@@ -617,30 +636,37 @@ export default function MorphDetail() {
             </section>
           )}
 
-          {/* Community examples */}
-          {communityImages.length > 0 && (
+          {/* Community examples: approved Morph Guide submissions (with the
+              member's name) first, then reviewed collection photos. */}
+          {memberPhotos.length > 0 && (
             <section className="mb-10">
               <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
                 <Dna className="w-5 h-5 text-emerald-400" />
                 From the Geck Inspect community
               </h2>
               <p className="text-sm text-slate-400 mb-4">
-                {morphName} crested geckos uploaded by keepers tracking their collections
-                on Geck Inspect.
+                {morphName} crested geckos from keepers on Geck Inspect.{' '}
+                <Link to={`/MorphGuideSubmission?morph=${slug}`} className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline">
+                  Add your photo
+                </Link>
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {communityImages.map((img) => (
-                  <div
-                    key={img.id}
-                    className="aspect-square rounded-xl overflow-hidden border border-slate-700 bg-slate-900"
-                  >
-                    <img
-                      src={img.image_url}
-                      alt={`${morphName} crested gecko`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
+                {memberPhotos.map((img) => (
+                  <figure key={img.id} className="m-0">
+                    <div className="aspect-square rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+                      <img
+                        src={img.image_url}
+                        alt={img.credit ? `${morphName} crested gecko, photo by ${img.credit}` : `${morphName} crested gecko`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                    {img.credit && (
+                      <figcaption className="mt-1.5 text-xs text-slate-400 truncate">
+                        Photo by {img.credit}
+                      </figcaption>
+                    )}
+                  </figure>
                 ))}
               </div>
             </section>

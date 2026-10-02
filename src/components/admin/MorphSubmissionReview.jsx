@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from '@/components/ui/textarea';
+import { reviewNotification, submissionMorphName } from '@/lib/morphPhotoSubmissions';
 
 export default function MorphSubmissionReview() {
     const [submissions, setSubmissions] = useState([]);
@@ -25,7 +26,9 @@ export default function MorphSubmissionReview() {
         setIsLoading(true);
         try {
             const pendingSubmissions = await MorphReferenceImage.filter({ status: 'pending' });
-            const guides = await MorphGuide.list();
+            // Submissions store the built-in morph slug. Older rows may hold a
+            // morph_guides id, so keep those names as a fallback.
+            const guides = await MorphGuide.list().catch(() => []);
             const guidesMap = guides.reduce((acc, guide) => {
                 acc[guide.id] = guide.morph_name;
                 return acc;
@@ -54,13 +57,11 @@ export default function MorphSubmissionReview() {
             }
             await MorphReferenceImage.update(submissionId, updateData);
 
-            // Send notification to user
-            await Notification.create({
-                user_email: submission.submitted_by_email,
-                type: 'submission_approved',
-                content: `Your image submission for the ${morphGuides[submission.morph_guide_id]} guide has been ${action}.`,
-                link: '/MorphGuide'
-            });
+            // Tell the member. Approvals link to the morph page where the
+            // photo now shows; rejections use their own type so the title
+            // is not "Submission approved".
+            const morphName = submissionMorphName(submission.morph_guide_id, morphGuides);
+            await Notification.create(reviewNotification(submission, action, morphName, reason));
 
             toast({ title: "Success", description: `Submission has been ${action}.` });
             fetchSubmissions(); // Refresh the list
@@ -87,7 +88,7 @@ export default function MorphSubmissionReview() {
                                 <img src={submission.image_url} alt="Submission" className="w-full h-48 object-cover" />
                                 <div className="p-4 space-y-3">
                                     <p className="font-semibold text-slate-200">
-                                        For: <span className="font-bold text-emerald-400">{morphGuides[submission.morph_guide_id] || 'Unknown Morph'}</span>
+                                        For: <span className="font-bold text-emerald-400">{submissionMorphName(submission.morph_guide_id, morphGuides)}</span>
                                     </p>
                                     <p className="text-sm text-slate-400 flex items-center gap-2">
                                         <UserIcon className="w-4 h-4" /> Submitted by: {submission.submitted_by_email}

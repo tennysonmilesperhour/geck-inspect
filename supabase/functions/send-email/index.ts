@@ -73,6 +73,7 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   referral_reward: "announcements",
   referral_grant_ended: "announcements",
   submission_approved: "level_up",
+  submission_rejected: "level_up",
 };
 
 const CORS = {

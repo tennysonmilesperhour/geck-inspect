@@ -316,7 +316,7 @@ const pushNotificationTypes = [
     { key: 'gecko_of_the_day', label: 'Gecko of the Day', description: 'When your gecko is featured' },
     { key: 'level_up', label: 'Level Up & Achievements', description: 'New badges or milestones' },
     { key: 'expert_status', label: 'Expert Status', description: 'Changes to your expert verification' },
-    { key: 'submission_approved', label: 'Morph Submissions', description: 'When your morph submission is approved' },
+    { key: 'submission_approved', label: 'Morph Submissions', description: 'When an admin reviews a photo you sent to the Morph Guide' },
     { key: 'announcement', label: 'Platform Announcements', description: 'Important news and feature updates' },
     { key: 'market_alert', label: 'Watchlist Matches', description: 'When a new listing or a price cut matches one of your market watches' },
     { key: 'market_brief', label: 'Morning Market Brief', description: 'The daily crested gecko market brief, once you switch it on' }

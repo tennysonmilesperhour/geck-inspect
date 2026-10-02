@@ -10,6 +10,7 @@ const ICONS = {
   level_up: <Award className="w-4 h-4 text-yellow-400" />,
   expert_status: <Shield className="w-4 h-4 text-green-400" />,
   submission_approved: <ImagePlus className="w-4 h-4 text-teal-400" />,
+  submission_rejected: <ImagePlus className="w-4 h-4 text-slate-400" />,
   role_change: <UserIcon className="w-4 h-4 text-blue-400" />,
   new_comment: <MessageSquare className="w-4 h-4 text-purple-400" />,
   new_reply: <MessageSquare className="w-4 h-4 text-indigo-400" />,

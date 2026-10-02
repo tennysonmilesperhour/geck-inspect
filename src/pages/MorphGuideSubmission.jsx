@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
-import { User, MorphGuide, MorphReferenceImage } from '@/entities/all';
+import { User, MorphReferenceImage } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Upload, X, CheckCircle, AlertCircle, ArrowLeft, Send, BookOpen } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SignInRequired from '@/components/shared/SignInRequired';
 import PageHeader from '@/components/shared/PageHeader';
+import { submissionMorphOptions } from '@/lib/morphPhotoSubmissions';
+
+// The 33 built-in morphs (src/data/morph-guide.js). A submission stores the
+// morph's slug, which is also its page address, so an approved photo lands
+// on exactly one Morph Guide page.
+const MORPH_OPTIONS = submissionMorphOptions();
 
 const ImagePreview = ({ file, onRemove }) => (
   <div className="relative group w-full h-32">
@@ -31,9 +37,13 @@ const ImagePreview = ({ file, onRemove }) => (
 
 export default function MorphGuideSubmissionPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
-  const [morphGuides, setMorphGuides] = useState([]);
-  const [selectedMorphId, setSelectedMorphId] = useState('');
+  // "Add your photo" on a morph page links here with ?morph=<slug>.
+  const [selectedMorphId, setSelectedMorphId] = useState(() => {
+    const fromLink = searchParams.get('morph');
+    return MORPH_OPTIONS.some((m) => m.slug === fromLink) ? fromLink : '';
+  });
   const [files, setFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -44,8 +54,6 @@ export default function MorphGuideSubmissionPage() {
       try {
         const currentUser = await User.me();
         setUser(currentUser);
-        const guides = await MorphGuide.list();
-        setMorphGuides(guides.sort((a, b) => a.morph_name.localeCompare(b.morph_name)));
       } catch {
         setUser(null); // Not logged in
       }
@@ -123,7 +131,7 @@ export default function MorphGuideSubmissionPage() {
             </Button>
           }
           title="Submit Morph Guide Photos"
-          description="Contribute high-quality images to our official morph guide."
+          description="Add your best photos to the Morph Guide. Approved photos show on that morph's page with your name."
         />
 
         {success && (
@@ -157,8 +165,8 @@ export default function MorphGuideSubmissionPage() {
                     <SelectValue placeholder="Choose the morph for your photos..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {morphGuides.map(guide => (
-                      <SelectItem key={guide.id} value={guide.id}>{guide.morph_name}</SelectItem>
+                    {MORPH_OPTIONS.map(morph => (
+                      <SelectItem key={morph.slug} value={morph.slug}>{morph.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -195,6 +203,7 @@ export default function MorphGuideSubmissionPage() {
                     <li>The gecko should be the main subject of the image.</li>
                     <li>Avoid cluttered backgrounds.</li>
                     <li>Provide both "fired up" and "fired down" states if possible.</li>
+                    <li>Approved photos are credited to your business name, or your name if your profile is public. Your email is never shown.</li>
                   </ul>
                 </AlertDescription>
               </Alert>
