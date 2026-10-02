@@ -50,6 +50,7 @@ import {
   REGIONS, AGE_CLASSES, LINEAGE_TIERS, TIMEFRAMES,
 } from '@/lib/marketAnalytics/taxonomy';
 import { DATA_SOURCES, SOURCE_KINDS } from '@/lib/marketAnalytics/sources';
+import { resolveTier } from '@/lib/tierLimits';
 
 const SUB_NAV = [
   { key: 'pinned',     label: 'Pinned',      icon: Pin },
@@ -70,9 +71,8 @@ const DEFAULT_FILTERS = {
 };
 
 export default function MarketAnalytics({ user }) {
-  const tier = user?.membership_tier || 'free';
-  const isAdmin = user?.role === 'admin';
-  const hasAccess = tier === 'enterprise' || isAdmin;
+  // resolveTier counts admins as Enterprise, and every other plan source.
+  const hasAccess = resolveTier(user) === 'enterprise';
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [drillCriteria, setDrillCriteria] = useState(null);

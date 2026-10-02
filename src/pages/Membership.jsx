@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { reportError } from '@/lib/telemetry';
-import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as InfinityIcon, CreditCard } from 'lucide-react';
+import { Check, CheckCircle2, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as InfinityIcon, CreditCard } from 'lucide-react';
 import { User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
@@ -21,6 +21,7 @@ import Seo from '@/components/seo/Seo';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
+import { resolveTier } from '@/lib/tierLimits';
 
 /**
  * Membership / pricing page.
@@ -28,7 +29,7 @@ import { openBillingPortal } from '@/lib/billingPortal';
  * Tier setup per April 2026 product decisions:
  *
  *   FREE       , 10 geckos, 1 active breeding pair, community access
- *   KEEPER*    , 50 geckos, 5 active breeding pairs, lineage tree, etc
+ *   KEEPER*    , 50 geckos, 5 active breeding pairs, Morph ID credits, etc
  *                 (*marked "Most Popular", hovering badge above the card)
  *   BREEDER    , unlimited geckos + pairs, opt-in to be featured on the
  *                 home dashboard, marketplace sync, certificates, etc
@@ -51,6 +52,12 @@ import { openBillingPortal } from '@/lib/billingPortal';
  * Grandfathered users land on this page already owning the Breeder tier
  * (see subscription_status === 'grandfathered') and see a "You already
  * have Breeder access" banner instead of the checkout buttons.
+ *
+ * Every line in the plan lists below must be true today (decision D11,
+ * 29 Sep 2026): no promises of features that do not exist yet, and
+ * nothing listed as paid that free members already use. Lineage, feeding
+ * groups and sales records are free on every plan, so they sit under
+ * Free. Limits match src/lib/tierLimits.js and PlanLimitChecker.
  */
 
 const tiers = [
@@ -65,9 +72,12 @@ const tiers = [
       'Up to 10 geckos in your collection',
       'Up to 5 additional reptiles tracked',
       'Basic breeding log (1 active pair)',
-      'Weight tracking',
+      'Weight tracking, feeding groups, and event logging',
+      'Lineage tree for your geckos',
+      'Sales records and cost tracking',
       'Automatic value estimates from real listings',
       'One free AI Morph ID to try it',
+      '1 GB of photo storage',
       'Morph Guide, genetics calculator, and care guides',
       'Public marketplace browsing',
       'Community forum access',
@@ -81,14 +91,13 @@ const tiers = [
     featured: true, // <-- Most Popular
     comingSoon: false,
     features: [
+      'Everything in Free',
       'Up to 50 geckos',
       'Up to 10 additional reptiles tracked',
       'Up to 5 active breeding pairs',
-      'Full lineage tree visualizer',
-      'Feeding groups and event logging',
       '3 AI Morph IDs per month',
-      'Estimated-value add-on (opt in)',
-      'Priority community support',
+      'Estimated-value add-on for Morph ID (opt in)',
+      '10 GB of photo storage',
     ],
   },
   {
@@ -103,12 +112,10 @@ const tiers = [
       'Unlimited geckos and breeding pairs',
       'Unlimited additional reptiles tracked',
       '6 AI Morph IDs per month',
-      'MorphMarket CSV sync (Palm Street pending)',
-      'Sales stats and cost tracking dashboard',
+      'Unlimited photo storage',
+      'MorphMarket CSV sync',
       'Pairing waitlists with deposit terms and tracking',
       'Option to be featured on the dashboard',
-      'Expert verification eligibility',
-      'Early access to new features',
     ],
   },
   {
@@ -121,10 +128,7 @@ const tiers = [
     features: [
       'Everything in Breeder',
       '15 AI Morph IDs per month',
-      'Market intelligence dashboard',
-      'Pricing trends and morph demand analytics',
-      'Competitive landscape analysis',
-      'Dedicated account support',
+      'Market Intelligence app: pricing trends, morph demand, and breeder market share',
     ],
   },
 ];
@@ -327,19 +331,61 @@ export default function MembershipPage() {
     User.me().then(setUser).catch(() => setUser(null));
   }, []);
 
+  // Stripe sends the member back to /Membership?checkout=success (or
+  // =cancelled). Read it once, then drop it from the address bar so a
+  // refresh or a bookmark does not show the confirmation again.
+  const [checkoutReturn] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const value = params.get('checkout');
+      if (value !== 'success' && value !== 'cancelled') return null;
+      params.delete('checkout');
+      const rest = params.toString();
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${window.location.pathname}${rest ? `?${rest}` : ''}${window.location.hash}`,
+      );
+      return value;
+    } catch {
+      return null;
+    }
+  });
+
   // Funnel: the pricing page was viewed, and, on return from Stripe, whether
   // checkout completed or was cancelled.
   useEffect(() => {
     captureEvent('membership_viewed');
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const checkout = params.get('checkout');
-      if (checkout === 'success') captureEvent('checkout_returned', { claimed_status: 'success' });
-      else if (checkout === 'cancelled') captureEvent('checkout_cancelled');
-    } catch {
-      // URL parsing unavailable; skip
-    }
-  }, []);
+    if (checkoutReturn === 'success') captureEvent('checkout_returned', { claimed_status: 'success' });
+    else if (checkoutReturn === 'cancelled') captureEvent('checkout_cancelled');
+  }, [checkoutReturn]);
+
+  // After a successful checkout the Stripe webhook updates the plan a few
+  // seconds later. Re-read the member a few times so the confirmation can
+  // name the new plan instead of the old one.
+  const [planConfirmed, setPlanConfirmed] = useState(false);
+  useEffect(() => {
+    if (checkoutReturn !== 'success') return undefined;
+    let cancelled = false;
+    let attempts = 0;
+    const poll = async () => {
+      attempts += 1;
+      try {
+        const fresh = await User.me();
+        if (cancelled) return;
+        if (fresh) setUser(fresh);
+        if (fresh && resolveTier(fresh) !== 'free') {
+          setPlanConfirmed(true);
+          return;
+        }
+      } catch {
+        // keep trying a few times
+      }
+      if (!cancelled && attempts < 6) setTimeout(poll, 2500);
+    };
+    poll();
+    return () => { cancelled = true; };
+  }, [checkoutReturn]);
 
   // The Promote page links here as ?intent=keeper_trial to offer the
   // one-time 30-day Keeper promo. Read it once on mount; the page never
@@ -352,9 +398,17 @@ export default function MembershipPage() {
     }
   });
 
-  const isGrandfathered =
-    user?.subscription_status === 'grandfathered' && user?.membership_tier === 'breeder';
-  const currentTier = user?.membership_tier || null;
+  // One plan resolver for the whole app (src/lib/tierLimits.js). Reading
+  // the raw membership_tier column showed an app store subscriber as Free,
+  // with a buy button for the plan they already pay for.
+  const isGrandfathered = user?.subscription_status === 'grandfathered';
+  const currentTier = user ? resolveTier(user) : null;
+  // The plan came from the app store rather than Stripe: Stripe checkout
+  // and the Stripe billing portal do not apply.
+  const isAppStorePlan = Boolean(
+    user && currentTier !== 'free' && !isGrandfathered && !user.stripe_subscription_id &&
+    (user.membership_tier || 'free') === 'free' && ['keeper', 'breeder'].includes(user.revenuecat_tier),
+  );
   const currentCycle = user?.membership_billing_cycle || null;
   const currentTierMeta = currentTier
     ? tiers.find((t) => t.key === currentTier) || null
@@ -367,9 +421,11 @@ export default function MembershipPage() {
   const keeperPromoAvailable =
     urlIntent === 'keeper_trial' && !user?.keeper_trial_used && !hasPaidPlan;
   // Stripe-backed subscriptions are the only ones with anything to manage.
-  // Grandfathered and lifetime members have no recurring billing.
+  // Grandfathered, lifetime, app store, referral and comped plans have no
+  // Stripe subscription.
   const canManageBilling = Boolean(
-    user && currentTier && currentTier !== 'free' && !isGrandfathered && !isLifetimeGrant,
+    user && currentTier && currentTier !== 'free' && !isGrandfathered && !isLifetimeGrant &&
+    user.stripe_subscription_id,
   );
   const [portalBusy, setPortalBusy] = useState(false);
 
@@ -412,6 +468,14 @@ export default function MembershipPage() {
       toast({
         title: 'You already have Breeder access',
         description: 'As a grandfathered member, you keep the Breeder tier for free.',
+      });
+      return;
+    }
+    if (isAppStorePlan) {
+      // A Stripe checkout here would bill them a second time.
+      toast({
+        title: 'Your plan is billed through the App Store',
+        description: 'Change or cancel it from the Geck Inspect app or your device subscription settings, so you are never charged twice.',
       });
       return;
     }
@@ -520,6 +584,33 @@ export default function MembershipPage() {
             <CycleToggle value={cycle} onChange={setCycle} />
           </div>
 
+          {checkoutReturn === 'success' && (
+            <div
+              role="status"
+              className="mx-auto max-w-xl flex items-start gap-3 rounded-2xl border border-emerald-400/50 bg-emerald-500/10 px-5 py-4 text-left text-sm text-emerald-100"
+            >
+              <CheckCircle2 className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-emerald-200">
+                  {planConfirmed && currentTierMeta
+                    ? `Thank you. Your ${currentTierMeta.name.charAt(0)}${currentTierMeta.name.slice(1).toLowerCase()} plan is active.`
+                    : 'Thank you. Your payment went through.'}
+                </p>
+                <p className="mt-1 text-emerald-100/80">
+                  {planConfirmed
+                    ? 'Everything in your plan is unlocked now.'
+                    : 'Your plan switches on within a minute. If this page still shows Free after that, refresh it, or message support below and we will sort it out.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {checkoutReturn === 'cancelled' && (
+            <p className="text-sm text-slate-400">
+              Checkout was cancelled, so nothing was charged. Pick a plan whenever you are ready.
+            </p>
+          )}
+
           {isGrandfathered && (
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
               <Crown className="w-4 h-4" />
@@ -546,7 +637,7 @@ export default function MembershipPage() {
                 You're on the{' '}
                 <span className="font-bold tracking-wide">{currentTierMeta.name}</span>{' '}
                 plan
-                {isLifetimeGrant ? ', lifetime access, no renewals.' : '.'}
+                {isLifetimeGrant ? ', lifetime access, no renewals.' : isAppStorePlan ? ', billed through the App Store.' : '.'}
               </span>
             </div>
           )}
@@ -592,11 +683,11 @@ export default function MembershipPage() {
             // should flip to "Current plan" for them instead of staying
             // disabled. Free users still match only when they have no
             // billing cycle on file.
+            // A plan with no billing cycle on file (Free, grandfathered,
+            // app store, referral month, comped) is current on every tab.
             const isCurrent =
               currentTier === tier.key &&
-              (isEnterprise
-                ? true
-                : currentCycle === cycle || (tier.key === 'free' && !currentCycle));
+              (isEnterprise ? true : !currentCycle || currentCycle === cycle);
             // The Enterprise card is greyed out and labeled "Coming Soon"
             // for the general public, but for members who actually hold
             // the tier (sponsored / comped grants) it should light up

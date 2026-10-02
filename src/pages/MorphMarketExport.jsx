@@ -46,6 +46,7 @@ import {
   MM_HEADERS,
 } from '@/lib/morphmarketSync';
 import QuickFixModal from '@/components/morph-market/QuickFixModal';
+import { resolveTier } from '@/lib/tierLimits';
 
 /**
  * MorphMarket Bulk Export Builder.
@@ -744,10 +745,8 @@ export default function MorphMarketExport() {
     };
   }, []);
 
-  const tier = user?.membership_tier || 'free';
-  const isAdmin = user?.role === 'admin';
-  const isGrandfathered = user?.subscription_status === 'grandfathered';
-  const hasAccess = tier === 'breeder' || tier === 'enterprise' || isAdmin || isGrandfathered;
+  const tier = resolveTier(user);
+  const hasAccess = tier === 'breeder' || tier === 'enterprise';
 
   const batchSet = useMemo(() => new Set(batchIds), [batchIds]);
   const batchGeckos = useMemo(

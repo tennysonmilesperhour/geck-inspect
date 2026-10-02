@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { exportMorphMarketCSV, parseMorphMarketCSV } from '@/lib/morphmarketSync';
 import { Gecko } from '@/entities/all';
+import { resolveTier } from '@/lib/tierLimits';
 
 /**
  * MorphMarket CSV sync panel, shown on the Seller Console for
@@ -46,10 +47,10 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
   const fileRef = useRef(null);
   const { toast } = useToast();
 
-  const tier = user?.membership_tier || 'free';
-  const isAdmin = user?.role === 'admin';
-  const isGrandfathered = user?.subscription_status === 'grandfathered';
-  const hasAccess = tier === 'breeder' || tier === 'enterprise' || isAdmin || isGrandfathered;
+  // One plan resolver for the app: Stripe, app store, grandfathered and
+  // admin plans all count (src/lib/tierLimits.js).
+  const tier = resolveTier(user);
+  const hasAccess = tier === 'breeder' || tier === 'enterprise';
 
   if (!hasAccess) {
     return (

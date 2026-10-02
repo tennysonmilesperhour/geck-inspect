@@ -23,6 +23,7 @@ import ShippingQuoteForm from '@/components/shipping/ShippingQuoteForm';
 import ShippingBookingForm from '@/components/shipping/ShippingBookingForm';
 import ShippingOrderList from '@/components/shipping/ShippingOrderList';
 import { IS_DEMO, SHIPZEROS_URL, getNearbyHubs } from '@/integrations/ShipZeros';
+import { resolveTier } from '@/lib/tierLimits';
 
 /**
  * BreederShipping, the authenticated shipping dashboard for Breeder
@@ -151,9 +152,8 @@ export default function BreederShipping() {
   const [activeQuote, setActiveQuote] = useState(null);
   const [orders, setOrders] = useState([]);
 
-  const tier = user?.membership_tier || 'free';
-  const isGrandfathered = user?.subscription_status === 'grandfathered';
-  const hasAccess = tier === 'breeder' || tier === 'enterprise' || isGrandfathered;
+  const tier = resolveTier(user);
+  const hasAccess = tier === 'breeder' || tier === 'enterprise';
 
   useEffect(() => {
     (async () => {
