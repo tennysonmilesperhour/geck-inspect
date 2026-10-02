@@ -17,6 +17,7 @@ import {
   guestMockList,
   isMockedEntity,
 } from '@/lib/guestMockData';
+import { PUBLIC_READ_COLUMNS } from '@/lib/publicColumns';
 
 /**
  * If a Supabase query fails with a JWT / auth error, try refreshing the
@@ -366,6 +367,18 @@ function applyFilter(query, filterObj) {
   return query;
 }
 
+/**
+ * The select list for a read. Signed-out visitors get an explicit column
+ * list on tables whose rows carry the owner's email (see publicColumns.js);
+ * everyone else gets every column.
+ */
+export async function readColumns(entityName) {
+  const publicColumns = PUBLIC_READ_COLUMNS[entityName];
+  if (!publicColumns) return '*';
+  const { data } = await supabase.auth.getSession();
+  return data?.session ? '*' : publicColumns;
+}
+
 function createEntityClient(entityName) {
   const tableName = TABLE_MAP[entityName];
   if (!tableName) {
@@ -385,12 +398,13 @@ function createEntityClient(entityName) {
         return [];
       }
 
+      const columns = await readColumns(entityName);
       const run = () => {
         const emailFilter = filterObj?.email;
         const emails = typeof emailFilter === 'string' ? [emailFilter] : emailFilter?.$in || null;
         let query = entityName === 'User'
           ? supabase.rpc('read_profiles', { p_emails: emails }).select('*')
-          : supabase.from(tableName).select('*');
+          : supabase.from(tableName).select(columns);
         query = applyFilter(query, filterObj);
 
         const sorts = parseSort(sort, entityName);
@@ -417,8 +431,9 @@ function createEntityClient(entityName) {
         if (isMockedEntity(entityName)) return guestMockGet(entityName, id);
         return null;
       }
+      const columns = await readColumns(entityName);
       const { data, error } = await withAuthRetry(() =>
-        (entityName === 'User' ? supabase.rpc('read_profiles') : supabase.from(tableName)).select('*').eq('id', id).maybeSingle()
+        (entityName === 'User' ? supabase.rpc('read_profiles') : supabase.from(tableName)).select(columns).eq('id', id).maybeSingle()
       );
       if (error) throw error;
       return data;

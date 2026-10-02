@@ -15,7 +15,7 @@ import { DEFAULT_GECKO_IMAGE as DEFAULT_AVATAR } from '@/lib/constants';
  * the same day, and the rotation advances once a day rather than on
  * every refresh. Clicking a card takes you to their public profile.
  *
- * Sale counts come from the community_gecko_counts() database function
+ * Sale counts come from the community_owner_gecko_counts() database function
  * (status = 'For Sale' per breeder). Historically this used Gecko.list()
  * to bucket counts client-side on the theory that the table is
  * small enough that a single fetch is fine. When it grows we can move
@@ -60,7 +60,7 @@ export default function FeaturedBreeders() {
           User.filter({ is_featured_breeder: true }).catch(() => []),
           // Per-breeder counts computed in the database instead of
           // downloading every gecko row to bucket them in the browser.
-          supabase.rpc('community_gecko_counts').then(({ data }) => data || []),
+          supabase.rpc('community_owner_gecko_counts').then(({ data }) => data || []),
         ]);
 
         // Deterministic 24h rotation: seed the shuffle with the current
@@ -70,10 +70,11 @@ export default function FeaturedBreeders() {
         const shuffled = seededShuffle(users, todaySeed).slice(0, FEATURED_COUNT);
         setBreeders(shuffled);
 
-        // Geckos with status 'For Sale' per breeder.
+        // Geckos with status 'For Sale' per breeder, keyed by profile id
+        // (signed-out visitors never see breeder emails).
         const counts = {};
         for (const row of countRows) {
-          if (row.created_by && row.selling > 0) counts[row.created_by] = row.selling;
+          if (row.owner_profile_id && row.selling > 0) counts[row.owner_profile_id] = row.selling;
         }
         setSaleCounts(counts);
       } catch (err) {
@@ -114,7 +115,7 @@ export default function FeaturedBreeders() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {breeders.map((b) => {
-              const sales = saleCounts[b.email] || 0;
+              const sales = saleCounts[b.id] || 0;
               const displayName = b.business_name || b.full_name || b.email.split('@')[0];
               return (
                 <Link

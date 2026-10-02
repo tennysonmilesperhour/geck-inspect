@@ -12,9 +12,9 @@ import { ArrowRight, Play } from 'lucide-react';
  * demonstrating. The honesty is the point: every face on screen is a
  * real Geck Inspect record, not stock photography.
  *
- * Data source: the geckos table is anon-readable (see RLS policy
- * geckos_read_all). We pull a small set keyed off the founder's
- * email and `gallery_display = true` so Tennyson controls which
+ * Data source: public geckos are anon-readable. We pull a small set
+ * keyed off the founder's profile id and `gallery_display = true` so
+ * Tennyson controls which
  * animals show up by toggling the gallery flag in the app.
  *
  * Captions are rotated client-side; they don't come from the database.
@@ -23,11 +23,12 @@ import { ArrowRight, Play } from 'lucide-react';
  * underlying gallery changes.
  */
 
-// Tennyson's account email. The slideshow pulls his curated gallery
-// from Supabase. If the email ever changes, update here. Hardcoded
-// rather than fetched so the unauthenticated public page doesn't
-// have to resolve the founder identity.
-const FOUNDER_EMAIL = 'tennysontaggart@gmail.com';
+// Tennyson's profile id (profiles.id). The slideshow pulls his curated
+// gallery from Supabase. Hardcoded rather than fetched so the
+// unauthenticated public page doesn't have to resolve the founder
+// identity. Signed-out visitors cannot filter on created_by (it holds
+// the owner's email), so this matches geckos.owner_profile_id.
+const FOUNDER_PROFILE_ID = 'f5398b9e-1b81-4d11-8c80-a300277b99da';
 
 // Captions narrate the "platform tour." Each slide's caption maps to
 // one of the headline product capabilities so the visitor scrubs
@@ -79,7 +80,7 @@ export default function HeroSlideshow() {
     supabase
       .from('geckos')
       .select('id, name, sex, hatch_date, morph_tags, morphs_traits, image_urls, sire_name, dam_name')
-      .eq('created_by', FOUNDER_EMAIL)
+      .eq('owner_profile_id', FOUNDER_PROFILE_ID)
       .eq('gallery_display', true)
       .eq('is_public', true)
       .limit(8)
