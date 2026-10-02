@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Bell, ArrowRight, Check, CheckCheck, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart, Egg, Utensils, Scale, Newspaper, ListOrdered, TrendingUp, Sunrise } from 'lucide-react';
+import { Bell, ArrowRight, Check, CheckCheck, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart, Egg, Utensils, Scale, Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope } from 'lucide-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
 
@@ -30,6 +30,7 @@ const ICONS = {
   waitlist_signup: <ListOrdered className="w-4 h-4 text-emerald-300" />,
   market_alert: <TrendingUp className="w-4 h-4 text-emerald-400" />,
   market_brief: <Sunrise className="w-4 h-4 text-amber-300" />,
+  vet_followup: <Stethoscope className="w-4 h-4 text-rose-300" />,
 };
 
 /**

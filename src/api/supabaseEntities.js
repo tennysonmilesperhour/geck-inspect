@@ -109,10 +109,33 @@ export function timestampColumns(entityName) {
 // timestamp (checked 29 Sep 2026), so a blank one is sent as null.
 const DATE_COLUMN = /(^date$|_date$|_date_|_at$|_since$|_until$)/;
 
+// Date columns whose names the pattern above misses (checked against
+// production on 2 Oct 2026). follow_up is the vet visit's follow-up date:
+// without it, saving a visit with no follow-up failed.
+export const OTHER_DATE_COLUMNS = new Set([
+  'follow_up',
+  'loan_start',
+  'expected_return',
+  'actual_return',
+  'planned_start',
+  'planned_end',
+  'last_updated',
+  'deposit_paid_on',
+  'refunded_on',
+  'hatched_on',
+  'event_timestamp',
+  'last_triggered',
+  'estimated_delivery',
+]);
+
+export function isDateColumn(key) {
+  return DATE_COLUMN.test(key) || OTHER_DATE_COLUMNS.has(key);
+}
+
 export function blankDatesToNull(record) {
   const row = { ...record };
   for (const [key, value] of Object.entries(row)) {
-    if (value === '' && DATE_COLUMN.test(key)) row[key] = null;
+    if (value === '' && isDateColumn(key)) row[key] = null;
   }
   return row;
 }
