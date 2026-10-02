@@ -17,8 +17,13 @@
  * wants. Example: 66% poss het Axanthic x visual Axanthic gives
  * 2/3 x 1/2 = 33.3% visual per egg.
  */
-import { predict, tagToGenotype, WILD_TYPE, LOCI } from '@/lib/genetics';
+import { predict, WILD_TYPE, LOCI } from '@/lib/genetics';
 import { getSimpleTraits } from './calculatorCatalog';
+import { tagsToSpec } from './tagTranslation';
+
+// Tags become a spec in one shared place (tagTranslation.js), so every
+// screen reads app tags the same way. Re-exported for existing callers.
+export { tagsToSpec };
 
 const MAX_SCENARIOS = 256;
 
@@ -95,16 +100,6 @@ export function expandScenarios(spec) {
     }
   }
   return scenarios;
-}
-
-/** Convert legacy morph_tags into a single-scenario spec. */
-export function tagsToSpec(tags) {
-  const partial = tagToGenotype(tags || []).genotype;
-  const loci = {};
-  for (const [locus, pair] of Object.entries(partial)) {
-    loci[locus] = [{ pair: [...pair], weight: 1 }];
-  }
-  return { loci };
 }
 
 function toAnimal(id, genotype) {

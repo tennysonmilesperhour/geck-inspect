@@ -71,6 +71,7 @@ import {
   TRAITS,
   canonicalizeMorphTags,
 } from './index.js';
+import { POSSIBLE_HET_CHANCE } from '../hetUtils.js';
 
 const RECESSIVE = 'recessive';
 const INCOMPLETE_DOMINANT = 'incomplete_dominant';
@@ -86,8 +87,9 @@ const TRAIT_DOMINANCE = (() => {
   return map;
 })();
 
-// Confidence we assign to a "Possible Het" tag actually being het.
-const POSSIBLE_HET_CONFIDENCE = 0.5;
+// Confidence we assign to a "Possible Het" tag actually being het. Shared
+// with the calculator's tag reading and the profile badges.
+const POSSIBLE_HET_CONFIDENCE = POSSIBLE_HET_CHANCE;
 
 // Minimum combined probability worth surfacing.
 const MIN_PROBABILITY = 0.1;

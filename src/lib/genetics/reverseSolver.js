@@ -367,17 +367,28 @@ export function solveTarget(targetId, { limit = 12 } = {}) {
 
 /**
  * Rank pairings from the user's own collection for a target.
- * Geckos arrive as { id, name, sex, spec } where spec is a
- * definite-locus spec (from tagsToSpec); missing loci read wild-type.
+ * Geckos arrive as { id, name, sex, spec } where spec comes from
+ * tagsToSpec; missing loci read wild-type. A Possible Het tag gives a
+ * locus two weighted options, and the odds are averaged over them.
  */
 export function scanCollection(targetId, geckos, { limit = 10, maxPairs = 2500 } = {}) {
   const target = REVERSE_TARGETS_BY_ID[targetId];
   if (!target) return { results: [], truncated: false };
   const loci = Object.keys(target.conditions);
 
-  const pairFor = (gecko, locus) => {
+  const WILD_OPTIONS = [{ pair: [WILD_TYPE, WILD_TYPE], weight: 1 }];
+  const optionsFor = (gecko, locus) => {
     const options = gecko.spec?.loci?.[locus];
-    return options?.[0]?.pair || [WILD_TYPE, WILD_TYPE];
+    return options?.length ? options : WILD_OPTIONS;
+  };
+  // For the health checks, assume a possible het proves out (the
+  // cautious reading), like the calculator's conditional warnings.
+  const pairFor = (gecko, locus) => {
+    let best = optionsFor(gecko, locus)[0];
+    for (const o of optionsFor(gecko, locus)) {
+      if (o.pair.filter((a) => a !== WILD_TYPE).length > best.pair.filter((a) => a !== WILD_TYPE).length) best = o;
+    }
+    return best.pair;
   };
 
   const sires = geckos.filter((g) => g.sex === 'Male' || g.sex === 'Unsexed');
@@ -392,7 +403,13 @@ export function scanCollection(targetId, geckos, { limit = 10, maxPairs = 2500 }
       if (++pairs > maxPairs) { truncated = true; break; }
       let p = 1;
       for (const locus of loci) {
-        p *= pSatisfies(pairFor(sire, locus), pairFor(dam, locus), target.conditions[locus]);
+        let locusP = 0;
+        for (const so of optionsFor(sire, locus)) {
+          for (const dop of optionsFor(dam, locus)) {
+            locusP += so.weight * dop.weight * pSatisfies(so.pair, dop.pair, target.conditions[locus]);
+          }
+        }
+        p *= locusP;
         if (p === 0) break;
       }
       if (p <= 0) continue;
@@ -456,10 +473,29 @@ export function scanCollectionTwoGen(targetId, geckos, {
   if (!target) return { results: [], truncated: false };
   const loci = Object.keys(target.conditions);
 
-  const pairFor = (gecko, locus) => {
+  // Possible Het tags give a locus weighted options; average over them.
+  const WILD_OPTIONS = [{ pair: [WILD_TYPE, WILD_TYPE], weight: 1 }];
+  const optionsFor = (gecko, locus) => {
     const options = gecko.spec?.loci?.[locus];
-    return options?.[0]?.pair || [WILD_TYPE, WILD_TYPE];
+    return options?.length ? options : WILD_OPTIONS;
   };
+  const childDistFor = (a, b, locus) => {
+    const merged = new Map();
+    for (const ao of optionsFor(a, locus)) {
+      for (const bo of optionsFor(b, locus)) {
+        for (const d of childPairDist(ao.pair, bo.pair)) {
+          const key = d.pair.join('|');
+          const entry = merged.get(key);
+          const p = ao.weight * bo.weight * d.p;
+          if (entry) entry.p += p;
+          else merged.set(key, { ...d, p });
+        }
+      }
+    }
+    return [...merged.values()];
+  };
+  const pSatisfiesMate = (holdbackPair, mate, locus, condition) =>
+    optionsFor(mate, locus).reduce((sum, o) => sum + o.weight * pSatisfies(holdbackPair, o.pair, condition), 0);
 
   const sires = geckos.filter((g) => g.sex === 'Male' || g.sex === 'Unsexed');
   const dams = geckos.filter((g) => g.sex === 'Female' || g.sex === 'Unsexed');
@@ -476,7 +512,7 @@ export function scanCollectionTwoGen(targetId, geckos, {
       // Distribution of gen-1 offspring at each target locus.
       const perLocus = loci.map((locus) => ({
         locus,
-        dist: childPairDist(pairFor(a, locus), pairFor(b, locus)),
+        dist: childDistFor(a, b, locus),
       }));
 
       // Enumerate holdback genotypes (cartesian across target loci).
@@ -499,9 +535,10 @@ export function scanCollectionTwoGen(targetId, geckos, {
           if (c.id === a.id && c.id === b.id) continue;
           let p2 = 1;
           for (const locus of loci) {
-            p2 *= pSatisfies(
+            p2 *= pSatisfiesMate(
               h.genotype[locus] || [WILD_TYPE, WILD_TYPE],
-              pairFor(c, locus),
+              c,
+              locus,
               target.conditions[locus],
             );
             if (p2 === 0) break;
