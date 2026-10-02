@@ -91,7 +91,8 @@ function extract(html, re) {
 
 // Static dev artifacts served from public/ that carry noindex and are
 // not real routes; they don't need descriptions, canonicals, or JSON-LD.
-const SKIP_ROUTES = new Set(['/font-preview']);
+// None today (public/font-preview.html was deleted 2 Oct 2026).
+const SKIP_ROUTES = new Set([]);
 
 function findings(file, html) {
   const out = [];
