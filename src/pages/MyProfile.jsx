@@ -216,11 +216,9 @@ function MyProfileScreen() {
             palm_street_url: currentUser.palm_street_url || '',
             breeder_name: currentUser.breeder_name || '',
             years_experience: currentUser.years_experience || 0,
-            // Add settings data
-            email_notifications_enabled: currentUser.email_notifications_enabled ?? true,
-            // Same default as Settings and the column: an empty list here was
-            // saved back and turned off every email type.
-            email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
+            // Notification preferences are edited in Settings only, so this
+            // form never writes them (two editors used to overwrite each
+            // other's choices).
             is_public_profile: currentUser.is_public_profile ?? true,
             show_username_on_images: currentUser.show_username_on_images ?? true,
             sidebar_badge_preference: currentUser.sidebar_badge_preference || 'collection'
@@ -375,14 +373,6 @@ function MyProfileScreen() {
 
     const handleSettingChange = (key, value) => {
         setEditData({...editData, [key]: value});
-    };
-
-    const handleNotificationTypeToggle = (type) => {
-        const currentTypes = editData.email_notification_types || [];
-        const newTypes = currentTypes.includes(type) 
-            ? currentTypes.filter(t => t !== type)
-            : [...currentTypes, type];
-        setEditData({...editData, email_notification_types: newTypes});
     };
 
     if (isLoading) {
@@ -868,58 +858,22 @@ function MyProfileScreen() {
                                 </CardContent>
                             </Card>
 
-                            {/* Notification Settings */}
+                            {/* Notification settings live in Settings (one editor). */}
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="text-slate-100">Notification Settings</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <Label htmlFor="email-notifications" className="text-slate-200 font-medium">Email Notifications</Label>
-                                            <p className="text-sm text-slate-400">Receive notifications via email</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-slate-400">
-                                                {editData.email_notifications_enabled ? 'Enabled' : 'Disabled'}
-                                            </span>
-                                            <Switch
-                                                id="email-notifications"
-                                                checked={editData.email_notifications_enabled}
-                                                onCheckedChange={(checked) => handleSettingChange('email_notifications_enabled', checked)}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {editData.email_notifications_enabled && (
-                                        <div className="ml-4 space-y-3 border-l-2 border-slate-700 pl-4">
-                                            {[
-                                                { key: 'level_up', label: 'Level Up Notifications', desc: 'When you reach new levels' },
-                                                { key: 'expert_status', label: 'Expert Status Changes', desc: 'When your expert status changes' },
-                                                { key: 'new_message', label: 'New Messages', desc: 'When someone sends you a message' },
-                                                { key: 'gecko_of_day', label: 'Gecko of the Day', desc: 'When your gecko is featured' },
-                                                { key: 'forum_replies', label: 'Forum Replies', desc: 'Replies to your posts' },
-                                                { key: 'breeding_updates', label: 'Breeding Updates', desc: 'Breeding calendar events' },
-                                                { key: 'announcements', label: 'Platform Announcements', desc: 'Important platform updates' }
-                                            ].map((notif) => (
-                                                <div key={notif.key} className="flex items-center justify-between">
-                                                    <div>
-                                                        <Label className="text-slate-300 text-sm">{notif.label}</Label>
-                                                        <p className="text-xs text-slate-500">{notif.desc}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-slate-400">
-                                                            {editData.email_notification_types?.includes(notif.key) ? 'On' : 'Off'}
-                                                        </span>
-                                                        <Switch
-                                                            checked={editData.email_notification_types?.includes(notif.key) || false}
-                                                            onCheckedChange={() => handleNotificationTypeToggle(notif.key)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <p className="text-sm text-slate-400">
+                                        Email and push choices (messages, forum replies, hatch alerts, market alerts and more) are all in Settings.
+                                    </p>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => navigate('/Settings#email-notifications')}
+                                        className="shrink-0"
+                                    >
+                                        Open notification settings
+                                    </Button>
                                 </CardContent>
                             </Card>
 

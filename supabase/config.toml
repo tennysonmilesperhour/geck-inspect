@@ -14,3 +14,8 @@ verify_jwt = true
 # anonymous calls; the handler then checks the admin role itself.
 [functions.admin-delete-account]
 verify_jwt = true
+
+# One-click unsubscribe from notification emails. Mail apps POST here with
+# no Supabase session; the signed token in the URL is the proof.
+[functions.email-unsubscribe]
+verify_jwt = false

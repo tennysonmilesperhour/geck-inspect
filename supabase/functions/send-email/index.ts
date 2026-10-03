@@ -32,6 +32,12 @@
 //   RESEND_API_KEY       starts with "re_"
 //   EMAIL_FROM           e.g. "Geck Inspect <alerts@geckinspect.com>"
 //
+// Unsubscribe: every email carries a signed per-member token
+// (email_unsubscribe_token, service role only). The footer links to
+// SITE_URL/Unsubscribe?t=<token>, which works signed out, and the
+// List-Unsubscribe header points at the email-unsubscribe function for
+// one-click unsubscribe from the mail app (RFC 8058).
+//
 // Deploy: supabase functions deploy send-email --no-verify-jwt
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
@@ -76,6 +82,9 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   referral_grant_ended: "announcements",
   submission_approved: "level_up",
   submission_rejected: "level_up",
+  // An admin answered the member's support ticket. Rides the messages
+  // preference, since it is a reply to something they wrote.
+  support_reply: "new_message",
 };
 
 // Alerts for the admin team. They go to admins whatever their email
@@ -146,7 +155,39 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function renderHtml(title: string, body: string, linkUrl: string): string {
+// The two unsubscribe addresses for one member, or null when no token
+// could be made (the Vault secret is missing). The page link works signed
+// out; the one-click address takes the POST a mail app sends.
+type UnsubscribeLinks = { page: string; oneClick: string };
+
+function unsubscribeLinks(token: string | null | undefined): UnsubscribeLinks | null {
+  if (!token) return null;
+  const t = encodeURIComponent(token);
+  return {
+    page: `${SITE_URL}/Unsubscribe?t=${t}`,
+    oneClick: `${SUPABASE_URL}/functions/v1/email-unsubscribe?t=${t}`,
+  };
+}
+
+async function unsubscribeToken(
+  supabase: ReturnType<typeof createClient>,
+  profileId: string | null | undefined,
+): Promise<string | null> {
+  if (!profileId) return null;
+  try {
+    const { data, error } = await supabase.rpc("email_unsubscribe_token", { p_profile_id: profileId });
+    if (error) {
+      console.warn("send-email: unsubscribe token failed", error);
+      return null;
+    }
+    return typeof data === "string" && data ? data : null;
+  } catch (err) {
+    console.warn("send-email: unsubscribe token threw", err);
+    return null;
+  }
+}
+
+function renderHtml(title: string, body: string, linkUrl: string, unsubscribe: UnsubscribeLinks | null): string {
   const safeTitle = escapeHtml(title);
   const safeBody = escapeHtml(body).replace(/\n/g, "<br>");
   const safeUrl = linkUrl.startsWith("http") ? linkUrl : `${SITE_URL}${linkUrl}`;
@@ -160,7 +201,7 @@ function renderHtml(title: string, body: string, linkUrl: string): string {
           <h1 style="margin:0 0 16px 0;color:#d1fae5;font-size:22px;font-weight:700;line-height:1.3;">${safeTitle}</h1>
           <p style="margin:0 0 24px 0;color:#a7f3d0;font-size:15px;line-height:1.55;">${safeBody}</p>
           <a href="${safeUrl}" style="display:inline-block;background:#10b981;color:#022c22;padding:12px 20px;border-radius:8px;font-weight:600;text-decoration:none;">Open in Geck Inspect</a>
-          <p style="margin:32px 0 0 0;color:#6ee7b7;font-size:12px;line-height:1.5;">You&rsquo;re getting this because email notifications are enabled in your Geck Inspect settings. <a href="${SITE_URL}/Settings#email-notifications" style="color:#86efac;">Change preferences</a>.</p>
+          <p style="margin:32px 0 0 0;color:#6ee7b7;font-size:12px;line-height:1.5;">You&rsquo;re getting this because email notifications are enabled in your Geck Inspect settings. <a href="${SITE_URL}/Settings#email-notifications" style="color:#86efac;">Change preferences</a>${unsubscribe ? ` or <a href="${escapeHtml(unsubscribe.page)}" style="color:#86efac;">unsubscribe from these emails</a>` : ""}.</p>
         </td></tr>
       </table>
     </td></tr>
@@ -176,7 +217,24 @@ class RateLimited extends Error {
   }
 }
 
-async function sendEmail(to: string, subject: string, text: string, html: string) {
+// List-Unsubscribe plus List-Unsubscribe-Post makes Gmail, Yahoo and
+// Apple Mail show their own Unsubscribe button, which POSTs to the
+// one-click address. Bulk senders are expected to include both.
+function unsubscribeHeaders(unsubscribe: UnsubscribeLinks | null): Record<string, string> | undefined {
+  if (!unsubscribe) return undefined;
+  return {
+    "List-Unsubscribe": `<${unsubscribe.oneClick}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
+
+async function sendEmail(
+  to: string,
+  subject: string,
+  text: string,
+  html: string,
+  headers?: Record<string, string>,
+) {
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -184,7 +242,7 @@ async function sendEmail(to: string, subject: string, text: string, html: string
       "Authorization": `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from: EMAIL_FROM, to, subject, text, html }),
+    body: JSON.stringify({ from: EMAIL_FROM, to, subject, text, html, ...(headers ? { headers } : {}) }),
   });
   if (!res.ok) {
     const msg = await res.text();
@@ -204,11 +262,17 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // each one calls this function at the same moment, so on 27 Sep 21 of the
 // digest emails failed with 429 and were dropped. Spread each burst over a
 // few seconds, then retry on 429 with growing, jittered waits.
-async function sendWithRetry(to: string, subject: string, text: string, html: string) {
+async function sendWithRetry(
+  to: string,
+  subject: string,
+  text: string,
+  html: string,
+  headers?: Record<string, string>,
+) {
   await sleep(Math.random() * 8_000);
   for (let attempt = 1; ; attempt += 1) {
     try {
-      return await sendEmail(to, subject, text, html);
+      return await sendEmail(to, subject, text, html, headers);
     } catch (err) {
       if (!(err instanceof RateLimited) || attempt >= 6) throw err;
       await sleep(Math.max(err.retryAfterMs, 1_000 * 2 ** attempt) + Math.random() * 2_000);
@@ -257,7 +321,7 @@ serve(async (req) => {
 
   const { data: profile, error: profileErr } = await supabase
     .from("profiles")
-    .select("role, email_notifications_enabled, email_notification_types")
+    .select("id, role, email_notifications_enabled, email_notification_types")
     .eq("email", userEmail)
     .maybeSingle();
 
@@ -283,9 +347,11 @@ serve(async (req) => {
     }
   }
 
-  const html = renderHtml(title, body, url);
-  const text = `${body}\n\n${url.startsWith("http") ? url : `${SITE_URL}${url}`}`;
-  const delivery = sendWithRetry(userEmail, title, text, html)
+  const unsubscribe = unsubscribeLinks(await unsubscribeToken(supabase, profile?.id));
+  const html = renderHtml(title, body, url, unsubscribe);
+  const text = `${body}\n\n${url.startsWith("http") ? url : `${SITE_URL}${url}`}` +
+    (unsubscribe ? `\n\nUnsubscribe from these emails: ${unsubscribe.page}` : "");
+  const delivery = sendWithRetry(userEmail, title, text, html, unsubscribeHeaders(unsubscribe))
     .then((result) => ({ delivered: 1, id: result?.id }))
     .catch((err) => {
       console.warn("send-email: delivery failed", err);

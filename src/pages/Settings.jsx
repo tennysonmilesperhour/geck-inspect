@@ -426,6 +426,18 @@ export default function SettingsPage() {
         loadData();
     }, [toast]);
 
+    // Links such as /Settings#email-notifications (from emails, My Profile
+    // and support replies) jump to their section once the page has loaded.
+    useEffect(() => {
+        if (isLoading || typeof window === 'undefined') return;
+        const id = window.location.hash.replace(/^#/, '');
+        if (!id) return;
+        const timer = setTimeout(() => {
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+        return () => clearTimeout(timer);
+    }, [isLoading]);
+
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     // Keeper mode lives in localStorage (per device), not in the profile
