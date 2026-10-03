@@ -13,6 +13,8 @@ import { breederCanonical, breederDisplayName, breederSlug } from '@/lib/breeder
 import BuyerInquiryModal from '@/components/breeder/BuyerInquiryModal';
 import { useInAppShell } from '@/lib/appShell';
 import TrustPanel from '@/components/marketplace/TrustPanel';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import {
   DEFAULT_STORE_SETTINGS, readStoreSettings, themeFor,
   AvailableNowSection, WaitlistCtaSection, BuiltOnGeckInspect,
@@ -95,6 +97,7 @@ export default function Breeder() {
   const [inferredGeckos, setInferredGeckos] = useState([]);
   const [uniqueOwners, setUniqueOwners] = useState(0);
   const [errorMsg, setErrorMsg] = useState(null);
+  const blocked = useBlockedMembers();
 
   // Mini-site settings (accent theme, "Available now" toggle, attached
   // waitlist), read from reserved entries in the owner's published
@@ -280,6 +283,17 @@ export default function Breeder() {
 
   const breederUrl = `https://geckinspect.com/Breeder/${slug}`;
   const isCurated = mode === 'curated' && profile;
+  if (isCurated && blocked.isBlocked({ created_by: profile.created_by })) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-8">
+        <div className="text-center max-w-md space-y-3">
+          <h1 className="text-2xl font-bold">You blocked this breeder</h1>
+          <p className="text-slate-400 text-sm">Their page, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
+          <Button asChild><Link to={createPageUrl('Settings')}>Open Settings</Link></Button>
+        </div>
+      </div>
+    );
+  }
   // Accent theme chosen by the breeder; emerald when unset, so the
   // inferred mode and pages without settings look unchanged.
   const theme = themeFor(storeSettings.theme);
@@ -471,6 +485,12 @@ export default function Breeder() {
                   <Mail className="w-4 h-4" />
                   Contact breeder
                 </button>
+                <ReportContent
+                  targetType="breeder_page"
+                  targetId={profile.id}
+                  authorEmail={profile.created_by}
+                  excerpt={[profile.display_name, profile.bio].filter(Boolean).join('\n')}
+                />
               </div>
 
               {profile.bio && (

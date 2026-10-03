@@ -81,8 +81,12 @@ export async function fetchMorphCommunityPhotos(slug, { limit = 12, client = sup
       .filter((row) => row && row.image_url)
       .map((row) => ({
         id: `submission-${row.id}`,
+        submission_id: row.id,
         image_url: row.image_url,
         credit: contributorCredit(row.contributor_name),
+        // Profile id (never an email), so blocking and reporting can name
+        // the contributor. Returned once the moderation migration is live.
+        owner_profile_id: row.contributor_id || null,
       }));
   } catch {
     return [];

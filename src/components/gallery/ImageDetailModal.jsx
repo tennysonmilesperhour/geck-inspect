@@ -10,6 +10,7 @@ import { CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import ReportContent from '@/components/support/ReportContent';
 
 export default function ImageDetailModal({ data, onClose }) {
     if (!data || !data.image) {
@@ -90,6 +91,16 @@ export default function ImageDetailModal({ data, onClose }) {
                                 <p className="text-slate-400 text-sm italic mt-1">"{image.notes}"</p>
                             </div>
                         )}
+
+                        <div className="pt-2 border-t border-slate-800">
+                            <ReportContent
+                                targetType="gecko_image"
+                                targetId={image.id}
+                                authorEmail={image.created_by}
+                                authorProfileId={image.owner_profile_id}
+                                excerpt={[image.image_url, image.notes].filter(Boolean).join('\n')}
+                            />
+                        </div>
                     </div>
                 </div>
             </DialogContent>

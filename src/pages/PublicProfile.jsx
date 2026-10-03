@@ -13,6 +13,8 @@ import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import Seo from '@/components/seo/Seo';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
 // Build a ProfilePage + Person JSON-LD graph for the currently-loaded
@@ -108,6 +110,7 @@ export default function PublicProfile() {
     const [storePage, setStorePage] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const blocked = useBlockedMembers();
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -255,6 +258,23 @@ export default function PublicProfile() {
     if (!profileUser) {
         return null;
     }
+
+    if (blocked.isBlocked({ created_by: profileUser.email, owner_profile_id: profileUser.id })) {
+        return (
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-5xl mx-auto py-16 md:py-20 flex flex-col items-center text-center">
+                    <UserX className="w-12 h-12 text-slate-500 mb-4" aria-hidden="true" />
+                    <h1 className="text-xl font-semibold text-slate-100">You blocked this member</h1>
+                    <p className="text-sm text-slate-400 mt-2 max-w-md">
+                        Their profile, posts, photos and listings are hidden for you. You can unblock them in Settings.
+                    </p>
+                    <Button asChild className="mt-4">
+                        <Link to={createPageUrl('Settings')}>Open Settings</Link>
+                    </Button>
+                </div>
+            </div>
+        );
+    }
     
     const profilePath = profileUser.id
         ? `/PublicProfile?userId=${profileUser.id}`
@@ -320,6 +340,14 @@ export default function PublicProfile() {
                                 )}
                             </Button>
                         )}
+                        <ReportContent
+                            targetType="profile"
+                            targetId={profileUser.id}
+                            authorEmail={profileUser.email}
+                            authorProfileId={profileUser.id}
+                            excerpt={[profileUser.full_name, profileUser.business_name, profileUser.bio].filter(Boolean).join('\n')}
+                            className="mt-2 sm:mt-0"
+                        />
                     </div>
                 </div>
                 {/* Name for the sm range only: the row above hides its copy

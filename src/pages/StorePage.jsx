@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabaseClient';
 import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import {
     Mail, Store, ArrowLeft, MessageCircle, ArrowUpRight, X,
 } from 'lucide-react';
@@ -295,6 +297,7 @@ export default function StorePage() {
     // rendering the original store body below as a fallback so shared
     // /store/:slug links never break.
     const [redirectSlug, setRedirectSlug] = useState(null);
+    const blocked = useBlockedMembers();
 
     useEffect(() => {
         let cancelled = false;
@@ -415,6 +418,18 @@ export default function StorePage() {
                     <Button onClick={() => navigate(createPageUrl('Home'))} className="bg-emerald-600 hover:bg-emerald-500">
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Geck Inspect
                     </Button>
+                </div>
+            </div>
+        );
+    }
+
+    if (blocked.isBlocked({ owner_profile_id: page.owner_profile_id })) {
+        return (
+            <div className="min-h-screen bg-stone-950 text-stone-200 flex items-center justify-center p-6">
+                <div className="text-center max-w-md space-y-3">
+                    <h1 className="font-serif text-3xl font-bold text-white">You blocked this breeder</h1>
+                    <p className="text-stone-400 text-sm">Their store, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
+                    <Button onClick={() => navigate(createPageUrl('Settings'))} className="bg-emerald-600 hover:bg-emerald-500">Open Settings</Button>
                 </div>
             </div>
         );
@@ -761,6 +776,15 @@ export default function StorePage() {
                     </Link>
                     .
                 </p>
+                <div className="mt-3 flex justify-center">
+                    <ReportContent
+                        targetType="store_page"
+                        targetId={page.id}
+                        authorProfileId={page.owner_profile_id}
+                        excerpt={[page.title, page.tagline, page.description].filter(Boolean).join('\n')}
+                        label="Report this store"
+                    />
+                </div>
             </footer>
 
             <GeckoLightbox gecko={openGecko} onClose={() => setOpenGecko(null)} />
