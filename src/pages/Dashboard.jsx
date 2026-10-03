@@ -67,8 +67,10 @@ async function loadCommunityDashboard() {
         ForumPost.list('-created_date', 10).catch(() => []),
         GotdEntity.filter({ date: today }, '-created_date', 1).catch(() => []),
         // Only photos uploaded by real members: the scraper inserts rows
-        // with NULL created_by, and those must not reach the community rail.
-        GeckoImage.filter({ created_by: { $ne: null } }, '-created_date', 20).catch(() => []),
+        // with no owner, and those must not reach the community rail.
+        // owner_profile_id is set exactly when a member uploaded the photo,
+        // and unlike created_by a signed-out visitor may filter on it.
+        GeckoImage.filter({ owner_profile_id: { $ne: null } }, '-created_date', 20).catch(() => []),
     ]);
 
     const stats = {
@@ -79,20 +81,21 @@ async function loadCommunityDashboard() {
         posts: posts.length,
     };
 
+    // The uploader is found from the photo's owner_profile_id, never from an
+    // email: signed-out visitors cannot read created_by or uploader_email.
+    const uploaderOf = (image) => (image?.owner_profile_id
+        ? User.get(image.owner_profile_id).catch(() => null)
+        : Promise.resolve(null));
+
     let geckoOfTheDay = null;
     let fallbackGecko = null;
     if (gotd && gotd.length > 0) {
-        const [featuredGeckoImage, uploaderResult] = await Promise.all([
-            GeckoImage.get(gotd[0].gecko_image_id).catch(() => null),
-            User.filter({ email: gotd[0].uploader_email }).catch(() => []),
-        ]);
-        geckoOfTheDay = { ...gotd[0], image: featuredGeckoImage, uploader: uploaderResult[0] || null };
+        const featuredGeckoImage = await GeckoImage.get(gotd[0].gecko_image_id).catch(() => null);
+        const uploader = await uploaderOf(featuredGeckoImage);
+        geckoOfTheDay = { ...gotd[0], image: featuredGeckoImage, uploader };
     } else if (recentImagesData.length > 0) {
         const randomImage = recentImagesData[Math.floor(Math.random() * recentImagesData.length)];
-        const uploaderResult = randomImage.created_by
-            ? await User.filter({ email: randomImage.created_by }).catch(() => [])
-            : [];
-        fallbackGecko = { image: randomImage, uploader: uploaderResult[0] || null };
+        fallbackGecko = { image: randomImage, uploader: await uploaderOf(randomImage) };
     }
 
     return { users: usersData, recentImages: recentImagesData, stats, geckoOfTheDay, fallbackGecko };
