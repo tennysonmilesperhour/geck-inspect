@@ -1,4 +1,4 @@
--- NOT APPLIED YET. It writes to members' existing rows, so it waits for
+-- Applied 3 Oct 2026.
 -- Tennyson (audit step 31).
 --
 -- Copies the number out of older Other Reptiles weigh-ins ("Weight: 45g"

@@ -4,7 +4,7 @@
 -- while signed out: Postgres refuses the whole query once a column in it
 -- is not granted. Apply this only after the client that reads explicit
 -- column lists (src/lib/publicColumns.js) is live in production, and after
--- 20261002235000_anon_hide_owner_email_columns.sql (geckos and photos).
+-- 20261003220100_anon_hide_owner_email_columns.sql (geckos and photos).
 -- Step 1 is 20261003022738_owner_profile_id_forum_store_welcome.sql.
 --
 -- A scan as the anon role on 3 Oct 2026 found email addresses readable by

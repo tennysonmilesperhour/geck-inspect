@@ -27,7 +27,9 @@
 --    rejection is no longer titled "Submission approved". The function
 --    body is the 30 Sep 2026 version (20260930060855) plus one line.
 --
--- Idempotent: create or replace, drop policy if exists.
+-- Applied 3 Oct 2026. The Supabase MCP tool hangs on DROP and REVOKE
+-- statements, so the policies are changed in place with ALTER POLICY
+-- (rename plus new roles and conditions) instead of drop and create.
 
 -- 1. Public read of approved photos, with a safe credit name.
 create or replace function public.morph_community_photos(p_slug text, p_limit integer default 12)
@@ -67,17 +69,14 @@ as $function$
   limit least(greatest(coalesce(p_limit, 12), 1), 48);
 $function$;
 
-revoke all on function public.morph_community_photos(text, integer) from public;
 grant execute on function public.morph_community_photos(text, integer) to anon, authenticated;
 
 -- 2. Row level security on the submissions table.
 alter table public.morph_reference_images enable row level security;
 
-drop policy if exists morph_reference_images_read_all on public.morph_reference_images;
-drop policy if exists morph_reference_images_read_own_or_admin on public.morph_reference_images;
-create policy morph_reference_images_read_own_or_admin
-  on public.morph_reference_images
-  for select
+alter policy morph_reference_images_read_all on public.morph_reference_images
+  rename to morph_reference_images_read_own_or_admin;
+alter policy morph_reference_images_read_own_or_admin on public.morph_reference_images
   to authenticated
   using (
     (select auth.email()) = created_by
@@ -85,10 +84,7 @@ create policy morph_reference_images_read_own_or_admin
     or (select public.is_admin())
   );
 
-drop policy if exists morph_reference_images_write_own on public.morph_reference_images;
-create policy morph_reference_images_write_own
-  on public.morph_reference_images
-  for insert
+alter policy morph_reference_images_write_own on public.morph_reference_images
   to authenticated
   with check (
     (select auth.email()) = created_by
@@ -96,11 +92,9 @@ create policy morph_reference_images_write_own
     and status = 'pending'
   );
 
-drop policy if exists morph_reference_images_update on public.morph_reference_images;
-drop policy if exists morph_reference_images_update_admin on public.morph_reference_images;
-create policy morph_reference_images_update_admin
-  on public.morph_reference_images
-  for update
+alter policy morph_reference_images_update on public.morph_reference_images
+  rename to morph_reference_images_update_admin;
+alter policy morph_reference_images_update_admin on public.morph_reference_images
   to authenticated
   using ((select public.is_admin()))
   with check ((select public.is_admin()));

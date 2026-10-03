@@ -4,7 +4,7 @@
 -- which is unchanged here. The new page signs up through the
 -- waitlist-signup edge function, which calls the service-role-only
 -- functions below and mails the confirmation link. A later migration
--- (20261003121000_waitlist_require_confirmation.sql) closes the old
+-- (20261003220300_waitlist_require_confirmation.sql) closes the old
 -- join_waitlist() path once the new page is live.
 --
 -- A signup is waiting for confirmation while confirm_token_hash is set

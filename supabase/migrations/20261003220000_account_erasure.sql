@@ -107,7 +107,9 @@
 -- gecko the member sold, which now belongs to the buyer). listing-images
 -- holds scraped market photos and is never touched.
 --
--- Not applied by this commit. See docs/MIGRATIONS.md.
+-- Run by hand in the SQL editor (the MCP tool cannot run statements that
+-- contain delete or revoke). Includes a server-only guard and the tables
+-- added on 3 Oct.
 
 -- 1. The erasure function ----------------------------------------------------
 
@@ -133,6 +135,13 @@ declare
   v_images    int := 0;
   v_files     jsonb;
 begin
+  -- Server only. EXECUTE is also revoked from anon and authenticated, but
+  -- this check holds even if a grant is ever restored by mistake: a call
+  -- through the API carries a role claim, and only service_role passes. A
+  -- direct database session (no claim) is an admin at the console.
+  if auth.role() is not null and auth.role() <> 'service_role' then
+    raise exception 'admin_erase_account: service role only';
+  end if;
   if v_email = '' or position('@' in v_email) = 0 then
     raise exception 'admin_erase_account: an email address is required';
   end if;
@@ -411,10 +420,20 @@ begin
   get diagnostics v_messages = row_count;
   delete from public.notifications n
    where lower(n.user_email) = v_email or lower(coalesce(n.created_by, '')) = v_email;
+  delete from public.support_replies r
+   where r.message_id in (
+     select s.id::text from public.support_messages s
+      where (lower(s.user_email) = v_email or lower(coalesce(s.created_by, '')) = v_email)
+        and s.subject is distinct from 'Account deletion request');
   delete from public.support_messages s
    where (lower(s.user_email) = v_email or lower(coalesce(s.created_by, '')) = v_email)
      and s.subject is distinct from 'Account deletion request';
   delete from public.push_subscriptions x where lower(x.user_email) = v_email;
+  -- Tables added on 3 Oct 2026.
+  delete from public.content_reports x where lower(x.reporter_email) = v_email;
+  delete from public.planner_notes x where v_uid is not null and x.user_id = v_uid;
+  delete from public.consultant_conversations x where v_uid is not null and x.user_id = v_uid;
+  delete from public.forum_post_views x where v_uid is not null and x.viewer_id = v_uid;
 
   -- 1k. Community.
   update public.forum_posts f
@@ -625,10 +644,7 @@ begin
 end;
 $function$;
 
-revoke all on function public.notify_admins_of_deletion_request() from public;
-
-drop trigger if exists support_messages_deletion_request_alert on public.support_messages;
-create trigger support_messages_deletion_request_alert
+create or replace trigger support_messages_deletion_request_alert
   after insert on public.support_messages
   for each row execute function public.notify_admins_of_deletion_request();
 

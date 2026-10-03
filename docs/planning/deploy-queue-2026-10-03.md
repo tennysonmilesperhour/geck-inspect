@@ -1,66 +1,57 @@
 # Deploy queue, 3 October 2026
 
-The 2 and 3 October ship-ready work is all on `main` and live on Vercel. Some of it waits on production database or edge function changes that were held back for approval, because they can break the live app, change member data, or send email. This is the full list, in the order to apply it. Each item says what it unlocks.
+The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file records what went to production on 3 October and the one step still waiting on Tennyson.
 
-Project: `mmuglfphhwlaluyfyxsp`. After applying a migration with the MCP `apply_migration` tool, rename the file to the version it records (docs/MIGRATIONS.md) and update any test or comment that names the file (`src/lib/__tests__/publicColumns.test.js` and `src/lib/publicColumns.js` name the two email migrations).
+Project: `mmuglfphhwlaluyfyxsp`.
 
-## 1. Edge functions (safe to deploy first)
+## Done on 3 October
 
-Each one is backward compatible with the live app. Deploy from the repo copy.
+**Edge functions deployed** (all from the repo copy):
 
-| Function | JWT check | What it unlocks |
+| Function | Version | What it unlocked |
 |---|---|---|
-| `send-email` | off (as today) | Vet follow-up, task reminder, morph photo rejection, support reply and account-deletion alert emails; unsubscribe link and List-Unsubscribe headers on every email |
-| `send-push` | as today | Vet follow-up, task reminder and morph rejection push |
-| `email-unsubscribe` (new) | off | One-click unsubscribe from mail apps. Deploy with or after `send-email` |
-| `waitlist-signup` (new) | off | Waitlist email confirmation and the "your place in line" email |
-| `recognize-gecko-morph` | as today | Free Morph ID try refunded on "better photos needed" (D19) |
-| `invoke-llm` | as today | AI Consultant refunds a failed message |
-| `publish-social-post` | as today | Copy-out costs no post credit; two-Pages fix; Bluesky only |
-| `set-platform-connection` | as today | Bluesky handle and app password checked before saving |
-| `admin-delete-account` (new) | on | Account erasure. Deploy after migration 2b below |
+| `send-email` | v25 | Vet follow-up, task reminder, photo rejection, support reply and deletion-request emails; unsubscribe link and List-Unsubscribe headers |
+| `send-push` | v23 | Vet follow-up, task reminder and photo rejection push |
+| `email-unsubscribe` | v1 (new) | One-click unsubscribe from mail apps |
+| `waitlist-signup` | v1 (new) | Waitlist email confirmation and the "your place in line" email |
+| `invoke-llm` | v28 | AI Consultant refunds a failed message |
+| `set-platform-connection` | v17 | Bluesky handle and app password checked before saving |
+| `publish-social-post` | v27 | Copy-out costs no post credit; two-Pages fix |
+| `recognize-gecko-morph` | v63 | Free Morph ID try refunded on "better photos needed" (D19) |
+| `admin-delete-account` | v1 (new) | Account erasure; says "not installed yet" until the SQL below runs |
 
-Also: undeploy `rapid-api` (hello-world template, no caller). `admin-end-trial` is a disabled stub and can be deleted too.
+**Migrations applied:**
+- `20261003204952_morph_photo_credits`: closed the open read rule on `morph_reference_images` (anyone could read pending and rejected submissions with the submitter's email), added `morph_community_photos()`, and every new notification title.
+- `20261003205612_morph_community_photos_moderation`: morph pages skip hidden photos and blocked members. Kept the four-column output, so the Report button on morph photos cannot offer "block" (adding the column needs a DROP FUNCTION).
+- `20261003210328_reptile_event_weight_backfill`: 14 old reptile weights copied into the number column.
+- `20261003210527_scrub_stored_email_names`: emails stored as names and reviewer emails in photo training data replaced (0 left).
 
-## 2. Migrations
+## Waiting on Tennyson: one SQL script
 
-### 2a. Morph Guide photos (privacy fix plus feature)
-1. `20261002220000_morph_photo_credits.sql`: closes the open read rule on `morph_reference_images` (today anyone, signed out, can read pending and rejected rows with the submitter's email), adds `morph_community_photos()`, and redefines `notify_dispatch_on_insert()` with every new title (vet follow-up, photo rejection, account deletion request, task reminder, support reply).
-2. `20261003031000_morph_community_photos_moderation.sql`: must come after 1. Hides moderated and blocked photos.
+The Supabase MCP tool treats any statement containing `delete`, `drop` or `revoke` as destructive and waits for a confirmation that never appears in a Claude session, so these four could not be applied from here. They are bundled in **`docs/planning/deploy-queue-2026-10-03.sql`**: open Supabase, SQL Editor, paste the whole file, Run. It is one transaction (all or nothing), records the four migrations in the history, and ends with checks that should all read true.
 
-### 2b. Account erasure
-3. `20261002230000_account_erasure.sql`: `admin_erase_account()` (service role only), the admin alert trigger, and the same `notify_dispatch_on_insert()` as item 1 (identical, so order between 1 and 3 does not matter). Then deploy `admin-delete-account`.
+1. `20261003220000_account_erasure`: `admin_erase_account()` (server only, with a second guard inside the function) and the admin alert on a deletion request.
+2. `20261003220100_anon_hide_owner_email_columns`: signed-out visitors stop seeing owner emails on geckos and photos.
+3. `20261003220200_anon_hide_email_columns_more`: the same for 20 more tables.
+4. `20261003220300_waitlist_require_confirmation`: the old direct waitlist signup closes.
 
-### 2c. Signed-out email lockdown (breaking for old clients)
-The client that reads only safe columns is live. Do a signed-out smoke test right after: landing page, Dashboard as guest, a passport, a morph page, a /Breeder page, a /store page, a waitlist page.
+Right after running it, open these signed out: the landing page, a passport, a morph page, a /Breeder page, a /store page and a waitlist page. If one breaks, `grant select on public.<table> to anon;` restores that table's old access while it is fixed.
 
-4. `20261002235000_anon_hide_owner_email_columns.sql`: signed-out visitors lose `created_by` on geckos and `created_by`, `user_id`, `image_embedding`, `training_meta` on gecko_images.
-5. `20261003120000_anon_hide_email_columns_more.sql`: signed-out visitors lose read access to user_activity, gecko_likes, questions, answers, morph_traits and morph_price_cache, and lose the email columns on 14 more tables (including feeding and shed records); members lose other members' emails on user_activity, gecko_likes, gecko_of_the_day, questions and answers; final `welcome_shelf()`.
+## Also for Tennyson
 
-Rollback if a signed-out page breaks: `grant select on public.<table> to anon;` restores the old column access for that table while the page is fixed.
+- Undeploy `rapid-api` (hello-world template, no caller). `admin-end-trial` is a disabled stub and can go too.
+- Promote and the AI Consultant are off for members in the admin Pages tool. Turn them on when ready.
 
-### 2d. Data changes
-6. `20261003120100_scrub_stored_email_names.sql`: replaces emails stored as names (2 ownership records, 1 forum comment, 2 photo notes) and the reviewer emails in 3,755 `training_meta` rows.
-7. `20261003121100_reptile_event_weight_backfill.sql`: copies 14 "Weight: 45g" notes into the number column. The app already reads the notes, so nothing waits on it.
+## Real-device and real-email checks
 
-### 2e. Waitlist (after `waitlist-signup` is deployed)
-8. `20261003121000_waitlist_require_confirmation.sql`: closes the old `join_waitlist` to the public, so nobody can sign up an address they do not own.
-
-## 3. Switches in the admin Pages tool
-
-Promote and the AI Consultant are both off for members. Turn them on once their functions are deployed; the Membership allowance lines appear on their own.
-
-## 4. Real-device and real-email checks
-
-These are section 8 of the feature audit plus the new ones:
 - Airplane mode: open Field Mode online, go offline, log a feeding, see "waiting to sync", go online, confirm it saved.
-- A task due today in the Season Planner: bell and push after 14:20 UTC with the app closed.
-- A vet follow-up due today: bell after 14:25 UTC, and email and push once the functions are deployed.
-- Transfer a gecko to a brand-new account from the email; check the buyer sees weights on the passport.
-- Waitlist: sign up, confirm from the email, get the "your place" email, breeder gets notified.
-- Report something, then hide it from Admin, Reports; confirm it is gone for another account and signed out.
+- A task due today in the Season Planner and a vet follow-up due today: bell, email and push arrive with the app closed (after 14:20 and 14:25 UTC).
+- Transfer a gecko to a brand-new account from the email; the buyer sees weights on the passport.
+- Waitlist: sign up, confirm from the email, get the "your place" email, the breeder is notified.
+- Report something, then hide it from Admin, Reports; it is gone for another account and signed out.
 - Hatch an egg from each entry point on a phone; check the limit message on a Free account with 10 geckos.
-- Erase a disposable account from the Support inbox (after 2b): login gone, files gone, a sold gecko's photo still loads for the buyer, the ticket closes.
+- After the SQL script: erase a disposable account from the Support inbox. The login is gone, its files are gone, a sold gecko's photo still loads for the buyer, the ticket closes.
 - One-click unsubscribe from a real Gmail message.
-- Connect a real Bluesky account and publish; confirm a copy-out leaves "Posts this month" unchanged.
+- Connect a real Bluesky account and publish; a copy-out leaves "Posts this month" unchanged.
+- A blurry free-account Morph ID gives the free try back.
 - Print the rack label sheet on US Letter.

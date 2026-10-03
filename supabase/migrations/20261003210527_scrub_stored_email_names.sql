@@ -1,7 +1,7 @@
--- Email addresses stored where a name belongs. NOT YET APPLIED (data change).
+-- Email addresses stored where a name belongs. Applied 3 Oct 2026.
 --
 -- Changes stored rows, so it is left for Tennyson to apply by hand. It is
--- safe to run before or after 20261003120000_anon_hide_email_columns_more.sql
+-- safe to run before or after 20261003220200_anon_hide_email_columns_more.sql
 -- and is idempotent (a second run finds nothing to change).
 --
 -- Found by a scan on 3 Oct 2026:

@@ -3,7 +3,7 @@
 --
 -- A scan as the signed-out (anon) role on 3 Oct 2026 found email addresses
 -- in forum posts, forum comments, store pages and more. Step 2
--- (20261003120000_anon_hide_email_columns_more.sql, applied only after the
+-- (20261003220200_anon_hide_email_columns_more.sql, applied only after the
 -- new client is deployed) takes those columns away from signed-out
 -- visitors. Before that can happen, signed-out pages need another way to
 -- say who wrote a post or owns a store page:
