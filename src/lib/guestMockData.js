@@ -976,7 +976,7 @@ const NOTIFICATIONS = [
     user_email: GUEST_EMAIL,
     type: 'hatch_alert',
     content: 'Harley x Spud clutch #1 is due to hatch in about 10 days.',
-    link: '/BreedingPairs',
+    link: '/Breeding',
     is_read: false,
     created_date: daysAgo(1),
     created_by: 'system@geckinspect',
