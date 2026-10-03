@@ -6,6 +6,10 @@ import { ForumPost, ForumComment, User, ForumCategory, Notification, ForumLike }
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/lib/supabaseClient';
+import { ForumPhotoGrid, ForumPhotoPicker, forumPhotoList } from '@/components/forum/ForumPhotos';
+import { arrangeForumComments } from '@/lib/forumThreads';
 import {
     ThumbsUp,
     User as UserIcon,
@@ -15,6 +19,11 @@ import {
     CornerDownRight,
     Loader2,
     X,
+    Pencil,
+    Pin,
+    Lock,
+    Unlock,
+    Eye,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -68,6 +77,11 @@ export default function ForumPostPage() {
     const [isPosting, setIsPosting] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [likesData, setLikesData] = useState({});
+    const [postDraft, setPostDraft] = useState(null);
+    const [isSavingPost, setIsSavingPost] = useState(false);
+    const [editingCommentId, setEditingCommentId] = useState(null);
+    const [commentDraft, setCommentDraft] = useState('');
+    const [isSavingComment, setIsSavingComment] = useState(false);
 
     const postId = new URLSearchParams(location.search).get('id');
 
@@ -87,6 +101,16 @@ export default function ForumPostPage() {
 
                 if (fetchedPost) {
                     setPost(fetchedPost);
+                    // Count the view: once per member per post, done by the
+                    // database so nobody can type in a number.
+                    if (user) {
+                        supabase
+                            .rpc('record_forum_post_view', { p_post_id: postId })
+                            .then(({ data }) => {
+                                if (data != null) setPost((prev) => (prev ? { ...prev, view_count: data } : prev));
+                            })
+                            .catch(() => {});
+                    }
                     const [fetchedComments, fetchedCategory, allLikes] = await Promise.all([
                         ForumComment.filter({ post_id: postId }, '-created_date'),
                         fetchedPost.category_id ? ForumCategory.get(fetchedPost.category_id).catch(() => null) : null,
@@ -254,6 +278,69 @@ export default function ForumPostPage() {
         setDeleteTarget(null);
     };
 
+    const startEditPost = () => {
+        setPostDraft({
+            title: post.title || '',
+            content: post.content || '',
+            image_urls: forumPhotoList(post.image_urls),
+        });
+    };
+
+    const handleSavePost = async () => {
+        if (!postDraft || !postDraft.title.trim() || !postDraft.content.trim()) return;
+        setIsSavingPost(true);
+        try {
+            const saved = await ForumPost.update(post.id, {
+                title: postDraft.title.trim(),
+                content: postDraft.content.trim(),
+                image_urls: forumPhotoList(postDraft.image_urls),
+            });
+            setPost((prev) => ({ ...prev, ...saved }));
+            setPostDraft(null);
+            toast({ title: 'Post updated' });
+        } catch (error) {
+            toast({ title: 'Could not save', description: error.message || 'Try again in a moment.', variant: 'destructive' });
+        }
+        setIsSavingPost(false);
+    };
+
+    const startEditComment = (comment) => {
+        setEditingCommentId(comment.id);
+        setCommentDraft(comment.content || '');
+    };
+
+    const handleSaveComment = async () => {
+        if (!editingCommentId || !commentDraft.trim()) return;
+        setIsSavingComment(true);
+        try {
+            const saved = await ForumComment.update(editingCommentId, { content: commentDraft.trim() });
+            setComments((prev) => prev.map((c) => (c.id === editingCommentId ? { ...c, ...saved } : c)));
+            setEditingCommentId(null);
+            setCommentDraft('');
+            toast({ title: 'Comment updated' });
+        } catch (error) {
+            toast({ title: 'Could not save', description: error.message || 'Try again in a moment.', variant: 'destructive' });
+        }
+        setIsSavingComment(false);
+    };
+
+    // Admin only (the database ignores these fields from anyone else).
+    const handleToggleFlag = async (field) => {
+        const next = !post[field];
+        try {
+            const saved = await ForumPost.update(post.id, { [field]: next });
+            setPost((prev) => ({ ...prev, ...saved }));
+            toast({
+                title:
+                    field === 'is_pinned'
+                        ? next ? 'Pinned to the top of the forum' : 'Unpinned'
+                        : next ? 'Thread locked. No new comments.' : 'Thread unlocked',
+            });
+        } catch (error) {
+            toast({ title: 'Could not update', description: error.message, variant: 'destructive' });
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-slate-950 p-4 md:p-8 flex items-center justify-center text-center text-slate-400">
@@ -302,16 +389,17 @@ export default function ForumPostPage() {
     const isAdmin = currentUser?.role === 'admin';
     const canDeletePost = isPostOwner || isAdmin;
 
-    const topLevelComments = comments.filter((c) => !c.parent_comment_id);
-    const commentReplies = {};
-    comments.forEach((c) => {
-        if (c.parent_comment_id) {
-            (commentReplies[c.parent_comment_id] ||= []).push(c);
-        }
-    });
+    const isLocked = !!post.is_locked;
+    const canComment = !!currentUser && (!isLocked || isAdmin);
+    const {
+        topLevel: topLevelComments,
+        replies: commentReplies,
+        orphanIds,
+        visibleCount: visibleCommentCount,
+    } = arrangeForumComments(comments, (c) => blockedAuthors.has(c.created_by));
 
     const renderComment = (comment, isReply = false) => {
-        if (blockedAuthors.has(comment.created_by)) return null;
+        const isEditingThis = editingCommentId === comment.id;
         const isCommentLiked = likesData[comment.id]?.userLiked || false;
         const commentLikeCount = likesData[comment.id]?.count ?? 0;
         const isCommentOwner = currentUser?.email && comment?.created_by === currentUser.email;
@@ -332,7 +420,44 @@ export default function ForumPostPage() {
                                 {formatDistanceToNow(new Date(comment.created_date), { addSuffix: true })}
                             </span>
                         </div>
-                        <p className="text-slate-300 whitespace-pre-wrap mb-3">{comment.content}</p>
+                        {orphanIds.has(comment.id) && (
+                            <p className="text-xs text-slate-500 mb-1 flex items-center gap-1">
+                                <CornerDownRight className="w-3 h-3" />
+                                Reply to a comment that was deleted
+                            </p>
+                        )}
+                        {isEditingThis ? (
+                            <div className="space-y-2 mb-3">
+                                <Textarea
+                                    value={commentDraft}
+                                    onChange={(e) => setCommentDraft(e.target.value)}
+                                    className="bg-slate-950 border-slate-700 text-slate-100 min-h-24"
+                                    aria-label="Edit your comment"
+                                />
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => { setEditingCommentId(null); setCommentDraft(''); }}
+                                        disabled={isSavingComment}
+                                        className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        onClick={handleSaveComment}
+                                        disabled={isSavingComment || !commentDraft.trim()}
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                                    >
+                                        {isSavingComment && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+                                        Save
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-slate-300 whitespace-pre-wrap mb-3">{comment.content}</p>
+                        )}
                         <div className="flex items-center gap-2 flex-wrap">
                             <Button
                                 variant="ghost"
@@ -346,7 +471,7 @@ export default function ForumPostPage() {
                                 <ThumbsUp className={`w-3 h-3 ${isCommentLiked ? 'fill-current' : ''}`} />
                                 ({commentLikeCount})
                             </Button>
-                            {currentUser && (
+                            {canComment && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -358,6 +483,17 @@ export default function ForumPostPage() {
                                 </Button>
                             )}
                             <ReportContent entity="forum_comment" recordId={comment.id} authorEmail={comment.created_by} excerpt={comment.content} />
+                            {isCommentOwner && !isEditingThis && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => startEditComment(comment)}
+                                    className="text-slate-400 hover:text-slate-200 text-xs h-7"
+                                >
+                                    <Pencil className="w-3 h-3 mr-1" />
+                                    Edit
+                                </Button>
+                            )}
                             {canDeleteComment && (
                                 <Button
                                     variant="ghost"
@@ -404,9 +540,20 @@ export default function ForumPostPage() {
                         button at its own width instead of stretching across
                         the card between the title and the byline. */}
                     <CardHeader className="items-start">
-                        <CardTitle className="text-2xl md:text-3xl text-slate-100">
-                            {post.title}
-                        </CardTitle>
+                        {postDraft ? (
+                            <Input
+                                value={postDraft.title}
+                                onChange={(e) => setPostDraft({ ...postDraft, title: e.target.value })}
+                                className="text-lg bg-slate-950 border-slate-700 text-slate-100"
+                                aria-label="Post title"
+                            />
+                        ) : (
+                            <CardTitle className="text-2xl md:text-3xl text-slate-100 flex items-start gap-2">
+                                {post.is_pinned && <Pin className="w-5 h-5 mt-1.5 text-amber-400 shrink-0" aria-label="Pinned" />}
+                                {isLocked && <Lock className="w-5 h-5 mt-1.5 text-slate-400 shrink-0" aria-label="Locked" />}
+                                <span>{post.title}</span>
+                            </CardTitle>
+                        )}
                         <ReportContent entity="forum_post" recordId={post.id} authorEmail={post.created_by} excerpt={post.content} />
                         <div className="text-sm text-slate-400 flex items-center gap-4 mt-2 flex-wrap">
                             <span className="flex items-center gap-1">
@@ -417,14 +564,55 @@ export default function ForumPostPage() {
                                 <Calendar className="w-4 h-4" />
                                 {format(new Date(post.created_date), 'PPP')}
                             </span>
+                            <span className="flex items-center gap-1">
+                                <Eye className="w-4 h-4" />
+                                {post.view_count || 0} {Number(post.view_count) === 1 ? 'view' : 'views'}
+                            </span>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-slate-200 whitespace-pre-wrap leading-relaxed">
-                            {post.content}
-                        </p>
+                        {postDraft ? (
+                            <div className="space-y-3">
+                                <Textarea
+                                    value={postDraft.content}
+                                    onChange={(e) => setPostDraft({ ...postDraft, content: e.target.value })}
+                                    className="min-h-40 bg-slate-950 border-slate-700 text-slate-100"
+                                    aria-label="Post text"
+                                />
+                                <ForumPhotoPicker
+                                    value={postDraft.image_urls}
+                                    onChange={(urls) => setPostDraft((prev) => ({ ...prev, image_urls: urls }))}
+                                    disabled={isSavingPost}
+                                />
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setPostDraft(null)}
+                                        disabled={isSavingPost}
+                                        className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleSavePost}
+                                        disabled={isSavingPost || !postDraft.title.trim() || !postDraft.content.trim()}
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                                    >
+                                        {isSavingPost && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                        Save changes
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-slate-200 whitespace-pre-wrap leading-relaxed">
+                                    {post.content}
+                                </p>
+                                <ForumPhotoGrid value={post.image_urls} />
+                            </>
+                        )}
                     </CardContent>
-                    <CardFooter className="border-t border-slate-800 pt-4 flex justify-between">
+                    <CardFooter className="border-t border-slate-800 pt-4 flex flex-wrap gap-2 justify-between">
                         <Button
                             variant="ghost"
                             size="sm"
@@ -437,23 +625,58 @@ export default function ForumPostPage() {
                             <ThumbsUp className={`w-4 h-4 ${isPostLiked ? 'fill-current' : ''}`} />
                             Like ({postLikeCount})
                         </Button>
-                        {canDeletePost && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setDeleteTarget({ type: 'post', id: post.id })}
-                                className="text-rose-400 hover:text-rose-300"
-                            >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete post
-                            </Button>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1">
+                            {isPostOwner && !postDraft && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={startEditPost}
+                                    className="text-slate-300 hover:text-slate-100"
+                                >
+                                    <Pencil className="w-4 h-4 mr-2" />
+                                    Edit post
+                                </Button>
+                            )}
+                            {isAdmin && (
+                                <>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleToggleFlag('is_pinned')}
+                                        className="text-amber-300 hover:text-amber-200"
+                                    >
+                                        <Pin className="w-4 h-4 mr-2" />
+                                        {post.is_pinned ? 'Unpin' : 'Pin'}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleToggleFlag('is_locked')}
+                                        className="text-slate-300 hover:text-slate-100"
+                                    >
+                                        {isLocked ? <Unlock className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+                                        {isLocked ? 'Unlock' : 'Lock'}
+                                    </Button>
+                                </>
+                            )}
+                            {canDeletePost && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setDeleteTarget({ type: 'post', id: post.id })}
+                                    className="text-rose-400 hover:text-rose-300"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete post
+                                </Button>
+                            )}
+                        </div>
                     </CardFooter>
                 </Card>
 
                 <div className="space-y-3">
                     <h3 className="text-xl md:text-2xl font-bold text-slate-100">
-                        {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+                        {visibleCommentCount} {visibleCommentCount === 1 ? 'comment' : 'comments'}
                     </h3>
                     {topLevelComments.map((comment) => renderComment(comment))}
                     {topLevelComments.length === 0 && (
@@ -463,7 +686,14 @@ export default function ForumPostPage() {
                     )}
                 </div>
 
-                {currentUser && (
+                {currentUser && isLocked && !isAdmin && (
+                    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-400 flex items-center gap-2">
+                        <Lock className="w-4 h-4 shrink-0" />
+                        This thread is locked, so it takes no new comments.
+                    </div>
+                )}
+
+                {canComment && (
                     <Card
                         ref={composerRef}
                         className={`bg-slate-900 border transition-colors ${

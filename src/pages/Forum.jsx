@@ -2,6 +2,8 @@ import { useBlockedAuthors } from '@/hooks/useBlockedAuthors';
 import { useEffect, useMemo, useState } from 'react';
 import Seo from '@/components/seo/Seo';
 import { ForumCategory, ForumPost, User } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
+import { ForumPhotoPicker, forumPhotoList } from '@/components/forum/ForumPhotos';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
@@ -26,6 +28,9 @@ import {
     Loader2,
     Search,
     X,
+    Lock,
+    Camera,
+    MessageCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -42,6 +47,8 @@ import { Skeleton } from '@/components/ui/skeleton';
  * would take them to a dead page. Now the list is re-fetched on
  * every mount.
  */
+const EMPTY_POST = { title: '', content: '', category_id: '', image_urls: [] };
+
 export default function ForumPage() {
     const blockedAuthors = useBlockedAuthors();
     const [forumPrefs, setForumPrefs] = usePageSettings('forum_prefs', {
@@ -54,7 +61,8 @@ export default function ForumPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
     const [showCreatePost, setShowCreatePost] = useState(false);
-    const [newPost, setNewPost] = useState({ title: '', content: '', category_id: '' });
+    const [newPost, setNewPost] = useState(EMPTY_POST);
+    const [replyCounts, setReplyCounts] = useState({});
     const [isPosting, setIsPosting] = useState(false);
     const [search, setSearch] = useState('');
     const [collapsedCats, setCollapsedCats] = useState(new Set());
@@ -74,6 +82,12 @@ export default function ForumPage() {
                 )
             );
             setPosts(fetchedPosts);
+            // Comment counts come from one grouped query instead of loading
+            // every comment. Best effort: the list still works without them.
+            const { data: counts } = await supabase.rpc('forum_reply_counts', { p_post_ids: null });
+            if (Array.isArray(counts)) {
+                setReplyCounts(Object.fromEntries(counts.map((r) => [r.post_id, Number(r.reply_count) || 0])));
+            }
         } catch (error) {
             console.error('Failed to load forum data:', error);
         }
@@ -96,13 +110,14 @@ export default function ForumPage() {
                 title: newPost.title.trim(),
                 content: newPost.content.trim(),
                 category_id: newPost.category_id,
+                image_urls: forumPhotoList(newPost.image_urls),
                 // Never the email: sign-up doesn't ask for a name, so this used
                 // to publish members' email addresses as the author.
                 author_name: currentUser.full_name || currentUser.business_name || currentUser.breeder_name || 'Geck Inspect member',
             });
             setPosts((prev) => [createdPost, ...prev]);
             setShowCreatePost(false);
-            setNewPost({ title: '', content: '', category_id: '' });
+            setNewPost(EMPTY_POST);
         } catch (error) {
             console.error('Failed to create post:', error);
         }
@@ -111,7 +126,7 @@ export default function ForumPage() {
 
     const handleCancelPost = () => {
         setShowCreatePost(false);
-        setNewPost({ title: '', content: '', category_id: '' });
+        setNewPost(EMPTY_POST);
     };
 
     const filteredPosts = useMemo(() => {
@@ -250,6 +265,11 @@ export default function ForumPage() {
                                 onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
                                 className="h-32 bg-slate-950 border-slate-700 text-slate-100"
                             />
+                            <ForumPhotoPicker
+                                value={newPost.image_urls}
+                                onChange={(urls) => setNewPost((prev) => ({ ...prev, image_urls: urls }))}
+                                disabled={isPosting}
+                            />
                             <Select
                                 value={newPost.category_id}
                                 onValueChange={(value) => setNewPost({ ...newPost, category_id: value })}
@@ -338,11 +358,21 @@ export default function ForumPage() {
                                                     </p>
                                                 </div>
                                                 {post.is_pinned && (
-                                                    <Pin className="w-4 h-4 text-amber-400 shrink-0" />
+                                                    <Pin className="w-4 h-4 text-amber-400 shrink-0" aria-label="Pinned" />
+                                                )}
+                                                {post.is_locked && (
+                                                    <Lock className="w-4 h-4 text-slate-400 shrink-0" aria-label="Locked" />
+                                                )}
+                                                {forumPhotoList(post.image_urls).length > 0 && (
+                                                    <Camera className="w-4 h-4 text-emerald-400 shrink-0" aria-label="Has photos" />
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-4 text-xs text-slate-500 shrink-0">
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1" title="Comments">
+                                                    <MessageCircle className="w-4 h-4" />
+                                                    <span>{replyCounts[post.id] || 0}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1" title="Views">
                                                     <Eye className="w-4 h-4" />
                                                     <span>{post.view_count || 0}</span>
                                                 </div>

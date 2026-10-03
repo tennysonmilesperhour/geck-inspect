@@ -391,50 +391,9 @@ export const STATIC_ROUTES = [
         'Crested gecko price guide by morph and quality. See what common, high-end, and genetic morphs like Lilly White, Cappuccino, and Axanthic are worth in 2026, and the factors (quality, sex, age, lineage) that set the price.',
     },
   },
-  {
-    path: '/Gallery',
-    priority: 0.8,
-    changefreq: 'daily',
-    lastmod: dateOf('src/pages/Gallery.jsx'),
-    meta: {
-      title: 'Crested Gecko Photo Gallery',
-      description:
-        'Browse crested gecko photos from breeders worldwide. Filter by morph, color, and trait to compare Lilly Whites, Harlequins, Phantoms, Cappuccinos, and more.',
-    },
-  },
-  {
-    path: '/Forum',
-    priority: 0.7,
-    changefreq: 'daily',
-    lastmod: dateOf('src/pages/Forum.jsx'),
-    meta: {
-      title: 'Crested Gecko Community Forum',
-      description:
-        'Ask questions and swap notes with crested gecko keepers and breeders. Breeding, morphs, care, feeding, and health discussions on the Geck Inspect forum.',
-    },
-  },
-  {
-    path: '/Marketplace',
-    priority: 0.8,
-    changefreq: 'daily',
-    lastmod: dateOf('src/pages/Marketplace.jsx'),
-    meta: {
-      title: 'Crested Gecko Marketplace, Buy and Sell Geckos',
-      description:
-        'Buy and sell crested geckos on Geck Inspect. Browse listings from breeders worldwide, filter by morph, sex, age, and price, and message sellers directly.',
-    },
-  },
-  {
-    path: '/MarketplaceBuy',
-    priority: 0.7,
-    changefreq: 'daily',
-    lastmod: dateOf('src/pages/MarketplaceBuy.jsx'),
-    meta: {
-      title: 'Buy Crested Geckos, Marketplace',
-      description:
-        'Browse crested geckos for sale from trusted breeders. Filter by morph, sex, age, and price to find your next gecko.',
-    },
-  },
+  // /Gallery, /Forum, /Marketplace and /MarketplaceBuy are not listed:
+  // a signed-out visitor (and a search crawler) hits a sign-in wall there,
+  // so a search result would land on a login prompt (plan step 20).
   {
     path: '/Membership',
     priority: 0.6,
