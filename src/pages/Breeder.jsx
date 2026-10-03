@@ -11,6 +11,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import { breederCanonical, breederDisplayName, breederSlug } from '@/lib/breederUtils';
 import BuyerInquiryModal from '@/components/breeder/BuyerInquiryModal';
+import BreederReviews, { PUBLIC_REVIEW_COLUMNS } from '@/components/breeder/BreederReviews';
 import { useInAppShell } from '@/lib/appShell';
 import TrustPanel from '@/components/marketplace/TrustPanel';
 import {
@@ -47,21 +48,6 @@ function InferredTile({ gecko }) {
         </p>
       </div>
     </Link>
-  );
-}
-
-function StarRow({ rating }) {
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className="w-3.5 h-3.5"
-          fill={i <= rating ? '#f59e0b' : 'transparent'}
-          style={{ color: i <= rating ? '#f59e0b' : '#475569' }}
-        />
-      ))}
-    </div>
   );
 }
 
@@ -163,8 +149,11 @@ export default function Breeder() {
               bp.user_id
                 ? supabase
                     .from('breeder_reviews')
-                    .select('*')
+                    .select(PUBLIC_REVIEW_COLUMNS)
                     .eq('reviewed_user_id', bp.user_id)
+                    // Only reviews from a claimed transfer (D9). Rows
+                    // written before that rule existed are not shown.
+                    .eq('is_verified', true)
                     .order('created_date', { ascending: false })
                     .limit(20)
                 : Promise.resolve({ data: [] }),
@@ -255,6 +244,18 @@ export default function Breeder() {
     };
   }, [slug, inferredDisplayName, canonical]);
 
+  const reloadReviews = async () => {
+    if (!profile?.user_id) return;
+    const { data } = await supabase
+      .from('breeder_reviews')
+      .select(PUBLIC_REVIEW_COLUMNS)
+      .eq('reviewed_user_id', profile.user_id)
+      .eq('is_verified', true)
+      .order('created_date', { ascending: false })
+      .limit(20);
+    if (Array.isArray(data)) setReviews(data);
+  };
+
   // Invalid slug guard, rarely hit, but render a clean 404-ish page
   if (!slug) {
     return (
@@ -295,7 +296,7 @@ export default function Breeder() {
           name: displayName,
           alternateName: slug,
           url: breederUrl,
-          description: profile.bio || `${displayName}, verified crested gecko breeder on Geck Inspect.`,
+          description: profile.bio || `${displayName}, ${profile.is_verified ? 'a verified' : 'a'} crested gecko breeder on Geck Inspect.`,
           logo: profile.profile_photo || LOGO_URL,
           image: profile.banner_photo || profile.profile_photo || LOGO_URL,
           ...(profile.location ? { address: { '@type': 'PostalAddress', addressLocality: profile.location } } : {}),
@@ -436,8 +437,16 @@ export default function Breeder() {
             <section className="max-w-5xl mx-auto px-6 pt-14 pb-10">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight flex flex-wrap items-center gap-3">
                     {displayName}
+                    {profile.is_verified && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-300 tracking-normal"
+                        title="Checked by the Geck Inspect team: identity, their own crested geckos, a sales record, published policies and no open complaints."
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" /> Verified breeder
+                      </span>
+                    )}
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400">
                     {profile.location && (
@@ -458,6 +467,9 @@ export default function Breeder() {
                     )}
                   </div>
                 </div>
+                {profile.accepts_inquiries === false ? (
+                  <p className="text-sm text-slate-400 italic">Not taking inquiries right now.</p>
+                ) : (
                 <button
                   type="button"
                   onClick={() => { setInquiryGecko(null); setInquiryOpen(true); }}
@@ -467,6 +479,7 @@ export default function Breeder() {
                   <Mail className="w-4 h-4" />
                   Contact breeder
                 </button>
+                )}
               </div>
 
               {profile.bio && (
@@ -506,7 +519,9 @@ export default function Breeder() {
               <AvailableNowSection
                 geckos={curatedGeckos.length > 0 ? curatedGeckos : forSaleGeckos}
                 theme={theme}
-                onInquire={(gecko) => { setInquiryGecko(gecko); setInquiryOpen(true); }}
+                onInquire={profile.accepts_inquiries === false
+                  ? undefined
+                  : (gecko) => { setInquiryGecko(gecko); setInquiryOpen(true); }}
               />
             )}
 
@@ -528,30 +543,13 @@ export default function Breeder() {
               </section>
             )}
 
-            {/* Reviews */}
-            <section className="max-w-4xl mx-auto px-6 pb-16">
-              <h2 className="text-xl font-bold text-white mb-4">Reviews</h2>
-              {reviews.length > 0 ? (
-                <div className="space-y-3">
-                  {reviews.map((r) => (
-                    <div key={r.id} className="rounded-xl border border-slate-700 bg-slate-900 p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <StarRow rating={r.rating || 0} />
-                        {r.is_verified && (
-                          <span className="text-[11px] rounded-full bg-emerald-500/15 text-emerald-300 px-2 py-0.5 font-semibold">
-                            Verified purchase
-                          </span>
-                        )}
-                      </div>
-                      {r.title && <p className="text-sm font-semibold text-white">{r.title}</p>}
-                      {r.body && <p className="text-sm text-slate-300 mt-1 leading-relaxed">{r.body}</p>}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500 italic">No reviews yet.</p>
-              )}
-            </section>
+            {/* Reviews: verified purchases only (D9). */}
+            <BreederReviews
+              reviews={reviews}
+              breederUserId={profile.user_id}
+              breederName={displayName}
+              onReviewsChanged={reloadReviews}
+            />
 
             {/* Powered-by + sign-in nudge */}
             <section className="max-w-4xl mx-auto px-6 pb-20">
@@ -629,7 +627,7 @@ export default function Breeder() {
                   </div>
                   <p className="text-slate-300 text-sm leading-relaxed">
                     Create a free Geck Inspect account and claim{' '}
-                    <span className="text-white font-semibold">{displayName}</span> as your verified storefront. Show your for-sale animals, lineages, and reviews, all on this page.
+                    <span className="text-white font-semibold">{displayName}</span> as your breeder page. Show your for-sale animals and lineages, and collect reviews from buyers who claim your geckos through a Geck Inspect transfer.
                   </p>
                 </div>
                 <Link to={createPageUrl('AuthPortal')}>

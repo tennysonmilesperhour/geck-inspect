@@ -44,6 +44,7 @@ import SupportInbox from '@/components/admin/SupportInbox';
 import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
 import BlogManager from '@/components/admin/blog/BlogManager';
 import TestimonialsAdmin from '@/components/admin/TestimonialsAdmin';
+import BreederVerification from '@/components/admin/BreederVerification';
 import AIFeedbackQueue from '@/components/morph-id/AIFeedbackQueue';
 
 /**
@@ -83,6 +84,7 @@ const NAV_GROUPS = [
       { id: 'users', label: 'Users', icon: Users },
       { id: 'support', label: 'Support inbox', icon: LifeBuoy },
       { id: 'moderation', label: 'Content moderation', icon: ShieldAlert },
+      { id: 'breeder_verification', label: 'Breeder verification', icon: Shield },
       { id: 'messaging', label: 'Mass messaging', icon: Megaphone },
       { id: 'changelog', label: 'Changelog', icon: Bell },
     ],
@@ -127,6 +129,7 @@ const SECTION_TITLES = {
   users: 'User management',
   support: 'Support inbox',
   moderation: 'Content moderation',
+  breeder_verification: 'Breeder verification',
   messaging: 'Mass messaging',
   changelog: 'Changelog',
   morph_guides: 'Morph guide editor',
@@ -214,6 +217,8 @@ export default function AdminPanel() {
         return <SupportInbox />;
       case 'moderation':
         return <ContentModeration />;
+      case 'breeder_verification':
+        return <BreederVerification />;
       case 'messaging':
         return (
           <MassMessaging
