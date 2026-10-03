@@ -165,6 +165,7 @@ begin
     when 'vet_followup'           then 'Vet follow-up'
     when 'account_deletion_request' then 'Account deletion request'
     when 'task_reminder'          then 'Task reminder'
+    when 'support_reply'          then 'Reply from Geck Inspect support'
     else 'Geck Inspect'
   end;
   v_body := coalesce(NEW.content, '');
