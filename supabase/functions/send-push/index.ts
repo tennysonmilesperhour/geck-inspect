@@ -169,6 +169,8 @@ serve(async (req) => {
   const PREF_ALIAS: Record<string, string> = {
     weighin_reminder: "feeding_due",
     vet_followup: "feeding_due",
+    // Season Planner task and plan due dates (enqueue_season_planner_reminders).
+    task_reminder: "feeding_due",
     waitlist_signup: "marketplace_inquiry",
     referral_reward: "announcement",
     referral_grant_ended: "announcement",

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Project, Task, BreedingPlan, FeedingGroup, OtherReptile, Notification, User } from '@/entities/all';
+import { useState, useEffect, useRef } from 'react';
+import { Project, Task, BreedingPlan, FeedingGroup, OtherReptile, User } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,8 +18,8 @@ import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
-import { format, differenceInCalendarDays } from 'date-fns';
-import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { format } from 'date-fns';
+import { parseLocalDate } from '@/lib/dateUtils';
 import ProjectCalendar from '../components/project-manager/ProjectCalendar';
 import FeedingGroupManager from '../components/project-manager/FeedingGroupManager';
 import StickyNotes from '../components/project-manager/StickyNotes';
@@ -46,13 +46,6 @@ export default function ProjectManager() {
         // planner opened blank for anyone who picked Plans as the default.
         return plannerPrefs.defaultTab === 'plans' ? 'projects' : plannerPrefs.defaultTab;
     });
-    const [currentUserEmail, setCurrentUserEmail] = useState(null);
-
-    useEffect(() => {
-        User.me()
-            .then((u) => setCurrentUserEmail(u?.email || null))
-            .catch((err) => console.error('Failed to load current user:', err));
-    }, []);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -119,100 +112,10 @@ export default function ProjectManager() {
         if (!background) setIsLoading(false);
     };
 
-    // ── Task / project due-date notifications ────────────────────────
-    // Runs once on mount. For each task or project with a due date that
-    // is today or past (and not completed/archived), creates an in-app
-    // notification, deduped by a daily key so the same reminder isn't
-    // created twice in one session.
-    const checkDueDateNotifications = useCallback(async (
-      taskList, projectList, userEmail
-    ) => {
-      if (!userEmail) return;
-      const todayStr = todayLocalISO();
-      const today = new Date();
-
-      // Collect items that need a notification
-      const reminders = [];
-
-      for (const task of taskList) {
-        if (task.is_completed) continue;
-        const dueDate = task.is_recurring ? task.next_due_date : task.due_date;
-        if (!dueDate) continue;
-        const due = parseLocalDate(dueDate);
-        if (!due) continue;
-        const daysOverdue = differenceInCalendarDays(today, due);
-        if (daysOverdue >= 0) {
-          reminders.push({
-            dedupKey: `task_${task.id}_${todayStr}`,
-            content: daysOverdue === 0
-              ? `Task "${task.title}" is due today${task.is_recurring ? ' (recurring)' : ''}`
-              : `Task "${task.title}" is ${daysOverdue} day${daysOverdue === 1 ? '' : 's'} overdue${task.is_recurring ? ' (recurring)' : ''}`,
-            link: '/ProjectManager',
-            metadata: { task_id: task.id, type: 'task_due_reminder' },
-          });
-        }
-      }
-
-      for (const project of projectList) {
-        if (project.status === 'completed') continue;
-        if (!project.due_date) continue;
-        const due = parseLocalDate(project.due_date);
-        if (!due) continue;
-        const daysOverdue = differenceInCalendarDays(today, due);
-        if (daysOverdue >= 0) {
-          reminders.push({
-            dedupKey: `project_${project.id}_${todayStr}`,
-            content: daysOverdue === 0
-              ? `Plan "${project.name}" is due today`
-              : `Plan "${project.name}" is ${daysOverdue} day${daysOverdue === 1 ? '' : 's'} overdue`,
-            link: '/ProjectManager',
-            metadata: { project_id: project.id, type: 'project_due_reminder' },
-          });
-        }
-      }
-
-      if (reminders.length === 0) return;
-
-      // Fetch today's existing notifications to dedup
-      try {
-        const existing = await Notification.filter({ user_email: userEmail });
-        const existingKeys = new Set(
-          existing
-            .filter(n => n.created_date?.startsWith(todayStr))
-            .map(n => {
-              const m = n.metadata || {};
-              if (m.type === 'task_due_reminder') return `task_${m.task_id}_${todayStr}`;
-              if (m.type === 'project_due_reminder') return `project_${m.project_id}_${todayStr}`;
-              return null;
-            })
-            .filter(Boolean)
-        );
-
-        for (const r of reminders) {
-          if (existingKeys.has(r.dedupKey)) continue;
-          await Notification.create({
-            user_email: userEmail,
-            type: 'announcement',
-            content: r.content,
-            link: r.link,
-            metadata: r.metadata,
-          });
-        }
-      } catch (e) {
-        console.warn('Failed to create due-date notifications:', e);
-      }
-    }, []);
-
-    // Fire notification check after initial data load
-    useEffect(() => {
-      if (!isLoading && tasks.length + projects.length > 0) {
-        User.me()
-          .then(u => {
-            if (u?.email) checkDueDateNotifications(tasks, projects, u.email);
-          })
-          .catch((err) => console.error('Failed to check due-date notifications:', err));
-      }
-    }, [isLoading]);  
+    // Task and plan due-date reminders, and the "pairing window is open"
+    // notice for future plans, are sent by the server every morning
+    // (enqueue_season_planner_reminders, pg_cron), so they arrive with the
+    // app closed. This page no longer creates them.
 
     const handleCreateProject = async () => {
         if (!newProject.name) return;
@@ -440,7 +343,7 @@ export default function ProjectManager() {
                         </TabsContent>
 
                         <TabsContent value="future">
-                            <FutureBreedingPlans ref={futureBreedingRef} geckos={geckos} currentUserEmail={currentUserEmail} />
+                            <FutureBreedingPlans ref={futureBreedingRef} geckos={geckos} />
                         </TabsContent>
 
                         <TabsContent value="calendar">
@@ -583,6 +486,22 @@ export default function ProjectManager() {
                                 <Checkbox checked={newTask.is_recurring} onCheckedChange={(checked) => setNewTask({...newTask, is_recurring: checked})} />
                                 <Label>Recurring Task</Label>
                             </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Checkbox checked={newTask.reminder_enabled} onCheckedChange={(checked) => setNewTask({...newTask, reminder_enabled: checked === true})} />
+                                <Label>Remind me</Label>
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    max="30"
+                                    value={newTask.reminder_days_before}
+                                    onChange={(e) => setNewTask({...newTask, reminder_days_before: Math.max(1, parseInt(e.target.value, 10) || 1)})}
+                                    disabled={!newTask.reminder_enabled}
+                                    className="w-20 bg-slate-800 border-slate-600"
+                                    aria-label="Days before the due date"
+                                />
+                                <span className="text-sm">days before</span>
+                            </div>
+                            <p className="text-xs text-slate-500 -mt-2">Tasks with a due date always get a reminder on the day (bell, plus push or email if you turned those on), even with the app closed.</p>
                             {newTask.is_recurring && (
                                 <div>
                                     <Label>Repeat Every (Days)</Label>

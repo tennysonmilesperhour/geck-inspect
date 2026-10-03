@@ -64,6 +64,8 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   weighin_reminder: "breeding_updates",
   // Daily from enqueue_vet_followups() on a vet visit's follow-up date.
   vet_followup: "breeding_updates",
+  // Daily from enqueue_season_planner_reminders() on a Season Planner task's due date.
+  task_reminder: "breeding_updates",
   announcement: "announcements",
   // Sunday summary from enqueue_weekly_digest(); rides the announcements preference.
   weekly_digest: "announcements",

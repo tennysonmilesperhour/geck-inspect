@@ -1,6 +1,10 @@
 import { useEffect, useImperativeHandle, useMemo, useState, forwardRef } from 'react';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
-import { FutureBreedingPlan } from '@/entities/all';
+import { FutureBreedingPlan, BreedingPlan, User } from '@/entities/all';
+import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { checkPlanLimit } from '@/components/subscription/PlanLimitChecker';
+import { buildPlanFromFuturePlan } from '@/lib/seasons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,6 +46,7 @@ import {
   Sparkles,
   Loader2,
   AlertCircle,
+  PlayCircle,
 } from 'lucide-react';
 import GeneticCalculator from '@/components/breeding/GeneticCalculator';
 import {
@@ -56,9 +61,10 @@ import {
  *
  * A planning surface for pairings you want to kick off in a future
  * season + year. Stores the planned season, year, sire, dam, goals, and
- * notes; shows genetic outcome probabilities from GeneticCalculator;
- * once the target season arrives (or is past), a notification is created
- * automatically on load so the user sees it next time they visit the app.
+ * notes; shows genetic outcome probabilities from GeneticCalculator.
+ * The server sends a notification when the target season's window opens
+ * (enqueue_season_planner_reminders, daily), with the app closed or open.
+ * "Start this pairing" turns the plan into a real breeding plan.
  *
  * Entity: FutureBreedingPlan (future_breeding_plans table)
  */
@@ -126,7 +132,7 @@ function emptyForm() {
   };
 }
 
-const FutureBreedingPlans = forwardRef(function FutureBreedingPlans({ geckos, currentUserEmail }, ref) {
+const FutureBreedingPlans = forwardRef(function FutureBreedingPlans({ geckos }, ref) {
   const [plans, setPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -160,36 +166,46 @@ const FutureBreedingPlans = forwardRef(function FutureBreedingPlans({ geckos, cu
     loadPlans();
   }, []);
 
-  // Fire-once: when a plan's target season is active or past and we
-  // haven't notified yet, create the notification + flip notified true.
-  useEffect(() => {
-    if (!currentUserEmail || plans.length === 0) return;
-    (async () => {
-      const { Notification } = await import('@/entities/all');
-      for (const plan of plans) {
-        if (plan.notified) continue;
-        const status = seasonStatus(plan.target_season, plan.target_year);
-        if (status === 'active' || status === 'past') {
-          try {
-            await Notification.create({
-              user_email: currentUserEmail,
-              type: 'future_breeding_ready',
-              content: `Your planned breeding for ${SEASON_LABELS[plan.target_season]} ${plan.target_year} is ready to initiate.`,
-              link: '/ProjectManager',
-              metadata: { future_breeding_plan_id: plan.id },
-            });
-            await FutureBreedingPlan.update(plan.id, {
-              notified: true,
-              notified_date: new Date().toISOString(),
-            });
-          } catch (err) {
-            console.warn('Failed to notify for future plan:', plan.id, err);
-          }
-        }
+  // Turn a future plan into a real breeding plan (Breeding page), then
+  // mark the future plan as started so it is not offered again and the
+  // server stops reminding about it.
+  const [startingId, setStartingId] = useState(null);
+  const queryClient = useQueryClient();
+  const startPairing = async (plan) => {
+    const sire = geckos.find((g) => g.id === plan.sire_id);
+    const dam = geckos.find((g) => g.id === plan.dam_id);
+    if (!sire || !dam) {
+      toast({ title: 'Both parents are needed', description: 'One or both parents are no longer in your collection. Edit the plan first.', variant: 'destructive' });
+      return;
+    }
+    setStartingId(plan.id);
+    try {
+      const [user, activePlans] = await Promise.all([
+        User.me(),
+        BreedingPlan.filter({ archived: false }).catch(() => []),
+      ]);
+      const limit = checkPlanLimit(user, 'breeding_pairs', (activePlans || []).length);
+      if (!limit.allowed) {
+        toast({ title: 'Breeding pair limit reached', description: `Your plan allows ${limit.limit} active breeding pair${limit.limit === 1 ? '' : 's'}. Archive a finished pair on the Breeding page or upgrade on Membership.`, variant: 'destructive' });
+        return;
       }
-    })();
-     
-  }, [plans.length, currentUserEmail]);
+      const created = await BreedingPlan.create(buildPlanFromFuturePlan(plan, sire, dam));
+      await FutureBreedingPlan.update(plan.id, {
+        started_breeding_plan_id: created?.id || null,
+        started_at: new Date().toISOString(),
+        notified: true,
+      });
+      // The Breeding page caches its plans; show the new one right away.
+      queryClient.invalidateQueries({ queryKey: ['breeding'] });
+      await loadPlans();
+      toast({ title: 'Pairing started', description: `${sire.name} x ${dam.name} is now on your Breeding page.` });
+    } catch (err) {
+      console.error('Start pairing failed:', err);
+      toast({ title: 'Could not start the pairing', description: err.message || 'Try again.', variant: 'destructive' });
+    } finally {
+      setStartingId(null);
+    }
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -291,7 +307,7 @@ const FutureBreedingPlans = forwardRef(function FutureBreedingPlans({ geckos, cu
             Future Breeding Plans
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Plan pairings for a future season. You'll get a notification when the target window opens.
+            Plan pairings for a future season. You'll get a notification when the target window opens, even with the app closed.
           </p>
         </div>
       </div>
@@ -402,6 +418,24 @@ const FutureBreedingPlans = forwardRef(function FutureBreedingPlans({ geckos, cu
                       <span>One or both parents are missing from your collection.</span>
                     </div>
                   )}
+                  {plan.started_breeding_plan_id ? (
+                    <p className="text-xs text-emerald-300">
+                      Started {plan.started_at ? new Date(plan.started_at).toLocaleDateString() : ''}.{' '}
+                      <Link to="/Breeding" className="underline">Open on the Breeding page</Link>
+                    </p>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => startPairing(plan)}
+                      disabled={startingId === plan.id || !sire || !dam}
+                      className="w-full bg-emerald-700 hover:bg-emerald-800 text-white"
+                    >
+                      {startingId === plan.id
+                        ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        : <PlayCircle className="w-4 h-4 mr-2" />}
+                      Start this pairing
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -418,7 +452,7 @@ const FutureBreedingPlans = forwardRef(function FutureBreedingPlans({ geckos, cu
               {editing ? 'Edit future breeding plan' : 'New future breeding plan'}
             </DialogTitle>
             <DialogDescription className="text-slate-400">
-              Plan a pairing for a future season. When the target season arrives you'll get an in-app notification.
+              Plan a pairing for a future season. When the target season opens you'll get a notification (bell, plus push or email if you turned those on).
             </DialogDescription>
           </DialogHeader>
 

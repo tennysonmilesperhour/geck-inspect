@@ -6,10 +6,10 @@
  * we use a simple meteorological quarter split and let the user pick
  * whichever quarter matches their plan.
  *
- *   spring -> Mar 1 – May 31
- *   summer -> Jun 1 – Aug 31
- *   fall   -> Sep 1 – Nov 30
- *   winter -> Dec 1 – Feb 28/29
+ *   spring -> Mar 1 to May 31
+ *   summer -> Jun 1 to Aug 31
+ *   fall   -> Sep 1 to Nov 30
+ *   winter -> Dec 1 to Feb 28/29
  *
  * THE WINTER RULE (canon): a winter belongs to the calendar year it
  * ENDS in. "2027 Winter" means Dec 1, 2026 through the end of Feb
@@ -43,19 +43,19 @@ export function computeSeasonWindow(season, year) {
       return {
         start: new Date(year, 2, 1),
         end: new Date(year, 5, 0, 23, 59, 59),
-        label: `Mar 1 – May 31, ${year}`,
+        label: `Mar 1 to May 31, ${year}`,
       };
     case 'summer':
       return {
         start: new Date(year, 5, 1),
         end: new Date(year, 8, 0, 23, 59, 59),
-        label: `Jun 1 – Aug 31, ${year}`,
+        label: `Jun 1 to Aug 31, ${year}`,
       };
     case 'fall':
       return {
         start: new Date(year, 8, 1),
         end: new Date(year, 11, 0, 23, 59, 59),
-        label: `Sep 1 – Nov 30, ${year}`,
+        label: `Sep 1 to Nov 30, ${year}`,
       };
     case 'winter':
       // Winter belongs to the year it ENDS in: "<year> Winter" spans
@@ -63,7 +63,7 @@ export function computeSeasonWindow(season, year) {
       return {
         start: new Date(year - 1, 11, 1),
         end: new Date(year, 2, 0, 23, 59, 59),
-        label: `Dec 1, ${year - 1} – Feb ${new Date(year, 2, 0).getDate()}, ${year}`,
+        label: `Dec 1, ${year - 1} to Feb ${new Date(year, 2, 0).getDate()}, ${year}`,
       };
     default:
       return null;
@@ -154,4 +154,29 @@ export function compareSeasonLabels(a, b) {
   if (pa.year !== pb.year) return pa.year - pb.year;
   const order = { Winter: 0, Spring: 1, Summer: 2, Fall: 3 };
   return order[pa.season] - order[pb.season];
+}
+
+/**
+ * The BreedingPlan row "Start this pairing" creates from a future plan
+ * (Season Planner). Pure so it can be tested. The season label keeps the
+ * planned year and season ("2027 Spring"), so the plan still groups under
+ * its calendar year (decision D17) and its quarter.
+ */
+export function buildPlanFromFuturePlan(plan, sire, dam, today = new Date()) {
+  const season = SEASON_LABELS[plan?.target_season];
+  const label = season && plan?.target_year ? `${plan.target_year} ${season}` : currentSeasonLabel(today);
+  const notes = [
+    plan?.goals ? `Goals: ${String(plan.goals).trim()}` : '',
+    plan?.notes ? String(plan.notes).trim() : '',
+  ].filter(Boolean).join('\n\n');
+  const pad = (n) => String(n).padStart(2, '0');
+  return {
+    sire_id: sire.id,
+    dam_id: dam.id,
+    breeding_id: `${sire.gecko_id_code || 'UNK'}x${dam.gecko_id_code || 'UNK'}`,
+    pairing_date: `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`,
+    status: 'Planned',
+    breeding_season: label,
+    notes,
+  };
 }
