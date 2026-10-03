@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { GeckoImage } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
+import { buildReviewQueuePage, buildReviewQueueCount } from '@/lib/reviewQueue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +45,7 @@ function describeOutcome(action, result) {
   return `Review recorded (${matching}/${required} approvals).`;
 }
 
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 50;
 // Default to NEWEST first. The previous oldest-first default buried freshly
 // seeded scraper candidates behind a backlog of legacy user submissions, so
 // the queue looked empty even with ~3,700 pending rows. Users still
@@ -85,13 +85,12 @@ export default function AIFeedbackQueue() {
   const [sortMode, setSortMode] = useState('newest');
   const [totalCount, setTotalCount] = useState(null);
   const [reviewNotes, setReviewNotes] = useState('');
-  const [fetchOffset, setFetchOffset] = useState(0);
+  const [lastCreated, setLastCreated] = useState(null);
   const [reviewedIds, setReviewedIds] = useState(() => new Set());
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const sortExpr = SORT_OPTIONS.find((s) => s.id === sortMode)?.expr ?? '-created_date';
       const [expertRpc, adminRpc, authRes] = await Promise.all([
         supabase.rpc('is_expert_reviewer').then((r) => r.data).catch(() => false),
         supabase.rpc('is_admin').then((r) => r.data).catch(() => false),
@@ -108,31 +107,27 @@ export default function AIFeedbackQueue() {
       }
 
       const reviewerEmail = authRes?.data?.user?.email;
-      const [rows, countRes, voteRes] = await Promise.all([
-        GeckoImage.filter({ verified: false }, sortExpr, PAGE_SIZE).catch(() => []),
-        supabase
-          .from('gecko_images')
-          .select('id', { count: 'exact', head: true })
-          .eq('verified', false)
-          .then((r) => r)
-          .catch(() => ({ count: null })),
-        reviewerEmail
-          ? supabase
-            .from('classification_votes')
-            .select('gecko_image_id')
-            .eq('reviewer_email', reviewerEmail)
-            .not('label_fingerprint', 'is', null)
-          : Promise.resolve({ data: [] }),
-      ]);
+      const voteRes = reviewerEmail
+        ? await supabase
+          .from('classification_votes')
+          .select('gecko_image_id')
+          .eq('reviewer_email', reviewerEmail)
+          .not('label_fingerprint', 'is', null)
+        : { data: [] };
       const alreadyVoted = new Set((voteRes?.data || []).map((vote) => String(vote.gecko_image_id)));
-      const availableRows = (rows || []).filter((row) => (
-        row?.training_meta?.review_status !== 'rejected'
-        && !alreadyVoted.has(String(row.id))
-      ));
-      setQueue(availableRows);
+      const excludeIds = [...alreadyVoted];
+      // Filtering happens in the database (member submissions only, not
+      // rejected, not already voted on), so every loaded row is reviewable.
+      const [pageRes, countRes] = await Promise.all([
+        buildReviewQueuePage(supabase, { sort: sortMode, pageSize: PAGE_SIZE, excludeIds }),
+        buildReviewQueueCount(supabase, { excludeIds }),
+      ]);
+      if (pageRes.error) throw pageRes.error;
+      const rows = pageRes.data || [];
+      setQueue(rows);
       setReviewedIds(alreadyVoted);
-      setFetchOffset((rows || []).length);
-      setHasMore((rows || []).length === PAGE_SIZE);
+      setLastCreated(rows.length ? rows[rows.length - 1].created_date : null);
+      setHasMore(rows.length === PAGE_SIZE);
       setTotalCount(typeof countRes?.count === 'number' ? countRes.count : null);
       setIdx(0);
     } catch (err) {
@@ -145,27 +140,24 @@ export default function AIFeedbackQueue() {
   const loadMore = useCallback(async () => {
     setIsLoadingMore(true);
     try {
-      const sortExpr = SORT_OPTIONS.find((s) => s.id === sortMode)?.expr ?? '-created_date';
-      const next = await GeckoImage.filter(
-        { verified: false },
-        sortExpr,
-        PAGE_SIZE,
-        fetchOffset,
-      ).catch(() => []);
-      const dedup = (next || []).filter((row) => (
-        row?.training_meta?.review_status !== 'rejected'
-        && !reviewedIds.has(String(row.id))
-        && !queue.some((queued) => queued.id === row.id)
-      ));
+      const { data: next, error: nextError } = await buildReviewQueuePage(supabase, {
+        sort: sortMode,
+        pageSize: PAGE_SIZE,
+        after: lastCreated,
+        excludeIds: [...reviewedIds],
+      });
+      if (nextError) throw nextError;
+      const rows = next || [];
+      const dedup = rows.filter((row) => !queue.some((queued) => queued.id === row.id));
       setQueue((prev) => [...prev, ...dedup]);
-      setFetchOffset((offset) => offset + (next || []).length);
-      setHasMore((next || []).length === PAGE_SIZE);
+      if (rows.length) setLastCreated(rows[rows.length - 1].created_date);
+      setHasMore(rows.length === PAGE_SIZE);
     } catch (err) {
       toast({ title: 'Failed to load more', description: err.message, variant: 'destructive' });
     } finally {
       setIsLoadingMore(false);
     }
-  }, [fetchOffset, queue, reviewedIds, toast, sortMode]);
+  }, [lastCreated, queue, reviewedIds, toast, sortMode]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -286,7 +278,7 @@ export default function AIFeedbackQueue() {
             </CardTitle>
             {totalCount != null && (
               <p className="mt-1 text-xs text-slate-400">
-                {totalCount.toLocaleString()} unverified in the queue · sorted{' '}
+                {totalCount.toLocaleString()} member submissions waiting · sorted{' '}
                 {SORT_OPTIONS.find((s) => s.id === sortMode)?.label.toLowerCase()}
               </p>
             )}

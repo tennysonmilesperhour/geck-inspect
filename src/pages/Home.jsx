@@ -154,8 +154,9 @@ const BUSINESS_SECTIONS = [
 ];
 
 // Everything else gets one line each (DECISIONS.md 13: no feature grids).
+// An item can be { label, to } when it has a public page to open.
 const ALSO_INCLUDED = [
-  'AI Morph ID (your first one is free)',
+  { label: 'AI Morph ID (your first one is free)', to: '/Recognition' },
   'Weight and growth tracking',
   'Egg and incubation timeline',
   'Multi-generation lineage',
@@ -544,7 +545,15 @@ export default function Home() {
             )}
           </div>
           <p className="text-xs text-slate-500 mt-6">
-            Free to start, no credit card. Your first AI Morph ID is free. Export your records to CSV or PDF any time.
+            Free to start, no credit card.{' '}
+            <Link
+              to="/Recognition"
+              onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'morph_id' })}
+              className="text-emerald-300 hover:text-white underline"
+            >
+              Your first AI Morph ID is free
+            </Link>
+            . Export your records to CSV or PDF any time.
             {showGuestCta && (
               <>
                 {' '}Already have an account?{' '}
@@ -646,9 +655,21 @@ export default function Home() {
           <h2 className="text-xl font-semibold text-white mb-4">Also in every account</h2>
           <ul className="flex flex-wrap justify-center gap-2">
             {ALSO_INCLUDED.map((item) => (
-              <li key={item} className="rounded-full border border-slate-700 bg-slate-900/60 backdrop-blur px-3 py-1.5 text-sm text-slate-300">
-                {item}
-              </li>
+              typeof item === 'string' ? (
+                <li key={item} className="rounded-full border border-slate-700 bg-slate-900/60 backdrop-blur px-3 py-1.5 text-sm text-slate-300">
+                  {item}
+                </li>
+              ) : (
+                <li key={item.label}>
+                  <Link
+                    to={item.to}
+                    onClick={() => captureEvent('landing_cta_clicked', { cta: 'also_included', target: item.to })}
+                    className="inline-flex rounded-full border border-emerald-700/70 bg-emerald-950/40 backdrop-blur px-3 py-1.5 text-sm text-emerald-200 hover:text-white hover:border-emerald-500 transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              )
             ))}
           </ul>
         </section>
@@ -950,6 +971,7 @@ export default function Home() {
                 <li><Link to="/breeding-records" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Breeding Records</Link></li>
                 <li><Link to="/QualityScale" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Quality Scale</Link></li>
                 <li><Link to="/crested-gecko-price" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Price Guide</Link></li>
+                <li><Link to="/Recognition" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Morph ID (first one free)</Link></li>
                 <li><Link to="/blog" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Blog</Link></li>
               </ul>
             </div>

@@ -81,6 +81,7 @@ export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, fired
       is_admin: data?.is_admin,
       credits_included: data?.credits_included,
       credits_remaining: data?.credits_remaining,
+      credit_refunded: data?.credit_refunded === true,
       value_estimate_included: data?.value_estimate_included,
     },
     error: null,
