@@ -86,6 +86,8 @@ const ClutchLab             = lazy(() => import('./pages/ClutchLab'));
 // page.
 const About                 = lazy(() => import('./pages/About'));
 const Contact               = lazy(() => import('./pages/Contact'));
+// Signed-out unsubscribe from notification emails (link in every email).
+const Unsubscribe           = lazy(() => import('./pages/Unsubscribe'));
 const Terms                 = lazy(() => import('./pages/Terms'));
 const MarketplaceVerification = lazy(() => import('./pages/MarketplaceVerification'));
 const StorePage             = lazy(() => import('./pages/StorePage'));
@@ -317,6 +319,7 @@ const AuthenticatedApp = () => {
           <Route path="/calculator/:morph" element={<CalculatorMorph />} />
           <Route path="/About" element={<About />} />
           <Route path="/Contact" element={<Contact />} />
+          <Route path="/Unsubscribe" element={<Unsubscribe />} />
           <Route path="/Terms" element={<Terms />} />
           <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
           {/* caseSensitive: React Router matches case-insensitively by
@@ -407,6 +410,7 @@ const AuthenticatedApp = () => {
         <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />
         <Route path="/Breeder/:slug" element={<Breeder />} />
         <Route path="/About" element={<About />} />
+        <Route path="/Unsubscribe" element={<Unsubscribe />} />
         <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
         <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
         <Route path="/breeding-records" element={<BreedingRecords />} />

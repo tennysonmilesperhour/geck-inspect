@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Seo from '@/components/seo/Seo';
 import { Notification, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,7 +24,7 @@ import {
     Egg,
     Utensils,
     Scale,
-    Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope, UserX,
+    Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope, UserX, Loader2, LifeBuoy,
 } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
@@ -32,6 +32,12 @@ import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import SignInRequired from '@/components/shared/SignInRequired';
 import { GUEST_USER, isGuestMode } from '@/lib/guestMode';
+import {
+    NOTIFICATIONS_PAGE_SIZE,
+    countUnreadNotifications,
+    fetchNotificationsPage,
+    markAllNotificationsRead,
+} from '@/lib/notificationsApi';
 
 /**
  * Notifications page, dark slate theme, matches the rest of the app.
@@ -46,8 +52,9 @@ import { GUEST_USER, isGuestMode } from '@/lib/guestMode';
  *     if one was provided.
  *   - a delete button so users can clean up their feed.
  *
- * "Mark all as read" hits every unread row in parallel and then emits
- * the same event so the header badge clears without a page refresh.
+ * The list loads a page at a time (Load more fetches the next one), and
+ * "Mark all as read" is one update for every unread row, then emits the
+ * same event so the header badge clears without a page refresh.
  */
 
 const notificationIcons = {
@@ -78,6 +85,7 @@ const notificationIcons = {
     market_brief: <Sunrise className="w-5 h-5 text-amber-300" />,
     vet_followup: <Stethoscope className="w-5 h-5 text-rose-300" />,
     account_deletion_request: <UserX className="w-5 h-5 text-red-400" />,
+    support_reply: <LifeBuoy className="w-5 h-5 text-emerald-400" />,
 };
 
 const typeLabels = {
@@ -106,6 +114,7 @@ const typeLabels = {
     market_brief: 'Market Brief',
     vet_followup: 'Vet Follow-up',
     account_deletion_request: 'Deletion Request',
+    support_reply: 'Support',
 };
 
 export default function NotificationsPage() {
@@ -117,7 +126,18 @@ export default function NotificationsPage() {
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
+    const [hasMore, setHasMore] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const { toast } = useToast();
+
+    const refreshUnreadCount = useCallback(async (email) => {
+        try {
+            setUnreadCount(await countUnreadNotifications(email));
+        } catch (err) {
+            console.warn('Unread count failed:', err);
+        }
+    }, []);
 
     useEffect(() => {
         (async () => {
@@ -134,23 +154,22 @@ export default function NotificationsPage() {
                     setNotifications([]);
                     return;
                 }
-                const userNotifications = await Notification.filter(
-                    { user_email: currentUser.email },
-                    '-created_date'
-                );
-                setNotifications(userNotifications);
+                const [{ rows, hasMore: more }] = await Promise.all([
+                    fetchNotificationsPage(currentUser.email, { unreadOnly: notifPrefs.showUnreadOnly }),
+                    refreshUnreadCount(currentUser.email),
+                ]);
+                setNotifications(rows);
+                setHasMore(more);
 
-                // Auto-mark-read on view
-                if (notifPrefs.autoMarkRead && !guest) {
-                    const unread = userNotifications.filter(n => !n.is_read);
-                    if (unread.length > 0) {
-                        Promise.all(unread.map(n => Notification.update(n.id, { is_read: true })))
-                            .then(() => {
-                                setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-                                emitCountChanged();
-                            })
-                            .catch((err) => console.error('Auto-mark-read failed:', err));
-                    }
+                // Auto-mark-read on view: one update for every unread row.
+                if (notifPrefs.autoMarkRead && !guest && rows.some((n) => !n.is_read)) {
+                    markAllNotificationsRead(currentUser.email)
+                        .then(() => {
+                            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+                            setUnreadCount(0);
+                            emitCountChanged();
+                        })
+                        .catch((err) => console.error('Auto-mark-read failed:', err));
                 }
             } catch (error) {
                 console.error('Failed to load notifications:', error);
@@ -159,7 +178,28 @@ export default function NotificationsPage() {
                 setIsLoading(false);
             }
         })();
-    }, []);
+        // Reload from the first page when the Unread Only switch changes.
+    }, [notifPrefs.showUnreadOnly]);
+
+    const loadMore = async () => {
+        if (!user || isLoadingMore) return;
+        setIsLoadingMore(true);
+        try {
+            const { rows, hasMore: more } = await fetchNotificationsPage(user.email, {
+                offset: notifications.length,
+                unreadOnly: notifPrefs.showUnreadOnly,
+            });
+            setNotifications((prev) => {
+                const seen = new Set(prev.map((n) => n.id));
+                return [...prev, ...rows.filter((n) => !seen.has(n.id))];
+            });
+            setHasMore(more);
+        } catch (error) {
+            console.error('Failed to load more notifications:', error);
+            toast({ title: 'Error', description: 'Could not load more notifications.', variant: 'destructive' });
+        }
+        setIsLoadingMore(false);
+    };
 
     const emitCountChanged = () => {
         window.dispatchEvent(
@@ -173,6 +213,7 @@ export default function NotificationsPage() {
             setNotifications((prev) =>
                 prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
             );
+            setUnreadCount((c) => Math.max(0, c - 1));
             emitCountChanged();
         } catch (error) {
             console.error('Failed to mark as read:', error);
@@ -181,15 +222,14 @@ export default function NotificationsPage() {
     };
 
     const markAllAsRead = async () => {
-        const unread = notifications.filter((n) => !n.is_read);
-        if (unread.length === 0) return;
+        const total = unreadCount;
+        if (total === 0 || !user) return;
         try {
-            await Promise.all(
-                unread.map((notif) => Notification.update(notif.id, { is_read: true }))
-            );
+            await markAllNotificationsRead(user.email);
             setNotifications((prev) => prev.map((notif) => ({ ...notif, is_read: true })));
+            setUnreadCount(0);
             emitCountChanged();
-            toast({ title: 'All caught up', description: `${unread.length} notifications marked read.` });
+            toast({ title: 'All caught up', description: `${total} ${total === 1 ? 'notification' : 'notifications'} marked read.` });
         } catch (error) {
             console.error('Failed to mark all as read:', error);
             toast({ title: 'Error', description: 'Could not mark all as read.', variant: 'destructive' });
@@ -198,8 +238,10 @@ export default function NotificationsPage() {
 
     const handleDelete = async (notificationId) => {
         try {
+            const removed = notifications.find((n) => n.id === notificationId);
             await Notification.delete(notificationId);
             setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+            if (removed && !removed.is_read) setUnreadCount((c) => Math.max(0, c - 1));
             emitCountChanged();
         } catch (error) {
             console.error('Failed to delete notification:', error);
@@ -208,6 +250,8 @@ export default function NotificationsPage() {
     };
 
     const displayNotifications = useMemo(() => {
+        // Unread Only is applied by the query; rows marked read on this
+        // visit drop out of that view straight away.
         let list = notifPrefs.showUnreadOnly ? notifications.filter(n => !n.is_read) : notifications;
         if (notifPrefs.groupByType) {
             list = [...list].sort((a, b) => {
@@ -233,8 +277,6 @@ export default function NotificationsPage() {
             <SignInRequired title="Sign in to see notifications" description="Hatch alerts, messages, and inquiries are delivered to your account." />
         );
     }
-
-    const unreadCount = notifications.filter((n) => !n.is_read).length;
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
@@ -361,6 +403,18 @@ export default function NotificationsPage() {
                                         </div>
                                     );
                                 })}
+                                {hasMore && (
+                                    <div className="flex justify-center pt-3">
+                                        <Button
+                                            variant="outline"
+                                            onClick={loadMore}
+                                            disabled={isLoadingMore}
+                                        >
+                                            {isLoadingMore && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                            Load {NOTIFICATIONS_PAGE_SIZE} more
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </CardContent>

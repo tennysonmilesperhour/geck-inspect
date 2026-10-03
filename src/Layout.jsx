@@ -68,6 +68,8 @@ import {
   KEEPER_MODE_STORAGE_KEY,
 } from '@/lib/navItems';
 import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
+import { markAllNotificationsRead } from '@/lib/notificationsApi';
+import { listenForPushRotation, syncPushSubscription } from '@/lib/webPush';
 
 
 function LayoutContent({ children, currentPageName: _currentPageName }) {
@@ -221,6 +223,15 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     }, 1500);
     return () => clearTimeout(timer);
   }, [isGuest, user?.email, user?.onboarding_completed_at, location.pathname, location.search, onboardingHoldTick]);
+
+  // Web push: save the browser's current subscription on load, and save the
+  // new one when the browser rotates it (the service worker posts a
+  // message). Without this a rotated subscription silently stopped pushes.
+  useEffect(() => {
+    if (isGuest || !user?.email) return undefined;
+    syncPushSubscription(user.email).catch(() => {});
+    return listenForPushRotation(user.email);
+  }, [isGuest, user?.email]);
 
   // Closing the role prompt without choosing means "show me everything":
   // mark onboarding seen so it never nags, but do not launch the tour.
@@ -616,13 +627,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     setRecentNotifications([]);
     setUnreadNotificationsCount(0);
     try {
-      // Mark every unread notification for this user, not just the recent slice
-      const all = await api.entities.Notification.filter(
-        { user_email: user.email, is_read: false }
-      );
-      await Promise.all(
-        all.map((n) => api.entities.Notification.update(n.id, { is_read: true }))
-      );
+      // Mark every unread notification for this user, not just the recent
+      // slice, in one update.
+      await markAllNotificationsRead(user.email);
       const cacheKey = `notifications_${user.email}`;
       dataCache.clear(cacheKey);
     } catch (e) {

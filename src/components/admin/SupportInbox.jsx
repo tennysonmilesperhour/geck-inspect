@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SupportMessage, User } from '@/entities/all';
+import { Notification, SupportMessage, User } from '@/entities/all';
+import {
+    SUPPORT_REPLY_NOTIFICATION_TYPE,
+    addTicketReply,
+    loadTicketReplies,
+    supportReplyNotificationContent,
+} from '@/lib/supportTickets';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +64,10 @@ import { formatDistanceToNowStrict, format } from 'date-fns';
  * - Search filter across subject, body, and user_email
  * - Click a row to open the full thread + admin notes editor
  * - Status can be moved via the dropdown; changes persist immediately
+ * - "Reply" saves the answer on the ticket (support_replies), moves a new
+ *   ticket to In progress (or to Resolved with "Reply and resolve") and
+ *   sends the member a notification. Members see the status and every
+ *   reply in Settings, Support.
  * - "Reply via DM" button drops the admin into Messages prefilled with
  *   the user's email as the recipient
  * - An open "Account deletion request" ticket gets an "Erase account"
@@ -131,6 +141,10 @@ export default function SupportInbox() {
     const [confirmErase, setConfirmErase] = useState(false);
     const [isErasing, setIsErasing] = useState(false);
     const [eraseError, setEraseError] = useState('');
+    const [replies, setReplies] = useState([]);
+    const [repliesLoading, setRepliesLoading] = useState(false);
+    const [replyText, setReplyText] = useState('');
+    const [isReplying, setIsReplying] = useState(false);
     const { toast } = useToast();
 
     const loadMessages = async () => {
@@ -187,10 +201,19 @@ export default function SupportInbox() {
         return list;
     }, [messages, activeStatus, activeSource, search]);
 
-    const openMessage = (msg) => {
+    const openMessage = async (msg) => {
         setSelected(msg);
         setAdminNotes(msg.admin_notes || '');
         setEraseError('');
+        setReplyText('');
+        setReplies([]);
+        setRepliesLoading(true);
+        try {
+            setReplies(await loadTicketReplies(msg.id));
+        } catch (err) {
+            console.error('Failed to load replies:', err);
+        }
+        setRepliesLoading(false);
     };
 
     const closeMessage = () => {
@@ -230,6 +253,43 @@ export default function SupportInbox() {
         } catch (err) {
             toast({ title: 'Update failed', description: err.message, variant: 'destructive' });
         }
+    };
+
+    const handleSendReply = async (resolve = false) => {
+        const body = replyText.trim();
+        if (!selected?.id || !body || isReplying) return;
+        setIsReplying(true);
+        try {
+            const saved = await addTicketReply(selected.id, body);
+            setReplies((prev) => [...prev, saved]);
+            setReplyText('');
+            // Status the member sees: answered tickets are at least in progress.
+            if (resolve && selected.status !== 'resolved') {
+                await handleChangeStatus(selected, 'resolved');
+            } else if (selected.status === 'new') {
+                await handleChangeStatus(selected, 'in_progress');
+            }
+            // Bell, email and push for the member. Visitors who wrote in
+            // without an account have no profile, so nothing is sent; email
+            // them yourself.
+            if (selected.user_email) {
+                try {
+                    await Notification.create({
+                        user_email: selected.user_email,
+                        type: SUPPORT_REPLY_NOTIFICATION_TYPE,
+                        content: supportReplyNotificationContent(selected, body),
+                        link: '/Settings#support',
+                        metadata: { support_message_id: selected.id },
+                    });
+                } catch (notifErr) {
+                    console.warn('Reply saved but the notification failed:', notifErr);
+                }
+            }
+            toast({ title: 'Reply saved', description: 'The member can see it in Settings, Support.' });
+        } catch (err) {
+            toast({ title: 'Reply not saved', description: err.message, variant: 'destructive' });
+        }
+        setIsReplying(false);
     };
 
     const isOpenDeletionRequest = (msg) =>
@@ -419,6 +479,67 @@ export default function SupportInbox() {
                                     <p className="text-sm text-slate-200 whitespace-pre-wrap">
                                         {selected.body}
                                     </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                                        Replies the member can see
+                                    </p>
+                                    {repliesLoading ? (
+                                        <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                                    ) : replies.length === 0 ? (
+                                        <p className="text-xs text-slate-500 mb-2">No reply yet.</p>
+                                    ) : (
+                                        <div className="space-y-2 mb-2">
+                                            {replies.map((r) => (
+                                                <div key={r.id} className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3">
+                                                    <p className="text-[11px] text-emerald-300 mb-1">
+                                                        {format(new Date(r.created_at), 'PPp')}
+                                                    </p>
+                                                    <p className="text-sm text-slate-200 whitespace-pre-wrap">{r.body}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {selected.user_email ? (
+                                        <>
+                                            <Textarea
+                                                value={replyText}
+                                                onChange={(e) => setReplyText(e.target.value)}
+                                                placeholder="Write a reply. The member sees it under Settings, Support, and gets a notification."
+                                                maxLength={5000}
+                                                className="bg-slate-950 border-slate-700 text-slate-100 min-h-24"
+                                            />
+                                            <div className="flex flex-wrap justify-end gap-2 mt-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleSendReply(true)}
+                                                    disabled={isReplying || !replyText.trim()}
+                                                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                                >
+                                                    Reply and resolve
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleSendReply(false)}
+                                                    disabled={isReplying || !replyText.trim()}
+                                                    className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                                                >
+                                                    {isReplying ? (
+                                                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                                    ) : (
+                                                        <Send className="w-3.5 h-3.5 mr-1.5" />
+                                                    )}
+                                                    Reply
+                                                </Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p className="text-xs text-slate-500">
+                                            This visitor left no email, so there is no way to reply.
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>

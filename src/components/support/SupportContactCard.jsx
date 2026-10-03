@@ -82,6 +82,7 @@ export default function SupportContactCard({ title = 'Need help?' }) {
                     <h3 className="text-xl font-bold text-white">Message received</h3>
                     <p className="text-slate-400">
                         Thanks for reaching out. An admin will review your message and reply soon.
+                        {user ? ' Our reply and the status of your message show in Settings, under Support.' : ''}
                     </p>
                     <p className="text-sm text-slate-400">You can also email <a href={SUPPORT_EMAIL_URL} className="text-emerald-300 underline break-all">{SUPPORT_EMAIL}</a>.</p>
                     <Button

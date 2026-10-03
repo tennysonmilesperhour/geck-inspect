@@ -21,3 +21,8 @@ verify_jwt = true
 # the database.
 [functions.waitlist-signup]
 verify_jwt = false
+
+# One-click unsubscribe from notification emails. Mail apps POST here with
+# no Supabase session; the signed token in the URL is the proof.
+[functions.email-unsubscribe]
+verify_jwt = false

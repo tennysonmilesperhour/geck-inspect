@@ -78,6 +78,42 @@ export async function getPushStatus() {
 }
 
 /**
+ * Store (or refresh) this browser's subscription row. The endpoint is the
+ * key, so saving the same subscription twice just updates it.
+ */
+async function saveSubscription(userEmail, sub) {
+  const json = sub.toJSON();
+  const endpoint = json.endpoint || sub.endpoint;
+  const p256dh = json.keys?.p256dh
+    || arrayBufferToBase64(sub.getKey('p256dh'));
+  const auth = json.keys?.auth
+    || arrayBufferToBase64(sub.getKey('auth'));
+
+  try {
+    const { error } = await supabase.from('push_subscriptions').upsert(
+      {
+        user_email: userEmail,
+        endpoint,
+        p256dh,
+        auth,
+        user_agent: navigator.userAgent || null,
+        platform: detectPlatform(),
+        last_seen_at: new Date().toISOString(),
+      },
+      { onConflict: 'endpoint' }
+    );
+    if (error) {
+      console.warn('[push] save failed:', error);
+      return { ok: false, reason: 'save-failed', error };
+    }
+  } catch (err) {
+    console.warn('[push] save threw:', err);
+    return { ok: false, reason: 'save-failed', error: err };
+  }
+  return { ok: true };
+}
+
+/**
  * Request permission (if not already granted), subscribe with the push
  * service, and persist to Supabase. Safe to call multiple times, an
  * existing subscription with the same endpoint is upserted.
@@ -118,34 +154,8 @@ export async function subscribeToPush(userEmail) {
     return { ok: false, reason: 'subscribe-failed', error: err };
   }
 
-  const json = sub.toJSON();
-  const endpoint = json.endpoint || sub.endpoint;
-  const p256dh = json.keys?.p256dh
-    || arrayBufferToBase64(sub.getKey('p256dh'));
-  const auth = json.keys?.auth
-    || arrayBufferToBase64(sub.getKey('auth'));
-
-  try {
-    const { error } = await supabase.from('push_subscriptions').upsert(
-      {
-        user_email: userEmail,
-        endpoint,
-        p256dh,
-        auth,
-        user_agent: navigator.userAgent || null,
-        platform: detectPlatform(),
-        last_seen_at: new Date().toISOString(),
-      },
-      { onConflict: 'endpoint' }
-    );
-    if (error) {
-      console.warn('[push] save failed:', error);
-      return { ok: false, reason: 'save-failed', error };
-    }
-  } catch (err) {
-    console.warn('[push] save threw:', err);
-    return { ok: false, reason: 'save-failed', error: err };
-  }
+  const saved = await saveSubscription(userEmail, sub);
+  if (!saved.ok) return saved;
 
   // Also flip the master pref on so send-push respects it.
   try {
@@ -206,4 +216,75 @@ export async function touchPushSubscription() {
   } catch {
     // Non-fatal.
   }
+}
+
+/**
+ * Keep the stored subscription in step with the browser.
+ *
+ * Browsers rotate push subscriptions now and then (new endpoint, new keys).
+ * The service worker hears about it (`pushsubscriptionchange`), tries to
+ * subscribe again itself, and tells any open tab. Before this, nothing
+ * listened, so the stored row went stale and pushes stopped until the
+ * member switched push off and on again.
+ *
+ * - On every signed-in page load, `syncPushSubscription` saves the
+ *   browser's current subscription if it has one (this also catches a
+ *   rotation that happened while no tab was open). It never asks for
+ *   permission and never creates a subscription the member removed.
+ * - When the worker reports a rotation, `resubscribeAfterRotation`
+ *   subscribes again if the worker could not, saves the new row and
+ *   deletes the old endpoint's row.
+ */
+export async function syncPushSubscription(userEmail) {
+  if (!userEmail || !isPushSupported()) return { ok: false, reason: 'not-supported' };
+  if (Notification.permission !== 'granted') return { ok: false, reason: 'no-permission' };
+  const reg = await getServiceWorkerRegistration();
+  const sub = reg ? await reg.pushManager.getSubscription() : null;
+  if (!sub) return { ok: false, reason: 'no-subscription' };
+  return saveSubscription(userEmail, sub);
+}
+
+export async function resubscribeAfterRotation(userEmail, oldEndpoint = null) {
+  if (!userEmail || !isPushSupported()) return { ok: false, reason: 'not-supported' };
+  if (Notification.permission !== 'granted') return { ok: false, reason: 'no-permission' };
+  const reg = await getServiceWorkerRegistration();
+  if (!reg) return { ok: false, reason: 'no-registration' };
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    if (!VAPID_PUBLIC_KEY) return { ok: false, reason: 'no-vapid-key' };
+    try {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    } catch (err) {
+      console.warn('[push] resubscribe failed:', err);
+      return { ok: false, reason: 'subscribe-failed', error: err };
+    }
+  }
+  const saved = await saveSubscription(userEmail, sub);
+  if (saved.ok && oldEndpoint && oldEndpoint !== sub.endpoint) {
+    try {
+      await supabase.from('push_subscriptions').delete().eq('endpoint', oldEndpoint);
+    } catch {
+      // Non-fatal: send-push removes dead endpoints when they return 410.
+    }
+  }
+  return saved;
+}
+
+/**
+ * Listen for the service worker's rotation message while a member is
+ * signed in. Returns a function that stops listening.
+ */
+export function listenForPushRotation(userEmail) {
+  if (!userEmail || !isPushSupported()) return () => {};
+  const onMessage = (event) => {
+    if (event.data?.type !== 'pushsubscriptionchange') return;
+    resubscribeAfterRotation(userEmail, event.data.oldEndpoint || null).catch((err) =>
+      console.warn('[push] rotation handling failed:', err)
+    );
+  };
+  navigator.serviceWorker.addEventListener('message', onMessage);
+  return () => navigator.serviceWorker.removeEventListener('message', onMessage);
 }

@@ -237,14 +237,30 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Handle subscription-change events (browser-rotated the push keys).
-// We emit a message to any open clients so they can re-subscribe.
+// Handle subscription-change events (the browser rotated the push keys).
+// Subscribe again here with the same options when the browser did not
+// already, then tell any open tab, which saves the new subscription and
+// deletes the old one (src/lib/webPush.js, listenForPushRotation). With no
+// tab open, the next signed-in page load saves it (syncPushSubscription).
 self.addEventListener('pushsubscriptionchange', (event) => {
   event.waitUntil(
     (async () => {
+      const oldEndpoint = event.oldSubscription ? event.oldSubscription.endpoint : null;
+      let renewed = event.newSubscription || null;
+      if (!renewed && event.oldSubscription && event.oldSubscription.options) {
+        try {
+          renewed = await self.registration.pushManager.subscribe(event.oldSubscription.options);
+        } catch {
+          renewed = null;
+        }
+      }
       const allClients = await self.clients.matchAll({ type: 'window' });
       for (const client of allClients) {
-        client.postMessage({ type: 'pushsubscriptionchange' });
+        client.postMessage({
+          type: 'pushsubscriptionchange',
+          oldEndpoint,
+          renewed: Boolean(renewed),
+        });
       }
     })()
   );
