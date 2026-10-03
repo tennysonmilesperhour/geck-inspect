@@ -3,13 +3,16 @@ import { User, WeightRecord, FeedingRecord, ShedRecord } from '@/entities/all';
 import { format, parseISO, startOfWeek, addDays as dateAddDays } from 'date-fns';
 import {
   Printer, FileText, Stethoscope, Tag, GitBranch,
-  Loader2,
+  Loader2, LayoutGrid,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QRCodeSVG } from 'qrcode.react';
 import { GUEST_USER, isGuestMode } from '@/lib/guestMode';
 import PageHeader from '@/components/shared/PageHeader';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import RackLabelSheet from '@/components/worksheets/RackLabelSheet';
 
 /* ─── Print CSS (injected once) ─────────────────────────────────── */
 
@@ -487,6 +490,67 @@ function TemplateButton({ icon: Icon, label, description, active, onClick }) {
   );
 }
 
+function RackLabelPicker({ geckos, selected, onChange, search, onSearch, onPrint }) {
+  const q = search.trim().toLowerCase();
+  const shown = q
+    ? geckos.filter((g) => [g.name, g.gecko_id_code, g.morphs_traits].filter(Boolean).join(' ').toLowerCase().includes(q))
+    : geckos;
+  const toggle = (id) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    onChange(next);
+  };
+  const allShownSelected = shown.length > 0 && shown.every((g) => selected.has(g.id));
+  const toggleAll = () => {
+    const next = new Set(selected);
+    if (allShownSelected) shown.forEach((g) => next.delete(g.id));
+    else shown.forEach((g) => next.add(g.id));
+    onChange(next);
+  };
+  const withoutPassport = geckos.filter((g) => selected.has(g.id) && !g.passport_code).length;
+
+  return (
+    <div className="mb-6 space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <Input
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder="Search by name, ID or morph"
+          className="max-w-xs"
+          aria-label="Search geckos"
+        />
+        <Button type="button" variant="outline" size="sm" onClick={toggleAll} disabled={shown.length === 0}>
+          {allShownSelected ? 'Clear these' : `Select ${q ? 'these' : 'all'} (${shown.length})`}
+        </Button>
+        <Button type="button" onClick={onPrint} disabled={selected.size === 0}>
+          <Printer size={16} className="mr-2" />
+          Print {selected.size || ''} {selected.size === 1 ? 'label' : 'labels'}
+        </Button>
+      </div>
+      {geckos.length === 0 ? (
+        <p className="text-sm text-slate-400">Add a gecko to your collection to print rack labels.</p>
+      ) : (
+        <div className="max-h-72 overflow-y-auto rounded-xl border border-slate-700 divide-y divide-slate-800">
+          {shown.map((g) => (
+            <label key={g.id} className="touch:min-h-11 flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-slate-900">
+              <Checkbox checked={selected.has(g.id)} onCheckedChange={() => toggle(g.id)} />
+              <span className="text-sm text-slate-100">{g.name || 'Unnamed gecko'}</span>
+              <span className="text-xs text-slate-500 truncate">
+                {[g.gecko_id_code, g.morphs_traits, g.sex].filter(Boolean).join(', ')}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
+      {withoutPassport > 0 && (
+        <p className="text-xs text-slate-500">
+          {withoutPassport} selected {withoutPassport === 1 ? 'gecko has' : 'geckos have'} no passport yet, so {withoutPassport === 1 ? 'its label prints' : 'their labels print'} without a QR code.
+        </p>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main page ─────────────────────────────────────────────────── */
 
 export default function PrintableWorksheets() {
@@ -501,6 +565,11 @@ export default function PrintableWorksheets() {
   const [feedings, setFeedings] = useState([]);
   const [sheds, setSheds] = useState([]);
   const [loadingTemplate, setLoadingTemplate] = useState(false);
+
+  // Rack label sheet: many geckos on one page.
+  const [mode, setMode] = useState('single');
+  const [labelIds, setLabelIds] = useState(() => new Set());
+  const [labelSearch, setLabelSearch] = useState('');
 
   useEffect(() => {
     ensurePrintStyles();
@@ -588,10 +657,39 @@ export default function PrintableWorksheets() {
         <PageHeader
           icon={Printer}
           title="Printable Worksheets"
-          description="Generate print-ready documents for your geckos, feeding logs, vet cards, expo tags, and lineage certificates."
+          description="Print-ready documents for your geckos: rack label sheets, feeding logs, vet cards, expo tags and lineage certificates."
         />
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+          <TemplateButton
+            icon={FileText}
+            label="One gecko"
+            description="Feeding log, vet card, expo tag or lineage card"
+            active={mode === 'single'}
+            onClick={() => setMode('single')}
+          />
+          <TemplateButton
+            icon={LayoutGrid}
+            label="Rack label sheet"
+            description="Up to 20 labels a page: name, ID, morph, sex, hatch date and passport QR"
+            active={mode === 'labels'}
+            onClick={() => setMode('labels')}
+          />
+        </div>
+
+        {mode === 'labels' && (
+          <RackLabelPicker
+            geckos={geckos}
+            selected={labelIds}
+            onChange={setLabelIds}
+            search={labelSearch}
+            onSearch={setLabelSearch}
+            onPrint={handlePrint}
+          />
+        )}
+
         {/* Gecko selector */}
+        {mode === 'single' && (<>
         <div className="mb-6">
           <label className="text-sm font-medium mb-2 block text-slate-200">
             Select Gecko
@@ -668,10 +766,24 @@ export default function PrintableWorksheets() {
             </span>
           </div>
         )}
+        </>)}
       </div>
 
+      {mode === 'labels' && labelIds.size > 0 && (
+        <div id="printable-area" className="max-w-4xl mx-auto">
+          <div className="no-print mb-3 pb-3 border-b border-slate-800">
+            <p className="text-xs font-medium text-emerald-400">
+              PREVIEW: {labelIds.size} {labelIds.size === 1 ? 'label' : 'labels'}, about 20 to a printed page
+            </p>
+          </div>
+          <div className="rounded-xl overflow-hidden border border-slate-700 bg-white print:rounded-none print:border-0">
+            <RackLabelSheet geckos={geckos.filter((g) => labelIds.has(g.id))} />
+          </div>
+        </div>
+      )}
+
       {/* Printable area */}
-      {selectedGecko && selectedTemplate && !loadingTemplate && (
+      {mode === 'single' && selectedGecko && selectedTemplate && !loadingTemplate && (
         <div id="printable-area" className="max-w-4xl mx-auto">
           <div className="no-print mb-3 pb-3 border-b border-slate-800">
             <p className="text-xs font-medium text-emerald-400">

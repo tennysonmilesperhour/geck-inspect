@@ -138,6 +138,8 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
         p_record_date: todayLocalISO(),
       });
       if (error) throw error;
+      // Lets the Dashboard (and any open list) drop its cached counts.
+      window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'created' } }));
 
       captureEvent('animal_created', {
         animal_id: gecko.id,

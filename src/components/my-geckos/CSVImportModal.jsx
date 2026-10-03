@@ -116,6 +116,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
 
             setImportResults(data.results);
             setStep('results');
+            window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'imported' } }));
 
             if (data.success && onImportComplete) {
                 onImportComplete();
