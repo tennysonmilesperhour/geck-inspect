@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import Seo from '@/components/seo/Seo';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -22,6 +23,7 @@ import {
   Undo2,
   Utensils,
   X,
+  CloudOff,
 } from 'lucide-react';
 import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent, CollectionMember } from '@/entities/all';
 import { api } from '@/api/appClient';
@@ -37,6 +39,8 @@ import {
   isAuthFailure,
 } from '@/lib/husbandryLog';
 import { createPageUrl } from '@/utils';
+import { queueFieldLog, isDeviceOffline, useOfflineQueue } from '@/lib/offlineSync';
+import { enqueue, removeQueued, updateQueued, isNetworkError } from '@/lib/offlineQueue';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 /**
@@ -58,6 +62,13 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
  * surface shares, so a "Fed" here also moves the gecko's feeding group
  * schedule (D21). Every log can be backdated with the date chips above
  * the buttons; the date resets to today when Field Mode opens.
+ *
+ * Offline: the collection comes from the copy kept in this browser
+ * (src/lib/offlineCache.js, query key 'field-mode'). A log made with no
+ * signal (or whose request never reached the server) is kept on the phone
+ * as a whole log and replayed through the same husbandryLog functions when
+ * the connection returns (src/lib/offlineSync.js), with its backdated day
+ * and the group schedule move. An expired sign-in still shows "Sign in".
  */
 
 const RECENT_KEY = 'geckinspect_field_mode_recent';
@@ -183,9 +194,9 @@ export default function FieldModePage() {
   const { toast } = useToast();
 
   const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [geckos, setGeckos] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const { pending: pendingSync, online } = useOfflineQueue();
   // An expired sign-in shows "Sign in", not a connection error.
   const [sessionExpired, setSessionExpired] = useState(false);
   // The day the next log is for. Today unless the keeper backdates it.
@@ -218,37 +229,51 @@ export default function FieldModePage() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const currentUser = await api.auth.me();
+    api.auth.me()
+      .then((currentUser) => { if (!cancelled) setUser(currentUser); })
+      .catch((error) => {
         if (cancelled) return;
-        setUser(currentUser);
-        const [allGeckos, memberships] = await Promise.all([
-          getVisibleGeckos(currentUser, {}, '-created_date', 500),
-          CollectionMember.filter({ status: 'accepted' }).catch(() => []),
-        ]);
-        if (cancelled) return;
-        const writable = (allGeckos || []).filter(
-          (g) => !g.archived && canWriteGecko(g, currentUser, memberships)
-        );
-        setGeckos(writable);
-      } catch (error) {
-        console.error('Field mode load failed:', error);
-        if (cancelled) return;
-        if (isAuthFailure(error)) {
-          setUser(null);
-          setSessionExpired(true);
-        } else {
-          setLoadError(true);
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
+        // No stored session at all: the "Sign in" screen. (Offline with a
+        // stored session, api.auth.me uses it instead of failing.)
+        setUser(null);
+        if (isAuthFailure(error)) setSessionExpired(true);
+      })
+      .finally(() => { if (!cancelled) setAuthChecked(true); });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // react-query, so the last loaded list is kept in this browser and Field
+  // Mode opens with no signal (src/lib/offlineCache.js persists this key).
+  const geckoQuery = useQuery({
+    queryKey: ['field-mode', user?.email || null],
+    enabled: Boolean(user?.email),
+    retry: (count, error) => !isAuthFailure(error) && count < 2,
+    queryFn: async () => {
+      const [allGeckos, memberships] = await Promise.all([
+        getVisibleGeckos(user, {}, '-created_date', 500),
+        CollectionMember.filter({ status: 'accepted' }).catch(() => []),
+      ]);
+      return (allGeckos || []).filter((g) => !g.archived && canWriteGecko(g, user, memberships));
+    },
+  });
+
+  useEffect(() => {
+    if (geckoQuery.data) setGeckos(geckoQuery.data);
+  }, [geckoQuery.data]);
+
+  useEffect(() => {
+    if (geckoQuery.isError && isAuthFailure(geckoQuery.error)) setSessionExpired(true);
+  }, [geckoQuery.isError, geckoQuery.error]);
+
+  const hasList = Boolean(geckoQuery.data);
+  // Offline with no saved copy: react-query pauses the fetch instead of
+  // failing, so say why the list is empty rather than spinning forever.
+  const offlineNoCopy = Boolean(user) && !hasList && geckoQuery.fetchStatus === 'paused';
+  const loadError = Boolean(user) && !hasList && geckoQuery.isError && !isAuthFailure(geckoQuery.error);
+  const isLoading = !authChecked
+    || (Boolean(user) && !hasList && !offlineNoCopy && !loadError && !sessionExpired);
 
   useEffect(() => {
     return () => {
@@ -352,36 +377,73 @@ export default function FieldModePage() {
     toast({ title: 'Save failed', description: error?.message || fallback, variant: 'destructive' });
   };
 
+  // Offline: a log that cannot reach the server is kept on the phone and
+  // sent later. An auth error is not a network error, so an expired
+  // sign-in still gets "Sign in" above instead of being queued.
+  const shouldQueue = (error) => isDeviceOffline() || (error && isNetworkError(error) && !isAuthFailure(error));
+  const savedLabel = (queued, text) => (queued ? `${text} kept on this phone` : `${text} saved`);
+
   const logWeight = async (gecko, grams, date = logDate) => {
     setIsSaving(true);
-    try {
-      const prevWeight = gecko.weight_grams ?? null;
-      const record = await WeightRecord.create({
-        gecko_id: gecko.id,
-        weight_grams: grams,
-        record_date: date,
-      });
-      // The gecko's current weight follows today's weigh-in. A backdated
-      // weigh-in only fills it when the gecko has no weight yet.
-      const mirror = date === todayLocalISO() || prevWeight == null;
-      if (mirror) {
-        await Gecko.update(gecko.id, { weight_grams: grams });
-        setGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, weight_grams: grams } : g)));
-        setSelectedGecko((s) => (s && s.id === gecko.id ? { ...s, weight_grams: grams } : s));
-      }
+    const prevWeight = gecko.weight_grams ?? null;
+    // The gecko's current weight follows today's weigh-in. A backdated
+    // weigh-in only fills it when the gecko has no weight yet.
+    const mirror = date === todayLocalISO() || prevWeight == null;
+    const showWeight = (value) => {
+      setGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, weight_grams: value } : g)));
+      setSelectedGecko((s) => (s && s.id === gecko.id ? { ...s, weight_grams: value } : s));
+    };
+    const finish = (entry) => {
+      if (mirror) showWeight(grams);
       afterLog({
         kind: 'weight',
-        message: `${grams} g for ${gecko.name}`,
+        queued: Boolean(entry.queued),
+        message: savedLabel(Boolean(entry.queued), `${grams} g for ${gecko.name}`),
         undo: async () => {
-          await WeightRecord.delete(record.id);
-          if (!mirror) return;
-          await Gecko.update(gecko.id, { weight_grams: prevWeight });
-          setGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, weight_grams: prevWeight } : g)));
-          setSelectedGecko((s) => (s && s.id === gecko.id ? { ...s, weight_grams: prevWeight } : s));
+          await entry.undo();
+          if (mirror) showWeight(prevWeight);
         },
       });
       setWeightInput('');
       setActivePanel(null);
+    };
+    const queueWhole = () => {
+      const item = queueFieldLog({ kind: 'weight', geckoId: gecko.id, grams, date, mirror });
+      finish({ queued: item, undo: async () => { removeQueued(item.id); } });
+    };
+    try {
+      if (isDeviceOffline()) {
+        queueWhole();
+        return;
+      }
+      let record;
+      try {
+        record = await WeightRecord.create({ gecko_id: gecko.id, weight_grams: grams, record_date: date });
+      } catch (error) {
+        if (!shouldQueue(error)) throw error;
+        queueWhole();
+        return;
+      }
+      // The weigh-in saved; if only the shown-weight update cannot reach
+      // the server, keep just that part for later.
+      let mirrorItem = null;
+      if (mirror) {
+        try {
+          await Gecko.update(gecko.id, { weight_grams: grams });
+        } catch (error) {
+          if (!shouldQueue(error)) throw error;
+          mirrorItem = enqueue({ entity: 'Gecko', op: 'update', recordId: gecko.id, data: { weight_grams: grams } });
+        }
+      }
+      finish({
+        queued: null,
+        undo: async () => {
+          await WeightRecord.delete(record.id);
+          if (!mirror) return;
+          if (mirrorItem) removeQueued(mirrorItem.id);
+          else await Gecko.update(gecko.id, { weight_grams: prevWeight });
+        },
+      });
     } catch (error) {
       console.error('Weight log failed:', error);
       reportSaveError(error, 'Could not save the weight.');
@@ -392,7 +454,22 @@ export default function FieldModePage() {
 
   const logShed = async (gecko, quality = 'unknown', date = logDate) => {
     setIsSaving(true);
+    const queueShed = () => {
+      const item = queueFieldLog({ kind: 'shed', geckoId: gecko.id, date, quality });
+      afterLog({
+        kind: 'shed',
+        queueId: item.id,
+        quality,
+        queued: true,
+        message: savedLabel(true, `Shed for ${gecko.name}`),
+        undo: async () => { removeQueued(item.id); },
+      });
+    };
     try {
+      if (isDeviceOffline()) {
+        queueShed();
+        return;
+      }
       const record = await writeShed({ gecko, date, quality });
       afterLog({
         kind: 'shed',
@@ -404,6 +481,10 @@ export default function FieldModePage() {
         },
       });
     } catch (error) {
+      if (shouldQueue(error)) {
+        queueShed();
+        return;
+      }
       console.error('Shed log failed:', error);
       reportSaveError(error, 'Could not log the shed.');
     } finally {
@@ -413,7 +494,32 @@ export default function FieldModePage() {
 
   const logFed = async (gecko, accepted = true, date = logDate) => {
     setIsSaving(true);
+    // Kept offline as a whole log; it replays through logFeedings, which
+    // also moves the group schedule then (never back in time).
+    const queueFed = () => {
+      const item = queueFieldLog({
+        kind: 'fed',
+        geckoId: gecko.id,
+        feedingGroupId: gecko.feeding_group_id || null,
+        accepted,
+        date,
+      });
+      afterLog({
+        kind: 'fed',
+        queueId: item.id,
+        gecko,
+        date,
+        accepted,
+        queued: true,
+        message: savedLabel(true, `Feeding for ${gecko.name}`),
+        undo: async () => { removeQueued(item.id); },
+      });
+    };
     try {
+      if (isDeviceOffline()) {
+        queueFed();
+        return;
+      }
       // Writes the feeding row and moves the gecko's group schedule when
       // it ate (D21), so Dashboard and reminders stop calling it due.
       const result = await logFeedings({ entries: [{ gecko, accepted }], date });
@@ -430,6 +536,10 @@ export default function FieldModePage() {
         },
       });
     } catch (error) {
+      if (shouldQueue(error)) {
+        queueFed();
+        return;
+      }
       console.error('Feeding log failed:', error);
       reportSaveError(error, 'Could not log the feeding.');
     } finally {
@@ -465,9 +575,22 @@ export default function FieldModePage() {
     const trimmed = (text || '').trim();
     if (!trimmed) return;
     setIsSaving(true);
+    // A backdated note lands at noon on that day.
+    const when = date === todayLocalISO() ? new Date() : new Date(`${date}T12:00:00`);
+    const done = (entry) => {
+      afterLog({ kind: 'note', ...entry });
+      setNoteInput('');
+      setActivePanel(null);
+    };
+    const queueNote = () => {
+      const item = queueFieldLog({ kind: 'note', geckoId: gecko.id, eventDate: when.toISOString(), notes: trimmed });
+      done({ queued: true, message: savedLabel(true, `Note for ${gecko.name}`), undo: async () => { removeQueued(item.id); } });
+    };
     try {
-      // A backdated note lands at noon on that day.
-      const when = date === todayLocalISO() ? new Date() : new Date(`${date}T12:00:00`);
+      if (isDeviceOffline()) {
+        queueNote();
+        return;
+      }
       const record = await GeckoEvent.create({
         gecko_id: gecko.id,
         event_type: 'custom',
@@ -475,16 +598,17 @@ export default function FieldModePage() {
         event_date: when.toISOString(),
         notes: trimmed,
       });
-      afterLog({
-        kind: 'note',
+      done({
         message: `Note for ${gecko.name}`,
         undo: async () => {
           await GeckoEvent.delete(record.id);
         },
       });
-      setNoteInput('');
-      setActivePanel(null);
     } catch (error) {
+      if (shouldQueue(error)) {
+        queueNote();
+        return;
+      }
       console.error('Note save failed:', error);
       reportSaveError(error, 'Could not save the note.');
     } finally {
@@ -497,7 +621,9 @@ export default function FieldModePage() {
   const refineShedQuality = async (quality) => {
     if (!undoEntry || undoEntry.kind !== 'shed') return;
     try {
-      await ShedRecord.update(undoEntry.recordId, { quality });
+      // A shed still waiting to sync is changed in the queue.
+      if (undoEntry.queueId) updateQueued(undoEntry.queueId, { quality });
+      else await ShedRecord.update(undoEntry.recordId, { quality });
       setUndoEntry((e) => (e && e.kind === 'shed' ? { ...e, quality } : e));
     } catch (error) {
       console.error('Shed quality update failed:', error);
@@ -509,6 +635,13 @@ export default function FieldModePage() {
     if (!undoEntry || undoEntry.kind !== 'fed') return;
     const entry = undoEntry;
     const next = !entry.accepted;
+    // A feeding still waiting to sync: change it in the queue. The group
+    // schedule moves (or not) when it replays.
+    if (entry.queueId) {
+      updateQueued(entry.queueId, { accepted: next });
+      setUndoEntry((e) => (e && e.kind === 'fed' ? { ...e, accepted: next } : e));
+      return;
+    }
     try {
       await FeedingRecord.update(entry.recordId, { accepted: next });
       // A refusal does not count as feeding the group (D21), so the group
@@ -646,7 +779,7 @@ export default function FieldModePage() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <CheckCircle2 className="w-6 h-6 text-emerald-300 flex-shrink-0" />
-                <span className="text-lg font-semibold truncate">{undoEntry.message} saved</span>
+                <span className="text-lg font-semibold truncate">{/(saved|kept on this phone)$/.test(undoEntry.message) ? undoEntry.message : `${undoEntry.message} saved`}</span>
               </div>
               <Button
                 onClick={handleUndo}
@@ -687,6 +820,19 @@ export default function FieldModePage() {
       </AnimatePresence>
 
       {/* Main scroll area */}
+      {/* Offline and waiting-to-sync notice */}
+      {(!online || pendingSync > 0) && (
+        <div role="status" className="mx-4 mt-3 flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-950/40 px-4 py-3 text-base text-amber-100">
+          <CloudOff className="w-5 h-5 flex-shrink-0" />
+          <span>
+            {!online ? 'No signal. Logs are kept on this phone. ' : ''}
+            {pendingSync > 0
+              ? `${pendingSync} log${pendingSync === 1 ? '' : 's'} waiting to sync${online ? ', sending now.' : '. They send when you are back online.'}`
+              : ''}
+          </span>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto pb-24">
         {sessionExpired || (!user && !loadError) ? (
           <div className="p-6 text-center">
@@ -701,6 +847,10 @@ export default function FieldModePage() {
             >
               <LogIn className="w-6 h-6 mr-2" /> Sign in
             </Button>
+          </div>
+        ) : offlineNoCopy ? (
+          <div className="p-6 text-center">
+            <p className="text-xl text-slate-300 mt-16">You are offline and this phone has no saved copy of your collection yet. Open Field Mode once with signal, then it works offline.</p>
           </div>
         ) : loadError ? (
           <div className="p-6 text-center">

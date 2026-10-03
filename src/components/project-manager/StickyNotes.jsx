@@ -1,6 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Grid3x3, List, StickyNote } from 'lucide-react';
+import { PlusCircle, Grid3x3, List, StickyNote, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+import { useToast } from '@/components/ui/use-toast';
+
+/**
+ * Season Planner notes. Stored per member in the planner_notes table, so
+ * they follow the account to every device and another account on the same
+ * browser never sees them. Notes from the old browser-only version (one
+ * shared localStorage key) are offered for import once, never imported
+ * automatically, because that key was shared by every account on the
+ * browser.
+ */
 
 // Use inline hex colors so Tailwind purge doesn't remove them
 const NOTE_COLORS = [
@@ -12,17 +23,29 @@ const NOTE_COLORS = [
     { label: 'Orange',  bg: '#fed7aa', border: '#fb923c', text: '#7c2d12', header: '#fdba74' },
 ];
 
-const STORAGE_KEY = 'gecko_sticky_notes';
+const LEGACY_STORAGE_KEY = 'gecko_sticky_notes';
 
-function loadNotes() {
+export function readLegacyNotes(storage = typeof localStorage !== 'undefined' ? localStorage : null) {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
+        const parsed = JSON.parse(storage?.getItem(LEGACY_STORAGE_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed.filter((n) => n && (n.title || n.body)) : [];
     } catch { return []; }
 }
 
-function saveNotes(notes) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+function clearLegacyNotes() {
+    try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch { /* blocked storage */ }
+}
+
+/** planner_notes rows for the legacy notes, oldest first. */
+export function legacyNotesToRows(notes) {
+    return [...notes]
+        .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
+        .map((n) => ({
+            title: String(n.title || 'Note').slice(0, 200),
+            body: String(n.body || '').slice(0, 10000),
+            color: n.color || 'Yellow',
+            ...(n.created_at ? { created_at: n.created_at } : {}),
+        }));
 }
 
 function NoteCard({ note, onDelete, onUpdate, isGrid }) {
@@ -135,46 +158,92 @@ function NoteCard({ note, onDelete, onUpdate, isGrid }) {
 }
 
 export default function StickyNotes() {
+    const { toast } = useToast();
     const [notes, setNotes] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [legacy, setLegacy] = useState([]);
     const [viewMode, setViewMode] = useState('grid');
     const [newTitle, setNewTitle] = useState('');
     const [newBody, setNewBody] = useState('');
     const [newColor, setNewColor] = useState('Yellow');
     const [showForm, setShowForm] = useState(false);
 
+    const load = useCallback(async () => {
+        const { data, error } = await supabase
+            .from('planner_notes')
+            .select('id, title, body, color, created_at, updated_at')
+            .order('created_at', { ascending: false });
+        if (error) {
+            console.error('Notes load failed:', error);
+            toast({ title: 'Could not load notes', description: error.message, variant: 'destructive' });
+        } else {
+            setNotes(data || []);
+        }
+        setLoading(false);
+    }, [toast]);
+
     useEffect(() => {
-        setNotes(loadNotes());
-    }, []);
+        load();
+        setLegacy(readLegacyNotes());
+    }, [load]);
 
     const selectedColorObj = NOTE_COLORS.find(c => c.label === newColor) || NOTE_COLORS[0];
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         if (!newBody.trim() && !newTitle.trim()) return;
-        const note = {
-            id: Date.now().toString(),
-            title: newTitle.trim() || 'Note',
-            body: newBody.trim(),
-            color: newColor,
-            created_at: new Date().toISOString(),
-        };
-        const updated = [note, ...notes];
-        setNotes(updated);
-        saveNotes(updated);
+        const { data, error } = await supabase
+            .from('planner_notes')
+            .insert({ title: newTitle.trim() || 'Note', body: newBody.trim(), color: newColor })
+            .select('id, title, body, color, created_at, updated_at')
+            .single();
+        if (error) {
+            toast({ title: 'Note not saved', description: error.message, variant: 'destructive' });
+            return;
+        }
+        setNotes((prev) => [data, ...prev]);
         setNewTitle('');
         setNewBody('');
         setShowForm(false);
     };
 
-    const handleDelete = (id) => {
-        const updated = notes.filter(n => n.id !== id);
-        setNotes(updated);
-        saveNotes(updated);
+    const handleDelete = async (id) => {
+        const before = notes;
+        setNotes((prev) => prev.filter(n => n.id !== id));
+        const { error } = await supabase.from('planner_notes').delete().eq('id', id);
+        if (error) {
+            setNotes(before);
+            toast({ title: 'Could not delete the note', description: error.message, variant: 'destructive' });
+        }
     };
 
-    const handleUpdate = (id, changes) => {
-        const updated = notes.map(n => n.id === id ? { ...n, ...changes } : n);
-        setNotes(updated);
-        saveNotes(updated);
+    const handleUpdate = async (id, changes) => {
+        const before = notes;
+        setNotes((prev) => prev.map(n => n.id === id ? { ...n, ...changes } : n));
+        const { error } = await supabase
+            .from('planner_notes')
+            .update({ ...changes, updated_at: new Date().toISOString() })
+            .eq('id', id);
+        if (error) {
+            setNotes(before);
+            toast({ title: 'Could not save the note', description: error.message, variant: 'destructive' });
+        }
+    };
+
+    const importLegacy = async () => {
+        const { error } = await supabase.from('planner_notes').insert(legacyNotesToRows(legacy));
+        if (error) {
+            toast({ title: 'Import failed', description: error.message, variant: 'destructive' });
+            return;
+        }
+        clearLegacyNotes();
+        setLegacy([]);
+        toast({ title: 'Notes imported', description: 'They now sync to your account on every device.' });
+        load();
+    };
+
+    const discardLegacy = () => {
+        clearLegacyNotes();
+        setLegacy([]);
     };
 
     return (
@@ -204,6 +273,19 @@ export default function StickyNotes() {
                     </button>
                 </div>
             </div>
+
+            {legacy.length > 0 && (
+                <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-4 text-sm text-amber-100 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                    <span>
+                        This browser has {legacy.length} note{legacy.length === 1 ? '' : 's'} from before notes synced to your account.
+                        If {legacy.length === 1 ? 'it is' : 'they are'} yours, import {legacy.length === 1 ? 'it' : 'them'}.
+                    </span>
+                    <div className="flex gap-2 flex-shrink-0">
+                        <Button size="sm" onClick={importLegacy} className="bg-amber-500 hover:bg-amber-600 text-amber-950">Import</Button>
+                        <Button size="sm" variant="outline" onClick={discardLegacy} className="border-amber-500/40 text-amber-100">Not mine, remove</Button>
+                    </div>
+                </div>
+            )}
 
             {/* New note form */}
             {showForm && (
@@ -253,7 +335,9 @@ export default function StickyNotes() {
             )}
 
             {/* Notes display */}
-            {notes.length === 0 ? (
+            {loading ? (
+                <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+            ) : notes.length === 0 ? (
                 <div className="text-center py-20 text-slate-500">
                     <StickyNote className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p>No notes yet. Click "New Note" to get started.</p>

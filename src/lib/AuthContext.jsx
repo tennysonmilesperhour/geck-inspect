@@ -7,6 +7,9 @@ import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
 import { loadUserProfile } from '@/lib/userProfile';
 import { queryClientInstance } from '@/lib/query-client';
 import { dataCache } from '@/lib/layoutCache';
+import { isOffline, readStoredSession, clearCachedProfiles } from '@/lib/offlineSession';
+import { startQueryPersistence, stopQueryPersistence, clearPersistedQueries } from '@/lib/offlineCache';
+import { setQueueOwner } from '@/lib/offlineQueue';
 
 const AuthContext = createContext();
 
@@ -22,14 +25,27 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let initialHandled = false;
     let mounted = true;
-    const reconcile = (event, session) => {
+    const reconcile = (event, incoming) => {
       if (!mounted || (event === 'INITIAL_SESSION' && initialHandled)) return;
       initialHandled = true;
+      let session = incoming;
+      // Opened with no signal: Supabase could not refresh the stored
+      // session, so it reports none. Keep using the stored one instead of
+      // sending the member to the sign-in page; Supabase checks it again
+      // when the connection returns (src/lib/offlineSession.js).
+      if (!session?.user && event === 'INITIAL_SESSION' && isOffline()) {
+        session = readStoredSession(supabase.auth.storageKey);
+      }
       const owner = session?.user?.id || null;
       if (owner !== sessionOwnerRef.current) {
         queryClientInstance.clear();
         dataCache.clearAll();
         sessionOwnerRef.current = owner;
+        // The last loaded collection for this account comes back from
+        // this browser, and offline logs are kept per account.
+        if (owner) startQueryPersistence(queryClientInstance, owner);
+        else stopQueryPersistence();
+        setQueueOwner(owner);
       }
       const revision = ++revisionRef.current;
       setIsLoadingAuth(false);
@@ -127,6 +143,12 @@ export const AuthProvider = ({ children }) => {
     // one's geckos while the fresh fetch is in flight.
     queryClientInstance.clear();
     dataCache.clearAll();
+    // The stored offline copy of the collection and profile go too. Logs
+    // still waiting to sync stay, keyed to this account, and are sent the
+    // next time it signs in on this device.
+    clearPersistedQueries();
+    clearCachedProfiles();
+    setQueueOwner(null);
     // Forget the "don't stay signed in" markers too, or a later normal
     // sign-in on this browser was signed out on the next visit.
     sessionStorage.removeItem('geck_inspect_ephemeral_session');

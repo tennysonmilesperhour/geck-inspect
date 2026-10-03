@@ -22,6 +22,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { RevenueCatProvider } from '@/lib/RevenueCatContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
+import OfflineSyncStatus from '@/components/shared/OfflineSyncStatus';
 import LoginPortal from '@/components/auth/LoginPortal';
 import SetNewPassword from '@/components/auth/SetNewPassword';
 import PublicPageShell from '@/components/public/PublicPageShell';
@@ -248,6 +249,23 @@ const AuthenticatedApp = () => {
     window.addEventListener('page_configs_changed', loadDisabled);
     return () => window.removeEventListener('page_configs_changed', loadDisabled);
   }, [isAuthenticated, isGuest]);
+
+  // Offline logging: fetch the Field Mode and My Geckos code once the app is
+  // idle, so the service worker has it cached before the member is out of
+  // signal. Without this a page never opened online could not open offline.
+  useEffect(() => {
+    if (!isAuthenticated || typeof window === 'undefined') return undefined;
+    const prefetch = () => {
+      import('./pages/FieldMode').catch(() => {});
+      import('./pages/MyGeckos').catch(() => {});
+    };
+    if (window.requestIdleCallback) {
+      const id = window.requestIdleCallback(prefetch, { timeout: 10000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(prefetch, 5000);
+    return () => clearTimeout(t);
+  }, [isAuthenticated]);
 
   // PWA launch redirect: existing home-screen icons may have been saved
   // when start_url was "/" (or while the user was on /Messages), and iOS
@@ -488,6 +506,7 @@ function App() {
                 </Suspense>
               )}
               <UpdateNotification />
+              <OfflineSyncStatus />
             </QueryClientProvider>
           </RevenueCatProvider>
         </AuthProvider>

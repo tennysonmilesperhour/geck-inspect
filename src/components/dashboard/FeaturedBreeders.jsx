@@ -99,7 +99,7 @@ export default function FeaturedBreeders() {
           </span>
         </div>
         <p className="text-xs text-slate-400 mt-1">
-          Curated breeders from the Geck Inspect community. Click any card to visit their public profile.
+          Breeder-plan members who chose to be featured. Click any card to visit their public profile.
         </p>
       </CardHeader>
       <CardContent>

@@ -29,7 +29,7 @@ Everything left on the old roadmap no longer applies. The old item numbers are l
 | 4. Comparison article | Shelved with the blog |
 | 5. Breeder outreach | Retired |
 | 6. NRBE Daytona | Retired (the date passed) |
-| 7. PWA | Done; offline records are plan step 2 |
+| 7. PWA | Done. Offline is limited on purpose: the app opens, My Geckos and Field Mode show the last loaded collection, and Field Mode logs (feeding, shed, weight, note) wait on the phone and sync when back online. Everything else needs signal (plan step 2) |
 | 8. Moat feature | Done: the genetics calculator |
 | 9. Keeper product | Built; vet records are plan step 1 |
 | 10. MorphMarket export | Done; the importer check is plan step 19 |

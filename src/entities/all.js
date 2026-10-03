@@ -4,14 +4,14 @@
 import * as sb from '@/api/supabaseEntities';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import { reportError } from '@/lib/telemetry';
-import { loadUserProfile } from '@/lib/userProfile';
+import { loadUserProfile, currentAuthUser } from '@/lib/userProfile';
 
 // User: auth + profile from Supabase
 export const User = new Proxy({}, {
   get(_, prop) {
     if (prop === 'me') {
       return async () => {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await currentAuthUser();
         if (!user) return null;
         return loadUserProfile(user);
       };

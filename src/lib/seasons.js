@@ -224,3 +224,27 @@ export function eggSeasonYear(egg) {
   if (egg.status === 'Hatched' && egg.hatch_date_actual) return yearOfDateLike(egg.hatch_date_actual);
   return yearOfDateLike(egg.lay_date);
 }
+
+/**
+ * The BreedingPlan row "Start this pairing" creates from a future plan
+ * (Season Planner). Pure so it can be tested. Per decision D17 the season
+ * is the calendar year, stored as the plain year ("2027") like every new
+ * plan; the planned quarter stays on the future plan.
+ */
+export function buildPlanFromFuturePlan(plan, sire, dam, today = new Date()) {
+  const year = Number(plan?.target_year) || currentSeasonYear(today);
+  const notes = [
+    plan?.goals ? `Goals: ${String(plan.goals).trim()}` : '',
+    plan?.notes ? String(plan.notes).trim() : '',
+  ].filter(Boolean).join('\n\n');
+  const pad = (n) => String(n).padStart(2, '0');
+  return {
+    sire_id: sire.id,
+    dam_id: dam.id,
+    breeding_id: `${sire.gecko_id_code || 'UNK'}x${dam.gecko_id_code || 'UNK'}`,
+    pairing_date: `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`,
+    status: 'Planned',
+    breeding_season: String(year),
+    notes,
+  };
+}

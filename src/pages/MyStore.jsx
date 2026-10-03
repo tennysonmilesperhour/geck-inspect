@@ -13,7 +13,7 @@ import {
 
 import {
     Store, Save, Loader2, ExternalLink, ArrowLeft, Plus, X, Lock, Crown, GitBranch,
-    User, Palette,
+    User, Palette, ShieldCheck,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
@@ -109,6 +109,7 @@ const EMPTY_PROFILE_FORM = {
     location: '',
     years_breeding: '',
     specialty_morphs: '',
+    accepts_inquiries: true,
 };
 
 function defaultSlugFor(user) {
@@ -217,6 +218,7 @@ export default function MyStore() {
                 specialty_morphs: Array.isArray(existingProfile?.specialty_morphs)
                     ? existingProfile.specialty_morphs.join(', ')
                     : '',
+                accepts_inquiries: existingProfile?.accepts_inquiries !== false,
             });
             setSiteSettings(readStoreSettings(existing?.external_links));
             setWaitlists(Array.isArray(waitlistRes.data) ? waitlistRes.data : []);
@@ -372,6 +374,7 @@ export default function MyStore() {
             location: profileForm.location.trim() || null,
             years_breeding: Number.isNaN(yearsBreeding) ? null : yearsBreeding,
             specialty_morphs: specialtyMorphs,
+            accepts_inquiries: profileForm.accepts_inquiries !== false,
             updated_date: nowIso,
         };
         const profRes = profileRow?.id
@@ -590,11 +593,11 @@ export default function MyStore() {
                                     <User className="w-4 h-4 text-emerald-400" /> Public breeder profile
                                 </CardTitle>
                                 <CardDescription className="text-slate-400">
-                                    This is your verified breeder page at
+                                    This is your public breeder page at
                                     {' '}
                                     <code className="text-emerald-300">geckinspect.com/Breeder/{form.slug || 'your-name'}</code>.
-                                    It shows your bio, specialty morphs, reviews, and a live "Available now" grid
-                                    of your for-sale geckos.
+                                    It shows your bio, specialty morphs, a live "Available now" grid of your for-sale
+                                    geckos, and reviews from buyers who claimed a gecko from you through a Geck Inspect transfer.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-5">
@@ -653,6 +656,30 @@ export default function MyStore() {
                                         className="bg-slate-950/60 border-slate-700"
                                     />
                                     <p className="text-xs text-slate-500">Comma-separated. These render as morph badges on your public page.</p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Switch
+                                        id="profile-inquiries"
+                                        checked={profileForm.accepts_inquiries !== false}
+                                        onCheckedChange={(v) => setProfile('accepts_inquiries', v)}
+                                    />
+                                    <div>
+                                        <Label htmlFor="profile-inquiries" className="text-slate-200">Accept buyer inquiries</Label>
+                                        <p className="text-xs text-slate-500">
+                                            When off, your page hides "Contact breeder" and the Inquire buttons. Inquiries you receive are listed in My Listings, under Inquiries.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3 text-xs text-slate-400 flex items-start gap-2">
+                                    <ShieldCheck className={`w-4 h-4 flex-shrink-0 ${profileRow?.is_verified ? 'text-emerald-400' : 'text-slate-500'}`} />
+                                    {profileRow?.is_verified ? (
+                                        <span>Your page shows the <span className="text-emerald-300 font-semibold">Verified breeder</span> badge.</span>
+                                    ) : (
+                                        <span>
+                                            The Verified breeder badge is given after a check by the Geck Inspect team: who you are, your own crested geckos tracked here,
+                                            a sales record (such as completed transfers), published store policies, and no open complaints. Ask through Contact once your page is set up.
+                                        </span>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

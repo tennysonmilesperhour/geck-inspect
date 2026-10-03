@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageHeader from '@/components/shared/PageHeader';
+import InquiriesInbox from '@/components/marketplace/InquiriesInbox';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { format, subMonths } from 'date-fns';
 import { isSoldGecko, saleAmount, saleDate as ledgerSaleDate } from '@/lib/businessLedger';
@@ -41,6 +42,7 @@ export default function MyListingsPage() {
     });
     const [salesData, setSalesData] = useState([]); // Added state for sales data
     const [_isLoading, setIsLoading] = useState(true);
+    const [newInquiries, setNewInquiries] = useState(0);
 
     useEffect(() => {
         const loadData = async () => {
@@ -73,8 +75,15 @@ export default function MyListingsPage() {
                     const { count } = await supabase
                         .from('breeder_inquiries')
                         .select('id', { count: 'exact', head: true })
-                        .eq('breeder_email', currentUser.email);
+                        .ilike('breeder_email', currentUser.email);
                     inquiries = count || 0;
+                    const { count: unread } = await supabase
+                        .from('breeder_inquiries')
+                        .select('id', { count: 'exact', head: true })
+                        .ilike('breeder_email', currentUser.email)
+                        .is('read_at', null)
+                        .is('replied_at', null);
+                    setNewInquiries(unread || 0);
                 } catch {
                     inquiries = 0;
                 }
@@ -300,9 +309,10 @@ export default function MyListingsPage() {
                 </div>
 
                 <Tabs defaultValue="active">
-                    <TabsList className="mb-6">
+                    <TabsList className="mb-6 flex-wrap h-auto">
                         <TabsTrigger value="active"><span className="hidden sm:inline">Active Listings</span><span className="sm:hidden">Active</span> ({activeListings.length})</TabsTrigger>
                         <TabsTrigger value="sold">Sold ({soldGeckos.length})</TabsTrigger>
+                        <TabsTrigger value="inquiries">Inquiries{newInquiries > 0 ? ` (${newInquiries} new)` : ''}</TabsTrigger>
                         <TabsTrigger value="analytics">Analytics</TabsTrigger>
                     </TabsList>
 
@@ -350,6 +360,14 @@ export default function MyListingsPage() {
                     </TabsContent>
 
                     {/* Analytics */}
+                    <TabsContent value="inquiries">
+                        {isGuestMode() ? (
+                            <p className="text-sm text-slate-400 py-6">Buyer inquiries show here once you have your own account.</p>
+                        ) : (
+                            <InquiriesInbox userEmail={_user?.email} onCountChange={setNewInquiries} />
+                        )}
+                    </TabsContent>
+
                     <TabsContent value="analytics">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <Card>
