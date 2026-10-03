@@ -21,6 +21,6 @@ describe('tutorial steps', () => {
   });
 
   it('uses no em or en dashes', () => {
-    expect(JSON.stringify(STEP_BLURBS)).not.toMatch(/[–—]/);
+    expect(JSON.stringify(STEP_BLURBS)).not.toMatch(/[\u2013\u2014]/);
   });
 });

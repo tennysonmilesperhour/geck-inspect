@@ -33,6 +33,17 @@ export const SIGNUP_STATUSES = [
 export const OUT_OF_LINE = new Set(['withdrawn', 'refunded']);
 
 /**
+ * A public signup that has not opened its confirmation email yet (audit
+ * step 33). It holds no place until it does. Rows from before email
+ * confirmation, and buyers added by hand, have no token and count as
+ * confirmed.
+ */
+export const awaitingConfirmation = (s) => Boolean(s?.confirm_token_hash) && !s?.confirmed_at;
+
+/** Not in line: withdrawn, refunded, or not confirmed yet. */
+export const isOutOfLine = (s) => OUT_OF_LINE.has(s?.status) || awaitingConfirmation(s);
+
+/**
  * Starting terms for a new waitlist with a deposit. The breeder can edit
  * them; most deposit disputes come from terms nobody wrote down.
  */
@@ -92,12 +103,12 @@ export function orderedSignups(signups = []) {
   const sorted = [...signups].sort((a, b) =>
     String(a.created_date).localeCompare(String(b.created_date)) || String(a.id).localeCompare(String(b.id)));
   let place = 0;
-  return sorted.map((s) => (OUT_OF_LINE.has(s.status) ? { ...s, place: null } : { ...s, place: ++place }));
+  return sorted.map((s) => (isOutOfLine(s) ? { ...s, place: null } : { ...s, place: ++place }));
 }
 
 /** Headline numbers for one waitlist. */
 export function waitlistSummary(signups = []) {
-  const active = signups.filter((s) => !OUT_OF_LINE.has(s.status));
+  const active = signups.filter((s) => !isOutOfLine(s));
   const held = active.filter((s) => ['deposit_paid', 'matched'].includes(s.status));
   return {
     active: active.length,
