@@ -23,7 +23,9 @@ import {
     ChevronLeft, ChevronRight, X, Droplets
 } from 'lucide-react';
 import ShareMenu from '@/components/shared/ShareMenu';
-import { passportUrl } from '@/lib/passportUtils';
+import { passportUrl, PUBLIC_WEIGHT_COLUMNS } from '@/lib/passportUtils';
+import { supabase } from '@/lib/supabaseClient';
+import { isGuestMode } from '@/lib/guestMode';
 
 // Renders a sire/dam parent name. If we have a linked Gecko record, that
 // wins. Otherwise, if the free-text name looks like a breeder reference
@@ -88,7 +90,13 @@ export default function GeckoDetail() {
                     fetchedGecko.created_by
                         ? User.filter({ email: fetchedGecko.created_by }).then(r => r[0] || null)
                         : Promise.resolve(null),
-                    WeightRecord.filter({ gecko_id: geckoId }, 'record_date'),
+                    // Explicit columns: signed-out visitors may read a public
+                    // passport gecko's weigh-ins but not created_by (an email).
+                    isGuestMode()
+                        ? WeightRecord.filter({ gecko_id: geckoId }, 'record_date')
+                        : supabase.from('weight_records').select(PUBLIC_WEIGHT_COLUMNS)
+                            .eq('gecko_id', geckoId).order('record_date', { ascending: true })
+                            .then(({ data, error }) => { if (error) throw error; return data || []; }),
                     ShedRecord.filter({ animal_id: geckoId }, 'date'),
                     fetchedGecko.sire_id ? Gecko.get(fetchedGecko.sire_id) : Promise.resolve(null),
                     fetchedGecko.dam_id ? Gecko.get(fetchedGecko.dam_id) : Promise.resolve(null),

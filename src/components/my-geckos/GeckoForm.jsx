@@ -2,6 +2,7 @@ import { captureEvent } from '@/lib/posthog';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Gecko, UserActivity, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
@@ -28,6 +29,7 @@ import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA, LIFE_STAGES } from './form/co
 import { generateNextGeckoId } from './form/helpers';
 import ImageCropDialog from './form/ImageCropDialog';
 import ParentAutocomplete from './form/ParentAutocomplete';
+import { parentNameForSave } from '@/lib/parentNames';
 
 // Back-compat alias so the rest of this file doesn't need to change
 const initialFormData = INITIAL_FORM_DATA;
@@ -58,6 +60,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     
     // New state for "For Sale" toggle
     const [isForSale, setIsForSale] = useState(false);
+    const [confirmPrivate, setConfirmPrivate] = useState(false);
     
     // New states for certificate generation
     // isGeneratingCert / certType state removed, certificates live on the view modal now.
@@ -455,8 +458,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 sex: formData.sex,
                 sire_id: sireId || null,
                 dam_id: damId || null,
-                sire_name: sireId ? null : sireInput,
-                dam_name: damId ? null : damInput,
+                // Keep the parent's name even when it is linked, so the tree
+                // still shows it if the parent later goes private, is
+                // deleted, or stays with the seller after a transfer.
+                sire_name: parentNameForSave({ parentId: sireId, input: sireInput, parents: userGeckos, storedName: gecko?.sire_id === sireId ? gecko?.sire_name : null }),
+                dam_name: parentNameForSave({ parentId: damId, input: damInput, parents: userGeckos, storedName: gecko?.dam_id === damId ? gecko?.dam_name : null }),
                 morphs_traits: formData.morphs_traits,
                 // Canonicalize on write so spelling variants ('Lily White')
                 // never reach the database; filters and analytics rely on it.
@@ -722,7 +728,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <Switch
                              id="is_public"
                              checked={formData.is_public === true}
-                             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_public: checked, gallery_display: checked && prev.gallery_display }))}
+                             onCheckedChange={(checked) => {
+                                 if (!checked && gecko?.passport_code && gecko?.is_public) {
+                                     setConfirmPrivate(true);
+                                     return;
+                                 }
+                                 setFormData(prev => ({ ...prev, is_public: checked, gallery_display: checked && prev.gallery_display }));
+                             }}
                              disabled={isArchived}
                              className="disabled:opacity-50 disabled:cursor-not-allowed"
                          />
@@ -1246,6 +1258,30 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     onClose={() => setCropDialogOpen(false)}
                 />
             )}
+
+            {/* A passport link and its printed QR labels only work while the
+                gecko is public, so warn before switching one to private. */}
+            <AlertDialog open={confirmPrivate} onOpenChange={setConfirmPrivate}>
+                <AlertDialogContent className="bg-slate-900 border-slate-700">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-slate-100">Make {formData.name || 'this gecko'} private?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-400">
+                            This gecko has a passport ({gecko?.passport_code}). While it is private, the passport
+                            link and any printed QR labels show &ldquo;Private passport&rdquo; to everyone but you.
+                            Switch it back to public to make them work again.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="border-slate-600">Keep it public</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-amber-600 hover:bg-amber-700 text-white"
+                            onClick={() => setFormData(prev => ({ ...prev, is_public: false, gallery_display: false }))}
+                        >
+                            Make private
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             </DialogContent>
         </Dialog>
     );

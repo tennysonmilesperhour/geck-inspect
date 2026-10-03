@@ -31,9 +31,9 @@ import { toast } from '@/components/ui/use-toast';
 import { todayLocalISO, parseLocalDate, formatAge } from '@/lib/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import { generatePassportCode } from '@/lib/passportUtils';
-import { supabase } from '@/lib/supabaseClient';
 import { createPageUrl } from '@/utils';
 import { PRIMARY_MORPHS } from '@/components/morph-id/morphTaxonomy';
+import TransferDialog from '@/components/transfers/TransferDialog';
 
 // The species ("Crested Gecko") is NOT a morph, and genetic traits
 // (Lilly White, Axanthic, ...) are not primary morphs. When syncing a
@@ -82,6 +82,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   const [isMakingPacket, setIsMakingPacket] = useState(false);
   const [isPublic, setIsPublic] = useState(gecko?.is_public ?? true);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [confirmPrivate, setConfirmPrivate] = useState(false);
   const [slideshowIndex, setSlideshowIndex] = useState(0);
   const [showSlideshow, setShowSlideshow] = useState(false);
 
@@ -208,7 +210,13 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
     setWeightToDelete(null);
   };
 
-  const handleTogglePublic = async (checked) => {
+  const handleTogglePublic = async (checked, { confirmed = false } = {}) => {
+    // A passport link (and every printed QR label) only works while the
+    // gecko is public, so ask before switching a passport gecko to private.
+    if (!checked && gecko.passport_code && !confirmed) {
+      setConfirmPrivate(true);
+      return;
+    }
     try {
       await Gecko.update(gecko.id, { is_public: checked });
       setIsPublic(checked);
@@ -339,6 +347,36 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <TransferDialog
+        open={showTransfer}
+        onOpenChange={setShowTransfer}
+        animal={gecko}
+        animalType="gecko"
+      />
+      <AlertDialog open={confirmPrivate} onOpenChange={setConfirmPrivate}>
+        <AlertDialogContent className="bg-slate-900 border-slate-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-100">Make {gecko.name || 'this gecko'} private?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              {gecko.name || 'This gecko'} has a passport ({gecko.passport_code}). While it is private, the passport
+              link and any printed QR labels show &ldquo;Private passport&rdquo; to everyone but you. Switch it
+              back to public to make them work again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-slate-600">Keep it public</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={() => {
+                setConfirmPrivate(false);
+                handleTogglePublic(false, { confirmed: true });
+              }}
+            >
+              Make private
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Card className="max-w-6xl w-full max-h-[90vh] flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-slate-700 p-4 sm:p-6">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -1028,42 +1066,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 )}
                 <Button
                   variant="outline"
-                  onClick={async () => {
-                    const email = prompt('Enter the recipient\'s email address:');
-                    if (!email) return;
-                    const price = prompt('Sale price (optional, leave blank to skip):');
-                    const msg = prompt('Message for the buyer (optional):');
-                    const token = crypto.randomUUID();
-                    const { data: authData, error: authError } = await supabase.auth.getUser();
-                    if (authError || !authData?.user?.id) {
-                      toast({ title: 'Transfer failed', description: 'You need to be signed in to transfer ownership.', variant: 'destructive' });
-                      return;
-                    }
-                    const { error } = await supabase.from('transfer_requests').insert({
-                      animal_id: gecko.id,
-                      from_user_id: authData.user.id,
-                      to_email: email,
-                      token,
-                      sale_price: price ? Number(price) : null,
-                      message: msg || null,
-                      // The insert rule needs created_by to be the signed-in
-                      // user; the gecko's creator may be a collaborator.
-                      created_by: authData.user.email,
-                      expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
-                    });
-                    if (error) {
-                      toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
-                    } else {
-                      const claimUrl = `${window.location.origin}/claim/${token}`;
-                      // iOS can refuse a clipboard write this long after the
-                      // tap, so the toast carries the link either way.
-                      const copied = await navigator.clipboard?.writeText(claimUrl).then(() => true, () => false);
-                      toast({
-                        title: 'Transfer started',
-                        description: `${copied ? 'Claim link copied. ' : ''}Send ${email} this link: ${claimUrl} (expires in 72 hours).`,
-                      });
-                    }
-                  }}
+                  onClick={() => setShowTransfer(true)}
                   className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
                 >
                   <ArrowRightLeft className="w-4 h-4 mr-2" />

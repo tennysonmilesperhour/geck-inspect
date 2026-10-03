@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
 import {
-  calculateAge, STATUS_BADGE_STYLES, PATTERN_GRADES, passportUrl
+  calculateAge, STATUS_BADGE_STYLES, PATTERN_GRADES, passportUrl, PUBLIC_WEIGHT_COLUMNS
 } from '@/lib/passportUtils';
 import { parseLocalDate } from '@/lib/dateUtils';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
@@ -411,7 +411,12 @@ export default function AnimalPassport() {
           .limit(1);
         if (gErr) throw gErr;
         if (!geckos || geckos.length === 0) {
-          setError('not_found');
+          // A private gecko's row is hidden from everyone but its owner, so
+          // ask whether the code exists at all. A printed label for a gecko
+          // switched to private should say so, not "not found".
+          const { data: visibility } = await supabase
+            .rpc('get_passport_visibility', { p_code: passportCode });
+          setError(visibility === 'private' ? 'private' : 'not_found');
           setIsLoading(false);
           return;
         }
@@ -430,7 +435,7 @@ export default function AnimalPassport() {
           g.dam_id ? supabase.from('geckos').select(columns).eq('id', g.dam_id).maybeSingle() : null,
           supabase.from('ownership_records').select('*').eq('animal_id', g.id).order('acquired_date', { ascending: true }),
           supabase.from('feeding_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }).limit(30),
-          supabase.from('weight_records').select('*').eq('gecko_id', g.id).order('record_date', { ascending: true }),
+          supabase.from('weight_records').select(PUBLIC_WEIGHT_COLUMNS).eq('gecko_id', g.id).order('record_date', { ascending: true }),
           supabase.from('shed_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }).limit(20),
           supabase.from('vet_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }),
         ]);
@@ -480,7 +485,10 @@ export default function AnimalPassport() {
   if (error === 'private') {
     return (
       <CenteredState icon={<ShieldCheck size={48} className="mx-auto mb-4 text-slate-500" />} title="Private passport">
-        <p className="text-sm text-slate-400">This animal&apos;s passport is set to private by the owner.</p>
+        <p className="text-sm text-slate-400">
+          The owner has made this animal&apos;s passport private. The link and any printed labels work
+          again when they switch it back to public.
+        </p>
       </CenteredState>
     );
   }

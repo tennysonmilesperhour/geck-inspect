@@ -17,6 +17,13 @@ export function generatePassportCode() {
 }
 
 /**
+ * Weigh-in columns a signed-out visitor may read. Public passports show
+ * weigh-ins to everyone, but created_by holds the owner's email address,
+ * so the anon role is not granted it and a `select('*')` would fail.
+ */
+export const PUBLIC_WEIGHT_COLUMNS = 'id, gecko_id, weight_grams, record_date, notes, created_date';
+
+/**
  * Build the public passport URL for a given passport code.
  */
 export function passportUrl(passportCode) {
