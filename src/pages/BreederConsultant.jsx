@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Send, Bot, User as UserIcon, Loader2, Sparkles, Crown, LogIn, Check, X, Undo2, CheckCircle2 } from 'lucide-react';
+import { Send, Bot, User as UserIcon, Loader2, Sparkles, Crown, LogIn, Check, X, Undo2, CheckCircle2, History, Plus, Trash2 } from 'lucide-react';
 import { InvokeLLMDetailed } from '@/lib/invokeLlm';
 import { isGuestMode } from '@/lib/guestMode';
 import ReactMarkdown from 'react-markdown';
@@ -13,6 +13,9 @@ import { getFeatureUsage } from '@/lib/usageMeter';
 import { getTierLimits } from '@/lib/tierLimits';
 import { createPageUrl } from '@/utils';
 import { ACTIONS, buildActionProtocolPrompt, parseAssistantAction } from '@/lib/assistantActions';
+import { buildConsultantFacts, isPairingQuestion, isValueQuestion } from '@/lib/consultantContext';
+import { loadTraitValueIndex } from '@/lib/traitValueTable';
+import { listConversations, loadConversation, saveConversation, deleteConversation } from '@/lib/consultantConversations';
 
 /**
  * GeckoGenius AI, the breeder consultant chat. Originally read-only
@@ -21,13 +24,18 @@ import { ACTIONS, buildActionProtocolPrompt, parseAssistantAction } from '@/lib/
  * sheds, feedings, list what's due, search the collection).
  *
  * Flow: every user message consumes one 'assistant_message' credit
- * BEFORE the LLM call. The model replies either with prose (rendered
+ * BEFORE the LLM call, and the server gives it back if the call fails.
+ * For pairing and value questions the prompt carries the genetics
+ * calculator's odds and the value table's prices (consultantContext.js),
+ * so the answer matches those screens. Chats are saved per member. The model replies either with prose (rendered
  * as-is) or with a single JSON action block. Write actions render a
  * confirmation card and only execute on Confirm, with a one-tap Undo
  * after. Read actions run immediately since they change nothing.
  */
 
-const BASE_SYSTEM_PROMPT = `You are a world-class expert on crested gecko (Correlophus ciliatus) genetics, breeding, and market trends. Your name is "GeckoGenius AI". Provide detailed, accurate, and helpful advice. When discussing genetics, use clear terms. When asked about potential pairings, list the likely visual outcomes and their approximate probabilities. If asked about value, provide a realistic price range in USD and explain the factors that influence it (e.g., structure, lineage, specific trait expression). Always be encouraging and supportive. Format your answers clearly using markdown.`;
+const BASE_SYSTEM_PROMPT = `You are a world-class expert on crested gecko (Correlophus ciliatus) genetics, breeding, and market trends. Your name is "GeckoGenius AI". Provide detailed, accurate, and helpful advice. When discussing genetics, use clear terms. When asked about potential pairings, list the likely visual outcomes and their approximate probabilities. If asked about value, provide a realistic price range in USD and explain the factors that influence it (e.g., structure, lineage, specific trait expression). When the prompt includes a FACTS FROM GECK INSPECT block, those odds and prices come from the app's genetics calculator and value table: use them exactly and do not contradict them. Without that block, say that odds and prices are rough and suggest the Genetics Calculator for exact odds. Always be encouraging and supportive. Format your answers clearly using markdown. Never use em dashes.`;
+
+const GREETING = { id: 0, role: 'assistant', content: "Hello! I'm your AI Breeder Consultant. Ask me anything about crested gecko genetics, breeding strategies, morph combinations, or market values. I can also keep your records: tell me to \"log 14.5g for Luna\" or ask \"what eggs are due this week?\" and I'll take care of it. How can I help you today?" };
 
 const SUGGESTION_CHIPS = [
     { label: 'What eggs are due this week?', send: 'What eggs are due this week?' },
@@ -37,9 +45,14 @@ const SUGGESTION_CHIPS = [
 ];
 
 export default function BreederConsultantPage() {
-    const [messages, setMessages] = useState([
-        { id: 0, role: 'assistant', content: "Hello! I'm your AI Breeder Consultant. Ask me anything about crested gecko genetics, breeding strategies, morph combinations, or market values. I can also keep your records: tell me to \"log 14.5g for Luna\" or ask \"what eggs are due this week?\" and I'll take care of it. How can I help you today?" }
-    ]);
+    const [messages, setMessages] = useState([GREETING]);
+    const [conversationId, setConversationId] = useState(null);
+    const [pastChats, setPastChats] = useState([]);
+    const [showHistory, setShowHistory] = useState(false);
+    const priceIndexRef = useRef(null);
+    const saveTimerRef = useRef(null);
+    const conversationIdRef = useRef(null);
+    const dirtyRef = useRef(false);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState(null);
@@ -65,6 +78,7 @@ export default function BreederConsultantPage() {
                 ]);
                 if (cancelled) return;
                 setGeckos(collection || []);
+                listConversations().then((rows) => { if (!cancelled) setPastChats(rows); }).catch(() => {});
                 if (usage && usage.remaining != null) {
                     setRemaining(usage.remaining);
                 } else {
@@ -79,9 +93,94 @@ export default function BreederConsultantPage() {
         return () => { cancelled = true; };
     }, []);
 
-    const appendMessage = (msg) => setMessages(prev => [...prev, { id: nextId(), ...msg }]);
-    const updateMessage = (msgId, patch) =>
+    // Save the chat a moment after it changes (each answer, each confirmed
+    // or cancelled action). Only chats with something the member asked.
+    useEffect(() => {
+        if (!user || isGuestMode()) return undefined;
+        if (!messages.some((m) => m.role === 'user')) return undefined;
+        if (isLoading || !dirtyRef.current) return undefined;
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(async () => {
+            dirtyRef.current = false;
+            try {
+                const id = await saveConversation({ id: conversationIdRef.current, messages });
+                if (!conversationIdRef.current) {
+                    conversationIdRef.current = id;
+                    setConversationId(id);
+                }
+                listConversations().then(setPastChats).catch(() => {});
+            } catch (error) {
+                console.warn('Could not save chat:', error);
+            }
+        }, 800);
+        return () => clearTimeout(saveTimerRef.current);
+    }, [messages, isLoading, user]);
+
+    const startNewChat = () => {
+        clearTimeout(saveTimerRef.current);
+        dirtyRef.current = false;
+        undoRef.current = {};
+        conversationIdRef.current = null;
+        setConversationId(null);
+        setMessages([GREETING]);
+        setShowHistory(false);
+        setGate(null);
+    };
+
+    const openChat = async (id) => {
+        try {
+            const row = await loadConversation(id);
+            if (!row) return;
+            clearTimeout(saveTimerRef.current);
+            dirtyRef.current = false;
+            undoRef.current = {};
+            const restored = (row.messages || []).map((m) => ({ id: nextId(), role: m.role, content: m.content }));
+            conversationIdRef.current = row.id;
+            setConversationId(row.id);
+            setMessages([GREETING, ...restored]);
+            setShowHistory(false);
+        } catch (error) {
+            console.warn('Could not open chat:', error);
+        }
+    };
+
+    const removeChat = async (id) => {
+        try {
+            await deleteConversation(id);
+            setPastChats((rows) => rows.filter((r) => r.id !== id));
+            if (conversationIdRef.current === id) startNewChat();
+        } catch (error) {
+            console.warn('Could not delete chat:', error);
+        }
+    };
+
+    // Calculator odds and value-table prices for pairing and value
+    // questions. The price table loads once, only when first needed.
+    const factsFor = async (text) => {
+        if (!isPairingQuestion(text) && !isValueQuestion(text)) return '';
+        if (!priceIndexRef.current) {
+            try {
+                priceIndexRef.current = await loadTraitValueIndex();
+            } catch {
+                priceIndexRef.current = null;
+            }
+        }
+        try {
+            return buildConsultantFacts(text, { geckos, priceIndex: priceIndexRef.current });
+        } catch (error) {
+            console.warn('Consultant facts failed:', error);
+            return '';
+        }
+    };
+
+    const appendMessage = (msg) => {
+        dirtyRef.current = true;
+        setMessages(prev => [...prev, { id: nextId(), ...msg }]);
+    };
+    const updateMessage = (msgId, patch) => {
+        dirtyRef.current = true;
         setMessages(prev => prev.map(m => (m.id === msgId ? { ...m, ...patch } : m)));
+    };
 
     const refreshGeckos = (currentUser) => {
         if (!currentUser) return;
@@ -152,7 +251,9 @@ export default function BreederConsultantPage() {
             // time, and past the function's 40,000-character cap every
             // message failed until the page was reloaded.
             const conversationHistory = priorMessages.slice(-12).map(historyLine).join('\n\n');
-            const fullPrompt = `${systemPrompt}\n\nHere is the conversation so far:\n${conversationHistory}\n\n**User**: ${text}\n\n**GeckoGenius AI**:`;
+            const facts = await factsFor(text);
+            const factsBlock = facts ? `\n\n${facts}` : '';
+            const fullPrompt = `${systemPrompt}\n\nHere is the conversation so far:\n${conversationHistory}${factsBlock}\n\n**User**: ${text}\n\n**GeckoGenius AI**:`;
 
             const { text: response, credits } = await InvokeLLMDetailed({ prompt: fullPrompt });
             if (credits?.remaining != null) setRemaining(credits.remaining);
@@ -171,7 +272,13 @@ export default function BreederConsultantPage() {
                 return;
             }
             console.error("Error calling LLM:", error);
-            appendMessage({ role: 'assistant', content: "I'm sorry, I'm having trouble connecting right now. Please try again later." });
+            if (error?.credits?.remaining != null) setRemaining(error.credits.remaining);
+            appendMessage({
+                role: 'assistant',
+                content: error?.refunded
+                    ? "I couldn't get an answer just now. That message was not counted, so please try again."
+                    : "I'm sorry, I'm having trouble connecting right now. Please try again later.",
+            });
         } finally {
             setIsLoading(false);
         }
@@ -278,6 +385,37 @@ export default function BreederConsultantPage() {
             <Card className="flex-1 flex flex-col">
                 <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 border-b border-slate-700">
                     <CardTitle className="text-slate-100 flex items-center gap-2"><Sparkles className="text-emerald-400"/> AI Breeder Consultant</CardTitle>
+                    {user && !isGuestMode() && (
+                        <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="border-slate-600 text-slate-300" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory}>
+                                <History className="w-4 h-4 mr-1" /> Past chats
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-slate-600 text-slate-300" onClick={startNewChat} disabled={isLoading}>
+                                <Plus className="w-4 h-4 mr-1" /> New chat
+                            </Button>
+                        </div>
+                    )}
+                    {showHistory && (
+                        <div className="w-full rounded-lg border border-slate-700 bg-slate-900/70 p-2 max-h-64 overflow-y-auto">
+                            {pastChats.length === 0 ? (
+                                <p className="text-sm text-slate-400 p-2">No saved chats yet. Chats save as you go.</p>
+                            ) : (
+                                <ul className="space-y-1">
+                                    {pastChats.map((c) => (
+                                        <li key={c.id} className={`flex items-center gap-2 rounded-md px-2 py-1.5 ${c.id === conversationId ? 'bg-slate-800' : 'hover:bg-slate-800/60'}`}>
+                                            <button type="button" onClick={() => openChat(c.id)} className="flex-1 min-w-0 text-left touch:min-h-11">
+                                                <span className="block text-sm text-slate-200 truncate">{c.title}</span>
+                                                <span className="block text-[11px] text-slate-500">{new Date(c.updated_date).toLocaleString()}</span>
+                                            </button>
+                                            <Button size="sm" variant="ghost" className="touch:min-w-11 text-slate-500 hover:text-red-300" onClick={() => removeChat(c.id)} aria-label={`Delete chat ${c.title}`}>
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
                     {messages.map((msg) => (

@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
                         <Shield className="w-8 h-8 text-emerald-400 flex-shrink-0" />
                         <div>
                             <h1 className="text-2xl font-bold text-slate-100">Privacy Policy</h1>
-                            <p className="text-slate-500 text-sm">Last updated: September 8, 2026</p>
+                            <p className="text-slate-500 text-sm">Last updated: October 3, 2026</p>
                         </div>
                     </div>
 
@@ -67,6 +67,7 @@ export default function PrivacyPolicy() {
                         <p><strong className="text-slate-300">Images:</strong> Photos you upload of your geckos or for morph identification purposes.</p>
                         <p><strong className="text-slate-300">Usage Data:</strong> We may collect basic analytics such as pages visited and features used to improve the Service.</p>
                         <p><strong className="text-slate-300">Communications:</strong> Messages you send to other users or to us via the platform.</p>
+                        <p><strong className="text-slate-300">AI Consultant chats:</strong> The questions you ask the AI Breeder Consultant and its answers are saved to your account so you can reopen them. Only you can see them, and you can delete any chat at any time.</p>
                     </Section>
 
                     <Section title="2. How We Use Your Information">
