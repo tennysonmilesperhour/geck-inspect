@@ -11,6 +11,7 @@ import BreederStoreCard from '@/components/settings/BreederStoreCard';
 import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLogicSettings';
 import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
 import DataExportCard from '@/components/settings/DataExportCard';
+import MySupportTickets from '@/components/support/MySupportTickets';
 import IotSettingsCard from '@/components/iot/IotSettingsCard';
 import { IOT_SENSORS_ENABLED } from '@/lib/iotClient';
 import { openBillingPortal } from '@/lib/billingPortal';
@@ -591,6 +592,7 @@ export default function SettingsPage() {
         { id: 'membership', label: 'Membership' },
         { id: 'morph-id', label: 'Morph ID' },
         ...(IOT_SENSORS_ENABLED ? [{ id: 'enclosure-sensors', label: 'Enclosure Sensors' }] : []),
+        { id: 'support', label: 'Support' },
         { id: 'data-export', label: 'Your Data' },
         { id: 'danger-zone', label: 'Danger Zone' },
     ];
@@ -1171,6 +1173,10 @@ export default function SettingsPage() {
                         <IotSettingsCard user={user} />
                     </section>
                 )}
+
+                <section id="support">
+                    <MySupportTickets user={user} />
+                </section>
 
                 <section id="data-export">
                     <DataExportCard user={user} />

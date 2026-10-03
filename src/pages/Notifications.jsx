@@ -24,7 +24,7 @@ import {
     Egg,
     Utensils,
     Scale,
-    Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope, UserX, Loader2,
+    Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope, UserX, Loader2, LifeBuoy,
 } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
@@ -85,6 +85,7 @@ const notificationIcons = {
     market_brief: <Sunrise className="w-5 h-5 text-amber-300" />,
     vet_followup: <Stethoscope className="w-5 h-5 text-rose-300" />,
     account_deletion_request: <UserX className="w-5 h-5 text-red-400" />,
+    support_reply: <LifeBuoy className="w-5 h-5 text-emerald-400" />,
 };
 
 const typeLabels = {
@@ -113,6 +114,7 @@ const typeLabels = {
     market_brief: 'Market Brief',
     vet_followup: 'Vet Follow-up',
     account_deletion_request: 'Deletion Request',
+    support_reply: 'Support',
 };
 
 export default function NotificationsPage() {
