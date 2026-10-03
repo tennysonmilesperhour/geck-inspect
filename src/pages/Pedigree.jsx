@@ -82,19 +82,18 @@ async function buildPedigreeGrid(rootId) {
   async function place(col, row, geckoId, parentTextSire, parentTextDam) {
     const key = `${col},${row}`;
 
+    // The child's stored sire_name / dam_name for this slot. It is shown
+    // as a text card when there is no linked record, and also when the
+    // linked parent cannot be read (private, deleted, or kept by the
+    // seller after a transfer).
+    const fromParent =
+      (row % 2 === 0 ? parentTextSire : parentTextDam) || null;
+
     let node;
-    if (geckoId) {
-      const gecko = await fetchGecko(geckoId);
-      if (gecko) {
-        node = { kind: 'gecko', gecko };
-      } else {
-        node = { kind: 'empty' };
-      }
+    const gecko = geckoId ? await fetchGecko(geckoId) : null;
+    if (gecko) {
+      node = { kind: 'gecko', gecko };
     } else {
-      // No FK, we may still have a free-text sire_name / dam_name we can
-      // show as a text card.
-      const fromParent =
-        (row % 2 === 0 ? parentTextSire : parentTextDam) || null;
       node = fromParent ? { kind: 'text', label: fromParent } : { kind: 'empty' };
     }
     grid.set(key, node);

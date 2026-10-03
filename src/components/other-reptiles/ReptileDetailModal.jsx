@@ -10,8 +10,7 @@ import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabaseClient';
+import TransferDialog from '@/components/transfers/TransferDialog';
 
 export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit, onArchive }) {
     const [weightRecords, setWeightRecords] = useState([]);
@@ -20,6 +19,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
     const [newWeight, setNewWeight] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [weightToDelete, setWeightToDelete] = useState(null);
+    const [showTransfer, setShowTransfer] = useState(false);
 
     const loadEventHistory = async () => {
         if (!reptile) return;
@@ -107,43 +107,6 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
         setWeightToDelete(null);
     };
 
-    const handleTransferOwnership = async () => {
-        const email = prompt("Enter the recipient's email address:");
-        if (!email) return;
-        const price = prompt('Sale price (optional, leave blank to skip):');
-        const msg = prompt('Message for the buyer (optional):');
-        const token = crypto.randomUUID();
-        const { data: authData, error: authError } = await supabase.auth.getUser();
-        if (authError || !authData?.user?.id) {
-            toast({ title: 'Transfer failed', description: 'You need to be signed in to transfer ownership.', variant: 'destructive' });
-            return;
-        }
-        const { error } = await supabase.from('transfer_requests').insert({
-            animal_id: reptile.id,
-            animal_type: 'other_reptile',
-            from_user_id: authData.user.id,
-            to_email: email,
-            token,
-            sale_price: price ? Number(price) : null,
-            message: msg || null,
-            // The insert rule needs created_by to be the signed-in user.
-            created_by: authData.user.email,
-            expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
-        });
-        if (error) {
-            toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
-        } else {
-            const claimUrl = `${window.location.origin}/claim/${token}`;
-            // iOS can refuse a clipboard write this long after the tap, so
-            // the toast carries the link either way.
-            const copied = await navigator.clipboard?.writeText(claimUrl).then(() => true, () => false);
-            toast({
-                title: 'Transfer started',
-                description: `${copied ? 'Claim link copied. ' : ''}Send ${email} this link: ${claimUrl} (expires in 72 hours).`,
-            });
-        }
-    };
-
     const chartData = [...weightRecords].reverse().map(r => ({
         date: format(parseLocalDate(r.record_date), 'MMM d'),
         weight: r.weight_grams,
@@ -154,6 +117,12 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
 
     return (
         <>
+        <TransferDialog
+            open={showTransfer}
+            onOpenChange={setShowTransfer}
+            animal={reptile}
+            animalType="other_reptile"
+        />
         <AlertDialog open={!!weightToDelete} onOpenChange={(open) => { if (!open) setWeightToDelete(null); }}>
             <AlertDialogContent className="bg-slate-900 border-slate-700">
                 <AlertDialogHeader>
@@ -262,7 +231,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                                 {!reptile.archived && (
                                     <Button
                                         variant="outline"
-                                        onClick={handleTransferOwnership}
+                                        onClick={() => setShowTransfer(true)}
                                         className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
                                     >
                                         <ArrowRightLeft className="w-4 h-4 mr-2" />

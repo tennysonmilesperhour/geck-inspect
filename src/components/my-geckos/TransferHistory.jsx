@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { ArrowRightLeft, ArrowUpRight, ArrowDownLeft, ExternalLink, Clock, Check, Ban, Hourglass } from 'lucide-react';
+import { ArrowRightLeft, ArrowUpRight, ArrowDownLeft, ExternalLink, Clock, Check, Ban, Hourglass, Copy, Mail, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import EmptyState from '../shared/EmptyState';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from '@/components/ui/use-toast';
+import { cancelTransfer, claimUrlFor, copyText, effectiveTransferStatus, sendTransferEmail } from '@/lib/transfers';
 
 /**
  * Ownership transfer history for the current user.
@@ -27,8 +30,7 @@ const STATUS_META = {
 };
 
 function StatusBadge({ status, expiresAt }) {
-  const effective =
-    status === 'pending' && expiresAt && new Date(expiresAt) < new Date() ? 'expired' : status;
+  const effective = effectiveTransferStatus({ status, expires_at: expiresAt });
   const meta = STATUS_META[effective] || STATUS_META.pending;
   const Icon = meta.icon;
   return (
@@ -39,7 +41,79 @@ function StatusBadge({ status, expiresAt }) {
   );
 }
 
-function TransferRow({ transfer, animal, direction }) {
+// Copy link, resend the email, or cancel. Only for a pending transfer
+// the signed-in user sent.
+function PendingActions({ transfer, onCancelled }) {
+  const [busy, setBusy] = useState(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const claimUrl = claimUrlFor(transfer.token);
+
+  const handleCopy = async () => {
+    const ok = await copyText(claimUrl);
+    toast({
+      title: ok ? 'Claim link copied' : 'Copy this link',
+      description: ok ? `Send it to ${transfer.to_email}.` : claimUrl,
+    });
+  };
+
+  const handleResend = async () => {
+    setBusy('resend');
+    const res = await sendTransferEmail(transfer.token);
+    setBusy(null);
+    toast(res.delivered
+      ? { title: 'Email sent', description: `We emailed ${transfer.to_email} the claim link again.` }
+      : { title: 'Email not sent', description: 'Copy the link and send it to the buyer yourself.', variant: 'destructive' });
+  };
+
+  const handleCancel = async () => {
+    setBusy('cancel');
+    try {
+      await cancelTransfer(transfer.id);
+      toast({ title: 'Transfer cancelled', description: 'The claim link no longer works.' });
+      if (onCancelled) onCancelled();
+    } catch (err) {
+      toast({ title: 'Could not cancel', description: err?.message || 'Please try again.', variant: 'destructive' });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const btn = 'touch:min-h-11 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border disabled:opacity-50';
+  return (
+    <div className="flex flex-wrap gap-2 mt-2">
+      <button type="button" onClick={handleCopy} className={`${btn} border-slate-600 text-slate-300 hover:bg-slate-800`}>
+        <Copy className="w-3.5 h-3.5" />
+        Copy link
+      </button>
+      <button type="button" onClick={handleResend} disabled={!!busy} className={`${btn} border-sky-700/60 text-sky-300 hover:bg-sky-900/20`}>
+        {busy === 'resend' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+        Resend email
+      </button>
+      <button type="button" onClick={() => setConfirmCancel(true)} disabled={!!busy} className={`${btn} border-red-800/60 text-red-300 hover:bg-red-900/20`}>
+        {busy === 'cancel' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />}
+        Cancel transfer
+      </button>
+      <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
+        <AlertDialogContent className="bg-slate-900 border-slate-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-100">Cancel this transfer?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              The claim link sent to {transfer.to_email} stops working. The animal stays in your collection.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-slate-600">Keep it</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white" onClick={handleCancel}>
+              Cancel transfer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function TransferRow({ transfer, animal, direction, onChanged }) {
   const isOutgoing = direction === 'outgoing';
   const counterparty = isOutgoing
     ? transfer.to_email
@@ -48,7 +122,7 @@ function TransferRow({ transfer, animal, direction }) {
   const img = animal?.image_urls?.[0];
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-600 transition-colors">
+    <div className="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-600 transition-colors">
       {img ? (
         <img src={img} alt={animal?.name || 'Animal'} className="w-12 h-12 rounded-lg object-cover shrink-0" />
       ) : (
@@ -74,6 +148,9 @@ function TransferRow({ transfer, animal, direction }) {
             </span>
           )}
         </div>
+        {isOutgoing && transfer.token && effectiveTransferStatus(transfer) === 'pending' && (
+          <PendingActions transfer={transfer} onCancelled={onChanged} />
+        )}
       </div>
 
       {animal?.passport_code && (
@@ -204,7 +281,7 @@ export default function TransferHistory({ user }) {
           </p>
           <div className="space-y-2">
             {outgoing.map((t) => (
-              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="outgoing" />
+              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="outgoing" onChanged={load} />
             ))}
           </div>
         </section>

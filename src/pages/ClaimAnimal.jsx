@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
 import { ArrowRightLeft, ShieldCheck, Clock, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { animalFromPreview } from '@/lib/transfers';
 
 // The page a buyer opens from a transfer link. It uses the app's own
 // cards, colors and buttons (it had its own palette and fonts until
@@ -63,41 +64,10 @@ export default function ClaimAnimal() {
         }
         setTransfer(tr);
 
-        // Load the animal from whichever table the transfer points at, and
-        // normalize into a shared shape the UI below can render either way.
-        if (tr.animal_type === 'other_reptile') {
-          const { data: r } = await supabase
-            .from('other_reptiles')
-            .select('id, name, species, morph, image_urls')
-            .eq('id', tr.animal_id)
-            .maybeSingle();
-          setAnimal(r ? {
-            isReptile: true,
-            name: r.name,
-            subtitle: [r.species, r.morph].filter(Boolean).join(' • ') || 'Reptile',
-            image_urls: r.image_urls,
-            passport_code: null,
-            emoji: '🦎',
-            collectionPath: '/OtherReptiles',
-            successHeading: 'Welcome to your new reptile!',
-          } : null);
-        } else {
-          const { data: g } = await supabase
-            .from('geckos')
-            .select('id, name, morphs_traits, image_urls, passport_code, sex, weight_grams')
-            .eq('id', tr.animal_id)
-            .maybeSingle();
-          setAnimal(g ? {
-            isReptile: false,
-            name: g.name,
-            subtitle: g.morphs_traits || 'Crested Gecko',
-            image_urls: g.image_urls,
-            passport_code: g.passport_code,
-            emoji: '🦎',
-            collectionPath: '/MyGeckos',
-            successHeading: 'Welcome to your new gecko!',
-          } : null);
-        }
+        // The preview carries the animal's name, first photo and morph, so
+        // the page shows them even when the animal is private (the buyer
+        // cannot read a private gecko's row before the claim).
+        setAnimal(animalFromPreview(tr));
       } catch (err) {
         console.error(err);
         setError('error');
@@ -234,7 +204,7 @@ export default function ClaimAnimal() {
               </div>
             )}
             <div className="min-w-0">
-              <h2 className="text-lg font-semibold text-slate-100 break-words">{animal?.name || 'Unknown'}</h2>
+              <h2 className="text-lg font-semibold text-slate-100 break-words">{animal?.name}</h2>
               <p className="text-sm text-slate-400">{animal?.subtitle || 'Animal'}</p>
               {animal?.passport_code && (
                 <code className="text-xs font-mono px-2 py-0.5 rounded-full mt-1 inline-block bg-slate-800 text-slate-400">
