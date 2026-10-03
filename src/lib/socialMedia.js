@@ -46,16 +46,43 @@ export const POST_TEMPLATES = [
   { key: 'educational', label: 'Educational',          blurb: "Explains this gecko's morph or trait combo to the audience." },
 ];
 
+// Decision D8: Bluesky posts directly; every other platform is copy-out
+// (the text goes on the clipboard and the platform's compose page opens).
+// Facebook and Instagram direct posting waits on Meta's App Review, so
+// they are copy-out too. A copy never uses a post credit.
 export const PLATFORMS = [
-  { key: 'bluesky',          label: 'Bluesky',          mode: 'direct',     hint: 'Posts directly via app password.' },
-  { key: 'facebook_page',    label: 'Facebook Page',    mode: 'direct',     hint: 'Posts directly to your Facebook Page via Meta Graph API.' },
-  { key: 'instagram',        label: 'Instagram',        mode: 'direct',     hint: 'Posts directly to your IG Business account. Requires a photo on the gecko.' },
-  { key: 'reddit',           label: 'Reddit',           mode: 'direct',     hint: 'Posts directly via OAuth. Defaults to your u/profile; you can change to a subreddit in Connections.' },
-  { key: 'threads',          label: 'Threads',          mode: 'clipboard',  hint: 'Copy to clipboard. Direct posting in v2.' },
-  { key: 'x',                label: 'X (Twitter)',      mode: 'clipboard',  hint: 'Copy to clipboard, deep-link to compose.' },
-  { key: 'tiktok',           label: 'TikTok',           mode: 'clipboard',  hint: 'Returns a video script you can use as a shot list.' },
-  { key: 'youtube_community',label: 'YouTube Community',mode: 'clipboard',  hint: 'Copy to clipboard.' },
+  { key: 'bluesky',          label: 'Bluesky',          mode: 'direct',     hint: 'Posts directly with your Bluesky app password.' },
+  { key: 'facebook_page',    label: 'Facebook',         mode: 'clipboard',  hint: 'Copies your post and opens Facebook so you can paste it.' },
+  { key: 'instagram',        label: 'Instagram',        mode: 'clipboard',  hint: 'Copies your caption and opens Instagram so you can paste it.' },
+  { key: 'reddit',           label: 'Reddit',           mode: 'clipboard',  hint: 'Copies your post and opens r/CrestedGecko so you can paste it.' },
+  { key: 'threads',          label: 'Threads',          mode: 'clipboard',  hint: 'Copies your post and opens Threads.' },
+  { key: 'x',                label: 'X (Twitter)',      mode: 'clipboard',  hint: 'Copies your post and opens X.' },
+  { key: 'tiktok',           label: 'TikTok',           mode: 'clipboard',  hint: 'Copies a caption you can use with your video.' },
+  { key: 'youtube_community',label: 'YouTube Community',mode: 'clipboard',  hint: 'Copies your post and opens YouTube Studio.' },
 ];
+
+export function isDirectPlatform(key) {
+  return PLATFORMS.find((p) => p.key === key)?.mode === 'direct';
+}
+
+// Member-facing wording for the error codes publish-social-post returns,
+// so the composer never shows a raw code or setup instructions.
+const PUBLISH_ERROR_MESSAGES = {
+  platform_not_connected: 'Connect your Bluesky account in Connections first, or use Copy to post it yourself.',
+  bluesky_auth_failed: 'Bluesky did not accept your handle and app password. Reconnect Bluesky in Connections with a new app password.',
+  bluesky_post_failed: 'Bluesky did not accept the post. Try again in a minute, or copy the text and post it yourself.',
+  token_decrypt_failed: 'We could not read your saved Bluesky login. Reconnect Bluesky in Connections.',
+  variant_already_published: 'This post already went out.',
+  forbidden: 'You can only publish your own posts.',
+  publish_failed: 'The post did not go out. Try again, or copy the text and post it yourself.',
+};
+
+export function publishErrorMessage(code, detail) {
+  const fromDetail = typeof detail === 'string' ? detail.split(':')[0].trim() : '';
+  if (fromDetail && PUBLISH_ERROR_MESSAGES[fromDetail]) return PUBLISH_ERROR_MESSAGES[fromDetail];
+  if (code && PUBLISH_ERROR_MESSAGES[code]) return PUBLISH_ERROR_MESSAGES[code];
+  return 'Something went wrong. Try again, or copy the text and post it yourself.';
+}
 
 // Hard character limits enforced by each platform's API. `null` means the
 // platform has a soft/effectively-unlimited limit (we don't show a counter
@@ -219,4 +246,31 @@ export function formatCents(cents) {
   if (cents == null) return '$0.00';
   const v = Number(cents) / 100;
   return `$${v.toFixed(2)}`;
+}
+
+// Members paste handles as "@name.bsky.social", "name.bsky.social" or a
+// full profile link. Bluesky's login wants the bare handle. Mirrors
+// normalizeBlueskyHandle in supabase/functions/_shared/promote.ts.
+export function normalizeBlueskyHandle(raw) {
+  let h = String(raw || '').trim();
+  h = h.replace(/^https?:\/\/(www\.)?bsky\.app\/profile\//i, '');
+  h = h.replace(/\/.*$/, '');
+  h = h.replace(/^@/, '');
+  return h.toLowerCase();
+}
+
+// Member-facing wording for set-platform-connection error codes. Setup
+// problems (a missing server key) read as "try later", never as
+// instructions meant for the admin.
+const CONNECTION_ERROR_MESSAGES = {
+  bluesky_auth_failed: 'Bluesky did not accept that handle and app password. Check the handle, make a new app password, and try again.',
+  bluesky_unreachable: 'We could not reach Bluesky just now. Please try again in a minute.',
+  account_handle_required: 'Enter your Bluesky handle, for example yourname.bsky.social.',
+  access_token_required: 'Enter a Bluesky app password.',
+  unknown_platform: 'That platform cannot be connected.',
+};
+
+export function connectionErrorMessage(code) {
+  return CONNECTION_ERROR_MESSAGES[code]
+    || 'Connecting is not available right now. Please try again later, or use Copy to post it yourself.';
 }

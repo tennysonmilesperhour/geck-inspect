@@ -1,10 +1,11 @@
 // Supabase Edge Function: publish-social-post
 //
 // Publishes a social_post_variant to its target platform and bills the user.
-// In v1 we directly post to Bluesky (app-password auth, no OAuth required).
-// All other platforms are recorded as `status = 'copied'` and quotas are
-// still deducted; copy-to-clipboard counts as a publish for billing
-// purposes since the user committed to the post.
+// Per decision D8 we post directly to Bluesky only (app-password auth, no
+// OAuth). Every other platform is recorded as `status = 'copied'` and is
+// NOT billed: a copy-out spends no post credit and no included post.
+// Facebook, Instagram and Reddit posting code stays below, switched off in
+// _shared/promote.ts (DIRECT_POST_PLATFORMS) until Meta's App Review.
 //
 // Token decryption: access_token_ciphertext (+ access_token_iv) hold the
 // AES-GCM encrypted app password from set-platform-connection. We fall
@@ -12,6 +13,13 @@
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import {
+  blueskyPostRecord,
+  isDirectPlatform,
+  normalizeBlueskyHandle,
+  pickConnection,
+  shouldChargePublish,
+} from "../_shared/promote.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -25,8 +33,6 @@ const TIER_INCLUDED: Record<string, number> = {
   breeder: 12,
   enterprise: 30,
 };
-
-const DIRECT_POST_PLATFORMS = new Set(["bluesky", "facebook_page", "instagram", "reddit"]);
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -234,15 +240,13 @@ async function postToBluesky(
   const sessionRes = await fetch("https://bsky.social/xrpc/com.atproto.server.createSession", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ identifier, password: appPassword }),
+    body: JSON.stringify({ identifier: normalizeBlueskyHandle(identifier), password: appPassword }),
   });
   if (!sessionRes.ok) {
     const err = await sessionRes.text();
     throw new Error(`bluesky_auth_failed: ${err.slice(0, 300)}`);
   }
   const session = await sessionRes.json() as { accessJwt: string; did: string; handle: string };
-
-  const trimmed = text.length > 300 ? text.slice(0, 297) + "…" : text;
 
   const recordRes = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord", {
     method: "POST",
@@ -253,12 +257,7 @@ async function postToBluesky(
     body: JSON.stringify({
       repo: session.did,
       collection: "app.bsky.feed.post",
-      record: {
-        $type: "app.bsky.feed.post",
-        text: trimmed,
-        createdAt: new Date().toISOString(),
-        langs: ["en"],
-      },
+      record: blueskyPostRecord(text),
     }),
   });
   if (!recordRes.ok) {
@@ -278,6 +277,9 @@ async function postToBluesky(
 
 interface PublishRequest {
   variant_id: string;
+  // Optional: which of the member's connections to post through, when
+  // they have more than one for the platform (two Facebook Pages).
+  connection_id?: string;
 }
 
 serve(async (req) => {
@@ -354,9 +356,12 @@ serve(async (req) => {
   const text = [variant.content, ...(variant.hashtags || []).map((h: string) => (h.startsWith("#") ? h : `#${h}`))]
     .filter(Boolean).join(variant.platform === "instagram" ? "\n\n" : " ");
 
+  const isDirect = isDirectPlatform(variant.platform);
+
   // Free-tier payment-method gate: if free, no credits, and would tip into
   // overage, block with a 402 so the frontend can show the trial offer.
-  if (tier === "free" && !isAdmin) {
+  // Copies are free, so they never hit this gate.
+  if (isDirect && tier === "free" && !isAdmin) {
     const monthKey = new Date().toISOString().slice(0, 7);
     const { data: usage } = await supabase
       .from("social_post_usage")
@@ -380,14 +385,17 @@ serve(async (req) => {
     statusOnSuccess: "copied",
   };
 
-  if (DIRECT_POST_PLATFORMS.has(variant.platform)) {
-    const { data: conn } = await supabase
+  if (isDirect) {
+    // A member can have several rows per platform (one per Facebook Page,
+    // or two Bluesky handles). Read them all and pick one; maybeSingle
+    // errored on more than one row and reported "not connected".
+    const { data: connRows } = await supabase
       .from("social_platform_connections")
-      .select("id, platform, account_handle, account_id, access_token, access_token_ciphertext, access_token_iv, refresh_token_ciphertext, refresh_token_iv, metadata, is_active")
+      .select("id, platform, account_handle, account_id, access_token, access_token_ciphertext, access_token_iv, refresh_token_ciphertext, refresh_token_iv, metadata, is_active, updated_date, created_date")
       .eq("user_id", user.id)
       .eq("platform", variant.platform)
-      .eq("is_active", true)
-      .maybeSingle();
+      .eq("is_active", true);
+    const conn = pickConnection(connRows, body.connection_id || null);
     if (!conn?.account_handle) {
       return json({ error: "platform_not_connected", platform: variant.platform }, 400);
     }
@@ -410,6 +418,10 @@ serve(async (req) => {
       if (variant.platform === "bluesky") {
         const r = await postToBluesky(conn.account_handle, token, text);
         publishResult = { url: r.postUrl, platform_post_id: r.uri, statusOnSuccess: "published" };
+        await supabase
+          .from("social_platform_connections")
+          .update({ last_used_at: new Date().toISOString() })
+          .eq("id", conn.id);
       } else if (variant.platform === "facebook_page") {
         const pageId = conn.account_id || (conn.metadata as { page_id?: string } | null)?.page_id;
         if (!pageId) throw new Error("missing_page_id");
@@ -520,10 +532,10 @@ serve(async (req) => {
     }
   }
 
-  // Charge the publish (credit > included > overage). Skipped entirely
-  // for admins so test publishes don't burn quota or trigger overage.
+  // Charge the publish (credit > included > overage). Skipped for admins
+  // so test publishes don't burn quota, and for copies (decision D8).
   let charge: unknown = null;
-  if (!isAdmin) {
+  if (shouldChargePublish({ statusOnSuccess: publishResult.statusOnSuccess, isAdmin })) {
     const { data: chargeRows } = await supabase.rpc("charge_social_publish", {
       p_user_id: user.id,
       p_tier: tier,
