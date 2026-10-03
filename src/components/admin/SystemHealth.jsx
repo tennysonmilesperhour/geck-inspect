@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { buildInfo as readBuildInfo, fetchHealthStatus, jobNeedsAttention } from '@/lib/adminData';
 
 /**
  * System health checks, quick overview of integrations the app depends on.
@@ -106,27 +108,84 @@ function HealthRow({ result }) {
   );
 }
 
+function ago(ts) {
+  if (!ts) return 'never';
+  try {
+    return formatDistanceToNow(new Date(ts), { addSuffix: true });
+  } catch {
+    return String(ts);
+  }
+}
+
+function summarizeServer(server) {
+  if (!server) return [null, null, null];
+  if (server.error) {
+    const fail = { ok: false, label: 'Server checks', detail: server.error };
+    return [fail, fail, fail];
+  }
+  const jobs = (server.jobs || []).filter((j) => !j.error);
+  const jobsUnavailable = (server.jobs || []).some((j) => j.error);
+  const failing = (server.jobs || []).filter(jobNeedsAttention);
+  const active = jobs.filter((j) => j.active).length;
+  const http = server.http_errors || [];
+  const clientErrors = Number(server.client_errors_24h || 0);
+  return [
+    jobsUnavailable
+      ? { ok: false, label: 'Scheduled jobs', detail: 'could not read the job list' }
+      : {
+          ok: failing.length === 0,
+          label: 'Scheduled jobs',
+          detail: failing.length === 0
+            ? `${active} on, ${jobs.length - active} off, none failing`
+            : `failing: ${failing.map((j) => j.name).join(', ')}`,
+        },
+    {
+      ok: http.length === 0,
+      label: 'Edge function calls from the database',
+      detail: http.length === 0
+        ? 'no failed calls kept (pg_net keeps about six hours)'
+        : `${http.length} failed, latest ${ago(http[0].at)} (HTTP ${http[0].status_code ?? 'none'})`,
+    },
+    {
+      ok: clientErrors === 0,
+      label: 'App errors in the last 24 hours',
+      detail: clientErrors === 0 ? 'none unresolved' : `${clientErrors} unresolved (see Error Logs)`,
+    },
+  ];
+}
+
 export default function SystemHealth() {
   const [results, setResults] = useState([null, null, null]);
+  const [server, setServer] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const runChecks = async () => {
     setIsRefreshing(true);
     setResults([null, null, null]);
+    setServer(null);
+    const serverPromise = fetchHealthStatus().catch((err) => ({ error: err?.message || 'admin_health_status failed' }));
     const env = checkEnv();
     setResults([env, null, null]);
     const sb = await pingSupabase();
     setResults([env, sb, null]);
     const auth = await pingAuth();
     setResults([env, sb, auth]);
+    setServer(await serverPromise);
     setIsRefreshing(false);
   };
+
+  const deploy = readBuildInfo();
+  const serverRows = summarizeServer(server);
 
   useEffect(() => {
     runChecks();
   }, []);
 
   const buildInfo = {
+    'Deploy version': deploy.commit === 'dev' ? 'dev (not a deployed build)' : deploy.shortCommit,
+    'Built': deploy.builtAt ? `${new Date(deploy.builtAt).toLocaleString()} (${ago(deploy.builtAt)})` : 'unknown',
+    'Branch': deploy.branch || 'unknown',
+    'Vercel environment': deploy.deployEnv || 'unknown',
     'App URL': window.location.origin,
     'Supabase URL': getEnv('VITE_SUPABASE_URL') || '(unset)',
     'PostHog enabled': getEnv('VITE_POSTHOG_KEY') ? 'yes' : 'no',
@@ -160,8 +219,74 @@ export default function SystemHealth() {
           {results.map((r, i) => (
             <HealthRow key={i} result={r} />
           ))}
+          {serverRows.map((r, i) => (
+            <HealthRow key={`server-${i}`} result={r} />
+          ))}
         </CardContent>
       </Card>
+
+      {server && !server.error && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-slate-100 text-base">Scheduled jobs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-slate-800">
+              {(server.jobs || []).filter((j) => !j.error).map((job) => {
+                const bad = jobNeedsAttention(job);
+                return (
+                  <div key={job.name} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+                    <div className="min-w-0">
+                      <p className={`font-mono text-xs ${job.active ? 'text-slate-200' : 'text-slate-500'}`}>{job.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {job.schedule} · {job.active ? 'on' : 'off'} · last run {ago(job.last_start)}
+                        {job.failures_7d > 0 && ` · ${job.failures_7d} failed this week`}
+                      </p>
+                      {job.last_message && (
+                        <p className="text-xs text-rose-300 break-words">{job.last_message}</p>
+                      )}
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={
+                        !job.active
+                          ? 'border-slate-600 text-slate-400'
+                          : bad
+                            ? 'border-rose-500/40 text-rose-300 bg-rose-500/10'
+                            : 'border-emerald-500/40 text-emerald-300 bg-emerald-500/10'
+                      }
+                    >
+                      {!job.active ? 'OFF' : job.last_status ? job.last_status.toUpperCase() : 'NOT RUN YET'}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {server && !server.error && (server.http_errors || []).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-slate-100 text-base">Recent failed edge function calls</CardTitle>
+            <p className="text-xs text-slate-500">
+              Calls the database made (cron jobs and triggers). Calls from the app itself are in the
+              Supabase dashboard under Edge Functions, Logs.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {server.http_errors.map((e) => (
+              <div key={e.id} className="rounded-lg border border-slate-800 bg-slate-800/40 px-3 py-2 text-xs">
+                <p className="text-slate-200">
+                  HTTP {e.status_code ?? 'none'}{e.timed_out ? ', timed out' : ''} · {ago(e.at)}
+                </p>
+                {e.error && <p className="text-slate-500 break-words mt-0.5">{e.error}</p>}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

@@ -21,7 +21,10 @@
 //
 // Input  (POST JSON): { prompt: string, response_json_schema?: object, model?: string, max_tokens?: number }
 // Output (JSON)     : { text?: string, json?: object, raw?: object, credits?: { included, remaining } }
-// Errors            : 401 unauthenticated, 402 feature_credits_exhausted, 413 prompt too long
+// Errors            : 401 unauthenticated, 402 feature_credits_exhausted, 413 prompt too long,
+//                     502/500 when the AI call fails. A failed call gives the credit back
+//                     (refund_feature_credit) and says so with `refunded: true`, so the
+//                     member's monthly count is unchanged.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
@@ -137,6 +140,7 @@ Deno.serve(async (req: Request) => {
   // Keeper-facing calls consume one assistant credit, with the allotment
   // resolved server-side from the caller's tier.
   let credits: { included: number | null; remaining: number | null } | undefined;
+  let charged = false;
   if (!isAdmin) {
     const { data: usage, error: rpcErr } = await userClient.rpc("consume_feature_credit", {
       p_feature: "assistant_message",
@@ -161,7 +165,28 @@ Deno.serve(async (req: Request) => {
       included,
       remaining: included == null ? null : Math.max(0, included - consumed),
     };
+    charged = true;
   }
+
+  // The credit is taken before the AI call (so two quick messages cannot
+  // both slip under the limit). When the call then fails, give it back.
+  // Only the service role may run refund_feature_credit.
+  const failWithRefund = async (body: Record<string, unknown>, status: number) => {
+    if (charged) {
+      const { error: refundErr } = await admin.rpc("refund_feature_credit", {
+        p_user_id: userData.user!.id,
+        p_feature: "assistant_message",
+      });
+      if (refundErr) {
+        console.warn("invoke-llm: refund failed", refundErr);
+      } else {
+        charged = false;
+        const remaining = credits?.remaining == null ? null : credits.remaining + 1;
+        return jsonResponse({ ...body, refunded: true, credits: credits ? { ...credits, remaining } : undefined }, status);
+      }
+    }
+    return jsonResponse({ ...body, refunded: false }, status);
+  };
 
   // When a response schema is provided, instruct the model to return pure
   // JSON and we'll parse it ourselves.
@@ -188,8 +213,8 @@ Deno.serve(async (req: Request) => {
 
     if (!anthropicRes.ok) {
       const errText = await anthropicRes.text();
-      return jsonResponse(
-        { error: `Anthropic API error (${anthropicRes.status}): ${errText}` },
+      return await failWithRefund(
+        { error: `Anthropic API error (${anthropicRes.status}): ${errText.slice(0, 500)}` },
         502,
       );
     }
@@ -199,6 +224,9 @@ Deno.serve(async (req: Request) => {
       ? data.content.find((b: { type: string }) => b.type === "text")
       : null;
     const text = textBlock?.text || "";
+    if (!text.trim()) {
+      return await failWithRefund({ error: "The AI returned an empty answer." }, 502);
+    }
 
     if (wantsJson) {
       // Strip markdown fences if the model added them despite instructions.
@@ -210,7 +238,7 @@ Deno.serve(async (req: Request) => {
         const parsed = JSON.parse(cleaned);
         return jsonResponse({ json: parsed, text, raw: data, credits });
       } catch (err) {
-        return jsonResponse(
+        return await failWithRefund(
           {
             error: `LLM returned non-JSON content: ${(err as Error).message}`,
             text,
@@ -222,7 +250,7 @@ Deno.serve(async (req: Request) => {
 
     return jsonResponse({ text, raw: data, credits });
   } catch (err) {
-    return jsonResponse(
+    return await failWithRefund(
       { error: `Edge function crash: ${(err as Error).message}` },
       500,
     );

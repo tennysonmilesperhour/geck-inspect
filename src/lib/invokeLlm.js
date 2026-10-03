@@ -12,6 +12,8 @@
  *
  * Errors carry `code`: 'credits_exhausted' (monthly assistant allotment
  * used up, `included` holds the allotment when known) or 'unauthenticated'.
+ * When the AI call itself fails, the server refunds the credit and the
+ * error carries `refunded: true` and the updated `credits`.
  */
 import { supabase } from '@/lib/supabaseClient';
 
@@ -50,6 +52,10 @@ async function callInvokeLlm({ prompt, response_json_schema, model, max_tokens }
     } else if (status === 401 || parsed?.error === 'unauthenticated') {
       err.code = 'unauthenticated';
     }
+    // A failed AI call gives the credit back on the server; pass that on
+    // so the page can keep its "messages left" count right.
+    if (parsed?.refunded) err.refunded = true;
+    if (parsed?.credits) err.credits = parsed.credits;
     throw err;
   }
   if (data?.error) {

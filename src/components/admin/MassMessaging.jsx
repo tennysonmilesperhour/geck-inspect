@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { User, DirectMessage, Notification, ChangeLog } from '@/entities/all';
+import { DirectMessage, Notification, ChangeLog } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
+import { fetchAccountDirectory, broadcastRecipients } from '@/lib/adminData';
 import { InvokeLLM } from '@/lib/invokeLlm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +58,12 @@ const TARGET_GROUPS = [
     color: 'bg-emerald-600',
   },
   {
+    value: 'reviewers',
+    label: 'Expert Reviewers',
+    icon: <Award className="w-4 h-4" />,
+    color: 'bg-teal-600',
+  },
+  {
     value: 'admins',
     label: 'Admins Only',
     icon: <Shield className="w-4 h-4" />,
@@ -70,19 +77,6 @@ const TARGET_GROUPS = [
   },
 ];
 
-function filterUsers(allUsers, targetGroup) {
-  switch (targetGroup) {
-    case 'experts':
-      return allUsers.filter((u) => u.is_expert === true);
-    case 'admins':
-      return allUsers.filter((u) => u.role === 'admin');
-    case 'non_experts':
-      return allUsers.filter((u) => !u.is_expert);
-    default:
-      return allUsers;
-  }
-}
-
 export default function MassMessaging({ prefill, onPrefillConsumed }) {
   const [targetGroup, setTargetGroup] = useState('all');
   const [subject, setSubject] = useState('');
@@ -90,7 +84,34 @@ export default function MassMessaging({ prefill, onPrefillConsumed }) {
   const [isSending, setIsSending] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [sendProgress, setSendProgress] = useState(null);
+  const [directory, setDirectory] = useState(null);
+  const [senderEmail, setSenderEmail] = useState(null);
+  const [directoryError, setDirectoryError] = useState(null);
   const { toast } = useToast();
+
+  // Load the account list once so the recipient count is shown before
+  // anything is sent. Only real accounts (with a login) are counted;
+  // legacy rows with no login cannot read a message.
+  const loadDirectory = async () => {
+    setDirectoryError(null);
+    try {
+      const [{ data: { user: sbUser } }, rows] = await Promise.all([
+        supabase.auth.getUser(),
+        fetchAccountDirectory(),
+      ]);
+      setSenderEmail(sbUser?.email || null);
+      setDirectory(rows);
+    } catch (err) {
+      console.error('Recipient list failed:', err);
+      setDirectoryError(err?.message || 'Could not load recipients.');
+    }
+  };
+
+  useEffect(() => {
+    loadDirectory();
+  }, []);
+
+  const recipients = directory ? broadcastRecipients(directory, targetGroup, senderEmail) : null;
 
   // Consume a prefill payload handed down from AdminPanel (e.g. when the
   // Changelog manager clicked "Broadcast" on a published entry).
@@ -200,10 +221,17 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
         throw new Error('Not signed in, cannot send.');
       }
 
-      const allUsers = await User.list();
-      const targetUsers = filterUsers(allUsers, targetGroup).filter(
-        (u) => u.email && u.email !== adminEmail
-      );
+      const rows = await fetchAccountDirectory();
+      const targetUsers = broadcastRecipients(rows, targetGroup, adminEmail);
+      if (targetUsers.length === 0) {
+        throw new Error('Nobody in this group to send to.');
+      }
+      const groupLabel = TARGET_GROUPS.find((g) => g.value === targetGroup)?.label || targetGroup;
+      if (!window.confirm(`Send "${subject.trim()}" to ${targetUsers.length} account${targetUsers.length === 1 ? '' : 's'} (${groupLabel})?`)) {
+        setSendProgress(null);
+        setIsSending(false);
+        return;
+      }
       setSendProgress({ sent: 0, total: targetUsers.length, failures: 0 });
 
       let sent = 0;
@@ -300,6 +328,13 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
               Sending to: {selectedGroupInfo.label}
             </Badge>
           )}
+          <p className="text-sm text-slate-300" aria-live="polite">
+            {directoryError
+              ? `Could not count recipients: ${directoryError}`
+              : recipients === null
+                ? 'Counting recipients...'
+                : `This will reach ${recipients.length} account${recipients.length === 1 ? '' : 's'}. Legacy rows with no login and your own account are left out.`}
+          </p>
         </div>
 
         <div className="p-4 bg-slate-800/60 rounded-lg border border-slate-700">
@@ -378,7 +413,7 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
         <div className="flex justify-end pt-4 border-t border-slate-800">
           <Button
             onClick={handleSend}
-            disabled={isSending || !subject.trim() || !content.trim()}
+            disabled={isSending || !subject.trim() || !content.trim() || (recipients && recipients.length === 0)}
             className="bg-emerald-600 hover:bg-emerald-500 text-white"
             size="lg"
           >
@@ -390,7 +425,7 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
             ) : (
               <>
                 <Send className="w-5 h-5 mr-2" />
-                Send broadcast
+                {recipients ? `Send to ${recipients.length}` : 'Send broadcast'}
               </>
             )}
           </Button>

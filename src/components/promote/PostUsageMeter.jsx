@@ -54,6 +54,9 @@ export default function PostUsageMeter({ usage, tier, credits = 0 }) {
           style={{ width: `${includedPct}%` }}
         />
       </div>
+      <div className="text-[11px] text-emerald-200/50">
+        Only posts we send to Bluesky for you count. Copying text for other platforms is free.
+      </div>
 
       {(overagePosts > 0 || isAtLimit) && (
         <>
