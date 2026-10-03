@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
-import { Gecko, User, WeightRecord, ShedRecord } from '@/entities/all';
+import { Gecko, User, WeightRecord, ShedRecord, GeckoEvent } from '@/entities/all';
 import { readinessFor } from '@/lib/breedingReadiness';
 import { ReadinessCard } from '@/components/breeding/BreedingReadiness';
 import { api } from '@/api/appClient';
@@ -17,13 +17,14 @@ import VisualSiblings from '@/components/gecko/VisualSiblings';
 import HealthScreenCard from '@/components/health/HealthScreenCard';
 import MarketValueCard from '@/components/gecko/MarketValueCard';
 import VetRecordsSection from '@/components/gecko/VetRecordsSection';
+import HusbandryHistory from '@/components/gecko/HusbandryHistory';
 import {
     Loader2, ArrowLeft, Calendar, GitBranch, StickyNote,
     DollarSign, LineChart as LineChartIcon, MapPin, Tag, User as UserIcon,
     ChevronLeft, ChevronRight, X, Droplets
 } from 'lucide-react';
 import ShareMenu from '@/components/shared/ShareMenu';
-import { passportUrl, PUBLIC_WEIGHT_COLUMNS } from '@/lib/passportUtils';
+import { passportUrl, PUBLIC_WEIGHT_COLUMNS, PUBLIC_SHED_COLUMNS } from '@/lib/passportUtils';
 import { supabase } from '@/lib/supabaseClient';
 import { isGuestMode } from '@/lib/guestMode';
 
@@ -66,6 +67,7 @@ export default function GeckoDetail() {
     const [currentUser, setCurrentUser] = useState(null);
     const [weightRecords, setWeightRecords] = useState([]);
     const [shedRecords, setShedRecords] = useState([]);
+    const [geckoEvents, setGeckoEvents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [lightboxIndex, setLightboxIndex] = useState(null);
     const navigate = useNavigate();
@@ -97,7 +99,12 @@ export default function GeckoDetail() {
                         : supabase.from('weight_records').select(PUBLIC_WEIGHT_COLUMNS)
                             .eq('gecko_id', geckoId).order('record_date', { ascending: true })
                             .then(({ data, error }) => { if (error) throw error; return data || []; }),
-                    ShedRecord.filter({ animal_id: geckoId }, 'date'),
+                    // Explicit columns for the same reason as weights.
+                    isGuestMode()
+                        ? ShedRecord.filter({ animal_id: geckoId }, 'date')
+                        : supabase.from('shed_records').select(PUBLIC_SHED_COLUMNS)
+                            .eq('animal_id', geckoId).order('date', { ascending: true })
+                            .then(({ data, error }) => { if (error) throw error; return data || []; }),
                     fetchedGecko.sire_id ? Gecko.get(fetchedGecko.sire_id) : Promise.resolve(null),
                     fetchedGecko.dam_id ? Gecko.get(fetchedGecko.dam_id) : Promise.resolve(null),
                 ]);
@@ -107,6 +114,14 @@ export default function GeckoDetail() {
                 setShedRecords(sheds.status === 'fulfilled' ? (sheds.value || []) : []);
                 setSire(sireData.status === 'fulfilled' ? sireData.value : null);
                 setDam(damData.status === 'fulfilled' ? damData.value : null);
+
+                // Older shed and feeding logs were saved as general events;
+                // the owner's feeding and shed history folds them in.
+                if (user && fetchedGecko.created_by === user.email) {
+                    GeckoEvent.filter({ gecko_id: geckoId }, '-event_date')
+                        .then((rows) => setGeckoEvents(rows || []))
+                        .catch(() => setGeckoEvents([]));
+                }
             } catch (error) {
                 console.error("Failed to load gecko details:", error);
             }
@@ -180,8 +195,11 @@ export default function GeckoDetail() {
                             <Button variant="outline" onClick={() => navigate(`/QualityScale?geckoId=${gecko.id}`)}>
                                 Score structure
                             </Button>
-                            <Button onClick={() => navigate(createPageUrl('MyGeckos'))}>
-                                Edit in My Geckos
+                            {/* Opens this gecko's record window in My Geckos,
+                                where weights, feedings, sheds, events and vet
+                                visits are logged and the gecko is edited. */}
+                            <Button onClick={() => navigate(`${createPageUrl('MyGeckos')}?gecko=${gecko.id}`)}>
+                                Open record in My Geckos
                             </Button>
                         </>
                     )}
@@ -404,8 +422,25 @@ export default function GeckoDetail() {
                             </Card>
                         )}
 
-                        {/* Shed Forecast */}
-                        {shedPrediction && (
+                        {/* Feeding and shed history plus the shed forecast,
+                            owner only (the passport shows buyers the
+                            feeding history). */}
+                        {isOwner && (
+                            <Card>
+                                <CardContent className="px-4 py-4">
+                                    <HusbandryHistory
+                                        gecko={gecko}
+                                        weights={weightRecords}
+                                        legacyEvents={geckoEvents}
+                                        headingClassName="text-base font-semibold text-slate-100 mb-3 flex items-center gap-2"
+                                        iconClassName="w-4 h-4 text-emerald-400"
+                                    />
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Shed Forecast for everyone else */}
+                        {!isOwner && shedPrediction && (
                             <Card>
                                 <CardHeader className="pb-2 pt-4 px-4">
                                     <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">

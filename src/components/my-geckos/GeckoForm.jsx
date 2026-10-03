@@ -160,6 +160,19 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             setFormData(formDataToSet);
             setCropData(gecko.image_crop_data || {}); // Set local crop data state
 
+            // Drafts (from Quick Add's "More details" or an AI Morph ID
+            // result) are new geckos too, so they get an ID code the same
+            // way a blank add does. Hatchlings get theirs from Effect 2.
+            if (!gecko.id && !gecko.gecko_id_code && !isHatching) {
+                const sire = gecko.sire_id ? userGeckos.find(g => g.id === gecko.sire_id) : null;
+                const dam = gecko.dam_id ? userGeckos.find(g => g.id === gecko.dam_id) : null;
+                generateNextGeckoId(currentUser, userGeckos, sire, dam, '', '', idSettings)
+                    .then((newId) => {
+                        setFormData(prev => (prev.gecko_id_code ? prev : { ...prev, gecko_id_code: newId }));
+                    })
+                    .catch((err) => console.warn('ID code not generated for draft:', err));
+            }
+
             // Also, parse the date parts for the UI inputs.
             const date = gecko.hatch_date ? parseLocalDate(gecko.hatch_date) : null;
             if (date && !isNaN(date.getTime())) {
