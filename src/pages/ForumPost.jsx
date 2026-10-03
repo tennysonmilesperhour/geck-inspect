@@ -19,6 +19,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { nameWithoutEmail } from '@/lib/publicColumns';
 import { useToast } from '@/components/ui/use-toast';
 import {
     AlertDialog,
@@ -322,12 +323,20 @@ export default function ForumPostPage() {
                 <Card>
                     <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-1.5">
-                            <Link
-                                to={createPageUrl(`PublicProfile?email=${encodeURIComponent(comment.created_by || '')}`)}
-                                className="relative touch-hit text-sm font-semibold text-emerald-400 hover:text-emerald-300"
-                            >
-                                {comment.author_name || 'Anonymous'}
-                            </Link>
+                            {/* Linked by profile id: signed-out visitors cannot read
+                                created_by (the author's email). */}
+                            {comment.owner_profile_id ? (
+                                <Link
+                                    to={createPageUrl(`PublicProfile?userId=${comment.owner_profile_id}`)}
+                                    className="relative touch-hit text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                                >
+                                    {nameWithoutEmail(comment.author_name, 'Geck Inspect member')}
+                                </Link>
+                            ) : (
+                                <span className="text-sm font-semibold text-emerald-400">
+                                    {nameWithoutEmail(comment.author_name, 'Geck Inspect member')}
+                                </span>
+                            )}
                             <span className="text-xs text-slate-500">
                                 {formatDistanceToNow(new Date(comment.created_date), { addSuffix: true })}
                             </span>
@@ -411,7 +420,7 @@ export default function ForumPostPage() {
                         <div className="text-sm text-slate-400 flex items-center gap-4 mt-2 flex-wrap">
                             <span className="flex items-center gap-1">
                                 <UserIcon className="w-4 h-4" />
-                                {post.author_name || 'Anonymous'}
+                                {nameWithoutEmail(post.author_name, 'Geck Inspect member')}
                             </span>
                             <span className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
@@ -483,7 +492,7 @@ export default function ForumPostPage() {
                                             <CornerDownRight className="w-3 h-3" />
                                             Replying to{' '}
                                             <span className="font-semibold">
-                                                {replyingTo.author_name || 'a comment'}
+                                                {nameWithoutEmail(replyingTo.author_name, 'a comment')}
                                             </span>
                                         </div>
                                     )}
@@ -495,7 +504,7 @@ export default function ForumPostPage() {
                                 ref={composerTextareaRef}
                                 placeholder={
                                     replyingTo
-                                        ? `Write your reply to ${replyingTo.author_name || 'this comment'}...`
+                                        ? `Write your reply to ${nameWithoutEmail(replyingTo.author_name, 'this comment')}...`
                                         : 'Write your comment here...'
                                 }
                                 value={newComment}

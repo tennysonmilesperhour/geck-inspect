@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Loader2, CheckCircle2, Scale, PlusCircle, Sparkles, ImagePlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -13,6 +13,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { captureEvent } from '@/lib/posthog';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
+import { generateNextGeckoId } from './form/helpers';
+import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 
 // Crested geckos on CGD are usually fed every 2 to 3 days.
 const DEFAULT_FEEDING_INTERVAL_DAYS = 3;
@@ -32,12 +34,22 @@ const SEXES = ['Unsexed', 'Female', 'Male'];
  * Props: open, user, onClose(), onSaved(gecko), onMoreDetails(draft),
  * onLogWeight(gecko), slotsLeftAtOpen (how many more active geckos the
  * plan allows when the dialog opened; Infinity for unlimited plans),
- * onLimitReached() (opens the upgrade prompt).
+ * onLimitReached() (opens the upgrade prompt), existingGeckos (the
+ * collection, so the new gecko gets the next ID code, like the full form)
+ * and idSettings (the keeper's ID code format from collection settings).
  */
-export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, slotsLeftAtOpen = Infinity, onLimitReached }) {
+export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null }) {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const requestIdRef = useRef(crypto.randomUUID());
+
+  // Keep the first-run keeper-or-breeder question from opening on top of
+  // this form; it can follow once the form closes.
+  useEffect(() => {
+    if (!open) return undefined;
+    holdOnboarding('quick_add');
+    return () => releaseOnboarding('quick_add');
+  }, [open]);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState('');
@@ -49,6 +61,9 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(null);
   const [addedCount, setAddedCount] = useState(0);
+  // Geckos saved in this dialog, so "Add another" counts them when it
+  // numbers the next ID code even before the collection reloads.
+  const savedHereRef = useRef([]);
   // The plan limit is checked when the dialog opens; each save here uses
   // one more slot, so "Add another" stops at the limit instead of letting
   // a free account pass 10 (the database refuses it anyway).
@@ -118,8 +133,19 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
         feedingGroupId = group?.id || null;
       }
 
+      // Same ID code the full add form would give a new founder.
+      const known = new Set(existingGeckos.map((g) => g.id));
+      const pool = [...existingGeckos, ...savedHereRef.current.filter((g) => !known.has(g.id))];
+      let idCode = null;
+      try {
+        idCode = await generateNextGeckoId(user, pool, null, null, '', '', idSettings);
+      } catch (idErr) {
+        console.warn('ID code not generated:', idErr);
+      }
+
       const record = {
         name: trimmed,
+        gecko_id_code: idCode || null,
         sex,
         hatch_date: hatchDate || null,
         morphs_traits: morph.trim() || null,
@@ -138,6 +164,10 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
         p_record_date: todayLocalISO(),
       });
       if (error) throw error;
+      // Lets the Dashboard (and any open list) drop its cached counts.
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'created' } }));
+      }
 
       captureEvent('animal_created', {
         animal_id: gecko.id,
@@ -146,6 +176,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
         recorded_weight: grams !== null,
         feeding_reminders: Boolean(feedingGroupId),
       });
+      savedHereRef.current = [...savedHereRef.current, gecko];
       setAddedCount((n) => n + 1);
       setSaved({ gecko, remind: Boolean(feedingGroupId), hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });
       onSaved?.(gecko);

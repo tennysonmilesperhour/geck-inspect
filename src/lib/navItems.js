@@ -135,11 +135,7 @@ export const NAV_REGISTRY = [
   {
     page: 'Breeding', section: 'manage', breederOnly: true,
     sidebar: { category: 'collection', order: 3, label: 'Breeding', icon: 'Egg', requiresAuth: true },
-    palette: { group: 'Breeding', label: 'Breeding Plans', icon: 'GitBranch', keywords: ['pairings', 'projects', 'season'] },
-  },
-  {
-    page: 'BreedingPairs', section: 'manage', breederOnly: true,
-    palette: { group: 'Breeding', label: 'Breeding Pairs', icon: 'GitBranch', keywords: ['sire dam', 'match', 'pair'] },
+    palette: { group: 'Breeding', label: 'Breeding Plans', icon: 'GitBranch', keywords: ['pairings', 'projects', 'season', 'breeding pairs', 'sire dam', 'pair', 'eggs', 'hatch'] },
   },
   {
     page: 'Lineage', section: 'manage', breederOnly: true,

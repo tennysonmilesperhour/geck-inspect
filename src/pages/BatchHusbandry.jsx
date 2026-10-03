@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User, FeedingGroup, FeedingRecord, WeightRecord, Gecko } from '@/entities/all';
 import { format, differenceInCalendarDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { logFeedings } from '@/lib/husbandryLog';
 import {
   Utensils, Scale, ChevronLeft, CheckCircle2, AlertTriangle, Loader2,
   Clock, Users, X, Check,
@@ -171,25 +172,26 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
       let fedCount = 0;
       let refusedCount = 0;
 
-      for (const row of rows) {
+      const entries = rows.map((row) => {
         const accepted = statuses[row.gecko.id] === 'fed';
         if (accepted) fedCount++; else refusedCount++;
-
-        await FeedingRecord.create({
-          animal_id: row.gecko.id,
-          date: today,
-          food_type: group.diet_type || 'CGD',
+        return {
+          // Geckos matched by the old label field still belong to this group.
+          gecko: { ...row.gecko, feeding_group_id: group.id },
           accepted,
           notes: accepted ? null : 'Refused during batch feeding',
-        });
-      }
+        };
+      });
 
-      // The reminder job, the Dashboard and Project Manager read the group's
-      // last_fed_date. Without this, feeding a group here left it overdue and
-      // the "due" reminder never came again.
-      if (fedCount > 0) {
-        await FeedingGroup.update(group.id, { last_fed_date: today });
-      }
+      // One feeding row per gecko, and the group's last fed date (read by
+      // the reminder job, the Dashboard and Project Manager) moves when at
+      // least one ate (D21). Same log every other surface uses.
+      await logFeedings({
+        entries,
+        date: today,
+        foodType: group.diet_type || 'CGD',
+        groups: [group],
+      });
 
       setSummary({ fed: fedCount, refused: refusedCount });
       setShowSummary(true);

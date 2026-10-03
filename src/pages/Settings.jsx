@@ -29,6 +29,8 @@ import { resolveTier } from '@/lib/tierLimits';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
+import { supabase } from '@/lib/supabaseClient';
+import { saveOnboarding } from '@/lib/onboardingState';
 import SignInRequired from '@/components/shared/SignInRequired';
 import PageHeader from '@/components/shared/PageHeader';
 
@@ -428,11 +430,9 @@ export default function SettingsPage() {
 
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    // Keeper mode lives in localStorage (per device), not in the profile
-    // form. Adding it to formData would push an unknown column into the
-    // profiles upsert and break saving every other setting, so it gets
-    // its own instant toggle: write the flag, tell Layout, done. No
-    // Save button involved.
+    // Keeper mode is an instant toggle, not part of the profile form: write
+    // the browser flag, save profiles.keeper_mode, tell Layout. No Save
+    // button involved.
     const [keeperMode, setKeeperMode] = useState(() => {
         try { return localStorage.getItem(KEEPER_MODE_STORAGE_KEY) === '1'; }
         catch { return false; }
@@ -441,6 +441,8 @@ export default function SettingsPage() {
     const handleKeeperModeChange = (enabled) => {
         setKeeperMode(enabled);
         try { localStorage.setItem(KEEPER_MODE_STORAGE_KEY, enabled ? '1' : '0'); } catch { /* private browsing, toggle still works for this page view */ }
+        // Also saved on the profile so every device follows (audit step 32).
+        saveOnboarding(supabase, user?.email, { keeperMode: enabled });
         // Layout listens for this and re-filters the sidebar in place.
         window.dispatchEvent(new CustomEvent('keeper_mode_changed'));
     };

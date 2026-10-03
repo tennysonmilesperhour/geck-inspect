@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { reportError } from '@/lib/telemetry';
 import { Check, CheckCircle2, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as InfinityIcon, CreditCard } from 'lucide-react';
-import { User } from '@/entities/all';
+import { User, PageConfig } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
@@ -22,6 +22,7 @@ import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
+import { featuresWithConsultant, pageIsLive } from '@/lib/membershipFeatures';
 
 /**
  * Membership / pricing page.
@@ -58,6 +59,9 @@ import { resolveTier } from '@/lib/tierLimits';
  * nothing listed as paid that free members already use. Lineage, feeding
  * groups and sales records are free on every plan, so they sit under
  * Free. Limits match src/lib/tierLimits.js and PlanLimitChecker.
+ *
+ * AI Consultant monthly message allowances are added to each card only
+ * while the AI Consultant page is switched on (src/lib/membershipFeatures.js).
  */
 
 const tiers = [
@@ -329,6 +333,16 @@ export default function MembershipPage() {
 
   useEffect(() => {
     User.me().then(setUser).catch(() => setUser(null));
+  }, []);
+
+  // Only list AI Consultant allowances while members can open the page.
+  const [consultantLive, setConsultantLive] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    PageConfig.filter({ page_name: 'BreederConsultant' })
+      .then((rows) => { if (!cancelled) setConsultantLive(pageIsLive(rows)); })
+      .catch(() => { if (!cancelled) setConsultantLive(false); });
+    return () => { cancelled = true; };
   }, []);
 
   // Stripe sends the member back to /Membership?checkout=success (or
@@ -843,7 +857,7 @@ export default function MembershipPage() {
 
                   <CardContent className="flex-1 flex flex-col gap-6">
                     <ul className="space-y-3 flex-1">
-                      {tier.features.map((feature, idx) => (
+                      {featuresWithConsultant(tier.key, tier.features, consultantLive).map((feature, idx) => (
                         <li key={idx} className="flex gap-3">
                           <Check
                             className={`w-5 h-5 flex-shrink-0 ${

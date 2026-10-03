@@ -28,6 +28,9 @@ export const RETIRED_PAGES = [
   // D7: hidden until it is finished (placeholder art, its own trait list
   // and prices). The code stays in src/components/morph-visualizer.
   { page: 'MorphVisualizer', to: '/MorphGuide' },
+  // Step 8: an older copy of Breeding with its own hatch flow. Its dated
+  // "add a clutch with a grade" form now lives on each Breeding plan card.
+  { page: 'BreedingPairs', to: '/Breeding' },
 ];
 
 export const RETIRED_PAGE_NAMES = new Set(RETIRED_PAGES.map((r) => r.page));

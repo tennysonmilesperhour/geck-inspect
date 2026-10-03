@@ -14,6 +14,8 @@ import BuyerInquiryModal from '@/components/breeder/BuyerInquiryModal';
 import BreederReviews, { PUBLIC_REVIEW_COLUMNS } from '@/components/breeder/BreederReviews';
 import { useInAppShell } from '@/lib/appShell';
 import TrustPanel from '@/components/marketplace/TrustPanel';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import {
   DEFAULT_STORE_SETTINGS, readStoreSettings, themeFor,
   AvailableNowSection, WaitlistCtaSection, BuiltOnGeckInspect,
@@ -81,6 +83,7 @@ export default function Breeder() {
   const [inferredGeckos, setInferredGeckos] = useState([]);
   const [uniqueOwners, setUniqueOwners] = useState(0);
   const [errorMsg, setErrorMsg] = useState(null);
+  const blocked = useBlockedMembers();
 
   // Mini-site settings (accent theme, "Available now" toggle, attached
   // waitlist), read from reserved entries in the owner's published
@@ -159,13 +162,17 @@ export default function Breeder() {
                 : Promise.resolve({ data: [] }),
               // Mini-site settings carrier. RLS only exposes published
               // rows to visitors, and we filter on is_published here too
-              // so owners preview exactly what the public sees.
-              supabase
-                .from('breeder_store_pages')
-                .select('external_links, featured_gecko_ids')
-                .eq('owner_email', ownerEmail)
-                .eq('is_published', true)
-                .maybeSingle(),
+              // so owners preview exactly what the public sees. Matched on
+              // the owner's profile id: signed-out visitors cannot read
+              // owner_email.
+              ownerProf?.id
+                ? supabase
+                    .from('breeder_store_pages')
+                    .select('external_links, featured_gecko_ids')
+                    .eq('owner_profile_id', ownerProf.id)
+                    .eq('is_published', true)
+                    .maybeSingle()
+                : Promise.resolve({ data: null }),
             ]);
             if (cancelled) return;
             setForSaleGeckos(geckos || []);
@@ -277,6 +284,17 @@ export default function Breeder() {
 
   const breederUrl = `https://geckinspect.com/Breeder/${slug}`;
   const isCurated = mode === 'curated' && profile;
+  if (isCurated && blocked.isBlocked({ created_by: profile.created_by })) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-8">
+        <div className="text-center max-w-md space-y-3">
+          <h1 className="text-2xl font-bold">You blocked this breeder</h1>
+          <p className="text-slate-400 text-sm">Their page, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
+          <Button asChild><Link to={createPageUrl('Settings')}>Open Settings</Link></Button>
+        </div>
+      </div>
+    );
+  }
   // Accent theme chosen by the breeder; emerald when unset, so the
   // inferred mode and pages without settings look unchanged.
   const theme = themeFor(storeSettings.theme);
@@ -480,6 +498,12 @@ export default function Breeder() {
                   Contact breeder
                 </button>
                 )}
+                <ReportContent
+                  targetType="breeder_page"
+                  targetId={profile.id}
+                  authorEmail={profile.created_by}
+                  excerpt={[profile.display_name, profile.bio].filter(Boolean).join('\n')}
+                />
               </div>
 
               {profile.bio && (

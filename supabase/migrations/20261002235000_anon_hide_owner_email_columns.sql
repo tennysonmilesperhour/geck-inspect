@@ -11,6 +11,7 @@
 --   geckos.created_by          (the owner's email)
 --   gecko_images.created_by    (the uploader's email)
 --   gecko_images.user_id       (some rows hold an email here too)
+--   gecko_images.training_meta (the reviewer's email sits inside it)
 --   gecko_images.image_embedding (large, and no public page uses it)
 -- Signed-in members keep full access; their row rules are unchanged.
 -- Columns added to these tables later are not readable when signed out
@@ -37,12 +38,12 @@ grant select (
 ) on public.geckos to anon;
 
 revoke select on public.gecko_images from anon;
-revoke select (created_by, user_id, image_embedding) on public.gecko_images from anon;
+revoke select (created_by, user_id, training_meta, image_embedding) on public.gecko_images from anon;
 grant select (
   id, image_url, perceptual_hash, primary_morph, secondary_morph,
   secondary_traits, base_color, pattern_intensity, white_amount,
   confidence_score, notes, verified, age_estimate, fired_state,
-  annotations, created_date, updated_date, training_meta,
+  annotations, created_date, updated_date,
   embedding_model, embedding_date, embedding_status,
   embedding_attempts, embedding_error, owner_profile_id
 ) on public.gecko_images to anon;

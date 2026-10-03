@@ -17,7 +17,7 @@ import {
   guestMockList,
   isMockedEntity,
 } from '@/lib/guestMockData';
-import { PUBLIC_READ_COLUMNS } from '@/lib/publicColumns';
+import { PUBLIC_READ_COLUMNS, EVERYONE_READ_COLUMNS } from '@/lib/publicColumns';
 
 /**
  * If a Supabase query fails with a JWT / auth error, try refreshing the
@@ -370,9 +370,11 @@ function applyFilter(query, filterObj) {
 /**
  * The select list for a read. Signed-out visitors get an explicit column
  * list on tables whose rows carry the owner's email (see publicColumns.js);
- * everyone else gets every column.
+ * everyone else gets every column, except on the few tables where members
+ * lose the email columns too.
  */
 export async function readColumns(entityName) {
+  if (EVERYONE_READ_COLUMNS[entityName]) return EVERYONE_READ_COLUMNS[entityName];
   const publicColumns = PUBLIC_READ_COLUMNS[entityName];
   if (!publicColumns) return '*';
   const { data } = await supabase.auth.getSession();

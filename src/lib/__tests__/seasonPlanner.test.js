@@ -21,13 +21,13 @@ describe('Start this pairing', () => {
       breeding_id: 'TT-01xTT-02',
       pairing_date: '2027-03-04',
       status: 'Planned',
-      breeding_season: '2027 Spring',
+      breeding_season: '2027',
       notes: 'Goals: Lilly White x Cappuccino\n\nWeigh her first',
     });
   });
   it('falls back to the current season and placeholder codes', () => {
     const row = buildPlanFromFuturePlan({}, { id: 's' }, { id: 'd' }, new Date(2026, 9, 3));
-    expect(row.breeding_season).toBe('2026 Fall');
+    expect(row.breeding_season).toBe('2026');
     expect(row.breeding_id).toBe('UNKxUNK');
     expect(row.notes).toBe('');
   });

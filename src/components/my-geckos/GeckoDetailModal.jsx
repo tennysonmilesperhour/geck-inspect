@@ -8,12 +8,15 @@ import { photoDataUrl, qrDataUrl, downloadPdf } from '@/lib/buyerPacketAssets';
 import { readinessFor } from '@/lib/breedingReadiness';
 import { ReadinessNote } from '@/components/breeding/BreedingReadiness';
 import { format } from 'date-fns';
-import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink, FileText } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink, FileText, Maximize2 } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import SmartImage from '../shared/SmartImage';
 import EventTracker from './EventTracker';
 import BreedingHistory from './BreedingHistory';
 import VetRecordsSection from '@/components/gecko/VetRecordsSection';
+import HusbandryHistory from '@/components/gecko/HusbandryHistory';
+import MarketValueCard from '@/components/gecko/MarketValueCard';
+import HealthScreenCard from '@/components/health/HealthScreenCard';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import WeightChart from '@/components/shared/WeightChart';
@@ -78,6 +81,10 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const [eventHistory, setEventHistory] = useState([]);
   const [showAddWeight, setShowAddWeight] = useState(false);
   const [newWeight, setNewWeight] = useState('');
+  const [newWeightDate, setNewWeightDate] = useState(todayLocalISO);
+  // Bumped after a feeding or shed is logged from "+ Event" so the
+  // feeding and shed history reloads.
+  const [husbandryKey, setHusbandryKey] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   const [isMakingPacket, setIsMakingPacket] = useState(false);
@@ -161,23 +168,31 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
   const handleAddWeight = async () => {
     if (!newWeight || isNaN(parseFloat(newWeight))) return;
+    const today = todayLocalISO();
+    const recordDate = newWeightDate && newWeightDate <= today ? newWeightDate : today;
 
     try {
       const weightValue = parseFloat(newWeight);
       const newRecord = {
         gecko_id: gecko.id,
         weight_grams: weightValue,
-        record_date: todayLocalISO(),
+        record_date: recordDate,
       };
 
       const createdRecord = await WeightRecord.create(newRecord);
-      // Mirror today's weigh-in onto the gecko row, like every other weigh
-      // path does. Without this the card kept showing an older weight while
-      // the chart showed the new one (18 geckos had drifted by Sep 2026).
-      await Gecko.update(gecko.id, { weight_grams: weightValue });
+      // Mirror the newest weigh-in onto the gecko row, like every other
+      // weigh path does. Without this the card kept showing an older weight
+      // while the chart showed the new one (18 geckos had drifted by Sep
+      // 2026). A backdated weigh-in older than the latest one leaves the
+      // current weight alone.
+      const isNewest = weightRecords.every((r) => !r.record_date || r.record_date <= recordDate);
+      if (isNewest) await Gecko.update(gecko.id, { weight_grams: weightValue });
 
-      setWeightRecords([createdRecord, ...weightRecords]);
+      setWeightRecords(
+        [createdRecord, ...weightRecords].sort((a, b) => String(b.record_date).localeCompare(String(a.record_date))),
+      );
       setNewWeight('');
+      setNewWeightDate(todayLocalISO());
       setShowAddWeight(false);
       
       // Notify parent component to refresh gecko data
@@ -341,6 +356,10 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const dam = allGeckos.find(g => g.id === gecko.dam_id);
 
   const readiness = readinessFor(gecko, weightRecords);
+  const isOwner = Boolean(currentUser?.email) && gecko?.created_by === currentUser.email;
+  const latestWeightValue = weightRecords.length > 0
+    ? [...weightRecords].sort((a, b) => String(b.record_date).localeCompare(String(a.record_date)))[0].weight_grams
+    : (gecko?.weight_grams ?? null);
 
 
   if (!gecko) return null;
@@ -392,8 +411,24 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               entityId={gecko.id}
               entityType="gecko"
               EventEntity={GeckoEvent}
+              gecko={gecko}
               onEventAdded={loadEventHistory}
+              onHusbandryLogged={() => setHusbandryKey((k) => k + 1)}
             />
+            {/* The full page holds the same record plus lineage links,
+                hidden genetics and lookalikes. */}
+            {gecko.id && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { onClose(); navigate(`${createPageUrl('GeckoDetail')}?id=${gecko.id}`); }}
+                className="border-slate-600 hover:bg-slate-800"
+                title="Open the full page for this gecko"
+              >
+                <Maximize2 className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Full page</span>
+              </Button>
+            )}
             {canEdit ? (
               <Button
                 variant="outline"
@@ -764,17 +799,39 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   </Button>
                 ) : (
                   <div className="space-y-3 mt-4">
-                    <Input
-                      type="number"
-                      placeholder="Weight in grams"
-                      value={newWeight}
-                      onChange={(e) => setNewWeight(e.target.value)}
-                      className="bg-slate-800 text-sm w-full"
-                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="new-weight-grams" className="text-xs text-slate-400">Weight (g)</Label>
+                        <Input
+                          id="new-weight-grams"
+                          type="number"
+                          inputMode="decimal"
+                          placeholder="34"
+                          value={newWeight}
+                          onChange={(e) => setNewWeight(e.target.value)}
+                          className="bg-slate-800 text-sm w-full"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="new-weight-date" className="text-xs text-slate-400">Weighed on</Label>
+                        <Input
+                          id="new-weight-date"
+                          type="date"
+                          max={todayLocalISO()}
+                          value={newWeightDate}
+                          onChange={(e) => setNewWeightDate(e.target.value)}
+                          className="bg-slate-800 text-sm w-full"
+                        />
+                      </div>
+                    </div>
                     <Button onClick={handleAddWeight} className="w-full">Save</Button>
                   </div>
                 )}
               </div>
+
+              {/* Feeding and shed history plus the shed forecast, from the
+                  same log Field Mode, Batch Husbandry and Mark fed write. */}
+              <HusbandryHistory gecko={gecko} weights={weightRecords} refreshKey={husbandryKey} legacyEvents={eventHistory} />
 
               {/* Breeding History */}
               <div>
@@ -980,8 +1037,15 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               )}
             </div>
 
-            {/* Right column: Certificates / Passport / Lineage / Archive / Parentage */}
+            {/* Right column: Value / Health / Certificates / Passport / Lineage / Archive / Parentage */}
             <div className="space-y-3">
+              {/* Value estimate, owner only (see MarketValueCard). */}
+              {isOwner && !isGuestMode() && (
+                <MarketValueCard gecko={{ ...gecko, weight_grams: latestWeightValue }} />
+              )}
+              {/* AI health check; renders nothing without photos. */}
+              {canEdit && !isGuestMode() && <HealthScreenCard gecko={gecko} user={currentUser} />}
+
               <Button
                 onClick={() => handleGenerateCertificate('ownership')}
                 disabled={isGeneratingCert}

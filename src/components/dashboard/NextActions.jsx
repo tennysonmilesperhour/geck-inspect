@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Scale, EggIcon, Calendar, Target, ChevronRight, CheckCircle2, Sparkles, Utensils, Loader2 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
+import { markGroupFed } from '@/lib/husbandryLog';
 import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
 import MarketTodayStrip from '@/components/dashboard/MarketTodayStrip';
 
@@ -185,8 +186,12 @@ export default function NextActions({ currentUserEmail }) {
         setMarkingId(action.id);
         try {
             if (target.kind === 'group') {
-                await FeedingGroup.update(target.id, { last_fed_date: today });
-                setData((d) => ({ ...d, feedingGroups: d.feedingGroups.map((g) => (g.id === target.id ? { ...g, last_fed_date: today } : g)) }));
+                // A feeding row for every gecko in the group, so each gecko's
+                // record and passport show it, then the group schedule.
+                const group = data.feedingGroups.find((g) => g.id === target.id) || { id: target.id };
+                const geckos = data.geckos?.length ? data.geckos : undefined;
+                const { lastFed } = await markGroupFed({ group, geckos, date: today });
+                setData((d) => ({ ...d, feedingGroups: d.feedingGroups.map((g) => (g.id === target.id ? { ...g, last_fed_date: lastFed } : g)) }));
             } else {
                 await OtherReptile.update(target.id, { last_fed_date: today });
                 setData((d) => ({ ...d, reptiles: d.reptiles.map((r) => (r.id === target.id ? { ...r, last_fed_date: today } : r)) }));

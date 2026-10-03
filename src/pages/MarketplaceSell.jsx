@@ -45,6 +45,7 @@ import {
 import { Link } from 'react-router-dom';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { createPageUrl } from '@/utils';
+import { UNLISTED_STATUSES, statusAfterUnlist, unlistPatch } from '@/lib/unlist';
 import { formatDistanceToNowStrict } from 'date-fns';
 
 /**
@@ -460,20 +461,37 @@ export default function MarketplaceSellPage() {
     setTogglingId(null);
   };
 
-  const handleUnlist = async (gecko) => {
-    if (!confirm(`Remove "${gecko.name}" from the marketplace? You can re-list any time.`)) {
+  // Unlist gives the gecko back the status it had before it was listed
+  // (Holdback, Proven and so on). When that is not known, the dialog asks.
+  const [unlistTarget, setUnlistTarget] = useState(null);
+  const [unlistStatus, setUnlistStatus] = useState('');
+  const [isUnlisting, setIsUnlisting] = useState(false);
+
+  const handleUnlist = (gecko) => {
+    setUnlistStatus(statusAfterUnlist(gecko) || '');
+    setUnlistTarget(gecko);
+  };
+
+  const confirmUnlist = async () => {
+    const gecko = unlistTarget;
+    if (!gecko || isUnlisting) return;
+    let patch;
+    try {
+      patch = unlistPatch(unlistStatus);
+    } catch (err) {
+      toast({ title: err.message });
       return;
     }
+    setIsUnlisting(true);
     try {
-      await Gecko.update(gecko.id, { status: 'Pet', is_public: false });
-      setAllGeckos((prev) =>
-        prev.map((g) =>
-          g.id === gecko.id ? { ...g, status: 'Pet', is_public: false } : g
-        )
-      );
-      toast({ title: 'Removed from marketplace' });
+      await Gecko.update(gecko.id, patch);
+      setAllGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, ...patch } : g)));
+      setUnlistTarget(null);
+      toast({ title: 'Removed from marketplace', description: `${gecko.name} is back in your collection as ${patch.status}.` });
     } catch (err) {
       toast({ title: 'Could not unlist', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsUnlisting(false);
     }
   };
 
@@ -521,7 +539,7 @@ export default function MarketplaceSellPage() {
       await Gecko.update(gecko.id, { status: 'For Sale', is_public: visible });
       setAllGeckos((prev) =>
         prev.map((g) =>
-          g.id === gecko.id ? { ...g, status: 'For Sale', is_public: visible } : g
+          g.id === gecko.id ? { ...g, status: 'For Sale', is_public: visible, status_before_listing: g.status } : g
         )
       );
       toast({
@@ -561,7 +579,9 @@ export default function MarketplaceSellPage() {
       );
       setAllGeckos((prev) =>
         prev.map((g) =>
-          ids.includes(g.id) ? { ...g, status: 'For Sale', is_public: visible } : g
+          ids.includes(g.id)
+            ? { ...g, status: 'For Sale', is_public: visible, status_before_listing: g.status === 'For Sale' ? g.status_before_listing : g.status }
+            : g
         )
       );
       toast({
@@ -986,6 +1006,48 @@ export default function MarketplaceSellPage() {
                 <Save className="w-4 h-4 mr-2" />
               )}
               Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unlist */}
+      <Dialog open={!!unlistTarget} onOpenChange={(open) => !open && setUnlistTarget(null)}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remove {unlistTarget?.name} from the marketplace</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {statusAfterUnlist(unlistTarget)
+                ? `It goes back to your collection as ${statusAfterUnlist(unlistTarget)}, the status it had before you listed it. You can re-list any time.`
+                : 'Choose the status it goes back to in your collection. You can re-list any time.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="unlist-status" className="text-slate-300">Status</Label>
+            <Select value={unlistStatus} onValueChange={setUnlistStatus}>
+              <SelectTrigger id="unlist-status" className="bg-slate-800 border-slate-700">
+                <SelectValue placeholder="Choose a status" />
+              </SelectTrigger>
+              <SelectContent>
+                {UNLISTED_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setUnlistTarget(null)}
+              className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmUnlist}
+              disabled={isUnlisting || !unlistStatus}
+              className="bg-rose-600 hover:bg-rose-500 text-white"
+            >
+              {isUnlisting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Remove listing
             </Button>
           </DialogFooter>
         </DialogContent>

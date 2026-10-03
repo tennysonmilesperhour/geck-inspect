@@ -21,6 +21,7 @@ import { useToast } from '@/components/ui/use-toast';
 export default function WelcomeShelf({ currentUser }) {
     const [keepers, setKeepers] = useState(null);
     const [followByEmail, setFollowByEmail] = useState({});
+    const [emailById, setEmailById] = useState({});
     const [busyEmail, setBusyEmail] = useState({});
     const { toast } = useToast();
 
@@ -33,14 +34,23 @@ export default function WelcomeShelf({ currentUser }) {
         return () => { cancelled = true; };
     }, []);
 
+    // welcome_shelf() never returns email addresses. Follows are still
+    // stored by email, so a signed-in member's browser looks up the
+    // address of each keeper on the shelf by profile id.
     useEffect(() => {
         if (!currentUser?.email || !keepers || keepers.length === 0) return;
         let cancelled = false;
         (async () => {
-            const myFollows = await UserFollow
-                .filter({ follower_email: currentUser.email })
-                .catch(() => []);
+            const ids = keepers.map((k) => k.id).filter(Boolean);
+            const [myFollows, { data: rows }] = await Promise.all([
+                UserFollow.filter({ follower_email: currentUser.email }).catch(() => []),
+                supabase.rpc('read_profiles').select('id, email').in('id', ids)
+                    .then((r) => r, () => ({ data: [] })),
+            ]);
             if (cancelled) return;
+            const emails = {};
+            for (const r of rows || []) if (r.email) emails[r.id] = r.email;
+            setEmailById(emails);
             const idx = {};
             for (const f of myFollows || []) idx[f.following_email] = f;
             setFollowByEmail(idx);
@@ -56,26 +66,27 @@ export default function WelcomeShelf({ currentUser }) {
             });
             return;
         }
-        if (busyEmail[keeper.email]) return;
-        setBusyEmail((b) => ({ ...b, [keeper.email]: true }));
+        const keeperEmail = emailById[keeper.id];
+        if (!keeperEmail || busyEmail[keeperEmail]) return;
+        setBusyEmail((b) => ({ ...b, [keeperEmail]: true }));
         try {
-            const existing = followByEmail[keeper.email];
+            const existing = followByEmail[keeperEmail];
             if (existing) {
                 await UserFollow.delete(existing.id);
                 setFollowByEmail((f) => {
                     const next = { ...f };
-                    delete next[keeper.email];
+                    delete next[keeperEmail];
                     return next;
                 });
             } else {
                 const newFollow = await UserFollow.create({
                     follower_email: currentUser.email,
-                    following_email: keeper.email,
+                    following_email: keeperEmail,
                 });
-                setFollowByEmail((f) => ({ ...f, [keeper.email]: newFollow }));
+                setFollowByEmail((f) => ({ ...f, [keeperEmail]: newFollow }));
                 try {
                     await notifyNewFollower(
-                        keeper.email,
+                        keeperEmail,
                         currentUser.email,
                         currentUser.full_name,
                     );
@@ -91,7 +102,7 @@ export default function WelcomeShelf({ currentUser }) {
                 variant: 'destructive',
             });
         } finally {
-            setBusyEmail((b) => ({ ...b, [keeper.email]: false }));
+            setBusyEmail((b) => ({ ...b, [keeperEmail]: false }));
         }
     };
 
@@ -111,9 +122,11 @@ export default function WelcomeShelf({ currentUser }) {
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
                     {keepers.map((k) => {
-                        const isMe = currentUser?.email && k.email === currentUser.email;
-                        const isFollowing = !!followByEmail[k.email];
-                        const isBusy = !!busyEmail[k.email];
+                        const kEmail = emailById[k.id];
+                        const isMe = (Boolean(currentUser?.id) && k.id === String(currentUser.id))
+                            || (Boolean(kEmail) && kEmail === currentUser?.email);
+                        const isFollowing = Boolean(kEmail && followByEmail[kEmail]);
+                        const isBusy = Boolean(kEmail && busyEmail[kEmail]);
                         return (
                             <div
                                 key={k.id}

@@ -1,7 +1,15 @@
 /**
  * Breeding-season helpers
  *
- * A "season" is a calendar quarter we use for planning future breeding
+ * Two kinds of season live here:
+ *
+ *   - The breeding season of plans, eggs, the Hatchery and a female's
+ *     breeding history is the CALENDAR YEAR (decision D17). See the
+ *     "Calendar-year seasons" helpers at the bottom of this file.
+ *   - The quarters below are only for the Season Planner's target
+ *     windows ("pair them next spring").
+ *
+ * A quarter is a calendar quarter we use for planning future breeding
  * pairings. The actual biological breeding season varies by region, so
  * we use a simple meteorological quarter split and let the user pick
  * whichever quarter matches their plan.
@@ -156,15 +164,75 @@ export function compareSeasonLabels(a, b) {
   return order[pa.season] - order[pb.season];
 }
 
+// ---------------------------------------------------------------------------
+// Calendar-year seasons (decision D17, October 2026)
+//
+// For breeding plans, eggs, the Hatchery and a female's breeding history,
+// a season is the calendar year: "2026" runs Jan 1 to Dec 31, 2026. New
+// plans store the plain year in breeding_season. Older plans stored
+// "<year> <Season>" labels; every helper below still reads a year from
+// them, so old and new plans group together.
+// ---------------------------------------------------------------------------
+
+function yearOfDateLike(value) {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    // "YYYY-MM-DD" or an ISO timestamp: read the year as written, so a
+    // date near New Year never shifts across time zones.
+    const m = value.match(/^(\d{4})-\d{2}-\d{2}/);
+    if (m) return parseInt(m[1], 10);
+  }
+  const d = value instanceof Date ? value : new Date(value);
+  return isNaN(d.getTime()) ? null : d.getFullYear();
+}
+
+/** The current breeding season: this calendar year, e.g. 2026. */
+export function currentSeasonYear(now = new Date()) {
+  return now.getFullYear();
+}
+
+/** The breeding season (calendar year) a date belongs to, or null. */
+export function seasonYearOf(date) {
+  return yearOfDateLike(date);
+}
+
+/**
+ * The breeding season (calendar year) of a plan:
+ *   1. a stored plain year ("2026");
+ *   2. the pairing date's year;
+ *   3. the year at the start of an older "<year> <Season>" label;
+ *   4. the year the plan was created.
+ */
+export function planSeasonYear(plan) {
+  if (!plan) return null;
+  const stored = String(plan.breeding_season || '').trim();
+  const plain = stored.match(/^(\d{4})$/);
+  if (plain) return parseInt(plain[1], 10);
+  const fromPairing = yearOfDateLike(plan.pairing_date);
+  if (fromPairing) return fromPairing;
+  const leading = stored.match(/^(\d{4})\b/);
+  if (leading) return parseInt(leading[1], 10);
+  return yearOfDateLike(plan.created_date);
+}
+
+/**
+ * The breeding season (calendar year) an egg counts toward: the year it
+ * hatched when it hatched, otherwise the year it was laid.
+ */
+export function eggSeasonYear(egg) {
+  if (!egg) return null;
+  if (egg.status === 'Hatched' && egg.hatch_date_actual) return yearOfDateLike(egg.hatch_date_actual);
+  return yearOfDateLike(egg.lay_date);
+}
+
 /**
  * The BreedingPlan row "Start this pairing" creates from a future plan
- * (Season Planner). Pure so it can be tested. The season label keeps the
- * planned year and season ("2027 Spring"), so the plan still groups under
- * its calendar year (decision D17) and its quarter.
+ * (Season Planner). Pure so it can be tested. Per decision D17 the season
+ * is the calendar year, stored as the plain year ("2027") like every new
+ * plan; the planned quarter stays on the future plan.
  */
 export function buildPlanFromFuturePlan(plan, sire, dam, today = new Date()) {
-  const season = SEASON_LABELS[plan?.target_season];
-  const label = season && plan?.target_year ? `${plan.target_year} ${season}` : currentSeasonLabel(today);
+  const year = Number(plan?.target_year) || currentSeasonYear(today);
   const notes = [
     plan?.goals ? `Goals: ${String(plan.goals).trim()}` : '',
     plan?.notes ? String(plan.notes).trim() : '',
@@ -176,7 +244,7 @@ export function buildPlanFromFuturePlan(plan, sire, dam, today = new Date()) {
     breeding_id: `${sire.gecko_id_code || 'UNK'}x${dam.gecko_id_code || 'UNK'}`,
     pairing_date: `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`,
     status: 'Planned',
-    breeding_season: label,
+    breeding_season: String(year),
     notes,
   };
 }

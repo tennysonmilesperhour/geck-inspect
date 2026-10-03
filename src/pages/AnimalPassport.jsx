@@ -15,13 +15,14 @@ import {
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import ShareMenu from '@/components/shared/ShareMenu';
+import ReportContent from '@/components/support/ReportContent';
 import QualityBadge from '@/components/shared/QualityBadge';
 import WeightChart from '@/components/shared/WeightChart';
 import FireStatePair from '@/components/shared/FireStatePair';
 import { hasFireStatePhotos } from '@/lib/fireStatePhotos';
 import OwnershipChain from '@/components/passport/OwnershipChain';
 import { exportProvenanceCertificate } from '@/lib/certificateExport';
-import { geckoSelect } from '@/lib/publicColumns';
+import { geckoSelect, PUBLIC_READ_COLUMNS } from '@/lib/publicColumns';
 
 // The passport is the page buyers see when they scan a tub label or open a
 // shared link. It used its own palette tokens and two display fonts; since
@@ -433,11 +434,13 @@ export default function AnimalPassport() {
         ] = await Promise.allSettled([
           g.sire_id ? supabase.from('geckos').select(columns).eq('id', g.sire_id).maybeSingle() : null,
           g.dam_id ? supabase.from('geckos').select(columns).eq('id', g.dam_id).maybeSingle() : null,
-          supabase.from('ownership_records').select('*').eq('animal_id', g.id).order('acquired_date', { ascending: true }),
-          supabase.from('feeding_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }).limit(30),
+          // Care records: explicit columns for everyone. created_by holds
+          // the owner's email and this page never needs it.
+          supabase.from('ownership_records').select(PUBLIC_READ_COLUMNS.OwnershipRecord).eq('animal_id', g.id).order('acquired_date', { ascending: true }),
+          supabase.from('feeding_records').select(PUBLIC_READ_COLUMNS.FeedingRecord).eq('animal_id', g.id).order('date', { ascending: false }).limit(30),
           supabase.from('weight_records').select(PUBLIC_WEIGHT_COLUMNS).eq('gecko_id', g.id).order('record_date', { ascending: true }),
-          supabase.from('shed_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }).limit(20),
-          supabase.from('vet_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }),
+          supabase.from('shed_records').select(PUBLIC_READ_COLUMNS.ShedRecord).eq('animal_id', g.id).order('date', { ascending: false }).limit(20),
+          supabase.from('vet_records').select(PUBLIC_READ_COLUMNS.VetRecord).eq('animal_id', g.id).order('date', { ascending: false }),
         ]);
 
         if (sireRes?.value?.data) setSire(sireRes.value.data);
@@ -546,6 +549,14 @@ export default function AnimalPassport() {
                 url={url}
                 title={`${gecko.name} on Geck Inspect`}
                 subtitle={[gecko.morphs_traits, gecko.sex].filter(Boolean).join(' · ')}
+              />
+              <ReportContent
+                targetType="gecko"
+                targetId={gecko.id}
+                authorEmail={gecko.created_by}
+                authorProfileId={gecko.owner_profile_id}
+                excerpt={[gecko.name, gecko.morphs_traits, gecko.marketplace_description].filter(Boolean).join('\n')}
+                label="Report"
               />
               {hasProvenance && (
                 <Button

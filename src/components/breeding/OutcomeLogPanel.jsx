@@ -12,6 +12,7 @@ import { PairingOutcomeLog } from '@/entities/all';
 import { downloadSeasonCard } from '@/lib/genetics/clutchCard';
 import { EGGS_PER_CLUTCH } from '@/lib/genetics/clutchMath';
 import { todayLocalISO } from '@/lib/dateUtils';
+import { outcomeLogKeys } from '@/lib/genetics/pairOutcomes';
 
 /**
  * Predicted vs actual: the outcomes flywheel (plan item 3.1, with the
@@ -72,13 +73,7 @@ export default function OutcomeLogPanel({ sire, dam, outcomes }) {
       const created = await PairingOutcomeLog.create({
         sire_id: sire.id,
         dam_id: dam.id,
-        sire_label: (sire.morph_tags || []).join(', '),
-        dam_label: (dam.morph_tags || []).join(', '),
-        pairing_key: pairingKey,
-        tag_key: [
-          [...(sire.morph_tags || [])].sort().join('+').toLowerCase(),
-          [...(dam.morph_tags || [])].sort().join('+').toLowerCase(),
-        ].sort().join(' x '),
+        ...outcomeLogKeys(sire, dam),
         predicted: outcomes.map((o) => ({ label: o.label, probability: o.probability })),
         observed,
         eggs: observed.length,

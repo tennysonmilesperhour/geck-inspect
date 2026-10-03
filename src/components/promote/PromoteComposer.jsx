@@ -17,7 +17,7 @@ import {
   VOICE_PRESETS, POST_TEMPLATES, PLATFORMS, PLATFORM_CHAR_LIMITS,
   HASHTAG_LIBRARY, normalizeHashtag, buildMorphMarketCsvRow,
   composePlatformText, platformDeepLink, platformLabel, voiceLabel,
-  pickPrimaryPlatform,
+  pickPrimaryPlatform, isDirectPlatform, publishErrorMessage,
 } from '@/lib/socialMedia';
 import { supabase } from '@/lib/supabaseClient';
 import { SocialPost, SocialPostVariant, UserBrandVoice, GeckoWaitlist } from '@/entities/all';
@@ -706,7 +706,7 @@ export default function PromoteComposer({
               setPublishing(false);
               return;
             }
-            results.push({ platform: p, ok: false, error: parsed?.error || fnErr.message || 'Publish failed.' });
+            results.push({ platform: p, ok: false, error: publishErrorMessage(parsed?.error, parsed?.detail) });
             continue;
           }
           if (data?.error === 'payment_method_required') {
@@ -715,7 +715,7 @@ export default function PromoteComposer({
             return;
           }
           if (data?.error) {
-            results.push({ platform: p, ok: false, error: data.error });
+            results.push({ platform: p, ok: false, error: publishErrorMessage(data.error, data.detail) });
             continue;
           }
 
@@ -740,7 +740,8 @@ export default function PromoteComposer({
             }
           }
         } catch (e) {
-          results.push({ platform: p, ok: false, error: String(e?.message || e) });
+          console.warn('publish failed', e);
+          results.push({ platform: p, ok: false, error: publishErrorMessage(null, null) });
         }
       }
 
@@ -748,13 +749,20 @@ export default function PromoteComposer({
       const failures = results.filter((r) => !r.ok);
 
       if (successes.length > 0) {
+        const posted = successes.filter((r) => r.status === 'published');
+        const copiedOut = successes.filter((r) => r.status !== 'published');
+        const parts = [];
+        if (posted.length > 0) {
+          parts.push(`Posted to ${posted.map((r) => `${platformLabel(r.platform)}${r.url ? ` (${r.url})` : ''}`).join(', ')}.`);
+        }
+        if (copiedOut.length > 0) {
+          parts.push(`Copied for ${copiedOut.map((r) => platformLabel(r.platform)).join(', ')}. Paste it in to post. Copies are free.`);
+        }
         toast({
           title: failures.length === 0
-            ? `Published to ${successes.length} platform${successes.length === 1 ? '' : 's'}`
-            : `Published ${successes.length}/${results.length}`,
-          description: successes
-            .map((r) => `${platformLabel(r.platform)}${r.url ? `: ${r.url}` : ''}`)
-            .join(' · '),
+            ? (posted.length > 0 ? 'Posted' : 'Copied')
+            : `${successes.length} of ${results.length} done`,
+          description: parts.join(' '),
         });
       }
 
@@ -878,9 +886,12 @@ export default function PromoteComposer({
                       onCheckedChange={() => togglePlatform(p.key)}
                       className="mt-0.5"
                     />
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0" title={p.hint}>
                       <div className="text-sm text-emerald-100 truncate">
                         {p.label}
+                      </div>
+                      <div className="text-[10px] text-emerald-200/50">
+                        {p.mode === 'direct' ? 'Posts for you' : 'Copy and paste'}
                       </div>
                     </div>
                   </label>
@@ -889,6 +900,9 @@ export default function PromoteComposer({
             </div>
             <p className="text-[11px] text-emerald-200/60 mt-1">
               Generation tailors the post for {platformLabel(primaryPlatform)} (the strictest selected). Other platforms reuse the same draft with their own hashtag formatting.
+            </p>
+            <p className="text-[11px] text-emerald-200/60 mt-1">
+              Only Bluesky posts count toward your monthly posts. Copying text for any other platform is free.
             </p>
           </div>
 
@@ -1354,10 +1368,12 @@ export default function PromoteComposer({
                     <>
                       <Send className="w-4 h-4 mr-1.5" />
                       {platforms.length === 1
-                        ? (PLATFORMS.find((p) => p.key === platforms[0])?.mode === 'direct'
+                        ? (isDirectPlatform(platforms[0])
                             ? `Publish to ${platformLabel(platforms[0])}`
                             : 'Copy + open compose')
-                        : `Publish ×${platforms.length}`}
+                        : platforms.some(isDirectPlatform)
+                          ? `Publish ×${platforms.length}`
+                          : `Copy ×${platforms.length}`}
                     </>
                   )}
                 </Button>

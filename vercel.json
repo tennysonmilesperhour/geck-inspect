@@ -286,6 +286,16 @@
       "permanent": true
     },
     {
+      "source": "/BreedingPairs",
+      "destination": "/Breeding",
+      "permanent": true
+    },
+    {
+      "source": "/breedingpairs",
+      "destination": "/Breeding",
+      "permanent": true
+    },
+    {
       "source": "/morph-visualizer",
       "destination": "/MorphGuide",
       "permanent": true

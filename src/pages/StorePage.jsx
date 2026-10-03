@@ -4,11 +4,14 @@ import { supabase } from '@/lib/supabaseClient';
 import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import {
     Mail, Store, ArrowLeft, MessageCircle, ArrowUpRight, X,
 } from 'lucide-react';
 import { linkKindMeta } from '@/lib/storeLinks';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { BREEDER_STORE_PAGE_PUBLIC_COLUMNS, publicDisplayName } from '@/lib/publicColumns';
 
 /**
  * Public breeder storefront. Route: /store/:slug
@@ -294,15 +297,18 @@ export default function StorePage() {
     // rendering the original store body below as a fallback so shared
     // /store/:slug links never break.
     const [redirectSlug, setRedirectSlug] = useState(null);
+    const blocked = useBlockedMembers();
 
     useEffect(() => {
         let cancelled = false;
         (async () => {
             setIsLoading(true);
             try {
+                // Explicit columns: signed-out visitors cannot read
+                // owner_email. The owner is found by owner_profile_id.
                 const { data, error } = await supabase
                     .from('breeder_store_pages')
-                    .select('*')
+                    .select(BREEDER_STORE_PAGE_PUBLIC_COLUMNS.join(','))
                     .eq('slug', slug)
                     .maybeSingle();
                 if (cancelled) return;
@@ -315,21 +321,26 @@ export default function StorePage() {
 
                 // Prefer redirecting to the canonical /Breeder page when the
                 // owner has a breeder profile with a custom slug.
-                const profileSlugRes = await supabase
-                    .from('breeder_profiles')
-                    .select('custom_slug')
-                    .eq('created_by', data.owner_email)
-                    .maybeSingle();
-                if (!cancelled && profileSlugRes.data?.custom_slug) {
-                    setRedirectSlug(profileSlugRes.data.custom_slug);
-                    return;
+                const profilesRes = data.owner_profile_id
+                    ? await supabase
+                        .rpc('read_profiles')
+                        .select('id, full_name, business_name, profile_image_url, email, bio, location, instagram_handle')
+                        .eq('id', data.owner_profile_id)
+                        .maybeSingle()
+                    : { data: null };
+                if (cancelled) return;
+                const ownerEmail = profilesRes.data?.email;
+                if (ownerEmail) {
+                    const profileSlugRes = await supabase
+                        .from('breeder_profiles')
+                        .select('custom_slug')
+                        .eq('created_by', ownerEmail)
+                        .maybeSingle();
+                    if (!cancelled && profileSlugRes.data?.custom_slug) {
+                        setRedirectSlug(profileSlugRes.data.custom_slug);
+                        return;
+                    }
                 }
-
-                const profilesRes = await supabase
-                    .rpc('read_profiles', { p_emails: [data.owner_email] })
-                    .select('id, full_name, profile_image_url, email, bio, location, instagram_handle')
-                    .eq('email', data.owner_email)
-                    .maybeSingle();
                 if (!cancelled && profilesRes.data) setOwner(profilesRes.data);
 
                 const geckoIds = Array.isArray(data.featured_gecko_ids) ? data.featured_gecko_ids : [];
@@ -412,7 +423,19 @@ export default function StorePage() {
         );
     }
 
-    const ownerName = owner?.breeder_name || owner?.full_name || page.owner_email.split('@')[0];
+    if (blocked.isBlocked({ owner_profile_id: page.owner_profile_id })) {
+        return (
+            <div className="min-h-screen bg-stone-950 text-stone-200 flex items-center justify-center p-6">
+                <div className="text-center max-w-md space-y-3">
+                    <h1 className="font-serif text-3xl font-bold text-white">You blocked this breeder</h1>
+                    <p className="text-stone-400 text-sm">Their store, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
+                    <Button onClick={() => navigate(createPageUrl('Settings'))} className="bg-emerald-600 hover:bg-emerald-500">Open Settings</Button>
+                </div>
+            </div>
+        );
+    }
+
+    const ownerName = publicDisplayName(owner, page.title || 'Geck Inspect breeder');
     const externalLinks = Array.isArray(page.external_links) ? page.external_links : [];
     const ContactIcon = page.contact_link?.startsWith('mailto:') ? Mail : MessageCircle;
     const hasHero = Boolean(page.header_image_url);
@@ -753,6 +776,15 @@ export default function StorePage() {
                     </Link>
                     .
                 </p>
+                <div className="mt-3 flex justify-center">
+                    <ReportContent
+                        targetType="store_page"
+                        targetId={page.id}
+                        authorProfileId={page.owner_profile_id}
+                        excerpt={[page.title, page.tagline, page.description].filter(Boolean).join('\n')}
+                        label="Report this store"
+                    />
+                </div>
             </footer>
 
             <GeckoLightbox gecko={openGecko} onClose={() => setOpenGecko(null)} />

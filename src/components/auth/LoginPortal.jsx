@@ -11,7 +11,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Mail, Lock } from 'lucide-react';
+import { Loader2, Mail, Lock, User as UserIcon } from 'lucide-react';
+
+// Supabase refuses a password sign-in for an unconfirmed address with
+// code email_not_confirmed (older versions only say so in the message).
+export function isEmailNotConfirmed(error) {
+  if (!error) return false;
+  if (error.code === 'email_not_confirmed') return true;
+  return /email not confirmed/i.test(error.message || '');
+}
 
 function GoogleIcon() {
   return (
@@ -55,6 +63,13 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Asked at sign-up so new members are not shown as "Geck Inspect
+  // member" everywhere until they find Settings (audit step 32). The
+  // profile trigger copies it from the sign-up metadata into full_name.
+  const [displayName, setDisplayName] = useState('');
+  // Set when a password sign-in is refused because the email is not
+  // confirmed yet, so the form can offer to send the link again.
+  const [unconfirmed, setUnconfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
@@ -105,10 +120,19 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     setIsLoading(true);
     try {
       if (isSignUp) {
+        const name = displayName.trim().slice(0, 60);
+        if (!name) {
+          toast({ title: 'Add a display name', description: 'This is the name other keepers see on your posts and geckos.', variant: 'destructive' });
+          setIsLoading(false);
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: authRedirect('/MyGeckos') },
+          options: {
+            emailRedirectTo: authRedirect('/MyGeckos'),
+            data: { full_name: name },
+          },
         });
         if (error) {
           toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
@@ -128,7 +152,10 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
+        if (error && isEmailNotConfirmed(error)) {
+          setUnconfirmed(true);
+        } else if (error) {
+          setUnconfirmed(false);
           toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' });
         } else if (!rememberMe) {
           // Mark session as ephemeral, AuthContext will clear it on tab close
@@ -335,6 +362,44 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                 </>}
                 {/* Email / password form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {unconfirmed && !isSignUp && (
+                    <div role="alert" className="rounded-lg border border-amber-700 bg-amber-950/40 p-3 space-y-2">
+                      <p className="text-sm font-semibold text-amber-100">Confirm your email first</p>
+                      <p className="text-xs text-amber-200/80">
+                        Open the confirmation link we sent to {email || 'your email'}. Can&apos;t find it? Check spam, or send a new one.
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={isLoading || !email}
+                        onClick={handleResendConfirmation}
+                        className="border-amber-600 bg-transparent text-amber-100 hover:bg-amber-900/40"
+                      >
+                        {isLoading ? 'Sending...' : 'Resend confirmation email'}
+                      </Button>
+                    </div>
+                  )}
+                  {isSignUp && (
+                    <div className="space-y-1">
+                      <Label htmlFor="display-name" className="text-slate-300 text-sm">Display name</Label>
+                      <div className="relative">
+                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          id="display-name"
+                          type="text"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          placeholder="Your name or breeding name"
+                          className="pl-10 bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-emerald-500"
+                          required
+                          maxLength={60}
+                          autoComplete="nickname"
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500">Shown on your posts and geckos. You can change it later.</p>
+                    </div>
+                  )}
                   <div className="space-y-1">
                     <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
                     <div className="relative">

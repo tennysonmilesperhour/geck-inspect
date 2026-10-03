@@ -16,3 +16,17 @@ export const queryClientInstance = new QueryClient({
 		},
 	},
 });
+
+// Any page that adds, removes or changes geckos dispatches a window
+// 'geckos_changed' event. The Dashboard caches its counts, so without this
+// it kept showing "Add your first gecko" for up to two minutes after the
+// first gecko was saved (audit step 31). Mark those caches stale here, once
+// for the whole app, so the next Dashboard visit refetches.
+export function invalidateCollectionCaches(client = queryClientInstance) {
+	client.invalidateQueries({ queryKey: ['dashboard', 'personal'] });
+	client.invalidateQueries({ queryKey: ['dashboard', 'hatchery'] });
+}
+
+if (typeof window !== 'undefined') {
+	window.addEventListener('geckos_changed', () => invalidateCollectionCaches());
+}

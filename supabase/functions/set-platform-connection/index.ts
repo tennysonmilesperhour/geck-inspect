@@ -22,6 +22,7 @@
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { normalizeBlueskyHandle } from "../_shared/promote.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -110,6 +111,28 @@ serve(async (req) => {
   if (!ALLOWED_PLATFORMS.has(body.platform)) return json({ error: "unknown_platform" }, 400);
   if (!body.account_handle?.trim()) return json({ error: "account_handle_required" }, 400);
   if (!body.access_token?.trim()) return json({ error: "access_token_required" }, 400);
+
+  // Bluesky: check the handle and app password with Bluesky before saving,
+  // so a typo shows up now instead of as a failed post later. The session
+  // tokens Bluesky returns are thrown away; only the app password is kept.
+  if (body.platform === "bluesky") {
+    body.account_handle = normalizeBlueskyHandle(body.account_handle);
+    try {
+      const res = await fetch("https://bsky.social/xrpc/com.atproto.server.createSession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: body.account_handle, password: body.access_token.trim() }),
+      });
+      if (res.status === 400 || res.status === 401) {
+        return json({ error: "bluesky_auth_failed" }, 400);
+      }
+      if (!res.ok) return json({ error: "bluesky_unreachable" }, 502);
+      const session = await res.json() as { handle?: string };
+      if (session.handle) body.account_handle = session.handle.toLowerCase();
+    } catch {
+      return json({ error: "bluesky_unreachable" }, 502);
+    }
+  }
 
   let access_token_ciphertext: string;
   let access_token_iv: string;

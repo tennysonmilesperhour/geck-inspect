@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/entities/all', () => ({
   Egg: {}, BreedingPlan: {}, WeightRecord: {}, FutureBreedingPlan: {}, FeedingGroup: {}, OtherReptile: {},
+  FeedingRecord: {}, ShedRecord: {}, Gecko: {},
 }));
 // The card component pulls in UI primitives that expect a browser; only
 // the pure buildActions logic is under test here.

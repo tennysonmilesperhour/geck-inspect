@@ -1,13 +1,34 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import path from 'path'
+import { execSync } from 'child_process'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const srcDir = path.resolve(__dirname, 'src')
 
+// The deploy version shown on Admin > Health. Vercel sets these during
+// its build; locally we ask git, and fall back to "dev".
+function gitCommit() {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA
+  try {
+    return execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+  } catch {
+    return 'dev'
+  }
+}
+const BUILD_INFO = {
+  commit: gitCommit(),
+  branch: process.env.VERCEL_GIT_COMMIT_REF || null,
+  env: process.env.VERCEL_ENV || null,
+  builtAt: new Date().toISOString(),
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __BUILD_INFO__: JSON.stringify(BUILD_INFO),
+  },
   plugins: [
     react(),
   ],

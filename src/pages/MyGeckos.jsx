@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
 import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
@@ -62,6 +63,12 @@ export default function MyGeckosPage() {
     // Guards the one-time consumption of an incoming AI Morph ID draft.
     const morphDraftConsumedRef = React.useRef(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    // The first-run question waits while the full gecko form is open.
+    useEffect(() => {
+        if (!isFormOpen) return undefined;
+        holdOnboarding('gecko_form');
+        return () => releaseOnboarding('gecko_form');
+    }, [isFormOpen]);
     // Photo-first quick add, used for a keeper's first gecko (VIP audit P1.2).
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -365,6 +372,27 @@ export default function MyGeckosPage() {
         window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
 
         openAddFlow();
+    }, [isLoading, user, geckos, location.search, location.pathname]);
+
+    // ?gecko=<id> (from /GeckoDetail's "Open record in My Geckos") opens
+    // that gecko's record window once the collection has loaded, then
+    // strips the param so a refresh doesn't reopen it.
+    const geckoParamConsumedRef = React.useRef(false);
+    useEffect(() => {
+        if (isLoading || !user || geckoParamConsumedRef.current) return;
+        const params = new URLSearchParams(location.search);
+        const wanted = params.get('gecko');
+        if (!wanted) return;
+        geckoParamConsumedRef.current = true;
+        params.delete('gecko');
+        const rest = params.toString();
+        window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
+        const match = geckos.find((g) => g.id === wanted);
+        if (!match) return;
+        if (match.archived) setShowArchived(true);
+        setSelectedGecko(match);
+        setIsFormOpen(false);
+        setIsDetailModalOpen(true);
     }, [isLoading, user, geckos, location.search, location.pathname]);
 
     // One entry point for "add a gecko": respects the plan limit, and gives
@@ -1068,6 +1096,8 @@ export default function MyGeckosPage() {
                     <QuickAddGecko
                         open={isQuickAddOpen}
                         user={user}
+                        existingGeckos={geckos}
+                        idSettings={idSettings}
                         slotsLeftAtOpen={geckoLimitStatus(user, geckos).slotsLeft}
                         onLimitReached={() => {
                             setIsQuickAddOpen(false);

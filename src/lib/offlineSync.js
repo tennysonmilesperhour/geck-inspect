@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import * as entities from '@/entities/all';
 import { queryClientInstance } from '@/lib/query-client';
+import { logFeedings, logShed } from '@/lib/husbandryLog';
 import {
   enqueue,
   flushQueue,
@@ -18,17 +19,63 @@ import {
 // damaged queue entry can never call an arbitrary entity method.
 const ALLOWED_ENTITIES = new Set(['FeedingRecord', 'ShedRecord', 'WeightRecord', 'GeckoEvent', 'Gecko']);
 
+// A whole Field Mode log kept offline. It replays through the same shared
+// log (src/lib/husbandryLog.js) as an online log, so a feeding made with no
+// signal still writes the per-gecko record on its own (possibly backdated)
+// day and moves the feeding group schedule when the gecko ate (D21; a group
+// is never moved back in time).
+export const FIELD_LOG = 'FieldLog';
+
+export async function executeFieldLog(d) {
+  if (!d?.geckoId) throw new Error('Offline log has no gecko');
+  if (d.kind === 'fed') {
+    return logFeedings({
+      entries: [{ gecko: { id: d.geckoId, feeding_group_id: d.feedingGroupId || null }, accepted: d.accepted !== false }],
+      date: d.date,
+    });
+  }
+  if (d.kind === 'shed') {
+    return logShed({ gecko: { id: d.geckoId }, date: d.date, quality: d.quality || 'unknown' });
+  }
+  if (d.kind === 'weight') {
+    const record = await entities.WeightRecord.create({
+      gecko_id: d.geckoId,
+      weight_grams: d.grams,
+      record_date: d.date,
+    });
+    if (d.mirror) await entities.Gecko.update(d.geckoId, { weight_grams: d.grams });
+    return record;
+  }
+  if (d.kind === 'note') {
+    return entities.GeckoEvent.create({
+      gecko_id: d.geckoId,
+      event_type: 'custom',
+      custom_event_name: 'Field note',
+      event_date: d.eventDate,
+      notes: d.notes,
+    });
+  }
+  throw new Error(`Unsupported offline log ${d.kind}`);
+}
+
 export async function executeQueuedWrite(item) {
+  if (item.entity === FIELD_LOG) return executeFieldLog(item.data);
   if (!ALLOWED_ENTITIES.has(item.entity)) throw new Error(`Unsupported entity ${item.entity}`);
   const client = entities[item.entity];
   if (item.op === 'create') return client.create(item.data);
-  if (item.op === 'update') {
-    // Gecko.update for a weight should also refresh the shown weight; the
-    // record itself is all the queue needs to send.
-    return client.update(item.recordId, item.data);
-  }
+  if (item.op === 'update') return client.update(item.recordId, item.data);
   if (item.op === 'delete') return client.delete(item.recordId);
   throw new Error(`Unsupported operation ${item.op}`);
+}
+
+/** Keep a whole Field Mode log for later. Returns the queue item. */
+export function queueFieldLog(data) {
+  return enqueue({ entity: FIELD_LOG, op: 'create', data });
+}
+
+/** True when the phone says it has no connection. */
+export function isDeviceOffline() {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
 }
 
 /**

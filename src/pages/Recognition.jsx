@@ -359,7 +359,9 @@ export default function Recognition() {
                     </Button>
                   </div>
                   <p className="text-xs text-slate-500">
-                    One credit is charged only when an analysis succeeds. A failed analyzer call is refunded automatically.
+                    {isFreeTier
+                      ? 'Your free try is used only when we can give you an answer. If the photos are not clear enough, you keep it and can try again with better photos.'
+                      : 'One credit is charged only when an analysis runs. A failed analyzer call is refunded automatically.'}
                   </p>
                 </div>
               </div>
@@ -428,7 +430,12 @@ export default function Recognition() {
           );
         })()}
 
-        {meta && !meta.is_admin && isFreeTier && (
+        {meta && !meta.is_admin && isFreeTier && meta.credit_refunded && (
+          <p className="text-xs text-slate-500 text-center">
+            We need clearer photos for this one, so your free identification was not used. Retake the top and side views and try again.
+          </p>
+        )}
+        {meta && !meta.is_admin && isFreeTier && !meta.credit_refunded && (
           <p className="text-xs text-slate-500 text-center">
             That was your free identification. Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
           </p>

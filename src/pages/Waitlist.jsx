@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, Check, Sparkles } from 'lucide-react';
+import { Loader2, Check, Sparkles, Mail } from 'lucide-react';
+import { joinWaitlist, confirmWaitlist, confirmTokenFromSearch } from '@/lib/waitlistSignup';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 
 // Public waitlist signup page.
 //
@@ -17,11 +20,19 @@ import { Loader2, Check, Sparkles } from 'lucide-react';
 // odds (saved when the breeder created it), lets the buyer say which one
 // they hope for, and says what deposit the breeder asks for and how to pay
 // it. Buyers pay the breeder directly. Signups go through the
-// join_waitlist() database function, which checks the list is open,
-// stops duplicate emails, tells the breeder and returns the buyer's place
-// in line.
+// waitlist-signup edge function: it checks the list is open, stops
+// duplicate emails and emails a confirmation link (so nobody can put
+// someone else's address on a list). Opening the link (?confirm=) tells
+// the breeder and emails the buyer their place in line and the deposit
+// terms they agreed to.
 export default function Waitlist() {
   const { slug } = useParams();
+  const location = useLocation();
+  const confirmToken = confirmTokenFromSearch(location.search);
+  // idle | confirming | confirmed | failed
+  const [confirmState, setConfirmState] = useState(confirmToken ? 'confirming' : 'idle');
+  const [confirmed, setConfirmed] = useState(null);
+  const [confirmError, setConfirmError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [waitlist, setWaitlist] = useState(null);
   const [gecko, setGecko] = useState(null);
@@ -33,7 +44,16 @@ export default function Waitlist() {
   const [notes, setNotes] = useState('');
   const [wanted, setWanted] = useState('');
   const [agreed, setAgreed] = useState(false);
-  const [joined, setJoined] = useState(null);
+
+  useEffect(() => {
+    if (!confirmToken) return undefined;
+    let cancelled = false;
+    confirmWaitlist(supabase, confirmToken)
+      .then((data) => { if (!cancelled) { setConfirmed(data); setConfirmState('confirmed'); } })
+      .catch((err) => { if (!cancelled) { setConfirmError(err.message); setConfirmState('failed'); } });
+    return () => { cancelled = true; };
+  }, [confirmToken]);
+  const blocked = useBlockedMembers();
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +77,7 @@ export default function Waitlist() {
         if (w.gecko_id) {
           const { data: g } = await supabase
             .from('geckos')
-            .select('id, name, morphs_traits, image_urls, sex, hatch_date')
+            .select('id, name, morphs_traits, image_urls, sex, hatch_date, owner_profile_id')
             .eq('id', w.gecko_id)
             .maybeSingle();
           if (!cancelled) setGecko(g || null);
@@ -86,16 +106,14 @@ export default function Waitlist() {
     setSubmitting(true);
     setError(null);
     try {
-      const { data, error: rpcErr } = await supabase.rpc('join_waitlist', {
-        p_slug: slug,
-        p_name: name.trim(),
-        p_email: email.trim(),
-        p_wanted: wanted || null,
-        p_notes: notes.trim() || null,
-        p_accept_terms: agreed,
+      await joinWaitlist(supabase, {
+        slug,
+        name,
+        email,
+        wanted,
+        notes,
+        acceptTerms: agreed,
       });
-      if (rpcErr) throw rpcErr;
-      setJoined(data || null);
       setSubmitted(true);
     } catch (err) {
       setError(err?.message || 'Signup failed.');
@@ -118,6 +136,19 @@ export default function Waitlist() {
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold mb-2">Waitlist unavailable</h1>
           <p className="text-emerald-200/70">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // When the waitlist is for a gecko, its owner's profile id says whose it
+  // is; a member who blocked that breeder does not see the list.
+  if (gecko && blocked.isBlocked(gecko)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-emerald-100 p-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold mb-2">You blocked this breeder</h1>
+          <p className="text-emerald-200/70">Their waitlists, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
         </div>
       </div>
     );
@@ -205,24 +236,60 @@ export default function Waitlist() {
           </div>
         )}
 
-        {isClosed ? (
+        {confirmState === 'confirming' ? (
+          <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/40 p-4 flex items-center gap-3 text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" /> Confirming your spot...
+          </div>
+        ) : confirmState === 'confirmed' ? (
+          <div className="rounded-lg border border-emerald-600/50 bg-emerald-800/40 p-4 flex items-start gap-3" data-waitlist-confirmed>
+            <Check className="w-5 h-5 text-emerald-200 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <div className="font-semibold">
+                {confirmed?.position
+                  ? `${confirmed.already_confirmed ? 'Already confirmed' : "You're confirmed"}: number ${confirmed.position} in line`
+                  : "You're confirmed"}
+              </div>
+              <div className="text-sm text-emerald-200/80 mt-1">
+                {confirmed?.already_confirmed
+                  ? 'Your place is saved. We emailed you a copy when you first confirmed.'
+                  : 'We emailed you a copy with your place in line and the terms you agreed to. Keep it as your record.'}
+                {' '}
+                {deposit
+                  ? 'The breeder will be in touch about the deposit, and again when a baby is ready for you.'
+                  : 'The breeder will reach out when this gecko (or a similar one from the project) is ready.'}
+              </div>
+              {confirmed?.terms && (
+                <div className="mt-3 text-sm">
+                  <div className="text-[10px] uppercase tracking-wider text-emerald-200/70 mb-1">
+                    Terms you agreed to{confirmed.terms_accepted_at ? ` on ${new Date(confirmed.terms_accepted_at).toLocaleDateString()}` : ''}
+                  </div>
+                  <p className="text-emerald-100/90 whitespace-pre-wrap">{confirmed.terms}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : confirmState === 'failed' ? (
+          <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-4 text-amber-200 text-sm space-y-2">
+            <p>{confirmError || 'This confirmation link is invalid or has expired.'}</p>
+            {!isClosed && (
+              <Button size="sm" variant="outline" className="border-amber-600 bg-transparent text-amber-100" onClick={() => setConfirmState('idle')}>
+                Sign up again
+              </Button>
+            )}
+          </div>
+        ) : isClosed ? (
           <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-4 text-amber-200 text-sm">
             This waitlist is closed for new signups. If you'd previously
             joined, the breeder will be in touch.
           </div>
         ) : submitted ? (
-          <div className="rounded-lg border border-emerald-600/50 bg-emerald-800/40 p-4 flex items-start gap-3">
-            <Check className="w-5 h-5 text-emerald-200 flex-shrink-0 mt-0.5" />
+          <div className="rounded-lg border border-emerald-600/50 bg-emerald-800/40 p-4 flex items-start gap-3" data-waitlist-check-email>
+            <Mail className="w-5 h-5 text-emerald-200 flex-shrink-0 mt-0.5" />
             <div>
-              <div className="font-semibold">
-                {joined?.position
-                  ? `${joined.already ? 'You were already on the list' : "You're on the list"}: number ${joined.position} in line`
-                  : "You're on the list"}
-              </div>
+              <div className="font-semibold">Check your email to confirm your spot</div>
               <div className="text-sm text-emerald-200/80 mt-1">
-                {deposit
-                  ? 'The breeder will be in touch about the deposit, and again when a baby is ready for you.'
-                  : 'The breeder will reach out when this gecko (or a similar one from the project) is ready.'}
+                We sent a link to {email.trim()}. You join the line when you open it, and we will email you your place and
+                {terms ? ' the terms you agreed to.' : ' the details.'} Nothing arrived? Check spam, or try again in a few minutes.
               </div>
             </div>
           </div>
@@ -295,12 +362,12 @@ export default function Waitlist() {
               className="bg-emerald-600 hover:bg-emerald-500 w-full"
             >
               {submitting
-                ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Joining…</>
+                ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Joining...</>
                 : 'Join the waitlist'}
             </Button>
             <p className="text-[11px] text-emerald-200/60">
-              Your details only reach the breeder who created this waitlist.
-              Geck Inspect doesn't share or sell them.
+              We email you a link to confirm. Your details only reach the
+              breeder who created this waitlist. Geck Inspect doesn't share or sell them.
             </p>
           </form>
         )}
@@ -310,6 +377,17 @@ export default function Waitlist() {
           <a href="/" className="text-emerald-200/90 underline hover:text-emerald-100">
             Geck Inspect
           </a>
+        </div>
+        <div className="mt-2 flex justify-center">
+          <ReportContent
+            targetType="waitlist"
+            targetId={waitlist.id}
+            authorProfileId={gecko?.owner_profile_id}
+            authorAuthId={waitlist.breeder_user_id}
+            excerpt={[waitlist.title, waitlist.description].filter(Boolean).join('\n')}
+            label="Report this waitlist"
+            className="text-emerald-300/70"
+          />
         </div>
       </div>
     </div>

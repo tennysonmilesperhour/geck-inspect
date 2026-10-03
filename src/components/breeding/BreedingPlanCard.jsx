@@ -47,6 +47,7 @@ import { todayLocalISO, parseLocalDate, daysSinceLocal } from '@/lib/dateUtils';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 import GeneticsModal from './GeneticsModal';
 import PlanDetails from './PlanDetails';
+import AddEggsDialog from './AddEggsDialog';
 import { DEFAULT_INCUBATION_PROFILE_ID, getEstimatedHatchDates } from '@/lib/incubationProfiles';
 
 /**
@@ -66,6 +67,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
     const [isEggCheckModalOpen, setIsEggCheckModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isGeneticsOpen, setIsGeneticsOpen] = useState(false);
+    const [isAddEggsOpen, setIsAddEggsOpen] = useState(false);
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
 
     // Derive egg data from hoisted prop, no individual fetches
@@ -330,6 +332,15 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                     >
                                         <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 2 Eggs</span><span className="sm:hidden">+2</span>
                                     </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs sm:text-sm border-slate-600"
+                                        onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
+                                        title="Add eggs with a lay date and grade"
+                                    >
+                                        <CalendarIcon size={14} className="mr-1" /> <span className="hidden sm:inline">Add dated clutch</span><span className="sm:hidden">Dated</span>
+                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -533,6 +544,13 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                 </DialogContent>
             </Dialog>
 
+            <AddEggsDialog
+                plan={plan}
+                open={isAddEggsOpen}
+                onOpenChange={setIsAddEggsOpen}
+                onAdded={onPlanUpdate}
+            />
+
             {/* Genetics Calculator Modal */}
             <GeneticsModal
                 isOpen={isGeneticsOpen}
@@ -620,6 +638,7 @@ function PlanEditDialog({ plan, isOpen, onOpenChange, onPlanUpdate, onPlanDelete
                 pairing_date: editedPlan.pairing_date || null,
                 status: editedPlan.status,
                 expected_lay_interval: editedPlan.expected_lay_interval ?? 31,
+                notes: editedPlan.notes || null,
             });
             await onPlanUpdate();
             onOpenChange(false);
@@ -679,6 +698,16 @@ function PlanEditDialog({ plan, isOpen, onOpenChange, onPlanUpdate, onPlanDelete
                             max="90"
                             value={editedPlan.expected_lay_interval ?? 31}
                             onChange={e => setEditedPlan({ ...editedPlan, expected_lay_interval: parseInt(e.target.value) || 31 })}
+                            className="bg-slate-800 border-slate-600"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="plan_notes">Notes</Label>
+                        <Textarea
+                            id="plan_notes"
+                            value={editedPlan.notes || ''}
+                            onChange={e => setEditedPlan({ ...editedPlan, notes: e.target.value })}
+                            placeholder="Notes on this pairing..."
                             className="bg-slate-800 border-slate-600"
                         />
                     </div>

@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
-import {
-  User,
-  Gecko,
-  GeckoImage,
-  ForumPost,
-  ForumComment,
-  MorphGuide,
-} from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
+import { fetchOverviewStats, fetchAccountDirectory, seriesPoints } from '@/lib/adminData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Users, Camera, MessageSquare, Database, Sparkles, Bell, Activity } from 'lucide-react';
-import { formatDistanceToNow, format, startOfDay, subDays } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 
 const SPARK_COLORS = {
@@ -20,23 +14,6 @@ const SPARK_COLORS = {
   rose: '#f43f5e',
   slate: '#94a3b8',
 };
-
-function dailySeries(list, days = 30) {
-  const buckets = Array.from({ length: days }, (_, i) => {
-    const day = startOfDay(subDays(new Date(), days - 1 - i));
-    return { key: format(day, 'yyyy-MM-dd'), value: 0 };
-  });
-  const idx = new Map(buckets.map((b, i) => [b.key, i]));
-  for (const item of list || []) {
-    if (!item?.created_date) continue;
-    const t = new Date(item.created_date);
-    if (isNaN(t.getTime())) continue;
-    const k = format(startOfDay(t), 'yyyy-MM-dd');
-    const i = idx.get(k);
-    if (i !== undefined) buckets[i].value += 1;
-  }
-  return buckets;
-}
 
 /**
  * Admin landing screen, at-a-glance KPIs and recent activity feed.
@@ -104,66 +81,72 @@ export default function AdminOverview({ onNavigate }) {
   const [recent, setRecent] = useState({ users: [], posts: [] });
   const [isLoading, setIsLoading] = useState(true);
 
+  const [loadError, setLoadError] = useState(null);
+
   useEffect(() => {
     (async () => {
       setIsLoading(true);
+      setLoadError(null);
       try {
-        const [users, geckos, images, posts, comments, morphs] = await Promise.all([
-          User.list().catch(() => []),
-          Gecko.list().catch(() => []),
-          GeckoImage.list().catch(() => []),
-          ForumPost.list().catch(() => []),
-          ForumComment.list().catch(() => []),
-          MorphGuide.list().catch(() => []),
+        // Counts and 30-day series come from one admin-only database
+        // function; the two short lists ask for five rows each. Nothing
+        // downloads a whole table any more.
+        const [overview, directory, postsRes] = await Promise.all([
+          fetchOverviewStats(),
+          fetchAccountDirectory().catch(() => []),
+          supabase
+            .from('forum_posts')
+            .select('id, title, created_by, created_date')
+            .order('created_date', { ascending: false })
+            .limit(5),
         ]);
-
-        const now = Date.now();
-        const sevenDays = 7 * 24 * 60 * 60 * 1000;
-        const newUsers7d = users.filter(
-          (u) => u.created_date && now - new Date(u.created_date).getTime() < sevenDays
-        ).length;
-        const newPosts7d = posts.filter(
-          (p) => p.created_date && now - new Date(p.created_date).getTime() < sevenDays
-        ).length;
-        const newGeckos7d = geckos.filter(
-          (g) => g.created_date && now - new Date(g.created_date).getTime() < sevenDays
-        ).length;
-        const newImages7d = images.filter(
-          (i) => i.created_date && now - new Date(i.created_date).getTime() < sevenDays
-        ).length;
-
+        const series = overview?.series || {};
         setStats({
-          totalUsers: users.length,
-          newUsers7d,
-          totalGeckos: geckos.length,
-          newGeckos7d,
-          totalImages: images.length,
-          newImages7d,
-          totalPosts: posts.length,
-          newPosts7d,
-          totalComments: comments.length,
-          totalMorphs: morphs.length,
-          adminCount: users.filter((u) => u.role === 'admin').length,
-          expertCount: users.filter((u) => u.is_expert).length,
-          usersSeries: dailySeries(users, 30),
-          geckosSeries: dailySeries(geckos, 30),
-          imagesSeries: dailySeries(images, 30),
-          postsSeries: dailySeries(posts, 30),
-          commentsSeries: dailySeries(comments, 30),
+          totalUsers: overview.real_accounts,
+          legacyProfiles: overview.legacy_profiles,
+          newUsers7d: overview.new_accounts_7d,
+          totalGeckos: overview.geckos,
+          newGeckos7d: overview.new_geckos_7d,
+          totalImages: overview.images,
+          newImages7d: overview.new_images_7d,
+          totalPosts: overview.forum_posts,
+          newPosts7d: overview.new_forum_posts_7d,
+          totalComments: overview.forum_comments,
+          totalMorphs: overview.morph_guides,
+          adminCount: overview.admins,
+          expertCount: overview.experts,
+          reviewerCount: overview.expert_reviewers,
+          usersSeries: seriesPoints(series, 'accounts'),
+          geckosSeries: seriesPoints(series, 'geckos'),
+          imagesSeries: seriesPoints(series, 'images'),
+          postsSeries: seriesPoints(series, 'posts'),
+          commentsSeries: seriesPoints(series, 'comments'),
         });
 
-        const sortByDateDesc = (a, b) =>
-          new Date(b.created_date || 0).getTime() - new Date(a.created_date || 0).getTime();
+        const newestAccounts = (directory || [])
+          .filter((u) => u.has_login)
+          .sort((a, b) => new Date(b.joined_at || 0).getTime() - new Date(a.joined_at || 0).getTime())
+          .slice(0, 5)
+          .map((u) => ({ ...u, created_date: u.joined_at }));
         setRecent({
-          users: [...users].sort(sortByDateDesc).slice(0, 5),
-          posts: [...posts].sort(sortByDateDesc).slice(0, 5),
+          users: newestAccounts,
+          posts: postsRes?.data || [],
         });
       } catch (err) {
         console.error('Admin overview load failed:', err);
+        setLoadError(err?.message || 'Could not load the overview.');
       }
       setIsLoading(false);
     })();
   }, []);
+
+  if (loadError) {
+    return (
+      <div className="rounded-lg border border-rose-500/40 bg-rose-950/30 p-4 text-sm text-rose-200">
+        Could not load the overview: {loadError}
+      </div>
+    );
+  }
 
   if (isLoading || !stats) {
     return (
@@ -179,9 +162,9 @@ export default function AdminOverview({ onNavigate }) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <StatCard
           icon={Users}
-          label="Users"
+          label="Accounts"
           value={stats.totalUsers}
-          sublabel={`+${stats.newUsers7d} this week`}
+          sublabel={`+${stats.newUsers7d} this week · ${stats.legacyProfiles} legacy rows not counted`}
           accent="emerald"
           series={stats.usersSeries}
         />
@@ -235,7 +218,7 @@ export default function AdminOverview({ onNavigate }) {
           icon={Users}
           label="Experts"
           value={stats.expertCount}
-          sublabel="verified breeders"
+          sublabel={`verified breeders · ${stats.reviewerCount} reviewer${stats.reviewerCount === 1 ? '' : 's'}`}
           accent="blue"
         />
       </div>
