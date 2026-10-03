@@ -24,6 +24,15 @@ export function generatePassportCode() {
 export const PUBLIC_WEIGHT_COLUMNS = 'id, gecko_id, weight_grams, record_date, notes, created_date';
 
 /**
+ * Feeding and shed columns the passport reads. Same reason: created_by
+ * holds an email, so the passport never asks for it (and once
+ * 20261003020000_anon_hide_husbandry_emails.sql is applied, a signed-out
+ * `select('*')` on these tables fails).
+ */
+export const PUBLIC_FEEDING_COLUMNS = 'id, animal_id, date, food_type, accepted, notes, created_date';
+export const PUBLIC_SHED_COLUMNS = 'id, animal_id, date, quality, notes, created_date';
+
+/**
  * Build the public passport URL for a given passport code.
  */
 export function passportUrl(passportCode) {

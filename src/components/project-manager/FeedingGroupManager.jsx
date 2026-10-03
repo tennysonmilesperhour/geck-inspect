@@ -10,6 +10,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Trash2, Edit, Utensils, Bell, BellOff, Check } from 'lucide-react';
 import { format, addDays, differenceInDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { markGroupFed } from '@/lib/husbandryLog';
+import { toast } from '@/components/ui/use-toast';
 
 const GROUP_COLORS = ['#f97316', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#eab308', '#ef4444', '#06b6d4'];
 const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -102,8 +104,25 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         onUpdate();
     };
 
+    // Writes a feeding row for every gecko in the group (so each gecko's
+    // record and passport show it), then moves the group schedule.
     const handleMarkFed = async (group) => {
-        await FeedingGroup.update(group.id, { last_fed_date: todayLocalISO() });
+        try {
+            const { fedCount } = await markGroupFed({
+                group,
+                geckos: geckos?.length ? geckos : undefined,
+                date: todayLocalISO(),
+            });
+            toast({
+                title: `${group.name || `Group ${group.label}`} marked fed`,
+                description: fedCount > 0
+                    ? `Logged a feeding for ${fedCount} gecko${fedCount === 1 ? '' : 's'}.`
+                    : 'No geckos are in this group yet, so only the schedule moved.',
+            });
+        } catch (error) {
+            console.error('Mark fed failed:', error);
+            toast({ title: 'Feeding not saved', description: error.message || 'Please try again.', variant: 'destructive' });
+        }
         onUpdate();
     };
 

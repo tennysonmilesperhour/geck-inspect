@@ -13,6 +13,7 @@ import {
   Delete,
   Layers,
   Loader2,
+  LogIn,
   Mic,
   MicOff,
   Scale,
@@ -25,7 +26,16 @@ import {
 import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent, CollectionMember } from '@/entities/all';
 import { api } from '@/api/appClient';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
-import { todayLocalISO } from '@/lib/dateUtils';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { format, subDays } from 'date-fns';
+import {
+  logFeedings,
+  undoFeedings,
+  advanceGroupsForFeedings,
+  revertGroupAdvances,
+  logShed as writeShed,
+  isAuthFailure,
+} from '@/lib/husbandryLog';
 import { createPageUrl } from '@/utils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
@@ -43,6 +53,11 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
  *   ShedRecord    { animal_id, date, quality }   quality CHECK: complete | partial | retained_toes | retained_eye_caps | unknown
  *   FeedingRecord { animal_id, date, food_type, accepted }
  *   GeckoEvent    { gecko_id, event_type, event_date, notes, custom_event_name }  (notes go here, not gecko.notes)
+ *
+ * Feedings and sheds go through src/lib/husbandryLog.js, the one log every
+ * surface shares, so a "Fed" here also moves the gecko's feeding group
+ * schedule (D21). Every log can be backdated with the date chips above
+ * the buttons; the date resets to today when Field Mode opens.
  */
 
 const RECENT_KEY = 'geckinspect_field_mode_recent';
@@ -171,6 +186,10 @@ export default function FieldModePage() {
   const [geckos, setGeckos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  // An expired sign-in shows "Sign in", not a connection error.
+  const [sessionExpired, setSessionExpired] = useState(false);
+  // The day the next log is for. Today unless the keeper backdates it.
+  const [logDate, setLogDate] = useState(todayLocalISO);
 
   const [recentIds, setRecentIds] = useState(getRecentIds);
   const [searchTerm, setSearchTerm] = useState('');
@@ -215,7 +234,13 @@ export default function FieldModePage() {
         setGeckos(writable);
       } catch (error) {
         console.error('Field mode load failed:', error);
-        if (!cancelled) setLoadError(true);
+        if (cancelled) return;
+        if (isAuthFailure(error)) {
+          setUser(null);
+          setSessionExpired(true);
+        } else {
+          setLoadError(true);
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -312,23 +337,44 @@ export default function FieldModePage() {
 
   // ----- log actions -----------------------------------------------------
 
-  const logWeight = async (gecko, grams) => {
+  const today = todayLocalISO();
+  const isBackdated = logDate !== today;
+  const logDayLabel = isBackdated ? format(parseLocalDate(logDate), 'EEE MMM d') : 'today';
+
+  // A failed save because the sign-in expired gets a "Sign in" prompt
+  // instead of a raw error.
+  const reportSaveError = (error, fallback) => {
+    if (isAuthFailure(error)) {
+      setSessionExpired(true);
+      toast({ title: 'Sign in again', description: 'Your sign-in expired, so that log was not saved.', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Save failed', description: error?.message || fallback, variant: 'destructive' });
+  };
+
+  const logWeight = async (gecko, grams, date = logDate) => {
     setIsSaving(true);
     try {
       const prevWeight = gecko.weight_grams ?? null;
       const record = await WeightRecord.create({
         gecko_id: gecko.id,
         weight_grams: grams,
-        record_date: todayLocalISO(),
+        record_date: date,
       });
-      await Gecko.update(gecko.id, { weight_grams: grams });
-      setGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, weight_grams: grams } : g)));
-      setSelectedGecko((s) => (s && s.id === gecko.id ? { ...s, weight_grams: grams } : s));
+      // The gecko's current weight follows today's weigh-in. A backdated
+      // weigh-in only fills it when the gecko has no weight yet.
+      const mirror = date === todayLocalISO() || prevWeight == null;
+      if (mirror) {
+        await Gecko.update(gecko.id, { weight_grams: grams });
+        setGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, weight_grams: grams } : g)));
+        setSelectedGecko((s) => (s && s.id === gecko.id ? { ...s, weight_grams: grams } : s));
+      }
       afterLog({
         kind: 'weight',
         message: `${grams} g for ${gecko.name}`,
         undo: async () => {
           await WeightRecord.delete(record.id);
+          if (!mirror) return;
           await Gecko.update(gecko.id, { weight_grams: prevWeight });
           setGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, weight_grams: prevWeight } : g)));
           setSelectedGecko((s) => (s && s.id === gecko.id ? { ...s, weight_grams: prevWeight } : s));
@@ -338,20 +384,16 @@ export default function FieldModePage() {
       setActivePanel(null);
     } catch (error) {
       console.error('Weight log failed:', error);
-      toast({ title: 'Save failed', description: error.message || 'Could not save the weight.', variant: 'destructive' });
+      reportSaveError(error, 'Could not save the weight.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const logShed = async (gecko, quality = 'unknown') => {
+  const logShed = async (gecko, quality = 'unknown', date = logDate) => {
     setIsSaving(true);
     try {
-      const record = await ShedRecord.create({
-        animal_id: gecko.id,
-        date: todayLocalISO(),
-        quality,
-      });
+      const record = await writeShed({ gecko, date, quality });
       afterLog({
         kind: 'shed',
         recordId: record.id,
@@ -363,33 +405,33 @@ export default function FieldModePage() {
       });
     } catch (error) {
       console.error('Shed log failed:', error);
-      toast({ title: 'Save failed', description: error.message || 'Could not log the shed.', variant: 'destructive' });
+      reportSaveError(error, 'Could not log the shed.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const logFed = async (gecko, accepted = true) => {
+  const logFed = async (gecko, accepted = true, date = logDate) => {
     setIsSaving(true);
     try {
-      const record = await FeedingRecord.create({
-        animal_id: gecko.id,
-        date: todayLocalISO(),
-        food_type: 'CGD',
-        accepted,
-      });
+      // Writes the feeding row and moves the gecko's group schedule when
+      // it ate (D21), so Dashboard and reminders stop calling it due.
+      const result = await logFeedings({ entries: [{ gecko, accepted }], date });
       afterLog({
         kind: 'fed',
-        recordId: record.id,
+        recordId: result.records[0]?.id,
+        gecko,
+        date,
         accepted,
+        result,
         message: `Feeding for ${gecko.name}`,
         undo: async () => {
-          await FeedingRecord.delete(record.id);
+          await undoFeedings(result);
         },
       });
     } catch (error) {
       console.error('Feeding log failed:', error);
-      toast({ title: 'Save failed', description: error.message || 'Could not log the feeding.', variant: 'destructive' });
+      reportSaveError(error, 'Could not log the feeding.');
     } finally {
       setIsSaving(false);
     }
@@ -413,22 +455,24 @@ export default function FieldModePage() {
     setSelectedGecko(match);
     setRecentIds(pushRecentId(match.id));
     if (log === 'weight') setActivePanel('weight');
-    else if (log === 'fed') logFed(match);
-    else if (log === 'shed') logShed(match);
+    else if (log === 'fed') logFed(match, true, todayLocalISO());
+    else if (log === 'shed') logShed(match, 'unknown', todayLocalISO());
     // logFed and logShed are stable in behavior; this runs once per visit.
   }, [isLoading, geckos, searchParams]);
 
 
-  const logNote = async (gecko, text) => {
+  const logNote = async (gecko, text, date = logDate) => {
     const trimmed = (text || '').trim();
     if (!trimmed) return;
     setIsSaving(true);
     try {
+      // A backdated note lands at noon on that day.
+      const when = date === todayLocalISO() ? new Date() : new Date(`${date}T12:00:00`);
       const record = await GeckoEvent.create({
         gecko_id: gecko.id,
         event_type: 'custom',
         custom_event_name: 'Field note',
-        event_date: new Date().toISOString(),
+        event_date: when.toISOString(),
         notes: trimmed,
       });
       afterLog({
@@ -442,7 +486,7 @@ export default function FieldModePage() {
       setActivePanel(null);
     } catch (error) {
       console.error('Note save failed:', error);
-      toast({ title: 'Save failed', description: error.message || 'Could not save the note.', variant: 'destructive' });
+      reportSaveError(error, 'Could not save the note.');
     } finally {
       setIsSaving(false);
     }
@@ -463,10 +507,26 @@ export default function FieldModePage() {
 
   const toggleFedAccepted = async () => {
     if (!undoEntry || undoEntry.kind !== 'fed') return;
-    const next = !undoEntry.accepted;
+    const entry = undoEntry;
+    const next = !entry.accepted;
     try {
-      await FeedingRecord.update(undoEntry.recordId, { accepted: next });
-      setUndoEntry((e) => (e && e.kind === 'fed' ? { ...e, accepted: next } : e));
+      await FeedingRecord.update(entry.recordId, { accepted: next });
+      // A refusal does not count as feeding the group (D21), so the group
+      // schedule follows the toggle.
+      let advanced = entry.result?.advanced || [];
+      if (!next) {
+        await revertGroupAdvances(advanced);
+        advanced = [];
+      } else {
+        ({ advanced } = await advanceGroupsForFeedings([{ gecko: entry.gecko, accepted: true }], { date: entry.date }));
+      }
+      const result = { ...entry.result, advanced };
+      setUndoEntry((e) => (e && e.kind === 'fed' ? {
+        ...e,
+        accepted: next,
+        result,
+        undo: async () => { await undoFeedings(result); },
+      } : e));
     } catch (error) {
       console.error('Feeding update failed:', error);
       toast({ title: 'Update failed', description: 'Could not update the feeding.', variant: 'destructive' });
@@ -628,13 +688,23 @@ export default function FieldModePage() {
 
       {/* Main scroll area */}
       <div className="flex-1 overflow-y-auto pb-24">
-        {loadError ? (
+        {sessionExpired || (!user && !loadError) ? (
+          <div className="p-6 text-center">
+            <p className="text-xl text-slate-300 mt-16 mb-6">
+              {sessionExpired && user
+                ? 'Your sign-in expired. Sign in again to keep logging.'
+                : 'Sign in to use field mode.'}
+            </p>
+            <Button
+              onClick={() => api.auth.redirectToLogin()}
+              className="min-h-14 px-8 text-lg font-bold bg-emerald-600 hover:bg-emerald-700 rounded-2xl"
+            >
+              <LogIn className="w-6 h-6 mr-2" /> Sign in
+            </Button>
+          </div>
+        ) : loadError ? (
           <div className="p-6 text-center">
             <p className="text-xl text-slate-300 mt-16">Could not load your collection. Check your connection and reload.</p>
-          </div>
-        ) : !user ? (
-          <div className="p-6 text-center">
-            <p className="text-xl text-slate-300 mt-16">Sign in to use field mode.</p>
           </div>
         ) : !selectedGecko ? (
           /* ------------------------------ Animal picker ------------------------------ */
@@ -738,7 +808,7 @@ export default function FieldModePage() {
                       disabled={isSaving}
                       className="flex-1 min-h-14 rounded-xl bg-indigo-500 text-slate-950 text-lg font-bold active:bg-indigo-400"
                     >
-                      Tap to log: {pendingVoice.action.label}
+                      Tap to log: {pendingVoice.action.label.replace('today', logDayLabel)}
                     </button>
                     <button
                       type="button"
@@ -752,6 +822,43 @@ export default function FieldModePage() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Which day this log is for. Backdating covers the feeding you
+                forgot to log last night. */}
+            <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Log date">
+              {[
+                { label: 'Today', value: today },
+                { label: 'Yesterday', value: format(subDays(new Date(), 1), 'yyyy-MM-dd') },
+              ].map((chip) => (
+                <button
+                  key={chip.label}
+                  type="button"
+                  onClick={() => setLogDate(chip.value)}
+                  aria-pressed={logDate === chip.value}
+                  className={`min-h-14 px-5 rounded-2xl text-lg font-semibold border ${
+                    logDate === chip.value
+                      ? 'bg-emerald-500 border-emerald-300 text-slate-950'
+                      : 'bg-slate-900 border-slate-700 text-slate-200'
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
+              <Input
+                type="date"
+                aria-label="Pick another date"
+                value={logDate}
+                max={today}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v && v <= today) setLogDate(v);
+                }}
+                className="min-h-14 h-14 text-lg bg-slate-900 border-slate-700 text-slate-100 rounded-2xl w-auto"
+              />
+            </div>
+            {isBackdated && (
+              <p className="mb-4 text-lg text-amber-300">Logging for {logDayLabel}, not today.</p>
+            )}
 
             {activePanel === null && (
               <div className="grid grid-cols-2 gap-3">
@@ -772,7 +879,7 @@ export default function FieldModePage() {
                 >
                   <Layers className="w-12 h-12 text-sky-300" />
                   <span className="text-2xl font-bold">Shed</span>
-                  <span className="text-base text-sky-300">One tap logs today</span>
+                  <span className="text-base text-sky-300">One tap logs {logDayLabel}</span>
                 </button>
                 <button
                   type="button"
@@ -782,7 +889,7 @@ export default function FieldModePage() {
                 >
                   <Utensils className="w-12 h-12 text-amber-300" />
                   <span className="text-2xl font-bold">Fed</span>
-                  <span className="text-base text-amber-300">One tap logs today</span>
+                  <span className="text-base text-amber-300">One tap logs {logDayLabel}</span>
                 </button>
                 <button
                   type="button"

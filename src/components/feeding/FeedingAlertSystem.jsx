@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { X, CheckCircle2, Clock } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { todayLocalISO, daysSinceLocal } from '@/lib/dateUtils';
+import { markGroupFed } from '@/lib/husbandryLog';
 import { startVisiblePolling } from '@/lib/pagePolling';
 
 // This component only drives the in-app banner. The feeding_due push and
@@ -128,7 +129,8 @@ export default function FeedingAlertSystem({ user, enabled }) {
       const today = todayLocalISO();
 
       if (alert.type === 'feedingGroup') {
-        await FeedingGroup.update(alert.entityId, { last_fed_date: today });
+        // A feeding row per gecko in the group, then the group schedule.
+        await markGroupFed({ group: alert.group || { id: alert.entityId, last_fed_date: alert.lastFedDate }, date: today });
       } else {
         await OtherReptile.update(alert.entityId, { last_fed_date: today });
       }
