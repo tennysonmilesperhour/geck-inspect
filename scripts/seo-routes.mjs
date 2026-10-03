@@ -392,6 +392,20 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    // Public front door for Morph ID (audit step 29). Signed-out visitors
+    // see the page and are asked to sign in before uploading; the first
+    // identification on a free account is free.
+    path: '/Recognition',
+    priority: 0.8,
+    changefreq: 'monthly',
+    lastmod: dateOf('src/pages/Recognition.jsx'),
+    meta: {
+      title: 'Crested Gecko Morph ID: Identify Your Gecko From Photos',
+      description:
+        'Upload a top and a side photo of your crested gecko and get a ranked morph shortlist (Harlequin, Lilly White, Phantom, Cappuccino and more), the visible traits behind it, and what the photos cannot confirm. Your first identification is free.',
+    },
+  },
+  {
     path: '/Gallery',
     priority: 0.8,
     changefreq: 'daily',

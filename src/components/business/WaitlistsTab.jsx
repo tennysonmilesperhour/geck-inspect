@@ -13,7 +13,8 @@ import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import { createPageUrl } from '@/utils';
 import {
   DEFAULT_DEPOSIT_TERMS,
-  OUT_OF_LINE,
+  isOutOfLine,
+  awaitingConfirmation,
   defaultWaitlistTitle,
   makeWaitlistSlug,
   matchableHatchlings,
@@ -453,7 +454,8 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
   const [startReserve, setStartReserve] = useState(true);
   const [saving, setSaving] = useState(false);
   const matched = signup.matched_gecko_id ? geckosById.get(signup.matched_gecko_id) : null;
-  const outOfLine = OUT_OF_LINE.has(signup.status);
+  const outOfLine = isOutOfLine(signup);
+  const unconfirmed = awaitingConfirmation(signup);
   const [refundAmount, setRefundAmount] = useState(String(signup.deposit_paid ?? ''));
   const canRefund = Number(signup.deposit_paid) > 0 && signup.status !== 'refunded';
 
@@ -517,6 +519,11 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
               Refunded {money(signup.refund_amount, currency)}{signup.refunded_on ? ` on ${signup.refunded_on}` : ''}
             </p>
           )}
+          {unconfirmed && (
+            <p className="text-xs text-slate-500 mt-0.5">
+              Has not opened the confirmation email yet. They join the line (and you get a notification) once they do.
+            </p>
+          )}
           {signup.terms_accepted_at ? (
             <details className="text-xs text-slate-400 mt-0.5">
               <summary className="cursor-pointer hover:text-slate-200">
@@ -528,7 +535,11 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
             <p className="text-xs text-slate-500 mt-0.5">Added by hand; has not agreed to the terms online</p>
           ) : null}
         </div>
-        <Badge className={STATUS_CLASS[signup.status] || STATUS_CLASS.waiting}>{signupStatusLabel(signup.status)}</Badge>
+        {unconfirmed ? (
+          <Badge className="bg-slate-800 text-slate-400">Email not confirmed</Badge>
+        ) : (
+          <Badge className={STATUS_CLASS[signup.status] || STATUS_CLASS.waiting}>{signupStatusLabel(signup.status)}</Badge>
+        )}
       </div>
 
       {(canRefund || (!outOfLine && signup.status !== 'completed')) && (

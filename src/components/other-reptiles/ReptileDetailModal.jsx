@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import TransferDialog from '@/components/transfers/TransferDialog';
+import { reptileWeightRecords, newReptileWeightEvent } from '@/lib/reptileWeights';
 
 export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit, onArchive }) {
     const [weightRecords, setWeightRecords] = useState([]);
@@ -41,15 +42,9 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                 const events = await ReptileEvent.filter({ reptile_id: reptile.id }, '-event_date');
                 setEventHistory(events);
                 
-                // Extract weight records from feeding events or create mock weight tracking
-                const weights = events
-                    .filter(e => e.event_type === 'weight' || (e.notes && e.notes.includes('Weight:')))
-                    .map(e => ({
-                        id: e.id,
-                        record_date: e.event_date,
-                        weight_grams: parseFloat(e.notes?.match(/Weight:\s*(\d+)/)?.[1]) || 0
-                    }))
-                    .filter(w => w.weight_grams > 0);
+                // Weigh-ins carry weight_grams; older ones only have the
+                // "Weight: 45g" note. Feeding notes (prey weight) are skipped.
+                const weights = reptileWeightRecords(events);
                 
                 setWeightRecords(weights);
             } catch (error) {
@@ -67,15 +62,9 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
 
         try {
             const weightValue = parseFloat(newWeight);
+            if (!(weightValue > 0)) return;
             
-            // Create a weight event
-            const newEvent = await ReptileEvent.create({
-                reptile_id: reptile.id,
-                event_type: 'custom',
-                custom_event_name: 'Weight Check',
-                event_date: new Date().toISOString(),
-                notes: `Weight: ${weightValue}g`
-            });
+            const newEvent = await ReptileEvent.create(newReptileWeightEvent(reptile.id, weightValue));
             
             setWeightRecords([{
                 id: newEvent.id,

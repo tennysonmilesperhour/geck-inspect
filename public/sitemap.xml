@@ -97,6 +97,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://geckinspect.com/Recognition</loc>
+    <lastmod>2026-10-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://geckinspect.com/Gallery</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>daily</changefreq>

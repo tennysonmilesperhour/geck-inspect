@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
 import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
@@ -62,6 +63,12 @@ export default function MyGeckosPage() {
     // Guards the one-time consumption of an incoming AI Morph ID draft.
     const morphDraftConsumedRef = React.useRef(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    // The first-run question waits while the full gecko form is open.
+    useEffect(() => {
+        if (!isFormOpen) return undefined;
+        holdOnboarding('gecko_form');
+        return () => releaseOnboarding('gecko_form');
+    }, [isFormOpen]);
     // Photo-first quick add, used for a keeper's first gecko (VIP audit P1.2).
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');

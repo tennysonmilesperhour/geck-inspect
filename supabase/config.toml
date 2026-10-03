@@ -14,3 +14,10 @@ verify_jwt = true
 # anonymous calls; the handler then checks the admin role itself.
 [functions.admin-delete-account]
 verify_jwt = true
+
+# Public waitlist signups and confirmation links. Buyers are signed out,
+# so the gateway lets anonymous calls through; the handler only acts
+# through service-role database functions and mails addresses read from
+# the database.
+[functions.waitlist-signup]
+verify_jwt = false

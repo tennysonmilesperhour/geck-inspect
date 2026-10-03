@@ -1177,6 +1177,21 @@ serve(async (req) => {
     );
     analysis.age_stage = ageStage;
     analysis.user_reported_fired_state = firedState;
+    // D19: a "better photos needed" answer gives the member nothing to act
+    // on, so the free lifetime try is handed back and they can retake the
+    // photos. Paid monthly credits are still used (the analysis ran).
+    let creditRefunded = false;
+    if (
+      creditWasConsumed &&
+      tier === "free" &&
+      analysis.assessment_status === "insufficient_evidence"
+    ) {
+      await refundMorphIdCredit(profile.auth_user_id);
+      creditWasConsumed = false;
+      creditRefunded = true;
+      creditsConsumed = Math.max(0, creditsConsumed - 1);
+      creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
+    }
     await logInvocation({
       surface,
       model,
@@ -1211,6 +1226,7 @@ serve(async (req) => {
       credits_included: creditsIncluded,
       credits_consumed: creditsConsumed,
       credits_remaining: creditsRemaining,
+      credit_refunded: creditRefunded,
       value_estimate_included: includeValueEstimate,
     });
   } catch (err) {

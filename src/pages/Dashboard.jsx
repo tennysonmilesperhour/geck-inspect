@@ -194,6 +194,9 @@ export default function Dashboard() {
         queryKey: ['dashboard', 'personal', email],
         queryFn: () => loadPersonalCounts(email),
         enabled: Boolean(email),
+        // Always recheck on arrival (the cached counts still render first),
+        // so a gecko added anywhere replaces "Add your first gecko" at once.
+        staleTime: 0,
     });
     const personalStats = personalQuery.data ?? EMPTY_PERSONAL;
 
