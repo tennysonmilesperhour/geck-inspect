@@ -30,10 +30,6 @@ export const STEP_BLURBS = {
         title: 'Breeding',
         body: 'Create breeding pairs, log copulation events, track eggs from lay through incubation, and auto-hatch confirmed eggs into new gecko records that inherit lineage.',
     },
-    BreedingPairs: {
-        title: 'Breeding Pairs',
-        body: 'Dedicated view of every active and historical pair. See pairing dates, predicted hatch windows, and per-pair offspring outcomes at a glance.',
-    },
     Lineage: {
         title: 'Lineage',
         body: 'Visualize multi-generation family trees, drag to reposition, and add placeholder ancestors for geckos you bought from other breeders so the tree stays complete.',

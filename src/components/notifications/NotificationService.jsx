@@ -57,7 +57,10 @@ export async function notifyFollowersNewGecko(gecko, ownerEmail, ownerName) {
 }
 
 // Notify all followers when a user creates a new public breeding plan
+// Decision D18: only a public plan is announced to followers. A private
+// plan (the default) never leaves the breeder's account.
 export async function notifyFollowersNewBreedingPlan(plan, sire, dam, ownerEmail, ownerName) {
+    if (plan?.is_public !== true) return;
     try {
         const followers = await UserFollow.filter({ following_email: ownerEmail });
         const pairName = `${sire?.name || 'Unknown'} × ${dam?.name || 'Unknown'}`;

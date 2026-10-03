@@ -45,7 +45,7 @@ const EXPECTED_FALLBACK = {
 
 // Order-independent: page -> section.
 const EXPECTED_SECTION = {
-  MyGeckos: 'manage', OtherReptiles: 'manage', Breeding: 'manage', BreedingPairs: 'manage',
+  MyGeckos: 'manage', OtherReptiles: 'manage', Breeding: 'manage',
   BreedingSeason: 'manage', PairingPlanner: 'manage', FieldMode: 'manage', Portfolio: 'manage',
   Lineage: 'manage', Pedigree: 'manage', GeckoDetail: 'manage', AnimalPassport: 'manage',
   ClaimAnimal: 'manage', LikedGeckos: 'manage', ProjectManager: 'manage', MarketplaceSalesStats: 'manage',
@@ -62,7 +62,7 @@ const EXPECTED_SECTION = {
 };
 
 const EXPECTED_BREEDER_ONLY = [
-  'Breeding', 'BreedingSeason', 'PairingPlanner', 'Portfolio', 'BreedingPairs', 'Lineage',
+  'Breeding', 'BreedingSeason', 'PairingPlanner', 'Portfolio', 'Lineage',
   'Pedigree', 'Promote', 'MarketplaceSalesStats', 'MyListings',
   'BatchHusbandry', 'ProjectManager', 'MorphMarketExport', 'BreedingROI',
 ];
@@ -78,7 +78,6 @@ const EXPECTED_PALETTE = [
   ['ImageImport', 'AI Image Import', 'Your Collection'],
   ['PrintableWorksheets', 'Printable Worksheets', 'Your Collection'],
   ['Breeding', 'Breeding Plans', 'Breeding'],
-  ['BreedingPairs', 'Breeding Pairs', 'Breeding'],
   ['Lineage', 'Lineage Tree', 'Breeding'],
   ['Pedigree', 'Pedigree', 'Breeding'],
   ['MarketplaceSalesStats', 'Business Tools', 'Breeding'],

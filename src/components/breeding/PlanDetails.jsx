@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Gecko, Egg } from '@/entities/all';
+import { Egg } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import {
@@ -20,11 +20,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, Trash2, Egg as EggIcon, Calendar as CalendarIcon } from 'lucide-react';
-import { format, addDays, differenceInDays } from 'date-fns';
+import { Edit, Trash2, Archive, Egg as EggIcon, Calendar as CalendarIcon } from 'lucide-react';
+import { format, addDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
-import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
+import { eggStatusFields } from '@/lib/hatchEgg';
+import { useToast } from '@/components/ui/use-toast';
 import PairingValuePanel from './PairingValuePanel';
+import HatchEggDialog from './HatchEggDialog';
+import DeleteEggDialog from './DeleteEggDialog';
 
 /**
  * Expanded-state view of a single breeding plan, shows all eggs with
@@ -32,134 +35,47 @@ import PairingValuePanel from './PairingValuePanel';
  */
 export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulationModal, onOpenEggCheckModal, planEggs, setIsEditModalOpen }) {
     const eggs = planEggs.filter(egg => !egg.archived).sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
-    const [editingHatchDate, setEditingHatchDate] = useState(null); // eggId to edit
     const [editedEggs, setEditedEggs] = useState({});
+    const { toast } = useToast();
 
+    // Archive and delete are separate actions: archiving keeps the record
+    // (Hatchery archive, breeding history), deleting removes it for good.
+    const [eggToArchive, setEggToArchive] = useState(null);
     const [eggToDelete, setEggToDelete] = useState(null);
+    // Hatching goes through the shared dialog (src/lib/hatchEgg.js).
+    const [eggToHatch, setEggToHatch] = useState(null);
 
-    const handleDeleteEgg = (eggId) => {
-        setEggToDelete(eggId);
-    };
+    const sire = geckos.find(g => g.id === plan.sire_id);
+    const dam = geckos.find(g => g.id === plan.dam_id);
 
-    const handleConfirmDeleteEgg = async () => {
-        if (!eggToDelete) return;
+    const handleConfirmArchiveEgg = async () => {
+        if (!eggToArchive) return;
         try {
-            await Egg.update(eggToDelete, {
+            await Egg.update(eggToArchive, {
                 archived: true,
                 archived_date: todayLocalISO()
             });
             onPlanUpdate();
         } catch (error) {
             console.error("Failed to archive egg:", error);
+            toast({ title: 'Egg not archived', description: error.message || 'Please try again.', variant: 'destructive' });
         }
-        setEggToDelete(null);
+        setEggToArchive(null);
     };
 
+    // Infertile, Slug or Stillbirth. Hatched has its own dialog.
     const handleUpdateEggStatus = async (eggId, status) => {
-        const updateData = { status };
-        const currentEgg = eggs.find(e => e.id === eggId);
-
-        // Auto-archive any egg that isn't incubating
-        if (status !== 'Incubating') {
-            updateData.archived = true;
-            updateData.archived_date = todayLocalISO();
-        }
-
-        if (status === 'Hatched' && currentEgg?.status !== 'Hatched') {
-            const hatchDate = todayLocalISO();
-            updateData.hatch_date_actual = hatchDate;
-
-            // Create gecko automatically if not already linked
-            if (!currentEgg.gecko_id) {
-                try {
-                    const sire = geckos.find(g => g.id === plan.sire_id);
-                    const dam = geckos.find(g => g.id === plan.dam_id);
-
-                    // Pull every egg for this plan so generateHatchedGeckoIdFromEgg
-                    // can group by clutch (lay_date) and derive offspring number
-                    // + egg letter for the new ID format.
-                    const allEggs = await Egg.filter({ breeding_plan_id: plan.id });
-
-                    // Simple 1-based offspring number for the human-readable name
-                    //, the ID code carries the authoritative sequence.
-                    const hatchedEggsWithGeckos = allEggs.filter(e => e.status === 'Hatched' && e.gecko_id);
-                    const offspringNumber = hatchedEggsWithGeckos.length + 1;
-
-                    // Generate name: SireName x DamName #1
-                    const geckoName = `${sire?.name || 'Unknown'} x ${dam?.name || 'Unknown'} #${offspringNumber}`;
-
-                    // New April 2026 format: (SiFirst2)(DaFirst2)(offspringNum)(egg letter)(YY)
-                    const geckoIdCode = generateHatchedGeckoIdFromEgg({
-                        sire,
-                        dam,
-                        egg: currentEgg,
-                        allEggsForPair: allEggs,
-                    });
-
-                    // Calculate incubation days
-                    const incubationDays = differenceInDays(parseLocalDate(hatchDate), parseLocalDate(currentEgg.lay_date));
-
-                    // Create the gecko
-                    const newGecko = await Gecko.create({
-                        name: geckoName,
-                        gecko_id_code: geckoIdCode,
-                        hatch_date: hatchDate,
-                        sex: 'Unsexed', // Default to unsexed, can be updated later
-                        sire_id: plan.sire_id,
-                        dam_id: plan.dam_id,
-                        status: 'Pet', // Default to pet, can be updated later
-                        notes: `Hatched from breeding plan: ${plan.breeding_id || plan.id}`,
-                        incubation_days: incubationDays
-                    });
-
-                    // Link gecko to egg
-                    updateData.gecko_id = newGecko.id;
-
-                    // Notify any listening pages (MyGeckos in particular)
-                    // that the user's gecko list has changed, so caches can
-                    // invalidate and the new gecko shows up on navigation.
-                    window.dispatchEvent(new CustomEvent('geckos_changed', {
-                        detail: { action: 'created', geckoId: newGecko.id }
-                    }));
-                } catch (error) {
-                    console.error("Failed to create gecko:", error);
-                    // Decide whether to proceed with egg status update if gecko creation fails
-                    // For now, we'll log and continue to update egg status
-                }
-            }
-        }
-
         try {
-            await Egg.update(eggId, updateData);
+            await Egg.update(eggId, eggStatusFields(status));
             onPlanUpdate();
         } catch (error) {
             console.error("Failed to update egg status:", error);
+            toast({ title: 'Egg not updated', description: error.message || 'Please try again.', variant: 'destructive' });
         }
-    };
-
-    const handleUpdateHatchDate = async (eggId, newDate) => {
-        if (!newDate) {
-            setEditingHatchDate(null);
-            return;
-        }
-        try {
-            await Egg.update(eggId, { hatch_date_actual: newDate });
-            setEditingHatchDate(null);
-            onPlanUpdate();
-        } catch (error) {
-            console.error("Failed to update hatch date:", error);
-        }
-    };
-
-    const handleHatchEgg = async (eggId) => {
-        await handleUpdateEggStatus(eggId, 'Hatched');
     };
 
     const handleAddToCalendar = async (egg) => {
         try {
-            const sire = geckos.find(g => g.id === plan.sire_id);
-            const dam = geckos.find(g => g.id === plan.dam_id);
-
             const title = `Gecko Egg Hatching - ${sire?.name || 'Unknown Sire'} x ${dam?.name || 'Unknown Dam'}`;
             const description = `Expected hatch date for egg laid on ${format(parseLocalDate(egg.lay_date), 'MMM dd, yyyy')}`;
             const startDate = parseLocalDate(egg.hatch_date_expected);
@@ -198,18 +114,6 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
     };
 
     const StatusDisplay = ({ egg }) => {
-        if (editingHatchDate === egg.id) {
-            return (
-                <Input
-                    type="date"
-                    defaultValue={egg.hatch_date_actual ? format(parseLocalDate(egg.hatch_date_actual), 'yyyy-MM-dd') : ''}
-                    onBlur={(e) => handleUpdateHatchDate(egg.id, e.target.value)}
-                    autoFocus
-                    className="bg-slate-800 border-slate-600 h-9 w-full"
-                />
-            );
-        }
-
         const statusConfig = {
             'Hatched': {
                 className: "bg-transparent text-green-400 border-green-400 hover:bg-green-900/20",
@@ -236,7 +140,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
         const config = statusConfig[egg.status] || { className: "bg-transparent text-slate-400 border-slate-400", text: egg.status };
         const baseClasses = "cursor-pointer text-xs font-semibold px-3 py-2 rounded-md border w-full text-center h-9 touch:min-h-11 truncate transition-colors flex items-center justify-center";
 
-        // Only Incubating eggs get the dropdown (limited to Infertile/Failed)
+        // Only Incubating eggs get the dropdown (the ways an egg can fail)
         if (egg.status === 'Incubating') {
             return (
                 <DropdownMenu>
@@ -247,7 +151,8 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-slate-800 border-slate-600 text-slate-200 z-50">
                         <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Infertile')}>Infertile</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Slug')}>Failed / Slug</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Slug')}>Failed or Slug</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Stillbirth')}>Stillbirth</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
@@ -262,8 +167,8 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
         <CardContent className="border-t border-slate-700 p-4 md:p-6">
             <PairingValuePanel
                 plan={plan}
-                sire={geckos.find(g => g.id === plan.sire_id)}
-                dam={geckos.find(g => g.id === plan.dam_id)}
+                sire={sire}
+                dam={dam}
                 eggs={planEggs}
             />
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
@@ -341,7 +246,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
                                     <Button
                                         size="sm"
                                         className="h-9 flex-1"
-                                        onClick={() => handleHatchEgg(egg.id)}
+                                        onClick={() => setEggToHatch(egg)}
                                     >
                                         Hatched!
                                     </Button>
@@ -355,31 +260,26 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
                                 >
                                     <CalendarIcon className="w-4 h-4" />
                                 </Button>
-                                    <AlertDialog open={eggToDelete === egg.id} onOpenChange={(open) => { if (!open) setEggToDelete(null); }}>
-                                       <Button
-                                           size="icon"
-                                           variant="destructive"
-                                           onClick={() => handleDeleteEgg(egg.id)}
-                                           className="bg-red-900/50 hover:bg-red-900/80 border border-red-500/30 text-red-400 h-9 w-9 flex-shrink-0"
-                                           title="Delete Egg"
-                                       >
-                                           <Trash2 className="w-4 h-4" />
-                                       </Button>
-                                       <AlertDialogContent className="bg-slate-900 border-slate-700">
-                                           <AlertDialogHeader>
-                                               <AlertDialogTitle className="text-slate-100">Archive this egg?</AlertDialogTitle>
-                                               <AlertDialogDescription className="text-slate-400">
-                                                   This will archive the egg record and hide it from the active list. You can view archived eggs in the Hatchery.
-                                               </AlertDialogDescription>
-                                           </AlertDialogHeader>
-                                           <AlertDialogFooter>
-                                               <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
-                                               <AlertDialogAction onClick={handleConfirmDeleteEgg} className="bg-red-700 hover:bg-red-800">
-                                                   Archive Egg
-                                               </AlertDialogAction>
-                                           </AlertDialogFooter>
-                                       </AlertDialogContent>
-                                    </AlertDialog>
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => setEggToArchive(egg.id)}
+                                    className="border-slate-600 hover:bg-slate-700 h-9 w-9 flex-shrink-0"
+                                    title="Archive egg"
+                                    aria-label="Archive egg"
+                                >
+                                    <Archive className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    onClick={() => setEggToDelete(egg)}
+                                    className="bg-red-900/50 hover:bg-red-900/80 border border-red-500/30 text-red-400 h-9 w-9 flex-shrink-0"
+                                    title="Delete egg"
+                                    aria-label="Delete egg"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
                             </div>
                         </div>
                     );
@@ -389,6 +289,41 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
                 <p className="text-slate-400 text-center py-6">No eggs have been recorded for this pairing yet.</p>
             )
             }
+
+            <AlertDialog open={!!eggToArchive} onOpenChange={(open) => { if (!open) setEggToArchive(null); }}>
+                <AlertDialogContent className="bg-slate-900 border-slate-700">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-slate-100">Archive this egg?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-400">
+                            The egg leaves this list but keeps its record. You can find it, and restore it, under Show Archived in the Hatchery.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmArchiveEgg} className="bg-emerald-700 hover:bg-emerald-800">
+                            Archive egg
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <DeleteEggDialog
+                egg={eggToDelete}
+                onClose={() => setEggToDelete(null)}
+                onDeleted={() => { setEggToDelete(null); onPlanUpdate(); }}
+            />
+
+            {eggToHatch && (
+                <HatchEggDialog
+                    egg={eggToHatch}
+                    plan={plan}
+                    sire={sire}
+                    dam={dam}
+                    pairEggs={planEggs}
+                    onClose={() => setEggToHatch(null)}
+                    onHatched={onPlanUpdate}
+                />
+            )}
 
             {/* The Edit Plan button opens the card's dialog (PlanEditDialog in
                 BreedingPlanCard). A second copy here stacked on top of it. */}

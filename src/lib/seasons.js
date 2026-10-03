@@ -1,15 +1,23 @@
 /**
  * Breeding-season helpers
  *
- * A "season" is a calendar quarter we use for planning future breeding
+ * Two kinds of season live here:
+ *
+ *   - The breeding season of plans, eggs, the Hatchery and a female's
+ *     breeding history is the CALENDAR YEAR (decision D17). See the
+ *     "Calendar-year seasons" helpers at the bottom of this file.
+ *   - The quarters below are only for the Season Planner's target
+ *     windows ("pair them next spring").
+ *
+ * A quarter is a calendar quarter we use for planning future breeding
  * pairings. The actual biological breeding season varies by region, so
  * we use a simple meteorological quarter split and let the user pick
  * whichever quarter matches their plan.
  *
- *   spring -> Mar 1 – May 31
- *   summer -> Jun 1 – Aug 31
- *   fall   -> Sep 1 – Nov 30
- *   winter -> Dec 1 – Feb 28/29
+ *   spring -> Mar 1 to May 31
+ *   summer -> Jun 1 to Aug 31
+ *   fall   -> Sep 1 to Nov 30
+ *   winter -> Dec 1 to Feb 28/29
  *
  * THE WINTER RULE (canon): a winter belongs to the calendar year it
  * ENDS in. "2027 Winter" means Dec 1, 2026 through the end of Feb
@@ -43,19 +51,19 @@ export function computeSeasonWindow(season, year) {
       return {
         start: new Date(year, 2, 1),
         end: new Date(year, 5, 0, 23, 59, 59),
-        label: `Mar 1 – May 31, ${year}`,
+        label: `Mar 1 to May 31, ${year}`,
       };
     case 'summer':
       return {
         start: new Date(year, 5, 1),
         end: new Date(year, 8, 0, 23, 59, 59),
-        label: `Jun 1 – Aug 31, ${year}`,
+        label: `Jun 1 to Aug 31, ${year}`,
       };
     case 'fall':
       return {
         start: new Date(year, 8, 1),
         end: new Date(year, 11, 0, 23, 59, 59),
-        label: `Sep 1 – Nov 30, ${year}`,
+        label: `Sep 1 to Nov 30, ${year}`,
       };
     case 'winter':
       // Winter belongs to the year it ENDS in: "<year> Winter" spans
@@ -63,7 +71,7 @@ export function computeSeasonWindow(season, year) {
       return {
         start: new Date(year - 1, 11, 1),
         end: new Date(year, 2, 0, 23, 59, 59),
-        label: `Dec 1, ${year - 1} – Feb ${new Date(year, 2, 0).getDate()}, ${year}`,
+        label: `Dec 1, ${year - 1} to Feb ${new Date(year, 2, 0).getDate()}, ${year}`,
       };
     default:
       return null;
@@ -154,4 +162,65 @@ export function compareSeasonLabels(a, b) {
   if (pa.year !== pb.year) return pa.year - pb.year;
   const order = { Winter: 0, Spring: 1, Summer: 2, Fall: 3 };
   return order[pa.season] - order[pb.season];
+}
+
+// ---------------------------------------------------------------------------
+// Calendar-year seasons (decision D17, October 2026)
+//
+// For breeding plans, eggs, the Hatchery and a female's breeding history,
+// a season is the calendar year: "2026" runs Jan 1 to Dec 31, 2026. New
+// plans store the plain year in breeding_season. Older plans stored
+// "<year> <Season>" labels; every helper below still reads a year from
+// them, so old and new plans group together.
+// ---------------------------------------------------------------------------
+
+function yearOfDateLike(value) {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    // "YYYY-MM-DD" or an ISO timestamp: read the year as written, so a
+    // date near New Year never shifts across time zones.
+    const m = value.match(/^(\d{4})-\d{2}-\d{2}/);
+    if (m) return parseInt(m[1], 10);
+  }
+  const d = value instanceof Date ? value : new Date(value);
+  return isNaN(d.getTime()) ? null : d.getFullYear();
+}
+
+/** The current breeding season: this calendar year, e.g. 2026. */
+export function currentSeasonYear(now = new Date()) {
+  return now.getFullYear();
+}
+
+/** The breeding season (calendar year) a date belongs to, or null. */
+export function seasonYearOf(date) {
+  return yearOfDateLike(date);
+}
+
+/**
+ * The breeding season (calendar year) of a plan:
+ *   1. a stored plain year ("2026");
+ *   2. the pairing date's year;
+ *   3. the year at the start of an older "<year> <Season>" label;
+ *   4. the year the plan was created.
+ */
+export function planSeasonYear(plan) {
+  if (!plan) return null;
+  const stored = String(plan.breeding_season || '').trim();
+  const plain = stored.match(/^(\d{4})$/);
+  if (plain) return parseInt(plain[1], 10);
+  const fromPairing = yearOfDateLike(plan.pairing_date);
+  if (fromPairing) return fromPairing;
+  const leading = stored.match(/^(\d{4})\b/);
+  if (leading) return parseInt(leading[1], 10);
+  return yearOfDateLike(plan.created_date);
+}
+
+/**
+ * The breeding season (calendar year) an egg counts toward: the year it
+ * hatched when it hatched, otherwise the year it was laid.
+ */
+export function eggSeasonYear(egg) {
+  if (!egg) return null;
+  if (egg.status === 'Hatched' && egg.hatch_date_actual) return yearOfDateLike(egg.hatch_date_actual);
+  return yearOfDateLike(egg.lay_date);
 }

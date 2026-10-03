@@ -24,7 +24,6 @@ const AuthPortal            = lazy(() => import('./pages/AuthPortal'));
 const Breeder               = lazy(() => import('./pages/Breeder'));
 const BreederConsultant     = lazy(() => import('./pages/BreederConsultant'));
 const Breeding              = lazy(() => import('./pages/Breeding'));
-const BreedingPairs         = lazy(() => import('./pages/BreedingPairs'));
 const BreedingSeason        = lazy(() => import('./pages/BreedingSeason'));
 const PairingPlanner        = lazy(() => import('./pages/PairingPlanner'));
 const FieldMode             = lazy(() => import('./pages/FieldMode'));
@@ -81,7 +80,6 @@ export const PAGES = {
     "Breeder": Breeder,
     "BreederConsultant": BreederConsultant,
     "Breeding": Breeding,
-    "BreedingPairs": BreedingPairs,
     "BreedingSeason": BreedingSeason,
     "PairingPlanner": PairingPlanner,
     "FieldMode": FieldMode,

@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dna, AlertTriangle, ChevronDown, ChevronRight, Shuffle, ExternalLink, ImageDown, Share2, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { getTrait, getComboMorph, displayText, outcomeCombos, outcomeTraits } from '@/lib/genetics';
+import { getTrait, getComboMorph, displayText, outcomeTraits } from '@/lib/genetics';
 import { predictWeighted } from '@/lib/genetics/predictWeighted';
 import { translateMorphTags } from '@/lib/genetics/tagTranslation';
+import { animalToSpec, outcomeLabel } from '@/lib/genetics/pairOutcomes';
 import {
   MORPH_GUIDE_SLUGS,
   COMPLEX_LOCUS,
@@ -63,11 +64,6 @@ function severityClasses(severity) {
   return 'bg-slate-800 border-slate-600 text-slate-200';
 }
 
-function animalToSpec(animal) {
-  if (animal?.genotype_spec) return animal.genotype_spec;
-  return translateMorphTags(animal?.morph_tags || []).spec;
-}
-
 /**
  * How a collection gecko's tags were read: which ones the odds could not
  * use, and which were counted as a maybe. Manual-mode parents are built
@@ -113,12 +109,6 @@ function TagsNotUsed({ sire, dam }) {
       ))}
     </div>
   );
-}
-
-function outcomeLabel(outcome) {
-  const combos = outcomeCombos(outcome);
-  if (combos.length > 0) return combos.join(' + ');
-  return outcomeTraits(outcome);
 }
 
 function guideLinksFor(outcome) {

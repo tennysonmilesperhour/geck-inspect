@@ -12,22 +12,17 @@
  *   - which season of her breeding career it was (1st, 2nd, ...)
  *   - her weight range during that season
  *
- * Seasons are keyed on the BreedingPlan.breeding_season string
- * ("2024 Spring", etc.). If a plan has no stored season, or an egg has
- * no linked plan, we fall back to inferring the season from the lay date
- * with the exact same month rule Breeding.jsx uses, so everything in
- * the app groups under the same labels.
+ * A season is the calendar year the egg was laid in (decision D17), so
+ * "2026" covers every egg laid from Jan 1 to Dec 31, 2026. Older plans
+ * stored quarter labels such as "2026 Spring"; they no longer split a
+ * year into several rows.
  *
  * Status values in the eggs table: Incubating | Hatched | Infertile | Slug | Stillbirth
  * "Failed" buckets Slug + Stillbirth together with Infertile, matching the
  * existing Hatchery summary (see components/breeding/Hatchery.jsx).
  */
 
-import {
-  inferSeasonLabel,
-  parseSeasonLabel,
-  compareSeasonLabels,
-} from './seasons.js';
+import { seasonYearOf } from './seasons.js';
 
 // Window around the first/last lay date we use for weight-range purposes.
 // A month either side captures the gravid buildup and post-lay recovery
@@ -58,13 +53,13 @@ function yearsBetween(from, to) {
  *
  * @param {object} params
  * @param {Array}  params.eggs, Egg rows for this dam (status, lay_date, breeding_plan_id)
- * @param {Array}  [params.breedingPlans], BreedingPlan rows (for breeding_season lookup)
+ * @param {Array}  [params.breedingPlans], BreedingPlan rows (accepted for older callers; the year comes from the lay date)
  * @param {Array}  params.weightRecords, WeightRecord rows for this gecko
  * @param {string|Date|null} params.hatchDate, the gecko's hatch_date
  * @returns {Array<{
- *   seasonLabel: string,       // e.g. "2024 Spring"
+ *   seasonLabel: string,       // the calendar year, e.g. "2026"
  *   year: number|null,
- *   seasonName: string|null,   // "Spring" | "Summer" | "Fall" | "Winter"
+ *   seasonName: null,          // kept for older callers; seasons are years now
  *   ageYears: number|null,
  *   seasonNumber: number,      // 1st breeding season, 2nd, ...
  *   eggsLaid: number,
@@ -83,15 +78,10 @@ function yearsBetween(from, to) {
  */
 export function summarizeBreedingHistory({
   eggs = [],
-  breedingPlans = [],
   weightRecords = [],
   hatchDate = null,
 } = {}) {
   const dob = toDate(hatchDate);
-  const planById = new Map();
-  for (const plan of breedingPlans) {
-    if (plan?.id) planById.set(plan.id, plan);
-  }
 
   const byLabel = new Map();
 
@@ -107,9 +97,9 @@ export function summarizeBreedingHistory({
     const laid = toDate(egg.lay_date);
     if (!laid) continue;
 
-    const plan = egg.breeding_plan_id ? planById.get(egg.breeding_plan_id) : null;
-    const label = plan?.breeding_season || inferSeasonLabel(laid);
-    if (!label) continue;
+    const year = seasonYearOf(egg.lay_date);
+    if (!year) continue;
+    const label = String(year);
 
     let bucket = byLabel.get(label);
     if (!bucket) {
@@ -141,7 +131,7 @@ export function summarizeBreedingHistory({
 
   // Sort oldest-first so seasonNumber ordinals line up chronologically.
   const rows = Array.from(byLabel.values()).sort((a, b) =>
-    compareSeasonLabels(a.seasonLabel, b.seasonLabel)
+    Number(a.seasonLabel) - Number(b.seasonLabel)
   );
 
   return rows.map((b, idx) => {
@@ -166,12 +156,10 @@ export function summarizeBreedingHistory({
     const midpoint = new Date((b.firstLay.getTime() + b.lastLay.getTime()) / 2);
     const ageYears = dob ? yearsBetween(dob, midpoint) : null;
 
-    const parsed = parseSeasonLabel(b.seasonLabel);
-
     return {
       seasonLabel: b.seasonLabel,
-      year: parsed?.year ?? null,
-      seasonName: parsed?.season ?? null,
+      year: Number(b.seasonLabel),
+      seasonName: null,
       ageYears,
       seasonNumber: idx + 1,
       eggsLaid: b.eggsLaid,
