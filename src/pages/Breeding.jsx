@@ -6,7 +6,7 @@ import { BreedingPlan, Egg } from '@/entities/all';
 import useFemaleReadiness from '@/hooks/useFemaleReadiness';
 import { ReadinessNote } from '@/components/breeding/BreedingReadiness';
 import { api } from '@/api/appClient';
-import { currentSeasonLabel } from '@/lib/seasons';
+import { planSeasonYear } from '@/lib/seasons';
 import { notifyFollowersNewBreedingPlan } from '@/components/notifications/NotificationService';
 import PlanLimitModal, { checkPlanLimit } from '@/components/subscription/PlanLimitChecker';
 // Extracted sub-components (previously inlined at the top of this file)
@@ -15,7 +15,7 @@ import GeneticCalculatorTab from '../components/breeding/GeneticCalculatorTab';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, GitBranch, Heart, ChevronDown, ChevronUp, Calendar as CalendarIcon, Archive, ListTree, Search, Dna, Moon } from 'lucide-react';
+import { PlusCircle, GitBranch, Heart, ChevronDown, ChevronUp, Calendar as CalendarIcon, Archive, ListTree, Search, Dna, Moon, AlertTriangle } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
@@ -117,13 +117,16 @@ export default function BreedingPage() {
         pairing_date: todayLocalISO(),
         status: 'Planned',
         notes: '',
-        breeding_season: ''
+        breeding_season: '',
     });
 
-    // Delegates to the shared seasons helper so the "<year> <Season>"
-    // labels written here follow the same winter rule as everything
-    // else (a December plan belongs to NEXT year's winter).
-    const getCurrentSeason = () => currentSeasonLabel();
+    // A breeding season is the calendar year (decision D17). Left blank,
+    // a plan's season is the year of its pairing date.
+    const seasonForNewPlan = (plan) => {
+        const typed = String(plan.breeding_season || '').trim();
+        if (typed) return typed;
+        return String(planSeasonYear({ pairing_date: plan.pairing_date }) || new Date().getFullYear());
+    };
 
     const [user, setUser] = useState(null);
     const [authChecked, setAuthChecked] = useState(false);
@@ -193,12 +196,16 @@ export default function BreedingPage() {
             const planData = {
                 ...newPlan,
                 breeding_id: breedingId,
-                breeding_season: newPlan.breeding_season || getCurrentSeason()
+                breeding_season: seasonForNewPlan(newPlan),
             };
             const createdPlan = await BreedingPlan.create(planData);
             
-            // Notify followers of new breeding plan
-            notifyFollowersNewBreedingPlan(createdPlan, sire, dam, user.email, user.full_name).catch(console.error);
+            // Decision D18: followers hear about a new plan only when it is
+            // public (breeding_plans.is_public). New plans start private, so
+            // this stays quiet unless a plan is created public.
+            if (createdPlan?.is_public === true) {
+                notifyFollowersNewBreedingPlan(createdPlan, sire, dam, user.email, user.full_name).catch(console.error);
+            }
             
             setIsModalOpen(false);
             setNewPlan({
@@ -208,7 +215,7 @@ export default function BreedingPage() {
                 pairing_date: todayLocalISO(),
                 status: 'Planned',
                 notes: '',
-                breeding_season: ''
+                breeding_season: '',
             });
             loadData();
         } catch (error) {
@@ -242,7 +249,7 @@ export default function BreedingPage() {
             await BreedingPlan.update(planId, {
                 archived: shouldArchive,
                 archived_date: shouldArchive ? todayLocalISO() : null,
-                breeding_season: planToUpdate.breeding_season || getCurrentSeason() 
+                breeding_season: planToUpdate.breeding_season || String(planSeasonYear(planToUpdate) || new Date().getFullYear()),
             });
             loadData();
         } catch (error) {
@@ -408,8 +415,11 @@ export default function BreedingPage() {
     const activePlans = filteredActivePlans;
     const archivedPlans = filteredArchivedPlans;
 
+    // The archive groups plans by season, which is the calendar year
+    // (decision D17). Older "2025 Spring" style labels group under 2025.
     const archivedBySeason = archivedPlans.reduce((acc, plan) => {
-        const season = plan.breeding_season || 'Unknown Season';
+        const year = planSeasonYear(plan);
+        const season = year ? String(year) : 'Unknown Season';
         if (!acc[season]) {
             acc[season] = [];
         }
@@ -418,26 +428,10 @@ export default function BreedingPage() {
     }, {});
 
     const sortedSeasons = Object.keys(archivedBySeason).sort((a, b) => {
-        const getYear = (s) => parseInt(s.split(' ')[0]);
-        const getSeasonOrder = (s) => {
-            const seasonName = s.split(' ')[1];
-            switch (seasonName) {
-                case 'Winter': return 0;
-                case 'Spring': return 1;
-                case 'Summer': return 2;
-                case 'Fall': return 3;
-                default: return 4;
-            }
-        };
-
-        const yearA = getYear(a);
-        const yearB = getYear(b);
-
-        if (yearB !== yearA) return yearB - yearA;
-        
-        return getSeasonOrder(a) - getSeasonOrder(b);
+        if (a === 'Unknown Season') return 1;
+        if (b === 'Unknown Season') return -1;
+        return Number(b) - Number(a);
     });
-
 
     const males = geckos.filter(g => g.sex === 'Male');
     const females = geckos.filter(g => g.sex === 'Female');
@@ -592,7 +586,14 @@ export default function BreedingPage() {
                                 </div>
                             </div>
 
-                            {activePlans.length === 0 ? (
+                            {breedingQuery.isError ? (
+                                <EmptyState
+                                    icon={AlertTriangle}
+                                    title="Your breeding plans could not be loaded"
+                                    message="Check your connection and try again. Nothing has been changed."
+                                    action={{ label: "Try again", onClick: () => loadData() }}
+                                />
+                            ) : activePlans.length === 0 ? (
                                 <EmptyState
                                     icon={Heart}
                                     title="No Active Breeding Plans"
@@ -732,7 +733,14 @@ export default function BreedingPage() {
                                 </div>
                             </div>
 
-                            {archivedPlans.length === 0 ? (
+                            {breedingQuery.isError ? (
+                                <EmptyState
+                                    icon={AlertTriangle}
+                                    title="Your breeding plans could not be loaded"
+                                    message="Check your connection and try again. Nothing has been changed."
+                                    action={{ label: "Try again", onClick: () => loadData() }}
+                                />
+                            ) : archivedPlans.length === 0 ? (
                                 <EmptyState
                                     icon={Archive}
                                     title="No Archived Plans"
@@ -745,7 +753,7 @@ export default function BreedingPage() {
                                             <div key={season}>
                                                 <h2 className="text-xl md:text-2xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
                                                     <CalendarIcon className="w-5 h-5 md:w-6 md:h-6" />
-                                                    {season}
+                                                    {season === 'Unknown Season' ? season : `${season} season`}
                                                 </h2>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         {archivedBySeason[season].map(plan => (
@@ -861,10 +869,10 @@ export default function BreedingPage() {
                                         id="breeding_season"
                                         value={newPlan.breeding_season}
                                         onChange={(e) => setNewPlan({...newPlan, breeding_season: e.target.value})}
-                                        placeholder={getCurrentSeason()}
+                                        placeholder={seasonForNewPlan({ ...newPlan, breeding_season: '' })}
                                         className="bg-slate-800 border-slate-600"
                                     />
-                                    <p className="text-xs text-slate-500 mt-1">Leave blank to auto-assign current season</p>
+                                    <p className="text-xs text-slate-500 mt-1">A season is a calendar year. Leave blank to use the pairing date&apos;s year.</p>
                                 </div>
                             </div>
 

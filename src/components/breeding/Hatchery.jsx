@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Egg, BreedingPlan, Gecko, User } from '@/entities/all';
+import { Egg, BreedingPlan, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,9 @@ import LoadingSpinner from '../shared/LoadingSpinner';
 import { format, differenceInDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import EggDetailModal from './EggDetailModal';
-import { generateHatchedGeckoIdFromEgg } from '../shared/geckoIdUtils';
-import { currentSeasonLabel, inferSeasonLabel } from '@/lib/seasons';
+import HatchEggDialog from './HatchEggDialog';
+import { eggStatusFields } from '@/lib/hatchEgg';
+import { currentSeasonYear, eggSeasonYear, planSeasonYear } from '@/lib/seasons';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -36,6 +37,8 @@ export default function Hatchery() {
     const [isSavingIncubation, setIsSavingIncubation] = useState(false);
     const [isTemperatureGuideOpen, setIsTemperatureGuideOpen] = useState(false);
     const [selectedEgg, setSelectedEgg] = useState(null);
+    const [hatchingEgg, setHatchingEgg] = useState(null);
+    const [loadError, setLoadError] = useState(null);
     
     const [filters, setFilters] = useState({
         season: 'all',
@@ -74,6 +77,7 @@ export default function Hatchery() {
 
     const loadData = async () => {
         setIsLoading(true);
+        setLoadError(null);
         try {
             const user = await User.me();
             const { getVisibleGeckos } = await import('@/lib/geckoAccess');
@@ -107,6 +111,7 @@ export default function Hatchery() {
             setGeckos(geckosData);
         } catch (error) {
             console.error("Failed to load hatchery data:", error);
+            setLoadError(error?.message || 'unknown error');
         }
         setIsLoading(false);
     };
@@ -117,12 +122,9 @@ export default function Hatchery() {
         // Filter archived
         result = result.filter(egg => filters.showArchived ? egg.archived : !egg.archived);
 
-        // Filter by season
+        // Filter by season (calendar year, decision D17)
         if (filters.season !== 'all') {
-            result = result.filter(egg => {
-                const plan = breedingPlans.find(p => p.id === egg.breeding_plan_id);
-                return plan?.breeding_season === filters.season;
-            });
+            result = result.filter(egg => String(eggSeasonYear(egg)) === filters.season);
         }
 
         // Filter by status
@@ -179,7 +181,9 @@ export default function Hatchery() {
         setFilteredEggs(result);
     }, [eggs, filters, sortBy, breedingPlans, geckos, incubationProfileId]);
 
-    const uniqueSeasons = [...new Set(breedingPlans.map(p => p.breeding_season).filter(Boolean))];
+    const uniqueSeasons = [...new Set(eggs.map(eggSeasonYear).filter(Boolean))]
+        .sort((a, b) => b - a)
+        .map(String);
 
     const getStatusColor = (status) => {
         const colors = {
@@ -250,60 +254,17 @@ export default function Hatchery() {
         }
     };
 
-    const handleHatchEgg = async (egg, e) => {
+    // One hatch path for every screen: the dialog asks for the date, adds
+    // the gecko and asks what hatched (src/lib/hatchEgg.js).
+    const handleHatchEgg = (egg, e) => {
         e.stopPropagation();
-        const plan = breedingPlans.find(p => p.id === egg.breeding_plan_id);
-        const sire = plan ? geckos.find(g => g.id === plan.sire_id) : null;
-        const dam = plan ? geckos.find(g => g.id === plan.dam_id) : null;
-
-        if (!plan || !sire || !dam) {
-            alert("Can't auto-hatch, this egg's breeding plan, sire, or dam is missing. Open the egg to mark it manually.");
-            return;
-        }
-
-        const today = todayLocalISO();
-        try {
-            const pairEggs = eggs.filter(e => e.breeding_plan_id === plan.id);
-            const newGeckoIdCode = generateHatchedGeckoIdFromEgg({
-                sire, dam, egg, allEggsForPair: pairEggs,
-            });
-
-            const newGecko = await Gecko.create({
-                name: `${sire.name} x ${dam.name} Hatchling`,
-                gecko_id_code: newGeckoIdCode,
-                hatch_date: today,
-                sex: 'Unsexed',
-                sire_id: sire.id,
-                dam_id: dam.id,
-                status: 'Pet',
-                morphs_traits: '',
-                notes: `Hatched from egg laid on ${format(parseLocalDate(egg.lay_date), 'PPP')}. From breeding pair: ${sire.name} x ${dam.name}.`,
-                image_urls: [],
-            });
-
-            await Egg.update(egg.id, {
-                status: 'Hatched',
-                hatch_date_actual: today,
-                gecko_id: newGecko.id,
-                archived: true,
-                archived_date: today,
-            });
-
-            await loadData();
-        } catch (error) {
-            console.error('Failed to hatch egg:', error);
-            alert(`Failed to hatch: ${error.message || 'unknown error'}`);
-        }
+        setHatchingEgg(egg);
     };
 
     const handleMarkFailed = async (eggId, newStatus, e) => {
         e.stopPropagation();
         try {
-            await Egg.update(eggId, {
-                status: newStatus,
-                archived: true,
-                archived_date: todayLocalISO(),
-            });
+            await Egg.update(eggId, eggStatusFields(newStatus));
             await loadData();
         } catch (error) {
             console.error('Failed to update egg status:', error);
@@ -311,29 +272,40 @@ export default function Hatchery() {
         }
     };
 
-    const currentSeason = currentSeasonLabel();
-    const planSeasonById = breedingPlans.reduce((acc, p) => {
-        if (p?.id) acc[p.id] = p.breeding_season || null;
-        return acc;
-    }, {});
-    const eggSeason = (egg) => {
-        const fromPlan = egg.breeding_plan_id ? planSeasonById[egg.breeding_plan_id] : null;
-        return fromPlan || inferSeasonLabel(egg.lay_date);
-    };
+    // "This season" is the calendar year (decision D17). A hatched egg
+    // counts in the year it hatched, any other egg in the year it was laid.
+    const currentSeason = currentSeasonYear();
+    const inThisSeason = (egg) => eggSeasonYear(egg) === currentSeason;
+    const FAILED = ['Slug', 'Infertile', 'Stillbirth'];
     const allNonArchived = eggs.filter(e => !e.archived);
     const stats = {
         incubating: allNonArchived.filter(e => e.status === 'Incubating').length,
         hatchedTotal: eggs.filter(e => e.status === 'Hatched').length,
-        hatchedSeason: eggs.filter(e => e.status === 'Hatched' && eggSeason(e) === currentSeason).length,
-        failedTotal: eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length,
-        failedSeason: eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status) && eggSeason(e) === currentSeason).length,
+        hatchedSeason: eggs.filter(e => e.status === 'Hatched' && inThisSeason(e)).length,
+        failedTotal: eggs.filter(e => FAILED.includes(e.status)).length,
+        failedSeason: eggs.filter(e => FAILED.includes(e.status) && inThisSeason(e)).length,
     };
+    const planFor = (egg) => breedingPlans.find(p => p.id === egg?.breeding_plan_id);
+    const geckoById = (id) => (id ? geckos.find(g => g.id === id) : undefined);
 
     if (isLoading) {
         return (
             <div className="flex justify-center items-center py-20">
                 <LoadingSpinner />
             </div>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <Card>
+                <CardContent className="text-center py-12 space-y-3">
+                    <EggIcon className="w-12 h-12 mx-auto text-slate-500" />
+                    <p className="text-slate-200 font-semibold">Your eggs could not be loaded</p>
+                    <p className="text-sm text-slate-400">Check your connection and try again. Nothing has been changed.</p>
+                    <Button onClick={loadData} variant="outline" className="border-slate-600">Try again</Button>
+                </CardContent>
+            </Card>
         );
     }
 
@@ -562,8 +534,8 @@ export default function Hatchery() {
                                     <p className="text-slate-200 font-semibold">
                                         {sire?.name || 'Unknown'} × {dam?.name || 'Unknown'}
                                     </p>
-                                    {plan?.breeding_season && (
-                                        <p className="text-xs text-slate-400">{plan.breeding_season}</p>
+                                    {plan && planSeasonYear(plan) && (
+                                        <p className="text-xs text-slate-400">{planSeasonYear(plan)} season</p>
                                     )}
                                 </div>
 
@@ -636,6 +608,14 @@ export default function Hatchery() {
                                         >
                                             Slug
                                         </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={(e) => handleMarkFailed(egg.id, 'Stillbirth', e)}
+                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-2"
+                                        >
+                                            Stillbirth
+                                        </Button>
                                     </div>
                                 )}
                             </CardContent>
@@ -682,11 +662,24 @@ export default function Hatchery() {
             {selectedEgg && (
                 <EggDetailModal
                     egg={selectedEgg}
-                    breedingPlan={breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)}
-                    sire={geckos.find(g => g.id === breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)?.sire_id)}
-                    dam={geckos.find(g => g.id === breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)?.dam_id)}
+                    breedingPlan={planFor(selectedEgg)}
+                    sire={geckoById(planFor(selectedEgg)?.sire_id)}
+                    dam={geckoById(planFor(selectedEgg)?.dam_id)}
+                    pairEggs={eggs.filter(e => e.breeding_plan_id === selectedEgg.breeding_plan_id)}
                     onClose={() => setSelectedEgg(null)}
                     onUpdate={loadData}
+                />
+            )}
+
+            {hatchingEgg && (
+                <HatchEggDialog
+                    egg={hatchingEgg}
+                    plan={planFor(hatchingEgg)}
+                    sire={geckoById(planFor(hatchingEgg)?.sire_id)}
+                    dam={geckoById(planFor(hatchingEgg)?.dam_id)}
+                    pairEggs={eggs.filter(e => e.breeding_plan_id === hatchingEgg.breeding_plan_id)}
+                    onClose={() => setHatchingEgg(null)}
+                    onHatched={loadData}
                 />
             )}
         </div>
