@@ -89,9 +89,13 @@ export default function GeckoDetail() {
 
                 // Load owner, parents, weights, sheds in parallel
                 const [ownerData, weights, sheds, sireData, damData] = await Promise.allSettled([
-                    fetchedGecko.created_by
-                        ? User.filter({ email: fetchedGecko.created_by }).then(r => r[0] || null)
-                        : Promise.resolve(null),
+                    // Signed-out visitors get no created_by (an email), so
+                    // the owner is found by profile id when there is one.
+                    fetchedGecko.owner_profile_id
+                        ? User.get(fetchedGecko.owner_profile_id)
+                        : fetchedGecko.created_by
+                            ? User.filter({ email: fetchedGecko.created_by }).then(r => r[0] || null)
+                            : Promise.resolve(null),
                     // Explicit columns: signed-out visitors may read a public
                     // passport gecko's weigh-ins but not created_by (an email).
                     isGuestMode()

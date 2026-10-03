@@ -170,13 +170,17 @@ export default function Breeder() {
                 : Promise.resolve({ data: [] }),
               // Mini-site settings carrier. RLS only exposes published
               // rows to visitors, and we filter on is_published here too
-              // so owners preview exactly what the public sees.
-              supabase
-                .from('breeder_store_pages')
-                .select('external_links, featured_gecko_ids')
-                .eq('owner_email', ownerEmail)
-                .eq('is_published', true)
-                .maybeSingle(),
+              // so owners preview exactly what the public sees. Matched on
+              // the owner's profile id: signed-out visitors cannot read
+              // owner_email.
+              ownerProf?.id
+                ? supabase
+                    .from('breeder_store_pages')
+                    .select('external_links, featured_gecko_ids')
+                    .eq('owner_profile_id', ownerProf.id)
+                    .eq('is_published', true)
+                    .maybeSingle()
+                : Promise.resolve({ data: null }),
             ]);
             if (cancelled) return;
             setForSaleGeckos(geckos || []);

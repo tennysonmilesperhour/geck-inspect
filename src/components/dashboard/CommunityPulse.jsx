@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Gecko, ForumPost, GeckoImage, BreedingPlan } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
+import { publicDisplayName } from '@/lib/publicColumns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Activity as ActivityIcon,
@@ -32,7 +33,7 @@ const TYPE_META = {
 export default function CommunityPulse() {
     const [isLoading, setIsLoading] = useState(true);
     const [items, setItems] = useState([]);
-    const [usersByEmail, setUsersByEmail] = useState(new Map());
+    const [profiles, setProfiles] = useState(new Map());
 
     useEffect(() => {
         (async () => {
@@ -51,6 +52,7 @@ export default function CommunityPulse() {
                         type: 'gecko',
                         ts: g.created_date,
                         email: g.created_by,
+                        ownerId: g.owner_profile_id || null,
                         detail: g.name || 'Unnamed gecko',
                         href: '/Marketplace',
                     })),
@@ -59,6 +61,7 @@ export default function CommunityPulse() {
                         type: 'image',
                         ts: i.created_date,
                         email: i.created_by,
+                        ownerId: i.owner_profile_id || null,
                         detail: (i.primary_morph || 'gecko').replace(/_/g, ' '),
                         href: '/Gallery',
                     })),
@@ -67,6 +70,7 @@ export default function CommunityPulse() {
                         type: 'post',
                         ts: p.created_date,
                         email: p.created_by,
+                        ownerId: p.owner_profile_id || null,
                         detail: p.title || 'New post',
                         href: '/Forum',
                     })),
@@ -75,6 +79,7 @@ export default function CommunityPulse() {
                         type: 'plan',
                         ts: pl.created_date,
                         email: pl.created_by,
+                        ownerId: pl.owner_profile_id || null,
                         detail: pl.breeding_id || 'New breeding plan',
                         href: '/Breeding',
                     })),
@@ -85,18 +90,25 @@ export default function CommunityPulse() {
 
                 setItems(merged);
 
-                // Hydrate user display names for the rows we actually show
-                const emails = Array.from(new Set(merged.map((x) => x.email).filter(Boolean)));
-                if (emails.length > 0) {
-                    // Only the profiles on screen, display columns only.
-                    const { data: userRows } = await supabase
-                        .rpc('read_profiles', { p_emails: emails })
-                        .select('id, email, full_name, business_name, profile_image_url')
-                        .in('email', emails);
-                    const map = new Map();
-                    for (const u of userRows || []) map.set(u.email, u);
-                    setUsersByEmail(map);
-                }
+                // Hydrate display names for the rows we actually show. Rows
+                // carry owner_profile_id where the table has one; signed-out
+                // visitors never get created_by (an email), so the email
+                // lookup only runs for signed-in members' plan rows.
+                const cols = 'id, email, full_name, business_name, profile_image_url';
+                const ids = Array.from(new Set(merged.map((x) => x.ownerId).filter(Boolean)));
+                const emails = Array.from(new Set(merged.filter((x) => !x.ownerId).map((x) => x.email).filter(Boolean)));
+                const [byId, byEmail] = await Promise.all([
+                    ids.length
+                        ? supabase.rpc('read_profiles').select(cols).in('id', ids)
+                        : Promise.resolve({ data: [] }),
+                    emails.length
+                        ? supabase.rpc('read_profiles', { p_emails: emails }).select(cols).in('email', emails)
+                        : Promise.resolve({ data: [] }),
+                ]);
+                const map = new Map();
+                for (const u of byId.data || []) map.set(`id:${u.id}`, u);
+                for (const u of byEmail.data || []) if (u.email) map.set(`email:${u.email}`, u);
+                setProfiles(map);
             } catch (err) {
                 console.error('CommunityPulse load failed:', err);
             }
@@ -136,8 +148,10 @@ export default function CommunityPulse() {
                         {pulse.map((item) => {
                             const meta = TYPE_META[item.type];
                             const Icon = meta.icon;
-                            const user = usersByEmail.get(item.email);
-                            const name = user?.full_name || user?.breeder_name || (item.email || '').split('@')[0];
+                            const user = item.ownerId
+                                ? profiles.get(`id:${item.ownerId}`)
+                                : profiles.get(`email:${item.email}`);
+                            const name = publicDisplayName(user, 'A keeper');
                             return (
                                 <li key={item.key}>
                                     <Link

@@ -3,6 +3,7 @@ import { Star, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { publicDisplayName } from '@/lib/publicColumns';
 
 export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onImageSelect }) {
     // Use official gecko of the day if available, otherwise use fallback
@@ -66,7 +67,7 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
                                 to={createPageUrl(`PublicProfile?userId=${uploader.id}`)}
                                 className="font-medium text-emerald-400 hover:underline"
                             >
-                                {uploader.full_name || uploader.email}
+                                {publicDisplayName(uploader)}
                             </Link>
                         </p>
                     )}

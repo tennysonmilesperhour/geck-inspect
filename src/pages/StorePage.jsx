@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { linkKindMeta } from '@/lib/storeLinks';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { BREEDER_STORE_PAGE_PUBLIC_COLUMNS, publicDisplayName } from '@/lib/publicColumns';
 
 /**
  * Public breeder storefront. Route: /store/:slug
@@ -300,9 +301,11 @@ export default function StorePage() {
         (async () => {
             setIsLoading(true);
             try {
+                // Explicit columns: signed-out visitors cannot read
+                // owner_email. The owner is found by owner_profile_id.
                 const { data, error } = await supabase
                     .from('breeder_store_pages')
-                    .select('*')
+                    .select(BREEDER_STORE_PAGE_PUBLIC_COLUMNS.join(','))
                     .eq('slug', slug)
                     .maybeSingle();
                 if (cancelled) return;
@@ -315,21 +318,26 @@ export default function StorePage() {
 
                 // Prefer redirecting to the canonical /Breeder page when the
                 // owner has a breeder profile with a custom slug.
-                const profileSlugRes = await supabase
-                    .from('breeder_profiles')
-                    .select('custom_slug')
-                    .eq('created_by', data.owner_email)
-                    .maybeSingle();
-                if (!cancelled && profileSlugRes.data?.custom_slug) {
-                    setRedirectSlug(profileSlugRes.data.custom_slug);
-                    return;
+                const profilesRes = data.owner_profile_id
+                    ? await supabase
+                        .rpc('read_profiles')
+                        .select('id, full_name, business_name, profile_image_url, email, bio, location, instagram_handle')
+                        .eq('id', data.owner_profile_id)
+                        .maybeSingle()
+                    : { data: null };
+                if (cancelled) return;
+                const ownerEmail = profilesRes.data?.email;
+                if (ownerEmail) {
+                    const profileSlugRes = await supabase
+                        .from('breeder_profiles')
+                        .select('custom_slug')
+                        .eq('created_by', ownerEmail)
+                        .maybeSingle();
+                    if (!cancelled && profileSlugRes.data?.custom_slug) {
+                        setRedirectSlug(profileSlugRes.data.custom_slug);
+                        return;
+                    }
                 }
-
-                const profilesRes = await supabase
-                    .rpc('read_profiles', { p_emails: [data.owner_email] })
-                    .select('id, full_name, profile_image_url, email, bio, location, instagram_handle')
-                    .eq('email', data.owner_email)
-                    .maybeSingle();
                 if (!cancelled && profilesRes.data) setOwner(profilesRes.data);
 
                 const geckoIds = Array.isArray(data.featured_gecko_ids) ? data.featured_gecko_ids : [];
@@ -412,7 +420,7 @@ export default function StorePage() {
         );
     }
 
-    const ownerName = owner?.breeder_name || owner?.full_name || page.owner_email.split('@')[0];
+    const ownerName = publicDisplayName(owner, page.title || 'Geck Inspect breeder');
     const externalLinks = Array.isArray(page.external_links) ? page.external_links : [];
     const ContactIcon = page.contact_link?.startsWith('mailto:') ? Mail : MessageCircle;
     const hasHero = Boolean(page.header_image_url);

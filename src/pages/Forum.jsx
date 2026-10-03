@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { nameWithoutEmail } from '@/lib/publicColumns';
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -331,7 +332,7 @@ export default function ForumPage() {
                                                         {post.title}
                                                     </Link>
                                                     <p className="text-xs md:text-sm text-slate-500 truncate">
-                                                        by {post.author_name || 'Unknown'} ·{' '}
+                                                        by {nameWithoutEmail(post.author_name, 'Geck Inspect member')} ·{' '}
                                                         {formatDistanceToNow(new Date(post.created_date), {
                                                             addSuffix: true,
                                                         })}
