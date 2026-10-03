@@ -23,6 +23,7 @@ import {
     ChevronLeft, ChevronRight, X, Droplets
 } from 'lucide-react';
 import ShareMenu from '@/components/shared/ShareMenu';
+import ReportContent from '@/components/support/ReportContent';
 import { passportUrl, PUBLIC_WEIGHT_COLUMNS } from '@/lib/passportUtils';
 import { supabase } from '@/lib/supabaseClient';
 import { isGuestMode } from '@/lib/guestMode';
@@ -224,6 +225,15 @@ export default function GeckoDetail() {
                                         )}
                                     </p>
                                 )}
+                                <div className="mt-2 flex justify-center">
+                                    <ReportContent
+                                        targetType="gecko"
+                                        targetId={gecko.id}
+                                        authorEmail={gecko.created_by}
+                                        authorProfileId={gecko.owner_profile_id}
+                                        excerpt={[gecko.name, gecko.morphs_traits, gecko.marketplace_description].filter(Boolean).join('\n')}
+                                    />
+                                </div>
                             </CardContent>
                         </Card>
 

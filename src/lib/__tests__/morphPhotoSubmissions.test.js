@@ -72,7 +72,7 @@ describe('fetching approved photos', () => {
   it('maps rows from the database function with a credit', async () => {
     const rpc = vi.fn().mockResolvedValue({
       data: [
-        { id: '1', image_url: 'https://x/1.jpg', contributor_name: 'Canopy Crested' },
+        { id: '1', image_url: 'https://x/1.jpg', contributor_name: 'Canopy Crested', contributor_id: 'p1' },
         { id: '2', image_url: 'https://x/2.jpg', contributor_name: null },
         { id: '3', image_url: null, contributor_name: 'Skipped' },
       ],
@@ -81,8 +81,8 @@ describe('fetching approved photos', () => {
     const rows = await fetchMorphCommunityPhotos('phantom', { client: { rpc } });
     expect(rpc).toHaveBeenCalledWith('morph_community_photos', { p_slug: 'phantom', p_limit: 12 });
     expect(rows).toEqual([
-      { id: 'submission-1', image_url: 'https://x/1.jpg', credit: 'Canopy Crested' },
-      { id: 'submission-2', image_url: 'https://x/2.jpg', credit: CONTRIBUTOR_FALLBACK },
+      { id: 'submission-1', submission_id: '1', image_url: 'https://x/1.jpg', credit: 'Canopy Crested', owner_profile_id: 'p1' },
+      { id: 'submission-2', submission_id: '2', image_url: 'https://x/2.jpg', credit: CONTRIBUTOR_FALLBACK, owner_profile_id: null },
     ]);
   });
 

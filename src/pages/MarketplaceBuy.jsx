@@ -26,6 +26,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
 import TrustPanel from '@/components/marketplace/TrustPanel';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
@@ -217,6 +219,17 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                            />
                        )}
                     </div>
+                    <div className="flex justify-end -mb-1" onClick={(e) => e.stopPropagation()}>
+                        <ReportContent
+                            targetType="gecko"
+                            targetId={gecko.id}
+                            authorEmail={gecko.created_by}
+                            authorProfileId={gecko.owner_profile_id}
+                            excerpt={[gecko.name, gecko.morphs_traits, gecko.marketplace_description].filter(Boolean).join('\n')}
+                            label="Report"
+                            className="h-7 text-[11px] px-2"
+                        />
+                    </div>
                 </div>
             </CardContent>
         </Card>
@@ -241,6 +254,8 @@ export default function MarketplaceBuyPage() {
     const [sexFilter, setSexFilter] = useState(buyPrefs.defaultSexFilter);
     const [sortBy, setSortBy] = useState(buyPrefs.defaultSort);
     const [activeFilters, setActiveFilters] = useState(new Set());
+    // Listings from members the viewer blocked are left out.
+    const blocked = useBlockedMembers();
 
     const MORPH_FILTERS = [
         'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Moonglow',
@@ -393,9 +408,10 @@ export default function MarketplaceBuyPage() {
         const q = searchTerm.toLowerCase();
         let list = geckos.filter(
             (gecko) =>
+                !blocked.isBlocked(gecko) && (
                 (gecko.name?.toLowerCase() || '').includes(q) ||
                 (gecko.morphs_traits?.toLowerCase() || '').includes(q) ||
-                (owners[gecko.created_by]?.full_name?.toLowerCase() || '').includes(q)
+                (owners[gecko.created_by]?.full_name?.toLowerCase() || '').includes(q))
         );
         if (sexFilter !== 'all') {
             list = list.filter((g) => g.sex === sexFilter);
@@ -428,7 +444,7 @@ export default function MarketplaceBuyPage() {
                 break;
         }
         return list;
-    }, [geckos, owners, searchTerm, sexFilter, sortBy, activeFilters]);
+    }, [geckos, owners, searchTerm, sexFilter, sortBy, activeFilters, blocked]);
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">

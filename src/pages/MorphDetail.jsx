@@ -30,6 +30,8 @@ import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
 import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import { useInAppShell } from '@/lib/appShell';
 
 const LOGO_URL = APP_LOGO_URL;
@@ -74,6 +76,7 @@ export default function MorphDetail() {
   const [relatedMorphs, setRelatedMorphs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const blocked = useBlockedMembers();
 
   const displayName = useMemo(() => morphDisplayName(slug), [slug]);
 
@@ -168,7 +171,7 @@ export default function MorphDetail() {
           // and unlike created_by it is readable when signed out.
           const { data: imgs } = await supabase
             .from('gecko_images')
-            .select('id, image_url, primary_morph')
+            .select('id, image_url, primary_morph, owner_profile_id')
             .ilike('primary_morph', `%${firstWord}%`)
             .eq('verified', true)
             .not('owner_profile_id', 'is', null)
@@ -233,7 +236,8 @@ export default function MorphDetail() {
 
   // --- success state ---
   const morphName = record.morph_name;
-  const memberPhotos = [...submittedPhotos, ...communityImages];
+  // Photos from members the viewer blocked are left out.
+  const memberPhotos = [...submittedPhotos, ...communityImages].filter((img) => !blocked.isBlocked(img));
   const heroImage = sanitizeImage(record.example_image_url) || memberPhotos[0]?.image_url || DEFAULT_GECKO_IMAGE;
   const rarityLabel = RARITY_LABELS[record.rarity] || record.rarity || 'Unknown';
   const rarityColor = RARITY_COLORS[record.rarity] || 'bg-slate-700/40 text-slate-300 border-slate-600';
@@ -663,11 +667,21 @@ export default function MorphDetail() {
                         loading="lazy"
                       />
                     </div>
-                    {img.credit && (
-                      <figcaption className="mt-1.5 text-xs text-slate-400 truncate">
-                        Photo by {img.credit}
-                      </figcaption>
-                    )}
+                    <div className="mt-1 flex items-center justify-between gap-1">
+                      {img.credit ? (
+                        <figcaption className="text-xs text-slate-400 truncate">
+                          Photo by {img.credit}
+                        </figcaption>
+                      ) : <span />}
+                      <ReportContent
+                        targetType={img.submission_id ? 'morph_photo' : 'gecko_image'}
+                        targetId={img.submission_id || img.id}
+                        authorProfileId={img.owner_profile_id}
+                        excerpt={img.image_url}
+                        compact
+                        className="h-7 px-2 shrink-0"
+                      />
+                    </div>
                   </figure>
                 ))}
               </div>

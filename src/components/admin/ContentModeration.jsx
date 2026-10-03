@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ForumPost, ForumComment, Gecko, MorphGuideComment } from '@/entities/all';
+import { ForumPost, ForumComment, Gecko } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,8 +27,13 @@ import { formatDistanceToNow } from 'date-fns';
 
 /**
  * Content moderation surface, browse and delete user-generated content
- * across forum posts, forum comments, marketplace listings, and morph guide
- * comments. Each tab is a simple list with search + delete confirmation.
+ * across forum posts, forum comments and marketplace listings. Each tab is
+ * a simple list with search + delete confirmation. Member reports, with
+ * Hide for every kind of content, are in the Reports section.
+ *
+ * The Morph Comments tab was removed on 3 Oct 2026: nothing creates morph
+ * guide comments any more and the table has no delete rule, so its delete
+ * button always failed.
  */
 
 function timeAgo(date) {
@@ -188,9 +193,6 @@ export default function ContentModeration() {
             <TabsTrigger value="marketplace" className="data-[state=active]:bg-slate-700">
               <ShoppingBag className="w-4 h-4 mr-1.5" /> Marketplace
             </TabsTrigger>
-            <TabsTrigger value="morph_comments" className="data-[state=active]:bg-slate-700">
-              <MessageCircle className="w-4 h-4 mr-1.5" /> Morph Comments
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="posts" className="mt-5">
@@ -262,25 +264,6 @@ export default function ContentModeration() {
                     <span className="text-[11px] text-slate-500">{g.created_by}</span>
                     <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(g.created_date)}</span>
-                  </div>
-                </>
-              )}
-            />
-          </TabsContent>
-
-          <TabsContent value="morph_comments" className="mt-5">
-            <ModerationList
-              entity={MorphGuideComment}
-              loadFn={() => MorphGuideComment.list('-created_date')}
-              searchKeys={['content', 'created_by']}
-              emptyText="No morph guide comments."
-              renderItem={(c) => (
-                <>
-                  <p className="text-sm text-slate-200 line-clamp-3">{c.content}</p>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[11px] text-slate-500">{c.created_by}</span>
-                    <span className="text-[11px] text-slate-500">·</span>
-                    <span className="text-[11px] text-slate-500">{timeAgo(c.created_date)}</span>
                   </div>
                 </>
               )}

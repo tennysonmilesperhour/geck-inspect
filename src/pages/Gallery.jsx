@@ -11,6 +11,7 @@ import CardGridSkeleton from '../components/shared/CardGridSkeleton';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -38,6 +39,8 @@ export default function Gallery() {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const offsetRef = useRef(0);
+    // Photos from members the viewer blocked are left out.
+    const blocked = useBlockedMembers();
 
     // Build filter query for API.
     //
@@ -135,6 +138,7 @@ export default function Gallery() {
     };
 
     const usersMap = new Map(users.map(u => [u.email, u]));
+    const visibleImages = images.filter(img => !blocked.isBlocked(img));
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
@@ -190,10 +194,10 @@ export default function Gallery() {
                         aspect="aspect-square"
                         columns={`grid-cols-2 ${galleryPrefs.gridColumns === '3' ? 'md:grid-cols-3' : galleryPrefs.gridColumns === '4' ? 'md:grid-cols-3 lg:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'}`}
                     />
-                ) : images.length > 0 ? (
+                ) : visibleImages.length > 0 ? (
                     <>
                         <div className={`grid grid-cols-2 gap-4 ${galleryPrefs.gridColumns === '3' ? 'md:grid-cols-3' : galleryPrefs.gridColumns === '4' ? 'md:grid-cols-3 lg:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'}`}>
-                            {images.map(image => (
+                            {visibleImages.map(image => (
                                 <ImageCard
                                     key={image.id}
                                     image={image}

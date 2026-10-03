@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Loader2, Check, Sparkles } from 'lucide-react';
+import ReportContent from '@/components/support/ReportContent';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 
 // Public waitlist signup page.
 //
@@ -34,6 +36,7 @@ export default function Waitlist() {
   const [wanted, setWanted] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [joined, setJoined] = useState(null);
+  const blocked = useBlockedMembers();
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +60,7 @@ export default function Waitlist() {
         if (w.gecko_id) {
           const { data: g } = await supabase
             .from('geckos')
-            .select('id, name, morphs_traits, image_urls, sex, hatch_date')
+            .select('id, name, morphs_traits, image_urls, sex, hatch_date, owner_profile_id')
             .eq('id', w.gecko_id)
             .maybeSingle();
           if (!cancelled) setGecko(g || null);
@@ -118,6 +121,19 @@ export default function Waitlist() {
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold mb-2">Waitlist unavailable</h1>
           <p className="text-emerald-200/70">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // When the waitlist is for a gecko, its owner's profile id says whose it
+  // is; a member who blocked that breeder does not see the list.
+  if (gecko && blocked.isBlocked(gecko)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-emerald-100 p-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold mb-2">You blocked this breeder</h1>
+          <p className="text-emerald-200/70">Their waitlists, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
         </div>
       </div>
     );
@@ -310,6 +326,17 @@ export default function Waitlist() {
           <a href="/" className="text-emerald-200/90 underline hover:text-emerald-100">
             Geck Inspect
           </a>
+        </div>
+        <div className="mt-2 flex justify-center">
+          <ReportContent
+            targetType="waitlist"
+            targetId={waitlist.id}
+            authorProfileId={gecko?.owner_profile_id}
+            authorAuthId={waitlist.breeder_user_id}
+            excerpt={[waitlist.title, waitlist.description].filter(Boolean).join('\n')}
+            label="Report this waitlist"
+            className="text-emerald-300/70"
+          />
         </div>
       </div>
     </div>

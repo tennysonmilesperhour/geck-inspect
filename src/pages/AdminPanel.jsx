@@ -22,6 +22,7 @@ import {
   Package,
   ListChecks,
   Scale,
+  Flag,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import PageHeader from '@/components/shared/PageHeader';
@@ -34,6 +35,7 @@ import AdminTasks from '@/components/admin/AdminTasks';
 import UserManagement from '@/components/admin/UserManagement';
 import MorphGuideEditor from '@/components/admin/MorphGuideEditor';
 import ContentModeration from '@/components/admin/ContentModeration';
+import ReportsQueue from '@/components/admin/ReportsQueue';
 import MassMessaging from '@/components/admin/MassMessaging';
 import ChangeLogManager from '@/components/admin/ChangeLogManager';
 import ScrapedDataReview from '@/components/admin/ScrapedDataReview';
@@ -52,6 +54,7 @@ import AIFeedbackQueue from '@/components/morph-id/AIFeedbackQueue';
  * Sections:
  *   Overview           , KPIs + recent activity + quick links
  *   Users              , search, role/expert grants, message
+ *   Reports            , member reports with Hide, Remove and Dismiss
  *   Moderation         , delete forum posts, comments, listings
  *   Morph Guides       , full CRUD on the morph_guides table
  *   Pages              , toggle visibility / page settings
@@ -80,6 +83,7 @@ const NAV_GROUPS = [
   {
     label: 'Community',
     items: [
+      { id: 'reports', label: 'Reports', icon: Flag },
       { id: 'users', label: 'Users', icon: Users },
       { id: 'support', label: 'Support inbox', icon: LifeBuoy },
       { id: 'moderation', label: 'Content moderation', icon: ShieldAlert },
@@ -124,6 +128,7 @@ const NAV_GROUPS = [
 const SECTION_TITLES = {
   overview: 'Overview',
   tasks: 'Admin tasks',
+  reports: 'Reports',
   users: 'User management',
   support: 'Support inbox',
   moderation: 'Content moderation',
@@ -164,6 +169,8 @@ export default function AdminPanel() {
   const sidebarRef = useRef(null);
   // Unverified Morph ID samples waiting for an expert, shown as a badge.
   const [reviewCount, setReviewCount] = useState(null);
+  // Open member reports, shown as a badge on Reports.
+  const [openReportCount, setOpenReportCount] = useState(null);
 
   useEffect(() => {
     const onPrefill = (e) => {
@@ -183,6 +190,12 @@ export default function AdminPanel() {
       .select('id', { count: 'exact', head: true })
       .eq('verified', false)
       .then(({ count }) => { if (!cancelled) setReviewCount(count ?? null); })
+      .catch(() => {});
+    supabase
+      .from('content_reports')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'open')
+      .then(({ count }) => { if (!cancelled) setOpenReportCount(count ?? null); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [user?.role, section]);
@@ -208,6 +221,8 @@ export default function AdminPanel() {
         return <AdminOverview onNavigate={setSection} />;
       case 'tasks':
         return <AdminTasks />;
+      case 'reports':
+        return <ReportsQueue onCountChange={setOpenReportCount} />;
       case 'users':
         return <UserManagement />;
       case 'support':
@@ -306,6 +321,11 @@ export default function AdminPanel() {
                           >
                             <Icon className="w-4 h-4 shrink-0" />
                             <span className="flex-1 text-left">{item.label}</span>
+                            {item.id === 'reports' && openReportCount > 0 && (
+                              <span className="rounded-full bg-rose-500/20 border border-rose-500/40 px-1.5 text-[10px] font-semibold text-rose-300">
+                                {openReportCount}
+                              </span>
+                            )}
                             {item.id === 'morph_id_review' && reviewCount > 0 && (
                               <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 text-[10px] font-semibold text-amber-300">
                                 {reviewCount}

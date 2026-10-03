@@ -15,6 +15,7 @@ import {
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import ShareMenu from '@/components/shared/ShareMenu';
+import ReportContent from '@/components/support/ReportContent';
 import QualityBadge from '@/components/shared/QualityBadge';
 import WeightChart from '@/components/shared/WeightChart';
 import FireStatePair from '@/components/shared/FireStatePair';
@@ -546,6 +547,14 @@ export default function AnimalPassport() {
                 url={url}
                 title={`${gecko.name} on Geck Inspect`}
                 subtitle={[gecko.morphs_traits, gecko.sex].filter(Boolean).join(' · ')}
+              />
+              <ReportContent
+                targetType="gecko"
+                targetId={gecko.id}
+                authorEmail={gecko.created_by}
+                authorProfileId={gecko.owner_profile_id}
+                excerpt={[gecko.name, gecko.morphs_traits, gecko.marketplace_description].filter(Boolean).join('\n')}
+                label="Report"
               />
               {hasProvenance && (
                 <Button
