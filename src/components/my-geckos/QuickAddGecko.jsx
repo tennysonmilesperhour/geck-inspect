@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Loader2, CheckCircle2, Scale, PlusCircle, Sparkles, ImagePlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { captureEvent } from '@/lib/posthog';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
+import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 
 // Crested geckos on CGD are usually fed every 2 to 3 days.
 const DEFAULT_FEEDING_INTERVAL_DAYS = 3;
@@ -38,6 +39,14 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const requestIdRef = useRef(crypto.randomUUID());
+
+  // Keep the first-run keeper-or-breeder question from opening on top of
+  // this form; it can follow once the form closes.
+  useEffect(() => {
+    if (!open) return undefined;
+    holdOnboarding('quick_add');
+    return () => releaseOnboarding('quick_add');
+  }, [open]);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState('');

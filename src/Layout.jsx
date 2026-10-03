@@ -13,6 +13,14 @@ import {
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
+import {
+  ONBOARDING_HOLD_EVENT,
+  browserAnswersToUpload,
+  onboardingShouldWait,
+  readOnboarding,
+  saveOnboarding,
+  syncOnboardingToBrowser,
+} from '@/lib/onboardingState';
 import CommandPalette from "@/components/command-palette/CommandPalette";
 // Lazy: it drags framer-motion (about 100 KB) into the shell otherwise.
 const FeedingAlertSystem = lazy(() => import("@/components/feeding/FeedingAlertSystem"));
@@ -168,36 +176,56 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     return () => window.removeEventListener('open_tutorial', handler);
   }, []);
 
-  // Auto-open the tutorial on the first authenticated session, once per
-  // browser. A small delay avoids colliding with the initial page load.
+  // A hold (the add-a-gecko form, for one) re-runs the first-run check
+  // when it is released, so the question can follow once it closes.
+  const [onboardingHoldTick, setOnboardingHoldTick] = useState(0);
+  useEffect(() => {
+    const onHold = () => setOnboardingHoldTick((n) => n + 1);
+    window.addEventListener(ONBOARDING_HOLD_EVENT, onHold);
+    return () => window.removeEventListener(ONBOARDING_HOLD_EVENT, onHold);
+  }, []);
+
+  // The profile is the source of truth for onboarding and Keeper mode, so
+  // a second phone picks up the answers given on the first (audit step 32).
+  useEffect(() => {
+    if (isGuest || !user) return;
+    const upload = browserAnswersToUpload(user);
+    if (upload) saveOnboarding(supabase, user.email, upload);
+    if (syncOnboardingToBrowser(user)) setKeeperMode(user.keeper_mode === true);
+  }, [isGuest, user?.email, user?.keeper_mode, user?.onboarding_completed_at, user?.onboarding_role]);
+
+  // Auto-open the first-run question once per account (on any device). A
+  // small delay avoids colliding with the initial page load.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     // Only real, signed-in accounts get the first-run prompt. Guests used
     // to get it 1.5 seconds into the demo, and choosing a role there set
     // the "seen" flag that then hid onboarding from the real account.
     if (isGuest || !user) return;
-    if (localStorage.getItem('geck_inspect_tutorial_seen') === '1') return;
+    const state = readOnboarding(user);
+    if (state.seen) return;
+    // Wait while an add form, invite or claim is in progress, so the
+    // question never opens on top of the thing the member came to do.
+    if (onboardingShouldWait(location)) return;
     // First run: ask the keeper-vs-breeder question before the tour, so
     // the tour (and the sidebar it walks) is already the right shape.
     // Once a role is chosen we go straight to the tour on later first-runs.
-    const roleChosen = localStorage.getItem('geck_inspect_role_chosen') === '1';
     const timer = setTimeout(() => {
-      if (roleChosen) {
+      if (onboardingShouldWait(window.location)) return;
+      if (state.roleChosen) {
         setShowTutorial(true);
-        localStorage.setItem('geck_inspect_tutorial_seen', '1');
+        saveOnboarding(supabase, user.email, { completed: true });
       } else {
         setShowRolePrompt(true);
       }
     }, 1500);
     return () => clearTimeout(timer);
-  }, [isGuest, user?.email]);
+  }, [isGuest, user?.email, user?.onboarding_completed_at, location.pathname, location.search, onboardingHoldTick]);
 
   // Closing the role prompt without choosing means "show me everything":
   // mark onboarding seen so it never nags, but do not launch the tour.
   const handleRoleDismissed = () => {
-    try {
-      localStorage.setItem('geck_inspect_tutorial_seen', '1');
-    } catch { /* ignore */ }
+    saveOnboarding(supabase, user?.email, { completed: true, role: 'everything' });
     setShowRolePrompt(false);
   };
 
@@ -207,10 +235,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // in the sidebar. Breeders get the tour, which covers far more ground.
   // (VIP audit P1.3: two of three new accounts never added a gecko.)
   const handleRoleChosen = (role) => {
-    try {
-      localStorage.setItem('geck_inspect_role_chosen', '1');
-      localStorage.setItem('geck_inspect_tutorial_seen', '1');
-    } catch { /* ignore */ }
+    saveOnboarding(supabase, user?.email, { completed: true, role, keeperMode: role === 'keeper' });
     setShowRolePrompt(false);
     if (role === 'keeper') {
       navigate('/MyGeckos?add=1');
