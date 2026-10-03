@@ -15,7 +15,8 @@ import {
 } from '@/components/ui/select';
 import {
     Users, Shield, Award, Mail, Trash2, Search,
-    MoreVertical, Crown, Star, MessageSquare, Loader2, Eye, Calendar, Activity, ExternalLink, ArrowUpDown
+    MoreVertical, Crown, Star, MessageSquare, Loader2, Eye, Calendar, Activity, ExternalLink, ArrowUpDown,
+    ShieldCheck
 } from 'lucide-react';
 import { format, formatDistanceToNowStrict } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from '@/components/ui/textarea';
 import { eraseAccount, erasureSummary } from '@/lib/accountErasure';
+import { fetchAccountDirectory } from '@/lib/adminData';
 
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Newest first' },
@@ -52,7 +54,9 @@ const ROLE_FILTERS = [
     { value: 'all', label: 'All users' },
     { value: 'admin', label: 'Admins only' },
     { value: 'expert', label: 'Experts only' },
+    { value: 'reviewer', label: 'Expert reviewers' },
     { value: 'regular', label: 'Regular users' },
+    { value: 'legacy', label: 'Legacy rows (no login)' },
 ];
 
 function timeAgo(date) {
@@ -67,6 +71,7 @@ function timeAgo(date) {
 export default function UserManagement() {
     const [users, setUsers] = useState([]);
     const [geckoCounts, setGeckoCounts] = useState({}); // email -> count
+    const [loginById, setLoginById] = useState(null); // profile id -> has a login
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('newest');
@@ -83,11 +88,13 @@ export default function UserManagement() {
     const fetchUsers = async () => {
         setIsLoading(true);
         try {
-            const [allUsers, allGeckos] = await Promise.all([
+            const [allUsers, allGeckos, directory] = await Promise.all([
                 User.list(),
                 Gecko.list().catch(() => []),
+                fetchAccountDirectory().catch(() => null),
             ]);
             setUsers(allUsers);
+            setLoginById(directory ? Object.fromEntries(directory.map((d) => [d.id, d.has_login])) : null);
             // Pre-compute gecko counts per email so sorting is instant.
             const counts = {};
             for (const g of allGeckos) {
@@ -111,7 +118,9 @@ export default function UserManagement() {
         // Role filter
         if (roleFilter === 'admin') list = list.filter(u => u.role === 'admin');
         else if (roleFilter === 'expert') list = list.filter(u => u.is_expert);
-        else if (roleFilter === 'regular') list = list.filter(u => u.role !== 'admin' && !u.is_expert);
+        else if (roleFilter === 'reviewer') list = list.filter(u => u.role === 'expert_reviewer');
+        else if (roleFilter === 'regular') list = list.filter(u => u.role !== 'admin' && u.role !== 'expert_reviewer' && !u.is_expert);
+        else if (roleFilter === 'legacy') list = list.filter(u => loginById && loginById[u.id] === false);
 
         // Search
         if (searchTerm) {
@@ -154,7 +163,7 @@ export default function UserManagement() {
             }
         });
         return list;
-    }, [users, searchTerm, sortBy, roleFilter, geckoCounts]);
+    }, [users, searchTerm, sortBy, roleFilter, geckoCounts, loginById]);
 
     const handleViewUserDetails = async (user) => {
         setSelectedUser(user);
@@ -219,6 +228,23 @@ export default function UserManagement() {
                     });
                     toast({ title: "Success", description: `${selectedUser.full_name} is now an expert.` });
                     break;
+                case 'makeReviewer':
+                    // Review rights come from the role, not the expert
+                    // badge: the review queue checks is_expert_reviewer(),
+                    // which reads role = 'expert_reviewer' (or 'admin').
+                    await User.update(selectedUser.id, { role: 'expert_reviewer' });
+                    await Notification.create({
+                        user_email: selectedUser.email,
+                        type: 'expert_status',
+                        content: 'You can now review morph identifications in the expert review queue.',
+                        link: '/Training'
+                    });
+                    toast({ title: "Success", description: `${selectedUser.full_name || selectedUser.email} can now review identifications.` });
+                    break;
+                case 'removeReviewer':
+                    await User.update(selectedUser.id, { role: 'user' });
+                    toast({ title: "Success", description: `${selectedUser.full_name || selectedUser.email} can no longer review identifications.` });
+                    break;
                 case 'removeExpert':
                     await User.update(selectedUser.id, { is_expert: false });
                     await Notification.create({
@@ -279,6 +305,8 @@ export default function UserManagement() {
         const badges = [];
         if (user.role === 'admin') badges.push({ label: 'Admin', color: 'bg-purple-600', icon: <Crown className="w-3 h-3" /> });
         if (user.is_expert) badges.push({ label: 'Expert', color: 'bg-green-600', icon: <Award className="w-3 h-3" /> });
+        if (user.role === 'expert_reviewer') badges.push({ label: 'Reviewer', color: 'bg-teal-600', icon: <ShieldCheck className="w-3 h-3" /> });
+        if (loginById && loginById[user.id] === false) badges.push({ label: 'No login', color: 'bg-slate-600', icon: null });
         return badges;
     };
 
@@ -410,7 +438,19 @@ export default function UserManagement() {
                                         ) : (
                                             <DropdownMenuItem onClick={() => handleUserAction(user, 'makeExpert')}>
                                                 <Star className="w-4 h-4 mr-2" />
-                                                Grant Expert Status
+                                                Grant Expert Badge
+                                            </DropdownMenuItem>
+                                        )}
+
+                                        {user.role === 'expert_reviewer' ? (
+                                            <DropdownMenuItem onClick={() => handleUserAction(user, 'removeReviewer')}>
+                                                <ShieldCheck className="w-4 h-4 mr-2" />
+                                                Remove Reviewer Role
+                                            </DropdownMenuItem>
+                                        ) : user.role !== 'admin' && (
+                                            <DropdownMenuItem onClick={() => handleUserAction(user, 'makeReviewer')}>
+                                                <ShieldCheck className="w-4 h-4 mr-2" />
+                                                Make Expert Reviewer
                                             </DropdownMenuItem>
                                         )}
                                         
@@ -540,6 +580,8 @@ export default function UserManagement() {
                             {actionType === 'removeAdmin' && `Remove admin privileges from ${selectedUser?.full_name}?`}
                             {actionType === 'makeExpert' && `Grant expert verification status to ${selectedUser?.full_name}?`}
                             {actionType === 'removeExpert' && `Remove expert status from ${selectedUser?.full_name}?`}
+                            {actionType === 'makeReviewer' && `Let ${selectedUser?.full_name || selectedUser?.email} review morph identifications in the expert review queue? The expert badge alone does not give review rights.`}
+                            {actionType === 'removeReviewer' && `Remove review rights from ${selectedUser?.full_name || selectedUser?.email}?`}
                         </DialogDescription>
                     </DialogHeader>
                     {actionError && (
