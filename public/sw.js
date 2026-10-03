@@ -4,8 +4,12 @@
  * Two jobs:
  *   1. Web push (notifications). This is the original reason the worker
  *      exists and must keep working exactly as before.
- *   2. A deliberately conservative offline cache so the app opens and the
- *      last-seen collection is readable with no signal.
+ *   2. A deliberately conservative offline cache of the app's own files,
+ *      so the app itself opens with no signal. This worker never caches
+ *      gecko data. The last loaded collection is kept by the app in
+ *      localStorage (src/lib/offlineCache.js), and Field Mode logs made
+ *      offline wait in a queue in the app (src/lib/offlineQueue.js).
+ *      Other pages still need signal.
  *
  * The caching strategy is chosen to make the classic "stuck on an old
  * version" and "white screen after deploy" bugs impossible:

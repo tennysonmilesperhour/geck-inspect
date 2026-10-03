@@ -16,13 +16,13 @@
  */
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import * as sbEntities from '@/api/supabaseEntities';
-import { loadUserProfile } from '@/lib/userProfile';
+import { loadUserProfile, currentAuthUser } from '@/lib/userProfile';
 import { isGuestMode, GUEST_USER, blockIfGuest } from '@/lib/guestMode';
 
 const authFacade = {
   async me() {
     if (isGuestMode()) return { ...GUEST_USER };
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await currentAuthUser();
     if (!user) throw new Error('Not authenticated');
     return loadUserProfile(user);
   },
@@ -43,8 +43,7 @@ const authFacade = {
   },
   async isAuthenticated() {
     if (isGuestMode()) return false;
-    const { data: { user } } = await supabase.auth.getUser();
-    return !!user;
+    return !!(await currentAuthUser());
   },
 };
 

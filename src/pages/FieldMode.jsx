@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import Seo from '@/components/seo/Seo';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -21,13 +22,16 @@ import {
   Undo2,
   Utensils,
   X,
+  CloudOff,
 } from 'lucide-react';
-import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent, CollectionMember } from '@/entities/all';
+import { CollectionMember } from '@/entities/all';
 import { api } from '@/api/appClient';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { createPageUrl } from '@/utils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { writeOrQueue, executeQueuedWrite, useOfflineQueue } from '@/lib/offlineSync';
+import { removeQueued, updateQueued } from '@/lib/offlineQueue';
 
 /**
  * Field Mode, a one-thumb logging screen for when you literally have a
@@ -43,6 +47,11 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
  *   ShedRecord    { animal_id, date, quality }   quality CHECK: complete | partial | retained_toes | retained_eye_caps | unknown
  *   FeedingRecord { animal_id, date, food_type, accepted }
  *   GeckoEvent    { gecko_id, event_type, event_date, notes, custom_event_name }  (notes go here, not gecko.notes)
+ *
+ * Offline: the collection comes from the copy kept in this browser
+ * (src/lib/offlineCache.js, query key 'field-mode'), and a log made with
+ * no signal is kept on the phone and sent when the connection returns
+ * (src/lib/offlineQueue.js). The page shows how many are waiting.
  */
 
 const RECENT_KEY = 'geckinspect_field_mode_recent';
@@ -168,9 +177,9 @@ export default function FieldModePage() {
   const { toast } = useToast();
 
   const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [geckos, setGeckos] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const { pending: pendingSync, online } = useOfflineQueue();
 
   const [recentIds, setRecentIds] = useState(getRecentIds);
   const [searchTerm, setSearchTerm] = useState('');
@@ -199,31 +208,39 @@ export default function FieldModePage() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const currentUser = await api.auth.me();
-        if (cancelled) return;
-        setUser(currentUser);
-        const [allGeckos, memberships] = await Promise.all([
-          getVisibleGeckos(currentUser, {}, '-created_date', 500),
-          CollectionMember.filter({ status: 'accepted' }).catch(() => []),
-        ]);
-        if (cancelled) return;
-        const writable = (allGeckos || []).filter(
-          (g) => !g.archived && canWriteGecko(g, currentUser, memberships)
-        );
-        setGeckos(writable);
-      } catch (error) {
-        console.error('Field mode load failed:', error);
-        if (!cancelled) setLoadError(true);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
+    api.auth.me()
+      .then((currentUser) => { if (!cancelled) setUser(currentUser); })
+      .catch(() => { if (!cancelled) setUser(null); })
+      .finally(() => { if (!cancelled) setAuthChecked(true); });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // react-query, so the last loaded list is kept in this browser and Field
+  // Mode opens with no signal (src/lib/offlineCache.js persists this key).
+  const geckoQuery = useQuery({
+    queryKey: ['field-mode', user?.email || null],
+    enabled: Boolean(user?.email),
+    queryFn: async () => {
+      const [allGeckos, memberships] = await Promise.all([
+        getVisibleGeckos(user, {}, '-created_date', 500),
+        CollectionMember.filter({ status: 'accepted' }).catch(() => []),
+      ]);
+      return (allGeckos || []).filter((g) => !g.archived && canWriteGecko(g, user, memberships));
+    },
+  });
+
+  useEffect(() => {
+    if (geckoQuery.data) setGeckos(geckoQuery.data);
+  }, [geckoQuery.data]);
+
+  const hasList = Boolean(geckoQuery.data);
+  // Offline with no saved copy: react-query pauses the fetch instead of
+  // failing, so say why the list is empty rather than spinning forever.
+  const offlineNoCopy = Boolean(user) && !hasList && geckoQuery.fetchStatus === 'paused';
+  const loadError = Boolean(user) && !hasList && geckoQuery.isError;
+  const isLoading = !authChecked || (Boolean(user) && !hasList && !offlineNoCopy && !loadError);
 
   useEffect(() => {
     return () => {
@@ -311,25 +328,44 @@ export default function FieldModePage() {
   };
 
   // ----- log actions -----------------------------------------------------
+  //
+  // Each write goes through writeOrQueue: saved now when there is signal,
+  // kept on the phone (and sent later) when there is not. Undo and the
+  // refine chips work on either: a saved record is changed in the
+  // database, a waiting one is changed in the queue.
+
+  const savedMessage = (queued, text) => (queued ? `${text} kept on this phone` : `${text} saved`);
 
   const logWeight = async (gecko, grams) => {
     setIsSaving(true);
     try {
       const prevWeight = gecko.weight_grams ?? null;
-      const record = await WeightRecord.create({
-        gecko_id: gecko.id,
-        weight_grams: grams,
-        record_date: todayLocalISO(),
+      const rec = await writeOrQueue({
+        entity: 'WeightRecord',
+        op: 'create',
+        data: { gecko_id: gecko.id, weight_grams: grams, record_date: todayLocalISO() },
       });
-      await Gecko.update(gecko.id, { weight_grams: grams });
+      // The gecko's shown weight follows the newest weigh-in. Once the
+      // weigh-in had to wait, this waits too, so the two stay in order.
+      const mirror = await writeOrQueue({
+        entity: 'Gecko',
+        op: 'update',
+        recordId: gecko.id,
+        data: { weight_grams: grams },
+        forceQueue: Boolean(rec.queued),
+      });
+      const queued = Boolean(rec.queued);
       setGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, weight_grams: grams } : g)));
       setSelectedGecko((s) => (s && s.id === gecko.id ? { ...s, weight_grams: grams } : s));
       afterLog({
         kind: 'weight',
-        message: `${grams} g for ${gecko.name}`,
+        queued,
+        message: savedMessage(queued, `${grams} g for ${gecko.name}`),
         undo: async () => {
-          await WeightRecord.delete(record.id);
-          await Gecko.update(gecko.id, { weight_grams: prevWeight });
+          if (rec.queued) removeQueued(rec.queued.id);
+          else await executeQueuedWrite({ entity: 'WeightRecord', op: 'delete', recordId: rec.record.id });
+          if (mirror.queued) removeQueued(mirror.queued.id);
+          else await executeQueuedWrite({ entity: 'Gecko', op: 'update', recordId: gecko.id, data: { weight_grams: prevWeight } });
           setGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, weight_grams: prevWeight } : g)));
           setSelectedGecko((s) => (s && s.id === gecko.id ? { ...s, weight_grams: prevWeight } : s));
         },
@@ -344,56 +380,54 @@ export default function FieldModePage() {
     }
   };
 
-  const logShed = async (gecko, quality = 'unknown') => {
+  // Shared by shed, fed and note: one record, undo deletes it.
+  const logSingle = async ({ entity, data, kind, label, extra = {}, failText }) => {
     setIsSaving(true);
     try {
-      const record = await ShedRecord.create({
-        animal_id: gecko.id,
-        date: todayLocalISO(),
-        quality,
-      });
+      const rec = await writeOrQueue({ entity, op: 'create', data });
+      const queued = Boolean(rec.queued);
       afterLog({
-        kind: 'shed',
-        recordId: record.id,
-        quality,
-        message: `Shed for ${gecko.name}`,
+        kind,
+        entity,
+        queued,
+        queueId: rec.queued?.id || null,
+        recordId: rec.record?.id || null,
+        message: savedMessage(queued, label),
+        ...extra,
         undo: async () => {
-          await ShedRecord.delete(record.id);
+          if (rec.queued) removeQueued(rec.queued.id);
+          else await executeQueuedWrite({ entity, op: 'delete', recordId: rec.record.id });
         },
       });
+      return true;
     } catch (error) {
-      console.error('Shed log failed:', error);
-      toast({ title: 'Save failed', description: error.message || 'Could not log the shed.', variant: 'destructive' });
+      console.error(`${kind} log failed:`, error);
+      toast({ title: 'Save failed', description: error.message || failText, variant: 'destructive' });
+      return false;
     } finally {
       setIsSaving(false);
     }
   };
 
-  const logFed = async (gecko, accepted = true) => {
-    setIsSaving(true);
-    try {
-      const record = await FeedingRecord.create({
-        animal_id: gecko.id,
-        date: todayLocalISO(),
-        food_type: 'CGD',
-        accepted,
-      });
-      afterLog({
-        kind: 'fed',
-        recordId: record.id,
-        accepted,
-        message: `Feeding for ${gecko.name}`,
-        undo: async () => {
-          await FeedingRecord.delete(record.id);
-        },
-      });
-    } catch (error) {
-      console.error('Feeding log failed:', error);
-      toast({ title: 'Save failed', description: error.message || 'Could not log the feeding.', variant: 'destructive' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const logShed = (gecko, quality = 'unknown') =>
+    logSingle({
+      entity: 'ShedRecord',
+      data: { animal_id: gecko.id, date: todayLocalISO(), quality },
+      kind: 'shed',
+      label: `Shed for ${gecko.name}`,
+      extra: { quality },
+      failText: 'Could not log the shed.',
+    });
+
+  const logFed = (gecko, accepted = true) =>
+    logSingle({
+      entity: 'FeedingRecord',
+      data: { animal_id: gecko.id, date: todayLocalISO(), food_type: 'CGD', accepted },
+      kind: 'fed',
+      label: `Feeding for ${gecko.name}`,
+      extra: { accepted },
+      failText: 'Could not log the feeding.',
+    });
 
   // Deep link from the owner's quick log on the passport (the QR on the tub
   // label): /FieldMode?gecko=<id>&log=fed|shed|weight opens that gecko.
@@ -422,55 +456,45 @@ export default function FieldModePage() {
   const logNote = async (gecko, text) => {
     const trimmed = (text || '').trim();
     if (!trimmed) return;
-    setIsSaving(true);
-    try {
-      const record = await GeckoEvent.create({
+    const ok = await logSingle({
+      entity: 'GeckoEvent',
+      data: {
         gecko_id: gecko.id,
         event_type: 'custom',
         custom_event_name: 'Field note',
         event_date: new Date().toISOString(),
         notes: trimmed,
-      });
-      afterLog({
-        kind: 'note',
-        message: `Note for ${gecko.name}`,
-        undo: async () => {
-          await GeckoEvent.delete(record.id);
-        },
-      });
+      },
+      kind: 'note',
+      label: `Note for ${gecko.name}`,
+      failText: 'Could not save the note.',
+    });
+    if (ok) {
       setNoteInput('');
       setActivePanel(null);
-    } catch (error) {
-      console.error('Note save failed:', error);
-      toast({ title: 'Save failed', description: error.message || 'Could not save the note.', variant: 'destructive' });
-    } finally {
-      setIsSaving(false);
     }
   };
 
   // Refine the record that is still inside its undo window (shed quality
-  // chips, fed accepted/refused toggle).
-  const refineShedQuality = async (quality) => {
-    if (!undoEntry || undoEntry.kind !== 'shed') return;
+  // chips, fed accepted/refused toggle). A log still waiting to sync is
+  // changed in the queue instead.
+  const refineEntry = async (kind, patch, failText) => {
+    if (!undoEntry || undoEntry.kind !== kind) return;
     try {
-      await ShedRecord.update(undoEntry.recordId, { quality });
-      setUndoEntry((e) => (e && e.kind === 'shed' ? { ...e, quality } : e));
+      if (undoEntry.queueId) updateQueued(undoEntry.queueId, patch);
+      else await executeQueuedWrite({ entity: undoEntry.entity, op: 'update', recordId: undoEntry.recordId, data: patch });
+      setUndoEntry((e) => (e && e.kind === kind ? { ...e, ...patch } : e));
     } catch (error) {
-      console.error('Shed quality update failed:', error);
-      toast({ title: 'Update failed', description: 'Could not set shed quality.', variant: 'destructive' });
+      console.error(`${kind} update failed:`, error);
+      toast({ title: 'Update failed', description: failText, variant: 'destructive' });
     }
   };
 
-  const toggleFedAccepted = async () => {
+  const refineShedQuality = (quality) => refineEntry('shed', { quality }, 'Could not set shed quality.');
+
+  const toggleFedAccepted = () => {
     if (!undoEntry || undoEntry.kind !== 'fed') return;
-    const next = !undoEntry.accepted;
-    try {
-      await FeedingRecord.update(undoEntry.recordId, { accepted: next });
-      setUndoEntry((e) => (e && e.kind === 'fed' ? { ...e, accepted: next } : e));
-    } catch (error) {
-      console.error('Feeding update failed:', error);
-      toast({ title: 'Update failed', description: 'Could not update the feeding.', variant: 'destructive' });
-    }
+    refineEntry('fed', { accepted: !undoEntry.accepted }, 'Could not update the feeding.');
   };
 
   // ----- numeric pad -----------------------------------------------------
@@ -586,7 +610,7 @@ export default function FieldModePage() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <CheckCircle2 className="w-6 h-6 text-emerald-300 flex-shrink-0" />
-                <span className="text-lg font-semibold truncate">{undoEntry.message} saved</span>
+                <span className="text-lg font-semibold truncate">{undoEntry.message}</span>
               </div>
               <Button
                 onClick={handleUndo}
@@ -626,9 +650,26 @@ export default function FieldModePage() {
         )}
       </AnimatePresence>
 
+      {/* Offline and waiting-to-sync notice */}
+      {(!online || pendingSync > 0) && (
+        <div role="status" className="mx-4 mt-3 flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-950/40 px-4 py-3 text-base text-amber-100">
+          <CloudOff className="w-5 h-5 flex-shrink-0" />
+          <span>
+            {!online ? 'No signal. Logs are kept on this phone. ' : ''}
+            {pendingSync > 0
+              ? `${pendingSync} log${pendingSync === 1 ? '' : 's'} waiting to sync${online ? ', sending now.' : '. They send when you are back online.'}`
+              : ''}
+          </span>
+        </div>
+      )}
+
       {/* Main scroll area */}
       <div className="flex-1 overflow-y-auto pb-24">
-        {loadError ? (
+        {offlineNoCopy ? (
+          <div className="p-6 text-center">
+            <p className="text-xl text-slate-300 mt-16">You are offline and this phone has no saved copy of your collection yet. Open Field Mode once with signal, then it works offline.</p>
+          </div>
+        ) : loadError ? (
           <div className="p-6 text-center">
             <p className="text-xl text-slate-300 mt-16">Could not load your collection. Check your connection and reload.</p>
           </div>
