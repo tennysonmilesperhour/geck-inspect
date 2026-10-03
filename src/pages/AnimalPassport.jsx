@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
 import {
-  calculateAge, STATUS_BADGE_STYLES, PATTERN_GRADES, passportUrl, PUBLIC_WEIGHT_COLUMNS
+  calculateAge, STATUS_BADGE_STYLES, PATTERN_GRADES, passportUrl, PUBLIC_WEIGHT_COLUMNS, PUBLIC_FEEDING_COLUMNS, PUBLIC_SHED_COLUMNS
 } from '@/lib/passportUtils';
 import { parseLocalDate } from '@/lib/dateUtils';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
@@ -434,9 +434,9 @@ export default function AnimalPassport() {
           g.sire_id ? supabase.from('geckos').select(columns).eq('id', g.sire_id).maybeSingle() : null,
           g.dam_id ? supabase.from('geckos').select(columns).eq('id', g.dam_id).maybeSingle() : null,
           supabase.from('ownership_records').select('*').eq('animal_id', g.id).order('acquired_date', { ascending: true }),
-          supabase.from('feeding_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }).limit(30),
+          supabase.from('feeding_records').select(PUBLIC_FEEDING_COLUMNS).eq('animal_id', g.id).order('date', { ascending: false }).limit(30),
           supabase.from('weight_records').select(PUBLIC_WEIGHT_COLUMNS).eq('gecko_id', g.id).order('record_date', { ascending: true }),
-          supabase.from('shed_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }).limit(20),
+          supabase.from('shed_records').select(PUBLIC_SHED_COLUMNS).eq('animal_id', g.id).order('date', { ascending: false }).limit(20),
           supabase.from('vet_records').select('*').eq('animal_id', g.id).order('date', { ascending: false }),
         ]);
 

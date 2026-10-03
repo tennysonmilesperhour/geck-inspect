@@ -33,12 +33,12 @@ import {
   Gecko,
   WeightRecord,
   ShedRecord,
-  FeedingRecord,
   Egg,
   BreedingPlan,
   FeedingGroup,
 } from '@/entities/all';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { logFeedings, undoFeedings } from '@/lib/husbandryLog';
 import { addDays, differenceInCalendarDays } from 'date-fns';
 
 // ---------------------------------------------------------------------------
@@ -387,18 +387,22 @@ export const ACTIONS = {
         : `Log a refused feeding for ${n.gecko.name}`;
     },
     async execute(n) {
-      const record = await FeedingRecord.create({
-        animal_id: n.gecko.id,
+      // Same log as every other surface: the feeding row, and the gecko's
+      // feeding group schedule moves when it ate (D21).
+      const result = await logFeedings({
+        entries: [{
+          gecko: n.gecko,
+          accepted: n.accepted,
+          notes: n.accepted ? null : 'Refused, logged via GeckoGenius',
+        }],
         date: todayLocalISO(),
-        accepted: n.accepted,
-        notes: n.accepted ? null : 'Refused, logged via GeckoGenius',
       });
       return {
         message: n.accepted
           ? `Logged a feeding for **${n.gecko.name}** today.`
           : `Logged a **refused** feeding for **${n.gecko.name}** today. Keep an eye on it; a refusal or two is normal, a streak is worth a closer look.`,
         undo: async () => {
-          await FeedingRecord.delete(record.id);
+          await undoFeedings(result);
         },
       };
     },

@@ -367,6 +367,27 @@ export default function MyGeckosPage() {
         openAddFlow();
     }, [isLoading, user, geckos, location.search, location.pathname]);
 
+    // ?gecko=<id> (from /GeckoDetail's "Open record in My Geckos") opens
+    // that gecko's record window once the collection has loaded, then
+    // strips the param so a refresh doesn't reopen it.
+    const geckoParamConsumedRef = React.useRef(false);
+    useEffect(() => {
+        if (isLoading || !user || geckoParamConsumedRef.current) return;
+        const params = new URLSearchParams(location.search);
+        const wanted = params.get('gecko');
+        if (!wanted) return;
+        geckoParamConsumedRef.current = true;
+        params.delete('gecko');
+        const rest = params.toString();
+        window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
+        const match = geckos.find((g) => g.id === wanted);
+        if (!match) return;
+        if (match.archived) setShowArchived(true);
+        setSelectedGecko(match);
+        setIsFormOpen(false);
+        setIsDetailModalOpen(true);
+    }, [isLoading, user, geckos, location.search, location.pathname]);
+
     // One entry point for "add a gecko": respects the plan limit, and gives
     // an empty collection the short photo-first quick add instead of the
     // full 20-field form. Existing collections keep the full form.
@@ -1068,6 +1089,8 @@ export default function MyGeckosPage() {
                     <QuickAddGecko
                         open={isQuickAddOpen}
                         user={user}
+                        existingGeckos={geckos}
+                        idSettings={idSettings}
                         slotsLeftAtOpen={geckoLimitStatus(user, geckos).slotsLeft}
                         onLimitReached={() => {
                             setIsQuickAddOpen(false);

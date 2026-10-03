@@ -99,6 +99,19 @@ describe('QuickAddGecko', () => {
     expect(textOf(tree)).toContain('Try Morph ID free');
   });
 
+  it('gives the new gecko the next ID code, counting geckos saved in this dialog', async () => {
+    const yy = String(new Date().getFullYear()).slice(-2);
+    const { tree } = await mount({ existingGeckos: [{ id: 'old', gecko_id_code: `KEE1-${yy}` }] });
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
+    await act(async () => { buttonWithText(tree, 'Save gecko').props.onClick(); });
+    expect(state.rpcCalls[0].args.p_record.gecko_id_code).toBe(`KEE2-${yy}`);
+
+    await act(async () => { buttonWithText(tree, 'Add another gecko').props.onClick(); });
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Pip' } }); });
+    await act(async () => { buttonWithText(tree, 'Save gecko').props.onClick(); });
+    expect(state.rpcCalls[1].args.p_record.gecko_id_code).toBe(`KEE3-${yy}`);
+  });
+
   it('reuses an existing feeding group and skips it when reminders are off', async () => {
     state.groups = [{ id: 'existing' }];
     const first = await mount();
