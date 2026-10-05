@@ -34,6 +34,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { saveOnboarding } from '@/lib/onboardingState';
 import SignInRequired from '@/components/shared/SignInRequired';
 import PageHeader from '@/components/shared/PageHeader';
+import WeighInReminderSetting from '@/components/settings/WeighInReminderSetting';
 
 const STORE_POLICY_EXAMPLE = [
     "• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon-Wed only. Shipping cost is the buyer's responsibility.",
@@ -984,6 +985,7 @@ export default function SettingsPage() {
                                  <p className="text-sm text-slate-400">Alerts also appear in the bottom right corner while feeding is overdue. Glow turns yellow when due, orange after 2+ weeks, red after 3+ weeks.</p>
                              </>
                          )}
+                         <WeighInReminderSetting email={user?.email} />
                          {renderSwitch('cgd-reorder-reminder', 'CGD Reorder Reminder', 'Notify me roughly 14 days before my CGD is estimated to run out. The estimate uses your collection size and your CGD orders from the Geck Inspect store, so it starts after your first store order.', formData.cgd_reorder_reminders_enabled, (checked) => handleChange('cgd_reorder_reminders_enabled', checked))}
                      </CardContent>
                  </Card>

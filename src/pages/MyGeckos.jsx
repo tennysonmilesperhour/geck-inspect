@@ -29,6 +29,11 @@ import GeckoForm from '../components/my-geckos/GeckoForm';
 import WeighInMode from '../components/my-geckos/WeighInMode';
 import QuickAddGecko from '../components/my-geckos/QuickAddGecko';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
+import { saveQuickGecko } from '../components/my-geckos/quickGeckoSave';
+import FirstGeckoStarter from '../components/onboarding/FirstGeckoStarter';
+import FirstGeckoFlow from '../components/onboarding/FirstGeckoFlow';
+import { clearPendingGecko, flowEvent, markPhotoPath, readPendingGecko } from '@/lib/firstGeckoFlow';
+import { isGeckoLimitError } from '@/lib/geckoLimit';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
 import TransferHistory from '../components/my-geckos/TransferHistory';
 import GeckoFilters from '../components/my-geckos/GeckoFilters';
@@ -45,7 +50,7 @@ import { captureEvent } from '@/lib/posthog';
 import { recordGeckoAdded } from '@/lib/activation';
 import { useGeckoFilters } from '@/hooks/useGeckoFilters';
 import { retryApiCall } from '@/lib/layoutCache';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -61,6 +66,7 @@ export default function MyGeckosPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
     const location = useLocation();
+    const navigate = useNavigate();
     // Guards the one-time consumption of an incoming AI Morph ID draft.
     const morphDraftConsumedRef = React.useRef(false);
     // True while the add form holds a Morph ID draft, so the save is
@@ -75,6 +81,16 @@ export default function MyGeckosPage() {
     }, [isFormOpen]);
     // Photo-first quick add, used for a keeper's first gecko (VIP audit P1.2).
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+    // How Quick Add opens: as step 1 of the guided first gecko (with the
+    // photo-or-type choice, or prefilled from a Morph ID draft), as a plain
+    // quick add, or in the guest demo. A new key remounts it fresh.
+    const [quickAddConfig, setQuickAddConfig] = useState({ key: 0, flow: false, offerPhotoChoice: false, initialDraft: null, saveSource: 'quick_add', guest: false });
+    // Steps 2 and 3 of the guided first gecko.
+    const [flowGecko, setFlowGecko] = useState(null);
+    const [flowStartStep, setFlowStartStep] = useState('parents');
+    // A gecko kept from the guest demo, waiting for this account.
+    const [pendingGecko, setPendingGecko] = useState(() => readPendingGecko());
+    const pendingSaveRef = React.useRef(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedGecko, setSelectedGecko] = useState(null);
@@ -354,9 +370,15 @@ export default function MyGeckosPage() {
             setShowUpgradeModal(true);
             return;
         }
-        setSelectedGecko(draft);
-        setIsFormOpen(true);
-        morphDraftOpenRef.current = true;
+        markPhotoPath(false);
+        if (geckos.filter((g) => !g.archived).length === 0 && !user.is_guest) {
+            // First gecko: the short form, prefilled, then parents and payoff.
+            openQuickAdd({ flow: true, initialDraft: draft, saveSource: 'morph_id_draft' });
+        } else {
+            setSelectedGecko(draft);
+            setIsFormOpen(true);
+            morphDraftOpenRef.current = true;
+        }
         captureEvent('morph_id_gecko_prefilled', {
             morph_count: Array.isArray(draft.morph_tags) ? draft.morph_tags.length : 0,
         });
@@ -372,12 +394,46 @@ export default function MyGeckosPage() {
         const params = new URLSearchParams(location.search);
         if (params.get('add') !== '1') return;
         addParamConsumedRef.current = true;
+        const typeIt = params.get('how') === 'type';
         params.delete('add');
+        params.delete('how');
         const rest = params.toString();
         window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
 
-        openAddFlow();
+        openAddFlow({ type: typeIt });
     }, [isLoading, user, geckos, location.search, location.pathname]);
+
+    // A gecko a visitor kept in the guest demo is saved as soon as this
+    // account can hold it, then the guided flow carries on from its
+    // parents. Runs once, after the collection loads (plan limit).
+    useEffect(() => {
+        if (isLoading || !user || user.is_guest || !pendingGecko || pendingSaveRef.current) return;
+        if (location.state?.geckoDraft) return; // a Morph ID result goes first
+        pendingSaveRef.current = true;
+        if (geckoLimitStatus(user, geckos).atLimit) {
+            setShowUpgradeModal(true);
+            return;
+        }
+        (async () => {
+            try {
+                const { gecko } = await saveQuickGecko({ user, fields: pendingGecko, remind: true, pool: geckos, idSettings });
+                clearPendingGecko();
+                setPendingGecko(null);
+                announceSavedGecko(gecko, true, 'demo_draft');
+                flowEvent('add', 'saved', { source: 'demo_draft', has_morph: Boolean(gecko.morphs_traits), has_weight: gecko.weight_grams != null, feeding_reminders: Boolean(gecko.feeding_group_id) });
+                toast({ title: `${gecko.name} is in your collection`, description: 'Saved from the demo. Next: its parents, if you know them.' });
+                await loadGeckos();
+                setFlowStartStep('parents');
+                setFlowGecko(gecko);
+            } catch (err) {
+                console.error('Saving the demo gecko failed:', err);
+                if (isGeckoLimitError(err)) { setShowUpgradeModal(true); return; }
+                // Keep the draft and let the member save it by hand.
+                pendingSaveRef.current = false;
+                toast({ title: `${pendingGecko.name} is not saved yet`, description: 'Tap Save on the card to try again.', variant: 'destructive' });
+            }
+        })();
+    }, [isLoading, user, pendingGecko, geckos]);
 
     // ?import=1 (from the Dashboard's first-run card) opens the CSV import
     // once the collection has loaded, then strips the param.
@@ -417,7 +473,17 @@ export default function MyGeckosPage() {
     // One entry point for "add a gecko": respects the plan limit, and gives
     // an empty collection the short photo-first quick add instead of the
     // full 20-field form. Existing collections keep the full form.
-    function openAddFlow() {
+    function openQuickAdd({ flow = false, offerPhotoChoice = false, initialDraft = null, saveSource = 'quick_add', guest = false } = {}) {
+        setSelectedGecko(null);
+        setIsDetailModalOpen(false);
+        setQuickAddConfig((c) => ({ key: c.key + 1, flow, offerPhotoChoice, initialDraft, saveSource, guest }));
+        setIsQuickAddOpen(true);
+    }
+
+    // The empty collection's add is the guided first gecko: step 1 offers
+    // "by photo" (Morph ID's free try) or "type it" unless the member
+    // already chose (opts.type).
+    function openAddFlow(opts = {}) {
         const live = geckos.filter((g) => !g.archived).length;
         if (geckoLimitStatus(user, geckos).atLimit) {
             setShowUpgradeModal(true);
@@ -425,9 +491,15 @@ export default function MyGeckosPage() {
         }
         setSelectedGecko(null);
         setIsDetailModalOpen(false);
-        if (live === 0) setIsQuickAddOpen(true);
+        if (live === 0) openQuickAdd({ flow: true, offerPhotoChoice: !opts.type });
         else setIsFormOpen(true);
     }
+
+    const choosePhotoPath = () => {
+        markPhotoPath(true);
+        setIsQuickAddOpen(false);
+        navigate('/Recognition?first_gecko=1');
+    };
 
     const announceSavedGecko = (geckoData, isNew, source = 'full_form') => {
         // Analytics: distinguish new-gecko creation from edits so the funnel
@@ -510,6 +582,9 @@ export default function MyGeckosPage() {
     // We render every gecko we've loaded; the server already capped the
     // fetch at GECKO_FETCH_LIMIT and filters/search are pure.
     const visibleGeckos = filteredAndSortedGeckos;
+    // Signed in, loaded, and nothing at all in the collection (archived
+    // geckos count): the page is the guided first gecko.
+    const isFirstRun = !isLoading && !showArchived && geckos.length === 0 && Boolean(user) && !user.is_guest;
 
     if (!user && !isLoading) {
         return (
@@ -582,6 +657,11 @@ export default function MyGeckosPage() {
                         </PageSettingsPanel>
                     }
                 >
+                    {/* A brand new collection shows only the first-gecko card
+                        below: archive, export and weigh-in have nothing to act
+                        on yet, and they pushed its buttons off a phone screen. */}
+                    {!isFirstRun && (
+                    <>
                     <Button
                         variant="outline"
                         onClick={() => { setShowArchived(!showArchived); loadGeckos(); }}
@@ -687,13 +767,17 @@ export default function MyGeckosPage() {
                             {/* Primary action leads on phones: full width, above
                                 the secondary tools, instead of wrapping to last. */}
                             <Button className="order-first w-full sm:w-auto md:order-none" onClick={() => {
-                                if (user?.is_guest) { window.location.href = '/AuthPortal?mode=signup'; return; }
+                                // The demo opens Quick Add too; saving there offers a
+                                // free account to keep the gecko (and a way back).
+                                if (user?.is_guest) { openQuickAdd({ guest: true }); return; }
                                 openAddFlow();
                             }}>
                                 <PlusCircle className="w-5 h-5 mr-2" />
                                 Add Gecko
                             </Button>
                         </>
+                    )}
+                    </>
                     )}
                 </PageHeader>
 
@@ -718,6 +802,14 @@ export default function MyGeckosPage() {
 
                 {activeTab === 'transfers' ? (
                     <TransferHistory user={user} />
+                ) : isFirstRun ? (
+                    <FirstGeckoStarter
+                        surface="my_geckos"
+                        onStart={() => openAddFlow({ type: true })}
+                        onImport={() => setIsImportModalOpen(true)}
+                        pendingName={pendingGecko?.name || null}
+                        onSavePending={() => { pendingSaveRef.current = false; setPendingGecko(readPendingGecko()); }}
+                    />
                 ) : (
                 <>
                 <div className="mb-6">
@@ -1121,8 +1213,20 @@ export default function MyGeckosPage() {
 
                 {isQuickAddOpen && (
                     <QuickAddGecko
+                        key={quickAddConfig.key}
                         open={isQuickAddOpen}
                         user={user}
+                        guest={quickAddConfig.guest}
+                        offerPhotoChoice={quickAddConfig.offerPhotoChoice}
+                        onChoosePhoto={choosePhotoPath}
+                        initialDraft={quickAddConfig.initialDraft}
+                        saveSource={quickAddConfig.saveSource}
+                        stepLabel={quickAddConfig.flow ? 'Step 1 of 3' : null}
+                        onContinue={quickAddConfig.flow ? (gecko) => {
+                            setIsQuickAddOpen(false);
+                            setFlowStartStep('parents');
+                            setFlowGecko(gecko);
+                        } : undefined}
                         existingGeckos={geckos}
                         idSettings={idSettings}
                         slotsLeftAtOpen={geckoLimitStatus(user, geckos).slotsLeft}
@@ -1132,7 +1236,7 @@ export default function MyGeckosPage() {
                         }}
                         onClose={() => setIsQuickAddOpen(false)}
                         onSaved={(gecko) => {
-                            announceSavedGecko(gecko, true, 'quick_add');
+                            announceSavedGecko(gecko, true, quickAddConfig.saveSource);
                             loadGeckos();
                         }}
                         onMoreDetails={(draft) => {
@@ -1153,6 +1257,29 @@ export default function MyGeckosPage() {
                         onImport={() => {
                             setIsQuickAddOpen(false);
                             setIsImportModalOpen(true);
+                        }}
+                    />
+                )}
+
+                {flowGecko && (
+                    <FirstGeckoFlow
+                        open={Boolean(flowGecko)}
+                        gecko={flowGecko}
+                        startStep={flowStartStep}
+                        user={user}
+                        allGeckos={geckos}
+                        onClose={() => { setFlowGecko(null); loadGeckos(); }}
+                        onUpdated={() => loadGeckos()}
+                        onOpenRecord={(gecko) => {
+                            setFlowGecko(null);
+                            const fresh = geckos.find((g) => g.id === gecko.id);
+                            setSelectedGecko({ ...(fresh || {}), ...gecko });
+                            setIsDetailModalOpen(true);
+                        }}
+                        onAddAnother={() => {
+                            setFlowGecko(null);
+                            if (geckoLimitStatus(user, geckos).atLimit) { setShowUpgradeModal(true); return; }
+                            openQuickAdd({ flow: false });
                         }}
                     />
                 )}

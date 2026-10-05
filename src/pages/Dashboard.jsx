@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Seo from '@/components/seo/Seo';
 import usePageSettings from '@/hooks/usePageSettings';
 import { User, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
@@ -36,6 +36,8 @@ import ChangeLogModal from '../components/changelog/ChangeLogModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
+import FirstGeckoStarter from '@/components/onboarding/FirstGeckoStarter';
+import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { createPageUrl, getDisplayName } from '@/utils';
 import { format } from 'date-fns';
 
@@ -152,6 +154,9 @@ async function loadHatcheryCounts(email) {
  */
 
 export default function Dashboard() {
+    const navigate = useNavigate();
+    // A gecko kept in the guest demo and not saved yet (My Geckos saves it).
+    const [pendingGeckoName] = useState(() => readPendingGecko()?.name || null);
     const [dashPrefs] = usePageSettings('dashboard_prefs', {
         showGeckoOfTheDay: true,
         showFeaturedBreeders: true,
@@ -385,37 +390,15 @@ export default function Dashboard() {
                         the one thing that matters first, not community totals
                         and breeder tools. */}
                     {!isLoading && user && !isGuestMode() && personalStats.geckos === 0 && (
-                        <Card className="gecko-card border-emerald-500/30 bg-emerald-950/20">
-                            <CardContent className="p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4">
-                                <div className="flex-1">
-                                    <p className="text-lg font-semibold text-slate-100">Add your first gecko, it takes about a minute</p>
-                                    <p className="text-sm text-slate-300 mt-1">
-                                        A photo and a name is enough. Add its morph and you also get a value estimate
-                                        from real crested gecko listings. Weights, sheds, pairings and lineage build up
-                                        from there.
-                                    </p>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {/* ?add=1 opens the add form on arrival, so the
-                                        first gecko is one tap away, not two. */}
-                                    <Link to={`${createPageUrl('MyGeckos')}?add=1`}>
-                                        <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
-                                            Add your first gecko
-                                        </Button>
-                                    </Link>
-                                    <Link to={`${createPageUrl('MyGeckos')}?import=1`}>
-                                        <Button variant="outline" className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800">
-                                            Import a spreadsheet
-                                        </Button>
-                                    </Link>
-                                    <Link to="/Recognition">
-                                        <Button variant="ghost" className="text-slate-200 hover:text-white">
-                                            Identify a morph free
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        // The guided first gecko: add it (by photo or typed),
+                        // its parents, then what it needs next and its value.
+                        <FirstGeckoStarter
+                            surface="dashboard"
+                            startHref={`${createPageUrl('MyGeckos')}?add=1&how=type`}
+                            importHref={`${createPageUrl('MyGeckos')}?import=1`}
+                            pendingName={pendingGeckoName}
+                            onSavePending={() => navigate(createPageUrl('MyGeckos'))}
+                        />
                     )}
 
                     {/* What needs doing today comes before any totals. Only

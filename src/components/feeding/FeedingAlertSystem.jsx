@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { todayLocalISO, daysSinceLocal } from '@/lib/dateUtils';
 import { markGroupFed } from '@/lib/husbandryLog';
 import { startVisiblePolling } from '@/lib/pagePolling';
+import { isGuestMode } from '@/lib/guestMode';
+import { TOUR_CHANGED_EVENT, tourOnScreen } from '@/lib/guestTour';
 
 // This component only drives the in-app banner. The feeding_due push and
 // email notifications come from the server (enqueue_feeding_reminders, a
@@ -20,6 +22,16 @@ export default function FeedingAlertSystem({ user, enabled }) {
   // mutex two loadAlerts() can race past the read-then-write dedup and
   // each insert their own notification row, fanning out to 2x pushes.
   const loadingRef = useRef(false);
+  // In the guest demo the sample feeding reminders wait until the guided
+  // tour is closed; on a phone the two used to cover each other and most
+  // of the screen.
+  const [tourActive, setTourActive] = useState(() => isGuestMode() && tourOnScreen());
+  useEffect(() => {
+    if (!isGuestMode()) return undefined;
+    const onChange = () => setTourActive(tourOnScreen());
+    window.addEventListener(TOUR_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(TOUR_CHANGED_EVENT, onChange);
+  }, []);
 
   // Days past the feeding due date. 0 = due today (interval has just elapsed),
   // 1 = a day late, etc. Negative values (not yet due) are filtered upstream
@@ -154,10 +166,10 @@ export default function FeedingAlertSystem({ user, enabled }) {
   const visibleAlerts = pendingAlerts.slice(0, MAX_SHOWN);
   const hiddenCount = pendingAlerts.length - visibleAlerts.length;
 
-  if (!enabled || visibleAlerts.length === 0) return null;
+  if (!enabled || tourActive || visibleAlerts.length === 0) return null;
 
   return (
-    <div data-floating-notice className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 max-w-sm max-h-[60vh] overflow-y-auto z-40">
+    <div data-floating-notice className="w-[min(24rem,calc(100vw-2rem))] max-h-[45vh] md:max-h-[60vh] overflow-y-auto">
       <style>{`
         @keyframes feeding-glow-yellow {
           0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.3), inset 0 0 10px rgba(234, 179, 8, 0.1); }

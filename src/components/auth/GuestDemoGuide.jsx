@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, Compass, UserPlus, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Compass, UserPlus, X } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { captureEvent } from '@/lib/posthog';
 import { useToast } from '@/components/ui/use-toast';
@@ -19,15 +19,24 @@ import GuestMockDisclaimer from './GuestMockDisclaimer';
 // The guided demo (P6): while a guest is offered or taking the three-stop
 // tour, this card stands in for the guest notice; once the tour is closed
 // the usual notice comes back. See src/lib/guestTour.js.
+//
+// On phones the card is one slim line (stop, title, Next, close) so it
+// does not sit on top of what it describes; the full text is one tap away.
+// It lives in the shared floating-notice stack (Layout), so it no longer
+// overlaps the feeding reminders in the same corner.
 
 const cardClass =
-  'fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 z-[60] w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-emerald-500/40 bg-slate-900/95 backdrop-blur-md shadow-lg shadow-black/40 text-slate-100';
+  'w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-emerald-500/40 bg-slate-900/95 backdrop-blur-md shadow-lg shadow-black/40 text-slate-100';
+const primaryClass =
+  'inline-flex items-center gap-1.5 min-h-10 touch:min-h-11 rounded-md bg-emerald-600 hover:bg-emerald-500 px-3 text-sm font-semibold text-white';
 
 export default function GuestDemoGuide() {
   const { isGuest } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [tour, setTour] = useState(getTourState);
+  // Phones only: the slim bar opens to the full card.
+  const [expanded, setExpanded] = useState(false);
   const { toast } = useToast();
 
   // The "view-only" toast lives here rather than in GuestMockDisclaimer,
@@ -73,6 +82,8 @@ export default function GuestDemoGuide() {
   let title;
   let body;
   let actions;
+  // The one action the slim phone bar shows.
+  let compact;
   if (tour.status === 'offer') {
     label = 'Guest demo, sample data';
     title = 'Take the one-minute tour';
@@ -86,6 +97,11 @@ export default function GuestDemoGuide() {
           Explore on my own
         </button>
       </>
+    );
+    compact = (
+      <button type="button" onClick={begin} className={primaryClass}>
+        Start <ArrowRight className="w-4 h-4" />
+      </button>
     );
   } else if (tour.status === 'finished') {
     label = 'Guest demo';
@@ -105,9 +121,19 @@ export default function GuestDemoGuide() {
         </button>
       </>
     );
+    compact = (
+      <Link to={TOUR_SIGNUP_URL} onClick={() => captureEvent('guest_tour', { action: 'signup' })} className={primaryClass}>
+        <UserPlus className="w-4 h-4" /> Sign up
+      </Link>
+    );
   } else {
     label = `Tour, stop ${tour.step + 1} of ${TOUR_STEPS.length}`;
     title = step.title;
+    compact = (
+      <button type="button" onClick={here ? next : () => navigate(step.path)} className={primaryClass}>
+        {here ? (tour.step + 1 >= TOUR_STEPS.length ? 'Finish' : 'Next') : 'Resume'} <ArrowRight className="w-4 h-4" />
+      </button>
+    );
     body = here ? step.body : 'Pick up where you left off.';
     actions = here ? (
       <button type="button" onClick={next} className="inline-flex items-center gap-1.5 min-h-10 touch:min-h-11 rounded-md bg-emerald-600 hover:bg-emerald-500 px-3 text-sm font-semibold text-white">
@@ -120,26 +146,41 @@ export default function GuestDemoGuide() {
     );
   }
 
+  const stopTag = tour.status === 'active' ? `${tour.step + 1}/${TOUR_STEPS.length} ` : '';
+
   return (
     <div role="dialog" aria-label="Guided demo" className={cardClass} data-floating-notice data-guest-tour>
-      <div className="p-3">
-        <div className="flex items-start gap-2">
-          <Compass className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" />
+      <div className="p-2 md:p-3">
+        <div className="flex items-center md:items-start gap-2">
+          <Compass className="w-4 h-4 md:mt-0.5 shrink-0 text-emerald-400" />
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300">{label}</p>
-            <p className="text-sm font-semibold text-slate-100 mt-0.5">{title}</p>
-            <p className="text-xs leading-snug text-slate-300 mt-1">{body}</p>
+            <p className={`${expanded ? 'block' : 'hidden md:block'} text-[11px] uppercase tracking-wider font-semibold text-emerald-300`}>{label}</p>
+            <p className={`text-sm font-semibold text-slate-100 md:mt-0.5 ${expanded ? '' : 'truncate md:whitespace-normal'}`}>
+              {!expanded && <span className="md:hidden text-emerald-300 font-bold">{stopTag}</span>}
+              {title}
+            </p>
+            <p className={`${expanded ? 'block' : 'hidden md:block'} text-xs leading-snug text-slate-300 mt-1`}>{body}</p>
           </div>
+          {!expanded && <div className="md:hidden shrink-0">{compact}</div>}
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="md:hidden shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 touch:min-h-11 touch:min-w-9 rounded text-slate-400 hover:text-white hover:bg-slate-800"
+            aria-label={expanded ? 'Show less' : 'Show the tour text'}
+            aria-expanded={expanded}
+          >
+            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+          </button>
           <button
             type="button"
             onClick={() => close('close')}
-            className="shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 touch:min-h-11 touch:min-w-11 rounded text-slate-400 hover:text-white hover:bg-slate-800"
+            className="shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 touch:min-h-11 touch:min-w-9 rounded text-slate-400 hover:text-white hover:bg-slate-800"
             aria-label="End the tour"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pl-6">{actions}</div>
+        <div className={`${expanded ? 'flex' : 'hidden md:flex'} mt-2.5 flex-wrap items-center gap-1.5 pl-6`}>{actions}</div>
       </div>
     </div>
   );

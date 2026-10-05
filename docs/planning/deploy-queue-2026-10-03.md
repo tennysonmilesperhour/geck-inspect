@@ -65,3 +65,8 @@ Done on 5 October (details in `instrumentation-2026-10.md`):
 - `recognize-gecko-morph` v64: the analyzer call stops at 90 s so a slow run is refunded, and a retry or double tap with the same photos is not charged twice.
 
 Still for Tennyson: give the Breeder member who upgraded on 1 Oct back one October Morph ID credit (the fix does not correct their existing row).
+
+## Added 5 October: personal weigh-in reminders (not applied)
+
+- Migration `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, written and **not applied**. It adds `enqueue_personal_weighin_reminders()` (a daily job at 14:20 UTC that reads `profiles.extra_data.care_reminders`), makes the weekly 30-day weigh-in nudge skip geckos the daily job covers and members who turned weigh-in reminders off, and schedules the job. It contains `revoke` lines, so the Supabase MCP tool will wait for a confirmation; run it in the SQL Editor instead. The app works without it (the switches save and the dates show), but no weigh-in push or email goes out for new geckos until it runs. Details in `activation-2026-10.md`.
+

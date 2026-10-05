@@ -1,23 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Camera, Loader2, CheckCircle2, Scale, PlusCircle, Sparkles, ImagePlus } from 'lucide-react';
+import { Camera, Loader2, CheckCircle2, Scale, PlusCircle, Sparkles, ImagePlus, Keyboard, UserPlus, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
-import { FeedingGroup } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
-import { supabase } from '@/lib/supabaseClient';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { captureEvent } from '@/lib/posthog';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
-import { generateNextGeckoId } from './form/helpers';
+import { saveQuickGecko } from './quickGeckoSave';
 import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
+import { DEFAULT_FEEDING_INTERVAL_DAYS, flowEvent, savePendingGecko } from '@/lib/firstGeckoFlow';
 
-// Crested geckos on CGD are usually fed every 2 to 3 days.
-const DEFAULT_FEEDING_INTERVAL_DAYS = 3;
+// After a guest keeps a gecko: create the account, then land on My Geckos,
+// where the saved draft becomes the first gecko in the collection.
+const GUEST_SIGNUP_URL = `/AuthPortal?mode=signup&redirect=${encodeURIComponent('/MyGeckos')}`;
 const SEXES = ['Unsexed', 'Female', 'Male'];
 
 /**
@@ -40,8 +40,22 @@ const SEXES = ['Unsexed', 'Female', 'Male'];
  * onOpenRecord(gecko) opens the saved gecko's record, where its value
  * estimate shows once it has a morph; onImport() swaps this dialog for
  * the CSV import, for breeders who already keep a spreadsheet.
+ *
+ * First-gecko flow (activation pass, 5 Oct 2026), all optional:
+ *   offerPhotoChoice: open on two choices, "identify it from a photo"
+ *     (onChoosePhoto, which goes to Morph ID's free try) or "type a name
+ *     and morph" (this form).
+ *   initialDraft: prefill from a Morph ID result or a guest's saved draft
+ *     ({ name, sex, hatch_date, morphs_traits, morph_tags, notes,
+ *     image_urls, weight_grams }).
+ *   stepLabel: e.g. "Step 1 of 3", shown above the title.
+ *   onContinue(gecko, meta): replaces the success screen; the parent moves
+ *     on to the parents step.
+ *   guest: the demo. Nothing is saved; the gecko is kept in this browser
+ *     and the visitor is offered a free account to keep it, or a way back.
+ *   saveSource: analytics source for the save (quick_add or morph_id_draft).
  */
-export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, onOpenRecord, onImport, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null }) {
+export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, onOpenRecord, onImport, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null, offerPhotoChoice = false, onChoosePhoto, initialDraft = null, stepLabel = null, onContinue, guest = false, saveSource = 'quick_add' }) {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const requestIdRef = useRef(crypto.randomUUID());
@@ -53,16 +67,32 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
     holdOnboarding('quick_add');
     return () => releaseOnboarding('quick_add');
   }, [open]);
-  const [photoUrl, setPhotoUrl] = useState(null);
+  const [photoUrl, setPhotoUrl] = useState(() => initialDraft?.image_urls?.[0] || null);
   const [uploading, setUploading] = useState(false);
-  const [name, setName] = useState('');
-  const [sex, setSex] = useState('Unsexed');
-  const [hatchDate, setHatchDate] = useState('');
-  const [morph, setMorph] = useState('');
-  const [weight, setWeight] = useState('');
+  const [name, setName] = useState(() => initialDraft?.name || '');
+  const [sex, setSex] = useState(() => (SEXES.includes(initialDraft?.sex) ? initialDraft.sex : 'Unsexed'));
+  const [hatchDate, setHatchDate] = useState(() => initialDraft?.hatch_date || '');
+  const [morph, setMorph] = useState(() => initialDraft?.morphs_traits || '');
+  const [weight, setWeight] = useState(() => (initialDraft?.weight_grams != null ? String(initialDraft.weight_grams) : ''));
   const [remind, setRemind] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(null);
+  // 'choose' shows the photo-or-type choice first; 'form' is the form.
+  const [mode, setMode] = useState(() => (offerPhotoChoice && !initialDraft && !guest ? 'choose' : 'form'));
+  // Guest demo: the gecko the visitor typed, kept for after sign-up.
+  const [guestKept, setGuestKept] = useState(null);
+  // Morph ID's tags and note ride along with a draft that came from it.
+  const draftExtrasRef = useRef({
+    morph_tags: Array.isArray(initialDraft?.morph_tags) && initialDraft.morph_tags.length ? initialDraft.morph_tags : null,
+    notes: initialDraft?.notes || null,
+    extraPhotos: Array.isArray(initialDraft?.image_urls) ? initialDraft.image_urls.slice(1) : [],
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    flowEvent('add', 'shown', { choice: mode === 'choose', from_draft: Boolean(initialDraft), guest });
+    // Once per opening.
+  }, [open]);
   const [addedCount, setAddedCount] = useState(0);
   // Geckos saved in this dialog, so "Add another" counts them when it
   // numbers the next ID code even before the collection reloads.
@@ -82,6 +112,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
     setMorph('');
     setWeight('');
     setSaved(null);
+    draftExtrasRef.current = { morph_tags: null, notes: null, extraPhotos: [] };
   };
 
   const handlePhoto = async (event) => {
@@ -104,7 +135,9 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
     sex,
     hatch_date: hatchDate || null,
     morphs_traits: morph.trim() || '',
-    image_urls: photoUrl ? [photoUrl] : [],
+    image_urls: photoUrl ? [photoUrl, ...draftExtrasRef.current.extraPhotos.filter((u) => u && u !== photoUrl)] : [],
+    ...(draftExtrasRef.current.morph_tags ? { morph_tags: draftExtrasRef.current.morph_tags } : {}),
+    ...(draftExtrasRef.current.notes ? { notes: draftExtrasRef.current.notes } : {}),
     weight_grams: weight === '' ? null : Number(weight),
     species: 'Crested Gecko',
   });
@@ -120,61 +153,40 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
       toast({ title: 'Check the weight', description: 'Enter grams as a number, for example 34.', variant: 'destructive' });
       return;
     }
+    if (guest) {
+      // Nothing is written in the demo. Keep the gecko in this browser and
+      // save it for real once the visitor has an account.
+      savePendingGecko({ name: trimmed, sex, hatch_date: hatchDate || null, morphs_traits: morph.trim(), weight_grams: grams });
+      flowEvent('add', 'guest_kept', { has_morph: Boolean(morph.trim()) });
+      setGuestKept({ name: trimmed });
+      return;
+    }
     setSaving(true);
     try {
-      let feedingGroupId = null;
-      if (remind) {
-        const groups = await FeedingGroup.filter({ created_by: user.email }).catch(() => []);
-        const group = groups[0] || await FeedingGroup.create({
-          label: 'A',
-          name: 'My geckos',
-          diet_type: 'CGD',
-          interval_days: DEFAULT_FEEDING_INTERVAL_DAYS,
-          last_fed_date: todayLocalISO(),
-          feeding_reminder_enabled: true,
-        });
-        feedingGroupId = group?.id || null;
-      }
-
-      // Same ID code the full add form would give a new founder.
+      // Geckos saved in this dialog count too when numbering the ID code.
       const known = new Set(existingGeckos.map((g) => g.id));
       const pool = [...existingGeckos, ...savedHereRef.current.filter((g) => !known.has(g.id))];
-      let idCode = null;
-      try {
-        idCode = await generateNextGeckoId(user, pool, null, null, '', '', idSettings);
-      } catch (idErr) {
-        console.warn('ID code not generated:', idErr);
-      }
-
-      const record = {
-        name: trimmed,
-        gecko_id_code: idCode || null,
-        sex,
-        hatch_date: hatchDate || null,
-        morphs_traits: morph.trim() || null,
-        image_urls: photoUrl ? [photoUrl] : [],
-        species: 'Crested Gecko',
-        status: 'Pet',
-        is_public: false,
-        weight_grams: grams,
-        feeding_group_id: feedingGroupId,
-      };
-      const { data: gecko, error } = await supabase.rpc('save_gecko_record', {
-        p_record: record,
-        p_request_id: requestIdRef.current,
-        p_gecko_id: null,
-        p_record_weight: grams !== null,
-        p_record_date: todayLocalISO(),
+      const { gecko, feedingGroupId } = await saveQuickGecko({
+        user,
+        remind,
+        pool,
+        idSettings,
+        requestId: requestIdRef.current,
+        fields: {
+          name: trimmed,
+          sex,
+          hatch_date: hatchDate || null,
+          morphs_traits: morph,
+          weight_grams: grams,
+          image_urls: photoUrl ? [photoUrl, ...draftExtrasRef.current.extraPhotos.filter((u) => u && u !== photoUrl)] : [],
+          morph_tags: draftExtrasRef.current.morph_tags,
+          notes: draftExtrasRef.current.notes,
+        },
       });
-      if (error) throw error;
-      // Lets the Dashboard (and any open list) drop its cached counts.
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'created' } }));
-      }
 
       captureEvent('animal_created', {
         animal_id: gecko.id,
-        source: 'quick_add',
+        source: saveSource,
         has_photo: Boolean(photoUrl),
         recorded_weight: grams !== null,
         feeding_reminders: Boolean(feedingGroupId),
@@ -182,8 +194,13 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
       if (grams !== null) captureEvent('weight_logged', { via: 'quick_add', at_add: true });
       savedHereRef.current = [...savedHereRef.current, gecko];
       setAddedCount((n) => n + 1);
-      setSaved({ gecko, remind: Boolean(feedingGroupId), hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });
+      flowEvent('add', 'saved', { source: saveSource, has_photo: Boolean(photoUrl), has_morph: Boolean(morph.trim()), has_weight: grams !== null, feeding_reminders: Boolean(feedingGroupId) });
       onSaved?.(gecko);
+      if (onContinue) {
+        onContinue(gecko, { feedingGroupId, hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });
+      } else {
+        setSaved({ gecko, remind: Boolean(feedingGroupId), hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });
+      }
     } catch (err) {
       console.error('Quick add failed:', err);
       if (isGeckoLimitError(err) && onLimitReached) {
@@ -199,7 +216,72 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next && !saving) onClose?.(); }}>
       <DialogContent className="w-[95vw] max-w-md max-h-[90svh] overflow-y-auto bg-slate-900 border-slate-700">
-        {saved ? (
+        {guestKept ? (
+          <div className="space-y-5">
+            <div className="text-center space-y-2 pt-2">
+              <UserPlus className="w-10 h-10 text-emerald-400 mx-auto" />
+              <DialogTitle className="text-xl text-slate-100">Create a free account to keep {guestKept.name}</DialogTitle>
+              <DialogDescription className="text-slate-400">
+                This is the demo, so nothing is saved yet. {guestKept.name} is kept in this browser and goes
+                straight into your collection once your free account exists. Free covers up to 10 geckos, no card needed.
+              </DialogDescription>
+            </div>
+            <div className="grid gap-2">
+              <Link
+                to={GUEST_SIGNUP_URL}
+                onClick={() => { flowEvent('add', 'guest_signup_clicked'); onClose?.(); }}
+                className="inline-flex items-center justify-center gap-2 w-full min-h-11 rounded-md bg-emerald-600 hover:bg-emerald-500 px-4 text-sm font-semibold text-white"
+              >
+                <UserPlus className="w-4 h-4" /> Create a free account
+              </Link>
+              <Button variant="ghost" className="w-full min-h-11 text-slate-300" onClick={() => { flowEvent('add', 'guest_back_to_demo'); onClose?.(); }}>
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to the demo
+              </Button>
+            </div>
+          </div>
+        ) : mode === 'choose' && !saved ? (
+          <div className="space-y-4">
+            <div>
+              {stepLabel && <p className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300">{stepLabel}</p>}
+              <DialogTitle className="text-xl text-slate-100">Add your first gecko</DialogTitle>
+              <DialogDescription className="text-slate-400 mt-1">
+                Two ways in. Both take about a minute, and you can skip anything you don&rsquo;t know.
+              </DialogDescription>
+            </div>
+            <button
+              type="button"
+              onClick={() => { flowEvent('add', 'choose_photo'); onChoosePhoto?.(); }}
+              className="w-full text-left rounded-xl border border-emerald-500/50 bg-emerald-950/30 hover:bg-emerald-900/30 p-4 flex gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            >
+              <Camera className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                <span className="block font-semibold text-slate-100">Add it by photo</span>
+                <span className="block text-sm text-slate-300 mt-0.5">Morph ID reads the morph from a top and a side photo (say, Lilly White or Harlequin) and fills it in. Your first one is free.</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { flowEvent('add', 'choose_type'); setMode('form'); }}
+              className="w-full text-left rounded-xl border border-slate-600 bg-slate-800/60 hover:bg-slate-800 p-4 flex gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            >
+              <Keyboard className="w-6 h-6 text-slate-300 shrink-0 mt-0.5" />
+              <span>
+                <span className="block font-semibold text-slate-100">Type a name and morph</span>
+                <span className="block text-sm text-slate-300 mt-0.5">Already know what it is? A name is enough, the rest is optional.</span>
+              </span>
+            </button>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              {onImport ? (
+                <button type="button" onClick={() => onImport()} className="touch:min-h-11 text-sm text-emerald-300 hover:text-emerald-200 underline underline-offset-4">
+                  Import a spreadsheet instead
+                </button>
+              ) : <span />}
+              <Button variant="ghost" className="min-h-11 text-slate-300" onClick={() => { flowEvent('add', 'skipped'); onClose?.(); }}>
+                Skip for now
+              </Button>
+            </div>
+          </div>
+        ) : saved ? (
           <div className="space-y-5">
             <div className="text-center space-y-2 pt-2">
               <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
@@ -248,11 +330,16 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
         ) : (
           <div className="space-y-4">
             <div>
+              {stepLabel && addedCount === 0 && <p className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300">{stepLabel}</p>}
               <DialogTitle className="text-xl text-slate-100">{addedCount > 0 ? 'Add another gecko' : 'Add your first gecko'}</DialogTitle>
               <DialogDescription className="text-slate-400 mt-1">
-                Start with a photo and a name. Everything else can wait.
+                {initialDraft?.morph_tags?.length || initialDraft?.notes
+                  ? 'Morph ID filled in the morph and photo. Give your gecko a name and check the rest.'
+                  : guest
+                    ? 'Try it with any name. This is the demo, so you keep it by creating a free account.'
+                    : 'Start with a photo and a name. Everything else can wait.'}
               </DialogDescription>
-              {addedCount === 0 && onImport && (
+              {addedCount === 0 && onImport && !offerPhotoChoice && !guest && (
                 <button
                   type="button"
                   onClick={() => onImport()}
@@ -263,6 +350,13 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               )}
             </div>
 
+            {guest ? (
+              <p className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs text-slate-400">
+                <Camera className="w-3.5 h-3.5 inline mr-1 text-emerald-400" />
+                Photos and Morph ID open once you have a free account.
+              </p>
+            ) : (
+            <>
             <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handlePhoto} />
             <button
               type="button"
@@ -287,6 +381,8 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               <button type="button" onClick={() => fileInputRef.current?.click()} className="touch:min-h-11 text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1">
                 <ImagePlus className="w-3.5 h-3.5" /> Change photo
               </button>
+            )}
+            </>
             )}
 
             <div>
@@ -332,6 +428,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               <Input id="qa-morph" value={morph} onChange={(e) => setMorph(e.target.value)} placeholder="e.g. Lilly White Harlequin" className="mt-1 bg-slate-800 border-slate-600 text-slate-100" autoComplete="off" />
             </div>
 
+            {!guest && (
             <div className="flex items-start justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/60 p-3">
               <div>
                 <Label htmlFor="qa-remind" className="text-slate-100">Remind me on feeding days</Label>
@@ -339,8 +436,14 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               </div>
               <Switch id="qa-remind" checked={remind} onCheckedChange={setRemind} />
             </div>
+            )}
 
             <div className="flex flex-col-reverse sm:flex-row gap-2 pt-1">
+              {guest ? (
+                <Button variant="ghost" className="min-h-11 text-slate-300" onClick={() => onClose?.()}>
+                  Back to the demo
+                </Button>
+              ) : (
               <Button
                 variant="ghost"
                 className="min-h-11 text-slate-300"
@@ -349,8 +452,9 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               >
                 More details
               </Button>
+              )}
               <Button className="min-h-11 flex-1" disabled={saving || uploading} onClick={handleSave}>
-                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : 'Save gecko'}
+                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : guest ? 'Keep this gecko' : onContinue ? 'Save and continue' : 'Save gecko'}
               </Button>
             </div>
           </div>
