@@ -1,0 +1,63 @@
+# Daily health check for Morph ID and the gecko value estimate.
+#
+# Runs scripts/canary/run-canary.mjs against production every morning. It
+# signs in as the Morph ID evaluation account, checks that fresh listings are
+# feeding the value estimates, prices four reference geckos with the app's own
+# valuation code, and runs two real identifications. Any failure fails the
+# run, and GitHub emails the repo owner. The run page shows a table of every
+# check.
+#
+# Cost: two identifications, about 6 cents a day.
+#
+# Secrets used (already set for the morph-id-eval workflow):
+#   SUPABASE_URL
+#   SUPABASE_SERVICE_ROLE_KEY
+
+name: daily-canary
+
+on:
+  schedule:
+    # 14:07 UTC: after the 12:40 market value snapshot, early morning in the US.
+    - cron: '7 14 * * *'
+  workflow_dispatch:
+    inputs:
+      skip_morph_id:
+        description: Skip the two Morph ID calls (checks prices only)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-canary
+  cancel-in-progress: false
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 10.33.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run health check
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # The public key the app itself ships with (src/lib/supabaseClient.js).
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdWdsZnBoaHdsYWx1eWZ5eHNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MjA5MTksImV4cCI6MjA5MTA5NjkxOX0.mbjrSDZoEvQwPBiZbRtzjC04viNmSJ7sABDJQK9TmIM
+          CANARY_SKIP_MORPH_ID: ${{ inputs.skip_morph_id && '1' || '' }}
+        run: node scripts/canary/run-canary.mjs
