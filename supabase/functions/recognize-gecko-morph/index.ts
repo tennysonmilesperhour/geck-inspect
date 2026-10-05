@@ -345,7 +345,7 @@ async function loadProfile(authToken: string): Promise<Profile | null> {
 // Request keys: the browser sends one key per set of photos. A retry with
 // the same key after a dropped connection or a double tap gets the stored
 // answer back instead of running (and charging) a second analysis. Needs
-// the morph_id_requests table (migration 20261005120100); until that is
+// the morph_id_requests table (migration 20261005145947); until that is
 // applied every helper here quietly does nothing and Morph ID works as
 // before.
 const REQUEST_KEY_PATTERN = /^[A-Za-z0-9_-]{8,64}$/;

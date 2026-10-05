@@ -17,7 +17,7 @@ Project: `mmuglfphhwlaluyfyxsp`.
 | `invoke-llm` | v28 | AI Consultant refunds a failed message |
 | `set-platform-connection` | v17 | Bluesky handle and app password checked before saving |
 | `publish-social-post` | v27 | Copy-out costs no post credit; two-Pages fix |
-| `recognize-gecko-morph` | v63 | Free Morph ID try refunded on "better photos needed" (D19) |
+| `recognize-gecko-morph` | v63 (v64 on 5 Oct) | Free Morph ID try refunded on "better photos needed" (D19) |
 | `admin-delete-account` | v1 (new) | Account erasure; says "not installed yet" until the SQL below runs |
 
 **Migrations applied:**
@@ -58,10 +58,10 @@ Right after running it, open these signed out: the landing page, a passport, a m
 
 ## Added 5 October: funnel and Morph ID credits
 
-Built and waiting, details in `instrumentation-2026-10.md`:
+Done on 5 October (details in `instrumentation-2026-10.md`):
 
-1. `20261005120000_growth_funnel_admin`: admin Funnel card and admin left out of the Overview tiles.
-2. `20261005120100_morph_id_request_keys`: Morph ID retry replay table and the free-try-then-upgrade fix in `consume_morph_id_credit`.
-3. Deploy `recognize-gecko-morph` (analyzer deadline and request keys), after item 2.
+- Migration `20261005150008_growth_funnel_admin`: admin Funnel card; the admin account is left out of the Overview tiles.
+- Migration `20261005145947_morph_id_request_keys`: Morph ID retry replay table, and the free try no longer counts against the first paid month.
+- `recognize-gecko-morph` v64: the analyzer call stops at 90 s so a slow run is refunded, and a retry or double tap with the same photos is not charged twice.
 
-None of the three uses a destructive keyword, so the Supabase MCP tool can apply them.
+Still for Tennyson: give the Breeder member who upgraded on 1 Oct back one October Morph ID credit (the fix does not correct their existing row).

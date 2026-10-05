@@ -53,7 +53,7 @@ Not covered on purpose: weights and feedings for other reptiles (`ReptileEvent`)
 |---|---|---|
 | Admin, Product Analytics (Live metrics) | Events from admin emails, events marked `is_admin`, and every event in a browser session that ever carried one are dropped before counting. Admin profiles are left out of signups. | No |
 | Admin, Analytics dashboard | Same for events; admin-owned geckos, photos, plans, posts, comments and messages are left out. | No |
-| Admin, Overview tiles | `admin_overview_stats()` returns member-only accounts, geckos and photos, plus `admin_excluded` and `admin_geckos`. Until it is applied the tiles say "includes admin". Today that is 55 accounts instead of 56 and 220 geckos instead of 349. | Yes, `20261005120000_growth_funnel_admin.sql` |
+| Admin, Overview tiles | `admin_overview_stats()` returns member-only accounts, geckos and photos, plus `admin_excluded` and `admin_geckos`. Until it is applied the tiles say "includes admin". Today that is 55 accounts instead of 56 and 220 geckos instead of 349. | Yes, `20261005150008_growth_funnel_admin.sql` |
 | Admin, Funnel card (new, on Overview and Product Analytics) | `admin_growth_funnel()` leaves out admin accounts and the Morph ID evaluation account. | Yes, same file |
 
 ## The Funnel card
@@ -96,8 +96,8 @@ The question was whether a failed analysis still uses a credit (Member 3's ledge
 
 | Item | Unlocks | How |
 |---|---|---|
-| `supabase/migrations/20261005120000_growth_funnel_admin.sql` | Funnel card, admin left out of Overview tiles | Applies through the Supabase MCP tool (no destructive keywords). Replaces `admin_overview_stats()` with the same keys plus two new ones. |
-| `supabase/migrations/20261005120100_morph_id_request_keys.sql` | Retry replay and the upgrade-month fix | Same. New table with row level security and no policies; replaces `consume_morph_id_credit()`. |
+| `supabase/migrations/20261005150008_growth_funnel_admin.sql` | Funnel card, admin left out of Overview tiles | Applies through the Supabase MCP tool (no destructive keywords). Replaces `admin_overview_stats()` with the same keys plus two new ones. |
+| `supabase/migrations/20261005145947_morph_id_request_keys.sql` | Retry replay and the upgrade-month fix | Same. New table with row level security and no policies; replaces `consume_morph_id_credit()`. |
 | Deploy `recognize-gecko-morph` | Analyzer deadline, request keys | Deploy after the second migration. It also works if deployed first: it skips the key check when the table is missing. |
 
 After deploying, check: a normal Morph ID still returns a result and shows the right credits left; pressing Identify twice fast runs once; a second Identify on the same photos after a result shows the same answer and the same credits left.

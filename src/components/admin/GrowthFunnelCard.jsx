@@ -120,7 +120,7 @@ export default function GrowthFunnelCard({ weeks = 12 }) {
         <CardContent>
           {isMissingFunction(error) ? (
             <p className="text-sm text-amber-200/90">
-              The funnel needs the database function in migration 20261005120000_growth_funnel_admin.sql.
+              The funnel needs the database function in migration 20261005150008_growth_funnel_admin.sql.
               It has not been applied yet, so there is nothing to show.
             </p>
           ) : (
