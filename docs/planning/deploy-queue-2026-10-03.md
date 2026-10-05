@@ -28,7 +28,7 @@ Project: `mmuglfphhwlaluyfyxsp`.
 
 ## Waiting on Tennyson: one SQL script
 
-The Supabase MCP tool treats any statement containing `delete`, `drop` or `revoke` as destructive and waits for a confirmation that never appears in a Claude session, so these four could not be applied from here. They are bundled in **`docs/planning/deploy-queue-2026-10-03.sql`**: open Supabase, SQL Editor, paste the whole file, Run. It is one transaction (all or nothing), records the four migrations in the history, and ends with checks that should all read true.
+The Supabase MCP tool treats any statement containing `delete`, `drop` or `revoke` as destructive and waits for a confirmation that never appears in a Claude session, so these four could not be applied from here. They are bundled, with the 5 Oct weigh-in reminder job, in **`docs/planning/deploy-queue-2026-10-03.sql`**: open Supabase, SQL Editor, paste the whole file, Run. It is one transaction (all or nothing), records the four migrations in the history, and ends with checks that should all read true.
 
 1. `20261003220000_account_erasure`: `admin_erase_account()` (server only, with a second guard inside the function) and the admin alert on a deletion request.
 2. `20261003220100_anon_hide_owner_email_columns`: signed-out visitors stop seeing owner emails on geckos and photos.
@@ -68,5 +68,5 @@ Still for Tennyson: give the Breeder member who upgraded on 1 Oct back one Octob
 
 ## Added 5 October: personal weigh-in reminders (not applied)
 
-- Migration `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, written and **not applied**. It adds `enqueue_personal_weighin_reminders()` (a daily job at 14:20 UTC that reads `profiles.extra_data.care_reminders`), makes the weekly 30-day weigh-in nudge skip geckos the daily job covers and members who turned weigh-in reminders off, and schedules the job. It contains `revoke` lines, so the Supabase MCP tool will wait for a confirmation; run it in the SQL Editor instead. The app works without it (the switches save and the dates show), but no weigh-in push or email goes out for new geckos until it runs. Details in `activation-2026-10.md`.
+- Migration `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, written and **not applied**. It adds `enqueue_personal_weighin_reminders()` (a daily job at 14:20 UTC that reads `profiles.extra_data.care_reminders`), makes the weekly 30-day weigh-in nudge skip geckos the daily job covers and members who turned weigh-in reminders off, and schedules the job. It contains `revoke` lines, so the Supabase MCP tool will wait for a confirmation; it is now included in `deploy-queue-2026-10-03.sql`, so the one SQL Editor run covers it. The app works without it (the switches save and the dates show), but no weigh-in push or email goes out for new geckos until it runs. Details in `activation-2026-10.md`.
 
