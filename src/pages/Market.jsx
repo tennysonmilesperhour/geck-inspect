@@ -11,6 +11,7 @@ import MarketTapePanel from '@/components/market/MarketTapePanel';
 import WatchlistPanel from '@/components/market/WatchlistPanel';
 import PriceGamePanel from '@/components/market/PriceGamePanel';
 import SellerPanel from '@/components/market/SellerPanel';
+import DemoMarketBrief from '@/components/market/DemoMarketBrief';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import { useAuth } from '@/lib/AuthContext';
 import { captureEvent } from '@/lib/posthog';
@@ -57,6 +58,25 @@ export default function Market() {
           {[90, 60, 320].map((h, i) => (
             <div key={i} className="animate-pulse rounded-xl bg-slate-900" style={{ height: h }} />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // The guest demo gets a labelled sample: every demo gecko priced from a
+  // dated snapshot of real listing data, so the landing page's "See what
+  // every gecko is worth" is something a visitor can actually see.
+  if (isGuest) {
+    return (
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+        {seo}
+        <div className="max-w-5xl mx-auto">
+          <PageHeader
+            icon={TrendingUp}
+            title="Market"
+            description="What crested geckos are listed for, and what that means for each gecko in a collection. This is the demo version."
+          />
+          <DemoMarketBrief />
         </div>
       </div>
     );

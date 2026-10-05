@@ -7,6 +7,7 @@ import { createPageUrl } from '@/utils';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { valueFromTraitTable, qualityTierFor, isCrestedGecko } from '@/lib/traitValuation';
 import { KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
+import { isGuestMode } from '@/lib/guestMode';
 
 /**
  * "Estimated value" card for the gecko detail page.
@@ -183,6 +184,7 @@ export default function MarketValueCard({ gecko }) {
 
         <p className="text-[11px] text-slate-500">
           Based on asking prices from crested gecko listings tracked by Geck Data. An estimate, not an appraisal.
+          {isGuestMode() && ' Demo: prices from a snapshot taken 5 Oct 2026; members see them updated with each market check.'}
         </p>
       </CardContent>
     </Card>

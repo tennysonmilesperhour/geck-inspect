@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2, Sparkles, ArrowRight, Camera, Lock, PlusCircle, ShieldCheck, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
@@ -19,6 +19,7 @@ import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis } from '@/lib/morphIdDraft';
 import { captureEvent } from '@/lib/posthog';
 import { upgradePromptShown, upgradePromptClicked } from '@/lib/activation';
+import { onPhotoPath } from '@/lib/firstGeckoFlow';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
@@ -83,6 +84,8 @@ export default function Recognition() {
   const { toast } = useToast();
   const { user, isGuest, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
+  // Arrived from the guided first gecko's "Add it by photo".
+  const [firstGeckoPath] = useState(() => onPhotoPath() || new URLSearchParams(window.location.search).get('first_gecko') === '1');
   const isAdmin = user?.role === 'admin';
   const [imageUrls, setImageUrls] = useState([]);
   const [ageStage, setAgeStage] = useState('unknown');
@@ -271,6 +274,22 @@ export default function Recognition() {
           title="Crested Gecko Morph ID"
           description="Add clear photos of one crested gecko. You will get a ranked visual shortlist, the traits behind it, and an honest prompt for better evidence when the photos are not enough."
         />
+
+        {/* Step 1 of the guided first gecko, by photo. "Add to my collection"
+            below hands the result to the short add form. */}
+        {firstGeckoPath && user && !isGuest && (
+          <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-3 md:p-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300">Your first gecko, step 1 of 3</p>
+              <p className="text-sm text-slate-200 mt-0.5">
+                Add a top and a side photo and run Morph ID. Then tap &ldquo;Add to my collection&rdquo; and the morph and photos are filled in for you.
+              </p>
+            </div>
+            <Link to="/MyGeckos?add=1&how=type" className="touch:min-h-11 inline-flex items-center text-sm text-emerald-300 hover:text-emerald-200 underline underline-offset-4 shrink-0">
+              Type it in instead
+            </Link>
+          </div>
+        )}
 
         <div className="space-y-3">
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">

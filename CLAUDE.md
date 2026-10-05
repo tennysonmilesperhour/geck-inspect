@@ -134,5 +134,6 @@ docs/planning/vip-audit-2026-09-27.md - post-launch audit: usage data, competito
 docs/planning/feature-completeness-audit-2026-09-29.md - the active plan: how finished each feature is, the decisions waiting on Tennyson, and the step-by-step plan to finish the app (least finished first). Start here for product work.
 docs/planning/deploy-queue-2026-10-03.md - the database migrations and edge functions that are built but not yet applied, in order. Check it before any database or function work.
 docs/planning/growth-plan-2026-10.md - the October growth plan: where the business stands, the three loops (activation, retention, distribution through breeders), the next 30 days and the decisions waiting. Start here for anything about growth, onboarding or priorities.
+docs/planning/activation-2026-10.md - the guided first gecko, default weigh-in and feeding reminders, and the guest demo fixes (5 Oct). Start here for onboarding and activation work.
 docs/planning/market-habit-2026-09-30.md - the Market page (brief, live feed, watchlists, Guess the Price, seller view): what shipped, what is left for Tennyson, and the habit number. Start here for market work.
 IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md and this file; do not invent those documents' contents.

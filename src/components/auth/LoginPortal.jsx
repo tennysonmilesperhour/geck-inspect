@@ -11,7 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Mail, Lock, User as UserIcon, Check } from 'lucide-react';
+import { Loader2, Mail, Lock, User as UserIcon, Check, ArrowLeft } from 'lucide-react';
+import { readPendingGecko } from '@/lib/firstGeckoFlow';
+import { isGuestMode } from '@/lib/guestMode';
 
 // Supabase refuses a password sign-in for an unconfirmed address with
 // code email_not_confirmed (older versions only say so in the message).
@@ -77,6 +79,10 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   const [signUpSent, setSignUpSent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  // A gecko the visitor typed in the guest demo, saved once the account
+  // exists (My Geckos picks it up), and the way back to the demo.
+  const [pendingGeckoName] = useState(() => readPendingGecko()?.name || null);
+  const [fromDemo] = useState(() => isGuestMode());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -273,6 +279,11 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
           <h1 className="text-2xl md:text-4xl font-bold text-white">
             {isForgot ? 'Geck Inspect' : isSignUp ? 'Create your free account' : 'Welcome back'}
           </h1>
+          {isSignUp && !isForgot && pendingGeckoName && (
+            <p className="rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-100">
+              {pendingGeckoName} is waiting. It goes straight into your collection once your account exists.
+            </p>
+          )}
           {isSignUp && !isForgot && (
             <ul className="inline-flex flex-col items-start gap-1 md:gap-1.5 text-sm text-slate-300 text-left">
               {[
@@ -288,6 +299,14 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
             </ul>
           )}
         </div>
+
+        {fromDemo && (
+          <div className="text-center">
+            <Link to="/Dashboard" className="touch:min-h-11 inline-flex items-center gap-1.5 text-sm text-slate-300 hover:text-white">
+              <ArrowLeft className="w-4 h-4" /> Back to the demo
+            </Link>
+          </div>
+        )}
 
         {/* Auth card */}
         <Card className="shadow-xl">

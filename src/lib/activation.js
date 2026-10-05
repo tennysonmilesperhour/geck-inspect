@@ -67,11 +67,15 @@ export async function recordSignupIfNew(authUser, profile) {
   // overwritten; the event above is the record either way.
   if (profile?.id && authUser.email) {
     try {
+      // Read extra_data fresh: other features keep settings there too
+      // (care_reminders), and the profile snapshot may predate them.
+      const { data: fresh } = await supabase.from('profiles').select('extra_data').eq('email', authUser.email).maybeSingle();
+      const current = fresh && typeof fresh.extra_data === 'object' && fresh.extra_data ? fresh.extra_data : (extra || {});
       await supabase
         .from('profiles')
         .update({
           extra_data: {
-            ...(extra || {}),
+            ...current,
             first_touch: touch || { source: 'unknown' },
             ...(signupCta ? { signup_cta: signupCta } : {}),
             signup_tracked_at: new Date().toISOString(),

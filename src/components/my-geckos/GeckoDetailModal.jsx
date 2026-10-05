@@ -16,6 +16,7 @@ import BreedingHistory from './BreedingHistory';
 import VetRecordsSection from '@/components/gecko/VetRecordsSection';
 import HusbandryHistory from '@/components/gecko/HusbandryHistory';
 import MarketValueCard from '@/components/gecko/MarketValueCard';
+import WeighInReminderSwitch from '@/components/gecko/WeighInReminderSwitch';
 import HealthScreenCard from '@/components/health/HealthScreenCard';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -827,6 +828,13 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     <Button onClick={handleAddWeight} className="w-full">Save</Button>
                   </div>
                 )}
+                {isOwner && !isGuestMode() && (
+                  <WeighInReminderSwitch
+                    gecko={gecko}
+                    email={currentUser?.email}
+                    lastWeighDate={weightRecords.length > 0 ? [...weightRecords].sort((a, b) => String(b.record_date).localeCompare(String(a.record_date)))[0].record_date : null}
+                  />
+                )}
               </div>
 
               {/* Feeding and shed history plus the shed forecast, from the
@@ -1039,8 +1047,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
             {/* Right column: Value / Health / Certificates / Passport / Lineage / Archive / Parentage */}
             <div className="space-y-3">
-              {/* Value estimate, owner only (see MarketValueCard). */}
-              {isOwner && !isGuestMode() && (
+              {/* Value estimate, owner only (see MarketValueCard). The demo
+                  prices its sample geckos from a dated snapshot. */}
+              {isOwner && (
                 <MarketValueCard gecko={{ ...gecko, weight_grams: latestWeightValue }} />
               )}
               {/* AI health check; renders nothing without photos. */}

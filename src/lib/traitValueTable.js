@@ -7,6 +7,7 @@
  */
 import { supabase } from '@/lib/supabaseClient';
 import { buildTraitValueIndex } from '@/lib/traitValuation';
+import { isGuestMode } from '@/lib/guestMode';
 
 const TTL_MS = 30 * 60_000;
 const PAGE = 1000;
@@ -28,8 +29,22 @@ async function fetchRows() {
   return rows;
 }
 
-/** Resolves to the trait value index (see buildTraitValueIndex). Throws on failure. */
+let demoIndex = null;
+
+/**
+ * Resolves to the trait value index (see buildTraitValueIndex). Throws on
+ * failure. In the guest demo there is no session to call the RPC with, so
+ * the index is built from a dated snapshot of the same table
+ * (src/data/demoTraitValues.js) and the demo shows real-shaped prices.
+ */
 export async function loadTraitValueIndex() {
+  if (isGuestMode()) {
+    if (!demoIndex) {
+      const { demoTraitValueRows } = await import('@/data/demoTraitValues');
+      demoIndex = buildTraitValueIndex(demoTraitValueRows());
+    }
+    return demoIndex;
+  }
   if (cache && Date.now() - cache.at < TTL_MS) return cache.index;
   if (!inflight) {
     inflight = fetchRows()

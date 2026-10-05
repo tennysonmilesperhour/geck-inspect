@@ -32,7 +32,7 @@ vi.mock('@/lib/supabaseClient', () => ({
     }),
   },
 }));
-vi.mock('react-router-dom', () => ({ Link: ({ children }) => <span>{children}</span> }));
+vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled }) => <button type="button" onClick={onClick} disabled={disabled}>{children}</button>,
 }));
@@ -127,5 +127,48 @@ describe('QuickAddGecko', () => {
     await act(async () => { byId(second.tree, 'qa-remind').props.onChange({ target: { checked: false } }); });
     await act(async () => { buttonWithText(second.tree, 'Save gecko').props.onClick(); });
     expect(state.rpcCalls[0].args.p_record.feeding_group_id).toBeNull();
+  });
+
+  it('offers photo or typing first, and the photo choice hands off', async () => {
+    const onChoosePhoto = vi.fn();
+    const { tree } = await mount({ offerPhotoChoice: true, onChoosePhoto, stepLabel: 'Step 1 of 3' });
+    expect(textOf(tree)).toContain('Step 1 of 3');
+    expect(textOf(tree)).toContain('Add it by photo');
+    await act(async () => { buttonWithText(tree, 'Add it by photo').props.onClick(); });
+    expect(onChoosePhoto).toHaveBeenCalledTimes(1);
+    await act(async () => { buttonWithText(tree, 'Type a name and morph').props.onClick(); });
+    expect(byId(tree, 'qa-name')).toBeTruthy();
+  });
+
+  it('prefills a Morph ID draft and saves its tags, then continues the flow', async () => {
+    const onContinue = vi.fn();
+    const draft = { image_urls: ['https://x/top.webp', 'https://x/side.webp'], morph_tags: ['Lilly White', 'Harlequin'], morphs_traits: 'Lilly White', notes: 'Unverified Morph ID suggestion' };
+    const { tree } = await mount({ initialDraft: draft, onContinue, saveSource: 'morph_id_draft' });
+    expect(byId(tree, 'qa-morph').props.value).toBe('Lilly White');
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
+    await act(async () => { buttonWithText(tree, 'Save and continue').props.onClick(); });
+    const record = state.rpcCalls[0].args.p_record;
+    expect(record.morph_tags).toEqual(['Lilly White', 'Harlequin']);
+    expect(record.image_urls).toEqual(['https://x/top.webp', 'https://x/side.webp']);
+    expect(record.notes).toContain('Morph ID');
+    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onContinue.mock.calls[0][0].name).toBe('Mango');
+    // The flow takes over: no success screen here.
+    expect(textOf(tree)).not.toContain('is in your collection');
+  });
+
+  it('in the guest demo keeps the gecko for sign-up instead of saving', async () => {
+    const mem = new Map();
+    globalThis.localStorage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: (k) => mem.delete(k) };
+    const { tree, onSaved } = await mount({ guest: true });
+    expect(textOf(tree)).toContain('Photos and Morph ID open once you have a free account');
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
+    await act(async () => { byId(tree, 'qa-morph').props.onChange({ target: { value: 'Lilly White' } }); });
+    await act(async () => { buttonWithText(tree, 'Keep this gecko').props.onClick(); });
+    expect(state.rpcCalls).toHaveLength(0);
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(textOf(tree)).toContain('Create a free account to keep Mango');
+    expect(textOf(tree)).toContain('Back to the demo');
+    expect(JSON.parse(mem.get('geck_pending_first_gecko_v1')).draft).toMatchObject({ name: 'Mango', morphs_traits: 'Lilly White' });
   });
 });

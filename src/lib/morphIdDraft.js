@@ -80,6 +80,9 @@ export function buildGeckoDraftFromAnalysis(analysis, imageUrls = []) {
   return {
     image_urls: Array.isArray(imageUrls) ? imageUrls : [],
     morph_tags,
+    // Plain-language morph for the short add form and the value estimate,
+    // for example "Lilly White Harlequin". Editable before saving.
+    morphs_traits: name || labels.join(' ') || '',
     notes,
   };
 }

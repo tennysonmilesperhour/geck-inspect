@@ -26,14 +26,14 @@ export const TOUR_STEPS = [
     id: 'record',
     path: '/GeckoDetail?id=mock-gecko-4',
     title: "Nimbus's record",
-    body: 'His weigh-ins with the healthy range for his age shaded behind them, his parents with a link to the full family tree, and when his next shed is due.',
+    body: 'His weigh-ins against the healthy range for his age, what he is worth from real listings, his parents with a link to the family tree, and when his next shed is due.',
     next: "Plan his parents' next clutch",
   },
   {
     id: 'calculator',
     path: '/calculator?sireGecko=mock-gecko-2&damGecko=mock-gecko-1',
     title: 'Odds before you pair',
-    body: "Nimbus's parents, Spud and Harley, are loaded. Scroll down for the odds of every baby in their next clutch, down to the possible hets.",
+    body: "Nimbus's parents, Spud and Harley, are loaded. Their clutch odds are listed below them on this page, down to the possible hets.",
     next: 'Make it yours',
   },
 ];
@@ -50,14 +50,28 @@ const read = () => {
   }
 };
 
+// Fired whenever the tour moves, so other floating notices (the feeding
+// reminders) can step aside while it runs.
+export const TOUR_CHANGED_EVENT = 'geck_inspect_guest_tour_changed';
+
 const write = (state) => {
   try {
     sessionStorage.setItem(KEY, JSON.stringify(state));
   } catch {
     // Storage blocked: the tour just does not persist between pages.
   }
+  try {
+    window.dispatchEvent(new CustomEvent(TOUR_CHANGED_EVENT, { detail: state }));
+  } catch {
+    // no window (tests)
+  }
   return state;
 };
+
+/** True while the guided demo card is on screen (offered, running or at its sign-up card). */
+export function tourOnScreen() {
+  return getTourState().status !== 'closed';
+}
 
 /**
  * Tour state: { status: 'offer' | 'active' | 'finished' | 'closed', step }.

@@ -28,6 +28,7 @@ import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import PushEnableBanner from "@/components/notifications/PushEnableBanner";
 import GuestDemoGuide from "@/components/auth/GuestDemoGuide";
+import FloatingNoticeStack from "@/components/shared/FloatingNoticeStack";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 import MarketIntelligenceButton from "@/components/shared/MarketIntelligenceButton";
 import InstallAppButton from "@/components/shared/InstallAppButton";
@@ -1399,7 +1400,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+          {/* Bottom padding leaves room for the tab bar (phones) and for
+              the floating notices, so the end of a page can scroll clear. */}
+          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(4rem+env(safe-area-inset-bottom)+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
             <PushEnableBanner user={user} />
             <AppShellContext.Provider value={true}>
               {/* Keyed by path so moving to another page clears a crashed one. */}
@@ -1439,18 +1442,22 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} onDismiss={handleRoleDismissed} />
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
-      <Suspense fallback={null}>
-        <FeedingAlertSystem
-          user={user}
-          enabled={user?.feeding_alerts_enabled !== false}
-        />
-      </Suspense>
+      {/* Feeding reminders and the guest demo card share one corner and
+          stack instead of overlapping. */}
+      <FloatingNoticeStack>
+        <Suspense fallback={null}>
+          <FeedingAlertSystem
+            user={user}
+            enabled={user?.feeding_alerts_enabled !== false}
+          />
+        </Suspense>
+        {/* Guided demo card, or the guest notice once the tour is closed. */}
+        <GuestDemoGuide />
+      </FloatingNoticeStack>
       {/* Always run the hatch producer for signed-in users; per-channel
           (push/email) opt-out lives in Settings → Notifications. The bell
           notification is non-disruptive, so no separate master toggle. */}
       <HatchAlertSystem user={user} enabled={Boolean(user?.email)} />
-      {/* Guided demo card, or the guest notice once the tour is closed. */}
-      <GuestDemoGuide />
       {user && <FeedbackWidget />}
     </>
     );
