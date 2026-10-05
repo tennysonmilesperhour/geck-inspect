@@ -374,6 +374,20 @@ export default function MyGeckosPage() {
         openAddFlow();
     }, [isLoading, user, geckos, location.search, location.pathname]);
 
+    // ?import=1 (from the Dashboard's first-run card) opens the CSV import
+    // once the collection has loaded, then strips the param.
+    const importParamConsumedRef = React.useRef(false);
+    useEffect(() => {
+        if (isLoading || !user || user.is_guest || importParamConsumedRef.current) return;
+        const params = new URLSearchParams(location.search);
+        if (params.get('import') !== '1') return;
+        importParamConsumedRef.current = true;
+        params.delete('import');
+        const rest = params.toString();
+        window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
+        setIsImportModalOpen(true);
+    }, [isLoading, user, location.search, location.pathname]);
+
     // ?gecko=<id> (from /GeckoDetail's "Open record in My Geckos") opens
     // that gecko's record window once the collection has loaded, then
     // strips the param so a refresh doesn't reopen it.
@@ -1046,13 +1060,18 @@ export default function MyGeckosPage() {
                                 title={geckos.length === 0 ? 'No geckos yet' : 'No geckos match'}
                                 message={
                                     geckos.length === 0
-                                        ? 'Add your first crested gecko and Geck Inspect starts tracking weight, sheds, pairings, and lineage for it.'
+                                        ? 'A photo and a name is enough to start. Add the morph (say, Lilly White Harlequin) and you also get a value estimate from real listings. Weights, sheds, pairings and lineage build up from there.'
                                         : 'Nothing matches the current search or filters. Clear them, or add a new gecko.'
                                 }
                                 action={{
                                     label: geckos.length === 0 ? 'Add your first gecko' : 'Add a gecko',
                                     onClick: () => openAddFlow(),
                                 }}
+                                secondaryAction={geckos.length === 0 ? {
+                                    label: 'Import a spreadsheet (CSV)',
+                                    onClick: () => setIsImportModalOpen(true),
+                                } : undefined}
+                                hint={geckos.length === 0 ? 'Coming from a spreadsheet? Save it as CSV and the importer matches your columns for you, which you can adjust.' : undefined}
                             />
                         )}
 
@@ -1117,6 +1136,15 @@ export default function MyGeckosPage() {
                             setIsQuickAddOpen(false);
                             setSelectedGecko(gecko);
                             setIsDetailModalOpen(true);
+                        }}
+                        onOpenRecord={(gecko) => {
+                            setIsQuickAddOpen(false);
+                            setSelectedGecko(gecko);
+                            setIsDetailModalOpen(true);
+                        }}
+                        onImport={() => {
+                            setIsQuickAddOpen(false);
+                            setIsImportModalOpen(true);
                         }}
                     />
                 )}

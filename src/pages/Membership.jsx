@@ -176,6 +176,32 @@ const MEMBERSHIP_OFFERS = PRICED_TIERS.flatMap((tier) =>
 const MEMBERSHIP_HIGH_PRICE = Math.max(
   ...MEMBERSHIP_OFFERS.map((o) => Number(o.price)),
 ).toFixed(0);
+// One list for the visible FAQ and the FAQPage JSON-LD. Google expects
+// the two to match, and until October 2026 the questions were only in the
+// structured data, so visitors never saw them.
+const MEMBERSHIP_FAQS = [
+  {
+    q: 'How much does Geck Inspect cost?',
+    a: `Geck Inspect has a Free plan (up to 10 geckos), Keeper at $2.99 a month or $30 a year, and Breeder at $5.99 a month or $60 a year. An Enterprise plan is coming soon. Subscribing bills you straight away, and each paid plan also offers an optional ${TRIAL_DAYS}-day free trial. Paying yearly saves about 17%.`,
+  },
+  {
+    q: 'Can I try a paid plan before subscribing?',
+    a: `Yes. Every monthly or yearly paid plan has a ${TRIAL_DAYS}-day free trial you can start from the plan card. It is one per account, and it is optional: subscribing without it bills you today.`,
+  },
+  {
+    q: 'What is included in the Free plan?',
+    a: 'Up to 10 geckos, 1 active breeding pair, weights, feeding groups and event logs, lineage trees, sales and cost records, value estimates from real listings, one free Morph ID, the genetics calculator and guides, and the community forum. It is free for as long as you use it, with no credit card.',
+  },
+  {
+    q: 'Can I export my records?',
+    a: 'Yes, on every plan. Export your roster to CSV or PDF from My Geckos, and your collection and care records as JSON from Settings. Your records stay yours if you ever leave.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Yes. Monthly and yearly subscriptions can be cancelled at any time. Use the Manage billing button on this page or in Settings to open your Stripe billing portal, where you can cancel, change plans, update your card, or download invoices.',
+  },
+];
+
 const MEMBERSHIP_JSON_LD = [
   {
     '@type': 'SoftwareApplication',
@@ -221,40 +247,11 @@ const MEMBERSHIP_JSON_LD = [
   },
   {
     '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'How much does Geck Inspect cost?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Geck Inspect has a Free tier (10 geckos), a Keeper tier ($2.99/month or $30/year), a Breeder tier ($5.99/month or $60/year), and an Enterprise tier that is coming soon. Subscribing bills you straight away, and every recurring plan also offers an optional ${TRIAL_DAYS}-day free trial. Annual billing saves about 17% vs monthly.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Can I try a paid plan before subscribing?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Yes. Every recurring (monthly or annual) paid plan has a ${TRIAL_DAYS}-day free trial you can start from the plan card. It is one per account, and it is optional: subscribing without it bills you today.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What is included in the Free plan?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'The Free plan includes up to 10 geckos, 1 active breeding pair, weight tracking, public marketplace browsing, and community forum access. It is free forever with no credit card required.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Can I cancel anytime?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Yes. Monthly and annual subscriptions can be cancelled at any time. Use the Manage billing button on this page or in Settings to open your Stripe billing portal, where you can cancel, change plans, update your card, or download invoices.',
-        },
-      },
-    ],
+    mainEntity: MEMBERSHIP_FAQS.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
   },
 ];
 
@@ -470,12 +467,14 @@ export default function MembershipPage() {
       });
       return;
     }
+    // Signed-out visitors picking a plan are new, so open the sign-up
+    // form, not sign-in (it used to open on Sign In and lose them).
     if (tier.key === 'free') {
-      window.location.href = user ? '/Dashboard' : '/AuthPortal';
+      window.location.href = user ? '/Dashboard' : '/AuthPortal?mode=signup';
       return;
     }
     if (!user) {
-      window.location.href = '/AuthPortal';
+      window.location.href = '/AuthPortal?mode=signup';
       return;
     }
     if (isGrandfathered) {
@@ -586,8 +585,12 @@ export default function MembershipPage() {
             Plans for every crested gecko collection
           </h1>
           <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto">
-            Choose the tier that fits your collection. Subscribe and it starts
-            today, or take the {TRIAL_DAYS}-day free trial first. Cancel anytime.
+            Start free with up to 10 geckos. Upgrade when your collection or
+            your breeding outgrows it, from $2.99 a month.
+          </p>
+          <p className="text-sm text-slate-400 max-w-xl mx-auto">
+            Paid plans start today, or after an optional {TRIAL_DAYS}-day free
+            trial. Cancel anytime.
           </p>
           <p className="text-sm text-slate-400 max-w-xl mx-auto">
             Your records are yours. Export your whole collection to CSV or PDF
@@ -738,8 +741,10 @@ export default function MembershipPage() {
 
             return (
               <div key={tier.key} className="relative">
-                {isFeatured && cycle !== 'lifetime' && (
-                  <HoveringBadge variant="popular">Most Popular</HoveringBadge>
+                {/* "Most popular" was not true (one paying member per
+                    plan, October 2026), so the badge says who it fits. */}
+                {isFeatured && cycle !== 'lifetime' && !isCurrent && (
+                  <HoveringBadge variant="popular">Best for most keepers</HoveringBadge>
                 )}
                 {isFeatured && cycle === 'lifetime' && (
                   <HoveringBadge variant="lifetime">Best Value</HoveringBadge>
@@ -814,7 +819,7 @@ export default function MembershipPage() {
                     <div>
                       <div className="flex items-baseline gap-1">
                         <span
-                          className={`text-4xl font-bold ${
+                          className={`${isEnterpriseLocked ? 'text-2xl' : 'text-4xl'} font-bold ${
                             lifetimeAccent
                               ? 'text-amber-200'
                               : isFeatured
@@ -826,9 +831,9 @@ export default function MembershipPage() {
                                     : 'text-white'
                           }`}
                         >
-                          {enterpriseLifetimeUnavailable ? '-' : (pricing?.price ?? 'Custom')}
+                          {isEnterpriseLocked ? 'Coming soon' : enterpriseLifetimeUnavailable ? '-' : (pricing?.price ?? 'Custom')}
                         </span>
-                        {!enterpriseLifetimeUnavailable && pricing?.billing && (
+                        {!isEnterpriseLocked && !enterpriseLifetimeUnavailable && pricing?.billing && (
                           <span className="text-slate-400 text-sm">{pricing.billing}</span>
                         )}
                       </div>
@@ -845,7 +850,13 @@ export default function MembershipPage() {
                       >
                         {tier.description}
                       </p>
-                      {(pricing?.priceCaption || enterpriseLifetimeUnavailable) && (
+                      {/* A plan nobody can buy yet shows no price or billing
+                          promise ("Billed monthly, starting today"). */}
+                      {isEnterpriseLocked ? (
+                        <p className="text-xs mt-1.5 text-slate-500 italic">
+                          Not on sale yet. Join the waitlist and we will tell you first.
+                        </p>
+                      ) : (pricing?.priceCaption || enterpriseLifetimeUnavailable) && (
                         <p className="text-xs mt-1.5 text-slate-500 italic">
                           {enterpriseLifetimeUnavailable
                             ? 'Lifetime not available for Enterprise, message support for a custom quote.'
@@ -889,7 +900,7 @@ export default function MembershipPage() {
 
                     <Button
                       onClick={() => handleCTA(tier, pricing)}
-                      disabled={isEnterpriseLocked || busy || isCurrent || enterpriseLifetimeUnavailable}
+                      disabled={busy || isCurrent || enterpriseLifetimeUnavailable}
                       className={`w-full font-semibold ${
                         isCurrent
                           ? tier.key === 'enterprise'
@@ -901,9 +912,7 @@ export default function MembershipPage() {
                               ? 'bg-amber-600/90 hover:bg-amber-500 text-slate-950'
                               : isFeatured
                                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                                : isEnterpriseLocked
-                                  ? 'bg-slate-700 hover:bg-slate-700 text-slate-500 cursor-not-allowed'
-                                  : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
+                                : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
                       }`}
                     >
                       {busy ? (
@@ -915,6 +924,10 @@ export default function MembershipPage() {
                         'Current plan'
                       ) : enterpriseLifetimeUnavailable ? (
                         'Not available'
+                      ) : isEnterpriseLocked ? (
+                        'Join the waitlist'
+                      ) : tier.key === 'free' && !user ? (
+                        'Create free account'
                       ) : (
                         pricing?.cta || 'Choose plan'
                       )}
@@ -950,6 +963,24 @@ export default function MembershipPage() {
             );
           })}
         </div>
+
+        {/* Visible FAQ, the same list as the FAQPage structured data. */}
+        <section aria-labelledby="membership-faq-heading" className="max-w-3xl mx-auto w-full">
+          <h2 id="membership-faq-heading" className="text-2xl font-bold text-slate-100 text-center mb-6">
+            Questions about plans
+          </h2>
+          <div className="space-y-3">
+            {MEMBERSHIP_FAQS.map((item) => (
+              <details key={item.q} className="group rounded-xl border border-slate-700 bg-slate-900/70">
+                <summary className="cursor-pointer list-none p-4 flex items-center justify-between gap-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+                  <span className="font-semibold text-slate-100">{item.q}</span>
+                  <span className="text-emerald-400 text-2xl leading-none flex-shrink-0 group-open:rotate-45 transition-transform" aria-hidden="true">+</span>
+                </summary>
+                <p className="px-4 pb-4 text-sm text-slate-300 leading-relaxed">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
 
         {/* Referral offer. Sits next to the plans so the reward and the
             price it applies to are read together. */}

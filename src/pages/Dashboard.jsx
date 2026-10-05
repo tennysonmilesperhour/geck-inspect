@@ -250,6 +250,10 @@ export default function Dashboard() {
         ? displayName.split(' ')[0]
         : '';
     const hasGeckos = personalStats.geckos > 0;
+    // A signed-in member whose collection is confirmed empty gets one next
+    // step (the first-gecko card) instead of four hero buttons that lead to
+    // empty pages. Waits for the count so the buttons never flicker.
+    const isFirstRun = Boolean(user) && !isGuestMode() && personalQuery.isSuccess && personalStats.geckos === 0;
     const todayLabel = format(now, 'EEEE, MMM d');
 
     // Seasonal flavor: rotates the hero kicker by month so the page
@@ -319,7 +323,7 @@ export default function Dashboard() {
                                                 )}
                                             </>
                                         ) : (
-                                            'No geckos logged yet. Add your first one to start tracking your collection.'
+                                            'Welcome to Geck Inspect. Everything on this page fills in as your collection grows.'
                                         )}
                                     </p>
                                     <p className="text-emerald-300/70 text-sm md:text-base italic">
@@ -330,7 +334,7 @@ export default function Dashboard() {
                                 <div className="flex flex-wrap gap-2.5">
                                     {/* Order: primary action (My Collection) first, then
                                         store curation, then passive views (Preview, What's New). */}
-                                    {user && (
+                                    {user && !isFirstRun && (
                                         <Link to={createPageUrl('MyGeckos')}>
                                             <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg shadow-emerald-500/20">
                                                 <GitBranch className="w-4 h-4 mr-2" />
@@ -338,8 +342,11 @@ export default function Dashboard() {
                                             </Button>
                                         </Link>
                                     )}
-                                    {user && <MyStoreButton user={user} />}
-                                    {user?.id && (
+                                    {/* Store and profile previews have nothing to show
+                                        before the first gecko, so a brand new account sees
+                                        one clear next step instead of four buttons. */}
+                                    {user && !isFirstRun && <MyStoreButton user={user} />}
+                                    {user?.id && !isFirstRun && (
                                         <a
                                             href={`/PublicProfile?userId=${user.id}`}
                                             target="_blank"
@@ -381,11 +388,11 @@ export default function Dashboard() {
                         <Card className="gecko-card border-emerald-500/30 bg-emerald-950/20">
                             <CardContent className="p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4">
                                 <div className="flex-1">
-                                    <p className="text-lg font-semibold text-slate-100">Start with one gecko</p>
-                                    <p className="text-sm text-slate-400 mt-1">
-                                        Add your first crested gecko and Geck Inspect starts tracking weights, sheds,
-                                        photos, and lineage from day one. Not sure of the morph? Let the AI take a
-                                        look at a photo first.
+                                    <p className="text-lg font-semibold text-slate-100">Add your first gecko, it takes about a minute</p>
+                                    <p className="text-sm text-slate-300 mt-1">
+                                        A photo and a name is enough. Add its morph and you also get a value estimate
+                                        from real crested gecko listings. Weights, sheds, pairings and lineage build up
+                                        from there.
                                     </p>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
@@ -396,14 +403,14 @@ export default function Dashboard() {
                                             Add your first gecko
                                         </Button>
                                     </Link>
-                                    <Link to={createPageUrl('MorphGuide')}>
+                                    <Link to={`${createPageUrl('MyGeckos')}?import=1`}>
                                         <Button variant="outline" className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800">
-                                            Browse the Morph Guide
+                                            Import a spreadsheet
                                         </Button>
                                     </Link>
-                                    <Link to={createPageUrl('CareGuide')}>
-                                        <Button variant="ghost" className="text-slate-300 hover:text-white">
-                                            Read the care guide
+                                    <Link to="/Recognition">
+                                        <Button variant="ghost" className="text-slate-200 hover:text-white">
+                                            Identify a morph free
                                         </Button>
                                     </Link>
                                 </div>

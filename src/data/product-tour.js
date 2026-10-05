@@ -3,10 +3,12 @@
  * public landing page (rendered by ProductTour.jsx, replacing the
  * gecko-photo HeroSlideshow).
  *
- * Each slide points at a static image under /public/screenshots/. The
- * file does not need to exist yet: ProductTour.jsx hides any slide
- * whose image fails to load, so adding a screenshot to /public/screenshots/
- * with the matching filename automatically activates that slide.
+ * Each slide points at a static image under /public/screenshots/. A slide
+ * is only requested once it is marked `shipped: true`: commit the image
+ * and flip the flag in the same change. (Until October 2026 every slide
+ * was probed on each landing visit, and production answered each missing
+ * file with the app HTML, so nine wasted downloads per visit.)
+ * ProductTour.jsx still hides a shipped slide whose image fails to load.
  *
  * Capture guidance:
  *   - 1600 × 1000 px (16:10), PNG or WebP. WebP preferred for size.

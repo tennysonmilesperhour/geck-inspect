@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { APP_LOGO_URL } from '@/lib/constants';
+import { APP_LOGO_ICON_URL } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { useInAppShell } from '@/lib/appShell';
@@ -29,7 +29,7 @@ export default function PublicPageShell({ children }) {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <header className="max-w-6xl w-full mx-auto px-6 py-6 flex items-center justify-between">
         <Link to="/" className="touch:min-h-11 flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <img src={APP_LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
+          <img src={APP_LOGO_ICON_URL} alt="" width="40" height="40" className="h-10 w-10 rounded-xl" />
           <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm text-slate-300">
@@ -38,11 +38,21 @@ export default function PublicPageShell({ children }) {
           <Link to="/GeneticsGuide" className="hover:text-white">Genetics</Link>
           <Link to="/calculator" className="hover:text-white">Calculator</Link>
         </nav>
-        <Link to={createPageUrl('AuthPortal')}>
-          <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
-            Sign In
-          </Button>
-        </Link>
+        {/* Quiet sign-in link for returning members, one filled button
+            for newcomers (matches the landing page header). */}
+        <div className="flex items-center gap-1 sm:gap-3">
+          <Link
+            to={createPageUrl('AuthPortal')}
+            className="inline-flex items-center min-h-11 px-3 text-sm font-semibold text-slate-200 hover:text-white rounded-md"
+          >
+            Sign in
+          </Link>
+          <Link to="/AuthPortal?mode=signup" className="hidden sm:inline-flex">
+            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
+              Start free
+            </Button>
+          </Link>
+        </div>
       </header>
 
       <main className="flex-1">{children}</main>
@@ -58,7 +68,7 @@ export function PublicFooter() {
       <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         <div className="col-span-2">
           <Link to="/" className="touch:min-h-11 flex items-center gap-3">
-            <img src={APP_LOGO_URL} alt="Geck Inspect" className="h-8 w-8 rounded-lg" />
+            <img src={APP_LOGO_ICON_URL} alt="" width="32" height="32" className="h-8 w-8 rounded-lg" />
             <span className="font-bold text-slate-100">Geck Inspect</span>
           </Link>
           <p className="text-slate-500 mt-3 leading-relaxed max-w-md">

@@ -1,6 +1,6 @@
 # Landing-page product tour screenshots
 
-This folder feeds the `<ProductTour />` slideshow on the public landing page (`src/components/landing/ProductTour.jsx`). The slide list and captions are defined in `src/data/product-tour.js`. Drop a PNG/WebP here with the matching filename and the slide auto-activates on next page load. Files that don't exist yet are silently skipped.
+This folder feeds the `<ProductTour />` slideshow on the public landing page (`src/components/landing/ProductTour.jsx`). The slide list and captions are defined in `src/data/product-tour.js`. Drop a PNG/WebP here with the matching filename and set `shipped: true` on that slide in `src/data/product-tour.js` (same commit). Slides that are not marked shipped are never requested, so the landing page does not spend requests on files that do not exist.
 
 ## What to capture
 

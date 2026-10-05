@@ -37,8 +37,11 @@ const SEXES = ['Unsexed', 'Female', 'Male'];
  * onLimitReached() (opens the upgrade prompt), existingGeckos (the
  * collection, so the new gecko gets the next ID code, like the full form)
  * and idSettings (the keeper's ID code format from collection settings).
+ * onOpenRecord(gecko) opens the saved gecko's record, where its value
+ * estimate shows once it has a morph; onImport() swaps this dialog for
+ * the CSV import, for breeders who already keep a spreadsheet.
  */
-export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null }) {
+export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, onOpenRecord, onImport, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null }) {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const requestIdRef = useRef(crypto.randomUUID());
@@ -207,8 +210,16 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               </DialogDescription>
             </div>
             <div className="grid gap-2">
+              {/* The payoff the landing page promises: add a morph and
+                  see what the gecko is worth (MarketValueCard on the
+                  record reads the morph text). */}
+              {saved.hadMorph && onOpenRecord && (
+                <Button className="w-full min-h-11" onClick={() => onOpenRecord(saved.gecko)}>
+                  <Sparkles className="w-4 h-4 mr-2" /> See what {saved.gecko.name} is worth
+                </Button>
+              )}
               {!saved.hadWeight && (
-                <Button className="w-full min-h-11" onClick={() => onLogWeight?.(saved.gecko)}>
+                <Button variant={saved.hadMorph && onOpenRecord ? 'outline' : 'default'} className={`w-full min-h-11 ${saved.hadMorph && onOpenRecord ? 'border-slate-600 text-slate-100' : ''}`} onClick={() => onLogWeight?.(saved.gecko)}>
                   <Scale className="w-4 h-4 mr-2" /> Log today&rsquo;s weight
                 </Button>
               )}
@@ -240,6 +251,15 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               <DialogDescription className="text-slate-400 mt-1">
                 Start with a photo and a name. Everything else can wait.
               </DialogDescription>
+              {addedCount === 0 && onImport && (
+                <button
+                  type="button"
+                  onClick={() => onImport()}
+                  className="touch:min-h-11 mt-1 text-sm text-emerald-300 hover:text-emerald-200 underline underline-offset-4"
+                >
+                  Already keep a spreadsheet? Import it instead
+                </button>
+              )}
             </div>
 
             <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handlePhoto} />
