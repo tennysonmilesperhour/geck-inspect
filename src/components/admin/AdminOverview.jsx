@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Users, Camera, MessageSquare, Database, Sparkles, Bell, Activity } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
+import GrowthFunnelCard from '@/components/admin/GrowthFunnelCard';
 
 const SPARK_COLORS = {
   emerald: '#10b981',
@@ -114,6 +115,10 @@ export default function AdminOverview({ onNavigate }) {
           totalComments: overview.forum_comments,
           totalMorphs: overview.morph_guides,
           adminCount: overview.admins,
+          // Set by the 20261005120000 version of admin_overview_stats,
+          // which leaves admin accounts and their geckos out of the counts.
+          adminExcluded: overview.admin_excluded === true,
+          adminGeckos: Number(overview.admin_geckos || 0),
           expertCount: overview.experts,
           reviewerCount: overview.expert_reviewers,
           usersSeries: seriesPoints(series, 'accounts'),
@@ -164,7 +169,7 @@ export default function AdminOverview({ onNavigate }) {
           icon={Users}
           label="Accounts"
           value={stats.totalUsers}
-          sublabel={`+${stats.newUsers7d} this week · ${stats.legacyProfiles} legacy rows not counted`}
+          sublabel={`+${stats.newUsers7d} this week · ${stats.legacyProfiles} legacy rows not counted · ${stats.adminExcluded ? 'admin excluded' : 'includes admin'}`}
           accent="emerald"
           series={stats.usersSeries}
         />
@@ -172,7 +177,9 @@ export default function AdminOverview({ onNavigate }) {
           icon={Database}
           label="Geckos"
           value={stats.totalGeckos}
-          sublabel={`+${stats.newGeckos7d} this week`}
+          sublabel={stats.adminExcluded
+            ? `+${stats.newGeckos7d} this week · ${stats.adminGeckos} admin geckos not counted`
+            : `+${stats.newGeckos7d} this week · includes admin geckos`}
           accent="blue"
           series={stats.geckosSeries}
         />
@@ -222,6 +229,8 @@ export default function AdminOverview({ onNavigate }) {
           accent="blue"
         />
       </div>
+
+      <GrowthFunnelCard />
 
       {/* Quick links */}
       <Card>

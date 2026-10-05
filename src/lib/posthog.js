@@ -1,4 +1,4 @@
-import { trackEvent } from '@/lib/telemetry';
+import { trackEvent, withAnalyticsContext } from '@/lib/telemetry';
 
 /**
  * PostHog client wrapper.
@@ -146,7 +146,8 @@ export function capturePageview(path) {
 export function captureEvent(name, properties = {}) {
   // Fire-and-forget; trackEvent swallows its own errors.
   trackEvent(name, properties);
-  withClient((ph) => ph.capture(name, properties));
+  const props = withAnalyticsContext(properties);
+  withClient((ph) => ph.capture(name, props));
 }
 
 /** The live client, or null until posthog-js has loaded. */

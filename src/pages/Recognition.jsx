@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { getTierLimits, TIER_LIMITS } from '@/lib/tierLimits';
 import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis } from '@/lib/morphIdDraft';
 import { captureEvent } from '@/lib/posthog';
+import { upgradePromptShown, upgradePromptClicked } from '@/lib/activation';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
@@ -53,11 +54,19 @@ const FRIENDLY_ERROR = {
   },
   request_timeout: {
     title: 'The analysis took too long',
-    body: 'Your photos are still here. Please try once more; failed analyzer calls are not charged.',
+    body: 'Your photos are still here. Press Identify again: if the first try finished, you get that answer back without using another credit.',
+  },
+  upstream_timeout: {
+    title: 'The analysis took too long',
+    body: 'Your photos are still here and no credit was used. Please try once more in a moment.',
+  },
+  morph_id_in_progress: {
+    title: 'Still working on these photos',
+    body: 'Your last analysis of these photos is still running. Wait a few seconds, then press Identify again. You will not be charged twice.',
   },
   network_error: {
     title: 'The analyzer request was interrupted',
-    body: 'Your photos are still here. Check your connection or browser privacy extension, then try again.',
+    body: 'Your photos are still here. Check your connection or browser privacy extension, then press Identify again. A retry of the same photos is not charged twice.',
   },
   auth_required: {
     title: 'Please sign in to use MorphID',
@@ -119,6 +128,30 @@ export default function Recognition() {
   // fails, the server still enforces the limit and returns a clear error.
   const morphIdLocked = isFreeTier && freeUsageQuery.isSuccess && freeTriesLeft === 0;
 
+  // Funnel: the locked card is an upgrade prompt.
+  useEffect(() => {
+    if (morphIdLocked) upgradePromptShown('morph_id', 'morph_id_locked');
+  }, [morphIdLocked]);
+
+  // One request key per set of photos and answers. A retry of the same
+  // photos (after a timeout, a dropped connection or a double tap) sends
+  // the same key, so the server returns the first answer instead of
+  // charging a second credit. New photos or "Start over" get a new key.
+  const requestKeyRef = useRef({ signature: null, key: null });
+  const analyzingRef = useRef(false);
+  const requestKeyFor = (signature) => {
+    if (requestKeyRef.current.signature !== signature || !requestKeyRef.current.key) {
+      let key;
+      try {
+        key = crypto.randomUUID();
+      } catch {
+        key = `k${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+      }
+      requestKeyRef.current = { signature, key };
+    }
+    return requestKeyRef.current.key;
+  };
+
   const reset = () => {
     setImageUrls([]);
     setViewsComplete(false);
@@ -131,6 +164,7 @@ export default function Recognition() {
     setError(null);
     setSavedOnce(false);
     setIsUploadingPhotos(false);
+    requestKeyRef.current = { signature: null, key: null };
   };
 
   // The headline funnel: turn the AI result into a pre-filled new gecko
@@ -166,19 +200,42 @@ export default function Recognition() {
       setError({ code: 'bad_request', message: 'Add a top view and a side view before analyzing.' });
       return;
     }
+    // A second tap before React re-renders the disabled button would
+    // start a second paid analysis.
+    if (analyzingRef.current) return;
+    analyzingRef.current = true;
     setIsAnalyzing(true);
     setError(null);
     setAnalysis(null);
     setMeta(null);
+    const requestKey = requestKeyFor(JSON.stringify([imageUrls, ageStage, firedState]));
     try {
-      const { data, error: funcError, meta: respMeta } = await recognizeGeckoMorph({ imageUrls, ageStage, firedState });
+      const { data, error: funcError, meta: respMeta } = await recognizeGeckoMorph({ imageUrls, ageStage, firedState, requestKey });
       if (funcError) {
         captureEvent('morph_id_analysis_failed', {
           error_code: funcError.code || 'unknown',
           photo_count: imageUrls.length,
         });
+        captureEvent('morph_id_result', {
+          outcome: 'error',
+          error_code: funcError.code || 'unknown',
+          photo_count: imageUrls.length,
+          free_tier: isFreeTier,
+        });
+        if (funcError.code === 'morph_id_credits_exhausted') {
+          upgradePromptShown('morph_id', 'morph_id_exhausted');
+        }
         setError(funcError);
       } else {
+        captureEvent('morph_id_result', {
+          outcome: data?.assessment_status === 'insufficient_evidence' ? 'insufficient' : 'success',
+          photo_count: imageUrls.length,
+          free_tier: isFreeTier,
+          tier: respMeta?.tier || null,
+          credit_refunded: respMeta?.credit_refunded === true,
+          replayed: respMeta?.replayed === true,
+          top_morph: data?.primary_morph || null,
+        });
         setAnalysis(data);
         setMeta(respMeta || null);
         // Refresh the free-try count so "Start over" shows the locked state
@@ -188,7 +245,9 @@ export default function Recognition() {
     } catch (err) {
       console.error('Analysis error:', err);
       setError({ code: 'internal_error', message: err.message || 'AI analysis failed.' });
+      captureEvent('morph_id_result', { outcome: 'error', error_code: 'client_exception', photo_count: imageUrls.length, free_tier: isFreeTier });
     } finally {
+      analyzingRef.current = false;
       setIsAnalyzing(false);
     }
   };
@@ -239,7 +298,7 @@ export default function Recognition() {
                 a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.
               </p>
               <div className="flex flex-wrap gap-2 justify-center mt-1">
-                <Button onClick={() => navigate('/Membership')}>
+                <Button onClick={() => { upgradePromptClicked('morph_id', 'morph_id_locked'); navigate('/Membership'); }}>
                   See plans
                 </Button>
                 <Button variant="outline" onClick={() => navigate('/MorphGuide')}>
@@ -416,7 +475,10 @@ export default function Recognition() {
                 </div>
                 {friendly.cta && (
                   <Button
-                    onClick={() => { window.location.href = friendly.cta.href; }}
+                    onClick={() => {
+                      if (isExhausted) upgradePromptClicked('morph_id', 'morph_id_exhausted');
+                      window.location.href = friendly.cta.href;
+                    }}
                     className={isExhausted
                       ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
                       : 'bg-rose-500 hover:bg-rose-400 text-white'

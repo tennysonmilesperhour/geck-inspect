@@ -18,6 +18,7 @@ import {
   isMockedEntity,
 } from '@/lib/guestMockData';
 import { PUBLIC_READ_COLUMNS, EVERYONE_READ_COLUMNS } from '@/lib/publicColumns';
+import { noteEntityCreated } from '@/lib/activation';
 
 /**
  * If a Supabase query fails with a JWT / auth error, try refreshing the
@@ -472,6 +473,7 @@ function createEntityClient(entityName) {
           .single()
       );
       if (error) throw error;
+      noteEntityCreated(entityName);
       return data;
     },
 

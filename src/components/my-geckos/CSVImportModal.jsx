@@ -11,6 +11,7 @@ import {
     ArrowLeft, ArrowRight, Check, Columns3, Sparkles,
 } from 'lucide-react';
 import { importGeckosFromCSV } from '@/functions/importGeckosFromCSV';
+import { recordGeckoAdded } from '@/lib/activation';
 import { geckoLimitFor } from '@/lib/geckoLimit';
 import { generateCSVTemplate } from '@/functions/generateCSVTemplate';
 import { parseCSV, readFileAsText, transformRows } from './csv/csvParser';
@@ -116,6 +117,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
 
             setImportResults(data.results);
             setStep('results');
+            if (data.results?.created > 0) recordGeckoAdded('csv_import', data.results.created);
             window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'imported' } }));
 
             if (data.success && onImportComplete) {

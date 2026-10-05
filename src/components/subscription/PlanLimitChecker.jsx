@@ -5,7 +5,7 @@ import { Sparkles, Lock, ArrowRight, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { resolveTier } from '@/lib/tierLimits';
-import { captureEvent } from '@/lib/posthog';
+import { upgradePromptShown, upgradePromptClicked } from '@/lib/activation';
 
 // Plan limits and feature flags. Source of truth for:
 //   - how many geckos the user can own (geckos)
@@ -168,7 +168,7 @@ export { PLAN_LIMITS, effectiveTier };
 export default function PlanLimitModal({ isOpen, onClose, limitType, currentCount, featureName }) {
     // Funnel: a paywall was shown (which limit triggered it).
     useEffect(() => {
-        if (isOpen) captureEvent('upgrade_prompt_shown', { limit_type: limitType });
+        if (isOpen) upgradePromptShown(limitType, `plan_limit_${limitType}`);
     }, [isOpen, limitType]);
 
     const isGeckoLimit = limitType === 'geckos';
@@ -269,7 +269,7 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                         <Link
                             to={createPageUrl("Membership")}
                             className="flex-1"
-                            onClick={() => captureEvent('upgrade_prompt_clicked', { limit_type: limitType })}
+                            onClick={() => upgradePromptClicked(limitType, `plan_limit_${limitType}`)}
                         >
                             <Button className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
                                 View Plans

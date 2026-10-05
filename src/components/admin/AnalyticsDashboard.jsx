@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
+import { adminEmailSet, withoutAdminEvents, withoutAdminRows } from '@/lib/adminData';
 import {
   Area,
   AreaChart,
@@ -201,7 +202,16 @@ export default function AnalyticsDashboard() {
 
   const computed = useMemo(() => {
     if (!data) return null;
-    const { users, geckos, images, posts, comments, plans, messages, events } = data;
+    // Admin accounts are left out of every number on this page.
+    const admins = adminEmailSet(data.users);
+    const users = (data.users || []).filter((u) => u?.role !== 'admin');
+    const geckos = withoutAdminRows(data.geckos, admins);
+    const images = withoutAdminRows(data.images, admins);
+    const posts = withoutAdminRows(data.posts, admins);
+    const comments = withoutAdminRows(data.comments, admins);
+    const plans = withoutAdminRows(data.plans, admins);
+    const messages = withoutAdminRows(data.messages, admins, 'sender_email');
+    const events = withoutAdminEvents(data.events, admins);
     const now = Date.now();
     const periodMs = period * 24 * 60 * 60 * 1000;
     const currFrom = now - periodMs;

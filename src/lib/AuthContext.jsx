@@ -4,6 +4,8 @@ import { identifyUser, resetUser, captureEvent } from '@/lib/posthog';
 import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
 import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
+import { recordSignupIfNew } from '@/lib/activation';
+import { setAnalyticsContext } from '@/lib/telemetry';
 import { loadUserProfile } from '@/lib/userProfile';
 import { queryClientInstance } from '@/lib/query-client';
 import { dataCache } from '@/lib/layoutCache';
@@ -52,6 +54,7 @@ export const AuthProvider = ({ children }) => {
       if (!session?.user) {
         setIsAuthenticated(false);
         resetUser();
+        setAnalyticsContext({ isAdmin: false });
         const guest = isGuestMode();
         setUser(guest ? GUEST_USER : null);
         setIsGuest(guest);
@@ -72,6 +75,8 @@ export const AuthProvider = ({ children }) => {
         if (revision !== revisionRef.current) return;
         setUser((prev) => ({ ...prev, ...enriched }));
         identifyUser(enriched);
+        setAnalyticsContext({ isAdmin: enriched?.role === 'admin' });
+        recordSignupIfNew(session.user, enriched).catch(() => {});
         applyPendingReferral(enriched);
         applyPendingSignupGrant();
       });

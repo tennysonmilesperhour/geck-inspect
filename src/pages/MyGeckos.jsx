@@ -42,6 +42,7 @@ import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { inferSeasonLabel, compareSeasonLabels } from '@/lib/seasons';
 import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
 import { captureEvent } from '@/lib/posthog';
+import { recordGeckoAdded } from '@/lib/activation';
 import { useGeckoFilters } from '@/hooks/useGeckoFilters';
 import { retryApiCall } from '@/lib/layoutCache';
 import { useLocation } from 'react-router-dom';
@@ -62,6 +63,9 @@ export default function MyGeckosPage() {
     const location = useLocation();
     // Guards the one-time consumption of an incoming AI Morph ID draft.
     const morphDraftConsumedRef = React.useRef(false);
+    // True while the add form holds a Morph ID draft, so the save is
+    // attributed to the Morph ID path in analytics.
+    const morphDraftOpenRef = React.useRef(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
     // The first-run question waits while the full gecko form is open.
     useEffect(() => {
@@ -352,6 +356,7 @@ export default function MyGeckosPage() {
         }
         setSelectedGecko(draft);
         setIsFormOpen(true);
+        morphDraftOpenRef.current = true;
         captureEvent('morph_id_gecko_prefilled', {
             morph_count: Array.isArray(draft.morph_tags) ? draft.morph_tags.length : 0,
         });
@@ -410,20 +415,20 @@ export default function MyGeckosPage() {
         else setIsFormOpen(true);
     }
 
-    const announceSavedGecko = (geckoData, isNew) => {
+    const announceSavedGecko = (geckoData, isNew, source = 'full_form') => {
         // Analytics: distinguish new-gecko creation from edits so the funnel
-        // can see "first gecko" vs "updated a gecko".
+        // can see "first gecko" vs "updated a gecko", and which add path
+        // was used (full form, Quick Add or a Morph ID draft).
         captureEvent(isNew ? 'gecko_added' : 'gecko_updated', {
+            ...(isNew ? { source, count: 1 } : {}),
             sex: geckoData?.sex || null,
             status: geckoData?.status || null,
             has_image: Array.isArray(geckoData?.image_urls) && geckoData.image_urls.length > 0,
             has_lineage: Boolean(geckoData?.sire_id || geckoData?.dam_id || geckoData?.sire_name || geckoData?.dam_name),
         });
-        // Activation milestone: this add was the user's first gecko (the
-        // pre-save list, still in state here, was empty of live geckos).
-        if (isNew && geckos.filter((g) => !g.archived).length === 0) {
-            captureEvent('first_gecko_added');
-        }
+        // Activation milestone, checked against the database so archived
+        // and imported geckos count the same way on every add path.
+        if (isNew) recordGeckoAdded(source, 1, { skipGeckoAdded: true });
 
         // Notify any other page listening on the gecko list (Dashboard,
         // Lineage, Breeding, etc.) so their caches can invalidate.
@@ -436,7 +441,9 @@ export default function MyGeckosPage() {
         const savedScroll = scrollPositionRef.current;
         setIsFormOpen(false);
         setSelectedGecko(null);
-        announceSavedGecko(geckoData, isNew);
+        const source = morphDraftOpenRef.current ? 'morph_id_draft' : 'full_form';
+        morphDraftOpenRef.current = false;
+        announceSavedGecko(geckoData, isNew, source);
 
         if (user) {
             window.scrollTo({ top: savedScroll, behavior: 'instant' });
@@ -452,6 +459,7 @@ export default function MyGeckosPage() {
         const savedScroll = scrollPositionRef.current;
         setIsFormOpen(false);
         setSelectedGecko(null);
+        morphDraftOpenRef.current = false;
         // Restore scroll position on cancel too
         setTimeout(() => {
             window.scrollTo({ top: savedScroll, behavior: 'instant' });
@@ -1105,7 +1113,7 @@ export default function MyGeckosPage() {
                         }}
                         onClose={() => setIsQuickAddOpen(false)}
                         onSaved={(gecko) => {
-                            announceSavedGecko(gecko, true);
+                            announceSavedGecko(gecko, true, 'quick_add');
                             loadGeckos();
                         }}
                         onMoreDetails={(draft) => {

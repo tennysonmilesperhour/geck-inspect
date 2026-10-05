@@ -83,6 +83,11 @@ import {
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
+// The whole request must finish inside the browser's 120 s deadline
+// (src/lib/supabaseClient.js) so a timed-out analysis is refunded here
+// instead of finishing unseen after the member gave up.
+const REQUEST_BUDGET_MS = 100_000;
+const CLAUDE_DEADLINE_MS = 90_000;
 const REPLICATE_API_TOKEN = Deno.env.get("REPLICATE_API_TOKEN");
 const VISUAL_EMBEDDING_MODEL = Deno.env.get("SIGLIP_MODEL") ||
   DEFAULT_VISUAL_EMBEDDING_MODEL;
@@ -335,6 +340,78 @@ async function loadProfile(authToken: string): Promise<Profile | null> {
     // grant it to themselves.
     is_eval_account: user.app_metadata?.morph_eval === true,
   };
+}
+
+// Request keys: the browser sends one key per set of photos. A retry with
+// the same key after a dropped connection or a double tap gets the stored
+// answer back instead of running (and charging) a second analysis. Needs
+// the morph_id_requests table (migration 20261005120100); until that is
+// applied every helper here quietly does nothing and Morph ID works as
+// before.
+const REQUEST_KEY_PATTERN = /^[A-Za-z0-9_-]{8,64}$/;
+const REPLAY_WINDOW_MS = 60 * 60 * 1000;
+const RUNNING_WINDOW_MS = 3 * 60 * 1000;
+
+type RequestClaim =
+  | { kind: "disabled" }
+  | { kind: "claimed" }
+  | { kind: "replay"; response: Record<string, unknown> }
+  | { kind: "running" };
+
+function requestStoreMissing(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === "42P01" || error.code === "PGRST205" ||
+    /morph_id_requests/.test(error.message || "") && /does not exist|schema cache/.test(error.message || "");
+}
+
+async function claimRequestKey(userId: string, key: string | null): Promise<RequestClaim> {
+  if (!key) return { kind: "disabled" };
+  try {
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { error: insertError } = await admin.from("morph_id_requests")
+      .insert({ user_id: userId, request_key: key, status: "running" });
+    if (!insertError) return { kind: "claimed" };
+    if (requestStoreMissing(insertError)) return { kind: "disabled" };
+    if (insertError.code !== "23505") {
+      console.error("morph_id_requests claim failed:", insertError.message);
+      return { kind: "disabled" };
+    }
+    const { data: row, error: readError } = await admin.from("morph_id_requests")
+      .select("status, response, updated_at")
+      .eq("user_id", userId).eq("request_key", key).maybeSingle();
+    if (readError || !row) return { kind: "disabled" };
+    const age = Date.now() - Date.parse(row.updated_at);
+    if (row.status === "done" && row.response && age < REPLAY_WINDOW_MS) {
+      return { kind: "replay", response: row.response as Record<string, unknown> };
+    }
+    if (row.status === "running" && age < RUNNING_WINDOW_MS) return { kind: "running" };
+    // Failed, stale or expired: take the key over for this run.
+    const { error: takeError } = await admin.from("morph_id_requests")
+      .update({ status: "running", response: null, updated_at: new Date().toISOString() })
+      .eq("user_id", userId).eq("request_key", key);
+    return takeError ? { kind: "disabled" } : { kind: "claimed" };
+  } catch (err) {
+    console.error("morph_id_requests claim threw:", err instanceof Error ? err.message : String(err));
+    return { kind: "disabled" };
+  }
+}
+
+async function settleRequestKey(
+  userId: string,
+  key: string | null,
+  status: "done" | "failed",
+  response: Record<string, unknown> | null,
+): Promise<void> {
+  if (!key) return;
+  try {
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { error } = await admin.from("morph_id_requests")
+      .update({ status, response, updated_at: new Date().toISOString() })
+      .eq("user_id", userId).eq("request_key", key);
+    if (error && !requestStoreMissing(error)) console.error("morph_id_requests settle failed:", error.message);
+  } catch (err) {
+    console.error("morph_id_requests settle threw:", err instanceof Error ? err.message : String(err));
+  }
 }
 
 async function refundMorphIdCredit(userId: string): Promise<void> {
@@ -910,6 +987,7 @@ async function callClaude(
   model: string,
   context: { ageStage: string; firedState: string },
   visualEvidence: VisualEvidence,
+  deadlineMs: number = CLAUDE_DEADLINE_MS,
 ): Promise<CallClaudeResult> {
   const bank = await loadFewShotBank();
 
@@ -964,31 +1042,51 @@ async function callClaude(
 
   const tool = buildTool(includeValueEstimate);
   const startedAt = Date.now();
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-      // Prompt caching is GA on Sonnet 4 but the beta header is a no-op
-      // when unneeded and required for some account configurations.
-      "anthropic-beta": "prompt-caching-2024-07-31",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 1536,
-      tools: [tool],
-      tool_choice: { type: "tool", name: tool.name },
-      messages: [{
-        role: "user",
-        content: [...cacheableContent, ...variableContent],
-      }],
-    }),
-  });
+  // Hard deadline so the function always answers before the browser gives
+  // up (120 s) and before the platform stops the worker. Without it a slow
+  // analyzer call could finish after the member saw "took too long" (credit
+  // charged, result lost) or be killed before the catch block could refund.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.max(15_000, deadlineMs));
+  let res: Response;
+  try {
+    res = await fetch("https://api.anthropic.com/v1/messages", {
+      signal: controller.signal,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY!,
+        "anthropic-version": "2023-06-01",
+        // Prompt caching is GA on Sonnet 4 but the beta header is a no-op
+        // when unneeded and required for some account configurations.
+        "anthropic-beta": "prompt-caching-2024-07-31",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 1536,
+        tools: [tool],
+        tool_choice: { type: "tool", name: tool.name },
+        messages: [{
+          role: "user",
+          content: [...cacheableContent, ...variableContent],
+        }],
+      }),
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    const aborted = controller.signal.aborted;
+    throw new UpstreamError(
+      aborted ? "Analyzer timed out" : `Analyzer request failed: ${err instanceof Error ? err.message : String(err)}`,
+      aborted ? 504 : 502,
+      aborted ? "upstream_timeout" : "upstream_error",
+      { httpStatus: aborted ? 504 : 502, durationMs: Date.now() - startedAt },
+    );
+  }
   const requestId = res.headers.get("request-id");
   const durationMs = Date.now() - startedAt;
   if (!res.ok) {
-    const detail = (await res.text()).slice(0, 500);
+    const detail = (await res.text().catch(() => "")).slice(0, 500);
+    clearTimeout(timer);
     const code = res.status === 429 ? "upstream_rate_limited" : "upstream_error";
     throw new UpstreamError(`Anthropic ${res.status}: ${detail}`, res.status, code, {
       httpStatus: res.status,
@@ -996,7 +1094,20 @@ async function callClaude(
       durationMs,
     });
   }
-  const body = await res.json();
+  let body: { content?: Array<{ type: string; input?: unknown }>; usage?: UpstreamUsage };
+  try {
+    body = await res.json();
+  } catch (err) {
+    const aborted = controller.signal.aborted;
+    throw new UpstreamError(
+      aborted ? "Analyzer timed out" : `Analyzer response unreadable: ${err instanceof Error ? err.message : String(err)}`,
+      aborted ? 504 : 502,
+      aborted ? "upstream_timeout" : "upstream_error",
+      { httpStatus: aborted ? 504 : res.status, requestId, durationMs: Date.now() - startedAt },
+    );
+  } finally {
+    clearTimeout(timer);
+  }
   const toolBlock = (body.content || []).find((b: { type: string }) => b.type === "tool_use");
   if (!toolBlock?.input) {
     throw new UpstreamError("Claude did not return a tool_use block", 502, "upstream_error", {
@@ -1046,6 +1157,10 @@ serve(async (req) => {
   // toggle as-is for them.
   const isPaidTier = tier === "keeper" || tier === "breeder" || tier === "enterprise";
   const includeValueEstimate = !!profile.morph_id_show_value_estimate && (isPaidTier || isAdmin);
+
+  const requestStartedAt = Date.now();
+  // Set once this run owns its request key; settled in both exits below.
+  let claimedKey: string | null = null;
 
   // Hoisted so the catch block can include them in the spend-log row.
   // Defaults match what `logInvocation` should see if we crash before
@@ -1132,6 +1247,27 @@ serve(async (req) => {
       }
     }
 
+    // A repeat of a request this member already sent (double tap, retry
+    // after a dropped connection) is answered from the stored result, or
+    // told to wait while the first run is still going. Neither costs a
+    // credit. Admin and evaluation calls never use credits, so they skip it.
+    const requestKey = typeof body?.request_key === "string" && REQUEST_KEY_PATTERN.test(body.request_key)
+      ? body.request_key
+      : null;
+    if (!isAdmin && !isEvalAccount && requestKey) {
+      const claim = await claimRequestKey(profile.auth_user_id, requestKey);
+      if (claim.kind === "replay") {
+        return json({ ...claim.response, replayed: true });
+      }
+      if (claim.kind === "running") {
+        return json({
+          error: "Your last analysis of these photos is still running.",
+          code: "morph_id_in_progress",
+        }, 409);
+      }
+      if (claim.kind === "claimed") claimedKey = requestKey;
+    }
+
     let creditsConsumed = 0;
     let creditsRemaining: number | null = null;
     if (!isAdmin && !isEvalAccount) {
@@ -1142,6 +1278,7 @@ serve(async (req) => {
         p_credits_included: creditsIncluded,
       });
       if (rpcErr) {
+        await settleRequestKey(profile.auth_user_id, claimedKey, "failed", null);
         if ((rpcErr.message || "").includes("morph_id_credits_exhausted")) {
           return json({
             error: "Monthly MorphID credit limit reached.",
@@ -1167,6 +1304,7 @@ serve(async (req) => {
       model,
       { ageStage, firedState },
       visualEvidence,
+      Math.min(CLAUDE_DEADLINE_MS, REQUEST_BUDGET_MS - (Date.now() - requestStartedAt)),
     );
     const analysis = clampToTaxonomy(
       result.raw,
@@ -1215,7 +1353,7 @@ serve(async (req) => {
       request_id: result.request_id,
       ip_hash: ipHash,
     });
-    return json({
+    const responseBody = {
       success: true,
       analysis,
       model,
@@ -1228,9 +1366,12 @@ serve(async (req) => {
       credits_remaining: creditsRemaining,
       credit_refunded: creditRefunded,
       value_estimate_included: includeValueEstimate,
-    });
+    };
+    await settleRequestKey(profile.auth_user_id, claimedKey, "done", responseBody);
+    return json(responseBody);
   } catch (err) {
     if (creditWasConsumed) await refundMorphIdCredit(profile.auth_user_id);
+    await settleRequestKey(profile.auth_user_id, claimedKey, "failed", null);
     if (err instanceof UpstreamError) {
       await logInvocation({
         surface,

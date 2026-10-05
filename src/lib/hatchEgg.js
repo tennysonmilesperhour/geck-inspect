@@ -26,6 +26,7 @@ import { Egg, Gecko, PairingOutcomeLog } from '@/entities/all';
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 import { outcomeLogKeys } from '@/lib/genetics/pairOutcomes';
 import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
+import { recordGeckoAdded } from '@/lib/activation';
 
 /** The "What hatched?" answer for a hatchling that matches no prediction. */
 export const OTHER_OUTCOME = 'other / unsure';
@@ -215,6 +216,7 @@ export async function hatchEgg({ egg, plan, sire, dam, pairEggs = [], hatchDate,
     outcomeError = error;
   }
 
+  if (createdNow) recordGeckoAdded('hatch').catch(() => {});
   if (createdNow && typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'created', geckoId: gecko.id } }));
   }

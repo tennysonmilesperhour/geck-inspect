@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { exportMorphMarketCSV, parseMorphMarketCSV } from '@/lib/morphmarketSync';
 import { Gecko } from '@/entities/all';
+import { recordGeckoAdded } from '@/lib/activation';
 import { resolveTier } from '@/lib/tierLimits';
 
 /**
@@ -133,6 +134,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
 
     setImportResult({ created, failed });
     setIsImporting(false);
+    if (created > 0) recordGeckoAdded('morphmarket_sync', created);
     if (created > 0) {
       onImportComplete?.();
     }

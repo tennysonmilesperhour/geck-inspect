@@ -46,6 +46,20 @@ function getPagePath() {
   }
 }
 
+// Who is signed in, as far as analytics needs to know. AuthContext sets
+// this once the profile loads. Admin events carry is_admin: true so every
+// dashboard can leave Tennyson's own use out of the numbers (the admin
+// account produced 60% of signed-in events in September 2026).
+let analyticsContext = { isAdmin: false };
+export function setAnalyticsContext(next = {}) {
+  analyticsContext = { isAdmin: next.isAdmin === true };
+}
+
+/** Event properties plus the shared context flags. */
+export function withAnalyticsContext(properties = {}) {
+  return analyticsContext.isAdmin ? { ...properties, is_admin: true } : properties;
+}
+
 // Throttle: don't record the same event more than once every 2 seconds.
 const lastSent = new Map();
 
@@ -64,7 +78,7 @@ export async function trackEvent(name, properties = {}) {
       user_email: email,
       page: getPagePath(),
       session_id: getSessionId(),
-      properties,
+      properties: withAnalyticsContext(properties),
       created_by: email,
     });
   } catch {

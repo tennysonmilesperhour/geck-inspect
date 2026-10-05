@@ -29,9 +29,14 @@ import PublicPageShell from '@/components/public/PublicPageShell';
 import ScrollToTop from '@/components/shared/ScrollToTop';
 import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
+import { captureFirstTouch } from '@/lib/attribution';
 import { captureSignupGrantFromUrl } from '@/lib/store/signupGrant';
 import { RETIRED_PAGES } from '@/lib/retiredPages';
 
+// First-touch attribution (referrer host, UTM tags, landing path) is
+// recorded once per browser. It has to run before the two helpers below
+// strip ?ref and ?grant from the address bar.
+captureFirstTouch();
 // Pull ?ref=<code> off the URL into localStorage as early as possible,
 // before any router renders, so the param is captured even on the very
 // first navigation away from the landing page. applyPendingReferral

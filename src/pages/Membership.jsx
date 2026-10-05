@@ -23,6 +23,7 @@ import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
 import { featuresWithConsultant, pageIsLive } from '@/lib/membershipFeatures';
+import { lastUpgradePrompt } from '@/lib/activation';
 
 /**
  * Membership / pricing page.
@@ -390,6 +391,14 @@ export default function MembershipPage() {
         if (fresh) setUser(fresh);
         if (fresh && resolveTier(fresh) !== 'free') {
           setPlanConfirmed(true);
+          // The paid plan is confirmed on the account, not just claimed
+          // by the return URL. Stripe's webhook log stays the source of
+          // truth for revenue; this is the in-app funnel step.
+          captureEvent('checkout_completed', {
+            tier: resolveTier(fresh),
+            from_prompt: lastUpgradePrompt(),
+            attempts,
+          });
           return;
         }
       } catch {
@@ -494,8 +503,9 @@ export default function MembershipPage() {
       return;
     }
 
-    captureEvent('plan_selected', { tier: tier.key, interval: cycle, intent });
-    captureEvent('checkout_started', { tier: tier.key, interval: cycle, intent });
+    const fromPrompt = lastUpgradePrompt();
+    captureEvent('plan_selected', { tier: tier.key, interval: cycle, intent, from_prompt: fromPrompt });
+    captureEvent('checkout_started', { tier: tier.key, interval: cycle, intent, from_prompt: fromPrompt });
     setLoadingAction(`${tier.key}:${intent}`);
     try {
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {

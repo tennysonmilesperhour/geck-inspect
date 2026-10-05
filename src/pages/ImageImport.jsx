@@ -13,6 +13,7 @@ import { Camera, Loader2, Check, X, Lock, ArrowRight, ImagePlus, Sparkles } from
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import PageHeader from '@/components/shared/PageHeader';
 import { todayLocalISO } from '@/lib/dateUtils';
+import { recordGeckoAdded } from '@/lib/activation';
 
 const LoginPortal = React.lazy(() => import('@/components/auth/LoginPortal'));
 
@@ -262,6 +263,7 @@ export default function ImageImport() {
             }
         }
 
+        if (mode === 'geckos' && results.created > 0) recordGeckoAdded('image_import', results.created);
         setImportResults(results);
         setStep('done');
     };

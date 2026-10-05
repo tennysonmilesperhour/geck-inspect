@@ -46,6 +46,8 @@ import {
 } from 'lucide-react';
 import { format, subDays, startOfDay } from 'date-fns';
 import MarketHabitCard from '@/components/admin/MarketHabitCard';
+import GrowthFunnelCard from '@/components/admin/GrowthFunnelCard';
+import { adminEmailSet, withoutAdminEvents } from '@/lib/adminData';
 
 /**
  * Product Analytics, the admin command center for product usage.
@@ -111,6 +113,17 @@ const FUNNELS = [
     ],
   },
   {
+    key: 'activation',
+    title: 'Activation funnel',
+    caption:
+      'New account to first gecko to a husbandry log. Counts only accounts whose signup_completed event falls in the window (recorded from 5 October 2026).',
+    stages: [
+      { label: 'Signed up', events: ['signup_completed'] },
+      { label: 'First gecko added', events: ['first_gecko_added'] },
+      { label: 'Weight, feeding or egg logged', events: ['weight_logged', 'feeding_logged', 'egg_logged'] },
+    ],
+  },
+  {
     key: 'upgrade',
     title: 'Paid conversion funnel',
     caption:
@@ -147,14 +160,19 @@ const EVENT_REFERENCE = [
       { name: 'landing_cta_clicked', what: 'Landing page CTA clicked (hero, nav, or guest).' },
       { name: 'guest_mode_entered', what: 'Visitor entered guest mode.' },
       { name: 'login_completed', what: 'User finished signing in.' },
+      { name: 'signup_completed', what: 'First session of a new account, with first-touch source (ft_source, referrer host, UTM tags, landing path).' },
       { name: 'onboarding_role_selected', what: 'New user picked keeper or breeder during onboarding.' },
     ],
   },
   {
     category: 'Collection',
     events: [
-      { name: 'gecko_added', what: 'New gecko inserted into a collection.' },
-      { name: 'first_gecko_added', what: 'A user added their very first gecko (activation moment).' },
+      { name: 'gecko_added', what: 'New gecko added; source says which path (full form, Quick Add, Morph ID draft, CSV, hatch, claim, imports).' },
+      { name: 'first_gecko_added', what: 'The account\'s first gecko, on any add path (activation moment).' },
+      { name: 'weight_logged', what: 'A weight was recorded (any screen, including the add form).' },
+      { name: 'feeding_logged', what: 'A feeding was recorded.' },
+      { name: 'egg_logged', what: 'An egg was recorded.' },
+      { name: 'morph_id_result', what: 'Morph ID finished: outcome success, insufficient or error.' },
       { name: 'gecko_updated', what: 'Existing gecko edited.' },
       { name: 'roster_exported', what: 'Roster exported (CSV or PDF).' },
       { name: 'morph_id_gecko_prefilled', what: 'Morph ID result used to prefill a new gecko form.' },
@@ -390,7 +408,10 @@ function LiveMetrics() {
 
   const computed = useMemo(() => {
     if (!data) return null;
-    const { users, events } = data;
+    // Admin accounts (and any browser session they used) are left out.
+    const admins = adminEmailSet(data.users);
+    const users = (data.users || []).filter((u) => u?.role !== 'admin');
+    const events = withoutAdminEvents(data.events, admins);
     const now = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;
     const currFrom = now - period * dayMs;
@@ -567,7 +588,7 @@ function LiveMetrics() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-slate-400 max-w-2xl">
           First-party telemetry from the <code className="text-slate-300 text-xs">user_events</code> table.
-          Signed-in users are counted by account; anonymous visitors by browser session.
+          Signed-in users are counted by account; anonymous visitors by browser session. Admin accounts are left out.
         </p>
         <div className="flex items-center gap-2">
           <Select value={String(period)} onValueChange={(v) => setPeriod(Number(v))}>
@@ -617,6 +638,8 @@ function LiveMetrics() {
         <KpiCard label="Product events" value={computed.productCurrCount} delta={computed.productDelta} accent="rose" sublabel={`last ${period} days`} />
         <KpiCard label="New signups" value={computed.signupsCurr} delta={computed.signupsDelta} accent="emerald" sublabel={`last ${period} days`} />
       </div>
+
+      <GrowthFunnelCard />
 
       <MarketHabitCard />
 
@@ -675,7 +698,7 @@ function LiveMetrics() {
       </div>
 
       {/* Funnels */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {FUNNELS.map((f) => (
           <FunnelCard key={f.key} funnel={f} computed={computed.funnelResults[f.key]} />
         ))}

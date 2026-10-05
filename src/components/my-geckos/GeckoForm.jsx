@@ -532,6 +532,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             });
             if (saveError) throw saveError;
             captureEvent(isNew ? 'animal_created' : 'animal_updated', { animal_id: savedGecko.id, recorded_weight: recordWeight, published: savedGecko.is_public === true });
+            // The weight is written inside save_gecko_record, not through the
+            // WeightRecord entity, so it is counted here.
+            if (recordWeight) captureEvent('weight_logged', { via: 'gecko_form', at_add: isNew });
             // Optional community activity must never turn a successful save into a failed form.
             if (isNew && currentUser) {
                 UserActivity.create({ user_email: currentUser.email, activity_type: 'new_gecko',

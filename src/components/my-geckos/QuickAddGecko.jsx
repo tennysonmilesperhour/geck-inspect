@@ -176,6 +176,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
         recorded_weight: grams !== null,
         feeding_reminders: Boolean(feedingGroupId),
       });
+      if (grams !== null) captureEvent('weight_logged', { via: 'quick_add', at_add: true });
       savedHereRef.current = [...savedHereRef.current, gecko];
       setAddedCount((n) => n + 1);
       setSaved({ gecko, remind: Boolean(feedingGroupId), hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });

@@ -72,3 +72,47 @@ export function jobNeedsAttention(job) {
   if (!job.active) return false;
   return job.last_status === 'failed' || Number(job.failures_7d || 0) > 0;
 }
+
+// Admin accounts are left out of every analytics view: in September 2026
+// the admin account produced 60% of signed-in events and held 37% of all
+// geckos, so unfiltered charts mostly measured Tennyson's own use.
+export function adminEmailSet(users) {
+  return new Set(
+    (users || [])
+      .filter((u) => u?.role === 'admin' && u.email)
+      .map((u) => String(u.email).toLowerCase()),
+  );
+}
+
+function isAdminEvent(event, admins) {
+  if (event?.properties?.is_admin === true) return true;
+  const email = event?.user_email ? String(event.user_email).toLowerCase() : null;
+  return Boolean(email && admins.has(email));
+}
+
+/**
+ * Events with admin activity removed. A browser session that ever carried
+ * an admin event is dropped whole, so the admin's signed-out page views
+ * in the same tab do not count as a visitor either.
+ */
+export function withoutAdminEvents(events, admins) {
+  if (!admins || admins.size === 0) {
+    return (events || []).filter((e) => e?.properties?.is_admin !== true);
+  }
+  const adminSessions = new Set();
+  for (const e of events || []) {
+    if (e?.session_id && isAdminEvent(e, admins)) adminSessions.add(e.session_id);
+  }
+  return (events || []).filter(
+    (e) => !isAdminEvent(e, admins) && !(e?.session_id && adminSessions.has(e.session_id)),
+  );
+}
+
+/** Rows (geckos, photos, plans, profiles) not owned by an admin account. */
+export function withoutAdminRows(rows, admins, field = 'created_by') {
+  if (!admins || admins.size === 0) return rows || [];
+  return (rows || []).filter((r) => {
+    const value = r?.[field] ? String(r[field]).toLowerCase() : null;
+    return !(value && admins.has(value));
+  });
+}

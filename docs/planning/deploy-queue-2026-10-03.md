@@ -55,3 +55,13 @@ Right after running it, open these signed out: the landing page, a passport, a m
 - Connect a real Bluesky account and publish; a copy-out leaves "Posts this month" unchanged.
 - A blurry free-account Morph ID gives the free try back.
 - Print the rack label sheet on US Letter.
+
+## Added 5 October: funnel and Morph ID credits
+
+Built and waiting, details in `instrumentation-2026-10.md`:
+
+1. `20261005120000_growth_funnel_admin`: admin Funnel card and admin left out of the Overview tiles.
+2. `20261005120100_morph_id_request_keys`: Morph ID retry replay table and the free-try-then-upgrade fix in `consume_morph_id_credit`.
+3. Deploy `recognize-gecko-morph` (analyzer deadline and request keys), after item 2.
+
+None of the three uses a destructive keyword, so the Supabase MCP tool can apply them.

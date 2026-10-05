@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { ArrowRightLeft, ShieldCheck, Clock, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { animalFromPreview } from '@/lib/transfers';
+import { recordGeckoAdded } from '@/lib/activation';
 
 // The page a buyer opens from a transfer link. It uses the app's own
 // cards, colors and buttons (it had its own palette and fonts until
@@ -105,6 +106,7 @@ export default function ClaimAnimal() {
       }
 
       setClaimed(true);
+      recordGeckoAdded('claim');
     } catch (err) {
       console.error('Claim failed:', err);
       setError('claim_failed');

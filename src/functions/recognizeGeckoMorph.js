@@ -13,7 +13,8 @@ import { supabase } from '@/lib/supabaseClient';
 //
 // Resolved error shape (for upstream UI):
 //   { code: 'morph_id_credits_exhausted' | 'upstream_rate_limited' |
-//           'upstream_error' | 'auth_required' | 'bad_request' |
+//           'upstream_error' | 'upstream_timeout' | 'morph_id_in_progress' |
+//           'auth_required' | 'bad_request' |
 //           'credit_check_failed' | 'internal_error',
 //     message: string,
 //     tier?, credits_included?, status? }
@@ -45,7 +46,7 @@ async function readEdgeError(error) {
   };
 }
 
-export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, firedState } = {}) {
+export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, firedState, requestKey } = {}) {
   const urls = Array.isArray(imageUrls) && imageUrls.length
     ? imageUrls
     : imageUrl ? [imageUrl] : [];
@@ -56,6 +57,10 @@ export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, fired
   const body = { imageUrls: urls };
   if (typeof ageStage === 'string' && ageStage) body.age_stage = ageStage;
   if (typeof firedState === 'string' && firedState) body.fired_state = firedState;
+  // Same key for a retry of the same photos: the server answers a repeat
+  // from the stored result (or says it is still running) without a second
+  // credit. Ignored by a server without the morph_id_requests table.
+  if (typeof requestKey === 'string' && requestKey) body.request_key = requestKey;
 
   const { data, error } = await supabase.functions.invoke('recognize-gecko-morph', {
     body,
@@ -82,6 +87,7 @@ export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, fired
       credits_included: data?.credits_included,
       credits_remaining: data?.credits_remaining,
       credit_refunded: data?.credit_refunded === true,
+      replayed: data?.replayed === true,
       value_estimate_included: data?.value_estimate_included,
     },
     error: null,
