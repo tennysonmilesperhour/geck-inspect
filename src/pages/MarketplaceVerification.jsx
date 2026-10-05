@@ -126,7 +126,9 @@ export default function MarketplaceVerification() {
         <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
           <Link to="/" className="hover:text-slate-300">Home</Link>
           <span>/</span>
-          <Link to="/Marketplace" className="hover:text-slate-300">Marketplace</Link>
+          {/* Plain text: /Marketplace needs an account, so the old link sent
+              signed-out readers to a bare sign-in form. */}
+          <span>Marketplace</span>
           <span>/</span>
           <span className="text-slate-400">Verification & Trust</span>
         </div>

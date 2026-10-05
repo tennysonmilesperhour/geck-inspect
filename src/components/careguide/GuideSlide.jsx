@@ -220,7 +220,7 @@ function Compare({ columns }) {
                 {col.items.map((item, j) => (
                   <li key={j} className="flex items-start gap-2 text-sm text-slate-300 leading-relaxed">
                     <span className={`mt-1 w-1.5 h-1.5 rounded-full ${col.tone === 'ruby' || col.tone === 'coral' || col.tone === 'amber' ? 'bg-rose-400' : 'bg-emerald-400'} flex-shrink-0`} />
-                    <span>{typeof item === 'string' ? item : (<><span className="font-semibold text-slate-200">{item.title}</span>{item.text ? ` – ${item.text}` : ''}</>)}</span>
+                    <span>{typeof item === 'string' ? item : (<><span className="font-semibold text-slate-200">{item.title}</span>{item.text ? `: ${item.text}` : ''}</>)}</span>
                   </li>
                 ))}
               </ul>

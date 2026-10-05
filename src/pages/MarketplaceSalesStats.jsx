@@ -1543,7 +1543,7 @@ export default function MarketplaceSalesStats() {
                           <div key={item.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
                             <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                               {item.kind === 'gecko' ? (
-                                <img src={item.image || 'https://i.imgur.com/sw9gnDp.png'} alt={item.name}
+                                <img src={item.image || 'https://geckinspect.com/gecko-placeholder.png'} alt={item.name}
                                   className="w-9 h-9 rounded object-cover flex-shrink-0" />
                               ) : (
                                 <div className="w-9 h-9 rounded bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center flex-shrink-0">

@@ -44,7 +44,7 @@ const INCUBATION_FALLBACK_DAYS = 75;
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const FALLBACK_PHOTO = 'https://i.imgur.com/sw9gnDp.png';
+const FALLBACK_PHOTO = 'https://geckinspect.com/gecko-placeholder.png';
 
 // Layout of one pair row. The timeline reads like a project roadmap (the
 // style GitHub Projects and Linear use for their roadmap views): every

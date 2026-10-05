@@ -119,7 +119,7 @@ function LikedGeckosScreen() {
                                                 alt={gecko.name}
                                                 width={500}
                                                 aspect="square"
-                                                fallback="https://i.imgur.com/sw9gnDp.png"
+                                                fallback="https://geckinspect.com/gecko-placeholder.png"
                                                 className="group-hover:scale-105 transition-transform"
                                             />
                                         </Link>

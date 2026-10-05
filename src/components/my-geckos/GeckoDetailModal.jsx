@@ -513,7 +513,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                               ? `rotate(${gecko.image_crop_data[currentSlide.url].rotation}deg)`
                               : undefined,
                           }}
-                          fallback="https://i.imgur.com/sw9gnDp.png"
+                          fallback="https://geckinspect.com/gecko-placeholder.png"
                         />
                         <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
                           {LIFE_STAGE_LABELS[currentSlide.stage] || currentSlide.stage} · {slideshowIndex + 1}/{taggedSlides.length}
@@ -546,7 +546,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                           ? `rotate(${gecko.image_crop_data[gecko.image_urls[0]].rotation}deg)`
                           : undefined,
                       }}
-                      fallback="https://i.imgur.com/sw9gnDp.png"
+                      fallback="https://geckinspect.com/gecko-placeholder.png"
                     />
                   </div>
                 )}

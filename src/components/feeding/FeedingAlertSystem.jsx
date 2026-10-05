@@ -145,12 +145,19 @@ export default function FeedingAlertSystem({ user, enabled }) {
     setDismissedAlerts(new Set([...dismissedAlerts, alertId]));
   };
 
-  const visibleAlerts = alerts.filter(a => !dismissedAlerts.has(a.id));
+  // Most overdue first, and at most two cards at once: three or more
+  // stacked cards covered the whole phone screen on every page.
+  const MAX_SHOWN = 2;
+  const pendingAlerts = alerts
+    .filter(a => !dismissedAlerts.has(a.id))
+    .sort((a, b) => (b.daysOverdue || 0) - (a.daysOverdue || 0));
+  const visibleAlerts = pendingAlerts.slice(0, MAX_SHOWN);
+  const hiddenCount = pendingAlerts.length - visibleAlerts.length;
 
   if (!enabled || visibleAlerts.length === 0) return null;
 
   return (
-    <div data-floating-notice className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 max-w-sm z-40">
+    <div data-floating-notice className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 max-w-sm max-h-[60vh] overflow-y-auto z-40">
       <style>{`
         @keyframes feeding-glow-yellow {
           0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.3), inset 0 0 10px rgba(234, 179, 8, 0.1); }
@@ -211,7 +218,9 @@ export default function FeedingAlertSystem({ user, enabled }) {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => handleDismiss(alert.id)}
+                aria-label={`Dismiss the feeding reminder for ${alert.name}`}
                 className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200 flex-shrink-0"
               >
                 <X className="w-4 h-4" />
@@ -239,6 +248,11 @@ export default function FeedingAlertSystem({ user, enabled }) {
           </motion.div>
         ))}
       </AnimatePresence>
+      {hiddenCount > 0 && (
+        <p className="text-xs text-slate-300 bg-slate-900/90 border border-slate-700 rounded-lg px-3 py-2">
+          {hiddenCount} more feeding {hiddenCount === 1 ? 'reminder' : 'reminders'} after these
+        </p>
+      )}
     </div>
   );
 }

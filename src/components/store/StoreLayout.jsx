@@ -11,7 +11,7 @@ import { fetchCart, cartItemCount } from '@/lib/store/cart';
 import { useAuth } from '@/lib/AuthContext';
 import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 
-const APP_LOGO = 'https://i.imgur.com/gfaW2Yg.png';
+const APP_LOGO = 'https://geckinspect.com/logo.png';
 
 /**
  * Shared chrome for every Store/* route.

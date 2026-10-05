@@ -12,6 +12,7 @@ import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import EggDetailModal from './EggDetailModal';
 import HatchEggDialog from './HatchEggDialog';
 import { eggStatusFields } from '@/lib/hatchEgg';
+import { isGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { currentSeasonYear, eggSeasonYear, planSeasonYear } from '@/lib/seasons';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/components/ui/use-toast';
@@ -79,7 +80,11 @@ export default function Hatchery() {
         setIsLoading(true);
         setLoadError(null);
         try {
-            const user = await User.me();
+            // User.me() from entities/all is null in the guest demo; use the
+            // demo user so the Hatchery tab shows the sample eggs instead of
+            // "Your eggs could not be loaded".
+            const user = (await User.me()) || (isGuestMode() ? { ...GUEST_USER } : null);
+            if (!user) throw new Error('Not signed in');
             const { getVisibleGeckos } = await import('@/lib/geckoAccess');
             const [eggsData, plansData, geckosData] = await Promise.all([
                 Egg.filter({ created_by: user.email }, '-lay_date'),
@@ -94,7 +99,9 @@ export default function Hatchery() {
             // view. The breeding-pair flow archives on hatch (PlanDetails);
             // mirror that here for any stragglers we find.
             const orphans = eggsData.filter(e => e.status === 'Hatched' && !e.archived);
-            if (orphans.length > 0) {
+            // Guests are view-only: the write would be refused and pop the
+            // "create an account" prompt the moment the tab opens.
+            if (orphans.length > 0 && !isGuestMode()) {
                 const today = todayLocalISO();
                 await Promise.all(orphans.map(e =>
                     Egg.update(e.id, { archived: true, archived_date: e.hatch_date_actual || today })

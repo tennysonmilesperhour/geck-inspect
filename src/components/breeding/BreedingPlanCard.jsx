@@ -255,7 +255,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                             <div className="flex w-full sm:w-32 lg:w-40 flex-shrink-0">
                                 <div className="w-1/2 h-32 sm:h-28 lg:h-32 overflow-hidden">
                                     <img
-                                        src={sire?.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                        src={sire?.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'}
                                         alt={sire?.name}
                                         className="w-full h-full object-cover"
                                         loading="lazy"
@@ -264,7 +264,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 </div>
                                 <div className="w-1/2 h-32 sm:h-28 lg:h-32 overflow-hidden">
                                     <img
-                                        src={dam?.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                        src={dam?.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'}
                                         alt={dam?.name}
                                         className="w-full h-full object-cover"
                                         loading="lazy"
