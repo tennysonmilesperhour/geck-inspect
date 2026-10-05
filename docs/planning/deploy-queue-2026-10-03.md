@@ -83,9 +83,9 @@ Applied to production on 5 October:
 - `20261005210000_listings_species_crested`: value estimates and the Market page had stopped seeing new listings on 1 October. The new detail scraper stores species as `'crested-gecko'` (the column default), and every price reader only counts `'crested'` or unknown, so 5,092 listings were invisible. A trigger now stores the value as `'crested'` and the existing rows were corrected. Lilly White now prices from 1,686 listings instead of 788. The column default was left alone: changing it needs an exclusive lock that timed out under scraper traffic, and the trigger makes it irrelevant.
 - `20261005201211_market_data_health`: a read-only, service-role-only function the daily health check uses.
 
-Built, waiting to deploy:
+Deployed on 5 October (the live files match the repo byte for byte):
 
-- `recognize-gecko-morph` (v65): one automatic retry when Anthropic is overloaded, rate limited or drops the connection; a cut-off answer is retried or refunded instead of reading as "Better photos needed"; an unreadable photo gets its own message. Deploy with `scripts/deploy-morph-id.sh` (it bundles the new `_shared/morph-upstream.ts`).
+- `recognize-gecko-morph` v65: one automatic retry when Anthropic is overloaded, rate limited or drops the connection; a cut-off answer is retried or refunded instead of reading as "Better photos needed"; an unreadable photo gets its own message.
 
 New on `main`:
 
