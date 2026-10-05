@@ -97,7 +97,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <span
               className="inline-flex items-center justify-center h-6 w-6 rounded-full text-white text-[11px] font-bold shadow border border-white/30 leading-none"
               style={{ backgroundColor: feedingGroup.color || '#f97316' }}
-              title={`Feeding Group ${feedingGroup.label}${feedingGroup.name ? ': ' + feedingGroup.name : ''}, ${feedingGroup.diet_type}`}
+              title={`Feeding Group ${feedingGroup.label || ''}${feedingGroup.name ? ': ' + feedingGroup.name : ''}${feedingGroup.diet_type ? ', ' + feedingGroup.diet_type : ''}`}
             >
               {feedingGroup.label}
             </span>
@@ -123,6 +123,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           <Button
             size="sm"
             onClick={handleViewClick}
+            aria-label={`View ${gecko.name || 'gecko'}`}
             className="h-8 px-2.5 touch:min-h-11 touch:min-w-11 bg-slate-900/75 hover:bg-slate-800/85 text-emerald-300 border border-emerald-600/40 backdrop-blur-sm font-medium"
           >
             <Eye className="w-3.5 h-3.5" />
@@ -132,6 +133,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <Button
               size="sm"
               onClick={handleEditClick}
+              aria-label={`Edit ${gecko.name || 'gecko'}`}
               className="h-8 px-2.5 touch:min-h-11 touch:min-w-11 bg-slate-900/75 hover:bg-slate-800/85 text-emerald-300 border border-emerald-600/40 backdrop-blur-sm font-medium"
             >
               <Edit className="w-3.5 h-3.5" />

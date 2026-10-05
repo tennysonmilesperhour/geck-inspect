@@ -155,7 +155,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                         <div className="space-y-6">
                             <div className="w-full rounded-lg overflow-hidden">
                                 <img 
-                                    src={reptile.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} 
+                                    src={reptile.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'} 
                                     alt={reptile.name} 
                                     className="w-full h-auto object-contain max-h-80"
                                 />

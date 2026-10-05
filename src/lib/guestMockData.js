@@ -1043,9 +1043,9 @@ const DIRECT_MESSAGES = [
 // Feeding groups (referenced by gecko.feeding_group_id)
 // ---------------------------------------------------------------------------
 const FEEDING_GROUPS = [
-  { id: 'mock-feed-1', name: 'Adults A', feed_days: ['Monday', 'Thursday'], created_by: GUEST_EMAIL, created_date: daysAgo(500) },
-  { id: 'mock-feed-2', name: 'Subadults', feed_days: ['Tuesday', 'Friday'], created_by: GUEST_EMAIL, created_date: daysAgo(400) },
-  { id: 'mock-feed-3', name: 'Hatchlings', feed_days: ['Monday', 'Wednesday', 'Friday'], created_by: GUEST_EMAIL, created_date: daysAgo(300) },
+  { id: 'mock-feed-1', label: 'A', color: '#10b981', diet_type: 'Pangea Fruit Mix', name: 'Adults A', feed_days: ['Monday', 'Thursday'], created_by: GUEST_EMAIL, created_date: daysAgo(500) },
+  { id: 'mock-feed-2', label: 'B', color: '#3b82f6', diet_type: 'Repashy CGD', name: 'Subadults', feed_days: ['Tuesday', 'Friday'], created_by: GUEST_EMAIL, created_date: daysAgo(400) },
+  { id: 'mock-feed-3', label: 'C', color: '#f97316', diet_type: 'Repashy CGD', name: 'Hatchlings', feed_days: ['Monday', 'Wednesday', 'Friday'], created_by: GUEST_EMAIL, created_date: daysAgo(300) },
 ];
 
 // ---------------------------------------------------------------------------

@@ -82,6 +82,9 @@ export default function Breeder() {
   const [storePolicy, setStorePolicy] = useState('');
   const [inferredGeckos, setInferredGeckos] = useState([]);
   const [uniqueOwners, setUniqueOwners] = useState(0);
+  // True once the inferred lookup has finished, so a slug nobody's geckos
+  // mention can be kept out of search results (any URL rendered a page).
+  const [inferredDone, setInferredDone] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const blocked = useBlockedMembers();
 
@@ -109,6 +112,7 @@ export default function Breeder() {
     let cancelled = false;
     (async () => {
       setMode('loading');
+      setInferredDone(false);
       setErrorMsg(null);
       try {
         // 1. Curated lookup first, does a breeder_profiles row claim
@@ -239,10 +243,12 @@ export default function Breeder() {
 
         setInferredGeckos(matches);
         setUniqueOwners(new Set(matches.map((g) => g.owner_profile_id).filter(Boolean)).size);
+        setInferredDone(true);
       } catch (err) {
         if (!cancelled) {
           setErrorMsg(err.message || 'Failed to load breeder');
           setMode('inferred');
+          setInferredDone(true);
         }
       }
     })();
@@ -369,6 +375,8 @@ export default function Breeder() {
         },
       ];
 
+  const inferredEmpty = mode === 'inferred' && inferredDone && inferredGeckos.length === 0;
+
   const seoTitle = isCurated
     ? `${displayName}, Crested Gecko Breeder on Geck Inspect`
     : `${displayName}, Crested Gecko Breeder`;
@@ -385,6 +393,7 @@ export default function Breeder() {
         description={seoDescription}
         path={`/Breeder/${slug}`}
         jsonLd={jsonLd}
+        noIndex={inferredEmpty}
       />
 
       <BuyerInquiryModal
@@ -620,7 +629,9 @@ export default function Breeder() {
               </h1>
 
               <p className="text-lg text-slate-300 leading-relaxed max-w-2xl">
-                {displayName} is a crested gecko breeder referenced by keepers in the Geck Inspect community. This page is built automatically from attribution data in our database.
+                {inferredEmpty
+                  ? `No geckos in the Geck Inspect community name ${displayName} as their breeder yet.`
+                  : `${displayName} is a crested gecko breeder referenced by keepers in the Geck Inspect community. This page is built automatically from attribution data in our database.`}
               </p>
 
               <div className="mt-8 flex flex-wrap gap-6 text-sm">

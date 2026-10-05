@@ -130,7 +130,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                     alt={gecko.name}
                     width={500}
                     aspect="square"
-                    fallback={gecko.image_urls?.[0] ? 'https://i.imgur.com/sw9gnDp.png' : initialsAvatarUrl(gecko.name)}
+                    fallback={gecko.image_urls?.[0] ? 'https://geckinspect.com/gecko-placeholder.png' : initialsAvatarUrl(gecko.name)}
                 />
                 {/* Sex icon in top left */}
                 <div className="absolute top-2 left-2">
@@ -180,7 +180,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                                 alt={owner?.full_name}
                                 loading="lazy"
                                 decoding="async"
-                                onError={(e) => { e.target.src = 'https://i.imgur.com/gfaW2Yg.png'; }}
+                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://geckinspect.com/logo.png'; }}
                             />
                             <span className="truncate group-hover:underline">{owner?.full_name || 'Breeder'}</span>
                         </Link>

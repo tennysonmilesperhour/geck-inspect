@@ -983,7 +983,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               decoding="async"
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = 'https://i.imgur.com/gfaW2Yg.png';
+                e.target.src = 'https://geckinspect.com/logo.png';
               }}
             />
           )}

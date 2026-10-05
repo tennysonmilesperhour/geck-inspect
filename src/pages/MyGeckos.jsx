@@ -889,7 +889,7 @@ export default function MyGeckosPage() {
                                                         <div className="space-y-2">
                                                             {speciesGeckos.map(gecko => (
                                                                 <div key={gecko.id} className="bg-slate-900 border border-slate-700 rounded-xl p-2 md:p-4 hover:border-emerald-600 transition-colors cursor-pointer flex items-center gap-3" onClick={() => handleOpenDetailModal(gecko)}>
-                                                                    <img src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" decoding="async" />
+                                                                    <img src={gecko.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" decoding="async" />
                                                                     <div className="flex-1 min-w-0">
                                                                         <h3 className="font-bold text-slate-100 truncate">{gecko.name}</h3>
                                                                         <div className="flex flex-wrap gap-1 mt-1">
@@ -950,12 +950,12 @@ export default function MyGeckosPage() {
                                                 >
                                                     <div className="flex items-center gap-2 md:gap-4">
                                                         <img
-                                                                    src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                                                    src={gecko.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'}
                                                                     alt={gecko.name}
                                                                     className="w-12 h-12 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"
                                                                     loading="lazy"
                                                                     decoding="async"
-                                                                    onError={(e) => { e.target.src = 'https://i.imgur.com/sw9gnDp.png'; }}
+                                                                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://geckinspect.com/gecko-placeholder.png'; }}
                                                                 />
                                                         <div className="flex-1 min-w-0">
                                                             {/* Mobile: Name only */}

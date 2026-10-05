@@ -452,11 +452,10 @@ export default function QualityScale() {
             ))}
           </div>
           <p className="text-slate-500 text-xs mt-4">
-            See asking-price ranges per trait, by age and sex, on the{' '}
-            <Link to="/MarketPricing" className="text-emerald-400 hover:text-emerald-300 underline">
-              Market Pricing
-            </Link>{' '}
-            page.
+            See price ranges by morph tier, and how sex and age move them, in the{' '}
+            <Link to="/crested-gecko-price" className="text-emerald-400 hover:text-emerald-300 underline">
+              crested gecko price guide
+            </Link>.
           </p>
         </div>
 
@@ -527,8 +526,8 @@ export default function QualityScale() {
             <li>Walk the 10 criteria. Score each one 0 to 1 in 0.5 increments. Be honest. Optimistic scoring of your own animal is the most common source of mispriced listings.</li>
             <li>Add up the score and read the grade tier from the table above.</li>
             <li>
-              Cross-check your tier against the asking-price range for your morph on the{' '}
-              <Link to="/MarketPricing" className="text-emerald-400 underline">Market Pricing</Link> page.
+              Cross-check your tier against the price range for your morph in the{' '}
+              <Link to="/crested-gecko-price" className="text-emerald-400 underline">crested gecko price guide</Link>.
             </li>
           </ol>
           <p className="text-slate-500 text-xs mt-4">

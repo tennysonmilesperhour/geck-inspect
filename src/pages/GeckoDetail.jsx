@@ -216,7 +216,7 @@ export default function GeckoDetail() {
                         <Card className="overflow-hidden">
                             <div className="aspect-square w-full bg-slate-800">
                                 <img
-                                    src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                    src={gecko.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'}
                                     alt={gecko.name}
                                     className="w-full h-full object-cover"
                                 />

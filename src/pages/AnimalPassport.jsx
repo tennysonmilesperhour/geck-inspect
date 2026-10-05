@@ -75,7 +75,7 @@ function StatChip({ icon: Icon, label, value }) {
     <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 border border-slate-700 px-3 py-2">
       <Icon size={14} className="text-emerald-400 shrink-0" />
       <span className="text-xs uppercase tracking-wider text-slate-500">{label}</span>
-      <span className="text-sm font-medium ml-auto text-slate-200 truncate">{value || '-'}</span>
+      <span className="text-sm font-medium ml-auto min-w-0 text-right leading-tight text-slate-200 break-words">{value || '-'}</span>
     </div>
   );
 }

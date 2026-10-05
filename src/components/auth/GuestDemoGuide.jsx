@@ -115,7 +115,7 @@ export default function GuestDemoGuide() {
       </button>
     ) : (
       <button type="button" onClick={() => navigate(step.path)} className="inline-flex items-center gap-1.5 min-h-10 touch:min-h-11 rounded-md bg-emerald-600 hover:bg-emerald-500 px-3 text-sm font-semibold text-white">
-        Go to {step.title} <ArrowRight className="w-4 h-4" />
+        Continue the tour <ArrowRight className="w-4 h-4" />
       </button>
     );
   }
