@@ -75,3 +75,18 @@ The Breeder member who cancelled on 30 Sep gets a free month instead of the cred
 - Migration `20261005185312_membership_comps`, applied. A `membership_comps` table (email, tier, start, end, reason) and both effective tier functions now return the higher of the paid plan and an active comp, so Morph ID credits, the gecko limit and featured breeders all follow it. A Stripe cancellation does not end a comp. Members can read their own rows; only admins and the server can add them. The app reads the comp at sign-in (`src/lib/userProfile.js`) and `resolveTier()` honours it.
 - First comp: the Breeder member who cancelled (free Morph ID try counted against the paid allowance) has Breeder free until 1 Dec 2026, so November gets 6 fresh Morph IDs.
 - To give someone a comp, in the SQL Editor: `insert into public.membership_comps (email, tier, ends_at, reason) values ('person@example.com', 'breeder', '2027-10-01', 'Founding breeder year');`
+
+## Added 5 October (evening): Morph ID and value estimates
+
+Applied to production on 5 October:
+
+- `20261005210000_listings_species_crested`: value estimates and the Market page had stopped seeing new listings on 1 October. The new detail scraper stores species as `'crested-gecko'` (the column default), and every price reader only counts `'crested'` or unknown, so 5,092 listings were invisible. A trigger now stores the value as `'crested'` and the existing rows were corrected. Lilly White now prices from 1,686 listings instead of 788. The column default was left alone: changing it needs an exclusive lock that timed out under scraper traffic, and the trigger makes it irrelevant.
+- `20261005201211_market_data_health`: a read-only, service-role-only function the daily health check uses.
+
+Built, waiting to deploy:
+
+- `recognize-gecko-morph` (v65): one automatic retry when Anthropic is overloaded, rate limited or drops the connection; a cut-off answer is retried or refunded instead of reading as "Better photos needed"; an unreadable photo gets its own message. Deploy with `scripts/deploy-morph-id.sh` (it bundles the new `_shared/morph-upstream.ts`).
+
+New on `main`:
+
+- `.github/workflows/daily-canary.yml`: every morning it checks that new listings are reaching the value estimates, prices four reference geckos, and runs two real identifications. A failure emails the repo owner. About 6 cents a day. Run it once by hand (Actions > daily-canary > Run workflow) to confirm the secrets work.

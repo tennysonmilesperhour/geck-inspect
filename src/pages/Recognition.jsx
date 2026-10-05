@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,7 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Sparkles, ArrowRight, Camera, Lock, PlusCircle, ShieldCheck, Search } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Sparkles, ArrowRight, Camera, Lock, PlusCircle, ShieldCheck, Search, RotateCcw, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { useAuth } from '@/lib/AuthContext';
@@ -16,7 +15,7 @@ import Seo from '@/components/seo/Seo';
 import PageHeader from '@/components/shared/PageHeader';
 import { getTierLimits, TIER_LIMITS } from '@/lib/tierLimits';
 import { TIER_PRICING } from '@/lib/stripe-config';
-import { buildGeckoDraftFromAnalysis } from '@/lib/morphIdDraft';
+import { buildGeckoDraftFromAnalysis, applyCorrections } from '@/lib/morphIdDraft';
 import { captureEvent } from '@/lib/posthog';
 import { upgradePromptShown, upgradePromptClicked } from '@/lib/activation';
 import { onPhotoPath } from '@/lib/firstGeckoFlow';
@@ -75,13 +74,83 @@ const FRIENDLY_ERROR = {
     cta: { label: 'Sign in', href: '/AuthPortal' },
   },
   bad_request: {
-    title: 'Upload at least one clear photo',
-    body: 'Drop a JPG or PNG of your gecko and try again.',
+    title: 'Add a top view and a side view',
+    body: 'Morph ID needs one clear photo from above and one from the side. Add both, then press Identify again.',
+  },
+  image_unreadable: {
+    title: "The analyzer couldn't open one of the photos",
+    body: 'No credit was used. Retake it as a normal camera photo (JPG or PNG), or pick a different one, then press Identify again.',
+  },
+  credit_check_failed: {
+    title: "We couldn't check your credits",
+    body: 'Nothing was charged. Please press Try again in a moment.',
+  },
+  config_error: {
+    title: 'Morph ID is down for maintenance',
+    body: 'Nothing was charged. We have been alerted and it should be back shortly.',
+  },
+  internal_error: {
+    title: 'Something went wrong on our side',
+    body: 'Any credit used was refunded automatically. Your photos are still here, so press Try again.',
   },
 };
 
+// Errors where pressing Identify again with the same photos can work. The
+// request key makes a retry safe: a finished first try is returned, not
+// charged twice.
+const RETRYABLE = new Set([
+  'upstream_rate_limited', 'upstream_error', 'upstream_timeout', 'request_timeout',
+  'morph_id_in_progress', 'network_error', 'credit_check_failed', 'internal_error',
+]);
+
+// What the analyzer is doing, in the order it does it, so a 30 to 90 second
+// wait reads as work in progress instead of a frozen button.
+const PROGRESS_STEPS = [
+  { at: 0, label: 'Checking your photos are sharp and show the whole gecko' },
+  { at: 6, label: 'Comparing against thousands of breeder-tagged crested geckos' },
+  { at: 20, label: 'Reading pattern: harlequin coverage, pinning, dalmatian spots' },
+  { at: 35, label: 'Checking for Lilly White, Axanthic and Cappuccino markers' },
+  { at: 55, label: 'Weighing the evidence across every photo' },
+  { at: 80, label: 'Almost there. Detailed photos take a little longer' },
+];
+
+function AnalysisProgress({ seconds }) {
+  const current = PROGRESS_STEPS.reduce((idx, step, i) => (seconds >= step.at ? i : idx), 0);
+  const pct = Math.min(95, Math.round((seconds / 75) * 100));
+  return (
+    <Card className="bg-slate-900/80 border-emerald-800/60" aria-live="polite">
+      <CardContent className="p-5 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-semibold text-emerald-100 flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" /> Identifying your gecko
+          </p>
+          <span className="text-xs text-slate-400 tabular-nums">{seconds}s</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+          <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${pct}%` }} />
+        </div>
+        <ol className="space-y-1.5">
+          {PROGRESS_STEPS.map((step, i) => (
+            <li
+              key={step.label}
+              className={`text-sm flex items-start gap-2 ${i < current ? 'text-slate-500' : i === current ? 'text-emerald-100' : 'text-slate-600'}`}
+            >
+              {i < current
+                ? <Check className="h-4 w-4 mt-0.5 shrink-0 text-emerald-500" />
+                : i === current
+                  ? <Loader2 className="h-4 w-4 mt-0.5 shrink-0 animate-spin text-emerald-400" />
+                  : <span className="h-4 w-4 mt-0.5 shrink-0" />}
+              {step.label}
+            </li>
+          ))}
+        </ol>
+        <p className="text-xs text-slate-500">Usually 30 to 60 seconds. You can keep this tab open in the background.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Recognition() {
-  const { toast } = useToast();
   const { user, isGuest, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
   // Arrived from the guided first gecko's "Add it by photo".
@@ -99,6 +168,29 @@ export default function Recognition() {
   const [uploaderKey, setUploaderKey] = useState(0);
   const [error, setError] = useState(null);
   const [savedOnce, setSavedOnce] = useState(false);
+  // The member's corrections from the result panel, used by "Add to my
+  // collection" so it saves what they confirmed.
+  const [corrected, setCorrected] = useState(null);
+  const [elapsed, setElapsed] = useState(0);
+  const resultRef = useRef(null);
+
+  useEffect(() => {
+    if (!isAnalyzing) return undefined;
+    setElapsed(0);
+    const started = Date.now();
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [isAnalyzing]);
+
+  // On a phone the answer lands below the uploader, out of sight. Bring it
+  // (or the error) into view when it arrives.
+  useEffect(() => {
+    if ((analysis || error) && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [analysis, error]);
+
+  const handleCorrectionChange = useCallback((state) => setCorrected(state), []);
 
   const primaryUrl = imageUrls[0] || null;
 
@@ -166,6 +258,7 @@ export default function Recognition() {
     setMeta(null);
     setError(null);
     setSavedOnce(false);
+    setCorrected(null);
     setIsUploadingPhotos(false);
     requestKeyRef.current = { signature: null, key: null };
   };
@@ -176,7 +269,7 @@ export default function Recognition() {
   // the draft stashed and are sent to sign in, then it is restored on
   // their first visit to MyGeckos.
   const handleAddToCollection = () => {
-    const draft = buildGeckoDraftFromAnalysis(analysis, imageUrls);
+    const draft = buildGeckoDraftFromAnalysis(applyCorrections(analysis, corrected), imageUrls);
     if (!draft) return;
     captureEvent('morph_id_add_to_collection_clicked', {
       morph_count: draft.morph_tags.length,
@@ -211,6 +304,7 @@ export default function Recognition() {
     setError(null);
     setAnalysis(null);
     setMeta(null);
+    setCorrected(null);
     const requestKey = requestKeyFor(JSON.stringify([imageUrls, ageStage, firedState]));
     try {
       const { data, error: funcError, meta: respMeta } = await recognizeGeckoMorph({ imageUrls, ageStage, firedState, requestKey });
@@ -448,6 +542,10 @@ export default function Recognition() {
         </Card>
         )}
 
+        <div ref={resultRef} className="scroll-mt-20" />
+
+        {isAnalyzing && <AnalysisProgress seconds={elapsed} />}
+
         {error && (() => {
           // Admins get the raw upstream message so they can debug 429s,
           // Anthropic outages, etc. Regular users get the toned-down copy
@@ -477,6 +575,7 @@ export default function Recognition() {
             body: 'Try a different photo, or check your connection and try again.',
           };
           const isExhausted = error.code === 'morph_id_credits_exhausted';
+          const canRetry = RETRYABLE.has(error.code) || !FRIENDLY_ERROR[error.code];
           return (
             <Card className={isExhausted
               ? 'bg-amber-950/40 border-amber-800'
@@ -492,11 +591,16 @@ export default function Recognition() {
                     {friendly.body}
                   </p>
                 </div>
+                {canRetry && viewsComplete && (
+                  <Button onClick={analyze} disabled={isAnalyzing} className="bg-rose-500 hover:bg-rose-400 text-white">
+                    <RotateCcw className="w-4 h-4 mr-2" /> Try again
+                  </Button>
+                )}
                 {friendly.cta && (
                   <Button
                     onClick={() => {
                       if (isExhausted) upgradePromptClicked('morph_id', 'morph_id_exhausted');
-                      window.location.href = friendly.cta.href;
+                      navigate(friendly.cta.href);
                     }}
                     className={isExhausted
                       ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
@@ -533,14 +637,33 @@ export default function Recognition() {
             imageUrl={primaryUrl}
             imageUrls={imageUrls}
             ageStage={ageStage}
-            onSaved={() => {
-              setSavedOnce(true);
-              toast({
-                title: 'Sent for expert review',
-                description: 'The sample is queued, but it is not verified training data yet.',
-              });
-            }}
+            onChange={handleCorrectionChange}
+            onSaved={() => setSavedOnce(true)}
           />
+        )}
+
+        {analysis && analysis.assessment_status === 'insufficient_evidence' && (
+          <Card className="bg-amber-950/30 border-amber-700">
+            <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-amber-100">Retake the photos for a confident answer</p>
+                <p className="text-sm text-amber-200/80 mt-1">
+                  {analysis.photo_assessment?.next_photo_needed
+                    || 'Shoot in daylight, fill the frame with the gecko, and take one photo straight down and one from the side.'}
+                </p>
+              </div>
+              <Button
+                size="lg"
+                onClick={() => {
+                  reset();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="bg-amber-500 hover:bg-amber-400 text-slate-950 shrink-0"
+              >
+                <Camera className="w-5 h-5 mr-2" /> Retake photos
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {analysis && primaryUrl && (

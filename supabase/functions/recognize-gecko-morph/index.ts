@@ -75,6 +75,7 @@ import {
   type VisualEvidence,
 } from "../_shared/morph-evidence.ts";
 import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
+import { RETRYABLE_UPSTREAM_STATUS, upstreamErrorCode } from "../_shared/morph-upstream.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
@@ -1042,83 +1043,118 @@ async function callClaude(
 
   const tool = buildTool(includeValueEstimate);
   const startedAt = Date.now();
-  // Hard deadline so the function always answers before the browser gives
-  // up (120 s) and before the platform stops the worker. Without it a slow
-  // analyzer call could finish after the member saw "took too long" (credit
-  // charged, result lost) or be killed before the catch block could refund.
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), Math.max(15_000, deadlineMs));
-  let res: Response;
-  try {
-    res = await fetch("https://api.anthropic.com/v1/messages", {
-      signal: controller.signal,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY!,
-        "anthropic-version": "2023-06-01",
-        // Prompt caching is GA on Sonnet 4 but the beta header is a no-op
-        // when unneeded and required for some account configurations.
-        "anthropic-beta": "prompt-caching-2024-07-31",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 1536,
-        tools: [tool],
-        tool_choice: { type: "tool", name: tool.name },
-        messages: [{
-          role: "user",
-          content: [...cacheableContent, ...variableContent],
-        }],
-      }),
-    });
-  } catch (err) {
-    clearTimeout(timer);
-    const aborted = controller.signal.aborted;
-    throw new UpstreamError(
-      aborted ? "Analyzer timed out" : `Analyzer request failed: ${err instanceof Error ? err.message : String(err)}`,
-      aborted ? 504 : 502,
-      aborted ? "upstream_timeout" : "upstream_error",
-      { httpStatus: aborted ? 504 : 502, durationMs: Date.now() - startedAt },
-    );
-  }
-  const requestId = res.headers.get("request-id");
-  const durationMs = Date.now() - startedAt;
-  if (!res.ok) {
-    const detail = (await res.text().catch(() => "")).slice(0, 500);
-    clearTimeout(timer);
-    const code = res.status === 429 ? "upstream_rate_limited" : "upstream_error";
-    throw new UpstreamError(`Anthropic ${res.status}: ${detail}`, res.status, code, {
-      httpStatus: res.status,
-      requestId,
-      durationMs,
-    });
-  }
-  let body: { content?: Array<{ type: string; input?: unknown }>; usage?: UpstreamUsage };
-  try {
-    body = await res.json();
-  } catch (err) {
-    const aborted = controller.signal.aborted;
-    throw new UpstreamError(
-      aborted ? "Analyzer timed out" : `Analyzer response unreadable: ${err instanceof Error ? err.message : String(err)}`,
-      aborted ? 504 : 502,
-      aborted ? "upstream_timeout" : "upstream_error",
-      { httpStatus: aborted ? 504 : res.status, requestId, durationMs: Date.now() - startedAt },
-    );
-  } finally {
-    clearTimeout(timer);
-  }
-  const toolBlock = (body.content || []).find((b: { type: string }) => b.type === "tool_use");
-  if (!toolBlock?.input) {
-    throw new UpstreamError("Claude did not return a tool_use block", 502, "upstream_error", {
-      httpStatus: res.status,
-      requestId,
-      durationMs,
-    });
+  const requestBody = JSON.stringify({
+    model,
+    // 1536 could cut off a five-photo answer mid-tool-call. The missing
+    // fields then defaulted to "photos unusable" and a paid member was
+    // charged for "Better photos needed". Output is billed as used, so a
+    // higher ceiling costs nothing on ordinary answers.
+    max_tokens: 3000,
+    tools: [tool],
+    tool_choice: { type: "tool", name: tool.name },
+    messages: [{
+      role: "user",
+      content: [...cacheableContent, ...variableContent],
+    }],
+  });
+
+  // One retry for a brief upstream hiccup (rate limit, overload, 5xx, a
+  // dropped connection, a cut-off answer), only while enough of the budget
+  // is left for a full second attempt. Every failure still refunds.
+  const RETRY_MIN_REMAINING_MS = 40_000;
+  let attempt = 0;
+  let res!: Response;
+  let body!: { content?: Array<{ type: string; input?: unknown }>; usage?: UpstreamUsage; stop_reason?: string };
+  let toolBlock: { type: string; input?: unknown } | undefined;
+  let requestId: string | null = null;
+  let durationMs = 0;
+  for (;;) {
+    attempt += 1;
+    const remainingMs = Math.max(15_000, deadlineMs - (Date.now() - startedAt));
+    const canRetry = () =>
+      attempt === 1 && deadlineMs - (Date.now() - startedAt) > RETRY_MIN_REMAINING_MS;
+    const retryPause = () => new Promise((resolve) => setTimeout(resolve, 1500));
+    // Hard deadline so the function always answers before the browser gives
+    // up (120 s) and before the platform stops the worker. Without it a slow
+    // analyzer call could finish after the member saw "took too long" (credit
+    // charged, result lost) or be killed before the catch block could refund.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), remainingMs);
+    try {
+      res = await fetch("https://api.anthropic.com/v1/messages", {
+        signal: controller.signal,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY!,
+          "anthropic-version": "2023-06-01",
+          // Prompt caching is GA on Sonnet 4 but the beta header is a no-op
+          // when unneeded and required for some account configurations.
+          "anthropic-beta": "prompt-caching-2024-07-31",
+        },
+        body: requestBody,
+      });
+    } catch (err) {
+      clearTimeout(timer);
+      const aborted = controller.signal.aborted;
+      if (!aborted && canRetry()) {
+        await retryPause();
+        continue;
+      }
+      throw new UpstreamError(
+        aborted ? "Analyzer timed out" : `Analyzer request failed: ${err instanceof Error ? err.message : String(err)}`,
+        aborted ? 504 : 502,
+        aborted ? "upstream_timeout" : "upstream_error",
+        { httpStatus: aborted ? 504 : 502, durationMs: Date.now() - startedAt },
+      );
+    }
+    requestId = res.headers.get("request-id");
+    durationMs = Date.now() - startedAt;
+    if (!res.ok) {
+      const detail = (await res.text().catch(() => "")).slice(0, 500);
+      clearTimeout(timer);
+      if (RETRYABLE_UPSTREAM_STATUS.has(res.status) && canRetry()) {
+        await retryPause();
+        continue;
+      }
+      throw new UpstreamError(`Anthropic ${res.status}: ${detail}`, res.status, upstreamErrorCode(res.status, detail), {
+        httpStatus: res.status,
+        requestId,
+        durationMs,
+      });
+    }
+    try {
+      body = await res.json();
+    } catch (err) {
+      const aborted = controller.signal.aborted;
+      throw new UpstreamError(
+        aborted ? "Analyzer timed out" : `Analyzer response unreadable: ${err instanceof Error ? err.message : String(err)}`,
+        aborted ? 504 : 502,
+        aborted ? "upstream_timeout" : "upstream_error",
+        { httpStatus: aborted ? 504 : res.status, requestId, durationMs: Date.now() - startedAt },
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+    toolBlock = (body.content || []).find((b: { type: string }) => b.type === "tool_use");
+    const truncated = body.stop_reason === "max_tokens";
+    if (!toolBlock?.input || truncated) {
+      if (canRetry()) {
+        await retryPause();
+        continue;
+      }
+      throw new UpstreamError(
+        truncated ? "Claude's answer was cut off (max_tokens)" : "Claude did not return a tool_use block",
+        502,
+        "upstream_error",
+        { httpStatus: res.status, requestId, durationMs },
+      );
+    }
+    break;
   }
   const usage: UpstreamUsage = body.usage ?? { input_tokens: 0, output_tokens: 0 };
   return {
-    raw: toolBlock.input as Record<string, unknown>,
+    raw: toolBlock!.input as Record<string, unknown>,
     few_shot_count: bank.length,
     usage,
     http_status: res.status,

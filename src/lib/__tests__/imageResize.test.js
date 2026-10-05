@@ -103,3 +103,34 @@ describe('HEIC upload normalization', () => {
     expect(await convertHeicForUpload(source)).toBe(source);
   });
 });
+
+describe('downscaleImage format safety (browser canvas mocked)', () => {
+  const stubCanvas = (outBytes) => {
+    vi.stubGlobal('HTMLCanvasElement', function HTMLCanvasElement() {});
+    vi.stubGlobal('createImageBitmap', vi.fn(async () => ({ width: 800, height: 600, close() {} })));
+    vi.stubGlobal('document', {
+      createElement: () => ({
+        width: 0,
+        height: 0,
+        getContext: () => ({ drawImage() {} }),
+        toBlob: (cb, type) => cb(new Blob([new Uint8Array(outBytes)], { type })),
+      }),
+    });
+  };
+  const small = (type, size) => new File([new Uint8Array(size)], `photo.${type.split('/')[1]}`, { type });
+
+  it('re-encodes a small AVIF to WebP so the Morph ID analyzer can read it', async () => {
+    stubCanvas(5000);
+    const out = await downscaleImage(small('image/avif', 2000));
+    expect(out.type).toBe('image/webp');
+    expect(out.name).toBe('photo.webp');
+    vi.unstubAllGlobals();
+  });
+
+  it('still keeps a small JPEG as is', async () => {
+    stubCanvas(5000);
+    const jpg = small('image/jpeg', 2000);
+    expect(await downscaleImage(jpg)).toBe(jpg);
+    vi.unstubAllGlobals();
+  });
+});

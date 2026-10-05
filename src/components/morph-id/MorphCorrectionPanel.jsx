@@ -68,7 +68,7 @@ function candidatesFrom(result, state) {
     : [];
 }
 
-export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageStage, onSaved }) {
+export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageStage, onSaved, onChange }) {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [state, setState] = useState(() => normalizeFromAI(result));
@@ -85,6 +85,12 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
     setEditing(false);
     setIsSaved(false);
   }, [result]);
+
+  // Let the page build "Add to my collection" from the member's corrections
+  // rather than the raw AI answer.
+  useEffect(() => {
+    onChange?.(state);
+  }, [state, onChange]);
 
   const candidates = useMemo(() => candidatesFrom(result, state), [result, state]);
 

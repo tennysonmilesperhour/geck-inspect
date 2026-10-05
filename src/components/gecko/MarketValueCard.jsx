@@ -28,7 +28,8 @@ import { isGuestMode } from '@/lib/guestMode';
  * The Portfolio is a Breeder-mode page (breederOnly in navItems.js), so
  * the link to it is left out when the viewer has Keeper mode on.
  *
- * Renders nothing for other species or when the table fails to load.
+ * Renders nothing for other species. When the table fails to load it says
+ * so and offers a retry, instead of the card silently vanishing.
  * With no matching traits it shows a prompt to add them instead.
  */
 
@@ -58,6 +59,8 @@ function askingNote(asking, band) {
 
 export default function MarketValueCard({ gecko }) {
   const [state, setState] = useState({ status: 'loading', index: null });
+  // Bumped by "Try again". A failed load is not cached, so this refetches.
+  const [attempt, setAttempt] = useState(0);
   const crested = Boolean(gecko) && isCrestedGecko(gecko);
 
   // The index is session-cached and does not depend on the gecko, so load
@@ -65,13 +68,14 @@ export default function MarketValueCard({ gecko }) {
   useEffect(() => {
     if (!crested) return undefined;
     let cancelled = false;
+    setState({ status: 'loading', index: null });
     loadTraitValueIndex()
       .then((index) => { if (!cancelled) setState({ status: 'ready', index }); })
       .catch(() => { if (!cancelled) setState({ status: 'error', index: null }); });
     return () => { cancelled = true; };
-  }, [crested]);
+  }, [crested, attempt]);
 
-  if (!crested || state.status === 'error') return null;
+  if (!crested) return null;
 
   const header = (
     <CardHeader className="pb-2 pt-4 px-4">
@@ -90,6 +94,26 @@ export default function MarketValueCard({ gecko }) {
         {header}
         <CardContent className="px-4 pb-4 flex items-center gap-2 text-sm text-slate-500">
           <Loader2 className="w-4 h-4 animate-spin" /> Checking market listings...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (state.status === 'error') {
+    return (
+      <Card>
+        {header}
+        <CardContent className="px-4 pb-4 space-y-3">
+          <p className="text-sm text-slate-400">
+            We couldn&rsquo;t load market prices just now, so there is no estimate yet.
+          </p>
+          <button
+            type="button"
+            onClick={() => setAttempt((n) => n + 1)}
+            className="touch:min-h-11 inline-flex text-sm font-medium text-emerald-400 hover:text-emerald-300"
+          >
+            Try again
+          </button>
         </CardContent>
       </Card>
     );

@@ -94,6 +94,10 @@ export function targetDimensions(width, height, maxEdge) {
  * @param {object} [opts] - overrides for RESIZE_DEFAULTS
  * @returns {Promise<File|Blob>}
  */
+// Formats every consumer of an uploaded photo can read, including the
+// Morph ID analyzer. Anything else is converted to WebP on upload.
+const WIDELY_READ_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 export async function downscaleImage(file, opts = {}) {
   const { maxEdge, quality, skipUnderBytes } = { ...RESIZE_DEFAULTS, ...opts };
 
@@ -119,8 +123,13 @@ export async function downscaleImage(file, opts = {}) {
     const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
     const { width, height, scaled } = targetDimensions(bitmap.width, bitmap.height, maxEdge);
 
+    // AVIF, BMP and TIFF are always re-encoded: Morph ID's analyzer reads
+    // only JPEG, PNG, WebP and GIF, and a small AVIF kept as is failed every
+    // identification with "couldn't reach the analyzer".
+    const mustReencode = !WIDELY_READ_TYPES.has(file.type);
+
     // Already small enough in both dimensions and bytes: keep the original.
-    if (!scaled && file.size <= skipUnderBytes) {
+    if (!scaled && !mustReencode && file.size <= skipUnderBytes) {
       bitmap.close?.();
       return file;
     }
@@ -143,7 +152,7 @@ export async function downscaleImage(file, opts = {}) {
 
     // If the re-encode didn't actually shrink an unscaled image, keep the
     // original (avoids bloating tiny PNGs into larger WebPs).
-    if (!scaled && blob.size >= file.size) return file;
+    if (!scaled && !mustReencode && blob.size >= file.size) return file;
 
     const newName = `${(file.name || 'image').replace(/\.[a-zA-Z0-9]+$/, '')}.webp`;
     return new File([blob], newName, {
