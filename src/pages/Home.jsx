@@ -417,6 +417,37 @@ const LANDING_JSON_LD = {
   ],
 };
 
+// A real screen beside the headline on laptops: one demo gecko's record
+// with its value estimate (from the real listings table) and weigh-ins
+// against the typical range for its age. Captured from the guest demo
+// (docs/planning/landing-speed-2026-10.md). Hidden below lg, where a
+// <picture> source swaps in an empty pixel so phones never download it.
+function HeroProductShot() {
+  return (
+    <figure className="hidden lg:block relative mt-0">
+      <div className="absolute -inset-4 rounded-3xl bg-emerald-500/10 blur-2xl" aria-hidden="true" />
+      <div className="relative rounded-xl overflow-hidden border border-emerald-500/25 bg-slate-950 shadow-2xl">
+        <picture>
+          {/* Below lg the figure is hidden; this empty source keeps phones
+              and tablets from downloading the screenshot at all. */}
+          <source media="(max-width: 1023px)" srcSet="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+        <img
+          src="/screenshots/hero-gecko-record.webp"
+          width="1040"
+          height="1055"
+          decoding="async"
+          alt="A gecko record in Geck Inspect: Lilly White and Harlequin traits, an estimated value of $350 from real crested gecko listings, and a weight chart against the typical range for its age."
+          className="w-full h-auto block"
+        />
+        </picture>
+      </div>
+      <figcaption className="relative mt-3 text-xs text-slate-400 text-center">
+        A gecko record from the demo collection. The value comes from real crested gecko listings.
+      </figcaption>
+    </figure>
+  );
+}
+
 export default function Home() {
   const { enterGuestMode, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -541,25 +572,29 @@ export default function Home() {
         </header>
 
         {/* Hero */}
-        <section className="relative z-10 max-w-5xl mx-auto px-6 pt-8 md:pt-16 pb-16 md:pb-20 text-center">
+        {/* On laptops the hero splits: the promise on the left, a real
+            screen from the app on the right (October 2026). Phones keep
+            the centred single column and never download the picture. */}
+        <section className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-6 pt-8 md:pt-16 pb-16 md:pb-20 text-center lg:text-left lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.85fr)] lg:gap-10 lg:items-center">
+          <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs sm:text-sm font-semibold text-emerald-300 mb-6 md:mb-8">
             <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
             Built only for crested geckos
           </div>
-          <h1 className="text-[2.6rem] sm:text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-5 md:mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
+          <h1 className="text-[2.6rem] sm:text-5xl md:text-7xl lg:text-5xl font-bold tracking-tight leading-[1.05] mb-5 md:mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
             Price right. Pair smart.
             <br />
             Sell with proof.
           </h1>
           {/* The one-line value proposition: who it is for and what it does. */}
-          <p className="text-lg md:text-2xl text-emerald-100 max-w-2xl mx-auto mb-3 md:mb-4 font-medium leading-snug">
+          <p className="text-lg md:text-2xl text-emerald-100 max-w-2xl mx-auto lg:mx-0 mb-3 md:mb-4 font-medium leading-snug">
             Records, genetics and real market prices for crested gecko breeders and keepers, in one app.
           </p>
-          <p className="text-base md:text-lg max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed text-slate-300">
+          <p className="text-base md:text-lg max-w-2xl mx-auto lg:mx-0 mb-8 md:mb-10 leading-relaxed text-slate-300">
             Value estimates from thousands of real listings, egg value before you pair, and a passport
             that hands each buyer the full history.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start items-center">
             {showGuestCta ? (
               <>
                 <Link
@@ -598,7 +633,7 @@ export default function Home() {
           {/* Risk reducers next to the button, each true today: the Free
               plan's 10-gecko limit (src/lib/tierLimits.js), no card at
               sign-up, CSV and PDF export on every plan. */}
-          <ul className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-slate-300">
+          <ul className="mt-6 flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 text-sm text-slate-300">
             {['Free for up to 10 geckos', 'No credit card', 'Export your records any time'].map((item) => (
               <li key={item} className="inline-flex items-center gap-1.5">
                 <Check className="w-4 h-4 text-emerald-400" aria-hidden="true" />
@@ -606,6 +641,8 @@ export default function Home() {
               </li>
             ))}
           </ul>
+          </div>
+          <HeroProductShot />
         </section>
 
         {/* Free hooks: two things a visitor can use in the next minute,

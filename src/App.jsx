@@ -18,14 +18,21 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { redirectFromSearch, takePostAuthRedirect } from '@/lib/postAuthRedirect';
 import PageNotFound from './lib/PageNotFound';
+import { isGuestMode } from '@/lib/guestMode';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { RevenueCatProvider } from '@/lib/RevenueCatContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import OfflineSyncStatus from '@/components/shared/OfflineSyncStatus';
-import LoginPortal from '@/components/auth/LoginPortal';
-import SetNewPassword from '@/components/auth/SetNewPassword';
-import PublicPageShell from '@/components/public/PublicPageShell';
+// Sign-in, password reset and the public page shell are lazy: a visitor
+// reading the Morph Guide never needs them up front.
+const LoginPortal = lazy(() => import('@/components/auth/LoginPortal'));
+const SetNewPassword = lazy(() => import('@/components/auth/SetNewPassword'));
+const PublicPageShell = lazy(() => import('@/components/public/PublicPageShell'));
+// Signed-out visitors who open a members-only page get a short "what this
+// is, sign in or create an account" page; unknown addresses get a real
+// page not found (both used to show a bare sign-in form).
+const SignedOutFallback = lazy(() => import('@/components/public/SignedOutFallback'));
 import ScrollToTop from '@/components/shared/ScrollToTop';
 import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
@@ -47,9 +54,36 @@ captureReferralFromUrl();
 // applyPendingSignupGrant redeems it on first authenticated session.
 captureSignupGrantFromUrl();
 
-// Public landing page, stays eager because it's what unauthenticated
-// visitors (and crawlers) hit first.
-import Home from './pages/Home';
+// Public landing page. Lazy like every other page since October 2026, so
+// a visitor landing on the Morph Guide or Care Guide does not download
+// the landing page code. The prerendered "/" document carries a
+// modulepreload for this chunk (scripts/prerender.mjs), and the line
+// below starts the fetch right away on other builds, so the landing
+// page does not wait an extra round trip.
+const loadHome = () => import('./pages/Home');
+const Home = lazy(loadHome);
+
+// Start downloading the code the first screen needs while the auth check
+// runs, instead of after it. Signed-in members and demo guests land in
+// the app shell (Layout + Dashboard); signed-out visitors on "/" land on
+// the landing page.
+function warmFirstScreen() {
+  if (typeof window === 'undefined') return;
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  let hasSession = false;
+  try {
+    hasSession = isGuestMode() || Object.keys(window.localStorage).some(
+      (k) => k.startsWith('sb-') && k.endsWith('-auth-token'),
+    );
+  } catch { /* storage blocked: fall through to the signed-out guess */ }
+  if (hasSession) {
+    import('./Layout.jsx').catch(() => {});
+    if (path === '/' || path === '/Dashboard') import('./pages/Dashboard').catch(() => {});
+  } else if (path === '/' || path === '/Home') {
+    loadHome().catch(() => {});
+  }
+}
+warmFirstScreen();
 
 // Lazy-loaded pages used in the unauthenticated route set.
 // (The authenticated set is driven entirely by pages.config.js.)
@@ -379,7 +413,12 @@ const AuthenticatedApp = () => {
           <Route path="/blog/:slug" element={<BlogPost />} />
           {/* Store, public so guests can shop and check out. */}
           <Route path="/Store/*" element={<Store />} />
-          <Route path="*" element={<LoginPortal />} />
+          {/* Sign-in and sign-up are real routes; every other address a
+              signed-out visitor opens goes to SignedOutFallback, which
+              explains members-only pages (with sign-in and sign-up) and
+              shows "page not found" for anything else. */}
+          <Route path="/AuthPortal" element={<LoginPortal />} />
+          <Route path="*" element={<SignedOutFallback />} />
         </Routes>
       </Suspense>
     );

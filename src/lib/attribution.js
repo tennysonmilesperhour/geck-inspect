@@ -148,3 +148,53 @@ export function firstTouchProperties(touch = getFirstTouch()) {
     ft_entry: touch.entry || null,
   };
 }
+
+// Last sign-up prompt clicked: which in-page call to action (a Morph
+// Guide page, the calculator, a members-only page) sent this browser to
+// the sign-up form. First touch says how a visitor arrived; this says
+// which page finally convinced them. Kept for 7 days, so a visitor who
+// clicks, reads the confirmation email the next morning and finishes
+// sign-up is still credited. Only the page path and a short label are
+// stored; nothing identifies a person.
+const SIGNUP_CTA_KEY = 'geck_signup_cta_v1';
+const SIGNUP_CTA_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function rememberSignupCta({ cta, page, pageType } = {}, now = Date.now()) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      SIGNUP_CTA_KEY,
+      JSON.stringify({
+        cta: clip(cta),
+        page: page ? safeLandingPath(page) : null,
+        page_type: clip(pageType),
+        at: now,
+      }),
+    );
+  } catch {
+    // private window: the click event itself is still recorded
+  }
+}
+
+export function getSignupCta(now = Date.now()) {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(SIGNUP_CTA_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.at || now - parsed.at > SIGNUP_CTA_MAX_AGE_MS) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/** Flat event properties for the last sign-up prompt clicked, if any. */
+export function signupCtaProperties(cta = getSignupCta()) {
+  if (!cta) return { signup_cta: null };
+  return {
+    signup_cta: cta.cta || null,
+    signup_cta_page: cta.page || null,
+    signup_cta_page_type: cta.page_type || null,
+  };
+}

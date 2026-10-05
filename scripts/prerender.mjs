@@ -738,10 +738,86 @@ function injectNoscriptBody(html, route) {
   );
 }
 
+// ------- page chunk preload -------------------------------------------------
+//
+// Every public page, the landing page included, is a lazy chunk (October
+// 2026 code split, docs/planning/landing-speed-2026-10.md). Without a
+// hint the browser only learns about the page chunk after the main
+// script has downloaded and run, which adds a round trip to every first
+// visit. Each prerendered document names its page chunk (and that
+// chunk's own imports) as <link rel="modulepreload">, so they download in
+// parallel with the main script. The map comes from Vite's build
+// manifest (build.manifest in vite.config.js).
+
+const MANIFEST_PATH = resolve(DIST, '.vite', 'manifest.json');
+const MANIFEST = existsSync(MANIFEST_PATH) ? JSON.parse(readFileSync(MANIFEST_PATH, 'utf8')) : null;
+if (!MANIFEST) console.warn('[prerender] no Vite manifest, page chunks will not be preloaded.');
+
+/** Which src/pages module renders a public route (mirrors App.jsx). */
+function pageModuleFor(path) {
+  if (path === '/') return 'Home';
+  const rules = [
+    [/^\/MorphGuide\/(category|inheritance)\//, 'MorphTaxonomyHub'],
+    [/^\/MorphGuide\/lines\//, 'ProjectLineDetail'],
+    [/^\/MorphGuide\/[^/]+$/, 'MorphDetail'],
+    [/^\/CareGuide\/series/, 'CareGuideSeries'],
+    [/^\/CareGuide\/[^/]+$/, 'CareGuideTopic'],
+    [/^\/calculator$/, 'GeneticCalculatorTool'],
+    [/^\/calculator\/reverse$/, 'ReverseCalculator'],
+    [/^\/calculator\/learn$/, 'ClutchLab'],
+    [/^\/calculator\/pairing\//, 'CalculatorPairing'],
+    [/^\/calculator\/[^/]+$/, 'CalculatorMorph'],
+    [/^\/blog$/, 'BlogIndex'],
+    [/^\/blog\/category\//, 'BlogCategoryPage'],
+    [/^\/blog\/tag\//, 'BlogTagPage'],
+    [/^\/blog\/[^/]+$/, 'BlogPost'],
+    [/^\/pedigree-tracker$/, 'PedigreeTracker'],
+    [/^\/breeding-records$/, 'BreedingRecords'],
+    [/^\/crested-gecko-price$/, 'CrestedGeckoPrice'],
+  ];
+  for (const [re, mod] of rules) if (re.test(path)) return mod;
+  const single = path.match(/^\/([A-Za-z]+)$/);
+  return single ? single[1] : null;
+}
+
+/** The manifest's chunk files a route needs beyond the entry, in load order. */
+function pageChunkFiles(path) {
+  if (!MANIFEST) return { files: [], css: [] };
+  const mod = pageModuleFor(path);
+  if (!mod) return { files: [], css: [] };
+  const key = [`src/pages/${mod}.jsx`, `src/pages/${mod}.js`].find((k) => MANIFEST[k]);
+  if (!key) return { files: [], css: [] };
+  const files = [];
+  const css = [];
+  const seen = new Set();
+  const visit = (k) => {
+    const chunk = MANIFEST[k];
+    if (!chunk || seen.has(k) || chunk.isEntry) return;
+    seen.add(k);
+    for (const dep of chunk.imports || []) visit(dep);
+    files.push(chunk.file);
+    for (const c of chunk.css || []) if (!css.includes(c)) css.push(c);
+  };
+  visit(key);
+  return { files, css };
+}
+
+function injectPagePreload(html, route) {
+  const { files, css } = pageChunkFiles(route.path) || {};
+  if (!files || files.length === 0) return html;
+  // Page-level CSS (for example the landing theme) as a normal stylesheet:
+  // Vite's loader sees the existing <link> and does not fetch it twice.
+  const links = [
+    ...css.map((f) => `<link rel="stylesheet" crossorigin href="/${f}">`),
+    ...files.map((f) => `<link rel="modulepreload" crossorigin href="/${f}">`),
+  ].join('\n    ');
+  return html.replace(/(<script type="module"[^>]*><\/script>)/, `$1\n    ${links}`);
+}
+
 // ------- write ------------------------------------------------------------
 
 function writeRoute(route) {
-  const html = injectNoscriptBody(injectMeta(SHELL_HTML, route), route);
+  const html = injectPagePreload(injectNoscriptBody(injectMeta(SHELL_HTML, route), route), route);
 
   let outPath;
   if (route.path === '/') {

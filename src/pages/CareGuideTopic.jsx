@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowLeft, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Seo from '@/components/seo/Seo';
 import ContentBlock from '@/components/careguide/ContentBlock';
 import PublicPageShell from '@/components/public/PublicPageShell';
+import ContentSignupPrompt, { careSignupCopy } from '@/components/public/ContentSignupPrompt';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import { breadcrumbSchema, ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
-import { createPageUrl } from '@/utils';
 
 /**
  * Programmatic-SEO deep-link page for a single Care Guide topic.
@@ -208,6 +208,16 @@ export default function CareGuideTopic() {
           ))}
         </div>
 
+        {/* One sign-up prompt, worded for this kind of care. Replaces the
+            old end-of-page box, which opened the Sign In form and
+            promised enclosure readings the free plan does not include. */}
+        <ContentSignupPrompt
+          pageType="care_topic"
+          ctaId={`care_${category?.id || 'topic'}`}
+          className="mt-10"
+          {...careSignupCopy(category?.id)}
+        />
+
         {/* Prev / next, keeps Googlebot traversing the topic chain and
             distributes internal link equity across all 30+ topic pages. */}
         <nav className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-slate-800/60 pt-6">
@@ -235,17 +245,6 @@ export default function CareGuideTopic() {
           ) : <span />}
         </nav>
 
-        <section className="mt-12 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 p-6 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Track your crested gecko's {section.title.toLowerCase()} on Geck Inspect</h2>
-          <p className="text-slate-300 mb-5 leading-relaxed">
-            Log weights, enclosure temps, humidity, feeding schedule, and breeding events with one clean timeline per gecko. Free to use.
-          </p>
-          <Link to={createPageUrl('AuthPortal')}>
-            <Button size="lg" className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-lg shadow-emerald-500/30">
-              Create a free account <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-        </section>
       </article>
     </PublicPageShell>
   );

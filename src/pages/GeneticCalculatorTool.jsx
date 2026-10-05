@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import { api } from '@/api/appClient';
 import { Dna, Loader2, ArrowLeftRight, ArrowRight, Users, Pencil, Link2, Check } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,7 +22,6 @@ import { loadTraitOverrides } from '@/lib/genetics/traitOverrides';
 import { Gecko } from '@/entities/all';
 import Seo from '@/components/seo/Seo';
 import PageHeader from '@/components/shared/PageHeader';
-import { createPageUrl } from '@/utils';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
 
 const CALCULATOR_JSON_LD = [
@@ -461,19 +461,6 @@ export default function GeneticCalculatorTool({
                                 </Button>
                               </div>
                             )}
-                            {!isAuthed && (
-                              <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <p className="text-xs text-slate-500">
-                                  Want to save these parents and run this against your real collection?
-                                </p>
-                                <Link to={`${createPageUrl('AuthPortal')}?mode=signup`}>
-                                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white text-xs touch:min-h-11">
-                                    Create a free account
-                                    <ArrowRight className="w-3 h-3 ml-1.5" />
-                                  </Button>
-                                </Link>
-                              </div>
-                            )}
                           </div>
                         ) : (
                           /* Collection mode, authed users picking saved geckos */
@@ -554,6 +541,19 @@ export default function GeneticCalculatorTool({
 
                           {/* Monte Carlo simulator */}
                           {hasParents && <BreedingSimulator sire={sire} dam={dam} />}
+
+                          {/* Sign-up prompt under the results, once there is a
+                              pairing to care about. Signed-in members never
+                              see it (they can switch to "From my collection"). */}
+                          {!isAuthed && hasParents && (
+                            <ContentSignupPrompt
+                              pageType="calculator"
+                              ctaId={pageBreadcrumb ? 'calculator_morph' : 'calculator'}
+                              headline="Run this pairing on your own geckos, free"
+                              body="Add your sire and dam to a free collection and the calculator reads their records, including hets worked out from three generations of parents. Each hatchling can then go straight into your breeding records and pedigree."
+                              secondary={{ label: 'How breeding records work', to: '/breeding-records' }}
+                            />
+                          )}
                         </div>
                     </>
                 )}

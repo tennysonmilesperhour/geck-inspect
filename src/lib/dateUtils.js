@@ -1,13 +1,17 @@
-import { format, parseISO, differenceInCalendarDays, differenceInMonths } from 'date-fns';
+import { parseISO, differenceInCalendarDays, differenceInMonths } from 'date-fns';
 
 // `last_fed_date`, `archived_date`, etc. are stored as `YYYY-MM-DD` (Postgres
 // `date` type, no timezone). Use the user's local timezone when reading and
 // writing, saving via `toISOString()` produces a UTC date, which renders as
 // "yesterday" for users east of UTC during the early-morning hours and as
 // "tomorrow" for users west of UTC during the late-evening hours.
-
-export function todayLocalISO() {
-  return format(new Date(), 'yyyy-MM-dd');
+//
+// Built by hand rather than with date-fns `format`: this file is on the
+// offline-sync path that every page loads, and `format` (with its locale
+// tables) was most of the date-fns code in the main script.
+export function todayLocalISO(now = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
 // Parse a `YYYY-MM-DD` string as local midnight. `new Date('2026-05-02')`

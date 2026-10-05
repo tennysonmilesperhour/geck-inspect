@@ -38,7 +38,6 @@
  */
 
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
-import { BLOG_POSTS } from '@/data/blog-posts';
 
 // Editorial byline. In the audit the reviewer is described as a panel
 // of experienced keepers, represent that as an editorial collective
@@ -134,9 +133,17 @@ export function editorialFor(path) {
   };
 }
 
-const BLOG_POST_INDEX = Object.fromEntries(
-  BLOG_POSTS.map((p) => [p.slug, p]),
-);
+// Per-post dates, filled by src/lib/editorialBlogDates.js, which the blog
+// pages import. Until October 2026 this file imported the whole of
+// src/data/blog-posts.js (327 KB) itself, so every Morph Guide and Care
+// Guide page downloaded every old article just to print its own byline.
+const BLOG_POST_INDEX = {};
+
+export function registerBlogPosts(posts) {
+  for (const p of posts || []) {
+    if (p?.slug) BLOG_POST_INDEX[p.slug] = { datePublished: p.datePublished, dateModified: p.dateModified };
+  }
+}
 
 /**
  * Human-readable byline for visible rendering on each content page.

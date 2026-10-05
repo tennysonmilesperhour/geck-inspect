@@ -42,6 +42,10 @@ export default defineConfig({
     },
   },
   build: {
+    // dist/.vite/manifest.json maps each source page to its chunk, so
+    // scripts/prerender.mjs can add a modulepreload for the page chunk to
+    // each prerendered document (every page is lazy since October 2026).
+    manifest: true,
     rollupOptions: {
       output: {
         // Split the three heaviest non-critical dependencies out of the
