@@ -64,9 +64,14 @@ Done on 5 October (details in `instrumentation-2026-10.md`):
 - Migration `20261005145947_morph_id_request_keys`: Morph ID retry replay table, and the free try no longer counts against the first paid month.
 - `recognize-gecko-morph` v64: the analyzer call stops at 90 s so a slow run is refunded, and a retry or double tap with the same photos is not charged twice.
 
-Still for Tennyson: give the Breeder member who upgraded on 1 Oct back one October Morph ID credit (the fix does not correct their existing row).
+The Breeder member who cancelled on 30 Sep gets a free month instead of the credit back (next section).
 
 ## Added 5 October: personal weigh-in reminders (not applied)
 
 - Migration `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, written and **not applied**. It adds `enqueue_personal_weighin_reminders()` (a daily job at 14:20 UTC that reads `profiles.extra_data.care_reminders`), makes the weekly 30-day weigh-in nudge skip geckos the daily job covers and members who turned weigh-in reminders off, and schedules the job. It contains `revoke` lines, so the Supabase MCP tool will wait for a confirmation; it is now included in `deploy-queue-2026-10-03.sql`, so the one SQL Editor run covers it. The app works without it (the switches save and the dates show), but no weigh-in push or email goes out for new geckos until it runs. Details in `activation-2026-10.md`.
 
+## Added 5 October: complimentary plans (applied)
+
+- Migration `20261005185312_membership_comps`, applied. A `membership_comps` table (email, tier, start, end, reason) and both effective tier functions now return the higher of the paid plan and an active comp, so Morph ID credits, the gecko limit and featured breeders all follow it. A Stripe cancellation does not end a comp. Members can read their own rows; only admins and the server can add them. The app reads the comp at sign-in (`src/lib/userProfile.js`) and `resolveTier()` honours it.
+- First comp: the Breeder member who cancelled (free Morph ID try counted against the paid allowance) has Breeder free until 1 Dec 2026, so November gets 6 fresh Morph IDs.
+- To give someone a comp, in the SQL Editor: `insert into public.membership_comps (email, tier, ends_at, reason) values ('person@example.com', 'breeder', '2027-10-01', 'Founding breeder year');`

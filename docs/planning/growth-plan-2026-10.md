@@ -37,8 +37,8 @@ In progress: a guided first gecko (photo or name, then parents, then the payoff 
 
 | Week | Build (Claude sessions) | Tennyson |
 |---|---|---|
-| 1 (6 to 12 Oct) | Finish activation and landing work; review the Funnel card daily | Run `deploy-queue-2026-10-03.sql`; email the cancelled Breeder member and give back the credit; 5 breeder conversations (script below); NARBC Tinley Park is 10 to 11 Oct |
-| 2 | Welcome and first-week emails (copy for approval); personal weekly note instead of the generic digest | Approve email copy; recruit 10 to 20 mid-size crested breeders for a free Breeder year |
+| 1 (6 to 12 Oct) | Finish activation and landing work; review the Funnel card daily | Run `deploy-queue-2026-10-03.sql`; email the cancelled Breeder member (draft in Gmail; a free Breeder month to 1 Dec is already on their account); 5 breeder conversations (script below); NARBC Tinley Park is 10 to 11 Oct |
+| 2 | Welcome and first-week emails (copy for approval); personal weekly note instead of the generic digest | Approve email copy; recruit 10 to 20 mid-size crested breeders for a free Breeder year (give it with a `membership_comps` row, see `deploy-queue-2026-10-03.md`) |
 | 3 | Breeder kit: printable passport QR cards for every sale, transfer link at checkout, "your crested gecko website for $5.99" page; MorphMarket import | Test the MorphMarket CSV round trip; send passport cards with sales |
 | 4 | iPhone app: store listing, TestFlight, native push | Store accounts, screenshots, App Review |
 
@@ -59,7 +59,7 @@ Write the answers in `docs/planning/breeder-interviews-2026-10.md`. Five honest 
 ## 6. Decisions waiting on Tennyson
 
 - Run the SQL script (account erasure and the signed-out email lockdown).
-- Email the cancelled Breeder member before 1 November and restore one October Morph ID credit.
+- Send the drafted email to the cancelled Breeder member (the free month to 1 Dec is already applied).
 - Are the first two paying members supporters or test accounts? If so, only one real member has evaluated and paid.
 - Is `VITE_POSTHOG_KEY` set in production? PostHog may hold a month of visitor sources the database does not.
 - Change the support address on the pricing page from the personal Gmail to a geckinspect.com address.

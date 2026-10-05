@@ -123,7 +123,8 @@ export const SOCIAL_POST_OVERAGE_CENTS = 50;
  * health screens, IoT, consultant, Promote) flows through tierOf().
  *
  * Admins receive Enterprise. Otherwise use the highest of the Stripe profile,
- * verified store tier, and a grandfathered Breeder grant. The legacy Pro flag
+ * verified store tier, an active complimentary plan (membership_comps) and a
+ * grandfathered Breeder grant. The legacy Pro flag
  * remains compatible with older callers; CustomerInfo alone never grants access.
  * This contract is mirrored by SQL effective_tier_for_current_user().
  *
@@ -138,6 +139,8 @@ export function resolveTier(user) {
   const tiers = ['free', 'keeper', 'breeder', 'enterprise'];
   const rank = Math.max(0, tiers.indexOf(u.membership_tier),
     ['keeper', 'breeder'].includes(u.revenuecat_tier) ? tiers.indexOf(u.revenuecat_tier) : 0,
+    ['keeper', 'breeder'].includes(u.comp_tier) && (!u.comp_ends_at || Date.parse(u.comp_ends_at) > Date.now())
+      ? tiers.indexOf(u.comp_tier) : 0,
     u.subscription_status === 'grandfathered' || u.revenuecat_pro_active ? 2 : 0);
   return tiers[rank];
 }

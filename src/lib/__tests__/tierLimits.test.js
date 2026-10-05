@@ -29,6 +29,15 @@ describe('resolveTier', () => {
     expect(getTierLimits({ revenuecat_pro_active: true })).toBe(TIER_LIMITS.breeder);
   });
 
+  it('lifts a member to an active complimentary plan', () => {
+    const future = new Date(Date.now() + 86400000).toISOString();
+    const past = new Date(Date.now() - 86400000).toISOString();
+    expect(resolveTier({ membership_tier: 'free', comp_tier: 'breeder', comp_ends_at: future })).toBe('breeder');
+    expect(resolveTier({ membership_tier: 'free', comp_tier: 'keeper', comp_ends_at: future })).toBe('keeper');
+    expect(resolveTier({ membership_tier: 'breeder', comp_tier: 'keeper', comp_ends_at: future })).toBe('breeder');
+    expect(resolveTier({ membership_tier: 'free', comp_tier: 'breeder', comp_ends_at: past })).toBe('free');
+  });
+
   it('falls through to membership_tier for Stripe-direct subscribers', () => {
     expect(resolveTier({ membership_tier: 'keeper' })).toBe('keeper');
     expect(resolveTier({ membership_tier: 'breeder' })).toBe('breeder');
