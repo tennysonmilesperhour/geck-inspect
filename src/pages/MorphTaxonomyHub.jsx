@@ -1,7 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Dna, Sparkles } from 'lucide-react';
+import { ArrowLeft, Dna, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Seo from '@/components/seo/Seo';
+import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import {
   MORPHS,
@@ -10,7 +11,6 @@ import {
   RARITY,
 } from '@/data/morph-guide';
 import { breadcrumbSchema, ORG_ID, SITE_URL } from '@/lib/organization-schema';
-import { createPageUrl } from '@/utils';
 
 /**
  * Programmatic taxonomy hub page for the morph catalog.
@@ -268,17 +268,14 @@ function TaxonomyHub({
           </div>
         </nav>
 
-        <section className="mt-12 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 p-6 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Track {label.toLowerCase()} on Geck Inspect</h2>
-          <p className="text-slate-300 mb-5 leading-relaxed">
-            Free collection manager built for the crested gecko hobby. Log weights, plan breedings, visualize lineage, and identify morphs with AI.
-          </p>
-          <Link to={createPageUrl('AuthPortal')}>
-            <Button size="lg" className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-lg shadow-emerald-500/30">
-              Create a free account <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-        </section>
+        <ContentSignupPrompt
+          variant="panel"
+          pageType="morph_hub"
+          ctaId="morph_hub_end"
+          className="mt-12"
+          headline="Track the morphs in your own collection, free"
+          body="Log each gecko's morph, hets, parents and weights. Geck Inspect builds the pedigree as you go and estimates each gecko's value from real crested gecko listings."
+        />
       </section>
     </PublicPageShell>
   );

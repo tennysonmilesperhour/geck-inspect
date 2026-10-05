@@ -11,12 +11,11 @@
  */
 import { supabase } from '@/lib/supabaseClient';
 import { blockIfGuest, isGuestMode } from '@/lib/guestMode';
-import {
-  guestMockFilter,
-  guestMockGet,
-  guestMockList,
-  isMockedEntity,
-} from '@/lib/guestMockData';
+// The demo collection (about 36 KB of sample geckos, plus the growth
+// curves it uses) is only needed in guest mode, so it loads on the first
+// guest read instead of riding in the main script for every visitor.
+let guestMocksPromise = null;
+const loadGuestMocks = () => (guestMocksPromise ||= import('@/lib/guestMockData'));
 import { PUBLIC_READ_COLUMNS, EVERYONE_READ_COLUMNS } from '@/lib/publicColumns';
 import { noteEntityCreated } from '@/lib/activation';
 
@@ -395,8 +394,9 @@ function createEntityClient(entityName) {
       // calls to tables that would hit RLS and flood the console with
       // 401s while the user is just browsing.
       if (isGuestMode() && entityName !== 'PageConfig') {
-        if (isMockedEntity(entityName)) {
-          return guestMockFilter(entityName, filterObj, sort, limit, skip);
+        const mocks = await loadGuestMocks();
+        if (mocks.isMockedEntity(entityName)) {
+          return mocks.guestMockFilter(entityName, filterObj, sort, limit, skip);
         }
         return [];
       }
@@ -431,7 +431,8 @@ function createEntityClient(entityName) {
 
     async get(id) {
       if (isGuestMode()) {
-        if (isMockedEntity(entityName)) return guestMockGet(entityName, id);
+        const mocks = await loadGuestMocks();
+        if (mocks.isMockedEntity(entityName)) return mocks.guestMockGet(entityName, id);
         return null;
       }
       const columns = await readColumns(entityName);
@@ -503,7 +504,8 @@ function createEntityClient(entityName) {
 
     async list(sort = null) {
       if (isGuestMode()) {
-        if (isMockedEntity(entityName)) return guestMockList(entityName, sort);
+        const mocks = await loadGuestMocks();
+        if (mocks.isMockedEntity(entityName)) return mocks.guestMockList(entityName, sort);
         return [];
       }
       return this.filter({}, sort);

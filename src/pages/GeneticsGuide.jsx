@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dna, ArrowUp, Search, Download } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
+import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import { Subsection } from '@/components/genetics/GeneticsHelpers';
 import { GENETICS_GUIDE_JSON_LD, GENETICS_GUIDE_PUBLISHED, GENETICS_GUIDE_MODIFIED } from "@/data/genetics-jsonld";
 import { bylineText } from '@/lib/editorial';
@@ -325,6 +326,14 @@ export default function GeneticsGuide() {
                     );
                   })}
                 </div>
+                <ContentSignupPrompt
+                  pageType="genetics_guide"
+                  ctaId="genetics_guide"
+                  className="mt-10 max-w-4xl"
+                  headline="Know what your geckos carry? Record it once, free"
+                  body="Note each gecko's hets and possible hets on its record. The calculator then pairs your own sire and dam, and works out hidden hets from three generations of parents."
+                  secondary={{ label: 'Try the genetics calculator', to: '/calculator' }}
+                />
               </div>
             </TabsContent>
 

@@ -1,5 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy } from '@/lib/lazyWithRetry';
+// Markdown is only needed for community-written sections, which arrive
+// from the database after the page has rendered, so the parser (about
+// 115 KB) loads then instead of with the Care Guide.
+const ReactMarkdown = lazy(() => import('react-markdown'));
 import { CareGuideSection } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,6 +27,7 @@ import Seo from '@/components/seo/Seo';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import ContentBlock from '@/components/careguide/ContentBlock';
 import KeepersGuideTabs from '@/components/careguide/KeepersGuideTabs';
+import ContentSignupPrompt, { careSignupCopy } from '@/components/public/ContentSignupPrompt';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 
 const CATEGORY_ICONS = {
@@ -280,7 +285,9 @@ function CommunitySection({ section }) {
         </div>
       )}
       <div className="prose prose-invert max-w-none prose-p:text-slate-300 prose-li:text-slate-300 prose-headings:text-slate-100 prose-strong:text-slate-100">
-        <ReactMarkdown>{section.content || ''}</ReactMarkdown>
+        <Suspense fallback={<p className="whitespace-pre-line">{section.content || ''}</p>}>
+          <ReactMarkdown>{section.content || ''}</ReactMarkdown>
+        </Suspense>
       </div>
       {section.source_url && (
         <a
@@ -510,6 +517,14 @@ export default function CareGuidePage() {
                   ))}
                 </div>
               )}
+
+              {/* One sign-up prompt, worded for the open care category. */}
+              <ContentSignupPrompt
+                pageType="care_guide"
+                ctaId={`care_guide_${activeCategory.id}`}
+                className="mt-10"
+                {...careSignupCopy(activeCategory.id)}
+              />
 
               {/* Cross-guide CTAs */}
               <div className="mt-10 rounded-xl border border-slate-700 bg-slate-900 p-6">

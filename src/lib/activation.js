@@ -7,7 +7,7 @@
 // All of it is best effort: a failed analytics call never blocks a save.
 import { supabase } from '@/lib/supabaseClient';
 import { captureEvent } from '@/lib/posthog';
-import { getFirstTouch, firstTouchProperties } from '@/lib/attribution';
+import { getFirstTouch, firstTouchProperties, getSignupCta, signupCtaProperties } from '@/lib/attribution';
 
 // An account counts as new on its first authenticated session within this
 // long of being created. Email confirmation can take a while, so a day.
@@ -57,9 +57,11 @@ export async function recordSignupIfNew(authUser, profile) {
   }
   writeFlag(flag);
   const touch = getFirstTouch();
+  const signupCta = getSignupCta();
   captureEvent('signup_completed', {
     method: authUser.app_metadata?.provider || 'email',
     ...firstTouchProperties(touch),
+    ...signupCtaProperties(signupCta),
   });
   // Only when the profile row has loaded, so an absent row is not
   // overwritten; the event above is the record either way.
@@ -71,6 +73,7 @@ export async function recordSignupIfNew(authUser, profile) {
           extra_data: {
             ...(extra || {}),
             first_touch: touch || { source: 'unknown' },
+            ...(signupCta ? { signup_cta: signupCta } : {}),
             signup_tracked_at: new Date().toISOString(),
           },
         })

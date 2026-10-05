@@ -14,6 +14,8 @@ import {
   ORG_ID,
   SITE_URL,
 } from '@/lib/organization-schema';
+// Registers per-post dates with editorialFor (see editorial.js).
+import '@/lib/editorialBlogDates';
 import { authorSchema, editorialFor } from '@/lib/editorial';
 import { useBlogContent } from '@/lib/blog-data-source';
 

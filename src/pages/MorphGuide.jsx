@@ -26,6 +26,22 @@ import {
 } from '@/data/morph-guide';
 import { PROJECT_LINES, LINE_CONFIDENCE, lineImageKeywords } from '@/data/project-lines';
 import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
+import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
+
+// Sits in the morph grid after the first two rows (six cards), full
+// width, so it reads as part of the page rather than a pop-up.
+const MORPH_GRID_PROMPT_AFTER = 6;
+function MorphGuideSignupPrompt({ className = '' }) {
+  return (
+    <ContentSignupPrompt
+      pageType="morph_guide"
+      ctaId="morph_guide_grid"
+      className={className}
+      headline="Know which morphs are in your collection? Keep them all in one place, free"
+      body="Log each gecko's morph, hets, parents and weights. Geck Inspect builds the pedigree as you go and estimates each gecko's value from real crested gecko listings."
+    />
+  );
+}
 
 // DefinedTermSet treats the morph guide as a controlled vocabulary for
 // AI assistants, every morph becomes a DefinedTerm that can be cited
@@ -107,6 +123,16 @@ function sanitizeImage(url) {
     return null;
   }
   return url;
+}
+
+function MorphGridItem({ morph, withPrompt }) {
+  if (!withPrompt) return <MorphCard morph={morph} />;
+  return (
+    <>
+      <MorphCard morph={morph} />
+      <MorphGuideSignupPrompt className="md:col-span-2 lg:col-span-3" />
+    </>
+  );
 }
 
 function MorphCard({ morph }) {
@@ -1052,11 +1078,18 @@ export default function MorphGuidePage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map((m) => (
-                <MorphCard key={m.slug} morph={m} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filtered.map((m, i) => (
+                  <MorphGridItem
+                    key={m.slug}
+                    morph={m}
+                    withPrompt={i === MORPH_GRID_PROMPT_AFTER - 1 && filtered.length > MORPH_GRID_PROMPT_AFTER}
+                  />
+                ))}
+              </div>
+              {filtered.length <= MORPH_GRID_PROMPT_AFTER && <MorphGuideSignupPrompt className="mt-6" />}
+            </>
           )}
 
           </>}

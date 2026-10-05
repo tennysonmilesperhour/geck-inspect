@@ -29,6 +29,7 @@ const ADVANCE_MS = 4500;
 // /screenshots/*.png to the app HTML, so each probe downloaded a page
 // before failing (October 2026 first-impression review).
 const SHIPPED_SLIDES = PRODUCT_TOUR_SLIDES.filter((s) => s.shipped);
+const HAS_PHONE_SHOTS = SHIPPED_SLIDES.every((s) => s.mobileFile);
 
 export default function ProductTour() {
   if (SHIPPED_SLIDES.length === 0) return null;
@@ -107,17 +108,25 @@ function ProductTourSlides() {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* 16:10 frame, matches a typical laptop screen capture */}
-        <div className="relative aspect-[16/10] bg-slate-900">
+        {/* 16:10 frame on laptops; on phones a 4:5 frame showing the phone
+            capture (mobileFile), so the text in the screenshot stays
+            readable instead of shrinking a laptop screen to 390 px. */}
+        <div className={'relative bg-slate-900 ' + (HAS_PHONE_SHOTS ? 'aspect-[4/5] sm:aspect-[16/10]' : 'aspect-[16/10]')}>
           {statuses.map((s, i) => {
             const visibleIndex = visible.findIndex((v) => v.id === s.id);
             const isActive = visibleIndex === active && s.ok !== false;
             return (
+              <picture key={s.id}>
+                {s.mobileFile && (
+                  <source media="(max-width: 639px)" srcSet={SCREENSHOTS_BASE + s.mobileFile} />
+                )}
               <img
-                key={s.id}
                 src={SCREENSHOTS_BASE + s.file}
                 alt={`Geck Inspect: ${s.title}`}
+                width="1600"
+                height="1000"
                 loading={i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
                 onLoad={() =>
                   setStatuses((cur) =>
                     cur.map((c) => (c.id === s.id ? { ...c, ok: true } : c))
@@ -129,10 +138,11 @@ function ProductTourSlides() {
                   )
                 }
                 className={
-                  'absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ' +
+                  'absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 ' +
                   (isActive ? 'opacity-100' : 'opacity-0 pointer-events-none')
                 }
               />
+              </picture>
             );
           })}
 
@@ -160,7 +170,7 @@ function ProductTourSlides() {
         {/* Footer dots */}
         <div className="flex items-center justify-between px-4 py-3 bg-slate-950/70 border-t border-slate-800/60">
           <div className="text-[11px] text-slate-400">
-            A quick visual tour of Geck Inspect.
+            The demo collection: sample geckos, value estimates from real listings.
           </div>
           {/* The 6 px dots are too dense to tap, so on touch screens they
               only show the position and the slides advance on their own. */}
@@ -182,7 +192,7 @@ function ProductTourSlides() {
           </div>
         </div>
       </div>
-      <div className="text-center mt-3 text-xs text-slate-500">
+      <div className="hidden md:block text-center mt-3 text-xs text-slate-500">
         Hover to pause.
         <ArrowRight className="w-3 h-3 inline ml-1 opacity-60" />
       </div>

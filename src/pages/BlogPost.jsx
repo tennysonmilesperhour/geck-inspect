@@ -3,14 +3,16 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Seo from '@/components/seo/Seo';
+import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import ContentBlock from '@/components/careguide/ContentBlock';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import {
   blogPostingSchema,
   breadcrumbSchema,
 } from '@/lib/organization-schema';
+// Registers per-post dates with editorialFor (see editorial.js).
+import '@/lib/editorialBlogDates';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
-import { createPageUrl } from '@/utils';
 import {
   useBlogContent,
   findPostBySlug,
@@ -357,20 +359,16 @@ export default function BlogPost() {
           </section>
         )}
 
-        <section className="mt-12 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 p-6 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
-            Track every gecko, pairing, and lineage on Geck Inspect
-          </h2>
-          <p className="text-slate-300 mb-5 leading-relaxed">
-            Free collection management with breeding planning, multi-generation lineage,
-            and Punnett-square genetics calculation. AI morph identification on paid plans.
-          </p>
-          <Link to={createPageUrl('AuthPortal')}>
-            <Button size="lg" className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-lg shadow-emerald-500/30">
-              Create a free account <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-        </section>
+        {/* Sign-up prompt (template only; the old box opened the Sign In
+            form and said Morph ID was paid only, but the first one is free). */}
+        <ContentSignupPrompt
+          variant="panel"
+          pageType="article"
+          ctaId="article_end"
+          className="mt-12"
+          headline="Keep your own crested geckos in one place, free"
+          body="Weights, parents, morphs and photos on one record per gecko, a pedigree that builds itself as you add parents, and a genetics calculator that reads your own pairings. Your first AI Morph ID is free too."
+        />
       </article>
     </PublicPageShell>
   );

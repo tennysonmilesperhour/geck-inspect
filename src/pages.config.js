@@ -8,14 +8,17 @@
 // fetch failures + stale deploys), a drop-in for React's lazy. See
 // src/lib/lazyWithRetry.js.
 import { lazy } from '@/lib/lazyWithRetry';
-import __Layout from './Layout.jsx';
-
-// Eagerly loaded: the pages a signed-in user is most likely to hit first.
-// Keeping these in the main bundle avoids a blank flash on the common path.
-// Dashboard is the authenticated landing page so it MUST be eager.
-import Home from './pages/Home';
-import MyProfile from './pages/MyProfile';
-import Dashboard from './pages/Dashboard';
+// The signed-in shell (Layout) and its first pages are lazy too. Until
+// October 2026 they were eager, so every visitor to the landing page, the
+// Morph Guide or the Care Guide downloaded the sidebar, Dashboard and
+// profile code they never use (about a third of the 1.22 MB main
+// script). App.jsx prefetches Layout and Dashboard as soon as it knows
+// the visitor is signed in or in the demo, so the signed-in first paint
+// does not wait on an extra round trip.
+const __Layout              = lazy(() => import('./Layout.jsx'));
+const Home                  = lazy(() => import('./pages/Home'));
+const MyProfile             = lazy(() => import('./pages/MyProfile'));
+const Dashboard             = lazy(() => import('./pages/Dashboard'));
 
 // Everything else is split into its own chunk and only downloaded
 // when the user navigates to that route. Cuts ~MB off first paint.

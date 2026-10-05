@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
-  ArrowRight,
   Dna,
   Sparkles,
   BookOpen,
@@ -33,6 +32,7 @@ import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
 import ReportContent from '@/components/support/ReportContent';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import { useInAppShell } from '@/lib/appShell';
+import ContentSignupPrompt, { possessive } from '@/components/public/ContentSignupPrompt';
 
 const LOGO_URL = APP_LOGO_URL;
 
@@ -465,6 +465,16 @@ export default function MorphDetail() {
             </section>
           )}
 
+          {/* Mid-page sign-up prompt, right after the price tier, which
+              is where a keeper starts wondering about their own gecko. */}
+          <ContentSignupPrompt
+            pageType="morph"
+            ctaId="morph_mid"
+            className="mb-10"
+            headline={`Track your own ${possessive(morphName)} lineage and value, free`}
+            body="Add your gecko with a photo and a name. Geck Inspect keeps its weights and parents together, builds its pedigree as you add the sire and dam, and estimates its value from real crested gecko listings."
+          />
+
           {/* Key features */}
           {keyFeatures.length > 0 && (
             <section className="mb-10">
@@ -739,25 +749,16 @@ export default function MorphDetail() {
             );
           })()}
 
-          {/* CTA */}
-          <section className="mt-12 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 p-6 md:p-8">
-            <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
-              Track your {morphName} geckos on Geck Inspect
-            </h2>
-            <p className="text-slate-300 mb-5 leading-relaxed">
-              Free to use. Log weights, plan breedings, visualize lineages, and identify morphs
-              with AI, built specifically for the crested gecko hobby.
-            </p>
-            <Link to={createPageUrl('AuthPortal')}>
-              <Button
-                size="lg"
-                className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-lg shadow-emerald-500/30"
-              >
-                Create a free account
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </section>
+          {/* End-of-page sign-up prompt (was a "Create a free account"
+              button that opened the Sign In form). */}
+          <ContentSignupPrompt
+            variant="panel"
+            pageType="morph"
+            ctaId="morph_end"
+            className="mt-12"
+            headline={`Keep your ${morphName} geckos in one place`}
+            body="Weights, parents, photos and a pedigree buyers can check, in one record per gecko. Plan pairings with the genetics calculator built for crested geckos."
+          />
         </article>
 
         {/* Footer */}
