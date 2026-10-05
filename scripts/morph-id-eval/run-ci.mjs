@@ -16,7 +16,7 @@ import { spawn } from 'node:child_process';
 import { writeFile, appendFile, mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createClient } from '@supabase/supabase-js';
+import { evalAccount } from './evalAccount.mjs';
 
 const env = process.env;
 const SUPABASE_URL = env.SUPABASE_URL;
@@ -33,54 +33,12 @@ for (const [name, value] of Object.entries({ SUPABASE_URL, SUPABASE_SERVICE_ROLE
   }
 }
 
-const authOptions = { auth: { persistSession: false, autoRefreshToken: false } };
-const admin = createClient(SUPABASE_URL, SERVICE_KEY, authOptions);
-
-async function findUser(email) {
-  for (let page = 1; page <= 50; page += 1) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-    if (error) throw new Error(`Could not list accounts: ${error.message}`);
-    const match = data.users.find((user) => user.email?.toLowerCase() === email.toLowerCase());
-    if (match) return match;
-    if (data.users.length < 1000) return null;
-  }
-  return null;
-}
-
-async function ensureEvalAccount() {
-  const existing = await findUser(EVAL_EMAIL);
-  if (existing) {
-    // Never hand the flag to an account this workflow did not create.
-    if (existing.app_metadata?.morph_eval !== true) {
-      throw new Error(`${EVAL_EMAIL} already exists without the evaluation flag. Refusing to use it.`);
-    }
-    return existing;
-  }
-  const { data, error } = await admin.auth.admin.createUser({
-    email: EVAL_EMAIL,
-    email_confirm: true,
-    app_metadata: { morph_eval: true },
-    user_metadata: { full_name: 'Morph ID evaluation (internal)' },
-  });
-  if (error) throw new Error(`Could not create the evaluation account: ${error.message}`);
-  console.error(`Created evaluation account ${EVAL_EMAIL}.`);
-  return data.user;
-}
-
-async function signIn() {
-  const { data: link, error: linkError } = await admin.auth.admin.generateLink({
-    type: 'magiclink',
-    email: EVAL_EMAIL,
-  });
-  if (linkError) throw new Error(`Could not create a sign-in link: ${linkError.message}`);
-  const client = createClient(SUPABASE_URL, ANON_KEY, authOptions);
-  const { data, error } = await client.auth.verifyOtp({
-    type: 'magiclink',
-    token_hash: link.properties.hashed_token,
-  });
-  if (error || !data.session) throw new Error(`Could not sign in: ${error?.message || 'no session returned'}`);
-  return data.session.access_token;
-}
+const { admin, ensureEvalAccount, signIn } = evalAccount({
+  supabaseUrl: SUPABASE_URL,
+  serviceKey: SERVICE_KEY,
+  anonKey: ANON_KEY,
+  email: EVAL_EMAIL,
+});
 
 function runEval(tokenFile) {
   return new Promise((resolve, reject) => {
