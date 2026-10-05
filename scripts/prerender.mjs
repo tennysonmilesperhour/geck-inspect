@@ -515,7 +515,7 @@ function routeMeta(route) {
 // mandatory high-priority fetch, and preloading something a page does not
 // render hurts LCP instead of helping it. The Morph Guide no longer uses
 // this photo, so it is no longer preloaded there.
-const HERO_WIDTHS = [800, 1600, 2400];
+const HERO_WIDTHS = [800, 1200, 1600, 2400];
 const heroImagePath = (w) => `/hero/crested-gecko-hero-${w}.webp`;
 const HERO_PRELOADS = {
   '/': heroImagePath(2400),

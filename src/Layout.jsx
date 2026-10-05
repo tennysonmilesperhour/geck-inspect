@@ -240,19 +240,18 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     setShowRolePrompt(false);
   };
 
-  // After the first-run role prompt, persist the choice. Keepers go
-  // straight to adding their first gecko (My Geckos opens the photo-first
-  // quick add when the collection is empty); the tour stays one click away
-  // in the sidebar. Breeders get the tour, which covers far more ground.
-  // (VIP audit P1.3: two of three new accounts never added a gecko.)
+  // After the first-run role prompt, persist the choice and go straight
+  // to adding the first gecko (My Geckos opens the photo-first quick add
+  // when the collection is empty, with an "import a spreadsheet" link for
+  // breeders who already keep records). The tour stays one click away in
+  // the sidebar. (VIP audit P1.3: two of three new accounts never added a
+  // gecko. October 2026: breeders used to get the full sidebar tour here,
+  // about 30 steps before their first gecko, so they now get the same
+  // first step as keepers.)
   const handleRoleChosen = (role) => {
     saveOnboarding(supabase, user?.email, { completed: true, role, keeperMode: role === 'keeper' });
     setShowRolePrompt(false);
-    if (role === 'keeper') {
-      navigate('/MyGeckos?add=1');
-    } else {
-      setShowTutorial(true);
-    }
+    navigate('/MyGeckos?add=1');
   };
 
   const getUserLevel = (geckoCount) => {

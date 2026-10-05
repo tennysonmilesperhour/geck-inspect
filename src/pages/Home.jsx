@@ -45,7 +45,11 @@ const LOGO_URL = '/logo-96.png';
 // handshake. Source: Unsplash photo 1441974231531-c6227db76b6e (Unsplash
 // licence, free to use). Regenerate with cwebp at q=62 from a 2,400 px
 // JPEG export, see docs/planning/launch-review-2026-09-04.md (F30).
-const BACKGROUND_IMAGE_WIDTHS = [800, 1600, 2400];
+// October 2026: re-encoded with a light blur (the photo sits under a 65%
+// black tint, so the fine detail never showed) and a 1200 px step added.
+// 1600 px went from 202 KB to 107 KB and 2400 px from 427 KB to 228 KB.
+// See docs/planning/first-impression-2026-10.md.
+const BACKGROUND_IMAGE_WIDTHS = [800, 1200, 1600, 2400];
 const heroImagePath = (w) => `/hero/crested-gecko-hero-${w}.webp`;
 const BACKGROUND_IMAGE = heroImagePath(2400);
 // One candidate per width so a phone downloads the 640 px file, not the
@@ -268,6 +272,31 @@ function PacketVisual() {
 
 const SECTION_VISUALS = { worth: ValueVisual, pair: PairingVisual, sell: PacketVisual };
 
+// The two free hooks a cold visitor can use right away. The calculator
+// needs no account (src/pages/GeneticCalculatorTool.jsx); Morph ID needs a
+// free account and the first identification is free
+// (TIER_LIMITS.free.lifetimeFreeMorphIDs, src/pages/Recognition.jsx).
+const FREE_HOOKS = [
+  {
+    to: '/calculator',
+    icon: Dna,
+    eyebrow: 'No account needed',
+    title: 'Run a pairing in the genetics calculator',
+    desc: 'Pick a sire and dam, for example a Lilly White het Axanthic and a Sable, and see every possible baby with its odds.',
+    cta: 'Open the calculator',
+    event: 'calculator',
+  },
+  {
+    to: '/Recognition',
+    icon: Sparkles,
+    eyebrow: 'First one free',
+    title: 'Ask Morph ID what your gecko is',
+    desc: 'Upload a top and a side photo. Get a ranked morph shortlist, the traits it can see and what photo would settle it.',
+    cta: 'Try Morph ID',
+    event: 'morph_id',
+  },
+];
+
 // Single source of truth for the landing FAQ. Both the visible section
 // and the FAQPage JSON-LD below are derived from this array, Google
 // requires the two to match for rich-result eligibility, so keep them
@@ -465,7 +494,7 @@ export default function Home() {
         {/* Top nav */}
         <header className="relative z-10 max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-md" />
+            <img src={LOGO_URL} alt="" width="40" height="40" className="h-10 w-10 rounded-md" />
             <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm text-slate-300">
@@ -479,34 +508,56 @@ export default function Home() {
               Pricing
             </Link>
           </nav>
-          <Link
-            to={createPageUrl('AuthPortal')}
-            onClick={() => captureEvent('landing_cta_clicked', { cta: 'nav', target: 'signin' })}
-          >
-            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
-              Sign In
-            </Button>
-          </Link>
+          {/* One primary action per screen: the nav's filled button is the
+              same "start free" as the hero, and Sign in is a quiet link for
+              returning members (it used to be the brightest button on the
+              page, competing with the sign-up CTA). */}
+          {showGuestCta ? (
+            <div className="flex items-center gap-1 sm:gap-3">
+              <Link
+                to={createPageUrl('AuthPortal')}
+                onClick={() => captureEvent('landing_cta_clicked', { cta: 'nav', target: 'signin' })}
+                className="inline-flex items-center min-h-11 px-3 text-sm font-semibold text-slate-200 hover:text-white rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/AuthPortal?mode=signup"
+                onClick={() => captureEvent('landing_cta_clicked', { cta: 'nav', target: 'signup' })}
+                className="hidden sm:inline-flex"
+              >
+                <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
+                  Start free
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <Link to={createPageUrl('Dashboard')}>
+              <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
+                Dashboard
+              </Button>
+            </Link>
+          )}
         </header>
 
         {/* Hero */}
-        <section className="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-semibold text-emerald-300 mb-8">
-            <Sparkles className="w-3.5 h-3.5" />
-            For new and small crested gecko breeders
+        <section className="relative z-10 max-w-5xl mx-auto px-6 pt-8 md:pt-16 pb-16 md:pb-20 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs sm:text-sm font-semibold text-emerald-300 mb-6 md:mb-8">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+            Built only for crested geckos
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
+          <h1 className="text-[2.6rem] sm:text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-5 md:mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
             Price right. Pair smart.
             <br />
             Sell with proof.
           </h1>
-          <p className="text-xl md:text-2xl text-emerald-200/90 max-w-2xl mx-auto mb-4 font-medium">
-            The crested gecko app for the business side of breeding.
+          {/* The one-line value proposition: who it is for and what it does. */}
+          <p className="text-lg md:text-2xl text-emerald-100 max-w-2xl mx-auto mb-3 md:mb-4 font-medium leading-snug">
+            Records, genetics and real market prices for crested gecko breeders and keepers, in one app.
           </p>
-          <p className="text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed text-slate-300">
-            See what every gecko is worth from thousands of real listings, what a pairing&rsquo;s eggs
-            should bring before you pair, and what each season made. When a gecko sells, hand the buyer its
-            full history in one PDF. Built only for crested geckos, by a breeder who keeps them.
+          <p className="text-base md:text-lg max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed text-slate-300">
+            Value estimates from thousands of real listings, egg value before you pair, and a passport
+            that hands each buyer the full history.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             {showGuestCta ? (
@@ -525,11 +576,11 @@ export default function Home() {
                 </Link>
                 <Button
                   size="lg"
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => handleContinueAsGuest('hero')}
-                  className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold text-base px-8 py-6 backdrop-blur"
+                  className="text-emerald-100 hover:bg-emerald-900/40 hover:text-white font-semibold text-base px-6 py-6 underline-offset-4 hover:underline"
                 >
-                  Try the demo first
+                  Or look around the demo collection
                 </Button>
               </>
             ) : (
@@ -544,30 +595,48 @@ export default function Home() {
               </Link>
             )}
           </div>
-          <p className="text-xs text-slate-500 mt-6">
-            Free to start, no credit card.{' '}
-            <Link
-              to="/Recognition"
-              onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'morph_id' })}
-              className="text-emerald-300 hover:text-white underline"
-            >
-              Your first AI Morph ID is free
-            </Link>
-            . Export your records to CSV or PDF any time.
-            {showGuestCta && (
-              <>
-                {' '}Already have an account?{' '}
+          {/* Risk reducers next to the button, each true today: the Free
+              plan's 10-gecko limit (src/lib/tierLimits.js), no card at
+              sign-up, CSV and PDF export on every plan. */}
+          <ul className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-slate-300">
+            {['Free for up to 10 geckos', 'No credit card', 'Export your records any time'].map((item) => (
+              <li key={item} className="inline-flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Free hooks: two things a visitor can use in the next minute,
+            before deciding anything. */}
+        <section aria-labelledby="free-hooks-heading" className="relative z-10 max-w-5xl mx-auto px-6 pb-16">
+          <h2 id="free-hooks-heading" className="sr-only">Try it free right now</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {FREE_HOOKS.map((hook) => {
+              const Icon = hook.icon;
+              return (
                 <Link
-                  to={createPageUrl('AuthPortal')}
-                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'signin' })}
-                  className="text-emerald-300 hover:text-white underline"
+                  key={hook.to}
+                  to={hook.to}
+                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'free_hook', target: hook.event })}
+                  className="group gecko-card backdrop-blur p-5 md:p-6 flex gap-4 items-start text-left transition-colors hover:border-emerald-400/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
-                  Sign in
+                  <div className="w-11 h-11 shrink-0 rounded-md border border-emerald-400/25 bg-emerald-500/15 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-emerald-300" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300">{hook.eyebrow}</p>
+                    <h3 className="text-lg font-semibold text-white mt-0.5">{hook.title}</h3>
+                    <p className="text-sm text-slate-300 mt-1.5 leading-relaxed">{hook.desc}</p>
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-300 group-hover:text-white mt-3">
+                      {hook.cta} <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                    </span>
+                  </div>
                 </Link>
-                .
-              </>
-            )}
-          </p>
+              );
+            })}
+          </div>
         </section>
 
         {/* Hero product preview, sits between the CTA copy and the
@@ -745,6 +814,39 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Who builds it. Every line is from the founder story on
+            /About (src/pages/About.jsx); no testimonials or numbers are
+            invented here. */}
+        <section aria-labelledby="founder-heading" className="relative z-10 max-w-4xl mx-auto px-6 pb-24">
+          <div className="gecko-card backdrop-blur p-6 md:p-10 grid md:grid-cols-[auto,1fr] gap-6 items-start">
+            <img src={LOGO_URL} alt="" aria-hidden="true" width="64" height="64" className="h-16 w-16 rounded-xl" loading="lazy" />
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300">Who builds it</p>
+              <h2 id="founder-heading" className="text-2xl md:text-3xl font-bold text-white mt-1">
+                Made by a crested gecko breeder, for the next one
+              </h2>
+              <p className="text-slate-300 leading-relaxed mt-3">
+                Geck Inspect started with rescue crested geckos and a retiring breeder&rsquo;s animals that
+                suddenly needed records, feeding schedules and pairings. Nothing out there fit a new breeder,
+                so Tennyson built the app he wanted, ran his own collection on it for about a year, and then
+                opened it to everyone.
+              </p>
+              <p className="text-slate-300 leading-relaxed mt-3">
+                Questions, bugs and feature ideas go straight to him through the Contact page or the
+                feedback tab inside the app.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                <Link to="/About" className="inline-flex items-center gap-1.5 min-h-11 font-semibold text-emerald-300 hover:text-white">
+                  Read the full story <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Link>
+                <Link to="/Contact" className="inline-flex items-center gap-1.5 min-h-11 font-semibold text-emerald-300 hover:text-white">
+                  Ask a question
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Email capture lead-magnet, sends Care Guide and Genetics
             Guide PDFs via Resend. Recorded in newsletter_subscribers.
             Sits after the comparison block so visitors who've already
@@ -891,10 +993,10 @@ export default function Home() {
         {/* Final CTA */}
         <section className="relative z-10 max-w-4xl mx-auto px-6 pb-24 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Boot up your geckOS.
+            Start with one gecko.
           </h2>
-          <p className="text-slate-400 mb-3 text-lg">
-            Create a free account, add your first gecko, and see what it&rsquo;s worth in minutes.
+          <p className="text-slate-300 mb-3 text-lg">
+            A photo and a name is enough to begin. Add its morph and Geck Inspect shows what it&rsquo;s worth.
           </p>
           <p className="text-emerald-200/70 mb-8 text-sm flex items-center justify-center gap-2">
             <Smartphone className="w-4 h-4" />
@@ -917,11 +1019,11 @@ export default function Home() {
                 </Link>
                 <Button
                   size="lg"
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => handleContinueAsGuest('bottom')}
-                  className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold text-base px-8 py-6 backdrop-blur"
+                  className="text-emerald-100 hover:bg-emerald-900/40 hover:text-white font-semibold text-base px-6 py-6 underline-offset-4 hover:underline"
                 >
-                  Try the demo first
+                  Or look around the demo collection
                 </Button>
               </>
             ) : (
@@ -945,7 +1047,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
             <div className="col-span-2">
               <div className="flex items-center gap-3">
-                <img src={LOGO_URL} alt="Geck Inspect" className="h-8 w-8 rounded" />
+                <img src={LOGO_URL} alt="" width="32" height="32" className="h-8 w-8 rounded" loading="lazy" />
                 <span className="font-bold text-slate-100">Geck Inspect</span>
               </div>
               <p className="text-slate-500 mt-3 leading-relaxed max-w-md">

@@ -63,8 +63,9 @@ export default function OnboardingRolePrompt({ isOpen, onChoose, onDismiss }) {
             <GitBranch className="w-7 h-7 text-emerald-400 mb-3" />
             <div className="font-semibold text-slate-100">I breed them</div>
             <div className="text-sm text-slate-400 mt-1">
-              The full toolkit: pairings, clutches, lineage, sales stats, and
-              storefront, plus everything a keeper gets.
+              The full toolkit: pairings, eggs, lineage, value estimates and
+              sales, plus everything a keeper gets. Have a spreadsheet? You
+              can import it.
             </div>
           </button>
         </div>
@@ -78,8 +79,9 @@ export default function OnboardingRolePrompt({ isOpen, onChoose, onDismiss }) {
             A bit of both, show me everything
           </Button>
         </div>
-        <p className="text-center text-xs text-slate-500">
-          You can switch this anytime in Settings.
+        <p className="text-center text-xs text-slate-400">
+          Next you add your first gecko: a photo and a name is enough. You can
+          switch this choice anytime in Settings.
         </p>
       </DialogContent>
     </Dialog>

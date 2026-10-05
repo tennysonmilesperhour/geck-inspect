@@ -23,11 +23,23 @@ import { PRODUCT_TOUR_SLIDES, SCREENSHOTS_BASE } from '@/data/product-tour';
 
 const ADVANCE_MS = 4500;
 
+// Only slides whose file is committed (shipped: true in
+// src/data/product-tour.js) are requested. Probing every candidate cost
+// each landing visit nine extra requests: production rewrites a missing
+// /screenshots/*.png to the app HTML, so each probe downloaded a page
+// before failing (October 2026 first-impression review).
+const SHIPPED_SLIDES = PRODUCT_TOUR_SLIDES.filter((s) => s.shipped);
+
 export default function ProductTour() {
+  if (SHIPPED_SLIDES.length === 0) return null;
+  return <ProductTourSlides />;
+}
+
+function ProductTourSlides() {
   // Track which slides have valid images. Start with all candidates;
   // mark each as { ok: null } and the <img onError> drops it.
   const [statuses, setStatuses] = useState(() =>
-    PRODUCT_TOUR_SLIDES.map((s) => ({ ...s, ok: null }))
+    SHIPPED_SLIDES.map((s) => ({ ...s, ok: null }))
   );
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);

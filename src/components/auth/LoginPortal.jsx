@@ -3,7 +3,7 @@ import { redirectFromSearch, rememberPostAuthRedirect } from '@/lib/postAuthRedi
 import { isNativePlatform, detectPlatform } from '@/lib/revenuecat';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { APP_LOGO_URL } from '@/lib/constants';
+import { APP_LOGO_ICON_URL } from '@/lib/constants';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Mail, Lock, User as UserIcon } from 'lucide-react';
+import { Loader2, Mail, Lock, User as UserIcon, Check } from 'lucide-react';
 
 // Supabase refuses a password sign-in for an unconfirmed address with
 // code email_not_confirmed (older versions only say so in the message).
@@ -215,7 +215,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center space-y-6">
           <img
-            src={APP_LOGO_URL}
+            src={APP_LOGO_ICON_URL}
             alt="Geck Inspect"
             className="h-16 w-16 rounded-xl mx-auto"
           />
@@ -253,16 +253,40 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-7">
+      <div className="w-full max-w-md space-y-5 md:space-y-7">
 
-        {/* Branding */}
-        <div className="text-center space-y-3">
-          <img
-            src={APP_LOGO_URL}
-            alt="Geck Inspect"
-            className="h-16 w-16 rounded-xl mx-auto"
-          />
-          <h1 className="text-4xl font-bold text-white">Geck Inspect</h1>
+        {/* Branding. The logo leads back to the landing page (there was no
+            way back before). Sign-up gets a short reminder of what the
+            free account includes, each line true today: the Free plan's
+            10 geckos (src/lib/tierLimits.js), value estimates on every
+            plan, and one free Morph ID. */}
+        <div className="text-center space-y-2 md:space-y-3">
+          <Link to="/" className="inline-block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400" aria-label="Geck Inspect home">
+            <img
+              src={APP_LOGO_ICON_URL}
+              alt=""
+              width="64"
+              height="64"
+              className="h-12 w-12 md:h-16 md:w-16 rounded-xl mx-auto"
+            />
+          </Link>
+          <h1 className="text-2xl md:text-4xl font-bold text-white">
+            {isForgot ? 'Geck Inspect' : isSignUp ? 'Create your free account' : 'Welcome back'}
+          </h1>
+          {isSignUp && !isForgot && (
+            <ul className="inline-flex flex-col items-start gap-1 md:gap-1.5 text-sm text-slate-300 text-left">
+              {[
+                'Up to 10 geckos free, no credit card',
+                'Value estimates from real crested gecko listings',
+                'Your first AI Morph ID is free',
+              ].map((line) => (
+                <li key={line} className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 text-emerald-400 shrink-0" aria-hidden="true" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Auth card */}

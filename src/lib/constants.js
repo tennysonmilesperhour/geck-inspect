@@ -10,6 +10,11 @@
 // include og:image / JSON-LD where absolute URLs are required.
 export const APP_LOGO_URL = 'https://geckinspect.com/logo.png';
 
+// On-page logo for headers and the sign-in screen (32 to 64 px). Same
+// origin, so it also works on preview deployments, and 8 KB instead of
+// the 170 KB 600 px master above.
+export const APP_LOGO_ICON_URL = '/logo-96.png';
+
 // The standalone geck-data (Market Intelligence) app lives on its own
 // subdomain so it deploys independently. The topbar launcher opens this
 // in a new tab; the in-app Business Tools Market Analytics module is the
