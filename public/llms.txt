@@ -227,29 +227,34 @@ Every major crested gecko morph has its own dedicated page with description, key
 - Phantom Pinstripe: https://geckinspect.com/MorphGuide/phantom-pinstripe
 - Dalmatian: https://geckinspect.com/MorphGuide/dalmatian
 - Super Dalmatian: https://geckinspect.com/MorphGuide/super-dalmatian
-- Lilly White: https://geckinspect.com/MorphGuide/lilly-white
-- Super Lilly White: https://geckinspect.com/MorphGuide/super-lilly-white
 - Flame: https://geckinspect.com/MorphGuide/flame
-- Cappuccino: https://geckinspect.com/MorphGuide/cappuccino
-- Frappuccino: https://geckinspect.com/MorphGuide/frappuccino
+- Tiger: https://geckinspect.com/MorphGuide/tiger
 - Brindle: https://geckinspect.com/MorphGuide/brindle
 - Extreme Brindle: https://geckinspect.com/MorphGuide/extreme-brindle
-- Tiger: https://geckinspect.com/MorphGuide/tiger
 - Tiger / Brindle: https://geckinspect.com/MorphGuide/tiger-brindle
-- Tricolor: https://geckinspect.com/MorphGuide/tricolor
-- Bicolor: https://geckinspect.com/MorphGuide/bicolor
-- Patternless: https://geckinspect.com/MorphGuide/patternless
-- Axanthic: https://geckinspect.com/MorphGuide/axanthic
 - Soft Scale: https://geckinspect.com/MorphGuide/soft-scale
 - Super Soft Scale: https://geckinspect.com/MorphGuide/super-soft-scale
 - White Wall: https://geckinspect.com/MorphGuide/white-wall
-- White Wall / White Spot: https://geckinspect.com/MorphGuide/white-wall-white-spot
-- Buckskin: https://geckinspect.com/MorphGuide/buckskin
-- Chocolate: https://geckinspect.com/MorphGuide/chocolate
-- Olive: https://geckinspect.com/MorphGuide/olive
+- White Wall White Spot: https://geckinspect.com/MorphGuide/white-wall-white-spot
+- Cappuccino: https://geckinspect.com/MorphGuide/cappuccino
+- Frappuccino: https://geckinspect.com/MorphGuide/frappuccino
+- Lilly White: https://geckinspect.com/MorphGuide/lilly-white
+- Axanthic: https://geckinspect.com/MorphGuide/axanthic
+- Albino: https://geckinspect.com/MorphGuide/albino
+- Hypo (Hypomelanistic): https://geckinspect.com/MorphGuide/hypo
+- Patternless: https://geckinspect.com/MorphGuide/patternless
+- Moonglow: https://geckinspect.com/MorphGuide/moonglow
+- Translucent: https://geckinspect.com/MorphGuide/translucent
 - Red Base: https://geckinspect.com/MorphGuide/red-base
 - Orange Base: https://geckinspect.com/MorphGuide/orange-base
 - Yellow Base: https://geckinspect.com/MorphGuide/yellow-base
+- Olive: https://geckinspect.com/MorphGuide/olive
+- Chocolate: https://geckinspect.com/MorphGuide/chocolate
+- Lavender: https://geckinspect.com/MorphGuide/lavender
+- Buckskin: https://geckinspect.com/MorphGuide/buckskin
+- Cream: https://geckinspect.com/MorphGuide/cream
+- Tricolor: https://geckinspect.com/MorphGuide/tricolor
+- Bicolor: https://geckinspect.com/MorphGuide/bicolor
 
 ## Contact
 

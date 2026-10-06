@@ -1,6 +1,6 @@
 # Geck Inspect, full reference for AI assistants
 
-> Generated: 2026-09-29 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, and editorial blog. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
+> Generated: 2026-10-06 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, and editorial blog. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
 
 ---
 
@@ -769,7 +769,7 @@ _Permalink: https://geckinspect.com/MorphGuide/extreme-harlequin_
 
 The top tier of harlequin pattern, high-coverage, high-contrast, often with solid cream flanks and legs.
 
-Extreme harlequin is the highest expression of the harlequin polygenic trait: pattern that nearly consumes the base color on the legs, flanks, and sometimes the dorsum. Top extreme harlequin animals can appear nearly cream-and-dark-red all over. The line between harlequin and extreme harlequin is a judgment call rather than a bright line, but experienced keepers use coverage (≥60–70% of flanks) as a rough threshold.
+Extreme harlequin is the highest expression of the harlequin polygenic trait: pattern that nearly consumes the base color on the legs, flanks, and sometimes the dorsum. Top extreme harlequin animals can appear nearly cream-and-dark-red all over. The line between harlequin and extreme harlequin is a judgment call rather than a bright line, but experienced keepers use coverage (≥60 to 70% of flanks) as a rough threshold.
 
 **History.** Came from the tightening of harlequin selection in the mid-2000s, with Hatcher's Cresties and AC Reptiles among the early drivers.
 
@@ -791,7 +791,7 @@ _Permalink: https://geckinspect.com/MorphGuide/pinstripe_
 
 Raised cream scales running along the dorsal ridge from neck to tail base.
 
-Pinstripe is a polygenic pattern trait where the raised scales along the dorsal ridge become cream or yellow, forming a bright parallel line down the back. Pinstripe quality is judged by percentage, "full pinstripe" describes 100% coverage from the back of the neck to the base of the tail. Partial pinstripe (50–90%) is far more common than full.
+Pinstripe is a polygenic pattern trait where the raised scales along the dorsal ridge become cream or yellow, forming a bright parallel line down the back. Pinstripe quality is judged by percentage, "full pinstripe" describes 100% coverage from the back of the neck to the base of the tail. Partial pinstripe (50 to 90%) is far more common than full.
 
 **History.** One of the first named polygenic traits in the hobby, recognized by the early 2000s.
 
@@ -839,7 +839,7 @@ Dalmatian is a polygenic trait producing discrete, round dark spots across the g
 
 **Key features:**
 - Discrete round dark spots, not pattern smudging or flecking
-- Spots darken and increase in count as the gecko ages, peaking around 12–18 months
+- Spots darken and increase in count as the gecko ages, peaking around 12 to 18 months
 - Quality graded by spot count, contrast, and distribution
 - Stacks with virtually every other trait: dalmatian harlequin, dalmatian pinstripe, super dalmatian combo animals are common
 
@@ -990,7 +990,7 @@ Homozygous form of soft scale, dramatically reduced scales and a near-leather ap
 
 Super soft scale is the homozygous expression of the soft scale gene. Two copies reduce scales far more dramatically than a single copy, producing a nearly smooth, leather-textured animal. Considered visually stunning and still quite rare in the hobby.
 
-**History.** First confirmed around 2022–2023 as early soft scale projects matured to the F2 generation.
+**History.** First confirmed around 2022 to 2023 as early soft scale projects matured to the F2 generation.
 
 **Key features:**
 - Dramatically reduced scale texture across the entire body
@@ -1116,6 +1116,29 @@ Axanthic is the only fully-proven recessive morph in crested geckos. It removes 
 
 **Notes.** Because it is a clean recessive, Punnett squares work: visual × visual → 100% visual; visual × het → 50% visual, 50% het; het × het → 25% visual, 50% het, 25% non-carrier.
 
+### Albino
+
+_Permalink: https://geckinspect.com/MorphGuide/albino_
+
+**Rarity:** very_rare  
+**Inheritance:** recessive  
+**Category:** color
+
+The newest crested gecko color gene: no black pigment and red eyes. The first healthy albino hatchlings were announced by Eureka Exotics in March 2026.
+
+An albino crested gecko lacks melanin, the black and brown pigment, so the animal shows only its yellow, orange, red and cream pigments, and its eyes are red or pink instead of dark. For years albino crested geckos were treated as a myth: the albino-looking hatchlings reported before 2026 were weak, deformed or did not survive, and most "albino" sales were pale animals or edited photos. That changed on 5 March 2026, when Eureka Exotics (Nicole Cullen, Newberry, Florida) announced the hatching of what appear to be the first viable albino crested geckos: babies with no visible melanin, red pupils and normal, robust health. Albinism is recessive in essentially every reptile where it has been worked out, so the crested gecko version is expected to be recessive too, but that still has to be shown by breeding the first albinos and their siblings. Until then, treat any "het albino" offer with caution.
+
+**History.** Albino-like crested geckos were reported several times before 2026, but none were healthy enough to breed. On 5 March 2026 Eureka Exotics announced the first apparently viable albino hatchlings. As of October 2026 the trait is still being worked: the next milestone is producing albino offspring from those animals, which would confirm how it is inherited.
+
+**Key features:**
+- No black or brown pigment (melanin)
+- Red or pink eyes instead of dark eyes
+- Yellow, orange, red and cream pigment still show, so albinos look warm and bright
+- First healthy hatchlings announced 5 March 2026 by Eureka Exotics
+- Expected recessive, like albinism in other reptiles, but not yet proven by test breeding
+
+**Notes.** Albino plus Axanthic is the combination keepers have waited for. Albino removes black pigment and Axanthic removes yellow and red, so a gecko carrying both should have almost no pigment left: a true white animal, the long-theorized Moonglow. Nobody has produced one yet, but with albinos now hatching, it has gone from impossible to a matter of breeding. Be wary of any seller offering albinos, het albinos or albino combos before the founding breeder has proven the gene.
+
 ### Hypo (Hypomelanistic)
 
 _Permalink: https://geckinspect.com/MorphGuide/hypo_
@@ -1156,18 +1179,24 @@ Patternless crested geckos lack visible markings and display a single solid base
 
 _Permalink: https://geckinspect.com/MorphGuide/moonglow_
 
-**Rarity:** rare  
+**Rarity:** very_rare  
 **Inheritance:** line-bred  
 **Category:** color
 
-Line-bred ultra-pale, near-white patternless animal, essentially a "super-cream" patternless with no visible markings.
+The long-theorized all-white crested gecko. Line-bred near-white animals are sold as Moonglow today, and the first albinos (2026) make a true Moonglow possible for the first time.
 
-Moonglow is a line-bred trait for near-white patternless animals. These geckos display an almost solid cream or white body with no discernible pattern. Maintained through tight selection over generations. Not related to axanthic, moonglow animals can still show warm cream tones.
+Moonglow is the name keepers use for a crested gecko that is white all over and stays white when fired up. The name means two things in the hobby today. First, line-bred near-white animals: patternless geckos selected over generations for an almost solid cream or white body. These are sold as Moonglow, but they still have dark eyes and normal pigment cells, so most warm up to cream, tan or gray when fired up, and their offspring vary. Second, the "true" Moonglow: a gecko with no visible pigment at all. That animal was long considered theoretical, because crested geckos had no albino gene to remove black pigment. In March 2026 Eureka Exotics announced the first healthy albino crested geckos, which supplies the missing piece. Axanthic already removes yellow and red pigment, and albino removes black, so an albino Axanthic should be close to pigment-free. Boa breeders reached the same goal the same way: their Snow is albino plus anerythristic, and their Moonglow adds hypo to that. No crested gecko combining albino and Axanthic has been produced yet, so a true Moonglow is now possible but not yet real.
+
+**History.** Breeders have chased an all-white crested gecko for years, combining very pale patternless, cream, Axanthic and Lilly White lines. The results were near-white, never pigment-free, which is why Moonglow was called theoretical. The first viable albino hatchlings, announced by Eureka Exotics on 5 March 2026, removed the main obstacle.
 
 **Key features:**
-- Nearly solid cream/white body with no visible pattern
-- Line-bred, inheritance is probabilistic
-- Often used as a breeding base for extreme cream or white-wall projects
+- Goal: a solid white crested gecko that stays white when fired up
+- Line-bred "Moonglow" animals today are near-white, with dark eyes, and can darken when fired up
+- A true Moonglow needs black pigment removed (albino) and yellow and red removed (Axanthic)
+- Albino crested geckos were first hatched healthy in March 2026, so the route now exists
+- No albino Axanthic crested gecko has been produced yet
+
+**Notes.** Treat any "true Moonglow" or "albino Moonglow" offered for sale today with suspicion: as of October 2026 none is known to exist. Line-bred Moonglows are real animals and can be beautiful, but they are a selection project, not a single gene.
 
 ### Translucent
 

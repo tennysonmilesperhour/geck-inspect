@@ -612,10 +612,10 @@ export const MORPH_GUIDE = {
                 'No such thing. Cresties cannot be blue genetically. Usually just lighting or an axanthic photographed under cool light.',
             },
             {
-              tone: 'ruby',
+              tone: 'amber',
               title: '"Albino crested gecko"',
               text:
-                'No confirmed albino morph exists in crested geckos as of now. Any seller claiming this is mistaken or dishonest.',
+                'Albinos are now real but brand new: Eureka Exotics announced the first healthy albino hatchlings in March 2026, and the gene is not yet proven by breeding. Check the eyes (a true albino has red or pink eyes) and ask where the line came from. Treat "het albino" offers with caution for now.',
             },
             {
               tone: 'amber',

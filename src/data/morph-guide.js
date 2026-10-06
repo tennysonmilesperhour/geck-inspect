@@ -687,6 +687,35 @@ export const MORPHS = [
       'Because it is a clean recessive, Punnett squares work: visual × visual → 100% visual; visual × het → 50% visual, 50% het; het × het → 25% visual, 50% het, 25% non-carrier.',
   },
   {
+    slug: 'albino',
+    name: 'Albino',
+    aliases: ['Amelanistic', 'Albino crested gecko'],
+    category: 'color',
+    inheritance: 'recessive',
+    rarity: 'very_rare',
+    summary:
+      'The newest crested gecko color gene: no black pigment and red eyes. The first healthy albino hatchlings were announced by Eureka Exotics in March 2026.',
+    description:
+      'An albino crested gecko lacks melanin, the black and brown pigment, so the animal shows only its yellow, orange, red and cream pigments, and its eyes are red or pink instead of dark. For years albino crested geckos were treated as a myth: the albino-looking hatchlings reported before 2026 were weak, deformed or did not survive, and most "albino" sales were pale animals or edited photos. That changed on 5 March 2026, when Eureka Exotics (Nicole Cullen, Newberry, Florida) announced the hatching of what appear to be the first viable albino crested geckos: babies with no visible melanin, red pupils and normal, robust health. Albinism is recessive in essentially every reptile where it has been worked out, so the crested gecko version is expected to be recessive too, but that still has to be shown by breeding the first albinos and their siblings. Until then, treat any "het albino" offer with caution.',
+    keyFeatures: [
+      'No black or brown pigment (melanin)',
+      'Red or pink eyes instead of dark eyes',
+      'Yellow, orange, red and cream pigment still show, so albinos look warm and bright',
+      'First healthy hatchlings announced 5 March 2026 by Eureka Exotics',
+      'Expected recessive, like albinism in other reptiles, but not yet proven by test breeding',
+    ],
+    visualIdentifiers: [
+      'Eye color is the tell: a true albino has red or pink pupils, never black',
+      'No dark pattern, dark dorsal or dark spots, even when fired up',
+      'A pale or "white" gecko with dark eyes is not albino (see Moonglow, Lilly White and Cream)',
+    ],
+    history:
+      'Albino-like crested geckos were reported several times before 2026, but none were healthy enough to breed. On 5 March 2026 Eureka Exotics announced the first apparently viable albino hatchlings. As of October 2026 the trait is still being worked: the next milestone is producing albino offspring from those animals, which would confirm how it is inherited.',
+    combinesWith: ['axanthic', 'lilly-white', 'moonglow', 'harlequin', 'pinstripe'],
+    notes:
+      'Albino plus Axanthic is the combination keepers have waited for. Albino removes black pigment and Axanthic removes yellow and red, so a gecko carrying both should have almost no pigment left: a true white animal, the long-theorized Moonglow. Nobody has produced one yet, but with albinos now hatching, it has gone from impossible to a matter of breeding. Be wary of any seller offering albinos, het albinos or albino combos before the founding breeder has proven the gene.',
+  },
+  {
     slug: 'hypo',
     name: 'Hypo (Hypomelanistic)',
     aliases: ['Hypomelanistic', 'Hypomelanism'],
@@ -731,22 +760,33 @@ export const MORPHS = [
   {
     slug: 'moonglow',
     name: 'Moonglow',
-    aliases: [],
+    aliases: ['True Moonglow'],
     category: 'color',
     inheritance: 'line-bred',
-    rarity: 'rare',
+    rarity: 'very_rare',
     priceTier: '$$$',
-    priceRange: '$500 to $1,500',
+    priceRange: '$500 to $1,500 for line-bred near-white animals',
     summary:
-      'Line-bred ultra-pale, near-white patternless animal, essentially a "super-cream" patternless with no visible markings.',
+      'The long-theorized all-white crested gecko. Line-bred near-white animals are sold as Moonglow today, and the first albinos (2026) make a true Moonglow possible for the first time.',
     description:
-      'Moonglow is a line-bred trait for near-white patternless animals. These geckos display an almost solid cream or white body with no discernible pattern. Maintained through tight selection over generations. Not related to axanthic, moonglow animals can still show warm cream tones.',
+      'Moonglow is the name keepers use for a crested gecko that is white all over and stays white when fired up. The name means two things in the hobby today. First, line-bred near-white animals: patternless geckos selected over generations for an almost solid cream or white body. These are sold as Moonglow, but they still have dark eyes and normal pigment cells, so most warm up to cream, tan or gray when fired up, and their offspring vary. Second, the "true" Moonglow: a gecko with no visible pigment at all. That animal was long considered theoretical, because crested geckos had no albino gene to remove black pigment. In March 2026 Eureka Exotics announced the first healthy albino crested geckos, which supplies the missing piece. Axanthic already removes yellow and red pigment, and albino removes black, so an albino Axanthic should be close to pigment-free. Boa breeders reached the same goal the same way: their Snow is albino plus anerythristic, and their Moonglow adds hypo to that. No crested gecko combining albino and Axanthic has been produced yet, so a true Moonglow is now possible but not yet real.',
     keyFeatures: [
-      'Nearly solid cream/white body with no visible pattern',
-      'Line-bred, inheritance is probabilistic',
-      'Often used as a breeding base for extreme cream or white-wall projects',
+      'Goal: a solid white crested gecko that stays white when fired up',
+      'Line-bred "Moonglow" animals today are near-white, with dark eyes, and can darken when fired up',
+      'A true Moonglow needs black pigment removed (albino) and yellow and red removed (Axanthic)',
+      'Albino crested geckos were first hatched healthy in March 2026, so the route now exists',
+      'No albino Axanthic crested gecko has been produced yet',
     ],
-    combinesWith: ['cream', 'white-wall', 'lilly-white', 'axanthic'],
+    visualIdentifiers: [
+      'Fire the gecko up: a line-bred Moonglow usually warms to cream, tan or gray; the true goal stays white',
+      'Check the eyes: line-bred Moonglows have dark eyes, an albino-based Moonglow would have red or pink eyes',
+      'Edited photos are common, so ask for unedited video in natural light',
+    ],
+    history:
+      'Breeders have chased an all-white crested gecko for years, combining very pale patternless, cream, Axanthic and Lilly White lines. The results were near-white, never pigment-free, which is why Moonglow was called theoretical. The first viable albino hatchlings, announced by Eureka Exotics on 5 March 2026, removed the main obstacle.',
+    combinesWith: ['albino', 'axanthic', 'cream', 'white-wall', 'lilly-white'],
+    notes:
+      'Treat any "true Moonglow" or "albino Moonglow" offered for sale today with suspicion: as of October 2026 none is known to exist. Line-bred Moonglows are real animals and can be beautiful, but they are a selection project, not a single gene.',
   },
   {
     slug: 'translucent',
