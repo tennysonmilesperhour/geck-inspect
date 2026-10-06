@@ -2,8 +2,8 @@ import { useId } from 'react';
 import { DEFAULT_PALETTE, mixHex } from './illustratedGeckoPresets';
 
 // Fixed anatomical anchors: pigment grows across the same specimen at every slider value.
-const BODY = 'M154,108C188,85 238,91 276,108C318,118 353,127 378,151C405,178 429,199 463,221C488,237 518,235 527,214C533,201 526,193 518,197C514,200 514,207 520,210C508,205 513,188 525,190C544,193 544,220 530,235C504,263 466,247 442,229C411,208 391,193 371,188C344,211 313,211 281,205C241,207 198,197 176,177C159,157 144,132 154,108Z';
-const HEAD = 'M62,139C58,132 66,125 78,116L101,90C119,73 145,76 163,92L191,116C196,134 187,158 171,170C154,180 132,174 109,163L79,152Q65,149 62,139Z';
+const BODY = 'M154,108C188,85 238,91 276,108C318,118 353,127 378,151C411,173 442,190 479,205C511,219 549,209 555,183C559,165 546,154 535,158C528,161 527,170 532,173C533,166 537,162 542,164C553,169 548,189 535,198C516,211 495,205 475,195C433,174 404,163 371,188C344,211 313,211 281,205C241,207 198,197 176,177C159,157 144,132 154,108Z';
+const HEAD = 'M58,140Q56,134 65,128L93,105C103,87 120,79 139,85Q157,89 169,105L189,123C190,140 182,154 166,162Q145,171 124,163L83,151Q61,149 58,140Z';
 const DORSAL = 'M155,104C196,83 238,89 278,107C322,117 352,125 379,150';
 const INNER_CREST = 'M160,113C204,102 240,105 280,120C313,127 345,137 368,155';
 function crestPoint(t, row) {
@@ -36,7 +36,9 @@ function foot(leg, color, outline) {
 export default function ObliqueGecko({ phenotype: p, className, size, label, decorative, focus }) {
   const id = `og${useId().replace(/[^a-z0-9]/gi, '')}`;
   const pal = { ...DEFAULT_PALETTE, ...p.palette };
-  const outline = mixHex(pal.base, pal.outline, 0.65);
+  // A light paper wash keeps the plate quiet without changing morph hue relationships.
+  pal.base = mixHex(pal.base, '#f3e8d0', .12);
+  const outline = mixHex(pal.base, '#33291e', 0.78);
   const dorsal = p.dorsalStyle === 'solid' ? pal.dorsal || pal.pattern : pal.pattern;
   const pin = p.phantom ? mixHex(pal.base, pal.pattern, 0.2) : pal.pattern;
   const crest = mixHex(pal.base, pal.pattern, 0.28);
@@ -44,16 +46,17 @@ export default function ObliqueGecko({ phenotype: p, className, size, label, dec
   return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 300" className={className} style={size ? { width: size, height: size * 300 / 580 } : undefined} role={decorative ? undefined : 'img'} aria-hidden={decorative ? 'true' : undefined} aria-label={decorative ? undefined : label}>
     <defs>
       <clipPath id={`${id}-clip`}><path d={BODY} /><path d={HEAD} />{limbs}</clipPath>
-      <linearGradient id={`${id}-body`} x1="0" x2="0" y1="0" y2="1"><stop stopColor={mixHex(pal.base, '#fff4d4', .22)} /><stop offset=".4" stopColor={pal.base} /><stop offset="1" stopColor={mixHex(pal.base, pal.dark, .45)} /></linearGradient>
-      <linearGradient id={`${id}-relief`} x1="0" x2="0" y1="0" y2="1"><stop stopColor="#fff7df" stopOpacity=".22" /><stop offset=".55" stopColor="#fff7df" stopOpacity="0" /><stop offset="1" stopColor={pal.dark} stopOpacity=".46" /></linearGradient>
+      <linearGradient id={`${id}-body`} x1="0" x2="0" y1="0" y2="1"><stop stopColor={mixHex(pal.base, '#fff4d4', .12)} /><stop offset=".4" stopColor={pal.base} /><stop offset="1" stopColor={mixHex(pal.base, pal.dark, .18)} /></linearGradient>
+      <linearGradient id={`${id}-relief`} x1="0" x2="0" y1="0" y2="1"><stop stopColor="#fff7df" stopOpacity=".22" /><stop offset=".55" stopColor="#fff7df" stopOpacity="0" /><stop offset="1" stopColor={pal.dark} stopOpacity=".12" /></linearGradient>
       <radialGradient id={`${id}-iris`} cx=".35" cy=".3"><stop stopColor={mixHex(pal.eye, '#fff4cc', .35)} /><stop offset="1" stopColor={mixHex(pal.eye, pal.dark, .5)} /></radialGradient>
-      <pattern id={`${id}-scales`} width="5" height="4.3" patternUnits="userSpaceOnUse"><path d="M1,.8l1.4,.6v1.4l-1.4,.6l-1.4,-.6V1.4ZM3.6,3l1.2,.5v1.2l-1.2,.5l-1.2,-.5V3.5Z" fill="none" stroke={pal.dark} strokeWidth=".32" opacity=".25" /><circle cx="1" cy="1.2" r=".35" fill="#fff4dc" opacity=".3" /></pattern>
+      <pattern id={`${id}-scales`} width="9" height="7" patternUnits="userSpaceOnUse"><path d="M1,2q1.2,-1 2.5,.1q.2,1.3 -1,1.6M6,5q1.2,-1 2.1,.2" fill="none" stroke={outline} strokeWidth=".4" opacity=".36" /><circle cx="5" cy="1" r=".25" fill={outline} opacity=".28" /></pattern>
+      <clipPath id={`${id}-shade`}><path d="M60,146Q120,164 170,160Q210,181 259,180Q319,181 369,173L390,202L420,240L560,260L560,300L0,300Z" /></clipPath>
     </defs>
-    <ellipse cx="298" cy="257" rx="205" ry="7" fill="#273c2c" opacity=".065" />
-    {LIMBS.filter(l => l.far).map(leg => <g key={leg.key} opacity=".78"><path d={leg.path} fill={mixHex(pal.base, pal.dark, .25)} stroke={outline} strokeWidth="1.2" />{foot(leg, mixHex(pal.base, pal.dark, .2), outline)}</g>)}
-    <path d={BODY} fill={`url(#${id}-body)`} stroke={outline} strokeWidth="1.2" />
-    <path d={HEAD} fill={`url(#${id}-body)`} stroke={outline} strokeWidth="1.2" />
-    {LIMBS.filter(l => !l.far).map(leg => <g key={leg.key}><path d={leg.path} fill={`url(#${id}-body)`} stroke={outline} strokeWidth="1.1" />{foot(leg, pal.base, outline)}</g>)}
+    <path d="M91,264H479" stroke="#76664a" strokeWidth=".45" opacity=".22" />
+    {LIMBS.filter(l => l.far).map(leg => <g key={leg.key} opacity=".78"><path d={leg.path} fill={mixHex(pal.base, pal.dark, .25)} stroke={outline} strokeWidth=".85" />{foot(leg, mixHex(pal.base, pal.dark, .2), outline)}</g>)}
+    <path d={BODY} fill={`url(#${id}-body)`} stroke={outline} strokeWidth=".85" />
+    <path d={HEAD} fill={`url(#${id}-body)`} stroke={outline} strokeWidth=".85" />
+    {LIMBS.filter(l => !l.far).map(leg => <g key={leg.key}><path d={leg.path} fill={`url(#${id}-body)`} stroke={outline} strokeWidth=".8" />{foot(leg, pal.base, outline)}</g>)}
     <g clipPath={`url(#${id}-clip)`}>
       <path d={DORSAL} stroke={dorsal} strokeWidth={2 + p.dorsal * (p.dorsalStyle === 'solid' ? 28 : 25)} opacity={p.dorsal} fill="none" />
       <path d="M83,120C106,104 112,89 133,91L159,103L175,121L165,132L143,124L122,125L107,137Z" fill={dorsal} opacity={p.dorsal * .88} />
@@ -66,8 +69,14 @@ export default function ObliqueGecko({ phenotype: p, className, size, label, dec
       <path d="M63,145Q103,165 151,174" stroke="#fbf9f1" strokeWidth="5" fill="none" opacity={p.lillyWhite} />
       {SPOTS.map((spot, i) => <path key={`spot${i}`} d={island(spot.x, spot.y, spot.r, spot.r * .9, i + 90)} fill={i % 10 / 10 < p.redSpots ? pal.redSpot : pal.spot} opacity={smooth(i, i + 1, p.dalmatian)} />)}
       <rect width="580" height="300" fill={`url(#${id}-scales)`} />
+      <g clipPath={`url(#${id}-shade)`} fill="none" stroke={outline} strokeWidth=".45" opacity=".42">{Array.from({ length: 92 }, (_, i) => { const x=60+i*5.4; return <path key={`engrave${i}`} d={`M${x},137q-5,15 -14,26m18,-9q-8,15 -17,25m19,-5l-12,22m17,-5l-9,16m14,-2l-7,14`} />; })}</g>
       <path d={BODY} fill={`url(#${id}-relief)`} /><path d={HEAD} fill={`url(#${id}-relief)`} />
       <path d="M175,162Q203,187 227,185M309,190Q336,190 347,203" fill="none" stroke={pal.dark} strokeWidth=".8" opacity=".4" />
+    </g>
+    <g clipPath={`url(#${id}-clip)`} fill="none" stroke={outline} strokeLinecap="round">
+      <path d="M84,131Q97,114 106,112M84,136Q99,123 105,124M91,140Q109,132 111,136M131,133Q144,124 155,126M138,144Q154,136 164,131M146,151Q162,145 171,137M174,145Q182,132 178,122M187,153Q218,172 249,173M231,184Q277,199 310,192M350,155Q361,160 368,171M378,172Q413,173 447,190M450,197Q492,219 521,208M164,176Q176,180 184,176M165,186l12,4M157,198l11,4M344,193q11,2 18,-2M350,207l14,-1M354,218l10,-1" strokeWidth=".65" opacity=".5" />
+      {Array.from({ length: 33 }, (_, i) => <path key={`tail-scale${i}`} d={`M${386+i*4.5},${177+Math.sin(i/33*Math.PI)*30}l-2,4`} strokeWidth=".4" opacity=".35" />)}
+      {Array.from({ length: 28 }, (_, i) => <path key={`cheek-scale${i}`} d={`M${86+i%7*8},${133+Math.floor(i/7)*6}q1,-1 3,0`} strokeWidth=".5" opacity=".4" />)}
     </g>
     <path d={DORSAL} stroke={crest} strokeWidth="2.2" fill="none" /><path d={INNER_CREST} stroke={crest} strokeWidth="1.5" fill="none" opacity=".85" />
     {[0, 1].map(row => <g key={row}>{Array.from({ length: 36 }, (_, i) => {
@@ -76,15 +85,19 @@ export default function ObliqueGecko({ phenotype: p, className, size, label, dec
       const growth = smooth(threshold, threshold + .16, p.pinstripe);
       return <g key={i}><path d={`M${x},${y}L${nx},${ny}`} stroke={pin} strokeWidth={row ? 2 : 3} strokeLinecap="round" opacity={growth} /><path d={`M${x},${y+1}L${x+1.2},${y-(row ? 2.2 : 4)-i%3*.5}L${nx},${ny+1}`} fill={mixHex(crest, pin, growth)} stroke={outline} strokeWidth=".45" /></g>;
     })}</g>)}
-    <path d="M90,105Q98,81 124,81Q145,81 163,99" fill="none" stroke={crest} strokeWidth="4" />
-    {Array.from({ length: 14 }, (_, i) => {const x = 91+i*5.1; const y = 83 + Math.pow((i-6)/7, 2)*15; return <path key={`lash${i}`} d={`M${x},${y+4}L${x+1},${y-5-i%3}L${x+5},${y+4}`} fill={crest} stroke={outline} strokeWidth=".6" />;})}
+    <path d="M90,105Q98,81 124,81Q145,81 163,99" fill="none" stroke={crest} strokeWidth="2" />
+    {Array.from({ length: 14 }, (_, i) => {const x = 91+i*5.1; const y = 83 + Math.pow((i-6)/7, 2)*15; return <path key={`lash${i}`} d={`M${x},${y+4}L${x+1},${y-3-i%3*.6}L${x+5},${y+4}`} fill={crest} stroke={outline} strokeWidth=".6" />;})}
+    <g transform="translate(120 110) scale(.83) translate(-120 -108)">
     <ellipse cx="120" cy="109" rx="18.5" ry="20" fill={outline} />
     <ellipse cx="120" cy="108" rx="17" ry="18.7" fill={`url(#${id}-iris)`} />
     {Array.from({length: 36}, (_, i) => {const a=i*Math.PI/18;return <path key={`iris${i}`} d={`M${120+Math.cos(a)*6},${108+Math.sin(a)*7}L${120+Math.cos(a)*15.7},${108+Math.sin(a)*17}`} stroke={pal.dark} strokeWidth=".55" opacity=".55" />;})}
     <path d="M120,92Q123,98 121,102Q125,108 121,114Q123,119 120,125Q117,119 118,113Q114,107 118,102Q117,97 120,92Z" fill={p.albino ? '#752b38' : '#1e2015'} />
     <ellipse cx="114" cy="101" rx="2.4" ry="3.3" fill="#fff8df" opacity=".6" />
-    <path d="M64,143Q99,149 130,159Q150,168 163,158" fill="none" stroke={outline} strokeWidth="1.1" />
+    </g>
+    <path d="M64,143Q99,149 130,159Q150,168 163,158" fill="none" stroke={outline} strokeWidth=".8" />
     {[0,1,2,3,4,5,6,7].map(i => <path key={`lip${i}`} d={`M${75+i*9},${146+i*1.8}l0,3`} stroke={outline} strokeWidth=".55" opacity=".6" />)}
+    <path d="M148,140q6,-4 10,-1l-1,8q-4,2 -7,-1Z" fill={outline} opacity=".65" />
+    <path d="M157,163q12,-5 18,-18M166,175q8,2 13,-3M338,200q9,3 13,0M337,234l8,3M136,216l6,5" fill="none" stroke={outline} strokeWidth=".65" opacity=".55" />
     <ellipse cx="77" cy="129" rx="2.1" ry="1.4" fill={outline} />
     {focus && <g fill="none" stroke="#62b99e" strokeWidth="2" strokeDasharray="4 4" opacity=".7">{focus === 'eyes' ? <ellipse cx="120" cy="108" rx="26" ry="28" /> : focus === 'back' ? <path d={DORSAL} /> : <ellipse cx="269" cy="163" rx="97" ry="38" />}</g>}
   </svg>;

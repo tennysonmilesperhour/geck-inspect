@@ -464,7 +464,8 @@ function IllustratedGecko({
 
 
   const pal = { ...DEFAULT_PALETTE, ...p.palette };
-  const outline = mixHex(pal.base, pal.outline, 0.6);
+  pal.base = mixHex(pal.base, '#f3e8d0', .12);
+  const outline = mixHex(pal.base, '#33291e', .78);
   const crestColor = pal.crest || mixHex(pal.base, '#ffffff', 0.22);
   const dorsalColor = p.dorsalStyle === 'solid' ? (pal.dorsal || mixHex(pal.base, '#ffffff', 0.35)) : pal.pattern;
   const pinColor = p.phantom ? mixHex(pal.base, pal.pattern, 0.28) : pal.pattern;
@@ -509,13 +510,13 @@ function IllustratedGecko({
           <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.16" />
         </filter>
         <linearGradient id={`${uid}-volume`} x1="84" x2="158" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={pal.dark} stopOpacity="0.62" />
+          <stop offset="0%" stopColor={pal.dark} stopOpacity="0.22" />
           <stop offset="32%" stopColor="#fff7df" stopOpacity="0.08" />
           <stop offset="55%" stopColor="#fff7df" stopOpacity="0.18" />
-          <stop offset="100%" stopColor={pal.dark} stopOpacity="0.5" />
+          <stop offset="100%" stopColor={pal.dark} stopOpacity="0.18" />
         </linearGradient>
         <radialGradient id={`${uid}-head-volume`} cx="114" cy="62" r="52" gradientUnits="userSpaceOnUse">
-          <stop offset="15%" stopColor="#fff6df" stopOpacity="0.17" /><stop offset="65%" stopColor={pal.dark} stopOpacity="0.06" /><stop offset="100%" stopColor={pal.dark} stopOpacity="0.58" />
+          <stop offset="15%" stopColor="#fff6df" stopOpacity="0.17" /><stop offset="65%" stopColor={pal.dark} stopOpacity="0.06" /><stop offset="100%" stopColor={pal.dark} stopOpacity="0.2" />
         </radialGradient>
         <pattern id={`${uid}-scales`} width="4" height="3.6" patternUnits="userSpaceOnUse">
           <circle cx="1" cy="1" r="0.67" fill="none" stroke={pal.dark} strokeWidth="0.26" opacity="0.22" />
@@ -530,7 +531,7 @@ function IllustratedGecko({
 
       {/* Outline pass: every part stroked thick in the outline color,
           then filled on top, so the joins read as one animal. */}
-      <g filter={`url(#${uid}-shadow)`} stroke={outline} strokeWidth="1.5" strokeLinejoin="round" fill={outline}>
+      <g stroke={outline} strokeWidth="0.85" strokeLinejoin="round" fill={outline}>
         <path d={BODY_PATH} />
         {LEGS.map((l) => (
           <g key={l.key}>
@@ -658,6 +659,7 @@ function IllustratedGecko({
         {LEGS.map(leg => <path key={leg.key} d={leg.path} fill="none" stroke="#fff6df" strokeWidth="1" opacity="0.2" />)}
         <path d={HEAD_PATH} fill={`url(#${uid}-head-volume)`} />
         <rect width={VIEW_W} height={VIEW_H} fill={`url(#${uid}-scales)`} />
+        <g fill="none" stroke={outline} strokeWidth=".4" opacity=".35">{Array.from({ length: 65 }, (_, i) => <path key={`plate-hatch${i}`} d={`M74,${30+i*5}l15,-7M151,${33+i*5}l12,6`} />)}</g>
         <path d="M94,40Q120,30 146,40M92,85Q120,99 148,85M105,103Q120,108 135,103" fill="none" stroke={pal.dark} strokeWidth="0.7" opacity="0.35" />
       </g>
 
