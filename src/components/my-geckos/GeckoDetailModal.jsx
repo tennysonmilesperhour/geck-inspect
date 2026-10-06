@@ -1,3 +1,4 @@
+import StickerGeckoActions from '@/components/store/StickerGeckoActions';
 import { useState, useEffect, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -638,6 +639,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   </div>
                 )}
               </div>
+
+              {canEdit && <StickerGeckoActions gecko={gecko} />}
 
               {/* Public Display Toggle */}
               <div className="space-y-3 mb-4">

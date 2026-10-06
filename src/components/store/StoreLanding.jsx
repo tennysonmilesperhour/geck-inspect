@@ -14,7 +14,7 @@ import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 // needsCheckout: only sold through Geck Inspect's own checkout, so the
 // tile is hidden while STORE_CHECKOUT_ENABLED is false.
 const ALL_HERO_TILES = [
-  { to: '/Store/stickers',        label: 'Custom stickers',   Icon: Sticker,  blurb: 'Your gecko on a sticker, six themes. $10 each.', needsCheckout: true },
+  { to: '/Store/stickers',        label: 'Custom stickers',   Icon: Sticker,  blurb: 'Collector stickers and elegant enclosure name plaques. Build yours.' },
   { to: '/Store/tees',            label: 'Custom tee',        Icon: Shirt,    blurb: 'Your gecko on a shirt. Pick colour, size and print.', needsCheckout: true },
   { to: '/Store/c/apparel',       label: 'Apparel',           Icon: Shirt,    blurb: 'Original Geck Inspect tees, hoodies, hats.', needsCheckout: true },
   { to: '/Store/c/gifts',         label: 'Gift ideas',        Icon: Gift,     blurb: 'For keepers, breeders, and the people who love them.' },

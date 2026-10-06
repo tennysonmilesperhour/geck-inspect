@@ -1,3 +1,4 @@
+import StickerPhoto from '@/components/store/StickerPhoto';
 import StickerCardPreview from '@/components/store/StickerCardPreview';
 import { stickerTheme, isCardTheme } from '@/lib/store/stickerThemes';
 
@@ -24,7 +25,8 @@ function Frame({ ratio, children, style, className = '' }) {
   );
 }
 
-function Photo({ src, alt, style, className = '' }) {
+function Photo({ src, alt, style, className = '', design }) {
+  if (design) return <StickerPhoto design={design} className={className} style={style} />;
   if (!src) {
     return (
       <div
@@ -53,7 +55,7 @@ function FieldGuidePreview({ design }) {
           <span>{design.dex_number ? `Plate ${design.dex_number}` : 'Plate'}</span>
         </div>
         <div className="mt-[3cqw] flex-1 relative" style={{ border: '0.6cqw solid #2f2418', background: '#fbf7ec' }}>
-          <Photo src={design.photo_url} alt={design.name} className="absolute inset-0 w-full h-full" />
+          <Photo design={design} src={design.photo_url} alt={design.name} className="absolute inset-0 w-full h-full" />
         </div>
         <div style={{ marginTop: '3.2cqw', fontSize: '7cqw', lineHeight: 1.05, fontStyle: 'italic' }}>{design.name || 'Name'}</div>
         <div style={{ fontSize: '3.4cqw', marginTop: '1cqw', color: '#4a3b28' }}>{morphOr(design)}</div>
@@ -79,7 +81,7 @@ function PassportPreview({ design }) {
     <Frame ratio="3.5 / 2.5" style={{ background: 'linear-gradient(135deg, #14372b, #0d2a21)', borderRadius: '3cqw', boxShadow: 'inset 0 0 0 0.8cqw #c9a84a' }}>
       <div className="absolute inset-0 flex" style={{ padding: '4cqw', gap: '4cqw', color: '#f1ead3', fontFamily: "'Montserrat', system-ui, sans-serif" }}>
         <div className="flex flex-col" style={{ width: '32%' }}>
-          <Photo src={design.photo_url} alt={design.name} className="w-full" style={{ aspectRatio: '3 / 4', borderRadius: '1.2cqw', border: '0.5cqw solid #c9a84a' }} />
+          <Photo design={design} src={design.photo_url} alt={design.name} className="w-full" style={{ aspectRatio: '3 / 4', borderRadius: '1.2cqw', border: '0.5cqw solid #c9a84a' }} />
           <div style={{ marginTop: 'auto', fontSize: '2.2cqw', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#c9a84a' }}>Geck Inspect</div>
         </div>
         <div className="flex-1 flex flex-col">
@@ -112,7 +114,7 @@ function ParkBadgePreview({ design }) {
         <div className="truncate w-full" style={{ fontSize: '7.5cqw', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{design.name || 'Name'}</div>
         <div style={{ fontSize: '3cqw', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#e5c46b', marginTop: '0.6cqw' }}>{morphOr(design)}</div>
         <div className="rounded-full overflow-hidden" style={{ width: '54%', aspectRatio: '1 / 1', marginTop: '3cqw', border: '1cqw solid #e5c46b' }}>
-          <Photo src={design.photo_url} alt={design.name} className="w-full h-full" />
+          <Photo design={design} src={design.photo_url} alt={design.name} className="w-full h-full" />
         </div>
         <div style={{ marginTop: 'auto', fontSize: '3.2cqw', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{design.badge_location || 'New Caledonia'}</div>
         <div style={{ fontSize: '2.6cqw', color: '#e5c46b', letterSpacing: '0.2em' }}>{design.hatch_label ? `EST. ${design.hatch_label}` : 'CORRELOPHUS CILIATUS'}</div>
@@ -128,7 +130,7 @@ function PolaroidPreview({ design }) {
     <Frame ratio="3.5 / 4.2" style={{ background: '#fbfbf7', borderRadius: '1.2cqw', boxShadow: '0 0.6cqw 2cqw rgba(0,0,0,0.25)' }}>
       <div className="absolute inset-0 flex flex-col" style={{ padding: '5cqw 5cqw 4cqw' }}>
         <div className="w-full" style={{ aspectRatio: '1 / 1', background: '#111' }}>
-          <Photo src={design.photo_url} alt={design.name} className="w-full h-full" style={{ color: '#ddd' }} />
+          <Photo design={design} src={design.photo_url} alt={design.name} className="w-full h-full" style={{ color: '#ddd' }} />
         </div>
         <div className="flex-1 flex flex-col justify-center" style={{ fontFamily: "'Righteous', 'Comic Sans MS', cursive", color: '#1f2a44', transform: 'rotate(-1.5deg)' }}>
           <div className="truncate" style={{ fontSize: '6cqw' }}>{caption}</div>
@@ -158,7 +160,7 @@ function RosettePreview({ design }) {
         ))}
         <div className="absolute rounded-full" style={{ left: '15%', top: '15%', width: '70%', height: '70%', background: '#f7e7b5', boxShadow: 'inset 0 0 0 1.2cqw #c9a84a' }}>
           <div className="absolute rounded-full overflow-hidden" style={{ left: '12%', top: '12%', width: '76%', height: '76%' }}>
-            <Photo src={design.photo_url} alt={design.name} className="w-full h-full" />
+            <Photo design={design} src={design.photo_url} alt={design.name} className="w-full h-full" />
           </div>
         </div>
       </div>
@@ -171,7 +173,30 @@ function RosettePreview({ design }) {
   );
 }
 
+function EnclosurePlaquePreview({ design }) {
+  const style = design.plaque_style || 'botanical';
+  const ivory = style === 'ivory';
+  const colors = { botanical: ['#183d32', '#d0b477'], ivory: ['#f3ead7', '#796a46'], slate: ['#20303c', '#a9b6b6'] }[style] || ['#183d32', '#d0b477'];
+  return (
+    <Frame ratio="2 / 1" style={{ background: colors[0], borderRadius: '2.5cqw', border: `1cqw double ${colors[1]}` }}>
+      <div className="absolute inset-0 flex flex-col" style={{ padding: '4.5cqw 5cqw', color: ivory ? '#24352c' : '#f3ecdc', fontFamily: "'Montserrat', system-ui, sans-serif" }}>
+        <div className="flex justify-between" style={{ color: colors[1], fontSize: '2.1cqw', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+          <span>Living collection</span><span>{design.hatch_label ? `Hatched ${design.hatch_label}` : 'Species portrait'}</span>
+        </div>
+        <div style={{ fontFamily: "'Young Serif', Georgia, serif", fontSize: (design.name || '').length > 16 ? '6.8cqw' : '9cqw', lineHeight: 1.1, marginTop: '2.8cqw', overflowWrap: 'anywhere' }}>{design.name || 'Your gecko'}</div>
+        <div style={{ marginTop: '1.2cqw', fontSize: '3.3cqw', fontWeight: 600 }}>{design.species_name || 'Species name'}</div>
+        <div style={{ marginTop: '0.5cqw', fontSize: '2.7cqw', letterSpacing: '0.04em', color: colors[1] }}>{design.scientific_name || 'Scientific name'}</div>
+        <div style={{ marginTop: 'auto', borderTop: `0.2cqw solid ${colors[1]}66`, paddingTop: '2cqw', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3cqw' }}>
+          <div><div style={{ fontSize: '1.9cqw', letterSpacing: '0.16em', textTransform: 'uppercase', color: colors[1] }}>Native range</div><div style={{ fontSize: '2.5cqw', lineHeight: 1.3, marginTop: '0.6cqw' }}>{design.native_range || 'Add native range'}</div></div>
+          <div><div style={{ fontSize: '1.9cqw', letterSpacing: '0.16em', textTransform: 'uppercase', color: colors[1] }}>Habitat</div><div style={{ fontSize: '2.5cqw', lineHeight: 1.3, marginTop: '0.6cqw' }}>{design.habitat || 'Add a habitat line'}</div></div>
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
 const THEME_COMPONENTS = {
+  enclosure_plaque: EnclosurePlaquePreview,
   field_guide: FieldGuidePreview,
   passport: PassportPreview,
   park_badge: ParkBadgePreview,

@@ -1,3 +1,4 @@
+import StickerGeckoActions from '@/components/store/StickerGeckoActions';
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, WeightRecord, ShedRecord, GeckoEvent } from '@/entities/all';
@@ -391,6 +392,7 @@ export default function GeckoDetail() {
                             estimate: it is the keeper's planning information. */}
                         {isOwner && !gecko.archived && <ReadinessCard gecko={gecko} readiness={readinessFor(gecko, weightRecords)} />}
 
+                        {isOwner && <StickerGeckoActions gecko={gecko} />}
                         {isOwner && <MarketValueCard gecko={{ ...gecko, weight_grams: latestWeight }} />}
 
                         {/* Notes */}

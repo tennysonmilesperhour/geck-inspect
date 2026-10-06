@@ -62,17 +62,13 @@ export default function StoreLayout({ children, breadcrumbs }) {
       >
         <Gift className="w-3.5 h-3.5" /> Gifts
       </Link>
-      {/* Custom stickers and Geck Inspect apparel can only be bought
-          through our own checkout, so they leave the menu while it is
-          closed (STORE_CHECKOUT_ENABLED). */}
-      {STORE_CHECKOUT_ENABLED && (
-        <Link
+      {/* The sticker designer remains available while payments are closed. */}
+      <Link
           to="/Store/stickers"
           className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
         >
           <Sticker className="w-3.5 h-3.5" /> Custom stickers
-        </Link>
-      )}
+      </Link>
       {STORE_CHECKOUT_ENABLED && (
         <Link to="/Store/c/apparel" className="touch:min-h-11 touch:min-w-11 shrink-0 justify-center text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center whitespace-nowrap">
           Apparel
