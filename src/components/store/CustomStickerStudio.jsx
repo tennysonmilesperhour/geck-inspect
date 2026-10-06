@@ -158,26 +158,28 @@ function ChipGroup({ value, onChange, options, columns = 3 }) {
  * the page still demonstrates every option.
  */
 function ExampleCard({ example, onUseAsStart }) {
-  const [imageOk, setImageOk] = useState(true);
+  const [imageOk, setImageOk] = useState(Boolean(example.image));
   return (
     <figure className="flex flex-col gap-2">
-      <div className="rounded-xl bg-[#064e3b] p-3">
-        {imageOk ? (
-          <img
-            src={example.image}
-            alt={`${example.design.name} custom sticker example`}
-            className="w-full"
-            loading="lazy"
-            decoding="async"
-            onError={() => setImageOk(false)}
-          />
-        ) : (
-          <StickerCardPreview design={example.design} />
-        )}
+      <div className="flex aspect-[4/5] items-center justify-center rounded-xl border border-emerald-900/50 bg-[#064e3b] p-5 sm:p-6">
+        <div className="w-full max-w-[240px] aspect-[2.5/3.5] flex items-center justify-center">
+          {imageOk ? (
+            <img
+              src={example.image}
+              alt={`${example.design.name} custom sticker example`}
+              className="w-full h-full object-contain"
+              loading="lazy"
+              decoding="async"
+              onError={() => setImageOk(false)}
+            />
+          ) : (
+            <StickerCardPreview design={example.design} />
+          )}
+        </div>
       </div>
       <figcaption className="text-xs text-slate-400 leading-relaxed">
         <span className="mb-1 block w-max rounded-full bg-[#064e3b] px-2 py-0.5 font-medium text-[#a7f3d0]">
-          Placeholder example
+          {example.image ? 'Keeper reference' : 'Collector template'}
         </span>
         <span className="font-semibold text-slate-200">{example.design.name}.</span>{' '}
         {example.note}
@@ -185,7 +187,8 @@ function ExampleCard({ example, onUseAsStart }) {
       <Button
         size="sm"
         variant="outline"
-        className="w-max border-slate-700 text-slate-200 hover:bg-slate-800"
+        className="mt-auto w-full border-slate-700 text-slate-200 hover:bg-slate-800"
+        aria-label={`Start from ${example.design.name}`}
         onClick={() => onUseAsStart(example)}
       >
         <Wand2 className="w-3.5 h-3.5 mr-1.5" />
@@ -381,16 +384,15 @@ export default function CustomStickerStudio() {
 
       {/* ---------------------------- Examples ---------------------------- */}
       <section className="mb-10">
-        <h2 className="text-lg font-bold text-slate-100 mb-1">Two early card references</h2>
+        <h2 className="text-lg font-bold text-slate-100 mb-1">Find your collector style</h2>
         <p className="text-sm text-slate-400 mb-4 max-w-3xl leading-relaxed">
-          Moonlight and Bat Geck are temporary examples of the layout. Pick
-          either as a starting point and swap in your own photo and stats, or
-          choose one of the other five themes in the builder below. We are
-          still developing the artwork system so final designs use original
-          styling and user-owned photos without third-party characters, logos,
-          card trade dress, or copyright text.
+          Choose a canopy, ember, or moon-inspired card, or start from a keeper
+          reference. Each template includes its own palette, signature moves,
+          and collection details. Add your pet’s photo and make it yours.
+          Illustrated geckos show the mood of each template; your uploaded photo
+          replaces the sample artwork.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {STICKER_EXAMPLES.map((ex) => (
             <ExampleCard key={ex.id} example={ex} onUseAsStart={handleUseExample} />
           ))}
