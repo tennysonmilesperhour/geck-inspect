@@ -14,6 +14,7 @@ import MorphIndexCard from '@/components/morphguide/MorphIndexCard';
 import MorphHubCta from '@/components/morphguide/MorphHubCta';
 import { useMorphGuideData } from '@/components/morphguide/MorphIndexData';
 import { breadcrumbSchema, ORG_ID, SITE_URL } from '@/lib/organization-schema';
+import { categoryHubSeo, inheritanceHubSeo } from '@/lib/morphMeta';
 
 /**
  * Programmatic taxonomy hub page for the morph catalog.
@@ -114,8 +115,9 @@ export function MorphCategoryHub() {
         `crested gecko ${categoryId} morphs`,
         `list of crested gecko ${cat.label.toLowerCase()} morphs`,
       ]}
-      seoDescription={`Every crested gecko ${cat.label.toLowerCase()} morph. ${cat.blurb} ${morphs.length} documented ${cat.label.toLowerCase()} morphs with inheritance, rarity, and links to per-morph detail pages.`}
-      sectionTitle={`${cat.label} morphs`}
+      seoTitle={categoryHubSeo(categoryId, morphs).title}
+      seoDescription={categoryHubSeo(categoryId, morphs).description}
+      sectionTitle={categoryHubSeo(categoryId, morphs).h1}
       bodyIntro={cat.blurb}
     />
   );
@@ -139,8 +141,9 @@ export function MorphInheritanceHub() {
         `${inh.label.toLowerCase()} gecko genes`,
         `crested gecko ${inh.label.toLowerCase()} inheritance`,
       ]}
-      seoDescription={`${inh.label} crested gecko morphs. ${inh.description} ${morphs.length} documented ${inh.label.toLowerCase()} morphs with rarity, visual cues, and links to per-morph detail pages.`}
-      sectionTitle={`${inh.label} crested gecko morphs`}
+      seoTitle={inheritanceHubSeo(inheritanceId, morphs).title}
+      seoDescription={inheritanceHubSeo(inheritanceId, morphs).description}
+      sectionTitle={inheritanceHubSeo(inheritanceId, morphs).h1}
       bodyIntro={inh.description}
     />
   );
@@ -154,6 +157,7 @@ function TaxonomyHub({
   path,
   morphs,
   seoKeywords,
+  seoTitle,
   seoDescription,
   sectionTitle,
   bodyIntro,
@@ -205,8 +209,9 @@ function TaxonomyHub({
   return (
     <PublicPageShell>
       <Seo
-        title={`${label}, Crested Gecko Morphs`}
+        title={seoTitle}
         description={seoDescription}
+        noIndex={morphs.length === 0}
         path={path}
         keywords={seoKeywords}
         jsonLd={jsonLd}

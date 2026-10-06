@@ -393,7 +393,7 @@ export default function MorphDetail() {
       {
         '@type': 'Article',
         '@id': `https://geckinspect.com${path}#article`,
-        headline: seo.title,
+        headline: seo.h1,
         description: seo.description,
         url: `https://geckinspect.com${path}`,
         image: heroImage || DEFAULT_GECKO_IMAGE,
@@ -615,7 +615,9 @@ export default function MorphDetail() {
                     <span className="text-sm text-neutral-400">typical adult, USD</span>
                   </div>
                   <p className="mt-2 leading-relaxed">
-                    {priceTier.label}. {priceTier.description} Line quality, sex, age and
+                    {/* Tier name only: the tier's own band ("Mid ($150 to $400)")
+                        contradicted this morph's range shown just above. */}
+                    {priceTier.label.split(' (')[0]} price tier. {priceTier.description} Line quality, sex, age and
                     proven lineage all move the price within that range.
                   </p>
                 </div>

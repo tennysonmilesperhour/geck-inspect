@@ -34,6 +34,9 @@ import { TIER_PRICING, TRIAL_DAYS } from '../src/lib/stripe-config.js';
 // The morph dataset is a plain, dependency-free ES module, so Node imports
 // it directly. Hub titles, counts and the morph route list come from it.
 import { MORPHS, INHERITANCE, MORPH_CATEGORIES } from '../src/data/morph-guide.js';
+import { CATEGORY_NOUNS, HIGH_VALUE_MORPH_SLUGS, categoryHubSeo, inheritanceHubSeo } from '../src/lib/morphMeta.js';
+
+export { CATEGORY_NOUNS };
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -443,16 +446,7 @@ export const STATIC_ROUTES = [
 // the hobby (Harlequin, Lilly White, Cappuccino rank highest; obscure
 // polygenic variants rank lower). Defaulting to 0.7 keeps the long tail
 // present without overstating its importance.
-const HIGH_VALUE_MORPHS = new Set([
-  'harlequin',
-  'extreme-harlequin',
-  'pinstripe',
-  'dalmatian',
-  'flame',
-  'cappuccino',
-  'lilly-white',
-  'axanthic',
-]);
+const HIGH_VALUE_MORPHS = HIGH_VALUE_MORPH_SLUGS;
 
 export function getMorphRoutes() {
   const slugs = loadMorphSlugs();
@@ -471,27 +465,6 @@ export function getMorphRoutes() {
 // dense and capture "all recessive crested gecko morphs" style
 // queries. Built from the dataset, so the titles carry real counts and a
 // hub with no morphs (co-dominant and dominant today) is not listed.
-
-// Plural noun for each category, as it reads in a sentence.
-export const CATEGORY_NOUNS = {
-  base: 'base color morphs',
-  color: 'color modifier morphs',
-  pattern: 'pattern morphs',
-  structure: 'structural morphs',
-  combo: 'combination morphs',
-};
-
-function titleCase(text) {
-  return text.replace(/(^|[\s-])([a-z])/g, (_, sep, c) => `${sep}${c.toUpperCase()}`);
-}
-
-// The best-known morphs lead a preview list (HIGH_VALUE_MORPHS below).
-function namesPreview(morphs, n = 3) {
-  const ranked = [...morphs].sort((a, b) => Number(HIGH_VALUE_MORPHS.has(b.slug)) - Number(HIGH_VALUE_MORPHS.has(a.slug)));
-  const names = ranked.slice(0, n).map((m) => m.name);
-  if (names.length <= 1) return names.join('');
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-}
 
 /** Category hubs that have at least one morph: [{ id, label, blurb, noun, morphs }]. */
 export function morphCategoryHubs() {
@@ -528,25 +501,19 @@ export function emptyInheritanceIds() {
 
 export function getMorphTaxonomyRoutes() {
   const lastmod = dateOf(MORPH_DATA);
-  const cats = morphCategoryHubs().map(({ id, noun, morphs }) => ({
+  const cats = morphCategoryHubs().map(({ id, morphs }) => ({
     path: `/MorphGuide/category/${id}`,
     priority: 0.8,
     changefreq: 'weekly',
     lastmod,
-    meta: {
-      title: `Crested Gecko ${titleCase(noun)}: All ${morphs.length} Listed`,
-      description: `All ${morphs.length} crested gecko ${noun} in one list, including ${namesPreview(morphs)}, with inheritance, rarity, typical price and a link to each morph page.`,
-    },
+    meta: (({ title, description }) => ({ title, description }))(categoryHubSeo(id, morphs)),
   }));
-  const inhs = morphInheritanceHubs().map(({ id, label, morphs }) => ({
+  const inhs = morphInheritanceHubs().map(({ id, morphs }) => ({
     path: `/MorphGuide/inheritance/${id}`,
     priority: 0.8,
     changefreq: 'weekly',
     lastmod,
-    meta: {
-      title: `${titleCase(label)} Crested Gecko Morphs: All ${morphs.length} Listed`,
-      description: `${morphs.length === 1 ? 'One crested gecko morph is' : `${morphs.length} crested gecko morphs are`} ${label.toLowerCase()}${morphs.length > 4 ? ', including ' : ': '}${namesPreview(morphs, 4)}. What that means for breeding, with rarity, typical price and a link to each morph page.`,
-    },
+    meta: (({ title, description }) => ({ title, description }))(inheritanceHubSeo(id, morphs)),
   }));
   return [...cats, ...inhs];
 }

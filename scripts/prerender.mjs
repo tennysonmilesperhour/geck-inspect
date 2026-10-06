@@ -161,7 +161,7 @@ if (Object.keys(MORPHS).length === 0) throw new Error('prerender: MORPHS is empt
 // and FAQ from these two modules, so the static HTML imports the very same
 // functions instead of keeping a copy that drifts. Both use relative
 // imports only, which is what lets Node load them here.
-const { morphSeo } = await importData('src/lib/morphMeta.js');
+const { morphSeo, categoryHubSeo, inheritanceHubSeo } = await importData('src/lib/morphMeta.js');
 const { morphFaq } = await importData('src/lib/morphFaq.js');
 
 const linesModule = await importData('src/data/project-lines.js');
@@ -610,7 +610,7 @@ function categoryHubMeta(id, route) {
   const n = hub.morphs.length;
   return hubMeta(route, {
     crumb: `${hub.label} morphs`,
-    h1: `Crested gecko ${hub.noun}`,
+    h1: categoryHubSeo(id, hub.morphs).h1,
     lead: `${sentence(hub.blurb)} The Morph Guide lists ${n} ${n === 1 ? hub.noun.replace(/s$/, '') : hub.noun}, each with its own page on identification, genetics and price.`,
     morphs: hub.morphs,
     columns: ['inheritance', 'rarity', 'price'],
@@ -627,7 +627,7 @@ function inheritanceHubMeta(id, route) {
     : [];
   return hubMeta(route, {
     crumb: `${hub.label} morphs`,
-    h1: `${hub.label} crested gecko morphs`,
+    h1: inheritanceHubSeo(id, hub.morphs).h1,
     lead: `${sentence(hub.description)} ${n === 1 ? 'One morph in the guide is' : `${n} morphs in the guide are`} ${label}.`,
     paragraphs: unproven,
     morphs: hub.morphs,

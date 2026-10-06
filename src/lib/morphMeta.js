@@ -6,7 +6,7 @@
  *
  * Dependency-free so the prerender script can import it from Node.
  */
-import { INHERITANCE, MORPH_CATEGORIES } from '../data/morph-guide.js';
+import { INHERITANCE, MORPH_CATEGORIES, MORPHS } from '../data/morph-guide.js';
 
 const RARITY_WORD = {
   common: 'common',
@@ -81,5 +81,61 @@ export function morphSeo(morph) {
     description,
     definition,
     categoryLabel: category?.label || null,
+  };
+}
+
+// ---------- hub pages (/MorphGuide/category/:id, /MorphGuide/inheritance/:id)
+
+// The best-known morphs lead a hub's preview list and rank higher in the
+// sitemap.
+export const HIGH_VALUE_MORPH_SLUGS = new Set([
+  'harlequin', 'extreme-harlequin', 'pinstripe', 'dalmatian',
+  'flame', 'cappuccino', 'lilly-white', 'axanthic',
+]);
+
+// Plural noun for each category, as it reads in a sentence.
+export const CATEGORY_NOUNS = {
+  base: 'base color morphs',
+  color: 'color modifier morphs',
+  pattern: 'pattern morphs',
+  structure: 'structural morphs',
+  combo: 'combination morphs',
+};
+
+function titleCase(text) {
+  return text.replace(/(^|[\s-])([a-z])/g, (_, sep, c) => `${sep}${c.toUpperCase()}`);
+}
+
+export function namesPreview(morphs, n = 3) {
+  const ranked = [...morphs].sort(
+    (a, b) => Number(HIGH_VALUE_MORPH_SLUGS.has(b.slug)) - Number(HIGH_VALUE_MORPH_SLUGS.has(a.slug)),
+  );
+  const names = ranked.slice(0, n).map((m) => m.name);
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/** Title, description and H1 for a category hub, shared by the app and the prerender. */
+export function categoryHubSeo(categoryId, morphs = MORPHS.filter((m) => m.category === categoryId)) {
+  const cat = MORPH_CATEGORIES.find((c) => c.id === categoryId);
+  const noun = CATEGORY_NOUNS[categoryId] || `${(cat?.label || categoryId).toLowerCase()} morphs`;
+  return {
+    noun,
+    title: `Crested Gecko ${titleCase(noun)}: All ${morphs.length} Listed`,
+    description: `All ${morphs.length} crested gecko ${noun} in one list, including ${namesPreview(morphs)}, with inheritance, rarity, typical price and a link to each morph page.`,
+    h1: `Crested gecko ${noun}`,
+  };
+}
+
+/** Title, description and H1 for an inheritance hub, shared by the app and the prerender. */
+export function inheritanceHubSeo(inheritanceId, morphs = MORPHS.filter((m) => m.inheritance === inheritanceId)) {
+  const label = INHERITANCE[inheritanceId]?.label || inheritanceId;
+  const n = morphs.length;
+  return {
+    title: `${titleCase(label)} Crested Gecko Morphs: All ${n} Listed`,
+    description: n === 0
+      ? `No crested gecko morph in the guide is ${label.toLowerCase()} yet.`
+      : `${n === 1 ? 'One crested gecko morph is' : `${n} crested gecko morphs are`} ${label.toLowerCase()}${n > 4 ? ', including ' : ': '}${namesPreview(morphs, 4)}. What that means for breeding, with rarity, typical price and a link to each morph page.`,
+    h1: `${label} crested gecko morphs`,
   };
 }
