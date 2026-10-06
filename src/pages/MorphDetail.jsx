@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from '@/lib/constants';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,7 @@ import {
   morphSlug,
   morphDisplayName,
   pickBestMorphRecord,
+  indexMorphsBySlug,
   KNOWN_MORPH_SLUGS,
 } from '@/lib/morphUtils';
 import {
@@ -44,6 +45,11 @@ import RelatedMorphs, { MorphPrevNext } from '@/components/morphguide/RelatedMor
 import MorphSectionNav from '@/components/morphguide/MorphSectionNav';
 import Reveal from '@/components/morphguide/Reveal';
 import { calculatorHref, trackMorphCta } from '@/components/morphguide/morphCta';
+import MorphText from '@/components/morphguide/MorphText';
+import { MorphImageContext, morphInitials } from '@/components/morphguide/MorphPreviewCard';
+import MorphGeneticsDemo, { geneticsDemoFor } from '@/components/morphguide/MorphGeneticsDemo';
+import MorphProgressBar from '@/components/morphguide/MorphProgressBar';
+import MorphSwipeNav from '@/components/morphguide/MorphSwipeNav';
 
 const RARITY_LABELS = {
   common: 'Common',
@@ -76,14 +82,16 @@ function sanitizeImage(url) {
   return url;
 }
 
-function initials(name) {
-  return String(name || '')
-    .replace(/\(.*?\)/g, '')
-    .split(/[\s/]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join('');
+/**
+ * Lets the Morph Guide index put the visitor back where they were: the
+ * index reads this key on load and scrolls to the card for `slug`.
+ */
+function rememberGuideReturn(slug) {
+  try {
+    window.sessionStorage.setItem('morphGuide:return', JSON.stringify({ slug, at: Date.now() }));
+  } catch {
+    /* storage blocked: the index just opens at the top */
+  }
 }
 
 /**
@@ -126,7 +134,7 @@ function HeroImage({ src, name, slug, category }) {
               aria-hidden="true"
               className="relative text-6xl md:text-7xl font-bold tracking-tight text-white/80"
             >
-              {initials(name)}
+              {morphInitials(name)}
             </span>
             <span className="relative mt-2 text-sm text-neutral-300">{name} crested gecko</span>
             <Link
@@ -155,13 +163,13 @@ function SectionHeading({ icon: Icon, children }) {
   );
 }
 
-function BulletList({ items }) {
+function BulletList({ items, linkSlug }) {
   return (
     <ul className="space-y-2.5">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-3 text-neutral-300 leading-relaxed">
           <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2.5" />
-          <span>{item}</span>
+          <span>{linkSlug ? <MorphText text={item} currentSlug={linkSlug} /> : item}</span>
         </li>
       ))}
     </ul>
@@ -175,6 +183,11 @@ export default function MorphDetail() {
   // Approved Morph Guide photo submissions, credited by display name.
   const [submittedPhotos, setSubmittedPhotos] = useState([]);
   const [referenceImages, setReferenceImages] = useState([]);
+  // Best photo per morph from the morph_guides rows, for link previews
+  // and the lookalike comparison tiles.
+  const [imageBySlug, setImageBySlug] = useState({});
+  const articleRef = useRef(null);
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const blocked = useBlockedMembers();
@@ -233,6 +246,14 @@ export default function MorphDetail() {
           .limit(200);
         if (error) throw error;
         if (cancelled) return;
+
+        const bySlug = indexMorphsBySlug(data || []);
+        const images = {};
+        for (const [s, r] of Object.entries(bySlug)) {
+          const url = sanitizeImage(r?.example_image_url);
+          if (url) images[s] = url;
+        }
+        setImageBySlug(images);
 
         const matches = (data || []).filter(
           (r) => morphSlug(r.morph_name) === slug
@@ -352,6 +373,17 @@ export default function MorphDetail() {
   const lookalikes = localMorph?.lookalikes || [];
   const faqs = morphFaq(localMorph || { slug, name: morphName, summary: record.description });
   const calcHref = calculatorHref(slug);
+  const hasDemo = Boolean(geneticsDemoFor(localMorph));
+  // Photo source for previews and comparison tiles: this page's hero for
+  // its own morph, the best morph_guides photo for any other.
+  const imageFor = (s) => (s === slug ? heroImage : imageBySlug[s] || null);
+  const backToGuide = (e, placement) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    rememberGuideReturn(slug);
+    trackMorphCta(slug, '/MorphGuide', placement);
+    navigate('/MorphGuide');
+  };
   const path = `/MorphGuide/${slug}`;
 
   const hasGenetics = Boolean(inheritance || localMorph?.foundationGenetics || localMorph?.notes || record.breeding_info);
@@ -433,6 +465,9 @@ export default function MorphDetail() {
 
   return (
     <PublicPageShell>
+      <MorphImageContext.Provider value={imageFor}>
+      <MorphProgressBar targetRef={articleRef} />
+      {localMorph && <MorphSwipeNav morph={localMorph} targetRef={articleRef} />}
       <Seo
         title={seo.title}
         description={seo.description}
@@ -442,13 +477,20 @@ export default function MorphDetail() {
         type="article"
       />
 
-      <article className="max-w-5xl mx-auto px-4 sm:px-6 pt-2 md:pt-6 pb-16 text-neutral-300">
+      <article ref={articleRef} className="max-w-5xl mx-auto px-4 sm:px-6 pt-2 md:pt-6 pb-16 text-neutral-300">
         {/* Answer first: name, the three facts people search for, the
             one-sentence definition and a photo, all on the first screen. */}
         <header className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-5 md:gap-10 md:items-center">
           <div>
             <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-500 mb-3">
-              <Link to="/MorphGuide" className="hover:text-neutral-300">Morph Guide</Link>
+              <Link
+                to="/MorphGuide"
+                onClick={(e) => backToGuide(e, 'breadcrumb_all_morphs')}
+                className="-ml-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 hover:text-neutral-200 hover:bg-neutral-800/60 transition-colors"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                All morphs
+              </Link>
               {category && (
                 <>
                   <span aria-hidden="true">/</span>
@@ -512,7 +554,7 @@ export default function MorphDetail() {
               <SectionHeading icon={BookOpen}>About the {morphName} morph</SectionHeading>
               <div className="leading-relaxed space-y-3">
                 {description.split(/\n+/).map((p, i) => (
-                  <p key={i}>{p}</p>
+                  <p key={i}>{localMorph ? <MorphText text={p} currentSlug={slug} /> : p}</p>
                 ))}
               </div>
               {localMorph?.history && (
@@ -520,7 +562,7 @@ export default function MorphDetail() {
                   <div className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1.5">
                     Origin and history
                   </div>
-                  <p className="leading-relaxed">{localMorph.history}</p>
+                  <p className="leading-relaxed"><MorphText text={localMorph.history} currentSlug={slug} /></p>
                 </div>
               )}
             </Reveal>
@@ -538,7 +580,7 @@ export default function MorphDetail() {
               {visualIdentifiers.length > 0 && (
                 <>
                   <h3 className="mt-6 text-sm font-semibold uppercase tracking-wider text-neutral-400 mb-3">What to check</h3>
-                  <BulletList items={visualIdentifiers} />
+                  <BulletList items={visualIdentifiers} linkSlug={slug} />
                 </>
               )}
               <InlineMorphCta slug={slug} to="/Recognition" placement="after_identify" icon={Camera}>
@@ -565,6 +607,8 @@ export default function MorphDetail() {
                 </div>
               )}
 
+              {hasDemo && <MorphGeneticsDemo morph={localMorph} />}
+
               {/* Dual inheritance models: traditional hobby label vs the
                   Foundation Genetics single-locus reading. Only present on
                   entries where the two frameworks describe the trait
@@ -572,7 +616,7 @@ export default function MorphDetail() {
               {localMorph?.foundationGenetics && (
                 <div className="mt-4">
                   <h3 className="text-lg font-semibold text-white mb-2">Two ways to read the genetics</h3>
-                  <p className="leading-relaxed">{localMorph.foundationGenetics}</p>
+                  <p className="leading-relaxed"><MorphText text={localMorph.foundationGenetics} currentSlug={slug} /></p>
                 </div>
               )}
 
@@ -582,7 +626,7 @@ export default function MorphDetail() {
                     <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                     Breeder note
                   </div>
-                  <p className="text-neutral-200 leading-relaxed">{localMorph.notes}</p>
+                  <p className="text-neutral-200 leading-relaxed"><MorphText text={localMorph.notes} currentSlug={slug} /></p>
                 </div>
               )}
 
@@ -597,11 +641,14 @@ export default function MorphDetail() {
                 </div>
               )}
 
-              <InlineMorphCta slug={slug} to={calcHref} placement="genetics" icon={Shuffle}>
-                {calcHref === '/calculator'
-                  ? 'Run this pairing in the calculator and see the odds for every egg.'
-                  : `Run ${article(morphName)} ${morphName} pairing in the calculator and see the odds for every egg.`}
-              </InlineMorphCta>
+              {/* The demo above ends in its own calculator button. */}
+              {!hasDemo && (
+                <InlineMorphCta slug={slug} to={calcHref} placement="genetics" icon={Shuffle}>
+                  {calcHref === '/calculator'
+                    ? 'Run this pairing in the calculator and see the odds for every egg.'
+                    : `Run ${article(morphName)} ${morphName} pairing in the calculator and see the odds for every egg.`}
+                </InlineMorphCta>
+              )}
             </Reveal>
           )}
 
@@ -788,6 +835,7 @@ export default function MorphDetail() {
             <div className="mt-4 text-sm">
               <Link
                 to="/MorphGuide"
+                onClick={(e) => backToGuide(e, 'footer_all_morphs')}
                 className="inline-flex items-center gap-1.5 min-h-11 text-emerald-300 hover:text-emerald-200"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -807,6 +855,7 @@ export default function MorphDetail() {
           body="Weights, parents, photos and a pedigree buyers can check, in one record per gecko. Plan pairings with the genetics calculator built for crested geckos."
         />
       </article>
+      </MorphImageContext.Provider>
     </PublicPageShell>
   );
 }
