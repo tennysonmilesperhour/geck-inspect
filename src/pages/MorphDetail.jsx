@@ -50,6 +50,8 @@ import { MorphImageContext, morphInitials } from '@/components/morphguide/MorphP
 import MorphGeneticsDemo, { geneticsDemoFor } from '@/components/morphguide/MorphGeneticsDemo';
 import MorphProgressBar from '@/components/morphguide/MorphProgressBar';
 import MorphSwipeNav from '@/components/morphguide/MorphSwipeNav';
+import PatternSpectrum, { spectrumPositionFor } from '@/components/morphguide/PatternSpectrum';
+import IllustratedGecko, { hasIllustration } from '@/components/morphguide/IllustratedGecko';
 
 const RARITY_LABELS = {
   common: 'Common',
@@ -130,12 +132,16 @@ function HeroImage({ src, name, slug, category }) {
               aria-hidden="true"
               className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:18px_18px]"
             />
-            <span
-              aria-hidden="true"
-              className="relative text-6xl md:text-7xl font-bold tracking-tight text-white/80"
-            >
-              {morphInitials(name)}
-            </span>
+            {hasIllustration(slug) ? (
+              <IllustratedGecko morph={slug} decorative className="relative h-40 md:h-56 w-auto drop-shadow-xl" />
+            ) : (
+              <span
+                aria-hidden="true"
+                className="relative text-6xl md:text-7xl font-bold tracking-tight text-white/80"
+              >
+                {morphInitials(name)}
+              </span>
+            )}
             <span className="relative mt-2 text-sm text-neutral-300">{name} crested gecko</span>
             <Link
               to={`/MorphGuideSubmission?morph=${slug}`}
@@ -582,6 +588,9 @@ export default function MorphDetail() {
                   <h3 className="mt-6 text-sm font-semibold uppercase tracking-wider text-neutral-400 mb-3">What to check</h3>
                   <BulletList items={visualIdentifiers} linkSlug={slug} />
                 </>
+              )}
+              {spectrumPositionFor(slug) !== null && (
+                <PatternSpectrum focusSlug={slug} className="mt-8" />
               )}
               <InlineMorphCta slug={slug} to="/Recognition" placement="after_identify" icon={Camera}>
                 Not sure? Upload a photo to Morph ID and get a second opinion in seconds.

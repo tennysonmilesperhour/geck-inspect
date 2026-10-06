@@ -34,6 +34,7 @@ import { useMorphGuideData, sanitizeImage, normMorph } from '@/components/morphg
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import MorphQuiz from '@/components/morphguide/MorphQuiz';
 import MorphFamilyMap from '@/components/morphguide/MorphFamilyMap';
+import PatternSpectrum from '@/components/morphguide/PatternSpectrum';
 
 const MORPH_COUNT = MORPHS.length;
 
@@ -897,6 +898,8 @@ export default function MorphGuidePage() {
                 </>
               )}
             </div>
+
+            <PatternSpectrum className="mt-12" />
 
             <MorphFamilyMap morphs={allMorphs} />
 

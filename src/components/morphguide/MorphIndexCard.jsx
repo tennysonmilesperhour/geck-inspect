@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { INHERITANCE, RARITY } from '@/data/morph-guide';
 import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
+import IllustratedGecko, { hasIllustration } from '@/components/morphguide/IllustratedGecko';
 
 /**
  * Photo card for one morph, shared by the Morph Guide index and the
@@ -51,9 +52,13 @@ export function MorphIndexArt({ morph, className = '' }) {
       className={`absolute inset-0 bg-gradient-to-br ${morphArtClass(morph)} flex items-center justify-center ${className}`}
     >
       <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_55%)]" />
-      <span className="relative font-black tracking-tight text-white/15 text-5xl sm:text-6xl select-none">
-        {initials(morph?.name)}
-      </span>
+      {hasIllustration(morph?.slug) ? (
+        <IllustratedGecko morph={morph.slug} decorative className="relative h-[82%] w-auto drop-shadow-lg" />
+      ) : (
+        <span className="relative font-black tracking-tight text-white/15 text-5xl sm:text-6xl select-none">
+          {initials(morph?.name)}
+        </span>
+      )}
     </div>
   );
 }

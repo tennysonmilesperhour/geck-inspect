@@ -13,6 +13,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getMorph, RARITY } from '@/data/morph-guide';
 import { captureEvent } from '@/lib/posthog';
+import IllustratedGecko, { hasIllustration } from '@/components/morphguide/IllustratedGecko';
 
 /**
  * Photo lookup for morph thumbnails: slug in, image URL (or null) out.
@@ -68,12 +69,18 @@ export function MorphThumb({ slug, name, src: srcProp, className = '', textClass
         aria-hidden="true"
         className="absolute inset-0 opacity-[0.08] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:14px_14px]"
       />
-      <span
-        aria-hidden="true"
-        className={`absolute inset-0 flex items-center justify-center font-bold tracking-tight text-white/75 ${textClass}`}
-      >
-        {morphInitials(label)}
-      </span>
+      {hasIllustration(morph?.slug) ? (
+        <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center p-2">
+          <IllustratedGecko morph={morph.slug} decorative className="h-full w-auto drop-shadow-md" />
+        </span>
+      ) : (
+        <span
+          aria-hidden="true"
+          className={`absolute inset-0 flex items-center justify-center font-bold tracking-tight text-white/75 ${textClass}`}
+        >
+          {morphInitials(label)}
+        </span>
+      )}
       {src && !failed && (
         <img
           src={src}
