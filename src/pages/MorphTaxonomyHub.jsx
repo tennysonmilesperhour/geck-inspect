@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Dna, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,8 +9,10 @@ import {
   MORPHS,
   MORPH_CATEGORIES,
   INHERITANCE,
-  RARITY,
 } from '@/data/morph-guide';
+import MorphIndexCard from '@/components/morphguide/MorphIndexCard';
+import MorphHubCta from '@/components/morphguide/MorphHubCta';
+import { useMorphGuideData } from '@/components/morphguide/MorphIndexData';
 import { breadcrumbSchema, ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
 /**
@@ -30,46 +33,44 @@ import { breadcrumbSchema, ORG_ID, SITE_URL } from '@/lib/organization-schema';
  * topical authority across the ~30 morph pages.
  */
 
-const RARITY_LABEL = {
-  common: 'Common',
-  uncommon: 'Uncommon',
-  rare: 'Rare',
-  very_rare: 'Very Rare',
-};
-
-function MorphTile({ morph }) {
-  const rarityColor = RARITY[morph.rarity]?.color || 'bg-slate-700/40 text-slate-300 border-slate-600';
+/**
+ * Shown when a hub has no morphs, for example "Dominant": no crested gecko
+ * gene has been proven to work that way. Explains why and points to the
+ * hubs that do have entries instead of showing a bare "nothing here".
+ */
+function EmptyHub({ label }) {
   return (
-    <Link
-      to={`/MorphGuide/${morph.slug}`}
-      className="group rounded-xl border border-slate-800 bg-slate-900/60 hover:border-emerald-500/40 hover:bg-slate-900 p-4 transition-colors block"
-    >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-semibold text-slate-100 group-hover:text-emerald-200 leading-tight">
-          {morph.name}
-        </h3>
-        {morph.rarity && (
-          <span className={`shrink-0 text-[10px] font-semibold uppercase tracking-wider rounded-full border px-2 py-0.5 ${rarityColor}`}>
-            {RARITY_LABEL[morph.rarity] || morph.rarity}
-          </span>
-        )}
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 md:p-8 text-center">
+      <Dna className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+      <p className="text-slate-200 font-semibold mb-2">
+        No crested gecko morph is documented as {label.toLowerCase()} yet
+      </p>
+      <p className="text-sm text-slate-400 leading-relaxed max-w-xl mx-auto">
+        Most proven crested gecko genes are incomplete dominant, like Lilly White, Cappuccino and
+        Soft Scale, or recessive, like Axanthic. Pattern morphs such as Harlequin and Pinstripe are
+        polygenic. If a new gene is proven, it will appear here.
+      </p>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        <Link
+          to="/MorphGuide/inheritance/incomplete-dominant"
+          className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 px-3 py-1.5 text-sm text-slate-200 hover:text-emerald-200"
+        >
+          Incomplete dominant morphs
+        </Link>
+        <Link
+          to="/MorphGuide/inheritance/recessive"
+          className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 px-3 py-1.5 text-sm text-slate-200 hover:text-emerald-200"
+        >
+          Recessive morphs
+        </Link>
+        <Link
+          to="/MorphGuide"
+          className="touch:min-h-11 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 px-3 py-1.5 text-sm text-slate-200 hover:text-emerald-200"
+        >
+          All morphs
+        </Link>
       </div>
-      {morph.summary && (
-        <p className="text-xs text-slate-400 leading-snug line-clamp-3">{morph.summary}</p>
-      )}
-      <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] uppercase tracking-wider font-semibold">
-        {morph.inheritance && INHERITANCE[morph.inheritance] && (
-          <span className={`rounded-full border px-2 py-0.5 ${INHERITANCE[morph.inheritance].color}`}>
-            {INHERITANCE[morph.inheritance].short}
-          </span>
-        )}
-        {morph.priceTier && (
-          <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-slate-300">
-            {morph.priceTier}
-          </span>
-        )}
-      </div>
-    </Link>
+    </div>
   );
 }
 
@@ -103,6 +104,7 @@ export function MorphCategoryHub() {
   return (
     <TaxonomyHub
       variant="category"
+      id={categoryId}
       label={cat.label}
       icon={Sparkles}
       path={`/MorphGuide/category/${categoryId}`}
@@ -127,6 +129,7 @@ export function MorphInheritanceHub() {
   return (
     <TaxonomyHub
       variant="inheritance"
+      id={inheritanceId}
       label={`${inh.label} morphs`}
       icon={Dna}
       path={`/MorphGuide/inheritance/${inheritanceId}`}
@@ -145,6 +148,7 @@ export function MorphInheritanceHub() {
 
 function TaxonomyHub({
   variant,
+  id,
   label,
   icon: Icon,
   path,
@@ -155,6 +159,13 @@ function TaxonomyHub({
   bodyIntro,
 }) {
   const url = `${SITE_URL}${path}`;
+  // Same photos as the index cards. The list itself comes from the local
+  // data, so the hub renders at once and photos fade in when they arrive.
+  const { allMorphs } = useMorphGuideData();
+  const cards = useMemo(() => {
+    const bySlug = new Map(allMorphs.map((m) => [m.slug, m]));
+    return morphs.map((m) => bySlug.get(m.slug) || m);
+  }, [allMorphs, morphs]);
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -201,7 +212,7 @@ function TaxonomyHub({
         jsonLd={jsonLd}
       />
 
-      <section className="max-w-5xl mx-auto px-6 pt-4 pb-16">
+      <section className="max-w-6xl mx-auto px-4 md:px-6 pt-4 pb-16">
         <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
           <Link to="/" className="hover:text-slate-300">Home</Link>
           <span>/</span>
@@ -218,18 +229,24 @@ function TaxonomyHub({
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-[1.1] mb-3 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent">
           {sectionTitle}
         </h1>
-        <p className="text-slate-300 leading-relaxed max-w-3xl mb-8">{bodyIntro}</p>
-        <p className="text-slate-500 text-sm mb-10">{morphs.length} documented morphs.</p>
+        <p className="text-slate-300 leading-relaxed max-w-3xl mb-2">{bodyIntro}</p>
+        <p className="text-slate-500 text-sm mb-6">
+          {morphs.length === 0
+            ? 'No documented morphs yet.'
+            : `${morphs.length} documented ${morphs.length === 1 ? 'morph' : 'morphs'}.`}
+        </p>
 
         {morphs.length === 0 ? (
-          <p className="text-slate-400">No morphs match this filter yet.</p>
+          <EmptyHub label={label.replace(/ morphs$/, '')} />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {morphs.map((m) => (
-              <MorphTile key={m.slug} morph={m} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {cards.map((m) => (
+              <MorphIndexCard key={m.slug} morph={m} />
             ))}
           </div>
         )}
+
+        <MorphHubCta variant={variant} id={id} className="mt-8" />
 
         {/* Cross-links to sibling hubs keep crawlers moving across the
             taxonomy and build dense internal linking. */}

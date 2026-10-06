@@ -1,88 +1,124 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-const ROTATE_INTERVAL_MS = 3000;
+const ROTATE_INTERVAL_MS = 3500;
+const FADE_MS = 700;
+
+function prefersReducedMotion() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 /**
- * Crossfades/slides through a list of morph reference images.
- * - Single image or empty: renders static img, no animation.
- * - Multiple images: advances every ROTATE_INTERVAL_MS, sliding the
- *   outgoing image to the left and the incoming image in from the right.
- * - Start offset is staggered per instance so a grid of cards doesn't
- *   flip in unison.
+ * Cycles through a list of morph reference photos with a crossfade.
+ *
+ * - Fills its nearest positioned parent (absolute inset-0), so the parent
+ *   needs `relative` and a size (for example an aspect ratio box).
+ * - One photo: a static image. Several: the next one fades in every few
+ *   seconds, with a random start offset so a grid of cards does not flip
+ *   in unison.
+ * - Rotation only runs while the image is on screen, and never for
+ *   visitors who ask their device for reduced motion.
+ * - Photos load lazily unless `eager` is set (for images above the fold).
+ * - A photo that fails to load is dropped. When none load, nothing is
+ *   rendered, so whatever the parent draws underneath (a fallback) shows.
  */
 export default function RotatingMorphImage({
   images = [],
   alt = '',
   className = '',
+  eager = false,
+  interval = ROTATE_INTERVAL_MS,
 }) {
-  // Filter out empty/duplicate URLs while keeping order.
-  const uniqueImages = Array.from(
-    new Set((images || []).filter(Boolean)),
+  const [failed, setFailed] = useState(() => new Set());
+  const list = useMemo(
+    () => Array.from(new Set((images || []).filter(Boolean))).filter((u) => !failed.has(u)),
+    [images, failed],
   );
 
   const [index, setIndex] = useState(0);
   const [prevSrc, setPrevSrc] = useState(null);
-  const timerRef = useRef(null);
+  const [visible, setVisible] = useState(false);
+  const [reduced, setReduced] = useState(prefersReducedMotion);
+  const wrapRef = useRef(null);
+  const jitterRef = useRef(Math.floor(Math.random() * interval));
+  const rotates = list.length > 1;
+
+  // Follow the reduced-motion setting if it changes while the page is open.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
+
+  // Only watch visibility when there is something to rotate.
+  useEffect(() => {
+    if (!rotates || !wrapRef.current) return undefined;
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return undefined;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { rootMargin: '0px', threshold: 0.25 },
+    );
+    io.observe(wrapRef.current);
+    return () => io.disconnect();
+  }, [rotates]);
+
+  const safeIndex = list.length ? index % list.length : 0;
+  const currentSrc = list[safeIndex];
 
   useEffect(() => {
-    if (uniqueImages.length <= 1) return undefined;
-    // Per-card jitter so neighboring cards don't flip at the same moment.
-    const initialDelay = Math.floor(Math.random() * ROTATE_INTERVAL_MS);
-    let currentIndex = 0;
-    timerRef.current = setTimeout(function tick() {
-      setPrevSrc(uniqueImages[currentIndex]);
-      currentIndex = (currentIndex + 1) % uniqueImages.length;
-      setIndex(currentIndex);
-      timerRef.current = setTimeout(tick, ROTATE_INTERVAL_MS);
-    }, ROTATE_INTERVAL_MS + initialDelay);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [uniqueImages.length]);
+    if (!rotates || !visible || reduced) return undefined;
+    const delay = interval + jitterRef.current;
+    jitterRef.current = 0;
+    const t = setTimeout(() => {
+      setPrevSrc(currentSrc);
+      setIndex((i) => (i + 1) % list.length);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [rotates, visible, reduced, safeIndex, currentSrc, list.length, interval]);
 
-  // Clear the outgoing image once its slide-out finishes, so only the
-  // current image keeps rendering between rotations.
+  // Drop the outgoing photo once the incoming one has faded in.
   useEffect(() => {
     if (!prevSrc) return undefined;
-    const t = setTimeout(() => setPrevSrc(null), 750);
+    const t = setTimeout(() => setPrevSrc(null), FADE_MS + 50);
     return () => clearTimeout(t);
   }, [prevSrc]);
 
-  if (uniqueImages.length === 0) {
-    return null;
-  }
+  if (!currentSrc) return null;
 
-  if (uniqueImages.length === 1) {
-    return (
-      <img
-        src={uniqueImages[0]}
-        alt={alt}
-        className={className}
-        loading="lazy"
-      />
-    );
-  }
-
-  const currentSrc = uniqueImages[index];
+  const markFailed = (src) =>
+    setFailed((prev) => {
+      if (prev.has(src)) return prev;
+      const next = new Set(prev);
+      next.add(src);
+      return next;
+    });
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div ref={wrapRef} className="absolute inset-0 overflow-hidden">
       {prevSrc && prevSrc !== currentSrc && (
         <img
           key={`out-${prevSrc}`}
           src={prevSrc}
           alt=""
           aria-hidden="true"
-          className={`absolute inset-0 animate-morph-slide-out-left ${className}`}
-          loading="lazy"
+          className={`absolute inset-0 ${className}`}
         />
       )}
       <img
-        key={`in-${currentSrc}-${index}`}
+        key={`in-${currentSrc}`}
         src={currentSrc}
         alt={alt}
-        className={`absolute inset-0 animate-morph-slide-in-right ${className}`}
-        loading="lazy"
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+        onError={() => markFailed(currentSrc)}
+        className={`absolute inset-0 ${className} ${
+          prevSrc ? 'animate-in fade-in duration-700 motion-reduce:animate-none' : ''
+        }`}
       />
     </div>
   );
