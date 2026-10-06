@@ -131,6 +131,7 @@ async function main() {
   const summary = [
     `## Morph ID evaluation`,
     '',
+    report.aborted_reason ? `**Run stopped early:** ${report.aborted_reason}\n` : '',
     `Model \`${report.model}\`, taxonomy \`${taxonomyVersion}\`, ${report.completed} of ${report.sample_size} geckos graded (${report.failures} failed).`,
     '',
     '| Measure | Result |',
@@ -147,6 +148,9 @@ async function main() {
   ].join('\n');
   console.log(summary);
   if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, `${summary}\n`);
+  // A run the eval cut short (the analyzer kept failing) must show red, not
+  // a green run with a meaningless score.
+  if (report.aborted_reason) throw new Error(report.aborted_reason);
 }
 
 main().catch((error) => {

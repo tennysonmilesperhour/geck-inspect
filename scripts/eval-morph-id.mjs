@@ -156,16 +156,33 @@ async function gradeRow(row, index) {
 }
 
 const startedAt = new Date().toISOString();
-const results = new Array(rows.length);
+let results = new Array(rows.length);
 let next = 0;
+// Stop early when the analyzer keeps failing the same way (on 6 Oct 2026 the
+// API credit ran out and two runs ground through 816 refused calls). Five
+// failures in a row with no success in between means something is down, not
+// that five geckos are hard.
+const ABORT_AFTER_CONSECUTIVE_FAILURES = 5;
+let consecutiveFailures = 0;
+let abortedReason = null;
 await Promise.all(Array.from({ length: Math.min(concurrency, rows.length) }, async () => {
-  while (next < rows.length) {
+  while (next < rows.length && !abortedReason) {
     const index = next;
     next += 1;
     results[index] = await gradeRow(rows[index], index);
     if (resultsPath) await appendFile(resultsPath, `${JSON.stringify(results[index])}\n`);
+    if (results[index].error) {
+      consecutiveFailures += 1;
+      if (consecutiveFailures >= ABORT_AFTER_CONSECUTIVE_FAILURES && !abortedReason) {
+        abortedReason = `Stopped after ${consecutiveFailures} failures in a row. Last error: ${results[index].error}`;
+        console.error(abortedReason);
+      }
+    } else {
+      consecutiveFailures = 0;
+    }
   }
 }));
+results = results.filter(Boolean);
 
 const completed = results.filter((row) => !row.error);
 const answered = completed.filter((row) => row.assessment_status !== 'insufficient_evidence');
@@ -196,6 +213,7 @@ const report = {
   sample_size: rows.length,
   completed: completed.length,
   failures: results.length - completed.length,
+  aborted_reason: abortedReason,
   coverage: ratio(answered.length, completed.length),
   overall_top1_accuracy: ratio(completed.filter((row) => row.top1_correct).length, completed.length),
   answered_top1_accuracy: ratio(answered.filter((row) => row.top1_correct).length, answered.length),

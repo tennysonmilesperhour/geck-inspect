@@ -85,6 +85,10 @@ const FRIENDLY_ERROR = {
     title: "We couldn't check your credits",
     body: 'Nothing was charged. Please press Try again in a moment.',
   },
+  analyzer_unavailable: {
+    title: 'Morph ID is down for maintenance',
+    body: 'Nothing was charged and your photos are still here. We have been alerted. Please try again in a few hours.',
+  },
   config_error: {
     title: 'Morph ID is down for maintenance',
     body: 'Nothing was charged. We have been alerted and it should be back shortly.',

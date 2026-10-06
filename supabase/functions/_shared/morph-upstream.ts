@@ -8,6 +8,11 @@ export const RETRYABLE_UPSTREAM_STATUS = new Set([429, 500, 502, 503, 504, 529])
 /** Map an Anthropic error to the code the page shows friendly copy for. */
 export function upstreamErrorCode(status: number, detail: string): string {
   if (status === 429 || status === 529) return "upstream_rate_limited";
+  // The Anthropic account is out of credit or its key is wrong. Nothing the
+  // member does will help, and "try again" would only send them in circles.
+  if (status === 401 || status === 403 || /credit balance|billing/i.test(detail)) {
+    return "analyzer_unavailable";
+  }
   // A photo the analyzer cannot decode (unsupported format, too large) is a
   // 400 that no retry will fix, so say so instead of "try again later".
   if (status === 400 && /image|media[_ ]type|base64|too large|exceeds/i.test(detail)) {

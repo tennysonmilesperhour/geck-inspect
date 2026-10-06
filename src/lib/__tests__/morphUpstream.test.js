@@ -12,6 +12,11 @@ describe('upstreamErrorCode', () => {
     expect(upstreamErrorCode(400, 'image exceeds 5 MB maximum')).toBe('image_unreadable');
   });
 
+  it('says the analyzer is unavailable when the account is out of credit', () => {
+    expect(upstreamErrorCode(400, '{"error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API."}}')).toBe('analyzer_unavailable');
+    expect(upstreamErrorCode(401, 'invalid x-api-key')).toBe('analyzer_unavailable');
+  });
+
   it('keeps other failures generic', () => {
     expect(upstreamErrorCode(400, 'invalid tool schema')).toBe('upstream_error');
     expect(upstreamErrorCode(500, 'internal')).toBe('upstream_error');
