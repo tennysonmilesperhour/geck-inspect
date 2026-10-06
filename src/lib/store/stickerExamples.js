@@ -1,14 +1,10 @@
 /**
- * The two reference stickers shown on the custom sticker page.
- *
- * Each entry carries both a printed image and the design spec behind it.
- * The printed images live in public/store/custom-stickers/ (Tennyson's own
- * Moonlight and Bat Geck cards, trimmed and encoded as WebP). If an image
- * ever fails to load, the gallery falls back to rendering the spec through
- * StickerCardPreview, so the page is never broken.
+ * Collector templates and the keeper-owned reference stickers.
+ * New illustrations are rendered with the same editable card component used
+ * by the builder. Reference images retain their live-render fallback.
  */
 
-export const STICKER_EXAMPLES = [
+const KEEPER_REFERENCES = [
   {
     id: 'moonlight',
     image: '/store/custom-stickers/moonlight.webp',
@@ -84,6 +80,55 @@ export const STICKER_EXAMPLES = [
   },
 ];
 
+// These examples use the exact production renderer, so the starting layout
+// and the gallery remain in sync. Sample art is never added to an order.
+const collectorTemplate = (id, name, type, border, note, attacks, overrides = {}) => ({
+  id,
+  note,
+  design: {
+    ...KEEPER_REFERENCES[0].design,
+    theme: 'trading_card',
+    photo_url: `/store/custom-stickers/${id}.webp`,
+    layout: 'classic',
+    name,
+    type,
+    border_color: border,
+    stage: 'basic',
+    evolves_from: '',
+    hp: 90,
+    dex_number: '',
+    height: '',
+    weight: '',
+    attacks: attacks.map(([name, damage, text], i) => ({ name, damage, text, cost: i + 1, cost_type: type })),
+    weakness_type: '',
+    resistance_type: '',
+    retreat_cost: 1,
+    illustrator: '',
+    set_code: 'GI26',
+    card_number: '1',
+    set_total: '3',
+    rarity: 'uncommon',
+    morph_line: 'Crested gecko',
+    finish: 'glossy',
+    ...overrides,
+  },
+});
+
+export const STICKER_EXAMPLES = [
+  collectorTemplate('canopy', 'Fern', 'grass', 'yellow',
+    'Golden frame, fern greens, and a classic two-move profile. A bright first-edition feel.',
+    [['Leaf Leap', '20', 'One perfect jump into the canopy.'], ['Branch Grip', '40', 'Small toes. Unshakeable hold.']]),
+  collectorTemplate('ember', 'Cinder', 'fire', 'gold',
+    'Warm copper tones and a gold frame, with bold moves and a featured edition mark.',
+    [['Warm Up', '20', 'Find the sunniest spot on the branch.'], ['Crest Rush', '60', 'A sudden dash, then a well-earned rest.']],
+    { hp: 120, stage: 'stage_2', evolves_from: 'Juvenile', card_number: '2', rarity: 'rare' }),
+  collectorTemplate('moon', 'Luna', 'psychic', 'silver',
+    'Silver edging, lavender ink, and a quiet moonlit portrait. A softer collector palette.',
+    [['Moon Walk', '10', 'Explore the leaves after lights out.'], ['Night Pounce', '50', 'A patient hunter makes one quick leap.']],
+    { hp: 100, stage: 'stage_1', evolves_from: 'Hatchling', card_number: '3', rarity: 'holo_rare' }),
+  ...KEEPER_REFERENCES,
+];
+
 /** Load one example into the builder as a starting point. */
 export function exampleAsStartingDesign(example) {
   return {
@@ -92,7 +137,8 @@ export function exampleAsStartingDesign(example) {
     photo_url: '',
     photo_path: '',
     name: '',
-    morph_line: example.design.morph_line,
+    morph_line: '',
+    attacks: (example.design.attacks || []).map((attack) => ({ ...attack })),
     finish: 'glossy',
   };
 }
