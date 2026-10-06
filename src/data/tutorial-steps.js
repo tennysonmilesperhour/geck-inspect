@@ -1,8 +1,8 @@
 // Feature explanations for the in-app walkthrough. Keep every sidebar page covered.
 export const STEP_BLURBS = {
     Market: {
-        title: 'Market',
-        body: 'Review current crested gecko asking prices and changes in the market. Watch for morphs within your budget and compare listing trends with your own collection; asking prices are not confirmed sale prices.',
+        title: 'Market Intelligence',
+        body: 'Review current crested gecko asking prices and changes in the market, watch for morphs within your budget, browse geckos listed in the app, and manage your own listings. Asking prices are not confirmed sale prices.',
     },
     Store: {"title": "Supplies", "body": "Browse reptile food, enclosures, lighting and care equipment. Affiliate products open the seller\u2019s listing, where you buy them at current prices. Items Geck Inspect will sell itself are marked Not available yet until its checkout opens."},
     Promote: {"title": "Promote", "body": "Choose a gecko from your collection and draft a social post tailored to your selected platform. Review its photos, morph details and generated wording before copying or sharing the post."},
@@ -81,10 +81,6 @@ export const STEP_BLURBS = {
     Gallery: {
         title: 'Image Gallery',
         body: 'Community photo feed. Post pictures of your geckos, like other keepers\' shots, and browse morph examples filtered by trait.',
-    },
-    Marketplace: {
-        title: 'Marketplace',
-        body: 'Buy and sell geckos through Geck Inspect. The page splits into Buy (browse listings) and Sell (publish your own). Both filter by morph, sex, age, and price.',
     },
     MarketplaceBuy: {
         title: 'Buy Geckos',

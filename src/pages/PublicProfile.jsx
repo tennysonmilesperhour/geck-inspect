@@ -75,7 +75,7 @@ function buildProfileJsonLd(profileUser, counts) {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
-        { '@type': 'ListItem', position: 2, name: 'Marketplace', item: `${SITE_URL}/Marketplace` },
+        { '@type': 'ListItem', position: 2, name: 'Marketplace', item: `${SITE_URL}/MarketplaceBuy` },
         { '@type': 'ListItem', position: 3, name: profileUser.full_name, item: url },
       ],
     },
@@ -248,7 +248,7 @@ export default function PublicProfile() {
                     <UserX className="w-12 h-12 text-slate-500 mb-4" aria-hidden="true" />
                     <h1 className="text-xl font-semibold text-slate-100">{error}</h1>
                     <Button asChild className="mt-4">
-                        <Link to={createPageUrl('Marketplace')}>Browse the marketplace</Link>
+                        <Link to={createPageUrl('MarketplaceBuy')}>Browse the marketplace</Link>
                     </Button>
                 </div>
             </div>

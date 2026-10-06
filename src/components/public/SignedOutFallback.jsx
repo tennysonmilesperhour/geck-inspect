@@ -47,7 +47,7 @@ const MEMBER_PAGES = {
     body: 'Family trees for the geckos in your collection, built from the parents you record.',
   },
   market: {
-    title: 'Market',
+    title: 'Market Intelligence',
     body: 'Crested gecko prices from real listings and how your own geckos compare.',
   },
   forum: {

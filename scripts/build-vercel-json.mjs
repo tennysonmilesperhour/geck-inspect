@@ -79,7 +79,6 @@ const CASE_REDIRECTS = [
   // which is the marketed and sitemap-canonical URL.
   { from: '/geneticcalculatortool', to: '/calculator' },
   { from: '/GeneticCalculatorTool', to: '/calculator' },
-  { from: '/marketplace', to: '/Marketplace' },
   { from: '/marketplacebuy', to: '/MarketplaceBuy' },
   { from: '/marketplaceverification', to: '/MarketplaceVerification' },
   { from: '/gallery', to: '/Gallery' },

@@ -14,7 +14,7 @@ import {
   Heart,
   MessageSquare,
   Database,
-  ShoppingCart,
+  TrendingUp,
   Users,
   GitBranch,
   Upload,
@@ -35,7 +35,7 @@ export const publicNavItems = [
   { title: 'Care Guide',        url: createPageUrl('CareGuide'),         icon: Heart },
   { title: 'Forum',             url: createPageUrl('Forum'),             icon: MessageSquare },
   { title: 'Image Gallery',     url: createPageUrl('Gallery'),           icon: Database },
-  { title: 'Marketplace',       url: createPageUrl('Marketplace'),       icon: ShoppingCart },
+  { title: 'Market Intelligence', url: createPageUrl('Market'),          icon: TrendingUp },
 ];
 
 // User-only navigation, shown to signed-in users.

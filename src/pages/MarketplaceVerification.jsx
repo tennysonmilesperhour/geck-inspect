@@ -39,7 +39,7 @@ const VERIFICATION_JSON_LD = [
   },
   breadcrumbSchema([
     { name: 'Home', path: '/' },
-    { name: 'Marketplace', path: '/Marketplace' },
+    { name: 'Marketplace', path: '/MarketplaceBuy' },
     { name: 'Verification & Trust', path: PATH },
   ]),
   {

@@ -108,8 +108,7 @@ function buildMarketplaceListJsonLd(geckos, owners) {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
-        { '@type': 'ListItem', position: 2, name: 'Marketplace', item: `${SITE_URL}/Marketplace` },
-        { '@type': 'ListItem', position: 3, name: 'Buy Geckos', item: `${SITE_URL}/MarketplaceBuy` },
+        { '@type': 'ListItem', position: 2, name: 'Buy Geckos', item: `${SITE_URL}/MarketplaceBuy` },
       ],
     },
   ];
@@ -236,7 +235,9 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
     );
 };
 
-export default function MarketplaceBuyPage() {
+// `embedded`: shown as a tab inside Market Intelligence, which sets its
+// own (noindex) page metadata.
+export default function MarketplaceBuyPage({ embedded = false }) {
     const [buyPrefs, setBuyPrefs] = usePageSettings('marketplace_buy_prefs', {
         cardSize: 'regular',
         defaultSort: 'newest',
@@ -448,13 +449,13 @@ export default function MarketplaceBuyPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-            <Seo
+            {!embedded && <Seo
                 title="Marketplace, Buy Geckos"
                 description="Browse crested geckos for sale from trusted breeders. Filter by morph, sex, and price to find your next gecko."
                 path="/MarketplaceBuy"
                 keywords={['buy crested gecko', 'gecko for sale', 'crested gecko marketplace', 'gecko breeder listings']}
                 jsonLd={buildMarketplaceListJsonLd(filteredGeckos, owners)}
-            />
+            />}
             <div className="max-w-7xl mx-auto">
                 <PageHeader
                     icon={ShoppingCart}

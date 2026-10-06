@@ -188,17 +188,12 @@ export const NAV_REGISTRY = [
   },
 
   // ----- Marketplace (palette) -----
-  // The market page: daily brief, live listings, watchlist, Guess the
-  // Price and (Breeder plan) your listings against the market. 30 Sep 2026.
+  // Market Intelligence: daily brief, live listings, watchlist, in-app
+  // listings (the old Marketplace page) and your listings. 6 Oct 2026.
   {
     page: 'Market', section: 'discover',
-    sidebar: { category: 'public', order: 1.5, label: 'Market', icon: 'TrendingUp', requiresAuth: true },
-    palette: { group: 'Marketplace', label: 'Market Today', icon: 'TrendingUp', keywords: ['market', 'prices', 'brief', 'watchlist', 'alerts', 'new listings', 'price cuts', 'guess the price', 'game', 'value'] },
-  },
-  {
-    page: 'Marketplace', section: 'discover',
-    sidebar: { category: 'public', order: 2, label: 'Marketplace', icon: 'ShoppingCart', requiresAuth: false },
-    palette: { group: 'Marketplace', label: 'Marketplace', icon: 'ShoppingCart', keywords: ['buy', 'shop', 'store'] },
+    sidebar: { category: 'public', order: 1.5, label: 'Market Intelligence', icon: 'TrendingUp', requiresAuth: true },
+    palette: { group: 'Marketplace', label: 'Market Intelligence', icon: 'TrendingUp', keywords: ['market', 'prices', 'brief', 'watchlist', 'alerts', 'new listings', 'price cuts', 'value', 'marketplace', 'buy', 'sell', 'shop'] },
   },
   {
     page: 'MarketplaceBuy', section: 'discover',

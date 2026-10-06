@@ -339,6 +339,16 @@
       "permanent": true
     },
     {
+      "source": "/Marketplace",
+      "destination": "/Market?tab=browse",
+      "permanent": true
+    },
+    {
+      "source": "/marketplace",
+      "destination": "/Market?tab=browse",
+      "permanent": true
+    },
+    {
       "source": "/morph-visualizer",
       "destination": "/MorphGuide",
       "permanent": true
@@ -416,11 +426,6 @@
     {
       "source": "/GeneticCalculatorTool",
       "destination": "/calculator",
-      "permanent": true
-    },
-    {
-      "source": "/marketplace",
-      "destination": "/Marketplace",
       "permanent": true
     },
     {
