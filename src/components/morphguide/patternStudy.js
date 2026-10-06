@@ -1,6 +1,7 @@
-/** Curated reference records. External images stay on the credited source's host.
- * These support visible-feature comparison, never genotype confirmation.
- * Reuse permission must be established before a public release of this preview.
+/** Curated reference records support visible-feature comparison, never genotype confirmation.
+ * Production links to the source unless a record has documented reuse permission.
+ * After recording permission from every relevant rights holder, set reuseApproved: true.
+ * Local development may embed the source-hosted images for design review.
  */
 export const SPECIMEN_SOURCE = 'https://lmreptiles.com/fg-pt2-1/';
 const PHOTO_SIZE = { brindle: [1024,780], pin: [1024,1019], flank: [1024,576], harlequin: [1024,683], extreme: [672,770], bicolor: [678,810], dalmatian: [1024,685], dense: [1024,683] };

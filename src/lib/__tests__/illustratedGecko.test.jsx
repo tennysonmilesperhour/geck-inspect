@@ -8,6 +8,7 @@ import IllustratedGecko, { STUDY_MORPHS, hasIllustration } from '@/components/mo
 import { pinSegments } from '@/components/morphguide/traitStudyMath';
 import { SPECIMENS, STUDY_LESSONS, STUDY_QUESTIONS, normalizedStudy, traitDescription } from '@/components/morphguide/patternStudy';
 import PatternSpectrum, { spectrumPositionFor } from '@/components/morphguide/PatternSpectrum';
+import { SpecimenPhoto } from '@/components/morphguide/SpecimenStudy';
 import { MORPHS } from '@/data/morph-guide';
 vi.mock('@/lib/posthog', () => ({ captureEvent: vi.fn() }));
 const slugs = new Set(MORPHS.map(m => m.slug));
@@ -39,6 +40,16 @@ describe('specimen-based lessons', () => {
     expect(spectrumPositionFor('dalmatian')).toEqual({ track:'features', pos:0 });
     expect(spectrumPositionFor('phantom-pinstripe')).toBeNull();
     expect(spectrumPositionFor('patternless')).toBeNull();
+  });
+  it('links to the original photograph in production unless reuse is explicitly approved', () => {
+    const html = renderToStaticMarkup(<SpecimenPhoto specimen={SPECIMENS.flame} previewPhotos={false} />);
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain(SPECIMENS.flame.src);
+    expect(html).toContain(SPECIMENS.flame.source);
+    expect(html).toContain('Open original photograph');
+    const cleared = renderToStaticMarkup(<SpecimenPhoto specimen={{ ...SPECIMENS.flame, reuseApproved: true }} previewPhotos={false} />);
+    expect(cleared).toContain('<img');
+    expect(cleared).toContain(SPECIMENS.flame.src);
   });
 });
 

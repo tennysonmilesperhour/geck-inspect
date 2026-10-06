@@ -184,7 +184,7 @@ export const MORPHS = [
     // hobby label (and the hub URL grouping); foundationGenetics explains
     // the Foundation Genetics single-locus model alongside it.
     foundationGenetics:
-      "Traditional hobby guides describe variation in harlequin expression as polygenic. Foundation Genetics proposes an underlying incomplete-dominant pattern trait with modifying factors. These are different models; visible coverage alone does not demonstrate gene dosage.",
+      "Traditional hobby guides describe variation in harlequin expression as polygenic. Foundation Genetics proposes an underlying pattern trait with incomplete dominant inheritance and modifying factors. These are different models; visible coverage alone does not demonstrate gene dosage.",
     rarity: 'common',
     priceTier: '$$',
     priceRange: '$120 to $400',
@@ -413,7 +413,7 @@ export const MORPHS = [
     // hobby label (and the hub URL grouping); foundationGenetics explains
     // the Foundation Genetics single-locus model alongside it.
     foundationGenetics:
-      "In a breeder model with a homozygous Dalmatian, the inheritance prediction follows that genotype. It must not be applied automatically to every heavily spotted animal sold as super.",
+      "Foundation Genetics models Dalmatian as a dominant trait with a homozygous Super Dalmatian form. In that model, inheritance predictions follow the documented genotype. They must not be applied automatically to every heavily spotted animal sold as super.",
     rarity: 'uncommon',
     priceTier: '$$$',
     priceRange: '$300 to $800',
