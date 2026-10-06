@@ -63,7 +63,7 @@ export default function OfflineSyncStatus() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 z-[9999] flex items-center gap-2 rounded-full border border-amber-500/40 bg-slate-900/95 px-3 py-1.5 text-xs font-semibold text-amber-200 shadow-lg"
+      className="fixed bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-4 right-4 z-[9999] flex items-center gap-2 rounded-full border border-amber-500/40 bg-slate-900/95 px-3 py-1.5 text-xs font-semibold text-amber-200 shadow-lg"
     >
       {online ? (
         <RefreshCw className={`h-3.5 w-3.5 ${busy ? 'animate-spin' : ''}`} />

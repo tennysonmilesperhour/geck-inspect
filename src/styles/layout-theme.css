@@ -163,7 +163,7 @@ html, body, #root {
              note in index.html) still have a strip under the app that
              only this color reaches, so it reads as part of the bar. */
           body {
-            background: #032821;
+            background: #061f1e;
             color: var(--gecko-text);
             font-weight: 400;
           }
@@ -1195,24 +1195,28 @@ html, body, #root {
           }
 
 /* Phone bottom bar with five destinations (6 Oct 2026): one glass strip
-   instead of two floating pills, so five targets fit a 360 px screen. */
+   instead of two floating pills, so five targets fit a 360 px screen.
+   Its size lives in --bottom-bar-pad and --bottom-bar-h (index.css). The
+   glass is light (55%) with a strong blur, so the page shows through;
+   the text shadow keeps labels readable over bright photos. */
 .gecko-bottom-nav.gecko-bottom-nav--bar {
   pointer-events: auto;
   gap: 4px;
-  padding: 6px 8px max(6px, env(safe-area-inset-bottom));
-  background: rgb(2 44 34 / 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgb(6 95 70 / 0.5);
+  padding: 4px 8px var(--bottom-bar-pad);
+  background: rgb(2 44 34 / 0.55);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-top: 1px solid rgb(6 95 70 / 0.35);
 }
 .gecko-bottom-nav--bar .gecko-bottom-nav__item {
   flex: 1 1 0;
   width: auto;
   min-width: 0;
-  min-height: 52px;
+  min-height: 48px;
   padding: 6px 2px;
   font-size: 9.5px;
   letter-spacing: 0.04em;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
   background: transparent;
   border-color: transparent;
   box-shadow: none;
@@ -1221,4 +1225,8 @@ html, body, #root {
 }
 .gecko-bottom-nav--bar .gecko-bottom-nav__item span {
   white-space: nowrap;
+  line-height: 1.2;
+}
+.gecko-bottom-nav--bar .gecko-bottom-nav__item svg {
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.5));
 }

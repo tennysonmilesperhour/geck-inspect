@@ -143,7 +143,7 @@ export default function FeedbackWidget() {
         aria-label="Send feedback"
         title="Send feedback"
         data-feedback-trigger
-        className="fixed z-[60] right-2 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] h-11 w-11 rounded-full md:right-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:h-auto md:w-auto md:rounded-none md:rounded-l-md md:flex-col md:gap-1.5 md:px-1.5 md:py-3 md:hover:px-2 touch:min-h-11 touch:min-w-11 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 text-xs font-semibold tracking-wider uppercase transition-all active:scale-95 print:hidden"
+        className="fixed z-[60] right-2 bottom-[calc(var(--bottom-bar-h)+1rem)] h-11 w-11 rounded-full md:right-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:h-auto md:w-auto md:rounded-none md:rounded-l-md md:flex-col md:gap-1.5 md:px-1.5 md:py-3 md:hover:px-2 touch:min-h-11 touch:min-w-11 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 text-xs font-semibold tracking-wider uppercase transition-all active:scale-95 print:hidden"
       >
         <MessageSquare className="w-5 h-5 md:w-3.5 md:h-3.5" />
         <span className="hidden md:inline [writing-mode:vertical-rl] rotate-180">Feedback</span>

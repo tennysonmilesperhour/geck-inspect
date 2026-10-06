@@ -1385,7 +1385,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           {/* Bottom padding leaves room for the tab bar (phones) and for
               the floating notices, so the end of a page can scroll clear. */}
-          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(4rem+env(safe-area-inset-bottom)+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
+          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(var(--bottom-bar-h)+0.5rem+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
             <PushEnableBanner user={user} />
             <AppShellContext.Provider value={true}>
               {/* Keyed by path so moving to another page clears a crashed one. */}

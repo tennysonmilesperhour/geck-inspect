@@ -857,7 +857,7 @@ export default function MarketplaceSellPage() {
           gecko marked. Sits above the mobile bottom nav so it doesn't
           collide with it. */}
       {selectMode && selectedIds.size > 0 && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-6 z-40 w-[min(96vw,640px)]">
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-6 z-40 w-[min(96vw,640px)]">
           <div className="rounded-xl border border-emerald-700/50 bg-slate-900/95 backdrop-blur-md shadow-2xl shadow-black/40 p-3 flex items-center gap-3">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-emerald-500 text-white shrink-0">

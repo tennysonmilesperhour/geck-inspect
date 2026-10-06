@@ -32,7 +32,7 @@ export default function FloatingNoticeStack({ children }) {
     <div
       ref={ref}
       data-floating-stack
-      className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 z-[60] flex flex-col items-end gap-2 pointer-events-none [&>*]:pointer-events-auto"
+      className="fixed bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-4 right-4 z-[60] flex flex-col items-end gap-2 pointer-events-none [&>*]:pointer-events-auto"
     >
       {children}
     </div>

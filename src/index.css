@@ -93,6 +93,16 @@ html, body {
   min-height: 100%;
 }
 
+/* Phone bottom bar size, shared by the bar (layout-theme.css), the page's
+   end padding and everything that floats just above the bar. The bar
+   tucks into the top of the home indicator area: its padding is the
+   inset minus 18px, which keeps the labels clear of the indicator line. */
+:root {
+  --bottom-bar-pad: max(6px, calc(env(safe-area-inset-bottom) - 18px));
+  /* 1px border + 4px top padding + 48px buttons + bottom padding */
+  --bottom-bar-h: calc(53px + var(--bottom-bar-pad));
+}
+
 
 /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
