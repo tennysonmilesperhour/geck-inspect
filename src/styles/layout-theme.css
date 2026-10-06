@@ -1194,19 +1194,16 @@ html, body, #root {
             .dashboard-card-hover:hover { transform: none; }
           }
 
-/* Phone bottom bar with five destinations (6 Oct 2026): one glass strip
+/* Phone bottom bar with five destinations (6 Oct 2026): one strip
    instead of two floating pills, so five targets fit a 360 px screen.
-   Its size lives in --bottom-bar-pad and --bottom-bar-h (index.css). The
-   glass is light (55%) with a strong blur, so the page shows through;
-   the text shadow keeps labels readable over bright photos. */
+   Its size lives in --bottom-bar-pad and --bottom-bar-h (index.css), which
+   count the 1px top edge. The glass itself is .liquid-glass below; the
+   text shadow keeps labels readable over bright photos. */
 .gecko-bottom-nav.gecko-bottom-nav--bar {
   pointer-events: auto;
   gap: 4px;
   padding: 4px 8px var(--bottom-bar-pad);
-  background: rgb(2 44 34 / 0.55);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border-top: 1px solid rgb(6 95 70 / 0.35);
+  border-top: 1px solid rgb(255 255 255 / 0.14);
 }
 .gecko-bottom-nav--bar .gecko-bottom-nav__item {
   flex: 1 1 0;
@@ -1216,7 +1213,7 @@ html, body, #root {
   padding: 6px 2px;
   font-size: 9.5px;
   letter-spacing: 0.04em;
-  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.7), 0 0 8px rgb(0 0 0 / 0.35);
   background: transparent;
   border-color: transparent;
   box-shadow: none;
@@ -1228,5 +1225,86 @@ html, body, #root {
   line-height: 1.2;
 }
 .gecko-bottom-nav--bar .gecko-bottom-nav__item svg {
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.5));
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+}
+
+/* Liquid glass phone bars (6 Oct 2026): the header and the bottom bar are
+   clear glass, and the page scrolls under both. A light blur, a color
+   lift and bright edges make the glass. In Chromium browsers an SVG
+   filter (#gi-glass-warp, rendered in Layout.jsx) also bends what passes
+   behind. Safari cannot run SVG filters on the backdrop (WebKit bug
+   245510) and drops the whole backdrop-filter when it sees url(), so the
+   bend only switches on under html.glass-warp, which main.jsx sets for
+   Chromium alone. Values in -webkit-backdrop-filter are written out
+   because Safari ignores custom properties there.
+
+   The bar itself has no backdrop-filter: its two layers do the work, and
+   a filtered parent would hide the page from them. Both layers sit at
+   z-index -1 inside the bar, so its buttons stay on top. */
+.liquid-glass::before,
+.liquid-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Layer 1, the glass: a faint white tint over a light blur that also
+   lifts color and brightness, so whatever passes behind stays visible. */
+.liquid-glass::before {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.02));
+  -webkit-backdrop-filter: blur(3px) saturate(180%) brightness(1.08);
+  backdrop-filter: blur(3px) saturate(180%) brightness(1.08);
+}
+html.glass-warp .liquid-glass::before {
+  -webkit-backdrop-filter: url(#gi-glass-warp) blur(2px) saturate(180%) brightness(1.08);
+  backdrop-filter: url(#gi-glass-warp) blur(2px) saturate(180%) brightness(1.08);
+}
+
+/* Layer 2, the rim: a thin band along the edge that faces the page, with
+   a little more blur and light and a bright line where light catches it.
+   This is what makes the glass read as thick and curved. Only the inner
+   edge gets it: the other edge meets the status bar or the screen edge,
+   where a line would look like a seam. */
+.liquid-glass::after {
+  -webkit-backdrop-filter: blur(3px) saturate(120%) brightness(1.1);
+  backdrop-filter: blur(3px) saturate(120%) brightness(1.1);
+}
+.liquid-glass--bottom::after {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.10), rgb(255 255 255 / 0) 10px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2);
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 2px, transparent 10px);
+  mask-image: linear-gradient(180deg, #000 0, #000 2px, transparent 10px);
+}
+.liquid-glass--top::after {
+  background: linear-gradient(0deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0) 10px);
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.1);
+  -webkit-mask-image: linear-gradient(0deg, #000 0, #000 2px, transparent 10px);
+  mask-image: linear-gradient(0deg, #000 0, #000 2px, transparent 10px);
+}
+
+/* The header's lower edge carries the line the bottom bar has on top. */
+.liquid-glass--top {
+  border-bottom: 1px solid rgb(255 255 255 / 0.12);
+}
+
+/* Header buttons on glass: the action group turns into a faint glass
+   pill, and icons get a soft shadow so they read over bright content. */
+.liquid-glass .gecko-header-actions {
+  background: rgb(255 255 255 / 0.06);
+  border-color: rgb(255 255 255 / 0.14);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.liquid-glass--top svg {
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+}
+
+/* People who turn on Reduce Transparency get solid bars. */
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass::before {
+    background: rgb(4 20 17 / 0.94);
+  }
 }

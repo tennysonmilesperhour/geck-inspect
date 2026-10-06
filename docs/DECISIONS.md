@@ -444,7 +444,16 @@ These entries capture the strategic decisions made during the initial landing pa
 **Reasoning:** The market data is the one thing no competitor has, and it costs real money to collect. Giving it away on Free left Enterprise with nothing to sell.
 **Consequences:** The gate is in the app only. The brief, tape and watchlist database functions still answer any signed-in member, and watches saved before this change keep sending alerts. A server-side check (effective_tier_for_current_user() in those functions, as the seller view already does) closes that. A price of exactly $100 needs a new Stripe price and its id swapped into stripe-config.js and both edge functions. Decision 21 (Enterprise as a sales-led waitlist) is superseded.
 
-### 39. Time to sell estimates, from the May to June sales window
+### 39. The phone bars are liquid glass; the warp runs in Chromium only
+
+**Date:** 2026-10-06
+**Status:** Accepted (Tennyson asked for liquid glass bars)
+**Context:** Tennyson asked for the phone header and bottom bar to be liquid glass: mostly transparent, with a slight warp of what passes behind them. The page never passed behind the header (it sat above the scroll area). The warp needs an SVG filter on the backdrop, which only Chromium renders: Safari has an open WebKit bug (245510) and drops the whole backdrop-filter, blur included, when it sees url() there.
+**Decision:** On phones the header floats over the page (fixed, its height measured into `--top-bar-h`), and the scroll area pads its top by that height. Both bars use `.liquid-glass` (layout-theme.css): a light blur that lifts color and brightness, a faint white tint, and a bright inner edge. In Chromium, `html.glass-warp` (set in main.jsx) adds `#gi-glass-warp`, soft noise through feDisplacementMap, so the page ripples as it scrolls behind. The iPhone status bar (theme-color) is now the active theme's page background instead of the header green (decision 37), so it does not read as a green strip above a clear header.
+**Reasoning:** This is as close to Apple's Liquid Glass as the web allows today. iPhone gets the glass without the ripple until Safari renders SVG backdrop filters.
+**Consequences:** Never let Safari see url() in a backdrop filter. When WebKit ships SVG backdrop filters, widen the `glass-warp` check in main.jsx. Sticky parts of pages keep `top-0`: Chrome and Safari keep sticky boxes inside the scroll area's padding, so they stop just below the header. Desktop is unchanged.
+
+### 40. Time to sell estimates, from the May to June sales window
 
 **Date:** 2026-10-06
 **Status:** Accepted (Tennyson asked for it)

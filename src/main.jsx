@@ -29,6 +29,16 @@ installNativeAuth().catch(() => console.warn('Native sign-in listener could not 
 // See translationGuard.js for why this crashed sign-up and the dashboard.
 installTranslationGuard();
 
+// The liquid glass bars bend the page behind them with an SVG backdrop
+// filter, which only Chromium renders. Safari drops the whole glass if it
+// sees one, so the bend is switched on by engine (layout-theme.css,
+// .liquid-glass). navigator.userAgentData exists only in Chromium.
+try {
+  if (navigator.userAgentData?.brands?.some((b) => b.brand === 'Chromium')) {
+    document.documentElement.classList.add('glass-warp');
+  }
+} catch { /* plain glass */ }
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
     <App />
