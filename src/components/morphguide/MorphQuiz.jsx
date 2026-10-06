@@ -9,7 +9,7 @@ import { MorphIndexArt, morphImages } from '@/components/morphguide/MorphIndexCa
 import MorphQuizGlyph, { QUIZ_GLYPHS } from '@/components/morphguide/MorphQuizGlyph';
 
 /**
- * "Which morph is my gecko?" A compact teaser card on the Morph Guide index
+ * "Which features can you see?" A compact teaser card on the Morph Guide index
  * that opens, in place, into a four step picture quiz. The scoring lives in
  * src/lib/morphQuiz.js; this file is only the screens.
  */
@@ -70,7 +70,7 @@ function ResultCard({ result, morph, rank }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-xs font-semibold uppercase tracking-wider text-emerald-300/90">
-          {rank === 0 ? 'Best match' : 'Also likely'}
+          {rank === 0 ? 'Start here' : 'Also compare'}
         </div>
         <div className="text-base font-bold text-white leading-snug group-hover:text-emerald-300 transition-colors">
           {result.name}
@@ -171,10 +171,10 @@ export default function MorphQuiz({ morphs = [] }) {
           </div>
           <div className="min-w-0 flex-1">
             <h2 id="morph-quiz-teaser" className="text-base sm:text-lg font-bold text-white leading-snug">
-              Which morph is my gecko?
+              Which features can you see?
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 leading-snug">
-              Four picture questions, about 30 seconds. Tap what your gecko looks like.
+              Four observations to find useful guides. Several names may apply to one gecko.
             </p>
           </div>
           <button
@@ -197,7 +197,7 @@ export default function MorphQuiz({ morphs = [] }) {
   return (
     <motion.section
       ref={sectionRef}
-      aria-label="Which morph is my gecko? quiz"
+      aria-label="Which features can you see? quiz"
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
@@ -266,10 +266,10 @@ export default function MorphQuiz({ morphs = [] }) {
                 tabIndex={-1}
                 className="text-lg sm:text-xl font-bold text-white text-center leading-snug outline-none"
               >
-                {results.length > 1 ? 'Your gecko is most likely one of these' : 'Your gecko is most likely'}
+                Guides to compare with your observations
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 text-center mt-1 mb-3 max-w-xl mx-auto">
-                A first guess from four answers. Many geckos carry more than one trait, so read each guide and compare.
+                These are reading suggestions, not an identification or genetic result. Compare clear photographs, natural firing states and documented lineage.
               </p>
               <div className={`grid gap-2 sm:gap-3 ${results.length > 1 ? 'md:grid-cols-2 lg:grid-cols-3' : 'max-w-md mx-auto'}`}>
                 {results.map((r, i) => {
@@ -284,7 +284,7 @@ export default function MorphQuiz({ morphs = [] }) {
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm px-4 h-11 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
                 >
                   <Camera className="w-4 h-4" />
-                  Not sure? Get a confident answer from a photo
+                  Compare a photo with Morph ID
                 </Link>
                 <button
                   type="button"

@@ -8,21 +8,20 @@ import { MORPHS } from '@/data/morph-guide';
  * the RULES table below, then scoreMorphs() returns the best one to three
  * matches with a plain reason for each.
  *
- * This is a friendly first guess, not an identification. A photo through
- * the Recognition tool gives a far more confident answer, and the result
- * screen says so.
+ * This is a friendly first guess, not an identification. Photographs and lineage provide different kinds of evidence; neither this
+ * questionnaire nor automated photo matching certifies genotype.
  */
 
 export const QUIZ_STEPS = [
   {
     id: 'pattern',
     question: 'Where is the cream or light pattern?',
-    help: 'Look at your gecko from above, ideally when it is fired up (darker and brighter colors).',
+    help: 'Look at your gecko from above, and from the side, using clear photographs in more than one natural firing state.',
     options: [
-      { id: 'back', label: 'Back only', hint: 'A light stripe down the back' },
+      { id: 'back', label: 'Mostly on the back', hint: 'A broad lighter dorsal field' },
       { id: 'sides', label: 'Sides and legs', hint: 'Cream climbs the sides and the legs' },
       { id: 'everywhere', label: 'Almost everywhere', hint: 'More cream than base color' },
-      { id: 'none', label: 'None', hint: 'One even color all over' },
+      { id: 'none', label: 'Little or none', hint: 'No conspicuous cream pattern' },
     ],
   },
   {
@@ -32,13 +31,13 @@ export const QUIZ_STEPS = [
     options: [
       { id: 'full', label: 'Full lines', hint: 'Unbroken, head to hips' },
       { id: 'broken', label: 'Broken lines', hint: 'Rows with gaps in them' },
-      { id: 'no', label: 'No', hint: 'No raised rows' },
+      { id: 'no', label: 'No', hint: 'No light line on the crest rows' },
     ],
   },
   {
     id: 'spots',
     question: 'Any dark spots?',
-    help: 'Spots that show in both fired-up and fired-down colors, not just freckles of pattern.',
+    help: 'Look for discrete pigmented spots. Their visibility can vary with age and firing state.',
     options: [
       { id: 'none', label: 'None', hint: 'Clean, no spots' },
       { id: 'some', label: 'Some', hint: 'A handful scattered around' },
@@ -51,7 +50,7 @@ export const QUIZ_STEPS = [
     question: 'Anything unusual?',
     help: 'Pick the one that stands out most. Most geckos are "none of these".',
     options: [
-      { id: 'red-eyes', label: 'Red or pink eyes', hint: 'No dark pupil color' },
+      { id: 'red-eyes', label: 'Red or pink eyes', hint: 'Check without flash or reflections' },
       { id: 'pale', label: 'Very pale or white', hint: 'White patches or a near-white body' },
       { id: 'gray', label: 'Gray, no yellow or red', hint: 'Black, white and gray tones only' },
       { id: 'none', label: 'None of these', hint: 'Normal eyes and colors' },
@@ -62,8 +61,8 @@ export const QUIZ_STEPS = [
 /**
  * The rule table. For each step and answer: which morphs gain points, how
  * many, and the clue shown to the visitor in the reason line. Weights:
- * 5 = this answer nearly names the morph (red eyes), 3 = strong sign,
- * 2 = good sign, 1 = a hint that only matters to break a tie.
+ * 3 = a relevant visible pattern, 2 = a comparison worth reading,
+ * 1 = a secondary comparison. These are navigation weights, not probabilities.
  *
  * Every slug here must exist in MORPHS; a unit test checks this.
  */
@@ -88,12 +87,12 @@ export const RULES = {
   },
   lines: {
     full: {
-      clue: 'full lines of raised scales',
-      points: { pinstripe: 3, 'phantom-pinstripe': 1 },
+      clue: 'continuous light crest rows',
+      points: { pinstripe: 3 },
     },
     broken: {
-      clue: 'broken lines of raised scales',
-      points: { pinstripe: 2, 'phantom-pinstripe': 1 },
+      clue: 'interrupted light crest rows',
+      points: { pinstripe: 2 },
     },
     no: { clue: null, points: {} },
   },
@@ -115,38 +114,23 @@ export const RULES = {
   unusual: {
     'red-eyes': {
       clue: 'red or pink eyes',
-      points: { albino: 5 },
+      points: { albino: 2 },
     },
     pale: {
       clue: 'very pale or white',
-      points: { 'lilly-white': 3, moonglow: 2, 'white-wall': 1, cream: 1 },
+      points: { 'lilly-white': 2, cream: 2 },
     },
     gray: {
       clue: 'gray with no yellow or red',
-      points: { axanthic: 5, lavender: 1 },
+      points: { axanthic: 2, lavender: 2 },
     },
     none: { clue: null, points: {} },
   },
 };
 
-/**
- * Rules that only make sense for a pair of answers. Raised scales on a
- * gecko with no cream pattern are the classic Phantom Pinstripe: the rows
- * are there but the same color as the body.
- */
+/** Combined visible features are navigation hints, never a genotype test. */
 export const COMBO_RULES = [
-  {
-    when: { pattern: 'none', lines: ['full', 'broken'] },
-    clue: 'raised scales with no cream color',
-    points: { 'phantom-pinstripe': 4 },
-  },
-  {
-    when: { pattern: 'sides', lines: ['full'] },
-    // A Harlequin Pinstripe: the full rows are the rarer, defining trait,
-    // so Pinstripe should lead with Harlequin as the runner-up.
-    clue: null,
-    points: { pinstripe: 2 },
-  },
+  { when: { pattern: 'sides', lines: ['full'] }, clue: null, points: { pinstripe: 2 } },
 ];
 
 const MAX_RESULTS = 3;
@@ -213,7 +197,7 @@ export function scoreMorphs(answers = {}, morphs = MORPHS) {
         slug: r.slug,
         name: bySlug.get(r.slug).morph.name,
         score: r.score,
-        reason: clues.length ? `You said ${sentence(clues)}.` : '',
+        reason: clues.length ? `You observed ${sentence(clues)}.${['albino', 'axanthic', 'lilly-white'].includes(r.slug) ? ' Appearance alone cannot confirm this trait.' : r.slug === 'super-dalmatian' ? ' Dense spots alone do not establish genetic super status.' : ''}` : '',
       };
     });
 }

@@ -31,18 +31,19 @@ describe('scoreMorphs', () => {
     expect(top({ pattern: 'everywhere' })[0]).toBe('extreme-harlequin');
     expect(top({ pattern: 'back' })[0]).toBe('flame');
     expect(top({ pattern: 'sides', lines: 'full' })[0]).toBe('pinstripe');
-    expect(top({ pattern: 'none', lines: 'full' })[0]).toBe('phantom-pinstripe');
+    expect(top({ pattern: 'none', lines: 'full' })[0]).toBe('pinstripe');
     expect(top({ pattern: 'none', spots: 'lots' })).toContain('super-dalmatian');
     expect(top({ pattern: 'back', spots: 'some' })).toContain('dalmatian');
     expect(top({ pattern: 'none', spots: 'red' })).toContain('dalmatian');
     expect(top({ pattern: 'none' })).toEqual(['patternless']);
   });
 
-  it('lets a strong single trait win', () => {
-    expect(top({ pattern: 'sides', unusual: 'red-eyes' })[0]).toBe('albino');
-    expect(top({ pattern: 'sides', unusual: 'gray' })[0]).toBe('axanthic');
+  it('suggests comparisons without prioritizing genetic claims from color alone', () => {
+    expect(top({ pattern: 'sides', unusual: 'red-eyes' })[0]).toBe('harlequin');
+    expect(top({ pattern: 'sides', unusual: 'red-eyes' })).toContain('albino');
+    expect(top({ pattern: 'sides', unusual: 'gray' })[0]).toBe('harlequin');
     expect(top({ pattern: 'none', unusual: 'pale' })).toEqual(
-      expect.arrayContaining(['lilly-white', 'moonglow']),
+      expect.arrayContaining(['lilly-white', 'cream']),
     );
   });
 
@@ -58,10 +59,13 @@ describe('scoreMorphs', () => {
       expect(res.length).toBeLessThanOrEqual(3);
       for (const r of res) {
         expect(SLUGS.has(r.slug)).toBe(true);
-        expect(r.reason).toMatch(/^You said .+\.$/);
+        expect(r.reason).toMatch(/^You observed .+\.$/);
         expect(r.reason).not.toMatch(/[\u2013\u2014]/);
       }
       expect(new Set(res.map((r) => r.slug)).size).toBe(res.length);
+      expect(res.map(r => r.slug)).not.toContain('moonglow');
+      expect(res.map(r => r.slug)).not.toContain('phantom-pinstripe');
+      res.filter(r => ['albino', 'axanthic', 'lilly-white'].includes(r.slug)).forEach(r => expect(r.reason).toContain('Appearance alone cannot confirm'));
     }
   });
 

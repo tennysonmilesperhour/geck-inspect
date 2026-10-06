@@ -1,20 +1,13 @@
-import IllustratedGecko from './IllustratedGecko';
+import TraitGecko from './TraitGecko';
 
-/** The quiz uses the same anatomical plate as the guide and continuous slider. */
-export default function MorphQuizGlyph({ cream = 'sides', lines = 'none', spots = 'none', tone = 'normal', eyes = 'dark', focus = null, className = '' }) {
-  const palette = tone === 'gray'
-    ? { base: '#787a74', dark: '#353d38', pattern: '#e6e2d6', eye: '#9b956b', outline: '#41473c' }
-    : tone === 'pale'
-      ? { base: '#e6dfce', dark: '#aa9c85', pattern: '#f9f6ed', eye: '#b9a064', outline: '#74654f' }
-      : { base: '#a9502e', dark: '#542d1f', pattern: '#ead6a9', eye: '#b5a05c', outline: '#3c2b20' };
-  if (eyes === 'red') palette.eye = '#cc6d77';
-  return <IllustratedGecko decorative className={className} focus={focus} detail={focus === 'eyes'} phenotype={{
-    palette, dorsal: cream === 'none' ? 0 : 1, flameTongues: cream === 'back' ? 0.7 : 0.3,
-    lateral: cream === 'everywhere' ? 1 : cream === 'sides' ? 0.55 : 0,
-    pinstripe: lines === 'full' ? 1 : lines === 'broken' ? 0.5 : 0,
-    dalmatian: spots === 'lots' ? 105 : spots === 'some' || spots === 'red' ? 15 : 0,
-    redSpots: spots === 'red' ? 1 : 0, albino: eyes === 'red',
-  }} />;
+/** Visible pattern examples; no invented pictures of unverified genotypes. */
+export default function MorphQuizGlyph({ cream = 'sides', lines = 'none', spots = 'none', tone = 'normal', eyes = 'dark', className = '' }) {
+  if (eyes === 'red' || tone !== 'normal' || spots === 'red') {
+    const label = eyes === 'red' ? 'Eye pigment' : spots === 'red' ? 'Red spotting' : tone === 'gray' ? 'Cool body tones' : 'Pale body tones';
+    const color = eyes === 'red' || spots === 'red' ? '#a45c54' : tone === 'gray' ? '#888c88' : '#e5dcc3';
+    return <div aria-hidden="true" className={`flex flex-col items-center justify-center gap-2 rounded-lg bg-[#f4efdf] text-[#40534b] ${className}`} style={{ aspectRatio:'3/2' }}><span className="block w-8 h-8 rounded-full border border-black/15" style={{ background:color }} /><span className="text-xs">{label}</span><span className="text-[10px]">Check real photographs</span></div>;
+  }
+  return <TraitGecko decorative view={lines === 'none' ? 'side' : 'top'} className={className} traits={{ dorsal:cream === 'none' ? 0 : 1, lateral:cream === 'everywhere' ? 1 : cream === 'sides' ? .62 : 0, pinstripe:lines === 'full' ? 1 : lines === 'broken' ? .5 : 0, spots:spots === 'lots' ? 1 : spots === 'some' ? .2 : 0 }} />;
 }
 
 /** The drawing for each quiz answer, keyed by step id then option id. */
