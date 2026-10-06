@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, AlertTriangle } from 'lucide-react';
 import { captureEvent } from '@/lib/posthog';
-import IllustratedGecko from '@/components/morphguide/IllustratedGecko';
-import { COVERAGE_PLATES, PINNING_PLATES, plateUrl } from './paintedGeckoPlates';
+import TraitGecko, { traitAsset } from './TraitGecko';
 import {
   COVERAGE_KEYFRAMES,
   PINNING_KEYFRAMES,
@@ -33,10 +31,10 @@ export const SPECTRUM_TRACKS = {
     stops: [
       {
         id: 'patternless-bicolor',
-        name: 'Patternless / Bicolor',
+        name: 'Patternless',
         short: 'None',
-        slugs: [{ slug: 'patternless', label: 'Patternless' }, { slug: 'bicolor', label: 'Bicolor' }],
-        look: 'One solid color, or a back that is a second solid color with a clean edge. No cream points or flank marks.',
+        slugs: [{ slug: 'patternless', label: 'Patternless' }],
+        look: 'A largely uniform base color without cream dorsal or flank pattern. The belly can naturally be lighter. Bicolor is a separate example with a contrasting back.',
       },
       {
         id: 'flame',
@@ -50,14 +48,14 @@ export const SPECTRUM_TRACKS = {
         name: 'Harlequin',
         short: 'Harlequin',
         slugs: [{ slug: 'harlequin', label: 'Harlequin' }],
-        look: 'Pattern climbs down the flanks and onto the legs, while plenty of base color still shows between the marks.',
+        look: 'Irregular cream climbs upward from the lower flanks and appears on the legs, while plenty of base color still shows between the marks.',
       },
       {
         id: 'extreme-harlequin',
         name: 'Extreme Harlequin',
         short: 'Extreme',
         slugs: [{ slug: 'extreme-harlequin', label: 'Extreme Harlequin' }],
-        look: 'Near-solid cream panels cover most of the flanks and legs, roughly 60 to 70% or more.',
+        look: 'Heavy irregular cream extends beyond the middle of the flanks, with substantial patterned legs. Breeders do not share a universal percentage cutoff.',
       },
     ],
     zones: [
@@ -120,311 +118,46 @@ export function spectrumPositionFor(slug) {
   return null;
 }
 
-function prefersReducedMotion() {
-  try {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-}
+const CONTROLS = [
+  ['dorsal', 'Dorsal cream', 'Cream within the back, separate from raised crest scales.'],
+  ['lateral', 'Flank & leg pattern', 'Irregular cream rises from the lower flanks; compare the side view.'],
+  ['pinstripe', 'Pinstripe continuity', 'Only the raised dorsal crest rows change. Compare the top view.'],
+  ['tiger', 'Dark band contrast', 'Broken transverse bands, independent of cream coverage.'],
+  ['spots', 'Dalmatian spotting', 'Sparse to dense: add discrete dark pigment spots over the other pattern.'],
+];
 
-const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-
-function trackCta(target, track) {
-  captureEvent('morph_guide_cta_clicked', { target, placement: 'spectrum', track });
-}
-
-export default function PatternSpectrum({
-  focusSlug,
-  initialTrack,
-  initialPosition,
-  className = '',
-  showHeader = true,
-}) {
-  const focus = focusSlug ? spectrumPositionFor(focusSlug) : null;
-  const startTrack = SPECTRUM_TRACKS[initialTrack] ? initialTrack : focus?.track || 'coverage';
-  const startPos = Number.isFinite(initialPosition)
-    ? initialPosition
-    : focus && focus.track === startTrack ? focus.pos : SPECTRUM_TRACKS[startTrack].defaultPos;
-
-  const [trackId, setTrackId] = useState(startTrack);
-  const [pos, setPos] = useState(startPos);
-  const [illustrationView, setIllustrationView] = useState('whole');
-  const track = SPECTRUM_TRACKS[trackId];
-  const max = track.stops.length - 1;
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
-
-  // ---- Smooth glide to a stop when a stop is tapped.
-  const animRef = useRef(null);
-  const posRef = useRef(pos);
-  useEffect(() => {
-    posRef.current = pos;
-  }, [pos]);
-  const stopAnim = () => {
-    if (animRef.current) cancelAnimationFrame(animRef.current);
-    animRef.current = null;
-  };
-  useEffect(() => stopAnim, []);
-
-  const glideTo = useCallback((target) => {
-    stopAnim();
-    const from = posRef.current;
-    if (prefersReducedMotion() || Math.abs(target - from) < 0.001) {
-      setPos(target);
-      return;
-    }
-    const dur = 380 + 160 * Math.abs(target - from);
-    const t0 = performance.now();
-    const step = (now) => {
-      const t = Math.min(1, (now - t0) / dur);
-      setPos(from + (target - from) * easeInOut(t));
-      animRef.current = t < 1 ? requestAnimationFrame(step) : null;
-    };
-    animRef.current = requestAnimationFrame(step);
-  }, []);
-
-  // ---- Analytics: one event per pause in scrubbing, not one per pixel.
-  const stopIdx = Math.round(pos);
-  const stop = track.stops[stopIdx];
-  const touched = useRef(false);
-  useEffect(() => {
-    if (!touched.current) return undefined;
-    const t = setTimeout(() => {
-      captureEvent('morph_spectrum_scrub', { track: trackId, stop: stop.id });
-    }, 700);
-    return () => clearTimeout(t);
-  }, [trackId, stop.id]);
-
-  const onSlider = (e) => {
-    touched.current = true;
-    stopAnim();
-    setPos(Number(e.target.value));
-  };
-  // Native range steps are 0.01 (smooth dragging), which is far too fine
-  // for the keyboard, so arrows move a quarter stop and Page keys a stop.
-  const onSliderKey = (e) => {
-    const cur = posRef.current;
-    let next = null;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') next = Math.min(max, Math.round((cur + 0.25) * 4) / 4);
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = Math.max(0, Math.round((cur - 0.25) * 4) / 4);
-    if (e.key === 'PageUp') next = Math.min(max, Math.floor(cur + 1.001));
-    if (e.key === 'PageDown') next = Math.max(0, Math.ceil(cur - 1.001));
-    if (e.key === 'Home') next = 0;
-    if (e.key === 'End') next = max;
-    if (next === null) return;
-    e.preventDefault();
-    touched.current = true;
-    stopAnim();
-    setPos(next);
-  };
-  const onStop = (i) => {
-    touched.current = true;
-    glideTo(i);
-  };
-  const onTab = (id) => {
-    if (id === trackId) return;
-    touched.current = true;
-    stopAnim();
+export default function PatternSpectrum({ focusSlug, initialTrack, initialPosition, className = '', showHeader = true }) {
+  const focus = spectrumPositionFor(focusSlug);
+  const startingTrack = initialTrack || focus?.track || 'coverage';
+  const startingPos = initialPosition ?? focus?.pos ?? 1;
+  const [trackId, setTrackId] = useState(startingTrack);
+  const [view, setView] = useState(startingTrack === 'pinning' ? 'top' : 'side');
+  const [traits, setTraits] = useState({ dorsal: startingTrack === 'coverage' && startingPos > 0 ? 1 : 0, lateral: startingTrack === 'coverage' ? Math.max(0, (startingPos - 1) / 2) : 0, pinstripe: startingTrack === 'pinning' ? startingPos / 2 : 0, tiger: 0, spots: 0 });
+  const uid = useId().replace(/:/g, '');
+  const coverage = traits.lateral > .75 ? 3 : traits.lateral > 0 ? 2 : traits.dorsal > 0 ? 1 : 0;
+  const stop = SPECTRUM_TRACKS[trackId].stops[trackId === 'coverage' ? coverage : traits.pinstripe === 1 ? 2 : traits.pinstripe > 0 ? 1 : 0];
+  const preset = (id, pos) => {
     setTrackId(id);
-    setPos(SPECTRUM_TRACKS[id].defaultPos);
+    if (id === 'pinning') { setTraits(t => ({ ...t, pinstripe: pos / 2 })); setView('top'); }
+    else { setTraits(t => ({ ...t, dorsal: pos > 0 ? 1 : 0, lateral: Math.max(0, (pos - 1) / 2) })); setView('side'); }
+    captureEvent('morph_spectrum_scrub', { track: id, stop: pos });
   };
-  const onTabKey = (e) => {
-    const i = TRACK_IDS.indexOf(trackId);
-    let next = null;
-    if (e.key === 'ArrowRight') next = TRACK_IDS[(i + 1) % TRACK_IDS.length];
-    if (e.key === 'ArrowLeft') next = TRACK_IDS[(i - 1 + TRACK_IDS.length) % TRACK_IDS.length];
-    if (next) {
-      e.preventDefault();
-      onTab(next);
-      document.getElementById(`${uid}-tab-${next}`)?.focus();
-    }
-  };
-
-  const zone = track.zones.find((z) => pos >= z.from && pos <= z.to);
-  const pct = (v) => `${(v / max) * 100}%`;
-
-  return (
-    <section
-      className={`rounded-2xl border border-slate-800 bg-slate-900/70 overflow-hidden ${className}`}
-      aria-labelledby={showHeader ? `${uid}-title` : undefined}
-      aria-label={showHeader ? undefined : 'Pattern spectrum'}
-    >
-      {showHeader && (
-        <div className="px-4 sm:px-6 pt-4 sm:pt-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-400">Pattern spectrum</p>
-          <h3 id={`${uid}-title`} className="mt-1 text-lg sm:text-xl font-bold text-white">
-            Slide from one morph to the next
-          </h3>
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="px-4 sm:px-6 pt-3">
-        <div role="tablist" aria-label="Spectrum" className="inline-flex rounded-lg bg-slate-950/60 border border-slate-800 p-1" onKeyDown={onTabKey}>
-          {TRACK_IDS.map((id) => {
-            const active = id === trackId;
-            return (
-              <button
-                key={id}
-                id={`${uid}-tab-${id}`}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                aria-controls={`${uid}-panel`}
-                tabIndex={active ? 0 : -1}
-                onClick={() => onTab(id)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
-                  active ? 'bg-emerald-500/15 text-emerald-300' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {SPECTRUM_TRACKS[id].tab}
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-2 text-sm text-slate-400">{track.blurb}</p>
+  return <section className={`rounded-2xl border border-slate-800 bg-slate-900/70 p-4 sm:p-6 ${className}`} aria-label="Pattern spectrum">
+    {showHeader && <><p className="text-xs uppercase tracking-widest text-emerald-400">Pattern spectrum</p><h3 className="text-xl font-bold text-white mt-1">Explore the traits on one gecko</h3></>}
+    <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6 mt-4 items-start">
+      <div><TraitGecko view={view} traits={traits} title={`${stop.name}, ${view} view`} className="rounded-xl w-full" />
+        <div className="flex justify-center gap-2 mt-3">{['side', 'top'].map(v => <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)} className={`rounded-full border px-4 py-2 text-sm ${view === v ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200' : 'border-slate-700 text-slate-300'}`}>{v === 'side' ? 'Side view' : 'Top view'}</button>)}</div>
+        <p className="mt-3 text-sm text-slate-400">Body color stays fixed. Pinstripe affects only the two raised crest rows. Top view shows both rows; side view reveals flank and leg pattern.</p>
+        <div hidden>{['side', 'top'].flatMap(v => ['base', 'cream', 'pin', 'tiger', 'spots'].map(t => <img key={v+t} src={traitAsset(v, t)} alt="" />))}</div>
       </div>
-
-      <div
-        id={`${uid}-panel`}
-        role="tabpanel"
-        aria-labelledby={`${uid}-tab-${trackId}`}
-        className="grid gap-4 sm:gap-6 px-4 sm:px-6 pb-5 pt-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] sm:items-center"
-      >
-        {/* The gecko */}
-        <div className="relative flex flex-col justify-center items-center rounded-xl border border-stone-300/50 bg-[#f4efdf] py-5">
-          <div hidden aria-hidden="true">{[...new Set([...COVERAGE_PLATES, ...PINNING_PLATES])].map(slug => <img key={slug} src={plateUrl(slug)} alt="" />)}</div>
-          <IllustratedGecko
-            track={trackId}
-            position={pos}
-            detail={illustrationView === 'detail'}
-            className="w-full h-auto"
-            title={`Illustration: ${stop.name}`}
-          />
-          <div className="mt-4 flex gap-2 text-xs text-[#294a3b]">
-            {[['whole', 'Whole specimen'], ['detail', 'Study detail']].map(([value, label]) => <button key={value} aria-pressed={illustrationView === value} onClick={() => setIllustrationView(value)} className={`rounded-full px-3 min-h-9 border ${illustrationView === value ? 'border-[#294a3b] bg-[#294a3b] text-stone-100' : 'border-[#294a3b]/30'}`}>{label}</button>)}
-          </div>
-        </div>
-
-        <div className="min-w-0">
-          {/* Caption */}
-          <div aria-live="polite" className="min-h-[176px] sm:min-h-[150px]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-              Stop {stopIdx + 1} of {track.stops.length}
-            </p>
-            <h4 className="mt-0.5 text-xl sm:text-2xl font-bold text-white">{stop.name}</h4>
-            <p className="mt-1.5 text-sm sm:text-[15px] leading-relaxed text-slate-300">
-              <span className="font-semibold text-emerald-300">Where to look: </span>
-              {stop.look}
-            </p>
-            {zone && (
-              <p className="mt-2 flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[13px] leading-snug text-amber-200">
-                <AlertTriangle className="h-4 w-4 flex-none mt-0.5" aria-hidden="true" />
-                <span><span className="font-semibold">Breeders disagree near here. </span>{zone.note}</span>
-              </p>
-            )}
-            {stop.slugs.length > 0 && (
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  {stop.slugs.map((l) => (
-                    <Link
-                      key={l.slug}
-                      to={`/MorphGuide/${l.slug}`}
-                      onClick={() => trackCta(`/MorphGuide/${l.slug}`, trackId)}
-                      className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-300 hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-                    >
-                      {l.label} guide <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Link>
-                  ))}
-                </div>
-            )}
-          </div>
-
-          {/* Slider */}
-          <div className="mt-4 select-none">
-            <div className="relative h-11">
-              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-slate-800 overflow-hidden">
-                <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600/70 to-emerald-400/80" style={{ width: pct(pos) }} />
-                {track.zones.map((z) => (
-                  <div
-                    key={z.from}
-                    className="absolute inset-y-0 bg-[repeating-linear-gradient(135deg,rgba(251,191,36,0.55)_0_3px,transparent_3px_6px)]"
-                    style={{ left: pct(z.from), width: `calc(${pct(z.to)} - ${pct(z.from)})` }}
-                  />
-                ))}
-              </div>
-              {track.stops.map((s, i) => (
-                <span
-                  key={s.id}
-                  aria-hidden="true"
-                  className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${
-                    i <= pos + 0.001 ? 'border-emerald-300 bg-emerald-400' : 'border-slate-600 bg-slate-900'
-                  }`}
-                  style={{ left: pct(i) }}
-                />
-              ))}
-              <input
-                type="range"
-                min={0}
-                max={max}
-                step={0.01}
-                value={pos}
-                onChange={onSlider}
-                onKeyDown={onSliderKey}
-                aria-label={`${track.tab} spectrum`}
-                aria-valuetext={zone ? `${stop.name}, near a disputed boundary` : stop.name}
-                className="peer absolute inset-0 w-full h-full opacity-0 cursor-pointer touch-pan-y"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-emerald-400 shadow-[0_2px_10px_rgba(0,0,0,0.5)] peer-focus-visible:ring-4 peer-focus-visible:ring-emerald-400/40"
-                style={{ left: pct(pos) }}
-              />
-            </div>
-
-            {/* Tappable stops */}
-            <div className="relative h-9 -mx-1">
-              {track.stops.map((s, i) => {
-                const active = i === stopIdx;
-                const edge = i === 0 ? 'translate-x-0 text-left' : i === max ? '-translate-x-full text-right' : '-translate-x-1/2 text-center';
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => onStop(i)}
-                    aria-label={`Go to ${s.name}`}
-                    aria-pressed={active}
-                    className={`absolute top-0 ${edge} whitespace-nowrap px-1 py-1.5 text-xs sm:text-sm font-medium leading-tight rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
-                      active ? 'text-emerald-300' : 'text-slate-400 hover:text-white'
-                    }`}
-                    style={{ left: `calc(${pct(i)} + ${i === 0 ? '4px' : i === max ? '-4px' : '0px'})` }}
-                  >
-                    <span className="sm:hidden">{s.short}</span>
-                    <span className="hidden sm:inline">{s.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Side note (Phantom Pinstripe) */}
-          {track.note && (
-            <div className="mt-3 flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-              <IllustratedGecko morph={track.note.slug} decorative className="w-9 h-auto flex-none" />
-              <p className="text-[13px] leading-snug text-slate-400">
-                <span className="font-semibold text-slate-200">Side note, {track.note.name}: </span>
-                {track.note.text}{' '}
-                <Link
-                  to={`/MorphGuide/${track.note.slug}`}
-                  onClick={() => trackCta(`/MorphGuide/${track.note.slug}`, trackId)}
-                  className="font-medium text-emerald-300 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded"
-                >
-                  Read the guide
-                </Link>
-              </p>
-            </div>
-          )}
-        </div>
+      <div className="space-y-4">{CONTROLS.map(([key, label, hint]) => <div key={key}><label htmlFor={`${uid}-${key}`} className="flex justify-between font-semibold text-sm text-slate-100"><span>{label}</span><output>{Math.round(traits[key] * 100)}%</output></label><input id={`${uid}-${key}`} aria-label={label} type="range" min="0" max="1" step=".01" value={traits[key]} onChange={e => setTraits(t => ({ ...t, [key]: Number(e.target.value) }))} className="w-full accent-emerald-400 h-8" /><p className="text-xs text-slate-400">{hint}</p></div>)}
+        <button type="button" onClick={() => setTraits({ dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0 })} className="text-sm text-emerald-300 underline">Reset all patterns</button>
       </div>
-    </section>
-  );
+    </div>
+    <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Spectrum">{TRACK_IDS.map(id => <button type="button" key={id} aria-pressed={id === trackId} onClick={() => setTrackId(id)} className={`rounded-lg px-3 py-2 text-sm ${id === trackId ? 'bg-emerald-500/20 text-emerald-200' : 'text-slate-400'}`}>{SPECTRUM_TRACKS[id].tab}</button>)}</div>
+    <div className="flex flex-wrap gap-2 mt-3">{SPECTRUM_TRACKS[trackId].stops.map((s,i) => <button type="button" key={s.id} onClick={() => preset(trackId,i)} className="rounded-full border border-slate-700 px-3 py-2 text-sm text-slate-200">{s.short}</button>)}</div>
+    <div className="mt-4" aria-live="polite"><h4 className="text-lg font-semibold text-white">{stop.name}</h4><p className="text-sm text-slate-300 mt-1">{stop.look}</p><div className="flex gap-3 mt-2 flex-wrap">{stop.slugs.map(l => <Link key={l.slug} to={`/MorphGuide/${l.slug}`} className="text-emerald-300 text-sm">{l.label} guide</Link>)}{trackId === 'pinning' && <Link to="/MorphGuide/phantom-pinstripe" className="text-emerald-300 text-sm">Phantom Pinstripe guide</Link>}</div></div>
+    <p className="mt-4 text-xs text-slate-400">Illustrated phenotype examples, not genetic predictions. Slider percentages describe this demonstration, not breeder grading. Real animals vary; morph names overlap. This study covers common pattern components, not every inherited morph. Spotting adds a subset of this specimen’s spots; banding adjusts contrast. Neither represents every possible pattern arrangement.</p>
+    <p className="mt-2 text-xs text-slate-400">Pattern placement references: <a href="https://www.pangeareptile.com/collections/harlequin" className="text-emerald-300" target="_blank" rel="noreferrer">Pangea specimen descriptions</a> and <a href="https://lmreptiles.com/foundation-genetics/" className="text-emerald-300" target="_blank" rel="noreferrer">LIL MONSTERS illustrated trait research</a>.</p>
+  </section>;
 }

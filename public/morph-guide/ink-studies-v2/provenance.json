@@ -1,0 +1,50 @@
+{
+  "classification": "AI-generated ink-and-pencil-style educational artwork, not commissioned hand drawing or verified specimen photography",
+  "limitations": "Common phenotype study; not all morphs or a genetic predictor. Raster edits are region masked. Specialist plates require separate review.",
+  "references": [
+    "https://www.pangeareptile.com/collections/harlequin",
+    "https://lmreptiles.com/foundation-genetics/"
+  ],
+  "assets": [
+    {
+      "file": "side-base.webp",
+      "prompt": "Use case: scientific-educational. Create a professional zoological specimen drawing of ONE adult Correlophus ciliatus, crested gecko, in strict lateral side profile facing LEFT, entire animal visible including long slender prehensile tail curving to right. Landscape 1536x1024. Plain warm ivory #f4efdf background, no labels, shadows or scenery. Fine brown-black archival ink contours, painstaking tiny granular scales, delicate stipple and parallel pencil hatching, restrained dry colored pencil umber pigment. NO watercolor, paint wash, digital airbrush, blur or fantasy. Accurate broad triangular head, blunt muzzle, large slit-pupil bronze eye, eyelash crests above eye, two dorsal rows of pointed crest scales from behind eyes to pelvic region, five anatomically correct lamellate digits per foot, short stocky limbs, muscular moderate adult torso. Plain brown patternless animal with no cream stripes or markings, uniform warm medium brown body, lighter natural belly only. Body/head occupy x 12%-67%, torso x35%-65%, dorsal crest y35%-43%, belly y60%-66%, tail from x65% toward90%; feet extend below. Strong legible hand-drawn line work and pencil texture remains visible at webpage size. Museum scientific drawing, not cute cartoon."
+    },
+    {
+      "file": "side-cream.webp",
+      "prompt": "Use case: precise-object-edit. Input image is the EDIT TARGET. Preserve the exact specimen drawing, pose, contours, proportions, scale linework, ivory paper background and canvas dimensions. Retain dry colored pencil and fine ink/stipple, never watercolor. Add a realistic high-expression harlequin pattern: irregular ivory cream tongues, branching islands and ragged interlocking patches climbing UP from the lower flanks toward the dorsal rows, irregular cream on limbs, and a separate cream dorsal field with jagged edges. Keep a network of brown negative space. No symmetrical zebra bands, no smooth blobs, no speckled white dust, no pinstripe. The head has subtle cream accents. Anatomically follow scale topology. No text. Keep every existing line and unmodified pixel position registered to the original for layer compositing."
+    },
+    {
+      "file": "side-pin.webp",
+      "prompt": "Use case: precise-object-edit. Input image is the EDIT TARGET. Preserve the exact specimen drawing, pose, contours, proportions, scale linework, ivory paper background and canvas dimensions. Retain dry colored pencil and fine ink/stipple, never watercolor. Change ONLY the raised pointed scales in the TWO crest rows running from behind the eyes to the hips to light ivory cream. Thin continuous pinstripe, each individual raised scale visible. Do not add a center stripe or cream on the flanks, legs, belly, head or tail. Body pigment must remain EXACTLY brown. No text. Keep every existing line and unmodified pixel position registered to the original for layer compositing."
+    },
+    {
+      "file": "side-spots.webp",
+      "prompt": "Use case: precise-object-edit. Input image is the EDIT TARGET. Preserve the exact specimen drawing, pose, contours, proportions, scale linework, ivory paper background and canvas dimensions. Retain dry colored pencil and fine ink/stipple, never watercolor. Add a realistic Dalmatian spotting phenotype: scattered discrete BLACK irregular pigment spots of varied size, a mix of small round pinspots and larger uneven ink blotches. Distributed over head, torso, limbs and tail. Spots are pigment patches conforming to the underlying scales, not raised objects or leopard rosettes. No cream pattern, no stripe. No text. Keep every existing line and unmodified pixel position registered to the original for layer compositing."
+    },
+    {
+      "file": "side-tiger.webp",
+      "prompt": "Use case: precise-object-edit. Input image is the EDIT TARGET. Preserve the exact specimen drawing, pose, contours, proportions, scale linework, ivory paper background and canvas dimensions. Retain dry colored pencil and fine ink/stipple, never watercolor. Add realistic dark brown tiger pattern: irregular roughly vertical broken narrow dark bands crossing the back and continuing down flanks, uneven forked bands separated by base brown, conforming to scales. No regular zebra stripes, no cream, no spots, no pinstripe. No text. Keep every existing line and unmodified pixel position registered to the original for layer compositing."
+    },
+    {
+      "file": "top-base.webp",
+      "prompt": "Use case: scientific-educational. Professional zoological specimen drawing of ONE adult Correlophus ciliatus crested gecko in strict orthographic DORSAL TOP VIEW, head facing LEFT, entire animal and tail visible. Landscape1536x1024. Plain warm ivory #f4efdf background, no labels/scenery/shadows. Fine brown-black archival ink contours, minute granular scales, delicate stipple and pencil hatching, restrained dry colored pencil umber pigment. NO watercolor, washes, airbrush or blur. Accurate broad triangular head, blunt muzzle, two eyelash crest rows leading into two raised spiny dorsal crest rows along opposite edges of back. Four stocky limbs splayed naturally with five lamellate pad digits each; long slender prehensile tail curling to right. Plain brown patternless animal, medium warm brown, no cream markings or pinstripe. Composition: head x12%-32% centered y50%, torso x32%-66%, centerline y50%, two dorsal crest rows y38% and62% along torso; legs outside torso, tail from x66%towards90%. Accurate narrow waist and hips, broad head, granular skin. The two crest rows need clearly discernible scale tips for an educational pinstripe overlay. Museum ink-and-colored-pencil naturalist drawing with crisp hand drawn details, not a cute cartoon."
+    },
+    {
+      "file": "top-cream.webp",
+      "prompt": "Use case: precise-object-edit. Input image is the EDIT TARGET. Preserve the exact specimen drawing, pose, contours, proportions, scale linework, ivory paper background and canvas dimensions. Retain dry colored pencil and fine ink/stipple, never watercolor. Add a realistic high-expression harlequin pattern: irregular ivory cream tongues, branching islands and ragged interlocking patches climbing UP from the lower flanks toward the dorsal rows, irregular cream on limbs, and a separate cream dorsal field with jagged edges. Keep a network of brown negative space. No symmetrical zebra bands, no smooth blobs, no speckled white dust, no pinstripe. The head has subtle cream accents. Anatomically follow scale topology. No text. Keep every existing line and unmodified pixel position registered to the original for layer compositing."
+    },
+    {
+      "file": "top-pin.webp",
+      "prompt": "Use case: precise-object-edit. Input image is the EDIT TARGET. Preserve the exact specimen drawing, pose, contours, proportions, scale linework, ivory paper background and canvas dimensions. Retain dry colored pencil and fine ink/stipple, never watercolor. Change ONLY the raised pointed scales in the TWO crest rows running from behind the eyes to the hips to light ivory cream. Thin continuous pinstripe, each individual raised scale visible. Do not add a center stripe or cream on the flanks, legs, belly, head or tail. Body pigment must remain EXACTLY brown. No text. Keep every existing line and unmodified pixel position registered to the original for layer compositing."
+    },
+    {
+      "file": "top-spots.webp",
+      "prompt": "Use case: precise-object-edit. Input image is the EDIT TARGET. Preserve the exact specimen drawing, pose, contours, proportions, scale linework, ivory paper background and canvas dimensions. Retain dry colored pencil and fine ink/stipple, never watercolor. Add a realistic Dalmatian spotting phenotype: scattered discrete BLACK irregular pigment spots of varied size, a mix of small round pinspots and larger uneven ink blotches. Distributed over head, torso, limbs and tail. Spots are pigment patches conforming to the underlying scales, not raised objects or leopard rosettes. No cream pattern, no stripe. No text. Keep every existing line and unmodified pixel position registered to the original for layer compositing."
+    },
+    {
+      "file": "top-tiger.webp",
+      "prompt": "Use case: precise-object-edit. Input image is the EDIT TARGET. Preserve the exact specimen drawing, pose, contours, proportions, scale linework, ivory paper background and canvas dimensions. Retain dry colored pencil and fine ink/stipple, never watercolor. Add realistic dark brown tiger pattern: irregular roughly vertical broken narrow dark bands crossing the back and continuing down flanks, uneven forked bands separated by base brown, conforming to scales. No regular zebra stripes, no cream, no spots, no pinstripe. No text. Keep every existing line and unmodified pixel position registered to the original for layer compositing."
+    }
+  ]
+}

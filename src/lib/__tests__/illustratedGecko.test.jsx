@@ -1,6 +1,7 @@
 import React from 'react';
+import TraitGecko, { traitAsset, CREST_PATHS } from '@/components/morphguide/TraitGecko';
 import { existsSync } from 'node:fs';
-import { paintedFrames, paintedPlateForPhenotype, PAINTED_PLATE_SLUGS, plateUrl } from '@/components/morphguide/paintedGeckoPlates';
+import { paintedPlateForPhenotype, PAINTED_PLATE_SLUGS, plateUrl } from '@/components/morphguide/paintedGeckoPlates';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -87,23 +88,36 @@ describe('rendering', () => {
       const html = renderToStaticMarkup(<IllustratedGecko morph={slug} size={120} />);
       expect(html).toMatch(/^<div/);
       expect(html).toContain('role="img"');
-      expect(html).toContain(plateUrl(slug));
-      expect(html).not.toContain('<svg');
+      expect(html).toMatch(/(?:painted-plates-v1|ink-studies-v2)/);
       expect(html).not.toContain('NaN');
     });
     PAINTED_PLATE_SLUGS.forEach(slug => expect(existsSync(`public${plateUrl(slug)}`), slug).toBe(true));
   });
 
-  it('dissolves adjacent finished plates without changing the image geometry', () => {
-    expect(paintedFrames('coverage', -.5)).toEqual({ lower: 'patternless', upper: 'flame', blend: 0 });
-    expect(paintedFrames('coverage', 1.25)).toEqual({ lower: 'flame', upper: 'harlequin', blend: .25 });
-    expect(paintedFrames('coverage', 99)).toEqual({ lower: 'extreme-harlequin', upper: 'extreme-harlequin', blend: 0 });
-    expect(paintedFrames('pinning', 1.5)).toEqual({ lower: 'partial-pinstripe', upper: 'pinstripe', blend: .5 });
-    const html = renderToStaticMarkup(<IllustratedGecko track="coverage" position={1.25} />);
-    expect(html).toContain(plateUrl('flame'));
-    expect(html).toContain(plateUrl('harlequin'));
-    expect(html).toContain('opacity:0.25');
-    expect(html).not.toContain('<svg');
+  it('keeps pinning on a crest mask over an unchanged base in both views', () => {
+    for (const view of ['side', 'top']) {
+      const off = renderToStaticMarkup(<TraitGecko view={view} traits={{ pinstripe: 0 }} />);
+      const on = renderToStaticMarkup(<TraitGecko view={view} traits={{ pinstripe: 1 }} />);
+      expect(off).toContain(traitAsset(view));
+      expect(on).toContain(traitAsset(view));
+      expect(on).toContain('data-layer="pinstripe"');
+      expect(on).toContain('mask="url(');
+      expect(off).not.toContain('data-layer="pinstripe"');
+      expect(on).not.toContain('data-layer="lateral"');
+      expect(on).not.toContain('data-layer="dorsal"');
+      expect(CREST_PATHS[view]).toHaveLength(view === 'top' ? 2 : 1);
+    }
+  });
+
+  it('combines cream and pinning without replacing the base and clamps invalid input', () => {
+    const html = renderToStaticMarkup(<TraitGecko traits={{ dorsal: 1, lateral: 1, pinstripe: 9 }} />);
+    expect(html).toContain('data-layer="dorsal"');
+    expect(html).toContain('data-layer="lateral"');
+    expect(html).toContain('data-layer="pinstripe"');
+    expect(html).not.toContain('NaN');
+    const pin = renderToStaticMarkup(<IllustratedGecko track="pinning" position={1} />);
+    expect(pin).toContain('data-trait-view="top"');
+    expect(pin).not.toContain(plateUrl('partial-pinstripe'));
   });
 
   it('preserves the educational distinctions for quiz phenotype callers', () => {
