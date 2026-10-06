@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { valueFromTraitTable } from '@/lib/traitValuation';
 import { useAuth } from '@/lib/AuthContext';
+import SellTimeEstimate from '@/components/market/SellTimeEstimate';
 
 const money = (n) => `$${Math.round(Number(n) || 0).toLocaleString('en-US')}`;
 
@@ -130,6 +131,8 @@ export default function MorphPriceIndex({ gecko, sellerPrice }) {
             </span>
           </div>
         )}
+
+        <SellTimeEstimate gecko={gecko} traitIndex={index} price={price} median={band.p50} surface="sell_price_helper" />
       </CardContent>
     </Card>
   );

@@ -8,6 +8,7 @@ import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { valueFromTraitTable, qualityTierFor, isCrestedGecko } from '@/lib/traitValuation';
 import { KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
 import { isGuestMode } from '@/lib/guestMode';
+import SellTimeEstimate from '@/components/market/SellTimeEstimate';
 
 /**
  * "Estimated value" card for the gecko detail page.
@@ -24,6 +25,8 @@ import { isGuestMode } from '@/lib/guestMode';
  *
  * Props:
  *   gecko, the gecko row, with weight_grams set to the latest weight
+ *   showSellTime, adds the Time to sell block (Enterprise, locked line
+ *     for other plans); off during onboarding
  *
  * The Portfolio is a Breeder-mode page (breederOnly in navItems.js), so
  * the link to it is left out when the viewer has Keeper mode on.
@@ -57,7 +60,7 @@ function askingNote(asking, band) {
   return `Your asking price of ${formatCurrency(asking)} is ${where}.`;
 }
 
-export default function MarketValueCard({ gecko }) {
+export default function MarketValueCard({ gecko, showSellTime = true }) {
   const [state, setState] = useState({ status: 'loading', index: null });
   // Bumped by "Try again". A failed load is not cached, so this refetches.
   const [attempt, setAttempt] = useState(0);
@@ -184,6 +187,10 @@ export default function MarketValueCard({ gecko }) {
         </div>
 
         {asking && <p className="text-xs text-yellow-300/90">{askingNote(asking, band)}</p>}
+
+        {showSellTime && !isGuestMode() && (
+          <SellTimeEstimate gecko={gecko} traitIndex={state.index} price={asking} median={band.p50} surface="gecko_value_card" />
+        )}
 
         {estimate.matchedTraits.length > 1 && (
           <p className="text-xs text-slate-500">

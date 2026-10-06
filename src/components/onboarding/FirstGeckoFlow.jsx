@@ -363,7 +363,7 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
             {/* Value */}
             <section aria-label="Value estimate">
               {gecko.morphs_traits || (Array.isArray(gecko.morph_tags) && gecko.morph_tags.length) ? (
-                <MarketValueCard gecko={gecko} />
+                <MarketValueCard gecko={gecko} showSellTime={false} />
               ) : (
                 <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-3">
                   <p className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-emerald-400" /> What is {name} worth?</p>
