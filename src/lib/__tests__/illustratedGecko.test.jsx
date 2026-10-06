@@ -1,4 +1,6 @@
 import React from 'react';
+import { existsSync } from 'node:fs';
+import { paintedFrames, paintedPlateForPhenotype, PAINTED_PLATE_SLUGS, plateUrl } from '@/components/morphguide/paintedGeckoPlates';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -80,26 +82,37 @@ describe('phenotype helpers', () => {
 });
 
 describe('rendering', () => {
-  it('renders every preset as an accessible SVG', () => {
-    Object.keys(ILLUSTRATED_GECKO_PRESETS).forEach((slug) => {
+  it('renders every preset as an accessible finished painting with a real asset', () => {
+    Object.keys(ILLUSTRATED_GECKO_PRESETS).forEach(slug => {
       const html = renderToStaticMarkup(<IllustratedGecko morph={slug} size={120} />);
-      expect(html).toMatch(/^<svg/);
+      expect(html).toMatch(/^<div/);
       expect(html).toContain('role="img"');
+      expect(html).toContain(plateUrl(slug));
+      expect(html).not.toContain('<svg');
       expect(html).not.toContain('NaN');
     });
+    PAINTED_PLATE_SLUGS.forEach(slug => expect(existsSync(`public${plateUrl(slug)}`), slug).toBe(true));
   });
 
-  it('keeps fixed anatomy and element counts while the slider changes pigment', () => {
-    const frames = [0, 0.45, 1, 1.7, 2, 2.5, 3].map(pos => renderToStaticMarkup(<IllustratedGecko phenotype={phenotypeAlong(SPECTRUM_TRACKS.coverage.keyframes, pos)} />));
-    const counts = frames.map(html => (html.match(/<path /g) || []).length);
-    expect(new Set(counts).size).toBe(1);
-    frames.forEach(html => {
-      expect(html).not.toContain('<image');
-      expect(html).not.toContain('NaN');
-      expect(html).toContain('viewBox="0 0 580 300"');
-    });
-    expect(frames[0]).not.toBe(frames[6]);
-    expect(renderToStaticMarkup(<IllustratedGecko morph="pinstripe" view="top" />)).toContain('viewBox="0 0 240 384"');
+  it('dissolves adjacent finished plates without changing the image geometry', () => {
+    expect(paintedFrames('coverage', -.5)).toEqual({ lower: 'patternless', upper: 'flame', blend: 0 });
+    expect(paintedFrames('coverage', 1.25)).toEqual({ lower: 'flame', upper: 'harlequin', blend: .25 });
+    expect(paintedFrames('coverage', 99)).toEqual({ lower: 'extreme-harlequin', upper: 'extreme-harlequin', blend: 0 });
+    expect(paintedFrames('pinning', 1.5)).toEqual({ lower: 'partial-pinstripe', upper: 'pinstripe', blend: .5 });
+    const html = renderToStaticMarkup(<IllustratedGecko track="coverage" position={1.25} />);
+    expect(html).toContain(plateUrl('flame'));
+    expect(html).toContain(plateUrl('harlequin'));
+    expect(html).toContain('opacity:0.25');
+    expect(html).not.toContain('<svg');
+  });
+
+  it('preserves the educational distinctions for quiz phenotype callers', () => {
+    expect(paintedPlateForPhenotype({ pinstripe: .5 })).toBe('partial-pinstripe');
+    expect(paintedPlateForPhenotype({ pinstripe: 1, phantom: true })).toBe('phantom-pinstripe');
+    expect(paintedPlateForPhenotype({ dalmatian: 15, redSpots: 1 })).toBe('red-spotted');
+    expect(paintedPlateForPhenotype({ dalmatian: 105 })).toBe('super-dalmatian');
+    expect(paintedPlateForPhenotype({ albino: true })).toBe('albino');
+    expect(paintedPlateForPhenotype({ palette: { base: '#787a74' } })).toBe('axanthic');
   });
 
   it('renders the spectrum on both tracks', () => {

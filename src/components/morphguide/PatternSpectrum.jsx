@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, AlertTriangle } from 'lucide-react';
 import { captureEvent } from '@/lib/posthog';
 import IllustratedGecko from '@/components/morphguide/IllustratedGecko';
+import { COVERAGE_PLATES, PINNING_PLATES, plateUrl } from './paintedGeckoPlates';
 import {
   COVERAGE_KEYFRAMES,
   PINNING_KEYFRAMES,
-  phenotypeAlong,
 } from '@/components/morphguide/illustratedGeckoPresets';
 
 /**
@@ -149,7 +149,7 @@ export default function PatternSpectrum({
 
   const [trackId, setTrackId] = useState(startTrack);
   const [pos, setPos] = useState(startPos);
-  const [illustrationView, setIllustrationView] = useState('oblique');
+  const [illustrationView, setIllustrationView] = useState('whole');
   const track = SPECTRUM_TRACKS[trackId];
   const max = track.stops.length - 1;
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
@@ -240,7 +240,6 @@ export default function PatternSpectrum({
     }
   };
 
-  const phenotype = useMemo(() => phenotypeAlong(track.keyframes, pos), [track, pos]);
   const zone = track.zones.find((z) => pos >= z.from && pos <= z.to);
   const pct = (v) => `${(v / max) * 100}%`;
 
@@ -290,18 +289,20 @@ export default function PatternSpectrum({
         id={`${uid}-panel`}
         role="tabpanel"
         aria-labelledby={`${uid}-tab-${trackId}`}
-        className="grid gap-4 sm:gap-6 px-4 sm:px-6 pb-5 pt-4 sm:grid-cols-[minmax(280px,400px)_1fr] sm:items-center"
+        className="grid gap-4 sm:gap-6 px-4 sm:px-6 pb-5 pt-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] sm:items-center"
       >
         {/* The gecko */}
-        <div className="relative flex flex-col justify-center items-center rounded-xl border border-stone-300/50 bg-[#e9e4d3] py-5">
+        <div className="relative flex flex-col justify-center items-center rounded-xl border border-stone-300/50 bg-[#f4efdf] py-5">
+          <div hidden aria-hidden="true">{[...new Set([...COVERAGE_PLATES, ...PINNING_PLATES])].map(slug => <img key={slug} src={plateUrl(slug)} alt="" />)}</div>
           <IllustratedGecko
-            phenotype={phenotype}
-            view={illustrationView}
-            className={illustrationView === 'top' ? 'w-[200px] h-auto' : 'w-full h-auto'}
+            track={trackId}
+            position={pos}
+            detail={illustrationView === 'detail'}
+            className="w-full h-auto"
             title={`Illustration: ${stop.name}`}
           />
           <div className="mt-4 flex gap-2 text-xs text-[#294a3b]">
-            {[['oblique', 'Side + back'], ['top', 'Top view']].map(([value, label]) => <button key={value} aria-pressed={illustrationView === value} onClick={() => setIllustrationView(value)} className={`rounded-full px-3 min-h-9 border ${illustrationView === value ? 'border-[#294a3b] bg-[#294a3b] text-stone-100' : 'border-[#294a3b]/30'}`}>{label}</button>)}
+            {[['whole', 'Whole specimen'], ['detail', 'Study detail']].map(([value, label]) => <button key={value} aria-pressed={illustrationView === value} onClick={() => setIllustrationView(value)} className={`rounded-full px-3 min-h-9 border ${illustrationView === value ? 'border-[#294a3b] bg-[#294a3b] text-stone-100' : 'border-[#294a3b]/30'}`}>{label}</button>)}
           </div>
         </div>
 

@@ -8,7 +8,7 @@ export default function MorphQuizGlyph({ cream = 'sides', lines = 'none', spots 
       ? { base: '#e6dfce', dark: '#aa9c85', pattern: '#f9f6ed', eye: '#b9a064', outline: '#74654f' }
       : { base: '#a9502e', dark: '#542d1f', pattern: '#ead6a9', eye: '#b5a05c', outline: '#3c2b20' };
   if (eyes === 'red') palette.eye = '#cc6d77';
-  return <IllustratedGecko decorative className={className} focus={focus} phenotype={{
+  return <IllustratedGecko decorative className={className} focus={focus} detail={focus === 'eyes'} phenotype={{
     palette, dorsal: cream === 'none' ? 0 : 1, flameTongues: cream === 'back' ? 0.7 : 0.3,
     lateral: cream === 'everywhere' ? 1 : cream === 'sides' ? 0.55 : 0,
     pinstripe: lines === 'full' ? 1 : lines === 'broken' ? 0.5 : 0,
