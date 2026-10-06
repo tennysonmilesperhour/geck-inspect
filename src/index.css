@@ -101,6 +101,25 @@ html, body {
   --bottom-bar-pad: max(6px, calc(env(safe-area-inset-bottom) - 18px));
   /* 1px border + 4px top padding + 48px buttons + bottom padding */
   --bottom-bar-h: calc(53px + var(--bottom-bar-pad));
+  /* Phone header height. Layout.jsx measures the real header and
+     overwrites this before first paint; this is only the first guess. */
+  --top-bar-h: calc(65px + env(safe-area-inset-top));
+}
+
+/* On phones the glass header floats over the page, so the page scrolls
+   under it and starts one header height down. Sticky parts of a page
+   (top-0 and friends) need no change: Chrome and Safari both keep them
+   inside the scroll area's padding, so they stop just below the header.
+   scroll-padding does the same for jumps to a section. */
+.app-main-scroll {
+  padding-top: var(--top-bar-h);
+  scroll-padding-top: var(--top-bar-h);
+}
+@media (min-width: 768px) {
+  .app-main-scroll {
+    padding-top: 0;
+    scroll-padding-top: 0;
+  }
 }
 
 

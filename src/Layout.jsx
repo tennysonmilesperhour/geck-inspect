@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, Suspense } from "react";
 import { lazy } from "@/lib/lazyWithRetry";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "@/styles/layout-theme.css";
@@ -162,6 +162,23 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   };
 
   const { toggleSidebar } = useSidebar();
+
+  // The phone header is glass that floats over the page, so the page pads
+  // its top by the header's height (--top-bar-h, read in index.css). It is
+  // measured because it changes with sign-in state and touch sizing; on
+  // wider screens the header is hidden and this comes out 0.
+  const mobileHeaderRef = useRef(null);
+  useLayoutEffect(() => {
+    const header = mobileHeaderRef.current;
+    if (!header) return undefined;
+    const root = document.documentElement;
+    const update = () => root.style.setProperty('--top-bar-h', `${header.getBoundingClientRect().height}px`);
+    update();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handler = () => setShowTutorial(true);
@@ -979,6 +996,17 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       >
         Skip to content
       </a>
+      {/* Bends the page behind the liquid glass bars. Only Chromium can run
+          an SVG filter on the backdrop, so .liquid-glass uses it only under
+          html.glass-warp (set in main.jsx). Soft noise shifts each pixel a
+          few px, and scrolling moves the page through the ripple. */}
+      <svg aria-hidden="true" focusable="false" width="0" height="0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+        <filter id="gi-glass-warp" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.006 0.035" numOctaves="2" seed="11" result="noise" />
+          <feGaussianBlur in="noise" stdDeviation="1.5" result="ripple" />
+          <feDisplacementMap in="SourceGraphic" in2="ripple" scale="16" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
       <div className="flex h-screen h-dvh bg-background font-sans app-container-outline">
         {/* Mobile Sidebar */}
         <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm md:hidden z-50">
@@ -1293,7 +1321,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </div>
 
         <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'md:pl-[13.6rem]' : 'md:pl-[3.4rem]'}`}>
-          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-[max(0.75rem,env(safe-area-inset-left))] pb-1.5 pt-[calc(0.375rem+env(safe-area-inset-top))] md:hidden sticky top-0 z-10 gecko-header gecko-header--compact">
+          {/* Phone header: liquid glass over the page (layout-theme.css). */}
+          <header ref={mobileHeaderRef} className="liquid-glass liquid-glass--top px-[max(0.75rem,env(safe-area-inset-left))] pb-1.5 pt-[calc(0.375rem+env(safe-area-inset-top))] md:hidden fixed inset-x-0 top-0 z-[45] gecko-header--compact">
             <div className="flex items-center justify-between gap-3">
               <button
                 onClick={toggleSidebar}
@@ -1400,7 +1429,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
         {/* Phone bottom bar: the most used pages, plus Menu for the rest. */}
         <nav
-          className="gecko-bottom-nav gecko-bottom-nav--bar fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
+          className="gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
           aria-label="Main"
         >
           {[{ page: 'Dashboard', label: 'Home', Icon: Home }, ...BOTTOM_BAR_PAGES.map((b) => ({ ...b, Icon: NAV_ICON_MAP[b.icon] || TrendingUp }))].map(({ page, label, Icon }) => {
