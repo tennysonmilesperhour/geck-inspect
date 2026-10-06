@@ -15,6 +15,14 @@
  * {
  *   slug: 'harlequin',                    // canonical URL slug
  *   name: 'Harlequin',                    // display name
+ *   definition: 'A Harlequin crested gecko is a crested gecko whose ...',
+ *                                         // one complete, quotable sentence. It opens the
+ *                                         // detail page and the meta description (via
+ *                                         // src/lib/morphMeta.js), so keep it factual and
+ *                                         // built only from the facts in this entry.
+ *   lookalikes: [                         // optional: morphs people mix this one up with
+ *     { slug: 'flame', difference: 'one sentence on how to tell them apart' },
+ *   ],                                    // slug must be another entry in MORPHS
  *   aliases: [],                          // alternate names / misspellings
  *   category: 'pattern',                  // base | color | pattern | structure | combo
  *   inheritance: 'polygenic',             // recessive | co-dominant | incomplete-dominant | dominant | polygenic | line-bred
@@ -153,6 +161,13 @@ export const MORPHS = [
   {
     slug: 'harlequin',
     name: 'Harlequin',
+    definition:
+      'A Harlequin crested gecko is a crested gecko whose bright, high-contrast cream or yellow pattern climbs from the belly up the flanks and onto the legs, instead of staying along the back.',
+    lookalikes: [
+      { slug: 'flame', difference: 'A Flame keeps its pattern on the back; once the pattern climbs onto the flanks and legs, it is a Harlequin.' },
+      { slug: 'extreme-harlequin', difference: 'Extreme Harlequin is the same pattern taken further: nearly solid cream panels covering most of the flanks, not scattered markings.' },
+      { slug: 'pinstripe', difference: 'A Harlequin whose raised back scales form a full cream line is sold as a Pinstripe; scattered cream back scales alone still make it a Harlequin.' },
+    ],
     aliases: ['Harley', 'Harle'],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -188,6 +203,12 @@ export const MORPHS = [
   {
     slug: 'extreme-harlequin',
     name: 'Extreme Harlequin',
+    definition:
+      'An Extreme Harlequin crested gecko is a crested gecko whose harlequin pattern covers most of the flanks and legs, often as nearly solid cream or yellow panels that stay visible even when it is fired down.',
+    lookalikes: [
+      { slug: 'harlequin', difference: 'A Harlequin shows pattern on the flanks and legs; an Extreme Harlequin covers most of them, roughly 60 to 70% or more, with near-solid cream.' },
+      { slug: 'tricolor', difference: 'A Tricolor is judged on three distinct colors in about equal amounts, not on how much of the flank the pattern covers.' },
+    ],
     aliases: ['Extreme Harley', 'EH', 'Super Harley'],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -218,6 +239,13 @@ export const MORPHS = [
   {
     slug: 'pinstripe',
     name: 'Pinstripe',
+    definition:
+      'A Pinstripe crested gecko is a crested gecko whose raised scales along each side of the back are cream or yellow, forming two stripes that run from the neck toward the base of the tail.',
+    lookalikes: [
+      { slug: 'phantom-pinstripe', difference: 'A Phantom Pinstripe has the same raised back scales, but they stay the body color with no cream line; the contrast is on the flanks instead.' },
+      { slug: 'harlequin', difference: 'Many Harlequins show a few cream back scales; it is only a Pinstripe when the cream follows the raised scales as a line, graded by percentage (100% is full pinstripe).' },
+      { slug: 'cream', difference: 'Cream describes the color of the pattern, not where it sits; a Cream Pinstripe is a Pinstripe whose stripes are off-white instead of yellow or orange.' },
+    ],
     aliases: ['Pin'],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -253,6 +281,12 @@ export const MORPHS = [
   {
     slug: 'phantom-pinstripe',
     name: 'Phantom Pinstripe',
+    definition:
+      'A Phantom Pinstripe crested gecko is a crested gecko whose raised back scales stay the same color as the body, with no cream stripe, while its flanks and legs carry bright harlequin-like pattern.',
+    lookalikes: [
+      { slug: 'pinstripe', difference: 'A Pinstripe\'s raised back scales are a bright cream line; a Phantom Pinstripe\'s raised scales blend into the body color.' },
+      { slug: 'extreme-harlequin', difference: 'An Extreme Harlequin can look similar from the side, so check the back: no visible cream on the raised scales points to Phantom Pinstripe.' },
+    ],
     aliases: ['Phantom', 'Reverse Pin'],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -285,6 +319,11 @@ export const MORPHS = [
   {
     slug: 'dalmatian',
     name: 'Dalmatian',
+    definition:
+      'A Dalmatian crested gecko is a crested gecko covered in separate, sharp-edged spots, most often black but sometimes red or white, that grow darker and more numerous as it ages.',
+    lookalikes: [
+      { slug: 'super-dalmatian', difference: 'A Super Dalmatian has 100 or more spots as an adult, reaching the head, legs and tail; a Dalmatian has fewer, mostly on the body.' },
+    ],
     aliases: ['Dal', 'Dally'],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -318,6 +357,11 @@ export const MORPHS = [
   {
     slug: 'super-dalmatian',
     name: 'Super Dalmatian',
+    definition:
+      'A Super Dalmatian crested gecko is a crested gecko with 100 or more well-defined spots as an adult, reaching the head, legs and tail as well as the body.',
+    lookalikes: [
+      { slug: 'dalmatian', difference: 'If you can count the spots quickly, or the head and tail are mostly clear, it is a Dalmatian rather than a Super Dalmatian.' },
+    ],
     aliases: ['Super Dal'],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -350,6 +394,12 @@ export const MORPHS = [
   {
     slug: 'flame',
     name: 'Flame',
+    definition:
+      'A Flame crested gecko is a crested gecko whose lighter pattern stays on the back, while its flanks and legs remain a clean, solid base color.',
+    lookalikes: [
+      { slug: 'harlequin', difference: 'Pattern that climbs onto the flanks and legs makes a Harlequin; a Flame\'s flanks and legs stay a clean, solid base color.' },
+      { slug: 'bicolor', difference: 'A Flame has lighter pattern markings along the back; a Bicolor\'s back is a second solid color with a clear boundary.' },
+    ],
     aliases: [],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -378,6 +428,12 @@ export const MORPHS = [
   {
     slug: 'tiger',
     name: 'Tiger',
+    definition:
+      'A Tiger crested gecko is a crested gecko with sharp, parallel dark bands running across the back, at right angles to the spine, that show most strongly when it is fired up.',
+    lookalikes: [
+      { slug: 'brindle', difference: 'A Tiger\'s bands are clean and parallel; a Brindle\'s are broken, smudged or marbled and often wrap onto the flanks.' },
+      { slug: 'tiger-brindle', difference: 'When the bands mix clean parallel lines with irregular patches, breeders usually list the gecko as Tiger / Brindle.' },
+    ],
     aliases: [],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -411,6 +467,12 @@ export const MORPHS = [
   {
     slug: 'brindle',
     name: 'Brindle',
+    definition:
+      'A Brindle crested gecko is a crested gecko with heavier, broken or marbled dark banding across the back that often wraps onto the flanks, instead of the clean parallel bands of a Tiger.',
+    lookalikes: [
+      { slug: 'tiger', difference: 'Clean, regular parallel bands across the back point to Tiger; broken or marbled bands point to Brindle.' },
+      { slug: 'extreme-brindle', difference: 'An Extreme Brindle\'s dark pattern covers most of the back and flanks, so the back can look almost fully dark.' },
+    ],
     aliases: [],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -438,6 +500,11 @@ export const MORPHS = [
   {
     slug: 'extreme-brindle',
     name: 'Extreme Brindle',
+    definition:
+      'An Extreme Brindle crested gecko is a crested gecko whose dark brindle pattern covers most of the back and spreads onto the flanks, so the back can look almost fully dark.',
+    lookalikes: [
+      { slug: 'brindle', difference: 'A Brindle still shows plenty of base color between its broken bands; an Extreme Brindle\'s dark pattern takes over most of the back.' },
+    ],
     aliases: [],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -458,6 +525,12 @@ export const MORPHS = [
   {
     slug: 'tiger-brindle',
     name: 'Tiger / Brindle',
+    definition:
+      'A Tiger / Brindle crested gecko is a crested gecko whose dark banding sits between the two looks, mixing tiger-like parallel lines with brindle-like irregular patches.',
+    lookalikes: [
+      { slug: 'tiger', difference: 'A Tiger has sharp, regular parallel bands with little irregular patching.' },
+      { slug: 'brindle', difference: 'A Brindle\'s banding is mostly broken or marbled, with few clean parallel lines.' },
+    ],
     aliases: ['T/B', 'Tiger Brindle'],
     category: 'pattern',
     inheritance: 'polygenic',
@@ -480,6 +553,11 @@ export const MORPHS = [
   {
     slug: 'soft-scale',
     name: 'Soft Scale',
+    definition:
+      'A Soft Scale crested gecko is a crested gecko carrying one copy of the incomplete dominant Soft Scale gene, which gives it visibly smaller, finer scales and smoother, more matte skin.',
+    lookalikes: [
+      { slug: 'super-soft-scale', difference: 'A Super Soft Scale (two copies) looks near-leather across the whole body; a Soft Scale (one copy) is smoother than normal but still clearly scaled.' },
+    ],
     aliases: ['SS'],
     category: 'structure',
     inheritance: 'incomplete-dominant',
@@ -510,6 +588,11 @@ export const MORPHS = [
   {
     slug: 'super-soft-scale',
     name: 'Super Soft Scale',
+    definition:
+      'A Super Soft Scale crested gecko is a crested gecko with two copies of the Soft Scale gene, giving it dramatically reduced scale texture and a near-leather look across the whole body.',
+    lookalikes: [
+      { slug: 'soft-scale', difference: 'A single-copy Soft Scale is visibly smoother than a normal gecko but far less extreme than the near-leather Super form.' },
+    ],
     aliases: ['SSS', 'Super SS'],
     category: 'structure',
     inheritance: 'incomplete-dominant',
@@ -533,6 +616,12 @@ export const MORPHS = [
   {
     slug: 'white-wall',
     name: 'White Wall',
+    definition:
+      'A White Wall crested gecko is a crested gecko with a bright white patch along the flanks that stays white even when the rest of the gecko fires down.',
+    lookalikes: [
+      { slug: 'white-wall-white-spot', difference: 'White Wall White Spot shows separate white spots on the flanks instead of one solid wall of white.' },
+      { slug: 'lilly-white', difference: 'A Lilly White has bold white markings on both the back and the flanks; a White Wall\'s white is a solid band along the flanks.' },
+    ],
     aliases: ['WW'],
     category: 'structure',
     inheritance: 'incomplete-dominant',
@@ -560,6 +649,11 @@ export const MORPHS = [
   {
     slug: 'white-wall-white-spot',
     name: 'White Wall White Spot',
+    definition:
+      'A White Wall White Spot crested gecko is a crested gecko with separate, well-defined white spots on the flanks (and sometimes the back) in place of a solid white wall, and the spots stay bright when it fires down.',
+    lookalikes: [
+      { slug: 'white-wall', difference: 'A White Wall\'s flank white is one solid patch; a White Wall White Spot\'s is broken into separate spots.' },
+    ],
     aliases: ['WWWS', 'White Spot'],
     category: 'structure',
     inheritance: 'incomplete-dominant',
@@ -580,6 +674,11 @@ export const MORPHS = [
   {
     slug: 'cappuccino',
     name: 'Cappuccino',
+    definition:
+      'A Cappuccino crested gecko is a crested gecko carrying the incomplete dominant Cappuccino gene, which gives it a clean-edged saddle marking on the back over a warm, coffee-brown body.',
+    lookalikes: [
+      { slug: 'frappuccino', difference: 'A Frappuccino is a Cappuccino that also carries Lilly White, so it is much whiter, with bold white head spotting.' },
+    ],
     aliases: ['Cap', 'Cappy'],
     category: 'structure',
     inheritance: 'incomplete-dominant',
@@ -608,6 +707,12 @@ export const MORPHS = [
   {
     slug: 'frappuccino',
     name: 'Frappuccino',
+    definition:
+      'A Frappuccino crested gecko is a crested gecko that carries both Cappuccino and Lilly White, which makes it brighter and whiter than a standard Lilly White, with bold white head spotting that develops with age.',
+    lookalikes: [
+      { slug: 'lilly-white', difference: 'A standard Lilly White is less bright and less white, and lacks the Cappuccino saddle and the heavy white head spotting.' },
+      { slug: 'cappuccino', difference: 'A Cappuccino without Lilly White keeps its warm coffee-brown body and saddle, without the bold white markings.' },
+    ],
     aliases: ['Frap'],
     category: 'combo',
     inheritance: 'incomplete-dominant',
@@ -628,6 +733,13 @@ export const MORPHS = [
   {
     slug: 'lilly-white',
     name: 'Lilly White',
+    definition:
+      'A Lilly White crested gecko is a crested gecko carrying one copy of the incomplete dominant Lilly White gene, which gives it bold white markings on the back and flanks that stay white when it fires down.',
+    lookalikes: [
+      { slug: 'white-wall', difference: 'A White Wall\'s white is a solid band along the flanks; a Lilly White shows bold white markings on the back and flanks at the same time.' },
+      { slug: 'frappuccino', difference: 'A Frappuccino carries Cappuccino as well as Lilly White, so it is brighter and whiter, with heavy white head spotting as it ages.' },
+      { slug: 'cream', difference: 'Cream is a pattern color on a Harlequin or Pinstripe; a Lilly White\'s white is structural and stays white when the gecko fires down.' },
+    ],
     aliases: ['LW', 'Lilly'],
     category: 'structure',
     inheritance: 'incomplete-dominant',
@@ -659,6 +771,13 @@ export const MORPHS = [
   {
     slug: 'axanthic',
     name: 'Axanthic',
+    definition:
+      'An Axanthic crested gecko is a crested gecko with two copies of a recessive gene that removes yellow and red pigment, so it shows only black, gray and white.',
+    lookalikes: [
+      { slug: 'albino', difference: 'Opposite pigments: an Axanthic keeps black and loses yellow and red; an Albino keeps yellow and red, loses black and has red or pink eyes.' },
+      { slug: 'lavender', difference: 'A Lavender is a purple-gray base color that can still carry warm pattern; an Axanthic shows no yellow, red or cream anywhere.' },
+      { slug: 'moonglow', difference: 'A line-bred Moonglow is near-white rather than black, gray and white, and usually warms to cream or tan when fired up.' },
+    ],
     aliases: ['Axie', 'Axan'],
     category: 'color',
     inheritance: 'recessive',
@@ -689,6 +808,13 @@ export const MORPHS = [
   {
     slug: 'albino',
     name: 'Albino',
+    definition:
+      'An Albino crested gecko is a crested gecko with no black or brown pigment (melanin), so it has red or pink eyes and shows only its yellow, orange, red and cream colors.',
+    lookalikes: [
+      { slug: 'moonglow', difference: 'Check the eyes: line-bred Moonglows are near-white with dark eyes; a true Albino has red or pink eyes.' },
+      { slug: 'lilly-white', difference: 'A Lilly White has white markings but keeps dark eyes and dark pattern; an Albino has no dark pigment at all.' },
+      { slug: 'axanthic', difference: 'Opposite pigments: an Albino keeps yellow and red and loses black; an Axanthic keeps black and loses yellow and red.' },
+    ],
     aliases: ['Amelanistic', 'Albino crested gecko'],
     category: 'color',
     inheritance: 'recessive',
@@ -718,6 +844,11 @@ export const MORPHS = [
   {
     slug: 'hypo',
     name: 'Hypo (Hypomelanistic)',
+    definition:
+      'A Hypo (Hypomelanistic) crested gecko is a crested gecko line-bred for reduced black pigment, giving it a warmer, brighter look with a paler belly and fewer dark markings.',
+    lookalikes: [
+      { slug: 'albino', difference: 'Hypo only reduces black pigment and keeps dark eyes; an Albino has no black pigment at all and red or pink eyes.' },
+    ],
     aliases: ['Hypomelanistic', 'Hypomelanism'],
     category: 'color',
     inheritance: 'line-bred',
@@ -739,6 +870,11 @@ export const MORPHS = [
   {
     slug: 'patternless',
     name: 'Patternless',
+    definition:
+      'A Patternless crested gecko is a crested gecko with one solid base color and no visible pattern, named after that color (for example red patternless or olive patternless).',
+    lookalikes: [
+      { slug: 'bicolor', difference: 'A Bicolor shows two distinct colors with a clear boundary; a Patternless is one solid color with no pattern.' },
+    ],
     aliases: ['Solid'],
     category: 'color',
     inheritance: 'line-bred',
@@ -760,6 +896,12 @@ export const MORPHS = [
   {
     slug: 'moonglow',
     name: 'Moonglow',
+    definition:
+      'A Moonglow crested gecko is a crested gecko bred toward solid white; the line-bred Moonglows sold today are near-white with dark eyes and can warm to cream, tan or gray when fired up.',
+    lookalikes: [
+      { slug: 'albino', difference: 'An Albino has red or pink eyes and keeps its yellow, orange and red; a line-bred Moonglow has dark eyes and is near-white.' },
+      { slug: 'lilly-white', difference: 'A Lilly White has bold white markings over a normal base; a Moonglow is white or near-white all over.' },
+    ],
     aliases: ['True Moonglow'],
     category: 'color',
     inheritance: 'line-bred',
@@ -791,6 +933,8 @@ export const MORPHS = [
   {
     slug: 'translucent',
     name: 'Translucent',
+    definition:
+      'A Translucent crested gecko is a crested gecko line-bred for skin with some translucency, so organs and bone structure are faintly visible, most of all on the belly and in juveniles.',
     aliases: ['Trans'],
     category: 'color',
     inheritance: 'line-bred',
@@ -813,6 +957,11 @@ export const MORPHS = [
   {
     slug: 'red-base',
     name: 'Red Base',
+    definition:
+      'A Red Base crested gecko is a crested gecko whose ground color is a true red (not orange or rust) that keeps its saturation when fired up.',
+    lookalikes: [
+      { slug: 'orange-base', difference: 'A Red Base is a true red that holds when fired up; warm orange or rust tones make it an Orange Base.' },
+    ],
     aliases: ['Red'],
     category: 'base',
     inheritance: 'polygenic',
@@ -839,6 +988,11 @@ export const MORPHS = [
   {
     slug: 'orange-base',
     name: 'Orange Base',
+    definition:
+      'An Orange Base crested gecko is a crested gecko whose ground color is a vivid, warm orange.',
+    lookalikes: [
+      { slug: 'red-base', difference: 'A Red Base is a true red with no orange cast; most warm geckos sold as red are really orange.' },
+    ],
     aliases: ['Orange'],
     category: 'base',
     inheritance: 'polygenic',
@@ -859,6 +1013,8 @@ export const MORPHS = [
   {
     slug: 'yellow-base',
     name: 'Yellow Base',
+    definition:
+      'A Yellow Base crested gecko is a crested gecko whose ground color is a bright, saturated yellow.',
     aliases: ['Yellow'],
     category: 'base',
     inheritance: 'polygenic',
@@ -884,6 +1040,8 @@ export const MORPHS = [
   {
     slug: 'olive',
     name: 'Olive',
+    definition:
+      'An Olive crested gecko is a crested gecko whose ground color is an olive-green or khaki tone that holds when fired up.',
     aliases: [],
     category: 'base',
     inheritance: 'polygenic',
@@ -904,6 +1062,11 @@ export const MORPHS = [
   {
     slug: 'chocolate',
     name: 'Chocolate',
+    definition:
+      'A Chocolate crested gecko is a crested gecko whose ground color is a deep, rich brown that stays saturated even when fired down.',
+    lookalikes: [
+      { slug: 'buckskin', difference: 'A Buckskin is a lighter warm tan or leather color; a Chocolate is a deep, rich brown.' },
+    ],
     aliases: [],
     category: 'base',
     inheritance: 'polygenic',
@@ -924,6 +1087,11 @@ export const MORPHS = [
   {
     slug: 'lavender',
     name: 'Lavender',
+    definition:
+      'A Lavender crested gecko is a crested gecko whose ground color is an unusual purple-gray, seen most clearly when it is fired down.',
+    lookalikes: [
+      { slug: 'axanthic', difference: 'An Axanthic has no yellow, red or cream at all; a Lavender\'s purple-gray base can still carry warm pattern.' },
+    ],
     aliases: [],
     category: 'base',
     inheritance: 'polygenic',
@@ -944,6 +1112,11 @@ export const MORPHS = [
   {
     slug: 'buckskin',
     name: 'Buckskin',
+    definition:
+      'A Buckskin crested gecko is a crested gecko whose ground color is a warm tan or leather brown.',
+    lookalikes: [
+      { slug: 'chocolate', difference: 'A Chocolate is a much deeper, darker brown that stays rich even when fired down.' },
+    ],
     aliases: [],
     category: 'base',
     inheritance: 'polygenic',
@@ -966,6 +1139,11 @@ export const MORPHS = [
   {
     slug: 'cream',
     name: 'Cream',
+    definition:
+      'A Cream crested gecko is a crested gecko whose pattern areas, usually harlequin or pinstripe, are cream or off-white instead of yellow or orange.',
+    lookalikes: [
+      { slug: 'lilly-white', difference: 'Cream is the color of a Harlequin or Pinstripe\'s pattern; a Lilly White\'s white markings are structural and stay white when fired down.' },
+    ],
     aliases: [],
     category: 'combo',
     inheritance: 'polygenic',
@@ -986,6 +1164,12 @@ export const MORPHS = [
   {
     slug: 'tricolor',
     name: 'Tricolor',
+    definition:
+      'A Tricolor crested gecko is a crested gecko showing three distinct colors in roughly equal amounts, usually on a Harlequin pattern.',
+    lookalikes: [
+      { slug: 'harlequin', difference: 'A Harlequin with a third distinct color covering roughly a third of the animal is sold as a Tricolor.' },
+      { slug: 'bicolor', difference: 'A Bicolor shows two contrasting colors; a Tricolor shows three in about equal amounts.' },
+    ],
     aliases: ['Tri', 'Tri-color'],
     category: 'combo',
     inheritance: 'polygenic',
@@ -1006,6 +1190,12 @@ export const MORPHS = [
   {
     slug: 'bicolor',
     name: 'Bicolor',
+    definition:
+      'A Bicolor crested gecko is a crested gecko with two clearly contrasting colors, usually its base color on the flanks and belly and a brighter color on the back.',
+    lookalikes: [
+      { slug: 'patternless', difference: 'A Patternless is a single solid color; a Bicolor has a second, brighter color on the back.' },
+      { slug: 'flame', difference: 'A Flame has lighter pattern markings on the back; a Bicolor\'s back is a second solid color.' },
+    ],
     aliases: ['Bi-color'],
     category: 'combo',
     inheritance: 'polygenic',
