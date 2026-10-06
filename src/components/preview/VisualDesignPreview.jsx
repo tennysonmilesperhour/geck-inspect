@@ -1,0 +1,25 @@
+import { useState } from 'react';
+import IllustratedGecko from '@/components/morphguide/IllustratedGecko';
+import BeforeGecko from './IllustratedGeckoBefore';
+import { ILLUSTRATED_GECKO_PRESETS, COVERAGE_KEYFRAMES, phenotypeAlong } from '@/components/morphguide/illustratedGeckoPresets';
+import PatternSpectrum from '@/components/morphguide/PatternSpectrum';
+import StickerCardPreview from '@/components/store/StickerCardPreview';
+import CardBefore from '@/components/store/StickerCardPreviewV2';
+import { createDefaultDesign } from '@/lib/store/customSticker';
+import MorphQuizGlyph, { QUIZ_GLYPHS } from '@/components/morphguide/MorphQuizGlyph';
+
+const SAMPLE = { ...createDefaultDesign(), name: 'Fern', photo_crop: { x: 15, y: 50, zoom: 1 }, photo_url: '/store/custom-stickers/canopy.webp', morph_line: 'Harlequin · Canopy explorer', illustrator: 'Personal collection', height: '8 in', weight: '42 g' };
+export default function VisualDesignPreview() {
+  const [pos, setPos] = useState(2);
+  const p = phenotypeAlong(COVERAGE_KEYFRAMES, pos);
+  return <main className="min-h-screen bg-[#111c19] text-[#eee8d8] px-5 py-12" style={{ fontFamily: 'Arial, sans-serif' }}>
+    <div className="max-w-6xl mx-auto space-y-14">
+      <header><p className="uppercase tracking-[.24em] text-xs text-emerald-300 mb-3">Geck Inspect · Unpublished design study</p><h1 className="text-4xl sm:text-5xl font-semibold">More character. Better clarity.</h1><p className="mt-4 text-stone-400 max-w-2xl">Review the collector frames and the shared code-drawn morph illustration. Nothing on this branch has been published.</p></header>
+      <section id="cards"><h2 className="text-2xl mb-2 font-semibold">Two collector frames. One ordinary printed finish.</h2><p className="text-sm text-stone-400 mb-6">The familiar classic hierarchy, and a newer full-art frame. Gecko artwork is an illustrated sample.</p><div className="grid sm:grid-cols-3 gap-8"><figure><CardBefore design={{ ...SAMPLE, version: 2, layout: 'classic' }} /><figcaption className="mt-4 text-stone-400">Current design</figcaption></figure><figure><StickerCardPreview design={{ ...SAMPLE, layout: 'classic' }} /><figcaption className="mt-4">Classic collector · Proposed</figcaption></figure><figure><StickerCardPreview design={{ ...SAMPLE, layout: 'full_art' }} /><figcaption className="mt-4">Modern full art · Proposed</figcaption></figure></div></section>
+      <section id="comparison"><h2 className="text-2xl mb-2 font-semibold">A shared natural-history illustration.</h2><p className="text-sm text-stone-400 mb-5">Same phenotype values, two renderers. Drag to compare the pattern growth; the new illustration is entirely code.</p><div className="grid sm:grid-cols-2 gap-6"><figure className="rounded-xl bg-slate-900 p-6 flex flex-col items-center"><BeforeGecko phenotype={p} className="w-[220px] h-auto" /><figcaption className="mt-4 text-stone-400">Current drawing</figcaption></figure><figure className="rounded-xl bg-[#e9e4d3] p-6 flex flex-col justify-center items-center text-[#293c2f]"><IllustratedGecko phenotype={p} className="w-full h-auto" /><figcaption className="mt-4">Proposed drawing · Code-rendered</figcaption></figure></div><label className="block mt-6">Pattern comparison<input aria-label="Before and after pattern coverage" type="range" min="0" max="3" step="0.01" value={pos} onChange={e => setPos(Number(e.target.value))} className="w-full mt-3 accent-emerald-400" /></label><div className="flex justify-between text-xs text-stone-400"><span>Patternless</span><span>Flame</span><span>Harlequin</span><span>Extreme</span></div></section>
+      <section id="slider"><h2 className="text-2xl mb-5 font-semibold">Try the actual educational slider.</h2><PatternSpectrum /><p className="mt-4 text-sm text-stone-400">These are teaching illustrations, not specimen photographs or genetic predictions. Scrubbing changes pigment coverage and crest continuity without generating or loading images.</p></section>
+      <section id="atlas"><h2 className="text-2xl mb-5 font-semibold">Every existing morph preset, with the new renderer.</h2><div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">{Object.entries(ILLUSTRATED_GECKO_PRESETS).map(([slug, preset]) => <figure key={slug} className="rounded-xl bg-[#e9e4d3] text-[#293c2f] p-4 flex flex-col items-center"><IllustratedGecko morph={slug} className="w-full max-w-[220px] h-auto" /><figcaption className="mt-3 text-xs font-semibold text-center">{preset.label}</figcaption></figure>)}</div></section>
+      <section id="quiz"><h2 className="text-2xl mb-5 font-semibold">Quiz illustrations now use the same anatomy.</h2><div className="grid grid-cols-4 sm:grid-cols-8 gap-3">{Object.entries(QUIZ_GLYPHS).flatMap(([step, options]) => Object.entries(options).map(([option, props]) => <figure key={`${step}-${option}`} className="rounded-xl bg-[#e9e4d3] text-[#293c2f] p-3"><MorphQuizGlyph {...props} className="w-full h-auto" /><figcaption className="mt-3 text-[10px] text-center">{step} · {option}</figcaption></figure>))}</div></section>
+    </div>
+  </main>;
+}

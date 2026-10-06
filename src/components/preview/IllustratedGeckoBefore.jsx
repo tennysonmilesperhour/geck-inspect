@@ -1,5 +1,4 @@
-import { memo, useId, useMemo } from 'react';
-import ObliqueGecko from './ObliqueGecko';
+import { useId, useMemo } from 'react';
 import {
   ILLUSTRATED_GECKO_PRESETS,
   DEFAULT_PALETTE,
@@ -8,7 +7,7 @@ import {
 } from '@/components/morphguide/illustratedGeckoPresets';
 
 /**
- * A natural-history crested gecko drawn in SVG, used as morph art in the
+ * A stylized, top-down crested gecko drawn in SVG, used as morph art in the
  * Morph Guide. It is not a photo and not a genetic prediction: it is a
  * diagram that shows WHERE each pattern sits on the body (back, flanks,
  * crest rows, legs) so a visitor can learn what to look for.
@@ -22,8 +21,7 @@ import {
  * from one morph to the next. See illustratedGeckoPresets.js for the
  * phenotype fields.
  *
- * The oblique view exposes the flanks and back together. The top view
- * remains available for examining both crest rows.
+ * Only the top view exists; `view` is accepted for forward compatibility.
  */
 
 // ---------------------------------------------------------------------------
@@ -89,10 +87,9 @@ function tubePath(frames, rf = () => 1) {
   const left = [];
   const right = [];
   frames.forEach((f, i) => {
-    const r = f.r * rf(f, i, 1);
-    const rr = f.r * rf(f, i, -1);
+    const r = f.r * rf(f, i);
     left.push(`${f1(f.x + f.nx * r)},${f1(f.y + f.ny * r)}`);
-    right.push(`${f1(f.x - f.nx * rr)},${f1(f.y - f.ny * rr)}`);
+    right.push(`${f1(f.x - f.nx * r)},${f1(f.y - f.ny * r)}`);
   });
   const last = frames[frames.length - 1];
   const lr = last.r * rf(last, frames.length - 1);
@@ -115,19 +112,19 @@ function frameAt(frames, u) {
 
 // Spine from the neck to the curled tail tip: [x, y, radius].
 const SPINE_POINTS = [
-  [120, 100, 17],
+  [120, 96, 22],
   [120, 124, 25],
-  [118.5, 168, 34],
-  [122, 212, 32],
+  [120, 168, 34],
+  [120.5, 212, 34],
   [120, 248, 22],
-  [119, 284, 9.5],
-  [116, 318, 6.6],
-  [124, 348, 5.0],
-  [146, 362, 3.6],
-  [168, 354, 2.7],
-  [174, 334, 1.8],
-  [162, 324, 1.2],
-  [153, 333, 0.7],
+  [119, 284, 12.5],
+  [116, 318, 10],
+  [124, 348, 8.4],
+  [146, 362, 7],
+  [168, 354, 5.6],
+  [174, 334, 4.6],
+  [162, 324, 3.6],
+  [153, 333, 2.6],
 ];
 const SPINE = sampleSpine(SPINE_POINTS, 14);
 // Normalized arc positions of landmarks along SPINE.
@@ -135,17 +132,17 @@ const U_HIPS = SPINE.find((f) => f.y >= 250).u;
 const BODY_PATH = tubePath(SPINE);
 
 const HEAD_PATH =
-  'M107,25Q120,21 133,25L146,39Q158,50 162,65Q166,78 157,89L143,102Q137,110 130,112L111,112Q103,109 97,102L82,89Q74,78 78,65Q82,50 94,39Z';
+  'M120,12C136,12 150,21 157,37C164,52 168,68 170,84C172,100 162,112 146,117C137,120 128,121 120,121C112,121 103,120 94,117C78,112 68,100 70,84C72,68 76,52 83,37C90,21 104,12 120,12Z';
 const EYES = [
-  { cx: 82, cy: 58, side: -1 },
-  { cx: 158, cy: 58, side: 1 },
+  { cx: 81, cy: 58, side: -1 },
+  { cx: 159, cy: 58, side: 1 },
 ];
 
 // Legs: shoulder/hip, elbow/knee, wrist/ankle, with the foot direction.
 // Defined for the gecko's left side (screen left) and mirrored.
 const LEG_DEFS = [
-  { key: 'front', pts: [[104, 129, 8.5], [73, 145, 7], [55, 121, 5.4]], toeDir: [-0.35, -1] },
-  { key: 'back', pts: [[106, 228, 10], [78, 243, 8], [55, 271, 5.8]], toeDir: [-0.4, 1] },
+  { key: 'front', pts: [[104, 132, 8.5], [74, 140, 7], [62, 108, 5.4]], toeDir: [-0.35, -1] },
+  { key: 'back', pts: [[106, 232, 9.5], [70, 226, 7.6], [60, 268, 5.8]], toeDir: [-0.4, 1] },
 ];
 
 function mirrorPts(pts) {
@@ -159,14 +156,14 @@ function buildLeg(pts, toeDir) {
   const dx = toeDir[0] / len;
   const dy = toeDir[1] / len;
   const base = Math.atan2(dy, dx);
-  const toes = [-95, -45, -8, 27, 62].map((deg, i) => {
+  const toes = [-64, -32, 0, 30, 60].map((deg, i) => {
     const a = base + (deg * Math.PI) / 180;
-    const l = [8.5, 15.5, 16.5, 13.5, 9.5][i];
+    const l = [10, 13.5, 14.5, 13.5, 10.5][i];
     const tipX = wrist[0] + Math.cos(a) * l;
     const tipY = wrist[1] + Math.sin(a) * l;
     return {
-      d: `M${f1(wrist[0])},${f1(wrist[1])}Q${f1(wrist[0] + Math.cos(a - 0.13) * l * 0.6)},${f1(wrist[1] + Math.sin(a - 0.13) * l * 0.6)} ${f1(tipX)},${f1(tipY)}`,
-      pad: { cx: f1(tipX + Math.cos(a) * 1.2), cy: f1(tipY + Math.sin(a) * 1.2), r: 2.8, rot: (a * 180) / Math.PI },
+      d: `M${f1(wrist[0])},${f1(wrist[1])}L${f1(tipX)},${f1(tipY)}`,
+      pad: { cx: f1(tipX + Math.cos(a) * 1.2), cy: f1(tipY + Math.sin(a) * 1.2), r: 3.3, rot: (a * 180) / Math.PI },
     };
   });
   return { frames, path: tubePath(frames), toes, wrist };
@@ -250,20 +247,6 @@ const smooth = (a, b, x) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
-
-/** Irregular pigment islands. Their seed and anchors never change while scrubbing. */
-function pigmentPath(x, y, rx, ry, rotation, seed) {
-  const random = rng(seed + 1701);
-  const angle = rotation * Math.PI / 180;
-  const points = Array.from({ length: 20 }, (_, i) => {
-    const theta = i / 20 * Math.PI * 2;
-    const edge = 0.68 + random() * 0.42;
-    const dx = Math.cos(theta) * rx * edge;
-    const dy = Math.sin(theta) * ry * edge;
-    return `${i ? 'L' : 'M'}${f1(x + dx * Math.cos(angle) - dy * Math.sin(angle))},${f1(y + dx * Math.sin(angle) + dy * Math.cos(angle))}`;
-  });
-  return points.join('') + 'Z';
-}
 
 // Flank blotches (Harlequin). Each has a threshold: it appears once the
 // coverage passes it, so pattern grows smoothly as coverage rises.
@@ -380,15 +363,15 @@ function dorsalPath(amount, tongues, style) {
   const to = Math.min(1, U_HIPS + (style === 'flame' ? 0.06 + 0.05 * amount : 0.04));
   const frames = SPINE.filter((f) => f.u >= from && f.u <= to);
   const period = 0.062;
-  return tubePath(frames, (f, i, side) => {
+  return tubePath(frames, (f) => {
     if (style === 'saddle') {
       const pinch = 1 - 0.28 * Math.pow(Math.sin(((f.u - from) / (to - from)) * Math.PI * 3), 2);
       return width * pinch * Math.max(0.15, smooth(to, to - 0.08, f.u));
     }
-    const phase = ((f.u - from + (side < 0 ? 0.013 : 0)) / period) % 1;
+    const phase = ((f.u - from) / period) % 1;
     const tooth = phase < 0.5 ? phase * 2 : (1 - phase) * 2; // 0..1 triangle
     const taper = smooth(to, to - 0.08, f.u) * smooth(from - 0.001, from + 0.03, f.u);
-    return (width + amp * (0.32 * Math.pow(tooth, 2) + 0.12 * Math.sin(f.u * 177 + side * 9))) * Math.max(0.15, taper);
+    return (width + amp * Math.pow(tooth, 3)) * Math.max(0.15, taper);
   });
 }
 
@@ -444,15 +427,14 @@ function tigerBands(amount, brindle) {
 // Component
 // ---------------------------------------------------------------------------
 
-function IllustratedGecko({
+export default function IllustratedGecko({
   morph,
   phenotype,
   size,
-  view = 'oblique',
+  view = 'top',
   className = '',
   title,
   decorative = false,
-  focus = null,
 }) {
   const rawId = useId();
   const uid = `ig${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -461,10 +443,10 @@ function IllustratedGecko({
     () => normalizePhenotype({ ...(preset?.phenotype || {}), ...(phenotype || {}) }),
     [preset, phenotype],
   );
-
+  void view;
 
   const pal = { ...DEFAULT_PALETTE, ...p.palette };
-  const outline = mixHex(pal.base, pal.outline, 0.6);
+  const outline = pal.outline;
   const crestColor = pal.crest || mixHex(pal.base, '#ffffff', 0.22);
   const dorsalColor = p.dorsalStyle === 'solid' ? (pal.dorsal || mixHex(pal.base, '#ffffff', 0.35)) : pal.pattern;
   const pinColor = p.phantom ? mixHex(pal.base, pal.pattern, 0.28) : pal.pattern;
@@ -480,8 +462,6 @@ function IllustratedGecko({
   const lateral = p.lateral;
   const spotCount = Math.round(p.dalmatian);
   const label = title || (preset ? `${preset.label} crested gecko illustration` : 'Crested gecko illustration');
-
-  if (view !== 'top') return <ObliqueGecko phenotype={p} className={className} size={size} label={label} decorative={decorative} focus={focus} />;
 
   const clip = `${uid}-clip`;
   const style = size ? { width: size, height: (size * VIEW_H) / VIEW_W } : undefined;
@@ -506,21 +486,11 @@ function IllustratedGecko({
           <feGaussianBlur stdDeviation="5" />
         </filter>
         <filter id={`${uid}-shadow`} x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.16" />
+          <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#000" floodOpacity="0.45" />
         </filter>
-        <linearGradient id={`${uid}-volume`} x1="84" x2="158" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={pal.dark} stopOpacity="0.62" />
-          <stop offset="32%" stopColor="#fff7df" stopOpacity="0.08" />
-          <stop offset="55%" stopColor="#fff7df" stopOpacity="0.18" />
-          <stop offset="100%" stopColor={pal.dark} stopOpacity="0.5" />
-        </linearGradient>
-        <radialGradient id={`${uid}-head-volume`} cx="114" cy="62" r="52" gradientUnits="userSpaceOnUse">
-          <stop offset="15%" stopColor="#fff6df" stopOpacity="0.17" /><stop offset="65%" stopColor={pal.dark} stopOpacity="0.06" /><stop offset="100%" stopColor={pal.dark} stopOpacity="0.58" />
-        </radialGradient>
-        <pattern id={`${uid}-scales`} width="4" height="3.6" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="0.67" fill="none" stroke={pal.dark} strokeWidth="0.26" opacity="0.22" />
-          <circle cx="3.1" cy="2.8" r="0.56" fill="none" stroke={pal.dark} strokeWidth="0.26" opacity="0.2" />
-          <path d="M0.6,0.7L1.3,0.7M2.8,2.5L3.3,2.5" stroke="#fff5dd" strokeWidth="0.28" opacity="0.32" />
+        <pattern id={`${uid}-scales`} width="6" height="5.2" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.3" r="1" fill="#000" opacity="0.12" />
+          <circle cx="4.5" cy="3.9" r="1" fill="#000" opacity="0.12" />
         </pattern>
         <radialGradient id={`${uid}-eye`} cx="40%" cy="38%" r="70%">
           <stop offset="0%" stopColor={mixHex(pal.eye, '#ffffff', 0.35)} />
@@ -530,21 +500,21 @@ function IllustratedGecko({
 
       {/* Outline pass: every part stroked thick in the outline color,
           then filled on top, so the joins read as one animal. */}
-      <g filter={`url(#${uid}-shadow)`} stroke={outline} strokeWidth="1.5" strokeLinejoin="round" fill={outline}>
+      <g filter={`url(#${uid}-shadow)`} stroke={outline} strokeWidth="5" strokeLinejoin="round" fill={outline}>
         <path d={BODY_PATH} />
         {LEGS.map((l) => (
           <g key={l.key}>
             <path d={l.path} />
             {l.toes.map((t, i) => (
               <g key={i}>
-                <path d={t.d} strokeWidth="5.2" strokeLinecap="round" fill="none" />
-                <ellipse cx={t.pad.cx} cy={t.pad.cy} rx={t.pad.r + 0.55} ry={t.pad.r * 0.82 + 0.55} transform={`rotate(${t.pad.rot} ${t.pad.cx} ${t.pad.cy})`} strokeWidth="0" />
+                <path d={t.d} strokeWidth="7.4" strokeLinecap="round" fill="none" />
+                <ellipse cx={t.pad.cx} cy={t.pad.cy} rx={t.pad.r + 1.6} ry={t.pad.r * 0.82 + 1.6} transform={`rotate(${t.pad.rot} ${t.pad.cx} ${t.pad.cy})`} strokeWidth="0" />
               </g>
             ))}
           </g>
         ))}
         <path d={HEAD_PATH} />
-        {EYES.map((e) => <circle key={e.cx} cx={e.cx} cy={e.cy} r="12.0" strokeWidth="0" />)}
+        {EYES.map((e) => <circle key={e.cx} cx={e.cx} cy={e.cy} r="13.6" strokeWidth="0" />)}
       </g>
 
       {/* Base color fill */}
@@ -564,11 +534,6 @@ function IllustratedGecko({
         <path d={HEAD_PATH} />
       </g>
 
-      <g fill="none" stroke={pal.dark} strokeWidth="0.35" opacity="0.48">
-        {LEGS.flatMap(leg => leg.toes.map((toe, i) => <g key={`${leg.key}-${i}`} transform={`rotate(${toe.pad.rot} ${toe.pad.cx} ${toe.pad.cy})`}>
-          {[-1.1, 0, 1.1].map(offset => <path key={offset} d={`M${toe.pad.cx + offset},${toe.pad.cy - 1.5}L${toe.pad.cx + offset},${toe.pad.cy + 1.5}`} />)}
-        </g>))}
-      </g>
       {/* Pattern layers, clipped to the silhouette */}
       <g clipPath={`url(#${clip})`}>
         {/* Bicolor / Cappuccino / Flame back */}
@@ -578,7 +543,7 @@ function IllustratedGecko({
         {/* Head blaze that continues the back pattern between the eyes */}
         {p.dorsal > 0.01 && p.dorsalStyle !== 'solid' && (
           <path
-            d="M113,42Q122,36 130,43L135,53L132,62L137,75L134,94L127,111L112,112L108,97L106,82L110,70L106,56Z"
+            d="M120,44C126,44 131,62 132,82C133,100 128,114 120,120C112,114 107,100 108,82C109,62 114,44 120,44Z"
             fill={dorsalColor}
             opacity={p.dorsalStyle === 'saddle' ? 1 : 0.7 * smooth(0.2, 0.9, p.dorsal)}
           />
@@ -586,7 +551,7 @@ function IllustratedGecko({
 
         {/* Tricolor third color */}
         {p.tricolor > 0 && ACCENT_BLOBS.map((b, i) => (
-          <path key={i} d={pigmentPath(b.x, b.y, b.rx, b.ry, b.rot, i + 91)} fill={pal.accent} opacity={p.tricolor * 0.95} />
+          <ellipse key={i} cx={f1(b.x)} cy={f1(b.y)} rx={b.rx} ry={b.ry} transform={`rotate(${f1(b.rot)} ${f1(b.x)} ${f1(b.y)})`} fill={pal.accent} opacity={p.tricolor * 0.95} />
         ))}
 
         {/* Harlequin: flank wash for Extreme, then blotches, then legs */}
@@ -609,7 +574,7 @@ function IllustratedGecko({
           if (g <= 0.01) return null;
           const s = 0.35 + 0.65 * g + 0.55 * smooth(0.65, 1, lateral);
           return (
-            <path key={i} d={pigmentPath(b.x, b.y, b.rx * s, b.ry * s, b.rot, i)} fill={pal.pattern} opacity={g} />
+            <ellipse key={i} cx={f1(b.x)} cy={f1(b.y)} rx={f1(b.rx * s)} ry={f1(b.ry * s)} transform={`rotate(${f1(b.rot)} ${f1(b.x)} ${f1(b.y)})`} fill={pal.pattern} opacity={Math.min(1, 0.4 + g)} />
           );
         })}
         {lateral > 0.25 && LEG_BLOBS.map((b, i) => {
@@ -617,7 +582,7 @@ function IllustratedGecko({
           if (g <= 0.01) return null;
           const s = 0.4 + 0.6 * g + 0.5 * smooth(0.75, 1, lateral);
           return (
-            <path key={i} d={pigmentPath(b.x, b.y, b.rx * s, b.ry * s, b.rot, i + 60)} fill={pal.pattern} opacity={g} />
+            <ellipse key={i} cx={f1(b.x)} cy={f1(b.y)} rx={f1(b.rx * s)} ry={f1(b.ry * s)} transform={`rotate(${f1(b.rot)} ${f1(b.x)} ${f1(b.y)})`} fill={pal.pattern} opacity={g} />
           );
         })}
 
@@ -633,7 +598,7 @@ function IllustratedGecko({
               const g = smooth(b.t, b.t + 0.3, p.lillyWhite);
               if (g <= 0.01) return null;
               return (
-                <path key={i} d={pigmentPath(b.x, b.y, b.w * g * 0.65, b.h * g * 0.7, b.rot, i + 500)} fill={lwWhite} opacity={g} />
+                <rect key={i} x={f1(b.x - (b.w * g) / 2)} y={f1(b.y - (b.h * g) / 2)} width={f1(b.w * g)} height={f1(b.h * g)} rx="6" transform={`rotate(${f1(b.rot)} ${f1(b.x)} ${f1(b.y)})`} fill={lwWhite} />
               );
             })}
             <path d="M70,76C69,94 78,110 96,119C90,106 84,92 82,74ZM170,76C171,94 162,110 144,119C150,106 156,92 158,74Z" fill={lwWhite} opacity={smooth(0.2, 0.8, p.lillyWhite)} />
@@ -649,16 +614,12 @@ function IllustratedGecko({
         ))}
 
         {/* Soft dorsal highlight and scale texture for depth */}
-        <path d={offsetLine(SPINE, 0, SPINE[2].u, 0.85)} stroke="#ffffff" strokeWidth="18" strokeLinecap="round" fill="none" opacity="0.08" filter={`url(#${uid}-soft)`} />
+        <path d={offsetLine(SPINE, 0, SPINE[2].u, 0.85)} stroke="#ffffff" strokeWidth="18" strokeLinecap="round" fill="none" opacity="0.13" filter={`url(#${uid}-soft)`} />
         <path d="M120,30C132,30 140,50 142,72C140,90 132,100 120,102C108,100 100,90 98,72C100,50 108,30 120,30Z" fill="#ffffff" opacity="0.08" filter={`url(#${uid}-soft)`} />
         {[-1, 1].map((side) => (
           <path key={side} d={offsetLine(SPINE, side * 1.05, 0, 1)} stroke="#000000" strokeWidth="9" fill="none" opacity="0.2" filter={`url(#${uid}-soft)`} />
         ))}
-        <path d={BODY_PATH} fill={`url(#${uid}-volume)`} />
-        {LEGS.map(leg => <path key={leg.key} d={leg.path} fill="none" stroke="#fff6df" strokeWidth="1" opacity="0.2" />)}
-        <path d={HEAD_PATH} fill={`url(#${uid}-head-volume)`} />
         <rect width={VIEW_W} height={VIEW_H} fill={`url(#${uid}-scales)`} />
-        <path d="M94,40Q120,30 146,40M92,85Q120,99 148,85M105,103Q120,108 135,103" fill="none" stroke={pal.dark} strokeWidth="0.7" opacity="0.35" />
       </g>
 
       {/* Crest rows: the base line, then pinstripe cream on top */}
@@ -678,8 +639,8 @@ function IllustratedGecko({
       </g>
       <g>
         {CREST_SPIKES.map((sp, i) => {
-          const pinGrowth = smooth((sp.u - CREST_FROM) / (CREST_TO - CREST_FROM), (sp.u - CREST_FROM) / (CREST_TO - CREST_FROM) + 0.12, p.pinstripe * 1.12);
-          return <path key={i} d={sp.d} fill={mixHex(crestColor, pinColor, pinGrowth)} stroke={outline} strokeWidth="0.35" strokeLinejoin="round" />;
+          const pinned = pins.length > 0 && p.pinstripe > 0.05 && ((sp.u - CREST_FROM) / (CREST_TO - CREST_FROM)) < p.pinstripe * 1.05;
+          return <path key={i} d={sp.d} fill={pinned ? pinColor : crestColor} stroke={outline} strokeWidth="0.6" strokeLinejoin="round" />;
         })}
       </g>
 
@@ -687,33 +648,20 @@ function IllustratedGecko({
       {EYES.map((e) => (
         <g key={e.cx}>
           <circle cx={e.cx} cy={e.cy} r="11" fill={`url(#${uid}-eye)`} />
-          {Array.from({ length: 28 }, (_, i) => {
-            const a = i * Math.PI * 2 / 28;
-            return <path key={i} d={`M${f1(e.cx + Math.cos(a) * 4.8)},${f1(e.cy + Math.sin(a) * 4.8)}L${f1(e.cx + Math.cos(a) * 9.8)},${f1(e.cy + Math.sin(a) * 9.8)}`} stroke={mixHex(pal.eye, pal.dark, 0.6)} opacity="0.52" strokeWidth="0.45" />;
-          })}
-          <circle cx={e.cx} cy={e.cy} r="10.4" fill="none" stroke={pal.dark} strokeWidth="0.75" />
           <ellipse cx={e.cx + e.side * 1.2} cy={e.cy} rx="1.7" ry="7.8" fill={p.albino ? mixHex(pal.eye, '#3a0008', 0.55) : '#120d0a'} />
-          <circle cx={e.cx - 3} cy={e.cy - 3.5} r="1.25" fill="#ffffff" opacity="0.7" />
+          <circle cx={e.cx - 3} cy={e.cy - 3.5} r="2" fill="#ffffff" opacity="0.85" />
         </g>
       ))}
       <g fill={crestColor} stroke={outline} strokeWidth="0.7" strokeLinejoin="round">
         {LASHES.map((d, i) => <path key={i} d={d} />)}
       </g>
 
-      {focus && <g fill="none" stroke="#64bda4" strokeWidth="0.9" strokeDasharray="3 2" opacity="0.9">
-        {focus === 'eyes' ? EYES.map((eye) => <circle key={eye.cx} cx={eye.cx} cy={eye.cy} r="16" />) : focus === 'back' ? <path d={offsetLine(SPINE, 0, 0.02, U_HIPS)} strokeWidth="25" opacity="0.2" /> : focus === 'sides' ? [-1, 1].map(side => <path key={side} d={offsetLine(SPINE, side * 0.92, 0.07, U_HIPS)} strokeWidth="7" opacity="0.4" />) : <ellipse cx="120" cy="170" rx="48" ry="93" />}
-      </g>}
-      {/* Labial fold, sensory pits, and small nasal scales. */}
-      <path d="M105,28Q120,33 135,28" fill="none" stroke={pal.dark} strokeWidth="0.6" opacity="0.65" />
-      {[109, 115, 121, 127, 133].map((x) => <circle key={x} cx={x} cy="35" r="0.55" fill={pal.dark} opacity="0.45" />)}
       {/* Nostrils */}
-      <circle cx="112" cy="26" r="1.2" fill={outline} opacity="0.8" />
-      <circle cx="128" cy="26" r="1.2" fill={outline} opacity="0.8" />
+      <circle cx="112" cy="20" r="1.7" fill={outline} opacity="0.8" />
+      <circle cx="128" cy="20" r="1.7" fill={outline} opacity="0.8" />
     </svg>
   );
 }
-
-export default memo(IllustratedGecko);
 
 /** True when the Morph Guide slug has an illustration preset. */
 export { hasIllustration } from '@/components/morphguide/illustratedGeckoPresets';

@@ -46,7 +46,7 @@ function OptionCard({ stepId, option, selected, onPick }) {
       }`}
     >
       <span className="block w-full rounded-lg bg-gradient-to-b from-slate-800/70 to-slate-900/40">
-        <MorphQuizGlyph {...glyph} className="mx-auto h-24 sm:h-28 w-auto py-1.5 transition-transform duration-200 group-hover:scale-105" />
+        <MorphQuizGlyph {...glyph} className="mx-auto w-full h-auto max-h-28 py-1.5 transition-transform duration-200 group-hover:scale-105" />
       </span>
       <span className="mt-2 text-sm font-bold text-white leading-tight">{option.label}</span>
       <span className="mt-0.5 text-xs text-slate-400 leading-snug">{option.hint}</span>
@@ -167,7 +167,7 @@ export default function MorphQuiz({ morphs = [] }) {
       >
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="relative shrink-0 w-14 h-16 sm:w-16 sm:h-20 rounded-xl bg-slate-950/60 border border-slate-700/80 flex items-center justify-center">
-            <MorphQuizGlyph cream="sides" lines="full" spots="some" className="h-14 sm:h-[4.5rem] w-auto" />
+            <MorphQuizGlyph cream="sides" lines="full" spots="some" className="w-28 sm:w-36 h-auto" />
           </div>
           <div className="min-w-0 flex-1">
             <h2 id="morph-quiz-teaser" className="text-base sm:text-lg font-bold text-white leading-snug">

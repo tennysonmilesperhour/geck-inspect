@@ -18,7 +18,7 @@ export const CUSTOM_STICKER_SLUG = 'custom-pet-sticker';
 export const CUSTOM_STICKER_PRICE_CENTS = 1000;
 export const CUSTOM_STICKER_SHIPPING_CENTS = 500;
 export const CUSTOM_STICKER_DESIGN_KIND = 'custom_sticker';
-export const CUSTOM_STICKER_DESIGN_VERSION = 2;
+export const CUSTOM_STICKER_DESIGN_VERSION = 3;
 
 /**
  * The eleven card types. `color` drives the card frame, `accent` the
@@ -52,21 +52,8 @@ export const CARD_STAGES = [
 ];
 
 export const CARD_LAYOUTS = [
-  {
-    value: 'classic',
-    label: 'Vintage collector',
-    blurb: 'Warm paper, layered borders, and a classic two-move profile.',
-  },
-  {
-    value: 'modern',
-    label: 'Modern illustrated',
-    blurb: 'Clean ivory panels, bold color accents, and generous artwork.',
-  },
-  {
-    value: 'full_art',
-    label: 'Full-art showcase',
-    blurb: 'Edge-to-edge photo with a compact identity and matchup strip.',
-  },
+  { value: 'classic', label: 'Classic collector', blurb: 'Golden frame, framed portrait, and the familiar original card proportions.' },
+  { value: 'full_art', label: 'Modern full art', blurb: 'An edge-to-edge portrait, layered detail, and a crisp silver frame. Printed color, no holo.' },
 ];
 
 export const BORDER_COLORS = [
@@ -81,7 +68,7 @@ export const RARITIES = [
   { value: 'common',    label: 'Core',         symbol: '●' },
   { value: 'uncommon',  label: 'Select',       symbol: '◆' },
   { value: 'rare',      label: 'Featured',     symbol: '★' },
-  { value: 'holo_rare', label: 'Foil feature', symbol: '✦' },
+  { value: 'holo_rare', label: 'Special illustration', symbol: '✦' },
 ];
 
 export const RARITY_MAP = Object.fromEntries(RARITIES.map((r) => [r.value, r]));

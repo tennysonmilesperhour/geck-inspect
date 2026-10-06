@@ -149,6 +149,7 @@ export default function PatternSpectrum({
 
   const [trackId, setTrackId] = useState(startTrack);
   const [pos, setPos] = useState(startPos);
+  const [illustrationView, setIllustrationView] = useState('oblique');
   const track = SPECTRUM_TRACKS[trackId];
   const max = track.stops.length - 1;
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
@@ -289,15 +290,19 @@ export default function PatternSpectrum({
         id={`${uid}-panel`}
         role="tabpanel"
         aria-labelledby={`${uid}-tab-${trackId}`}
-        className="grid gap-4 sm:gap-6 px-4 sm:px-6 pb-5 pt-4 sm:grid-cols-[minmax(180px,240px)_1fr] sm:items-center"
+        className="grid gap-4 sm:gap-6 px-4 sm:px-6 pb-5 pt-4 sm:grid-cols-[minmax(280px,400px)_1fr] sm:items-center"
       >
         {/* The gecko */}
-        <div className="relative flex justify-center items-center rounded-xl bg-[radial-gradient(ellipse_at_center,rgba(52,211,153,0.10),transparent_65%)] py-2">
+        <div className="relative flex flex-col justify-center items-center rounded-xl border border-stone-300/50 bg-[#e9e4d3] py-5">
           <IllustratedGecko
             phenotype={phenotype}
-            className="w-[150px] sm:w-[200px] h-auto"
+            view={illustrationView}
+            className={illustrationView === 'top' ? 'w-[200px] h-auto' : 'w-full h-auto'}
             title={`Illustration: ${stop.name}`}
           />
+          <div className="mt-4 flex gap-2 text-xs text-[#294a3b]">
+            {[['oblique', 'Side + back'], ['top', 'Top view']].map(([value, label]) => <button key={value} aria-pressed={illustrationView === value} onClick={() => setIllustrationView(value)} className={`rounded-full px-3 min-h-9 border ${illustrationView === value ? 'border-[#294a3b] bg-[#294a3b] text-stone-100' : 'border-[#294a3b]/30'}`}>{label}</button>)}
+          </div>
         </div>
 
         <div className="min-w-0">

@@ -89,6 +89,19 @@ describe('rendering', () => {
     });
   });
 
+  it('keeps fixed anatomy and element counts while the slider changes pigment', () => {
+    const frames = [0, 0.45, 1, 1.7, 2, 2.5, 3].map(pos => renderToStaticMarkup(<IllustratedGecko phenotype={phenotypeAlong(SPECTRUM_TRACKS.coverage.keyframes, pos)} />));
+    const counts = frames.map(html => (html.match(/<path /g) || []).length);
+    expect(new Set(counts).size).toBe(1);
+    frames.forEach(html => {
+      expect(html).not.toContain('<image');
+      expect(html).not.toContain('NaN');
+      expect(html).toContain('viewBox="0 0 580 300"');
+    });
+    expect(frames[0]).not.toBe(frames[6]);
+    expect(renderToStaticMarkup(<IllustratedGecko morph="pinstripe" view="top" />)).toContain('viewBox="0 0 240 384"');
+  });
+
   it('renders the spectrum on both tracks', () => {
     const a = renderToStaticMarkup(<MemoryRouter><PatternSpectrum focusSlug="flame" /></MemoryRouter>);
     expect(a).toContain('Flame');

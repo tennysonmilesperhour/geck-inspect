@@ -133,7 +133,7 @@ function HeroImage({ src, name, slug, category }) {
               className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:18px_18px]"
             />
             {hasIllustration(slug) ? (
-              <IllustratedGecko morph={slug} decorative className="relative h-40 md:h-56 w-auto drop-shadow-xl" />
+              <IllustratedGecko morph={slug} decorative className="relative w-[92%] h-auto max-h-[85%]" />
             ) : (
               <span
                 aria-hidden="true"

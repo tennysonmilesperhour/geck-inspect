@@ -23,7 +23,7 @@ import { designFromGecko } from '@/lib/store/stickerGecko';
 import { downloadSticker } from '@/lib/store/stickerExport';
 import { CARD_LAYOUTS, CUSTOM_STICKER_SLUG, CUSTOM_STICKER_PRICE_CENTS, CUSTOM_STICKER_SHIPPING_CENTS, FIELD_LIMITS, PLAQUE_STYLES, STICKER_SIZES, createDefaultDesign, serializeDesign, stickerDimensions, validateDesign } from '@/lib/store/customSticker';
 
-const SAMPLE = { ...createDefaultDesign(), ...STICKER_EXAMPLES[2].design, layout: 'modern', name: 'Luna' };
+const SAMPLE = { ...createDefaultDesign(), ...STICKER_EXAMPLES[2].design, layout: 'full_art', name: 'Luna' };
 const PLAQUE_SAMPLE = { ...createDefaultDesign(), theme: 'enclosure_plaque', name: 'Moonlight', hatch_label: '2024' };
 const STEPS = ['Choose a style', 'Make it yours', 'Review your proof'];
 const cardSurface = 'rounded-2xl border border-slate-800 bg-slate-900/35 p-5 md:p-6';
@@ -246,7 +246,7 @@ export default function CustomStickerStudio() {
                 ['enclosure_plaque', 'Enclosure name plaque', 'An elegant name and species label for their home.', PanelTop],
               ].map(([value, label, description, Icon]) => <button key={value} aria-pressed={design.theme === value} className={`rounded-xl border p-4 text-left ${design.theme === value ? 'border-emerald-400 bg-emerald-950/40' : 'border-slate-700 hover:border-slate-500'}`} onClick={() => patch({ theme: value })}><Icon className="h-5 w-5 text-emerald-300 mb-3" /><span className="block font-semibold text-stone-100">{label}</span><span className="block mt-1 text-xs leading-relaxed text-slate-400">{description}</span></button>)}
             </div>
-            {isCard && <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            {isCard && <div className="grid grid-cols-2 gap-3">
               {CARD_LAYOUTS.map((layout) => <button key={layout.value} aria-pressed={design.layout === layout.value} className={`rounded-xl border p-2 sm:p-3 text-left ${design.layout === layout.value ? 'border-emerald-400' : 'border-slate-800 hover:border-slate-500'}`} onClick={() => { patch({ layout: layout.value }); captureEvent('custom_sticker_layout_selected', { layout: layout.value }); }}><StickerPreview design={{ ...SAMPLE, ...((design.photo_url && design.name) ? design : {}), layout: layout.value }} /><span className="block mt-3 text-[11px] sm:text-sm font-semibold text-stone-100">{layout.label}</span><span className="hidden sm:block mt-1 text-xs leading-relaxed text-slate-400">{layout.blurb}</span></button>)}
             </div>}
             {isPlaque && <><div className="rounded-xl bg-stone-950 p-5"><StickerPreview design={{ ...PLAQUE_SAMPLE, ...design, name: design.name || PLAQUE_SAMPLE.name }} /></div><ChoiceField label="Plaque palette" value={design.plaque_style} options={PLAQUE_STYLES} onChange={(plaque_style) => patch({ plaque_style })} /><p className="text-xs text-slate-400">A landscape vinyl label, not a rigid or engraved plaque. Designed to sit neatly on the outside of the glass.</p></>}

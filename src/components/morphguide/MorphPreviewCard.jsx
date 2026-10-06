@@ -71,7 +71,7 @@ export function MorphThumb({ slug, name, src: srcProp, className = '', textClass
       />
       {hasIllustration(morph?.slug) ? (
         <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center p-2">
-          <IllustratedGecko morph={morph.slug} decorative className="h-full w-auto drop-shadow-md" />
+          <IllustratedGecko morph={morph.slug} decorative className="w-full h-auto max-h-full" />
         </span>
       ) : (
         <span
