@@ -3,10 +3,9 @@ import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X, Sparkles, ArrowRightLeft, MessageSquare } from 'lucide-react';
 import {
-    SECTIONS,
     FALLBACK_NAV_ITEMS,
     flattenNavItems,
-    getSectionForPage,
+    groupNavItems,
     KEEPER_MODE_STORAGE_KEY,
     BREEDER_ONLY_PAGES,
 } from '@/lib/navItems';
@@ -70,15 +69,12 @@ export default function TutorialModal({ isOpen, onClose }) {
         if (!isOpen) setMigrationMode(false);
     }, [isOpen]);
 
-    // Build the step list from the static nav data so we can walk every
-    // tile in every section, not just the ones currently mounted in the
-    // DOM (the sidebar only renders the active section's items at a
-    // time). Each per-item step carries its sectionId so we can switch
-    // sections on the fly when the user advances into the other tab.
+    // Build the step list from the static nav data, in sidebar group
+    // order. Each step carries its group id (as sectionId) so a folded
+    // group can be opened before the step points into it.
     //
     // Anchors are looked up live at render-time in the layout effect
-    // below, that handles the case where switching sections re-mounts
-    // the nav and we need to grab the freshly-rendered node.
+    // below, since unfolding a group mounts its tiles a moment later.
     useEffect(() => {
         if (!isOpen) return;
 
@@ -94,14 +90,8 @@ export default function TutorialModal({ isOpen, onClose }) {
         } catch {
             // localStorage unavailable; fall back to the full tour
         }
-        // Group items by section, preserving each section's source order.
-        const itemsBySection = new Map(SECTIONS.map((s) => [s.id, []]));
-        for (const item of flat) {
-            const sectionId = getSectionForPage(item.page_name);
-            if (sectionId && itemsBySection.has(sectionId)) {
-                itemsBySection.get(sectionId).push(item);
-            }
-        }
+        // Same groups, same order as the sidebar.
+        const groups = groupNavItems(flat);
 
         const welcomeStep = {
             pageName: '__welcome',
@@ -109,7 +99,7 @@ export default function TutorialModal({ isOpen, onClose }) {
             sectionId: null,
             blurb: {
                 title: 'Welcome to Geck Inspect',
-                body: 'The app is split into two top-level tabs, Manage (your animals + business) and Discover (tools, community, reference). We\'ll walk through both, one tile at a time. Use the arrows, or hit Esc to skip.',
+                body: 'Everything lives in the sidebar, in five groups: Collection, Breeding, Tools, Learn and Community. We\'ll walk through them one tile at a time. Use the arrows, or hit Esc to skip.',
             },
         };
         const doneStep = {
@@ -122,24 +112,20 @@ export default function TutorialModal({ isOpen, onClose }) {
             },
         };
 
-        // For each section, emit the section-overview step first
-        // (anchored to the section tab itself), then a per-item step
-        // for every nav tile inside it.
-        const sectionSteps = SECTIONS.flatMap((section) => {
-            const headerKey = `__section_${section.id}`;
+        // For each sidebar group, an overview step anchored to the group
+        // heading, then one step per tile inside it.
+        const sectionSteps = groups.flatMap((group) => {
+            const headerKey = `__group_${group.id}`;
             const header = {
                 pageName: headerKey,
-                label: section.label,
-                sectionId: section.id,
-                blurb: STEP_BLURBS[headerKey] || {
-                    title: section.label,
-                    body: `The ${section.label} tab.`,
-                },
+                label: group.label,
+                sectionId: group.id,
+                blurb: STEP_BLURBS[headerKey] || { title: group.label, body: `The ${group.label} group.` },
             };
-            const items = (itemsBySection.get(section.id) || []).filter((item) => STEP_BLURBS[item.page_name]).map((item) => ({
+            const items = group.items.filter((item) => STEP_BLURBS[item.page_name]).map((item) => ({
                 pageName: item.page_name,
                 label: item.display_name,
-                sectionId: section.id,
+                sectionId: group.id,
                 blurb: STEP_BLURBS[item.page_name],
             }));
             return [header, ...items];
@@ -165,17 +151,11 @@ export default function TutorialModal({ isOpen, onClose }) {
         return firstHidden;
     };
 
-    // Switch sections by simulated-clicking the section's tab anchor.
-    // The tab is a react-router <Link>, so a click event triggers the
-    // SPA navigation that re-mounts the sidebar with that section's
-    // items. Returns true if a switch was attempted.
-    const ensureSection = (sectionId) => {
-        if (!sectionId) return false;
-        const tab = findAnchorNode(`__section_${sectionId}`);
-        if (!tab) return false;
-        const isActive = tab.getAttribute('aria-current') === 'page';
-        if (isActive) return false;
-        tab.click();
+    // A member may have folded the group this step points into. Ask
+    // Layout to unfold it so the tile is on screen.
+    const ensureSection = (groupId) => {
+        if (!groupId) return false;
+        window.dispatchEvent(new CustomEvent('open_nav_group', { detail: groupId }));
         return true;
     };
 
@@ -196,12 +176,8 @@ export default function TutorialModal({ isOpen, onClose }) {
             return;
         }
 
-        // If this step belongs to a non-active section, switch first.
-        // The section header step itself uses the tab as its anchor,
-        // so the click would be a no-op there.
-        if (currentStep.sectionId && !currentStep.pageName.startsWith('__section_')) {
-            ensureSection(currentStep.sectionId);
-        }
+        // Unfold the step's sidebar group if the member folded it.
+        if (currentStep.sectionId) ensureSection(currentStep.sectionId);
 
         let cancelled = false;
         let resolvedNode = null;

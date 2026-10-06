@@ -10,13 +10,25 @@ export const STEP_BLURBS = {
     PairingPlanner: {"title": "Pairing Planner", "body": "Choose a breeding goal and compare possible sire-and-dam combinations in your collection. Review predicted traits, estimated offspring values and pairing warnings before deciding which animals to pair."},
     BreedingSeason: {"title": "Season Timeline", "body": "See every pairing, recorded lock, clutch and hatch on one timeline. Compare incubation windows across pairs to plan checks and prepare space for upcoming hatchlings."},
     FieldMode: {"title": "Field Mode", "body": "Log a weight, feeding, shed or note while handling an animal. Large controls make one-handed entry easier, recent animals are quick to find, and a short undo window lets you correct an accidental log."},
-    __section_manage: {
-        title: 'Manage, your animals + business',
-        body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings and sales stats. We\'ll walk through each tile next.',
+    __group_collection: {
+        title: 'Collection',
+        body: 'Everything about the geckos you keep: your collection, other reptiles, quick logging in Field Mode, and what your geckos are worth.',
     },
-    __section_discover: {
-        title: 'Discover, tools, community, reference',
-        body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the care guide, the marketplace and the forum. Switching to it now so we can walk those tiles.',
+    __group_breeding: {
+        title: 'Breeding',
+        body: 'Planning and running a breeding operation: pairings, lineage, the season planner and timeline, sales numbers and promotion. Keeper mode hides this group.',
+    },
+    __group_tools: {
+        title: 'Tools',
+        body: 'Morph ID from a photo, Market Intelligence for prices and listings, and the AI Consultant for breeding and care questions.',
+    },
+    __group_learn: {
+        title: 'Learn',
+        body: 'The Morph Guide, Genetics Guide and Care Guide, written for crested geckos.',
+    },
+    __group_community: {
+        title: 'Community',
+        body: 'The photo gallery and the forum, where keepers and breeders trade photos, questions and answers.',
     },
     Dashboard: {
         title: 'Dashboard',

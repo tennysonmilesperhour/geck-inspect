@@ -134,18 +134,16 @@ export default function FeedbackWidget() {
 
   return (
     <>
-      {/* Launcher. On phones a round 44 px button in the bottom nav band,
-          right of the section pills, where it covers no page text (a tab
-          on the right edge sat on top of whatever line was behind it).
-          Below 350 px there is no room beside the pills, so it moves just
-          above them. From md up it is the slim tab on the right edge. */}
+      {/* Launcher. On phones a round 44 px button just above the bottom
+          bar, which is full width now that it holds five destinations.
+          From md up it is the slim tab on the right edge. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Send feedback"
         title="Send feedback"
         data-feedback-trigger
-        className="fixed z-[60] right-2 bottom-[calc(max(6px,env(safe-area-inset-bottom))+6px)] max-[349px]:bottom-[calc(4.75rem+env(safe-area-inset-bottom))] h-11 w-11 rounded-full md:right-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:h-auto md:w-auto md:rounded-none md:rounded-l-md md:flex-col md:gap-1.5 md:px-1.5 md:py-3 md:hover:px-2 touch:min-h-11 touch:min-w-11 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 text-xs font-semibold tracking-wider uppercase transition-all active:scale-95 print:hidden"
+        className="fixed z-[60] right-2 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] h-11 w-11 rounded-full md:right-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:h-auto md:w-auto md:rounded-none md:rounded-l-md md:flex-col md:gap-1.5 md:px-1.5 md:py-3 md:hover:px-2 touch:min-h-11 touch:min-w-11 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 text-xs font-semibold tracking-wider uppercase transition-all active:scale-95 print:hidden"
       >
         <MessageSquare className="w-5 h-5 md:w-3.5 md:h-3.5" />
         <span className="hidden md:inline [writing-mode:vertical-rl] rotate-180">Feedback</span>

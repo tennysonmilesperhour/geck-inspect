@@ -48,10 +48,12 @@ function notifyPageConfigsChanged() {
 /**
  * Page Management, controls the entire sidebar.
  *
- * Every page is assigned to one of the two top-level sections (Manage /
+ * Every page is assigned to one of the two old sections (Manage /
  * Discover) via `page_config.section`, plus a "Hidden" bucket for pages
  * the admin has toggled off. Hidden pages can be dragged back into a
- * section to re-enable them in one motion.
+ * section to re-enable them in one motion. Since 6 Oct 2026 the sidebar
+ * is one grouped list (NAV_GROUPS in src/lib/navItems.js), so only the
+ * Hidden bucket still changes what members see.
  *
  * Reorder writes to `order_position` (the actual DB column) and toggling
  * a page off route-redirects it to / for ALL users, including admins,
@@ -592,9 +594,11 @@ export default function PageManagement() {
                 Sidebar Navigation
               </CardTitle>
               <p className="text-sm text-slate-400 mt-1 max-w-xl">
-                Drag rows to reorder, between sections to recategorize, or into{' '}
-                <span className="text-slate-300">Hidden</span> to disable. Toggling a page off
-                takes effect for every user, including admins, and the route redirects to home.
+                Drag a row into <span className="text-slate-300">Hidden</span> to turn the page
+                off for every user, including admins; its route then redirects to home. The
+                sidebar groups (Collection, Breeding, Tools, Learn, Community) and their order are
+                set in the app code (NAV_GROUPS in src/lib/navItems.js). The Manage and Discover
+                columns are left from the old two-tab layout and no longer change the sidebar.
               </p>
               <p className="text-xs text-slate-500 mt-1">
                 Changes save automatically. Watch for the{' '}

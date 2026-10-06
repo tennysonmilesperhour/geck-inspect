@@ -81,6 +81,44 @@ export const SECTIONS = [
   { id: 'discover', label: 'Discover', icon: 'Search',     defaultPage: 'Recognition' },
 ];
 
+// Sidebar groups (6 Oct 2026). One sidebar replaces the Manage and
+// Discover tabs; these headings keep it scannable. A page not listed here
+// (an admin-added one, say) lands in "More" at the bottom.
+export const NAV_GROUPS = [
+  { id: 'collection', label: 'Collection', pages: ['MyGeckos', 'OtherReptiles', 'FieldMode', 'Portfolio'] },
+  { id: 'breeding', label: 'Breeding', pages: ['Breeding', 'Lineage', 'PairingPlanner', 'ProjectManager', 'BreedingSeason', 'MarketplaceSalesStats', 'Promote'] },
+  { id: 'tools', label: 'Tools', pages: ['Recognition', 'Market', 'BreederConsultant'] },
+  { id: 'learn', label: 'Learn', pages: ['MorphGuide', 'GeneticsGuide', 'CareGuide'] },
+  { id: 'community', label: 'Community', pages: ['Gallery', 'Forum'] },
+];
+
+// Pages pinned to the phone's bottom bar, after Home and before Menu.
+export const BOTTOM_BAR_PAGES = [
+  { page: 'MyGeckos', label: 'My Geckos', icon: 'Users' },
+  { page: 'Recognition', label: 'Morph ID', icon: 'Search' },
+  { page: 'Market', label: 'Market', icon: 'TrendingUp' },
+];
+
+/** Splits a flat sidebar list into NAV_GROUPS order, dropping empty groups. */
+export function groupNavItems(items, skip = new Set(['Dashboard'])) {
+  const byPage = new Map();
+  for (const item of items || []) {
+    if (item?.page_name && !skip.has(item.page_name)) byPage.set(item.page_name, item);
+  }
+  const groups = NAV_GROUPS.map((g) => {
+    const list = [];
+    for (const page of g.pages) {
+      if (byPage.has(page)) {
+        list.push(byPage.get(page));
+        byPage.delete(page);
+      }
+    }
+    return { id: g.id, label: g.label, items: list };
+  });
+  if (byPage.size) groups.push({ id: 'more', label: 'More', items: [...byPage.values()] });
+  return groups.filter((g) => g.items.length > 0);
+}
+
 /**
  * The registry. One row per page. Fields:
  *   page        route/page name (the id used everywhere else)

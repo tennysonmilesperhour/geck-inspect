@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { lazy } from "@/lib/lazyWithRetry";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "@/styles/layout-theme.css";
@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
-  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, Pin, PinOff, Home
+  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home, TrendingUp
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
@@ -63,8 +63,8 @@ import {
   NAV_ICON_MAP,
   FAVORITES_MAX,
   flattenNavItems,
-  SECTIONS,
-  getSectionForPage,
+  groupNavItems,
+  BOTTOM_BAR_PAGES,
   BREEDER_ONLY_PAGES,
   KEEPER_MODE_STORAGE_KEY,
 } from '@/lib/navItems';
@@ -134,42 +134,32 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
   }, []);
 
-  // Active section drives the top/bottom section bars + sidebar filter.
-  // If the URL points to a page in a section, that section wins. On
-  // section-agnostic pages (Dashboard, MyProfile, Settings) we fall back
-  // to the last section the user was in, so the sidebar doesn't go
-  // empty when they hit home. DB overrides (page_config.section) are
-  // applied once page configs finish loading, see the effect below.
+  // Which sidebar groups the member folded away. Stored per device; the
+  // group holding the current page always shows open.
   const currentPageName = location.pathname.replace(/^\/+/, '').split('/')[0] || '';
-
-  // DB-backed per-page section override. `page_config.section` wins over
-  // the hardcoded map when set, lets admins move pages between sections
-  // without a code deploy.
-  const dbSectionByPage = useMemo(() => {
-    const map = new Map();
-    for (const p of pageConfigs || []) {
-      if (p?.page_name && p?.section) map.set(p.page_name, p.section);
-    }
-    return map;
-  }, [pageConfigs]);
-  const resolveSection = (pageName) =>
-    dbSectionByPage.get(pageName) || getSectionForPage(pageName);
-
-  const [activeSectionId, setActiveSectionId] = useState(() => {
-    const s = getSectionForPage(currentPageName);
-    if (s) return s;
-    try { return localStorage.getItem('active_section') || SECTIONS[0].id; }
-    catch { return SECTIONS[0].id; }
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('nav_collapsed_groups') || '[]')); }
+    catch { return new Set(); }
   });
-
-  // Update the active section whenever the URL or DB overrides change.
+  // The App Tutorial unfolds a group before pointing at a tile in it.
   useEffect(() => {
-    const resolved = resolveSection(currentPageName);
-    if (resolved && resolved !== activeSectionId) {
-      setActiveSectionId(resolved);
-      try { localStorage.setItem('active_section', resolved); } catch {}
-    }
-  }, [currentPageName, dbSectionByPage, activeSectionId]);
+    const onOpen = (e) => setCollapsedGroups((prev) => {
+      if (!prev.has(e.detail)) return prev;
+      const next = new Set(prev);
+      next.delete(e.detail);
+      return next;
+    });
+    window.addEventListener('open_nav_group', onOpen);
+    return () => window.removeEventListener('open_nav_group', onOpen);
+  }, []);
+  const toggleGroup = (id) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem('nav_collapsed_groups', JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  };
 
   const { toggleSidebar } = useSidebar();
 
@@ -825,9 +815,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // category buckets (collection/tools/public) because sections are now
   // the primary grouping, a single page can live anywhere in the DB
   // category and still show up under its section.
-  const activeSection = SECTIONS.find((s) => s.id === activeSectionId) || SECTIONS[0];
-  const sectionNavItems = flattenNavItems(navItems)
-    .filter((item) => resolveSection(item.page_name) === activeSectionId);
+  const navGroups = groupNavItems(flattenNavItems(navItems));
 
   // Persistent Dashboard tile. The section tabs (Manage/Discover) don't
   // include the dashboard, and the only other way back was clicking the
@@ -960,6 +948,28 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     );
   };
 
+  // One sidebar, grouped (replaced the Manage / Discover tabs 6 Oct 2026).
+  const renderNavGroups = () => navGroups.map((group) => {
+    const holdsCurrent = group.items.some((i) => location.pathname === createPageUrl(i.page_name));
+    const open = holdsCurrent || !collapsedGroups.has(group.id);
+    return (
+      <div key={group.id} className="mb-1">
+        <button
+          type="button"
+          onClick={() => toggleGroup(group.id)}
+          aria-expanded={open}
+          data-tutorial-id={`__group_${group.id}`}
+          data-tutorial-label={group.label}
+          className="sidebar-collapse-hide w-full flex items-center justify-between px-4 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sage-700 hover:text-emerald-200 transition-colors"
+        >
+          <span>{group.label}</span>
+          {open ? <ChevronDown className="h-3.5 w-3.5 opacity-60" /> : <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
+        </button>
+        {open && renderNavSection(group.items, null)}
+      </div>
+    );
+  });
+
   return (
     <>
       {/* Skip-to-content link for keyboard/screen-reader users */}
@@ -1034,7 +1044,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
             {renderHomeLink()}
             {renderFavoritesGrid()}
-            {renderNavSection(sectionNavItems, activeSection.label)}
+            {renderNavGroups()}
             {user?.role === 'admin' && (
               <div className="mb-4">
                 <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">Admin</div>
@@ -1197,7 +1207,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
               {renderHomeLink()}
               {renderFavoritesGrid()}
-              {renderNavSection(sectionNavItems, activeSection.label)}
+              {renderNavGroups()}
               {user?.role === 'admin' && (
                 <div className="mb-4">
                   <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">Admin</div>
@@ -1340,33 +1350,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 </button>
               </div>
 
-              {/* Section tabs (desktop) */}
-              <nav
-                className="flex items-center gap-1 bg-emerald-950/50 border border-emerald-800/50 rounded-xl p-1 shadow-inner"
-                aria-label="App sections"
-              >
-                {SECTIONS.map((section) => {
-                  const IconComponent = NAV_ICON_MAP[section.icon] || Database;
-                  const isActive = section.id === activeSectionId;
-                  return (
-                    <Link
-                      key={section.id}
-                      to={createPageUrl(section.defaultPage)}
-                      aria-current={isActive ? 'page' : undefined}
-                      data-tutorial-id={`__section_${section.id}`}
-                      data-tutorial-label={section.label}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-                        isActive
-                          ? 'bg-emerald-700/60 text-emerald-50 shadow-sm'
-                          : 'text-emerald-200/80 hover:text-emerald-100 hover:bg-emerald-800/40'
-                      }`}
-                    >
-                      <IconComponent className="h-4 w-4" />
-                      <span>{section.label}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
 
               <div className="flex-1 flex justify-end items-center gap-2">
                 {user ? (
@@ -1415,28 +1398,34 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           </main>
 
-        {/* Section tabs (mobile), fixed bottom bar */}
+        {/* Phone bottom bar: the most used pages, plus Menu for the rest. */}
         <nav
-          className="gecko-bottom-nav fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
-          aria-label="App sections"
+          className="gecko-bottom-nav gecko-bottom-nav--bar fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
+          aria-label="Main"
         >
-          {SECTIONS.map((section) => {
-            const IconComponent = NAV_ICON_MAP[section.icon] || Database;
-            const isActive = section.id === activeSectionId;
+          {[{ page: 'Dashboard', label: 'Home', Icon: Home }, ...BOTTOM_BAR_PAGES.map((b) => ({ ...b, Icon: NAV_ICON_MAP[b.icon] || TrendingUp }))].map(({ page, label, Icon }) => {
+            const isActive = currentPageName === page || (page === 'Dashboard' && currentPageName === '');
             return (
               <Link
-                key={section.id}
-                to={createPageUrl(section.defaultPage)}
+                key={page}
+                to={createPageUrl(page)}
                 aria-current={isActive ? 'page' : undefined}
-                data-tutorial-id={`__section_${section.id}`}
-                data-tutorial-label={section.label}
                 className={`gecko-bottom-nav__item ${isActive ? 'is-active' : ''}`}
               >
-                <IconComponent className="h-5 w-5" />
-                <span>{section.label}</span>
+                <Icon className="h-5 w-5" />
+                <span>{label}</span>
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => toggleSidebar()}
+            className="gecko-bottom-nav__item"
+            aria-label="Open the full menu"
+          >
+            <Menu className="h-5 w-5" />
+            <span>Menu</span>
+          </button>
         </nav>
       </div>
       <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} onDismiss={handleRoleDismissed} />

@@ -416,3 +416,12 @@ These entries capture the strategic decisions made during the initial landing pa
 **Reasoning:** Charts are visited once; news about your own animals, your own watches and your own listings is what brings people back. A daily game gives a reason to come back on days with no news and trains the pricing eye breeders need. Everything shows asking prices on listings and says so, never sale prices. The page is member-only because its photos come from MorphMarket listings and D20 (scraped listing photos on public pages) is still open. The morning brief is off by default so nobody gets a daily email they did not ask for.
 **Consequences:** The loop only feels alive while MorphMarket is checked: the US feed has been off since early September (GitHub is blocked), and until Tennyson runs the Mac setup or adds the proxy secret, US numbers come from the last full check and the live feed shows Korea, Japan and Europe only. A 30-minute newest-listings check (geck-data) now keeps new listings flowing within the hour once the feed is on. Details in `docs/planning/market-habit-2026-09-30.md`.
 
+
+### 36. Market Intelligence absorbs the Marketplace; one grouped sidebar replaces Manage and Discover
+
+**Date:** 2026-10-06
+**Status:** Accepted (Tennyson)
+**Context:** The app had two Market pages side by side (Market and Marketplace), and the sidebar showed only half the pages at a time behind Manage and Discover tabs, so a keeper in My Geckos never saw Morph ID or the market.
+**Decision:** Market is now Market Intelligence. Its tabs are Today, Live, Watchlist, In-app listings (the old Buy page, replacing Guess the Price) and Your listings (the Seller Console plus the Breeder plan comparison). /Marketplace redirects to the In-app listings tab. The sidebar is one list in five groups (Collection, Breeding, Tools, Learn, Community) that members can fold. On phones the bottom bar is Home, My Geckos, Morph ID, Market and Menu.
+**Reasoning:** Morph ID and the market are the subscription magnets, and the old tabs hid them half the time. Nineteen pages fit in one grouped list, and Keeper mode trims it to about eleven.
+**Consequences:** Group membership and order live in code (NAV_GROUPS in src/lib/navItems.js). The section setting in admin Page Management no longer changes the sidebar; only its Hidden bucket does. Guess the Price is out of the app but its code stays.
