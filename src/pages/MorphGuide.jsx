@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,8 +32,44 @@ import MorphIndexFaq, { MORPH_INDEX_FAQ } from '@/components/morphguide/MorphInd
 import MorphIndexAppHooks from '@/components/morphguide/MorphIndexAppHooks';
 import { useMorphGuideData, sanitizeImage, normMorph } from '@/components/morphguide/MorphIndexData';
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
+import MorphQuiz from '@/components/morphguide/MorphQuiz';
+import MorphFamilyMap from '@/components/morphguide/MorphFamilyMap';
 
 const MORPH_COUNT = MORPHS.length;
+
+// Back navigation from a morph page. Clicking a card saves which morph was
+// opened; coming back within RETURN_WINDOW_MS scrolls that card into view.
+// The filters are saved as they change so the grid comes back the same.
+const RETURN_KEY = 'morphGuide:return';
+const FILTERS_KEY = 'morphGuide:filters';
+const RETURN_WINDOW_MS = 10 * 60 * 1000;
+
+// sessionStorage can throw (private mode, blocked storage), so every read
+// and write is wrapped and simply does nothing when storage is unavailable.
+function readSession(key) {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+function writeSession(key, value) {
+  try {
+    if (value === null) window.sessionStorage.removeItem(key);
+    else window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Storage unavailable: nothing to restore later, which is fine.
+  }
+}
+function savedFilter(name, fallback) {
+  const saved = typeof window === 'undefined' ? null : readSession(FILTERS_KEY);
+  const v = saved?.[name];
+  return typeof v === 'string' ? v : fallback;
+}
+function rememberCard(slug) {
+  writeSession(RETURN_KEY, { slug, at: Date.now() });
+}
 const SEO_TITLE = `Crested Gecko Morphs: Guide to All ${MORPH_COUNT} Morphs`;
 const SEO_DESCRIPTION =
   'Every crested gecko morph in one guide: Harlequin, Pinstripe, Lilly White, Axanthic, Cappuccino and the new Albino, with genetics, rarity and price for each.';
@@ -224,10 +260,11 @@ function MorphFilterSelects({
 }
 
 function MorphGridItem({ morph, withPrompt }) {
-  if (!withPrompt) return <MorphIndexCard morph={morph} />;
+  const onClick = () => rememberCard(morph.slug);
+  if (!withPrompt) return <MorphIndexCard morph={morph} onClick={onClick} />;
   return (
     <>
-      <MorphIndexCard morph={morph} />
+      <MorphIndexCard morph={morph} onClick={onClick} />
       <MorphGuideSignupPrompt className="col-span-full" />
     </>
   );
@@ -332,14 +369,19 @@ function InheritanceLegend() {
 export default function MorphGuidePage() {
   const inAppShell = useInAppShell();
   const { allMorphs, dbBySlug, communityByKeyword, heroByNorm } = useMorphGuideData();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('all');
-  const [inheritanceFilter, setInheritanceFilter] = useState('all');
-  const [rarityFilter, setRarityFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('rarity_rare_first');
+  const [searchTerm, setSearchTerm] = useState(() => savedFilter('searchTerm', ''));
+  const [category, setCategory] = useState(() => savedFilter('category', 'all'));
+  const [inheritanceFilter, setInheritanceFilter] = useState(() => savedFilter('inheritanceFilter', 'all'));
+  const [rarityFilter, setRarityFilter] = useState(() => savedFilter('rarityFilter', 'all'));
+  const [sortBy, setSortBy] = useState(() => savedFilter('sortBy', 'rarity_rare_first'));
   const [showLegend, setShowLegend] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const resultsRef = useRef(null);
+  const gridRef = useRef(null);
+
+  useEffect(() => {
+    writeSession(FILTERS_KEY, { searchTerm, category, inheritanceFilter, rarityFilter, sortBy });
+  }, [searchTerm, category, inheritanceFilter, rarityFilter, sortBy]);
 
   // Top-level tab toggle: 'morphs' (default) | 'lines'. Synced with the
   // ?tab=lines query param so deep links from ProjectLineDetail land on
@@ -483,6 +525,34 @@ export default function MorphGuidePage() {
 
     return list;
   }, [allMorphs, category, inheritanceFilter, rarityFilter, searchTerm, sortBy]);
+
+  // Coming back from a morph page: center the card the visitor opened and
+  // flash a ring around it. Runs once, after the first paint of the grid,
+  // and a beat after the app's scroll-to-top on route change.
+  useEffect(() => {
+    const ret = readSession(RETURN_KEY);
+    writeSession(RETURN_KEY, null);
+    if (!ret?.slug || typeof ret.at !== 'number' || Date.now() - ret.at > RETURN_WINDOW_MS) return undefined;
+    if (view !== 'morphs') return undefined;
+    let fadeTimer;
+    const timer = setTimeout(() => {
+      const grid = gridRef.current;
+      const card = grid?.querySelector(`a[href="/MorphGuide/${CSS.escape(ret.slug)}"]`);
+      if (!card) return;
+      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      card.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+      card.style.transition = 'box-shadow 400ms ease';
+      card.style.boxShadow = '0 0 0 3px rgba(52, 211, 153, 0.9), 0 0 28px rgba(52, 211, 153, 0.45)';
+      fadeTimer = setTimeout(() => {
+        card.style.boxShadow = '';
+      }, 1800);
+    }, 120);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fadeTimer);
+    };
+    // Only on mount: this restores the position the visitor left from.
+  }, []);
 
   const categoryCounts = useMemo(() => {
     const c = { all: allMorphs.length };
@@ -695,6 +765,8 @@ export default function MorphGuidePage() {
           <>
             <MorphIndexSpotlight morphs={allMorphs} />
 
+            <MorphQuiz morphs={allMorphs} />
+
             {/* The filter bar sticks to the top of the screen while the
                 visitor scrolls the grid (public pages only: inside the app
                 the app's own header already sticks there). */}
@@ -812,7 +884,7 @@ export default function MorphGuidePage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                  <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                     {filtered.map((m, i) => (
                       <MorphGridItem
                         key={m.slug}
@@ -825,6 +897,8 @@ export default function MorphGuidePage() {
                 </>
               )}
             </div>
+
+            <MorphFamilyMap morphs={allMorphs} />
 
             <MorphIndexCompareTable />
 
