@@ -1352,12 +1352,11 @@ serve(async (req) => {
     analysis.age_stage = ageStage;
     analysis.user_reported_fired_state = firedState;
     // D19: a "better photos needed" answer gives the member nothing to act
-    // on, so the free lifetime try is handed back and they can retake the
-    // photos. Paid monthly credits are still used (the analysis ran).
+    // on, so the credit is handed back and they can retake the photos. Since
+    // 6 Oct 2026 this covers paid monthly credits too, not only the free try.
     let creditRefunded = false;
     if (
       creditWasConsumed &&
-      tier === "free" &&
       analysis.assessment_status === "insufficient_evidence"
     ) {
       await refundMorphIdCredit(profile.auth_user_id);

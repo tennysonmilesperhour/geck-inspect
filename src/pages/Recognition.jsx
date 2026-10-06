@@ -533,7 +533,7 @@ export default function Recognition() {
                   <p className="text-xs text-slate-500">
                     {isFreeTier
                       ? 'Your free try is used only when we can give you an answer. If the photos are not clear enough, you keep it and can try again with better photos.'
-                      : 'One credit is charged only when an analysis runs. A failed analyzer call is refunded automatically.'}
+                      : 'A credit is used only when we can give you an answer. If the photos are not clear enough, or the analyzer fails, the credit comes back automatically.'}
                   </p>
                 </div>
               </div>
@@ -627,6 +627,7 @@ export default function Recognition() {
         )}
         {meta && !meta.is_admin && !isFreeTier && typeof meta.credits_remaining === 'number' && (
           <p className="text-xs text-slate-500 text-center">
+            {meta.credit_refunded ? 'We need clearer photos for this one, so no credit was used. ' : ''}
             {meta.credits_remaining} of {meta.credits_included} MorphID credits left this month.
           </p>
         )}
