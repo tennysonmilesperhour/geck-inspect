@@ -75,7 +75,7 @@ import {
   type VisualEvidence,
 } from "../_shared/morph-evidence.ts";
 import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
-import { RETRYABLE_UPSTREAM_STATUS, upstreamErrorCode } from "../_shared/morph-upstream.ts";
+import { RETRYABLE_UPSTREAM_STATUS, requestShape, upstreamErrorCode } from "../_shared/morph-upstream.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
@@ -188,6 +188,8 @@ const PRICE_PER_MTOK_USD: Record<string, { input: number; output: number }> = {
   "claude-haiku-4-5":  { input: 1,  output: 5 },
   "claude-sonnet-4-6": { input: 3,  output: 15 },
   "claude-opus-4-7":   { input: 15, output: 75 },
+  "claude-sonnet-5-5": { input: 2,  output: 10 },
+  "claude-opus-5-5":   { input: 4,  output: 20 },
 };
 
 function computeCostCents(
@@ -261,6 +263,8 @@ const ALLOWED_MODELS = new Set([
   "claude-haiku-4-5",
   "claude-sonnet-4-6",
   "claude-opus-4-7",
+  "claude-sonnet-5-5",
+  "claude-opus-5-5",
 ]);
 function resolveModel(raw: unknown): string {
   return typeof raw === "string" && ALLOWED_MODELS.has(raw) ? raw : CLAUDE_MODEL;
@@ -1043,15 +1047,20 @@ async function callClaude(
 
   const tool = buildTool(includeValueEstimate);
   const startedAt = Date.now();
+  // Newer models reject a forced tool call and think before answering; see
+  // requestShape. 1536 max_tokens once cut off five-photo answers, so the
+  // floor is 3000 (output is billed as used, so a higher ceiling is free).
+  const shape = requestShape(model, tool.name);
+  if (shape.callInstruction) {
+    const last = variableContent[variableContent.length - 1] as { type: string; text: string };
+    variableContent[variableContent.length - 1] = { ...last, text: last.text + shape.callInstruction };
+  }
   const requestBody = JSON.stringify({
     model,
-    // 1536 could cut off a five-photo answer mid-tool-call. The missing
-    // fields then defaulted to "photos unusable" and a paid member was
-    // charged for "Better photos needed". Output is billed as used, so a
-    // higher ceiling costs nothing on ordinary answers.
-    max_tokens: 3000,
+    max_tokens: shape.maxTokens,
     tools: [tool],
-    tool_choice: { type: "tool", name: tool.name },
+    tool_choice: shape.toolChoice,
+    ...(shape.outputConfig ? { output_config: shape.outputConfig } : {}),
     messages: [{
       role: "user",
       content: [...cacheableContent, ...variableContent],
@@ -1135,6 +1144,14 @@ async function callClaude(
       );
     } finally {
       clearTimeout(timer);
+    }
+    // A safety decline is not a bad answer worth retrying the same way.
+    if (body.stop_reason === "refusal") {
+      throw new UpstreamError("Analyzer declined the request (refusal)", 502, "upstream_error", {
+        httpStatus: res.status,
+        requestId,
+        durationMs,
+      });
     }
     toolBlock = (body.content || []).find((b: { type: string }) => b.type === "tool_use");
     const truncated = body.stop_reason === "max_tokens";
