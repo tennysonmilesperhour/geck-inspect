@@ -143,7 +143,7 @@ export default function CustomStickerStudio() {
   }
 
   function useExample(example) {
-    const personal = { name: design.name, morph_line: design.morph_line, photo_url: design.photo_url, photo_path: design.photo_path, photo_crop: design.photo_crop, photo_treatment: design.photo_treatment };
+    const personal = { name: design.name, morph_line: design.morph_line, species_name: design.species_name, scientific_name: design.scientific_name, native_range: design.native_range, habitat: design.habitat, hatch_label: design.hatch_label, plaque_style: design.plaque_style, photo_url: design.photo_url, photo_path: design.photo_path, photo_crop: design.photo_crop, photo_treatment: design.photo_treatment };
     patch({ ...createDefaultDesign(), ...exampleAsStartingDesign(example), ...personal, version: createDefaultDesign().version });
     captureEvent('custom_sticker_template_selected', { template: example.id }); goToStep(1);
   }
