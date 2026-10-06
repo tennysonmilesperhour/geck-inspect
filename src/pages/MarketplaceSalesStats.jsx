@@ -29,6 +29,7 @@ import { format, getQuarter, getYear } from 'date-fns';
 import { todayLocalISO } from '@/lib/dateUtils';
 import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
 import WaitlistsTab from '@/components/business/WaitlistsTab';
+import MarketPreviewGate from '@/components/subscription/MarketPreviewGate';
 import { lazy } from '@/lib/lazyWithRetry';
 // Market analytics sits on the Pricing tab, so its code (and its charts)
 // download only when that tab is opened.
@@ -1633,7 +1634,9 @@ export default function MarketplaceSalesStats() {
                   <Globe className="w-4 h-4 text-emerald-400" /> Market analytics
                 </h3>
                 <Suspense fallback={<div className="h-64 rounded-xl bg-slate-900 border border-slate-700 animate-pulse" />}>
-                  <MarketAnalytics user={user} />
+                  <MarketPreviewGate user={user} surface="business_market_analytics" height={420}>
+                    <MarketAnalytics user={user} />
+                  </MarketPreviewGate>
                 </Suspense>
               </section>
             </TabsContent>

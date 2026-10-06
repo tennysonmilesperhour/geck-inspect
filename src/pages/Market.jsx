@@ -11,6 +11,7 @@ import MarketTapePanel from '@/components/market/MarketTapePanel';
 import WatchlistPanel from '@/components/market/WatchlistPanel';
 import SellerPanel from '@/components/market/SellerPanel';
 import DemoMarketBrief from '@/components/market/DemoMarketBrief';
+import MarketPreviewGate from '@/components/subscription/MarketPreviewGate';
 import MarketplaceBuyPage from '@/pages/MarketplaceBuy';
 import MarketplaceSellPage from '@/pages/MarketplaceSell';
 import { useAuth } from '@/lib/AuthContext';
@@ -33,6 +34,10 @@ const EMBEDDED = '[&>.min-h-screen]:min-h-0 [&>.min-h-screen]:p-0';
  * is the Geck Inspect marketplace, and Your listings holds the Seller
  * Console plus (Breeder plan) the member's MorphMarket listings against
  * the market. The old Marketplace page was folded in here on 6 Oct 2026.
+ *
+ * Today, Live and Watchlist are Enterprise only (6 Oct 2026): other plans
+ * see a short read-only preview with an upgrade card (MarketPreviewGate).
+ * In-app listings and the Seller Console stay open to every member.
  *
  * Member-only for now: the listing photos come from MorphMarket, and
  * whether to show them on public pages is an open decision (D20).
@@ -135,9 +140,15 @@ export default function Market() {
             <TabsTrigger value="browse"><ShoppingCart className="w-3.5 h-3.5" /> In-app listings</TabsTrigger>
             <TabsTrigger value="listings"><Store className="w-3.5 h-3.5" /> Your listings</TabsTrigger>
           </TabsList>
-          <TabsContent value="today"><MarketBriefPanel user={user} /></TabsContent>
-          <TabsContent value="live"><MarketTapePanel /></TabsContent>
-          <TabsContent value="watchlist"><WatchlistPanel /></TabsContent>
+          <TabsContent value="today">
+            <MarketPreviewGate user={user} surface="market_today"><MarketBriefPanel user={user} /></MarketPreviewGate>
+          </TabsContent>
+          <TabsContent value="live">
+            <MarketPreviewGate user={user} surface="market_live"><MarketTapePanel /></MarketPreviewGate>
+          </TabsContent>
+          <TabsContent value="watchlist">
+            <MarketPreviewGate user={user} surface="market_watchlist"><WatchlistPanel /></MarketPreviewGate>
+          </TabsContent>
           <TabsContent value="browse" className={EMBEDDED}>
             <MarketplaceBuyPage embedded />
           </TabsContent>
