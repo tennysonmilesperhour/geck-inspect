@@ -4,6 +4,10 @@ import { api } from '@/api/appClient';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { basicHatchlingValue } from '@/lib/traitValuation';
 import { predictGeckoPair, eggValue } from '@/lib/pairingValue';
+import { loadSellTimeModel } from '@/lib/sellTime';
+import { seedFrom } from '@/lib/seasonProjection';
+import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
+import SeasonProjectionPanel from '@/components/breeding/SeasonProjectionPanel';
 import { translateMorphTags } from '@/lib/genetics/tagTranslation';
 import useFemaleReadiness from '@/hooks/useFemaleReadiness';
 import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
@@ -39,6 +43,8 @@ import {
   ArrowRight,
   Heart,
   Sparkles,
+  ChevronDown,
+  CalendarRange,
 } from 'lucide-react';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
@@ -170,6 +176,22 @@ export default function PairingPlannerPage() {
       cancelled = true;
     };
   }, []);
+  // Time to sell model for the season projection (Enterprise). Other
+  // plans get { allowed: false } without a round trip.
+  const [sellModel, setSellModel] = useState(null);
+  useEffect(() => {
+    if (!user) return undefined;
+    if (!canUseFeature(user, 'market_intelligence')) {
+      setSellModel({ allowed: false });
+      return undefined;
+    }
+    let cancelled = false;
+    loadSellTimeModel()
+      .then((m) => { if (!cancelled) setSellModel(m); })
+      .catch(() => { if (!cancelled) setSellModel({ allowed: false }); });
+    return () => { cancelled = true; };
+  }, [user]);
+
   // An offspring whose traits match nothing in the table (Wild-type) counts
   // at the low end of the cheapest common hatchling.
   const floorPrice = useMemo(() => (priceIndex ? basicHatchlingValue(priceIndex) || 0 : 0), [priceIndex]);
@@ -279,6 +301,7 @@ export default function PairingPlannerPage() {
           dam,
           score,
           top,
+          phenotypes,
           warnings,
           blocked,
           unusedTags: [
@@ -490,7 +513,7 @@ export default function PairingPlannerPage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {visibleRows.map((row, i) => (
-                  <PairingCard key={`${row.sire.id}-${row.dam.id}`} row={row} rank={i + 1} goal={goal} usingStaticWeights={usingStaticWeights} readiness={damReadiness(row.dam)} />
+                  <PairingCard key={`${row.sire.id}-${row.dam.id}`} row={row} rank={i + 1} goal={goal} usingStaticWeights={usingStaticWeights} readiness={damReadiness(row.dam)} priceIndex={priceIndex} sellModel={sellModel} />
                 ))}
               </div>
             )}
@@ -514,7 +537,8 @@ function Thumb({ gecko, ring }) {
   );
 }
 
-function PairingCard({ row, rank, goal, usingStaticWeights, readiness }) {
+function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceIndex, sellModel }) {
+  const [showSeason, setShowSeason] = useState(false);
   const damNotReady = readiness && (readiness.level === 'not_yet' || readiness.level === 'nearly');
   const { sire, dam, top, warnings, blocked, score, unusedTags = [] } = row;
 
@@ -603,6 +627,32 @@ function PairingCard({ row, rank, goal, usingStaticWeights, readiness }) {
             )}
           </div>
         ))}
+      </div>
+
+      {/* Season projection: rendered only when opened, since it plays
+          the season out a few thousand times. */}
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={() => setShowSeason((v) => !v)}
+          aria-expanded={showSeason}
+          className="touch:min-h-11 w-full flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm text-slate-200 hover:border-emerald-700/60"
+        >
+          <span className="flex items-center gap-1.5">
+            <CalendarRange className="w-4 h-4 text-emerald-400" /> Season projection: worth, sell time, when to list
+          </span>
+          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showSeason ? 'rotate-180' : ''}`} />
+        </button>
+        {showSeason && (
+          <div className="mt-3">
+            <SeasonProjectionPanel
+              phenotypes={row.phenotypes}
+              priceIndex={priceIndex}
+              seed={seedFrom(`${sire.id}|${dam.id}`)}
+              sellModel={sellModel}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800">

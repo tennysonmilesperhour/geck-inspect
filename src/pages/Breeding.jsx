@@ -23,6 +23,7 @@ import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import Hatchery from '../components/breeding/Hatchery';
+import BreedingValueStats from '../components/breeding/BreedingValueStats';
 import {
   Dialog,
   DialogContent,
@@ -87,6 +88,7 @@ export default function BreedingPage() {
         defaultTab: 'active',
         defaultSort: 'newest',
         autoExpandCards: false,
+        showValueStats: true,
     });
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [allGeckos, setAllGeckos] = useState([]);
@@ -509,6 +511,10 @@ export default function BreedingPage() {
                                 <Label className="text-slate-300 text-sm">Auto-expand Cards</Label>
                                 <Switch checked={breedingPrefs.autoExpandCards} onCheckedChange={v => { setBreedingPrefs({ autoExpandCards: v }); setExpandAllActive(v); }} />
                             </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Show Production Value</Label>
+                                <Switch checked={breedingPrefs.showValueStats !== false} onCheckedChange={v => setBreedingPrefs({ showValueStats: v })} />
+                            </div>
                         </PageSettingsPanel>
                     }
                 >
@@ -517,6 +523,16 @@ export default function BreedingPage() {
                         New Breeding Plan
                     </Button>
                 </PageHeader>
+
+                {!isLoading && (
+                    <BreedingValueStats
+                        plans={breedingPlans}
+                        eggs={allEggs}
+                        geckos={allGeckos}
+                        visible={breedingPrefs.showValueStats !== false}
+                        onToggle={v => setBreedingPrefs({ showValueStats: v })}
+                    />
+                )}
 
                 {isLoading ? (
                     <div className="text-center py-20">
