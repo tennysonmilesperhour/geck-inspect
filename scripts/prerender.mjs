@@ -45,7 +45,19 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, getAllRoutes } from './seo-routes.mjs';
+import {
+  SITE_URL,
+  getAllRoutes,
+  getCalculatorMorphRoutes,
+  dateOf,
+  MORPH_DATA,
+  CARE_DATA,
+  MORPH_COUNT,
+  MORPH_SLUG_ALIASES,
+  CATEGORY_NOUNS,
+  morphCategoryHubs,
+  morphInheritanceHubs,
+} from './seo-routes.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -97,12 +109,15 @@ const EDITORIAL_AUTHOR = {
   ],
 };
 
-// Mirrors PER_PATH in src/lib/editorial.js for the guide families. Blog
-// posts carry their own dates.
+// Mirrors PER_PATH in src/lib/editorial.js for the guide families. The
+// modified date is the last commit to the guide's data file, read from
+// scripts/content-dates.json through seo-routes.mjs, which is also where
+// the sitemap's <lastmod> comes from. One date, three places that agree.
+// Blog posts carry their own dates.
 const EDITORIAL_DATES = {
-  '/MorphGuide': { published: '2025-07-01', modified: '2026-04-17' },
-  '/CareGuide': { published: '2025-06-15', modified: '2026-04-17' },
-  '/': { published: '2025-06-01', modified: '2026-04-17' },
+  '/MorphGuide': { published: '2025-07-01', modified: dateOf(MORPH_DATA) },
+  '/CareGuide': { published: '2025-06-15', modified: dateOf(CARE_DATA) },
+  '/': { published: '2025-06-01' },
 };
 
 const ABOUT_CRESTED_GECKO = {
@@ -135,11 +150,42 @@ const morphModule = await importData('src/data/morph-guide.js');
 const careModule = await importData('src/data/care-guide.js');
 const blogModule = await importData('src/data/blog-posts.js');
 
-const MORPHS = Object.fromEntries(morphModule.MORPHS.map((m) => [m.slug, m]));
+const MORPH_LIST = morphModule.MORPHS || [];
+const MORPHS = Object.fromEntries(MORPH_LIST.map((m) => [m.slug, m]));
 const INHERITANCE = morphModule.INHERITANCE || {};
-const PRICE_TIERS = morphModule.PRICE_TIERS || {};
+const RARITY = morphModule.RARITY || {};
 const MORPH_CATEGORIES = morphModule.MORPH_CATEGORIES || [];
 if (Object.keys(MORPHS).length === 0) throw new Error('prerender: MORPHS is empty');
+
+// The live morph page builds its title, description, H1, opening sentence
+// and FAQ from these two modules, so the static HTML imports the very same
+// functions instead of keeping a copy that drifts. Both use relative
+// imports only, which is what lets Node load them here.
+const { morphSeo } = await importData('src/lib/morphMeta.js');
+const { morphFaq } = await importData('src/lib/morphFaq.js');
+
+const linesModule = await importData('src/data/project-lines.js');
+const PROJECT_LINES = Object.fromEntries((linesModule.PROJECT_LINES || []).map((l) => [l.slug, l]));
+
+/** A morph slug as written in the data, resolved through the alias map. */
+function morphFor(slug) {
+  return MORPHS[slug] || MORPHS[MORPH_SLUG_ALIASES[slug]] || null;
+}
+
+// Per-morph calculator pages (/calculator/<slug>). Decision D13: White
+// Wall is the engine's Whiteout and Phantom Pinstripe is how the
+// recessive Phantom reads, so those two morph pages point at the
+// calculator under the engine's name. Mirrored in CalculatorMorph.jsx.
+const CALCULATOR_SLUGS = new Set(getCalculatorMorphRoutes().map((r) => r.path.split('/').pop()));
+const CALCULATOR_FOR_MORPH = { 'white-wall': 'whiteout', 'phantom-pinstripe': 'phantom' };
+function calculatorSlugFor(slug) {
+  const calc = CALCULATOR_FOR_MORPH[slug] || slug;
+  return CALCULATOR_SLUGS.has(calc) ? calc : null;
+}
+
+// The page's social image, so Article.image matches what og:image shows
+// instead of pointing at the logo.
+const OG_IMAGE = SHELL_HTML.match(/<meta property="og:image" content="([^"]*)"/)?.[1] || null;
 
 // Flatten CARE_CATEGORIES into id -> section (with its category label).
 const CARE_SECTIONS = {};
@@ -177,62 +223,6 @@ function firstListFrom(body) {
   return null;
 }
 
-/**
- * Per-morph FAQ. Mirrors src/lib/morphFaq.js question for question, so the
- * static FAQ and the React FAQ say the same thing. Questions that depend on
- * a missing field are skipped, never invented.
- */
-function morphFaq(morph) {
-  const out = [];
-  const summary = morph.summary || (morph.description ? morph.description.slice(0, 280) : null);
-  if (summary) out.push({ question: `What is a ${morph.name} crested gecko?`, answer: summary });
-
-  if (morph.visualIdentifiers?.length) {
-    out.push({
-      question: `How do I identify a ${morph.name} crested gecko?`,
-      answer: `Look for: ${morph.visualIdentifiers.slice(0, 3).join('; ')}.`,
-    });
-  } else if (morph.keyFeatures?.length) {
-    out.push({
-      question: `How do I identify a ${morph.name} crested gecko?`,
-      answer: `Key visual features: ${morph.keyFeatures.slice(0, 3).join('; ')}.`,
-    });
-  }
-
-  const inh = INHERITANCE[morph.inheritance];
-  if (inh) {
-    const special = morph.slug === 'lilly-white'
-      ? ' Lilly White specifically has a lethal super form, pairing two Lilly Whites together produces 25% non-viable homozygous embryos, so the morph cannot be bred "true".'
-      : '';
-    out.push({
-      question: `How is ${morph.name} inherited?`,
-      answer: `${morph.name} is classified as ${inh.label.toLowerCase()}. ${inh.description}${special}`,
-    });
-  }
-
-  if (morph.priceTier) {
-    const tier = PRICE_TIERS[morph.priceTier];
-    const range = morph.priceRange ? ` Typical adult price: ${morph.priceRange}.` : '';
-    out.push({
-      question: `How much does a ${morph.name} crested gecko cost?`,
-      answer: `${morph.name} crested geckos fall into the ${tier?.label || morph.priceTier} price tier.${range} ${tier?.description || ''}`.trim(),
-    });
-  }
-
-  if (morph.combinesWith?.length) {
-    const names = morph.combinesWith.map((s) => s.replace(/-/g, ' ')).slice(0, 6);
-    out.push({
-      question: `What other morphs combine with ${morph.name}?`,
-      answer: `${morph.name} commonly combines with ${names.join(', ')}. These combinations are highly sought after in the hobby and often produce some of the most visually striking animals.`,
-    });
-  }
-
-  if (morph.history) {
-    out.push({ question: `Who discovered or first produced ${morph.name} crested geckos?`, answer: morph.history });
-  }
-  return out;
-}
-
 function faqSchema(id, faq) {
   if (!faq?.length) return null;
   return {
@@ -267,17 +257,65 @@ const RARITY_LABEL = {
   very_rare: 'very rare',
 };
 
+/** "a, b and c" */
+function listJoin(items) {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+function sentence(text) {
+  const t = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  const capped = t.charAt(0).toUpperCase() + t.slice(1);
+  return /[.!?]$/.test(capped) ? capped : `${capped}.`;
+}
+
+const INHERITANCE_HUB_IDS = new Set(morphInheritanceHubs().map((h) => h.id));
+const CATEGORY_HUB_IDS = new Set(morphCategoryHubs().map((h) => h.id));
+
+/** Table of morphs: name linked to its page, then the columns asked for. */
+function morphTable(morphs, columns = ['category', 'inheritance', 'rarity', 'price']) {
+  const COLS = {
+    category: ['Category', (m) => MORPH_CATEGORIES.find((c) => c.id === m.category)?.label || ''],
+    inheritance: ['Inheritance', (m) => INHERITANCE[m.inheritance]?.label || ''],
+    rarity: ['Rarity', (m) => RARITY[m.rarity]?.label || ''],
+    price: ['Typical adult price', (m) => m.priceRange || 'No market price yet'],
+  };
+  return {
+    headers: ['Morph', ...columns.map((c) => COLS[c][0])],
+    rows: morphs.map((m) => [
+      { text: m.name, href: `/MorphGuide/${m.slug}` },
+      ...columns.map((c) => COLS[c][1](m)),
+    ]),
+  };
+}
+
+/** Links to every non-empty category and inheritance hub. */
+function hubLinkSections(currentPath) {
+  return [
+    {
+      title: 'Browse by category',
+      items: morphCategoryHubs()
+        .filter((h) => `/MorphGuide/category/${h.id}` !== currentPath)
+        .map((h) => ({ name: `${h.label} (${h.morphs.length})`, href: `/MorphGuide/category/${h.id}` })),
+    },
+    {
+      title: 'Browse by inheritance',
+      items: morphInheritanceHubs()
+        .filter((h) => `/MorphGuide/inheritance/${h.id}` !== currentPath)
+        .map((h) => ({ name: `${h.label} (${h.morphs.length})`, href: `/MorphGuide/inheritance/${h.id}` })),
+    },
+  ];
+}
+
 function morphMeta(slug) {
   const m = MORPHS[slug] || { slug, name: humanize(slug) };
+  const seo = morphSeo(m);
   const name = m.name;
-  const rarity = RARITY_LABEL[m.rarity] || 'documented';
   const url = `${SITE_URL}/MorphGuide/${slug}`;
   const category = MORPH_CATEGORIES.find((c) => c.id === m.category);
   const inheritance = INHERITANCE[m.inheritance];
-  const desc =
-    m.summary ||
-    (m.description ? m.description.slice(0, 220).trim() + (m.description.length > 220 ? '...' : '') : null) ||
-    `${name} is a ${rarity} crested gecko morph. Every documented crested gecko (Correlophus ciliatus) morph has its own entry in the Geck Inspect morph guide with inheritance, visual identifiers, and breeding notes.`;
+  const rarity = RARITY_LABEL[m.rarity];
 
   const paragraphs = [m.description, m.foundationGenetics, m.history, m.notes]
     .filter((p) => typeof p === 'string' && p.trim())
@@ -285,7 +323,7 @@ function morphMeta(slug) {
   const facts = [
     inheritance ? `Inheritance: ${inheritance.label}.` : null,
     category ? `Category: ${category.label || category.id}.` : null,
-    m.rarity ? `Rarity: ${rarity}.` : null,
+    rarity ? `Rarity: ${rarity}.` : null,
     m.priceRange ? `Typical adult price: ${m.priceRange}.` : null,
     m.aliases?.length ? `Also called: ${m.aliases.join(', ')}.` : null,
   ].filter(Boolean);
@@ -297,14 +335,45 @@ function morphMeta(slug) {
   const faq = morphFaq(m);
   const dates = EDITORIAL_DATES['/MorphGuide'];
 
+  // Lookalikes come from the morph data when an entry has them; the
+  // section is simply absent otherwise.
+  const lookalikes = (Array.isArray(m.lookalikes) ? m.lookalikes : [])
+    .map((l) => ({ target: morphFor(l?.slug), difference: l?.difference }))
+    .filter(({ target, difference }) => target && difference && target.slug !== slug)
+    .map(({ target, difference }) => ({ name: target.name, href: `/MorphGuide/${target.slug}`, note: sentence(difference) }));
+  const related = [...new Set((m.combinesWith || []).map((s) => morphFor(s)?.slug).filter((s) => s && s !== slug))]
+    .map((s) => ({ name: MORPHS[s].name, href: `/MorphGuide/${s}` }));
+  const calc = calculatorSlugFor(slug);
+  const tools = [
+    calc ? { name: `${name} genetics calculator`, href: `/calculator/${calc}`, note: 'per-egg odds for any pairing' } : null,
+    category && CATEGORY_HUB_IDS.has(category.id)
+      ? { name: `All crested gecko ${CATEGORY_NOUNS[category.id] || 'morphs'}`, href: `/MorphGuide/category/${category.id}` }
+      : null,
+    inheritance && INHERITANCE_HUB_IDS.has(inheritance.id)
+      ? { name: `All ${inheritance.label.toLowerCase()} crested gecko morphs`, href: `/MorphGuide/inheritance/${inheritance.id}` }
+      : null,
+    { name: 'Crested gecko price guide', href: '/crested-gecko-price', note: 'what each morph and quality grade sells for' },
+    { name: 'Quality Scale', href: '/QualityScale', note: 'grade your gecko from 0 to 10' },
+    { name: 'Morph ID', href: '/Recognition', note: 'identify your gecko from a top and a side photo' },
+  ].filter(Boolean);
+  const linkSections = [
+    lookalikes.length ? { title: 'How to tell it apart', items: lookalikes } : null,
+    related.length ? { title: 'Related morphs', items: related } : null,
+    { title: 'Keep exploring', items: tools },
+  ].filter(Boolean);
+
   const jsonLd = [
     {
       '@type': 'DefinedTerm',
       '@id': `${url}#term`,
       name,
-      description: m.description || desc,
+      ...(m.aliases?.length ? { alternateName: m.aliases } : {}),
+      termCode: slug,
+      url,
+      description: seo.definition,
       inDefinedTermSet: {
         '@type': 'DefinedTermSet',
+        '@id': `${SITE_URL}/MorphGuide#termset`,
         name: 'Crested Gecko Morphs',
         url: `${SITE_URL}/MorphGuide`,
       },
@@ -313,10 +382,11 @@ function morphMeta(slug) {
     {
       '@type': 'Article',
       '@id': `${url}#article`,
-      headline: `${name}: Crested Gecko Morph Guide`,
-      description: (m.description || desc).slice(0, 280),
+      headline: seo.h1,
+      description: seo.definition,
       url,
-      image: LOGO_URL,
+      mainEntityOfPage: url,
+      ...(OG_IMAGE ? { image: OG_IMAGE } : {}),
       about: ABOUT_CRESTED_GECKO,
       mentions: [{ '@id': `${url}#term` }],
       author: EDITORIAL_AUTHOR,
@@ -333,14 +403,294 @@ function morphMeta(slug) {
   ].filter(Boolean);
 
   return {
-    title: `${name} Morph, Crested Gecko Guide`,
-    description: `${name} is a ${rarity} crested gecko morph. ${desc}`.slice(0, 320),
-    bodyHeading: `${name} crested gecko morph`,
-    bodyLead: desc,
+    title: seo.title,
+    description: seo.description,
+    crumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Morph Guide', path: '/MorphGuide' },
+    ],
+    bodyHeading: seo.h1,
+    bodyLead: seo.definition,
     bodyParagraphs: paragraphs,
     bodyFacts: facts,
     bodyList: list,
+    linkSections,
     faq,
+    jsonLd,
+  };
+}
+
+/** Questions the Morph Guide index answers, computed from the data. */
+function morphGuideFaq() {
+  const byCategory = morphCategoryHubs().map((h) => `${h.morphs.length} ${h.morphs.length === 1 ? h.noun.replace(/s$/, '') : h.noun}`);
+  const SINGLE_GENE = ['incomplete-dominant', 'co-dominant', 'dominant', 'recessive'];
+  const genetic = morphInheritanceHubs().filter((h) => SINGLE_GENE.includes(h.id));
+  const geneticCount = genetic.reduce((n, h) => n + h.morphs.length, 0);
+  const veryRare = MORPH_LIST.filter((m) => m.rarity === 'very_rare').map((m) => m.name);
+  const albino = MORPHS.albino;
+  const rarestGene = MORPH_LIST.find((m) => m.rarity === 'rare' && m.inheritance === 'recessive' && m.priceRange);
+
+  return [
+    {
+      question: 'How many crested gecko morphs are there?',
+      answer: `The Geck Inspect Morph Guide documents ${MORPH_COUNT} crested gecko morphs: ${listJoin(byCategory)}. Only ${geneticCount} of them follow a single gene you can predict with a Punnett square; the rest are polygenic or line-bred looks that breeders refine over generations.`,
+    },
+    {
+      question: 'What is the rarest crested gecko morph?',
+      answer: [
+        veryRare.length ? `The rarest morphs in the guide are rated very rare: ${listJoin(veryRare)}.` : '',
+        albino ? 'Albino is the rarest of all: the first healthy albino hatchlings were only announced in March 2026.' : '',
+        rarestGene ? `Among established genes, ${rarestGene.name} is the rarest, at ${rarestGene.priceRange} for a typical adult.` : '',
+      ].filter(Boolean).join(' '),
+    },
+    {
+      question: 'Which crested gecko morphs are genetic?',
+      answer: `${geneticCount} morphs in the guide follow single-gene inheritance. ${genetic
+        .map((h) => `${h.label}: ${listJoin(h.morphs.map((m) => m.name))}.`)
+        .join(' ')}${albino ? ' Albino is expected to be recessive, but breeding has not proven it yet.' : ''} Every other morph is polygenic or line-bred, so its look is improved by selective breeding rather than predicted.`,
+    },
+    {
+      question: 'Are there albino crested geckos?',
+      answer:
+        'Yes. On 5 March 2026 Eureka Exotics announced the first healthy albino crested gecko hatchlings: no black pigment and red eyes. How it is inherited is not yet proven by breeding.',
+    },
+  ];
+}
+
+function morphGuideIndexMeta(route) {
+  const url = `${SITE_URL}/MorphGuide`;
+  const faq = morphGuideFaq();
+  const title = route.meta?.title || `Crested Gecko Morphs: Guide to All ${MORPH_COUNT} Morphs`;
+  const description = route.meta?.description || title;
+  const lead = `A crested gecko morph is a named look set by base color, pattern, scale structure or a proven gene. This guide covers all ${MORPH_COUNT} morphs recognized in the hobby, from Harlequin and Pinstripe to Lilly White, Axanthic and the first albinos.`;
+  const lines = Object.values(PROJECT_LINES).map((l) => ({ name: l.name, href: `/MorphGuide/lines/${l.slug}` }));
+
+  // Mirrors MORPH_GUIDE_JSON_LD in src/pages/MorphGuide.jsx (same @ids).
+  const terms = MORPH_LIST.map((m) => ({
+    '@type': 'DefinedTerm',
+    '@id': `${SITE_URL}/MorphGuide/${m.slug}#term`,
+    name: m.name,
+    ...(m.aliases?.length ? { alternateName: m.aliases } : {}),
+    termCode: m.slug,
+    url: `${SITE_URL}/MorphGuide/${m.slug}`,
+    description: morphSeo(m).definition,
+    inDefinedTermSet: { '@id': `${url}#termset` },
+  }));
+  const jsonLd = [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${url}#collection`,
+      name: 'Crested Gecko Morphs: The Complete Guide',
+      url,
+      description,
+      about: ABOUT_CRESTED_GECKO,
+      isPartOf: { '@id': WEBSITE_ID },
+      publisher: { '@id': ORG_ID },
+      dateModified: EDITORIAL_DATES['/MorphGuide'].modified,
+      mainEntity: { '@id': `${url}#termset` },
+    },
+    {
+      '@type': 'DefinedTermSet',
+      '@id': `${url}#termset`,
+      name: 'Crested Gecko Morph Vocabulary',
+      description: `Controlled vocabulary of the ${MORPH_COUNT} named crested gecko morphs maintained by Geck Inspect: base colors, color modifiers, pattern types, structural traits and named combinations, each with inheritance model and rarity.`,
+      url,
+      inLanguage: 'en-US',
+      publisher: { '@id': ORG_ID },
+      hasDefinedTerm: terms,
+    },
+    {
+      '@type': 'ItemList',
+      '@id': `${url}#itemlist`,
+      name: 'Crested Gecko Morphs',
+      numberOfItems: MORPH_LIST.length,
+      itemListOrder: 'https://schema.org/ItemListOrderAscending',
+      itemListElement: MORPH_LIST.map((m, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${SITE_URL}/MorphGuide/${m.slug}`,
+        name: m.name,
+      })),
+    },
+    faqSchema(`${url}#faq`, faq),
+    {
+      ...breadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Morph Guide', path: '/MorphGuide' },
+      ]),
+      '@id': `${url}#breadcrumbs`,
+    },
+  ];
+
+  return {
+    title,
+    description,
+    bodyHeading: 'Crested Gecko Morphs: The Complete Guide',
+    bodyLead: lead,
+    bodyParagraphs: [],
+    bodyFacts: [],
+    bodyList: null,
+    table: { title: `All ${MORPH_COUNT} crested gecko morphs`, ...morphTable(MORPH_LIST) },
+    linkSections: [
+      ...hubLinkSections('/MorphGuide'),
+      lines.length ? { title: 'Project lines', items: lines } : null,
+      {
+        title: 'Tools for identifying and pricing a morph',
+        items: [
+          { name: 'Morph ID', href: '/Recognition', note: 'identify your gecko from a top and a side photo' },
+          { name: 'Genetics calculator', href: '/calculator', note: 'per-egg odds for Lilly White, Cappuccino, Axanthic and more' },
+          { name: 'Crested gecko price guide', href: '/crested-gecko-price', note: 'what each morph and quality grade sells for' },
+          { name: 'Quality Scale', href: '/QualityScale', note: 'grade your gecko from 0 to 10' },
+        ],
+      },
+    ].filter(Boolean),
+    faq,
+    jsonLd,
+  };
+}
+
+/** Shared template for the category and inheritance hubs. */
+function hubMeta(route, { crumb, h1, lead, paragraphs = [], morphs, columns }) {
+  const url = `${SITE_URL}${route.path}`;
+  const title = route.meta?.title || h1;
+  const description = route.meta?.description || lead;
+  const jsonLd = [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${url}#webpage`,
+      name: h1,
+      url,
+      description,
+      about: ABOUT_CRESTED_GECKO,
+      isPartOf: { '@id': WEBSITE_ID },
+      publisher: { '@id': ORG_ID },
+      dateModified: EDITORIAL_DATES['/MorphGuide'].modified,
+      mainEntity: { '@id': `${url}#itemlist` },
+    },
+    {
+      '@type': 'ItemList',
+      '@id': `${url}#itemlist`,
+      name: h1,
+      numberOfItems: morphs.length,
+      itemListElement: morphs.map((m, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${SITE_URL}/MorphGuide/${m.slug}`,
+        name: m.name,
+      })),
+    },
+    breadcrumbSchema([
+      { name: 'Home', path: '/' },
+      { name: 'Morph Guide', path: '/MorphGuide' },
+      { name: crumb, path: route.path },
+    ]),
+  ];
+  return {
+    title,
+    description,
+    crumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Morph Guide', path: '/MorphGuide' },
+    ],
+    bodyHeading: h1,
+    bodyLead: lead,
+    bodyParagraphs: paragraphs,
+    bodyFacts: [],
+    bodyList: null,
+    table: { title: `${morphs.length} ${morphs.length === 1 ? 'morph' : 'morphs'}`, ...morphTable(morphs, columns) },
+    linkSections: hubLinkSections(route.path),
+    faq: [],
+    jsonLd,
+  };
+}
+
+function categoryHubMeta(id, route) {
+  const hub = morphCategoryHubs().find((h) => h.id === id);
+  if (!hub) return genericMeta(route);
+  const n = hub.morphs.length;
+  return hubMeta(route, {
+    crumb: `${hub.label} morphs`,
+    h1: `Crested gecko ${hub.noun}`,
+    lead: `${sentence(hub.blurb)} The Morph Guide lists ${n} ${n === 1 ? hub.noun.replace(/s$/, '') : hub.noun}, each with its own page on identification, genetics and price.`,
+    morphs: hub.morphs,
+    columns: ['inheritance', 'rarity', 'price'],
+  });
+}
+
+function inheritanceHubMeta(id, route) {
+  const hub = morphInheritanceHubs().find((h) => h.id === id);
+  if (!hub) return genericMeta(route);
+  const n = hub.morphs.length;
+  const label = hub.label.toLowerCase();
+  const unproven = hub.morphs.some((m) => m.slug === 'albino')
+    ? ['Albino is listed as recessive because albinism is recessive in other reptiles, but breeding has not proven it in crested geckos yet. The first healthy albinos hatched in March 2026.']
+    : [];
+  return hubMeta(route, {
+    crumb: `${hub.label} morphs`,
+    h1: `${hub.label} crested gecko morphs`,
+    lead: `${sentence(hub.description)} ${n === 1 ? 'One morph in the guide is' : `${n} morphs in the guide are`} ${label}.`,
+    paragraphs: unproven,
+    morphs: hub.morphs,
+    columns: ['category', 'rarity', 'price'],
+  });
+}
+
+function projectLineMeta(slug, route) {
+  const line = PROJECT_LINES[slug];
+  if (!line) return genericMeta(route);
+  const url = `${SITE_URL}${route.path}`;
+  const title = route.meta?.title || line.name;
+  const description = route.meta?.description || line.summary || title;
+  const morphs = [...new Set((line.relatedMorphs || []).map((s) => morphFor(s)?.slug).filter(Boolean))].map((s) => MORPHS[s]);
+  const facts = [
+    line.founder ? `Founder: ${line.founder}.` : null,
+    line.origin ? `Origin: ${line.origin}.` : null,
+    line.established ? `Established: ${line.established}.` : null,
+    line.priceRange ? `Typical price: ${line.priceRange}.` : null,
+  ].filter(Boolean);
+  const jsonLd = [
+    {
+      '@type': 'WebPage',
+      '@id': `${url}#webpage`,
+      url,
+      name: line.name,
+      description,
+      isPartOf: { '@id': WEBSITE_ID },
+      about: ABOUT_CRESTED_GECKO,
+      publisher: { '@id': ORG_ID },
+      ...(morphs.length ? { mentions: morphs.map((m) => ({ '@id': `${SITE_URL}/MorphGuide/${m.slug}#term` })) } : {}),
+    },
+    breadcrumbSchema([
+      { name: 'Home', path: '/' },
+      { name: 'Morph Guide', path: '/MorphGuide' },
+      { name: line.name, path: route.path },
+    ]),
+  ];
+  const tips = Array.isArray(line.identificationTips) ? line.identificationTips.filter((t) => typeof t === 'string') : [];
+  return {
+    title,
+    description,
+    crumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Morph Guide', path: '/MorphGuide' },
+    ],
+    bodyHeading: line.name,
+    bodyLead: line.summary || description,
+    bodyParagraphs: line.description ? [line.description] : [],
+    bodyFacts: facts,
+    bodyList: tips.length ? { title: 'How to identify the line', items: tips.slice(0, 6) } : null,
+    linkSections: [
+      morphs.length
+        ? { title: 'Morphs in this line', items: morphs.map((m) => ({ name: m.name, href: `/MorphGuide/${m.slug}` })) }
+        : null,
+      {
+        title: 'Other project lines',
+        items: Object.values(PROJECT_LINES)
+          .filter((l) => l.slug !== slug)
+          .map((l) => ({ name: l.name, href: `/MorphGuide/lines/${l.slug}` })),
+      },
+    ].filter(Boolean),
+    faq: [],
     jsonLd,
   };
 }
@@ -495,9 +845,35 @@ function genericMeta(route) {
   };
 }
 
+/** /calculator/<slug>: the generic page plus a link to the morph's own page. */
+function calculatorMorphMeta(calc, route) {
+  const meta = genericMeta(route);
+  const morphSlug = Object.keys(CALCULATOR_FOR_MORPH).find((s) => CALCULATOR_FOR_MORPH[s] === calc) || calc;
+  const morph = MORPHS[morphSlug];
+  if (!morph) return meta;
+  return {
+    ...meta,
+    linkSections: [
+      {
+        title: 'About this morph',
+        items: [{ name: `${morph.name} morph guide`, href: `/MorphGuide/${morph.slug}`, note: 'how to identify it, genetics and price' }],
+      },
+    ],
+  };
+}
+
 function routeMeta(route) {
+  if (route.path === '/MorphGuide') return morphGuideIndexMeta(route);
+  const categoryMatch = route.path.match(/^\/MorphGuide\/category\/([a-z0-9-]+)$/);
+  if (categoryMatch) return categoryHubMeta(categoryMatch[1], route);
+  const inheritanceMatch = route.path.match(/^\/MorphGuide\/inheritance\/([a-z0-9-]+)$/);
+  if (inheritanceMatch) return inheritanceHubMeta(inheritanceMatch[1], route);
+  const lineMatch = route.path.match(/^\/MorphGuide\/lines\/([a-z0-9-]+)$/);
+  if (lineMatch) return projectLineMeta(lineMatch[1], route);
   const morphMatch = route.path.match(/^\/MorphGuide\/([a-z0-9-]+)$/);
   if (morphMatch) return morphMeta(morphMatch[1]);
+  const calcMatch = route.path.match(/^\/calculator\/([a-z0-9-]+)$/);
+  if (calcMatch && CALCULATOR_SLUGS.has(calcMatch[1])) return calculatorMorphMeta(calcMatch[1], route);
   // /CareGuide/series is the Keeper's Guide index, not a care-guide.js
   // section, so it keeps the meta from seo-routes.
   const careMatch = route.path.match(/^\/CareGuide\/([a-z0-9-]+)$/);
@@ -636,7 +1012,8 @@ function allRoutes() {
 }
 function childLinksFor(route) {
   const prefixes = {
-    '/MorphGuide': [/^\/MorphGuide\/[^/]+$/, /^\/MorphGuide\/lines\//, /^\/MorphGuide\/traits\//, /^\/MorphGuide\/category\//, /^\/MorphGuide\/inheritance\//],
+    // /MorphGuide links its morphs, hubs and lines from its own table and
+    // link sections (morphGuideIndexMeta), so it needs no generic list.
     '/CareGuide': [/^\/CareGuide\//],
     '/blog': [/^\/blog\//],
     '/calculator': [/^\/calculator\//],
@@ -661,6 +1038,30 @@ function injectNoscriptBody(html, route) {
         .map((i) => `<li>${escapeHtml(i)}</li>`)
         .join('')}</ul></section>`
     : '';
+  const crumbs = meta.crumbs?.length
+    ? `<p class="geck-crumbs">${meta.crumbs
+        .map((c) => `<a href="${c.path}">${escapeHtml(c.name)}</a>`)
+        .join(' / ')} / ${escapeHtml(meta.bodyHeading || '')}</p>`
+    : '';
+  const cell = (c) => (c && typeof c === 'object' && c.href
+    ? `<a href="${c.href}">${escapeHtml(c.text)}</a>`
+    : escapeHtml(c ?? ''));
+  const table = meta.table?.rows?.length
+    ? `<section>${meta.table.title ? `<h2>${escapeHtml(meta.table.title)}</h2>` : ''}<table><thead><tr>${meta.table.headers
+        .map((h) => `<th scope="col">${escapeHtml(h)}</th>`)
+        .join('')}</tr></thead><tbody>${meta.table.rows
+        .map((r) => `<tr>${r.map((c, i) => (i === 0 ? `<th scope="row">${cell(c)}</th>` : `<td>${cell(c)}</td>`)).join('')}</tr>`)
+        .join('')}</tbody></table></section>`
+    : '';
+  const linkSections = (meta.linkSections || [])
+    .filter((s) => s?.items?.length)
+    .map((s) => {
+      const withNotes = s.items.some((i) => i.note);
+      return `<section><h2>${escapeHtml(s.title)}</h2><ul${withNotes ? ' class="geck-plain-list"' : ''}>${s.items
+        .map((i) => `<li><a href="${i.href}">${escapeHtml(i.name)}</a>${i.note ? `: ${escapeHtml(i.note)}` : ''}</li>`)
+        .join('')}</ul></section>`;
+    })
+    .join('');
   const faq = meta.faq?.length
     ? `<section><h2>Frequently asked questions</h2>${meta.faq
         .map((f) => `<h3>${escapeHtml(f.question)}</h3><p>${escapeHtml(f.answer)}</p>`)
@@ -687,6 +1088,9 @@ function injectNoscriptBody(html, route) {
         .geck-noscript-shell h3{color:#fff;font-size:1rem;margin:16px 0 4px;}
         .geck-noscript-shell ul{columns:2;column-gap:24px;padding-left:18px;line-height:1.7;}
         .geck-noscript-shell ul.geck-plain-list{columns:1;}
+        .geck-noscript-shell .geck-crumbs{font-size:0.875rem;color:#94a3b8;margin:0 0 8px;}
+        .geck-noscript-shell table{border-collapse:collapse;width:100%;font-size:0.875rem;margin:0 0 16px;}
+        .geck-noscript-shell th,.geck-noscript-shell td{border-bottom:1px solid #1e293b;padding:6px 8px;text-align:left;vertical-align:top;}
         .geck-noscript-shell footer{margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;font-size:0.8125rem;color:#64748b;}
       </style>
       <div class="geck-noscript-shell">
@@ -706,11 +1110,14 @@ function injectNoscriptBody(html, route) {
             <a href="/Membership">Pricing</a>
             <a href="/About">About</a>
           </nav>
+          ${crumbs}
           <h1>${escapeHtml(heading)}</h1>
           ${lead ? `<p>${escapeHtml(lead)}</p>` : ''}
           ${paragraphs}
           ${facts}
           ${list}
+          ${table}
+          ${linkSections}
           ${faq}
           ${childList}
           <p>Canonical URL: <a href="${canonical}">${canonical}</a></p>

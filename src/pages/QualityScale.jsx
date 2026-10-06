@@ -112,7 +112,7 @@ const CATEGORIES = [
     id: 'lilly-white',
     name: 'Lilly White',
     description:
-      'Co-dominant trait expressing high white saturation across the body. Clean white expression, even distribution, and absence of muddied pattern score highest.',
+      'Incomplete dominant trait expressing high white saturation across the body. Clean white expression, even distribution, and absence of muddied pattern score highest.',
     weighted: ['Color saturation', 'Pattern quality', 'Overall presence'],
   },
   {
@@ -154,10 +154,14 @@ const CATEGORIES = [
     id: 'cappuccino',
     name: 'Cappuccino (any base morph)',
     description:
-      'Recessive cap-allelic trait producing a rich brown base with characteristic dorsal expression. Judged across whichever morph category the animal also expresses.',
+      'Incomplete dominant trait (allelic with Sable) producing a rich brown base with characteristic dorsal expression. Judged across whichever morph category the animal also expresses.',
     weighted: ['Color saturation', 'Pattern coverage', 'Overall presence'],
   },
 ];
+
+// Every category id is also its Morph Guide slug except Phantom, whose
+// page is Phantom Pinstripe.
+const MORPH_PAGE_FOR_CATEGORY = { phantom: 'phantom-pinstripe' };
 
 const FAQ_ITEMS = [
   {
@@ -476,7 +480,11 @@ export default function QualityScale() {
           <div className="space-y-6">
             {CATEGORIES.map((c) => (
               <div key={c.id} id={c.id} className="border border-slate-800 rounded-lg p-4 bg-slate-950/40">
-                <h3 className="text-base font-semibold text-slate-100">{c.name}</h3>
+                <h3 className="text-base font-semibold text-slate-100">
+                  <Link to={`/MorphGuide/${MORPH_PAGE_FOR_CATEGORY[c.id] || c.id}`} className="hover:text-emerald-300">
+                    {c.name}
+                  </Link>
+                </h3>
                 <p className="text-slate-400 text-sm mt-1">{c.description}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-slate-500">Most weighted:</span>

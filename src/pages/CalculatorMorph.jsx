@@ -1,6 +1,7 @@
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import GeneticCalculatorTool from './GeneticCalculatorTool';
 import { CALCULATOR_PAGES_BY_SLUG } from '@/lib/genetics/calculatorCatalog';
+import { getMorph } from '@/data/morph-guide';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
 import PageNotFound from '@/lib/PageNotFound';
 
@@ -21,9 +22,17 @@ import PageNotFound from '@/lib/PageNotFound';
  * a sitemap entry for; an unknown slug means a typo or a removed morph
  * and shouldn't 200.
  */
+
+// Calculator slugs whose Morph Guide page goes by another name (decision
+// D13: the engine's Whiteout is White Wall, its Phantom is Phantom
+// Pinstripe). Every other calculator slug is also the morph slug, when
+// that morph has a page. Mirrored in scripts/prerender.mjs.
+const MORPH_PAGE_FOR_CALCULATOR = { whiteout: 'white-wall', phantom: 'phantom-pinstripe' };
+
 export default function CalculatorMorph() {
   const { morph } = useParams();
   const page = CALCULATOR_PAGES_BY_SLUG[morph];
+  const morphPage = page ? getMorph(MORPH_PAGE_FOR_CALCULATOR[page.slug] || page.slug) : null;
 
   if (!page) {
     return <PageNotFound />;
@@ -67,6 +76,16 @@ export default function CalculatorMorph() {
       <p className="text-sm text-slate-300 leading-relaxed">
         {page.blurb}
       </p>
+      {morphPage && (
+        <p className="text-sm mt-2">
+          <Link
+            to={`/MorphGuide/${morphPage.slug}`}
+            className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline"
+          >
+            {morphPage.name} morph guide: how to identify it, genetics and price
+          </Link>
+        </p>
+      )}
       {page.super_lethal && (
         <p className="text-xs text-red-300 mt-2 leading-relaxed">
           <strong>Lethal-super warning:</strong> homozygous{' '}

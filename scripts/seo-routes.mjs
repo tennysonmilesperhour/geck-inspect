@@ -31,24 +31,40 @@ import { fileURLToPath } from 'node:url';
 // Live prices, so the prerendered /Membership snippet can never drift
 // from what the page actually charges.
 import { TIER_PRICING, TRIAL_DAYS } from '../src/lib/stripe-config.js';
+// The morph dataset is a plain, dependency-free ES module, so Node imports
+// it directly. Hub titles, counts and the morph route list come from it.
+import { MORPHS, INHERITANCE, MORPH_CATEGORIES } from '../src/data/morph-guide.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 
 export const SITE_URL = 'https://geckinspect.com';
 
-// Resolve morph slugs from the canonical data file without triggering
-// Vite-style imports. We extract slugs with a regex so Node can execute
-// this without a bundler in the loop.
+// Morph slugs straight from the dataset. This used to be a regex over the
+// source text, which would also have picked up the slugs inside a morph's
+// `lookalikes` list.
 function loadMorphSlugs() {
-  const src = readFileSync(resolve(REPO_ROOT, 'src/data/morph-guide.js'), 'utf8');
-  const matches = [...src.matchAll(/slug:\s*'([a-z0-9-]+)'/g)];
-  const slugs = [...new Set(matches.map((m) => m[1]))];
+  const slugs = [...new Set(MORPHS.map((m) => m.slug).filter(Boolean))];
   if (slugs.length === 0) {
     throw new Error('seo-routes: no morph slugs found in src/data/morph-guide.js');
   }
   return slugs;
 }
+
+/** Number of morphs in the guide, for titles and copy that state the count. */
+export const MORPH_COUNT = MORPHS.length;
+
+// Misspellings, nicknames and super forms that have no page of their own,
+// mapped to the morph page that covers them. build-vercel-json.mjs turns
+// each into a 301, and prerender.mjs uses it to resolve related-morph
+// slugs (a project line lists 'super-lilly-white', for instance).
+export const MORPH_SLUG_ALIASES = {
+  'lily-white': 'lilly-white',
+  'super-lilly-white': 'lilly-white',
+  phantom: 'phantom-pinstripe',
+  harley: 'harlequin',
+  albinos: 'albino',
+};
 
 // Quote-agnostic string field reader for the regex-based data parsers
 // below. Matches `field: 'value'` or `field: "value"` (value may sit on the
@@ -185,13 +201,13 @@ try {
 
 // Newest commit date across the files a route depends on. Falls back to
 // the build date only when none of them has a recorded date.
-function dateOf(...files) {
+export function dateOf(...files) {
   const dates = files.map((f) => CONTENT_DATES[f]).filter(Boolean).sort();
   return dates.length ? dates[dates.length - 1] : TODAY;
 }
 
-const MORPH_DATA = 'src/data/morph-guide.js';
-const CARE_DATA = 'src/data/care-guide.js';
+export const MORPH_DATA = 'src/data/morph-guide.js';
+export const CARE_DATA = 'src/data/care-guide.js';
 const LINES_DATA = 'src/data/project-lines.js';
 const CALC_DATA = 'src/lib/genetics/calculatorCatalog.js';
 
@@ -281,9 +297,9 @@ export const STATIC_ROUTES = [
     changefreq: 'weekly',
     lastmod: dateOf('src/pages/MorphGuide.jsx', MORPH_DATA, LINES_DATA),
     meta: {
-      title: 'Crested Gecko Morph Guide, Every Known Morph',
+      title: `Crested Gecko Morphs: Guide to All ${MORPH_COUNT} Morphs`,
       description:
-        'Definitive visual and written reference for every known crested gecko (Correlophus ciliatus) morph. Harlequin, Pinstripe, Dalmatian, Lilly White, Cappuccino, Axanthic, and dozens more, with inheritance, rarity, and pricing.',
+        `All ${MORPH_COUNT} crested gecko morphs in one guide, from Harlequin and Pinstripe to Lilly White, Axanthic and the first albinos, with inheritance, rarity and typical prices.`,
     },
   },
   {
@@ -306,7 +322,7 @@ export const STATIC_ROUTES = [
     meta: {
       title: 'Crested Gecko Genetics Guide',
       description:
-        'From Punnett squares to proving recessives, the crested gecko genetics guide. Understand Lilly White co-dominance, Cappuccino and Axanthic recessives, Soft Scale dominance, and why most morphs are polygenic.',
+        'From Punnett squares to proving recessives, the crested gecko genetics guide. Why Lilly White, Cappuccino and Soft Scale are incomplete dominant, why Axanthic is recessive, and why most morphs are polygenic.',
     },
   },
   {
@@ -444,50 +460,92 @@ export function getMorphRoutes() {
     path: `/MorphGuide/${slug}`,
     priority: HIGH_VALUE_MORPHS.has(slug) ? 0.9 : 0.7,
     changefreq: 'monthly',
-    lastmod: dateOf(MORPH_DATA, 'src/pages/MorphDetail.jsx'),
+    // Same date as the page's Article dateModified (prerender.mjs and
+    // src/lib/editorial.js): the last commit to the morph data.
+    lastmod: dateOf(MORPH_DATA),
   }));
 }
 
 // Morph taxonomy hub pages: one per category and per inheritance
 // mode. Small, high-quality hubs that keep the internal link graph
 // dense and capture "all recessive crested gecko morphs" style
-// queries.
-const MORPH_CATEGORIES_META = [
-  { id: 'pattern', label: 'Pattern morphs' },
-  { id: 'base', label: 'Base color morphs' },
-  { id: 'color', label: 'Color modifier morphs' },
-  { id: 'structure', label: 'Structural morphs' },
-  { id: 'combo', label: 'Combination morphs' },
-];
+// queries. Built from the dataset, so the titles carry real counts and a
+// hub with no morphs (co-dominant and dominant today) is not listed.
 
-const MORPH_INHERITANCES_META = [
-  { id: 'recessive', label: 'Recessive crested gecko morphs' },
-  { id: 'co-dominant', label: 'Co-dominant crested gecko morphs' },
-  { id: 'incomplete-dominant', label: 'Incomplete-dominant crested gecko morphs' },
-  { id: 'dominant', label: 'Dominant crested gecko morphs' },
-  { id: 'polygenic', label: 'Polygenic crested gecko morphs' },
-  { id: 'line-bred', label: 'Line-bred crested gecko morphs' },
-];
+// Plural noun for each category, as it reads in a sentence.
+export const CATEGORY_NOUNS = {
+  base: 'base color morphs',
+  color: 'color modifier morphs',
+  pattern: 'pattern morphs',
+  structure: 'structural morphs',
+  combo: 'combination morphs',
+};
+
+function titleCase(text) {
+  return text.replace(/(^|[\s-])([a-z])/g, (_, sep, c) => `${sep}${c.toUpperCase()}`);
+}
+
+// The best-known morphs lead a preview list (HIGH_VALUE_MORPHS below).
+function namesPreview(morphs, n = 3) {
+  const ranked = [...morphs].sort((a, b) => Number(HIGH_VALUE_MORPHS.has(b.slug)) - Number(HIGH_VALUE_MORPHS.has(a.slug)));
+  const names = ranked.slice(0, n).map((m) => m.name);
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/** Category hubs that have at least one morph: [{ id, label, blurb, noun, morphs }]. */
+export function morphCategoryHubs() {
+  return MORPH_CATEGORIES.map((c) => ({
+    id: c.id,
+    label: c.label,
+    blurb: c.blurb,
+    noun: CATEGORY_NOUNS[c.id] || `${c.label.toLowerCase()} morphs`,
+    morphs: MORPHS.filter((m) => m.category === c.id),
+  })).filter((h) => h.morphs.length > 0);
+}
+
+/** Inheritance hubs that have at least one morph: [{ id, label, description, morphs }]. */
+export function morphInheritanceHubs() {
+  return Object.values(INHERITANCE)
+    .map((inh) => ({
+      id: inh.id,
+      label: inh.label,
+      description: inh.description,
+      morphs: MORPHS.filter((m) => m.inheritance === inh.id),
+    }))
+    .filter((h) => h.morphs.length > 0);
+}
+
+/**
+ * Inheritance ids with no morph. Their hub URL still renders in the app
+ * (the hub page links every mode), so build-vercel-json.mjs sends them
+ * with a noindex header instead of listing them in the sitemap.
+ */
+export function emptyInheritanceIds() {
+  const used = new Set(MORPHS.map((m) => m.inheritance));
+  return Object.keys(INHERITANCE).filter((id) => !used.has(id));
+}
 
 export function getMorphTaxonomyRoutes() {
-  const cats = MORPH_CATEGORIES_META.map(({ id, label }) => ({
+  const lastmod = dateOf(MORPH_DATA);
+  const cats = morphCategoryHubs().map(({ id, noun, morphs }) => ({
     path: `/MorphGuide/category/${id}`,
     priority: 0.8,
     changefreq: 'weekly',
-    lastmod: dateOf(MORPH_DATA, 'src/pages/MorphTaxonomyHub.jsx'),
+    lastmod,
     meta: {
-      title: `${label}: Crested Gecko Morph Guide`,
-      description: `Every crested gecko ${label.toLowerCase()} in one place, with inheritance, rarity, and deep links to per-morph detail pages.`,
+      title: `Crested Gecko ${titleCase(noun)}: All ${morphs.length} Listed`,
+      description: `All ${morphs.length} crested gecko ${noun} in one list, including ${namesPreview(morphs)}, with inheritance, rarity, typical price and a link to each morph page.`,
     },
   }));
-  const inhs = MORPH_INHERITANCES_META.map(({ id, label }) => ({
+  const inhs = morphInheritanceHubs().map(({ id, label, morphs }) => ({
     path: `/MorphGuide/inheritance/${id}`,
     priority: 0.8,
     changefreq: 'weekly',
-    lastmod: dateOf(MORPH_DATA, 'src/pages/MorphTaxonomyHub.jsx'),
+    lastmod,
     meta: {
-      title: label,
-      description: `${label} grouped by inheritance mode. Complete list with rarity, visual cues, and links to per-morph detail pages.`,
+      title: `${titleCase(label)} Crested Gecko Morphs: All ${morphs.length} Listed`,
+      description: `${morphs.length === 1 ? 'One crested gecko morph is' : `${morphs.length} crested gecko morphs are`} ${label.toLowerCase()}${morphs.length > 4 ? ', including ' : ': '}${namesPreview(morphs, 4)}. What that means for breeding, with rarity, typical price and a link to each morph page.`,
     },
   }));
   return [...cats, ...inhs];
@@ -537,7 +595,7 @@ export function getCareTopicRoutes() {
     path: `/CareGuide/${id}`,
     priority: 0.7,
     changefreq: 'monthly',
-    lastmod: dateOf(CARE_DATA, 'src/pages/CareGuideTopic.jsx'),
+    lastmod: dateOf(CARE_DATA),
     meta: {
       title: `${title}: Crested Gecko Care`,
       description: `${title}, part of the Geck Inspect crested gecko (Correlophus ciliatus) care guide.`,

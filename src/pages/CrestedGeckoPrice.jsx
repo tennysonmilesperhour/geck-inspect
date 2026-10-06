@@ -14,6 +14,8 @@ import { breadcrumbSchema, faqPageSchema, SITE_URL } from '@/lib/organization-sc
 
 const LAST_UPDATED = '2026-09-28';
 
+// Each example morph is [label, Morph Guide slug] so it links to its own
+// page; a plain string is a description with no page.
 // Market ranges are for healthy, captive-bred crested geckos sold directly
 // by breeders (not chain-store animals), in USD, reflecting 2026 hobby
 // pricing. Ranges are wide on purpose: quality grade, sex, age, and
@@ -23,28 +25,28 @@ const PRICE_BANDS = [
     tier: 'Starter / common',
     range: '$50 to $150',
     color: 'border-slate-600 bg-slate-800/40',
-    morphs: 'Bicolor, Patternless, basic Flame, low-expression Harlequin, common Tiger',
+    morphs: [['Bicolor', 'bicolor'], ['Patternless', 'patternless'], ['basic Flame', 'flame'], ['low-expression Harlequin', 'harlequin'], ['common Tiger', 'tiger']],
     note: 'Healthy pet-grade animals. The floor of the hobby, and where most first geckos sit.',
   },
   {
     tier: 'Mid-tier',
     range: '$150 to $400',
     color: 'border-emerald-700 bg-emerald-900/30',
-    morphs: 'Clean Harlequin, Pinstripe, Dalmatian, Phantom, strong Flame',
+    morphs: [['Clean Harlequin', 'harlequin'], ['Pinstripe', 'pinstripe'], ['Dalmatian', 'dalmatian'], ['Phantom', 'phantom-pinstripe'], ['strong Flame', 'flame']],
     note: 'Solid structure and pattern. Typical hobby-breeder stock and starter breeder projects.',
   },
   {
     tier: 'High-end',
     range: '$400 to $1,200',
     color: 'border-sky-700 bg-sky-900/30',
-    morphs: 'Extreme Harlequin, high-white pattern, quality Dalmatian, tricolor, refined Pinstripe',
+    morphs: [['Extreme Harlequin', 'extreme-harlequin'], 'high-white pattern', ['quality Dalmatian', 'dalmatian'], ['tricolor', 'tricolor'], ['refined Pinstripe', 'pinstripe']],
     note: 'Above-average structure, strong contrast, high pattern coverage. Animals that hold value.',
   },
   {
     tier: 'Designer / genetic',
     range: '$500 to $3,000+',
     color: 'border-amber-700 bg-amber-900/30',
-    morphs: 'Lilly White, Cappuccino, Axanthic, and combos stacking these on quality bases',
+    morphs: [['Lilly White', 'lilly-white'], ['Cappuccino', 'cappuccino'], ['Axanthic', 'axanthic'], 'and combos stacking these on quality bases'],
     note: 'Proven genetic morphs and multi-trait combos. Exceptional specimens have sold well above this.',
   },
 ];
@@ -208,7 +210,16 @@ export default function CrestedGeckoPrice() {
                   <span className="text-slate-100 font-semibold text-sm">{b.tier}</span>
                   <span className="text-slate-100 font-bold text-base">{b.range}</span>
                 </div>
-                <p className="text-slate-300 text-sm mb-1"><span className="text-slate-500">Examples:</span> {b.morphs}</p>
+                <p className="text-slate-300 text-sm mb-1"><span className="text-slate-500">Examples:</span>{' '}
+                  {b.morphs.map((m, i) => (
+                    <span key={Array.isArray(m) ? m[0] : m}>
+                      {i > 0 && ', '}
+                      {Array.isArray(m) ? (
+                        <Link to={`/MorphGuide/${m[1]}`} className="text-emerald-400 hover:text-emerald-300">{m[0]}</Link>
+                      ) : m}
+                    </span>
+                  ))}
+                </p>
                 <p className="text-slate-400 text-xs leading-relaxed">{b.note}</p>
               </div>
             ))}

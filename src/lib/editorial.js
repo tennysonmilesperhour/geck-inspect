@@ -38,6 +38,12 @@
  */
 
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+// Last commit date of each content file, written by
+// scripts/build-content-dates.mjs. The sitemap's <lastmod> and the
+// prerendered JSON-LD (scripts/seo-routes.mjs, scripts/prerender.mjs) read
+// the same file, so a guide's "Last updated" date, its dateModified and its
+// sitemap entry can no longer disagree.
+import CONTENT_DATES_FILE from '../../scripts/content-dates.json';
 
 // Editorial byline. In the audit the reviewer is described as a panel
 // of experienced keepers, represent that as an editorial collective
@@ -74,6 +80,13 @@ export function authorSchema() {
 const DEFAULT_PUBLISHED = '2025-06-01';
 const DEFAULT_MODIFIED = new Date().toISOString().slice(0, 10);
 
+const CONTENT_DATES = CONTENT_DATES_FILE?.files || {};
+
+/** Content date of a data file, or the fallback when it was never recorded. */
+function contentDate(file, fallback) {
+  return CONTENT_DATES[file] || fallback;
+}
+
 // Per-path publication and last-update metadata. Fill this out over
 // time, every path we don't list falls back to the defaults above.
 // Paths are stored without a trailing slash to match the canonical
@@ -85,8 +98,11 @@ const PER_PATH = {
   '/Terms': { published: '2026-04-17', modified: '2026-04-17' },
   '/MarketplaceVerification': { published: '2026-04-17', modified: '2026-04-17' },
   '/PrivacyPolicy': { published: '2025-06-01', modified: '2026-04-05' },
-  '/CareGuide': { published: '2025-06-15', modified: '2026-04-17' },
-  '/MorphGuide': { published: '2025-07-01', modified: '2026-09-28' },
+  // The guides follow their data file: the Care Guide changes when
+  // care-guide.js changes, the Morph Guide (and every morph page) when
+  // morph-guide.js changes. Mirrored by EDITORIAL_DATES in prerender.mjs.
+  '/CareGuide': { published: '2025-06-15', modified: contentDate('src/data/care-guide.js', '2026-04-17') },
+  '/MorphGuide': { published: '2025-07-01', modified: contentDate('src/data/morph-guide.js', '2026-09-28') },
   '/GeneticsGuide': { published: '2025-07-15', modified: '2026-04-17' },
   '/calculator': { published: '2025-08-01', modified: '2026-04-17' },
   // Blog index, bumped whenever a new post ships. Per-post pages

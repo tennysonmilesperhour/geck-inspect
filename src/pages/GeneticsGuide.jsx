@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,15 @@ import { GLOSSARY_GROUPS, GLOSSARY } from "@/data/genetics-glossary";
 // linked by a gradient backbone, with content cards on the right. There's
 // no level filter, no prev/next slideshow buttons, and nothing is hidden
 // behind collapsibles that chop off the flow.
+
+// The genetic morphs the guide keeps coming back to, linked to their
+// Morph Guide pages: [name, slug].
+const GENE_MORPH_LINKS = [
+  ['Lilly White', 'lilly-white'],
+  ['Axanthic', 'axanthic'],
+  ['Cappuccino', 'cappuccino'],
+  ['Albino', 'albino'],
+];
 
 const LEVEL_META = {
   Beginner: {
@@ -179,6 +189,16 @@ export default function GeneticsGuide() {
               genetics, morphs, and selective breeding.
             </p>
             <p className="text-xs text-slate-500 mt-4">{bylineText('/GeneticsGuide')}</p>
+            <p className="text-sm text-slate-400 mt-3">
+              The main single-gene morphs, each with its own page:{' '}
+              {GENE_MORPH_LINKS.map(([name, slug], i) => (
+                <span key={slug}>
+                  {i > 0 && ', '}
+                  <Link to={`/MorphGuide/${slug}`} className="text-emerald-400 hover:text-emerald-300">{name}</Link>
+                </span>
+              ))}
+              .
+            </p>
             <div className="mt-6">
               <DnaHelix />
             </div>

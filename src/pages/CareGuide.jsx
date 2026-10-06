@@ -561,6 +561,21 @@ export default function CareGuidePage() {
                     <ChevronRight className="w-3.5 h-3.5" />
                   </a>
                 </div>
+                <p className="mt-4 text-sm text-slate-400">
+                  Genetic morphs:{' '}
+                  {[
+                    ['Lilly White', 'lilly-white'],
+                    ['Axanthic', 'axanthic'],
+                    ['Cappuccino', 'cappuccino'],
+                    ['Albino', 'albino'],
+                  ].map(([name, slug], i) => (
+                    <span key={slug}>
+                      {i > 0 && ', '}
+                      <a href={`/MorphGuide/${slug}`} className="text-emerald-400 hover:text-emerald-300">{name}</a>
+                    </span>
+                  ))}
+                  .
+                </p>
               </div>
             </main>
           </div>

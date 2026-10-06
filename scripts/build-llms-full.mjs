@@ -69,9 +69,17 @@ async function loadCareGuide() {
   return out;
 }
 
+// Labels for the raw ids in morph-guide.js, filled by loadMorphs().
+let MORPH_LABELS = { inheritance: {}, rarity: {}, category: {} };
+
 async function loadMorphs() {
   const mod = await import(pathToFileURL(MORPH).href);
   const morphs = mod.MORPHS;
+  MORPH_LABELS = {
+    inheritance: Object.fromEntries(Object.values(mod.INHERITANCE || {}).map((i) => [i.id, i.label])),
+    rarity: Object.fromEntries(Object.values(mod.RARITY || {}).map((r) => [r.id, r.label])),
+    category: Object.fromEntries((mod.MORPH_CATEGORIES || []).map((c) => [c.id, c.label])),
+  };
   if (!Array.isArray(morphs)) {
     throw new Error('morph-guide.js did not export a MORPHS array');
   }
@@ -87,6 +95,7 @@ async function loadMorphs() {
       inheritance: m.inheritance || null,
       rarity: m.rarity || null,
       category: m.category || null,
+      priceRange: m.priceRange || null,
       keyFeatures: m.keyFeatures || [],
     }));
   if (out.length < MIN_MORPHS) {
@@ -174,9 +183,10 @@ function morphsToMarkdown(morphs) {
     out.push(`_Permalink: https://geckinspect.com/MorphGuide/${m.slug}_`);
     out.push('');
     const facts = [];
-    if (m.rarity) facts.push(`**Rarity:** ${m.rarity}`);
-    if (m.inheritance) facts.push(`**Inheritance:** ${m.inheritance}`);
-    if (m.category) facts.push(`**Category:** ${m.category}`);
+    if (m.rarity) facts.push(`**Rarity:** ${MORPH_LABELS.rarity[m.rarity] || m.rarity}`);
+    if (m.inheritance) facts.push(`**Inheritance:** ${MORPH_LABELS.inheritance[m.inheritance] || m.inheritance}`);
+    if (m.category) facts.push(`**Category:** ${MORPH_LABELS.category[m.category] || m.category}`);
+    if (m.priceRange) facts.push(`**Typical adult price:** ${m.priceRange}`);
     if (facts.length) {
       out.push(facts.join('  \n'));
       out.push('');
@@ -235,9 +245,33 @@ function blogToMarkdown(posts) {
   return out.join('\n');
 }
 
+// ---- llms.txt per-morph list ----------------------------------------------
+
+// The "Per-morph guide pages" list in llms.txt is generated from MORPHS on
+// every build, so a new morph (Albino, March 2026) can never be missing
+// from it and a removed one can never linger.
+function withMorphList(intro, morphs) {
+  const heading = '## Per-morph guide pages (public, crawlable)';
+  const start = intro.indexOf(heading);
+  if (start === -1) return intro;
+  const next = intro.indexOf('\n## ', start + heading.length);
+  const end = next === -1 ? intro.length : next + 1;
+  const section = [
+    heading,
+    '',
+    `Each of the ${morphs.length} crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.`,
+    '',
+    ...morphs.map((m) => `- ${m.name}: https://geckinspect.com/MorphGuide/${m.slug}`),
+    '',
+    '',
+  ].join('\n');
+  return `${intro.slice(0, start)}${section}${intro.slice(end)}`;
+}
+
 // ---- compose -------------------------------------------------------------
 
 async function build() {
+  const morphList = await loadMorphs();
   // Stamp llms.txt with the newest content date so "Last updated" is not
   // a hand-typed value from months ago.
   let intro = readFileSync(LLMS, 'utf8');
@@ -254,8 +288,13 @@ async function build() {
   } catch {
     // content-dates.json missing; leave the file alone
   }
+  const listed = withMorphList(intro, morphList);
+  if (listed !== intro) {
+    writeFileSync(LLMS, listed);
+    intro = listed;
+  }
   const care = careToMarkdown(await loadCareGuide());
-  const morphs = morphsToMarkdown(await loadMorphs());
+  const morphs = morphsToMarkdown(morphList);
   const blog = blogToMarkdown(await loadBlogPosts());
   const now = new Date().toISOString().slice(0, 10);
 

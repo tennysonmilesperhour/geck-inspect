@@ -180,6 +180,24 @@
           "value": "noindex, nofollow"
         }
       ]
+    },
+    {
+      "source": "/MorphGuide/inheritance/co-dominant",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/MorphGuide/inheritance/dominant",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ],
   "redirects": [
@@ -193,6 +211,31 @@
         }
       ],
       "destination": "/Breeder/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/MorphGuide/lily-white",
+      "destination": "/MorphGuide/lilly-white",
+      "permanent": true
+    },
+    {
+      "source": "/MorphGuide/super-lilly-white",
+      "destination": "/MorphGuide/lilly-white",
+      "permanent": true
+    },
+    {
+      "source": "/MorphGuide/phantom",
+      "destination": "/MorphGuide/phantom-pinstripe",
+      "permanent": true
+    },
+    {
+      "source": "/MorphGuide/harley",
+      "destination": "/MorphGuide/harlequin",
+      "permanent": true
+    },
+    {
+      "source": "/MorphGuide/albinos",
+      "destination": "/MorphGuide/albino",
       "permanent": true
     },
     {

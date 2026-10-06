@@ -220,6 +220,18 @@ function loadEditorialDates() {
   while ((hit = re.exec(m[1])) !== null) {
     out[hit[1]] = { published: hit[2], modified: hit[3] };
   }
+  // Guides whose modified date follows a data file's commit date:
+  // `modified: contentDate('src/data/x.js', 'fallback')`.
+  let contentDates = {};
+  try {
+    contentDates = JSON.parse(readFileSync(resolve(REPO_ROOT, 'scripts/content-dates.json'), 'utf8')).files || {};
+  } catch {
+    // no content-dates.json, the fallback dates apply
+  }
+  const dyn = /'([^']+)':\s*\{\s*published:\s*'([^']+)',\s*modified:\s*contentDate\('([^']+)',\s*'([^']+)'\)/g;
+  while ((hit = dyn.exec(m[1])) !== null) {
+    out[hit[1]] = { published: hit[2], modified: contentDates[hit[3]] || hit[4] };
+  }
   return out;
 }
 

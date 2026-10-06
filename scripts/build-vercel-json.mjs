@@ -29,7 +29,7 @@
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getAllSpaPathPatterns } from './seo-routes.mjs';
+import { MORPH_SLUG_ALIASES, emptyInheritanceIds, getAllSpaPathPatterns } from './seo-routes.mjs';
 import { RETIRED_PAGES } from '../src/lib/retiredPages.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -45,6 +45,11 @@ const NOINDEX_PAGES = [
   '/Settings',
   '/Notifications',
   '/Messages',
+  // Inheritance hubs with no morph in the guide (co-dominant and dominant
+  // today). The hub page still renders, since it links every inheritance
+  // mode, but an empty list should not be indexed. They are also left out
+  // of the sitemap (seo-routes.mjs getMorphTaxonomyRoutes).
+  ...emptyInheritanceIds().map((id) => `/MorphGuide/inheritance/${id}`),
 ];
 
 // Lowercase → canonical PascalCase redirects. External inbound links
@@ -89,6 +94,14 @@ const CASE_REDIRECTS = [
   { from: '/breeder', to: '/Breeder' },
   { from: '/breeder/:slug', to: '/Breeder/:slug' },
 ];
+
+// Misspellings, nicknames and super forms that have no page of their own,
+// sent to the morph page that covers them. Listed before the case
+// redirects so /MorphGuide/lily-white resolves in one hop.
+const MORPH_ALIAS_REDIRECTS = Object.entries(MORPH_SLUG_ALIASES).map(([from, to]) => ({
+  from: `/MorphGuide/${from}`,
+  to: `/MorphGuide/${to}`,
+}));
 
 // Removed pages that were indexed and may have inbound links. 301 them
 // to the closest canonical surface instead of letting them 404. The
@@ -292,6 +305,11 @@ function buildConfig() {
         destination: '/Breeder/:slug',
         permanent: true,
       },
+      ...MORPH_ALIAS_REDIRECTS.map(({ from, to }) => ({
+        source: from,
+        destination: to,
+        permanent: true,
+      })),
       ...GONE_REDIRECTS.map(({ from, to }) => ({
         source: from,
         destination: to,
