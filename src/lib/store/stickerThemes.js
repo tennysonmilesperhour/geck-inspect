@@ -15,6 +15,13 @@
 
 export const STICKER_THEMES = [
   {
+    value: 'enclosure_plaque',
+    label: 'Enclosure name plaque',
+    blurb: 'An elegant species label for the outside of an enclosure.',
+    ratio: '2 / 1',
+    fields: ['species_name', 'scientific_name', 'native_range', 'habitat', 'hatch_label'],
+  },
+  {
     value: 'trading_card',
     label: 'Collector card',
     blurb: 'Power, signature moves, affinity, and edition details.',
@@ -61,7 +68,7 @@ export const STICKER_THEMES = [
 export const THEME_MAP = Object.fromEntries(STICKER_THEMES.map((t) => [t.value, t]));
 
 export function stickerTheme(value) {
-  return THEME_MAP[value] || STICKER_THEMES[0];
+  return THEME_MAP[value] || THEME_MAP.trading_card;
 }
 
 export function isCardTheme(value) {
@@ -70,6 +77,10 @@ export function isCardTheme(value) {
 
 /** Labels, hints and placeholders for the theme-only fields. */
 export const THEME_FIELD_META = {
+  species_name: { label: 'Common species name', placeholder: 'Crested gecko' },
+  scientific_name: { label: 'Scientific name', placeholder: 'Correlophus ciliatus' },
+  native_range: { label: 'Native range', placeholder: 'New Caledonia · South Pacific', hint: 'Where the species occurs in the wild, not where your pet was bred.' },
+  habitat: { label: 'Habitat', placeholder: 'Tropical forest canopy' },
   dex_number: { label: 'Plate number', placeholder: '12', hint: 'Printed as "Plate 12" in the corner.' },
   height: { label: 'Length', placeholder: '8.5 in', hint: 'Snout to tail, or leave blank.' },
   weight: { label: 'Weight', placeholder: '42 g', hint: 'Blank hides the line.' },
@@ -83,6 +94,10 @@ export const THEME_FIELD_META = {
 };
 
 export const THEME_FIELD_LIMITS = {
+  species_name: 40,
+  scientific_name: 48,
+  native_range: 60,
+  habitat: 60,
   caption: 60,
   hatch_label: 14,
   badge_location: 26,
@@ -94,6 +109,11 @@ export const THEME_FIELD_LIMITS = {
 export function themeFieldDefaults() {
   return {
     theme: 'trading_card',
+    species_name: 'Crested gecko',
+    scientific_name: 'Correlophus ciliatus',
+    native_range: 'New Caledonia · South Pacific',
+    habitat: 'Tropical forest canopy',
+    plaque_style: 'botanical',
     caption: '',
     hatch_label: '',
     badge_location: 'New Caledonia',

@@ -18,7 +18,7 @@ export const CUSTOM_STICKER_SLUG = 'custom-pet-sticker';
 export const CUSTOM_STICKER_PRICE_CENTS = 1000;
 export const CUSTOM_STICKER_SHIPPING_CENTS = 500;
 export const CUSTOM_STICKER_DESIGN_KIND = 'custom_sticker';
-export const CUSTOM_STICKER_DESIGN_VERSION = 1;
+export const CUSTOM_STICKER_DESIGN_VERSION = 2;
 
 /**
  * The eleven card types. `color` drives the card frame, `accent` the
@@ -54,12 +54,17 @@ export const CARD_STAGES = [
 export const CARD_LAYOUTS = [
   {
     value: 'classic',
-    label: 'Keeper profile',
-    blurb: 'Framed photo with signature moves and collection details.',
+    label: 'Vintage collector',
+    blurb: 'Warm paper, layered borders, and a classic two-move profile.',
+  },
+  {
+    value: 'modern',
+    label: 'Modern illustrated',
+    blurb: 'Clean ivory panels, bold color accents, and generous artwork.',
   },
   {
     value: 'full_art',
-    label: 'Full portrait',
+    label: 'Full-art showcase',
     blurb: 'Edge-to-edge photo with a compact identity and matchup strip.',
   },
 ];
@@ -123,6 +128,28 @@ export const FIELD_LIMITS = {
   hp_max: 340,
 };
 
+export const PLAQUE_STYLES = [
+  { value: 'botanical', label: 'Botanical', color: '#183d32' },
+  { value: 'ivory', label: 'Museum ivory', color: '#f3ead7' },
+  { value: 'slate', label: 'Midnight slate', color: '#20303c' },
+];
+
+export function stickerDimensions(design) {
+  const longest = { '2in': 2, '3in': 3, '4in': 4 }[design?.size] || 3;
+  const [w, h] = stickerTheme(design?.theme).ratio.split('/').map(Number);
+  const width = w >= h ? longest : longest * w / h;
+  const height = h >= w ? longest : longest * h / w;
+  return { width, height, label: `${Number(width.toFixed(2))} × ${Number(height.toFixed(2))} in` };
+}
+
+export function normalizePhotoCrop(crop) {
+  const bound = (value, min, max, fallback) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
+  };
+  return { x: bound(crop?.x, 0, 100, 50), y: bound(crop?.y, 0, 100, 50), zoom: bound(crop?.zoom, 1, 3, 1) };
+}
+
 function emptyAttack() {
   return { name: '', cost: 1, cost_type: null, damage: '', text: '' };
 }
@@ -138,6 +165,8 @@ export function createDefaultDesign() {
     version: CUSTOM_STICKER_DESIGN_VERSION,
     photo_url: '',
     photo_path: '',
+    photo_crop: { x: 50, y: 50, zoom: 1 },
+    photo_treatment: 'original',
     layout: 'classic',
     border_color: 'yellow',
     stage: 'basic',
@@ -148,7 +177,10 @@ export function createDefaultDesign() {
     dex_number: '1',
     height: '',
     weight: '',
-    attacks: [emptyAttack()],
+    attacks: [
+      { name: 'Branch Grip', cost: 1, cost_type: null, damage: '20', text: 'Small toes. Unshakeable hold.' },
+      { name: 'Night Pounce', cost: 2, cost_type: null, damage: '40', text: 'One perfect leap after lights out.' },
+    ],
     weakness_type: 'fighting',
     weakness_multiplier: '×2',
     resistance_type: '',
@@ -193,14 +225,16 @@ export function stageEvolves(stage) {
 export function validateDesign(design) {
   const problems = [];
   if (!design) return ['Start a design first.'];
-  if (!design.photo_url) problems.push('Upload a photo of your pet.');
+  if (design.theme !== 'enclosure_plaque' && !design.photo_url) problems.push('Add a photo of your pet.');
+  if (design.theme === 'enclosure_plaque') {
+    if (!String(design.species_name || '').trim()) problems.push('Add the common species name.');
+    if (!String(design.scientific_name || '').trim()) problems.push('Add the scientific name.');
+    if (!String(design.native_range || '').trim()) problems.push('Add the species’ native range.');
+  }
   if (!String(design.name || '').trim()) problems.push(isCardTheme(design.theme) ? 'Give the card a name.' : 'Give the sticker a name.');
   // Everything below is trading-card only. The other themes print the name,
   // the morph line, the photo and a few words; nothing else can be wrong.
   if (!isCardTheme(design.theme)) return problems;
-  if (stageEvolves(design.stage) && !String(design.evolves_from || '').trim()) {
-    problems.push(`A ${CARD_STAGES.find((s) => s.value === design.stage)?.label} card needs a lineage note.`);
-  }
   const hp = Number(design.hp);
   if (!Number.isFinite(hp) || hp < FIELD_LIMITS.hp_min || hp > FIELD_LIMITS.hp_max) {
     problems.push(`Power score has to be between ${FIELD_LIMITS.hp_min} and ${FIELD_LIMITS.hp_max}.`);
@@ -216,9 +250,16 @@ export function serializeDesign(design) {
   return {
     kind: CUSTOM_STICKER_DESIGN_KIND,
     version: CUSTOM_STICKER_DESIGN_VERSION,
-    photo_url: design.photo_url || '',
-    photo_path: design.photo_path || '',
-    layout: design.layout || 'classic',
+    photo_url: design.theme === 'enclosure_plaque' ? '' : design.photo_url || '',
+    photo_path: design.theme === 'enclosure_plaque' ? '' : design.photo_path || '',
+    photo_crop: normalizePhotoCrop(design.photo_crop),
+    photo_treatment: design.photo_treatment === 'cutout' ? 'cutout' : 'original',
+    plaque_style: PLAQUE_STYLES.some((s) => s.value === design.plaque_style) ? design.plaque_style : 'botanical',
+    species_name: clean(design.species_name, THEME_FIELD_LIMITS.species_name),
+    scientific_name: clean(design.scientific_name, THEME_FIELD_LIMITS.scientific_name),
+    native_range: clean(design.native_range, THEME_FIELD_LIMITS.native_range),
+    habitat: clean(design.habitat, THEME_FIELD_LIMITS.habitat),
+    layout: CARD_LAYOUTS.some((l) => l.value === design.layout) ? design.layout : 'classic',
     border_color: design.border_color || 'yellow',
     stage: design.stage || 'basic',
     evolves_from: stageEvolves(design.stage) ? clean(design.evolves_from, FIELD_LIMITS.evolves_from) : '',
@@ -250,7 +291,7 @@ export function serializeDesign(design) {
     rarity: design.rarity || 'common',
     morph_line: clean(design.morph_line, FIELD_LIMITS.morph_line),
     size: design.size || '3in',
-    finish: design.finish || 'glossy',
+    finish: 'glossy',
     theme: stickerTheme(design.theme).value,
     caption: clean(design.caption, THEME_FIELD_LIMITS.caption),
     hatch_label: clean(design.hatch_label, THEME_FIELD_LIMITS.hatch_label),
@@ -271,6 +312,9 @@ export function isCustomStickerLine(line) {
 export function designSummary(design) {
   if (!design) return '';
   const size = STICKER_SIZES.find((s) => s.value === design.size)?.label || design.size;
+  if (design.theme === 'enclosure_plaque') {
+    return [design.name, 'Enclosure plaque sticker', design.species_name, stickerDimensions(design).label].filter(Boolean).join(' · ');
+  }
   if (!isCardTheme(design.theme)) {
     return [design.name, stickerTheme(design.theme).label, design.morph_line, size].filter(Boolean).join(' · ');
   }

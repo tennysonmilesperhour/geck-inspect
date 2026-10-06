@@ -6,9 +6,11 @@
  * their Stripe secrets, the store only offers what can actually be
  * bought: affiliate products, which open the seller's own page.
  * While this is false:
- *   - the cart, the custom sticker builder and the custom tee builder
- *     (/Store/cart, /Store/stickers, /Store/tees) redirect to /Store,
+ *   - the cart and the custom tee builder
+ *     (/Store/cart, /Store/tees) redirect to /Store,
  *     and the store navigation hides their links;
+ *   - the sticker designer stays open for design previews and downloads,
+ *     with purchase actions disabled;
  *   - products sold through Geck Inspect stay visible in the catalog but
  *     are labelled "Not available yet", with no add-to-cart button and
  *     no price offer in their search markup (see isAwaitingCheckout);

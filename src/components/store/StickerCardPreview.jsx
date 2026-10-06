@@ -1,3 +1,5 @@
+import LegacyStickerCardPreview from './LegacyStickerCardPreview';
+import StickerPhoto from '@/components/store/StickerPhoto';
 import {
   Leaf, Flame, Droplet, Zap, Eye, Hand, Moon, Cog, Sparkles, Gem, Star,
 } from 'lucide-react';
@@ -182,263 +184,80 @@ function Footer({ design, onLight }) {
   );
 }
 
-function PhotoSlot({ url, name, className, style }) {
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt={name ? `${name} sticker artwork` : 'Sticker artwork'}
-        className={className}
-        style={style}
-        loading="lazy"
-        decoding="async"
-      />
-    );
-  }
+function MovePanel({ design, onDark = false, compact = false }) {
+  const moves = (design.attacks || []).filter((a) => String(a.name || '').trim()).slice(0, 2);
   return (
-    <div
-      className={`${className} flex flex-col items-center justify-center text-center`}
-      style={{ ...style, background: 'rgba(0,0,0,0.25)' }}
-    >
-      <span style={{ fontSize: '3.4cqw', color: 'rgba(255,255,255,0.7)', padding: '0 6cqw' }}>
-        Your photo goes here
-      </span>
+    <div className="flex flex-col justify-center" style={{ gap: '2cqw', flex: 1, padding: '2cqw 1.5cqw', color: onDark ? '#fff' : '#24271e' }}>
+      {moves.length ? moves.map((move, i) => (
+        <div key={i} style={{ borderTop: i ? `0.25cqw solid ${onDark ? '#ffffff38' : '#473a242b'}` : undefined, paddingTop: i ? '1.8cqw' : 0 }}>
+          <div className="flex items-center" style={{ gap: '1.5cqw' }}>
+            <CostPips count={move.cost} type={move.cost_type || design.type} size={compact ? 3.8 : 4.6} />
+            <span className="flex-1 font-bold" style={{ fontSize: compact ? '3.9cqw' : '4.7cqw', lineHeight: 1.1, overflowWrap: 'anywhere' }}>{move.name}</span>
+            <span className="font-extrabold" style={{ fontSize: compact ? '4.6cqw' : '5.5cqw' }}>{move.damage}</span>
+          </div>
+          {move.text && <p style={{ fontSize: compact ? '2.5cqw' : '2.8cqw', lineHeight: 1.3, marginTop: '1cqw' }}>{move.text}</p>}
+        </div>
+      )) : <span style={{ fontSize: '3cqw' }}>Your signature moves</span>}
+    </div>
+  );
+}
+
+function CardIdentity({ design, light = false }) {
+  const stage = CARD_STAGES.find((s) => s.value === design.stage) || CARD_STAGES[0];
+  const name = design.name || 'Your gecko';
+  return (
+    <div className="flex items-start" style={{ gap: '2cqw', color: light ? '#fff' : '#202820' }}>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center" style={{ gap: '1.4cqw', fontSize: '2.3cqw', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 800 }}>
+          <span style={{ background: light ? '#ffffff26' : '#f5ecd3', border: '0.2cqw solid #8d7b5355', padding: '0.4cqw 1.2cqw', borderRadius: '0.6cqw' }}>{stage.label}</span>
+          <span style={{ opacity: 0.7 }}>Geck Inspect</span>
+        </div>
+        <div className="font-extrabold" style={{ fontSize: name.length > 16 ? '5.6cqw' : '7.6cqw', lineHeight: 1.12, marginTop: '1cqw', overflowWrap: 'anywhere' }}>{name}</div>
+        {stageEvolves(design.stage) && design.evolves_from && <div style={{ fontSize: '2.6cqw', marginTop: '0.6cqw' }}>Lineage: {design.evolves_from}</div>}
+      </div>
+      <div className="flex items-center shrink-0" style={{ gap: '1cqw', paddingTop: '4cqw' }}>
+        <div className="text-right"><div style={{ fontSize: '2.2cqw', letterSpacing: '0.06em' }}>POWER</div><div style={{ fontSize: '7cqw', fontWeight: 900, lineHeight: 1 }}>{design.hp}</div></div>
+        <TypePip type={design.type} size={6.8} />
+      </div>
     </div>
   );
 }
 
 export default function StickerCardPreview({ design, className = '' }) {
   if (!design) return null;
-  const t = cardType(design.type);
-  const stage = CARD_STAGES.find((s) => s.value === design.stage) || CARD_STAGES[0];
-  const border = {
-    yellow: '#f4d75e',
-    silver: '#c9ced3',
-    gold: '#d4a94a',
-    black: '#1c2028',
-    white: '#f3f1ea',
-  }[design.border_color] || '#f4d75e';
-  const attacks = (design.attacks || []).filter((a) => String(a.name || '').trim());
+  if (design.version === 1) return <LegacyStickerCardPreview design={design} className={className} />;
+  const type = cardType(design.type);
   const fullArt = design.layout === 'full_art';
-
+  const modern = design.layout === 'modern';
+  // Reserve enough room for two detailed moves and long identities.
+  const compact = String(design.name || '').length > 16 || (design.attacks || []).some((move) => String(move.name || '').length > 16 || String(move.text || '').length > 65);
+  const border = { yellow: '#e8c657', silver: '#c8ced1', gold: '#bd9653', black: '#24302e', white: '#f4f0e6' }[design.border_color] || '#e8c657';
   return (
-    <div
-      className={`relative w-full select-none ${className}`}
-      style={{
-        containerType: 'inline-size',
-        aspectRatio: '2.5 / 3.5',
-      }}
-    >
-      <div
-        className="absolute inset-0 overflow-hidden"
-        style={{
-          background: border,
-          borderRadius: '4.2cqw',
-          padding: '3.2cqw',
-          boxShadow: '0 1.5cqw 4cqw rgba(0,0,0,0.45)',
-        }}
-      >
-        <div
-          className="w-full h-full relative overflow-hidden flex flex-col"
-          style={{
-            borderRadius: '2.4cqw',
-            padding: fullArt ? 0 : '2.4cqw',
-            gap: fullArt ? 0 : '1.6cqw',
-            background: fullArt
-              ? '#0b0e13'
-              : `radial-gradient(120% 90% at 50% 0%, ${t.color} 0%, ${t.accent} 100%)`,
-            border: '0.3cqw solid rgba(0,0,0,0.35)',
-          }}
-        >
-          {/* ---------------- Full art layout ---------------- */}
-          {fullArt && (
+    <div className={`relative w-full select-none ${className}`} style={{ containerType: 'inline-size', aspectRatio: '2.5 / 3.5' }}>
+      <div className="absolute inset-0 overflow-hidden" style={{ background: border, borderRadius: '4cqw', padding: '3cqw', boxShadow: 'inset 0 0 0 0.45cqw #fff5, 0 1cqw 3cqw #0003', fontFamily: "'Montserrat', system-ui, sans-serif" }}>
+        <div className="relative w-full h-full overflow-hidden flex flex-col" style={{ borderRadius: '1.7cqw', border: '0.4cqw solid #252f294d', background: modern ? '#f6f2e8' : `linear-gradient(140deg, #fff5, #fff0), ${type.color}` }}>
+          {fullArt ? (
             <>
-              <PhotoSlot
-                url={design.photo_url}
-                name={design.name}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div
-                className="absolute inset-x-0 top-0"
-                style={{
-                  padding: '2.6cqw 3cqw',
-                  background: 'linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 100%)',
-                }}
-              >
-                <div className="flex items-start" style={{ gap: '1.6cqw' }}>
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className="font-bold uppercase inline-block"
-                      style={{
-                        fontSize: '2.5cqw',
-                        letterSpacing: '0.06em',
-                        color: '#101319',
-                        background: '#e8e5dc',
-                        borderRadius: '0.8cqw',
-                        padding: '0.2cqw 1.2cqw',
-                      }}
-                    >
-                      {stage.label}
-                    </div>
-                    <div
-                      className="font-extrabold truncate"
-                      style={{
-                        fontSize: '8cqw',
-                        color: '#fff',
-                        lineHeight: 1.05,
-                        textShadow: '0 0.5cqw 1cqw rgba(0,0,0,0.8)',
-                      }}
-                    >
-                      {design.name || 'Card name'}
-                    </div>
-                    {stageEvolves(design.stage) && design.evolves_from && (
-                      <div
-                        className="italic font-semibold truncate"
-                        style={{ fontSize: '2.9cqw', color: 'rgba(255,255,255,0.9)' }}
-                      >
-                        Lineage: {design.evolves_from}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center shrink-0" style={{ gap: '1cqw', paddingTop: '3cqw' }}>
-                    <span style={{ fontSize: '3cqw', color: '#fff', fontWeight: 700 }}>PWR</span>
-                    <span
-                      style={{
-                        fontSize: '8cqw',
-                        color: '#fff',
-                        fontWeight: 800,
-                        lineHeight: 1,
-                        textShadow: '0 0.5cqw 1cqw rgba(0,0,0,0.8)',
-                      }}
-                    >
-                      {design.hp}
-                    </span>
-                    <TypePip type={design.type} size={7} />
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="absolute inset-x-0 bottom-0 flex flex-col"
-                style={{
-                  padding: '2.6cqw 3cqw',
-                  gap: '1.4cqw',
-                  background: 'linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)',
-                }}
-              >
-                <StatsBar design={design} />
+              <StickerPhoto design={design} className="absolute inset-0 w-full h-full" style={{ background: type.accent }} />
+              <div className="relative" style={{ padding: '3cqw', background: 'linear-gradient(#101c22d9, #101c2222)' }}><CardIdentity design={design} light /></div>
+              <div className="relative mt-auto" style={{ padding: '2cqw 3cqw 3cqw', background: 'linear-gradient(#101c2266, #101c22f5 25%)' }}>
+                <MovePanel design={design} onDark />
+                <div style={{ marginTop: '2cqw', marginBottom: '1.8cqw' }}><StatsBar design={design} /></div>
                 <Footer design={design} onLight={false} />
               </div>
             </>
-          )}
-
-          {/* ---------------- Classic layout ---------------- */}
-          {!fullArt && (
-            <>
-              <div className="flex items-start" style={{ gap: '1.6cqw' }}>
-                <div className="flex-1 min-w-0">
-                  <div
-                    className="font-bold uppercase inline-block"
-                    style={{
-                      fontSize: '2.5cqw',
-                      letterSpacing: '0.06em',
-                      color: '#101319',
-                      background: '#e8e5dc',
-                      borderRadius: '0.8cqw',
-                      padding: '0.2cqw 1.2cqw',
-                    }}
-                  >
-                    {stage.label}
-                  </div>
-                  <div
-                    className="font-extrabold truncate"
-                    style={{
-                      fontSize: '8cqw',
-                      color: '#14181f',
-                      lineHeight: 1.05,
-                      textShadow: '0 0.2cqw 0 rgba(255,255,255,0.45)',
-                    }}
-                  >
-                    {design.name || 'Card name'}
-                  </div>
-                  {stageEvolves(design.stage) && design.evolves_from && (
-                    <div
-                      className="italic font-semibold truncate"
-                      style={{ fontSize: '2.9cqw', color: 'rgba(20,20,20,0.8)' }}
-                    >
-                        Lineage: {design.evolves_from}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center shrink-0" style={{ gap: '1cqw', paddingTop: '2.4cqw' }}>
-                  <span style={{ fontSize: '3cqw', color: '#14181f', fontWeight: 700 }}>PWR</span>
-                  <span style={{ fontSize: '8cqw', color: '#14181f', fontWeight: 800, lineHeight: 1 }}>
-                    {design.hp}
-                  </span>
-                  <TypePip type={design.type} size={7} />
-                </div>
+          ) : (
+            <div className="w-full h-full flex flex-col" style={{ padding: '2.8cqw', gap: '1.8cqw', backgroundImage: modern ? undefined : 'repeating-linear-gradient(30deg, transparent 0 1.4cqw, #fff08 1.4cqw 1.6cqw)' }}>
+              {modern && <div className="absolute inset-x-0 top-0" style={{ height: '1.2cqw', background: type.accent }} />}
+              <CardIdentity design={design} />
+              <div className="relative w-full overflow-hidden shrink-0" style={{ aspectRatio: compact ? '2.25 / 1' : modern ? '1.6 / 1' : '1.65 / 1', border: modern ? `0.8cqw solid ${type.accent}` : '1cqw solid #f1e6c8', borderRadius: modern ? '3cqw' : '0.5cqw', boxShadow: '0 0 0 0.25cqw #69563488, 0 0.8cqw 1.5cqw #0002', background: type.color }}>
+                <StickerPhoto design={design} className="absolute inset-0 w-full h-full" />
               </div>
-
-              <div
-                className="relative w-full overflow-hidden shrink-0"
-                style={{
-                  aspectRatio: '4 / 3',
-                  borderRadius: '1.2cqw',
-                  border: '0.8cqw solid rgba(240,238,230,0.9)',
-                  boxShadow: '0 0.6cqw 1.6cqw rgba(0,0,0,0.35)',
-                }}
-              >
-                <PhotoSlot
-                  url={design.photo_url}
-                  name={design.name}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              </div>
-
               <InfoBar design={design} />
-
-              <div className="flex-1 flex flex-col justify-center" style={{ gap: '2.4cqw' }}>
-                {attacks.length === 0 ? (
-                  <div
-                    className="text-center italic"
-                    style={{ fontSize: '3cqw', color: 'rgba(20,20,20,0.55)' }}
-                  >
-                    Add a signature move to fill this space.
-                  </div>
-                ) : (
-                  attacks.map((a, i) => (
-                    <div key={i}>
-                      <div className="flex items-center" style={{ gap: '1.6cqw' }}>
-                        <CostPips count={a.cost} type={a.cost_type || design.type} size={5.4} />
-                        <div
-                          className="flex-1 font-bold truncate text-center"
-                          style={{ fontSize: '5.4cqw', color: '#14181f' }}
-                        >
-                          {a.name}
-                        </div>
-                        <div
-                          className="font-extrabold shrink-0"
-                          style={{ fontSize: '5.8cqw', color: '#14181f' }}
-                        >
-                          {a.damage}
-                        </div>
-                      </div>
-                      {a.text && (
-                        <div
-                          className="text-center"
-                          style={{ fontSize: '2.9cqw', color: 'rgba(20,20,20,0.85)', lineHeight: 1.3, marginTop: '0.6cqw' }}
-                        >
-                          {a.text}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-
+              <div className="flex-1 flex flex-col min-h-0" style={{ background: modern ? '#fff' : '#f6ecd9c9', border: '0.25cqw solid #84735855', borderRadius: modern ? '2cqw' : '0.6cqw', padding: '0 1cqw' }}><MovePanel design={design} compact={compact} /></div>
               <StatsBar design={design} />
               <Footer design={design} onLight />
-            </>
+            </div>
           )}
         </div>
       </div>
