@@ -449,8 +449,7 @@ export default function GeneticsGuide() {
         {showBackToTop && (
           <button
             onClick={scrollToTop}
-            className="touch-hit fixed right-6 z-50 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full p-3 shadow-lg transition-all"
-            style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+            className="touch-hit fixed right-6 z-50 bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] bg-emerald-600 hover:bg-emerald-500 text-white rounded-full p-3 shadow-lg transition-all"
             aria-label="Back to top"
           >
             <ArrowUp className="w-5 h-5" />

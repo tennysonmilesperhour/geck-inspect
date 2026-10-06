@@ -54,7 +54,7 @@ export default function CommunityPulse() {
                         email: g.created_by,
                         ownerId: g.owner_profile_id || null,
                         detail: g.name || 'Unnamed gecko',
-                        href: '/Marketplace',
+                        href: '/MarketplaceBuy',
                     })),
                     ...images.map((i) => ({
                         key: `image-${i.id}`,

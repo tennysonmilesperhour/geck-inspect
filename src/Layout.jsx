@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, Suspense } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, Suspense } from "react";
 import { lazy } from "@/lib/lazyWithRetry";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "@/styles/layout-theme.css";
@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
-  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, Pin, PinOff, Home
+  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home, TrendingUp
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
@@ -63,8 +63,8 @@ import {
   NAV_ICON_MAP,
   FAVORITES_MAX,
   flattenNavItems,
-  SECTIONS,
-  getSectionForPage,
+  groupNavItems,
+  BOTTOM_BAR_PAGES,
   BREEDER_ONLY_PAGES,
   KEEPER_MODE_STORAGE_KEY,
 } from '@/lib/navItems';
@@ -134,44 +134,51 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
   }, []);
 
-  // Active section drives the top/bottom section bars + sidebar filter.
-  // If the URL points to a page in a section, that section wins. On
-  // section-agnostic pages (Dashboard, MyProfile, Settings) we fall back
-  // to the last section the user was in, so the sidebar doesn't go
-  // empty when they hit home. DB overrides (page_config.section) are
-  // applied once page configs finish loading, see the effect below.
+  // Which sidebar groups the member folded away. Stored per device; the
+  // group holding the current page always shows open.
   const currentPageName = location.pathname.replace(/^\/+/, '').split('/')[0] || '';
-
-  // DB-backed per-page section override. `page_config.section` wins over
-  // the hardcoded map when set, lets admins move pages between sections
-  // without a code deploy.
-  const dbSectionByPage = useMemo(() => {
-    const map = new Map();
-    for (const p of pageConfigs || []) {
-      if (p?.page_name && p?.section) map.set(p.page_name, p.section);
-    }
-    return map;
-  }, [pageConfigs]);
-  const resolveSection = (pageName) =>
-    dbSectionByPage.get(pageName) || getSectionForPage(pageName);
-
-  const [activeSectionId, setActiveSectionId] = useState(() => {
-    const s = getSectionForPage(currentPageName);
-    if (s) return s;
-    try { return localStorage.getItem('active_section') || SECTIONS[0].id; }
-    catch { return SECTIONS[0].id; }
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('nav_collapsed_groups') || '[]')); }
+    catch { return new Set(); }
   });
-
-  // Update the active section whenever the URL or DB overrides change.
+  // The App Tutorial unfolds a group before pointing at a tile in it.
   useEffect(() => {
-    const resolved = resolveSection(currentPageName);
-    if (resolved && resolved !== activeSectionId) {
-      setActiveSectionId(resolved);
-      try { localStorage.setItem('active_section', resolved); } catch {}
-    }
-  }, [currentPageName, dbSectionByPage, activeSectionId]);
+    const onOpen = (e) => setCollapsedGroups((prev) => {
+      if (!prev.has(e.detail)) return prev;
+      const next = new Set(prev);
+      next.delete(e.detail);
+      return next;
+    });
+    window.addEventListener('open_nav_group', onOpen);
+    return () => window.removeEventListener('open_nav_group', onOpen);
+  }, []);
+  const toggleGroup = (id) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem('nav_collapsed_groups', JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  };
 
   const { toggleSidebar } = useSidebar();
+
+  // The phone header is glass that floats over the page, so the page pads
+  // its top by the header's height (--top-bar-h, read in index.css). It is
+  // measured because it changes with sign-in state and touch sizing; on
+  // wider screens the header is hidden and this comes out 0.
+  const mobileHeaderRef = useRef(null);
+  useLayoutEffect(() => {
+    const header = mobileHeaderRef.current;
+    if (!header) return undefined;
+    const root = document.documentElement;
+    const update = () => root.style.setProperty('--top-bar-h', `${header.getBoundingClientRect().height}px`);
+    update();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handler = () => setShowTutorial(true);
@@ -825,9 +832,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // category buckets (collection/tools/public) because sections are now
   // the primary grouping, a single page can live anywhere in the DB
   // category and still show up under its section.
-  const activeSection = SECTIONS.find((s) => s.id === activeSectionId) || SECTIONS[0];
-  const sectionNavItems = flattenNavItems(navItems)
-    .filter((item) => resolveSection(item.page_name) === activeSectionId);
+  const navGroups = groupNavItems(flattenNavItems(navItems));
 
   // Persistent Dashboard tile. The section tabs (Manage/Discover) don't
   // include the dashboard, and the only other way back was clicking the
@@ -960,6 +965,28 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     );
   };
 
+  // One sidebar, grouped (replaced the Manage / Discover tabs 6 Oct 2026).
+  const renderNavGroups = () => navGroups.map((group) => {
+    const holdsCurrent = group.items.some((i) => location.pathname === createPageUrl(i.page_name));
+    const open = holdsCurrent || !collapsedGroups.has(group.id);
+    return (
+      <div key={group.id} className="mb-1">
+        <button
+          type="button"
+          onClick={() => toggleGroup(group.id)}
+          aria-expanded={open}
+          data-tutorial-id={`__group_${group.id}`}
+          data-tutorial-label={group.label}
+          className="sidebar-collapse-hide w-full flex items-center justify-between px-4 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sage-700 hover:text-emerald-200 transition-colors"
+        >
+          <span>{group.label}</span>
+          {open ? <ChevronDown className="h-3.5 w-3.5 opacity-60" /> : <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
+        </button>
+        {open && renderNavSection(group.items, null)}
+      </div>
+    );
+  });
+
   return (
     <>
       {/* Skip-to-content link for keyboard/screen-reader users */}
@@ -969,6 +996,17 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       >
         Skip to content
       </a>
+      {/* Bends the page behind the liquid glass bars. Only Chromium can run
+          an SVG filter on the backdrop, so .liquid-glass uses it only under
+          html.glass-warp (set in main.jsx). Soft noise shifts each pixel a
+          few px, and scrolling moves the page through the ripple. */}
+      <svg aria-hidden="true" focusable="false" width="0" height="0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+        <filter id="gi-glass-warp" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.006 0.035" numOctaves="2" seed="11" result="noise" />
+          <feGaussianBlur in="noise" stdDeviation="1.5" result="ripple" />
+          <feDisplacementMap in="SourceGraphic" in2="ripple" scale="16" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
       <div className="flex h-screen h-dvh bg-background font-sans app-container-outline">
         {/* Mobile Sidebar */}
         <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm md:hidden z-50">
@@ -1034,7 +1072,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
             {renderHomeLink()}
             {renderFavoritesGrid()}
-            {renderNavSection(sectionNavItems, activeSection.label)}
+            {renderNavGroups()}
             {user?.role === 'admin' && (
               <div className="mb-4">
                 <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">Admin</div>
@@ -1197,7 +1235,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
               {renderHomeLink()}
               {renderFavoritesGrid()}
-              {renderNavSection(sectionNavItems, activeSection.label)}
+              {renderNavGroups()}
               {user?.role === 'admin' && (
                 <div className="mb-4">
                   <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">Admin</div>
@@ -1283,7 +1321,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </div>
 
         <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'md:pl-[13.6rem]' : 'md:pl-[3.4rem]'}`}>
-          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-[max(0.75rem,env(safe-area-inset-left))] pb-1.5 pt-[calc(0.375rem+env(safe-area-inset-top))] md:hidden sticky top-0 z-10 gecko-header gecko-header--compact">
+          {/* Phone header: liquid glass over the page (layout-theme.css). */}
+          <header ref={mobileHeaderRef} className="liquid-glass liquid-glass--top px-[max(0.75rem,env(safe-area-inset-left))] pb-1.5 pt-[calc(0.375rem+env(safe-area-inset-top))] md:hidden fixed inset-x-0 top-0 z-[45] gecko-header--compact">
             <div className="flex items-center justify-between gap-3">
               <button
                 onClick={toggleSidebar}
@@ -1340,33 +1379,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 </button>
               </div>
 
-              {/* Section tabs (desktop) */}
-              <nav
-                className="flex items-center gap-1 bg-emerald-950/50 border border-emerald-800/50 rounded-xl p-1 shadow-inner"
-                aria-label="App sections"
-              >
-                {SECTIONS.map((section) => {
-                  const IconComponent = NAV_ICON_MAP[section.icon] || Database;
-                  const isActive = section.id === activeSectionId;
-                  return (
-                    <Link
-                      key={section.id}
-                      to={createPageUrl(section.defaultPage)}
-                      aria-current={isActive ? 'page' : undefined}
-                      data-tutorial-id={`__section_${section.id}`}
-                      data-tutorial-label={section.label}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-                        isActive
-                          ? 'bg-emerald-700/60 text-emerald-50 shadow-sm'
-                          : 'text-emerald-200/80 hover:text-emerald-100 hover:bg-emerald-800/40'
-                      }`}
-                    >
-                      <IconComponent className="h-4 w-4" />
-                      <span>{section.label}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
 
               <div className="flex-1 flex justify-end items-center gap-2">
                 {user ? (
@@ -1402,7 +1414,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           {/* Bottom padding leaves room for the tab bar (phones) and for
               the floating notices, so the end of a page can scroll clear. */}
-          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(4rem+env(safe-area-inset-bottom)+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
+          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(var(--bottom-bar-h)+0.5rem+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
             <PushEnableBanner user={user} />
             <AppShellContext.Provider value={true}>
               {/* Keyed by path so moving to another page clears a crashed one. */}
@@ -1415,28 +1427,34 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           </main>
 
-        {/* Section tabs (mobile), fixed bottom bar */}
+        {/* Phone bottom bar: the most used pages, plus Menu for the rest. */}
         <nav
-          className="gecko-bottom-nav fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
-          aria-label="App sections"
+          className="gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
+          aria-label="Main"
         >
-          {SECTIONS.map((section) => {
-            const IconComponent = NAV_ICON_MAP[section.icon] || Database;
-            const isActive = section.id === activeSectionId;
+          {[{ page: 'Dashboard', label: 'Home', Icon: Home }, ...BOTTOM_BAR_PAGES.map((b) => ({ ...b, Icon: NAV_ICON_MAP[b.icon] || TrendingUp }))].map(({ page, label, Icon }) => {
+            const isActive = currentPageName === page || (page === 'Dashboard' && currentPageName === '');
             return (
               <Link
-                key={section.id}
-                to={createPageUrl(section.defaultPage)}
+                key={page}
+                to={createPageUrl(page)}
                 aria-current={isActive ? 'page' : undefined}
-                data-tutorial-id={`__section_${section.id}`}
-                data-tutorial-label={section.label}
                 className={`gecko-bottom-nav__item ${isActive ? 'is-active' : ''}`}
               >
-                <IconComponent className="h-5 w-5" />
-                <span>{section.label}</span>
+                <Icon className="h-5 w-5" />
+                <span>{label}</span>
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => toggleSidebar()}
+            className="gecko-bottom-nav__item"
+            aria-label="Open the full menu"
+          >
+            <Menu className="h-5 w-5" />
+            <span>Menu</span>
+          </button>
         </nav>
       </div>
       <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} onDismiss={handleRoleDismissed} />

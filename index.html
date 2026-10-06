@@ -98,7 +98,10 @@
          data-theme drives backgrounds/surfaces/sage/slate; data-secondary
          drives the accent palette. Both default to 'blizzard' (blue),
          matching DEFAULT_THEME / DEFAULT_SECONDARY in ThemeContext.jsx;
-         keep the two in sync. -->
+         keep the two in sync. The script also sets theme-color (the iPhone
+         status bar) to the theme's page background, from the same table
+         as statusBar in THEMES (ThemeContext.jsx). -->
+    <meta name="theme-color" content="#0a0f19" />
     <script>
       (function () {
         var allowed = ['normal','tangerine','halloween-mask','blizzard','lavender','super-hypo'];
@@ -108,15 +111,29 @@
             return allowed.indexOf(v) !== -1 ? v : 'blizzard';
           } catch (e) { return 'blizzard'; }
         }
-        document.documentElement.setAttribute('data-theme', pick('geckinspect.theme'));
+        var theme = pick('geckinspect.theme');
+        document.documentElement.setAttribute('data-theme', theme);
+        var statusBar = { 'normal': '#0a1913', 'tangerine': '#160d09', 'halloween-mask': '#170b08', 'blizzard': '#0a0f19', 'lavender': '#160d1c', 'super-hypo': '#161109' };
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', statusBar[theme]);
         document.documentElement.setAttribute('data-secondary', pick('geckinspect.secondary'));
         document.documentElement.classList.add('dark');
       })();
     </script>
-    <meta name="theme-color" content="#064e3b" />
     <meta name="color-scheme" content="dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- iPhone home screen app status bar. "default" is an opaque bar
+         that iOS tints with theme-color (the page background, so the bar
+         above the glass header matches the page), and the app fills the
+         screen below it, down to the bottom edge. Do not go back to
+         "black-translucent": since iOS 26 that style
+         sizes the app one status bar short, which leaves a strip under
+         the bottom bar that the page cannot paint (WebKit bug 301108).
+         iOS reads this tag only when the app is added to the home
+         screen, so older installs keep the strip until they are removed
+         and added again (the body color in layout-theme.css blends it
+         into the bottom bar). -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Geck Inspect" />
     <meta name="application-name" content="Geck Inspect" />
 

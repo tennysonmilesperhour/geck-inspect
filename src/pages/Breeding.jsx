@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
 import { BreedingPlan, Egg } from '@/entities/all';
@@ -96,6 +97,12 @@ export default function BreedingPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [expandedPlanIds, setExpandedPlanIds] = useState(new Set());
     const [activeTab, setActiveTab] = useState(breedingPrefs.defaultTab);
+    // ?tab=hatchery (the guided demo links here) opens that tab directly.
+    const [searchParams] = useSearchParams();
+    const tabParam = searchParams.get('tab');
+    useEffect(() => {
+        if (['active', 'hatchery', 'genetics', 'archive'].includes(tabParam)) setActiveTab(tabParam);
+    }, [tabParam]);
 
     const [expandAllActive, setExpandAllActive] = useState(breedingPrefs.autoExpandCards);
     const [expandAllArchive, setExpandAllArchive] = useState(false);

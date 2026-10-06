@@ -9,42 +9,51 @@ import { supabase } from '@/lib/supabaseClient';
 // Renaming a `label` is purely cosmetic and safe. Historical labels
 // "Normal", "Halloween Mask", and "Super Hypo" were renamed to
 // "Emerald", "Eclipse", and "Hypo" while the IDs stay frozen.
+// `statusBar` is the theme's page background (--slate-950 in index.css)
+// as hex. It becomes theme-color, which tints the iPhone status bar above
+// the glass header; index.html holds the same table for the first paint.
 export const THEMES = [
   {
     id: 'normal',
     label: 'Emerald',
     description: 'Wild-type emerald, deep forest greens with umber accents',
     swatch: '#2fb574',
+    statusBar: '#0a1913',
   },
   {
     id: 'tangerine',
     label: 'Tangerine',
     description: 'Dusk-to-ember warmth, bright amber on deep umber',
     swatch: '#ea8206',
+    statusBar: '#160d09',
   },
   {
     id: 'halloween-mask',
     label: 'Eclipse',
     description: 'October night, glowing red-orange with bronze accents',
     swatch: '#e53e1a',
+    statusBar: '#170b08',
   },
   {
     id: 'blizzard',
     label: 'Blizzard',
     description: 'Icy night, frost-cyan primary on cold near-black',
     swatch: '#38a7f2',
+    statusBar: '#0a0f19',
   },
   {
     id: 'lavender',
     label: 'Lavender',
     description: 'Deep violet base with pale-lavender accents, Lavender Albino tones',
     swatch: '#c084fc',
+    statusBar: '#160d1c',
   },
   {
     id: 'super-hypo',
     label: 'Hypo',
     description: 'High-noon sunlight, golden yellow with olive and bronze undertones',
     swatch: '#e0b308',
+    statusBar: '#161109',
   },
 ];
 
@@ -81,6 +90,13 @@ function readStored(key, validSet, fallback) {
 function applyAttribute(name, value) {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute(name, value);
+}
+
+function applyStatusBar(themeId) {
+  if (typeof document === 'undefined') return;
+  const color = THEMES.find((t) => t.id === themeId)?.statusBar;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (color && meta) meta.setAttribute('content', color);
 }
 
 const ThemeContext = createContext({
@@ -201,6 +217,7 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     applyAttribute('data-theme', theme);
+    applyStatusBar(theme);
     try { window.localStorage.setItem(STORAGE_KEY, theme); } catch {}
     if (authReady && !skipCloudWrite.current) saveCloudPref('ui_theme', theme);
   }, [theme, authReady]);

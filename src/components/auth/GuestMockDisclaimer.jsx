@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
-import { ChevronUp, Info, LogIn, UserPlus, X } from 'lucide-react';
+import { ChevronUp, Compass, Info, LogIn, UserPlus, X } from 'lucide-react';
 
 /**
  * Bottom-right floating disclaimer shown throughout guest mode.
@@ -19,12 +19,13 @@ import { ChevronUp, Info, LogIn, UserPlus, X } from 'lucide-react';
  * flag can go stale but that's fine since we stop rendering anyway.
  * The guest write-block toast lives in GuestDemoGuide, which is mounted
  * for the whole guest session (this notice is not, during the tour).
+ * `onOpenTours` adds a button that reopens the guided demo's tour picker.
  */
 const DISMISS_KEY = 'geck_inspect_guest_disclaimer_dismissed';
 // Opens AuthPortal on the Create Account tab rather than Sign In.
 const SIGNUP_URL = '/AuthPortal?mode=signup';
 
-export default function GuestMockDisclaimer() {
+export default function GuestMockDisclaimer({ onOpenTours }) {
   const { isGuest } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [dismissed, setDismissed] = useState(() => {
@@ -93,6 +94,16 @@ export default function GuestMockDisclaimer() {
                   <UserPlus className="w-3 h-3" />
                   Create account
                 </Link>
+                {onOpenTours && (
+                  <button
+                    type="button"
+                    onClick={onOpenTours}
+                    className="inline-flex items-center gap-1 touch:min-h-11 rounded-md px-2 py-1.5 text-[11px] font-semibold text-yellow-50 hover:bg-yellow-300/20"
+                  >
+                    <Compass className="w-3 h-3" />
+                    Tours
+                  </button>
+                )}
               </div>
             </div>
           </div>

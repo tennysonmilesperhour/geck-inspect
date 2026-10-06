@@ -1,8 +1,8 @@
 // Feature explanations for the in-app walkthrough. Keep every sidebar page covered.
 export const STEP_BLURBS = {
     Market: {
-        title: 'Market',
-        body: 'Review current crested gecko asking prices and changes in the market. Watch for morphs within your budget and compare listing trends with your own collection; asking prices are not confirmed sale prices.',
+        title: 'Market Intelligence',
+        body: 'Review current crested gecko asking prices and changes in the market, watch for morphs within your budget, browse geckos listed in the app, and manage your own listings. Asking prices are not confirmed sale prices.',
     },
     Store: {"title": "Supplies", "body": "Browse reptile food, enclosures, lighting and care equipment. Affiliate products open the seller\u2019s listing, where you buy them at current prices. Items Geck Inspect will sell itself are marked Not available yet until its checkout opens."},
     Promote: {"title": "Promote", "body": "Choose a gecko from your collection and draft a social post tailored to your selected platform. Review its photos, morph details and generated wording before copying or sharing the post."},
@@ -10,13 +10,25 @@ export const STEP_BLURBS = {
     PairingPlanner: {"title": "Pairing Planner", "body": "Choose a breeding goal and compare possible sire-and-dam combinations in your collection. Review predicted traits, estimated offspring values and pairing warnings before deciding which animals to pair."},
     BreedingSeason: {"title": "Season Timeline", "body": "See every pairing, recorded lock, clutch and hatch on one timeline. Compare incubation windows across pairs to plan checks and prepare space for upcoming hatchlings."},
     FieldMode: {"title": "Field Mode", "body": "Log a weight, feeding, shed or note while handling an animal. Large controls make one-handed entry easier, recent animals are quick to find, and a short undo window lets you correct an accidental log."},
-    __section_manage: {
-        title: 'Manage, your animals + business',
-        body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings and sales stats. We\'ll walk through each tile next.',
+    __group_collection: {
+        title: 'Collection',
+        body: 'Everything about the geckos you keep: your collection, other reptiles, quick logging in Field Mode, and what your geckos are worth.',
     },
-    __section_discover: {
-        title: 'Discover, tools, community, reference',
-        body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the care guide, the marketplace and the forum. Switching to it now so we can walk those tiles.',
+    __group_breeding: {
+        title: 'Breeding',
+        body: 'Planning and running a breeding operation: pairings, lineage, the season planner and timeline, sales numbers and promotion. Keeper mode hides this group.',
+    },
+    __group_tools: {
+        title: 'Tools',
+        body: 'Morph ID from a photo, Market Intelligence for prices and listings, and the AI Consultant for breeding and care questions.',
+    },
+    __group_learn: {
+        title: 'Learn',
+        body: 'The Morph Guide, Genetics Guide and Care Guide, written for crested geckos.',
+    },
+    __group_community: {
+        title: 'Community',
+        body: 'The photo gallery and the forum, where keepers and breeders trade photos, questions and answers.',
     },
     Dashboard: {
         title: 'Dashboard',
@@ -81,10 +93,6 @@ export const STEP_BLURBS = {
     Gallery: {
         title: 'Image Gallery',
         body: 'Community photo feed. Post pictures of your geckos, like other keepers\' shots, and browse morph examples filtered by trait.',
-    },
-    Marketplace: {
-        title: 'Marketplace',
-        body: 'Buy and sell geckos through Geck Inspect. The page splits into Buy (browse listings) and Sell (publish your own). Both filter by morph, sex, age, and price.',
     },
     MarketplaceBuy: {
         title: 'Buy Geckos',

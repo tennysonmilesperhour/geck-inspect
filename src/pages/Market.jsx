@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { BarChart3, BellRing, Crown, Radio, Store, Sunrise, Target, TrendingUp } from 'lucide-react';
+import { BarChart3, BellRing, Radio, ShoppingCart, Store, Sunrise, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageHeader from '@/components/shared/PageHeader';
@@ -9,22 +9,35 @@ import Seo from '@/components/seo/Seo';
 import MarketBriefPanel from '@/components/market/MarketBriefPanel';
 import MarketTapePanel from '@/components/market/MarketTapePanel';
 import WatchlistPanel from '@/components/market/WatchlistPanel';
-import PriceGamePanel from '@/components/market/PriceGamePanel';
 import SellerPanel from '@/components/market/SellerPanel';
 import DemoMarketBrief from '@/components/market/DemoMarketBrief';
-import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
+import MarketPreviewGate from '@/components/subscription/MarketPreviewGate';
+import MarketplaceBuyPage from '@/pages/MarketplaceBuy';
+import MarketplaceSellPage from '@/pages/MarketplaceSell';
 import { useAuth } from '@/lib/AuthContext';
 import { captureEvent } from '@/lib/posthog';
 import { createPageUrl } from '@/utils';
 
-const TABS = ['today', 'live', 'watchlist', 'game', 'listings'];
+const TABS = ['today', 'live', 'watchlist', 'browse', 'listings'];
+// Old links: Guess the Price left the tab strip on 6 Oct 2026.
+const TAB_ALIASES = { game: 'today', buy: 'browse', sell: 'listings' };
+
+// The embedded marketplace pages are also standalone routes, so their
+// wrapper carries min-h-screen and page padding. Inside this page that
+// would add a viewport of empty scroll and a second gutter.
+const EMBEDDED = '[&>.min-h-screen]:min-h-0 [&>.min-h-screen]:p-0';
 
 /**
- * The Market page: the crested gecko market as a daily habit. Today is
+ * Market Intelligence: the crested gecko market as a daily habit. Today is
  * the morning brief, Live is the feed of new listings and price cuts,
- * Watchlist sends a note when a matching gecko is listed, Guess the Price
- * is five real listings a day, and Your listings (Breeder plan) puts the
- * member's own MorphMarket listings against the market.
+ * Watchlist sends a note when a matching gecko is listed, In-app listings
+ * is the Geck Inspect marketplace, and Your listings holds the Seller
+ * Console plus (Breeder plan) the member's MorphMarket listings against
+ * the market. The old Marketplace page was folded in here on 6 Oct 2026.
+ *
+ * Today, Live and Watchlist are Enterprise only (6 Oct 2026): other plans
+ * see a short read-only preview with an upgrade card (MarketPreviewGate).
+ * In-app listings and the Seller Console stay open to every member.
  *
  * Member-only for now: the listing photos come from MorphMarket, and
  * whether to show them on public pages is an open decision (D20).
@@ -33,7 +46,9 @@ export default function Market() {
   const { user, isGuest, isLoadingAuth } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get('tab');
-  const tab = TABS.includes(requested) ? requested : 'today';
+  const aliased = TAB_ALIASES[requested] || requested;
+  const tab = TABS.includes(aliased) ? aliased : 'today';
+  const [listingsView, setListingsView] = useState('selling');
   const signedIn = !!user?.email && !isGuest;
 
   useEffect(() => {
@@ -42,7 +57,7 @@ export default function Market() {
 
   const seo = (
     <Seo
-      title="Crested Gecko Market"
+      title="Crested Gecko Market Intelligence"
       description="What crested geckos are listed for today, what changed since yesterday, and what it means for your collection."
       path="/Market"
       noIndex
@@ -73,7 +88,7 @@ export default function Market() {
         <div className="max-w-5xl mx-auto">
           <PageHeader
             icon={TrendingUp}
-            title="Market"
+            title="Market Intelligence"
             description="What crested geckos are listed for, and what that means for each gecko in a collection. This is the demo version."
           />
           <DemoMarketBrief />
@@ -88,8 +103,8 @@ export default function Market() {
         {seo}
         <SignInRequired
           icon={TrendingUp}
-          title="Crested Gecko Market"
-          description="Sign in to see today's market, watch for morphs under your price, and play Guess the Price."
+          title="Crested Gecko Market Intelligence"
+          description="Sign in to see today's market, watch for morphs under your price, and buy or sell in the app."
         />
       </>
     );
@@ -105,10 +120,10 @@ export default function Market() {
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       {seo}
-      <div className="max-w-5xl mx-auto">
+      <div className={`${tab === 'browse' ? 'max-w-7xl' : tab === 'listings' ? 'max-w-6xl' : 'max-w-5xl'} mx-auto`}>
         <PageHeader
           icon={TrendingUp}
-          title="Market"
+          title="Market Intelligence"
           description="What crested geckos are listed for today, what changed, and what it means for yours. Asking prices on listings, not sale prices."
         >
           <Button asChild variant="outline" size="sm">
@@ -122,19 +137,33 @@ export default function Market() {
             <TabsTrigger value="today"><Sunrise className="w-3.5 h-3.5" /> Today</TabsTrigger>
             <TabsTrigger value="live"><Radio className="w-3.5 h-3.5" /> Live</TabsTrigger>
             <TabsTrigger value="watchlist"><BellRing className="w-3.5 h-3.5" /> Watchlist</TabsTrigger>
-            <TabsTrigger value="game"><Target className="w-3.5 h-3.5" /> Guess the Price</TabsTrigger>
-            <TabsTrigger value="listings">
-              {canUseFeature(user, 'seller_market')
-                ? <Store className="w-3.5 h-3.5" />
-                : <Crown className="w-3.5 h-3.5 text-amber-300" />}
-              Your listings
-            </TabsTrigger>
+            <TabsTrigger value="browse"><ShoppingCart className="w-3.5 h-3.5" /> In-app listings</TabsTrigger>
+            <TabsTrigger value="listings"><Store className="w-3.5 h-3.5" /> Your listings</TabsTrigger>
           </TabsList>
-          <TabsContent value="today"><MarketBriefPanel user={user} /></TabsContent>
-          <TabsContent value="live"><MarketTapePanel /></TabsContent>
-          <TabsContent value="watchlist"><WatchlistPanel /></TabsContent>
-          <TabsContent value="game"><PriceGamePanel /></TabsContent>
-          <TabsContent value="listings"><SellerPanel /></TabsContent>
+          <TabsContent value="today">
+            <MarketPreviewGate user={user} surface="market_today"><MarketBriefPanel user={user} /></MarketPreviewGate>
+          </TabsContent>
+          <TabsContent value="live">
+            <MarketPreviewGate user={user} surface="market_live"><MarketTapePanel /></MarketPreviewGate>
+          </TabsContent>
+          <TabsContent value="watchlist">
+            <MarketPreviewGate user={user} surface="market_watchlist"><WatchlistPanel /></MarketPreviewGate>
+          </TabsContent>
+          <TabsContent value="browse" className={EMBEDDED}>
+            <MarketplaceBuyPage embedded />
+          </TabsContent>
+          <TabsContent value="listings">
+            <Tabs value={listingsView} onValueChange={setListingsView}>
+              <TabsList className="mb-5">
+                <TabsTrigger value="selling">Seller Console</TabsTrigger>
+                <TabsTrigger value="compare">Against the market</TabsTrigger>
+              </TabsList>
+              <TabsContent value="selling" className={EMBEDDED}>
+                <MarketplaceSellPage />
+              </TabsContent>
+              <TabsContent value="compare"><SellerPanel /></TabsContent>
+            </Tabs>
+          </TabsContent>
         </Tabs>
       </div>
     </div>

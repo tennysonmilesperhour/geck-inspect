@@ -37,8 +37,7 @@ const EXPECTED_FALLBACK = {
   ],
   public: [
     { page_name: 'Dashboard', display_name: 'Dashboard', icon: 'BarChart3', category: 'public', requires_auth: false, is_enabled: true, order: 1 },
-    { page_name: 'Market', display_name: 'Market', icon: 'TrendingUp', category: 'public', requires_auth: true, is_enabled: true, order: 1.5 },
-    { page_name: 'Marketplace', display_name: 'Marketplace', icon: 'ShoppingCart', category: 'public', requires_auth: false, is_enabled: true, order: 2 },
+    { page_name: 'Market', display_name: 'Market Intelligence', icon: 'TrendingUp', category: 'public', requires_auth: true, is_enabled: true, order: 1.5 },
     { page_name: 'MarketplaceSalesStats', display_name: 'Business Tools', icon: 'BarChart3', category: 'public', requires_auth: true, is_enabled: true, order: 3 },
   ],
 };
@@ -55,7 +54,7 @@ const EXPECTED_SECTION = {
   GeneticsGuide: 'discover', GeneticCalculatorTool: 'discover', Gallery: 'discover', CareGuide: 'discover',
   CareGuideTopic: 'discover', Forum: 'discover', ForumPost: 'discover', BreederConsultant: 'discover',
   PrintableWorksheets: 'discover', ImageImport: 'discover',
-  Training: 'discover', Marketplace: 'discover', MarketplaceBuy: 'discover',
+  Training: 'discover', MarketplaceBuy: 'discover',
   MarketplaceVerification: 'discover', MarketPricing: 'discover', BreedingROI: 'discover',
   Market: 'discover',
   Breeder: 'discover',
@@ -87,8 +86,7 @@ const EXPECTED_PALETTE = [
   ['Forum', 'Forum', 'Community'],
   ['Messages', 'Messages', 'Community'],
   ['Notifications', 'Notifications', 'Community'],
-  ['Market', 'Market Today', 'Marketplace'],
-  ['Marketplace', 'Marketplace', 'Marketplace'],
+  ['Market', 'Market Intelligence', 'Marketplace'],
   ['MarketplaceBuy', 'Buy Geckos', 'Marketplace'],
   ['MarketplaceSell', 'Sell Geckos', 'Marketplace'],
   ['MyListings', 'My Listings', 'Marketplace'],

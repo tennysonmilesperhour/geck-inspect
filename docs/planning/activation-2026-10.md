@@ -64,3 +64,15 @@ The proposed activation definition from the funnel diagnosis still applies: 3 or
 5. **The photo path needs two photos** (top and side) and uses the one free Morph ID. A member who already used it sees the plans card; the banner's "Type it in instead" link is the way out. Worth watching `choose_photo` against `saved` with `source: morph_id_draft`.
 6. **Demo prices are a dated snapshot** (5 Oct). Refresh `src/data/demoTraitValues.js` from `trait_value_table()` every month or two, or serve the aggregate table to signed-out visitors (a decision about showing listing data publicly, D20).
 7. The value card is below the fold on the phone payoff screen. If `payoff shown` is high but `open_record` and second visits stay low, try moving a one-line estimate ("Mango is worth about $400") into the family card.
+
+## Guest demo tours (6 Oct)
+
+The three-stop demo is now a set of tours (`src/lib/guestTour.js`):
+
+- **The one-minute tour** (marked "Start here"): My Geckos, Nimbus's record, the calculator with his parents, and the Market brief.
+- **Topic tours** to dive deeper: Collection and care, Breeding and genetics (pairings, the hatchery tab, Nimbus's family tree, clutch odds), Morphs and Morph ID, Prices and value, and Community.
+- **A tour picker** (bottom sheet on phones, centered panel on laptops) with an "I keep geckos / I breed geckos" toggle. The toggle sets the suggested order; the next unseen tour is marked, finished ones are ticked, and the card after each tour offers the suggested next one.
+- The stop card has a progress bar, Back, a shortcut to all tours, and animated transitions (off for people who ask for reduced motion). Each stop scrolls the page back to the top.
+- After the guest closes the tour, the yellow guest notice has a **Tours** button to reopen the picker.
+- `/Breeding?tab=hatchery` now opens the hatchery tab directly.
+- The `guest_tour` event now carries `tour` on every action, and adds the actions `hub`, `hub_close`, `role` and `back`.

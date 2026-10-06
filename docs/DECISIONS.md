@@ -416,3 +416,48 @@ These entries capture the strategic decisions made during the initial landing pa
 **Reasoning:** Charts are visited once; news about your own animals, your own watches and your own listings is what brings people back. A daily game gives a reason to come back on days with no news and trains the pricing eye breeders need. Everything shows asking prices on listings and says so, never sale prices. The page is member-only because its photos come from MorphMarket listings and D20 (scraped listing photos on public pages) is still open. The morning brief is off by default so nobody gets a daily email they did not ask for.
 **Consequences:** The loop only feels alive while MorphMarket is checked: the US feed has been off since early September (GitHub is blocked), and until Tennyson runs the Mac setup or adds the proxy secret, US numbers come from the last full check and the live feed shows Korea, Japan and Europe only. A 30-minute newest-listings check (geck-data) now keeps new listings flowing within the hour once the feed is on. Details in `docs/planning/market-habit-2026-09-30.md`.
 
+
+### 36. Market Intelligence absorbs the Marketplace; one grouped sidebar replaces Manage and Discover
+
+**Date:** 2026-10-06
+**Status:** Accepted (Tennyson)
+**Context:** The app had two Market pages side by side (Market and Marketplace), and the sidebar showed only half the pages at a time behind Manage and Discover tabs, so a keeper in My Geckos never saw Morph ID or the market.
+**Decision:** Market is now Market Intelligence. Its tabs are Today, Live, Watchlist, In-app listings (the old Buy page, replacing Guess the Price) and Your listings (the Seller Console plus the Breeder plan comparison). /Marketplace redirects to the In-app listings tab. The sidebar is one list in five groups (Collection, Breeding, Tools, Learn, Community) that members can fold. On phones the bottom bar is Home, My Geckos, Morph ID, Market and Menu.
+**Reasoning:** Morph ID and the market are the subscription magnets, and the old tabs hid them half the time. Nineteen pages fit in one grouped list, and Keeper mode trims it to about eleven.
+**Consequences:** Group membership and order live in code (NAV_GROUPS in src/lib/navItems.js). The section setting in admin Page Management no longer changes the sidebar; only its Hidden bucket does. Guess the Price is out of the app but its code stays.
+
+### 37. The iPhone home screen app uses the opaque status bar
+
+**Date:** 2026-10-06
+**Status:** Accepted (Tennyson asked for the app to fill the screen)
+**Context:** On iPhone, the app added to the home screen ended 47 points above the bottom of the screen, and a dark green strip (the page's body color) filled the rest. The cause is an iOS 26 bug (WebKit 301108): with the translucent status bar style, iOS draws the app from the top of the screen but sizes it as if it started below the status bar. No CSS or script can paint into that strip; other projects tried taller heights, measured heights and bleed layers on real devices and all failed.
+**Decision:** `apple-mobile-web-app-status-bar-style` is `default` instead of `black-translucent`. iOS then gives the app an opaque status bar, tints it with `theme-color` (#064e3b, the header green), and sizes the app from below the status bar to the bottom edge. The body color is now the bottom bar's color over the page (#061f1e at the time of writing), so installs made before this change, which keep the old style until reinstalled, show the strip as part of the bar.
+**Reasoning:** The status bar keeps the green header look, and the bottom bar reaches the screen edge with only the home indicator's padding. Switching styles is the only fix confirmed on devices.
+**Consequences:** Do not switch back to `black-translucent` unless Apple fixes the bug. iOS reads the tag only when the app is added, so anyone who installed it before 6 Oct 2026 must remove it from the home screen and add it again to lose the strip. Pages no longer draw under the status bar on iPhone, so `env(safe-area-inset-top)` is 0 there; the headers already pad with it, so nothing else changes.
+
+### 38. Market Intelligence is Enterprise only, and Enterprise goes on sale
+
+**Date:** 2026-10-06
+**Status:** Accepted (Tennyson asked for it)
+**Context:** Every signed-in member, free included, could use the Market Intelligence page in full: the daily brief, the live feed, watchlists and the pricing analytics on Business Tools. The Membership page listed it under Enterprise, but Enterprise was marked Coming soon, so nobody could buy it.
+**Decision:** Today, Live and Watchlist on /Market and the Market analytics section on Business Tools need the `market_intelligence` feature (Enterprise, and admins). Other plans see a short, faded, read-only slice of the real panel with an upgrade card (src/components/subscription/MarketPreviewGate.jsx). In-app listings, the Seller Console and the Breeder "Against the market" view are unchanged. Enterprise is on sale at the existing Stripe prices, $99.99 a month or $1,000 a year, with the optional 7-day trial like the other paid plans.
+**Reasoning:** The market data is the one thing no competitor has, and it costs real money to collect. Giving it away on Free left Enterprise with nothing to sell.
+**Consequences:** The gate is in the app only. The brief, tape and watchlist database functions still answer any signed-in member, and watches saved before this change keep sending alerts. A server-side check (effective_tier_for_current_user() in those functions, as the seller view already does) closes that. A price of exactly $100 needs a new Stripe price and its id swapped into stripe-config.js and both edge functions. Decision 21 (Enterprise as a sales-led waitlist) is superseded.
+
+### 39. The phone bars are liquid glass; the warp runs in Chromium only
+
+**Date:** 2026-10-06
+**Status:** Accepted (Tennyson asked for liquid glass bars)
+**Context:** Tennyson asked for the phone header and bottom bar to be liquid glass: mostly transparent, with a slight warp of what passes behind them. The page never passed behind the header (it sat above the scroll area). The warp needs an SVG filter on the backdrop, which only Chromium renders: Safari has an open WebKit bug (245510) and drops the whole backdrop-filter, blur included, when it sees url() there.
+**Decision:** On phones the header floats over the page (fixed, its height measured into `--top-bar-h`), and the scroll area pads its top by that height. Both bars use `.liquid-glass` (layout-theme.css): a light blur that lifts color and brightness, a faint white tint, and a bright inner edge. In Chromium, `html.glass-warp` (set in main.jsx) adds `#gi-glass-warp`, soft noise through feDisplacementMap, so the page ripples as it scrolls behind. The iPhone status bar (theme-color) is now the active theme's page background instead of the header green (decision 37), so it does not read as a green strip above a clear header.
+**Reasoning:** This is as close to Apple's Liquid Glass as the web allows today. iPhone gets the glass without the ripple until Safari renders SVG backdrop filters.
+**Consequences:** Never let Safari see url() in a backdrop filter. When WebKit ships SVG backdrop filters, widen the `glass-warp` check in main.jsx. Sticky parts of pages keep `top-0`: Chrome and Safari keep sticky boxes inside the scroll area's padding, so they stop just below the header. Desktop is unchanged.
+
+### 40. Time to sell estimates, from the May to June sales window
+
+**Date:** 2026-10-06
+**Status:** Accepted (Tennyson asked for it)
+**Context:** Members wanted to know how long a crested gecko like theirs takes to sell. The only listing-level sale dates are from 17 May to 7 Jun 2026, when the scraper still marked listings as sold (6,520 listings with an age class, 1,774 sold). Since then sales are counted only per morph per day ("came down"), which cannot be tied to one gecko's traits.
+**Decision:** `public.sell_time_model()` returns the market's sales rate (sales per listing-day) and a multiplier for each age class, sex, price position (against the median for the same age and leading trait) and trait with at least 20 listings. Small groups are pulled toward the market rate. The app (src/lib/sellTime.js) multiplies the factors that fit a gecko (the traits as one geometric mean, so correlated traits do not stack) and shows how long until half of geckos like it sell, plus the chance it sells within 2 weeks and within a month. It appears on the gecko's Estimated Value card and on the Sell page price helper. Enterprise only, checked in the database function; other plans see one locked line.
+**Reasoning:** A steady-rate model fits the data (it predicts 15% sold in 2 weeks; 15% were) and lets three weeks of sales say something about a two-month wait. Across the market half sell in about 58 days; hatchlings, unsexed geckos, Axanthic and Cappuccino sell faster; adults, males, Partial Pinstripe and Cream slower; pricing well below similar geckos speeds a sale by about 20%.
+**Consequences:** The numbers are from spring 2026 and do not move until sales are tracked per listing again. When the scraper records sold dates again the function picks them up with no change (it uses the whole sold window). Times past a month are projections and the card says so.

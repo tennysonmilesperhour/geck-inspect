@@ -127,13 +127,15 @@ const tiers = [
     key: 'enterprise',
     name: 'ENTERPRISE',
     icon: Sparkles,
-    description: 'For large-scale operations',
+    description: 'For breeders who price by the market',
     featured: false,
-    comingSoon: true,
+    comingSoon: false,
     features: [
       'Everything in Breeder',
       '15 AI Morph IDs per month',
-      'Market Intelligence app: pricing trends, morph demand, and breeder market share',
+      'Market Intelligence: the daily market brief and the live feed of new listings and price cuts',
+      'Watchlist alerts when a matching gecko is listed',
+      'Pricing analytics: asking prices by trait, supply and sellers',
     ],
   },
 ];
@@ -152,10 +154,8 @@ const CYCLE_OPTIONS = [
 // SoftwareApplication + Offer JSON-LD for the pricing page. AI assistants
 // (ChatGPT, Perplexity, Claude) parse this directly when answering "how
 // much does Geck Inspect cost / what plans are available". Offers cover
-// every (tier × billing cycle) combo where we have a real $ amount,
-// "Custom" enterprise rows are intentionally omitted because schema.org
-// Offer.price requires a number.
-const PRICED_TIERS = ['keeper', 'breeder'];
+// every (tier × billing cycle) combo with a live Stripe price.
+const PRICED_TIERS = ['keeper', 'breeder', 'enterprise'];
 function priceToNumber(p) {
   // "$4" → 4, "$38.40" → 38.4, "$0" → 0
   return Number(String(p).replace(/[^0-9.]/g, ''));
@@ -183,7 +183,7 @@ const MEMBERSHIP_HIGH_PRICE = Math.max(
 const MEMBERSHIP_FAQS = [
   {
     q: 'How much does Geck Inspect cost?',
-    a: `Geck Inspect has a Free plan (up to 10 geckos), Keeper at $2.99 a month or $30 a year, and Breeder at $5.99 a month or $60 a year. An Enterprise plan is coming soon. Subscribing bills you straight away, and each paid plan also offers an optional ${TRIAL_DAYS}-day free trial. Paying yearly saves about 17%.`,
+    a: `Geck Inspect has a Free plan (up to 10 geckos), Keeper at $2.99 a month or $30 a year, and Breeder at $5.99 a month or $60 a year. Enterprise, with Market Intelligence, is $99.99 a month or $1,000 a year. Subscribing bills you straight away, and each paid plan also offers an optional ${TRIAL_DAYS}-day free trial. Paying yearly saves about 17%.`,
   },
   {
     q: 'Can I try a paid plan before subscribing?',
@@ -232,6 +232,7 @@ const MEMBERSHIP_JSON_LD = [
       'Pairing waitlists with deposit tracking (Breeder tier)',
       'Genetics calculator and morph guide',
       'Community forum and marketplace',
+      'Crested gecko Market Intelligence (Enterprise tier)',
     ],
   },
   {
@@ -574,7 +575,7 @@ export default function MembershipPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 md:p-8">
       <Seo
         title="Pricing & Plans"
-        description={`Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo or $30/yr), Breeder ($5.99/mo or $60/yr), and Enterprise. Optional ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`}
+        description={`Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo or $30/yr), Breeder ($5.99/mo or $60/yr), and Enterprise ($99.99/mo or $1,000/yr). Optional ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`}
         path="/Membership"
         type="website"
         imageAlt="Geck Inspect membership plans, Free, Keeper, Breeder, and Enterprise tiers"
@@ -698,28 +699,25 @@ export default function MembershipPage() {
           {tiers.map((tier) => {
             const Icon = tier.icon;
             const isFeatured = tier.featured;
-            const isEnterprise = tier.comingSoon;
+            const isEnterprise = tier.key === 'enterprise';
             const pricing = getTierPricing(tier.key, cycle);
             // Enterprise has no `lifetime` row in the pricing config,
             // surface a friendly "Not available" instead of crashing or
             // showing stale monthly numbers.
             const enterpriseLifetimeUnavailable = isEnterprise && cycle === 'lifetime' && !pricing;
 
-            // Enterprise members exist (sponsored / comped grants like the
-            // beta-tester program), so the "Coming Soon" Enterprise card
-            // should flip to "Current plan" for them instead of staying
-            // disabled. Free users still match only when they have no
+            // Enterprise is current on every tab (comped grants have no
+            // billing cycle). Free users still match only when they have no
             // billing cycle on file.
             // A plan with no billing cycle on file (Free, grandfathered,
             // app store, referral month, comped) is current on every tab.
             const isCurrent =
               currentTier === tier.key &&
               (isEnterprise ? true : !currentCycle || currentCycle === cycle);
-            // The Enterprise card is greyed out and labeled "Coming Soon"
-            // for the general public, but for members who actually hold
-            // the tier (sponsored / comped grants) it should light up
-            // like any other current plan instead of staying locked.
-            const isEnterpriseLocked = isEnterprise && !isCurrent;
+            // A tier flagged comingSoon is greyed out with a waitlist CTA,
+            // except for members who already hold it. None is today:
+            // Enterprise went on sale on 6 Oct 2026.
+            const isEnterpriseLocked = tier.comingSoon && !isCurrent;
             const busy = loadingAction === `${tier.key}:purchase`;
             const trialBusy = loadingAction === `${tier.key}:trial`;
             const anyBusy = Boolean(loadingAction);

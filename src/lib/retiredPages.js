@@ -31,6 +31,10 @@ export const RETIRED_PAGES = [
   // Step 8: an older copy of Breeding with its own hatch flow. Its dated
   // "add a clutch with a grade" form now lives on each Breeding plan card.
   { page: 'BreedingPairs', to: '/Breeding' },
+  // 6 Oct 2026: Buy and Sell moved into Market Intelligence, as the
+  // In-app listings and Your listings tabs. /MarketplaceBuy and
+  // /MarketplaceSell still work on their own.
+  { page: 'Marketplace', to: '/Market?tab=browse' },
 ];
 
 export const RETIRED_PAGE_NAMES = new Set(RETIRED_PAGES.map((r) => r.page));
