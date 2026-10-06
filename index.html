@@ -116,7 +116,17 @@
     <meta name="theme-color" content="#064e3b" />
     <meta name="color-scheme" content="dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- iPhone home screen app status bar. "default" is an opaque bar
+         that iOS tints with theme-color above (the header green), and
+         the app fills the screen below it, down to the bottom edge. Do
+         not go back to "black-translucent": since iOS 26 that style
+         sizes the app one status bar short, which leaves a strip under
+         the bottom bar that the page cannot paint (WebKit bug 301108).
+         iOS reads this tag only when the app is added to the home
+         screen, so older installs keep the strip until they are removed
+         and added again (the body color in layout-theme.css blends it
+         into the bottom bar). -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Geck Inspect" />
     <meta name="application-name" content="Geck Inspect" />
 

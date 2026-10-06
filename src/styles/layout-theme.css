@@ -158,8 +158,12 @@ html, body, #root {
             --earth-900: #fef7f0;
           }
 
+          /* The body color is the phone bottom bar's color over the page.
+             Home screen installs made before the status bar fix (see the
+             note in index.html) still have a strip under the app that
+             only this color reaches, so it reads as part of the bar. */
           body {
-            background: #0d1f17;
+            background: #032821;
             color: var(--gecko-text);
             font-weight: 400;
           }
