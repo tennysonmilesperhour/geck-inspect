@@ -75,7 +75,7 @@ const KEEPER_REFERENCES = [
       rarity: 'common',
       morph_line: 'Dark Base Harlequin',
       size: '3in',
-      finish: 'holographic',
+      finish: 'glossy',
     },
   },
 ];
@@ -88,7 +88,7 @@ const collectorTemplate = (id, name, type, border, note, attacks, overrides = {}
   design: {
     ...KEEPER_REFERENCES[0].design,
     theme: 'trading_card',
-    version: 2,
+    version: 3,
     photo_url: `/store/custom-stickers/${id}.webp`,
     layout: 'classic',
     name,
@@ -117,16 +117,16 @@ const collectorTemplate = (id, name, type, border, note, attacks, overrides = {}
 
 export const STICKER_EXAMPLES = [
   collectorTemplate('canopy', 'Fern', 'grass', 'yellow',
-    'Golden frame, fern greens, and a classic two-move profile. A bright first-edition feel.',
-    [['Leaf Leap', '20', 'One perfect jump into the canopy.'], ['Branch Grip', '40', 'Small toes. Unshakeable hold.']]),
+    'Golden frame, a detailed painted woodland portrait, and a classic two-move profile.',
+    [['Leaf Leap', '20', 'One perfect jump into the canopy.'], ['Branch Grip', '40', 'Small toes. Unshakeable hold.']], { photo_url: '/store/custom-stickers/collector-classic-art-v4.webp', photo_crop: { x: 50, y: 50, zoom: 1 } }),
   collectorTemplate('ember', 'Cinder', 'fire', 'gold',
     'Warm copper tones and a gold frame, with bold moves and a featured edition mark.',
     [['Warm Up', '20', 'Find the sunniest spot on the branch.'], ['Crest Rush', '60', 'A sudden dash, then a well-earned rest.']],
-    { layout: 'modern', hp: 120, stage: 'stage_2', evolves_from: 'Juvenile', card_number: '2', rarity: 'rare' }),
+    { layout: 'full_art', photo_crop: { x: 20, y: 50, zoom: 1 }, hp: 120, stage: 'stage_2', evolves_from: 'Juvenile', card_number: '2', rarity: 'rare' }),
   collectorTemplate('moon', 'Luna', 'psychic', 'silver',
     'Silver edging, lavender ink, and a quiet moonlit portrait. A softer collector palette.',
     [['Moon Walk', '10', 'Explore the leaves after lights out.'], ['Night Pounce', '50', 'A patient hunter makes one quick leap.']],
-    { layout: 'full_art', hp: 100, stage: 'stage_1', evolves_from: 'Hatchling', card_number: '3', rarity: 'holo_rare' }),
+    { layout: 'full_art', photo_url: '/store/custom-stickers/collector-modern-art-v4.webp', photo_crop: { x: 50, y: 0, zoom: 1 }, hp: 100, stage: 'stage_1', evolves_from: 'Hatchling', card_number: '3', rarity: 'holo_rare' }),
   ...KEEPER_REFERENCES,
 ];
 

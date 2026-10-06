@@ -12,9 +12,8 @@ import {
 describe('custom collector-card options', () => {
   it('uses Geck Inspect labels while retaining stable stored values', () => {
     expect(CARD_LAYOUTS.map((option) => option.label)).toEqual([
-      'Vintage collector',
-      'Modern illustrated',
-      'Full-art showcase',
+      'Classic collector',
+      'Modern full art',
     ]);
     expect(CARD_STAGES.map((option) => option.label)).toEqual([
       'Hatchling',

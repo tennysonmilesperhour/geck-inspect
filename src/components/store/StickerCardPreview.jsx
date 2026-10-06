@@ -1,266 +1,92 @@
+import StickerPhoto from './StickerPhoto';
 import LegacyStickerCardPreview from './LegacyStickerCardPreview';
-import StickerPhoto from '@/components/store/StickerPhoto';
-import {
-  Leaf, Flame, Droplet, Zap, Eye, Hand, Moon, Cog, Sparkles, Gem, Star,
-} from 'lucide-react';
-import {
-  cardType,
-  CARD_STAGES,
-  RARITY_MAP,
-  stageEvolves,
-} from '@/lib/store/customSticker';
+import StickerCardPreviewV2 from './StickerCardPreviewV2';
+import { cardType, CARD_STAGES, RARITY_MAP, stageEvolves } from '@/lib/store/customSticker';
 
-/**
- * Live render of a custom pet sticker design.
- *
- * This is an original Geck Inspect card layout, not a reproduction of any
- * published card. It exists so the customer can see what they are buying
- * while they build it, and so production has a reference render.
- *
- * Sizing is done entirely in container-query units (cqw), so one component
- * renders correctly at thumbnail size in the cart and at full size in the
- * builder without a second set of styles. The card is 2.5 x 3.5, the
- * standard trading-card ratio.
- */
-
-const GLYPHS = {
-  leaf: Leaf,
-  flame: Flame,
-  droplet: Droplet,
-  zap: Zap,
-  eye: Eye,
-  fist: Hand,
-  moon: Moon,
-  cog: Cog,
-  sparkles: Sparkles,
-  gem: Gem,
-  star: Star,
+const PAPERS = { grass: '#a8ca72', fire: '#efb07d', water: '#a8d2e7', lightning: '#f2df77', psychic: '#c7abd7', fighting: '#d5a570', darkness: '#aab9be', metal: '#c9cecb', fairy: '#e7b7cf', dragon: '#dfc17c', colorless: '#fff9e9' };
+// Solid silhouettes read like printed energy stamps, even at thumbnail size.
+const ENERGY_SHAPES = {
+  leaf: <><path d="M4 17C2 8 10 3 20 3c0 11-7 18-14 15L16 7 4 17Z" /><path d="m6 18-2 3" fill="none" stroke="currentColor" strokeWidth="2" /></>,
+  flame: <path d="M12 2c2 5-2 7-1 10 3-1 4-4 4-6 7 7 6 15-3 16C3 22 0 14 6 8c-1 5 1 6 2 5-2-4 2-6 4-11Z" />,
+  droplet: <path d="M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z" />,
+  zap: <path d="M13 1 4 13h6L8 23 21 9h-7l3-8Z" />,
+  eye: <><path d="M1 12Q12-1 23 12Q12 25 1 12Zm4 0q7 8 14 0-7-8-14 0Z" fillRule="evenodd" /><circle cx="12" cy="12" r="4" /></>,
+  fist: <path d="M5 5h3V2h3v3h2V2h3v4h3v8l-5 7H7l-4-7V8h3v6h2V5Z" />,
+  moon: <path d="M17 2a10 10 0 1 0 5 16C11 20 6 8 17 2Z" />,
+  cog: <path d="m12 1 3 4 5-1-1 5 4 3-4 3 1 5-5-1-3 4-3-4-5 1 1-5-4-3 4-3-1-5 5 1 3-4Zm0 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" fillRule="evenodd" />,
+  sparkles: <path d="m12 1 3 7 8 4-8 4-3 7-3-7-8-4 8-4Z" />,
+  gem: <path d="m6 3 12 0 5 7-11 13L1 10Zm-2 7h16L12 5 4 10Z" fillRule="evenodd" />,
+  star: <path d="m12 1 2.8 6.1 6.7-.7L18 12l3.5 5.6-6.7-.7L12 23l-2.8-6.1-6.7.7L6 12 2.5 6.4l6.7.7Z" />,
 };
-
-function TypePip({ type, size = 5.4 }) {
+function Energy({ type, size = 4.4 }) {
   const t = cardType(type);
-  const Icon = GLYPHS[t.glyph] || Star;
-  return (
-    <span
-      className="inline-flex items-center justify-center rounded-full shrink-0"
-      style={{
-        width: `${size}cqw`,
-        height: `${size}cqw`,
-        background: t.color,
-        border: `${size * 0.09}cqw solid rgba(0,0,0,0.35)`,
-        boxShadow: 'inset 0 0 0 0.2cqw rgba(255,255,255,0.45)',
-      }}
-      title={t.label}
-    >
-      <Icon style={{ width: `${size * 0.6}cqw`, height: `${size * 0.6}cqw`, color: t.text }} strokeWidth={2.6} />
-    </span>
-  );
+  return <span title={t.label} className="inline-flex items-center justify-center shrink-0" style={{ width: `${size}cqw`, height: `${size}cqw`, borderRadius: '50%', background: `radial-gradient(circle at 35% 28%, #ffffffb0, transparent 52%), ${t.color}`, border: '0.18cqw solid #34362d', color: '#171a17' }}><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" style={{ width: '76%', height: '76%' }}>{ENERGY_SHAPES[t.glyph] || ENERGY_SHAPES.star}</svg></span>;
 }
-
-function CostPips({ count, type, size = 5.4 }) {
-  const n = Math.max(0, Math.min(4, Number(count) || 0));
-  if (n === 0) {
-    return (
-      <span
-        className="inline-flex items-center justify-center rounded-full shrink-0"
-        style={{
-          width: `${size}cqw`,
-          height: `${size}cqw`,
-          background: 'rgba(0,0,0,0.12)',
-          border: `${size * 0.09}cqw dashed rgba(0,0,0,0.3)`,
-        }}
-      />
-    );
-  }
-  return (
-    <span className="inline-flex" style={{ gap: `${size * 0.12}cqw` }}>
-      {Array.from({ length: n }).map((_, i) => (
-        <TypePip key={i} type={type} size={size} />
-      ))}
-    </span>
-  );
+function Cost({ count, type, size = 4.4 }) {
+  return <span className="inline-flex flex-wrap" style={{ gap: '0.5cqw' }}>{Array.from({ length: Math.max(0, Math.min(4, Number(count) || 0)) }, (_, i) => <Energy key={i} type={type} size={size} />)}</span>;
 }
-
-function InfoBar({ design }) {
-  const bits = [];
-  if (design.dex_number) bits.push(`NO. ${design.dex_number}`);
-  if (design.height) bits.push(`HT: ${design.height}`);
-  if (design.weight) bits.push(`WT: ${design.weight} lbs.`);
-  if (bits.length === 0) return null;
-  return (
-    <div
-      className="text-center font-medium"
-      style={{
-        fontSize: '2.9cqw',
-        color: 'rgba(20,20,20,0.8)',
-        background: 'linear-gradient(180deg, #f2f0ea 0%, #d8d5cc 100%)',
-        borderRadius: '1cqw',
-        padding: '0.7cqw 1.5cqw',
-        border: '0.25cqw solid rgba(0,0,0,0.18)',
-      }}
-    >
-      {bits.join('   ')}
-    </div>
-  );
-}
-
-function StatsBar({ design }) {
-  const weak = design.weakness_type ? cardType(design.weakness_type) : null;
-  const resist = design.resistance_type ? cardType(design.resistance_type) : null;
-  const cell = {
-    background: 'linear-gradient(180deg, #f4f2ec 0%, #dcd9d0 100%)',
-    border: '0.25cqw solid rgba(0,0,0,0.2)',
-    borderRadius: '3cqw',
-    padding: '0.8cqw 2cqw',
-    color: 'rgba(20,20,20,0.85)',
-  };
-  return (
-    <div className="flex items-center" style={{ gap: '1.2cqw', fontSize: '2.7cqw' }}>
-      <div className="flex items-center flex-1" style={{ ...cell, gap: '1cqw' }}>
-        <span className="font-semibold">challenge</span>
-        {weak ? (
-          <>
-            <TypePip type={design.weakness_type} size={4} />
-            <span className="font-bold">{design.weakness_multiplier}</span>
-          </>
-        ) : (
-          <span style={{ opacity: 0.4 }}>none</span>
-        )}
+function Moves({ design, modern, compact }) {
+  const moves = (design.attacks || []).filter(a => String(a.name || '').trim()).slice(0, 2);
+  return <div className="h-full flex flex-col justify-center" style={{ gap: modern ? '3cqw' : '2cqw' }}>
+    {moves.length ? moves.map((move, i) => <div key={i} style={{ borderTop: undefined, paddingTop: !modern && i ? '2cqw' : 0 }}>
+      <div className="flex items-center" style={{ gap: '1.4cqw' }}>
+        <div className="shrink-0" style={{ width: modern ? 'auto' : '22%', maxWidth: '25%' }}><Cost count={move.cost} type={move.cost_type || design.type} size={compact ? 3.6 : 4.5} /></div>
+        <div className="flex-1 min-w-0" style={{ fontWeight: 700, fontSize: compact ? '4.2cqw' : '5.7cqw', lineHeight: 1.05, overflowWrap: 'anywhere' }}>{move.name}</div>
+        <span className="shrink-0" style={{ fontWeight: 500, fontSize: compact ? '5.5cqw' : '6.8cqw' }}>{move.damage}</span>
       </div>
-      <div className="flex items-center flex-1" style={{ ...cell, gap: '1cqw' }}>
-        <span className="font-semibold">strength</span>
-        {resist ? (
-          <>
-            <TypePip type={design.resistance_type} size={4} />
-            <span className="font-bold">{design.resistance_amount}</span>
-          </>
-        ) : (
-          <span style={{ opacity: 0.4 }}>none</span>
-        )}
-      </div>
-      <div className="flex items-center" style={{ ...cell, gap: '1cqw' }}>
-        <span className="font-semibold">rest</span>
-        <CostPips count={design.retreat_cost} type="colorless" size={4} />
-      </div>
-    </div>
-  );
+      {move.text && <p style={{ fontSize: compact ? '2.8cqw' : '3.4cqw', lineHeight: 1.15, margin: '1.2cqw 0 0', overflowWrap: 'anywhere' }}>{move.text}</p>}
+    </div>) : <p style={{ fontSize: '3cqw', textAlign: 'center' }}>Add your gecko’s signature moves</p>}
+  </div>;
+}
+function Matchups({ design, modern }) {
+  const cell = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.7cqw' };
+  return <div className="grid grid-cols-3 text-center" style={{ borderTop: modern ? undefined : '0.3cqw solid #383729', padding: '1cqw 0', fontSize: modern ? '2.25cqw' : '2.65cqw', lineHeight: 1.05, background: modern ? 'linear-gradient(#eceee8,#b9bfba)' : undefined, borderRadius: modern ? '0.5cqw' : 0 }}>
+    <div style={modern ? cell : undefined}>weakness<div style={{ ...cell, marginTop: modern ? 0 : '0.7cqw' }}>{design.weakness_type ? <><Energy type={design.weakness_type} size={modern ? 3.2 : 4.1} /><span>{design.weakness_multiplier}</span></> : '—'}</div></div>
+    <div style={modern ? cell : undefined}>resistance<div style={{ ...cell, marginTop: modern ? 0 : '0.7cqw' }}>{design.resistance_type ? <><Energy type={design.resistance_type} size={modern ? 3.2 : 4.1} /><span>{design.resistance_amount}</span></> : '—'}</div></div>
+    <div style={modern ? cell : undefined}>{modern ? 'retreat' : 'retreat cost'}<div style={{ marginTop: modern ? 0 : '0.7cqw' }}><Cost count={design.retreat_cost} type="colorless" size={modern ? 3.2 : 4.1} /></div></div>
+  </div>;
 }
 
-function Footer({ design, onLight }) {
-  const rarity = RARITY_MAP[design.rarity] || RARITY_MAP.common;
-  const color = onLight ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.92)';
-  return (
-    <div className="flex items-end justify-between" style={{ fontSize: '2.6cqw', color }}>
-      <div className="min-w-0">
-        {design.illustrator && (
-          <div className="italic font-semibold truncate">Art by {design.illustrator}</div>
-        )}
-        <div className="flex items-center" style={{ gap: '1.2cqw' }}>
-          {design.set_code && (
-            <span
-              className="font-bold"
-              style={{
-                background: onLight ? 'rgba(20,20,20,0.85)' : 'rgba(255,255,255,0.9)',
-                color: onLight ? '#f5f3ee' : '#14181f',
-                borderRadius: '0.6cqw',
-                padding: '0.2cqw 1cqw',
-              }}
-            >
-              {design.set_code}
-            </span>
-          )}
-          <span className="font-semibold">
-            {design.card_number || '1'}/{design.set_total || '150'}
-          </span>
-          <span style={{ fontSize: '3cqw', lineHeight: 1 }}>{rarity.symbol}</span>
-        </div>
-      </div>
-      {design.morph_line && (
-        <div className="text-right font-semibold truncate" style={{ maxWidth: '58%' }}>
-          {design.morph_line}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MovePanel({ design, onDark = false, compact = false }) {
-  const moves = (design.attacks || []).filter((a) => String(a.name || '').trim()).slice(0, 2);
-  return (
-    <div className="flex flex-col justify-center" style={{ gap: '2cqw', flex: 1, padding: '2cqw 1.5cqw', color: onDark ? '#fff' : '#24271e' }}>
-      {moves.length ? moves.map((move, i) => (
-        <div key={i} style={{ borderTop: i ? `0.25cqw solid ${onDark ? '#ffffff38' : '#473a242b'}` : undefined, paddingTop: i ? '1.8cqw' : 0 }}>
-          <div className="flex items-center" style={{ gap: '1.5cqw' }}>
-            <CostPips count={move.cost} type={move.cost_type || design.type} size={compact ? 3.8 : 4.6} />
-            <span className="flex-1 font-bold" style={{ fontSize: compact ? '3.9cqw' : '4.7cqw', lineHeight: 1.1, overflowWrap: 'anywhere' }}>{move.name}</span>
-            <span className="font-extrabold" style={{ fontSize: compact ? '4.6cqw' : '5.5cqw' }}>{move.damage}</span>
-          </div>
-          {move.text && <p style={{ fontSize: compact ? '2.5cqw' : '2.8cqw', lineHeight: 1.3, marginTop: '1cqw' }}>{move.text}</p>}
-        </div>
-      )) : <span style={{ fontSize: '3cqw' }}>Your signature moves</span>}
-    </div>
-  );
-}
-
-function CardIdentity({ design, light = false }) {
-  const stage = CARD_STAGES.find((s) => s.value === design.stage) || CARD_STAGES[0];
-  const name = design.name || 'Your gecko';
-  return (
-    <div className="flex items-start" style={{ gap: '2cqw', color: light ? '#fff' : '#202820' }}>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center" style={{ gap: '1.4cqw', fontSize: '2.3cqw', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 800 }}>
-          <span style={{ background: light ? '#ffffff26' : '#f5ecd3', border: '0.2cqw solid #8d7b5355', padding: '0.4cqw 1.2cqw', borderRadius: '0.6cqw' }}>{stage.label}</span>
-          <span style={{ opacity: 0.7 }}>Geck Inspect</span>
-        </div>
-        <div className="font-extrabold" style={{ fontSize: name.length > 16 ? '5.6cqw' : '7.6cqw', lineHeight: 1.12, marginTop: '1cqw', overflowWrap: 'anywhere' }}>{name}</div>
-        {stageEvolves(design.stage) && design.evolves_from && <div style={{ fontSize: '2.6cqw', marginTop: '0.6cqw' }}>Lineage: {design.evolves_from}</div>}
-      </div>
-      <div className="flex items-center shrink-0" style={{ gap: '1cqw', paddingTop: '4cqw' }}>
-        <div className="text-right"><div style={{ fontSize: '2.2cqw', letterSpacing: '0.06em' }}>POWER</div><div style={{ fontSize: '7cqw', fontWeight: 900, lineHeight: 1 }}>{design.hp}</div></div>
-        <TypePip type={design.type} size={6.8} />
-      </div>
-    </div>
-  );
-}
-
+/** Flat printed collector frames. Earlier sold designs retain their versioned renderers. */
 export default function StickerCardPreview({ design, className = '' }) {
   if (!design) return null;
   if (design.version === 1) return <LegacyStickerCardPreview design={design} className={className} />;
+  if (design.version === 2) return <StickerCardPreviewV2 design={design} className={className} />;
+  const modern = design.layout === 'full_art';
   const type = cardType(design.type);
-  const fullArt = design.layout === 'full_art';
-  const modern = design.layout === 'modern';
-  // Reserve enough room for two detailed moves and long identities.
-  const compact = String(design.name || '').length > 16 || (design.attacks || []).some((move) => String(move.name || '').length > 16 || String(move.text || '').length > 65);
-  const border = { yellow: '#e8c657', silver: '#c8ced1', gold: '#bd9653', black: '#24302e', white: '#f4f0e6' }[design.border_color] || '#e8c657';
-  return (
-    <div className={`relative w-full select-none ${className}`} style={{ containerType: 'inline-size', aspectRatio: '2.5 / 3.5' }}>
-      <div className="absolute inset-0 overflow-hidden" style={{ background: border, borderRadius: '4cqw', padding: '3cqw', boxShadow: 'inset 0 0 0 0.45cqw #fff5, 0 1cqw 3cqw #0003', fontFamily: "'Montserrat', system-ui, sans-serif" }}>
-        <div className="relative w-full h-full overflow-hidden flex flex-col" style={{ borderRadius: '1.7cqw', border: '0.4cqw solid #252f294d', background: modern ? '#f6f2e8' : `linear-gradient(140deg, #fff5, #fff0), ${type.color}` }}>
-          {fullArt ? (
-            <>
-              <StickerPhoto design={design} className="absolute inset-0 w-full h-full" style={{ background: type.accent }} />
-              <div className="relative" style={{ padding: '3cqw', background: 'linear-gradient(#101c22d9, #101c2222)' }}><CardIdentity design={design} light /></div>
-              <div className="relative mt-auto" style={{ padding: '2cqw 3cqw 3cqw', background: 'linear-gradient(#101c2266, #101c22f5 25%)' }}>
-                <MovePanel design={design} onDark />
-                <div style={{ marginTop: '2cqw', marginBottom: '1.8cqw' }}><StatsBar design={design} /></div>
-                <Footer design={design} onLight={false} />
-              </div>
-            </>
-          ) : (
-            <div className="w-full h-full flex flex-col" style={{ padding: '2.8cqw', gap: '1.8cqw', backgroundImage: modern ? undefined : 'repeating-linear-gradient(30deg, transparent 0 1.4cqw, #fff08 1.4cqw 1.6cqw)' }}>
-              {modern && <div className="absolute inset-x-0 top-0" style={{ height: '1.2cqw', background: type.accent }} />}
-              <CardIdentity design={design} />
-              <div className="relative w-full overflow-hidden shrink-0" style={{ aspectRatio: compact ? '2.25 / 1' : modern ? '1.6 / 1' : '1.65 / 1', border: modern ? `0.8cqw solid ${type.accent}` : '1cqw solid #f1e6c8', borderRadius: modern ? '3cqw' : '0.5cqw', boxShadow: '0 0 0 0.25cqw #69563488, 0 0.8cqw 1.5cqw #0002', background: type.color }}>
-                <StickerPhoto design={design} className="absolute inset-0 w-full h-full" />
-              </div>
-              <InfoBar design={design} />
-              <div className="flex-1 flex flex-col min-h-0" style={{ background: modern ? '#fff' : '#f6ecd9c9', border: '0.25cqw solid #84735855', borderRadius: modern ? '2cqw' : '0.6cqw', padding: '0 1cqw' }}><MovePanel design={design} compact={compact} /></div>
-              <StatsBar design={design} />
-              <Footer design={design} onLight />
+  const name = design.name || 'Your gecko';
+  const stage = CARD_STAGES.find(s => s.value === design.stage)?.label || 'Hatchling';
+  const paper = PAPERS[design.type] || PAPERS.colorless;
+  const compact = name.length > 16 || (design.attacks || []).some(a => (a.name || '').length > 18 || (a.text || '').length > 60);
+  const border = modern ? '#bdc4c4' : { yellow: '#f1d432', silver: '#cbd0cc', gold: '#cba651', white: '#ede8d9', black: '#2b302b' }[design.border_color] || '#f1d432';
+  const rarity = (RARITY_MAP[design.rarity] || RARITY_MAP.common).symbol;
+  const evolves = stageEvolves(design.stage) && design.evolves_from;
+  const info = [design.dex_number && `No. ${design.dex_number}`, design.species_name || 'Crested gecko', design.height && `Length: ${design.height}`, design.weight && `Weight: ${design.weight}`].filter(Boolean).join(' · ');
+  return <div className={`relative w-full select-none ${className}`} style={{ containerType: 'inline-size', aspectRatio: '2.5 / 3.5' }}>
+    <div className="absolute inset-0 overflow-hidden" style={{ background: modern ? 'linear-gradient(130deg,#e7e9e4,#a9b0b0 45%,#d5d9d5)' : border, borderRadius: '3.5cqw', padding: modern ? '2.4cqw' : '4cqw', boxShadow: 'inset 0 0 0 0.35cqw #fff8, 0 0.8cqw 2cqw #0002', fontFamily: 'Arial, Helvetica, sans-serif', color: '#171b15' }}>
+      <div className="relative w-full h-full overflow-hidden" style={{ borderRadius: '0.8cqw', background: paper, border: '0.25cqw solid #4b4a3d66' }}>
+        {modern ? <><StickerPhoto design={design} className="absolute inset-0 w-full h-full" style={{ top: '5cqw', height: 'calc(100% - 5cqw)' }} /><div className="absolute inset-0" style={{ background: 'linear-gradient(180deg,#091e2c28 0%,transparent 35%,#061e27aa 68%,#071b25ee 100%)' }} /><div className="absolute inset-0 pointer-events-none" style={{ border: '0.65cqw ridge #e5eae7cc', borderRadius: '0.6cqw', boxShadow: 'inset 0 0 0 .45cqw #364c47aa' }} /></> : <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'repeating-radial-gradient(ellipse at 18% 24%,#ffffff18 0 .12cqw,transparent .15cqw .7cqw),radial-gradient(ellipse at 65% 80%,#97702c24,transparent 65%)' }} />}
+        <div className="absolute inset-0 flex flex-col" style={{ padding: modern ? '0 2.2cqw 1.6cqw' : '1.6cqw 3.2cqw 1.3cqw', gap: modern ? '1.4cqw' : '.7cqw' }}>
+          {modern ? <div style={{ margin: '0 -2.2cqw', padding: '1.7cqw 2.3cqw 2.5cqw', background: `linear-gradient(175deg,#fafaf1 0%,${paper} 48%,#778a76 100%)`, borderBottom: '0.4cqw solid #8c9c96', clipPath: 'polygon(0 0,100% 0,100% 82%,96% 100%,9% 100%,0 75%)' }}>
+            <div className="flex items-center justify-between" style={{ gap: '1.4cqw' }}>
+              <span style={{ fontSize: '2.35cqw', fontWeight: 800, padding: '.3cqw 1cqw', borderRadius: '2.8cqw .6cqw .6cqw 2.8cqw', background: 'linear-gradient(#fff,#bcc3b9)', border: '.2cqw solid #838f85', whiteSpace: 'nowrap' }}>{stage === 'Hatchling' ? 'BASIC' : stage.toUpperCase()}</span>
+              <span className="flex-1 min-w-0 font-bold" style={{ fontFamily: 'Arial, sans-serif', fontStyle: 'italic', fontSize: name.length > 16 ? '5.4cqw' : '7.8cqw', letterSpacing: '-.04em', lineHeight: 1, overflowWrap: 'anywhere' }}>{name}<span style={{ fontSize: '4cqw', color: type.accent, marginLeft: '.7cqw', letterSpacing: '-.09em' }}>GI</span></span>
+              <span className="shrink-0" style={{ fontSize: '7.2cqw', fontWeight: 800, whiteSpace: 'nowrap' }}><small style={{ fontSize: '2.6cqw', marginRight: '.3cqw' }}>HP</small>{design.hp}</span><Energy type={design.type} size={6.8} />
             </div>
-          )}
+            {evolves && <p style={{ fontSize: '2.1cqw', margin: '.8cqw 0 0 12cqw' }}>Evolves from {design.evolves_from}</p>}
+          </div> : <>
+            <div className="flex justify-between" style={{ fontSize: '2.7cqw', lineHeight: 1 }}><span>{stage === 'Hatchling' ? 'BASIC' : stage.toUpperCase()}</span><span style={{ fontSize: '2.1cqw' }}>{evolves ? `Evolves from ${design.evolves_from}` : ''}</span></div>
+            <div className="flex items-center justify-between" style={{ minHeight: '8.7cqw', gap: '1.2cqw' }}><span className="font-bold min-w-0" style={{ fontSize: name.length > 16 ? '6.2cqw' : '8.5cqw', lineHeight: .98, letterSpacing: '-.025em', overflowWrap: 'anywhere' }}>{name}</span><div className="flex items-center shrink-0" style={{ gap: '1.6cqw' }}><span style={{ fontSize: '6.7cqw', fontWeight: 600, fontFamily: 'Arial Narrow, Arial, sans-serif', letterSpacing: '-.055em', color: '#c02425', whiteSpace: 'nowrap' }}>{design.hp} HP</span><Energy type={design.type} size={6.7} /></div></div>
+            <div className="relative shrink-0 overflow-hidden" style={{ height: compact ? '42cqw' : '48cqw', border: '1.2cqw solid #bba45f', boxShadow: '0.35cqw 0.5cqw 0.4cqw #4b412766, inset 0 0 0 .25cqw #62552d', background: type.color }}><StickerPhoto design={design} className="absolute inset-0 w-full h-full" /></div>
+          </>}
+          {modern && <div className="flex-1 min-h-0" />}
+          {!modern && <div style={{ fontSize: '2.6cqw', fontStyle: 'italic', fontWeight: 600, textAlign: 'center', lineHeight: 1.1, background: 'linear-gradient(90deg,#af94592b,#e8d3a85e,#af94592b)', borderBottom: '.2cqw solid #927b45', padding: '.65cqw .3cqw' }}>{info}</div>}
+          <div className={modern ? 'shrink-0' : 'flex-1 min-h-0'} style={{ padding: modern ? '2cqw .9cqw' : '.5cqw 0', color: modern ? '#fffdf4' : undefined, textShadow: modern ? '-.18cqw -.18cqw 0 #10232d,.18cqw -.18cqw 0 #10232d,-.18cqw .18cqw 0 #10232d,.18cqw .18cqw 0 #10232d,0 .25cqw .4cqw #000' : undefined }}><Moves design={design} modern={modern} compact={compact} /></div>
+          <Matchups design={design} modern={modern} />
+          <div style={{ border: modern ? '.25cqw solid #b4bfbc' : '.45cqw ridge #b19b58', borderRadius: modern ? '0.6cqw' : 0, padding: modern ? '1.2cqw 1.7cqw' : '.8cqw 1.2cqw', fontSize: compact ? '2.5cqw' : '2.8cqw', lineHeight: 1.12, background: modern ? 'linear-gradient(170deg,#f5f6ec,#cbd3cc)' : undefined, overflowWrap: 'anywhere' }}>{modern && <span style={{ display: 'inline-block', fontWeight: 800, fontSize: '2.9cqw', marginRight: '1cqw', padding: '.4cqw 1cqw', borderRadius: '1cqw', border: '.22cqw solid #7b8f84', background: 'linear-gradient(#edf2d9,#aebbb0)', color: '#172b1c' }}>Gecko rule</span>}{design.morph_line || 'A small creature with a remarkable personality.'}</div>
+          <div className="flex justify-between items-end shrink-0" style={{ color: modern ? '#fffdf1' : '#342f20', fontSize: '2.1cqw', gap: '1cqw' }}><div className="min-w-0"><div className="truncate">{design.illustrator ? `Illus. ${design.illustrator}` : '© Geck Inspect'}</div>{modern && <div style={{ fontSize: '1.7cqw', marginTop: '.35cqw' }}>{design.dex_number ? `No. ${design.dex_number} · ` : ''}{design.species_name || 'Crested gecko'}</div>}</div><span className="shrink-0">{design.set_code} {design.card_number || '1'}/{design.set_total || '150'} <span style={{ marginLeft: '1cqw', fontSize: '3cqw' }}>{rarity}</span></span></div>
         </div>
       </div>
     </div>
-  );
+  </div>;
 }

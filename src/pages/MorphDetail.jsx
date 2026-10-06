@@ -133,7 +133,7 @@ function HeroImage({ src, name, slug, category }) {
               className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:18px_18px]"
             />
             {hasIllustration(slug) ? (
-              <IllustratedGecko morph={slug} decorative className="relative h-40 md:h-56 w-auto drop-shadow-xl" />
+              <IllustratedGecko morph={slug} decorative className="relative w-[92%] h-auto max-h-[85%]" />
             ) : (
               <span
                 aria-hidden="true"
@@ -142,7 +142,7 @@ function HeroImage({ src, name, slug, category }) {
                 {morphInitials(name)}
               </span>
             )}
-            <span className="relative mt-2 text-sm text-neutral-300">{name} crested gecko</span>
+            <span className="relative mt-2 text-sm text-neutral-300">{hasIllustration(slug) ? `${name} · illustrative feature study` : `${name} · documented photo needed`}</span>
             <Link
               to={`/MorphGuideSubmission?morph=${slug}`}
               onClick={() => trackMorphCta(slug, '/MorphGuideSubmission', 'hero_add_photo')}
@@ -589,8 +589,10 @@ export default function MorphDetail() {
                   <BulletList items={visualIdentifiers} linkSlug={slug} />
                 </>
               )}
+              <p className="mt-5 text-sm text-neutral-400">Visible features can suggest comparisons, but a photograph or illustration does not establish genotype. Use several views, natural firing states and documented lineage when assessing an animal.</p>
+              {localMorph?.sources?.length > 0 && <div className="mt-4 rounded-xl border border-neutral-800 p-4"><h3 className="text-sm font-semibold text-white">Specimens and breeder references</h3><ul className="mt-2 space-y-2 text-sm">{localMorph.sources.map(url => <li key={url}><a href={url} target="_blank" rel="noreferrer" className="text-emerald-300 underline">{url.includes('pangea') ? 'Pangea Reptile' : url.includes('acreptiles') ? 'AC Reptiles · project observations' : url.includes('corch') ? 'Corch Geckos · Lilly White project' : 'LIL MONSTERS · specimens and breeder model'}</a></li>)}</ul></div>}
               {spectrumPositionFor(slug) !== null && (
-                <PatternSpectrum focusSlug={slug} className="mt-8" />
+                <PatternSpectrum key={slug} focusSlug={slug} className="mt-8" />
               )}
               <InlineMorphCta slug={slug} to="/Recognition" placement="after_identify" icon={Camera}>
                 Not sure? Upload a photo to Morph ID and get a second opinion in seconds.
@@ -612,7 +614,7 @@ export default function MorphDetail() {
                       {inheritance.label}
                     </Link>
                   </div>
-                  <p className="leading-relaxed">{inheritance.description}</p>
+                  <p className="leading-relaxed">{inheritance.description}</p><p className="mt-2 text-sm text-neutral-400">This explains the listed inheritance model. It does not confirm the genotype of an animal from its appearance; terminology and proposed models can differ between breeding projects.</p>
                 </div>
               )}
 

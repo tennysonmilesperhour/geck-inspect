@@ -53,7 +53,7 @@ export function MorphIndexArt({ morph, className = '' }) {
     >
       <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_55%)]" />
       {hasIllustration(morph?.slug) ? (
-        <IllustratedGecko morph={morph.slug} decorative className="relative h-[82%] w-auto drop-shadow-lg" />
+        <IllustratedGecko morph={morph.slug} decorative className="relative w-[94%] h-auto max-h-[88%]" />
       ) : (
         <span className="relative font-black tracking-tight text-white/15 text-5xl sm:text-6xl select-none">
           {initials(morph?.name)}

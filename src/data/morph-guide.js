@@ -1,5 +1,5 @@
 /**
- * Crested Gecko Morph Guide, authoritative local dataset.
+ * Crested Gecko Morph Guide, local reference dataset.
  *
  * Source-of-truth morph data, structured for both UI rendering and
  * LLM consumption. Every morph entry follows a consistent shape so
@@ -162,11 +162,20 @@ export const MORPHS = [
     slug: 'harlequin',
     name: 'Harlequin',
     definition:
-      'A Harlequin crested gecko is a crested gecko whose bright, high-contrast cream or yellow pattern climbs from the belly up the flanks and onto the legs, instead of staying along the back.',
+      "A Harlequin crested gecko has conspicuous light pattern on the flanks and limbs as well as the back, with irregular patches separated by areas of base color.",
     lookalikes: [
-      { slug: 'flame', difference: 'A Flame keeps its pattern on the back; once the pattern climbs onto the flanks and legs, it is a Harlequin.' },
-      { slug: 'extreme-harlequin', difference: 'Extreme Harlequin is the same pattern taken further: nearly solid cream panels covering most of the flanks, not scattered markings.' },
-      { slug: 'pinstripe', difference: 'A Harlequin whose raised back scales form a full cream line is sold as a Pinstripe; scattered cream back scales alone still make it a Harlequin.' },
+      {
+        "slug": "flame",
+        "difference": "Flame emphasizes dorsal pattern with relatively little lateral and limb pattern; borderline examples exist."
+      },
+      {
+        "slug": "extreme-harlequin",
+        "difference": "Extreme describes more extensive lateral and limb pattern, without a universal percentage cutoff."
+      },
+      {
+        "slug": "pinstripe",
+        "difference": "Pinstripe concerns the raised edges of the back; an animal can be both harlequin and pinstripe."
+      }
     ],
     aliases: ['Harley', 'Harle'],
     category: 'pattern',
@@ -175,39 +184,48 @@ export const MORPHS = [
     // hobby label (and the hub URL grouping); foundationGenetics explains
     // the Foundation Genetics single-locus model alongside it.
     foundationGenetics:
-      'The hobby has two ways of reading Harlequin genetics, and this guide presents both. The traditional framing calls it polygenic: pattern quality visibly improves through selective pairing and no simple ratio predicts outcomes. Foundation Genetics models an underlying single gene that is incomplete dominant: one copy makes a Harlequin, two copies are the genetic basis for Extreme Harlequin expression, while polygenic modifiers still decide how bold and high the pattern climbs. Both models agree on practice: pair your best-patterned animals and expect a quality gradient, not a Punnett-square guarantee.',
+      "Traditional hobby guides describe variation in harlequin expression as polygenic. Foundation Genetics proposes an underlying pattern trait with incomplete dominant inheritance and modifying factors. These are different models; visible coverage alone does not demonstrate gene dosage.",
     rarity: 'common',
     priceTier: '$$',
     priceRange: '$120 to $400',
     summary:
-      'High-contrast pattern morph with bold markings covering the legs and climbing high up the dorsum.',
+      "Light pattern on the flanks and limbs, with variable dorsal coverage.",
     description:
-      'Harlequin is a polygenic pattern morph characterized by bright, high-contrast markings that extend from the belly up onto the legs and sides. It is the baseline quality for most serious hobby projects and one of the two most-produced pattern types alongside pinstripe. Harlequin quality ranges dramatically, from "near-flame" animals with minimal leg coverage to "extreme harlequin" with near-solid cream flanks.',
+      "Look at the sides and legs, not just the back. Harlequin pattern can form irregular islands, branching edges and larger connected patches. Coverage varies, and one animal may also show pinstripe, banding or Dalmatian spots. A small amount of lateral pattern does not create a universally agreed boundary between flame and harlequin.",
     keyFeatures: [
-      'High-contrast cream or yellow markings that climb the flanks and legs',
-      'Pattern typically extends above the lateral line onto the dorsum',
-      'Selectively bred for saturation and coverage, better pattern each generation',
-      'The base most other morphs sit on. When another morph is present, that name leads: a harlequin with full pinstripe is sold as a Pinstripe, a three-color one as a Tricolor, and a Lilly White with harlequin patterning as a Lilly White',
+      "Light pattern on the flanks and limbs",
+      "Irregular patch boundaries and areas of visible base color",
+      "Pinning, banding and spotting may coexist"
     ],
     visualIdentifiers: [
-      'Look at the flanks and legs: harlequin must show bright pattern that climbs up the sides, not just along the belly line',
-      'A flame-quality animal with minor pattern extending onto legs is not yet a harlequin',
-      'Color saturation should hold when the animal fires up',
+      "Compare both flanks and the legs with the dorsal pattern",
+      "Use several specimens to learn the range of coverage",
+      "Compare photographs in consistent lighting and firing states"
     ],
     history:
       'Emerged in the early 2000s as breeders selected for progressively more pattern coverage from flame-base stock.',
     combinesWith: ['dalmatian', 'cream', 'tricolor', 'pinstripe', 'lilly-white', 'axanthic'],
     notes:
-      'Because the trait is polygenic, pairing two harlequins does not guarantee harlequin offspring, it just improves the odds and average quality.',
+      "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
+    sources: [
+      "https://www.pangeareptile.com/collections/harlequin",
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
   },
   {
     slug: 'extreme-harlequin',
     name: 'Extreme Harlequin',
     definition:
-      'An Extreme Harlequin crested gecko is a crested gecko whose harlequin pattern covers most of the flanks and legs, often as nearly solid cream or yellow panels that stay visible even when it is fired down.',
+      "An Extreme Harlequin crested gecko has extensive harlequin pattern on the flanks and limbs, often reaching above the middle of the sides; the label has no universal numerical cutoff.",
     lookalikes: [
-      { slug: 'harlequin', difference: 'A Harlequin shows pattern on the flanks and legs; an Extreme Harlequin covers most of them, roughly 60 to 70% or more, with near-solid cream.' },
-      { slug: 'tricolor', difference: 'A Tricolor is judged on three distinct colors in about equal amounts, not on how much of the flank the pattern covers.' },
+      {
+        "slug": "harlequin",
+        "difference": "The distinction is the extent of lateral and limb pattern, with no universally accepted cutoff."
+      },
+      {
+        "slug": "tricolor",
+        "difference": "Tricolor describes distinguishable colors; it does not measure lateral coverage."
+      }
     ],
     aliases: ['Extreme Harley', 'EH', 'Super Harley'],
     category: 'pattern',
@@ -216,25 +234,27 @@ export const MORPHS = [
     priceTier: '$$$',
     priceRange: '$350 to $900',
     summary:
-      'The top tier of harlequin pattern, high-coverage, high-contrast, often with solid cream flanks and legs.',
+      "Extensive lateral and limb pattern, with variable interruptions and contrast.",
     description:
-      'Extreme harlequin is the highest expression of the harlequin polygenic trait: pattern that nearly consumes the base color on the legs, flanks, and sometimes the dorsum. Top extreme harlequin animals can appear nearly cream-and-dark-red all over. The line between harlequin and extreme harlequin is a judgment call rather than a bright line, but experienced keepers use coverage (≥60 to 70% of flanks) as a rough threshold.',
+      "Extreme is a coverage description used within harlequin variation. The light areas may join into broad patches or remain interrupted by dark pattern. They need not form solid rectangular panels. Assess the whole animal from both sides rather than estimating a precise percentage from one photograph.",
     keyFeatures: [
-      'Extensive pattern coverage on flanks and legs, often approaching 70%+ of the lateral surface',
-      'Pattern frequently continues across the shoulders and neck',
-      'Most saturated when fired up; dull animals should still show dramatic contrast',
-      'Foundation of many high-end projects: tricolor, phantom pinstripe combos, "crown" pattern animals',
+      "Extensive light pattern on the flanks and limbs",
+      "Pattern often reaches above the middle of the flanks",
+      "Base color can interrupt even very extensive light areas"
     ],
     visualIdentifiers: [
-      'Nearly solid cream or yellow panels on the flanks rather than scattered markings',
-      'Pattern visible even in fired-down state',
-      'Often paired with bold leg pattern and white lips',
+      "Check coverage on both sides and limbs",
+      "Separate coverage from brightness, lighting and firing state"
     ],
     history:
       'Came from the tightening of harlequin selection in the mid-2000s, with Hatcher\'s Cresties and AC Reptiles among the early drivers.',
     combinesWith: ['cream', 'tricolor', 'dalmatian', 'phantom-pinstripe', 'axanthic'],
     notes:
-      'Buyers should ask for photos of both fired and unfired states, some animals look far less extreme when not fully fired.',
+      "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
+    sources: [
+      "https://www.pangeareptile.com/collections/harlequin",
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
   },
   {
     slug: 'pinstripe',
@@ -242,9 +262,14 @@ export const MORPHS = [
     definition:
       'A Pinstripe crested gecko is a crested gecko whose raised scales along each side of the back are cream or yellow, forming two stripes that run from the neck toward the base of the tail.',
     lookalikes: [
-      { slug: 'phantom-pinstripe', difference: 'A Phantom Pinstripe has the same raised back scales, but they stay the body color with no cream line; the contrast is on the flanks instead.' },
-      { slug: 'harlequin', difference: 'Many Harlequins show a few cream back scales; it is only a Pinstripe when the cream follows the raised scales as a line, graded by percentage (100% is full pinstripe).' },
-      { slug: 'cream', difference: 'Cream describes the color of the pattern, not where it sits; a Cream Pinstripe is a Pinstripe whose stripes are off-white instead of yellow or orange.' },
+      {
+        "slug": "phantom-pinstripe",
+        "difference": "The historical phantom-pinstripe label concerns reduced cream on the crest rows; it does not by itself prove genetic Phantom."
+      },
+      {
+        "slug": "harlequin",
+        "difference": "Harlequin describes flank and limb pattern and can coexist with pinstripe."
+      }
     ],
     aliases: ['Pin'],
     category: 'pattern',
@@ -253,76 +278,88 @@ export const MORPHS = [
     // hobby label (and the hub URL grouping); foundationGenetics explains
     // the Foundation Genetics single-locus model alongside it.
     foundationGenetics:
-      'Two readings coexist in the hobby. Traditionally Pinstripe is described as polygenic because completeness (partial to full) responds to selective breeding. Foundation Genetics models it as a dominant gene: one copy produces pinstriping, and homozygous animals often show more complete or stronger stripes. The polygenic part is real either way; it lives in the modifiers that decide how complete the stripe is, not in whether the trait is present.',
+      "Pinstripe completeness responds to selective breeding. Foundation Genetics proposes a dominant underlying trait with variable expression. The illustration controls visible continuity and cannot identify a heterozygous or homozygous animal.",
     rarity: 'common',
     priceTier: '$$',
     priceRange: '$120 to $350',
     summary:
-      'Raised cream scales running along the dorsal ridge from neck to tail base.',
+      "Light coloration following the paired raised edges of the back.",
     description:
-      'Pinstripe is a polygenic pattern trait where the raised scales along the dorsal ridge become cream or yellow, forming a bright parallel line down the back. Pinstripe quality is judged by percentage, "full pinstripe" describes 100% coverage from the back of the neck to the base of the tail. Partial pinstripe (50 to 90%) is far more common than full.',
+      "Pinstripe is light coloration along the paired raised scale rows bordering the dorsal field. Full pinstripe describes continuous lines; partial pinstripe has interruptions. Follow each row separately in an overhead or oblique photograph. Broad cream on the back is a different feature.",
     keyFeatures: [
-      'Two parallel cream/yellow stripes along the raised dorsal scales',
-      'Percentage graded: 100% = "full pinstripe", 75% = "75% pin", etc.',
-      'Stacks with harlequin, dalmatian, base color modifiers, and structural traits',
-      'Base for further trait combinations: phantom pinstripe, dashed pin, reverse pin',
+      "Light scales follow the two raised crest rows",
+      "Full and partial describe continuity, not body color",
+      "Can coexist with harlequin pattern, banding and spots"
     ],
     visualIdentifiers: [
-      'Look at the raised scales along the spine, they should be a different color than the surrounding base',
-      'Pinstripe is not a "white stripe" on flat skin; it must follow the raised scales',
-      'Percentage measured from the neck crest to the tail base',
+      "Use an overhead or oblique view to see both rows",
+      "Distinguish the narrow crest rows from the broad dorsal field"
     ],
     history:
       'One of the first named polygenic traits in the hobby, recognized by the early 2000s.',
     combinesWith: ['harlequin', 'cream', 'phantom-pinstripe', 'dalmatian', 'lilly-white', 'axanthic'],
     notes:
-      'A "partial pinstripe" (under 75%) is often not worth a premium, most buyers pay up only for 90%+ coverage.',
+      "Sellers sometimes estimate pinning percentages, but viewing angle and scoring conventions vary. A dark line immediately below the raised row is commonly called reverse pinstripe; it is not synonymous with Phantom.",
+    sources: [
+      "https://www.pangeareptile.com/collections/pinstripe",
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
   },
   {
     slug: 'phantom-pinstripe',
     name: 'Phantom Pinstripe',
     definition:
-      'A Phantom Pinstripe crested gecko is a crested gecko whose raised back scales stay the same color as the body, with no cream stripe, while its flanks and legs carry bright harlequin-like pattern.',
+      "Phantom Pinstripe is a historical visual label for pinstripe-like raised back rows with reduced cream coloration; the label alone does not establish the animal's genetics.",
     lookalikes: [
-      { slug: 'pinstripe', difference: 'A Pinstripe\'s raised back scales are a bright cream line; a Phantom Pinstripe\'s raised scales blend into the body color.' },
-      { slug: 'extreme-harlequin', difference: 'An Extreme Harlequin can look similar from the side, so check the back: no visible cream on the raised scales points to Phantom Pinstripe.' },
+      {
+        "slug": "pinstripe",
+        "difference": "Visible pinstripe highlights the raised rows; cream continuity alone cannot establish Phantom status."
+      }
     ],
-    aliases: ['Phantom', 'Reverse Pin'],
+    aliases: [
+      "Phantom Pin"
+    ],
     category: 'pattern',
     inheritance: 'polygenic',
     // Dual-model note (D13): the traditional label stays; the paragraph
     // below gives the Foundation Genetics reading.
     foundationGenetics:
-      'The traditional hobby reading treats Phantom Pinstripe as a polygenic pinstripe style kept going by selection. Foundation Genetics links the look to Phantom, a simple recessive gene: two copies add dark pigment and mute pattern, and on a pinstriped animal the raised dorsal scales stay the base color instead of turning cream. Under that reading a Phantom Pinstripe is a visual Phantom with Pinstripe, and one hidden copy (Het Phantom) looks normal. In Geck Inspect a plain "Phantom" tag means a visual Phantom; ask the breeder whether the line has proven out before paying for a Phantom or Het Phantom claim.',
+      "Foundation Genetics and AC Reptiles describe recessive Phantom models. Do not infer a carrier or homozygous state from a dark crest row or from the older phantom-pinstripe sale label.",
     rarity: 'rare',
     priceTier: '$$$',
     priceRange: '$500 to $1,500',
     summary:
-      'Raised dorsal scales that remain dark (unpigmented cream) while the flanks carry bright pattern, a reversed look.',
+      "A historical visual label that needs to be distinguished from genetic Phantom and reverse pinstripe.",
     description:
-      'Phantom pinstripe (sometimes called "reverse pin") is a pattern where the dorsal raised scales stay the base color, not cream, while the surrounding pattern is extremely bright. This produces a striking "phantom" appearance where the dorsal line disappears into the body while the rest of the pattern pops. Often confused with a low-quality pinstripe; true phantom is a distinct, selectively maintained look.',
+      "Usage has changed across breeders and over time. Genetic Phantom is associated with suppression of parts of the usual pattern, and should be discussed using the breeder's lineage and model. The absence of a cream pinstripe is not enough to identify it. Reverse pinstripe instead describes a dark line below the crest row; it may occur alongside a visible cream pinstripe.",
     keyFeatures: [
-      'Dorsal raised scales are the same color as the base, no cream stripe',
-      'Flanks and legs show bright, harlequin-like pattern',
-      'Often paired with extreme harlequin and tricolor for maximum visual impact',
-      'Selection depends on keepers recognizing the trait and preserving it, easy to lose in a large breeding program',
+      "Reduced light coloration on raised dorsal rows in the historical usage",
+      "Absence of cream alone is not diagnostic",
+      "Reverse pinstripe is a separate visible feature"
     ],
     visualIdentifiers: [
-      'Dorsal scales blend into the body rather than forming a bright line',
-      'Contrast is on the flanks, not the back',
-      'Requires comparison photos to a traditional pinstripe to appreciate',
+      "Describe crest color, dorsal field and flank pattern separately",
+      "Ask which definition and lineage support a Phantom label"
     ],
     history:
-      'Formally recognized in the late 2000s. Named by hobbyists who noticed that the "reverse" look held up across generations.',
+      "The older appearance-based term and more recent genetic usage are not interchangeable.",
     combinesWith: ['extreme-harlequin', 'tricolor', 'lilly-white', 'axanthic', 'cream'],
+    sources: [
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=54",
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
   {
     slug: 'dalmatian',
     name: 'Dalmatian',
     definition:
-      'A Dalmatian crested gecko is a crested gecko covered in separate, sharp-edged spots, most often black but sometimes red or white, that grow darker and more numerous as it ages.',
+      "A Dalmatian crested gecko shows discrete pigmented spots, commonly black or red, which vary in size, shape and distribution and may overlap lighter pattern.",
     lookalikes: [
-      { slug: 'super-dalmatian', difference: 'A Super Dalmatian has 100 or more spots as an adult, reaching the head, legs and tail; a Dalmatian has fewer, mostly on the body.' },
+      {
+        "slug": "super-dalmatian",
+        "difference": "Super Dalmatian may describe heavy spotting or a breeder's genetic claim; there is no universal spot-count test."
+      }
     ],
     aliases: ['Dal', 'Dally'],
     category: 'pattern',
@@ -331,36 +368,43 @@ export const MORPHS = [
     // hobby label (and the hub URL grouping); foundationGenetics explains
     // the Foundation Genetics single-locus model alongside it.
     foundationGenetics:
-      'Two readings coexist. The traditional view treats Dalmatian spotting as polygenic since spot count varies wildly and climbs with selective pairing. Foundation Genetics models a dominant gene: one copy gives a visible Dalmatian (passing to about half of offspring), two copies give denser spotting and pass spots to every offspring. Spot count on top of that base is modifier-driven, and spots keep developing with age, so a sparse hatchling can mature into a heavily spotted adult.',
+      "Some breeders model Dalmatian as a dominant or incomplete-dominant trait and use super for a homozygous animal. Other listings use super as a visual grade. A spot count alone does not distinguish these meanings.",
     rarity: 'common',
     priceTier: '$$',
     priceRange: '$100 to $400',
     summary:
-      'Discrete dark spots scattered across the body, black is most common, red and occasionally white also occur.',
+      "Discrete pigmented spots that can coexist with other patterns.",
     description:
-      'Dalmatian is a polygenic trait producing discrete, round dark spots across the gecko\'s body. Spot count ranges from a few dozen on a "light dalmatian" to hundreds on a "super dalmatian." Spots typically develop with age, a hatchling may show a handful, while the same animal at 18 months may be peppered head to tail. Red dalmatian spots are rarer and often co-occur with a red base.',
+      "Look for individual spots rather than treating every dark band or cream fleck as spotting. Spots can vary from small dots to larger irregular blotches, and may occur over both base color and light pattern. Their number, size and visibility can change with age and firing state. White portholes and other white markings are separate features.",
     keyFeatures: [
-      'Discrete round dark spots, not pattern smudging or flecking',
-      'Spots darken and increase in count as the gecko ages, peaking around 12 to 18 months',
-      'Quality graded by spot count, contrast, and distribution',
-      'Stacks with virtually every other trait: dalmatian harlequin, dalmatian pinstripe, super dalmatian combo animals are common',
+      "Individual pigmented spots with variable sizes and edges",
+      "Black and red spots can occur on the same animal",
+      "Spotting can coexist with cream pattern and pinstripe"
     ],
     visualIdentifiers: [
-      'Sharp-edged round spots distinguishable from random dark flecking',
-      'Spots appear on the base color, not on pattern areas',
-      'Count should increase from hatchling to adult, an "already heavy" hatchling usually develops into a super dalmatian',
+      "Inspect more than one side and more than one firing state",
+      "Do not classify genotype from a spot count",
+      "Distinguish pale portholes from pigmented spots"
     ],
     history:
       'Long-established trait, recognized since the earliest organized breeding in the late 1990s.',
     combinesWith: ['harlequin', 'pinstripe', 'cream', 'lilly-white', 'axanthic', 'super-dalmatian'],
+    sources: [
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=67",
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
   {
     slug: 'super-dalmatian',
     name: 'Super Dalmatian',
     definition:
-      'A Super Dalmatian crested gecko is a crested gecko with 100 or more well-defined spots as an adult, reaching the head, legs and tail as well as the body.',
+      "Super Dalmatian is used for heavily spotted crested geckos and, in some breeder models, for a homozygous Dalmatian; the meanings cannot be equated by counting spots.",
     lookalikes: [
-      { slug: 'dalmatian', difference: 'If you can count the spots quickly, or the head and tail are mostly clear, it is a Dalmatian rather than a Super Dalmatian.' },
+      {
+        "slug": "dalmatian",
+        "difference": "The visual distinction is the degree of spotting; a single cutoff does not establish gene dosage."
+      }
     ],
     aliases: ['Super Dal'],
     category: 'pattern',
@@ -369,36 +413,46 @@ export const MORPHS = [
     // hobby label (and the hub URL grouping); foundationGenetics explains
     // the Foundation Genetics single-locus model alongside it.
     foundationGenetics:
-      'Under the traditional polygenic reading, Super Dalmatian is simply the far end of the spot-count spectrum reached through selective breeding. Foundation Genetics reads it as the homozygous form of a dominant Dalmatian gene, with polygenic modifiers stacking the 100+ spot counts on top. Practical upshot from both models: pairing two heavily spotted animals is how you get there, and a Super Dalmatian passes spotting to every offspring.',
+      "Foundation Genetics models Dalmatian as a dominant trait with a homozygous Super Dalmatian form. In that model, inheritance predictions follow the documented genotype. They must not be applied automatically to every heavily spotted animal sold as super.",
     rarity: 'uncommon',
     priceTier: '$$$',
     priceRange: '$300 to $800',
     summary:
-      'Extreme dalmatian with 100+ well-defined spots covering nearly the entire body.',
+      "Heavy spotting; ask whether super denotes appearance or a documented genetic claim.",
     description:
-      'Super dalmatian is the high-count end of the dalmatian gradient. Conventionally, 100+ well-defined spots covering the head, dorsum, flanks, legs, and tail. Because dalmatian counts increase with age, a super dalmatian designation is typically made at ~12+ months after spots have stabilized.',
+      "Describe the visible spot density, size and distribution first. Sellers use different standards for super Dalmatian, and a fixed threshold such as 100 spots is not a genetic test. Age, firing state, other traits and which parts of the animal are visible affect a count.",
     keyFeatures: [
-      '100+ discrete spots across the body at adult age',
-      'Spots extend onto the head, legs, and tail, not just the dorsum',
-      'Often produced by stacking two high-dalmatian parents across multiple generations',
+      "Extensive or dense spotting in the visual usage",
+      "Spot sizes and distribution remain variable",
+      "A genetic super claim needs lineage or breeding evidence"
     ],
     visualIdentifiers: [
-      'Too many spots to count quickly',
-      'Spots remain well-defined rather than smudging together',
-      'Head and tail are fully covered, not just the body',
+      "Compare multiple photographs rather than counting one side",
+      "Ask how the breeder uses the term super"
     ],
     history:
       'The "super" designation came with breeders tightening selection pressure on spot count through the 2010s.',
     combinesWith: ['harlequin', 'extreme-harlequin', 'pinstripe', 'lilly-white', 'axanthic'],
+    sources: [
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=67",
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
   {
     slug: 'flame',
     name: 'Flame',
     definition:
-      'A Flame crested gecko is a crested gecko whose lighter pattern stays on the back, while its flanks and legs remain a clean, solid base color.',
+      "A Flame crested gecko has conspicuous lighter dorsal pattern with relatively little pattern on the flanks and limbs.",
     lookalikes: [
-      { slug: 'harlequin', difference: 'Pattern that climbs onto the flanks and legs makes a Harlequin; a Flame\'s flanks and legs stay a clean, solid base color.' },
-      { slug: 'bicolor', difference: 'A Flame has lighter pattern markings along the back; a Bicolor\'s back is a second solid color with a clear boundary.' },
+      {
+        "slug": "harlequin",
+        "difference": "Harlequin has more conspicuous lateral and limb pattern; the boundary is descriptive."
+      },
+      {
+        "slug": "bicolor",
+        "difference": "Bicolor describes a contrasting dorsal color field with little internal pattern; flame emphasizes dorsal markings."
+      }
     ],
     aliases: [],
     category: 'pattern',
@@ -407,32 +461,40 @@ export const MORPHS = [
     priceTier: '$',
     priceRange: '$60 to $180',
     summary:
-      'A pattern type with color restricted to the dorsum, flanks stay a solid base color.',
+      "Dorsal pattern dominates; flank and leg pattern is limited.",
     description:
-      'Flame is the "entry-level" pattern in the hobby. A flame crested gecko has bright dorsal markings but minimal or no pattern on the flanks and legs. It is the baseline from which most harlequin projects start, breeders call it "flame" to contrast with "harlequin" (pattern climbing the flanks). Flames can still be beautiful with strong base color, and quality flame pairs remain the foundation of many breeding programs.',
+      "Flame directs attention to the patterned dorsal field. Some examples have subtle lateral or limb markings, so perfectly blank sides are not a requirement. Compare the amount and organization of flank and limb pattern when discussing flame versus harlequin.",
     keyFeatures: [
-      'Pattern concentrated along the dorsum, not climbing onto flanks or legs',
-      'Typically the least expensive pattern morph at hatch',
-      'Strong flames form the base of harlequin projects',
-      'Pair flame × harlequin often produces a mix of both',
+      "Light pattern is most conspicuous on the back",
+      "Relatively limited lateral and limb pattern",
+      "Broad dorsal pattern is distinct from a narrow pinstripe"
     ],
     visualIdentifiers: [
-      'Clean, solid flanks and legs',
-      'Dorsal pattern can still be very bright, the distinction is coverage, not saturation',
-      'Often mistaken for a poor harlequin; flame is a named category in its own right',
+      "Compare the dorsal field with the flanks and legs",
+      "Recognize that borderline flame and harlequin labels vary"
     ],
     history:
       'Recognized since the earliest days of the hobby. Named for the flame-like markings running along the back.',
     combinesWith: ['dalmatian', 'cream', 'pinstripe', 'lilly-white'],
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/",
+      "https://www.pangeareptile.com/collections/harlequin"
+    ],
   },
   {
     slug: 'tiger',
     name: 'Tiger',
     definition:
-      'A Tiger crested gecko is a crested gecko with sharp, parallel dark bands running across the back, at right angles to the spine, that show most strongly when it is fired up.',
+      "A Tiger crested gecko shows dark transverse markings across the back that may continue down the flanks, with naturally variable spacing, width and continuity.",
     lookalikes: [
-      { slug: 'brindle', difference: 'A Tiger\'s bands are clean and parallel; a Brindle\'s are broken, smudged or marbled and often wrap onto the flanks.' },
-      { slug: 'tiger-brindle', difference: 'When the bands mix clean parallel lines with irregular patches, breeders usually list the gecko as Tiger / Brindle.' },
+      {
+        "slug": "brindle",
+        "difference": "Brindle commonly describes more broken or reticulated transverse pattern; terminology overlaps."
+      },
+      {
+        "slug": "tiger-brindle",
+        "difference": "Tiger/brindle acknowledges overlapping banded and interrupted appearances."
+      }
     ],
     aliases: [],
     category: 'pattern',
@@ -446,32 +508,36 @@ export const MORPHS = [
     priceTier: '$$',
     priceRange: '$150 to $400',
     summary:
-      'Horizontal dark banding across the dorsum, running perpendicular to the spine.',
+      "Dark transverse banding with variable contrast and continuity.",
     description:
-      'Tiger pattern consists of distinct dark horizontal bands running across the back of the gecko, perpendicular to the spine. The bands can be subtle or bold, and are most visible when the animal is fired up. Selective breeding has pushed the contrast and number of bands higher, producing the extreme form known as brindle.',
+      "Follow the direction of the dark markings across the back. Real bands are not mechanically straight, identical or evenly spaced. More interrupted or reticulated patterns are often called brindle, and breeders may use tiger/brindle for overlapping appearances.",
     keyFeatures: [
-      'Horizontal bands crossing the dorsum perpendicular to the spine',
-      'Bands are darkest when fired up and can fade significantly when fired down',
-      'Quality judged by band number, sharpness, and contrast',
-      'Stacks with base color traits: red tiger, olive tiger, chocolate tiger',
+      "Transverse orientation across the dorsal field",
+      "Unequal band widths and irregular edges",
+      "Contrast can change with firing state"
     ],
     visualIdentifiers: [
-      'Sharp, parallel horizontal lines across the back',
-      'Distinguished from "dashed" or irregular markings by parallel regularity',
-      'Fires up dramatically at night',
+      "Use a top view for direction and a side view for continuation",
+      "Do not require perfectly parallel stripes"
     ],
     history:
       'Long-established polygenic trait, recognized in breeding programs since the early 2000s.',
     combinesWith: ['brindle', 'extreme-brindle', 'red-base', 'olive', 'chocolate', 'harlequin'],
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
   {
     slug: 'brindle',
     name: 'Brindle',
     definition:
-      'A Brindle crested gecko is a crested gecko with heavier, broken or marbled dark banding across the back that often wraps onto the flanks, instead of the clean parallel bands of a Tiger.',
+      "A Brindle crested gecko has irregular, broken or reticulated dark transverse pattern, a descriptive appearance that overlaps with tiger.",
     lookalikes: [
-      { slug: 'tiger', difference: 'Clean, regular parallel bands across the back point to Tiger; broken or marbled bands point to Brindle.' },
-      { slug: 'extreme-brindle', difference: 'An Extreme Brindle\'s dark pattern covers most of the back and flanks, so the back can look almost fully dark.' },
+      {
+        "slug": "tiger",
+        "difference": "Tiger usually emphasizes recognizable transverse bands; both can have irregular edges and flank markings."
+      }
     ],
     aliases: [],
     category: 'pattern',
@@ -482,20 +548,22 @@ export const MORPHS = [
     summary:
       'Heavier, more irregular banding than tiger, often described as "broken" or "marbled" tiger.',
     description:
-      'Brindle is the heavier, more chaotic cousin of tiger. Where tiger shows clean parallel bands, brindle shows broken, irregular, overlapping dark markings across the dorsum. The two traits are on a gradient, many breeders refer to "tiger/brindle" as a combined category. Extreme brindle is the upper tier where the dark pattern dominates the dorsum.',
+      "Brindle commonly describes broken or interconnected dark banding. It is not defined only by stronger contrast or by whether markings reach the flanks. Observe direction, interruptions and branching together.",
     keyFeatures: [
-      'Irregular, broken, or marbled dark bands across the dorsum',
-      'More pattern coverage than tiger, less regular',
-      'Often combined with strong base color (red, olive) for dramatic effect',
-      'Pairs well with dalmatian for a busy, high-interest animal',
+      "Broken or interconnected dark markings",
+      "Irregular band widths, spacing and continuity",
+      "Terminology overlaps with tiger"
     ],
     visualIdentifiers: [
-      'Horizontal pattern that appears smudged or broken, rather than clean bands',
-      'Pattern can wrap around onto the flanks, distinguishing from tiger',
+      "Follow branching and interruptions across the back and flanks"
     ],
     history:
       'Recognized alongside tiger as breeders noted both patterns appeared in the same lines at different expression levels.',
     combinesWith: ['tiger', 'extreme-brindle', 'red-base', 'olive', 'chocolate', 'harlequin'],
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
   {
     slug: 'extreme-brindle',
@@ -528,8 +596,14 @@ export const MORPHS = [
     definition:
       'A Tiger / Brindle crested gecko is a crested gecko whose dark banding sits between the two looks, mixing tiger-like parallel lines with brindle-like irregular patches.',
     lookalikes: [
-      { slug: 'tiger', difference: 'A Tiger has sharp, regular parallel bands with little irregular patching.' },
-      { slug: 'brindle', difference: 'A Brindle\'s banding is mostly broken or marbled, with few clean parallel lines.' },
+      {
+        "slug": "tiger",
+        "difference": "Tiger emphasizes recognizable transverse bands."
+      },
+      {
+        "slug": "brindle",
+        "difference": "Brindle emphasizes broken or interconnected dark pattern."
+      }
     ],
     aliases: ['T/B', 'Tiger Brindle'],
     category: 'pattern',
@@ -554,9 +628,12 @@ export const MORPHS = [
     slug: 'soft-scale',
     name: 'Soft Scale',
     definition:
-      'A Soft Scale crested gecko is a crested gecko carrying one copy of the incomplete dominant Soft Scale gene, which gives it visibly smaller, finer scales and smoother, more matte skin.',
+      "Soft Scale is an AC Reptiles trait associated with subtle differences in skin texture and appearance; it can be difficult to identify from photographs.",
     lookalikes: [
-      { slug: 'super-soft-scale', difference: 'A Super Soft Scale (two copies) looks near-leather across the whole body; a Soft Scale (one copy) is smoother than normal but still clearly scaled.' },
+      {
+        "slug": "super-soft-scale",
+        "difference": "The super form is described as more pronounced, but visual assessment alone can be difficult."
+      }
     ],
     aliases: ['SS'],
     category: 'structure',
@@ -565,33 +642,37 @@ export const MORPHS = [
     priceTier: '$$$',
     priceRange: '$400 to $1,000',
     summary:
-      'Incomplete-dominant trait that reduces scale size and texture, the animal looks smoother and more velvety.',
+      "Subtle scale and texture differences requiring close comparison and lineage.",
     description:
-      'Soft scale is a proven incomplete-dominant trait that modifies the structure of the gecko\'s scales, producing a noticeably smoother and finer-grained skin texture. The super form, super soft scale, takes this further, scales are dramatically reduced and the animal looks almost leather-like. First formally identified and proven by North of the Border (NOTB) in the early 2020s.',
+      "AC Reptiles describes differences in scale spacing, texture and coloration, with a more conspicuous Super Soft Scale form. Ordinary photographs, eye color or a smooth-looking drawing are insufficient to establish the trait.",
     keyFeatures: [
-      'Visibly smaller, finer scales compared to a wild-type animal',
-      'Skin appears smoother and more matte',
-      'Single copy is visible (het form); two copies produce the super form',
-      'Proven inheritance, works in Punnett squares',
+      "Subtle scale-spacing and texture differences",
+      "Expression varies with the animal and other traits",
+      "Use documented lineage and close comparative photographs"
     ],
     visualIdentifiers: [
-      'Close-up photo of the dorsum shows reduced scale prominence',
-      'Skin texture feels noticeably softer to the touch',
-      'In direct side-by-side comparison with a standard animal, the difference is obvious',
+      "Compare detailed photographs with documented examples",
+      "Do not infer gene dosage from apparent smoothness alone"
     ],
     history:
-      'Proven by North of the Border Reptiles (Frank Payne) in the early 2020s. Verified through controlled test breedings.',
+      "Developed by Anthony Caponetto at AC Reptiles from animals held in the early 2000s.",
     combinesWith: ['super-soft-scale', 'white-wall', 'lilly-white', 'cappuccino', 'axanthic'],
     notes:
-      'Super soft scale can be difficult to distinguish from the single-copy form in photos, request multiple angles when buying.',
+      "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
+    sources: [
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=55"
+    ],
   },
   {
     slug: 'super-soft-scale',
     name: 'Super Soft Scale',
     definition:
-      'A Super Soft Scale crested gecko is a crested gecko with two copies of the Soft Scale gene, giving it dramatically reduced scale texture and a near-leather look across the whole body.',
+      "Super Soft Scale is the homozygous form described in the AC Reptiles Soft Scale project, with more pronounced texture and appearance differences.",
     lookalikes: [
-      { slug: 'soft-scale', difference: 'A single-copy Soft Scale is visibly smoother than a normal gecko but far less extreme than the near-leather Super form.' },
+      {
+        "slug": "soft-scale",
+        "difference": "Expression overlaps in photographs; do not establish dosage from apparent smoothness."
+      }
     ],
     aliases: ['SSS', 'Super SS'],
     category: 'structure',
@@ -600,27 +681,35 @@ export const MORPHS = [
     priceTier: '$$$$',
     priceRange: '$1,200 to $3,500',
     summary:
-      'Homozygous form of soft scale, dramatically reduced scales and a near-leather appearance.',
+      "The more pronounced form in the Soft Scale breeding model.",
     description:
-      'Super soft scale is the homozygous expression of the soft scale gene. Two copies reduce scales far more dramatically than a single copy, producing a nearly smooth, leather-textured animal. Considered visually stunning and still quite rare in the hobby.',
+      "The super designation refers to the breeding model, not to a requirement for scaleless or leather-like skin. Retained scales and crest structure vary. Use documented project animals for comparison.",
     keyFeatures: [
-      'Dramatically reduced scale texture across the entire body',
-      'Skin appears near-leather or matte in quality',
-      'Two copies required, produced by pairing two visual soft scale animals',
-      'High value because of the small pool of proven super animals',
+      "More pronounced expression in the Soft Scale project",
+      "Not a scaleless animal",
+      "Lineage and breeding evidence support the genetic label"
     ],
     history:
-      'First confirmed around 2022 to 2023 as early soft scale projects matured to the F2 generation.',
+      "Developed within the AC Reptiles Soft Scale project.",
     combinesWith: ['lilly-white', 'axanthic', 'cappuccino', 'white-wall'],
+    sources: [
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=55"
+    ],
   },
   {
     slug: 'white-wall',
     name: 'White Wall',
     definition:
-      'A White Wall crested gecko is a crested gecko with a bright white patch along the flanks that stays white even when the rest of the gecko fires down.',
+      "White Wall commonly describes extensive pale lateral pattern; breeders may also use the term within specific Whiteout or white-pattern inheritance models.",
     lookalikes: [
-      { slug: 'white-wall-white-spot', difference: 'White Wall White Spot shows separate white spots on the flanks instead of one solid wall of white.' },
-      { slug: 'lilly-white', difference: 'A Lilly White has bold white markings on both the back and the flanks; a White Wall\'s white is a solid band along the flanks.' },
+      {
+        "slug": "lilly-white",
+        "difference": "Lateral white alone does not identify Lilly White."
+      },
+      {
+        "slug": "white-wall-white-spot",
+        "difference": "White-spot terminology concerns discrete pale lateral areas and varies by model."
+      }
     ],
     aliases: ['WW'],
     category: 'structure',
@@ -629,30 +718,36 @@ export const MORPHS = [
     priceTier: '$$$$',
     priceRange: '$1,500 to $4,000',
     summary:
-      'Structural trait producing a bright white flank that does not fire down, hence "wall of white."',
+      "Extensive pale flank pattern; terminology depends on the breeder and line.",
     description:
-      'White wall is a proven incomplete-dominant trait that produces a striking white patch along the flanks and sometimes the dorsum. The white is structural, it does not fire down with the rest of the animal, giving the impression of a persistent "wall" of white even when the gecko is otherwise fired down. The super form, super white wall, pushes this further toward a near-patternless white animal.',
+      "Describe the location and extent of the lateral white first. A connected flank patch is not proof of Lilly White or a universal White Wall genotype. Whiteout, white wall and white-spot terminology differs between breeding models.",
     keyFeatures: [
-      'Bright white patch on the flanks that persists in fired-down state',
-      'Often combined with lilly white for the white-wall white-spot look',
-      'Proven inheritance with a known super form',
-      'Distinguishes itself from harlequin cream by holding when the animal is fired down',
+      "Extensive lateral white or cream pattern",
+      "The term may describe appearance or a breeder-specific genetic model"
     ],
     visualIdentifiers: [
-      'White patches remain bright even when the rest of the animal darkens at rest',
-      'Position typically along the lateral line and flanks',
+      "Examine both flanks",
+      "Ask which lineage and inheritance model support the label"
     ],
     history:
-      'Proven by AC Reptiles and collaborating breeders in the early 2020s after years of line development.',
+      "The terminology is used across breeder projects, including AC Reptiles Whiteout work.",
     combinesWith: ['lilly-white', 'white-wall-white-spot', 'soft-scale', 'axanthic'],
+    sources: [
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=55",
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
   {
     slug: 'white-wall-white-spot',
     name: 'White Wall White Spot',
     definition:
-      'A White Wall White Spot crested gecko is a crested gecko with separate, well-defined white spots on the flanks (and sometimes the back) in place of a solid white wall, and the spots stay bright when it fires down.',
+      "White Wall White Spot is used for white-pattern traits involving pale lateral patches or spots; the exact meaning depends on the breeder's terminology and lineage.",
     lookalikes: [
-      { slug: 'white-wall', difference: 'A White Wall\'s flank white is one solid patch; a White Wall White Spot\'s is broken into separate spots.' },
+      {
+        "slug": "white-wall",
+        "difference": "Connected versus separate pale areas can help describe appearance, but does not establish genotype."
+      }
     ],
     aliases: ['WWWS', 'White Spot'],
     category: 'structure',
@@ -661,23 +756,29 @@ export const MORPHS = [
     priceTier: '$$$$',
     priceRange: '$1,500 to $4,000',
     summary:
-      'Variant of white wall characterized by isolated bright white spots rather than a solid wall.',
+      "A white-pattern label whose meaning needs breeder context.",
     description:
-      'White wall white spot expresses as discrete white patches or spots across the body, rather than the continuous white flank typical of standard white wall. Often considered a variant of the same underlying gene complex, and frequently co-produced with white wall animals in the same lines.',
+      "Separate what is visible from a genetic claim. Record whether the pale lateral pattern forms isolated patches, connected walls or spreading markings. Similar appearances can be described differently between projects.",
     keyFeatures: [
-      'Discrete, defined white spots on the flanks and sometimes dorsum',
-      'Spots hold in fired-down state (structural, not pigmentary)',
-      'Commonly paired with lilly white for further dramatic contrast',
+      "Pale lateral patches or spots",
+      "Label and inheritance need project-specific context"
     ],
     combinesWith: ['lilly-white', 'white-wall', 'soft-scale', 'axanthic'],
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
   {
     slug: 'cappuccino',
     name: 'Cappuccino',
     definition:
-      'A Cappuccino crested gecko is a crested gecko carrying the incomplete dominant Cappuccino gene, which gives it a clean-edged saddle marking on the back over a warm, coffee-brown body.',
+      "A Cappuccino crested gecko carries the Cappuccino trait, which can alter pattern and pigmentation across a wide range of appearances; coffee-brown color or a saddle alone is not diagnostic.",
     lookalikes: [
-      { slug: 'frappuccino', difference: 'A Frappuccino is a Cappuccino that also carries Lilly White, so it is much whiter, with bold white head spotting.' },
+      {
+        "slug": "frappuccino",
+        "difference": "Frappuccino combines Cappuccino with Lilly White; appearance is variable and requires supporting lineage."
+      }
     ],
     aliases: ['Cap', 'Cappy'],
     category: 'structure',
@@ -686,32 +787,40 @@ export const MORPHS = [
     priceTier: '$$$',
     priceRange: '$400 to $1,200',
     summary:
-      'Structural pattern trait creating a distinctive "saddle" mark on the back with a clean dorsal contrast.',
+      "A genetic trait with variable appearance across ages and combinations.",
     description:
-      'Cappuccino is a proven incomplete-dominant trait that produces a characteristic "saddle", a distinct, rounded dorsal marking with clean boundaries. The body often shows a warm brown (coffee) tone, hence the name. Combines powerfully with harlequin to produce "mocha" animals. Two copies produce the Super Cappuccino (also called Melanistic), which carries documented health concerns, so Cappuccino is best paired to a non-Cappuccino.',
+      "Cappuccino appearance varies with age, base color and other traits. Breeders often inspect the pale marking at the tail base in young animals together with the overall pattern and documented lineage. There is no universal coffee-brown body or clean-edged saddle that identifies every Cappuccino.",
     keyFeatures: [
-      'Defined dorsal "saddle" with clean edges, not a gradient pattern',
-      'Warm brown/mocha undertone on body',
-      'Proven incomplete-dominant inheritance',
-      'Homozygous form is the Super Cappuccino (Melanistic), with documented health concerns',
+      "Variable pigmentation and pattern",
+      "A pale tail-base marking can be a clue in juveniles",
+      "Confirmation depends on the breeder's documented line and evidence"
     ],
     visualIdentifiers: [
-      'Saddle-shaped dorsal marking that stands out from the surrounding pattern',
-      'Warm coffee-colored base rather than cool tones',
-      'Often shows a clean ring pattern around the eyes',
+      "Compare age-matched documented examples",
+      "Do not identify it from brown color alone"
     ],
     history:
-      'Proven in the 2010s. One of the first widely-accepted proven non-recessive morphs in the species.',
+      "The project was developed in South Korea and later investigated through breeder collaborations, including Pangea.",
     combinesWith: ['lilly-white', 'soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
+    sources: [
+      "https://www.pangeareptile.com/blogs/blog/cappuccino-frappuccino-melanistic"
+    ],
+    notes: "Two Cappuccino copies produce the melanistic form associated with serious health concerns. Avoid Cappuccino-to-Cappuccino pairings.",
   },
   {
     slug: 'frappuccino',
     name: 'Frappuccino',
     definition:
-      'A Frappuccino crested gecko is a crested gecko that carries both Cappuccino and Lilly White, which makes it brighter and whiter than a standard Lilly White, with bold white head spotting that develops with age.',
+      "A Frappuccino crested gecko combines Cappuccino and Lilly White; its white coverage, pigmentation and pattern vary with age and other traits.",
     lookalikes: [
-      { slug: 'lilly-white', difference: 'A standard Lilly White is less bright and less white, and lacks the Cappuccino saddle and the heavy white head spotting.' },
-      { slug: 'cappuccino', difference: 'A Cappuccino without Lilly White keeps its warm coffee-brown body and saddle, without the bold white markings.' },
+      {
+        "slug": "lilly-white",
+        "difference": "Extra white alone does not demonstrate Cappuccino; establish the combination through lineage."
+      },
+      {
+        "slug": "cappuccino",
+        "difference": "Frappuccino also carries Lilly White."
+      }
     ],
     aliases: ['Frap'],
     category: 'combo',
@@ -720,25 +829,37 @@ export const MORPHS = [
     priceTier: '$$$$',
     priceRange: '$1,500 to $3,500',
     summary:
-      'A combo of Cappuccino and Lilly White, brighter and whiter than a standard Lilly White with dramatic head spotting.',
+      "The combination of Cappuccino and Lilly White, with variable expression.",
     description:
-      'Frappuccino is the combination of two incomplete-dominant morphs, Cappuccino and Lilly White, carried in the same animal. It is not a super form, and it does not come from pairing two Cappuccinos. Frappuccinos hatch brighter and whiter than a standard Lilly White and develop dramatic white spotting on the head as they mature. A Frappuccino carries one copy each of Cappuccino and Lilly White.',
+      "Frappuccino names a combination of two traits, not a visual brightness grade or a single super form. Some examples develop conspicuous head markings or extensive white, but no one head-spot pattern or level of whiteness identifies every animal. Compare documented examples and lineage.",
     keyFeatures: [
-      'A combo of Cappuccino + Lilly White, not a homozygous super form',
-      'Brighter, whiter coloration than a standard Lilly White',
-      'Dramatic white head spotting develops with age',
+      "Cappuccino plus Lilly White",
+      "Variable white coverage and head markings",
+      "Not simply an especially white Lilly White"
     ],
     combinesWith: ['soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
+    sources: [
+      "https://www.pangeareptile.com/blogs/blog/cappuccino-frappuccino-melanistic"
+    ],
   },
   {
     slug: 'lilly-white',
     name: 'Lilly White',
     definition:
-      'A Lilly White crested gecko is a crested gecko carrying one copy of the incomplete dominant Lilly White gene, which gives it bold white markings on the back and flanks that stay white when it fires down.',
+      "A Lilly White crested gecko carries an incomplete-dominant trait associated with distinctive white or cream coverage, which varies with age and other traits.",
     lookalikes: [
-      { slug: 'white-wall', difference: 'A White Wall\'s white is a solid band along the flanks; a Lilly White shows bold white markings on the back and flanks at the same time.' },
-      { slug: 'frappuccino', difference: 'A Frappuccino carries Cappuccino as well as Lilly White, so it is brighter and whiter, with heavy white head spotting as it ages.' },
-      { slug: 'cream', difference: 'Cream is a pattern color on a Harlequin or Pinstripe; a Lilly White\'s white is structural and stays white when the gecko fires down.' },
+      {
+        "slug": "white-wall",
+        "difference": "White flank pattern alone does not establish Lilly White."
+      },
+      {
+        "slug": "frappuccino",
+        "difference": "Frappuccino also carries Cappuccino; greater whiteness is not proof."
+      },
+      {
+        "slug": "cream",
+        "difference": "Cream is a visible color description, not confirmation of Lilly White."
+      }
     ],
     aliases: ['LW', 'Lilly'],
     category: 'structure',
@@ -749,23 +870,24 @@ export const MORPHS = [
     summary:
       'Proven incomplete-dominant trait producing bold white markings, the super form is lethal.',
     description:
-      'Lilly white is the most famous incomplete-dominant morph in crested geckos. A single copy produces bright, well-defined white markings on the dorsum, flanks, and legs. The super form (two copies) is a lethal allele, homozygous embryos do not survive to hatch. This is the cleanest confirmed example of a lethal gene in the species and is why visual lilly × visual lilly pairings yield only 2/3 surviving offspring as lilly white and 1/3 as non-lilly siblings.',
+      "Lilly White produces variable white or cream pattern that often becomes more extensive with age. Breeders assess multiple features, including tail, flank and ventral coloration, alongside lineage. High white coverage alone is insufficient: other traits may resemble it, and low-expression or Phantom combinations can look quite different.",
     keyFeatures: [
-      'Bright, well-defined white markings on a single copy',
-      'Super form (super lilly / LWxLW homozygous) is lethal, embryos do not hatch',
-      'Pair visual lilly × non-carrier to produce 50% lilly offspring with zero lethal risk',
-      'Stacks with nearly every other trait: axanthic lilly, harlequin lilly, tricolor lilly',
+      "Variable white or cream coverage",
+      "Tail, flank and ventral features help guide comparison",
+      "Two copies are associated with a lethal super form; avoid Lilly White-to-Lilly White pairings"
     ],
     visualIdentifiers: [
-      'White markings appear on both the dorsum and flanks simultaneously',
-      'Often includes bright leg pattern',
-      'The white is structural, it persists in fired-down state',
+      "Compare multiple regions with documented, age-matched examples",
+      "Use lineage to support identification"
     ],
     history:
-      'Discovered by Anthony Caponetto at ACR in 2011 and proven through controlled breeding. Named after his daughter Lilly.',
+      "The founding project was established by Nick Lumb at Lilly Exotics in the United Kingdom, beginning with an unusual hatchling in late 2010.",
     combinesWith: ['white-wall', 'soft-scale', 'cappuccino', 'axanthic', 'harlequin', 'extreme-harlequin', 'dalmatian'],
     notes:
-      'Never pair two visual lilly whites unless you accept that roughly 1/4 of eggs will fail to develop, this is the homozygous lethal phenotype.',
+      "The homozygous super form has been reported to die before or shortly after hatching. A Lilly White-to-non-Lilly pairing avoids producing that genotype; it cannot guarantee general offspring health.",
+    sources: [
+      "https://www.corchgeckos.com/lillywhite.html"
+    ],
   },
   // ---------- COLOR MODIFIERS ----------
   {
@@ -774,9 +896,14 @@ export const MORPHS = [
     definition:
       'An Axanthic crested gecko is a crested gecko with two copies of a recessive gene that removes yellow and red pigment, so it shows only black, gray and white.',
     lookalikes: [
-      { slug: 'albino', difference: 'Opposite pigments: an Axanthic keeps black and loses yellow and red; an Albino keeps yellow and red, loses black and has red or pink eyes.' },
-      { slug: 'lavender', difference: 'A Lavender is a purple-gray base color that can still carry warm pattern; an Axanthic shows no yellow, red or cream anywhere.' },
-      { slug: 'moonglow', difference: 'A line-bred Moonglow is near-white rather than black, gray and white, and usually warms to cream or tan when fired up.' },
+      {
+        "slug": "lavender",
+        "difference": "A cool-looking base color does not by itself demonstrate axanthic genetics."
+      },
+      {
+        "slug": "albino",
+        "difference": "Albinism concerns melanin; axanthic animals retain dark pigment."
+      }
     ],
     aliases: ['Axie', 'Axan'],
     category: 'color',
@@ -787,23 +914,24 @@ export const MORPHS = [
     summary:
       'Proven recessive trait that removes yellow and red pigment, animals appear black, gray, and white.',
     description:
-      'Axanthic is the only fully-proven recessive morph in crested geckos. It removes yellow (xanthophores) and red (erythrophores) pigment, leaving only melanin (black) and white. Visual axanthics appear in shades of charcoal, silver, and white with no warm tones at all. A heterozygous (het) axanthic looks identical to a normal animal, which is why het purchases require documented lineage. First proven by Cabernet Dragons (Matt Parks) around 2018.',
+      "Visual axanthic crested geckos are typically gray, charcoal and pale-toned rather than strongly warm-colored. Several breeder lines exist; compatibility and carrier claims require documentation. Lighting, firing state and image processing can make a non-axanthic animal appear gray, so one photograph is not a genetic test.",
     keyFeatures: [
-      'Proven autosomal recessive, two copies required for visual expression',
-      'Complete absence of yellow and red pigment, only black, gray, and white',
-      'Het axanthics are invisible; buy from documented lineage only',
-      'Stacks with every other trait to produce a "cool-toned" version of that morph',
+      "A recessive trait documented in breeder lines",
+      "Typically reduced warm coloration",
+      "Carrier status cannot be established by appearance"
     ],
     visualIdentifiers: [
-      'Zero warm tones, no yellow, no red, no cream',
-      'Base color appears charcoal to silver',
-      'Pattern areas that would be cream in a normal animal appear pure white',
+      "Compare unfiltered photographs in neutral light",
+      "Confirm lineage and compatibility before interpreting inheritance"
     ],
     history:
-      'Proven by Cabernet Dragons (Matt Parks) around 2018 after multiple generations of selective breeding and test pairings.',
+      "Multiple axanthic breeding projects have been developed; confirm the specific line with the breeder.",
     combinesWith: ['lilly-white', 'soft-scale', 'white-wall', 'dalmatian', 'harlequin', 'pinstripe', 'cappuccino'],
     notes:
-      'Because it is a clean recessive, Punnett squares work: visual × visual → 100% visual; visual × het → 50% visual, 50% het; het × het → 25% visual, 50% het, 25% non-carrier.',
+      "Recessive inheritance predictions apply when the parents carry the same compatible trait. A gray photograph is not proof of a visual axanthic or a carrier.",
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
   },
   {
     slug: 'albino',
@@ -811,7 +939,7 @@ export const MORPHS = [
     definition:
       'An Albino crested gecko is a crested gecko with no black or brown pigment (melanin), so it has red or pink eyes and shows only its yellow, orange, red and cream colors.',
     lookalikes: [
-      { slug: 'moonglow', difference: 'Check the eyes: line-bred Moonglows are near-white with dark eyes; a true Albino has red or pink eyes.' },
+      { slug: 'moonglow', difference: 'A pale body alone does not establish albinism; eye pigmentation and documented lineage matter.' },
       { slug: 'lilly-white', difference: 'A Lilly White has white markings but keeps dark eyes and dark pattern; an Albino has no dark pigment at all.' },
       { slug: 'axanthic', difference: 'Opposite pigments: an Albino keeps yellow and red and loses black; an Axanthic keeps black and loses yellow and red.' },
     ],
@@ -831,7 +959,7 @@ export const MORPHS = [
       'Expected recessive, like albinism in other reptiles, but not yet proven by test breeding',
     ],
     visualIdentifiers: [
-      'Eye color is the tell: a true albino has red or pink pupils, never black',
+      'Reduced eye pigment is a clue; flash, reflections and edited photographs can mimic red pupils',
       'No dark pattern, dark dorsal or dark spots, even when fired up',
       'A pale or "white" gecko with dark eyes is not albino (see Moonglow, Lilly White and Cream)',
     ],
@@ -839,13 +967,13 @@ export const MORPHS = [
       'Albino-like crested geckos were reported several times before 2026, but none were healthy enough to breed. On 5 March 2026 Eureka Exotics announced the first apparently viable albino hatchlings. As of October 2026 the trait is still being worked: the next milestone is producing albino offspring from those animals, which would confirm how it is inherited.',
     combinesWith: ['axanthic', 'lilly-white', 'moonglow', 'harlequin', 'pinstripe'],
     notes:
-      'Albino plus Axanthic is the combination keepers have waited for. Albino removes black pigment and Axanthic removes yellow and red, so a gecko carrying both should have almost no pigment left: a true white animal, the long-theorized Moonglow. Nobody has produced one yet, but with albinos now hatching, it has gone from impossible to a matter of breeding. Be wary of any seller offering albinos, het albinos or albino combos before the founding breeder has proven the gene.',
+      'Albino plus Axanthic is the combination keepers have waited for. Albino removes black pigment and Axanthic removes yellow and red, so a gecko carrying both should have almost no pigment left: a true white animal, the long-theorized Moonglow. Nobody has produced one yet, but with albinos now hatching, it remains a hypothesis until actual offspring and inheritance are documented. Be wary of any seller offering albinos, het albinos or albino combos before the founding breeder has proven the gene.',
   },
   {
     slug: 'hypo',
     name: 'Hypo (Hypomelanistic)',
     definition:
-      'A Hypo (Hypomelanistic) crested gecko is a crested gecko line-bred for reduced black pigment, giving it a warmer, brighter look with a paler belly and fewer dark markings.',
+      "Hypo, or hypomelanistic, describes reduced dark pigment; breeders differ in how they apply it to crested gecko lines and inheritance models.",
     lookalikes: [
       { slug: 'albino', difference: 'Hypo only reduces black pigment and keeps dark eyes; an Albino has no black pigment at all and red or pink eyes.' },
     ],
@@ -858,14 +986,17 @@ export const MORPHS = [
     summary:
       'Line-bred trait reducing black pigment, warmer, brighter animals with pale bellies and reduced dark markings.',
     description:
-      'Hypomelanism in crested geckos is a line-bred rather than a single-gene trait. It describes animals with reduced black pigment, creating a warmer, brighter overall appearance. Hypo can occur on any base, the name describes the reduction in melanin, not a specific morph. The trait is maintained by pairing hypo to hypo across multiple generations.',
+      "A lighter animal is not automatically a proven Hypo. Assess natural firing states, age and lineage, and ask which model the breeder uses. Reduced apparent dark pigment may be a useful observation without establishing a gene.",
     keyFeatures: [
-      'Reduced dark (melanin) pigment throughout the body',
-      'Warmer overall tone with paler belly and reduced dark dorsal markings',
-      'Line-bred rather than single-gene, inheritance is probabilistic',
-      'Stacks with any other color or pattern trait',
+      "Reduced apparent dark pigment",
+      "Firing state and lineage matter",
+      "Terminology and proposed inheritance vary"
     ],
     combinesWith: ['red-base', 'orange-base', 'yellow-base', 'harlequin', 'lilly-white', 'dalmatian'],
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
   {
     slug: 'patternless',
@@ -897,44 +1028,50 @@ export const MORPHS = [
     slug: 'moonglow',
     name: 'Moonglow',
     definition:
-      'A Moonglow crested gecko is a crested gecko bred toward solid white; the line-bred Moonglows sold today are near-white with dark eyes and can warm to cream, tan or gray when fired up.',
+      "Moonglow is a disputed name associated with the goal of a persistently white crested gecko, not a reliably identifiable visual morph or confirmed genotype.",
     lookalikes: [
-      { slug: 'albino', difference: 'An Albino has red or pink eyes and keeps its yellow, orange and red; a line-bred Moonglow has dark eyes and is near-white.' },
-      { slug: 'lilly-white', difference: 'A Lilly White has bold white markings over a normal base; a Moonglow is white or near-white all over.' },
+      {
+        "slug": "lilly-white",
+        "difference": "Lilly White is an established trait with variable pale pattern; it is not defined as an all-white animal."
+      },
+      {
+        "slug": "albino",
+        "difference": "Albinism concerns melanin and eye pigmentation, not simply a pale body."
+      }
     ],
     aliases: ['True Moonglow'],
     category: 'color',
     inheritance: 'line-bred',
     rarity: 'very_rare',
     priceTier: '$$$',
-    priceRange: '$500 to $1,500 for line-bred near-white animals',
+    priceRange: "No reliable price standard for this disputed label",
     summary:
-      'The long-theorized all-white crested gecko. Line-bred near-white animals are sold as Moonglow today, and the first albinos (2026) make a true Moonglow possible for the first time.',
+      "A disputed label and breeding goal, not a visual diagnosis.",
     description:
-      'Moonglow is the name keepers use for a crested gecko that is white all over and stays white when fired up. The name means two things in the hobby today. First, line-bred near-white animals: patternless geckos selected over generations for an almost solid cream or white body. These are sold as Moonglow, but they still have dark eyes and normal pigment cells, so most warm up to cream, tan or gray when fired up, and their offspring vary. Second, the "true" Moonglow: a gecko with no visible pigment at all. That animal was long considered theoretical, because crested geckos had no albino gene to remove black pigment. In March 2026 Eureka Exotics announced the first healthy albino crested geckos, which supplies the missing piece. Axanthic already removes yellow and red pigment, and albino removes black, so an albino Axanthic should be close to pigment-free. Boa breeders reached the same goal the same way: their Snow is albino plus anerythristic, and their Moonglow adds hypo to that. No crested gecko combining albino and Axanthic has been produced yet, so a true Moonglow is now possible but not yet real.',
+      "Very pale fired-down animals, lighting and image editing can create an apparently white gecko. A near-white photograph should not be presented as proof of a stable all-white morph. Proposed combinations intended to remove pigment are hypotheses until documented in actual animals.",
     keyFeatures: [
-      'Goal: a solid white crested gecko that stays white when fired up',
-      'Line-bred "Moonglow" animals today are near-white, with dark eyes, and can darken when fired up',
-      'A true Moonglow needs black pigment removed (albino) and yellow and red removed (Axanthic)',
-      'Albino crested geckos were first hatched healthy in March 2026, so the route now exists',
-      'No albino Axanthic crested gecko has been produced yet',
+      "No reliable visual identification standard",
+      "Firing state and lighting can strongly affect apparent whiteness",
+      "Speculative combinations must be distinguished from observed animals"
     ],
     visualIdentifiers: [
-      'Fire the gecko up: a line-bred Moonglow usually warms to cream, tan or gray; the true goal stays white',
-      'Check the eyes: line-bred Moonglows have dark eyes, an albino-based Moonglow would have red or pink eyes',
-      'Edited photos are common, so ask for unedited video in natural light',
+      "Compare neutral-light photographs in different natural firing states",
+      "Ask for documented evidence rather than an edited white image"
     ],
     history:
-      'Breeders have chased an all-white crested gecko for years, combining very pale patternless, cream, Axanthic and Lilly White lines. The results were near-white, never pigment-free, which is why Moonglow was called theoretical. The first viable albino hatchlings, announced by Eureka Exotics on 5 March 2026, removed the main obstacle.',
+      "The name has long circulated around the idea of an all-white crested gecko.",
     combinesWith: ['albino', 'axanthic', 'cream', 'white-wall', 'lilly-white'],
     notes:
-      'Treat any "true Moonglow" or "albino Moonglow" offered for sale today with suspicion: as of October 2026 none is known to exist. Line-bred Moonglows are real animals and can be beautiful, but they are a selection project, not a single gene.',
+      "Do not assign Moonglow from a pale photograph or use the name as proof of genetics.",
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
   },
   {
     slug: 'translucent',
     name: 'Translucent',
     definition:
-      'A Translucent crested gecko is a crested gecko line-bred for skin with some translucency, so organs and bone structure are faintly visible, most of all on the belly and in juveniles.',
+      "Translucent describes visible translucency of skin, which alone does not establish a distinct crested gecko morph or inheritance model.",
     aliases: ['Trans'],
     category: 'color',
     inheritance: 'line-bred',
@@ -942,15 +1079,19 @@ export const MORPHS = [
     priceTier: '$$$',
     priceRange: '$400 to $1,200',
     summary:
-      'Line-bred trait producing a degree of skin translucency, organs and bone structure faintly visible.',
+      "An appearance description requiring context, not a diagnosis from a photograph.",
     description:
-      'Translucent crested geckos show a degree of skin translucency, most evident in hatchlings and juveniles where the belly, internal organs, or bone structure is faintly visible through the skin. The trait often becomes less obvious as the animal ages. Still considered line-bred and the inheritance model is not fully proven.',
+      "Thin juvenile skin and the ventral region can appear translucent. That observation should not be used by itself to identify a genetic trait. Compare age-matched animals and the breeder's supporting evidence.",
     keyFeatures: [
-      'Visible translucency in skin, especially on the belly',
-      'Most visible in juveniles, can fade with age',
-      'Frequently combined with other color modifiers like axanthic',
+      "Visible translucency, often most evident ventrally",
+      "Age and lighting affect the observation",
+      "Inheritance cannot be inferred from translucency alone"
     ],
     combinesWith: ['axanthic', 'lilly-white', 'cream', 'harlequin'],
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ],
+    notes: "This is a visible-feature description. A sale label or photograph alone does not establish genotype. Breeders use some names and inheritance models differently.",
   },
 
   // ---------- BASE COLORS ----------
@@ -958,9 +1099,12 @@ export const MORPHS = [
     slug: 'red-base',
     name: 'Red Base',
     definition:
-      'A Red Base crested gecko is a crested gecko whose ground color is a true red (not orange or rust) that keeps its saturation when fired up.',
+      "A Red Base crested gecko has red-dominant ground coloration, whose saturation varies with firing state, age and lighting.",
     lookalikes: [
-      { slug: 'orange-base', difference: 'A Red Base is a true red that holds when fired up; warm orange or rust tones make it an Orange Base.' },
+      {
+        "slug": "orange-base",
+        "difference": "Red and orange descriptions overlap at intermediate hues; lighting and firing state matter."
+      }
     ],
     aliases: ['Red'],
     category: 'base',
@@ -976,12 +1120,11 @@ export const MORPHS = [
     summary:
       'Polygenic base color showing true red tones, distinct from red dalmatian or rose-brown animals.',
     description:
-      'Red base describes animals whose base color is true red. Quality is measured by saturation and consistency when fired up. Entry-level red bases are often more of a rust or orange-red; top-quality red bases hold deep saturation even in the fired-down state.',
+      "Red, orange-red and rust tones form a visual range. Describe the base separately from cream pattern and red Dalmatian spots. Compare neutral-light images in more than one natural firing state.",
     keyFeatures: [
-      'True red base color (not orange, not rust)',
-      'Saturation holds when fired up',
-      'Line-bred over multiple generations',
-      'Pairs well with harlequin for dramatic cream-on-red contrast',
+      "Red-dominant ground color",
+      "Firing state affects saturation",
+      "Separate base color from pattern color"
     ],
     combinesWith: ['harlequin', 'extreme-harlequin', 'dalmatian', 'pinstripe', 'tricolor'],
   },
@@ -991,7 +1134,10 @@ export const MORPHS = [
     definition:
       'An Orange Base crested gecko is a crested gecko whose ground color is a vivid, warm orange.',
     lookalikes: [
-      { slug: 'red-base', difference: 'A Red Base is a true red with no orange cast; most warm geckos sold as red are really orange.' },
+      {
+        "slug": "red-base",
+        "difference": "Red and orange form a range; compare neutral-light images rather than imposing a rigid color boundary."
+      }
     ],
     aliases: ['Orange'],
     category: 'base',
@@ -1063,7 +1209,7 @@ export const MORPHS = [
     slug: 'chocolate',
     name: 'Chocolate',
     definition:
-      'A Chocolate crested gecko is a crested gecko whose ground color is a deep, rich brown that stays saturated even when fired down.',
+      "A Chocolate crested gecko has deep brown ground coloration, often most apparent when fired up.",
     lookalikes: [
       { slug: 'buckskin', difference: 'A Buckskin is a lighter warm tan or leather color; a Chocolate is a deep, rich brown.' },
     ],
@@ -1076,11 +1222,11 @@ export const MORPHS = [
     summary:
       'Polygenic base color with rich deep-brown tones, like dark chocolate.',
     description:
-      'Chocolate base describes animals with a deep, rich brown base color. Strong chocolate animals hold dark saturation even when fired down. Pairs beautifully with cream or harlequin patterns for strong contrast.',
+      "Chocolate is a descriptive base-color term. An animal can become lighter when fired down; retaining a fixed deep brown is not a requirement.",
     keyFeatures: [
-      'Deep rich brown base color',
-      'Saturation holds into fired-down state',
-      'Dramatic canvas for cream or harlequin patterns',
+      "Deep brown base coloration",
+      "Color can lighten in a fired-down state",
+      "Can coexist with cream pattern and spotting"
     ],
     combinesWith: ['harlequin', 'cream', 'dalmatian', 'tiger', 'brindle'],
   },
@@ -1115,7 +1261,7 @@ export const MORPHS = [
     definition:
       'A Buckskin crested gecko is a crested gecko whose ground color is a warm tan or leather brown.',
     lookalikes: [
-      { slug: 'chocolate', difference: 'A Chocolate is a much deeper, darker brown that stays rich even when fired down.' },
+      { slug: 'chocolate', difference: 'Chocolate describes a deeper brown base; both appearances can lighten when fired down.' },
     ],
     aliases: [],
     category: 'base',
@@ -1165,10 +1311,10 @@ export const MORPHS = [
     slug: 'tricolor',
     name: 'Tricolor',
     definition:
-      'A Tricolor crested gecko is a crested gecko showing three distinct colors in roughly equal amounts, usually on a Harlequin pattern.',
+      'A Tricolor crested gecko shows three distinguishable colors, often a base color and two pattern colors; breeders vary in how much of each they require.',
     lookalikes: [
-      { slug: 'harlequin', difference: 'A Harlequin with a third distinct color covering roughly a third of the animal is sold as a Tricolor.' },
-      { slug: 'bicolor', difference: 'A Bicolor shows two contrasting colors; a Tricolor shows three in about equal amounts.' },
+      { slug: 'harlequin', difference: 'Tricolor describes distinguishable colors and can coexist with harlequin pattern; equal thirds are not a universal requirement.' },
+      { slug: 'bicolor', difference: 'Bicolor emphasizes a contrasting dorsal region; tricolor describes three distinguishable colors.' },
     ],
     aliases: ['Tri', 'Tri-color'],
     category: 'combo',
@@ -1177,11 +1323,11 @@ export const MORPHS = [
     priceTier: '$$$',
     priceRange: '$300 to $800',
     summary:
-      'Three distinct colors in roughly equal amounts, usually on a Harlequin. Common enough to be sold as its own morph.',
+      'Three distinguishable colors, often on a harlequin pattern; visual grading varies.',
     description:
-      'Tricolor is named for its colors. A tricolor shows three distinct colors in roughly equal amounts: the base color plus two pattern colors. Common sets are red, orange or yellow, and cream or white, or a dark base (black, brown or lavender) with orange or yellow and cream or white. Most tricolors are Harlequins or Extreme Harlequins; some are Pinstripes, and breeders often list both, as in "Tricolor Harlequin". It is one of the most common morphs on the market and is sold as a morph in its own right. When one color dominates, the animal reads as a cream or red Harlequin instead. When all three colors are saturated and evenly balanced, the animal is spectacular and valued accordingly. It is polygenic, so there is no single gene to test for.',
+      'Tricolor is named for its colors. A tricolor shows three distinguishable colors: the base color plus two pattern colors. Common sets are red, orange or yellow, and cream or white, or a dark base (black, brown or lavender) with orange or yellow and cream or white. Most tricolors are Harlequins or Extreme Harlequins; some are Pinstripes, and breeders often list both, as in "Tricolor Harlequin". It is one of the most common morphs on the market and is sold as a morph in its own right. Some breeders prefer evenly balanced colors, but that is a grading preference rather than a universal biological threshold. It is polygenic, so there is no single gene to test for.',
     keyFeatures: [
-      'Three distinct colors, each covering roughly a third of the animal',
+      'Three distinguishable colors, without a universal equal-coverage rule',
       'Rides on a pattern, most often Harlequin, sometimes Pinstripe',
       'Most striking in fully fired-up state',
     ],

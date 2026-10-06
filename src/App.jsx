@@ -95,6 +95,7 @@ warmFirstScreen();
 const Breeder              = lazy(() => import('./pages/Breeder'));
 const MorphDetail          = lazy(() => import('./pages/MorphDetail'));
 const ProjectLineDetail    = lazy(() => import('./pages/ProjectLineDetail'));
+const VisualDesignPreview = import.meta.env.DEV ? lazy(() => import('./components/preview/VisualDesignPreview')) : null;
 const MorphGuideList       = lazy(() => import('./pages/MorphGuide'));
 // Programmatic taxonomy hubs: /MorphGuide/category/<id> and
 // /MorphGuide/inheritance/<id>. Two routes, one module, the module
@@ -351,6 +352,7 @@ const AuthenticatedApp = () => {
               these at the edge; this covers client-side navigation from
               stale links. */}
           {retiredRoutes}
+          {import.meta.env.DEV && <Route path="/DesignPreview" element={<VisualDesignPreview />} />}
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/category/:categoryId" element={<MorphCategoryHub />} />
           <Route path="/MorphGuide/inheritance/:inheritanceId" element={<MorphInheritanceHub />} />
