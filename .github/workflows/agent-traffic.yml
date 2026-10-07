@@ -1,0 +1,65 @@
+# Weekly AI traffic export for the agent review.
+#
+# Runs scripts/agent-traffic-report.mjs every Monday at 15:20 UTC, 35
+# minutes before the scheduled "Weekly agent review" Claude session, and
+# commits docs/agent-review/YYYY-MM-DD.json to main. The review session
+# reads that file, so it needs no database connector of its own.
+# See docs/planning/agent-access-2026-10.md.
+#
+# Secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (already set for the
+# other jobs).
+
+name: agent-traffic
+
+on:
+  schedule:
+    - cron: '20 15 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-traffic
+  cancel-in-progress: false
+
+jobs:
+  export:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Export AI traffic
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/agent-traffic-report.mjs
+
+      - name: Commit export
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: credential.helper
+          GIT_CONFIG_VALUE_0: '!gh auth git-credential'
+        run: |
+          git config user.name  "geckinspect-agent-bot"
+          git config user.email "agent-bot@users.noreply.github.com"
+          git add docs/agent-review/
+          if git diff --cached --quiet; then
+            echo "No new export."
+          else
+            git commit -m "agent review: weekly traffic export $(date -u +%Y-%m-%d)"
+            for i in 1 2 3 4; do
+              git pull --rebase origin main && git push origin main && break
+              sleep $((2 ** i))
+            done
+          fi
