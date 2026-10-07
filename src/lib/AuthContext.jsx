@@ -143,9 +143,13 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async (shouldRedirect = true) => {
     revisionRef.current++;
-    // Drop cached collection data before the session goes away, so a
-    // second account signing in on this device never sees the previous
-    // one's geckos while the fresh fetch is in flight.
+    const { error } = await supabase.auth.signOut();
+    // Supabase can end the local session even when remote revocation fails.
+    // Only report a failure if its auth listener still has an account.
+    if (error && sessionOwnerRef.current) throw error;
+    // The auth listener clears in-memory data as the session ends. Finish
+    // clearing account data here only after sign-out succeeds, so a failed
+    // request leaves the member's offline data and queued logs usable.
     queryClientInstance.clear();
     dataCache.clearAll();
     // The stored offline copy of the collection and profile go too. Logs
@@ -158,7 +162,6 @@ export const AuthProvider = ({ children }) => {
     // sign-in on this browser was signed out on the next visit.
     sessionStorage.removeItem('geck_inspect_ephemeral_session');
     localStorage.removeItem('geck_inspect_unload_ts');
-    await supabase.auth.signOut();
     setGuestMode(false);
     setIsGuest(false);
     setUser(null);

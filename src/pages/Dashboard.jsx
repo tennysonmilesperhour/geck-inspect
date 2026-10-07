@@ -37,6 +37,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import FirstGeckoStarter from '@/components/onboarding/FirstGeckoStarter';
+import SignOutButton from '@/components/auth/SignOutButton';
 import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { createPageUrl, getDisplayName } from '@/utils';
 import { format } from 'date-fns';
@@ -296,12 +297,15 @@ export default function Dashboard() {
                         <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
                         <div className="relative z-10 p-5 md:p-10">
+                            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
+                                    <Flame className="w-3.5 h-3.5" />
+                                    {todayLabel}
+                                </div>
+                                <SignOutButton className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800 backdrop-blur-sm" />
+                            </div>
                             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 md:gap-6">
                                 <div className="space-y-2 md:space-y-3">
-                                    <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
-                                        <Flame className="w-3.5 h-3.5" />
-                                        {todayLabel}
-                                    </div>
                                     <h1 className="text-3xl md:text-6xl font-bold tracking-tight leading-[1.05] bg-gradient-to-b from-white via-emerald-100 to-emerald-300 bg-clip-text text-transparent">
                                         {greeting}{firstName ? `, ${firstName}` : ''}
                                     </h1>
@@ -331,7 +335,7 @@ export default function Dashboard() {
                                             'Welcome to Geck Inspect. Everything on this page fills in as your collection grows.'
                                         )}
                                     </p>
-                                    <p className="text-emerald-300/70 text-sm md:text-base italic">
+                                    <p className="text-emerald-300/70 text-sm md:text-base">
                                         {seasonalKicker}
                                     </p>
                                 </div>

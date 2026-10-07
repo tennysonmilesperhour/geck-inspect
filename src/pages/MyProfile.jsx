@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import { createPageUrl, getDisplayName } from '@/utils';
 import SignInRequired, { AccountOnly } from '@/components/shared/SignInRequired';
+import SignOutButton from '@/components/auth/SignOutButton';
 
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
@@ -480,6 +481,7 @@ function MyProfileScreen() {
                                     </Button>
                                 </div>
                             )}
+                            <SignOutButton disabled={isSaving || isUploading} className="border-slate-600 hover:bg-slate-800" />
                         </div>
                     </div>
                 </div>
