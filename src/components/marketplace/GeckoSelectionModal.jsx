@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect } from 'react';
 import { Gecko } from '@/entities/all';
 import { Input } from '@/components/ui/input';
@@ -125,15 +126,13 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
               return (
                 <div key={geckoId} className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    {gecko?.image_urls?.[0] && (
-                      <img
-                        src={gecko.image_urls[0]}
-                        alt={gecko.name}
+                    <GeckoImage
+                        src={gecko?.image_urls?.[0]}
+                        alt={gecko?.name || 'Gecko'}
                         className="w-12 h-12 rounded object-cover"
                         loading="lazy"
                         decoding="async"
                       />
-                    )}
                     <div>
                       <p className="font-semibold text-slate-100">{gecko?.name}</p>
                       <p className="text-xs text-slate-500">{gecko?.morphs_traits}</p>
@@ -221,15 +220,13 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
                     : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800'
                 }`}
               >
-                {gecko.image_urls?.[0] && (
-                  <img
-                    src={gecko.image_urls[0]}
-                    alt={gecko.name}
+                <GeckoImage
+                    src={gecko?.image_urls?.[0]}
+                    alt={gecko?.name || 'Gecko'}
                     className="w-12 h-12 rounded object-cover flex-shrink-0"
                     loading="lazy"
                     decoding="async"
                   />
-                )}
                 <div className="flex-1 min-w-0 text-left">
                   <p className="font-semibold text-slate-100">{gecko.name}</p>
                   <div className="flex items-center gap-2 text-xs text-slate-400">

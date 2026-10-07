@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
@@ -90,7 +91,7 @@ function GeckoLightbox({ gecko, onClose }) {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="md:flex-[2] min-h-0 flex items-center justify-center">
-                    <img
+                    <GeckoImage
                         src={main}
                         alt={gecko.name}
                         className="max-h-[70vh] w-full object-contain rounded-lg shadow-2xl"
@@ -209,7 +210,7 @@ function GeckoTile({ gecko, onOpen, variant = 'large' }) {
             className={`touch:min-h-11 group block text-left w-full ${meta.tile} transition-opacity`}
         >
             <div className={`${aspect} bg-stone-900 overflow-hidden rounded-md relative`}>
-                <img
+                <GeckoImage
                     src={img}
                     alt={gecko.name}
                     className={`w-full h-full object-cover transition-transform duration-[800ms] group-hover:scale-[1.04] ${isSold ? 'saturate-[0.6] group-hover:saturate-100' : ''}`}
@@ -632,7 +633,7 @@ export default function StorePage() {
                                         {[p.sire, p.dam].map((parent, i) => (
                                             <div key={i} className="space-y-2">
                                                 <div className="aspect-square bg-stone-900 overflow-hidden rounded-sm">
-                                                    <img
+                                                    <GeckoImage
                                                         src={parent?.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                                                         alt={parent?.name || (i === 0 ? 'Sire' : 'Dam')}
                                                         className="w-full h-full object-cover"

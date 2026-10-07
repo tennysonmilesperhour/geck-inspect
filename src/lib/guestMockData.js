@@ -1,3 +1,5 @@
+import { DEMO_GECKO_PHOTOS } from '@/lib/demoGeckoPhotos';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { growthBandAt } from '@/lib/growthBand';
 
 /**
@@ -10,68 +12,34 @@ import { growthBandAt } from '@/lib/growthBand';
  * Design notes:
  * - Every mock record uses `created_by: GUEST_EMAIL` so pages that
  *   filter "mine" by email match cleanly.
- * - Real gecko photos are bundled locally, avoiding unreliable external
- *   image redirects in the demo and homepage captures. Source records are
- *   documented in public/demo-geckos/README.md. The records are fictional;
- *   the guest disclaimer explains that photos do not verify their traits.
+ * - Photos are bundled, owner-authorized images of age-verified adults
+ *   from the admin collection. Mock names and traits remain illustrative.
  * - Writes are still blocked by `blockIfGuest()` in the entity layer;
  *   this module only powers reads.
  */
 
 export const GUEST_EMAIL = 'guest@local';
 
-// Keep each demo animal's portrait consistent across collection cards,
-// lineage, and breeding plans. Photo labels refer to the real source animal,
-// not the fictional demo record. These are UI examples, not morph references.
-const DEMO_PHOTOS = {
-  diamond: 'odin',
-  ruby: 'moonlight',
-  thor: 'pony-boy-x-pepperjack-1',
-  sunny: 'blush',
-  harley: 'bliss',
-  spud: 'raindrop',
-  moss: 'cheeto',
-  nimbus: 'hermes',
-  pebble: 'odin',
-  jasper: 'pony-boy-x-pepperjack-1',
-  fern: 'olivia',
-  cappy: 'olivia',
-  ember: 'blush',
-  pixel: 'frito',
-  onyx: 'odin',
-  tiger: 'cheeto',
-  aria: 'pony-boy',
-  bramble: 'raindrop',
-  willow: 'moonlight',
-};
+// Real adult photos ship with previews and native builds, without hotlinks.
+const GECKO_PHOTOS = DEMO_GECKO_PHOTOS.map(photo => photo.src);
 
-// Inline SVG fallback (emerald card with the morph name) served as a
-// data URI so an unavailable photo never surfaces as a broken-image
-// icon in the demo. Consumers can set this as `onError` via the
-// exported fallbackForMorph() helper where it's reachable.
-export function fallbackForMorph(label = 'Crested Gecko') {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'>
-    <defs>
-      <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-        <stop offset='0' stop-color='#0d1f17'/>
-        <stop offset='1' stop-color='#1a3a2d'/>
-      </linearGradient>
-    </defs>
-    <rect width='600' height='600' fill='url(#g)'/>
-    <text x='300' y='300' text-anchor='middle' dominant-baseline='middle'
-      fill='#86efac' font-family='Inter, sans-serif' font-size='32' font-weight='700'>
-      ${String(label).replace(/[<>&]/g, '').slice(0, 24)}
-    </text>
-    <text x='300' y='350' text-anchor='middle' fill='#4ade80aa'
-      font-family='Inter, sans-serif' font-size='16'>
-      demo image
-    </text>
-  </svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+// Retained for consumers that explicitly request a demo image fallback.
+export function fallbackForMorph() {
+  return DEFAULT_GECKO_IMAGE;
 }
 
-// Alternate timeline seeds for one animal retain that animal's portrait.
-const IMG = (seed) => `/demo-geckos/${DEMO_PHOTOS[String(seed).replace(/-\d+$/, '')]}.webp`;
+// Deterministic photo pick so the same gecko always shows the same
+// photo across refreshes and navigations.
+const PHOTO_SEEDS = [
+  'diamond', 'ruby', 'thor', 'sunny', 'harley', 'spud', 'moss',
+  'nimbus', 'pebble', 'jasper', 'fern', 'cappy', 'ember', 'pixel',
+  'onyx', 'tiger', 'aria', 'bramble', 'willow',
+];
+const IMG = (seed) => {
+  // Keep one real animal per sample record, including its extra photo slots.
+  const index = PHOTO_SEEDS.indexOf(String(seed).replace(/-\d+$/, ''));
+  return GECKO_PHOTOS[Math.max(0, index) % GECKO_PHOTOS.length];
+};
 
 const nowMs = Date.now();
 const daysAgo = (n) => new Date(nowMs - n * 86400000).toISOString();

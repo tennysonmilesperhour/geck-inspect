@@ -1,3 +1,5 @@
+import GeckoImage from '@/components/shared/GeckoImage';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import StickerGeckoActions from '@/components/store/StickerGeckoActions';
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
@@ -216,8 +218,8 @@ export default function GeckoDetail() {
                     <div className="space-y-4">
                         <Card className="overflow-hidden">
                             <div className="aspect-square w-full bg-slate-800">
-                                <img
-                                    src={gecko.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'}
+                                <GeckoImage
+                                    src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                                     alt={gecko.name}
                                     className="w-full h-full object-cover"
                                 />
@@ -303,7 +305,7 @@ export default function GeckoDetail() {
                                 >
                                     <ChevronLeft className="w-6 h-6" />
                                 </button>
-                                <img
+                                <GeckoImage
                                     src={gecko.image_urls[lightboxIndex]}
                                     alt={`${gecko.name} ${lightboxIndex + 1}`}
                                     className="max-h-[85vh] max-w-full object-contain rounded-lg"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE_URL } from '@/lib/constants';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
@@ -434,7 +434,7 @@ export default function MorphDetail() {
         headline: seo.h1,
         description: seo.description,
         url: `https://geckinspect.com${path}`,
-        image: heroImage || DEFAULT_GECKO_IMAGE,
+        image: heroImage || DEFAULT_GECKO_IMAGE_URL,
         about: {
           '@type': 'Thing',
           name: 'Crested gecko',
@@ -478,7 +478,7 @@ export default function MorphDetail() {
         title={seo.title}
         description={seo.description}
         path={path}
-        image={heroImage || DEFAULT_GECKO_IMAGE}
+        image={heroImage || DEFAULT_GECKO_IMAGE_URL}
         jsonLd={jsonLd}
         type="article"
       />

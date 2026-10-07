@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
@@ -113,7 +114,7 @@ function PhotoCarousel({ images }) {
     return (
       <div className="w-full h-72 sm:h-96 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-700">
         <div className="text-center">
-          <div className="text-6xl mb-2">🦎</div>
+          <GeckoImage alt="Gecko photo placeholder" className="w-48 h-48 mx-auto rounded-lg mb-2" />
           <p className="text-sm text-slate-500">No photos yet</p>
         </div>
       </div>
@@ -123,7 +124,7 @@ function PhotoCarousel({ images }) {
   const next = () => setIdx((i) => (i + 1) % images.length);
   return (
     <div className="relative rounded-xl overflow-hidden h-72 sm:h-96 bg-slate-900">
-      <img src={images[idx]} alt="Animal photo" className="w-full h-full object-cover" />
+      <GeckoImage src={images[idx]} alt="Animal photo" className="w-full h-full object-cover" />
       {images.length > 1 && (
         <>
           <button

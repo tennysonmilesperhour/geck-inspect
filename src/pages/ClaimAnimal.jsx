@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
@@ -198,13 +199,7 @@ export default function ClaimAnimal() {
         {/* Animal summary */}
         <div className={`${card} mb-6`}>
           <div className="flex items-center gap-4">
-            {profileImg ? (
-              <img src={profileImg} alt={animal?.name} className="w-20 h-20 rounded-xl object-cover" />
-            ) : (
-              <div className="w-20 h-20 rounded-xl flex items-center justify-center text-3xl bg-emerald-500/10">
-                {animal?.emoji || '🦎'}
-              </div>
-            )}
+            <GeckoImage src={profileImg} alt={animal?.name} className="w-20 h-20 rounded-xl object-cover" />
             <div className="min-w-0">
               <h2 className="text-lg font-semibold text-slate-100 break-words">{animal?.name}</h2>
               <p className="text-sm text-slate-400">{animal?.subtitle || 'Animal'}</p>

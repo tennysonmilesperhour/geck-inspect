@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import PriceBandBar from '@/components/market/PriceBandBar';
@@ -31,11 +32,7 @@ export default function ListingCard({ listing, meta = null, badge = null, showBa
   const body = (
     <div className="flex gap-3">
       <div className="w-20 h-20 shrink-0 overflow-hidden rounded-lg border border-slate-700 bg-slate-800">
-        {image ? (
-          <img src={image} alt={morphLabel(morphs, title || 'Crested gecko')} loading="lazy" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-500 px-1 text-center">No photo</div>
-        )}
+        <GeckoImage src={image} alt={morphLabel(morphs, title || "Crested gecko")} className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">

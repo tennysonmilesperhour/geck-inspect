@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -241,7 +242,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                             className="block"
                             aria-label="Open in gallery"
                         >
-                            <img
+                            <GeckoImage
                                 src={current.image_url}
                                 alt={morph}
                                 className="w-full aspect-[4/3] object-contain"

@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { Card } from '@/components/ui/card';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
@@ -8,7 +9,7 @@ export default function ImageCard({ image, onImageSelect, thumbnail = false }) {
       onClick={() => onImageSelect(image)}
     >
       <div className="relative aspect-square">
-        <img
+        <GeckoImage
           src={image.image_url}
           alt={image.primary_morph}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"

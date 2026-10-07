@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 /**
  * Collection Portfolio.
  *
@@ -525,13 +526,7 @@ export default function Portfolio() {
                     <tr key={gecko.id} className="border-b border-slate-800/60 hover:bg-slate-800/30">
                       <td className="py-2.5 px-3">
                         <Link to={createPageUrl(`GeckoDetail?id=${gecko.id}`)} className="touch:min-h-11 flex items-center gap-3 group">
-                          {photo ? (
-                            <img src={photo} alt={gecko.name || 'Gecko'} className="w-10 h-10 shrink-0 rounded-lg object-cover bg-slate-800" />
-                          ) : (
-                            <div className="w-10 h-10 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs font-bold">
-                              {(gecko.name || '?').charAt(0).toUpperCase()}
-                            </div>
-                          )}
+                          <GeckoImage src={photo} alt={gecko.name || "Gecko"} className="w-10 h-10 shrink-0 rounded-lg object-cover" />
                           <span className="text-slate-100 font-medium group-hover:text-emerald-400">{gecko.name || 'Unnamed'}</span>
                         </Link>
                       </td>

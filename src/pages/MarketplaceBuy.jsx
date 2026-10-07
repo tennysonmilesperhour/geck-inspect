@@ -1,3 +1,4 @@
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Seo from '@/components/seo/Seo';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
@@ -129,7 +130,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                     alt={gecko.name}
                     width={500}
                     aspect="square"
-                    fallback={gecko.image_urls?.[0] ? 'https://geckinspect.com/gecko-placeholder.png' : initialsAvatarUrl(gecko.name)}
+                    fallback={DEFAULT_GECKO_IMAGE}
                 />
                 {/* Sex icon in top left */}
                 <div className="absolute top-2 left-2">

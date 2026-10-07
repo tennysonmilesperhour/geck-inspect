@@ -24,9 +24,9 @@
 export const PRODUCT_TOUR_SLIDES = [
   // Shipped October 2026, captured from the guest demo collection (sample
   // geckos) with value estimates from the real Geck Data listings table.
-  // Laptop captures are 1600 x 1000; phone captures use a 4:5 crop.
-  // Record, lineage, and breeding slides use bundled real gecko photos.
-  // Versioned filenames ensure returning visitors receive the new captures.
+  // Each has a 1600 x 1000 laptop file and a 780 x 976 (4:5) phone file
+  // (`mobileFile`), WebP. Recaptured with bundled, owner-authorized adult
+  // gecko photos from the admin collection; no external photo hosts needed.
   {
     id: 'gecko-record',
     file: 'gecko-record-real.webp',
@@ -72,7 +72,7 @@ export const PRODUCT_TOUR_SLIDES = [
     captureUrl: '/Portfolio (demo)',
     shipped: true,
   },
-  // Additional feature slides remain unshipped until captured and reviewed.
+  // Additional feature slides have not been captured yet.
   {
     id: 'dashboard',
     file: 'dashboard.webp',

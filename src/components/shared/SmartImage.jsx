@@ -62,6 +62,9 @@ export default function SmartImage({
   className = '',
   containerClassName = '',
   fallback = DEFAULT_GECKO_IMAGE,
+  style,
+  onLoad,
+  onError,
   ...rest
 }) {
   // failStage: 0 = trying transformed URL, 1 = trying original URL,
@@ -86,6 +89,9 @@ export default function SmartImage({
     resolvedSrc = fallback;
   }
 
+  if (typeof src !== 'string' || !src.trim()) resolvedSrc = fallback;
+  const isSilhouette = resolvedSrc === DEFAULT_GECKO_IMAGE;
+
   return (
     <div
       className={`relative overflow-hidden bg-slate-800 ${containerClassName}`}
@@ -100,13 +106,17 @@ export default function SmartImage({
         alt={alt || ''}
         loading="lazy"
         decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={() => {
+        onLoad={(event) => { setLoaded(true); onLoad?.(event); }}
+        onError={(event) => {
           // Step through: transform → original → fallback. Stop at 2 so we
           // don't loop on a broken fallback URL.
           setFailStage((stage) => (stage < 2 ? stage + 1 : stage));
           setLoaded(true);
+          onError?.(event);
         }}
+        style={isSilhouette
+          ? { ...style, objectFit: 'contain', objectPosition: 'center', transform: 'none', padding: '8%', backgroundColor: '#dce7df' }
+          : style}
         className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
         {...rest}
       />

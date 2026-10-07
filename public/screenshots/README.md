@@ -1,14 +1,12 @@
 # Landing-page product tour screenshots
 
-This folder feeds the `<ProductTour />` slideshow on the public landing page (`src/components/landing/ProductTour.jsx`) and the product shot beside the landing headline on laptops (`hero-gecko-record.webp`, used in `src/pages/Home.jsx`). The slide list and captions are defined in `src/data/product-tour.js`. A slide is only requested once it has `shipped: true`, so commit the image and flip the flag in the same change.
+This folder feeds the `<ProductTour />` slideshow on the public landing page (`src/components/landing/ProductTour.jsx`) and the product shot beside the landing headline on laptops (`hero-gecko-record-real.webp`, used in `src/pages/Home.jsx`). The slide list and captions are defined in `src/data/product-tour.js`. A slide is only requested once it has `shipped: true`, so commit the image and flip the flag in the same change.
 
-## Current captures
+## What is here (October 2026)
 
-The record, lineage, and breeding slides were refreshed in October 2026 from the interactive guest demo with real gecko photographs. The photos are bundled under `public/demo-geckos/` so captures and the demo do not depend on external image redirects. See that folder's README for the public source records. Demo records and family relationships are fictional; photographs do not verify their listed traits. The slideshow footer and guest notice identify the sample data.
+Recaptured from the guest demo collection with bundled real photos from the admin collection. All eight source geckos have exact hatch dates before October 6, 2024, verified on October 6, 2026. Photo names and hatch dates are recorded in `src/lib/demoGeckoPhotos.js`; the demo records remain illustrative. Value estimates use the existing dated Geck Data snapshot. Both the product tour and `hero-gecko-record-real.webp` now include actual gecko photos.
 
-These are captures of the actual app, with no composited UI or generated geckos. Value estimates use the demo's Geck Data snapshot. The calculator, portfolio, and hero value-panel captures remain unchanged.
-
-| Slide | Laptop file (1600 x 1000) | Phone file (4:5) | Demo page |
+| Slide | Laptop file (1600 x 1000) | Phone file (780 x 976, 4:5) | Demo page |
 |---|---|---|---|
 | One record per gecko | `gecko-record-real.webp` | `gecko-record-real-phone.webp` | `/GeckoDetail?id=mock-gecko-4` |
 | Genetics calculator | `genetics-calculator.webp` | `genetics-calculator-phone.webp` | `/calculator?sireGecko=mock-gecko-2&damGecko=mock-gecko-1` |
@@ -16,18 +14,15 @@ These are captures of the actual app, with no composited UI or generated geckos.
 | Breeding plans | `breeding-planner-real.webp` | `breeding-planner-real-phone.webp` | `/Breeding` |
 | Collection value | `portfolio.webp` | `portfolio-phone.webp` | `/Portfolio` |
 
-Additional slides awaiting capture and review: dashboard, morph guide, AI morph ID, breeder storefront, and photo timeline.
+Still to capture: dashboard, morph guide, AI morph ID, breeder storefront, photo timeline.
 
 ## Capture tips
 
-- Use the populated guest collection, dark theme, collapsed sidebar, and dismiss the optional demo tour and notice using their controls.
-- Laptop: 1600 x 1000 viewport. Wait for all photos and value panels to load.
-- Refreshed phone slides: capture a 390 x 844 viewport and crop a 390 x 488 section of actual content, below the header and above the bottom navigation. The record crop starts at y=180. For lineage, hide the detail strip and select 75% zoom, then crop from y=200. For breeding, scroll until the search field sits just below the header, then crop from y=68.
-- The older calculator and portfolio phone images are 780 x 976. Both sizes have the same 4:5 framing and display below 640 px wide.
-- Encode WebP around quality 82 to preserve photo detail and small interface text. Keep the new files lightweight; photo captures will be larger than flat placeholder drawings.
-- Change the filename when replacing a shipped capture, and update its manifest entry, so returning visitors do not keep an older cached image.
+- Laptop: 1600 x 1000 viewport, dark theme, sidebar collapsed, demo tour card and toasts closed. Phone: 390 px wide at 2x, a 488 px crop below the header. Calculator and portfolio phone captures scroll to the populated photo rows.
+- WebP at quality 78, with optimized bundled photos for reliable captures.
+- Phone files go in `mobileFile`; the tour shows them below 640 px wide in a 4:5 frame.
 
-## How to add a new slide
+## How to add a NEW slide
 
 1. Add an entry to `PRODUCT_TOUR_SLIDES` in `src/data/product-tour.js` (`id`, `file`, optional `mobileFile`, `title`, `caption`, `captureUrl`).
 2. Drop the matching files here.

@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useImperativeHandle, useMemo, useState, forwardRef } from 'react';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { FutureBreedingPlan, BreedingPlan, User } from '@/entities/all';
@@ -92,7 +93,7 @@ function ParentPortrait({ gecko, role }) {
           gecko ? 'border-slate-700 bg-slate-800' : 'border-dashed border-slate-700 bg-slate-800/40 opacity-70'
         }`}
       >
-        <img
+        <GeckoImage
           src={img}
           alt={gecko?.name || (isSire ? 'Unknown sire' : 'Unknown dam')}
           className="w-full h-full object-cover"

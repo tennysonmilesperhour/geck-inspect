@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
@@ -47,7 +48,7 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
             </CardHeader>
             <CardContent className="space-y-4">
                 <div onClick={handleSelect} className="relative aspect-[4/3] rounded-lg overflow-hidden cursor-pointer group">
-                    <img
+                    <GeckoImage
                         src={image.image_url}
                         alt={isOfficial ? "Gecko of the day" : "Featured gecko"}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"

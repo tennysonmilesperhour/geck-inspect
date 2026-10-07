@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -199,7 +200,7 @@ function NodeCard({ node, x, y, onClick }) {
         className="w-full h-full rounded-xl border border-slate-700 bg-slate-900/90 hover:border-emerald-500/60 hover:bg-slate-900 transition-all flex overflow-hidden text-left shadow-lg shadow-black/30"
       >
         <div className="w-24 h-full flex-shrink-0 bg-slate-800">
-          <img
+          <GeckoImage
             src={img}
             alt={g.name}
             className="w-full h-full object-cover"

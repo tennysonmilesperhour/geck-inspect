@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useMemo, useState } from 'react';
 import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from "@/lib/constants";
 import { Link, useLocation, useParams } from 'react-router-dom';
@@ -33,7 +34,7 @@ function InferredTile({ gecko }) {
       className="group relative rounded-xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-emerald-500/40 transition-colors"
     >
       <div className="aspect-square bg-slate-800">
-        <img
+        <GeckoImage
           src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
           alt={gecko.name || 'Crested gecko'}
           className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"

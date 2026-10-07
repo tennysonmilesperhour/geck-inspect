@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -169,14 +170,12 @@ export default function Waitlist() {
 
         <h1 className="text-2xl md:text-3xl font-bold mb-3">{waitlist.title}</h1>
 
-        {gecko?.image_urls?.[0] && (
-          <img
-            src={gecko.image_urls[0]}
-            alt={gecko.name || gecko.id}
+        <GeckoImage
+            src={gecko?.image_urls?.[0]}
+            alt={gecko?.name || 'Gecko'}
             className="w-full aspect-video object-cover rounded-lg border border-emerald-800/40 mb-4"
             loading="lazy"
           />
-        )}
 
         {gecko && (
           <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/40 p-4 mb-4">

@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Loader2, Crown, LogIn } from 'lucide-react';
@@ -140,7 +141,7 @@ export default function VisualSiblings({ gecko, user }) {
                   rel="noopener noreferrer"
                   aria-label={`Open ${labelFor(m.primary_morph, 'gecko')} photo in a new tab`}
                 >
-                  <img
+                  <GeckoImage
                     src={m.image_url}
                     alt={labelFor(m.primary_morph, 'Similar gecko')}
                     className="aspect-square w-full object-cover rounded-md border border-slate-700"
