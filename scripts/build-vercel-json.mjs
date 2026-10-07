@@ -168,7 +168,12 @@ function buildConfig() {
   // copies to dist/app.html. It used to be /index.html, which after
   // prerendering is the landing page, so every app route (AuthPortal,
   // Dashboard, My Geckos) preloaded a 427 KB hero image it never renders.
-  const rewrites = [{ source: '/(.*)', destination: '/app.html' }];
+  // /mcp is the public MCP server for AI agents (api/mcp.js); it must come
+  // before the SPA catch-all.
+  const rewrites = [
+    { source: '/mcp', destination: '/api/mcp' },
+    { source: '/(.*)', destination: '/app.html' },
+  ];
 
   // NOTE: Do NOT add `_comment` (or any unknown top-level key) to the
   // returned object. Vercel's schema validator now rejects unknown
@@ -282,6 +287,52 @@ function buildConfig() {
         headers: [
           { key: 'Content-Type', value: 'text/markdown; charset=utf-8' },
           { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
+        ],
+      },
+      // Agent-facing files (scripts/build-agent-data.mjs). Topic files and
+      // the markdown twin of each morph and care page are markdown; each
+      // twin names its HTML page as canonical so search engines keep
+      // ranking the page, not the .md copy.
+      {
+        source: '/llms/(.*)',
+        headers: [
+          { key: 'Content-Type', value: 'text/markdown; charset=utf-8' },
+          { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+        ],
+      },
+      ...['MorphGuide', 'CareGuide'].map((section) => ({
+        source: `/${section}/:page([a-z0-9-]+)\\.md`,
+        headers: [
+          { key: 'Content-Type', value: 'text/markdown; charset=utf-8' },
+          { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Link', value: `<https://geckinspect.com/${section}/:page>; rel="canonical"` },
+        ],
+      })),
+      {
+        source: '/data/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+        ],
+      },
+      {
+        source: '/data/(.*)\\.csv',
+        headers: [{ key: 'Content-Type', value: 'text/csv; charset=utf-8' }],
+      },
+      {
+        source: '/.well-known/api-catalog',
+        headers: [
+          { key: 'Content-Type', value: 'application/linkset+json' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+        ],
+      },
+      {
+        source: '/.well-known/mcp/(.*)',
+        headers: [
+          { key: 'Content-Type', value: 'application/json' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
         ],
       },
       {

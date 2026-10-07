@@ -1,0 +1,2600 @@
+{
+  "latest": [
+    {
+      "p25": 113,
+      "p75": 211,
+      "trait": null,
+      "market": "EU",
+      "median": 135,
+      "listings": 183,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 761,
+      "p75": 1380,
+      "trait": "Axanthic",
+      "market": "EU",
+      "median": 1071,
+      "listings": 5,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 113,
+      "p75": 127,
+      "trait": "Lilly White",
+      "market": "EU",
+      "median": 113,
+      "listings": 11,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 114,
+      "p75": 237,
+      "trait": null,
+      "market": "JP",
+      "median": 158,
+      "listings": 119,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 122,
+      "p75": 212,
+      "trait": "Dalmatian",
+      "market": "JP",
+      "median": 164,
+      "listings": 8,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 101,
+      "p75": 259,
+      "trait": "Dark",
+      "market": "JP",
+      "median": 171,
+      "listings": 6,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 114,
+      "p75": 158,
+      "trait": "Extreme Harlequin",
+      "market": "JP",
+      "median": 139,
+      "listings": 15,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 101,
+      "p75": 158,
+      "trait": "Harlequin",
+      "market": "JP",
+      "median": 120,
+      "listings": 15,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 237,
+      "p75": 493,
+      "trait": "Lilly White",
+      "market": "JP",
+      "median": 304,
+      "listings": 22,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 129,
+      "p75": 192,
+      "trait": "Pinstripe",
+      "market": "JP",
+      "median": 146,
+      "listings": 6,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 177,
+      "p75": 247,
+      "trait": "Red",
+      "market": "JP",
+      "median": 202,
+      "listings": 7,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 101,
+      "p75": 114,
+      "trait": "Tiger",
+      "market": "JP",
+      "median": 101,
+      "listings": 5,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 142,
+      "p75": 190,
+      "trait": "Tri-color",
+      "market": "JP",
+      "median": 164,
+      "listings": 11,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 149,
+      "p75": 896,
+      "trait": null,
+      "market": "KR",
+      "median": 336,
+      "listings": 2957,
+      "checked_on": "2026-10-06",
+      "price_cuts": 15,
+      "new_listings": 33
+    },
+    {
+      "p25": 336,
+      "p75": 2166,
+      "trait": "Axanthic",
+      "market": "KR",
+      "median": 747,
+      "listings": 345,
+      "checked_on": "2026-10-06",
+      "price_cuts": 2,
+      "new_listings": 16
+    },
+    {
+      "p25": 112,
+      "p75": 598,
+      "trait": "Cappuccino",
+      "market": "KR",
+      "median": 243,
+      "listings": 140,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 112,
+      "p75": 299,
+      "trait": "Cream",
+      "market": "KR",
+      "median": 224,
+      "listings": 61,
+      "checked_on": "2026-10-06",
+      "price_cuts": 1,
+      "new_listings": 3
+    },
+    {
+      "p25": 90,
+      "p75": 224,
+      "trait": "Dark",
+      "market": "KR",
+      "median": 187,
+      "listings": 17,
+      "checked_on": "2026-10-06",
+      "price_cuts": 2,
+      "new_listings": 0
+    },
+    {
+      "p25": 224,
+      "p75": 1120,
+      "trait": "Drippy",
+      "market": "KR",
+      "median": 448,
+      "listings": 344,
+      "checked_on": "2026-10-06",
+      "price_cuts": 3,
+      "new_listings": 2
+    },
+    {
+      "p25": 224,
+      "p75": 1195,
+      "trait": "Empty Back",
+      "market": "KR",
+      "median": 373,
+      "listings": 53,
+      "checked_on": "2026-10-06",
+      "price_cuts": 1,
+      "new_listings": 2
+    },
+    {
+      "p25": 149,
+      "p75": 1120,
+      "trait": "Extreme Harlequin",
+      "market": "KR",
+      "median": 373,
+      "listings": 395,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 1
+    },
+    {
+      "p25": 149,
+      "p75": 448,
+      "trait": "Frappuccino",
+      "market": "KR",
+      "median": 224,
+      "listings": 59,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 187,
+      "p75": 1120,
+      "trait": "Full Pinstripe",
+      "market": "KR",
+      "median": 336,
+      "listings": 196,
+      "checked_on": "2026-10-06",
+      "price_cuts": 2,
+      "new_listings": 4
+    },
+    {
+      "p25": 159,
+      "p75": 289,
+      "trait": "Harlequin",
+      "market": "KR",
+      "median": 224,
+      "listings": 6,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 187,
+      "p75": 1120,
+      "trait": "Het Axanthic",
+      "market": "KR",
+      "median": 336,
+      "listings": 263,
+      "checked_on": "2026-10-06",
+      "price_cuts": 6,
+      "new_listings": 1
+    },
+    {
+      "p25": 373,
+      "p75": 1494,
+      "trait": "Hypo",
+      "market": "KR",
+      "median": 598,
+      "listings": 83,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 1
+    },
+    {
+      "p25": 149,
+      "p75": 672,
+      "trait": "Lilly White",
+      "market": "KR",
+      "median": 299,
+      "listings": 562,
+      "checked_on": "2026-10-06",
+      "price_cuts": 1,
+      "new_listings": 9
+    },
+    {
+      "p25": 168,
+      "p75": 598,
+      "trait": "Phantom",
+      "market": "KR",
+      "median": 486,
+      "listings": 38,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 224,
+      "p75": 1120,
+      "trait": "Pinstripe",
+      "market": "KR",
+      "median": 448,
+      "listings": 93,
+      "checked_on": "2026-10-06",
+      "price_cuts": 1,
+      "new_listings": 1
+    },
+    {
+      "p25": 149,
+      "p75": 1120,
+      "trait": "Portholes",
+      "market": "KR",
+      "median": 243,
+      "listings": 58,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 1
+    },
+    {
+      "p25": 187,
+      "p75": 1195,
+      "trait": "Quad-stripe",
+      "market": "KR",
+      "median": 373,
+      "listings": 197,
+      "checked_on": "2026-10-06",
+      "price_cuts": 2,
+      "new_listings": 2
+    },
+    {
+      "p25": 112,
+      "p75": 261,
+      "trait": "Red",
+      "market": "KR",
+      "median": 149,
+      "listings": 51,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 149,
+      "p75": 822,
+      "trait": "Sable",
+      "market": "KR",
+      "median": 299,
+      "listings": 386,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 2
+    },
+    {
+      "p25": 187,
+      "p75": 1083,
+      "trait": "Super Dalmatian",
+      "market": "KR",
+      "median": 429,
+      "listings": 38,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 149,
+      "p75": 747,
+      "trait": "Tangerine",
+      "market": "KR",
+      "median": 336,
+      "listings": 180,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 149,
+      "p75": 896,
+      "trait": "Tri-color",
+      "market": "KR",
+      "median": 355,
+      "listings": 850,
+      "checked_on": "2026-10-06",
+      "price_cuts": 2,
+      "new_listings": 4
+    },
+    {
+      "p25": 75,
+      "p75": 411,
+      "trait": "Yellow",
+      "market": "KR",
+      "median": 224,
+      "listings": 37,
+      "checked_on": "2026-10-06",
+      "price_cuts": 1,
+      "new_listings": 3
+    },
+    {
+      "p25": 150,
+      "p75": 450,
+      "trait": null,
+      "market": "US",
+      "median": 250,
+      "listings": 6985,
+      "checked_on": "2026-10-06",
+      "price_cuts": 183,
+      "new_listings": 53
+    },
+    {
+      "p25": 600,
+      "p75": 1200,
+      "trait": "Axanthic",
+      "market": "US",
+      "median": 800,
+      "listings": 144,
+      "checked_on": "2026-10-06",
+      "price_cuts": 4,
+      "new_listings": 0
+    },
+    {
+      "p25": 100,
+      "p75": 300,
+      "trait": "Brindle",
+      "market": "US",
+      "median": 150,
+      "listings": 213,
+      "checked_on": "2026-10-06",
+      "price_cuts": 6,
+      "new_listings": 0
+    },
+    {
+      "p25": 100,
+      "p75": 200,
+      "trait": "Buckskin",
+      "market": "US",
+      "median": 150,
+      "listings": 15,
+      "checked_on": "2026-10-06",
+      "price_cuts": 0,
+      "new_listings": 0
+    },
+    {
+      "p25": 244,
+      "p75": 596,
+      "trait": "Cappuccino",
+      "market": "US",
+      "median": 350,
+      "listings": 384,
+      "checked_on": "2026-10-06",
+      "price_cuts": 8,
+      "new_listings": 4
+    },
+    {
+      "p25": 150,
+      "p75": 350,
+      "trait": "Cream",
+      "market": "US",
+      "median": 250,
+      "listings": 415,
+      "checked_on": "2026-10-06",
+      "price_cuts": 20,
+      "new_listings": 5
+    },
+    {
+      "p25": 100,
+      "p75": 300,
+      "trait": "Dalmatian",
+      "market": "US",
+      "median": 175,
+      "listings": 680,
+      "checked_on": "2026-10-06",
+      "price_cuts": 22,
+      "new_listings": 6
+    },
+    {
+      "p25": 150,
+      "p75": 450,
+      "trait": "Dark",
+      "market": "US",
+      "median": 262,
+      "listings": 794,
+      "checked_on": "2026-10-06",
+      "price_cuts": 35,
+      "new_listings": 7
+    },
+    {
+      "p25": 250,
+      "p75": 600,
+      "trait": "Drippy",
+      "market": "US",
+      "median": 400,
+      "listings": 462,
+      "checked_on": "2026-10-06",
+      "price_cuts": 16,
+      "new_listings": 3
+    },
+    {
+      "p25": 160,
+      "p75": 400,
+      "trait": "Empty Back",
+      "market": "US",
+      "median": 250,
+      "listings": 313,
+      "checked_on": "2026-10-06",
+      "price_cuts": 13,
+      "new_listings": 1
+    },
+    {
+      "p25": 200,
+      "p75": 434,
+      "trait": "Extreme Harlequin",
+      "market": "US",
+      "median": 300,
+      "listings": 1106,
+      "checked_on": "2026-10-06",
+      "price_cuts": 25,
+      "new_listings": 6
+    },
+    {
+      "p25": 110,
+      "p75": 280,
+      "trait": "Harlequin",
+      "market": "US",
+      "median": 175,
+      "listings": 1277,
+      "checked_on": "2026-10-06",
+      "price_cuts": 31,
+      "new_listings": 9
+    },
+    {
+      "p25": 250,
+      "p75": 600,
+      "trait": "Het Axanthic",
+      "market": "US",
+      "median": 450,
+      "listings": 135,
+      "checked_on": "2026-10-06",
+      "price_cuts": 2,
+      "new_listings": 0
+    },
+    {
+      "p25": 203,
+      "p75": 500,
+      "trait": "Hypo",
+      "market": "US",
+      "median": 315,
+      "listings": 122,
+      "checked_on": "2026-10-06",
+      "price_cuts": 4,
+      "new_listings": 1
+    },
+    {
+      "p25": 160,
+      "p75": 450,
+      "trait": "Lavender",
+      "market": "US",
+      "median": 300,
+      "listings": 243,
+      "checked_on": "2026-10-06",
+      "price_cuts": 6,
+      "new_listings": 1
+    },
+    {
+      "p25": 250,
+      "p75": 600,
+      "trait": "Lilly White",
+      "market": "US",
+      "median": 400,
+      "listings": 1191,
+      "checked_on": "2026-10-06",
+      "price_cuts": 29,
+      "new_listings": 13
+    },
+    {
+      "p25": 200,
+      "p75": 450,
+      "trait": "Olive",
+      "market": "US",
+      "median": 250,
+      "listings": 17,
+      "checked_on": "2026-10-06",
+      "price_cuts": 1,
+      "new_listings": 0
+    },
+    {
+      "p25": 175,
+      "p75": 425,
+      "trait": "Orange",
+      "market": "US",
+      "median": 285,
+      "listings": 322,
+      "checked_on": "2026-10-06",
+      "price_cuts": 7,
+      "new_listings": 1
+    },
+    {
+      "p25": 120,
+      "p75": 300,
+      "trait": "Partial Pinstripe",
+      "market": "US",
+      "median": 175,
+      "listings": 386,
+      "checked_on": "2026-10-06",
+      "price_cuts": 17,
+      "new_listings": 0
+    },
+    {
+      "p25": 125,
+      "p75": 275,
+      "trait": "Patternless",
+      "market": "US",
+      "median": 150,
+      "listings": 27,
+      "checked_on": "2026-10-06",
+      "price_cuts": 2,
+      "new_listings": 0
+    },
+    {
+      "p25": 150,
+      "p75": 400,
+      "trait": "Phantom",
+      "market": "US",
+      "median": 250,
+      "listings": 589,
+      "checked_on": "2026-10-06",
+      "price_cuts": 15,
+      "new_listings": 9
+    },
+    {
+      "p25": 150,
+      "p75": 350,
+      "trait": "Pinstripe",
+      "market": "US",
+      "median": 249,
+      "listings": 949,
+      "checked_on": "2026-10-06",
+      "price_cuts": 25,
+      "new_listings": 3
+    },
+    {
+      "p25": 125,
+      "p75": 350,
+      "trait": "Portholes",
+      "market": "US",
+      "median": 200,
+      "listings": 388,
+      "checked_on": "2026-10-06",
+      "price_cuts": 17,
+      "new_listings": 1
+    },
+    {
+      "p25": 175,
+      "p75": 400,
+      "trait": "Quad-stripe",
+      "market": "US",
+      "median": 280,
+      "listings": 179,
+      "checked_on": "2026-10-06",
+      "price_cuts": 8,
+      "new_listings": 0
+    },
+    {
+      "p25": 150,
+      "p75": 400,
+      "trait": "Red",
+      "market": "US",
+      "median": 250,
+      "listings": 509,
+      "checked_on": "2026-10-06",
+      "price_cuts": 17,
+      "new_listings": 3
+    },
+    {
+      "p25": 175,
+      "p75": 467,
+      "trait": "Red Base",
+      "market": "US",
+      "median": 300,
+      "listings": 403,
+      "checked_on": "2026-10-06",
+      "price_cuts": 12,
+      "new_listings": 4
+    },
+    {
+      "p25": 100,
+      "p75": 337,
+      "trait": "Reverse Pinstripe",
+      "market": "US",
+      "median": 150,
+      "listings": 50,
+      "checked_on": "2026-10-06",
+      "price_cuts": 2,
+      "new_listings": 0
+    },
+    {
+      "p25": 490,
+      "p75": 863,
+      "trait": "Sable",
+      "market": "US",
+      "median": 610,
+      "listings": 112,
+      "checked_on": "2026-10-06",
+      "price_cuts": 3,
+      "new_listings": 0
+    },
+    {
+      "p25": 219,
+      "p75": 500,
+      "trait": "Soft Scale",
+      "market": "US",
+      "median": 340,
+      "listings": 168,
+      "checked_on": "2026-10-06",
+      "price_cuts": 5,
+      "new_listings": 0
+    },
+    {
+      "p25": 200,
+      "p75": 500,
+      "trait": "Super Dalmatian",
+      "market": "US",
+      "median": 360,
+      "listings": 390,
+      "checked_on": "2026-10-06",
+      "price_cuts": 12,
+      "new_listings": 4
+    },
+    {
+      "p25": 200,
+      "p75": 400,
+      "trait": "Tangerine",
+      "market": "US",
+      "median": 300,
+      "listings": 262,
+      "checked_on": "2026-10-06",
+      "price_cuts": 6,
+      "new_listings": 1
+    },
+    {
+      "p25": 150,
+      "p75": 400,
+      "trait": "Tiger",
+      "market": "US",
+      "median": 275,
+      "listings": 232,
+      "checked_on": "2026-10-06",
+      "price_cuts": 4,
+      "new_listings": 0
+    },
+    {
+      "p25": 200,
+      "p75": 450,
+      "trait": "Tri-color",
+      "market": "US",
+      "median": 300,
+      "listings": 1348,
+      "checked_on": "2026-10-06",
+      "price_cuts": 40,
+      "new_listings": 10
+    },
+    {
+      "p25": 200,
+      "p75": 550,
+      "trait": "White Wall",
+      "market": "US",
+      "median": 349,
+      "listings": 501,
+      "checked_on": "2026-10-06",
+      "price_cuts": 9,
+      "new_listings": 4
+    },
+    {
+      "p25": 150,
+      "p75": 350,
+      "trait": "Yellow",
+      "market": "US",
+      "median": 200,
+      "listings": 410,
+      "checked_on": "2026-10-06",
+      "price_cuts": 18,
+      "new_listings": 2
+    },
+    {
+      "p25": 156,
+      "p75": 425,
+      "trait": "Yellow Base",
+      "market": "US",
+      "median": 292,
+      "listings": 182,
+      "checked_on": "2026-10-06",
+      "price_cuts": 9,
+      "new_listings": 2
+    }
+  ],
+  "monthly": [
+    {
+      "month": "2026-09",
+      "trait": null,
+      "market": "EU",
+      "median": 136,
+      "full_checks": 4,
+      "avg_listings": 184
+    },
+    {
+      "month": "2026-09",
+      "trait": "Axanthic",
+      "market": "EU",
+      "median": 1135,
+      "full_checks": 4,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-09",
+      "trait": "Lilly White",
+      "market": "EU",
+      "median": 114,
+      "full_checks": 4,
+      "avg_listings": 11
+    },
+    {
+      "month": "2026-10",
+      "trait": null,
+      "market": "EU",
+      "median": 135,
+      "full_checks": 4,
+      "avg_listings": 184
+    },
+    {
+      "month": "2026-10",
+      "trait": "Axanthic",
+      "market": "EU",
+      "median": 1097,
+      "full_checks": 4,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-10",
+      "trait": "Lilly White",
+      "market": "EU",
+      "median": 113,
+      "full_checks": 4,
+      "avg_listings": 11
+    },
+    {
+      "month": "2026-09",
+      "trait": null,
+      "market": "JP",
+      "median": 159,
+      "full_checks": 3,
+      "avg_listings": 119
+    },
+    {
+      "month": "2026-09",
+      "trait": "Dalmatian",
+      "market": "JP",
+      "median": 165,
+      "full_checks": 3,
+      "avg_listings": 8
+    },
+    {
+      "month": "2026-09",
+      "trait": "Dark",
+      "market": "JP",
+      "median": 172,
+      "full_checks": 3,
+      "avg_listings": 6
+    },
+    {
+      "month": "2026-09",
+      "trait": "Extreme Harlequin",
+      "market": "JP",
+      "median": 140,
+      "full_checks": 3,
+      "avg_listings": 15
+    },
+    {
+      "month": "2026-09",
+      "trait": "Harlequin",
+      "market": "JP",
+      "median": 121,
+      "full_checks": 3,
+      "avg_listings": 15
+    },
+    {
+      "month": "2026-09",
+      "trait": "Lilly White",
+      "market": "JP",
+      "median": 305,
+      "full_checks": 3,
+      "avg_listings": 22
+    },
+    {
+      "month": "2026-09",
+      "trait": "Pinstripe",
+      "market": "JP",
+      "median": 147,
+      "full_checks": 3,
+      "avg_listings": 6
+    },
+    {
+      "month": "2026-09",
+      "trait": "Red",
+      "market": "JP",
+      "median": 204,
+      "full_checks": 3,
+      "avg_listings": 7
+    },
+    {
+      "month": "2026-09",
+      "trait": "Tiger",
+      "market": "JP",
+      "median": 102,
+      "full_checks": 3,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-09",
+      "trait": "Tri-color",
+      "market": "JP",
+      "median": 165,
+      "full_checks": 3,
+      "avg_listings": 11
+    },
+    {
+      "month": "2026-10",
+      "trait": null,
+      "market": "JP",
+      "median": 158,
+      "full_checks": 4,
+      "avg_listings": 119
+    },
+    {
+      "month": "2026-10",
+      "trait": "Dalmatian",
+      "market": "JP",
+      "median": 164,
+      "full_checks": 4,
+      "avg_listings": 8
+    },
+    {
+      "month": "2026-10",
+      "trait": "Dark",
+      "market": "JP",
+      "median": 171,
+      "full_checks": 4,
+      "avg_listings": 6
+    },
+    {
+      "month": "2026-10",
+      "trait": "Extreme Harlequin",
+      "market": "JP",
+      "median": 139,
+      "full_checks": 4,
+      "avg_listings": 15
+    },
+    {
+      "month": "2026-10",
+      "trait": "Harlequin",
+      "market": "JP",
+      "median": 120,
+      "full_checks": 4,
+      "avg_listings": 15
+    },
+    {
+      "month": "2026-10",
+      "trait": "Lilly White",
+      "market": "JP",
+      "median": 304,
+      "full_checks": 4,
+      "avg_listings": 22
+    },
+    {
+      "month": "2026-10",
+      "trait": "Pinstripe",
+      "market": "JP",
+      "median": 146,
+      "full_checks": 4,
+      "avg_listings": 6
+    },
+    {
+      "month": "2026-10",
+      "trait": "Red",
+      "market": "JP",
+      "median": 203,
+      "full_checks": 4,
+      "avg_listings": 7
+    },
+    {
+      "month": "2026-10",
+      "trait": "Tiger",
+      "market": "JP",
+      "median": 101,
+      "full_checks": 4,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-10",
+      "trait": "Tri-color",
+      "market": "JP",
+      "median": 165,
+      "full_checks": 4,
+      "avg_listings": 11
+    },
+    {
+      "month": "2026-08",
+      "trait": null,
+      "market": "KR",
+      "median": 702,
+      "full_checks": 1,
+      "avg_listings": 38
+    },
+    {
+      "month": "2026-08",
+      "trait": "Drippy",
+      "market": "KR",
+      "median": 1330,
+      "full_checks": 1,
+      "avg_listings": 11
+    },
+    {
+      "month": "2026-08",
+      "trait": "Empty Back",
+      "market": "KR",
+      "median": 333,
+      "full_checks": 1,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-08",
+      "trait": "Full Pinstripe",
+      "market": "KR",
+      "median": 1108,
+      "full_checks": 1,
+      "avg_listings": 9
+    },
+    {
+      "month": "2026-08",
+      "trait": "Het Axanthic",
+      "market": "KR",
+      "median": 1330,
+      "full_checks": 1,
+      "avg_listings": 20
+    },
+    {
+      "month": "2026-08",
+      "trait": "Quad-stripe",
+      "market": "KR",
+      "median": 1108,
+      "full_checks": 1,
+      "avg_listings": 9
+    },
+    {
+      "month": "2026-08",
+      "trait": "Tri-color",
+      "market": "KR",
+      "median": 148,
+      "full_checks": 1,
+      "avg_listings": 7
+    },
+    {
+      "month": "2026-09",
+      "trait": null,
+      "market": "KR",
+      "median": 351,
+      "full_checks": 6,
+      "avg_listings": 1817
+    },
+    {
+      "month": "2026-09",
+      "trait": "Axanthic",
+      "market": "KR",
+      "median": 887,
+      "full_checks": 4,
+      "avg_listings": 279
+    },
+    {
+      "month": "2026-09",
+      "trait": "Buckskin",
+      "market": "KR",
+      "median": 296,
+      "full_checks": 4,
+      "avg_listings": 6
+    },
+    {
+      "month": "2026-09",
+      "trait": "Cappuccino",
+      "market": "KR",
+      "median": 203,
+      "full_checks": 4,
+      "avg_listings": 138
+    },
+    {
+      "month": "2026-09",
+      "trait": "Cream",
+      "market": "KR",
+      "median": 185,
+      "full_checks": 4,
+      "avg_listings": 53
+    },
+    {
+      "month": "2026-09",
+      "trait": "Dark",
+      "market": "KR",
+      "median": 148,
+      "full_checks": 4,
+      "avg_listings": 19
+    },
+    {
+      "month": "2026-09",
+      "trait": "Drippy",
+      "market": "KR",
+      "median": 406,
+      "full_checks": 6,
+      "avg_listings": 239
+    },
+    {
+      "month": "2026-09",
+      "trait": "Empty Back",
+      "market": "KR",
+      "median": 369,
+      "full_checks": 4,
+      "avg_listings": 47
+    },
+    {
+      "month": "2026-09",
+      "trait": "Extreme Harlequin",
+      "market": "KR",
+      "median": 369,
+      "full_checks": 5,
+      "avg_listings": 310
+    },
+    {
+      "month": "2026-09",
+      "trait": "Frappuccino",
+      "market": "KR",
+      "median": 222,
+      "full_checks": 4,
+      "avg_listings": 64
+    },
+    {
+      "month": "2026-09",
+      "trait": "Full Pinstripe",
+      "market": "KR",
+      "median": 323,
+      "full_checks": 4,
+      "avg_listings": 199
+    },
+    {
+      "month": "2026-09",
+      "trait": "Harlequin",
+      "market": "KR",
+      "median": 185,
+      "full_checks": 4,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-09",
+      "trait": "Het Axanthic",
+      "market": "KR",
+      "median": 369,
+      "full_checks": 4,
+      "avg_listings": 257
+    },
+    {
+      "month": "2026-09",
+      "trait": "Hypo",
+      "market": "KR",
+      "median": 591,
+      "full_checks": 4,
+      "avg_listings": 56
+    },
+    {
+      "month": "2026-09",
+      "trait": "Lilly White",
+      "market": "KR",
+      "median": 277,
+      "full_checks": 4,
+      "avg_listings": 503
+    },
+    {
+      "month": "2026-09",
+      "trait": "Phantom",
+      "market": "KR",
+      "median": 517,
+      "full_checks": 4,
+      "avg_listings": 41
+    },
+    {
+      "month": "2026-09",
+      "trait": "Pinstripe",
+      "market": "KR",
+      "median": 443,
+      "full_checks": 4,
+      "avg_listings": 85
+    },
+    {
+      "month": "2026-09",
+      "trait": "Portholes",
+      "market": "KR",
+      "median": 296,
+      "full_checks": 4,
+      "avg_listings": 49
+    },
+    {
+      "month": "2026-09",
+      "trait": "Quad-stripe",
+      "market": "KR",
+      "median": 369,
+      "full_checks": 4,
+      "avg_listings": 188
+    },
+    {
+      "month": "2026-09",
+      "trait": "Red",
+      "market": "KR",
+      "median": 148,
+      "full_checks": 4,
+      "avg_listings": 49
+    },
+    {
+      "month": "2026-09",
+      "trait": "Sable",
+      "market": "KR",
+      "median": 333,
+      "full_checks": 5,
+      "avg_listings": 258
+    },
+    {
+      "month": "2026-09",
+      "trait": "Super Dalmatian",
+      "market": "KR",
+      "median": 406,
+      "full_checks": 4,
+      "avg_listings": 39
+    },
+    {
+      "month": "2026-09",
+      "trait": "Tangerine",
+      "market": "KR",
+      "median": 342,
+      "full_checks": 4,
+      "avg_listings": 158
+    },
+    {
+      "month": "2026-09",
+      "trait": "Tiger",
+      "market": "KR",
+      "median": 185,
+      "full_checks": 3,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-09",
+      "trait": "Tri-color",
+      "market": "KR",
+      "median": 351,
+      "full_checks": 6,
+      "avg_listings": 553
+    },
+    {
+      "month": "2026-09",
+      "trait": "Yellow",
+      "market": "KR",
+      "median": 185,
+      "full_checks": 4,
+      "avg_listings": 29
+    },
+    {
+      "month": "2026-10",
+      "trait": null,
+      "market": "KR",
+      "median": 298,
+      "full_checks": 4,
+      "avg_listings": 2949
+    },
+    {
+      "month": "2026-10",
+      "trait": "Axanthic",
+      "market": "KR",
+      "median": 832,
+      "full_checks": 4,
+      "avg_listings": 323
+    },
+    {
+      "month": "2026-10",
+      "trait": "Buckskin",
+      "market": "KR",
+      "median": 296,
+      "full_checks": 2,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-10",
+      "trait": "Cappuccino",
+      "market": "KR",
+      "median": 223,
+      "full_checks": 4,
+      "avg_listings": 141
+    },
+    {
+      "month": "2026-10",
+      "trait": "Cream",
+      "market": "KR",
+      "median": 223,
+      "full_checks": 4,
+      "avg_listings": 56
+    },
+    {
+      "month": "2026-10",
+      "trait": "Dark",
+      "market": "KR",
+      "median": 186,
+      "full_checks": 4,
+      "avg_listings": 17
+    },
+    {
+      "month": "2026-10",
+      "trait": "Drippy",
+      "market": "KR",
+      "median": 390,
+      "full_checks": 4,
+      "avg_listings": 362
+    },
+    {
+      "month": "2026-10",
+      "trait": "Empty Back",
+      "market": "KR",
+      "median": 372,
+      "full_checks": 4,
+      "avg_listings": 51
+    },
+    {
+      "month": "2026-10",
+      "trait": "Extreme Harlequin",
+      "market": "KR",
+      "median": 372,
+      "full_checks": 4,
+      "avg_listings": 402
+    },
+    {
+      "month": "2026-10",
+      "trait": "Frappuccino",
+      "market": "KR",
+      "median": 223,
+      "full_checks": 4,
+      "avg_listings": 61
+    },
+    {
+      "month": "2026-10",
+      "trait": "Full Pinstripe",
+      "market": "KR",
+      "median": 335,
+      "full_checks": 4,
+      "avg_listings": 202
+    },
+    {
+      "month": "2026-10",
+      "trait": "Harlequin",
+      "market": "KR",
+      "median": 204,
+      "full_checks": 4,
+      "avg_listings": 6
+    },
+    {
+      "month": "2026-10",
+      "trait": "Het Axanthic",
+      "market": "KR",
+      "median": 352,
+      "full_checks": 4,
+      "avg_listings": 269
+    },
+    {
+      "month": "2026-10",
+      "trait": "Hypo",
+      "market": "KR",
+      "median": 594,
+      "full_checks": 4,
+      "avg_listings": 82
+    },
+    {
+      "month": "2026-10",
+      "trait": "Lilly White",
+      "market": "KR",
+      "median": 296,
+      "full_checks": 4,
+      "avg_listings": 551
+    },
+    {
+      "month": "2026-10",
+      "trait": "Phantom",
+      "market": "KR",
+      "median": 500,
+      "full_checks": 4,
+      "avg_listings": 38
+    },
+    {
+      "month": "2026-10",
+      "trait": "Pinstripe",
+      "market": "KR",
+      "median": 446,
+      "full_checks": 4,
+      "avg_listings": 92
+    },
+    {
+      "month": "2026-10",
+      "trait": "Portholes",
+      "market": "KR",
+      "median": 277,
+      "full_checks": 4,
+      "avg_listings": 57
+    },
+    {
+      "month": "2026-10",
+      "trait": "Quad-stripe",
+      "market": "KR",
+      "median": 372,
+      "full_checks": 4,
+      "avg_listings": 200
+    },
+    {
+      "month": "2026-10",
+      "trait": "Red",
+      "market": "KR",
+      "median": 149,
+      "full_checks": 4,
+      "avg_listings": 52
+    },
+    {
+      "month": "2026-10",
+      "trait": "Sable",
+      "market": "KR",
+      "median": 298,
+      "full_checks": 4,
+      "avg_listings": 380
+    },
+    {
+      "month": "2026-10",
+      "trait": "Super Dalmatian",
+      "market": "KR",
+      "median": 409,
+      "full_checks": 4,
+      "avg_listings": 40
+    },
+    {
+      "month": "2026-10",
+      "trait": "Tangerine",
+      "market": "KR",
+      "median": 343,
+      "full_checks": 4,
+      "avg_listings": 175
+    },
+    {
+      "month": "2026-10",
+      "trait": "Tri-color",
+      "market": "KR",
+      "median": 335,
+      "full_checks": 4,
+      "avg_listings": 860
+    },
+    {
+      "month": "2026-10",
+      "trait": "Yellow",
+      "market": "KR",
+      "median": 250,
+      "full_checks": 4,
+      "avg_listings": 33
+    },
+    {
+      "month": "2026-05",
+      "trait": null,
+      "market": "US",
+      "median": 300,
+      "full_checks": 4,
+      "avg_listings": 6020
+    },
+    {
+      "month": "2026-05",
+      "trait": "Axanthic",
+      "market": "US",
+      "median": 1050,
+      "full_checks": 4,
+      "avg_listings": 39
+    },
+    {
+      "month": "2026-05",
+      "trait": "Brindle",
+      "market": "US",
+      "median": 163,
+      "full_checks": 4,
+      "avg_listings": 61
+    },
+    {
+      "month": "2026-05",
+      "trait": "Cappuccino",
+      "market": "US",
+      "median": 350,
+      "full_checks": 4,
+      "avg_listings": 161
+    },
+    {
+      "month": "2026-05",
+      "trait": "Cream",
+      "market": "US",
+      "median": 271,
+      "full_checks": 4,
+      "avg_listings": 77
+    },
+    {
+      "month": "2026-05",
+      "trait": "Dalmatian",
+      "market": "US",
+      "median": 175,
+      "full_checks": 4,
+      "avg_listings": 249
+    },
+    {
+      "month": "2026-05",
+      "trait": "Dark",
+      "market": "US",
+      "median": 250,
+      "full_checks": 4,
+      "avg_listings": 212
+    },
+    {
+      "month": "2026-05",
+      "trait": "Drippy",
+      "market": "US",
+      "median": 500,
+      "full_checks": 4,
+      "avg_listings": 121
+    },
+    {
+      "month": "2026-05",
+      "trait": "Empty Back",
+      "market": "US",
+      "median": 250,
+      "full_checks": 4,
+      "avg_listings": 116
+    },
+    {
+      "month": "2026-05",
+      "trait": "Extreme Harlequin",
+      "market": "US",
+      "median": 300,
+      "full_checks": 4,
+      "avg_listings": 360
+    },
+    {
+      "month": "2026-05",
+      "trait": "Harlequin",
+      "market": "US",
+      "median": 150,
+      "full_checks": 4,
+      "avg_listings": 451
+    },
+    {
+      "month": "2026-05",
+      "trait": "Het Axanthic",
+      "market": "US",
+      "median": 400,
+      "full_checks": 4,
+      "avg_listings": 56
+    },
+    {
+      "month": "2026-05",
+      "trait": "Hypo",
+      "market": "US",
+      "median": 300,
+      "full_checks": 4,
+      "avg_listings": 36
+    },
+    {
+      "month": "2026-05",
+      "trait": "Lavender",
+      "market": "US",
+      "median": 300,
+      "full_checks": 4,
+      "avg_listings": 98
+    },
+    {
+      "month": "2026-05",
+      "trait": "Lilly White",
+      "market": "US",
+      "median": 391,
+      "full_checks": 4,
+      "avg_listings": 385
+    },
+    {
+      "month": "2026-05",
+      "trait": "Olive",
+      "market": "US",
+      "median": 200,
+      "full_checks": 1,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-05",
+      "trait": "Orange",
+      "market": "US",
+      "median": 259,
+      "full_checks": 4,
+      "avg_listings": 89
+    },
+    {
+      "month": "2026-05",
+      "trait": "Partial Pinstripe",
+      "market": "US",
+      "median": 175,
+      "full_checks": 4,
+      "avg_listings": 102
+    },
+    {
+      "month": "2026-05",
+      "trait": "Patternless",
+      "market": "US",
+      "median": 150,
+      "full_checks": 2,
+      "avg_listings": 5
+    },
+    {
+      "month": "2026-05",
+      "trait": "Phantom",
+      "market": "US",
+      "median": 275,
+      "full_checks": 4,
+      "avg_listings": 163
+    },
+    {
+      "month": "2026-05",
+      "trait": "Pinstripe",
+      "market": "US",
+      "median": 200,
+      "full_checks": 4,
+      "avg_listings": 273
+    },
+    {
+      "month": "2026-05",
+      "trait": "Portholes",
+      "market": "US",
+      "median": 190,
+      "full_checks": 4,
+      "avg_listings": 125
+    },
+    {
+      "month": "2026-05",
+      "trait": "Quad-stripe",
+      "market": "US",
+      "median": 300,
+      "full_checks": 4,
+      "avg_listings": 81
+    },
+    {
+      "month": "2026-05",
+      "trait": "Red",
+      "market": "US",
+      "median": 275,
+      "full_checks": 4,
+      "avg_listings": 163
+    },
+    {
+      "month": "2026-05",
+      "trait": "Red Base",
+      "market": "US",
+      "median": 294,
+      "full_checks": 4,
+      "avg_listings": 116
+    },
+    {
+      "month": "2026-05",
+      "trait": "Reverse Pinstripe",
+      "market": "US",
+      "median": 170,
+      "full_checks": 4,
+      "avg_listings": 13
+    },
+    {
+      "month": "2026-05",
+      "trait": "Sable",
+      "market": "US",
+      "median": 925,
+      "full_checks": 4,
+      "avg_listings": 33
+    },
+    {
+      "month": "2026-05",
+      "trait": "Soft Scale",
+      "market": "US",
+      "median": 300,
+      "full_checks": 4,
+      "avg_listings": 88
+    },
+    {
+      "month": "2026-05",
+      "trait": "Super Dalmatian",
+      "market": "US",
+      "median": 380,
+      "full_checks": 4,
+      "avg_listings": 96
+    },
+    {
+      "month": "2026-05",
+      "trait": "Tangerine",
+      "market": "US",
+      "median": 300,
+      "full_checks": 4,
+      "avg_listings": 108
+    },
+    {
+      "month": "2026-05",
+      "trait": "Tiger",
+      "market": "US",
+      "median": 284,
+      "full_checks": 4,
+      "avg_listings": 73
+    },
+    {
+      "month": "2026-05",
+      "trait": "Tri-color",
+      "market": "US",
+      "median": 300,
+      "full_checks": 4,
+      "avg_listings": 418
+    },
+    {
+      "month": "2026-05",
+      "trait": "White Wall",
+      "market": "US",
+      "median": 350,
+      "full_checks": 4,
+      "avg_listings": 116
+    },
+    {
+      "month": "2026-05",
+      "trait": "Yellow",
+      "market": "US",
+      "median": 250,
+      "full_checks": 4,
+      "avg_listings": 125
+    },
+    {
+      "month": "2026-05",
+      "trait": "Yellow Base",
+      "market": "US",
+      "median": 325,
+      "full_checks": 4,
+      "avg_listings": 52
+    },
+    {
+      "month": "2026-06",
+      "trait": null,
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 5994
+    },
+    {
+      "month": "2026-06",
+      "trait": "Axanthic",
+      "market": "US",
+      "median": 1100,
+      "full_checks": 1,
+      "avg_listings": 28
+    },
+    {
+      "month": "2026-06",
+      "trait": "Brindle",
+      "market": "US",
+      "median": 155,
+      "full_checks": 1,
+      "avg_listings": 54
+    },
+    {
+      "month": "2026-06",
+      "trait": "Cappuccino",
+      "market": "US",
+      "median": 375,
+      "full_checks": 1,
+      "avg_listings": 127
+    },
+    {
+      "month": "2026-06",
+      "trait": "Cream",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 62
+    },
+    {
+      "month": "2026-06",
+      "trait": "Dalmatian",
+      "market": "US",
+      "median": 175,
+      "full_checks": 1,
+      "avg_listings": 208
+    },
+    {
+      "month": "2026-06",
+      "trait": "Dark",
+      "market": "US",
+      "median": 275,
+      "full_checks": 1,
+      "avg_listings": 173
+    },
+    {
+      "month": "2026-06",
+      "trait": "Drippy",
+      "market": "US",
+      "median": 500,
+      "full_checks": 1,
+      "avg_listings": 104
+    },
+    {
+      "month": "2026-06",
+      "trait": "Empty Back",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 94
+    },
+    {
+      "month": "2026-06",
+      "trait": "Extreme Harlequin",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 302
+    },
+    {
+      "month": "2026-06",
+      "trait": "Harlequin",
+      "market": "US",
+      "median": 160,
+      "full_checks": 1,
+      "avg_listings": 350
+    },
+    {
+      "month": "2026-06",
+      "trait": "Het Axanthic",
+      "market": "US",
+      "median": 450,
+      "full_checks": 1,
+      "avg_listings": 41
+    },
+    {
+      "month": "2026-06",
+      "trait": "Hypo",
+      "market": "US",
+      "median": 350,
+      "full_checks": 1,
+      "avg_listings": 30
+    },
+    {
+      "month": "2026-06",
+      "trait": "Lavender",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 79
+    },
+    {
+      "month": "2026-06",
+      "trait": "Lilly White",
+      "market": "US",
+      "median": 400,
+      "full_checks": 1,
+      "avg_listings": 322
+    },
+    {
+      "month": "2026-06",
+      "trait": "Orange",
+      "market": "US",
+      "median": 290,
+      "full_checks": 1,
+      "avg_listings": 70
+    },
+    {
+      "month": "2026-06",
+      "trait": "Partial Pinstripe",
+      "market": "US",
+      "median": 175,
+      "full_checks": 1,
+      "avg_listings": 85
+    },
+    {
+      "month": "2026-06",
+      "trait": "Phantom",
+      "market": "US",
+      "median": 275,
+      "full_checks": 1,
+      "avg_listings": 136
+    },
+    {
+      "month": "2026-06",
+      "trait": "Pinstripe",
+      "market": "US",
+      "median": 200,
+      "full_checks": 1,
+      "avg_listings": 211
+    },
+    {
+      "month": "2026-06",
+      "trait": "Portholes",
+      "market": "US",
+      "median": 200,
+      "full_checks": 1,
+      "avg_listings": 95
+    },
+    {
+      "month": "2026-06",
+      "trait": "Quad-stripe",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 67
+    },
+    {
+      "month": "2026-06",
+      "trait": "Red",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 128
+    },
+    {
+      "month": "2026-06",
+      "trait": "Red Base",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 96
+    },
+    {
+      "month": "2026-06",
+      "trait": "Reverse Pinstripe",
+      "market": "US",
+      "median": 170,
+      "full_checks": 1,
+      "avg_listings": 9
+    },
+    {
+      "month": "2026-06",
+      "trait": "Sable",
+      "market": "US",
+      "median": 1200,
+      "full_checks": 1,
+      "avg_listings": 27
+    },
+    {
+      "month": "2026-06",
+      "trait": "Soft Scale",
+      "market": "US",
+      "median": 325,
+      "full_checks": 1,
+      "avg_listings": 75
+    },
+    {
+      "month": "2026-06",
+      "trait": "Super Dalmatian",
+      "market": "US",
+      "median": 400,
+      "full_checks": 1,
+      "avg_listings": 70
+    },
+    {
+      "month": "2026-06",
+      "trait": "Tangerine",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 93
+    },
+    {
+      "month": "2026-06",
+      "trait": "Tiger",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 60
+    },
+    {
+      "month": "2026-06",
+      "trait": "Tri-color",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 354
+    },
+    {
+      "month": "2026-06",
+      "trait": "White Wall",
+      "market": "US",
+      "median": 350,
+      "full_checks": 1,
+      "avg_listings": 90
+    },
+    {
+      "month": "2026-06",
+      "trait": "Yellow",
+      "market": "US",
+      "median": 250,
+      "full_checks": 1,
+      "avg_listings": 99
+    },
+    {
+      "month": "2026-06",
+      "trait": "Yellow Base",
+      "market": "US",
+      "median": 325,
+      "full_checks": 1,
+      "avg_listings": 40
+    },
+    {
+      "month": "2026-09",
+      "trait": null,
+      "market": "US",
+      "median": 260,
+      "full_checks": 1,
+      "avg_listings": 2478
+    },
+    {
+      "month": "2026-09",
+      "trait": "Axanthic",
+      "market": "US",
+      "median": 695,
+      "full_checks": 1,
+      "avg_listings": 31
+    },
+    {
+      "month": "2026-09",
+      "trait": "Brindle",
+      "market": "US",
+      "median": 150,
+      "full_checks": 1,
+      "avg_listings": 91
+    },
+    {
+      "month": "2026-09",
+      "trait": "Cappuccino",
+      "market": "US",
+      "median": 361,
+      "full_checks": 1,
+      "avg_listings": 92
+    },
+    {
+      "month": "2026-09",
+      "trait": "Cream",
+      "market": "US",
+      "median": 287,
+      "full_checks": 1,
+      "avg_listings": 150
+    },
+    {
+      "month": "2026-09",
+      "trait": "Dalmatian",
+      "market": "US",
+      "median": 193,
+      "full_checks": 1,
+      "avg_listings": 274
+    },
+    {
+      "month": "2026-09",
+      "trait": "Dark",
+      "market": "US",
+      "median": 250,
+      "full_checks": 1,
+      "avg_listings": 309
+    },
+    {
+      "month": "2026-09",
+      "trait": "Drippy",
+      "market": "US",
+      "median": 375,
+      "full_checks": 1,
+      "avg_listings": 151
+    },
+    {
+      "month": "2026-09",
+      "trait": "Empty Back",
+      "market": "US",
+      "median": 250,
+      "full_checks": 1,
+      "avg_listings": 110
+    },
+    {
+      "month": "2026-09",
+      "trait": "Extreme Harlequin",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 414
+    },
+    {
+      "month": "2026-09",
+      "trait": "Harlequin",
+      "market": "US",
+      "median": 175,
+      "full_checks": 1,
+      "avg_listings": 488
+    },
+    {
+      "month": "2026-09",
+      "trait": "Het Axanthic",
+      "market": "US",
+      "median": 425,
+      "full_checks": 1,
+      "avg_listings": 36
+    },
+    {
+      "month": "2026-09",
+      "trait": "Hypo",
+      "market": "US",
+      "median": 399,
+      "full_checks": 1,
+      "avg_listings": 43
+    },
+    {
+      "month": "2026-09",
+      "trait": "Lavender",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 121
+    },
+    {
+      "month": "2026-09",
+      "trait": "Lilly White",
+      "market": "US",
+      "median": 400,
+      "full_checks": 1,
+      "avg_listings": 359
+    },
+    {
+      "month": "2026-09",
+      "trait": "Orange",
+      "market": "US",
+      "median": 250,
+      "full_checks": 1,
+      "avg_listings": 111
+    },
+    {
+      "month": "2026-09",
+      "trait": "Partial Pinstripe",
+      "market": "US",
+      "median": 180,
+      "full_checks": 1,
+      "avg_listings": 166
+    },
+    {
+      "month": "2026-09",
+      "trait": "Patternless",
+      "market": "US",
+      "median": 150,
+      "full_checks": 1,
+      "avg_listings": 10
+    },
+    {
+      "month": "2026-09",
+      "trait": "Phantom",
+      "market": "US",
+      "median": 253,
+      "full_checks": 1,
+      "avg_listings": 196
+    },
+    {
+      "month": "2026-09",
+      "trait": "Pinstripe",
+      "market": "US",
+      "median": 225,
+      "full_checks": 1,
+      "avg_listings": 315
+    },
+    {
+      "month": "2026-09",
+      "trait": "Portholes",
+      "market": "US",
+      "median": 199,
+      "full_checks": 1,
+      "avg_listings": 143
+    },
+    {
+      "month": "2026-09",
+      "trait": "Quad-stripe",
+      "market": "US",
+      "median": 275,
+      "full_checks": 1,
+      "avg_listings": 82
+    },
+    {
+      "month": "2026-09",
+      "trait": "Red",
+      "market": "US",
+      "median": 275,
+      "full_checks": 1,
+      "avg_listings": 188
+    },
+    {
+      "month": "2026-09",
+      "trait": "Red Base",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 156
+    },
+    {
+      "month": "2026-09",
+      "trait": "Reverse Pinstripe",
+      "market": "US",
+      "median": 150,
+      "full_checks": 1,
+      "avg_listings": 19
+    },
+    {
+      "month": "2026-09",
+      "trait": "Sable",
+      "market": "US",
+      "median": 680,
+      "full_checks": 1,
+      "avg_listings": 31
+    },
+    {
+      "month": "2026-09",
+      "trait": "Soft Scale",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 85
+    },
+    {
+      "month": "2026-09",
+      "trait": "Super Dalmatian",
+      "market": "US",
+      "median": 375,
+      "full_checks": 1,
+      "avg_listings": 127
+    },
+    {
+      "month": "2026-09",
+      "trait": "Tangerine",
+      "market": "US",
+      "median": 299,
+      "full_checks": 1,
+      "avg_listings": 110
+    },
+    {
+      "month": "2026-09",
+      "trait": "Tiger",
+      "market": "US",
+      "median": 250,
+      "full_checks": 1,
+      "avg_listings": 81
+    },
+    {
+      "month": "2026-09",
+      "trait": "Tri-color",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 464
+    },
+    {
+      "month": "2026-09",
+      "trait": "White Wall",
+      "market": "US",
+      "median": 300,
+      "full_checks": 1,
+      "avg_listings": 160
+    },
+    {
+      "month": "2026-09",
+      "trait": "Yellow",
+      "market": "US",
+      "median": 250,
+      "full_checks": 1,
+      "avg_listings": 140
+    },
+    {
+      "month": "2026-09",
+      "trait": "Yellow Base",
+      "market": "US",
+      "median": 299,
+      "full_checks": 1,
+      "avg_listings": 71
+    },
+    {
+      "month": "2026-10",
+      "trait": null,
+      "market": "US",
+      "median": 250,
+      "full_checks": 2,
+      "avg_listings": 6215
+    },
+    {
+      "month": "2026-10",
+      "trait": "Axanthic",
+      "market": "US",
+      "median": 775,
+      "full_checks": 2,
+      "avg_listings": 140
+    },
+    {
+      "month": "2026-10",
+      "trait": "Brindle",
+      "market": "US",
+      "median": 155,
+      "full_checks": 2,
+      "avg_listings": 188
+    },
+    {
+      "month": "2026-10",
+      "trait": "Buckskin",
+      "market": "US",
+      "median": 142,
+      "full_checks": 2,
+      "avg_listings": 14
+    },
+    {
+      "month": "2026-10",
+      "trait": "Cappuccino",
+      "market": "US",
+      "median": 350,
+      "full_checks": 2,
+      "avg_listings": 348
+    },
+    {
+      "month": "2026-10",
+      "trait": "Cream",
+      "market": "US",
+      "median": 250,
+      "full_checks": 2,
+      "avg_listings": 349
+    },
+    {
+      "month": "2026-10",
+      "trait": "Dalmatian",
+      "market": "US",
+      "median": 175,
+      "full_checks": 2,
+      "avg_listings": 606
+    },
+    {
+      "month": "2026-10",
+      "trait": "Dark",
+      "market": "US",
+      "median": 269,
+      "full_checks": 2,
+      "avg_listings": 690
+    },
+    {
+      "month": "2026-10",
+      "trait": "Drippy",
+      "market": "US",
+      "median": 400,
+      "full_checks": 2,
+      "avg_listings": 412
+    },
+    {
+      "month": "2026-10",
+      "trait": "Empty Back",
+      "market": "US",
+      "median": 250,
+      "full_checks": 2,
+      "avg_listings": 282
+    },
+    {
+      "month": "2026-10",
+      "trait": "Extreme Harlequin",
+      "market": "US",
+      "median": 300,
+      "full_checks": 2,
+      "avg_listings": 961
+    },
+    {
+      "month": "2026-10",
+      "trait": "Harlequin",
+      "market": "US",
+      "median": 168,
+      "full_checks": 2,
+      "avg_listings": 1127
+    },
+    {
+      "month": "2026-10",
+      "trait": "Het Axanthic",
+      "market": "US",
+      "median": 450,
+      "full_checks": 2,
+      "avg_listings": 121
+    },
+    {
+      "month": "2026-10",
+      "trait": "Hypo",
+      "market": "US",
+      "median": 308,
+      "full_checks": 2,
+      "avg_listings": 108
+    },
+    {
+      "month": "2026-10",
+      "trait": "Lavender",
+      "market": "US",
+      "median": 288,
+      "full_checks": 2,
+      "avg_listings": 206
+    },
+    {
+      "month": "2026-10",
+      "trait": "Lilly White",
+      "market": "US",
+      "median": 400,
+      "full_checks": 2,
+      "avg_listings": 1072
+    },
+    {
+      "month": "2026-10",
+      "trait": "Olive",
+      "market": "US",
+      "median": 250,
+      "full_checks": 2,
+      "avg_listings": 15
+    },
+    {
+      "month": "2026-10",
+      "trait": "Orange",
+      "market": "US",
+      "median": 280,
+      "full_checks": 2,
+      "avg_listings": 281
+    },
+    {
+      "month": "2026-10",
+      "trait": "Partial Pinstripe",
+      "market": "US",
+      "median": 175,
+      "full_checks": 2,
+      "avg_listings": 336
+    },
+    {
+      "month": "2026-10",
+      "trait": "Patternless",
+      "market": "US",
+      "median": 163,
+      "full_checks": 2,
+      "avg_listings": 23
+    },
+    {
+      "month": "2026-10",
+      "trait": "Phantom",
+      "market": "US",
+      "median": 250,
+      "full_checks": 2,
+      "avg_listings": 536
+    },
+    {
+      "month": "2026-10",
+      "trait": "Pinstripe",
+      "market": "US",
+      "median": 237,
+      "full_checks": 2,
+      "avg_listings": 845
+    },
+    {
+      "month": "2026-10",
+      "trait": "Portholes",
+      "market": "US",
+      "median": 200,
+      "full_checks": 2,
+      "avg_listings": 343
+    },
+    {
+      "month": "2026-10",
+      "trait": "Quad-stripe",
+      "market": "US",
+      "median": 290,
+      "full_checks": 2,
+      "avg_listings": 156
+    },
+    {
+      "month": "2026-10",
+      "trait": "Red",
+      "market": "US",
+      "median": 250,
+      "full_checks": 2,
+      "avg_listings": 449
+    },
+    {
+      "month": "2026-10",
+      "trait": "Red Base",
+      "market": "US",
+      "median": 294,
+      "full_checks": 2,
+      "avg_listings": 354
+    },
+    {
+      "month": "2026-10",
+      "trait": "Reverse Pinstripe",
+      "market": "US",
+      "median": 175,
+      "full_checks": 2,
+      "avg_listings": 41
+    },
+    {
+      "month": "2026-10",
+      "trait": "Sable",
+      "market": "US",
+      "median": 605,
+      "full_checks": 2,
+      "avg_listings": 106
+    },
+    {
+      "month": "2026-10",
+      "trait": "Soft Scale",
+      "market": "US",
+      "median": 345,
+      "full_checks": 2,
+      "avg_listings": 143
+    },
+    {
+      "month": "2026-10",
+      "trait": "Super Dalmatian",
+      "market": "US",
+      "median": 355,
+      "full_checks": 2,
+      "avg_listings": 355
+    },
+    {
+      "month": "2026-10",
+      "trait": "Tangerine",
+      "market": "US",
+      "median": 300,
+      "full_checks": 2,
+      "avg_listings": 231
+    },
+    {
+      "month": "2026-10",
+      "trait": "Tiger",
+      "market": "US",
+      "median": 288,
+      "full_checks": 2,
+      "avg_listings": 203
+    },
+    {
+      "month": "2026-10",
+      "trait": "Tri-color",
+      "market": "US",
+      "median": 298,
+      "full_checks": 2,
+      "avg_listings": 1184
+    },
+    {
+      "month": "2026-10",
+      "trait": "White Wall",
+      "market": "US",
+      "median": 337,
+      "full_checks": 2,
+      "avg_listings": 440
+    },
+    {
+      "month": "2026-10",
+      "trait": "Yellow",
+      "market": "US",
+      "median": 200,
+      "full_checks": 2,
+      "avg_listings": 354
+    },
+    {
+      "month": "2026-10",
+      "trait": "Yellow Base",
+      "market": "US",
+      "median": 296,
+      "full_checks": 2,
+      "avg_listings": 158
+    }
+  ],
+  "generated_at": "2026-10-07T06:00:32.202164+00:00",
+  "name": "Geck Inspect Price Index",
+  "description": "Asking prices for crested geckos (Correlophus ciliatus) by trait and market, compiled by Geck Inspect from public listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe.",
+  "url": "https://geckinspect.com/data",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "creator": "Geck Inspect",
+  "attribution": "Geck Inspect Price Index, https://geckinspect.com/data",
+  "methodology": [
+    "Asking prices on open listings, not sale prices.",
+    "Prices outside the US are converted to USD at stored exchange rates; shipping and import costs are not included.",
+    "Only full catalog checks count. A partial check or the catch-up after an outage is left out.",
+    "A trait is shown only when at least 5 listings carry it. trait null means all crested geckos in that market.",
+    "p25, median and p75 are the 25th, 50th and 75th percentile asking price. monthly.median is the median of that month's daily medians.",
+    "Trait labels are the marketplace labels as listed by sellers; a label does not prove genotype."
+  ]
+}

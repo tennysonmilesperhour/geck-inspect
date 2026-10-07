@@ -411,6 +411,20 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    // Open data: the Geck Inspect Price Index and the morph, genetics and
+    // care datasets, with Dataset markup for Google Dataset Search and
+    // the MCP server for agents (docs/planning/agent-access-2026-10.md).
+    path: '/data',
+    priority: 0.7,
+    changefreq: 'weekly',
+    lastmod: dateOf('src/pages/OpenData.jsx'),
+    meta: {
+      title: 'Crested Gecko Open Data: Price Index, Morphs and Genetics',
+      description:
+        'Free crested gecko datasets from Geck Inspect: the Geck Inspect Price Index of asking prices by trait and market, every morph, the genetics engine data and the care guide, as JSON, CSV and markdown, plus an MCP server for AI agents.',
+    },
+  },
+  {
     // Public front door for Morph ID (audit step 29). Signed-out visitors
     // see the page and are asked to sign in before uploading; the first
     // identification on a free account is free.

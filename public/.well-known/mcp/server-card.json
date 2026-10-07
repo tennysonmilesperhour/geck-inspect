@@ -1,0 +1,11 @@
+{
+  "name": "geck-inspect",
+  "title": "Geck Inspect crested gecko reference",
+  "description": "Read-only crested gecko (Correlophus ciliatus) reference from Geck Inspect: morph guide, care guide, genetics pairing odds and the Geck Inspect Price Index of asking prices by trait and market.",
+  "version": "1.0.0",
+  "homepage": "https://geckinspect.com/data",
+  "transport": { "type": "streamable-http", "url": "https://geckinspect.com/mcp" },
+  "authentication": { "required": false },
+  "tools": ["search_morphs", "get_morph", "list_care_topics", "get_care_topic", "get_prices", "predict_pairing"],
+  "license": "Data CC BY 4.0. Cite the url returned with each answer."
+}

@@ -58,6 +58,7 @@ import {
   morphCategoryHubs,
   morphInheritanceHubs,
 } from './seo-routes.mjs';
+import { OPEN_DATASETS, MCP_URL, openDataJsonLd } from '../src/data/open-datasets.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -862,8 +863,91 @@ function calculatorMorphMeta(calc, route) {
   };
 }
 
+// ------- open data and live prices ------------------------------------------
+
+const MARKET_LABEL = { US: 'United States', KR: 'South Korea', JP: 'Japan', EU: 'Europe' };
+const usd = (n) => (n == null ? 'n/a' : `$${Math.round(Number(n)).toLocaleString('en-US')}`);
+let PRICE_INDEX_CACHE;
+function priceIndex() {
+  if (PRICE_INDEX_CACHE === undefined) {
+    try {
+      PRICE_INDEX_CACHE = JSON.parse(readFileSync(resolve(REPO_ROOT, 'public/data/price-index.json'), 'utf8'));
+    } catch {
+      PRICE_INDEX_CACHE = null;
+    }
+  }
+  return PRICE_INDEX_CACHE;
+}
+
+/** Latest US asking prices as a noscript table (the most-listed traits first). */
+function priceTable(limit) {
+  const index = priceIndex();
+  const rows = (index?.latest || []).filter((r) => r.market === 'US' && r.trait).sort((a, b) => b.listings - a.listings);
+  if (!rows.length) return null;
+  const day = rows[0].checked_on;
+  return {
+    title: `Geck Inspect Price Index: United States asking prices (${day})`,
+    headers: ['Trait', 'Listings', 'Median asking price', 'Middle half'],
+    rows: rows.slice(0, limit).map((r) => [r.trait, String(r.listings), usd(r.median), `${usd(r.p25)} to ${usd(r.p75)}`]),
+  };
+}
+
+function priceSummary() {
+  const index = priceIndex();
+  const all = (index?.latest || []).filter((r) => !r.trait);
+  return all.map((r) => `${MARKET_LABEL[r.market] || r.market}: median asking price ${usd(r.median)} across ${r.listings} listings (middle half ${usd(r.p25)} to ${usd(r.p75)}, checked ${r.checked_on}).`);
+}
+
+/** /data: the open data catalog, with Dataset markup in the server HTML. */
+function openDataMeta(route) {
+  const meta = genericMeta(route);
+  const modified = String(priceIndex()?.generated_at || route.lastmod || '').slice(0, 10) || undefined;
+  return {
+    ...meta,
+    bodyHeading: 'Crested gecko open data',
+    bodyLead:
+      'Geck Inspect publishes what it knows about crested geckos as free data: current asking prices by trait and market (the Geck Inspect Price Index), every morph in the Morph Guide, the genetics behind the calculator, and the care guide. Please credit Geck Inspect and link to the page you used.',
+    bodyParagraphs: [
+      ...priceSummary(),
+      `AI assistants and developers can query the same data through the MCP server at ${MCP_URL} (no key needed), read the markdown version of any morph or care page by adding .md to its address, or start at ${SITE_URL}/llms.txt.`,
+      'Prices are asking prices on open listings, not sale prices. Prices outside the US are converted to USD. Only full catalog checks count, and a trait needs at least 5 listings. The price, morph and genetics data are licensed CC BY 4.0; the care guide text is free to quote with a link.',
+    ],
+    table: priceTable(25),
+    linkSections: OPEN_DATASETS.map((d) => ({
+      title: d.name,
+      items: d.files.map((f) => ({ name: `${f.label} download`, href: f.url.replace(SITE_URL, ''), note: d.license ? 'CC BY 4.0' : d.licenseNote })),
+    })),
+    jsonLd: [...meta.jsonLd, ...openDataJsonLd(modified)],
+  };
+}
+
+/** /crested-gecko-price: the hand-written guide plus the live asking prices. */
+function priceGuideMeta(route) {
+  const meta = genericMeta(route);
+  return {
+    ...meta,
+    bodyParagraphs: [
+      'Crested gecko prices run from about $50 for a healthy common animal to several thousand dollars for a proven genetic morph. Price is set by morph and genetics, quality and structure, sex, and age.',
+      ...priceSummary(),
+    ],
+    table: priceTable(15),
+    linkSections: [
+      {
+        title: 'Keep exploring',
+        items: [
+          { name: 'Quality Scale', href: '/QualityScale', note: 'grade your gecko from 0 to 10' },
+          { name: 'Open data', href: '/data', note: 'download the full Geck Inspect Price Index' },
+          { name: 'Morph Guide', href: '/MorphGuide' },
+        ],
+      },
+    ],
+  };
+}
+
 function routeMeta(route) {
   if (route.path === '/MorphGuide') return morphGuideIndexMeta(route);
+  if (route.path === '/data') return openDataMeta(route);
+  if (route.path === '/crested-gecko-price') return priceGuideMeta(route);
   const categoryMatch = route.path.match(/^\/MorphGuide\/category\/([a-z0-9-]+)$/);
   if (categoryMatch) return categoryHubMeta(categoryMatch[1], route);
   const inheritanceMatch = route.path.match(/^\/MorphGuide\/inheritance\/([a-z0-9-]+)$/);
@@ -964,6 +1048,20 @@ function injectMeta(html, route) {
     `$1\n    <link rel="canonical" href="${canonical}" />`,
   );
   if (out === beforeCanonical) throw new Error(`prerender: could not place canonical for ${route.path}`);
+
+  // Morph and care pages have a markdown twin (scripts/build-agent-data.mjs)
+  // that agents can read without running the app.
+  const mdTwin = /^\/MorphGuide\/[a-z0-9-]+$/.test(route.path) && MORPHS[route.path.split('/')[2]]
+    ? `${route.path}.md`
+    : /^\/CareGuide\/[a-z0-9-]+$/.test(route.path) && CARE_SECTIONS[route.path.split('/')[2]]
+      ? `${route.path}.md`
+      : null;
+  if (mdTwin) {
+    out = out.replace(
+      /(<link rel="canonical" href="[^"]*"\s*\/>)/,
+      `$1\n    <link rel="alternate" type="text/markdown" href="${SITE_URL}${mdTwin}" />`,
+    );
+  }
 
   // Route-specific hero image preload. Only emits for routes listed in
   // HERO_PRELOADS so we don't waste a mandatory fetch on pages that

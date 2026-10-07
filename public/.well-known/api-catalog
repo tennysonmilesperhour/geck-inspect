@@ -1,0 +1,16 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://geckinspect.com/.well-known/api-catalog",
+      "item": [
+        { "href": "https://geckinspect.com/mcp", "type": "application/json", "title": "Geck Inspect MCP server (Model Context Protocol, Streamable HTTP)" },
+        { "href": "https://geckinspect.com/data/index.json", "type": "application/json", "title": "Geck Inspect open data catalog" }
+      ]
+    },
+    {
+      "anchor": "https://geckinspect.com/mcp",
+      "service-desc": [{ "href": "https://geckinspect.com/.well-known/mcp/server-card.json", "type": "application/json" }],
+      "service-doc": [{ "href": "https://geckinspect.com/data", "type": "text/html" }]
+    }
+  ]
+}

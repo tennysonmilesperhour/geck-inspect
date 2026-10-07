@@ -147,6 +147,7 @@ const RecognitionPublic     = lazy(() => import('./pages/Recognition'));
 const PedigreeTracker       = lazy(() => import('./pages/PedigreeTracker'));
 const BreedingRecords       = lazy(() => import('./pages/BreedingRecords'));
 const CrestedGeckoPrice     = lazy(() => import('./pages/CrestedGeckoPrice'));
+const OpenData              = lazy(() => import('./pages/OpenData'));
 
 // P1, Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
@@ -394,6 +395,7 @@ const AuthenticatedApp = () => {
           <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
           <Route path="/breeding-records" element={<BreedingRecords />} />
           <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
+          <Route path="/data" element={<OpenData />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           {/* Breeder is indexable under both /Breeder?slug= (legacy) and
               /Breeder/<slug> (clean, preferred); the page itself reads
@@ -479,6 +481,7 @@ const AuthenticatedApp = () => {
         <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
         <Route path="/breeding-records" element={<BreedingRecords />} />
         <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
+        <Route path="/data" element={<OpenData />} />
         <Route path="/Subscription" element={<Navigate to="/Membership" replace />} />
         <Route path="/GeckAnswers" element={<Navigate to="/Forum" replace />} />
         {retiredRoutes}

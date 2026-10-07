@@ -68,3 +68,11 @@ ios/**/xcuserdata/
 ios/**/.build/
 *.mobileprovision
 *.p12
+
+# Generated on every build by scripts/build-agent-data.mjs. The price index
+# snapshot is committed so a build without database access still ships it.
+public/MorphGuide/
+public/CareGuide/
+public/llms/
+public/data/*
+!public/data/price-index.json

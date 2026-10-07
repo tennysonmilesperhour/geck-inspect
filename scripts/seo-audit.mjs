@@ -332,7 +332,10 @@ const knownRoutes = new Set(htmlFiles.map(pathFromFile).map((r) => (r === '/' ? 
 for (const [source, targets] of outboundLinks) {
   for (const target of targets) {
     const norm = target === '/' ? '/' : target.replace(/\/$/, '');
-    if (!knownRoutes.has(norm) && !isKnownSpaOnlyRoute(norm)) {
+    // Links to static files (datasets, markdown twins, CSV) are fine when
+    // the file shipped in dist.
+    const isStaticFile = /\.[a-z0-9]+$/i.test(norm) && existsSync(join(DIST, norm));
+    if (!knownRoutes.has(norm) && !isKnownSpaOnlyRoute(norm) && !isStaticFile) {
       allFindings.push({
         level: 'warn',
         code: 'broken-internal-link',

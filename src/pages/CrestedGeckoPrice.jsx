@@ -10,9 +10,10 @@ import {
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
+import PriceIndexTable from '@/components/public/PriceIndexTable';
 import { breadcrumbSchema, faqPageSchema, SITE_URL } from '@/lib/organization-schema';
 
-const LAST_UPDATED = '2026-09-28';
+const LAST_UPDATED = '2026-10-07';
 
 // Each example morph is [label, Morph Guide slug] so it links to its own
 // page; a plain string is a description with no page.
@@ -192,6 +193,15 @@ export default function CrestedGeckoPrice() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+        </div>
+
+        {/* Live asking prices (Geck Inspect Price Index) */}
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
+          <h2 className="text-lg font-semibold text-slate-100 mb-1">What sellers are asking right now</h2>
+          <p className="text-slate-400 text-sm mb-4">
+            Current asking prices by trait from public crested gecko listings, the Geck Inspect Price Index. Use it alongside the tiers below: a trait&apos;s median hides a wide spread in quality.
+          </p>
+          <PriceIndexTable limit={15} />
         </div>
 
         {/* Price bands */}

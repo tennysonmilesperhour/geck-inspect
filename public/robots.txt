@@ -5,6 +5,9 @@
 
 User-agent: *
 Allow: /
+# Content Signals (contentsignals.org): yes to search, to answering
+# questions live (ai-input) and to training. We want to be cited.
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Disallow: /AdminPanel
 Disallow: /Settings
 Disallow: /Messages
@@ -83,6 +86,11 @@ Allow: /
 
 # Sitemap
 Sitemap: https://geckinspect.com/sitemap.xml
+
+# For AI agents: start at https://geckinspect.com/llms.txt (topic files
+# and markdown twins of every morph and care page), open data at
+# https://geckinspect.com/data, and a read-only MCP server at
+# https://geckinspect.com/mcp (no key needed).
 
 # IndexNow key file (Bing / Yandex / Seznam push-indexing protocol).
 # Geck Inspect can notify search engines of URL changes by POSTing
