@@ -1,5 +1,5 @@
 {
-  "lastRun": "2026-10-06T17:05:09.140Z",
+  "lastRun": "2026-10-07T17:42:57.227Z",
   "signatures": {
     "5a866ee3a287": {
       "status": "skipped",
@@ -12,14 +12,14 @@
       "updatedAt": "2026-09-07T16:21:45.438Z"
     },
     "8f34801e006a": {
-      "status": "skipped",
-      "reason": "This is the same dual-React-instance issue previously documented in error-triage-state.json (skipped for \"useRef\", now manifesting as \"useState\"). Evidence: (1) 0 distinct real users affected, (2) HeadlessChrome user agent = CI/E2E test runner, (3) port 4173 = vite preview build, (4) the React internal dispatcher (chunk-EGKDWVYF.js) is null when usePageSettings calls useState — this only happens when two separate React copies are bundled and the hooks resolver uses a different ReactCurrentDispatcher than the renderer. The application code in usePageSettings.js and Dashboard.jsx is correct and follows all Rules of Hooks. The fix requires deduplicating React in the Vite/bundler config or package manager overrides, both of which are off-limits per hard rules.",
+      "status": "fix_failed",
+      "reason": "exception: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CfoHntN5c775yQoRxfQNp\"}",
       "prUrl": null,
       "branch": null,
       "title": null,
       "lastMessage": "Cannot read properties of null (reading 'useState')",
       "lastCount": 2,
-      "updatedAt": "2026-09-07T16:22:28.633Z"
+      "updatedAt": "2026-10-07T17:42:57.227Z"
     },
     "014f69b54eeb": {
       "status": "open_pr",
