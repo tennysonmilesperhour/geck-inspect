@@ -1,47 +1,55 @@
 // Supabase Edge Function: generate-social-post
 //
-// Generates a social-media post variant for a given gecko using Claude with
-// prompt caching. The system prompt (voice presets + platform rules + crestie
-// hashtag library + anti-AI-tell rules) is cached so repeat calls for the
-// same user pay cache-read rates instead of full input rates.
+// Drafts social posts about one of the member's geckos. The aim is a post
+// the keeper would be glad to have written: built on what actually
+// happened, the gecko's real data and what is visible in the photo, in
+// the keeper's voice. Never invented details, never stock praise.
 //
-// Cost model:
-//   Sonnet 4.6  $3 / $15 per MTok in/out  (1.25x cache write, 0.1x cache read)
-//   Haiku  4.5  $1 / $5  per MTok in/out  (1.25x cache write, 0.1x cache read)
+// Inputs that make the posts good (all sent by PromoteComposer):
+//   moment       the keeper's own words about why they are posting now
+//   facts        true statements built from the gecko's records
+//                (src/lib/postCraft.js buildGeckoFacts)
+//   photo_urls   up to 2 photos the model looks at, so it can mention
+//                what is really in the picture
+//   voice_custom the keeper's pasted captions, to copy their rhythm
 //
-// First generation per post (`kind=generate`) uses Sonnet because the initial
-// 3 variants set the quality bar. Iterations (`kind=regenerate`,
-// `voice_cycle`, `tweak`) use Haiku because tweaks don't need the larger
-// model.
+// Kinds:
+//   generate / regenerate / voice_cycle: 3 drafts, each a different approach
+//   hook_rewrite: 5 new opening lines for the current draft
+//   tweak:        1 revision of the current draft (shorter, plainer, ...)
 //
-// Iteration cap: hard-stops at 10 generations per draft post. The composer
-// also disables the button at 10 to give a soft warning first.
+// Model: Claude Sonnet 5.5 for every kind. It writes noticeably better
+// than Haiku and costs less than Sonnet 4.6 did. The system prompt is
+// cached, so repeat calls pay the cache-read rate for it.
 //
-// Secrets:
-//   ANTHROPIC_API_KEY
-//   SUPABASE_URL
-//   SUPABASE_SERVICE_ROLE_KEY
+// Iteration cap: hard-stops at 10 generations per draft post (admins
+// exempt). The composer shows the count.
 //
-// Deploy:
-//   supabase functions deploy generate-social-post
+// Secrets: ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// Deploy:  supabase functions deploy generate-social-post
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { scrubDashes } from "../_shared/promote.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const SONNET = "claude-sonnet-4-6";
-const HAIKU = "claude-haiku-4-5";
+const MODEL = "claude-sonnet-5-5";
 
 const ITERATION_CAP_PER_POST = 10;
 
-// Anthropic per-MTok pricing in cents (1 USD = 100 cents).
-const PRICING_CENTS = {
-  [SONNET]: { input: 300, cacheWrite: 375, cacheRead: 30, output: 1500 },
-  [HAIKU]:  { input: 100, cacheWrite: 125, cacheRead: 10, output: 500 },
+// Anthropic per-MTok pricing in cents. A refusal fallback can serve the
+// request from another model, so the response's model picks the row;
+// an unknown model is billed at the highest rate here so we never
+// under-count.
+const PRICING_CENTS: Record<string, { input: number; cacheWrite: number; cacheRead: number; output: number }> = {
+  "claude-sonnet-5-5": { input: 200, cacheWrite: 250, cacheRead: 20, output: 1000 },
+  "claude-opus-5-5":   { input: 400, cacheWrite: 500, cacheRead: 20, output: 2000 },
+  "claude-sonnet-4-6": { input: 300, cacheWrite: 375, cacheRead: 30, output: 1500 },
 };
+const FALLBACK_PRICING = PRICING_CENTS["claude-opus-5-5"];
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -57,154 +65,167 @@ function json(body: unknown, status = 200) {
 }
 
 // ---------------------------------------------------------------------------
-// System prompt, cached. Must be > 1024 tokens for Sonnet caching to take
-// effect, > 2048 for Haiku. The full preset library + hashtag library easily
-// clears that bar.
+// System prompt (cached). Stable text only: nothing per-request goes here.
 // ---------------------------------------------------------------------------
 
 const VOICE_PRESETS: Record<string, string> = {
   educator:
-    "Educator voice. Teach as you go. Weave one or two genetics or husbandry facts naturally into the post (Lilly White is dominant, Cappuccino vs Mocha distinctions, fired vs unfired states, axanthic recessiveness, etc). Cite the gecko's specific traits. Tone is warm and credible, not lecturing. Reads like a passionate breeder explaining what makes this animal special.",
+    "Educator. The keeper likes explaining what makes an animal what it is. Pick ONE thing worth teaching that this gecko actually shows (how its trait is inherited, why it looks different fired up, what a term means) and explain it in a sentence or two the way you would at a reptile expo table. Only teach what you are sure is correct; if the genetics are uncertain or still debated in the hobby, say so.",
   storyteller:
-    "Storyteller voice. Personal, journey-focused, present-tense moments. Reference time spent with this gecko, milestones reached, what you noticed about its personality, body language, color shifts. Emotional but earned, never saccharine. The reader should feel like they were let in on a private update.",
+    "Storyteller. Tells a small true moment. Built from the keeper's own words and the dated records, told in order, with one concrete detail that puts the reader in the room. If the keeper did not supply a moment, keep it short rather than invent one.",
   hobbyist_hype:
-    "Hobbyist hype voice. Excited peer-to-peer. Morph names can be UPPERCASED for emphasis when warranted. Short bursts, exclamation points used sparingly but not zero. Reads like a Discord post in the best crestie server. Specific praise for the trait combo, lineage, or visual standout features.",
+    "Excited hobbyist. A keeper who cannot wait to show a friend. Energy comes from specifics (\"look at the cream on that dorsal\") rather than adjectives. Allowed: one exclamation point, one emoji, morph names in caps once if it fits. Still has to be true.",
   pro_breeder:
-    "Pro breeder voice. Clinical, precise, project-forward. Lead with morph and notable traits in proper terminology. State pairings, projects, available status, and asks plainly. No fluff. Reads as a working breeder informing other working breeders. Reputation-building tone.",
+    "Working breeder. Plain, precise, project-minded. Proper terminology, short sentences, the facts a serious buyer or fellow breeder wants (morph, sex, weight, age, lineage, project goal, availability). Confident without hype. No exclamation points.",
   casual:
-    "Casual conversational voice. Low-key friend tone. Asks the audience an open question or invites a reply. Treats followers as a community. Plain language, contractions, gentle humor where it fits. Never tries too hard.",
+    "Casual. Like texting a friend who also keeps cresties. Lowercase-leaning rhythm is fine, contractions, a dry joke if one is sitting right there. If it asks a question, it is one the keeper would genuinely want answered.",
 };
 
 const PLATFORM_RULES: Record<string, string> = {
   bluesky:
-    "Bluesky: 300 char hard limit including hashtags. No emoji-spam. Hashtags work but feel less central than on IG. 1-3 hashtags max. Linking out is fine; there's an active reptile community.",
+    "Bluesky: 300 characters INCLUDING hashtags, hard limit. Aim for 200-260 so there is room. 0-2 hashtags. Text-first, conversational, the reptile community there is small and friendly and dislikes marketing tone.",
   threads:
-    "Threads: 500 char limit. Quieter, lower-CTR than IG but high engagement on text-led posts. Hashtags less critical (1-3). Hooks that read as a quote do well.",
+    "Threads: 500 characters. Text-first and conversational. 0-1 topic tag (Threads allows one). Short paragraphs.",
   reddit:
-    "Reddit: title is the make-or-break. No hashtags. Subreddit-specific norms: r/CrestedGecko welcomes ID/morph posts and breeding updates with photos; r/Reptiles wants broader appeal; r/Geckos varied. Body should be conversational, not promotional. Mods will remove transactional content from non-marketplace subs.",
+    "Reddit: no hashtags, no CTA, no emoji. The `hook` is the post TITLE: plain, specific, under 100 characters, no clickbait (\"6 months of growth on my Lilly White male, 4g to 31g\"). The body reads like a keeper talking to other keepers, includes useful detail, and never sells. r/CrestedGecko removes sales posts.",
   facebook_page:
-    "Facebook Page: 1-3 short paragraphs. 0-3 hashtags. Audience skews older than IG, more tolerance for storytelling and lineage detail. Calls to comment / message work well. Avoid IG-style hashtag walls.",
+    "Facebook: 1-3 short paragraphs. 0-3 hashtags. The audience is used to longer updates and lineage detail, and comments are where sales start, so a plain \"message me if you are interested\" is fine for sales posts.",
   instagram:
-    "Instagram: caption can run long but the first 125 chars matter most (visible above the fold). 5-15 hashtags appended at the end OR placed in the first comment. Carousel posts get the highest engagement. Hashtags should mix high-volume crestie tags with niche morph-specific tags.",
+    "Instagram: only the first ~125 characters show before \"more\", so the first line has to carry the post on its own. Then 1-3 short paragraphs. 3-5 specific hashtags at the end (more looks spammy and Instagram limits them). Mention swiping only if more than one photo is attached.",
   x:
-    "X (Twitter): 280 char limit. Hooks land harder than hashtags. 1-2 hashtags max. Photo carousels (up to 4 images) outperform single-image posts. Reply CTAs work better than 'DM me'.",
+    "X: 280 characters INCLUDING hashtags. One or two sentences. 0-1 hashtag. Say the one interesting thing and stop.",
   tiktok:
-    "TikTok: this is a video script, not a static caption. Provide a 15-30 second script structure: hook (first 2 seconds), beat 1, beat 2, payoff. Caption should be one short line that complements the video. 3-5 hashtags including #fyp, #crestedgecko, and one morph-specific tag.",
+    "TikTok: write a short video plan, not a caption. `body` holds the beats: an on-screen text hook for the first 2 seconds, 2-3 shots to film (what to point the camera at), and the payoff. `hook` is the on-screen text. `cta` is the one-line caption. 3-4 hashtags, always including #crestedgecko.",
   youtube_community:
-    "YouTube Community post: 1-2 paragraphs. Treat as a casual update to existing subscribers. Polls work well; consider a one-line poll variant. No hashtags.",
+    "YouTube Community post: 1-2 short paragraphs to existing subscribers, like a quick update between videos. No hashtags.",
   clipboard:
-    "Generic clipboard format: medium-length, platform-neutral. 5-7 hashtags. Hook + 1-2 paragraphs + CTA + hashtags. User will tweak before posting.",
+    "General post: platform-neutral, medium length, 3-5 hashtags.",
 };
 
-const CRESTIE_HASHTAG_LIBRARY = `
-HIGH-VOLUME CORE (use 1-2 always):
-  #crestedgecko #crestedgeckos #correlophusciliatus #reptilesofinstagram
-  #geckosofinstagram #cresties
+const TEMPLATES: Record<string, string> = {
+  meet: "Introducing a gecko to followers (new arrival, holdback, or one that has never been posted).",
+  available: "Sales post. Lead with what a buyer needs to decide: morph, sex (or that it is unsexed), weight, age, price if given, and how to ask. Disclose tail loss and anything else a buyer would want to know. No urgency language.",
+  pairing: "Announcing a pairing. Say who with and what the keeper hopes to produce, without promising outcomes genetics cannot promise.",
+  eggs: "Clutch update.",
+  hatchling: "A new hatchling.",
+  milestone: "A milestone: weight, age, first shed, finally eating, anything the keeper is pleased about.",
+  throwback: "Then and now. Use real dates and weights where given.",
+  lineage: "Spotlighting where this gecko comes from.",
+  educational: "Teaching followers about this gecko's morph or traits, using this animal as the example.",
+};
 
-MORPH-SPECIFIC (use the ones that match THIS gecko):
-  Lilly White: #lillywhite #lillywhitecrested #lillywhitegecko
-  Harlequin / Extreme Harlequin: #harlequincrestedgecko #extremeharlequin
-  Phantom: #phantomcrestedgecko #phantomgecko
-  Cappuccino / Mocha: #cappuccinocrestedgecko #mochacrestedgecko
-  Axanthic: #axanthiccrestedgecko #axanthicgecko
-  Sable: #sablecrestedgecko
-  Highway: #highwaycrestedgecko #pinstripegecko
-  Dalmatian: #dalmatiancrestedgecko
-  Pinstripe: #pinstripecrestedgecko #fullpinstripe
-  Patternless / Solid: #patternlesscrestedgecko
-  Drippy / Tiger: #tigercrestedgecko
-
-COMMUNITY / SALES (when applicable):
-  #reptilebreeder #crestedgeckobreeder #crestedgeckosforsale (sales only)
-  #reptilelife #morphmarket #geckobreeding #cresteddaddy
-
-BREEDING / LIFECYCLE:
-  #geckoeggs #crestedgeckohatchling #babygecko #geckohatching
-  #crestedgeckobreeding #breedingproject
-
-NICHE / EVERGREEN:
-  #correlophus #rhacodactylus (genus shift, older but still tagged)
-  #firedupgecko #firedup (when photo shows fired state)
-
-DO NOT use generic / over-saturated tags as primaries:
-  Avoid leading with #reptiles or #lizards alone, they bury crestie content
-  in unrelated traffic. Use them only as supplemental tags after morph-specific.
+const HASHTAGS = `
+Core (pick 1): #crestedgecko #crestedgeckos #correlophusciliatus #cresties
+Morph tags (only if this gecko actually has the trait):
+  Lilly White #lillywhite, Harlequin #harlequincrestedgecko, Extreme Harlequin #extremeharlequin,
+  Phantom #phantomcrestedgecko, Cappuccino #cappuccinocrestedgecko, Axanthic #axanthiccrestedgecko,
+  Sable #sablecrestedgecko, Highway #highwaycrestedgecko, Dalmatian #dalmatiancrestedgecko,
+  Pinstripe #pinstripecrestedgecko, Patternless #patternlesscrestedgecko, Tiger #tigercrestedgecko
+Life stage: #crestedgeckohatchling #geckoeggs #crestedgeckobreeding
+Sales only: #crestedgeckosforsale #crestedgeckobreeder
+Fewer, specific tags beat a wall of tags. Never put hashtags inside sentences.
 `.trim();
 
-const ANTI_AI_TELLS = `
-HARD RULES (any violation must be self-corrected before output):
-- Never use em dashes (—). If you would use one, rewrite with a comma, period,
-  or colon instead. Em dashes are the single biggest "this was written by AI"
-  giveaway in 2026 social copy.
-- Never use en dashes (–) as substitutes for em dashes.
-- Never use the phrases: "delve", "embark on a journey", "in the realm of",
-  "the world of", "navigate the landscape", "robust ecosystem", "tapestry",
-  "testament to", "leverage", "unprecedented", "let's explore", "in today's
-  fast-paced world". These read as AI-generated to crested gecko hobbyists.
-- Don't open with "Meet ___!" unless the template is literally Meet (intro
-  for a new gecko). Vary openings.
-- Hyphens in genuine compound words ("crested-gecko-first", "well-known")
-  are fine. The rule is about the em-dash punctuation mark, not hyphens.
-- Don't pad with empty adjectives. "Stunning" alone says nothing; "stunning
-  Lilly White Phantom" says something specific.
-`.trim();
+const SYSTEM_PROMPT = `
+You help crested gecko keepers write social posts about their own animals. The keeper will read your drafts, pick one, edit it, and post it under their own name, so every draft has to be something they would be glad to have written.
 
-function buildSystemPrompt(): string {
-  return `
-You are a social media post writer for a crested gecko breeder. Your job is
-to produce a tight, on-brand post about a specific gecko, tailored to a
-specific platform, using the breeder's chosen voice.
+# What makes a post worth reading
 
-# Voice presets
+People follow keepers, not brands. The posts that do well in the crestie community are small, specific and true: a weight that finally went up, a photo where the dorsal cream is glowing because she fired up at night, a hatchling that already has a pinstripe, a buyer's question answered plainly. A good post has one idea and one concrete detail that carries it.
+
+Work from the material, in this order:
+1. The keeper's own words about what happened ("moment"). If given, this is the spine of the post. Keep their facts and their phrasing where it is good; do not polish the personality out of it.
+2. The attached photos. Look closely and mention one or two things that are clearly visible (fired up or down, a specific pattern feature, the color, the pose, the setting). Never describe something you cannot see.
+3. The records: dated weights, sheds, events, parents, age, status. Real numbers and dates make a post feel real ("4g in July, 31g today" beats "growing so fast").
+
+# Truth rules (these matter more than anything else)
+
+- Use only facts from the moment, the records and what is visible in the photos. Do not invent behavior, personality, feelings, events, buyers, waitlists, prices, places, shows or plans.
+- If the material is thin, write a shorter post. A two-line true caption is better than a paragraph of filler.
+- Never use placeholders like [price] or [name]. If a post really needs something the keeper did not give (a price on a sales post, say), leave it out and list it in check_before_posting.
+- Genetics: be accurate and modest. Lilly White and Cappuccino are incomplete dominant (the super forms are lethal or problematic, and good breeders do not pair two together); Axanthic is recessive; many pattern traits (Harlequin, Pinstripe, Dalmatian) are polygenic or line-bred, not simple genes. Do not claim a pairing "will produce" anything uncertain. When unsure, describe instead of label.
+- Crested geckos that drop their tail do not regrow it. If a sales post's records note tail loss, include it plainly.
+- Fired up (darker, more contrast) and fired down (paler) can make the same gecko look very different; it is fine and honest to say which the photo shows.
+
+# How it should sound
+
+Like a real keeper typing on their phone at the rack: plain words, short sentences, contractions, specific nouns. Varied sentence length. Humor only when it comes from the actual situation.
+
+Never write these (they mark a post as AI-written to this community):
+- Em dashes or en dashes. Use a comma, a period, or a colon.
+- Announcer openings: "Meet ___!", "Say hello to", "Introducing", "Allow me to introduce".
+- Stock praise: stunning, gorgeous, stunner, showstopper, eye candy, absolute unit, steals the show, speaks for itself, beauty, gem.
+- AI vocabulary: delve, tapestry, testament, journey, embark, realm, elevate, showcase, boasts, nestled, vibrant tapestry, "in the world of".
+- The shapes "It's not just X, it's Y", "From X to Y,", three-adjective lists, and rhetorical questions with no real answer ("Is there anything cuter?").
+- Engagement bait: "Who else loves...", "Drop a 🦎 if...", "Let us know in the comments", "Stay tuned", "Smash that follow".
+- Pushy sales lines: "won't last long", "act fast", "don't miss out".
+- "This little one", "this little guy". Use the gecko's name or nothing.
+- Strings of emoji. Zero or one emoji per post, used like a person would.
+- More than one exclamation point.
+
+A question at the end is good only if the keeper would actually want the answers ("Would you hold her back or pair her with my Sable male?"). Otherwise end on the last true thing and stop.
+
+Examples of the difference:
+  Flat: "Meet Juniper! 🦎✨ This stunning Lilly White is an absolute showstopper with incredible color. Who else is obsessed with Lilly Whites?! 😍🔥"
+  Good: "Juniper hit 31g this week. She was 4g when she hatched in March and wouldn't touch the dish for a month. Lilly White from my Sable project, fired up in this shot."
+
+  Flat: "Introducing our newest available gecko! Don't miss out on this gorgeous male, he won't last long!"
+  Good: "Available: male Harlequin Pinstripe, 22g, hatched Feb 2026, eating Pangea and crickets. Full tail. $250 plus shipping. Message me with questions."
+
+# Voices
 
 ${Object.entries(VOICE_PRESETS).map(([k, v]) => `## ${k}\n${v}`).join("\n\n")}
 
-# Platform rules
+If a "Keeper's own writing" block is present, it beats the preset: match its sentence length, punctuation, capitalization, emoji habits and favorite words. Copy the rhythm, never the content.
 
-${Object.entries(PLATFORM_RULES).map(([k, v]) => `## ${k}\n${v}`).join("\n\n")}
+# Post types
 
-# Crested gecko hashtag library
+${Object.entries(TEMPLATES).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 
-${CRESTIE_HASHTAG_LIBRARY}
+# Platforms
 
-# Anti-AI-tell rules
+${Object.entries(PLATFORM_RULES).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 
-${ANTI_AI_TELLS}
+# Hashtags
+
+${HASHTAGS}
 
 # Output
 
-Always call the \`submit_post_variant\` tool. Produce exactly the requested
-number of variants. Each variant must include a hook (the opening line or
-two), a body, hashtags (an array of strings INCLUDING the # prefix), and a
-cta (call to action, can be empty string for platforms where CTAs feel
-forced like Reddit). Compose body so it reads naturally on the target
-platform; respect length limits.
+Always answer by calling the submit_post_variant tool, never with plain text.
+- hook: the opening line (for Reddit, the title). It has to work on its own.
+- body: the rest of the post. It must NOT repeat the hook.
+- cta: a closing line only when the post needs one (sales, a real question). Usually empty.
+- hashtags: with the # prefix, following the platform rules. Can be empty.
+- approach: 2-5 words naming the angle so the keeper can tell drafts apart ("Just the facts", "The weigh-in story", "Asking for pairing ideas").
+- check_before_posting: short notes about anything the keeper should add or confirm (missing price, unsexed, photo looks fired down). Empty when there is nothing.
 
-Quality bar: every post should pass the "would a real crestie breeder send
-this?" test. Specific over generic. Particular over vague. The animal's
-actual traits, lineage, and recent changes should be visible in the copy.
+When asked for several drafts, make them genuinely different approaches, not rewordings: for example one very short and plain, one built around the moment or the photo detail, one in a different structure (a question to followers, a then-and-now, a mini lesson). Respect the length limits of the target platform in every draft.
 `.trim();
-}
 
 const TOOL_DEF = {
   name: "submit_post_variant",
-  description: "Submit one or more social media post variants for the user to choose from.",
+  description: "Submit the post drafts for the keeper to choose from.",
   input_schema: {
     type: "object",
     required: ["variants"],
     properties: {
       variants: {
         type: "array",
-        minItems: 1,
-        maxItems: 5,
         items: {
           type: "object",
-          required: ["hook", "body", "hashtags", "cta"],
+          required: ["hook", "body", "hashtags", "cta", "approach", "check_before_posting"],
           properties: {
-            hook:     { type: "string", description: "Opening line or two. Should stop the scroll." },
-            body:     { type: "string", description: "Main caption body. May include the hook or stand alone after it." },
+            hook:     { type: "string", description: "Opening line (Reddit: the title)." },
+            body:     { type: "string", description: "Rest of the post. Does not repeat the hook." },
             hashtags: { type: "array", items: { type: "string" }, description: "Hashtags including the # prefix." },
-            cta:      { type: "string", description: "Call to action. Empty string when platform forbids them (Reddit) or when the post is purely informational." },
+            cta:      { type: "string", description: "Closing line, or empty string." },
+            approach: { type: "string", description: "2-5 word name for this draft's angle." },
+            check_before_posting: {
+              type: "array",
+              items: { type: "string" },
+              description: "Things the keeper should add or confirm. Empty when none.",
+            },
           },
         },
       },
@@ -212,9 +233,19 @@ const TOOL_DEF = {
   },
 };
 
+const TWEAK_INSTRUCTIONS: Record<string, string> = {
+  shorter: "Make it about half as long. Keep the single most interesting detail and cut everything else.",
+  plainer: "Make it plainer: remove adjectives, hype and emoji, keep the facts and the keeper's voice.",
+  warmer: "Make it warmer and more personal, using only the true details already present. Do not add invented feelings or events.",
+  funnier: "Make it lighter, with a bit of dry humor that comes from the actual situation. No forced jokes, no puns on 'gecko'.",
+  more_detail: "Work in one or two more concrete details from the records or the photos (a weight, a date, a visible trait). Keep the length similar.",
+  less_salesy: "Remove anything that sounds like marketing. If it is a sales post, keep only plain facts and a simple way to ask.",
+  add_question: "End with one question the keeper would genuinely want answers to, tied to this gecko. Not engagement bait.",
+  more_me: "Rewrite to sound more like the keeper's own writing (see the keeper's writing block if present, and the keeper's moment). Match their rhythm and word choice.",
+};
+
 // ---------------------------------------------------------------------------
-// Cost helper. Returns cents, rounded up. Adds a small safety margin so we
-// never under-bill ourselves.
+// Cost helper. Returns cents, rounded up.
 // ---------------------------------------------------------------------------
 function computeCents(model: string, usage: {
   input_tokens?: number;
@@ -222,23 +253,24 @@ function computeCents(model: string, usage: {
   cache_read_input_tokens?: number;
   cache_creation_input_tokens?: number;
 }): number {
-  const rates = PRICING_CENTS[model];
-  if (!rates) return 0;
-  const inputT  = Math.max(0, (usage.input_tokens || 0) - (usage.cache_read_input_tokens || 0) - (usage.cache_creation_input_tokens || 0));
-  const cwT     = usage.cache_creation_input_tokens || 0;
-  const crT     = usage.cache_read_input_tokens || 0;
-  const outputT = usage.output_tokens || 0;
+  const rates = PRICING_CENTS[model] || FALLBACK_PRICING;
+  // input_tokens already excludes cached tokens on the Messages API.
   const microCents =
-    inputT  * rates.input +
-    cwT     * rates.cacheWrite +
-    crT     * rates.cacheRead +
-    outputT * rates.output;
-  // microCents is per-million-token-cents. Divide by 1M, round up.
+    (usage.input_tokens || 0) * rates.input +
+    (usage.cache_creation_input_tokens || 0) * rates.cacheWrite +
+    (usage.cache_read_input_tokens || 0) * rates.cacheRead +
+    (usage.output_tokens || 0) * rates.output;
   return Math.ceil(microCents / 1_000_000);
 }
 
+// social_generation_log.kind has a check constraint; map newer kinds onto it.
+function logKind(kind: string): string {
+  if (kind === "generate" || kind === "regenerate" || kind === "voice_cycle") return kind;
+  return "tweak";
+}
+
 // ---------------------------------------------------------------------------
-// Main handler
+// Request shape
 // ---------------------------------------------------------------------------
 
 interface GenerateRequest {
@@ -255,19 +287,199 @@ interface GenerateRequest {
     sire?: { name?: string; morph?: string } | null;
     dam?:  { name?: string; morph?: string } | null;
     recent_changes?: string[];
-    photo_urls?: string[];
   };
+  facts?: { profile?: string[]; recent?: string[] } | null;
+  moment?: string | null;
+  photo_urls?: string[];
   platforms: string[];
-  template: string;        // 'meet' | 'available' | 'pairing' | 'eggs' | 'hatchling' | 'milestone' | 'throwback' | 'lineage' | 'educational'
-  voice_preset: string;    // matches VOICE_PRESETS keys
+  template: string;
+  voice_preset: string;
   voice_custom?: string | null;
-  tone?: string;
-  length_pref?: string;    // 'short' | 'medium' | 'long'
+  length_pref?: string;
   starting_point?: string;
-  variant_count?: number;  // default 3
-  kind?: string;           // 'generate' | 'regenerate' | 'voice_cycle' | 'tweak'
+  variant_count?: number;
+  kind?: string;
+  tweak?: string;
+  current_text?: string;
   previous_variants?: { content: string }[];
 }
+
+function clean(s: unknown, max: number): string {
+  return String(s ?? "").replace(/\s+\n/g, "\n").trim().slice(0, max);
+}
+
+function photoBlocks(urls: string[] | undefined) {
+  return (urls || [])
+    .filter((u) => typeof u === "string" && /^https:\/\//i.test(u))
+    .slice(0, 2)
+    .map((url) => ({ type: "image", source: { type: "url", url } }));
+}
+
+function geckoBrief(body: GenerateRequest): string {
+  const g = body.gecko;
+  const lines: string[] = [`Name: ${g.name || "(no name, do not make one up)"}`];
+  const profile = (body.facts?.profile || []).map((f) => clean(f, 300)).filter(Boolean).slice(0, 16);
+  const recent = (body.facts?.recent || []).map((f) => clean(f, 300)).filter(Boolean).slice(0, 8);
+  if (profile.length > 0) {
+    lines.push(...profile);
+  } else {
+    // Older clients send only the flat gecko fields.
+    if (g.morph) lines.push(`Morph and traits: ${g.morph}`);
+    if (g.sex) lines.push(`Sex: ${g.sex}`);
+    if (g.hatch_date) lines.push(`Hatched: ${g.hatch_date}`);
+    if (g.weight_g != null) lines.push(`Weight: ${g.weight_g}g`);
+    if (g.sale_status) lines.push(`Status: ${g.sale_status}`);
+    if (g.sire?.name) lines.push(`Sire: ${g.sire.name}${g.sire.morph ? ` (${g.sire.morph})` : ""}`);
+    if (g.dam?.name) lines.push(`Dam: ${g.dam.name}${g.dam.morph ? ` (${g.dam.morph})` : ""}`);
+  }
+  if (g.notes) lines.push(`Keeper's notes on this gecko: ${clean(g.notes, 500)}`);
+  if (recent.length > 0) {
+    lines.push("", "Recent records (newest first):", ...recent.map((r) => `- ${r}`));
+  }
+  return lines.join("\n");
+}
+
+function buildUserText(body: GenerateRequest, variantCount: number, photoCount: number): string {
+  const kind = body.kind || "generate";
+  const platform = body.platforms[0];
+  const others = body.platforms.slice(1);
+  const moment = clean(body.moment || body.starting_point, 1200);
+
+  const header = [
+    `Platform: ${platform}${others.length ? ` (the keeper will also paste it to ${others.join(", ")}, so it must fit ${platform}'s limits)` : ""}`,
+    `Post type: ${body.template}`,
+    `Voice: ${body.voice_preset}`,
+    `Length: ${body.length_pref === "short" ? "short (one to three sentences)" : body.length_pref === "long" ? "longer (up to 4 short paragraphs where the platform allows)" : "medium (a short paragraph or two where the platform allows)"}`,
+    "",
+    "# The gecko",
+    geckoBrief(body),
+    "",
+    "# What the keeper says is going on",
+    moment || "(nothing given; work from the records and the photos, and keep it short)",
+    "",
+    photoCount > 0
+      ? `# Photos\n${photoCount} photo${photoCount === 1 ? " is" : "s are"} attached above. Use what you can clearly see.`
+      : "# Photos\nNo photo attached. Do not describe how the gecko looks beyond the recorded morph.",
+  ];
+
+  if (kind === "hook_rewrite") {
+    const current = clean(body.current_text || body.previous_variants?.[0]?.content, 3000);
+    return [
+      ...header,
+      "",
+      "# Current draft",
+      current || "(empty)",
+      "",
+      "# Task",
+      `Write ${variantCount} different opening lines for this draft. Put each in \`hook\`. Leave \`body\` and \`cta\` as empty strings, \`hashtags\` and \`check_before_posting\` as empty arrays, and set \`approach\` to the angle (a number, the photo detail, the moment, a question, the plain fact). Each hook must work as the first line people see, stay true to the draft, and avoid every phrase on the never-write list.`,
+    ].join("\n");
+  }
+
+  if (kind === "tweak") {
+    const current = clean(body.current_text, 3000);
+    const instruction = TWEAK_INSTRUCTIONS[body.tweak || ""] || TWEAK_INSTRUCTIONS.plainer;
+    return [
+      ...header,
+      "",
+      "# Current draft (the keeper may have edited it; keep their edits)",
+      current || "(empty)",
+      "",
+      "# Task",
+      `Revise the draft: ${instruction}`,
+      "Return exactly 1 variant. Keep any facts and phrases the keeper clearly wrote themselves. Split the result into hook, body and cta as usual.",
+    ].join("\n");
+  }
+
+  const previous = (body.previous_variants || [])
+    .slice(0, 5)
+    .map((v, i) => `${i + 1}. ${clean(v.content, 600)}`)
+    .join("\n");
+
+  return [
+    ...header,
+    previous ? `\n# Drafts the keeper already passed on (take different approaches, reuse no phrasing)\n${previous}` : "",
+    "",
+    "# Task",
+    `Write ${variantCount} drafts for ${platform}, each a genuinely different approach.`,
+  ].join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// Anthropic call
+// ---------------------------------------------------------------------------
+
+async function callClaude(body: GenerateRequest, variantCount: number, withPhotos: boolean) {
+  const photos = withPhotos ? photoBlocks(body.photo_urls) : [];
+  const system: Array<Record<string, unknown>> = [
+    { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+  ];
+  const voiceCustom = clean(body.voice_custom, 4000);
+  if (voiceCustom) {
+    system.push({
+      type: "text",
+      text: `# Keeper's own writing\n\nThis is how the keeper writes (their own captions or their description of their voice). Match it.\n\n${voiceCustom}`,
+    });
+  }
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "anthropic-beta": "server-side-fallback-2026-07-01",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 8000,
+      // Short creative writing: some thought helps pick a good angle,
+      // a lot only adds latency.
+      output_config: { effort: "medium" },
+      // If a safety classifier declines (very unlikely for gecko posts),
+      // the API retries on a fallback model inside the same call.
+      fallbacks: "default",
+      system,
+      tools: [TOOL_DEF],
+      // Sonnet 5.5 does not accept a forced tool choice; the system
+      // prompt tells it to always call the tool.
+      tool_choice: { type: "auto" },
+      messages: [{
+        role: "user",
+        content: [
+          ...photos,
+          { type: "text", text: buildUserText(body, variantCount, photos.length) },
+        ],
+      }],
+    }),
+  });
+  return { res, usedPhotos: photos.length > 0 };
+}
+
+interface RawVariant {
+  hook?: unknown;
+  body?: unknown;
+  hashtags?: unknown;
+  cta?: unknown;
+  approach?: unknown;
+  check_before_posting?: unknown;
+}
+
+function tidyVariant(v: RawVariant) {
+  const str = (x: unknown) => scrubDashes(typeof x === "string" ? x : "").trim();
+  const list = (x: unknown) => (Array.isArray(x) ? x : []).map((t) => str(t)).filter(Boolean);
+  return {
+    hook: str(v.hook),
+    body: str(v.body),
+    cta: str(v.cta),
+    approach: str(v.approach),
+    hashtags: list(v.hashtags).map((t) => (t.startsWith("#") ? t : `#${t}`).replace(/\s+/g, "")),
+    check_before_posting: list(v.check_before_posting),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Main handler
+// ---------------------------------------------------------------------------
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -275,18 +487,14 @@ serve(async (req) => {
 
   if (!ANTHROPIC_API_KEY) return json({ error: "anthropic_key_missing" }, 500);
 
-  // Auth: verify_jwt is true, so Supabase already gated us by an authed
-  // user. We pull the user id from the JWT for logging + rate limiting.
   const authHeader = req.headers.get("authorization") || "";
   const jwt = authHeader.replace(/^Bearer\s+/i, "");
   if (!jwt) return json({ error: "no_jwt" }, 401);
 
-  const supaAuth = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-  const { data: userData, error: userErr } = await supaAuth.auth.getUser(jwt);
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+  const { data: userData, error: userErr } = await supabase.auth.getUser(jwt);
   if (userErr || !userData?.user) return json({ error: "auth_failed" }, 401);
   const user = userData.user;
-
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
   let body: GenerateRequest;
   try {
@@ -295,16 +503,13 @@ serve(async (req) => {
     return json({ error: "invalid_json" }, 400);
   }
 
-  // Validate
   if (!body.post_id || !body.gecko?.id || !Array.isArray(body.platforms) || body.platforms.length === 0) {
     return json({ error: "missing_fields" }, 400);
   }
-  if (!VOICE_PRESETS[body.voice_preset] && !body.voice_custom) {
-    return json({ error: "unknown_voice_preset" }, 400);
-  }
+  if (!VOICE_PRESETS[body.voice_preset]) body.voice_preset = "casual";
+  if (!TEMPLATES[body.template]) body.template = "meet";
 
-  // Admins bypass the iteration cap entirely so the team can test
-  // generation without bumping into the 10-per-post limit.
+  // Admins bypass the iteration cap so the team can test freely.
   const { data: callerProfile } = await supabase
     .from("profiles")
     .select("role")
@@ -312,7 +517,6 @@ serve(async (req) => {
     .maybeSingle();
   const isAdmin = callerProfile?.role === "admin";
 
-  // Iteration cap (atomically increment)
   const { data: postRow, error: postErr } = await supabase
     .from("social_posts")
     .select("id, iteration_count, created_by_user_id")
@@ -325,61 +529,34 @@ serve(async (req) => {
   }
 
   const kind = body.kind || "generate";
-  const variantCount = Math.max(1, Math.min(5, body.variant_count || 3));
+  const variantCount = kind === "tweak" ? 1 : Math.max(1, Math.min(5, body.variant_count || 3));
 
-  // First generation uses Sonnet; iterations use Haiku.
-  const model = kind === "generate" ? SONNET : HAIKU;
-
-  const userPrompt = buildUserPrompt(body, variantCount);
-
-  // Build messages with cache_control on the system block.
-  const messages = [
-    { role: "user", content: userPrompt },
-  ];
-
-  const anthropicBody = {
-    model,
-    max_tokens: 2500,
-    system: [
-      {
-        type: "text",
-        text: buildSystemPrompt(),
-        cache_control: { type: "ephemeral" },
-      },
-      ...(body.voice_custom
-        ? [{
-            type: "text",
-            text: `# Custom voice override\n\n${body.voice_custom}`,
-          }]
-        : []),
-    ],
-    tools: [TOOL_DEF],
-    tool_choice: { type: "tool", name: "submit_post_variant" },
-    messages,
-  };
-
-  let res: Response;
+  let res: Response | null = null;
   try {
-    res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify(anthropicBody),
-    });
+    const first = await callClaude(body, variantCount, true);
+    res = first.res;
+    // A photo URL the API cannot fetch fails the whole request with a
+    // 400. Try once more without photos rather than failing the keeper.
+    if (res.status === 400 && first.usedPhotos) {
+      const detail = await res.text();
+      console.warn("retrying without photos:", detail.slice(0, 300));
+      res = (await callClaude(body, variantCount, false)).res;
+    }
   } catch (e) {
-    return json({ error: "anthropic_unreachable", detail: String(e) }, 502);
+    console.error("anthropic unreachable", e);
+    res = null;
   }
-
+  if (!res) return json({ error: "anthropic_unreachable" }, 502);
   if (!res.ok) {
     const text = await res.text();
-    return json({ error: "anthropic_failed", status: res.status, detail: text.slice(0, 500) }, 502);
+    console.error("anthropic failed", res.status, text.slice(0, 500));
+    return json({ error: "anthropic_failed", status: res.status }, 502);
   }
 
   const completion = await res.json() as {
-    content: Array<{ type: string; input?: { variants?: unknown[] }; text?: string }>;
+    model?: string;
+    stop_reason?: string;
+    content: Array<{ type: string; name?: string; input?: { variants?: RawVariant[] } }>;
     usage: {
       input_tokens?: number;
       output_tokens?: number;
@@ -388,117 +565,55 @@ serve(async (req) => {
     };
   };
 
-  // Pull the tool-use block.
-  const toolBlock = completion.content?.find((c) => c.type === "tool_use");
-  const variants = (toolBlock?.input as { variants?: unknown[] } | undefined)?.variants;
-  if (!Array.isArray(variants) || variants.length === 0) {
-    return json({ error: "no_variants_returned" }, 502);
-  }
-
-  // Cost accounting
-  const cents = computeCents(model, completion.usage || {});
+  const servedModel = completion.model || MODEL;
+  const cents = computeCents(servedModel, completion.usage || {});
   const monthKey = new Date().toISOString().slice(0, 7);
 
-  // Log generation
+  // Log and bill every call that reached the model, even one that came
+  // back without drafts, so spend tracking stays honest.
   await supabase.from("social_generation_log").insert({
     user_id: user.id,
     post_id: body.post_id,
-    model,
+    model: servedModel,
     input_tokens: completion.usage?.input_tokens || 0,
     output_tokens: completion.usage?.output_tokens || 0,
     cache_read_tokens: completion.usage?.cache_read_input_tokens || 0,
     cache_creation_tokens: completion.usage?.cache_creation_input_tokens || 0,
     cents_cost: cents,
-    kind,
+    kind: logKind(kind),
   });
-
-  // Bump iteration count
-  await supabase
-    .from("social_posts")
-    .update({ iteration_count: (postRow.iteration_count || 0) + 1, updated_date: new Date().toISOString() })
-    .eq("id", body.post_id);
-
-  // Atomically increment monthly api_cents_spent + generations_count.
   await supabase.rpc("increment_social_usage_spend", {
     p_user_id: user.id,
     p_month_key: monthKey,
     p_cents: cents,
   });
 
+  if (completion.stop_reason === "refusal") {
+    return json({ error: "declined" }, 422);
+  }
+
+  const toolBlock = completion.content?.find((c) => c.type === "tool_use" && c.name === TOOL_DEF.name);
+  const raw = toolBlock?.input?.variants;
+  const variants = Array.isArray(raw)
+    ? raw.map(tidyVariant).filter((v) => v.hook || v.body).slice(0, variantCount)
+    : [];
+  if (variants.length === 0) {
+    return json({ error: "no_variants_returned" }, 502);
+  }
+
+  // Only a call that produced drafts uses up one of the post's tries.
+  const nextCount = (postRow.iteration_count || 0) + 1;
+  await supabase
+    .from("social_posts")
+    .update({ iteration_count: nextCount, updated_date: new Date().toISOString() })
+    .eq("id", body.post_id);
+
   return json({
     ok: true,
     variants,
     cents,
-    model,
-    iteration_count: (postRow.iteration_count || 0) + 1,
+    model: servedModel,
+    iteration_count: nextCount,
     iteration_cap: ITERATION_CAP_PER_POST,
   });
 });
-
-// ---------------------------------------------------------------------------
-// User-prompt builder. Pulls the gecko profile down into a compact briefing
-// the model can act on.
-// ---------------------------------------------------------------------------
-function buildUserPrompt(body: GenerateRequest, variantCount: number): string {
-  const g = body.gecko;
-  const lineage = [
-    g.sire ? `Sire: ${g.sire.name || "unknown"}${g.sire.morph ? ` (${g.sire.morph})` : ""}` : null,
-    g.dam  ? `Dam: ${g.dam.name || "unknown"}${g.dam.morph ? ` (${g.dam.morph})` : ""}`     : null,
-  ].filter(Boolean).join(" / ");
-
-  const recent = (g.recent_changes || []).filter(Boolean).slice(0, 6).join("; ");
-
-  const previous = (body.previous_variants || [])
-    .slice(0, 5)
-    .map((v, i) => `${i + 1}. ${v.content}`)
-    .join("\n");
-
-  // Hook-rewrite mode: keep the body the same, vary the openings.
-  // Used by the "Try different hooks" button in the composer.
-  if ((body.kind || "") === "hook_rewrite") {
-    return [
-      `# Brief`,
-      `Task: produce ${variantCount} alternative HOOK options for the existing post body below.`,
-      `Voice: ${body.voice_preset}${body.voice_custom ? " + custom voice override" : ""}`,
-      `Platform: ${body.platforms[0]}`,
-      "",
-      `# Existing body (do NOT rewrite this; only change the hook)`,
-      previous || "(no body provided)",
-      "",
-      `# Task`,
-      `Call submit_post_variant with ${variantCount} variants. For each variant: put a new opening line (1-2 sentences) in \`hook\`, repeat the existing body verbatim in \`body\`, copy the existing hashtags in \`hashtags\`, and leave \`cta\` empty unless the post obviously needs one. Each hook should take a DIFFERENT angle: question, statistic, trait flex, lineage tease, sensory detail, etc. No repeats. Respect the anti-AI-tell rules.`,
-    ].filter(Boolean).join("\n");
-  }
-
-  const lengthDirective = body.length_pref === "short"
-    ? "Keep each variant tight: 1-2 short paragraphs."
-    : body.length_pref === "long"
-    ? "Each variant can run 3-4 paragraphs. Include lineage detail."
-    : "Aim for medium length: 2-3 paragraphs.";
-
-  return [
-    `# Brief`,
-    `Template: ${body.template}`,
-    `Platform(s): ${body.platforms.join(", ")} (write ${variantCount} variant(s) for the FIRST platform listed; the user will adapt others if needed)`,
-    `Voice preset: ${body.voice_preset}${body.voice_custom ? " + custom voice override" : ""}`,
-    body.tone ? `Tone: ${body.tone}` : "",
-    `Length: ${lengthDirective}`,
-    body.starting_point ? `User's starting point / required angle: ${body.starting_point}` : "",
-    "",
-    `# Gecko`,
-    `ID: ${g.id}`,
-    `Name: ${g.name || "(unnamed)"}`,
-    `Morph: ${g.morph || "(not specified)"}`,
-    `Sex: ${g.sex || "(not specified)"}`,
-    g.hatch_date ? `Hatched: ${g.hatch_date}` : "",
-    g.weight_g != null ? `Current weight: ${g.weight_g}g` : "",
-    g.sale_status ? `Sale status: ${g.sale_status}` : "",
-    lineage ? `Lineage: ${lineage}` : "",
-    g.notes ? `Breeder notes: ${g.notes.slice(0, 400)}` : "",
-    recent ? `Recent changes: ${recent}` : "",
-    "",
-    previous ? `# Previously generated variants (do NOT repeat phrasing):\n${previous}\n` : "",
-    `# Task`,
-    `Generate ${variantCount} variant(s) by calling submit_post_variant. Each variant must respect the platform rules for ${body.platforms[0]}.`,
-  ].filter(Boolean).join("\n");
-}

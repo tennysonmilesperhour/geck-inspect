@@ -4,11 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Sparkles, RefreshCw, ChevronLeft, ChevronRight, Copy, Send, Check,
-  AlertCircle, Loader2, Image as ImageIcon, Calendar,
+  Sparkles, RefreshCw, Copy, Send, Check, Undo2,
+  AlertCircle, Loader2, Image as ImageIcon, Calendar, ChevronDown, Lightbulb,
 } from 'lucide-react';
 import PromoteImageGallery from './PromoteImageGallery';
 import { getTierLimits } from '@/lib/tierLimits';
@@ -16,9 +15,10 @@ import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import {
   VOICE_PRESETS, POST_TEMPLATES, PLATFORMS, PLATFORM_CHAR_LIMITS,
   HASHTAG_LIBRARY, normalizeHashtag, buildMorphMarketCsvRow,
-  composePlatformText, platformDeepLink, platformLabel, voiceLabel,
-  pickPrimaryPlatform, isDirectPlatform, publishErrorMessage,
+  composePlatformText, platformDeepLink, platformLabel,
+  pickPrimaryPlatform, isDirectPlatform, publishErrorMessage, generationErrorMessage,
 } from '@/lib/socialMedia';
+import { buildGeckoFacts, findAiTells, TWEAKS, MOMENT_PROMPTS } from '@/lib/postCraft';
 import { supabase } from '@/lib/supabaseClient';
 import { SocialPost, SocialPostVariant, UserBrandVoice, GeckoWaitlist } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
@@ -26,21 +26,29 @@ import { toast } from '@/components/ui/use-toast';
 // See the schedule input below.
 const SCHEDULING_ENABLED = false;
 
-const DEFAULT_VOICE = 'pro_breeder';
+const DEFAULT_VOICE = 'casual';
 const DEFAULT_TEMPLATE = 'meet';
 const DEFAULT_PLATFORMS = ['bluesky'];
 const DEFAULT_LENGTH = 'medium';
 const ITERATION_CAP = 10;
+const MAX_WRITER_PHOTOS = 2;
 
-// The composer, generation, edit, voice cycling, copy, publish.
+// Join a draft's parts the way the keeper will post it.
+function draftText(v) {
+  if (!v) return '';
+  return [v.hook, v.body, v.cta].map((s) => (s || '').trim()).filter(Boolean).join('\n\n');
+}
+
+// The composer: tell it what's going on, get three different drafts,
+// pick one, refine it in your own words, then copy or publish.
 //
 // Lifecycle:
-//   Open with a gecko -> create draft social_posts row -> user picks
-//   template/voice/platform -> Generate -> 3 variants returned -> user
-//   picks one -> can Regenerate / cycle voice / edit body / Copy / Publish.
+//   Open with a gecko -> load its records into plain facts -> keeper
+//   writes what's going on, picks photos -> Write drafts creates the
+//   social_posts row and returns 3 drafts -> keeper picks one, edits,
+//   uses one-tap tweaks -> Copy / Publish.
 //
-// Iteration cap: hard-stops at 10 generations per draft. The button shows
-// remaining count and disables at 0.
+// Iteration cap: 10 generations per draft post (each tweak counts).
 export default function PromoteComposer({
   open, onOpenChange, gecko, user, onPublished, onPaymentRequired,
 }) {
@@ -49,49 +57,53 @@ export default function PromoteComposer({
   const [voicePreset, setVoicePreset] = useState(DEFAULT_VOICE);
   const [platforms, setPlatforms] = useState(DEFAULT_PLATFORMS);
   const [lengthPref, setLengthPref] = useState(DEFAULT_LENGTH);
-  const [startingPoint, setStartingPoint] = useState('');
+  // The keeper's own words about why they're posting. The single most
+  // useful input: it gives the post a reason to exist.
+  const [moment, setMoment] = useState('');
+  const [facts, setFacts] = useState({ profile: [], recent: [] });
+  const [factsOpen, setFactsOpen] = useState(false);
+  // Photos the writer looks at (URLs from gecko.image_urls).
+  const [writerPhotos, setWriterPhotos] = useState([]);
   const [variants, setVariants] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [generating, setGenerating] = useState(false);
+  const [tweaking, setTweaking] = useState(null); // tweak key in flight
   const [publishing, setPublishing] = useState(false);
   const [iterations, setIterations] = useState(0);
   const [editedContent, setEditedContent] = useState('');
+  const [undoContent, setUndoContent] = useState(null);
   const [editedHashtags, setEditedHashtags] = useState('');
+  const [hashtagsOpen, setHashtagsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(null);
-  // Custom voices (user_brand_voice). Loaded on open. A selected custom
-  // voice overrides the preset for the next generation by sending its
-  // voice_text as the `voice_custom` system-prompt addition.
+  // Saved writing samples (user_brand_voice). A selected one is sent as
+  // voice_custom and beats the preset.
   const [customVoices, setCustomVoices] = useState([]);
   const [selectedCustomVoiceId, setSelectedCustomVoiceId] = useState(null);
   const [showNewVoiceForm, setShowNewVoiceForm] = useState(false);
   const [newVoiceName, setNewVoiceName] = useState('');
   const [newVoiceText, setNewVoiceText] = useState('');
   const [savingVoice, setSavingVoice] = useState(false);
-  // Hook rewriter state: 5 alternative opening lines for the active
-  // variant. Picking one rewrites just the first paragraph of the
-  // edited content.
+  // Opening-line suggestions for the active draft.
   const [hookSuggestions, setHookSuggestions] = useState([]);
   const [rewritingHooks, setRewritingHooks] = useState(false);
-  // Inspiration library state. We pull the user's recent published
-  // social_post_variants so they can click a past post as a style
-  // anchor for the next generation. The selected anchor seeds the
-  // `starting_point` prompt slot.
-  const [inspirationPosts, setInspirationPosts] = useState([]);
   // Thread/carousel split state. When the body exceeds the active
   // platform's char limit we offer a client-side split into segments,
-  // each ≤ the limit, with "1/N" markers. Server-free for now.
+  // each within the limit, with "1/N" markers.
   const [threadSegments, setThreadSegments] = useState([]);
   // Promote image library + per-post picks. The gallery opens as a
   // sibling modal; selected rows become image_ids on the variant
   // when we publish or schedule.
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [pickedImages, setPickedImages] = useState([]); // [{id, public_url, ...}]
-  // Scheduling: datetime-local string ("YYYY-MM-DDTHH:mm"). When set,
-  // the Publish button becomes Schedule; the post lands in 'scheduled'
-  // status and the pg_cron worker picks it up.
+  // Scheduling: datetime-local string ("YYYY-MM-DDTHH:mm").
   const [scheduleAt, setScheduleAt] = useState('');
   const tierLimitsFn = useMemo(() => getTierLimits(user), [user]);
+
+  const geckoPhotos = useMemo(
+    () => (Array.isArray(gecko?.image_urls) ? gecko.image_urls.filter((u) => typeof u === 'string' && u) : []).slice(0, 8),
+    [gecko?.image_urls],
+  );
 
   // Reset on open / gecko change.
   useEffect(() => {
@@ -101,16 +113,65 @@ export default function PromoteComposer({
     setActiveIdx(0);
     setIterations(0);
     setEditedContent('');
+    setUndoContent(null);
     setEditedHashtags('');
     setError(null);
-    setStartingPoint('');
+    setMoment('');
+    setFacts({ profile: [], recent: [] });
+    setFactsOpen(false);
+    setWriterPhotos(geckoPhotos.slice(0, 1));
     setPlatforms(DEFAULT_PLATFORMS);
     setHookSuggestions([]);
+    setThreadSegments([]);
     setPickedImages([]);
     setScheduleAt('');
+    // Default the post type from what the gecko is up to.
+    const status = (gecko?.status || '').toLowerCase();
+    if (/sale|available/.test(status)) setTemplate('available');
+    else if (gecko?.hatch_date && Date.now() - new Date(gecko.hatch_date).getTime() < 60 * 86400000) setTemplate('hatchling');
+    else setTemplate(DEFAULT_TEMPLATE);
   }, [open, gecko?.id]);
 
-  // Load the user's saved custom voices when the composer opens.
+  // Load the gecko's records and turn them into facts the writer can
+  // use. Failures just mean fewer facts; the composer still works.
+  useEffect(() => {
+    if (!open || !gecko?.id) return;
+    let cancelled = false;
+    (async () => {
+      const safe = async (p) => {
+        try {
+          const { data } = await p;
+          return data || [];
+        } catch {
+          return [];
+        }
+      };
+      const parentIds = [gecko.sire_id, gecko.dam_id].filter(Boolean);
+      const [weights, events, sheds, parents] = await Promise.all([
+        safe(supabase.from('weight_records').select('weight_grams, record_date')
+          .eq('gecko_id', gecko.id).order('record_date', { ascending: false }).limit(40)),
+        safe(supabase.from('gecko_events').select('event_type, custom_event_name, event_date, notes')
+          .eq('gecko_id', gecko.id).order('event_date', { ascending: false }).limit(40)),
+        safe(supabase.from('shed_records').select('date, quality, notes')
+          .eq('animal_id', gecko.id).order('date', { ascending: false }).limit(10)),
+        parentIds.length
+          ? safe(supabase.from('geckos').select('id, name, morphs_traits').in('id', parentIds))
+          : Promise.resolve([]),
+      ]);
+      if (cancelled) return;
+      setFacts(buildGeckoFacts({
+        gecko,
+        weights,
+        events,
+        sheds,
+        sire: parents.find((p) => p.id === gecko.sire_id) || null,
+        dam: parents.find((p) => p.id === gecko.dam_id) || null,
+      }));
+    })();
+    return () => { cancelled = true; };
+  }, [open, gecko]);
+
+  // Load the user's saved writing samples when the composer opens.
   useEffect(() => {
     if (!open || !user?.auth_user_id) return;
     (async () => {
@@ -125,51 +186,6 @@ export default function PromoteComposer({
     })();
   }, [open, user?.auth_user_id]);
 
-  // Load the user's most recent published variants as inspiration. We
-  // pull from social_post_variants (status = 'published') and
-  // dedupe-by-post so the picker shows distinct posts, not every
-  // platform fan-out of the same draft.
-  useEffect(() => {
-    if (!open || !user?.auth_user_id) return;
-    (async () => {
-      try {
-        const { data: postRows } = await supabase
-          .from('social_posts')
-          .select('id, template, primary_variant_id, published_at, gecko_id')
-          .eq('created_by_user_id', user.auth_user_id)
-          .eq('status', 'published')
-          .order('published_at', { ascending: false })
-          .limit(5);
-        if (!postRows || postRows.length === 0) {
-          setInspirationPosts([]);
-          return;
-        }
-        const variantIds = postRows.map((p) => p.primary_variant_id).filter(Boolean);
-        if (variantIds.length === 0) {
-          setInspirationPosts([]);
-          return;
-        }
-        const { data: variantRows } = await supabase
-          .from('social_post_variants')
-          .select('id, post_id, platform, content')
-          .in('id', variantIds);
-        const variantById = new Map((variantRows || []).map((v) => [v.id, v]));
-        setInspirationPosts(
-          postRows
-            .map((p) => ({
-              post_id: p.id,
-              template: p.template,
-              published_at: p.published_at,
-              variant: variantById.get(p.primary_variant_id),
-            }))
-            .filter((r) => r.variant),
-        );
-      } catch (e) {
-        console.warn('inspiration load failed', e);
-      }
-    })();
-  }, [open, user?.auth_user_id]);
-
   const selectedCustomVoice = useMemo(
     () => customVoices.find((v) => v.id === selectedCustomVoiceId) || null,
     [customVoices, selectedCustomVoiceId],
@@ -177,6 +193,8 @@ export default function PromoteComposer({
 
   const remainingIterations = ITERATION_CAP - iterations;
   const primaryPlatform = useMemo(() => pickPrimaryPlatform(platforms), [platforms]);
+  const aiTells = useMemo(() => findAiTells(editedContent), [editedContent]);
+  const activeVariant = variants[activeIdx] || null;
 
   const togglePlatform = (key) => {
     setPlatforms((prev) => {
@@ -188,17 +206,27 @@ export default function PromoteComposer({
     });
   };
 
-  // Update edit fields when active variant changes.
-  useEffect(() => {
-    const v = variants[activeIdx];
+  const toggleWriterPhoto = (url) => {
+    setWriterPhotos((prev) => {
+      if (prev.includes(url)) return prev.filter((u) => u !== url);
+      return [...prev, url].slice(-MAX_WRITER_PHOTOS);
+    });
+  };
+
+  // Load a draft into the editor.
+  const pickVariant = (idx) => {
+    const v = variants[idx];
     if (!v) return;
-    setEditedContent(`${v.hook ? v.hook + '\n\n' : ''}${v.body}${v.cta ? '\n\n' + v.cta : ''}`.trim());
+    setActiveIdx(idx);
+    setEditedContent(draftText(v));
     setEditedHashtags((v.hashtags || []).join(' '));
-  }, [activeIdx, variants]);
+    setUndoContent(null);
+    setHookSuggestions([]);
+    setThreadSegments([]);
+  };
 
   // Set of currently-included hashtags (normalized, no # prefix) so the
-  // chip buttons can render an active state and the toggle helper can
-  // be idempotent.
+  // chip buttons can render an active state.
   const activeHashtagSet = useMemo(() => {
     return new Set(
       editedHashtags
@@ -213,26 +241,71 @@ export default function PromoteComposer({
     if (!norm) return;
     const tokens = editedHashtags.split(/\s+/).filter(Boolean);
     const has = tokens.some((t) => normalizeHashtag(t) === norm);
-    let next;
-    if (has) {
-      next = tokens.filter((t) => normalizeHashtag(t) !== norm);
-    } else {
-      next = [...tokens, `#${norm}`];
-    }
+    const next = has
+      ? tokens.filter((t) => normalizeHashtag(t) !== norm)
+      : [...tokens, `#${norm}`];
     setEditedHashtags(next.join(' '));
+  };
+
+  // Everything the writer needs about this gecko, shared by every call.
+  const writerPayload = () => ({
+    voice_preset: voicePreset,
+    voice_custom: selectedCustomVoice?.voice_text || null,
+    platforms: [primaryPlatform, ...platforms.filter((p) => p !== primaryPlatform)],
+    template,
+    length_pref: lengthPref,
+    moment: moment.trim() || null,
+    facts,
+    photo_urls: writerPhotos,
+    gecko: {
+      id: gecko.id,
+      name: gecko.name || null,
+      morph: gecko.morphs_traits || null,
+      sex: gecko.sex || null,
+      hatch_date: gecko.hatch_date || null,
+      weight_g: gecko.weight_grams ?? null,
+      sale_status: gecko.status || null,
+      notes: gecko.notes || null,
+      sire: gecko.sire_name ? { name: gecko.sire_name, morph: null } : null,
+      dam: gecko.dam_name ? { name: gecko.dam_name, morph: null } : null,
+      recent_changes: facts.recent,
+    },
+  });
+
+  // Calls generate-social-post and returns its data, or null after
+  // showing a readable error.
+  const callWriter = async (extra) => {
+    const { data, error: fnErr } = await supabase.functions.invoke('generate-social-post', {
+      body: { ...writerPayload(), ...extra },
+    });
+    if (fnErr) {
+      let code = null;
+      try {
+        const ctx = fnErr.context;
+        if (ctx && typeof ctx.json === 'function') code = (await ctx.json())?.error;
+      } catch { /* ignore */ }
+      if (code === 'iteration_cap_reached') setIterations(ITERATION_CAP);
+      setError(generationErrorMessage(code));
+      return null;
+    }
+    if (data?.error) {
+      if (data.error === 'iteration_cap_reached') setIterations(ITERATION_CAP);
+      setError(generationErrorMessage(data.error));
+      return null;
+    }
+    if (data?.iteration_count) setIterations(data.iteration_count);
+    return data;
   };
 
   const handleGenerate = async (kind = 'generate') => {
     if (!gecko) return;
     if (remainingIterations <= 0) {
-      setError('You have reached the 10 generation cap for this post. Publish, copy, or discard it to start a new one.');
+      setError(generationErrorMessage('iteration_cap_reached'));
       return;
     }
     setGenerating(true);
     setError(null);
-
     try {
-      // Create draft on first generation.
       let postId = draft?.id;
       if (!postId) {
         const created = await SocialPost.create({
@@ -244,146 +317,106 @@ export default function PromoteComposer({
           template,
           voice_preset: voicePreset,
           length_pref: lengthPref,
-          starting_point: startingPoint || null,
+          starting_point: moment.trim() || null,
           status: 'draft',
         });
         setDraft(created);
         postId = created.id;
       }
-
-      const previousVariants = kind !== 'generate'
-        ? variants.map((v) => ({ content: `${v.hook} ${v.body}` }))
-        : [];
-
-      const { data, error: fnErr } = await supabase.functions.invoke('generate-social-post', {
-        body: {
-          post_id: postId,
-          // When the user has a custom voice selected we forward its
-          // voice_text as voice_custom; the server appends it to the
-          // system prompt so it stacks on top of the preset.
-          voice_custom: selectedCustomVoice?.voice_text || null,
-          gecko: {
-            id: gecko.id,
-            name: gecko.name || null,
-            morph: gecko.morphs_traits || null,
-            sex: gecko.sex || null,
-            hatch_date: gecko.hatch_date || null,
-            weight_g: gecko.weight_grams ?? null,
-            sale_status: gecko.status || null,
-            notes: gecko.notes || null,
-            // Gecko rows carry parent names, not parent objects, so these
-            // were always null before 29 Sep 2026.
-            sire: gecko.sire_name ? { name: gecko.sire_name, morph: null } : null,
-            dam: gecko.dam_name ? { name: gecko.dam_name, morph: null } : null,
-            recent_changes: [],
-          },
-          platforms: [primaryPlatform, ...platforms.filter((p) => p !== primaryPlatform)],
-          template,
-          voice_preset: voicePreset,
-          length_pref: lengthPref,
-          starting_point: startingPoint || undefined,
-          variant_count: 3,
-          kind,
-          previous_variants: previousVariants,
-        },
+      const data = await callWriter({
+        post_id: postId,
+        kind,
+        variant_count: 3,
+        previous_variants: kind === 'generate' ? [] : variants.map((v) => ({ content: draftText(v) })),
       });
-
-      if (fnErr) {
-        setError(fnErr.message || 'Generation failed.');
-        return;
-      }
-      if (data?.error) {
-        if (data.error === 'iteration_cap_reached') {
-          setIterations(ITERATION_CAP);
-          setError('Iteration cap reached.');
-        } else {
-          setError(`Error: ${data.error}`);
-        }
-        return;
-      }
-
-      setVariants(data.variants || []);
+      if (!data) return;
+      const next = data.variants || [];
+      setVariants(next);
       setActiveIdx(0);
-      setIterations(data.iteration_count || iterations + 1);
+      setEditedContent(draftText(next[0]));
+      setEditedHashtags((next[0]?.hashtags || []).join(' '));
+      setUndoContent(null);
+      setHookSuggestions([]);
+      setThreadSegments([]);
     } catch (e) {
-      setError(String(e?.message || e));
+      console.warn('generate failed', e);
+      setError(generationErrorMessage(null));
     } finally {
       setGenerating(false);
     }
   };
 
-  const handleCycleVoice = async () => {
-    const idx = VOICE_PRESETS.findIndex((v) => v.key === voicePreset);
-    const next = VOICE_PRESETS[(idx + 1) % VOICE_PRESETS.length].key;
-    setVoicePreset(next);
-    if (variants.length > 0) {
-      // Regenerate with the new voice
-      await handleGenerate('voice_cycle');
+  // One-tap revision of whatever is in the editor right now, including
+  // the keeper's own edits.
+  const handleTweak = async (key) => {
+    if (!draft || !editedContent.trim()) return;
+    if (remainingIterations <= 0) {
+      setError(generationErrorMessage('iteration_cap_reached'));
+      return;
+    }
+    setTweaking(key);
+    setError(null);
+    try {
+      const data = await callWriter({
+        post_id: draft.id,
+        kind: 'tweak',
+        tweak: key,
+        current_text: editedContent,
+      });
+      const v = data?.variants?.[0];
+      if (!v) return;
+      setUndoContent(editedContent);
+      setEditedContent(draftText(v));
+      if (v.hashtags?.length) setEditedHashtags(v.hashtags.join(' '));
+    } catch (e) {
+      console.warn('tweak failed', e);
+      setError(generationErrorMessage(null));
+    } finally {
+      setTweaking(null);
     }
   };
 
-  // Hook rewriter: ask the model for 5 alternative opening lines for
-  // the current draft. Body and hashtags stay; the user picks one to
-  // swap in. Burns an iteration just like a regenerate.
+  // Five alternative opening lines for the current draft. Picking one
+  // swaps out the first paragraph.
   const handleRewriteHooks = async () => {
     if (!editedContent.trim() || !draft) return;
     if (remainingIterations <= 0) {
-      setError('You have reached the 10 generation cap for this post.');
+      setError(generationErrorMessage('iteration_cap_reached'));
       return;
     }
     setRewritingHooks(true);
     setError(null);
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('generate-social-post', {
-        body: {
-          post_id: draft.id,
-          kind: 'hook_rewrite',
-          variant_count: 5,
-          voice_preset: voicePreset,
-          voice_custom: selectedCustomVoice?.voice_text || null,
-          platforms,
-          template,
-          length_pref: lengthPref,
-          gecko: {
-            id: gecko.id,
-            name: gecko.name || null,
-            morph: gecko.morphs_traits || null,
-            sex: gecko.sex || null,
-          },
-          previous_variants: [{ content: editedContent }],
-        },
+      const data = await callWriter({
+        post_id: draft.id,
+        kind: 'hook_rewrite',
+        variant_count: 5,
+        current_text: editedContent,
+        previous_variants: [{ content: editedContent }],
       });
-      if (fnErr) {
-        setError(fnErr.message || 'Hook rewrite failed.');
-        return;
-      }
-      if (data?.error) {
-        setError(`Error: ${data.error}`);
-        return;
-      }
+      if (!data) return;
       setHookSuggestions((data.variants || []).map((v) => v.hook).filter(Boolean));
-      setIterations(data.iteration_count || iterations + 1);
     } catch (e) {
-      setError(String(e?.message || e));
+      console.warn('hook rewrite failed', e);
+      setError(generationErrorMessage(null));
     } finally {
       setRewritingHooks(false);
     }
   };
 
-  // Replace the opening paragraph of the edited content with the
-  // chosen hook. We treat "everything up to the first blank line" as
-  // the existing hook so users can paste-in new openings without
-  // losing the body.
+  // Replace the opening paragraph with the chosen line. "Everything up
+  // to the first blank line" counts as the current opening.
   const applyHook = (hook) => {
     if (!hook) return;
     const trimmed = editedContent.trim();
     const splitAt = trimmed.indexOf('\n\n');
     const body = splitAt === -1 ? '' : trimmed.slice(splitAt).trimStart();
+    setUndoContent(editedContent);
     setEditedContent(body ? `${hook}\n\n${body}` : hook);
     setHookSuggestions([]);
   };
 
-  // Save a new custom voice to user_brand_voice.
+  // Save the keeper's writing samples to user_brand_voice.
   const handleSaveVoice = async () => {
     if (!newVoiceName.trim() || !newVoiceText.trim()) return;
     setSavingVoice(true);
@@ -400,31 +433,23 @@ export default function PromoteComposer({
       setNewVoiceText('');
       setShowNewVoiceForm(false);
     } catch (e) {
-      setError(`Save voice failed: ${e?.message || e}`);
+      console.warn('save voice failed', e);
+      setError('Could not save your writing sample. Try again.');
     } finally {
       setSavingVoice(false);
     }
   };
 
   const handleDeleteVoice = async (id) => {
-    if (!confirm('Delete this saved voice?')) return;
+    if (!confirm('Delete this writing sample?')) return;
     try {
       await UserBrandVoice.delete(id);
       setCustomVoices((prev) => prev.filter((v) => v.id !== id));
       if (selectedCustomVoiceId === id) setSelectedCustomVoiceId(null);
     } catch (e) {
-      setError(`Delete failed: ${e?.message || e}`);
+      console.warn('delete voice failed', e);
+      setError('Could not delete that writing sample. Try again.');
     }
-  };
-
-  // Seed an inspiration post into the starting-point field so the next
-  // generation can use it as a style anchor. We don't paste the full
-  // text into editedContent because that would clobber the working
-  // draft; using starting_point lets the model riff on the angle.
-  const applyInspiration = (post) => {
-    if (!post?.variant) return;
-    const excerpt = post.variant.content.slice(0, 300);
-    setStartingPoint(`Match the angle and rhythm of this past post: ${excerpt}`);
   };
 
   // Client-side splitter. Walks the caption, packs sentences into
@@ -789,178 +814,185 @@ export default function PromoteComposer({
     }
   };
 
+  const momentPlaceholder = MOMENT_PROMPTS[template] || MOMENT_PROMPTS.meet;
+  const factCount = facts.profile.length + facts.recent.length;
+  const geckoName = gecko?.name || 'this gecko';
+  const sectionLabel = 'text-xs uppercase tracking-wider text-emerald-300 mb-1.5 block';
+  const chip = (active) => `touch:min-h-11 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+    active
+      ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
+      : 'bg-emerald-950/30 border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/40 hover:text-emerald-100'
+  }`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl w-[100vw] sm:w-auto max-h-[100vh] sm:max-h-[90vh] h-[100vh] sm:h-auto sm:rounded-lg rounded-none overflow-y-auto p-3 sm:p-6 pb-24 sm:pb-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-emerald-400" />
-            Compose post about {gecko?.name || gecko?.id}
+            Post about {gecko?.name || 'your gecko'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
-          {/* Inspiration: the user's last 5 published posts. Click one
-              to seed it as a style anchor (writes into the
-              starting-point field, keeps the working draft intact). */}
-          {inspirationPosts.length > 0 && (
-            <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-emerald-300/80 mb-2">
-                Inspired by your past posts
+        <div className="space-y-5 mt-2">
+          {/* 1. What kind of post */}
+          <div>
+            <Label className={sectionLabel}>What kind of post?</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {POST_TEMPLATES.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTemplate(t.key)}
+                  title={t.blurb}
+                  className={chip(template === t.key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 2. The keeper's own words. This is what keeps posts from
+              sounding generic, so it gets the most room. */}
+          <div>
+            <Label htmlFor="promote-moment" className={sectionLabel}>
+              What's going on with {geckoName}?
+            </Label>
+            <Textarea
+              id="promote-moment"
+              value={moment}
+              onChange={(e) => setMoment(e.target.value)}
+              placeholder={momentPlaceholder}
+              rows={3}
+              className="text-sm"
+            />
+            <p className="text-[11px] text-emerald-200/60 mt-1">
+              A sentence or two in your own words is plenty. The drafts are built around it, and nothing gets made up to fill gaps.
+            </p>
+
+            {factCount > 0 && (
+              <div className="mt-2 rounded-md border border-emerald-800/40 bg-emerald-950/30">
+                <button
+                  type="button"
+                  onClick={() => setFactsOpen((o) => !o)}
+                  className="touch:min-h-11 w-full flex items-center justify-between px-3 py-2 text-xs text-emerald-200/80 hover:text-emerald-100"
+                >
+                  <span>
+                    Also using {factCount} detail{factCount === 1 ? '' : 's'} from {geckoName}'s records
+                    {facts.recent.length > 0 && `, including ${facts.recent.length} recent`}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${factsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {factsOpen && (
+                  <ul className="px-3 pb-2 space-y-0.5 text-[11px] text-emerald-100/80 list-disc list-inside">
+                    {[...facts.recent, ...facts.profile].map((f) => (
+                      <li key={f}>{f}</li>
+                    ))}
+                    <li className="list-none text-emerald-300/60 pt-1">
+                      Something wrong here? Fix it in My Geckos and it is fixed everywhere.
+                    </li>
+                  </ul>
+                )}
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                {inspirationPosts.map((p) => (
-                  <button
-                    key={p.post_id}
-                    type="button"
-                    onClick={() => applyInspiration(p)}
-                    className="touch:min-h-11 flex-shrink-0 w-40 text-left rounded-md border border-emerald-800/40 bg-emerald-950/50 hover:border-emerald-500/60 hover:bg-emerald-900/40 transition-colors p-2"
-                    title="Use this as a style anchor for the next generation"
-                  >
-                    <div className="text-[10px] uppercase tracking-wider text-emerald-300/70">
-                      {p.template} · {platformLabel(p.variant.platform)}
-                    </div>
-                    <div className="text-[11px] text-emerald-100 line-clamp-3 mt-1">
-                      {p.variant.content}
-                    </div>
-                  </button>
-                ))}
+            )}
+          </div>
+
+          {/* 3. Photos the writer looks at */}
+          {geckoPhotos.length > 0 && (
+            <div>
+              <Label className={sectionLabel}>Photos to describe</Label>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {geckoPhotos.map((url) => {
+                  const on = writerPhotos.includes(url);
+                  return (
+                    <button
+                      key={url}
+                      type="button"
+                      onClick={() => toggleWriterPhoto(url)}
+                      aria-pressed={on}
+                      className={`relative flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-colors ${
+                        on ? 'border-emerald-400' : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      {on && (
+                        <span className="absolute top-0.5 right-0.5 rounded-full bg-emerald-500 p-0.5">
+                          <Check className="w-2.5 h-2.5 text-white" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+              <p className="text-[11px] text-emerald-200/60 mt-1">
+                Pick up to {MAX_WRITER_PHOTOS}. The writer looks at them so it can mention what is really in the shot, like fired up or a clean pinstripe.
+              </p>
             </div>
           )}
 
-          {/* Template + Length pickers */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* 4. Where and how */}
+          <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3 space-y-3">
             <div>
-              <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 block">
-                Template
-              </Label>
-              <Select value={template} onValueChange={setTemplate}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {POST_TEMPLATES.map((t) => (
-                    <SelectItem key={t.key} value={t.key}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 block">
-                Length
-              </Label>
-              <Select value={lengthPref} onValueChange={setLengthPref}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="short">Short</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="long">Long</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Platforms, multi-select. Generation targets the most
-              restrictive selected platform so the post fits everywhere
-              it's sent; per-platform formatting (hashtag placement,
-              truncation) happens at publish time. */}
-          <div>
-            <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 block">
-              Platforms (post to all selected)
-            </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3">
-              {PLATFORMS.map((p) => {
-                const checked = platforms.includes(p.key);
-                return (
-                  <label
-                    key={p.key}
-                    className={`flex items-start gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-colors ${
-                      checked
-                        ? 'bg-emerald-800/40 border border-emerald-600/50'
-                        : 'border border-transparent hover:bg-emerald-900/30'
-                    }`}
-                  >
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={() => togglePlatform(p.key)}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1 min-w-0" title={p.hint}>
-                      <div className="text-sm text-emerald-100 truncate">
-                        {p.label}
-                      </div>
-                      <div className="text-[10px] text-emerald-200/50">
-                        {p.mode === 'direct' ? 'Posts for you' : 'Copy and paste'}
-                      </div>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-            <p className="text-[11px] text-emerald-200/60 mt-1">
-              Generation tailors the post for {platformLabel(primaryPlatform)} (the strictest selected). Other platforms reuse the same draft with their own hashtag formatting.
-            </p>
-            <p className="text-[11px] text-emerald-200/60 mt-1">
-              Only Bluesky posts count toward your monthly posts. Copying text for any other platform is free.
-            </p>
-          </div>
-
-          {/* Voice cycling + custom voice picker */}
-          <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs uppercase tracking-wider text-emerald-300">
-                Voice: {voiceLabel(voicePreset)}
-                {selectedCustomVoice && (
-                  <span className="ml-2 normal-case tracking-normal text-emerald-200/70">
-                    + {selectedCustomVoice.name}
-                  </span>
-                )}
-              </Label>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={handleCycleVoice}
-                disabled={generating || remainingIterations <= 0}
-                className="text-xs"
-              >
-                <RefreshCw className="w-3 h-3 mr-1" />
-                Try another voice
-              </Button>
-            </div>
-            <p className="text-xs text-emerald-200/70">
-              {VOICE_PRESETS.find((v) => v.key === voicePreset)?.blurb}
-            </p>
-
-            {/* Saved custom voices, click a chip to stack a custom voice
-                on top of the preset. Saving captures the user's own
-                writing for the model to mimic. */}
-            <div className="pt-2 border-t border-emerald-900/40">
-              <div className="text-[10px] uppercase tracking-wider text-emerald-300/70 mb-1.5">
-                Your saved voices
+              <Label className={sectionLabel}>Where are you posting?</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                {PLATFORMS.map((p) => {
+                  const checked = platforms.includes(p.key);
+                  return (
+                    <label
+                      key={p.key}
+                      title={p.hint}
+                      className={`flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-colors ${
+                        checked
+                          ? 'bg-emerald-800/40 border border-emerald-600/50'
+                          : 'border border-transparent hover:bg-emerald-900/30'
+                      }`}
+                    >
+                      <Checkbox checked={checked} onCheckedChange={() => togglePlatform(p.key)} />
+                      <span className="text-sm text-emerald-100 truncate">{p.label}</span>
+                    </label>
+                  );
+                })}
               </div>
-              <div className="flex flex-wrap gap-1.5 items-center">
+              <p className="text-[11px] text-emerald-200/60 mt-1">
+                {platforms.length > 1
+                  ? `Written to fit ${platformLabel(primaryPlatform)}, the strictest one you picked, so it works everywhere. `
+                  : ''}
+                Bluesky can post for you. Everything else copies the text and opens the app, and copies are free.
+              </p>
+            </div>
+
+            <div>
+              <Label className={sectionLabel}>Voice</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {VOICE_PRESETS.map((v) => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => setVoicePreset(v.key)}
+                    title={v.blurb}
+                    className={chip(voicePreset === v.key && !selectedCustomVoice)}
+                  >
+                    {v.label}
+                  </button>
+                ))}
                 {customVoices.map((v) => {
                   const active = v.id === selectedCustomVoiceId;
                   return (
-                    <span key={v.id} className="inline-flex items-center gap-0.5">
+                    <span key={v.id} className="inline-flex items-center">
                       <button
                         type="button"
                         onClick={() => setSelectedCustomVoiceId(active ? null : v.id)}
-                        className={`touch:min-h-11 text-[11px] px-2 py-0.5 rounded-l border transition-colors ${
-                          active
-                            ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
-                            : 'bg-emerald-950/40 border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/40'
-                        }`}
+                        className={`${chip(active)} rounded-r-none`}
+                        title="Your own writing. The drafts copy its rhythm."
                       >
                         {v.name}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDeleteVoice(v.id)}
-                        title="Delete voice"
-                        className="touch:min-h-11 touch:min-w-11 text-[11px] px-1 py-0.5 rounded-r border border-l-0 border-emerald-800/50 bg-emerald-950/40 text-emerald-300/60 hover:text-red-300 hover:bg-red-900/30"
+                        aria-label={`Delete ${v.name}`}
+                        className="touch:min-h-11 touch:min-w-11 text-xs px-1.5 py-1 rounded-r-full border border-l-0 border-emerald-800/50 bg-emerald-950/40 text-emerald-300/60 hover:text-red-300"
                       >
                         ×
                       </button>
@@ -970,26 +1002,31 @@ export default function PromoteComposer({
                 <button
                   type="button"
                   onClick={() => setShowNewVoiceForm((s) => !s)}
-                  className="touch:min-h-11 text-[11px] px-2 py-0.5 rounded-full border border-dashed border-emerald-700/60 text-emerald-300/80 hover:text-emerald-100 hover:bg-emerald-900/40"
+                  className="touch:min-h-11 text-xs px-2.5 py-1 rounded-full border border-dashed border-emerald-700/60 text-emerald-300/80 hover:text-emerald-100"
                 >
-                  {showNewVoiceForm ? 'Cancel' : '+ Train a voice'}
+                  {showNewVoiceForm ? 'Cancel' : '+ Sound like me'}
                 </button>
               </div>
+              <p className="text-[11px] text-emerald-200/60 mt-1">
+                {selectedCustomVoice
+                  ? `Copying the rhythm of "${selectedCustomVoice.name}". Tap it again to use a preset instead.`
+                  : VOICE_PRESETS.find((v) => v.key === voicePreset)?.blurb}
+              </p>
 
               {showNewVoiceForm && (
                 <div className="mt-2 space-y-2 rounded-md bg-emerald-950/50 border border-emerald-800/40 p-2">
                   <Input
                     value={newVoiceName}
                     onChange={(e) => setNewVoiceName(e.target.value)}
-                    placeholder="Voice name (e.g. My breeder voice)"
-                    className="text-xs"
+                    placeholder="Name it (e.g. My Instagram)"
+                    className="text-sm"
                   />
                   <Textarea
                     value={newVoiceText}
                     onChange={(e) => setNewVoiceText(e.target.value)}
-                    placeholder="Paste 5-10 of your past captions, or describe the voice in your own words. The model will mimic phrasing, rhythm, and tics."
-                    rows={5}
-                    className="text-xs font-mono"
+                    placeholder="Paste 3 to 10 captions you wrote yourself, one after another. The drafts will copy how you write: sentence length, emoji habits, the words you use. Not what you said."
+                    rows={6}
+                    className="text-sm"
                   />
                   <Button
                     size="sm"
@@ -997,29 +1034,27 @@ export default function PromoteComposer({
                     disabled={savingVoice || !newVoiceName.trim() || !newVoiceText.trim()}
                     className="bg-emerald-600 hover:bg-emerald-500"
                   >
-                    {savingVoice ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Saving…</> : 'Save voice'}
+                    {savingVoice ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Saving…</> : 'Save'}
                   </Button>
                 </div>
               )}
             </div>
+
+            <div>
+              <Label className={sectionLabel}>Length</Label>
+              <div className="flex gap-1.5">
+                {[['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']].map(([k, label]) => (
+                  <button key={k} type="button" onClick={() => setLengthPref(k)} className={chip(lengthPref === k)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Optional starting-point text */}
-          <div>
-            <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 block">
-              Starting point (optional)
-            </Label>
-            <Input
-              value={startingPoint}
-              onChange={(e) => setStartingPoint(e.target.value)}
-              placeholder="e.g. focus on her line, mention dam was a Lilly White Phantom"
-              className="text-sm"
-            />
-          </div>
-
-          {/* Generate / Variants */}
+          {/* Generate / drafts */}
           {variants.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="flex flex-col items-center justify-center py-6 text-center">
               <Button
                 onClick={() => handleGenerate('generate')}
                 disabled={generating}
@@ -1027,148 +1062,215 @@ export default function PromoteComposer({
                 className="bg-emerald-600 hover:bg-emerald-500"
               >
                 {generating ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Writing…</>
                 ) : (
-                  <><Sparkles className="w-4 h-4 mr-2" /> Generate 3 variants</>
+                  <><Sparkles className="w-4 h-4 mr-2" /> Write 3 drafts</>
                 )}
               </Button>
-              <p className="text-xs text-emerald-200/60 mt-2">
-                Uses Sonnet 4.6 for the first generation, Haiku 4.5 for tweaks.
+              <p className="text-xs text-emerald-200/60 mt-2 max-w-sm">
+                {moment.trim()
+                  ? 'Three different takes. Pick one and make it yours.'
+                  : `Tip: a line about what's going on with ${geckoName} makes the drafts much better.`}
               </p>
             </div>
           ) : (
             <>
-              {/* Variant tabs */}
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => setActiveIdx((i) => Math.max(0, i - 1))}
-                  disabled={activeIdx === 0}
-                  className="h-8 w-8"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <div className="flex-1 text-center text-xs text-emerald-200/70">
-                  Variant {activeIdx + 1} of {variants.length}
-                  {' '}
-                  <span className="text-emerald-300/50">
-                    · {remainingIterations} regeneration{remainingIterations === 1 ? '' : 's'} left
-                  </span>
-                </div>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => setActiveIdx((i) => Math.min(variants.length - 1, i + 1))}
-                  disabled={activeIdx === variants.length - 1}
-                  className="h-8 w-8"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleGenerate('regenerate')}
-                  disabled={generating || remainingIterations <= 0}
-                >
-                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-                  Regenerate
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleRewriteHooks}
-                  disabled={rewritingHooks || remainingIterations <= 0 || !editedContent.trim()}
-                  title="Generate 5 alternative opening lines"
-                >
-                  {rewritingHooks
-                    ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Hooks…</>
-                    : <>5 hooks</>}
-                </Button>
-              </div>
-
-              {hookSuggestions.length > 0 && (
-                <div className="rounded-lg border border-emerald-700/50 bg-emerald-900/30 p-2 space-y-1.5">
-                  <div className="text-[10px] uppercase tracking-wider text-emerald-300 flex items-center justify-between">
-                    Pick a new opening
-                    <button
-                      type="button"
-                      onClick={() => setHookSuggestions([])}
-                      className="touch:min-h-11 text-emerald-400/70 hover:text-emerald-200 text-[10px]"
+              {/* Drafts, each a different approach */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label className="text-xs uppercase tracking-wider text-emerald-300">Pick a draft</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-emerald-300/60">
+                      {remainingIterations} {remainingIterations === 1 ? 'try' : 'tries'} left
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleGenerate('regenerate')}
+                      disabled={generating || remainingIterations <= 0}
+                      className="text-xs"
                     >
-                      dismiss
-                    </button>
+                      {generating
+                        ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
+                      3 new drafts
+                    </Button>
                   </div>
-                  {hookSuggestions.map((h, i) => (
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {variants.map((v, i) => (
                     <button
                       key={i}
                       type="button"
-                      onClick={() => applyHook(h)}
-                      className="touch:min-h-11 block w-full text-left text-xs text-emerald-100 rounded bg-emerald-950/50 hover:bg-emerald-800/40 border border-emerald-800/40 hover:border-emerald-600/60 px-2 py-1.5 transition-colors"
+                      onClick={() => pickVariant(i)}
+                      className={`text-left rounded-lg border p-2.5 transition-colors ${
+                        i === activeIdx
+                          ? 'border-emerald-400 bg-emerald-900/40'
+                          : 'border-emerald-800/40 bg-emerald-950/30 hover:border-emerald-600/60'
+                      }`}
                     >
-                      {h}
+                      <div className="text-[10px] uppercase tracking-wider text-emerald-300/80 mb-1">
+                        {v.approach || `Draft ${i + 1}`}
+                      </div>
+                      <div className="text-xs text-emerald-100 whitespace-pre-wrap line-clamp-6">
+                        {draftText(v)}
+                      </div>
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {activeVariant?.check_before_posting?.length > 0 && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-700/40 bg-amber-950/20 p-2.5 text-xs text-amber-100">
+                  <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-300" />
+                  <div>
+                    <div className="font-medium mb-0.5">Before you post</div>
+                    <ul className="list-disc list-inside space-y-0.5 text-amber-100/90">
+                      {activeVariant.check_before_posting.map((c) => <li key={c}>{c}</li>)}
+                    </ul>
+                  </div>
+                </div>
               )}
 
-              {/* Edit area */}
+              {/* Editor */}
               <div>
-                <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 block">
-                  Caption (edit before publishing)
-                </Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label htmlFor="promote-caption" className="text-xs uppercase tracking-wider text-emerald-300">
+                    Your post
+                  </Label>
+                  {undoContent != null && (
+                    <button
+                      type="button"
+                      onClick={() => { setEditedContent(undoContent); setUndoContent(null); }}
+                      className="touch:min-h-11 inline-flex items-center gap-1 text-[11px] text-emerald-300/80 hover:text-emerald-100"
+                    >
+                      <Undo2 className="w-3 h-3" /> Undo
+                    </button>
+                  )}
+                </div>
                 <Textarea
+                  id="promote-caption"
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
                   rows={8}
-                  className="text-sm font-mono"
+                  className="text-sm leading-relaxed"
                 />
-                <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 mt-3 block">
+
+                {aiTells.length > 0 && (
+                  <div className="mt-2 rounded-md border border-amber-700/40 bg-amber-950/20 p-2.5">
+                    <div className="text-[11px] font-medium text-amber-200 mb-1">
+                      Might read as AI-written
+                    </div>
+                    <ul className="space-y-1">
+                      {aiTells.map((t) => (
+                        <li key={t.label} className="text-[11px] text-amber-100/90">
+                          <span className="font-mono text-amber-200">"{t.match.slice(0, 40)}"</span>
+                          {' '}{t.why}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* One-tap revisions */}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {TWEAKS.map((t) => (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => handleTweak(t.key)}
+                      disabled={!!tweaking || generating || remainingIterations <= 0 || !editedContent.trim()
+                        || (t.key === 'more_me' && !selectedCustomVoice && !moment.trim())}
+                      title={t.key === 'more_me' && !selectedCustomVoice && !moment.trim()
+                        ? 'Add your own writing under Voice, or a line about what is going on, first'
+                        : undefined}
+                      className={`${chip(false)} disabled:opacity-40 disabled:cursor-not-allowed`}
+                    >
+                      {tweaking === t.key && <Loader2 className="inline w-3 h-3 mr-1 animate-spin" />}
+                      {t.label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={handleRewriteHooks}
+                    disabled={rewritingHooks || !!tweaking || remainingIterations <= 0 || !editedContent.trim()}
+                    className={`${chip(false)} disabled:opacity-40 disabled:cursor-not-allowed`}
+                  >
+                    {rewritingHooks && <Loader2 className="inline w-3 h-3 mr-1 animate-spin" />}
+                    New opening line
+                  </button>
+                </div>
+
+                {hookSuggestions.length > 0 && (
+                  <div className="mt-2 rounded-lg border border-emerald-700/50 bg-emerald-900/30 p-2 space-y-1.5">
+                    <div className="text-[10px] uppercase tracking-wider text-emerald-300 flex items-center justify-between">
+                      Pick an opening line
+                      <button
+                        type="button"
+                        onClick={() => setHookSuggestions([])}
+                        className="touch:min-h-11 text-emerald-400/70 hover:text-emerald-200 text-[10px]"
+                      >
+                        dismiss
+                      </button>
+                    </div>
+                    {hookSuggestions.map((h, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => applyHook(h)}
+                        className="touch:min-h-11 block w-full text-left text-xs text-emerald-100 rounded bg-emerald-950/50 hover:bg-emerald-800/40 border border-emerald-800/40 hover:border-emerald-600/60 px-2 py-1.5 transition-colors"
+                      >
+                        {h}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <Label htmlFor="promote-hashtags" className="text-xs uppercase tracking-wider text-emerald-300 mb-1 mt-4 block">
                   Hashtags
                 </Label>
                 <Input
+                  id="promote-hashtags"
                   value={editedHashtags}
                   onChange={(e) => setEditedHashtags(e.target.value)}
-                  placeholder="#crestedgecko #lillywhite ..."
-                  className="text-sm font-mono"
+                  placeholder="#crestedgecko #lillywhite"
+                  className="text-sm"
                 />
+                <button
+                  type="button"
+                  onClick={() => setHashtagsOpen((o) => !o)}
+                  className="touch:min-h-11 mt-1 inline-flex items-center gap-1 text-[11px] text-emerald-300/80 hover:text-emerald-100"
+                >
+                  Browse crestie hashtags
+                  <ChevronDown className={`w-3 h-3 transition-transform ${hashtagsOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-                {/* Hashtag chip picker, grouped by category. Click a chip
-                    to add or remove that tag from the post. Selected
-                    chips render in the active style; the chip set stays
-                    in sync with whatever the user typed into the input
-                    above via the normalized hashtag set. */}
-                <div className="mt-2 space-y-2">
-                  {HASHTAG_LIBRARY.map((group) => (
-                    <div key={group.key}>
-                      <div className="text-[10px] uppercase tracking-wider text-emerald-300/70 mb-1">
-                        {group.label}
-                        <span className="text-emerald-400/40 normal-case tracking-normal ml-2">
-                          {group.blurb}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {group.tags.map((tag) => {
-                          const isActive = activeHashtagSet.has(normalizeHashtag(tag));
-                          return (
+                {hashtagsOpen && (
+                  <div className="mt-2 space-y-2">
+                    {HASHTAG_LIBRARY.map((group) => (
+                      <div key={group.key}>
+                        <div className="text-[10px] uppercase tracking-wider text-emerald-300/70 mb-1">
+                          {group.label}
+                          <span className="text-emerald-400/40 normal-case tracking-normal ml-2">
+                            {group.blurb}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {group.tags.map((tag) => (
                             <button
                               key={tag}
                               type="button"
                               onClick={() => toggleHashtag(tag)}
-                              className={`touch:min-h-11 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
-                                isActive
-                                  ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
-                                  : 'bg-emerald-950/30 border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/40 hover:text-emerald-100'
-                              }`}
+                              className={chip(activeHashtagSet.has(normalizeHashtag(tag)))}
                             >
                               #{tag}
                             </button>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Per-platform previews, one card each. Same caption,

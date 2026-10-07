@@ -19,6 +19,7 @@ import PromoteImageGallery from '@/components/promote/PromoteImageGallery';
 import TrialOfferModal from '@/components/promote/TrialOfferModal';
 import ConnectionsModal from '@/components/promote/ConnectionsModal';
 import { formatDistanceToNow } from 'date-fns';
+import { POST_TEMPLATES } from '@/lib/socialMedia';
 
 // Promote, the social media manager page.
 //
@@ -133,13 +134,13 @@ export default function PromotePage() {
       list = list.filter((g) =>
         (g.name || '').toLowerCase().includes(q) ||
         (g.id || '').toLowerCase().includes(q) ||
-        (g.morph_description || g.morph || '').toLowerCase().includes(q)
+        (g.morphs_traits || '').toLowerCase().includes(q)
       );
     }
     if (sortBy === 'name') {
       list = [...list].sort((a, b) => (a.name || a.id || '').localeCompare(b.name || b.id || ''));
     } else if (sortBy === 'morph') {
-      list = [...list].sort((a, b) => (a.morph_description || a.morph || '').localeCompare(b.morph_description || b.morph || ''));
+      list = [...list].sort((a, b) => (a.morphs_traits || '').localeCompare(b.morphs_traits || ''));
     }
     return list;
   }, [geckos, search, sortBy, view]);
@@ -174,13 +175,13 @@ export default function PromotePage() {
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <Seo
         title="Promote your geckos"
-        description="Generate platform-tailored social media posts about your crested geckos using AI trained on crestie-specific best practices."
+        description="Draft social posts about your crested geckos from their real records, photos and your own words, then make them yours."
       />
       <div className="max-w-6xl mx-auto">
         <PageHeader
           icon={Sparkles}
           title="Promote"
-          description="Pick a gecko and we'll draft a post about it. Tailored to platform best practices."
+          description="Pick a gecko, tell us what's going on, and get three drafts to make your own."
         >
           <Button
             variant="outline"
@@ -228,7 +229,7 @@ export default function PromotePage() {
                     className="flex items-center justify-between text-xs rounded bg-emerald-950/40 px-2 py-1.5"
                   >
                     <div className="flex-1 min-w-0 truncate">
-                      <span className="text-emerald-100 font-medium">{p.template}</span>
+                      <span className="text-emerald-100 font-medium">{POST_TEMPLATES.find((t) => t.key === p.template)?.label || p.template}</span>
                       <span className="text-emerald-300/70 mx-2">·</span>
                       <span className="text-emerald-200/80">{gname}</span>
                       <span className="text-emerald-300/70 mx-2">·</span>
@@ -270,7 +271,7 @@ export default function PromotePage() {
                   key={p.id}
                   className="flex-shrink-0 rounded-md border border-emerald-800/40 bg-emerald-950/30 px-3 py-2 text-xs"
                 >
-                  <div className="font-medium text-emerald-100">{p.template}</div>
+                  <div className="font-medium text-emerald-100">{POST_TEMPLATES.find((t) => t.key === p.template)?.label || p.template}</div>
                   <div className="text-emerald-200/60">
                     {p.status === 'published' ? (
                       <><Send className="inline w-3 h-3 mr-1" />Published</>
@@ -348,8 +349,8 @@ export default function PromotePage() {
         {sortBy === 'recent_changes' && (
           <div className="text-xs text-emerald-200/60 mb-3 px-1">
             <Clock className="inline w-3 h-3 mr-1" />
-            Surfacing geckos with new photos, weights, or pairings first. Audiences follow along
-            when they can see the journey, this is a tried and true social media strategy.
+            Geckos with new photos, weights or pairings come first. Those updates are usually the
+            best thing to post about.
           </div>
         )}
 
@@ -395,7 +396,7 @@ export default function PromotePage() {
                     {g.name || g.id}
                   </div>
                   <div className="text-xs text-emerald-300/70 truncate">
-                    {g.morph_description || g.morph || 'unspecified morph'}
+                    {g.morphs_traits || 'Morph not set'}
                   </div>
                   {g.last_meaningful_change_at && (
                     <div className="text-[10px] text-emerald-200/50 mt-1">
