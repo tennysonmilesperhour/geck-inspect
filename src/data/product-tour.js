@@ -11,7 +11,7 @@
  * ProductTour.jsx still hides a shipped slide whose image fails to load.
  *
  * Capture guidance:
- *   - 1600 x 1000 px (16:10) WebP, plus an optional 780 x 976 (4:5)
+ *   - 1600 x 1000 px (16:10) WebP, plus an optional 390 x 488 (4:5)
  *     phone capture as `mobileFile` (shown below 640 px wide).
  *   - Capture the page on a wide laptop viewport (≥1440 wide), zoom 100%.
  *   - Use a populated demo collection so the screenshot looks real,
@@ -24,13 +24,13 @@
 export const PRODUCT_TOUR_SLIDES = [
   // Shipped October 2026, captured from the guest demo collection (sample
   // geckos) with value estimates from the real Geck Data listings table.
-  // Each has a 1600 x 1000 laptop file and a 780 x 976 (4:5) phone file
-  // (`mobileFile`), WebP. Demo geckos have no photos in the sandbox the
-  // captures were made in, so photo slots show the app's own placeholder.
+  // Laptop captures are 1600 x 1000; phone captures use a 4:5 crop.
+  // Record, lineage, and breeding slides use bundled real gecko photos.
+  // Versioned filenames ensure returning visitors receive the new captures.
   {
     id: 'gecko-record',
-    file: 'gecko-record.webp',
-    mobileFile: 'gecko-record-phone.webp',
+    file: 'gecko-record-real.webp',
+    mobileFile: 'gecko-record-real-phone.webp',
     title: 'One record per gecko',
     caption: 'Morph, weigh-ins against the typical range for its age, and a value estimate from real crested gecko listings.',
     captureUrl: '/GeckoDetail?id=mock-gecko-4 (demo)',
@@ -47,8 +47,8 @@ export const PRODUCT_TOUR_SLIDES = [
   },
   {
     id: 'lineage',
-    file: 'lineage-tree.webp',
-    mobileFile: 'lineage-tree-phone.webp',
+    file: 'lineage-tree-real.webp',
+    mobileFile: 'lineage-tree-real-phone.webp',
     title: 'Multi-generation lineage',
     caption: 'Trace any gecko back through its parents and grandparents, with known ancestors and inbreeding (COI) at a glance.',
     captureUrl: '/Lineage?geckoId=mock-gecko-4 (demo)',
@@ -56,8 +56,8 @@ export const PRODUCT_TOUR_SLIDES = [
   },
   {
     id: 'breeding-planner',
-    file: 'breeding-planner.webp',
-    mobileFile: 'breeding-planner-phone.webp',
+    file: 'breeding-planner-real.webp',
+    mobileFile: 'breeding-planner-real-phone.webp',
     title: 'Breeding plans',
     caption: 'Every pairing in one place: days since the last egg, clutches logged, and the hatchery one tab away.',
     captureUrl: '/Breeding (demo)',
@@ -72,8 +72,7 @@ export const PRODUCT_TOUR_SLIDES = [
     captureUrl: '/Portfolio (demo)',
     shipped: true,
   },
-  // Not captured yet: these need real photos, which the demo cannot show
-  // without network access to its photo hosts. Capture on production.
+  // Additional feature slides remain unshipped until captured and reviewed.
   {
     id: 'dashboard',
     file: 'dashboard.webp',
