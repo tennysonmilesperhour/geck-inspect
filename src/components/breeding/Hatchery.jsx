@@ -1,3 +1,4 @@
+import EggBulkActions from '@/components/bulk/EggBulkActions';
 import { useState, useEffect } from 'react';
 import { Egg, BreedingPlan, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
@@ -76,8 +77,8 @@ export default function Hatchery() {
         loadUserPreference();
     }, []);
 
-    const loadData = async () => {
-        setIsLoading(true);
+    const loadData = async ({ background = false } = {}) => {
+        if (!background) setIsLoading(true);
         setLoadError(null);
         try {
             // User.me() from entities/all is null in the guest demo; use the
@@ -496,6 +497,8 @@ export default function Hatchery() {
                     </div>
                 </CardContent>
             </Card>
+
+            {!isGuestMode() && <EggBulkActions records={filteredEggs} allEggs={eggs} plans={breedingPlans} geckos={geckos} onComplete={() => loadData({ background: true })} />}
 
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredEggs.map(egg => {
