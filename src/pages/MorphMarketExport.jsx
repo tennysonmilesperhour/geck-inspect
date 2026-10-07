@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Gecko, User } from '@/entities/all';
@@ -293,11 +294,7 @@ function GeckoTile({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
         className="touch:min-h-11 text-left w-full focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-xl"
       >
         <div className="relative aspect-square bg-slate-950">
-          {thumb ? (
-            <img src={thumb} alt={gecko.name || ''} className="w-full h-full object-cover" loading="lazy" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">No photo</div>
-          )}
+          <GeckoImage src={thumb} alt={gecko.name || ""} className="w-full h-full object-cover" />
           <div className="absolute top-2 left-2">
             <Checkbox
               checked={selected}
@@ -384,11 +381,7 @@ function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
         className="touch:min-h-11 flex items-center gap-3 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-md"
       >
         <div className="w-10 h-10 rounded bg-slate-950 shrink-0 overflow-hidden">
-          {thumb ? (
-            <img src={thumb} alt="" className="w-full h-full object-cover" loading="lazy" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-500 text-[10px]">No photo</div>
-          )}
+          <GeckoImage src={thumb} alt={gecko.name || ""} className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">

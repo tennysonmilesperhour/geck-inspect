@@ -35,11 +35,9 @@ export const MARKET_INTELLIGENCE_URL =
 export const MARKET_SNAPSHOT_URL =
   import.meta.env.VITE_MARKET_SNAPSHOT_URL || `${MARKET_INTELLIGENCE_URL}/data/market.json`;
 
-// Placeholder for a gecko with no photo. Served from /public on our own
-// domain: it used to be an Imgur link, and Imgur blocks visitors from the
-// UK, so every photo-less card showed a broken image there. Absolute for
-// the same reason as APP_LOGO_URL (MorphDetail passes it to og:image).
-export const DEFAULT_GECKO_IMAGE = 'https://geckinspect.com/gecko-placeholder.png';
+// Bundled silhouette: works on production, previews, and native builds.
+export const DEFAULT_GECKO_IMAGE = '/gecko-profile-placeholder.png';
+export const DEFAULT_GECKO_IMAGE_URL = `https://geckinspect.com${DEFAULT_GECKO_IMAGE}`;
 
 export const GECKO_STATUS_OPTIONS = [
   'Pet',

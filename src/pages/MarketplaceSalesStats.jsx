@@ -1,3 +1,5 @@
+import GeckoImage from '@/components/shared/GeckoImage';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -677,7 +679,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
                         <button key={g.id} type="button"
                           onMouseDown={(e) => { e.preventDefault(); selectGeckoForSale(g); }}
                           className="w-full text-left px-3 py-1.5 touch:min-h-11 text-xs text-slate-200 hover:bg-slate-600 flex items-center gap-2">
-                          {g.image_urls?.[0] && <img src={g.image_urls[0]} alt="" className="w-5 h-5 rounded object-cover" />}
+                          <GeckoImage src={g.image_urls?.[0]} alt="" className="w-5 h-5 rounded object-cover" />
                           <span className="truncate">{g.name}</span>
                           {g.asking_price && <span className="text-emerald-400 ml-auto">${g.asking_price}</span>}
                         </button>
@@ -1544,7 +1546,7 @@ export default function MarketplaceSalesStats() {
                           <div key={item.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
                             <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                               {item.kind === 'gecko' ? (
-                                <img src={item.image || 'https://geckinspect.com/gecko-placeholder.png'} alt={item.name}
+                                <GeckoImage src={item.image || DEFAULT_GECKO_IMAGE} alt={item.name}
                                   className="w-9 h-9 rounded object-cover flex-shrink-0" />
                               ) : (
                                 <div className="w-9 h-9 rounded bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center flex-shrink-0">

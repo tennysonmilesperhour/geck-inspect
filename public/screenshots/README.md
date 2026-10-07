@@ -4,7 +4,7 @@ This folder feeds the `<ProductTour />` slideshow on the public landing page (`s
 
 ## What is here (October 2026)
 
-Captured from the guest demo collection (sample geckos) with Playwright. Value estimates come from the real Geck Data listings table (`trait_value_table`), read once and served to the browser. The demo's photos live on hosts the capture sandbox could not reach, so photo slots show the app's own no-photo placeholder. See `docs/planning/landing-speed-2026-10.md`.
+Recaptured from the guest demo collection with bundled real photos from the admin collection. All eight source geckos have exact hatch dates before October 6, 2024, verified on October 6, 2026. Photo names and hatch dates are recorded in `src/lib/demoGeckoPhotos.js`; the demo records remain illustrative. Value estimates use the existing dated Geck Data snapshot. Both the product tour and `hero-gecko-record.webp` now include actual gecko photos.
 
 | Slide | Laptop file (1600 x 1000) | Phone file (780 x 976, 4:5) | Demo page |
 |---|---|---|---|
@@ -14,12 +14,12 @@ Captured from the guest demo collection (sample geckos) with Playwright. Value e
 | Breeding plans | `breeding-planner.webp` | `breeding-planner-phone.webp` | `/Breeding` |
 | Collection value | `portfolio.webp` | `portfolio-phone.webp` | `/Portfolio` |
 
-Still to capture (they need real photos, so capture on production): dashboard, morph guide, AI morph ID, breeder storefront, photo timeline.
+Still to capture: dashboard, morph guide, AI morph ID, breeder storefront, photo timeline.
 
 ## Capture tips
 
-- Laptop: 1600 x 1000 viewport, dark theme, sidebar collapsed, demo tour card and toasts closed. Phone: 390 px wide at 2x, top 488 px of the screen (below the header, above the bottom nav).
-- WebP at quality 70 to 75. Every file here is under 50 KB.
+- Laptop: 1600 x 1000 viewport, dark theme, sidebar collapsed, demo tour card and toasts closed. Phone: 390 px wide at 2x, a 488 px crop below the header. Calculator and portfolio phone captures scroll to the populated photo rows.
+- WebP at quality 78, with optimized bundled photos for reliable captures.
 - Phone files go in `mobileFile`; the tour shows them below 640 px wide in a 4:5 frame.
 
 ## How to add a NEW slide

@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
 import { api } from '@/api/appClient';
@@ -525,16 +526,7 @@ export default function PairingPlannerPage() {
 }
 
 function Thumb({ gecko, ring }) {
-  return gecko.image_urls?.[0] ? (
-    <img
-      src={gecko.image_urls[0]}
-      alt={gecko.name}
-      className={`w-12 h-12 rounded-lg object-cover border ${ring}`}
-      loading="lazy"
-    />
-  ) : (
-    <div className={`w-12 h-12 rounded-lg bg-slate-700 border ${ring}`} />
-  );
+  return <GeckoImage src={gecko.image_urls?.[0]} alt={gecko.name} className={`w-12 h-12 rounded-lg object-cover border ${ring}`} />;
 }
 
 function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceIndex, sellModel }) {

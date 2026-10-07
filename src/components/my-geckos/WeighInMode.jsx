@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -170,7 +171,7 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
                 const hasValue = value !== '' && !isNaN(parseFloat(value));
                 return (
                   <li key={gecko.id} className="flex items-center gap-3 py-2.5">
-                    <img
+                    <GeckoImage
                       src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                       alt={gecko.name}
                       className="w-10 h-10 rounded object-cover flex-shrink-0 border border-slate-700"

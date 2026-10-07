@@ -1,3 +1,5 @@
+import GeckoImage from '@/components/shared/GeckoImage';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -154,8 +156,8 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                         {/* Left Column: Basic Info & Image */}
                         <div className="space-y-6">
                             <div className="w-full rounded-lg overflow-hidden">
-                                <img 
-                                    src={reptile.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'} 
+                                <GeckoImage
+                                    src={reptile.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                                     alt={reptile.name} 
                                     className="w-full h-auto object-contain max-h-80"
                                 />

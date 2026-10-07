@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Seo from '@/components/seo/Seo';
@@ -380,16 +381,7 @@ export default function PromotePage() {
               >
                 <CardContent className="p-3">
                   <div className="aspect-square w-full bg-emerald-950/40 rounded-md mb-2 overflow-hidden flex items-center justify-center">
-                    {g.image_urls?.[0] ? (
-                      <img
-                        src={g.image_urls[0]}
-                        alt={g.name || g.id}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className="text-emerald-700 text-xs">no photo</span>
-                    )}
+                    <GeckoImage src={g.image_urls?.[0]} alt={g.name || g.id} className="w-full h-full object-cover" />
                   </div>
                   <div className="font-semibold text-emerald-100 text-sm truncate">
                     {g.name || g.id}

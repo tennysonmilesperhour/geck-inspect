@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import GeckoBulkActions from '@/components/bulk/GeckoBulkActions';
 import { Gecko } from '@/entities/all';
 import { useEffect, useMemo, useState } from 'react';
@@ -820,7 +821,7 @@ export default function MyStore() {
                                                     }`}
                                                 >
                                                     <div className="aspect-square bg-slate-800 relative">
-                                                        <img src={img} alt={g.name} className="w-full h-full object-cover" />
+                                                        <GeckoImage src={img} alt={g.name} className="w-full h-full object-cover" />
                                                         {selected && (
                                                             <div className="absolute top-1 right-1 bg-emerald-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                                                                 {form.featured_gecko_ids.indexOf(g.id) + 1}

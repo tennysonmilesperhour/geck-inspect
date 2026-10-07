@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import {
     Dialog,
     DialogContent,
@@ -56,7 +57,7 @@ export default function ImageDetailModal({ data, onClose }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                     <div>
                         <div className="relative">
-                            <img src={image.image_url} alt={morphDisplayName} className="rounded-lg w-full h-auto object-contain" />
+                            <GeckoImage src={image.image_url} alt={morphDisplayName} className="rounded-lg w-full h-auto object-contain" />
                             {image.verified && (
                                 <div className="absolute top-3 left-3 flex items-center gap-2 bg-green-600/80 text-white text-xs font-bold px-3 py-1 rounded-full">
                                     <CheckCircle className="w-4 h-4"/>

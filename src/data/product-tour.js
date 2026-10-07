@@ -25,8 +25,8 @@ export const PRODUCT_TOUR_SLIDES = [
   // Shipped October 2026, captured from the guest demo collection (sample
   // geckos) with value estimates from the real Geck Data listings table.
   // Each has a 1600 x 1000 laptop file and a 780 x 976 (4:5) phone file
-  // (`mobileFile`), WebP. Demo geckos have no photos in the sandbox the
-  // captures were made in, so photo slots show the app's own placeholder.
+  // (`mobileFile`), WebP. Recaptured with bundled, owner-authorized adult
+  // gecko photos from the admin collection; no external photo hosts needed.
   {
     id: 'gecko-record',
     file: 'gecko-record.webp',
@@ -72,8 +72,7 @@ export const PRODUCT_TOUR_SLIDES = [
     captureUrl: '/Portfolio (demo)',
     shipped: true,
   },
-  // Not captured yet: these need real photos, which the demo cannot show
-  // without network access to its photo hosts. Capture on production.
+  // Additional feature slides have not been captured yet.
   {
     id: 'dashboard',
     file: 'dashboard.webp',

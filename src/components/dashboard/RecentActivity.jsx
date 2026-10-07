@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { memo, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Image as ImageIcon } from 'lucide-react';
@@ -28,7 +29,7 @@ const Tile = memo(function Tile({ image, uploader: _uploader, onClick }) {
                 willChange: 'auto',
             }}
         >
-            <img
+            <GeckoImage
                 src={image.image_url}
                 alt={morph}
                 loading="lazy"

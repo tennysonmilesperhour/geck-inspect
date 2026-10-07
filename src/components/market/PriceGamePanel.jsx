@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useState } from 'react';
 import { ArrowRight, ExternalLink, Flame, Loader2, Share2, Target, Trophy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -154,11 +155,7 @@ function RoundCard({ round, sellsQuestion, onGuessed, onPredicted, onNext, nextL
       <CardContent className="p-4 md:p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           <div className="aspect-square w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
-            {round.image_url ? (
-              <img src={round.image_url} alt={label} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-sm text-slate-500">No photo</div>
-            )}
+            <GeckoImage src={round.image_url} alt={label} className="w-full h-full object-cover" />
           </div>
           <div className="space-y-3 min-w-0">
             <div>

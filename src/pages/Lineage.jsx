@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Seo from '@/components/seo/Seo';
 import { useLocation } from 'react-router-dom';
@@ -420,7 +421,7 @@ const UnknownCardNode = ({ size = 'normal' }) => {
      const cardSize = size === 'nano' ? 'w-14 h-20' : size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
      return (
          <div className={`flex-shrink-0 relative overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-lg ${cardSize}`}>
-             <img 
+             <GeckoImage
                  src={DEFAULT_GECKO_IMAGE} 
                  alt="Unknown" 
                  className="w-full h-full object-cover opacity-50"

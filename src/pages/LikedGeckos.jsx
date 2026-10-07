@@ -1,3 +1,4 @@
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
@@ -119,7 +120,7 @@ function LikedGeckosScreen() {
                                                 alt={gecko.name}
                                                 width={500}
                                                 aspect="square"
-                                                fallback="https://geckinspect.com/gecko-placeholder.png"
+                                                fallback={DEFAULT_GECKO_IMAGE}
                                                 className="group-hover:scale-105 transition-transform"
                                             />
                                         </Link>

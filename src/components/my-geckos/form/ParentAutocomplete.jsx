@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,7 +81,7 @@ export default function ParentAutocomplete({
                 setShowSuggestions(false);
               }}
             >
-              <img
+              <GeckoImage
                 src={g.image_urls?.[0] || DEFAULT_THUMB}
                 alt={g.name}
                 className="w-6 h-6 rounded object-cover flex-shrink-0"

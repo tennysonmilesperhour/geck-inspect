@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 
 import { useState, useEffect } from 'react';
 import { Gecko, User } from '@/entities/all';
@@ -157,17 +158,7 @@ export default function MyListingsPage() {
         return (
             <Card>
                 <div className="relative">
-                    {primaryImage ? (
-                        <img 
-                            src={primaryImage} 
-                            alt={gecko.name}
-                            className="w-full h-32 object-cover rounded-t-lg"
-                        />
-                    ) : (
-                        <div className="w-full h-32 rounded-t-lg bg-slate-800 flex items-center justify-center">
-                            <ShoppingCart className="w-8 h-8 text-slate-500" />
-                        </div>
-                    )}
+                    <GeckoImage src={primaryImage} alt={gecko.name} className="w-full h-32 object-cover rounded-t-lg" />
                     <div className="absolute top-2 right-2 flex gap-2">
                         <Badge className={`text-xs border ${
                             gecko.status === 'For Sale' ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' :

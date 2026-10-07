@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +43,7 @@ function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {matches.slice(0, 6).map((match, index) => (
               <div key={match.id} className="space-y-1">
-                <img
+                <GeckoImage
                   src={match.image_url}
                   alt={`Visual comparison labeled ${labelFor(match.primary_morph)}`}
                   className="aspect-square w-full object-cover rounded-md border border-slate-700"

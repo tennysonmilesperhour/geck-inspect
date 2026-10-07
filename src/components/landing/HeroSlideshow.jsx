@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { ArrowRight, Play } from 'lucide-react';
+import { DEMO_GECKO_PHOTOS } from '@/lib/demoGeckoPhotos';
 
 /**
  * Hero slideshow for the public landing page.
@@ -43,6 +44,9 @@ const FEATURE_CAPTIONS = [
 ];
 
 const ADVANCE_MS = 4500;
+const BUNDLED_SLIDES = DEMO_GECKO_PHOTOS.slice(0, 6).map(photo => ({
+  id: photo.src, name: photo.name, hatch_date: photo.hatchDate, _img: photo.src,
+}));
 
 function pickCaption(index) {
   return FEATURE_CAPTIONS[index % FEATURE_CAPTIONS.length];
@@ -71,34 +75,37 @@ function morphLine(g) {
 }
 
 export default function HeroSlideshow() {
-  const [slides, setSlides] = useState(null);
+  const [slides, setSlides] = useState(BUNDLED_SLIDES);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    const adultCutoff = new Date();
+    adultCutoff.setFullYear(adultCutoff.getFullYear() - 2);
     supabase
       .from('geckos')
       .select('id, name, sex, hatch_date, morph_tags, morphs_traits, image_urls, sire_name, dam_name')
       .eq('owner_profile_id', FOUNDER_PROFILE_ID)
       .eq('gallery_display', true)
       .eq('is_public', true)
+      .lte('hatch_date', adultCutoff.toISOString().slice(0, 10))
       .limit(8)
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error || !data) {
-          setSlides([]);
+          setSlides(BUNDLED_SLIDES);
           return;
         }
         const filtered = data
           .map((g) => ({ ...g, _img: firstImageUrl(g.image_urls) }))
           .filter((g) => !!g._img)
           .slice(0, 6);
-        setSlides(filtered);
+        setSlides(filtered.length ? filtered : BUNDLED_SLIDES);
       })
       .catch(() => {
         if (cancelled) return;
-        setSlides([]);
+        setSlides(BUNDLED_SLIDES);
       });
     return () => {
       cancelled = true;
@@ -134,6 +141,12 @@ export default function HeroSlideshow() {
               src={g._img}
               alt={g.name || 'A crested gecko in the Geck Inspect platform'}
               loading={i === 0 ? 'eager' : 'lazy'}
+              onError={() => {
+                const fallback = BUNDLED_SLIDES[i % BUNDLED_SLIDES.length];
+                if (g._img !== fallback._img) {
+                  setSlides(currentSlides => currentSlides.map((slide, index) => index === i ? fallback : slide));
+                }
+              }}
               className={
                 'absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ' +
                 (i === active ? 'opacity-100' : 'opacity-0')

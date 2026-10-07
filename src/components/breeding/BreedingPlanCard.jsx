@@ -1,3 +1,5 @@
+import GeckoImage from '@/components/shared/GeckoImage';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { Egg, BreedingPlan, User } from '@/entities/all';
 import { useToast } from '@/components/ui/use-toast';
@@ -254,8 +256,8 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                         <div className="flex flex-1 flex-col sm:flex-row min-w-0">
                             <div className="flex w-full sm:w-32 lg:w-40 flex-shrink-0">
                                 <div className="w-1/2 h-32 sm:h-28 lg:h-32 overflow-hidden">
-                                    <img
-                                        src={sire?.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'}
+                                    <GeckoImage
+                                        src={sire?.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                                         alt={sire?.name}
                                         className="w-full h-full object-cover"
                                         loading="lazy"
@@ -263,8 +265,8 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                     />
                                 </div>
                                 <div className="w-1/2 h-32 sm:h-28 lg:h-32 overflow-hidden">
-                                    <img
-                                        src={dam?.image_urls?.[0] || 'https://geckinspect.com/gecko-placeholder.png'}
+                                    <GeckoImage
+                                        src={dam?.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                                         alt={dam?.name}
                                         className="w-full h-full object-cover"
                                         loading="lazy"

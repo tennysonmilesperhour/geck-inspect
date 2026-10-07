@@ -1,3 +1,4 @@
+import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { ArrowRightLeft, ArrowUpRight, ArrowDownLeft, ExternalLink, Clock, Check, Ban, Hourglass, Copy, Mail, Loader2 } from 'lucide-react';
@@ -123,11 +124,7 @@ function TransferRow({ transfer, animal, direction, onChanged }) {
 
   return (
     <div className="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-600 transition-colors">
-      {img ? (
-        <img src={img} alt={animal?.name || 'Animal'} className="w-12 h-12 rounded-lg object-cover shrink-0" />
-      ) : (
-        <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-xl shrink-0">🦎</div>
-      )}
+      <GeckoImage src={img} alt={animal?.name || "Animal"} className="w-12 h-12 rounded-lg object-cover shrink-0" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">

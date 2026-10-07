@@ -1,3 +1,5 @@
+import { DEMO_GECKO_PHOTOS } from '@/lib/demoGeckoPhotos';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { growthBandAt } from '@/lib/growthBand';
 
 /**
@@ -10,68 +12,33 @@ import { growthBandAt } from '@/lib/growthBand';
  * Design notes:
  * - Every mock record uses `created_by: GUEST_EMAIL` so pages that
  *   filter "mine" by email match cleanly.
- * - Images come from Picsum (https://picsum.photos/seed/<seed>/...).
- *   Picsum is a free service that returns stable Unsplash photos keyed
- *   by a seed string. They are used here for UI demonstration only,
- *   the photos don't necessarily depict crested geckos, let alone the
- *   specific traits each mock record claims to have. The guest-mode
- *   disclaimer toast makes this explicit to the visitor.
+ * - Photos are bundled, owner-authorized images of age-verified adults
+ *   from the admin collection. Mock names and traits remain illustrative.
  * - Writes are still blocked by `blockIfGuest()` in the entity layer;
  *   this module only powers reads.
  */
 
 export const GUEST_EMAIL = 'guest@local';
 
-// Fair-use crested gecko photos from Wikimedia Commons, served via the
-// stable Special:FilePath redirect. Every file below is licensed under
-// CC-BY-SA or equivalent and hotlinkable for demonstration. Because the
-// demo assigns these images to mock records by index, not by actual
-// morph, the guest disclaimer toast explicitly notes the photo may
-// not depict the traits the record claims.
-const GECKO_PHOTOS = [
-  'https://commons.wikimedia.org/wiki/Special:FilePath/Crested_gecko_2.JPG?width=640',
-  'https://commons.wikimedia.org/wiki/Special:FilePath/Crested_gecko_-_1.jpg?width=640',
-  'https://commons.wikimedia.org/wiki/Special:FilePath/Correlophus_ciliatus_-_Crested_gecko_02.jpg?width=640',
-  'https://commons.wikimedia.org/wiki/Special:FilePath/Rhacodactylus_ciliatus_-_Tiergarten_Sch%C3%B6nbrunn_2.jpg?width=640',
-  'https://commons.wikimedia.org/wiki/Special:FilePath/Kronengecko_Correlophus_ciliatus.jpg?width=640',
-  'https://commons.wikimedia.org/wiki/Special:FilePath/Correlophus_ciliatus_lateral.jpg?width=640',
-  'https://commons.wikimedia.org/wiki/Special:FilePath/Rhacodactylus_ciliatus.jpg?width=640',
-  'https://commons.wikimedia.org/wiki/Special:FilePath/Correlophus_ciliatus_Wilhelma.jpg?width=640',
-];
+// Real adult photos ship with previews and native builds, without hotlinks.
+const GECKO_PHOTOS = DEMO_GECKO_PHOTOS.map(photo => photo.src);
 
-// Inline SVG fallback (emerald card with the morph name) served as a
-// data URI so broken Wikimedia URLs never surface as a broken-image
-// icon in the demo. Consumers can set this as `onError` via the
-// exported fallbackForMorph() helper where it's reachable.
-export function fallbackForMorph(label = 'Crested Gecko') {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'>
-    <defs>
-      <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-        <stop offset='0' stop-color='#0d1f17'/>
-        <stop offset='1' stop-color='#1a3a2d'/>
-      </linearGradient>
-    </defs>
-    <rect width='600' height='600' fill='url(#g)'/>
-    <text x='300' y='300' text-anchor='middle' dominant-baseline='middle'
-      fill='#86efac' font-family='Inter, sans-serif' font-size='32' font-weight='700'>
-      ${String(label).replace(/[<>&]/g, '').slice(0, 24)}
-    </text>
-    <text x='300' y='350' text-anchor='middle' fill='#4ade80aa'
-      font-family='Inter, sans-serif' font-size='16'>
-      demo image
-    </text>
-  </svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+// Retained for consumers that explicitly request a demo image fallback.
+export function fallbackForMorph() {
+  return DEFAULT_GECKO_IMAGE;
 }
 
 // Deterministic photo pick so the same gecko always shows the same
 // photo across refreshes and navigations.
+const PHOTO_SEEDS = [
+  'diamond', 'ruby', 'thor', 'sunny', 'harley', 'spud', 'moss',
+  'nimbus', 'pebble', 'jasper', 'fern', 'cappy', 'ember', 'pixel',
+  'onyx', 'tiger', 'aria', 'bramble', 'willow',
+];
 const IMG = (seed) => {
-  let h = 0;
-  const str = String(seed);
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
-  const idx = Math.abs(h) % GECKO_PHOTOS.length;
-  return GECKO_PHOTOS[idx];
+  // Keep one real animal per sample record, including its extra photo slots.
+  const index = PHOTO_SEEDS.indexOf(String(seed).replace(/-\d+$/, ''));
+  return GECKO_PHOTOS[Math.max(0, index) % GECKO_PHOTOS.length];
 };
 
 const nowMs = Date.now();

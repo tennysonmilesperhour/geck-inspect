@@ -1,3 +1,5 @@
+import GeckoImage from '@/components/shared/GeckoImage';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -44,7 +46,7 @@ const INCUBATION_FALLBACK_DAYS = 75;
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const FALLBACK_PHOTO = 'https://geckinspect.com/gecko-placeholder.png';
+const FALLBACK_PHOTO = DEFAULT_GECKO_IMAGE;
 
 // Layout of one pair row. The timeline reads like a project roadmap (the
 // style GitHub Projects and Linear use for their roadmap views): every
@@ -243,13 +245,13 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
                 title="Open Breeding Management"
             >
                 <div className="flex flex-shrink-0">
-                    <img
+                    <GeckoImage
                         src={sire?.image_urls?.[0] || FALLBACK_PHOTO}
                         alt={sire?.name || 'Sire'}
                         className="w-9 h-9 rounded-full object-cover border-2 border-slate-700"
                         loading="lazy"
                     />
-                    <img
+                    <GeckoImage
                         src={dam?.image_urls?.[0] || FALLBACK_PHOTO}
                         alt={dam?.name || 'Dam'}
                         className="w-9 h-9 rounded-full object-cover border-2 border-slate-700 -ml-3"
