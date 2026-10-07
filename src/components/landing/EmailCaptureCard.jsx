@@ -137,7 +137,7 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="touch:min-h-11 inline-flex items-center justify-center gap-2 rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-700/50 px-5 py-3 text-sm font-semibold text-white transition-colors"
+                  className="home-glass-button home-glass-button--primary inline-flex items-center justify-center gap-2 px-5 py-3 text-sm"
                 >
                   {submitting ? (
                     <>

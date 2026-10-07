@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 import { captureEvent } from '@/lib/posthog';
 import '@/styles/layout-theme.css';
+import '@/styles/home.css';
 import {
   Dna,
   GitBranch,
@@ -489,7 +490,7 @@ export default function Home() {
       />
 
       <div
-        className="landing-font min-h-screen text-slate-100 relative"
+        className="home-page landing-font min-h-screen text-slate-100 relative"
         style={{ background: 'linear-gradient(135deg, #0a0f0a 0%, #1a2920 100%)' }}
       >
         {/* Jungle background, fixed so it parallax-feels as you scroll.
@@ -539,35 +540,32 @@ export default function Home() {
               Pricing
             </Link>
           </nav>
-          {/* One primary action per screen: the nav's filled button is the
-              same "start free" as the hero, and Sign in is a quiet link for
-              returning members (it used to be the brightest button on the
-              page, competing with the sign-up CTA). */}
+          {/* The brighter glass treatment keeps sign-up the primary action. */}
           {showGuestCta ? (
-            <div className="flex items-center gap-1 sm:gap-3">
-              <Link
-                to={createPageUrl('AuthPortal')}
-                onClick={() => captureEvent('landing_cta_clicked', { cta: 'nav', target: 'signin' })}
-                className="inline-flex items-center min-h-11 px-3 text-sm font-semibold text-slate-200 hover:text-white rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/AuthPortal?mode=signup"
-                onClick={() => captureEvent('landing_cta_clicked', { cta: 'nav', target: 'signup' })}
-                className="hidden sm:inline-flex"
-              >
-                <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button asChild variant="ghost" className="home-glass-button">
+                <Link
+                  to={createPageUrl('AuthPortal')}
+                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'nav', target: 'signin' })}
+                >
+                  Sign in
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className="home-glass-button home-glass-button--primary hidden sm:inline-flex">
+                <Link
+                  to="/AuthPortal?mode=signup"
+                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'nav', target: 'signup' })}
+                >
                   Start free
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           ) : (
-            <Link to={createPageUrl('Dashboard')}>
-              <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
+            <Button asChild variant="ghost" className="home-glass-button home-glass-button--primary">
+              <Link to={createPageUrl('Dashboard')}>
                 Dashboard
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </header>
 
@@ -594,40 +592,44 @@ export default function Home() {
             Value estimates from thousands of real listings, egg value before you pair, and a passport
             that hands each buyer the full history.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center lg:justify-start items-center">
             {showGuestCta ? (
               <>
-                <Link
-                  to="/AuthPortal?mode=signup"
-                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'signup' })}
+                <Button
+                  asChild
+                  size="lg"
+                  variant="ghost"
+                  className="home-glass-button home-glass-button--primary w-full sm:w-auto text-base px-8 py-3"
                 >
-                  <Button
-                    size="lg"
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
+                  <Link
+                    to="/AuthPortal?mode=signup"
+                    onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'signup' })}
                   >
                     Create free account
                     <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
                 <Button
                   size="lg"
                   variant="ghost"
                   onClick={() => handleContinueAsGuest('hero')}
-                  className="text-emerald-100 hover:bg-emerald-900/40 hover:text-white font-semibold text-base px-6 py-6 underline-offset-4 hover:underline"
+                  className="home-glass-button w-full sm:w-auto text-base px-6 py-3"
                 >
                   Or look around the demo collection
                 </Button>
               </>
             ) : (
-              <Link to={createPageUrl('Dashboard')}>
-                <Button
-                  size="lg"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
-                >
+              <Button
+                asChild
+                size="lg"
+                variant="ghost"
+                className="home-glass-button home-glass-button--primary w-full sm:w-auto text-base px-8 py-3"
+              >
+                <Link to={createPageUrl('Dashboard')}>
                   Open your dashboard
                   <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
           </div>
           {/* Risk reducers next to the button, each true today: the Free
@@ -932,7 +934,7 @@ export default function Home() {
         <section className="relative z-10 max-w-4xl mx-auto px-6 pb-24">
           <div className="gecko-card backdrop-blur p-8 md:p-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              About the crested gecko (<em>Correlophus ciliatus</em>)
+              About the crested gecko (Correlophus ciliatus)
             </h2>
             <div className="space-y-4 text-slate-300 leading-relaxed">
               <p>
@@ -966,29 +968,29 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to={createPageUrl('CareGuide')}>
-                <Button variant="outline" className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold backdrop-blur">
+              <Button asChild variant="ghost" className="home-glass-button">
+                <Link to={createPageUrl('CareGuide')}>
                   <BookOpen className="w-4 h-4 mr-2 text-emerald-300" />
                   Care Guide
-                </Button>
-              </Link>
-              <Link to={createPageUrl('MorphGuide')}>
-                <Button variant="outline" className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold backdrop-blur">
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className="home-glass-button">
+                <Link to={createPageUrl('MorphGuide')}>
                   <Dna className="w-4 h-4 mr-2 text-emerald-300" />
                   Morph Guide
-                </Button>
-              </Link>
-              <Link to={createPageUrl('GeneticsGuide')}>
-                <Button variant="outline" className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold backdrop-blur">
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className="home-glass-button">
+                <Link to={createPageUrl('GeneticsGuide')}>
                   Genetics
-                </Button>
-              </Link>
-              <Link to="/Membership">
-                <Button variant="outline" className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold backdrop-blur">
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className="home-glass-button">
+                <Link to="/Membership">
                   <DollarSign className="w-4 h-4 mr-2 text-emerald-300" />
                   Pricing
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
@@ -1039,40 +1041,44 @@ export default function Home() {
             <Smartphone className="w-4 h-4" />
             Add to your iOS or Android home screen, full-screen, like a native app, no app store needed.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-3">
             {showGuestCta ? (
               <>
-                <Link
-                  to="/AuthPortal?mode=signup"
-                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'bottom', target: 'signup' })}
+                <Button
+                  asChild
+                  size="lg"
+                  variant="ghost"
+                  className="home-glass-button home-glass-button--primary w-full sm:w-auto text-base px-8 py-3"
                 >
-                  <Button
-                    size="lg"
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
+                  <Link
+                    to="/AuthPortal?mode=signup"
+                    onClick={() => captureEvent('landing_cta_clicked', { cta: 'bottom', target: 'signup' })}
                   >
                     Create free account
                     <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
                 <Button
                   size="lg"
                   variant="ghost"
                   onClick={() => handleContinueAsGuest('bottom')}
-                  className="text-emerald-100 hover:bg-emerald-900/40 hover:text-white font-semibold text-base px-6 py-6 underline-offset-4 hover:underline"
+                  className="home-glass-button w-full sm:w-auto text-base px-6 py-3"
                 >
                   Or look around the demo collection
                 </Button>
               </>
             ) : (
-              <Link to={createPageUrl('Dashboard')}>
-                <Button
-                  size="lg"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
-                >
+              <Button
+                asChild
+                size="lg"
+                variant="ghost"
+                className="home-glass-button home-glass-button--primary w-full sm:w-auto text-base px-8 py-3"
+              >
+                <Link to={createPageUrl('Dashboard')}>
                   Open your dashboard
                   <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
           </div>
         </section>

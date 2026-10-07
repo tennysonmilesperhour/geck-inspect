@@ -1,0 +1,120 @@
+/* Home-page actions use neutral glass, independent of a saved app accent.
+   Keep the treatment scoped so it does not change signed-in app controls. */
+.home-page .home-glass-button {
+  position: relative;
+  isolation: isolate;
+  min-height: 44px;
+  height: auto;
+  max-width: 100%;
+  border: 1px solid rgb(255 255 255 / 0.24);
+  border-radius: 999px;
+  background-color: rgb(10 24 20 / 0.38);
+  background-image:
+    radial-gradient(ellipse at 16% 0%, rgb(255 255 255 / 0.16), transparent 60%),
+    linear-gradient(165deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.025) 48%, rgb(255 255 255 / 0.06));
+  color: #f7faf9;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  white-space: normal;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.32),
+    inset 0 -1px 0 rgb(255 255 255 / 0.06),
+    0 4px 14px rgb(0 0 0 / 0.18);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+/* Light catches opposite edges of the curved glass without covering text. */
+.home-page .home-glass-button::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.65), transparent 35%, transparent 65%, rgb(255 255 255 / 0.28)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.home-page .home-glass-button--primary {
+  border-color: rgb(255 255 255 / 0.4);
+  background-color: rgb(214 247 233 / 0.13);
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgb(255 255 255 / 0.28), transparent 65%),
+    linear-gradient(165deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.035) 50%, rgb(210 245 229 / 0.1));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    inset 0 -1px 0 rgb(255 255 255 / 0.1),
+    0 6px 22px rgb(0 0 0 / 0.22);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-page .home-glass-button:not(:disabled):hover {
+    background-color: rgb(223 249 238 / 0.17);
+    border-color: rgb(255 255 255 / 0.55);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -1px 0 rgb(255 255 255 / 0.1), 0 8px 24px rgb(0 0 0 / 0.24);
+  }
+}
+
+.home-page .home-glass-button:focus-visible {
+  outline: 2px solid #e4fff3;
+  outline-offset: 4px;
+}
+
+.home-page .home-glass-button:not(:disabled):active {
+  transform: translateY(0) scale(0.98);
+  background-color: rgb(223 249 238 / 0.1);
+}
+
+.home-page .home-glass-button:disabled {
+  cursor: wait;
+  color: rgb(247 250 249 / 0.6);
+  border-color: rgb(255 255 255 / 0.15);
+  background-color: rgb(10 24 20 / 0.5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.15);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .home-page .home-glass-button {
+    background-color: #182a24;
+  }
+  .home-page .home-glass-button--primary {
+    background-color: #30483d;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page .home-glass-button {
+    transition: none;
+  }
+  .home-page .home-glass-button:not(:disabled):is(:hover, :active) {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .home-page .home-glass-button {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    text-shadow: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .home-page .home-glass-button::before {
+    display: none;
+  }
+  .home-page .home-glass-button:focus-visible {
+    outline-color: Highlight;
+  }
+}
