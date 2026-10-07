@@ -7,41 +7,21 @@
  */
 
 export const VOICE_PRESETS = [
-  {
-    key: 'educator',
-    label: 'Educator',
-    blurb: 'Teaches genetics or husbandry as you go. Credible and warm.',
-  },
-  {
-    key: 'storyteller',
-    label: 'Storyteller',
-    blurb: 'Personal, journey-focused, present-tense moments.',
-  },
-  {
-    key: 'hobbyist_hype',
-    label: 'Hobbyist hype',
-    blurb: 'Excited peer-to-peer voice. Reads like a Discord post.',
-  },
-  {
-    key: 'pro_breeder',
-    label: 'Pro breeder',
-    blurb: 'Clinical and project-forward. Lineage-led, reputation-building.',
-  },
-  {
-    key: 'casual',
-    label: 'Casual',
-    blurb: 'Low-key friend tone. Asks the audience an open question.',
-  },
+  { key: 'casual', label: 'Casual', blurb: 'Like texting a friend who also keeps cresties.' },
+  { key: 'storyteller', label: 'Storyteller', blurb: 'Tells the small true moment, in order, with one real detail.' },
+  { key: 'hobbyist_hype', label: 'Excited', blurb: 'Can\'t wait to show you. Energy from specifics, not adjectives.' },
+  { key: 'educator', label: 'Teacher', blurb: 'Explains one thing this gecko shows, like you would at an expo table.' },
+  { key: 'pro_breeder', label: 'Breeder', blurb: 'Plain and precise. The facts a serious buyer wants.' },
 ];
 
 export const POST_TEMPLATES = [
   { key: 'meet',        label: 'Meet / introduce',     blurb: 'New gecko, holdback reveal, fresh face on the rack.' },
-  { key: 'available',   label: 'Available for sale',   blurb: 'Sales post. Will include disclaimers automatically.' },
+  { key: 'available',   label: 'Available for sale',   blurb: 'Sales post. Plain facts a buyer needs, tail loss disclosed.' },
   { key: 'pairing',     label: 'Pairing announcement', blurb: 'Paired this gecko with another. Lineage-aware.' },
   { key: 'eggs',        label: 'Eggs laid / due',      blurb: 'Update on a clutch in incubation.' },
   { key: 'hatchling',   label: 'Hatchling debut',      blurb: 'New hatchling, often grouped with siblings.' },
   { key: 'milestone',   label: 'Milestone',            blurb: 'Weight, age, first shed, first ovulation.' },
-  { key: 'throwback',   label: 'Throwback / glow-up',  blurb: 'Then vs now. Pulls from oldest and newest photos.' },
+  { key: 'throwback',   label: 'Throwback / glow-up',  blurb: 'Then and now, with real dates and weights.' },
   { key: 'lineage',     label: 'Lineage spotlight',    blurb: 'Daughter of X, paired with Y. Story-led.' },
   { key: 'educational', label: 'Educational',          blurb: "Explains this gecko's morph or trait combo to the audience." },
 ];
@@ -76,6 +56,22 @@ const PUBLISH_ERROR_MESSAGES = {
   forbidden: 'You can only publish your own posts.',
   publish_failed: 'The post did not go out. Try again, or copy the text and post it yourself.',
 };
+
+// Member-facing wording for generate-social-post error codes.
+const GENERATION_ERROR_MESSAGES = {
+  iteration_cap_reached: 'You have used all 10 tries on this post. Copy or publish it, or close this and start a new post.',
+  post_not_found: 'This draft was not saved. Close the composer and try again.',
+  forbidden: 'This draft belongs to a different account.',
+  declined: 'The writer could not draft this one. Try rewording what is going on.',
+  no_variants_returned: 'The drafts came back empty. Try again.',
+  anthropic_failed: 'The writer is busy right now. Try again in a minute.',
+  anthropic_unreachable: 'The writer is busy right now. Try again in a minute.',
+  anthropic_key_missing: 'Drafting is not available right now. Please try again later.',
+};
+
+export function generationErrorMessage(code) {
+  return GENERATION_ERROR_MESSAGES[code] || 'Something went wrong writing the drafts. Try again.';
+}
 
 export function publishErrorMessage(code, detail) {
   const fromDetail = typeof detail === 'string' ? detail.split(':')[0].trim() : '';

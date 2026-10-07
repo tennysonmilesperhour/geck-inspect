@@ -104,14 +104,14 @@ function ProductTourSlides() {
   return (
     <section className="relative z-10 max-w-4xl mx-auto px-6 pb-16">
       <div
-        className="relative rounded-lg overflow-hidden border border-emerald-500/25 bg-slate-950/60 shadow-2xl"
+        className="home-glass-panel p-1.5"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         {/* 16:10 frame on laptops; on phones a 4:5 frame showing the phone
             capture (mobileFile), so the text in the screenshot stays
             readable instead of shrinking a laptop screen to 390 px. */}
-        <div className={'relative bg-slate-900 ' + (HAS_PHONE_SHOTS ? 'aspect-[4/5] sm:aspect-[16/10]' : 'aspect-[16/10]')}>
+        <div className={'relative overflow-hidden rounded-[14px] bg-slate-900 ' + (HAS_PHONE_SHOTS ? 'aspect-[4/5] sm:aspect-[16/10]' : 'aspect-[16/10]')}>
           {statuses.map((s, i) => {
             const visibleIndex = visible.findIndex((v) => v.id === s.id);
             const isActive = visibleIndex === active && s.ok !== false;
@@ -168,7 +168,7 @@ function ProductTourSlides() {
         </div>
 
         {/* Footer dots */}
-        <div className="flex items-center justify-between px-4 py-3 bg-slate-950/70 border-t border-slate-800/60">
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="text-[11px] text-slate-400">
             The demo collection: sample geckos, value estimates from real listings.
           </div>

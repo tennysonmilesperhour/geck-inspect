@@ -90,3 +90,7 @@ Deployed on 5 October (the live files match the repo byte for byte):
 New on `main`:
 
 - `.github/workflows/daily-canary.yml`: every morning it checks that new listings are reaching the value estimates, prices four reference geckos, and runs two real identifications. A failure emails the repo owner. About 6 cents a day. Run it once by hand (Actions > daily-canary > Run workflow) to confirm the secrets work.
+
+## Added 7 October: Promote drafting
+
+Deployed: `generate-social-post` v22 (matches the repo). Not yet exercised against the live Anthropic API because this session has no key. First check: as an admin, open Promote, pick a gecko with photos and weights, write a line under "What's going on", and press Write 3 drafts. If it errors, the function log line `anthropic failed` shows why.

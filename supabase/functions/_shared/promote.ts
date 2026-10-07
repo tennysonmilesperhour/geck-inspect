@@ -129,3 +129,16 @@ export function blueskyPostRecord(text: string, now = new Date()) {
     ...(facets.length > 0 ? { facets } : {}),
   };
 }
+
+// Drafts must never carry em or en dashes (they read as AI-written to
+// this audience). The prompt forbids them; this catches any that slip
+// through. A dash between digits ("3\u20135g") becomes a hyphen, any other
+// dash becomes a comma.
+export function scrubDashes(text: string): string {
+  return String(text || "")
+    .replace(/(\d)\s*[\u2013\u2014]\s*(\d)/g, "$1-$2")
+    .replace(/\s*[\u2013\u2014]\s*([.,!?;:)]|$)/gm, "$1")
+    .replace(/^\s*[\u2013\u2014]\s*/gm, "")
+    .replace(/\s*[\u2013\u2014]\s*/g, ", ")
+    .replace(/,\s*,/g, ",");
+}
