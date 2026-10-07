@@ -1,7 +1,7 @@
 // Supabase Edge Function: store-stripe-webhook
 //
 // Receives Stripe events for store checkout sessions, marks orders paid,
-// expands order items from the cart snapshot, mints the guest signup
+// verifies the immutable checkout snapshot, mints the guest signup
 // grant if eligible, and triggers fulfillment routing per item.
 //
 // Idempotent on stripe_event_id; safe to receive duplicates.
@@ -23,6 +23,7 @@
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { paidOrderAmounts } from "../_shared/storeOrderSnapshot.js";
 
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
@@ -137,31 +138,19 @@ serve(async (req) => {
     const cartId = (session.metadata as Record<string, string> | null)?.cart_id;
     if (!orderId) return new Response("no_order_id", { status: 200 });
 
-    // Pull line items so we know what to write to store_order_items.
-    let cartItems: Array<{
-      id: string;
-      quantity: number;
-      unit_price_cents_snapshot: number;
-      customization: Record<string, unknown> | null;
-      product: {
-        id: string;
-        name: string;
-        vendor_id: string;
-        vendor_sku: string | null;
-        vendor_extra: Record<string, unknown> | null;
-        fulfillment_mode: string;
-      } | null;
-    }> = [];
-    if (cartId) {
-      const { data } = await supabase
-        .from("store_cart_items")
-        .select(`
-          id, quantity, unit_price_cents_snapshot, customization,
-          product:store_products ( id, name, vendor_id, vendor_sku, vendor_extra, fulfillment_mode )
-        `)
-        .eq("cart_id", cartId);
-      cartItems = (data as typeof cartItems) || [];
-    }
+    // Delayed payment methods can complete Checkout before funds arrive.
+    if (session.payment_status !== "paid") return new Response("payment_pending", { status: 200 });
+    const { data: order, error: orderError } = await supabase.from("store_orders")
+      .select("id, status, stripe_checkout_session_id, subtotal_cents, shipping_cents")
+      .eq("id", orderId).maybeSingle();
+    if (orderError || !order) return new Response("order_not_found", { status: 500 });
+    if (order.status !== "pending") return new Response("already_processed", { status: 200 });
+    const { data: orderItems, error: itemsError } = await supabase.from("store_order_items")
+      .select("quantity, unit_price_cents, line_total_cents").eq("order_id", orderId);
+    if (itemsError) return new Response("order_snapshot_unavailable", { status: 500 });
+    let amounts;
+    try { amounts = paidOrderAmounts(session, order, orderItems || []); }
+    catch (error) { return new Response((error as Error).message, { status: 500 }); }
 
     const customerDetails = session.customer_details as
       | { email?: string; name?: string; address?: { country?: string; postal_code?: string; line1?: string; line2?: string; city?: string; state?: string } }
@@ -170,11 +159,6 @@ serve(async (req) => {
       | { address?: { country?: string; postal_code?: string; line1?: string; line2?: string; city?: string; state?: string }; name?: string }
       | null) || null;
 
-    const totalCents = Number(session.amount_total ?? 0);
-    const subtotalCents = Number(session.amount_subtotal ?? totalCents);
-    const taxCents = Number(((session as { total_details?: { amount_tax?: number } }).total_details?.amount_tax) ?? 0);
-    const shippingCents = Number(((session as { total_details?: { amount_shipping?: number } }).total_details?.amount_shipping) ?? 0);
-
     const updatePayload: Record<string, unknown> = {
       status: "paid",
       paid_at: new Date().toISOString(),
@@ -182,41 +166,17 @@ serve(async (req) => {
       stripe_customer_id: session.customer as string | null,
       customer_email: customerDetails?.email || (session.customer_email as string | null) || "",
       customer_name: customerDetails?.name || shipping?.name || null,
-      subtotal_cents: subtotalCents,
-      tax_cents: taxCents,
-      shipping_cents: shippingCents,
-      total_cents: totalCents,
+      ...amounts,
       ship_to: shipping?.address ? { ...shipping.address, name: shipping.name } : null,
     };
-    await supabase.from("store_orders").update(updatePayload).eq("id", orderId);
-
-    // Fan out cart items into store_order_items snapshots
-    if (cartItems.length > 0) {
-      const rows = cartItems
-        .filter((ci) => ci.product)
-        .map((ci) => ({
-          order_id: orderId,
-          product_id: ci.product!.id,
-          vendor_id: ci.product!.vendor_id,
-          fulfillment_mode: ci.product!.fulfillment_mode,
-          product_name_snapshot: ci.product!.name,
-          vendor_sku_snapshot: ci.product!.vendor_sku,
-          quantity: ci.quantity,
-          unit_price_cents: ci.unit_price_cents_snapshot,
-          line_total_cents: Number(ci.unit_price_cents_snapshot) * Number(ci.quantity),
-          vendor_extra_snapshot: ci.product!.vendor_extra,
-          // Custom sticker designs are snapshotted here so production
-          // prints from the order, not from a cart that may be edited or
-          // cleared after payment.
-          customization: ci.customization,
-        }));
-      if (rows.length > 0) await supabase.from("store_order_items").insert(rows);
-
-      // Convert the cart so it doesn't get reused.
-      await supabase
-        .from("store_carts")
-        .update({ status: "converted", updated_date: new Date().toISOString() })
-        .eq("id", cartId);
+    // The conditional update also protects against concurrent event deliveries.
+    const { data: paidOrder, error: paidError } = await supabase.from("store_orders")
+      .update(updatePayload).eq("id", orderId).eq("status", "pending").select("id").maybeSingle();
+    if (paidError) return new Response("order_update_failed", { status: 500 });
+    if (!paidOrder) return new Response("already_processed", { status: 200 });
+    if (cartId) {
+      await supabase.from("store_carts")
+        .update({ status: "converted", updated_date: new Date().toISOString() }).eq("id", cartId);
     }
 
     // Guest signup grant, only when there's no owner_user_id on the order

@@ -198,7 +198,7 @@ export default function StoreLanding() {
             <p className="text-sm text-slate-400 mt-1 leading-relaxed">
               Upload a photo of your gecko and pick a look: trading card,
               field-guide plate, passport, park badge, instant photo or show
-              rosette. Die-cut and weatherproof, $10 each plus $5 flat shipping.
+              rosette. Standard glossy $10, holographic $13. Mix 20+ for $5 standard or $7 holographic each, plus $5 flat shipping.
             </p>
           </div>
           <span className="text-sm font-semibold text-emerald-300 group-hover:text-emerald-200 shrink-0">

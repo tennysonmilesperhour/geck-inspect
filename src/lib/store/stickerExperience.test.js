@@ -42,7 +42,7 @@ describe('collection handoff and enclosure plaques', () => {
     expect(serialized.plaque_style).toBe('ivory');
     expect(serialized.scientific_name).toBe('Correlophus ciliatus');
     expect(serialized.photo_crop).toEqual({ x: 20, y: 72, zoom: 1.6 });
-    expect(serialized.finish).toBe('glossy');
+    expect(serialized.finish).toBe('holographic');
     expect(serializeDesign(serialized)).toEqual(serialized);
     expect(designSummary(serialized)).toContain('Enclosure plaque sticker');
   });

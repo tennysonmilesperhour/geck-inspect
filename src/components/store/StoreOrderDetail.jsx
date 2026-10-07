@@ -93,7 +93,7 @@ export default function StoreOrderDetail() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-slate-100">{it.product_name_snapshot}</div>
                     {design && (
-                      <div className="text-xs text-emerald-300/90 truncate">{shirt ? shirtDesignSummary(design) : designSummary(design)}</div>
+                      <div className="text-xs text-emerald-300/90 break-words">{shirt ? shirtDesignSummary(design) : designSummary(design)}</div>
                     )}
                     <div className="text-xs text-slate-500">
                       Qty {it.quantity} · {formatCents(it.unit_price_cents)} each · {it.fulfillment_status}

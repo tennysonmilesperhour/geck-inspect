@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   fetchCart,
   updateCartItemQuantity,
+  updateStickerFinish,
   removeFromCart,
   cartSubtotalCents,
   cartLineKey,
@@ -27,12 +28,14 @@ import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 import { captureEvent } from '@/lib/posthog';
+import { isPricedSticker, normalizeStickerFinish, STICKER_FINISHES, STICKER_BULK_MINIMUM, stickerCartQuantity } from '@/lib/store/stickerPricing';
 
 export default function StoreCart() {
   const { user, isAuthenticated } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [cartError, setCartError] = useState('');
   const [settings, setSettings] = useState({
     free_shipping_threshold_cents: 5000,
     loyalty_min_cart_cents: 4000,
@@ -47,6 +50,9 @@ export default function StoreCart() {
     try {
       const c = await fetchCart();
       setItems(c.items || []);
+      setCartError('');
+    } catch (error) {
+      setCartError(error.message || 'Your cart could not be loaded. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -92,9 +98,21 @@ export default function StoreCart() {
     try {
       await updateCartItemQuantity(item.id, cartLineKey(item), q);
       await refresh();
+    } catch (error) {
+      setCartError(error.message || 'The quantity could not be updated.');
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleFinish(item, finish) {
+    setBusy(true);
+    try {
+      await updateStickerFinish(item, finish);
+      await refresh();
+    } catch (error) {
+      setCartError(error.message || 'The finish could not be updated.');
+    } finally { setBusy(false); }
   }
 
   async function handleRemove(item) {
@@ -102,6 +120,8 @@ export default function StoreCart() {
     try {
       await removeFromCart(item.id, cartLineKey(item));
       await refresh();
+    } catch (error) {
+      setCartError(error.message || 'The item could not be removed.');
     } finally {
       setBusy(false);
     }
@@ -167,6 +187,7 @@ export default function StoreCart() {
   // Signup-grant preview for guests, see CLAUDE.md / proposal: the receipt
   // includes a 3-month Keeper trial for guest checkouts above the min order.
   const remainingForGrant = Math.max(0, settings.signup_grant_min_order_cents - subtotal);
+  const stickerQuantity = stickerCartQuantity(items);
 
   return (
     <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Cart' }]}>
@@ -177,6 +198,7 @@ export default function StoreCart() {
         noIndex
       />
       <h1 className="text-2xl font-bold text-slate-100 mb-4">Your cart</h1>
+      {cartError && <p role="alert" className="mb-4 rounded-lg bg-rose-950/30 p-3 text-sm text-rose-200">{cartError}</p>}
 
       {loading ? (
         <div className="h-40 flex items-center justify-center text-slate-500 text-sm">Loading…</div>
@@ -192,6 +214,11 @@ export default function StoreCart() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
           <div className="space-y-3">
+            {stickerQuantity > 0 && <div className="rounded-xl border border-emerald-800/60 bg-emerald-950/30 p-4 text-sm" aria-live="polite">
+              <p className="font-semibold text-emerald-100">{stickerQuantity >= STICKER_BULK_MINIMUM ? `Bulk pricing applied to all ${stickerQuantity} stickers` : `${STICKER_BULK_MINIMUM - stickerQuantity} more stickers to unlock bulk pricing`}</p>
+              <p className="mt-1 text-xs text-slate-300">20+ across all designs and finishes: $5 standard, $7 holographic each. Below 20: $10 standard, $13 holographic.</p>
+              <Link to="/Store/stickers" className="inline-block mt-2 min-h-10 py-2 text-xs text-emerald-200 underline">Create another sticker design</Link>
+            </div>}
             {items.map((item) => {
               const p = item.product;
               const sticker = isCustomStickerLine(item);
@@ -221,19 +248,31 @@ export default function StoreCart() {
                       {p?.name}
                     </Link>
                     {design && (
-                      <div className="text-xs text-emerald-300/90 mt-0.5 truncate">
+                      <div className="text-xs text-emerald-300/90 mt-0.5 break-words">
                         {shirt ? shirtDesignSummary(design) : designSummary(design)}
                       </div>
                     )}
                     <div className="text-xs text-slate-500 mt-0.5">
                       {formatCents(item.unit_price_cents_snapshot ?? p?.our_price_cents)} each
                     </div>
+                    {isPricedSticker(item) && <label className="mt-2 block text-xs text-slate-400">Finish
+                      <select aria-label={`Finish for ${design?.name || p.name}`} value={normalizeStickerFinish(design?.finish)} disabled={busy} onChange={(event) => handleFinish(item, event.target.value)} className="ml-2 min-h-10 max-w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-slate-200">
+                        {STICKER_FINISHES.map((finish) => <option key={finish.value} value={finish.value}>{finish.label}</option>)}
+                      </select>
+                    </label>}
                     <div className="flex items-center gap-2 mt-2">
-                      <Button size="sm" className="touch:min-w-11" variant="ghost" disabled={busy} onClick={() => handleQty(item, item.quantity - 1)}>
+                      <Button size="sm" aria-label={`Decrease quantity for ${design?.name || p?.name}`} className="touch:min-w-11" variant="ghost" disabled={busy} onClick={() => handleQty(item, item.quantity - 1)}>
                         <Minus className="w-3.5 h-3.5" />
                       </Button>
-                      <span className="w-7 text-center text-sm text-slate-200">{item.quantity}</span>
-                      <Button size="sm" className="touch:min-w-11" variant="ghost" disabled={busy} onClick={() => handleQty(item, item.quantity + 1)}>
+                      <input key={item.quantity} aria-label={`Quantity for ${design?.name || p?.name}`} type="number" inputMode="numeric" min="1" max="999999" step="1" defaultValue={item.quantity} disabled={busy} onBlur={async (event) => {
+                        const input = event.currentTarget;
+                        const next = Number(event.target.value);
+                        if (Number.isSafeInteger(next) && next > 0 && next <= 999999 && next !== item.quantity) await handleQty(item, next);
+                        // A successful refresh replaces this keyed input. On failure,
+                        // restore the saved quantity so it agrees with the displayed total.
+                        input.value = String(item.quantity);
+                      }} onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }} className="w-16 min-h-10 rounded border border-slate-700 bg-slate-950 text-center text-sm text-slate-200" />
+                      <Button size="sm" aria-label={`Increase quantity for ${design?.name || p?.name}`} className="touch:min-w-11" variant="ghost" disabled={busy} onClick={() => handleQty(item, item.quantity + 1)}>
                         <Plus className="w-3.5 h-3.5" />
                       </Button>
                       <Button
@@ -241,6 +280,7 @@ export default function StoreCart() {
                         variant="ghost"
                         className="touch:min-w-11 text-rose-300 hover:bg-rose-500/10 ml-auto"
                         disabled={busy}
+                        aria-label={`Remove ${design?.name || p?.name}`}
                         onClick={() => handleRemove(item)}
                       >
                         <Trash2 className="w-3.5 h-3.5" />

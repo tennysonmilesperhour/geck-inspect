@@ -13,6 +13,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { isPricedSticker, normalizeStickerFinish, priceCartItems, STICKER_FINISHES, validateCartQuantity } from './stickerPricing';
 
 const SESSION_KEY = 'gi_store_session_token';
 const GUEST_CART_KEY = 'gi_store_guest_cart_v1';
@@ -109,12 +110,12 @@ export async function fetchCart() {
       .eq('cart_id', cart.id)
       .order('created_date', { ascending: true });
     if (error) throw error;
-    return { mode: 'user', cart, items: items || [] };
+    return { mode: 'user', cart, items: priceCartItems(items || []) };
   }
   // Guest cart from localStorage. Items are stored as
   //   { product_id, quantity, unit_price_cents_snapshot, product:{...} }
   const guest = readGuestCart();
-  return { mode: 'guest', cart: { id: null, session_token: getSessionToken() }, items: guest.items };
+  return { mode: 'guest', cart: { id: null, session_token: getSessionToken() }, items: priceCartItems(guest.items) };
 }
 
 /**
@@ -128,6 +129,7 @@ export async function fetchCart() {
  */
 export async function addToCart(product, quantity = 1, customization = null) {
   if (!product || !product.id) throw new Error('addToCart: product required');
+  validateCartQuantity(quantity);
   const user = await getCurrentUser();
   const unitPrice = product.our_price_cents ?? 0;
   if (user) {
@@ -182,9 +184,49 @@ export async function addToCart(product, quantity = 1, customization = null) {
   writeGuestCart(guest);
 }
 
+/** Add both finishes together, so a failed insert cannot leave half a set. */
+export async function addStickerToCart(product, design, quantities) {
+  if (!product?.id || !isPricedSticker({ product })) throw new Error('This sticker is unavailable.');
+  const lines = STICKER_FINISHES.map(({ value }) => ({
+    product_id: product.id,
+    product,
+    quantity: quantities[value] ?? 0,
+    customization: { ...design, finish: value },
+  })).filter((line) => line.quantity !== 0);
+  if (!lines.length) throw new Error('Choose at least one sticker.');
+  const current = await fetchCart();
+  const priced = priceCartItems([...current.items, ...lines]);
+  const additions = priced.slice(current.items.length);
+  if (current.mode === 'user') {
+    const { error } = await supabase.from('store_cart_items').insert(additions.map(({ product: _product, ...line }) => ({
+      ...line, cart_id: current.cart.id,
+    })));
+    if (error) throw error;
+  } else {
+    writeGuestCart({ items: [...current.items, ...additions.map((line) => ({ ...line, line_id: newLineId() }))] });
+  }
+  return { ...current, items: priced };
+}
+
+export async function updateStickerFinish(item, finish) {
+  if (!isPricedSticker(item)) throw new Error('Choose a custom sticker to change its finish.');
+  const customization = { ...item.customization, finish: normalizeStickerFinish(finish) };
+  const user = await getCurrentUser();
+  if (user) {
+    const { error } = await supabase.from('store_cart_items')
+      .update({ customization, updated_date: new Date().toISOString() }).eq('id', item.id);
+    if (error) throw error;
+  } else {
+    const guest = readGuestCart();
+    const line = guest.items.find((candidate) => guestLineKey(candidate) === cartLineKey(item));
+    if (line) { line.customization = customization; writeGuestCart(guest); }
+  }
+}
+
 export async function updateCartItemQuantity(itemId, lineKey, quantity) {
   const user = await getCurrentUser();
   if (quantity <= 0) return removeFromCart(itemId, lineKey);
+  validateCartQuantity(quantity);
   if (user) {
     const { error } = await supabase
       .from('store_cart_items')
@@ -217,7 +259,7 @@ export async function removeFromCart(itemId, lineKey) {
 }
 
 export function cartSubtotalCents(items) {
-  return (items || []).reduce(
+  return priceCartItems(items || []).reduce(
     (sum, i) =>
       sum + Number(i.unit_price_cents_snapshot ?? i.product?.our_price_cents ?? 0) * (i.quantity || 0),
     0

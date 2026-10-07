@@ -7,15 +7,14 @@
  *
  * The finished design is stored as the `customization` jsonb blob on the
  * cart line (store_cart_items.customization), snapshotted onto the order
- * line at payment, and printed from there. Nothing here is priced
- * separately: every sticker is a flat $10 regardless of the options
- * chosen, so the cart math stays trivial.
+ * line when checkout begins, and printed from there. Physical finish and
+ * the combined sticker quantity determine the price in stickerPricing.js.
  */
 
 import { themeFieldDefaults, THEME_FIELD_LIMITS, isCardTheme, stickerTheme } from '@/lib/store/stickerThemes';
+import { CUSTOM_STICKER_SLUG, normalizeStickerFinish, stickerFinishLabel, isPricedSticker } from './stickerPricing';
 
-export const CUSTOM_STICKER_SLUG = 'custom-pet-sticker';
-export const CUSTOM_STICKER_PRICE_CENTS = 1000;
+export { CUSTOM_STICKER_SLUG, CUSTOM_STICKER_PRICE_CENTS } from './stickerPricing';
 export const CUSTOM_STICKER_SHIPPING_CENTS = 500;
 export const CUSTOM_STICKER_DESIGN_KIND = 'custom_sticker';
 export const CUSTOM_STICKER_DESIGN_VERSION = 3;
@@ -53,7 +52,7 @@ export const CARD_STAGES = [
 
 export const CARD_LAYOUTS = [
   { value: 'classic', label: 'Classic collector', blurb: 'Golden frame, framed portrait, and the familiar original card proportions.' },
-  { value: 'full_art', label: 'Modern full art', blurb: 'An edge-to-edge portrait, layered detail, and a crisp silver frame. Printed color, no holo.' },
+  { value: 'full_art', label: 'Modern full art', blurb: 'An edge-to-edge portrait, layered detail, and a crisp silver frame. Available in standard glossy or holographic.' },
 ];
 
 export const BORDER_COLORS = [
@@ -212,6 +211,7 @@ export function stageEvolves(stage) {
 export function validateDesign(design) {
   const problems = [];
   if (!design) return ['Start a design first.'];
+  try { normalizeStickerFinish(design.finish); } catch { problems.push('Choose a standard glossy or holographic finish.'); }
   if (design.theme !== 'enclosure_plaque' && !design.photo_url) problems.push('Add a photo of your pet.');
   if (design.theme === 'enclosure_plaque') {
     if (!String(design.species_name || '').trim()) problems.push('Add the common species name.');
@@ -278,7 +278,7 @@ export function serializeDesign(design) {
     rarity: design.rarity || 'common',
     morph_line: clean(design.morph_line, FIELD_LIMITS.morph_line),
     size: design.size || '3in',
-    finish: 'glossy',
+    finish: normalizeStickerFinish(design.finish),
     theme: stickerTheme(design.theme).value,
     caption: clean(design.caption, THEME_FIELD_LIMITS.caption),
     hatch_label: clean(design.hatch_label, THEME_FIELD_LIMITS.hatch_label),
@@ -298,15 +298,16 @@ export function isCustomStickerLine(line) {
 /** One-line description for cart rows, order rows, and Stripe line items. */
 export function designSummary(design) {
   if (!design) return '';
+  const finish = stickerFinishLabel(design.finish);
   const size = STICKER_SIZES.find((s) => s.value === design.size)?.label || design.size;
   if (design.theme === 'enclosure_plaque') {
-    return [design.name, 'Enclosure plaque sticker', design.species_name, stickerDimensions(design).label].filter(Boolean).join(' · ');
+    return [design.name, 'Enclosure plaque sticker', design.species_name, stickerDimensions(design).label, finish].filter(Boolean).join(' · ');
   }
   if (!isCardTheme(design.theme)) {
-    return [design.name, stickerTheme(design.theme).label, design.morph_line, size].filter(Boolean).join(' · ');
+    return [design.name, stickerTheme(design.theme).label, design.morph_line, size, finish].filter(Boolean).join(' · ');
   }
   const type = cardType(design.type).label;
-  return [design.name, `${type} · ${design.hp} power`, size]
+  return [design.name, `${type} · ${design.hp} power`, size, finish]
     .filter(Boolean)
     .join(' · ');
 }
@@ -319,5 +320,5 @@ export function designSummary(design) {
  */
 export function stickerOnlyCart(items) {
   const list = items || [];
-  return list.length > 0 && list.every(isCustomStickerLine);
+  return list.length > 0 && list.every(isPricedSticker);
 }

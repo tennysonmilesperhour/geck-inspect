@@ -5,13 +5,15 @@ import StoreLayout from './StoreLayout';
 import StickerPreview from './StickerThemePreviews';
 import StickerMockup from './StickerMockup';
 import StickerPhotoEditor from './StickerPhotoEditor';
+import StickerOrderOptions from './StickerOrderOptions';
 import CardDetails, { ChoiceField, TextField } from './StickerFormFields';
 import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseClient';
 import { uploadFile } from '@/lib/uploadFile';
 import { convertHeicForUpload } from '@/lib/imageResize';
-import { addToCart } from '@/lib/store/cart';
+import { addStickerToCart, fetchCart } from '@/lib/store/cart';
+import { stickerCartQuantity, stickerUnitPriceCents, validateCartQuantity } from '@/lib/store/stickerPricing';
 import { formatCents } from '@/lib/store/format';
 import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 import { captureEvent } from '@/lib/posthog';
@@ -63,6 +65,8 @@ export default function CustomStickerStudio() {
   const [exporting, setExporting] = useState(false);
   const [view, setView] = useState('design');
   const [story, setStory] = useState('card');
+  const [quantities, setQuantities] = useState({ glossy: 1, holographic: 0 });
+  const [cartQuantity, setCartQuantity] = useState(0);
   const builderRef = useRef(null);
   const proofRef = useRef(null);
   const placementRef = useRef(null);
@@ -78,6 +82,7 @@ export default function CustomStickerStudio() {
     previousLocationRef.current = location.key;
     uploadRevisionRef.current += 1;
     setDesign(freshDesign(location)); setApproved(false); setAdded(false);
+    setQuantities({ glossy: 1, holographic: 0 });
     setStep(location.state?.stickerGecko ? 1 : 0); setError(''); setNotice(''); setUploading(false);
   }, [location]);
 
@@ -95,6 +100,14 @@ export default function CustomStickerStudio() {
       finally { if (!cancelled) setLoadingProduct(false); }
     }
     load();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!STORE_CHECKOUT_ENABLED) return;
+    let cancelled = false;
+    fetchCart().then((current) => { if (!cancelled) setCartQuantity(stickerCartQuantity(current.items)); })
+      .catch(() => { if (!cancelled) setNotice('Your saved cart could not be loaded. Final quantity pricing will be confirmed in your cart.'); });
     return () => { cancelled = true; };
   }, []);
 
@@ -143,7 +156,7 @@ export default function CustomStickerStudio() {
   }
 
   function useExample(example) {
-    const personal = { name: design.name, morph_line: design.morph_line, species_name: design.species_name, scientific_name: design.scientific_name, native_range: design.native_range, habitat: design.habitat, hatch_label: design.hatch_label, plaque_style: design.plaque_style, photo_url: design.photo_url, photo_path: design.photo_path, photo_crop: design.photo_crop, photo_treatment: design.photo_treatment };
+    const personal = { name: design.name, morph_line: design.morph_line, species_name: design.species_name, scientific_name: design.scientific_name, native_range: design.native_range, habitat: design.habitat, hatch_label: design.hatch_label, plaque_style: design.plaque_style, photo_url: design.photo_url, photo_path: design.photo_path, photo_crop: design.photo_crop, photo_treatment: design.photo_treatment, finish: design.finish };
     patch({ ...createDefaultDesign(), ...exampleAsStartingDesign(example), ...personal, version: createDefaultDesign().version });
     captureEvent('custom_sticker_template_selected', { template: example.id }); goToStep(1);
   }
@@ -153,18 +166,30 @@ export default function CustomStickerStudio() {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     objectUrlRef.current = null;
     setDesign(createDefaultDesign()); setApproved(false); setAdded(false); setError(''); setNotice(''); setStep(0);
+    setQuantities({ glossy: 1, holographic: 0 });
   }
 
   const isPlaque = design.theme === 'enclosure_plaque';
   const isCard = isCardTheme(design.theme);
   const dimensions = stickerDimensions(design);
   const problems = useMemo(() => validateDesign(design), [design]);
-  const unitPrice = product?.our_price_cents ?? CUSTOM_STICKER_PRICE_CENTS;
-  const total = unitPrice + CUSTOM_STICKER_SHIPPING_CENTS;
+  const quantity = quantities.glossy + quantities.holographic;
+  const combinedQuantity = cartQuantity + (added ? 0 : quantity);
+  const standardPrice = stickerUnitPriceCents('glossy', combinedQuantity);
+  const holographicPrice = stickerUnitPriceCents('holographic', combinedQuantity);
+  const subtotal = quantities.glossy * standardPrice + quantities.holographic * holographicPrice;
+  const total = subtotal + (quantity > 0 ? CUSTOM_STICKER_SHIPPING_CENTS : 0);
+  const finishSummary = quantities.glossy && quantities.holographic ? 'Standard glossy + holographic' : quantities.holographic ? 'Holographic vinyl' : 'Standard glossy vinyl';
   const storedPhoto = !design.photo_url || Boolean(design.photo_path) || /^https?:\/\//.test(design.photo_url);
-  const canAdd = STORE_CHECKOUT_ENABLED && !!product && !uploading && problems.length === 0 && approved && storedPhoto;
+  const canAdd = STORE_CHECKOUT_ENABLED && !!product && !uploading && problems.length === 0 && approved && storedPhoto && quantity > 0;
   const heroDesign = isPlaque ? PLAQUE_SAMPLE : SAMPLE;
-  const jsonLd = { '@type': 'Product', '@id': `${SITE_URL}/Store/stickers#product`, name: 'Custom gecko stickers and enclosure name plaques', url: `${SITE_URL}/Store/stickers`, image: `${SITE_URL}/store/custom-stickers/sticker-social.png`, description: 'Create an original collector-card sticker or an elegant enclosure species label with your gecko’s own details.', brand: { '@type': 'Brand', name: 'Geck Inspect' }, ...(STORE_CHECKOUT_ENABLED && product ? { offers: { '@type': 'Offer', price: (unitPrice / 100).toFixed(2), priceCurrency: 'USD', availability: 'https://schema.org/InStock' } } : {}) };
+  const jsonLd = { '@type': 'Product', '@id': `${SITE_URL}/Store/stickers#product`, name: 'Custom gecko stickers and enclosure name plaques', url: `${SITE_URL}/Store/stickers`, image: `${SITE_URL}/store/custom-stickers/sticker-social.png`, description: 'Create an original collector-card sticker or an elegant enclosure species label with your gecko’s own details. Standard glossy and holographic finishes, with mix-and-match bulk pricing at 20+.', brand: { '@type': 'Brand', name: 'Geck Inspect' }, ...(STORE_CHECKOUT_ENABLED && product ? { offers: { '@type': 'Offer', name: 'One standard glossy sticker', price: (CUSTOM_STICKER_PRICE_CENTS / 100).toFixed(2), priceCurrency: 'USD', availability: 'https://schema.org/InStock' } } : {}) };
+
+  function changeQuantities(next) {
+    setQuantities(next); setAdded(false); setNotice('');
+    if (next.glossy === 0 && next.holographic > 0) setDesign((current) => ({ ...current, finish: 'holographic' }));
+    if (next.holographic === 0 && next.glossy > 0) setDesign((current) => ({ ...current, finish: 'glossy' }));
+  }
 
   async function exportImage(placement = false) {
     setExporting(true); setError('');
@@ -179,7 +204,7 @@ export default function CustomStickerStudio() {
     const payload = serializeDesign(design);
     // Local object URLs do not survive reloads. Do not claim the photo is saved.
     if (payload.photo_url.startsWith('blob:')) { payload.photo_url = ''; payload.photo_path = ''; }
-    const blob = new Blob([JSON.stringify({ ...payload, draft_version: 1 }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ ...payload, draft_version: 1, order_quantities: quantities }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob); const link = document.createElement('a');
     link.href = url; link.download = 'my-gecko-sticker-design.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     setNotice(payload.photo_url || isPlaque ? 'Design saved. Use “Resume a saved design” to reopen it.' : 'Design saved. Add your photo again when you reopen it; local photos are not included in the file.');
@@ -192,6 +217,9 @@ export default function CustomStickerStudio() {
       const data = JSON.parse(await file.text());
       if (data.kind !== 'custom_sticker' || data.draft_version !== 1) throw new Error('Choose a design file saved by this sticker builder.');
       const cleaned = serializeDesign({ ...createDefaultDesign(), ...data });
+      const restored = data.order_quantities || { glossy: cleaned.finish === 'glossy' ? 1 : 0, holographic: cleaned.finish === 'holographic' ? 1 : 0 };
+      for (const finish of ['glossy', 'holographic']) if (restored[finish] !== 0) validateCartQuantity(restored[finish]);
+      setQuantities({ glossy: restored.glossy, holographic: restored.holographic });
       if (cleaned.photo_url && !/^https?:\/\//.test(cleaned.photo_url)) { cleaned.photo_url = ''; cleaned.photo_path = ''; }
       uploadRevisionRef.current += 1; setUploading(false); patch({ ...createDefaultDesign(), ...cleaned }); setError(''); goToStep(1);
     } catch (e) { setError(e.message || 'That design could not be opened.'); }
@@ -202,8 +230,9 @@ export default function CustomStickerStudio() {
     setAdding(true); setError('');
     try {
       const payload = serializeDesign(design);
-      await addToCart(product, 1, payload);
-      captureEvent('store_add_to_cart', { product_id: product.id, product_name: product.name, unit_price_cents: unitPrice, quantity: 1, customized: true, sticker_layout: payload.layout, sticker_theme: payload.theme });
+      const current = await addStickerToCart(product, payload, quantities);
+      setCartQuantity(stickerCartQuantity(current.items));
+      captureEvent('store_add_to_cart', { product_id: product.id, product_name: product.name, quantity, standard_quantity: quantities.glossy, holographic_quantity: quantities.holographic, customized: true, sticker_layout: payload.layout, sticker_theme: payload.theme });
       setAdded(true);
     } catch (e) { setError(e.message || 'Could not add your sticker to the cart.'); }
     finally { setAdding(false); }
@@ -218,7 +247,11 @@ export default function CustomStickerStudio() {
         <h1 className="mt-4 text-4xl md:text-5xl font-bold leading-[1.05] tracking-tight text-stone-100">{isPlaque ? 'An enclosure with their name on it.' : 'Your gecko. Your collectible.'}</h1>
         <p className="mt-5 max-w-lg text-sm md:text-base leading-relaxed text-slate-300">{isPlaque ? 'A quiet, beautifully typeset name plaque with their species and the corner of the world they come from. Made as a vinyl sticker for the outside of an enclosure.' : 'The dramatic leap. The tiny toes. The oversized personality. Turn the pet you love into a collector sticker that could only be theirs.'}</p>
         <div className="flex flex-wrap gap-3 mt-6"><Button className="bg-emerald-500 text-emerald-950 hover:bg-emerald-400 min-h-11" onClick={() => goToStep(0)}>Make yours <ArrowRight className="h-4 w-4 ml-2" /></Button><button className="min-h-11 px-2 text-sm text-emerald-200 underline underline-offset-4" onClick={() => { patch({ theme: isPlaque ? 'trading_card' : 'enclosure_plaque' }); goToStep(0); }}>{isPlaque ? 'Explore collector stickers' : 'Make an enclosure plaque'}</button></div>
-        <p className="mt-5 text-sm text-slate-300"><strong className="text-stone-100">{formatCents(unitPrice)}</strong> per sticker · {formatCents(CUSTOM_STICKER_SHIPPING_CENTS)} flat shipping per stickers-only order</p>
+        <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+          <div className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-3"><p className="text-xs text-slate-400">Make one, or a few</p><p className="mt-1 font-semibold text-stone-100">$10 standard</p><p className="mt-1 text-xs text-slate-300">$13 holographic · +$3</p></div>
+          <div className="rounded-xl border border-emerald-700/70 bg-emerald-950/40 p-3"><p className="text-xs text-emerald-300">Build a set · 20+</p><p className="mt-1 font-semibold text-stone-100">$5 standard</p><p className="mt-1 text-xs text-slate-300">$7 holographic · mix & match</p></div>
+        </div>
+        <p className="mt-3 text-xs text-slate-400">Prices per sticker. Mix designs and finishes to reach 20. {formatCents(CUSTOM_STICKER_SHIPPING_CENTS)} flat shipping per stickers-only order.</p>
         <p className="mt-2 text-xs text-slate-500">{STORE_CHECKOUT_ENABLED ? 'Your preview is free. Order when it feels just right.' : 'The designer is open. Ordering opens after checkout is ready.'}</p>
       </div>
       <div className="space-y-3">
@@ -278,7 +311,7 @@ export default function CustomStickerStudio() {
             <h3 className="text-xl font-semibold text-stone-100">One last look. Every detail is yours.</h3>
             <p className="text-sm text-slate-400">Check the spelling, photo crop, and smallest text. The saved design and crop travel with your order.</p>
             <div className="max-w-sm mx-auto rounded-xl bg-[#064e3b] p-6"><StickerPreview design={design} /></div>
-            <dl className="grid grid-cols-2 gap-3 text-sm text-slate-300"><div><dt className="text-xs text-slate-500">Design</dt><dd>{isCard ? CARD_LAYOUTS.find((l) => l.value === design.layout)?.label : stickerTheme(design.theme).label}</dd></div><div><dt className="text-xs text-slate-500">Size</dt><dd>{dimensions.label}</dd></div><div><dt className="text-xs text-slate-500">Material & finish</dt><dd>Glossy vinyl sticker</dd></div><div><dt className="text-xs text-slate-500">Delivery</dt><dd>{STORE_CHECKOUT_ENABLED ? 'Confirm timing before ordering' : 'Available when ordering opens'}</dd></div></dl>
+            <dl className="grid grid-cols-2 gap-3 text-sm text-slate-300"><div><dt className="text-xs text-slate-500">Design</dt><dd>{isCard ? CARD_LAYOUTS.find((l) => l.value === design.layout)?.label : stickerTheme(design.theme).label}</dd></div><div><dt className="text-xs text-slate-500">Size</dt><dd>{dimensions.label}</dd></div><div><dt className="text-xs text-slate-500">Material & finish</dt><dd>{finishSummary}</dd></div><div><dt className="text-xs text-slate-500">Delivery</dt><dd>{STORE_CHECKOUT_ENABLED ? 'Confirm timing before ordering' : 'Available when ordering opens'}</dd></div></dl>
             {problems.length > 0 && <div role="status" className="rounded-lg border border-amber-700/40 bg-amber-950/20 p-4"><p className="text-sm text-amber-200 mb-2">Finish these details first:</p><ul className="list-disc pl-5 text-xs text-amber-100/80 space-y-1">{problems.map((problem) => <li key={problem}>{problem}</li>)}</ul><button className="text-sm mt-3 underline text-emerald-200 min-h-11" onClick={() => goToStep(1)}>Return to my details</button></div>}
             <label className="flex gap-3 items-start text-sm leading-relaxed text-slate-300"><input type="checkbox" className="mt-1 h-4 w-4 accent-emerald-400" checked={approved} onChange={(e) => setApproved(e.target.checked)} />I’ve checked this proof and have permission to use the photo. This is the design I want printed.</label>
             <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={exporting || uploading} onClick={() => exportImage()}><Download className="h-4 w-4 mr-2" />{exporting ? 'Preparing…' : 'Download proof'}</Button><Button variant="outline" onClick={saveDraft}>Save design</Button><Button variant="outline" onClick={() => goToStep(1)}>Edit details</Button></div>
@@ -295,17 +328,21 @@ export default function CustomStickerStudio() {
             <div ref={proofRef} style={view === 'design' ? {} : { position: 'absolute', left: '-10000px', width: '340px' }} aria-hidden={view !== 'design'}><StickerPreview design={design} /></div>
             {view === 'placement' && <div ref={placementRef}><StickerMockup design={design} /></div>}
             {view === 'scale' && <StickerMockup design={design} scale />}
-            <p className="mt-3 text-center text-[11px] text-slate-500">{dimensions.label} · glossy vinyl · {isPlaque ? 'landscape name plaque' : 'die-cut sticker'}</p>
+            <p className="mt-3 text-center text-[11px] text-slate-500">{dimensions.label} · {finishSummary.toLowerCase()} · {isPlaque ? 'landscape name plaque' : 'die-cut sticker'}</p>
             {view === 'placement' && <button disabled={exporting} className="w-full text-xs mt-3 text-emerald-200 underline min-h-10" onClick={() => exportImage(true)}>Download this placement mockup</button>}
           </div>
           <div className={`${cardSurface} space-y-3`}>
             <h3 className="font-semibold text-stone-100">Made just for {design.name || 'your gecko'}</h3>
-            <div className="flex justify-between text-sm text-slate-400"><span>One {isPlaque ? 'plaque sticker' : 'sticker'}</span><span className="text-slate-100">{formatCents(unitPrice)}</span></div>
-            <div className="flex justify-between text-sm text-slate-400"><span>Flat shipping</span><span className="text-slate-100">{formatCents(CUSTOM_STICKER_SHIPPING_CENTS)}</span></div>
-            <div className="flex justify-between border-t border-slate-800 pt-3 text-sm font-semibold text-slate-100"><span>Sticker + shipping</span><span>{formatCents(total)}</span></div>
+            <StickerOrderOptions quantities={quantities} onChange={changeQuantities} cartQuantity={cartQuantity} added={added} />
+            <div className="space-y-2 border-t border-slate-800 pt-4" aria-live="polite">
+              {quantities.glossy > 0 && <div className="flex justify-between gap-2 text-sm text-slate-400"><span>{quantities.glossy} standard × {formatCents(standardPrice)}</span><span className="text-slate-100">{formatCents(quantities.glossy * standardPrice)}</span></div>}
+              {quantities.holographic > 0 && <div className="flex justify-between gap-2 text-sm text-slate-400"><span>{quantities.holographic} holographic × {formatCents(holographicPrice)}</span><span className="text-slate-100">{formatCents(quantities.holographic * holographicPrice)}</span></div>}
+            </div>
+            <div className="flex justify-between text-sm text-slate-400"><span>Flat shipping</span><span className="text-slate-100">{formatCents(quantity > 0 ? CUSTOM_STICKER_SHIPPING_CENTS : 0)}</span></div>
+            <div className="flex justify-between border-t border-slate-800 pt-3 text-sm font-semibold text-slate-100"><span>{cartQuantity > 0 ? 'This design + shipping' : 'Stickers + shipping'}</span><span data-testid="sticker-order-total">{formatCents(total)}</span></div>
             <p className="text-[11px] text-slate-500">One shipping charge for a stickers-only order, even with several designs. Any applicable tax is shown at checkout.</p>
             {!STORE_CHECKOUT_ENABLED ? <p className="rounded-lg bg-amber-950/20 border border-amber-800/30 p-3 text-xs text-amber-200">Design and download today. Ordering is not open yet; payment and delivery timing will be available when checkout opens.</p> : loadingProduct ? <p className="text-xs text-slate-400">Loading availability…</p> : !product ? <p className="text-xs text-amber-200">This product is not available to order yet.</p> : null}
-            {STORE_CHECKOUT_ENABLED && <><Button disabled={!canAdd || adding || added} onClick={handleAdd} className="w-full bg-emerald-600 hover:bg-emerald-500">{adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : added ? <Check className="h-4 w-4 mr-2" /> : <ShoppingCart className="h-4 w-4 mr-2" />}{adding ? 'Adding…' : added ? 'Added to cart' : 'Add my design to cart'}</Button>{!storedPhoto && <Link className="text-xs text-emerald-200 underline block" to={`/AuthPortal?redirect=${encodeURIComponent('/Store/stickers')}`}>Sign in, then upload your photo to save it for printing.</Link>}{!approved && <button className="text-xs text-emerald-200 underline min-h-10" onClick={() => goToStep(2)}>Review and approve your proof first</button>}{added && <Link to="/Store/cart" className="block text-center text-sm text-emerald-200 underline min-h-11 pt-2">Go to cart</Link>}</>}
+            {STORE_CHECKOUT_ENABLED && <><Button disabled={!canAdd || adding || added} onClick={handleAdd} className="w-full bg-emerald-600 hover:bg-emerald-500">{adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : added ? <Check className="h-4 w-4 mr-2" /> : <ShoppingCart className="h-4 w-4 mr-2" />}{adding ? 'Adding…' : added ? 'Added to cart' : `Add ${quantity} ${quantity === 1 ? 'sticker' : 'stickers'} to cart`}</Button>{!storedPhoto && <Link className="text-xs text-emerald-200 underline block" to={`/AuthPortal?redirect=${encodeURIComponent('/Store/stickers')}`}>Sign in, then upload your photo to save it for printing.</Link>}{!approved && <button className="text-xs text-emerald-200 underline min-h-10" onClick={() => goToStep(2)}>Review and approve your proof first</button>}{added && <><Link to="/Store/cart" className="block text-center text-sm text-emerald-200 underline min-h-11 pt-2">Go to cart</Link><button onClick={reset} className="w-full text-sm text-emerald-200 underline min-h-11">Create another design for this order</button></>}</>}
             <a href={SUPPORT_EMAIL_URL} className="text-xs text-slate-400 underline block pt-1">Questions about your design or delivery?</a>
           </div>
         </aside>
@@ -325,6 +362,8 @@ export default function CustomStickerStudio() {
     </section>
 
     <section className="mb-8" aria-labelledby="sticker-faq-title"><h2 id="sticker-faq-title" className="text-xl font-semibold text-stone-100 mb-4">A few things before you make yours.</h2><div className="space-y-2">{[
+      ['Can I choose a holographic finish?', 'Yes. Standard glossy is $10 per sticker and holographic is $13. At 20 or more stickers in one order, the prices become $5 standard and $7 holographic each. The physical finish is chosen separately from the card’s illustration and rarity symbol.'],
+      ['Can I mix designs and finishes for bulk pricing?', 'Yes. The 20-sticker minimum is the combined quantity across all your custom sticker designs, sizes, and finishes. For example, 10 standard and 10 holographic stickers cost $120, plus $5 flat shipping and any applicable tax. Add one design, then create another for the same cart. Falling below 20 returns the cart to single-sticker prices.'],
       ['Is the enclosure plaque a hard sign?', 'It’s a landscape vinyl sticker with an elegant plaque design, not engraved metal or a rigid board. Apply it to a clean, dry surface on the outside of the enclosure.'],
       ['Will my gecko be turned into generated art?', 'Your uploaded photo is used in the design. The illustrated templates are samples; they do not redraw your gecko. The cutout editor lets you erase the background yourself.'],
       ['What size should I choose?', 'Sizes refer to the longest edge. The preview shows the exact width and height. Pick 3 or 4 inches if your design has detailed moves or species information.'],
