@@ -49,4 +49,153 @@ FINISH
 
 Paste the block for the repo under the master prompt.
 
-_Blocks are filled in from the 7 Oct survey below._
+Every block below came from a read of the repo on 7 Oct 2026. The session checks it against the code before acting.
+
+Review cadence and times are staggered so routines and their export Actions never collide (Geck Inspect owns Monday 15:20/15:55 UTC). "Light" means a monthly review instead of weekly, for sites with little to cite.
+
+### Run these (good fit)
+
+#### utah-forage-map (World Mushroom Foraging, worldmushroomforaging.org), fit: high
+
+```
+CUSTOMIZATION: utah-forage-map
+- Site: worldmushroomforaging.org. React + Vite + Mapbox frontend, Python FastAPI backend on Vercel, Neon Postgres. No CLAUDE.md: follow PRODUCT.md and DESIGN.md (guest-first, protect places and people, never imply the map confirms a mushroom is edible).
+- Citable content: 108 prerendered species guides (frontend/content/species), foraging guides (content/foraging), the 113-plant herbal atlas (The Verdant Hours), ten regional collections, the public read API.
+- Original data to publish: monthly seasonality per species and hemisphere, regional fruiting outlooks, the 90-day field signal, lookalike pairs with cited safety notes. Aggregated only: never exact coordinates (public points are already shifted 1 to 2.5 miles), private logbooks, owner IDs or unreviewed submissions.
+- iNaturalist-derived data: check per-record licences and credit iNaturalist and observers before redistributing; leave out records whose licence does not allow it. Use CC BY 4.0 only for what you are allowed to relicense.
+- MCP tools: search_species, get_species_guide (with lookalikes and the safety warning), seasonality(species, region), in_season_near(region), approximated or aggregated locations only.
+- Every agent-facing output carries: "A map observation is not an identification. Never eat a wild mushroom based on this data."
+- Do NOT build: any tool or text that answers "is this edible", photo identification over MCP, exact locations.
+- Database: Neon, not Supabase. Put the traffic log table and summary function there, with the FastAPI backend writing it.
+- Review: weekly, Monday 16:25 UTC (export Action 15:50).
+```
+
+#### i-ching-app (The Free I Ching, thefreeiching.com), fit: high, needs prerendering first
+
+```
+CUSTOMIZATION: i-ching-app
+- Site: thefreeiching.com. Vite + React SPA on Vercel (catch-all to index.html), Base44 backend, PostHog, iOS build via Capacitor. No CLAUDE.md and no robots.txt, sitemap or llms.txt today, and crawlers see an almost empty page.
+- First job: prerender one static page per hexagram (64 pages, plus trigram and method pages) so bots get real HTML, then add robots.txt and a sitemap.
+- Original content: the modern judgment, image and counsel text in src/lib/hexagramInterpretations.js. The changing-line text in src/data/classicalLines.json is CC0 from jesshewitt/i-ching; credit it as THIRD_PARTY_TEXT.md says.
+- Dataset: the 64 hexagrams (King Wen number, trigrams, names, original summaries) as JSON and CSV with Dataset markup.
+- MCP tools: get_hexagram(number or name), get_trigram, cast_reading (random cast with changing lines, clearly labelled a reflection tool, not a prediction).
+- Do NOT touch: journal entries and readings (user data in Base44). Never imply readings predict the future.
+- No database of its own besides Base44: log bots from Vercel middleware into a small store you choose (say which), or skip the log and say why.
+- Review: weekly, Monday 16:55 UTC (export Action 16:20).
+```
+
+#### geck-data (Geck Intellect, geck-data.vercel.app), fit: high, static only, coordinate with geck-inspect
+
+```
+CUSTOMIZATION: geck-data
+- Site: geck-data.vercel.app (also geckintellect.geckinspect.com). Next.js 14 App Router + TypeScript + D3 on Vercel. Uses the geck_data schema in the geck-inspect Supabase project (mmuglfphhwlaluyfyxsp). Rules: push straight to main, no PRs, run tsc --noEmit first, add files one by one, ask before destructive changes, NEVER add or replay migrations here (all migrations go in geck-inspect).
+- geck-inspect already has the Price Index (/data), markdown twins, an MCP server at geckinspect.com/mcp and the bot log (public.agent_hits). Do not duplicate them: link to them, and add only what geck-data uniquely has (composite indices for Lilly White, Axanthic and Cappuccino, fair price, market temperature, trait frequency, the methodology).
+- Crawlers already drained the Supabase Disk IO budget. Everything for bots must be static and precomputed (JSON/CSV files built on deploy or by a scheduled job). No live-query endpoints for bots. Keep robots.ts blocking /combo, /trait and filtered URLs.
+- Dataset: precomputed index series with Dataset markup; markdown twins for morph and index pages only; llms.txt pointing to /methodology and the index pages.
+- Log bots into the existing public.agent_hits through public.log_agent_hit() (one shared log; the weekly export in geck-inspect can add a site column later). Ask Tennyson before any schema change, which belongs in geck-inspect anyway.
+- Legal: the site republishes scraped MorphMarket listings, photos and seller names. Do not expose more of that to agents, and flag it in your report as a risk for Tennyson to decide on (aggregates are much safer than listing pages).
+- Decision to raise: robots.txt disallows /api/ while /api-docs documents public endpoints.
+- Review: fold into geck-inspect's Monday review (add a geck-data section to its plan doc) instead of a separate routine.
+```
+
+#### ai-catch-up, fit: medium-high, mostly in place
+
+```
+CUSTOMIZATION: ai-catch-up
+- Product: $49 AI onboarding for solo founders. Next.js 15 + Tailwind v4 + MDX on Vercel, no database. Live domain: check NEXT_PUBLIC_SITE_URL (falls back to ai-catch-up.vercel.app).
+- Already has: app/llms.txt/route.ts, a sitemap, robots.txt allowing 12 AI bots. Build on them, do not replace them.
+- Rules from CLAUDE.md: no em dashes (run npm run voice-check), never edit /content/ unless HANDOFF.md says so or Tennyson asks directly, the stack is locked, use the dev branch CLAUDE.md names and merge to main as it describes.
+- Add: markdown twins for guides, glossary and blog; the glossary as a DefinedTermSet dataset with Dataset markup; Content Signals; the bot log (no database: pick a small store and say which, or log through Vercel and explain the limit); weekly review.
+- MCP: optional, small (search_glossary, get_guide). Skip it if it means new copy.
+- Do NOT write new copy outside the HANDOFF process, and keep /data/subscribers.json, the admin area and PAID_EMAILS private.
+- Review: light (monthly), first Tuesday 15:55 UTC.
+```
+
+#### mythic-labs (mythiclabs.studio), fit: medium
+
+```
+CUSTOMIZATION: mythic-labs
+- Two things in one repo: the Mythic Labs studio site (static HTML: mythic_labs_landing.html, showcase.html; domain mythiclabs.studio, check how it is deployed) and the "mythic-brain" Claude Code plugin marketplace (marketplace.json, 5 plugins).
+- Rules from CLAUDE.md: skill descriptions are a contract, skill bodies stay under about 150 lines, bump the plugin version when behaviour changes.
+- Site: llms.txt plus a methodology topic file (Threefold Path, the comparison with traditional agencies), a markdown twin of the manifesto, Organization/ProfessionalService JSON-LD, Content Signals.
+- Marketplace: it is already agent-facing. Make marketplace.json and every skill description accurate and clean.
+- Good addition: a dev-workflows skill that packages this agent-access playbook (the master prompt in geck-inspect docs/planning/agent-access-prompts.md) so any repo can run it.
+- Skip: datasets and a site MCP (no data). Keep comms, inbox and client material out.
+- Review: light (monthly), first Tuesday 16:25 UTC.
+```
+
+#### vibe-check, fit: low to medium
+
+```
+CUSTOMIZATION: vibe-check
+- App: private journal about how people and habits affect you, with somatic practices. vibe-check-flame-nu.vercel.app (no custom domain yet). Vite + React, Supabase project shared with Daily Digest, Campground and Dialogue, Vercel.
+- Rules from CLAUDE.md: open a PR, self code-review, squash-merge once CI is green; plain voice, no persona, no "we"; lint and build before committing; the Supabase project is shared, so reconcile migration history before any db push; respect the tight Content-Security-Policy in vercel.json.
+- Add: llms.txt and markdown twins of the /help-now practices (full instructions plus a safety note and crisis line), Content Signals, the bot log, optionally one MCP tool get_practice(state) for the eleven practices matched to stress states.
+- The brand promise is "No AI reads your journal". Nothing may touch journals, reports or anything about people. No datasets. No medical claims.
+- Review: light (monthly), first Tuesday 16:55 UTC.
+```
+
+#### kiwipop (Kiwi Pop, www.kiwipop.fun), fit: medium, after a claims review
+
+```
+CUSTOMIZATION: kiwipop
+- Store: functional "party supplement" lollipops. Next.js 14 on Vercel (Hobby plan: one cron a day), Supabase, Stripe, Resend, ShipStation. Rule: open PRs as non-draft and squash-merge right away.
+- Already has: public/llms.txt, robots.ts allowing AI bots, a sitemap.
+- FIRST: review every claim agents can read (llms.txt says things like "does not interact with alcohol" and "not psychoactive") against FDA rules for supplements and foods. List anything risky for Tennyson with a safer wording; change only what is clearly a factual error. Flavor names (Molly, Mary, Luci) read as drug references to an AI; flag, do not rename.
+- Add: Product and Offer markup and markdown twins for product pages (ingredients, allergens, coconut as a tree nut, price), a stockist and event feed, Content Signals, the bot log.
+- Do NOT add: an MCP server, open datasets, or any new health or function claim. Keep orders, customers, recipes, costs and financials private.
+- Review: light (monthly), first Tuesday 17:25 UTC (mind the one-cron limit: run the export from GitHub Actions, not Vercel cron).
+```
+
+#### ClearPath, fit: medium, once it has a real domain
+
+```
+CUSTOMIZATION: ClearPath
+- Product: AI check that validates loan applications for non-bank mortgage lenders before underwriting, explicitly no credit decisions. Static HTML (index, app, dashboard) plus Vercel functions and Supabase (applications, findings, leads). The README describes a Python/FastAPI tree that is not in the repo.
+- Domain is unclear (Netlify homepage field, a vercel.json, hello@clearpath.ai in the README). If there is no confirmed live domain, stop after the fit check and say what is needed.
+- Add: llms.txt and topic files (how validation works, the no-credit-decisions stance, the error types it catches), markdown twins of the landing page and an FAQ, Content Signals blocking /app, /dashboard and /api, the bot log.
+- Dataset only from synthetic or anonymized demo data, for example a taxonomy of common loan-file error types. Never real submissions.
+- Regulated area (fair lending, ECOA): nothing may read as credit advice. Keep applicant data and the internal research file private.
+- Skip the MCP server until there is a product.
+- Review: light (monthly), first Wednesday 15:55 UTC.
+```
+
+#### switchboard, fit: low (signals and a summary only)
+
+```
+CUSTOMIZATION: switchboard
+- App: social plans (invite waves, private group polls, mutual-interest matching). switchboard-hqk2.vercel.app, Next.js 16, Supabase, Vercel, Claude API, Twilio.
+- Rules (AGENTS.md via CLAUDE.md): batch commits into one locally checked push, do not use CI as the test loop; read docs/SECURITY.md before auth or database work and docs/AUTH.md before sign-in work; every user-facing error gets an SB- code; this is not the Next.js you know, read node_modules/next/dist/docs first; main deploys only through the migration workflow.
+- Add only: a short llms.txt, a markdown twin of /features generated from src/lib/features.ts, robots.txt with `Content-Signal: search=yes, ai-input=yes, ai-train=no`, and the bot log.
+- Keep invite and share pages out of crawler reach. No MCP, no datasets: contacts, invites, location and relationship signals are private.
+- Review: light (monthly), first Wednesday 16:25 UTC.
+```
+
+#### dialogue, fit: low (marketing site only)
+
+```
+CUSTOMIZATION: dialogue
+- Product: iOS app that wraps watched-app sessions in an intention gate and a debrief. It never blocks, and no usage data leaves the device. The marketing site and waitlist are in web/ (Next.js). Read docs/CONTEXT.md first; CLAUDE.md rules: no em dashes, no exclamation points, no emoji, no guilt copy (run python3 scripts/copy_lint.py), log decisions in docs/DECISIONS.md, CI runs on every pull request.
+- Scope is web/ only: llms.txt, a markdown twin of the main page and an FAQ (how the gate and debrief work, the privacy stance), Content Signals, the bot log if the site has a backend you can use without touching user data.
+- Nothing about any user's sessions or ledger. No MCP, no datasets.
+- Review: light (monthly), first Wednesday 16:55 UTC.
+```
+
+### Later (no live site yet)
+
+- **cairn** (Wasatch trail dataset, Phase 0). When there is a site: per-trail pages with markdown twins, an open trail dataset that credits OpenStreetMap under ODbL (share-alike, so not CC BY), an MCP tool find_trails(near, max_gain), the bot log. Never user GPS tracks, never imply trail safety or conditions. Its docs may live on a claude/ branch.
+- **realestate-intake** (Foyer). Only if it ships for a real agent: llms.txt and a "how intake works" FAQ, Content Signals blocking /portal, /dashboard and /api. Never an MCP or dataset; never log chat content.
+
+### Do not run (keep these away from AI systems or there is nothing to cite)
+
+- **psilocin-valley**, **dailydigest**: no agent access. If anything, robots.txt with `Content-Signal: search=yes, ai-input=no, ai-train=no` and no llms.txt. Drug-adjacent and private health data respectively.
+- **shroom** (Shroom OS): a grow-operation backend for Isaac's operation, not a public site. Not applicable.
+- **alexandria**, **burnout**, **media-ops-scripts**, **hermes-jobs**, **eyeinthesky**, **geckfunnel**, **claude-config**, **dotfiles-claude**, **librechat-config**: private tools, configs or internal material. Not applicable.
+- **hermes-jobs** could later post every repo's weekly agent-review summary to Slack in one message.
+
+## Things the survey found that need Tennyson (outside this work)
+
+1. **geckfunnel is a public repo** holding sales strategy, prompts and PIPELINE_TRACKER.xlsx (may contain breeder handles and emails). It also presents tennyscrestedgeckos.com as Tennyson's brand (CLAUDE.md treats that as a bug) and has an em dash in its page title. Recommendation: make it private, then fix the domain.
+2. **eyeinthesky is a public repo** that documents capturing MorphMarket data from logged-in pages. Recommendation: make it private.
+3. **geck-data publicly republishes scraped listings, photos and seller names.** That is the largest legal exposure in the Geck stack. Recommendation: show aggregates publicly and keep listing-level pages members-only.
+4. **kiwipop's llms.txt** makes health-adjacent claims that should be checked against FDA rules.
