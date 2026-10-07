@@ -1,0 +1,294 @@
+{
+  "generated_at": "2026-10-07T06:24:11.886Z",
+  "traffic": {
+    "last7": {
+      "to": "2026-10-07T06:24:12.764453+00:00",
+      "days": 7,
+      "from": "2026-09-30T06:24:12.764453+00:00",
+      "daily": [
+        {
+          "day": "2026-10-07",
+          "hits": 21
+        }
+      ],
+      "total": 21,
+      "by_kind": {
+        "search": 21
+      },
+      "by_agent": [
+        {
+          "hits": 17,
+          "kind": "search",
+          "agent": "bingbot",
+          "previous": 0
+        },
+        {
+          "hits": 4,
+          "kind": "search",
+          "agent": "YandexBot",
+          "previous": 0
+        }
+      ],
+      "top_paths": [
+        {
+          "hits": 3,
+          "path": "/",
+          "agents": 2
+        },
+        {
+          "hits": 2,
+          "path": "/robots.txt",
+          "agents": 2
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agents": 2
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide/feeding-schedules",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide/tail-loss",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/calculator",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/GeneticsGuide",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/cappuccino",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/category/base",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/category/pattern",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/cream",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/flame",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/harlequin",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/inheritance/recessive",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/soft-scale",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide",
+          "agents": 1
+        }
+      ],
+      "agent_files": [
+        {
+          "hits": 1,
+          "path": "/data",
+          "agent": "bingbot"
+        },
+        {
+          "hits": 1,
+          "path": "/data",
+          "agent": "YandexBot"
+        }
+      ],
+      "previous_total": 0,
+      "unknown_user_agents": []
+    },
+    "last28": {
+      "to": "2026-10-07T06:24:13.119459+00:00",
+      "days": 28,
+      "from": "2026-09-09T06:24:13.119459+00:00",
+      "daily": [
+        {
+          "day": "2026-10-07",
+          "hits": 21
+        }
+      ],
+      "total": 21,
+      "by_kind": {
+        "search": 21
+      },
+      "by_agent": [
+        {
+          "hits": 17,
+          "kind": "search",
+          "agent": "bingbot",
+          "previous": 0
+        },
+        {
+          "hits": 4,
+          "kind": "search",
+          "agent": "YandexBot",
+          "previous": 0
+        }
+      ],
+      "top_paths": [
+        {
+          "hits": 3,
+          "path": "/",
+          "agents": 2
+        },
+        {
+          "hits": 2,
+          "path": "/robots.txt",
+          "agents": 2
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agents": 2
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide/feeding-schedules",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide/tail-loss",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/calculator",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/GeneticsGuide",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/cappuccino",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/category/base",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/category/pattern",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/cream",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/flame",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/harlequin",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/inheritance/recessive",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/soft-scale",
+          "agents": 1
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide",
+          "agents": 1
+        }
+      ],
+      "agent_files": [
+        {
+          "hits": 1,
+          "path": "/data",
+          "agent": "bingbot"
+        },
+        {
+          "hits": 1,
+          "path": "/data",
+          "agent": "YandexBot"
+        }
+      ],
+      "previous_total": 0,
+      "unknown_user_agents": []
+    }
+  },
+  "pruned": {
+    "cutoff": "2026-04-10T06:24:13.176Z",
+    "removed": 0
+  },
+  "priceIndex": {
+    "generated_at": "2026-10-07T06:13:26.816137+00:00",
+    "age_days": 0,
+    "fresh": true,
+    "latest_rows": 73,
+    "monthly_rows": 222,
+    "last_full_check_by_market": {
+      "EU": "2026-10-06",
+      "JP": "2026-10-06",
+      "KR": "2026-10-06",
+      "US": "2026-10-06"
+    }
+  },
+  "mcp": {
+    "status": 200,
+    "tools": [
+      "search_morphs",
+      "get_morph",
+      "list_care_topics",
+      "get_care_topic",
+      "get_prices",
+      "predict_pairing"
+    ],
+    "ok": true
+  }
+}
