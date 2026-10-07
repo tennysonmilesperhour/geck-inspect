@@ -1,3 +1,5 @@
+import GeckoBulkActions from '@/components/bulk/GeckoBulkActions';
+import { Gecko } from '@/entities/all';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -163,7 +165,7 @@ export default function MyStore() {
                     .maybeSingle(),
                 supabase
                     .from('geckos')
-                    .select('id, name, morphs_traits, image_urls, status, sex, is_public, archived')
+                    .select('id, name, morphs_traits, morph_tags, species, image_urls, status, sex, is_public, archived')
                     .eq('created_by', user.email)
                     .eq('archived', false),
                 supabase
@@ -760,6 +762,24 @@ export default function MyStore() {
                                             : 'No open waitlists yet. Create one from the Promote composer on any gecko, then attach it here.'}
                                     </p>
                                 </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader><CardTitle>Manage store geckos</CardTitle><CardDescription>Edit your stock in bulk, or add and remove featured geckos. Store feature changes are saved with Save store.</CardDescription></CardHeader>
+                            <CardContent>
+                                <GeckoBulkActions records={geckos} extraActions={[
+                                    { id: 'feature', label: 'Feature in store', description: 'Only public geckos can be featured.', run: async g => {
+                                        if (!g.is_public) throw new Error('Make this gecko public before featuring it.');
+                                        setForm(prev => ({ ...prev, featured_gecko_ids: [...new Set([...prev.featured_gecko_ids, g.id])] }));
+                                    } },
+                                    { id: 'unfeature', label: 'Remove from featured', run: async g => setForm(prev => ({ ...prev, featured_gecko_ids: prev.featured_gecko_ids.filter(id => id !== g.id) })) },
+                                ]} onComplete={async () => {
+                                    const updated = await Gecko.filter({ created_by: user.email, archived: false });
+                                    setGeckos(updated);
+                                    const publicIds = new Set(updated.filter(g => g.is_public).map(g => g.id));
+                                    setForm(prev => ({ ...prev, featured_gecko_ids: prev.featured_gecko_ids.filter(id => publicIds.has(id)) }));
+                                }} />
                             </CardContent>
                         </Card>
 
