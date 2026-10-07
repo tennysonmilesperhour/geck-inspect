@@ -1,3 +1,4 @@
+import GeckoBulkActions from '@/components/bulk/GeckoBulkActions';
 import React, { useState, useEffect, useCallback } from 'react';
 import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 import { useQuery } from '@tanstack/react-query';
@@ -878,6 +879,10 @@ export default function MyGeckosPage() {
                         />
                     </div>
                 </div>
+
+                {!isLoading && activeTab === 'collection' && (
+                    <GeckoBulkActions records={filteredAndSortedGeckos.filter(g => canWriteGecko(g, user, memberships))} onComplete={loadGeckos} />
+                )}
 
                 {isLoading ? (
                     <CardGridSkeleton
