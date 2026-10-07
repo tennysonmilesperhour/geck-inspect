@@ -43,11 +43,11 @@ What would change that, and the plan when it does:
 
 Licensing as published: price, morph and genetics data CC BY 4.0 (free with attribution, which is what makes it citable). Care guide text: free to quote with a link, not to republish in full. Change in `src/data/open-datasets.js` and `scripts/build-agent-data.mjs` if Tennyson wants something else.
 
-## Decisions for Tennyson
+## Decisions (Tennyson, 7 Oct)
 
-1. **Is publishing the coarse price index OK?** It is aggregate (counts and percentiles, never single listings or photos) and labelled as asking prices on public listings without naming the marketplaces. Market Intelligence is Enterprise only (decision 38); the free index is one median per trait and market, while Enterprise keeps age, sex and quality comps, time to sell, watchlists, alerts and the seller view. To turn it off: `revoke execute on function public.open_price_index() from anon, authenticated;` in the SQL editor, delete `public/data/price-index.json`, and remove the table from the two pages.
-2. **The licence** above (CC BY 4.0 for data).
-3. **Register the MCP server** in public directories once it has run for a week (the official MCP Registry, Smithery, mcp.so, PulseMCP). That is outward-facing, so it waits for a yes.
+1. **The coarse price index stays public.** It is aggregate (counts and percentiles, never single listings or photos) and labelled as asking prices on public listings without naming the marketplaces. Enterprise Market Intelligence keeps age, sex and quality comps, time to sell, watchlists, alerts and the seller view. If a marketplace ever objects, turn it off: `revoke execute on function public.open_price_index() from anon, authenticated;` in the SQL editor, delete `public/data/price-index.json`, and remove the table from the two pages.
+2. **Licence: CC BY 4.0 for the price, morph and genetics data** (free with credit, so every reuse is a citation). Care guide text stays quote-with-a-link only.
+3. **Register the MCP server in public directories, approved.** Do it at the first review after 14 Oct (so 19 Oct), once a week of logs shows `/mcp` is stable. Official MCP Registry first: it can run from a GitHub Action with no stored secret (`mcp-publisher login github-oidc`, namespace `io.github.tennysonmilesperhour/geck-inspect`); check the registry docs for the current steps and `server.json` format. Directories that need an account sign-in (Smithery, mcp.so, PulseMCP) are listed for Tennyson with exact steps rather than done by the session.
 
 ## The weekly agent review
 
@@ -71,7 +71,8 @@ How much is a Lilly White crested gecko worth? Can you breed two Lilly Whites? W
 - Price index by age class and sex once there is enough data, and a monthly "state of the crested gecko market" stats page (numbers only, no blog post).
 - Original stats from member data, aggregated and anonymous, once there are enough records: hatch rates, incubation days by temperature, weight by age. At least 50 records per number before publishing.
 - An OpenAPI description for the `/data` files.
-- Re-check the MCP server card format when the proposal settles; register in MCP directories (needs Tennyson's yes).
+- Re-check the MCP server card format when the proposal settles.
+- 19 Oct review: register the MCP server (decision 3 above).
 - When agents start paying anywhere relevant: a paid MCP tool (price history, comps) through x402 or Stripe.
 
 ## Outlook
