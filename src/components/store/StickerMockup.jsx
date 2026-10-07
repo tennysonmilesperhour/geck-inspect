@@ -14,8 +14,7 @@ export default function StickerMockup({ design, scale = false }) {
   return <figure>
     <div className="relative overflow-hidden rounded-xl" style={{ aspectRatio: '4 / 3' }}>
       <img src="/store/custom-stickers/enclosure-scene.webp" alt="Planted enclosure placement scene" className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute" style={plaque ? { width: '48%', left: '26%', top: '68%' } : { width: '15%', left: '72%', top: '53%' }}><StickerPreview design={design} /></div>
+      <div className="absolute" style={plaque ? { width: '30%', left: '50%', top: '67.5%', transform: 'translate(-50%, -50%)' } : { width: '15%', left: '72%', top: '53%' }}><StickerPreview design={design} /></div>
     </div>
-    <figcaption className="mt-2 text-center text-[10px] text-slate-400">Placement mockup on an AI-created scene. Not a print photograph or an exact scale view.</figcaption>
   </figure>;
 }
