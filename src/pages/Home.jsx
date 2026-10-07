@@ -427,7 +427,7 @@ function HeroProductShot() {
   return (
     <figure className="hidden lg:block relative mt-0">
       <div className="absolute -inset-4 rounded-3xl bg-emerald-500/10 blur-2xl" aria-hidden="true" />
-      <div className="relative rounded-xl overflow-hidden border border-emerald-500/25 bg-slate-950 shadow-2xl">
+      <div className="home-glass-panel p-1.5">
         <picture>
           {/* Below lg the figure is hidden; this empty source keeps phones
               and tablets from downloading the screenshot at all. */}
@@ -438,7 +438,7 @@ function HeroProductShot() {
           height="1055"
           decoding="async"
           alt="A gecko record in Geck Inspect: Lilly White and Harlequin traits, an estimated value of $350 from real crested gecko listings, and a weight chart against the typical range for its age."
-          className="w-full h-auto block"
+          className="w-full h-auto block rounded-[14px]"
         />
         </picture>
       </div>
@@ -692,21 +692,21 @@ export default function Home() {
               just under the hero so cold visitors see them before
               scrolling into features. */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left max-w-3xl mx-auto">
-            <div className="flex items-start gap-3 rounded border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
+            <div className="home-glass-panel flex items-start gap-3 px-4 py-3">
               <Lock className="w-5 h-5 text-sky-300 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-white">Private by default</div>
                 <div className="text-xs text-slate-400 leading-snug">Row-level security on every record. Only what you publish is public.</div>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
+            <div className="home-glass-panel flex items-start gap-3 px-4 py-3">
               <Download className="w-5 h-5 text-sky-300 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-white">Yours to export</div>
                 <div className="text-xs text-slate-400 leading-snug">Export your roster as CSV and your collection records as JSON. Photos are included as links.</div>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
+            <div className="home-glass-panel flex items-start gap-3 px-4 py-3">
               <Smartphone className="w-5 h-5 text-sky-300 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-white">Works on every phone</div>
@@ -764,7 +764,7 @@ export default function Home() {
           <ul className="flex flex-wrap justify-center gap-2">
             {ALSO_INCLUDED.map((item) => (
               typeof item === 'string' ? (
-                <li key={item} className="rounded-full border border-slate-700 bg-slate-900/60 backdrop-blur px-3 py-1.5 text-sm text-slate-300">
+                <li key={item} className="home-glass-inset home-glass-chip px-3 py-1.5 text-sm text-slate-300">
                   {item}
                 </li>
               ) : (
@@ -772,7 +772,7 @@ export default function Home() {
                   <Link
                     to={item.to}
                     onClick={() => captureEvent('landing_cta_clicked', { cta: 'also_included', target: item.to })}
-                    className="inline-flex rounded-full border border-emerald-700/70 bg-emerald-950/40 backdrop-blur px-3 py-1.5 text-sm text-emerald-200 hover:text-white hover:border-emerald-500 transition-colors"
+                    className="home-glass-inset home-glass-chip inline-flex px-3 py-1.5 text-sm text-emerald-200 hover:text-white transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -801,9 +801,9 @@ export default function Home() {
               screen behind a horizontal scroll. */}
           <div className="md:hidden space-y-3">
             {COMPARISON_ROWS.map(([row, sheet, generic, gi], i) => (
-              <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <div key={i} className="home-glass-panel p-4">
                 <div className="font-semibold text-white mb-3">{row}</div>
-                <div className="flex items-start gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm text-slate-200">
+                <div className="home-glass-inset flex items-start gap-2 px-3 py-2 text-sm text-slate-200">
                   <Check className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" />
                   <span><span className="font-semibold text-emerald-300">Geck Inspect: </span><span dangerouslySetInnerHTML={{ __html: gi }} /></span>
                 </div>
@@ -820,7 +820,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <div className="hidden md:block overflow-x-auto">
+          <div className="home-glass-panel hidden md:block overflow-x-auto">
             <table className="w-full text-sm border-separate border-spacing-0">
               <thead>
                 <tr className="text-left">

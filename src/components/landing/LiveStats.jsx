@@ -62,7 +62,7 @@ export default function LiveStats() {
 
   return (
     <section className="relative z-10 max-w-4xl mx-auto px-6 pb-20 -mt-6">
-      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 backdrop-blur p-6 md:p-8">
+      <div className="home-glass-panel p-6 md:p-8">
         <p className="text-center text-xs uppercase tracking-widest text-emerald-300/70 mb-6 font-semibold">
           A real platform, with real keepers
         </p>

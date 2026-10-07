@@ -1,5 +1,77 @@
-/* Home-page actions use neutral glass, independent of a saved app accent.
+/* Home-page surfaces use neutral glass, independent of a saved app accent.
    Keep the treatment scoped so it does not change signed-in app controls. */
+.home-page :is(.gecko-card, .home-glass-panel) {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 20px;
+  background-color: rgb(10 22 18 / 0.34);
+  background-image:
+    radial-gradient(ellipse at 0% 0%, rgb(255 255 255 / 0.09), transparent 65%),
+    linear-gradient(145deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.01) 50%, rgb(218 245 231 / 0.035));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(255 255 255 / 0.04),
+    0 12px 32px rgb(0 0 0 / 0.16);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+/* A fine reflection follows the rim; the content stays fully opaque. */
+.home-page :is(.gecko-card, .home-glass-panel)::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.36), transparent 30%, transparent 70%, rgb(255 255 255 / 0.16)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Nested boxes use a lighter inset, without stacking multiple blurs. */
+.home-page .home-glass-inset,
+.home-page .home-glass-input {
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.045);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+}
+
+.home-page .home-glass-chip {
+  border-radius: 999px;
+}
+
+.home-page .home-glass-input {
+  background: rgb(0 0 0 / 0.2);
+  color: #f7faf9;
+}
+
+.home-page .home-glass-input::placeholder {
+  color: #aebdb6;
+}
+
+/* Small captions need more contrast over the translucent surfaces. */
+.home-page :is(.gecko-card, .home-glass-panel) :is(.text-slate-400, .text-slate-500) {
+  color: #bfcfc7;
+}
+
+.home-page :is(a.gecko-card, .home-glass-chip, .home-glass-input):focus-visible {
+  outline: 2px solid #e4fff3;
+  outline-offset: 4px;
+}
+
+.home-page details.gecko-card > summary:focus-visible {
+  outline: 2px solid #e4fff3;
+  outline-offset: -5px;
+  border-radius: inherit;
+}
+
 .home-page .home-glass-button {
   position: relative;
   isolation: isolate;
@@ -56,6 +128,10 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .home-page a.gecko-card:hover {
+    border-color: rgb(255 255 255 / 0.42);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.34), 0 14px 36px rgb(0 0 0 / 0.2);
+  }
   .home-page .home-glass-button:not(:disabled):hover {
     background-color: rgb(223 249 238 / 0.17);
     border-color: rgb(255 255 255 / 0.55);
@@ -84,6 +160,9 @@
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .home-page :is(.gecko-card, .home-glass-panel) {
+    background-color: #15271f;
+  }
   .home-page .home-glass-button {
     background-color: #182a24;
   }
@@ -93,6 +172,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .home-page :is(.gecko-card, .home-glass-panel),
   .home-page .home-glass-button {
     transition: none;
   }
@@ -102,6 +182,20 @@
 }
 
 @media (forced-colors: active) {
+  .home-page :is(.gecko-card, .home-glass-panel, .home-glass-inset, .home-glass-input) {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .home-page :is(.gecko-card, .home-glass-panel)::before {
+    display: none;
+  }
+  .home-page :is(a.gecko-card, .home-glass-chip, .home-glass-input, details.gecko-card > summary):focus-visible {
+    outline-color: Highlight;
+  }
   .home-page .home-glass-button {
     border: 1px solid ButtonText;
     background: ButtonFace;
