@@ -28,7 +28,9 @@
 //   supabase functions deploy store-checkout
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { isPricedSticker, priceCartItems, stickerFinishLabel, validateCartQuantity } from "../_shared/stickerPricing.js";
+import { buildOrderItemSnapshots } from "../_shared/storeOrderSnapshot.js";
 
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
@@ -57,6 +59,7 @@ interface CartItemRow {
     pricing_constraint: string;
     map_floor_cents: number | null;
     vendor_id: string;
+    vendor_sku: string | null;
     vendor_extra: Record<string, unknown> | null;
     status: string;
     free_shipping_eligible: boolean;
@@ -66,13 +69,6 @@ interface CartItemRow {
 }
 
 const CART_ELIGIBLE_MODES = new Set(["direct_self", "direct_pod", "dropship_wholesale"]);
-
-const CUSTOM_STICKER_SLUG = "custom-pet-sticker";
-
-function isCustomSticker(it: CartItemRow): boolean {
-  const kind = it.customization ? String(it.customization.kind ?? "") : "";
-  return kind === "custom_sticker" || it.product?.slug === CUSTOM_STICKER_SLUG;
-}
 
 /**
  * Short label appended to the Stripe line item for a custom sticker, so the
@@ -88,7 +84,7 @@ function stickerLineLabel(it: CartItemRow): string | null {
   }
   const name = String(c.name ?? "").trim();
   const size = String(c.size ?? "").trim();
-  const finish = String(c.finish ?? "").trim();
+  const finish = isPricedSticker(it) ? stickerFinishLabel(c.finish) : String(c.finish ?? "").trim();
   const bits = [name, [size, finish].filter(Boolean).join(" ")].filter(Boolean);
   return bits.length ? bits.join(" · ") : null;
 }
@@ -121,7 +117,7 @@ async function callStripe<T = unknown>(path: string, params: Record<string, stri
   return json as T;
 }
 
-async function nextOrderNumber(supabase: ReturnType<typeof createClient>): Promise<string> {
+async function nextOrderNumber(supabase: SupabaseClient): Promise<string> {
   // GI-YYMMDD-<seq>; seq is count of today's orders + 1. Cheap, collision-rare
   // at our volume; we rely on the unique index on order_number to retry on
   // the unlikely race.
@@ -176,6 +172,14 @@ serve(async (req) => {
   }
   if (!cart) return jsonResponse({ error: "cart_not_found" }, 404);
   if (cart.status !== "open") return jsonResponse({ error: "cart_not_open" }, 409);
+  // Service-role reads do not enforce RLS. Verify ownership before pricing.
+  if (cart.owner_user_id) {
+    const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user || user.id !== cart.owner_user_id) return jsonResponse({ error: "cart_access_denied" }, 403);
+  } else if (!session_token || session_token !== cart.session_token) {
+    return jsonResponse({ error: "cart_access_denied" }, 403);
+  }
 
   const { data: items, error: itemsErr } = await supabase
     .from("store_cart_items")
@@ -183,17 +187,20 @@ serve(async (req) => {
       id, quantity, unit_price_cents_snapshot, customization,
       product:store_products (
         id, slug, name, short_description, our_price_cents, images,
-        fulfillment_mode, pricing_constraint, map_floor_cents, vendor_id,
+        fulfillment_mode, pricing_constraint, map_floor_cents, vendor_id, vendor_sku,
         vendor_extra, status, free_shipping_eligible, weight_grams, shipping_class
       )
     `)
     .eq("cart_id", cart.id);
   if (itemsErr) return jsonResponse({ error: itemsErr.message }, 500);
-  const cartItems = (items as unknown as CartItemRow[]) || [];
+  let cartItems = (items as unknown as CartItemRow[]) || [];
   if (cartItems.length === 0) return jsonResponse({ error: "cart_empty" }, 400);
+  // Stripe permits 100 lines; leave room for the flat shipping line.
+  if (cartItems.length > 99) return jsonResponse({ error: "Split this order into fewer than 100 designs and finishes." }, 400);
 
   // Validate every item is cart-eligible and active
   for (const it of cartItems) {
+    try { validateCartQuantity(it.quantity); } catch (error) { return jsonResponse({ error: (error as Error).message }, 400); }
     if (!it.product) return jsonResponse({ error: `product_missing_for_item_${it.id}` }, 400);
     if (it.product.status !== "active") return jsonResponse({ error: `product_inactive_${it.product.slug}` }, 400);
     if (!CART_ELIGIBLE_MODES.has(it.product.fulfillment_mode)) {
@@ -221,16 +228,15 @@ serve(async (req) => {
     .maybeSingle();
   const stickerShippingCents = Number((stickerShipRow?.value as number) ?? 500);
 
-  let subtotalCents = 0;
-  for (const it of cartItems) {
-    subtotalCents += Number(it.product.our_price_cents) * Number(it.quantity);
-  }
+  try { cartItems = priceCartItems(cartItems); }
+  catch (error) { return jsonResponse({ error: (error as Error).message }, 400); }
+  const subtotalCents = cartItems.reduce((sum, item) => sum + item.unit_price_cents_snapshot * item.quantity, 0);
 
   // Shipping. An order made up entirely of custom stickers ships for the
   // flat sticker fee no matter how many stickers it holds. Any other mix
   // uses the normal store rules and the stickers ride along inside that
   // shipment at no extra charge, so no order is ever charged both fees.
-  const stickersOnly = cartItems.length > 0 && cartItems.every(isCustomSticker);
+  const stickersOnly = cartItems.length > 0 && cartItems.every(isPricedSticker);
   const shippingCents = stickersOnly
     ? stickerShippingCents
     : subtotalCents >= freeShippingThreshold
@@ -254,6 +260,15 @@ serve(async (req) => {
     .single();
   if (orderErr || !orderInsert) return jsonResponse({ error: orderErr?.message || "order_insert_failed" }, 500);
 
+  // Lock quantity, finish, artwork, and the actual discounted price together.
+  // The webhook fulfills this immutable snapshot, never the mutable cart.
+  const { error: snapshotError } = await supabase.from("store_order_items")
+    .insert(buildOrderItemSnapshots(orderInsert.id, cartItems));
+  if (snapshotError) {
+    await supabase.from("store_orders").update({ status: "cancelled", notes: "order_snapshot_failed" }).eq("id", orderInsert.id);
+    return jsonResponse({ error: "order_snapshot_failed" }, 500);
+  }
+
   // Stripe Checkout: flat-fee shipping line baked in as a separate line
   // item rather than via shipping_options, which keeps the math identical
   // to what we wrote into the order row.
@@ -272,12 +287,11 @@ serve(async (req) => {
   if (customer_email) params["customer_email"] = customer_email;
 
   cartItems.forEach((it, i) => {
-    const primary =
-      (Array.isArray(it.product.images) && it.product.images.find((img) => img.is_primary)) ||
-      (Array.isArray(it.product.images) && it.product.images[0]);
+    const images = Array.isArray(it.product.images) ? it.product.images : [];
+    const primary = images.find((img) => img.is_primary) || images[0];
     params[`line_items[${i}][quantity]`] = it.quantity;
     params[`line_items[${i}][price_data][currency]`] = "usd";
-    params[`line_items[${i}][price_data][unit_amount]`] = it.product.our_price_cents;
+    params[`line_items[${i}][price_data][unit_amount]`] = it.unit_price_cents_snapshot;
     params[`line_items[${i}][price_data][tax_behavior]`] = "exclusive";
     const stickerLabel = stickerLineLabel(it);
     params[`line_items[${i}][price_data][product_data][name]`] = (
@@ -324,10 +338,14 @@ serve(async (req) => {
     return jsonResponse({ error: (e as Error).message }, 500);
   }
 
-  await supabase
+  const { error: sessionSaveError } = await supabase
     .from("store_orders")
     .update({ stripe_checkout_session_id: session.id })
     .eq("id", orderInsert.id);
+  if (sessionSaveError) {
+    await callStripe(`checkout/sessions/${session.id}/expire`, {});
+    return jsonResponse({ error: "checkout_session_save_failed" }, 500);
+  }
 
   return jsonResponse({ url: session.url, order_id: orderInsert.id, order_number: orderInsert.order_number });
 });

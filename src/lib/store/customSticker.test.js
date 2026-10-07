@@ -23,9 +23,14 @@ describe('custom collector-card options', () => {
     expect(CARD_TYPES.find((option) => option.value === 'grass')?.label).toBe('Canopy');
   });
 
-  it('keeps glossy as the only customer-facing default', () => {
+  it('defaults to standard glossy and preserves the selected physical finish', () => {
     expect(createDefaultDesign().finish).toBe('glossy');
     expect(serializeDesign(createDefaultDesign()).finish).toBe('glossy');
+    const holographic = serializeDesign({ ...createDefaultDesign(), finish: 'holographic', rarity: 'common' });
+    expect(holographic.finish).toBe('holographic');
+    expect(holographic.rarity).toBe('common');
+    expect(designSummary(holographic)).toContain('Holographic');
+    expect(serializeDesign({ ...createDefaultDesign(), rarity: 'holo_rare' }).finish).toBe('glossy');
   });
 
   it('uses the new customer-facing vocabulary in validation and summaries', () => {
