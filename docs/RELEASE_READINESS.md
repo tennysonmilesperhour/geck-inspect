@@ -1,84 +1,84 @@
-# Release evidence, September 6, 2026
+# Release readiness, 8 October 2026
 
-The RevenueCat webhook blocker is resolved. This is an evidence record, not a
-claim that every device/store flow has passed or that the entire product is
-ready for submission without the remaining checks.
+This is the current store-submission status. The September evidence record is kept at the bottom. Nothing has been submitted to the App Store or Google Play.
 
-## Repaired and verified
+Store version for the first upload: **1.0** (iOS build **1**, Android versionName **1.0**, versionCode **1**). Bundle id and package name: `com.geckinspect.app`. Display name: Geck Inspect.
 
-| Area | Result |
+## What changed in code
+
+| Area | Status |
 |---|---|
-| RevenueCat delivery | Live authenticated TEST returned HTTP 200; receipt persisted; no access granted by TEST |
-| Real catalog mapping | Apple Keeper and Breeder products map to their own tiers; legacy Pro compatibility retained |
-| Purchase/restore reconciliation | Deployed signed-in `revenuecat-sync`; caller cannot choose another UUID or forge access; repeated calls return 429 |
-| Subscription lifecycle | Tests cover expiration, paid time after cancellation, billing grace, deferred changes, lifetime refunds, transfers, aliases, retries and ordered atomic writes |
-| Cross-tool membership | Browser/provider/user facades and metered server tools use verified store access alongside Stripe, preserving higher existing tiers |
-| Account changes | Delayed profiles cannot resurrect a signed-out account; old billing extras are rejected; query/layout caches and account views reset on identity change |
-| Identity trust | Editable metadata cannot choose account identity, admin role or membership |
-| Auth configuration | Canonical web site and exact native confirmation/recovery return URLs saved in Supabase |
-| Shared references | Crested image/taxonomy lookups are species-scoped; failed inventory reads show errors; all-species ingestion is labeled accurately |
-| Companion market feed | Live Geck Intellect snapshot returned 200 with 10,011 observations and 1,007 breeders at verification; confirmed sales are distinct from asking-price observations |
-| Community | Forum comments have contextual reports; blocked authors disappear from forum/Q&A views; server message blocking remains enforced |
-| Moderation data safety | Removing a marketplace listing now unpublishes it and preserves the owner's private animal and care records |
-| Notifications | Forum replies use the existing server dispatcher instead of dead email stubs and private recipient-profile lookups |
-| Shared database performance | Combo-price query restricts observations before weekly deduplication; five equivalence cases passed; benchmark fell from 627 ms to 21 ms and 53,097 to 1,526 shared buffer hits |
-| Configuration hygiene | Refreshed invalid production Vercel service key; added iOS public SDK key; secrets kept outside source control |
-| Engineering handoff | Current identity/integration guide, focused billing runbook, corrected route-registration comments and removed unused code |
+| Apple privacy manifest | `ios/App/App/PrivacyInfo.xcprivacy` is in the app target. Tracking is off. Collected data matches the privacy policy (account, photos, gecko records, purchases, product analytics, support). Required-reason APIs: UserDefaults, file timestamps, disk space. |
+| Export compliance | `ITSAppUsesNonExemptEncryption` is already false. Standard HTTPS only. |
+| App icon and splash | iOS icon is 1024x1024, no alpha channel. Android launcher icons and branded splash screens are already in the projects. |
+| Versioning | iOS `MARKETING_VERSION` 1.0 and `CURRENT_PROJECT_VERSION` 1. Android `versionName` 1.0 and `versionCode` 1 unless `GECK_VERSION_NAME` / `GECK_VERSION_CODE` are set. The next upload must raise the build number on both. |
+| Android build | minSdk 24, targetSdk 36, cleartext off, release builds refuse to assemble without the four `GECK_ANDROID_*` signing variables. Exact-alarm permission from the reminder plugin is removed. Camera is optional hardware. |
+| Payments | Inside the app, Keeper and Breeder are StoreKit / Play Billing through RevenueCat, with Restore purchases. The Stripe billing button is hidden in the app. The Promote trial dialog in the app only offers store plans. Website Stripe checkout is unchanged. Supplies checkout stays off (`STORE_CHECKOUT_ENABLED` is false). |
+| Account deletion | Settings now deletes the signed-in account. `delete-my-account` is deployed (verify_jwt on). An anonymous call returns 401. It erases only the session user, cancels a live website subscription first, and does not cancel an App Store or Google Play subscription. `admin_erase_account` is already installed. If the function is missing, Settings still files the 30-day support request. |
+| Privacy policy and terms | Updated 8 October 2026. Public deletion steps are on `/PrivacyPolicy`, which is the URL to paste into both stores. |
+| Native value (Guideline 4.2) | The app bundles the product. It does not load geckinspect.com as a remote page. Morph ID, quick add, and the gecko form open the device camera or photo library. Feeding and weigh-in reminders can be scheduled on the phone. The status bar matches the app background. |
 
-Database timing is one controlled comparison on the same query and privileges,
-not a load test or guarantee of infrastructure capacity. Supabase displayed a
-resource-pressure warning during the audit; reassess real usage after the hot
-query repair before deciding whether compute capacity needs to change.
+## The six gates
 
-## Verification scope
+1. **App Store Connect paperwork.** Still the owner. The binary side (privacy manifest, encryption flag, version, restore purchases, privacy and terms URLs) is ready to attach. Sign in, accept the Paid Apps agreement, create the app and subscriptions, send Apple's server notification test to RevenueCat, and fill the privacy answers below.
+2. **A real sandbox purchase and sign-in on a release build.** Still the owner, on a device or TestFlight. The code path is RevenueCat plus the existing `com.geckinspect.app://auth/callback` return. Leave `NATIVE_AUTH_REDIRECT_VERIFIED` unset until email confirmation and password recovery succeed on a device.
+3. **Physical-device photo and collection checks.** Still the owner. Camera capture is wired. HEIC still goes through the existing upload converter. A two-account transfer and export still need a device pass.
+4. **Deletion fulfillment.** The in-app action is no longer only a ticket. One proof is still the owner: create a disposable account, add a gecko and a photo, delete it from Settings, and confirm the login is gone, the photo is gone, and a sold animal's photo still loads for the buyer. Do not use a real member for this.
+5. **Moderation operations.** Still the owner. Report, hide, and response-time need an acceptance pass. Code for forum reports and message blocking was already in place and was not treated as a finished moderation program.
+6. **Store listing claims.** Screenshots and the listing text are still the owner. Do not claim remote push, a shipping checkout, a supplies checkout, mentorship, or giveaways. Safe claims: collection records, breeding and lineage, AI morph identification from a photo you take, feeding and weigh-in reminders on the phone, and memberships billed by the store.
 
-The complete web build includes ESLint, Vitest, generated public assets, Vite,
-prerender and SEO checks. The final build passed 701 tests across 27 files,
-with no lint errors or warnings. Browser checks passed for the demo collection,
-guest sign-up, forum and Q&A, with no client console errors. SEO checks covered
-165 routes with zero errors, 67 content warnings and one orphan route.
+## Privacy answers to paste
 
-The database rollback scripts passed for animal/weight atomicity, private
-visibility, votes/accepted answers, blocked messages, duplicate/out-of-order
-billing, tier precedence and service-only reconciliation. Ordinary-user HTTP
-checks passed on the live sync endpoint; disposable Supabase records were cleaned
-up. Only an empty RevenueCat test customer remains from the lookup.
+Use the same facts in App Store Connect (App Privacy) and Play Console (Data safety). The app does not track users across other companies' apps for ads. It does not sell data.
 
-The iOS simulator compilation passed with the configured Apple SDK key. This
-verifies compilation, not Apple payment processing, signed distribution or
-physical-device behavior. `pnpm typecheck` remains a limited JavaScript syntax
-check, not full static typing. The SEO audit still has content warnings.
+Collected, linked to the account, used for the app:
 
-## Submission gates still requiring evidence
+- Name and email
+- Photos of geckos
+- User ID
+- Purchase history (store or website membership)
+- Other user content (gecko records, messages, forum posts)
+- Customer support messages
 
-1. **Authenticated App Store Connect review:** uploaded build/version, agreements,
-   subscription availability and group levels, review metadata/privacy answers,
-   and Apple server notifications. The dashboard was signed out; a sign-in tab
-   was left available. RevenueCat's in-app purchase key is valid, but no Apple
-   server notification had been received during this audit.
-2. **Actual release-binary store and auth flows:** ordinary-account Keeper and
-   Breeder purchases, restore/reinstall, upgrade/cancellation/refund/expiration,
-   account switching, confirmation and password recovery. Callback configuration
-   and webhook TEST delivery cannot substitute for this.
-3. **Physical-device workflow checks:** camera-roll HEIC, photo save, collection
-   care, private isolation, a two-account collection/ownership transfer and export.
-4. **Deletion fulfillment:** the in-app form creates a tracked support request.
-   The privacy policy promises deletion/anonymization within 30 days. Assign an
-   operator and prove complete erasure/anonymization on a representative disposable
-   account, including media and third-party retention. Ticket creation alone is
-   not verified erasure.
-5. **Moderation operations:** report handling, review response time, coverage of
-   gallery/listing content, and abuse response need an acceptance pass. Forum/Q&A
-   filtering and message blocking do not certify the entire moderation program.
-6. **Product claims:** store screenshots must match enabled features. Native push,
-   shipping provider checkout, supplies checkout, mentorship and giveaways are
-   unavailable or incomplete. Production endpoint inventory found only the
-   deliberately disabled shipping/supplies checkout calls without deployed handlers.
+Collected, linked, used for analytics and the app:
 
-Keep `NATIVE_AUTH_REDIRECT_VERIFIED` unset until device confirmation/recovery
-passes. Delivery evidence supports the webhook verification gate; retain separate
-actual purchase evidence. Do not waive release checks merely to produce an archive.
+- Product interaction (pages and features). Google Analytics and PostHog. No advertising cookies. No session replay.
 
-For code ownership and release procedure, read [ENGINEERING.md](ENGINEERING.md).
-For live identifiers, secrets by name, retries and purchase diagnosis, read
-[BILLING.md](BILLING.md).
+Not collected: precise location, contacts, health, financial info beyond the purchase handled by Apple, Google, or Stripe, advertising ID.
+
+Play Data safety extras: data is encrypted in transit. Users can request deletion. Deletion URL: `https://geckinspect.com/PrivacyPolicy`. The steps on that page are: sign in, open Settings, choose Delete my account.
+
+## Guideline 4.2
+
+Risk is real, and it is lower than a bare website wrapper.
+
+Apple rejects apps that are only a website in a web view. Geck Inspect was already a full keeper product (collection, breeding, lineage, morph identification, store billing) packaged with Capacitor, not a remote frame of the marketing site. What it lacked was device capability a reviewer can point at. The binary now includes the camera, on-device reminders, and store billing. That is the smallest set that matches how keepers actually use the app.
+
+It can still be rejected if the reviewer decides the interface is only the website. There is no native tab bar or fully native screens. If that happens, the next addition that would matter is a small native capture flow (a camera screen that does not look like the site) rather than more web pages.
+
+## Owner checklist
+
+Do these yourself. They cannot be done from the repo.
+
+- [ ] Apple Developer Program ($99 a year) and a signed Paid Apps agreement, with tax and banking.
+- [ ] App Store Connect app for `com.geckinspect.app`, subscriptions in one group, and Apple server notifications pointed at RevenueCat. Send the test notification.
+- [ ] Privacy nutrition answers pasted from the section above. Privacy URL `https://geckinspect.com/PrivacyPolicy`. Terms URL `https://geckinspect.com/Terms`. Support email on the Contact page.
+- [ ] iOS signing: open `ios/App` in Xcode, select your team, archive version 1.0 (1) with a current Xcode, upload to TestFlight. Do not submit for review until the device checks pass.
+- [ ] Google Play Console ($25) and, if you want the lower fee, the Small Business Program.
+- [ ] Create the Android upload keystore. Release builds read `GECK_ANDROID_KEYSTORE`, `GECK_ANDROID_STORE_PASSWORD`, `GECK_ANDROID_KEY_ALIAS`, and `GECK_ANDROID_KEY_PASSWORD`. Prefer Play App Signing so Google holds the app signing key.
+- [ ] Upload an AAB to a closed test. Play requires 12 testers on a closed test for 14 days before production for new personal accounts. That clock starts when the testers are opted in.
+- [ ] Play Data safety and the account-deletion URL, using the answers above.
+- [ ] Screenshots: 6.7 inch iPhone, 13 inch iPad if you ship iPad, and a phone plus a 7 inch tablet for Play. Show the collection, a morph identification, and a reminder. Do not show a feature the build does not have.
+- [ ] Sandbox purchase of Keeper and of Breeder, then restore on a second install. Confirm and reset a password from the app.
+- [ ] On a phone: take a gecko photo (including a HEIC from the library), save a weight, and confirm another account cannot see the private collection.
+- [ ] Disposable-account deletion proof described in gate 4.
+- [ ] One moderation pass: file a report, hide it, confirm another account cannot see it.
+- [ ] After the privacy policy change is on geckinspect.com, re-read `/PrivacyPolicy` before you paste the URL into the stores.
+
+## September 2026 evidence (unchanged)
+
+The RevenueCat webhook blocker was resolved on 6 September 2026. That record is not a claim that every device flow has passed.
+
+Repaired then: RevenueCat test delivery, catalog mapping, purchase reconciliation, subscription lifecycle tests, cross-tool membership, account-change cache resets, identity trust, native auth return URLs, species-scoped image lookups, the market feed, forum reports and blocks, listing unpublish, notification dispatch, and the combo-price query. The iOS simulator compiled. Those checks do not replace a signed purchase or a physical device.
+
+For code ownership and release procedure, read [ENGINEERING.md](ENGINEERING.md). For live identifiers and purchase diagnosis, read [BILLING.md](BILLING.md).

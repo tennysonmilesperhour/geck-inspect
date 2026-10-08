@@ -10,11 +10,14 @@ import CollectionsCard from '@/components/settings/CollectionsCard';
 import BreederStoreCard from '@/components/settings/BreederStoreCard';
 import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLogicSettings';
 import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
+import PhoneRemindersCard from '@/components/settings/PhoneRemindersCard';
 import DataExportCard from '@/components/settings/DataExportCard';
 import MySupportTickets from '@/components/support/MySupportTickets';
 import IotSettingsCard from '@/components/iot/IotSettingsCard';
 import { IOT_SENSORS_ENABLED } from '@/lib/iotClient';
 import { openBillingPortal } from '@/lib/billingPortal';
+import { isNativePlatform } from '@/lib/revenuecat';
+import { syncNativeCareReminders } from '@/lib/nativeCareReminders';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -510,6 +513,7 @@ export default function SettingsPage() {
         setIsSaving(true);
         try {
             await User.updateMyUserData(formData);
+            syncNativeCareReminders({ email: user?.email, feedingAlertsEnabled: formData.feeding_alerts_enabled !== false }).catch(() => {});
             toast({ title: "Settings Saved", description: "Your profile has been successfully updated." });
             setHasUnsavedChanges(false);
         } catch (error) {
@@ -973,6 +977,7 @@ export default function SettingsPage() {
                     renderSwitch={renderSwitch}
                     renderNotificationSwitch={renderNotificationSwitch}
                 />
+                <PhoneRemindersCard email={user?.email} />
 
                 <section id="feeding-alerts">
                  <Card>
@@ -1058,6 +1063,11 @@ export default function SettingsPage() {
                     // Grandfathered, lifetime, referral and comped plans
                     // have no recurring bill.
                     const canManageBilling = isPaid && !isGrandfathered && !isLifetime && Boolean(user?.stripe_subscription_id);
+                    const nativeApp = isNativePlatform();
+                    // A website subscription is managed in Stripe on the web.
+                    // Inside the app that button would open a payment flow
+                    // outside the store, which the stores reject.
+                    const showStripePortal = canManageBilling && !nativeApp;
                     // The plan came from the app store (RevenueCat), which
                     // handles its own billing.
                     const isAppStorePlan = isPaid && !canManageBilling && !isGrandfathered
@@ -1098,7 +1108,7 @@ export default function SettingsPage() {
                                     >
                                         {isPaid ? 'Compare plans' : 'See plans'}
                                     </Button>
-                                    {canManageBilling && (
+                                    {showStripePortal && (
                                         <Button
                                             type="button"
                                             className="bg-emerald-600 hover:bg-emerald-500 text-white"
@@ -1110,13 +1120,17 @@ export default function SettingsPage() {
                                         </Button>
                                     )}
                                     <p className="basis-full text-xs text-slate-500">
-                                        {canManageBilling
+                                        {nativeApp && canManageBilling
+                                            ? 'This plan was purchased on the Geck Inspect website. The app cannot change it or take a card. Cancel it in a web browser if you do not want it to renew. New plans in this app are billed by the App Store or Google Play.'
+                                            : showStripePortal
                                             ? 'Manage billing opens your secure Stripe portal to change plans, update your card, download invoices, or cancel.'
                                             : isAppStorePlan
-                                                ? 'Your plan renews through the App Store. Change or cancel it in your device subscription settings.'
+                                                ? 'Your plan renews through the store. Change or cancel it in your device subscription settings.'
                                                 : isPaid
                                                     ? 'Your plan has no recurring bill, so there is nothing to manage here.'
-                                                    : 'Paid plans can be cancelled anytime from this page. The free trial is optional and offered on the Membership page.'}
+                                                    : nativeApp
+                                                        ? 'Plans bought in this app are billed by the App Store or Google Play. Cancel them in the store subscription settings.'
+                                                        : 'Paid plans can be cancelled anytime from this page. The free trial is optional and offered on the Membership page.'}
                                     </p>
                                 </CardContent>
                             </Card>

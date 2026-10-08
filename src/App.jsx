@@ -34,6 +34,7 @@ const PublicPageShell = lazy(() => import('@/components/public/PublicPageShell')
 // page not found (both used to show a bare sign-in form).
 const SignedOutFallback = lazy(() => import('@/components/public/SignedOutFallback'));
 import ScrollToTop from '@/components/shared/ScrollToTop';
+import NativeCareSync from '@/components/native/NativeCareSync';
 import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
 import { captureFirstTouch } from '@/lib/attribution';
@@ -546,6 +547,7 @@ function App() {
                 <PostHogPageTracker />
                 <GA4PageTracker />
                 <PostAuthRedirect />
+                <NativeCareSync />
                 <AuthenticatedApp />
               </Router>
               <Toaster />

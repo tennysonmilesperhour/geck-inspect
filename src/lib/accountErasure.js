@@ -21,8 +21,12 @@ export const DELETION_REQUEST_SUBJECT = 'Account deletion request';
 
 export const ERASURE_FUNCTION = 'admin-delete-account';
 
+/** The signed-in member's own deletion. The function ignores any email
+ *  in the body and erases only the account on the session. */
+export const SELF_DELETE_FUNCTION = 'delete-my-account';
+
 const NOT_DEPLOYED_MESSAGE =
-  'Account erasure is not deployed yet. Deploy the admin-delete-account edge function and apply the account erasure migration, then try again. Nothing was deleted.';
+  'Account deletion is not deployed yet. Nothing was deleted.';
 
 /**
  * Read the error body a FunctionsHttpError hides on error.context and turn
@@ -84,6 +88,30 @@ export async function eraseAccount({ supportMessageId, profileId, email } = {}) 
   }
   if (!data?.ok) {
     const err = new Error(data?.message || 'Account erasure did not finish.');
+    err.code = data?.error || 'erasure_failed';
+    throw err;
+  }
+  return data;
+}
+
+/**
+ * Delete the signed-in account. Resolves with the function summary.
+ * Rejects with an Error that has `code` and a plain-language `message`.
+ * The same error reader as the admin tool covers "not deployed yet".
+ */
+export async function deleteMyAccount() {
+  const { data, error } = await supabase.functions.invoke(SELF_DELETE_FUNCTION, {
+    body: { confirm: 'DELETE' },
+  });
+  if (error) {
+    const info = await readErasureError(error);
+    const err = new Error(info.message);
+    err.code = info.code;
+    err.status = info.status;
+    throw err;
+  }
+  if (!data?.ok) {
+    const err = new Error(data?.message || 'Account deletion did not finish.');
     err.code = data?.error || 'erasure_failed';
     throw err;
   }

@@ -104,7 +104,7 @@ export default function Terms() {
           </Section>
 
           <Section n="8" title="Termination">
-            <p>You may delete your account at any time from your account settings. We may suspend or terminate accounts that violate these Terms. On termination, you may lose access to Your Content; we recommend exporting anything you want to keep before deleting.</p>
+            <p>You may delete your account at any time from your account settings. Deleting the account removes your login and personal data. It does not cancel an App Store or Google Play subscription; cancel that in the store if you do not want it to renew. A membership bought on the website is cancelled as part of deletion when automatic deletion is available. We may suspend or terminate accounts that violate these Terms. On termination, you may lose access to Your Content; we recommend exporting anything you want to keep before deleting.</p>
           </Section>
 
           <Section n="9" title="Disclaimers and limitation of liability">

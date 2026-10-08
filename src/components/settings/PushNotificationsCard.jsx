@@ -127,7 +127,7 @@ export default function PushNotificationsCard({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isNativePlatform() && <p className="text-sm text-slate-300">Device push notifications are not available in this native build. Your in-app notifications and email preferences remain available.</p>}
+          {isNativePlatform() && <p className="text-sm text-slate-300">Remote push is not used in the app. Phone reminders, in the next section, schedule feeding and weigh-in alerts on this device. Email preferences on this page still apply.</p>}
           {!supported && !isNativePlatform() && (
             <div className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-3 text-sm text-slate-300">
               <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />

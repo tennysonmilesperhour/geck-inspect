@@ -30,6 +30,8 @@ import { generateNextGeckoId } from './form/helpers';
 import ImageCropDialog from './form/ImageCropDialog';
 import ParentAutocomplete from './form/ParentAutocomplete';
 import { parentNameForSave } from '@/lib/parentNames';
+import { isNativePlatform } from '@/lib/revenuecat';
+import { captureDevicePhoto } from '@/lib/devicePhoto';
 
 // Back-compat alias so the rest of this file doesn't need to change
 const initialFormData = INITIAL_FORM_DATA;
@@ -1050,6 +1052,16 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                 className={`h-24 sm:h-28 flex flex-col items-center justify-center gap-1 text-center px-2 text-slate-400 ${
                                                     isArchived || isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:text-emerald-300 hover:bg-slate-800'
                                                 }`}
+                                                onClick={async (event) => {
+                                                    if (!isNativePlatform() || isArchived || isUploadingImage) return;
+                                                    event.preventDefault();
+                                                    try {
+                                                        const file = await captureDevicePhoto();
+                                                        if (file) await handleSlotUpload({ target: { files: [file] } }, slot.id);
+                                                    } catch (err) {
+                                                        toast({ title: 'Could not open the camera', description: err.message || 'Try again.', variant: 'destructive' });
+                                                    }
+                                                }}
                                             >
                                                 <Upload className="w-4 h-4" />
                                                 <span className="text-xs">Add {slot.label.toLowerCase()} photo</span>
@@ -1194,7 +1206,19 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             </Droppable>
                         </DragDropContext>
                         <Button asChild type="button" variant="outline" disabled={isUploadingImage} className="w-full border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-60">
-                            <label className="cursor-pointer">
+                            <label
+                                className="cursor-pointer"
+                                onClick={async (event) => {
+                                    if (!isNativePlatform() || isUploadingImage) return;
+                                    event.preventDefault();
+                                    try {
+                                        const file = await captureDevicePhoto();
+                                        if (file) await handleImageUpload({ target: { files: [file] } });
+                                    } catch (err) {
+                                        toast({ title: 'Could not open the camera', description: err.message || 'Try again.', variant: 'destructive' });
+                                    }
+                                }}
+                            >
                                 {isUploadingImage ? (
                                     <>
                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
