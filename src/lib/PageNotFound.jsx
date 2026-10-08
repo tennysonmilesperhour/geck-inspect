@@ -22,12 +22,10 @@ export default function PageNotFound({}) {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-slate-950 text-slate-100">
-            {/* Client-side noindex signal. Because the SPA returns HTTP 200
-                on every path (Vercel rewrite → /index.html), the authoritative
-                way to tell JS-executing crawlers this URL is a dead end is
-                via <meta name="robots" content="noindex, nofollow">. Real
-                404 status requires enumerating every known SPA path in
-                vercel.json, tracked as a follow-up. */}
+            {/* Direct requests for an unknown path already return HTTP 404
+                from middleware.js. Opening a missing route from inside the
+                app does not make a new request, so this page still renders
+                and asks crawlers that do run JavaScript not to index it. */}
             <Seo
               title="Page not found"
               description="The page you requested could not be found on Geck Inspect."
