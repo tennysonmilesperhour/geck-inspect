@@ -300,8 +300,11 @@ function json(body: unknown, status = 200) {
 }
 
 // Per-tier monthly credit allotments. Keep in sync with
-// src/lib/tierLimits.js#monthlyMorphIDCredits. Unknown / missing tier
-// falls back to `free`, matching the frontend's tierOf() helper.
+// src/lib/tierLimits.js#monthlyMorphIDCredits and the monthly case in
+// morph_id_scans_remaining(). Unknown / missing tier falls back to
+// `free`, matching the frontend's tierOf() helper. Bonus scans are not
+// in this map. The database adds them on top, and only after the
+// monthly allowance is used.
 const TIER_MORPH_ID_CREDITS: Record<string, number> = {
   free: 0,
   keeper: 3,
@@ -416,6 +419,32 @@ async function settleRequestKey(
     if (error && !requestStoreMissing(error)) console.error("morph_id_requests settle failed:", error.message);
   } catch (err) {
     console.error("morph_id_requests settle threw:", err instanceof Error ? err.message : String(err));
+  }
+}
+
+// Scans left after bonus credits. Null when that function is not
+// installed yet, so the caller keeps the older monthly subtraction.
+async function readMorphIdScansRemaining(
+  userId: string,
+  tier: string,
+  monthly: number,
+): Promise<number | null> {
+  try {
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data, error } = await admin.rpc("morph_id_scans_remaining", {
+      p_user_id: userId,
+      p_tier: tier,
+      p_monthly: monthly,
+    });
+    if (error || data == null || typeof data !== "object") return null;
+    const remaining = Number((data as { remaining?: unknown }).remaining);
+    return Number.isFinite(remaining) ? remaining : null;
+  } catch (err) {
+    console.error(
+      "morph_id_scans_remaining failed:",
+      err instanceof Error ? err.message : String(err),
+    );
+    return null;
   }
 }
 
@@ -1346,7 +1375,14 @@ serve(async (req) => {
         }, 500);
       }
       creditsConsumed = usage?.credits_consumed ?? 0;
-      creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
+      creditsRemaining = await readMorphIdScansRemaining(
+        profile.auth_user_id,
+        tier,
+        creditsIncluded,
+      );
+      if (creditsRemaining == null) {
+        creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
+      }
       creditWasConsumed = true;
     }
 
@@ -1380,7 +1416,12 @@ serve(async (req) => {
       creditWasConsumed = false;
       creditRefunded = true;
       creditsConsumed = Math.max(0, creditsConsumed - 1);
-      creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
+      const refreshed = await readMorphIdScansRemaining(
+        profile.auth_user_id,
+        tier,
+        creditsIncluded,
+      );
+      creditsRemaining = refreshed ?? Math.max(0, (creditsRemaining ?? 0) + 1);
     }
     await logInvocation({
       surface,

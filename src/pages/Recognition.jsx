@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
 import PageHeader from '@/components/shared/PageHeader';
 import { getTierLimits, TIER_LIMITS } from '@/lib/tierLimits';
+import { loadMorphIdQuota, morphIdGate, morphIdScansLeftLabel } from '@/lib/morphIdQuota';
 import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis, applyCorrections } from '@/lib/morphIdDraft';
 import { captureEvent } from '@/lib/posthog';
@@ -198,34 +199,29 @@ export default function Recognition() {
 
   const primaryUrl = imageUrls[0] || null;
 
-  // Free accounts have no monthly allowance but get one identification ever
-  // (lifetimeFreeMorphIDs, enforced by consume_morph_id_credit). Read the
-  // ledger so the page offers the free try, and shows the upgrade card up
-  // front once it is used instead of an uploader that ends in a 402.
+  // The server reports scans left (the plan allowance plus any unexpired
+  // bonus credits). Free is 1 lifetime try. Paid plans are the monthly
+  // cap. Lock only once that number is known to be 0. If the read fails,
+  // the server still enforces the limit and returns a clear error.
   const isFreeTier =
     Boolean(user) && !isGuest && !isAdmin && getTierLimits(user).monthlyMorphIDCredits === 0;
-  const freeUsageQuery = useQuery({
-    // Usage rows are keyed by the sign-in id (auth_user_id). user.id is the
-    // profile id, which differs for every free account, so this lookup found
-    // nothing and a used free try still showed as available (fixed 29 Sep 2026).
-    queryKey: ['morph-id-lifetime-usage', user?.auth_user_id],
-    enabled: isFreeTier && Boolean(user?.auth_user_id),
+  const quotaQuery = useQuery({
+    // Usage is keyed by the sign-in id (auth_user_id). user.id is the
+    // profile id, which differs for every free account.
+    queryKey: ['morph-id-scans-remaining', user?.auth_user_id, isFreeTier],
+    enabled: Boolean(user?.auth_user_id) && !isGuest && !isAdmin,
     staleTime: 60 * 1000,
-    queryFn: async () => {
-      const { data, error: usageError } = await supabase
-        .from('morph_id_usage')
-        .select('credits_consumed')
-        .eq('user_id', user.auth_user_id);
-      if (usageError) throw usageError;
-      return (data || []).reduce((sum, row) => sum + (Number(row.credits_consumed) || 0), 0);
-    },
+    queryFn: () => loadMorphIdQuota(supabase, {
+      isFreeTier,
+      userId: user.auth_user_id,
+    }),
   });
-  const freeTriesLeft = isFreeTier
-    ? Math.max(0, (TIER_LIMITS.free.lifetimeFreeMorphIDs || 0) - (freeUsageQuery.data ?? 0))
-    : null;
-  // Lock only once the ledger confirms the free try is spent. If the read
-  // fails, the server still enforces the limit and returns a clear error.
-  const morphIdLocked = isFreeTier && freeUsageQuery.isSuccess && freeTriesLeft === 0;
+  const gate = quotaQuery.data ?? morphIdGate({ isFreeTier });
+  const morphIdLocked = gate.locked;
+  const showFirstFreeBanner = isFreeTier && (
+    quotaQuery.isSuccess ? gate.showFirstFreeBanner : !quotaQuery.isError
+  );
+  const showScansLeft = quotaQuery.isSuccess && gate.showScansLeft;
 
   // Funnel: the locked card is an upgrade prompt.
   useEffect(() => {
@@ -325,6 +321,7 @@ export default function Recognition() {
         });
         if (funcError.code === 'morph_id_credits_exhausted') {
           upgradePromptShown('morph_id', 'morph_id_exhausted');
+          if (!isAdmin && user?.auth_user_id) await quotaQuery.refetch();
         }
         setError(funcError);
       } else {
@@ -337,11 +334,11 @@ export default function Recognition() {
           replayed: respMeta?.replayed === true,
           top_morph: data?.primary_morph || null,
         });
-        setAnalysis(data);
+        // Refresh before showing the result, so "scans left" and the lock
+        // match the scan that just finished (including a refund).
+        if (!isAdmin && user?.auth_user_id) await quotaQuery.refetch();
         setMeta(respMeta || null);
-        // Refresh the free-try count so "Start over" shows the locked state
-        // instead of an uploader that ends in a refusal after the upload.
-        if (isFreeTier) freeUsageQuery.refetch();
+        setAnalysis(data);
       }
     } catch (err) {
       console.error('Analysis error:', err);
@@ -409,10 +406,15 @@ export default function Recognition() {
           <Card className="bg-amber-950/40 border-amber-800">
             <CardContent className="p-4 md:p-6 flex flex-col items-center text-center gap-3">
               <Lock className="w-6 h-6 text-amber-300" />
-              <p className="font-semibold text-amber-100">You have used your free Morph ID</p>
+              <p className="font-semibold text-amber-100">
+                {isFreeTier
+                  ? (gate.bonus > 0 ? 'You have used your Morph ID scans' : 'You have used your free Morph ID')
+                  : "You're out of Morph ID scans for this month"}
+              </p>
               <p className="text-sm text-amber-200/80 max-w-md">
-                Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications
-                a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.
+                {isFreeTier
+                  ? <>Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.</>
+                  : 'Your monthly scans reset on the 1st. Upgrade your plan to identify more geckos now.'}
               </p>
               <div className="flex flex-wrap gap-2 justify-center mt-1">
                 <Button onClick={() => { upgradePromptClicked('morph_id', 'morph_id_locked'); navigate('/Membership'); }}>
@@ -435,12 +437,22 @@ export default function Recognition() {
               </div>
             ) : user && !isGuest ? (
               <>
-              {isFreeTier && freeTriesLeft > 0 && (
+              {showFirstFreeBanner && (
                 <div className="rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100">
                   <p className="font-semibold">Your first identification is free.</p>
                   <p className="text-emerald-200/80 mt-1">
                     Make it count: a sharp top view and side view in daylight, plus a third photo if you can.
                   </p>
+                </div>
+              )}
+              {showScansLeft && (
+                <div className="rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100">
+                  <p className="font-semibold">{morphIdScansLeftLabel(gate.remaining)}</p>
+                  {isFreeTier && (
+                    <p className="text-emerald-200/80 mt-1">
+                      Make it count: a sharp top view and side view in daylight, plus a third photo if you can.
+                    </p>
+                  )}
                 </div>
               )}
               <ViewPhotoUploader
@@ -535,7 +547,7 @@ export default function Recognition() {
                     </Button>
                   </div>
                   <p className="text-xs text-slate-500">
-                    {isFreeTier
+                    {isFreeTier && gate.bonus === 0
                       ? 'Your free try is used only when we can give you an answer. If the photos are not clear enough, you keep it and can try again with better photos.'
                       : 'A credit is used only when we can give you an answer. If the photos are not clear enough, or the analyzer fails, the credit comes back automatically.'}
                   </p>
@@ -570,7 +582,7 @@ export default function Recognition() {
           }
           const friendly = (error.code === 'morph_id_credits_exhausted' && isFreeTier)
             ? {
-                title: 'You have used your free Morph ID',
+                title: gate.bonus > 0 ? 'You have used your Morph ID scans' : 'You have used your free Morph ID',
                 body: `Keeper includes ${TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications a month.`,
                 cta: { label: 'See plans', href: '/Membership' },
               }
@@ -619,20 +631,21 @@ export default function Recognition() {
           );
         })()}
 
-        {meta && !meta.is_admin && isFreeTier && meta.credit_refunded && (
+        {meta && !meta.is_admin && meta.credit_refunded && (
           <p className="text-xs text-slate-500 text-center">
-            We need clearer photos for this one, so your free identification was not used. Retake the top and side views and try again.
+            {isFreeTier && gate.bonus === 0
+              ? 'We need clearer photos for this one, so your free identification was not used. Retake the top and side views and try again.'
+              : 'We need clearer photos for this one, so no credit was used. Retake the top and side views and try again.'}
           </p>
         )}
-        {meta && !meta.is_admin && isFreeTier && !meta.credit_refunded && (
+        {meta && !meta.is_admin && !meta.credit_refunded && isFreeTier && gate.known && gate.remaining === 0 && gate.bonus === 0 && (
           <p className="text-xs text-slate-500 text-center">
             That was your free identification. Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
           </p>
         )}
-        {meta && !meta.is_admin && !isFreeTier && typeof meta.credits_remaining === 'number' && (
+        {meta && !meta.is_admin && showScansLeft && (
           <p className="text-xs text-slate-500 text-center">
-            {meta.credit_refunded ? 'We need clearer photos for this one, so no credit was used. ' : ''}
-            {meta.credits_remaining} of {meta.credits_included} MorphID credits left this month.
+            {morphIdScansLeftLabel(gate.remaining)}
           </p>
         )}
 

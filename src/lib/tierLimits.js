@@ -41,7 +41,9 @@ export const TIER_LIMITS = {
     // gets one identification, ever (lifetimeFreeMorphIDs), so a keeper can
     // try the flagship feature once (decision 27 Sep 2026; about 2 cents a
     // call). Enforced server-side in consume_morph_id_credit(), which counts
-    // the morph_id_usage ledger across all months.
+    // the morph_id_usage ledger across all months. Extra scans granted in
+    // morph_id_bonus_credits sit on top of this 1. The page reads the
+    // combined total from morph_id_scans_remaining(), not from this number.
     monthlyMorphIDCredits: 0,
     lifetimeFreeMorphIDs: 1,
     // June 2026 feature wave, all HARD monthly caps metered through the
