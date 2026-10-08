@@ -22,6 +22,13 @@
 -- counter. consume_morph_id_credit below is the 5 Oct definition
 -- (migration 20261005145947) with that bonus rule added.
 --
+-- Two known limits. Leave them as they are:
+-- A Free account that upgrades to a paid plan in the same month has the
+-- scans it already used added onto the new plan cap, so bonus scans spent
+-- before that upgrade come back.
+-- Scans taken against a grant that later expires still count against any
+-- newer grant. Leave expires_at null until that is the behavior you want.
+--
 -- Not applied to production by this change. Grants are a separate SQL
 -- step after Morph ID is confirmed working.
 
@@ -93,7 +100,9 @@ as $function$
 $function$;
 
 -- True when scans taken past the plan cap are more than the unexpired
--- grants. consume_morph_id_credit uses it to undo a race.
+-- grants. consume_morph_id_credit uses it to undo a race, and only after
+-- a scan that itself went past the plan cap. An expired grant must not
+-- block this month's paid allowance.
 create or replace function public.morph_id_bonus_overdrawn(p_user_id uuid)
 returns boolean
 language sql
@@ -175,6 +184,8 @@ begin
       v_cap := greatest(v_existing_included, v_monthly);
       -- First paid call after a free try in the same month: the free
       -- use does not count against the paid allowance (5 Oct 2026).
+      -- The same addition credits back bonus scans already used this
+      -- month. That is a known limit of the upgrade rule.
       if coalesce(v_existing_tier, 'free') = 'free' then
         v_cap := greatest(v_cap, v_monthly + v_existing_consumed);
       end if;
@@ -214,7 +225,12 @@ begin
         updated_date = now()
     returning * into rec;
 
-  if public.morph_id_bonus_overdrawn(p_user_id) then
+  -- Only a scan past the plan cap can overdraw the bonus. A scan that
+  -- still fits in this month's allowance must succeed even when an old
+  -- grant has expired and historical bonus use is larger than what is
+  -- still active.
+  if rec.credits_consumed > rec.credits_included
+     and public.morph_id_bonus_overdrawn(p_user_id) then
     update public.morph_id_usage
       set credits_consumed = greatest(rec.credits_consumed - 1, 0),
           updated_date = now()
@@ -262,13 +278,15 @@ declare
   v_monthly_left integer;
   v_remaining integer;
 begin
+  -- PostgREST sets the role to anon, authenticated, or service_role, and
+  -- security definer does not change current_setting('role'). Supabase
+  -- SQL runs as postgres, which is not a superuser, so a superuser check
+  -- would reject the admin grant script (42501). Any role other than
+  -- anon or authenticated may look up a user. A signed-in member stays
+  -- on authenticated and cannot look up someone else.
   v_privileged := coalesce(auth.role(), '') = 'service_role'
-    or exists (
-      select 1
-        from pg_roles r
-       where r.rolname = session_user
-         and r.rolsuper
-    );
+    or coalesce(nullif(current_setting('role', true), 'none'), session_user::text)
+       not in ('anon', 'authenticated');
 
   if not v_privileged
      and p_user_id is not null

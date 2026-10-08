@@ -1,8 +1,15 @@
--- Morph ID bonus credits. Run in the SQL editor. Every change rolls back.
+-- Morph ID bonus credits.
+--
+-- Plain SQL script for local Postgres. It needs a superuser: it creates
+-- roles and uses SET SESSION AUTHORIZATION. It is not pgTAP, and it is
+-- not meant to be pasted into the Supabase SQL editor.
+-- Every change rolls back.
 --
 -- Free with and without a bonus, paid monthly scans with a bonus used
 -- only after that month's allowance, expiry, a refund giving the scan
--- back, and a signed-in member who cannot insert a grant.
+-- back, a signed-in member who cannot insert a grant, and a
+-- non-superuser role (not anon or authenticated) that can look up
+-- another member.
 begin;
 
 create temp table _bonus_fixture (
@@ -79,6 +86,7 @@ declare
   v_paid uuid;
   v_keeper uuid;
   v_prior uuid;
+  v_expired_keeper uuid;
   v_earlier_free uuid;
   v_upgrade uuid;
   v_expire uuid;
@@ -305,6 +313,27 @@ begin
       pg_temp.scans(v_prior, 'keeper', 3);
   end if;
 
+  -- Same history, then the grant expires. The two bonus scans from last
+  -- month are over the active grants, but this month's 3 plan scans
+  -- still have to go through. The overdrawn check must not run on them.
+  v_expired_keeper := pg_temp.make_user('keeper');
+  insert into public.morph_id_usage (user_id, month_key, tier_at_start, credits_included, credits_consumed)
+  values (v_expired_keeper, '2020-01', 'keeper', 3, 5);
+  insert into public.morph_id_bonus_credits (user_id, credits, reason, expires_at)
+  values (v_expired_keeper, 2, 'expired-after-use', now() - interval '1 day');
+  if pg_temp.scans(v_expired_keeper, 'keeper', 3) <> 3 then
+    raise exception 'expired bonus should leave this month at 3, got %',
+      pg_temp.scans(v_expired_keeper, 'keeper', 3);
+  end if;
+  for n in 1..3 loop
+    perform public.consume_morph_id_credit(v_expired_keeper, 'keeper', 3);
+  end loop;
+  if pg_temp.scans(v_expired_keeper, 'keeper', 3) <> 0 then
+    raise exception 'keeper should still scan 3 times after an expired grant, got %',
+      pg_temp.scans(v_expired_keeper, 'keeper', 3);
+  end if;
+  perform pg_temp.expect_exhausted(v_expired_keeper, 'keeper', 3);
+
   -- Free try spent in an earlier month. This month's scans are bonus.
   v_earlier_free := pg_temp.make_user('free');
   insert into public.morph_id_usage (user_id, month_key, tier_at_start, credits_included, credits_consumed)
@@ -430,11 +459,20 @@ select set_config(
 );
 
 set local session authorization morph_id_bonus_tester;
+-- The tester is not anon or authenticated. Without this, the privilege
+-- check would treat the session as an admin and allow the cross-user read.
+set local role authenticated;
 
 do $guard$
 declare
   n integer;
+  v_role text;
 begin
+  v_role := coalesce(nullif(current_setting('role', true), 'none'), session_user::text);
+  if v_role is distinct from 'authenticated' then
+    raise exception 'denial check must run as authenticated, role is %', v_role;
+  end if;
+
   n := (public.morph_id_scans_remaining()->>'remaining')::integer;
   if n <> 1 then
     raise exception 'member remaining should be the restored bonus scan, got %', n;
@@ -451,6 +489,50 @@ begin
   end;
 end;
 $guard$;
+
+reset role;
+reset session authorization;
+
+-- Mirrors Supabase's postgres role: not a superuser, and not anon or
+-- authenticated. That session must be able to look up another member,
+-- which is what the admin grant script does.
+do $editor_role$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'morph_id_bonus_editor') then
+    create role morph_id_bonus_editor nosuperuser nologin inherit;
+  end if;
+end;
+$editor_role$;
+
+grant usage on schema public to morph_id_bonus_editor;
+grant execute on function public.morph_id_scans_remaining(uuid, text, integer) to morph_id_bonus_editor;
+
+set local session authorization morph_id_bonus_editor;
+
+do $editor$
+declare
+  v_row jsonb;
+  v_role text;
+begin
+  if session_user is distinct from 'morph_id_bonus_editor' then
+    raise exception 'expected morph_id_bonus_editor, got %', session_user;
+  end if;
+  if (select rolsuper from pg_roles where rolname = session_user) then
+    raise exception 'morph_id_bonus_editor must not be a superuser';
+  end if;
+  v_role := coalesce(nullif(current_setting('role', true), 'none'), session_user::text);
+  if v_role in ('anon', 'authenticated') then
+    raise exception 'editor must not be running as anon or authenticated, role is %', v_role;
+  end if;
+
+  v_row := public.morph_id_scans_remaining(
+    current_setting('morph_bonus.other_id')::uuid, 'keeper', 3
+  );
+  if (v_row->>'bonus')::integer <> 2 or (v_row->>'remaining')::integer <> 0 then
+    raise exception 'non-superuser editor should see the other keeper (bonus 2, remaining 0), got %', v_row;
+  end if;
+end;
+$editor$;
 
 reset session authorization;
 rollback;
