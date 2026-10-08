@@ -88,6 +88,8 @@ function initClient(ph) {
       disable_session_recording: true,
       // Honor Do-Not-Track headers on user browsers.
       respect_dnt: true,
+      // Uncaught errors and unhandled rejections. console.error stays off.
+      capture_exceptions: true,
       loaded: (client) => {
         if (import.meta.env.DEV) client.debug(false);
       },

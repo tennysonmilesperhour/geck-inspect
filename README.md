@@ -58,3 +58,18 @@ so the sitemap's lastmod values reflect real change dates.
 Start with [the engineering guide](docs/ENGINEERING.md), then the
 [billing runbook](docs/BILLING.md) and [current release evidence](docs/RELEASE_READINESS.md).
 See CLAUDE.md for the full working agreement.
+
+## Baseline checklist
+
+```
+[ ] private repo + main protected + CI   [x] dependabot + lockfile
+[ ] advisors clean (or exceptions noted)  [ ] backups/PITR confirmed
+[ ] PostHog + exceptions on               [ ] uptime incl. checkout URL
+[ ] privacy / terms / contact (+refund/shipping/disclaimers if selling)
+[ ] support@ email works                  [ ] domain auto-renew on
+[ ] revenue lands in business account     [ ] sales tax configured (physical goods)
+```
+
+Dependabot and `pnpm-lock.yaml` are in the repo. The other boxes stay
+open: this repository is public, branch protection is not recorded here,
+and the rest is not something the repo can confirm.
