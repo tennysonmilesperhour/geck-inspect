@@ -447,6 +447,14 @@ begin
 end;
 $$;
 
+-- A fresh replay does not have every geck_data object this statement
+-- uses, because the archived placeholders create nothing. Run the
+-- original statement only when those objects exist. Production already
+-- applied this version and will not run the file again.
+do $do$
+begin
+  if to_regclass('geck_data.breeder_market_v') is not null then
+    execute $stmt$
 create or replace function public.seller_market_find(p_query text)
 returns table (seller_slug text, name text, location text, for_sale bigint)
 language sql
@@ -461,8 +469,16 @@ as $$
   order by b.for_sale desc nulls last
   limit 10;
 $$;
+$stmt$;
+    execute $stmt$
+revoke all on function public.seller_market_find(text) from public, anon;
+$stmt$;
+    execute $stmt$
+grant execute on function public.seller_market_find(text) to authenticated;
+$stmt$;
+  end if;
+end
+$do$;
 
 revoke all on function public.seller_market_view(text) from public, anon;
-revoke all on function public.seller_market_find(text) from public, anon;
 grant execute on function public.seller_market_view(text) to authenticated;
-grant execute on function public.seller_market_find(text) to authenticated;

@@ -548,6 +548,17 @@ as $$
   delete from geck_data.alerts a where a.id = p_id and a.owner_id = auth.uid();
 $$;
 
+-- A fresh replay does not have every geck_data object this statement
+-- uses, because the archived placeholders create nothing. Run the
+-- original statement only when those objects exist. Production already
+-- applied this version and will not run the file again.
+do $do$
+begin
+  if to_regclass('geck_data.listing_market_mv') is not null
+     and to_regclass('geck_data.listing_facts_mv') is not null
+     and to_regclass('geck_data.alert_matches') is not null
+     and to_regclass('geck_data.alerts') is not null then
+    execute $stmt$
 create or replace function public.market_watch_matches(p_limit integer default 30)
 returns table (
   match_id uuid, alert_id uuid, alert_name text, matched_at timestamptz,
@@ -574,17 +585,25 @@ as $$
   order by m.matched_at desc
   limit least(greatest(coalesce(p_limit, 30), 1), 100);
 $$;
+$stmt$;
+    execute $stmt$
+revoke all on function public.market_watch_matches(integer) from public, anon;
+$stmt$;
+    execute $stmt$
+grant execute on function public.market_watch_matches(integer) to authenticated;
+$stmt$;
+  end if;
+end
+$do$;
 
 revoke all on function public.market_watch_list() from public, anon;
 revoke all on function public.market_watch_save(uuid, text[], numeric, numeric, text, boolean, text, text) from public, anon;
 revoke all on function public.market_watch_set_active(uuid, boolean) from public, anon;
 revoke all on function public.market_watch_remove(uuid) from public, anon;
-revoke all on function public.market_watch_matches(integer) from public, anon;
 grant execute on function public.market_watch_list() to authenticated;
 grant execute on function public.market_watch_save(uuid, text[], numeric, numeric, text, boolean, text, text) to authenticated;
 grant execute on function public.market_watch_set_active(uuid, boolean) to authenticated;
 grant execute on function public.market_watch_remove(uuid) to authenticated;
-grant execute on function public.market_watch_matches(integer) to authenticated;
 
 -- 6. The member's market at a glance, for the Today card.
 create or replace function public.my_market_today()

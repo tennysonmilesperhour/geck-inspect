@@ -59,6 +59,17 @@ revoke all on geck_data.morph_term_map from anon, authenticated;
 grant select on geck_data.morph_term_map to service_role;
 
 -- 2. Canonical morphs and MorphMarket's own posting date per listing.
+-- A fresh replay does not have every geck_data object this statement
+-- uses, because the archived placeholders create nothing. Run the
+-- original statement only when those objects exist. Production already
+-- applied this version and will not run the file again.
+do $do$
+begin
+  if to_regprocedure('geck_data._drop_contained(text[])') is not null
+     and to_regclass('geck_data.listings') is not null
+     and to_regclass('geck_data.morph_term_map') is not null
+     and to_regclass('geck_data.market_listings') is not null then
+    execute $stmt$
 create materialized view if not exists geck_data.listing_facts_mv as
 with lt as (
   select l.listing_id, mp.canon
@@ -77,12 +88,22 @@ select l.listing_id,
 from geck_data.listings l
 left join morphs m using (listing_id)
 left join geck_data.market_listings ml on ml.id = 'mm_' || l.listing_id;
-
+$stmt$;
+    execute $stmt$
 create unique index if not exists listing_facts_mv_pk on geck_data.listing_facts_mv (listing_id);
+$stmt$;
+    execute $stmt$
 create index if not exists listing_facts_mv_morphs on geck_data.listing_facts_mv using gin (morphs);
-
+$stmt$;
+    execute $stmt$
 revoke all on geck_data.listing_facts_mv from anon, authenticated;
+$stmt$;
+    execute $stmt$
 grant select on geck_data.listing_facts_mv to service_role;
+$stmt$;
+  end if;
+end
+$do$;
 
 -- 3. The daily table.
 create table if not exists geck_data.market_daily (
@@ -358,6 +379,21 @@ revoke all on function geck_data.snapshot_market_day(date) from public, anon, au
 grant execute on function geck_data.snapshot_market_day(date) to service_role;
 
 -- 5. The views the snapshot reads include listing_facts_mv now.
+-- A fresh replay does not have every geck_data object this statement
+-- uses, because the archived placeholders create nothing. Run the
+-- original statement only when those objects exist. Production already
+-- applied this version and will not run the file again.
+do $do$
+begin
+  if to_regclass('geck_data.v_observed_traits') is not null
+     and to_regclass('geck_data.combo_weekly_prices_mv') is not null
+     and to_regclass('geck_data.v_sold_reconciled') is not null
+     and to_regclass('geck_data.listing_market_mv') is not null
+     and to_regclass('geck_data.listing_week_mv') is not null
+     and to_regclass('geck_data.cross_platform_traits_mv') is not null
+     and to_regclass('geck_data.market_asks_mv') is not null
+     and to_regclass('geck_data.listing_facts_mv') is not null then
+    execute $stmt$
 create or replace function geck_data.refresh_market_matviews()
 returns void
 language sql
@@ -373,6 +409,10 @@ as $$
   refresh materialized view concurrently geck_data.market_asks_mv;
   refresh materialized view concurrently geck_data.listing_facts_mv;
 $$;
+$stmt$;
+  end if;
+end
+$do$;
 
 -- 6. What runs after a scrape, and the queue scrapers use to ask for it.
 create table if not exists geck_data.after_scrape_requests (

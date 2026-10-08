@@ -27,6 +27,17 @@
 -- security definer because authenticated users have no direct grant on
 -- the geck_data tables it reads; it only returns aggregates.
 
+-- A fresh replay does not have every geck_data object this statement
+-- uses, because the archived placeholders create nothing. Run the
+-- original statement only when those objects exist. Production already
+-- applied this version and will not run the file again.
+do $do$
+begin
+  if to_regprocedure('geck_data._age_class(text)') is not null
+     and to_regprocedure('geck_data._looks_like_group_lot(text, boolean)') is not null
+     and to_regclass('geck_data.listings') is not null
+     and to_regclass('geck_data.crested_morph_taxonomy') is not null then
+    execute $stmt$
 create or replace function public.market_analytics_v2()
 returns jsonb
 language sql
@@ -247,9 +258,17 @@ select jsonb_build_object(
 )
 ;
 $function$;
-
+$stmt$;
+    execute $stmt$
 comment on function public.market_analytics_v2() is
   'Business Tools Market Analytics dashboard as one jsonb object: coverage, periods, KPIs, per-trait prices by age and week, seller concentration. Asking prices from geck_data.listings.';
-
+$stmt$;
+    execute $stmt$
 revoke all on function public.market_analytics_v2() from public, anon;
+$stmt$;
+    execute $stmt$
 grant execute on function public.market_analytics_v2() to authenticated, service_role;
+$stmt$;
+  end if;
+end
+$do$;
