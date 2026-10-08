@@ -13,6 +13,7 @@
       "brace-expansion@^1": "1.1.18",
       "brace-expansion@^5": "5.0.9",
       "browserslist": "4.28.7",
+      "dompurify": "3.4.16",
       "inline-style-parser": "0.2.9",
       "js-yaml": "4.3.1",
       "lodash": "4.18.1",
