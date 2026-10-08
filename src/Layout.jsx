@@ -31,6 +31,7 @@ import GuestDemoGuide from "@/components/auth/GuestDemoGuide";
 import FloatingNoticeStack from "@/components/shared/FloatingNoticeStack";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 import MarketIntelligenceButton from "@/components/shared/MarketIntelligenceButton";
+import { FounderCredit, GeckIntellectLink } from "@/components/public/SiteCredits";
 import InstallAppButton from "@/components/shared/InstallAppButton";
 import {
   Sidebar,
@@ -1108,6 +1109,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           <SidebarFooter className="px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-emerald-900/40">
             <div className="space-y-3">
               <Link to="/PrivacyPolicy" className="flex items-center touch:min-h-11 text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
+              <GeckIntellectLink className="flex items-center touch:min-h-11 text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors" />
+              <FounderCredit className="flex items-center touch:min-h-11 text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors" />
               <Link to={createPageUrl("Membership")} className="block">
                 <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                   <Star className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -1258,6 +1261,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               <div className="p-4 border-t border-emerald-900/40 mt-auto">
                 <div className="space-y-3">
                   <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors sidebar-collapse-hide">Privacy Policy</Link>
+                  <GeckIntellectLink className="flex items-center touch:min-h-11 text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors sidebar-collapse-hide" />
+                  <FounderCredit className="flex items-center touch:min-h-11 text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors sidebar-collapse-hide" />
                   <Link to={createPageUrl("Membership")} className="block">
                     <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                       <Star className="w-4 h-4 mr-2 flex-shrink-0" />

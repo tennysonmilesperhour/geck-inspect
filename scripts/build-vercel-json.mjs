@@ -27,6 +27,7 @@
  */
 
 import { writeFileSync } from 'node:fs';
+import { writeKnownPaths } from './write-known-paths.mjs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MORPH_SLUG_ALIASES, emptyInheritanceIds, getAllSpaPathPatterns } from './seo-routes.mjs';
@@ -136,15 +137,13 @@ const GONE_REDIRECTS = [
  *   - Every known SPA path is rewritten to /index.html; React Router
  *     handles it client-side and scripts/prerender.mjs overwrites
  *     /index.html per route at build time with route-aware metadata.
- *   - A catch-all `/(.*)` rewrite at the end of the rewrites array
- *     hands any unknown path to the SPA too, so full-page reloads on
- *     dynamic or newly-added routes return the React shell instead of
- *     a server 404. PageNotFound.jsx renders the 404 UX and emits a
- *     noindex meta for JS-executing crawlers. We previously shipped a
- *     static /public/404.html for a "real HTTP 404" SEO signal, but
- *     Vercel's filesystem step serves that file BEFORE the catch-all
- *     rewrite fires, breaking refresh on every non-prerendered route
- *     (Dashboard, MyGeckos, Settings, etc.). Removed 2026-04-21.
+ *   - A catch-all `/(.*)` rewrite still serves the SPA shell for any
+ *     path that reaches it. middleware.js returns HTTP 404 before that
+ *     rewrite when the path is not in getEdgeAllowPatterns(). Known
+ *     routes, including /MyGeckos and /Dashboard, pass through so a
+ *     refresh still loads the app. A static /public/404.html cannot do
+ *     this job: Vercel would serve that file before the rewrite and
+ *     break those refreshes (removed 2026-04-21).
  *
  * Headers:
  *   - HTML is never cached at the CDN edge so a deploy rolls out immediately.
@@ -380,6 +379,7 @@ function main() {
   writeFileSync(OUT_PATH, body, 'utf8');
   const count = config.rewrites.length;
   console.log(`[vercel.json] wrote ${count} SPA rewrites + ${config.redirects.length} redirects`);
+  writeKnownPaths();
 }
 
 main();

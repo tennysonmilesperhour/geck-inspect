@@ -4,9 +4,9 @@
  * Consumed by:
  *   - scripts/build-sitemap.mjs      → emits public/sitemap.xml with <lastmod>
  *   - scripts/prerender.mjs          → emits route-specific static HTML into dist/
- *   - scripts/build-vercel-json.mjs  → emits vercel.json with enumerated SPA
- *                                      rewrites so unknown paths fall through
- *                                      to /404.html (real HTTP 404).
+ *   - scripts/build-vercel-json.mjs  → emits vercel.json, and the route
+ *                                      allowlist middleware.js uses so an
+ *                                      unknown path returns HTTP 404.
  *
  * Adding a new indexable URL:
  *   1. Append an object here with { path, priority, changefreq, lastmod, meta? }
@@ -28,6 +28,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { RETIRED_PAGES } from '../src/lib/retiredPages.js';
 // Live prices, so the prerendered /Membership snippet can never drift
 // from what the page actually charges.
 import { TIER_PRICING, TRIAL_DAYS } from '../src/lib/stripe-config.js';
@@ -797,5 +798,80 @@ export function getAllSpaPathPatterns() {
   for (const r of getBlogRoutes()) push(r.path);
   for (const p of DYNAMIC_ROUTE_PATTERNS) push(p);
 
+  return out;
+}
+
+// Paths middleware.js must let through. Known app routes, plus the
+// redirect sources in scripts/build-vercel-json.mjs (a request has to
+// reach the redirect to become a 301), plus dynamic shapes that are not
+// in the sitemap because the id lives in the database (a breeder slug,
+// a passport code, a blog post published from the admin).
+const EDGE_EXTRA_PATTERNS = [
+  '/store/:slug',
+  '/blog/category/:slug',
+  '/blog/tag/:slug',
+  '/waitlist/:slug',
+  '/Store',
+  '/Store/stickers',
+  '/Store/tees',
+  '/Store/cart',
+  '/Store/checkout/success',
+  '/Store/orders',
+  '/Store/c/*',
+  '/Store/p/:slug',
+  '/Store/orders/:orderNumber',
+  '/data/*',
+  '/llms/*',
+  '/Subscription',
+  '/GeckAnswers',
+  '/BreederStorefront',
+  '/morph-guide',
+  '/morph-guide/:slug',
+  '/care-guide',
+  '/care-guide/:topic',
+  '/genetics-guide',
+  '/morphguide',
+  '/morphguide/:slug',
+  '/morphguide/category/:categoryId',
+  '/morphguide/inheritance/:inheritanceId',
+  '/morphguide/lines/:slug',
+  '/careguide',
+  '/careguide/:topic',
+  '/geneticsguide',
+  '/geneticcalculatortool',
+  '/marketplacebuy',
+  '/marketplaceverification',
+  '/gallery',
+  '/forum',
+  '/geckanswers',
+  '/membership',
+  '/about',
+  '/contact',
+  '/terms',
+  '/privacypolicy',
+  '/authportal',
+  '/breeder',
+  '/breeder/:slug',
+  '/Morphs',
+  '/morphs',
+  '/morph-visualizer',
+];
+
+export function getEdgeAllowPatterns() {
+  const seen = new Set();
+  const out = [];
+  const push = (path) => {
+    if (path && !seen.has(path)) {
+      seen.add(path);
+      out.push(path);
+    }
+  };
+  for (const path of getAllSpaPathPatterns()) push(path);
+  for (const path of EDGE_EXTRA_PATTERNS) push(path);
+  for (const from of Object.keys(MORPH_SLUG_ALIASES)) push(`/MorphGuide/${from}`);
+  for (const { page } of RETIRED_PAGES) {
+    push(`/${page}`);
+    push(`/${page.toLowerCase()}`);
+  }
   return out;
 }
