@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MorphGuide } from '@/entities/MorphGuide';
 import { supabase } from '@/lib/supabaseClient';
+import { fetchHeroAnchorPhotos } from '@/lib/publicGeckoPhotos';
 import { morphSlug, pickBestMorphRecord } from '@/lib/morphUtils';
 import { MORPHS } from '@/data/morph-guide';
 
@@ -35,19 +36,12 @@ async function fetchMorphGuideData() {
       .eq('verified', true)
       .not('owner_profile_id', 'is', null)
       .limit(500),
-    // Show-winner reference photos. Only the three attribution fields are
-    // read out of training_meta instead of the whole JSON blob.
-    supabase
-      .from('gecko_images')
-      .select(
-        'image_url, primary_morph, created_date, photo_credit:training_meta->>photo_credit, gecko_name:training_meta->>gecko_name, award:training_meta->>award',
-      )
-      .eq('verified', true)
-      .not('primary_morph', 'is', null)
-      .not('image_url', 'is', null)
-      .filter('training_meta->>verification_tier', 'eq', 'hero_anchor')
-      .order('created_date', { ascending: false })
-      .limit(200),
+    // Show-winner photos. The public function returns the image and
+    // caption only. It does not select the JSON column that can hold
+    // a reviewer email. If that function is not applied yet, this
+    // resolves to an empty list and the curated image plus the
+    // community pool still fill the card.
+    fetchHeroAnchorPhotos(supabase, 200),
   ]);
 
   const rows = (r) => {

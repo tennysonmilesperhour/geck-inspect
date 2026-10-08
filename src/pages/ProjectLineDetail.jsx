@@ -15,6 +15,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseClient';
+import { fetchProjectLinePhotos } from '@/lib/publicGeckoPhotos';
 import { PROJECT_LINES, LINE_CONFIDENCE, getProjectLine, lineImageKeywords } from '@/data/project-lines';
 import { getMorph } from '@/data/morph-guide';
 
@@ -81,18 +82,13 @@ export default function ProjectLineDetailPage() {
           // 'cho' matching 'chocolate'. ilike with %phrase% catches the
           // keyword anywhere in primary_morph (e.g. 'lilly white' matches
           // 'lilly white harlequin').
-          const { data } = await supabase
-            .from('gecko_images')
-            .select('image_url, primary_morph, training_meta')
-            .not('image_url', 'is', null)
-            .ilike('primary_morph', `%${kw}%`)
-            .limit(8);
-          for (const row of data || []) {
-            const url = row.image_url;
+          const rows = await fetchProjectLinePhotos(supabase, kw, 8);
+          for (const row of rows) {
+            const url = row.url;
             if (!url || seen.has(url)) continue;
             if (url.includes('ytimg.com') || url.includes('altitudeexotics.com') || url.endsWith('.html')) continue;
             seen.add(url);
-            out.push({ url, credit: row.training_meta?.photo_credit, geckoName: row.training_meta?.gecko_name });
+            out.push({ url, credit: row.credit, geckoName: row.geckoName });
             if (out.length >= 12) break;
           }
         } catch (err) {
