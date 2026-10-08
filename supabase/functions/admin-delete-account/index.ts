@@ -15,7 +15,7 @@
 //      other members depend on (claimed transfers, lineage parents, the
 //      chain of custody, forum threads, reviews). The full per-table list
 //      and the reasons are in
-//      supabase/migrations/20261003220000_account_erasure.sql.
+//      supabase/migrations/20261008081305_account_erasure.sql.
 //   4. Removes the member's Storage files that the SQL function listed.
 //      Storage refuses direct SQL deletes, so this has to go through the
 //      Storage API. Files still used by a surviving row (for example a
@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
       missing ? 503 : 500,
       missing ? "erasure_not_installed" : "erasure_failed",
       missing
-        ? "The database part of account erasure is not installed yet (migration 20261003220000_account_erasure)."
+        ? "The database part of account erasure is not installed yet (migration 20261008081305_account_erasure)."
         : `The database erasure failed and nothing was changed: ${rpcErr.message}`,
     );
   }

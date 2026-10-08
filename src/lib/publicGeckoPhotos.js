@@ -2,7 +2,7 @@
  * Photos the Morph Guide and project line pages may load while signed out.
  *
  * gecko_images.training_meta can hold a reviewer email, and
- * 20261003220100_anon_hide_owner_email_columns.sql takes that column
+ * 20261008081011_anon_hide_owner_email_columns.sql takes that column
  * away from anon. These helpers never select it. Show-winner captions
  * come from public.public_gecko_photos, which returns only the image
  * and three caption fields. Until that function is applied, the pages

@@ -35,7 +35,7 @@ describe('public gecko photo columns', () => {
   });
 
   it('the follow-up function returns captions and not the JSON column', () => {
-    const sql = read('supabase/migrations/20261008080000_public_gecko_photos.sql');
+    const sql = read('supabase/migrations/20261008081101_public_gecko_photos.sql');
     expect(sql).toContain('security definer');
     expect(sql).toContain('grant execute on function public.public_gecko_photos(text, text, integer) to anon, authenticated, service_role');
     expect(sql).toContain('revoke all on function public.public_gecko_photos(text, text, integer) from public');

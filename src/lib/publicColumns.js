@@ -10,7 +10,7 @@
  * look the name up with read_profiles.
  *
  * The database migration
- * supabase/migrations/20261003220100_anon_hide_owner_email_columns.sql
+ * supabase/migrations/20261008081011_anon_hide_owner_email_columns.sql
  * grants the anon role exactly these columns. Once it is applied, a
  * signed-out `select *` on these tables fails, so every signed-out read must
  * use these lists. A test keeps the two in step.
@@ -45,7 +45,7 @@ export const GECKO_IMAGE_PUBLIC_COLUMNS = [
 // owner_email, user_email, uploader_email). Pages that need to say who
 // wrote a forum post or owns a store page use owner_profile_id.
 // The grants live in
-// supabase/migrations/20261003220200_anon_hide_email_columns_more.sql.
+// supabase/migrations/20261008081043_anon_hide_email_columns_more.sql.
 
 export const FORUM_POST_PUBLIC_COLUMNS = [
   'id', 'title', 'content', 'category_id', 'author_name', 'image_urls',
@@ -141,7 +141,7 @@ export const OWNERSHIP_RECORD_PUBLIC_COLUMNS = [
 
 /**
  * Tables signed-out visitors cannot read at all once
- * 20261003220200_anon_hide_email_columns_more.sql is applied. No signed-out
+ * 20261008081043_anon_hide_email_columns_more.sql is applied. No signed-out
  * page reads them; a test checks that none of them has a public list.
  */
 export const NO_ANON_READ_TABLES = [
