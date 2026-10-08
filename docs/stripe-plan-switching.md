@@ -59,3 +59,31 @@ Cleanup: portal cancellation is verified; immediate deletion of the disposable S
 - Existing subscription update delivered a real processed webhook after overage removal.
 
 Tax settings were not changed. The inspected subscription has no tax rate applied; any future Stripe Tax setup requires applicable registrations.
+
+## Owner checklist: webhook events (8 Oct 2026)
+
+Do this in the Stripe Dashboard. Nothing in this change edits the Stripe account, a subscription, or the endpoint's event list.
+
+The membership webhook is `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/stripe-webhook`.
+
+`metadata.tier` on a subscription is the plan from the original Checkout session. Switching Keeper to Breeder in the portal does not update it, so a subscription can show `tier: keeper` while the price is Breeder. The webhook ignores that field and reads the price on the subscription item. Do not edit the metadata by hand.
+
+1. Open Developers, then Webhooks. Switch to live mode. Open the endpoint above.
+2. Add these events. Leave every event that is already selected, including both `invoice.paid` and `invoice.payment_succeeded`:
+   - `charge.refunded`
+   - `charge.dispute.created`
+   - `charge.dispute.updated`
+   - `charge.dispute.closed`
+   - `charge.dispute.funds_withdrawn`
+   - `charge.dispute.funds_reinstated`
+   - `customer.subscription.trial_will_end`
+3. Save.
+4. Repeat in test mode if that mode has its own endpoint.
+
+What those events do once this webhook is deployed:
+
+- A full refund of the subscription's latest membership invoice sets the member to Free. If the latest invoice cannot be read, a full refund that still belongs to that subscription does the same. A partial refund does not. A refund of an older invoice does not take away a plan they already renewed.
+- A chargeback (`needs_response`, `under_review`, funds withdrawn, or `lost`) sets the member to Free. If you win the dispute, or Stripe returns the funds, access comes back only while that subscription is still active or trialing. An inquiry (`warning_needs_response`) does not remove access.
+- `customer.subscription.trial_will_end` arrives about three days before the trial ends and does not remove access. Access ends when Stripe marks the subscription `canceled`, `unpaid`, or `incomplete_expired`. Those updates already arrive as `customer.subscription.updated` and `customer.subscription.deleted`.
+- `invoice.paid` and `invoice.payment_succeeded` are the same payment. The second delivery does not grant a second month or a second referral credit.
+- A refund removes access in Geck Inspect. It does not cancel the Stripe subscription. If the refund should stop the next bill, cancel that subscription in the Dashboard yourself.
