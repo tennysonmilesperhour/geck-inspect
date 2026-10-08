@@ -59,6 +59,12 @@ import {
   morphInheritanceHubs,
 } from './seo-routes.mjs';
 import { OPEN_DATASETS, MCP_URL, openDataJsonLd } from '../src/data/open-datasets.js';
+import {
+  FOUNDER_NAME,
+  FOUNDER_URL,
+  GECK_INTELLECT_LABEL,
+  GECK_INTELLECT_URL,
+} from '../src/data/public-links.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -1230,7 +1236,9 @@ function injectNoscriptBody(html, route) {
           <footer>
             &copy; ${new Date().getFullYear()} Geck Inspect. geckOS.
             <a href="/Terms">Terms</a>, <a href="/PrivacyPolicy">Privacy</a>,
-            <a href="/Contact">Contact</a>
+            <a href="/Contact">Contact</a>,
+            <a href="${GECK_INTELLECT_URL}">${GECK_INTELLECT_LABEL}</a>,
+            <a href="${FOUNDER_URL}">by ${FOUNDER_NAME}</a>
           </footer>
         </main>
       </div>

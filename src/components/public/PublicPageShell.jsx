@@ -3,6 +3,7 @@ import { APP_LOGO_ICON_URL } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { useInAppShell } from '@/lib/appShell';
+import { FounderCredit, GeckIntellectLink } from '@/components/public/SiteCredits';
 
 /**
  * Shared chrome for unauthenticated content pages (About, Contact, Terms,
@@ -97,13 +98,17 @@ export function PublicFooter() {
             <li><Link to="/MarketplaceVerification" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Marketplace Trust</Link></li>
             <li><Link to="/Terms" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Terms</Link></li>
             <li><Link to="/PrivacyPolicy" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Privacy</Link></li>
+            <li><GeckIntellectLink className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white" /></li>
           </ul>
         </div>
       </div>
       <div className="border-t border-slate-800/50">
         <div className="max-w-6xl mx-auto px-6 py-5 text-xs text-slate-500 flex flex-col md:flex-row items-center justify-between gap-2">
           <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
-          <span>Built for the crested gecko hobby.</span>
+          <span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+            <span>Built for the crested gecko hobby.</span>
+            <FounderCredit className="inline-flex items-center touch:min-h-11 hover:text-slate-300" />
+          </span>
         </div>
       </div>
     </footer>
