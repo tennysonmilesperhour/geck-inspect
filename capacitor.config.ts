@@ -27,6 +27,13 @@ const config: CapacitorConfig = {
     // reports.
     allowMixedContent: false,
   },
+  plugins: {
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: '#020617',
+      overlaysWebView: false,
+    },
+  },
 };
 
 export default config;

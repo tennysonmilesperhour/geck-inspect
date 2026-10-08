@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
@@ -43,4 +44,12 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Camera is requested only when the keeper takes a gecko photo. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Local feeding and weigh-in reminders on Android 13 and later. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Morning reminders do not need exact alarms. The plugin requests this
+         permission; Play reviews that declaration, so it is removed. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>

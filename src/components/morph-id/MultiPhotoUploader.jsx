@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from '@/components/ui/use-toast';
 import { Upload, X, Loader2, Star, StarOff } from 'lucide-react';
+import { isNativePlatform } from '@/lib/revenuecat';
+import { captureDevicePhoto } from '@/lib/devicePhoto';
 
 export const MAX_PHOTOS = 5;
 
@@ -205,7 +207,18 @@ export default function MultiPhotoUploader({
         {hasRoom && (
           <button
             type="button"
-            onClick={() => inputRef.current?.click()}
+            onClick={async () => {
+              if (isNativePlatform()) {
+                try {
+                  const file = await captureDevicePhoto();
+                  if (file) handleFiles([file]);
+                } catch (err) {
+                  toast({ title: 'Could not open the camera', description: err.message || 'Try again.', variant: 'destructive' });
+                }
+                return;
+              }
+              inputRef.current?.click();
+            }}
             className="touch:min-h-11 aspect-square flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-600 hover:border-emerald-500 hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-emerald-300"
           >
             <Upload className="w-6 h-6 mb-1" />

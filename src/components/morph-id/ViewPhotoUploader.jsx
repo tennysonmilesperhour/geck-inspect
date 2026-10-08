@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from '@/components/ui/use-toast';
 import { Upload, X, Loader2, Check } from 'lucide-react';
+import { isNativePlatform } from '@/lib/revenuecat';
+import { captureDevicePhoto } from '@/lib/devicePhoto';
 import { MAX_EXTRA_VIEWS, REQUIRED_VIEWS, orderedViewUrls, viewsReady } from './photoViews';
 
 // Morph ID photo slots (Tennyson, 29 Sep 2026): a top view and a side view
@@ -93,8 +95,17 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
     extras: prev.extras.map((e) => (e.id === id ? { ...e, ...patch } : e)),
   }));
 
-  const pick = (target) => {
+  const pick = async (target) => {
     targetRef.current = target;
+    if (isNativePlatform()) {
+      try {
+        const file = await captureDevicePhoto();
+        if (file) await handleFiles([file]);
+      } catch (err) {
+        toast({ title: 'Could not open the camera', description: err.message || 'Try again.', variant: 'destructive' });
+      }
+      return;
+    }
     inputRef.current?.click();
   };
 

@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
 import { loadMemberWeighInEnabled, setMemberWeighInReminders } from '@/lib/careReminders';
+import { syncNativeCareReminders } from '@/lib/nativeCareReminders';
 
 /**
  * Settings, Notifications: the member-wide switch for personal weigh-in
@@ -27,6 +28,7 @@ export default function WeighInReminderSetting({ email }) {
     setState({ status: 'saving', on });
     try {
       await setMemberWeighInReminders(email, on);
+      syncNativeCareReminders({ email }).catch(() => {});
       setState({ status: 'ready', on });
       toast({ title: on ? 'Weigh-in reminders on' : 'Weigh-in reminders off', description: on ? 'Each gecko gets a note when its weigh-in is due. Turn one off on its record.' : 'No weigh-in reminders for any gecko.' });
     } catch (err) {

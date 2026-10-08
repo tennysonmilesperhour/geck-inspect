@@ -1,4 +1,5 @@
 import { installNativeAuth } from '@/lib/nativeAuth';
+import { installNativeShell } from '@/lib/nativeShell';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
@@ -24,6 +25,7 @@ installGlobalErrorHandlers();
 // moment the user flips the Settings toggle.
 registerServiceWorker();
 installNativeAuth().catch(() => console.warn('Native sign-in listener could not start.'));
+installNativeShell().catch(() => console.warn('Native shell chrome could not start.'));
 
 // Keep the app alive when a visitor uses the browser's page translation.
 // See translationGuard.js for why this crashed sign-up and the dashboard.

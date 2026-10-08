@@ -14,6 +14,8 @@ import { isGeckoLimitError } from '@/lib/geckoLimit';
 import { saveQuickGecko } from './quickGeckoSave';
 import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 import { DEFAULT_FEEDING_INTERVAL_DAYS, flowEvent, savePendingGecko } from '@/lib/firstGeckoFlow';
+import { isNativePlatform } from '@/lib/revenuecat';
+import { captureDevicePhoto } from '@/lib/devicePhoto';
 
 // After a guest keeps a gecko: create the account, then land on My Geckos,
 // where the saved draft becomes the first gecko in the collection.
@@ -115,9 +117,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
     draftExtrasRef.current = { morph_tags: null, notes: null, extraPhotos: [] };
   };
 
-  const handlePhoto = async (event) => {
-    const file = event.target.files?.[0];
-    if (event.target) event.target.value = '';
+  const uploadPhotoFile = async (file) => {
     if (!file) return;
     setUploading(true);
     try {
@@ -128,6 +128,24 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
       toast({ title: 'Photo upload failed', description: err.message || 'Try another photo.', variant: 'destructive' });
     }
     setUploading(false);
+  };
+
+  const handlePhoto = async (event) => {
+    const file = event.target.files?.[0];
+    if (event.target) event.target.value = '';
+    await uploadPhotoFile(file);
+  };
+
+  const openPhoto = async () => {
+    if (isNativePlatform()) {
+      try {
+        await uploadPhotoFile(await captureDevicePhoto());
+      } catch (err) {
+        toast({ title: 'Could not open the camera', description: err.message || 'Try again.', variant: 'destructive' });
+      }
+      return;
+    }
+    fileInputRef.current?.click();
   };
 
   const draft = () => ({
@@ -360,7 +378,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
             <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handlePhoto} />
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={openPhoto}
               disabled={uploading}
               className="touch:min-h-11 w-full aspect-[4/3] rounded-xl border-2 border-dashed border-slate-600 hover:border-emerald-500/70 bg-slate-800/50 flex flex-col items-center justify-center gap-2 overflow-hidden text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               aria-label={photoUrl ? 'Change photo' : 'Add a photo'}
@@ -378,7 +396,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               )}
             </button>
             {photoUrl && !uploading && (
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="touch:min-h-11 text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1">
+              <button type="button" onClick={openPhoto} className="touch:min-h-11 text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1">
                 <ImagePlus className="w-3.5 h-3.5" /> Change photo
               </button>
             )}

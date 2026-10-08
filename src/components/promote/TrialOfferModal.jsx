@@ -4,6 +4,7 @@ import { Sparkles, CreditCard, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { KEEPER_PROMO_TRIAL_DAYS, TIER_PRICING } from '@/lib/stripe-config';
+import { isNativePlatform } from '@/lib/revenuecat';
 
 // Modal that fires when a Free user tries to publish their 2nd post in a
 // month. Three options:
@@ -21,6 +22,24 @@ import { KEEPER_PROMO_TRIAL_DAYS, TIER_PRICING } from '@/lib/stripe-config';
 export default function TrialOfferModal({ open, onOpenChange, tier, trialAlreadyUsed }) {
   const [hovering, setHovering] = useState(null);
   const recommendTrial = !trialAlreadyUsed;
+
+  if (isNativePlatform()) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl">You have used this month's free post</DialogTitle>
+            <DialogDescription className="text-emerald-200/80">
+              Memberships in the app are purchased from the App Store or Google Play. There is no card form here.
+            </DialogDescription>
+          </DialogHeader>
+          <Link to={createPageUrl('Membership')} className="touch:min-h-11 block rounded-lg border border-emerald-600/60 bg-emerald-900/20 p-4 text-emerald-100 font-semibold">
+            See store plans
+          </Link>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -15,6 +15,11 @@ verify_jwt = true
 [functions.admin-delete-account]
 verify_jwt = true
 
+# The member deletes their own account from Settings. The gateway requires a
+# session; the handler erases only the user on that session.
+[functions.delete-my-account]
+verify_jwt = true
+
 # Public waitlist signups and confirmation links. Buyers are signed out,
 # so the gateway lets anonymous calls through; the handler only acts
 # through service-role database functions and mails addresses read from
