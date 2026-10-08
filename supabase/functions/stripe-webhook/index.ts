@@ -829,6 +829,7 @@ Deno.serve(async (req: Request) => {
           if (linked) {
             const sub = await stripeGet(`subscriptions/${linked}`);
             if (sub) await applySubscriptionAccess(profile, sub);
+            else console.warn("dispute won but the subscription could not be read", linked);
           }
           break;
         }
