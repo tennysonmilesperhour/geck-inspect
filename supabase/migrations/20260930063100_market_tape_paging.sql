@@ -4,8 +4,25 @@
 -- "Load older" with a time cursor alone skipped some of them. The tape now
 -- takes the last event's id as well and pages by (time, id).
 
+-- A fresh replay does not have every geck_data object this statement
+-- uses, because the archived placeholders create nothing. Run the
+-- original statement only when those objects exist. Production already
+-- applied this version and will not run the file again.
+do $do$
+begin
+  if to_regclass('geck_data.listing_market_mv') is not null
+     and to_regclass('geck_data.listing_facts_mv') is not null
+     and to_regclass('geck_data.market_daily') is not null
+     and to_regclass('geck_data.price_history') is not null
+     and to_regclass('geck_data.cross_platform_observations') is not null
+     and to_regclass('geck_data.cross_platform_listings') is not null
+     and to_regclass('geck_data.cross_platform_traits_mv') is not null
+     and to_regclass('geck_data.cross_platform_listing_images') is not null
+     and to_regclass('geck_data.fx_rates') is not null then
+    execute $stmt$
 drop function if exists public.market_tape(timestamptz, integer, text);
-
+$stmt$;
+    execute $stmt$
 create or replace function public.market_tape(
   p_before timestamptz default null,
   p_limit integer default 40,
@@ -158,6 +175,13 @@ as $$
   order by e.at desc, e.event_id desc
   limit least(greatest(coalesce(p_limit, 40), 1), 100);
 $$;
-
+$stmt$;
+    execute $stmt$
 revoke all on function public.market_tape(timestamptz, integer, text, text) from public, anon;
+$stmt$;
+    execute $stmt$
 grant execute on function public.market_tape(timestamptz, integer, text, text) to authenticated;
+$stmt$;
+  end if;
+end
+$do$;

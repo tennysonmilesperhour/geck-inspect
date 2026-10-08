@@ -31,6 +31,18 @@
 -- security definer because authenticated users have no direct grant on the
 -- geck_data tables it reads; it only returns aggregates.
 
+-- A fresh replay does not have every geck_data object this statement
+-- uses, because the archived placeholders create nothing. Run the
+-- original statement only when those objects exist. Production already
+-- applied this version and will not run the file again.
+do $do$
+begin
+  if to_regprocedure('geck_data._age_class(text)') is not null
+     and to_regprocedure('geck_data._sex_class(text)') is not null
+     and to_regprocedure('geck_data._looks_like_group_lot(text, boolean)') is not null
+     and to_regclass('geck_data.listings') is not null
+     and to_regclass('geck_data.crested_morph_taxonomy') is not null then
+    execute $stmt$
 create or replace function public.trait_value_table()
 returns table (
   trait text,
@@ -139,9 +151,17 @@ as $function$
     and s.sex_class is not null
   order by lb.trait, s.age_class, s.sex_class;
 $function$;
-
+$stmt$;
+    execute $stmt$
 comment on function public.trait_value_table() is
   'Per-trait asking-price bands (p25/p50/p75) from geck_data.listings, by age and sex with rolled-up ''any'' levels. Same filters as geck_data.v_listing_value. Feeds the Collection Portfolio valuation.';
-
+$stmt$;
+    execute $stmt$
 revoke all on function public.trait_value_table() from public, anon;
+$stmt$;
+    execute $stmt$
 grant execute on function public.trait_value_table() to authenticated, service_role;
+$stmt$;
+  end if;
+end
+$do$;

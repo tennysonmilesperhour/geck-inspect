@@ -10,6 +10,15 @@
 -- and Europe, the hourly job) still refreshes everything, and only a full
 -- refresh asks for a new collection value, as before.
 
+-- A fresh replay does not have every geck_data object this statement
+-- uses, because the archived placeholders create nothing. Run the
+-- original statement only when those objects exist. Production already
+-- applied this version and will not run the file again.
+do $do$
+begin
+  if to_regclass('geck_data.listing_market_mv') is not null
+     and to_regclass('geck_data.listing_facts_mv') is not null then
+    execute $stmt$
 create or replace function geck_data.refresh_listing_matviews()
 returns void
 language sql
@@ -19,9 +28,16 @@ as $$
   refresh materialized view concurrently geck_data.listing_market_mv;
   refresh materialized view concurrently geck_data.listing_facts_mv;
 $$;
-
+$stmt$;
+    execute $stmt$
 revoke all on function geck_data.refresh_listing_matviews() from public, anon, authenticated;
+$stmt$;
+    execute $stmt$
 grant execute on function geck_data.refresh_listing_matviews() to service_role;
+$stmt$;
+  end if;
+end
+$do$;
 
 create or replace function geck_data.after_scrape(p_trigger text default 'manual')
 returns jsonb
