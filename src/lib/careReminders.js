@@ -19,9 +19,7 @@
 //   }
 //
 // The daily job that reads it is in
-// supabase/migrations/20261005190000_personal_weighin_reminders.sql (not
-// applied yet). Until it is, the switches save and show, and the in-app
-// "next weigh-in" dates are right, but no push or email goes out for them.
+// supabase/migrations/20261008081343_personal_weighin_reminders.sql.
 import { supabase } from '@/lib/supabaseClient';
 
 const asObject = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
