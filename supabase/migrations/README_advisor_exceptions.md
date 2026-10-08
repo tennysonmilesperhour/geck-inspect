@@ -1,8 +1,7 @@
 # Advisor exceptions
 
-Recorded with `20261008082521_pin_function_search_path.sql`. That file
-is not applied by opening or merging the pull request. The owner
-applies it after merge.
+Recorded with `20261008083025_pin_function_search_path.sql`, the version
+production recorded for this change.
 
 ## search_path pinned to empty
 
