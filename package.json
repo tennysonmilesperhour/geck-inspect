@@ -58,11 +58,11 @@
     "ios:release": "GECK_RELEASE_TARGET=ios pnpm cap:sync && cap open ios"
   },
   "dependencies": {
-    "@capacitor/android": "^8.3.4",
+    "@capacitor/android": "^8.5.3",
     "@capacitor/app": "^8.1.1",
     "@capacitor/browser": "^8.0.4",
-    "@capacitor/core": "^8.3.4",
-    "@capacitor/ios": "8.3.4",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "8.5.3",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^5.9.1",
     "@radix-ui/react-accordion": "^1.2.3",
@@ -125,7 +125,7 @@
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
-    "@capacitor/cli": "^8.3.4",
+    "@capacitor/cli": "^8.5.3",
     "@eslint/js": "^9.19.0",
     "@types/node": "^22.13.5",
     "@types/react": "^18.2.66",
