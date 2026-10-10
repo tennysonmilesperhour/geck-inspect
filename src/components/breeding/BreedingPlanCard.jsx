@@ -252,9 +252,9 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
         <>
             <Card key={plan.id} className={`bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden transition-all ${shouldGlow ? 'ring-2 ring-white/30 shadow-[0_0_20px_4px_rgba(255,255,255,0.12)]' : ''}`}>
                 <CardHeader className="p-0 relative">
-                    <div className="flex flex-col sm:flex-row min-w-0">
+                    <div className="flex flex-col lg:flex-row min-w-0">
                         {/* Portraits: sire and dam side by side, large, with role labels */}
-                        <div className="relative flex w-full sm:w-64 lg:w-80 flex-shrink-0 h-52 sm:h-auto sm:min-h-[12rem] gap-px bg-slate-950">
+                        <div className="relative flex w-full lg:w-[22rem] xl:w-[26rem] flex-shrink-0 h-56 sm:h-72 lg:h-auto lg:min-h-[14rem] gap-px bg-slate-950">
                             {[{ gecko: sire, role: 'Sire', symbol: '♂' }, { gecko: dam, role: 'Dam', symbol: '♀' }].map(({ gecko, role, symbol }) => (
                                 <div key={role} className="relative w-1/2 overflow-hidden">
                                     <GeckoImage
@@ -273,7 +273,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                             ))}
                         </div>
 
-                        <div className="p-4 sm:p-5 flex flex-col flex-1 min-w-0 gap-3">
+                        <div className="p-4 sm:p-5 flex flex-col flex-1 min-w-0 gap-3 lg:justify-between">
                             <div className="min-w-0">
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
                                     {daysSinceLastEgg !== null ? (
@@ -315,29 +315,29 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                             )}
 
                             {/* Quick actions: equal-width on mobile, right-aligned row on desktop */}
-                            <div className="grid grid-cols-3 sm:flex sm:justify-end gap-2 sm:mt-auto">
+                            <div className="grid grid-cols-3 gap-2 lg:flex lg:flex-wrap lg:justify-end lg:mt-auto">
                                 <Button
                                     size="sm"
-                                    className="h-9 text-xs sm:text-sm"
+                                    className="h-9 text-xs sm:text-sm px-2 sm:px-3"
                                     onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(1); }}
                                 >
-                                    <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 1 Egg</span><span className="sm:hidden">+1</span>
+                                    <PlusCircle size={14} className="mr-1" /> Add 1 Egg
                                 </Button>
                                 <Button
                                     size="sm"
-                                    className="h-9 text-xs sm:text-sm"
+                                    className="h-9 text-xs sm:text-sm px-2 sm:px-3"
                                     onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(2); }}
                                 >
-                                    <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 2 Eggs</span><span className="sm:hidden">+2</span>
+                                    <PlusCircle size={14} className="mr-1" /> Add 2 Eggs
                                 </Button>
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-9 text-xs sm:text-sm border-slate-600"
+                                    className="h-9 text-xs sm:text-sm border-slate-600 px-2 sm:px-3"
                                     onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
                                     title="Add eggs with a lay date and grade"
                                 >
-                                    <CalendarIcon size={14} className="mr-1" /> <span className="hidden sm:inline">Add dated clutch</span><span className="sm:hidden">Dated</span>
+                                    <CalendarIcon size={14} className="mr-1" /> <span className="sm:hidden">Dated</span><span className="hidden sm:inline">Add dated clutch</span>
                                 </Button>
                             </div>
                         </div>
@@ -450,7 +450,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                         </TooltipProvider>
                     </div>
 
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="grid grid-cols-4 gap-1.5 w-full sm:flex sm:w-auto sm:items-center">
                         <Button
                             variant="outline"
                             size="sm"
@@ -484,7 +484,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                             onClick={() => setIsGeneticsOpen(true)}
                             title="Genetics calculator"
                         >
-                            <Dna size={14} className="sm:mr-1" /> <span className="hidden sm:inline">Genetics</span>
+                            <Dna size={14} className="mr-1" /> Genetics
                         </Button>
                         <Button
                             variant="outline"
@@ -493,7 +493,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                             onClick={() => setIsEditModalOpen(true)}
                             title="Edit plan"
                         >
-                            <Edit size={14} className="sm:mr-1" /> <span className="hidden sm:inline">Edit</span>
+                            <Edit size={14} className="mr-1" /> Edit
                         </Button>
                         {showArchiveButton && (
                             <Button
@@ -503,8 +503,8 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 onClick={() => onPlanArchive(plan.id, !plan.archived)}
                                 title={plan.archived ? 'Unarchive plan' : 'Archive plan'}
                             >
-                                {plan.archived ? <ArchiveRestore size={14} className="sm:mr-1" /> : <Archive size={14} className="sm:mr-1" />}
-                                <span className="hidden sm:inline">{plan.archived ? 'Unarchive' : 'Archive'}</span>
+                                {plan.archived ? <ArchiveRestore size={14} className="mr-1" /> : <Archive size={14} className="mr-1" />}
+                                {plan.archived ? 'Unarchive' : 'Archive'}
                             </Button>
                         )}
                     </div>
