@@ -271,6 +271,20 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                     </div>
                                 </div>
                             ))}
+                            {/* Wireframe quick-add buttons floating over the photos */}
+                            <div className="absolute top-2 right-2 z-10 flex gap-1.5">
+                                {[1, 2].map((n) => (
+                                    <button
+                                        key={n}
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(n); }}
+                                        className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                        aria-label={`Add ${n} egg${n > 1 ? 's' : ''}`}
+                                    >
+                                        <PlusCircle size={14} className="drop-shadow" /> {n} Egg{n > 1 ? 's' : ''}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="p-4 sm:p-5 flex flex-col flex-1 min-w-0 gap-3 lg:justify-between">
@@ -314,30 +328,16 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 </button>
                             )}
 
-                            {/* Quick actions: equal-width on mobile, right-aligned row on desktop */}
-                            <div className="grid grid-cols-3 gap-2 lg:flex lg:flex-wrap lg:justify-end lg:mt-auto">
-                                <Button
-                                    size="sm"
-                                    className="h-9 text-xs sm:text-sm px-2 sm:px-3"
-                                    onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(1); }}
-                                >
-                                    <PlusCircle size={14} className="mr-1" /> Add 1 Egg
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    className="h-9 text-xs sm:text-sm px-2 sm:px-3"
-                                    onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(2); }}
-                                >
-                                    <PlusCircle size={14} className="mr-1" /> Add 2 Eggs
-                                </Button>
+                            {/* Dated clutch entry (1 and 2 egg quick-adds float over the photos) */}
+                            <div className="flex justify-end lg:mt-auto">
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-9 text-xs sm:text-sm border-slate-600 px-2 sm:px-3"
+                                    className="h-9 text-xs sm:text-sm border-slate-600 px-3 w-full sm:w-auto"
                                     onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
                                     title="Add eggs with a lay date and grade"
                                 >
-                                    <CalendarIcon size={14} className="mr-1" /> <span className="sm:hidden">Dated</span><span className="hidden sm:inline">Add dated clutch</span>
+                                    <CalendarIcon size={14} className="mr-1" /> Dated clutch
                                 </Button>
                             </div>
                         </div>
