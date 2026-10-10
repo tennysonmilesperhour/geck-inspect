@@ -175,7 +175,7 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
             className="flex-shrink-0"
         >
             <Card
-                className={`relative transition-all duration-300 overflow-hidden ${cardSize} bg-slate-800/50 border-2 border-dashed border-slate-600 ${isEditable ? 'hover:border-emerald-500 cursor-pointer' : 'cursor-default opacity-60'}`}
+                className={`relative transition-all duration-300 overflow-hidden ${cardSize} bg-slate-800/50 border-2 border-solid border-slate-600 ${isEditable ? 'hover:border-emerald-500 cursor-pointer' : 'cursor-default opacity-60'}`}
                 onClick={isEditable ? onEdit : undefined}
             >
                 <div className="w-full h-full bg-slate-700 flex items-center justify-center relative">
@@ -240,6 +240,14 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
     );
 };
 
+// Short trait list shown under a card when the "traits" toggle is on.
+// Prefers the structured morph tags, falls back to the free-text field.
+const getTraitText = (gecko) => {
+    const tags = Array.isArray(gecko?.morph_tags) ? gecko.morph_tags.filter(Boolean) : [];
+    if (tags.length) return tags.join(', ');
+    return (gecko?.morphs_traits || '').trim();
+};
+
 // GeckoCardNode component
 const GeckoCardNode = ({
     gecko,
@@ -252,6 +260,7 @@ const GeckoCardNode = ({
     isDimmed = false,
     onHoverEnter,
     onHoverLeave,
+    showTraits = false,
 }) => {
     if (!gecko) {
         return <UnknownCardNode size={size} />;
@@ -259,12 +268,13 @@ const GeckoCardNode = ({
     const hasImage = gecko.image_urls && gecko.image_urls.length > 0;
 
     const sizes = {
-        nano: { card: 'w-14 h-20', name: 'text-[8px]', id: 'text-[7px]' },
-        tiny: { card: 'w-24 h-28', name: 'text-[10px]', id: 'text-[9px]' },
-        small: { card: 'w-28 h-32', name: 'text-xs', id: 'text-[10px]' },
-        normal: { card: 'w-36 h-44', name: 'text-sm', id: 'text-xs' },
+        nano: { card: 'w-14 h-20', name: 'text-[8px]', id: 'text-[7px]', width: 'w-14', traits: 'text-[8px] line-clamp-2' },
+        tiny: { card: 'w-24 h-28', name: 'text-[10px]', id: 'text-[9px]', width: 'w-24', traits: 'text-[9px] line-clamp-3' },
+        small: { card: 'w-28 h-32', name: 'text-xs', id: 'text-[10px]', width: 'w-28', traits: 'text-[10px] line-clamp-3' },
+        normal: { card: 'w-36 h-44', name: 'text-sm', id: 'text-xs', width: 'w-36', traits: 'text-[11px] line-clamp-4' },
     };
-    const { card: cardSize, name: nameTextSize, id: idTextSize } = sizes[size] || sizes.normal;
+    const { card: cardSize, name: nameTextSize, id: idTextSize, width: cardWidth, traits: traitsClass } = sizes[size] || sizes.normal;
+    const traitText = showTraits ? getTraitText(gecko) : '';
 
     const sexIcon = gecko.sex === 'Male' ? '♂' : gecko.sex === 'Female' ? '♀' : '?';
     const sexColor = gecko.sex === 'Male' ? 'text-blue-400' : gecko.sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
@@ -351,6 +361,11 @@ const GeckoCardNode = ({
                     </div>
                 )}
             </Card>
+            {showTraits && traitText && (
+                <p className={`mt-1 ${cardWidth} text-center leading-tight text-slate-300 break-words ${traitsClass} ${dimClass} ${isFaded ? 'opacity-50' : ''}`}>
+                    {traitText}
+                </p>
+            )}
         </motion.div>
     );
 
@@ -420,7 +435,7 @@ const GeckoCardNode = ({
 const UnknownCardNode = ({ size = 'normal' }) => {
      const cardSize = size === 'nano' ? 'w-14 h-20' : size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
      return (
-         <div className={`flex-shrink-0 relative overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-lg ${cardSize}`}>
+         <div className={`flex-shrink-0 relative overflow-hidden bg-slate-800/50 border-2 border-solid border-slate-600 rounded-lg ${cardSize}`}>
              <GeckoImage
                  src={DEFAULT_GECKO_IMAGE} 
                  alt="Unknown" 
@@ -440,7 +455,10 @@ export default function Lineage() {
     const [lineagePrefs, setLineagePrefs] = usePageSettings('lineage_prefs', {
         defaultGenerations: '3',
         defaultZoom: '100',
+        showTraits: false,
     });
+
+    const showTraits = !!lineagePrefs.showTraits;
     const location = useLocation();
     const [myGeckos, setMyGeckos] = useState([]);
     const [allGeckosMap, setAllGeckosMap] = useState({});
@@ -944,6 +962,7 @@ export default function Lineage() {
                 isDimmed={!!highlightPath && !isOnHighlightPath}
                 onHoverEnter={() => setHighlightPath(path)}
                 onHoverLeave={() => setHighlightPath(null)}
+                showTraits={showTraits}
             />
         );
     };
@@ -1172,6 +1191,21 @@ export default function Lineage() {
                                 <SelectItem value="5">5 Gen</SelectItem>
                             </SelectContent>
                         </Select>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => setLineagePrefs({ showTraits: !showTraits })}
+                                    className={`h-10 w-10 shrink-0 border-slate-600 hover:bg-slate-700 ${showTraits ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300' : 'bg-slate-800'}`}
+                                    aria-label={showTraits ? 'Hide traits under cards' : 'Show traits under cards'}
+                                    aria-pressed={showTraits}
+                                >
+                                    <Tag className="w-4 h-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{showTraits ? 'Hide traits' : 'Show traits under cards'}</TooltipContent>
+                        </Tooltip>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
@@ -1454,6 +1488,7 @@ export default function Lineage() {
                                                     gecko={mate}
                                                     onNodeClick={handleSelectGecko}
                                                     size={matesCardSize}
+                                                    showTraits={showTraits}
                                                 />
                                             ))}
                                         </div>
@@ -1505,6 +1540,7 @@ export default function Lineage() {
                                                                     gecko={child}
                                                                     onNodeClick={handleSelectGecko}
                                                                     size="nano"
+                                                                    showTraits={showTraits}
                                                                 />
                                                             ))}
                                                         </div>
