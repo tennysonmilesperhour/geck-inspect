@@ -271,6 +271,16 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                     </div>
                                 </div>
                             ))}
+                            <div className="absolute top-2 left-2 z-10">
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
+                                    className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    title="Add eggs with a lay date and grade"
+                                >
+                                    <CalendarIcon size={14} className="drop-shadow" /> Dated clutch
+                                </button>
+                            </div>
                             {/* Wireframe quick-add buttons floating over the photos */}
                             <div className="absolute top-2 right-2 z-10 flex gap-1.5">
                                 {[1, 2].map((n) => (
@@ -328,16 +338,15 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 </button>
                             )}
 
-                            {/* Dated clutch entry (1 and 2 egg quick-adds float over the photos) */}
                             <div className="flex justify-end lg:mt-auto">
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-9 text-xs sm:text-sm border-slate-600 px-3 w-full sm:w-auto"
-                                    onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
-                                    title="Add eggs with a lay date and grade"
+                                    className="h-9 text-xs sm:text-sm border-purple-700/70 text-purple-300 hover:bg-purple-900/30 px-3 w-full sm:w-auto"
+                                    onClick={(e) => { e.stopPropagation(); setIsGeneticsOpen(true); }}
+                                    title="Genetics calculator"
                                 >
-                                    <CalendarIcon size={14} className="mr-1" /> Dated clutch
+                                    <Dna size={14} className="mr-1" /> Genetics
                                 </Button>
                             </div>
                         </div>
@@ -450,7 +459,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                         </TooltipProvider>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-1.5 w-full sm:flex sm:w-auto sm:items-center">
+                    <div className="grid grid-cols-3 gap-1.5 w-full sm:flex sm:w-auto sm:items-center">
                         <Button
                             variant="outline"
                             size="sm"
@@ -476,15 +485,6 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                     })()}
                                 </>
                             )}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-purple-700/70 text-purple-300 hover:bg-purple-900/30 text-xs h-8 px-2.5"
-                            onClick={() => setIsGeneticsOpen(true)}
-                            title="Genetics calculator"
-                        >
-                            <Dna size={14} className="mr-1" /> Genetics
                         </Button>
                         <Button
                             variant="outline"
