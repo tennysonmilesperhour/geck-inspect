@@ -252,101 +252,95 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
         <>
             <Card key={plan.id} className={`bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden transition-all ${shouldGlow ? 'ring-2 ring-white/30 shadow-[0_0_20px_4px_rgba(255,255,255,0.12)]' : ''}`}>
                 <CardHeader className="p-0 relative">
-                    <div className="flex flex-col sm:flex-row justify-between items-stretch min-w-0">
-                        <div className="flex flex-1 flex-col sm:flex-row min-w-0">
-                            <div className="flex w-full sm:w-32 lg:w-40 flex-shrink-0">
-                                <div className="w-1/2 h-32 sm:h-28 lg:h-32 overflow-hidden">
+                    <div className="flex flex-col sm:flex-row min-w-0">
+                        {/* Portraits: sire and dam side by side, large, with role labels */}
+                        <div className="relative flex w-full sm:w-64 lg:w-80 flex-shrink-0 h-52 sm:h-auto sm:min-h-[12rem] gap-px bg-slate-950">
+                            {[{ gecko: sire, role: 'Sire', symbol: '♂' }, { gecko: dam, role: 'Dam', symbol: '♀' }].map(({ gecko, role, symbol }) => (
+                                <div key={role} className="relative w-1/2 overflow-hidden">
                                     <GeckoImage
-                                        src={sire?.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
-                                        alt={sire?.name}
-                                        className="w-full h-full object-cover"
+                                        src={gecko?.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
+                                        alt={gecko?.name ? `${role}: ${gecko.name}` : role}
+                                        className="absolute inset-0 w-full h-full object-cover"
                                         loading="lazy"
                                         decoding="async"
                                     />
-                                </div>
-                                <div className="w-1/2 h-32 sm:h-28 lg:h-32 overflow-hidden">
-                                    <GeckoImage
-                                        src={dam?.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
-                                        alt={dam?.name}
-                                        className="w-full h-full object-cover"
-                                        loading="lazy"
-                                        decoding="async"
-                                    />
-                                </div>
-                            </div>
-                            <div className="p-3 sm:p-4 sm:ml-3 lg:ml-4 flex flex-col justify-center flex-1 min-w-0">
-                                {/* Days Since Last Egg */}
-                                {daysSinceLastEgg !== null && (
-                                    <div className="text-sm text-slate-400 mb-1">
-                                        {daysSinceLastEgg} day{daysSinceLastEgg !== 1 ? 's' : ''} since last egg
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-2 pt-6 pb-1.5">
+                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-white/90">
+                                            {symbol} {role}
+                                        </span>
                                     </div>
-                                )}
-
-                                <div className="font-bold text-base sm:text-lg lg:text-xl text-slate-100 break-words truncate">
-                                    {sire?.name || 'N/A'} & {dam?.name || 'N/A'}
                                 </div>
-                                {sire?.species && sire.species !== 'Crested Gecko' && (
-                                    <div className="text-xs text-teal-400 font-medium truncate">{sire.species}</div>
-                                )}
-                                {plan.breeding_id && (
-                                    <div className="text-xs sm:text-sm text-slate-400 truncate">ID: {plan.breeding_id}</div>
-                                )}
-
-                                {/* Egg Check Day Display */}
-                                {plan.egg_check_day && (
-                                    <div
-                                        className="mt-3 relative cursor-pointer group"
-                                        onClick={handleOpenEggCheckModal}
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity animate-pulse"></div>
-                                        <div className="relative bg-gradient-to-br from-emerald-600 to-green-600 p-3 rounded-lg border-2 border-emerald-400 shadow-lg">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <CalendarIcon className="w-4 h-4 text-white" />
-                                                        <span className="text-xs font-semibold text-white uppercase tracking-wide">Monthly Egg Check</span>
-                                                    </div>
-                                                    <div className="text-2xl font-bold text-white mt-1">
-                                                        Day {plan.egg_check_day}
-                                                    </div>
-                                                    <div className="text-xs text-emerald-100 mt-1">
-                                                        {plan.egg_check_count || 0} clutch{(plan.egg_check_count || 0) !== 1 ? 'es' : ''} laid
-                                                    </div>
-                                                </div>
-                                                <Sparkles className="w-6 h-6 text-emerald-200 animate-pulse" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex gap-2 mt-2 justify-end flex-wrap">
-                                    <Button
-                                        size="sm"
-                                        className="text-xs sm:text-sm"
-                                        onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(1); }}
-                                    >
-                                        <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 1 Egg</span><span className="sm:hidden">+1</span>
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        className="text-xs sm:text-sm"
-                                        onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(2); }}
-                                    >
-                                        <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 2 Eggs</span><span className="sm:hidden">+2</span>
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-xs sm:text-sm border-slate-600"
-                                        onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
-                                        title="Add eggs with a lay date and grade"
-                                    >
-                                        <CalendarIcon size={14} className="mr-1" /> <span className="hidden sm:inline">Add dated clutch</span><span className="sm:hidden">Dated</span>
-                                    </Button>
-                                </div>
-                            </div>
+                            ))}
                         </div>
 
+                        <div className="p-4 sm:p-5 flex flex-col flex-1 min-w-0 gap-3">
+                            <div className="min-w-0">
+                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                    {daysSinceLastEgg !== null ? (
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${shouldGlow ? 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30' : 'bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/20'}`}>
+                                            {daysSinceLastEgg} day{daysSinceLastEgg !== 1 ? 's' : ''} since last egg
+                                        </span>
+                                    ) : <span />}
+                                    {plan.breeding_id && (
+                                        <span className="text-xs font-mono text-slate-400 truncate">ID: {plan.breeding_id}</span>
+                                    )}
+                                </div>
+                                <h3 className="mt-2 font-bold text-lg sm:text-xl lg:text-2xl leading-tight text-slate-100 break-words">
+                                    {sire?.name || 'N/A'} <span className="text-slate-500 font-normal">&</span> {dam?.name || 'N/A'}
+                                </h3>
+                                {sire?.species && sire.species !== 'Crested Gecko' && (
+                                    <div className="text-xs text-teal-400 font-medium truncate mt-0.5">{sire.species}</div>
+                                )}
+                            </div>
+
+                            {/* Egg Check Day Display */}
+                            {plan.egg_check_day && (
+                                <button
+                                    type="button"
+                                    onClick={handleOpenEggCheckModal}
+                                    className="group flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-left transition-colors hover:bg-emerald-500/15 hover:border-emerald-400/50"
+                                >
+                                    <CalendarIcon className="w-4 h-4 text-emerald-300 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">Monthly egg check</div>
+                                        <div className="text-sm font-semibold text-emerald-50">
+                                            Day {plan.egg_check_day}
+                                            <span className="ml-2 text-xs font-normal text-emerald-200/70">
+                                                {plan.egg_check_count || 0} clutch{(plan.egg_check_count || 0) !== 1 ? 'es' : ''} laid
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <Sparkles className="w-4 h-4 text-emerald-300/70 flex-shrink-0" />
+                                </button>
+                            )}
+
+                            {/* Quick actions: equal-width on mobile, right-aligned row on desktop */}
+                            <div className="grid grid-cols-3 sm:flex sm:justify-end gap-2 sm:mt-auto">
+                                <Button
+                                    size="sm"
+                                    className="h-9 text-xs sm:text-sm"
+                                    onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(1); }}
+                                >
+                                    <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 1 Egg</span><span className="sm:hidden">+1</span>
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="h-9 text-xs sm:text-sm"
+                                    onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(2); }}
+                                >
+                                    <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 2 Eggs</span><span className="sm:hidden">+2</span>
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-9 text-xs sm:text-sm border-slate-600"
+                                    onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
+                                    title="Add eggs with a lay date and grade"
+                                >
+                                    <CalendarIcon size={14} className="mr-1" /> <span className="hidden sm:inline">Add dated clutch</span><span className="sm:hidden">Dated</span>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </CardHeader>
 
@@ -402,15 +396,65 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                     </>
                 )}
 
-                <CardFooter className="bg-emerald-950/50 p-3 flex flex-wrap gap-2 justify-between items-center">
-                    <div className="flex gap-2 flex-wrap items-center">
-                        <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 text-xs h-8 text-emerald-300" onClick={() => onToggleExpanded(plan.id)}>
+                <CardFooter className="bg-slate-950/40 border-t border-slate-800 px-3 py-2.5 sm:px-4 flex flex-wrap gap-x-3 gap-y-2 justify-between items-center">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+                            onClick={() => onToggleExpanded(plan.id)}
+                        >
                             {isExpanded ? <><ChevronUp size={14} className="mr-1" /> Collapse</> : <><ChevronDown size={14} className="mr-1" /> Expand</>}
                         </Button>
+
+                        <TooltipProvider delayDuration={150}>
+                            <div className="flex gap-1.5 flex-wrap items-center">
+                                {eggCounts.eggsLaid > 0 && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="bg-amber-100 text-amber-900 text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 cursor-default">
+                                                <EggIcon className="w-3 h-3" />
+                                                {eggCounts.eggsLaid}
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="bg-slate-800 text-slate-100">
+                                            Eggs incubating
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
+                                {eggCounts.hatched > 0 && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="bg-green-600 text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-default">
+                                                ✓ {eggCounts.hatched}
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="bg-slate-800 text-slate-100">
+                                            Hatched
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
+                                {eggCounts.failed > 0 && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="bg-yellow-600 text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-default">
+                                                ✗ {eggCounts.failed}
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="bg-slate-800 text-slate-100">
+                                            Failed / Slug / Infertile
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
+                            </div>
+                        </TooltipProvider>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap">
                         <Button
                             variant="outline"
                             size="sm"
-                            className={`text-xs h-8 ${plan.laying_active !== false ? 'border-green-600 text-green-400 hover:bg-green-900/20' : 'border-slate-600 text-slate-400 hover:bg-slate-800'}`}
+                            className={`text-xs h-8 px-2.5 ${plan.laying_active !== false ? 'border-green-700/70 text-green-400 hover:bg-green-900/20' : 'border-slate-600 text-slate-400 hover:bg-slate-800'}`}
                             onClick={async () => {
                                 const goingDormant = plan.laying_active !== false;
                                 await BreedingPlan.update(plan.id, {
@@ -433,66 +477,37 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 </>
                             )}
                         </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-purple-700/70 text-purple-300 hover:bg-purple-900/30 text-xs h-8 px-2.5"
+                            onClick={() => setIsGeneticsOpen(true)}
+                            title="Genetics calculator"
+                        >
+                            <Dna size={14} className="sm:mr-1" /> <span className="hidden sm:inline">Genetics</span>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-slate-600 hover:bg-slate-800 text-xs h-8 px-2.5"
+                            onClick={() => setIsEditModalOpen(true)}
+                            title="Edit plan"
+                        >
+                            <Edit size={14} className="sm:mr-1" /> <span className="hidden sm:inline">Edit</span>
+                        </Button>
                         {showArchiveButton && (
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-yellow-600 text-yellow-500 hover:bg-yellow-900/20 text-xs h-8"
+                                className="border-yellow-700/70 text-yellow-500 hover:bg-yellow-900/20 text-xs h-8 px-2.5"
                                 onClick={() => onPlanArchive(plan.id, !plan.archived)}
+                                title={plan.archived ? 'Unarchive plan' : 'Archive plan'}
                             >
-                                {plan.archived ? <ArchiveRestore size={14} className="mr-1" /> : <Archive size={14} className="mr-1" />}
-                                {plan.archived ? 'Unarchive' : 'Archive'}
+                                {plan.archived ? <ArchiveRestore size={14} className="sm:mr-1" /> : <Archive size={14} className="sm:mr-1" />}
+                                <span className="hidden sm:inline">{plan.archived ? 'Unarchive' : 'Archive'}</span>
                             </Button>
                         )}
-                        <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 text-xs h-8" onClick={() => setIsEditModalOpen(true)}>
-                            <Edit size={14} className="mr-1" /> Edit
-                        </Button>
-                        <Button variant="outline" size="sm" className="border-purple-700 text-purple-300 hover:bg-purple-900/30 text-xs h-8" onClick={() => setIsGeneticsOpen(true)}>
-                            <Dna size={14} className="mr-1" /> Genetics
-                        </Button>
                     </div>
-
-                    <TooltipProvider delayDuration={150}>
-                        <div className="flex gap-1 flex-wrap">
-                            {eggCounts.eggsLaid > 0 && (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="bg-amber-100 text-amber-900 text-xs px-1.5 py-0.5 rounded flex items-center gap-1 cursor-default">
-                                            <EggIcon className="w-3 h-3" />
-                                            {eggCounts.eggsLaid}
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="bg-slate-800 text-slate-100">
-                                        Eggs incubating
-                                    </TooltipContent>
-                                </Tooltip>
-                            )}
-                            {eggCounts.hatched > 0 && (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded cursor-default">
-                                            ✓ {eggCounts.hatched}
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="bg-slate-800 text-slate-100">
-                                        Hatched
-                                    </TooltipContent>
-                                </Tooltip>
-                            )}
-                            {eggCounts.failed > 0 && (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="bg-yellow-600 text-white text-xs px-1.5 py-0.5 rounded cursor-default">
-                                            ✗ {eggCounts.failed}
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="bg-slate-800 text-slate-100">
-                                        Failed / Slug / Infertile
-                                    </TooltipContent>
-                                </Tooltip>
-                            )}
-                        </div>
-                    </TooltipProvider>
                 </CardFooter>
             </Card>
 
