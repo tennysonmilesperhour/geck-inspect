@@ -290,9 +290,9 @@ export const STATIC_ROUTES = [
     changefreq: 'monthly',
     lastmod: dateOf('src/pages/CareGuide.jsx', CARE_DATA, 'src/data/keepers-guides.js'),
     meta: {
-      title: 'Crested Gecko Care Guide',
+      title: 'Crested Gecko Care Guide: Temp, Diet, and Housing',
       description:
-        'Comprehensive crested gecko (Correlophus ciliatus) care guide, housing, temperature and humidity, diet with CGD brand comparison, handling, common health issues, shedding, tail loss, breeding readiness, egg incubation, and hatchling care.',
+        'Crested gecko care from hatchling to adult: 72-78F, a night-to-day humidity cycle, CGD diet, enclosure size, handling, shedding, and breeding readiness.',
     },
   },
   {
