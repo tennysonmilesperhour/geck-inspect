@@ -807,7 +807,7 @@ export default function MorphGuidePage() {
                   </div>
                 </div>
                 {filtersOpen && (
-                  <div id="morph-filter-panel" className="md:hidden mt-2 grid grid-cols-3 gap-2">
+                  <div id="morph-filter-panel" className="md:hidden mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
                     <MorphFilterSelects {...selectProps} wide />
                   </div>
                 )}

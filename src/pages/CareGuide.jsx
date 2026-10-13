@@ -62,9 +62,9 @@ const CARE_GUIDE_JSON_LD = {
     {
       '@type': 'Article',
       '@id': 'https://geckinspect.com/CareGuide#article',
-      headline: 'Crested Gecko Care Guide: Complete Beginner to Advanced Reference',
+      headline: 'Crested Gecko Care Guide: Temp, Diet, and Housing',
       description:
-        'Comprehensive care guide for crested geckos (Correlophus ciliatus): housing, temperature and humidity, diet, handling, common health issues, shedding, tail loss, breeding, and hatchling care.',
+        'Crested gecko care from hatchling to adult: 72-78F, a night-to-day humidity cycle, CGD diet, enclosure size, handling, shedding, and breeding readiness.',
       url: 'https://geckinspect.com/CareGuide',
       about: {
         '@type': 'Thing',
@@ -390,8 +390,8 @@ export default function CareGuidePage() {
   return (
     <>
       <Seo
-        title="Crested Gecko Care Guide"
-        description="Comprehensive crested gecko (Correlophus ciliatus) care guide, housing setups, temperature and humidity ranges, diet with CGD brand comparison, handling, common health issues, shedding, tail loss, breeding readiness, egg incubation, and hatchling care."
+        title="Crested Gecko Care Guide: Temp, Diet, and Housing"
+        description="Crested gecko care from hatchling to adult: 72-78F, a night-to-day humidity cycle, CGD diet, enclosure size, handling, shedding, and breeding readiness."
         path="/CareGuide"
         imageAlt="Crested gecko care and husbandry reference"
         keywords={[

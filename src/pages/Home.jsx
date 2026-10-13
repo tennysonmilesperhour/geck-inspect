@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import PublicMobileMenu from '@/components/public/PublicMobileMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 import { captureEvent } from '@/lib/posthog';
@@ -560,13 +561,19 @@ export default function Home() {
                   Start free
                 </Link>
               </Button>
+              <PublicMobileMenu
+                onNavigate={(target) => captureEvent('landing_cta_clicked', { cta: 'mobile_menu', target })}
+              />
             </div>
           ) : (
-            <Button asChild variant="ghost" className="home-glass-button home-glass-button--primary">
-              <Link to={createPageUrl('Dashboard')}>
-                Dashboard
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button asChild variant="ghost" className="home-glass-button home-glass-button--primary">
+                <Link to={createPageUrl('Dashboard')}>
+                  Dashboard
+                </Link>
+              </Button>
+              <PublicMobileMenu signedIn />
+            </div>
           )}
         </header>
 
@@ -1039,7 +1046,7 @@ export default function Home() {
             A photo and a name is enough to begin. Add its morph and Geck Inspect shows what it&rsquo;s worth.
           </p>
           <p className="text-emerald-200/70 mb-8 text-sm flex items-center justify-center gap-2">
-            <Smartphone className="w-4 h-4" />
+            <Smartphone className="w-4 h-4 shrink-0" />
             Add to your iOS or Android home screen, full-screen, like a native app, no app store needed.
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-3">

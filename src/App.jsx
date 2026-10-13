@@ -362,22 +362,27 @@ const AuthenticatedApp = () => {
             users set membership_tier without paying). Old links land on
             the real pricing/checkout page. */}
         <Route path="/Subscription" element={<Navigate to="/Membership" replace />} />
-        <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
+        <Route path="/MorphGuide/lines/:slug" element={<PublicPageShell><ProjectLineDetail /></PublicPageShell>} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
-          <Route path="/CareGuide" element={<CareGuide />} />
-          <Route path="/CareGuide/series" element={<CareGuideSeries />} />
-          <Route path="/CareGuide/series/:guideId" element={<CareGuideSeries />} />
+          {/* The guides and calculator pages draw no header of their own, so
+              signed-out visitors (most of them on phones, from search) had
+              no way to reach the rest of the site. The shell adds the
+              header, phone menu and footer here only; signed in, the app
+              Layout provides them. */}
+          <Route path="/CareGuide" element={<PublicPageShell><CareGuide /></PublicPageShell>} />
+          <Route path="/CareGuide/series" element={<PublicPageShell><CareGuideSeries /></PublicPageShell>} />
+          <Route path="/CareGuide/series/:guideId" element={<PublicPageShell><CareGuideSeries /></PublicPageShell>} />
           <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />
-          <Route path="/GeneticsGuide" element={<GeneticsGuide />} />
-          <Route path="/GeneticCalculatorTool" element={<GeneticCalculatorTool />} />
+          <Route path="/GeneticsGuide" element={<PublicPageShell><GeneticsGuide /></PublicPageShell>} />
+          <Route path="/GeneticCalculatorTool" element={<PublicPageShell><GeneticCalculatorTool /></PublicPageShell>} />
           {/* Cleaner, marketable URL alias for the genetics calculator,
               the legacy path is kept above so existing links and the
               authenticated PAGES table keep working. */}
-          <Route path="/calculator" element={<GeneticCalculatorTool />} />
-          <Route path="/calculator/reverse" element={<ReverseCalculator />} />
-          <Route path="/calculator/learn" element={<ClutchLab />} />
-          <Route path="/calculator/pairing/:pairing" element={<CalculatorPairing />} />
-          <Route path="/calculator/:morph" element={<CalculatorMorph />} />
+          <Route path="/calculator" element={<PublicPageShell><GeneticCalculatorTool /></PublicPageShell>} />
+          <Route path="/calculator/reverse" element={<PublicPageShell><ReverseCalculator /></PublicPageShell>} />
+          <Route path="/calculator/learn" element={<PublicPageShell><ClutchLab /></PublicPageShell>} />
+          <Route path="/calculator/pairing/:pairing" element={<PublicPageShell><CalculatorPairing /></PublicPageShell>} />
+          <Route path="/calculator/:morph" element={<PublicPageShell><CalculatorMorph /></PublicPageShell>} />
           <Route path="/About" element={<About />} />
           <Route path="/Contact" element={<Contact />} />
           <Route path="/Unsubscribe" element={<Unsubscribe />} />

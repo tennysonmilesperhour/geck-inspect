@@ -156,10 +156,10 @@ function LikedGeckosScreen() {
                                                 >
                                                     <img 
                                                         src={owner.profile_image_url || initialsAvatarUrl(owner.full_name)}
-                                                        className="w-6 h-6 rounded-full"
+                                                        className="w-6 h-6 rounded-full shrink-0"
                                                         alt={owner.full_name}
                                                     />
-                                                    <span>{owner.full_name}</span>
+                                                    <span className="min-w-0 truncate">{owner.full_name}</span>
                                                 </Link>
                                                 {(owner.city || owner.country) && (
                                                     <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">

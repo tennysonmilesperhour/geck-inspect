@@ -199,7 +199,7 @@ export default function PromoteImageGallery({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[100vw] sm:w-auto max-h-[100vh] sm:max-h-[90vh] h-[100vh] sm:h-auto sm:rounded-lg rounded-none overflow-y-auto p-3 sm:p-6">
+      <DialogContent className="max-w-4xl w-[100vw] sm:w-auto max-h-[100dvh] sm:max-h-[90vh] h-[100dvh] sm:h-auto content-start sm:rounded-lg rounded-none overflow-y-auto p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ImageIcon className="w-5 h-5 text-emerald-400" />

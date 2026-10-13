@@ -138,9 +138,9 @@ export default function ChangeLogModal({ isOpen, onClose }) {
                 hideCloseButton
             >
                 <DialogHeader>
-                    <DialogTitle className="text-slate-100 flex items-center gap-2 text-xl">
+                    <DialogTitle className="text-slate-100 flex flex-wrap items-center gap-2 text-xl">
                         <Sparkles className="w-5 h-5 text-emerald-400" />
-                        What's New
+                        <span className="whitespace-nowrap">What's New</span>
                         {newSinceLastVisit > 0 && (
                             <Badge className="bg-emerald-600 text-white text-xs ml-1">
                                 {newSinceLastVisit} new since your last visit

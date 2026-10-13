@@ -665,6 +665,10 @@ export default function MyGeckosPage() {
                         on yet, and they pushed its buttons off a phone screen. */}
                     {!isFirstRun && (
                     <>
+                    {/* Secondary tools sit in an even 2-column grid on phones
+                        (they wrapped into a ragged 2+2 row). From sm up the
+                        wrapper is display:contents, so the row is unchanged. */}
+                    <div className={showArchived ? 'contents' : 'grid grid-cols-2 gap-2 w-full sm:contents'}>
                     <Button
                         variant="outline"
                         onClick={() => { setShowArchived(!showArchived); loadGeckos(); }}
@@ -767,6 +771,11 @@ export default function MyGeckosPage() {
                                 <Scale className="w-4 h-4 mr-2 text-emerald-400" />
                                 Weigh-in
                             </Button>
+                        </>
+                    )}
+                    </div>
+                    {!showArchived && (
+                        <>
                             {/* Primary action leads on phones: full width, above
                                 the secondary tools, instead of wrapping to last. */}
                             <Button className="order-first w-full sm:w-auto md:order-none" onClick={() => {
@@ -828,9 +837,9 @@ export default function MyGeckosPage() {
                                 className="pl-10 h-9 bg-slate-950 border-slate-700 text-slate-100 focus-visible:ring-emerald-500/40"
                             />
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2 md:shrink-0">
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="w-44 !h-8 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
+                                <SelectTrigger className="flex-1 min-w-0 md:flex-none md:w-44 !h-8 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                         <SelectValue placeholder="Sort" />
@@ -1309,6 +1318,10 @@ export default function MyGeckosPage() {
                         onUpdate={() => loadGeckos()}
                         onEdit={handleEdit}
                         onArchive={handleArchiveGecko}
+                        onMarkSold={(geckoId) => {
+                            setArchiveDialogReason('sold');
+                            setArchiveDialogGeckoId(geckoId);
+                        }}
                         onDelete={handleDelete}
                     />
                 )}

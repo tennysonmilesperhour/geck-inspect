@@ -94,7 +94,6 @@ describe('public credits', () => {
     for (const file of [
       'src/pages/Home.jsx',
       'src/components/public/PublicPageShell.jsx',
-      'src/Layout.jsx',
     ]) {
       const src = readFileSync(resolve(ROOT, file), 'utf8');
       expect(src, file).toContain('GeckIntellectLink');

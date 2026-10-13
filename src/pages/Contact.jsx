@@ -80,18 +80,18 @@ export default function Contact() {
         </h1>
         <p className="text-lg text-slate-300 leading-relaxed max-w-3xl">
           Geck Inspect is operated from the United States. For support, privacy, or account deletion questions, email{' '}
-          <a href={SUPPORT_EMAIL_URL} className="text-emerald-300 underline break-all">{SUPPORT_EMAIL}</a>.
+          <a href={SUPPORT_EMAIL_URL} className="text-emerald-300 underline break-words">{SUPPORT_EMAIL}</a>.
           {' '}You can contact us without creating an account.
         </p>
 
         <div className="mt-10 space-y-5">
           {CHANNELS.map(({ icon: Icon, title, body, cta }) => (
-            <div key={title} className="rounded-xl border border-slate-700 bg-slate-900 p-6">
-              <div className="flex items-start gap-4">
+            <div key={title} className="rounded-xl border border-slate-700 bg-slate-900 p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                 <div className="flex-shrink-0 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
                   <Icon className="w-5 h-5 text-emerald-300" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-bold text-white mb-1.5">{title}</h2>
                   <p className="text-slate-400 leading-relaxed mb-3">{body}</p>
                   <Link to={createPageUrl(cta.path.replace(/^\//, ''))}>

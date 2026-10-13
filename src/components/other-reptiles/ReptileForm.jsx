@@ -359,14 +359,15 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
                     </div>
                 </form>
 
-                <CardFooter className="flex-shrink-0 mt-auto bg-slate-900/80 border-t border-slate-800 p-4 flex justify-between">
+                <CardFooter className="flex-shrink-0 mt-auto bg-slate-900/80 border-t border-slate-800 p-4 flex justify-between gap-2">
                     <div>
                         {reptile && onDelete && (
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm">
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Archive
+                                    <Button variant="destructive" size="sm" aria-label="Archive" title="Archive">
+                                        {/* Icon only on phones so the footer fits one row */}
+                                        <Trash2 className="w-4 h-4 sm:mr-2" />
+                                        <span className="hidden sm:inline">Archive</span>
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent className="bg-slate-900 border-slate-700">
@@ -384,7 +385,7 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
                             </AlertDialog>
                         )}
                     </div>
-                    <div className="flex gap-4">
+                    <div className="flex gap-2 sm:gap-4">
                         <Button variant="outline" onClick={onCancel} className="border-slate-600">Cancel</Button>
                         <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
                             {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

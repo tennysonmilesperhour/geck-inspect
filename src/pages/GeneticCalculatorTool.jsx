@@ -348,7 +348,7 @@ export default function GeneticCalculatorTool({
                             misleading). */}
                         {isAuthed && (
                           <div className="flex flex-wrap items-center gap-2 mb-4">
-                            <span className="text-xs text-slate-500 mr-1">Pick parents:</span>
+                            <span className="w-full sm:w-auto text-xs text-slate-500 mr-1">Pick parents:</span>
                             <button
                               type="button"
                               onClick={() => setMode('manual')}
@@ -384,7 +384,7 @@ export default function GeneticCalculatorTool({
                               value={omniboxText}
                               onChange={(e) => setOmniboxText(e.target.value)}
                               placeholder='Type a pairing: "lilly white het axanthic x sable"'
-                              className="flex-1 h-10 touch:h-11 rounded-md bg-slate-800 border border-slate-600 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                              className="flex-1 min-w-0 h-10 touch:h-11 rounded-md bg-slate-800 border border-slate-600 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
                               aria-label="Type a pairing in breeder shorthand"
                             />
                             <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white text-sm h-10">

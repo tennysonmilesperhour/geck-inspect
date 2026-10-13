@@ -410,7 +410,7 @@ export default function ForumPostPage() {
             <div key={comment.id} className={isReply ? 'ml-6 md:ml-10 mt-3' : ''}>
                 <Card>
                     <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-1.5">
+                        <div className="flex justify-between items-start gap-2 mb-1.5">
                             {/* Linked by profile id: signed-out visitors cannot read
                                 created_by (the author's email). */}
                             {comment.owner_profile_id ? (
@@ -425,7 +425,7 @@ export default function ForumPostPage() {
                                     {nameWithoutEmail(comment.author_name, 'Geck Inspect member')}
                                 </span>
                             )}
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-slate-500 shrink-0">
                                 {formatDistanceToNow(new Date(comment.created_date), { addSuffix: true })}
                             </span>
                         </div>
@@ -465,7 +465,7 @@ export default function ForumPostPage() {
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-slate-300 whitespace-pre-wrap mb-3">{comment.content}</p>
+                            <p className="text-slate-300 whitespace-pre-wrap break-words mb-3">{comment.content}</p>
                         )}
                         <div className="flex items-center gap-2 flex-wrap">
                             <Button
@@ -560,7 +560,7 @@ export default function ForumPostPage() {
                             <CardTitle className="text-2xl md:text-3xl text-slate-100 flex items-start gap-2">
                                 {post.is_pinned && <Pin className="w-5 h-5 mt-1.5 text-amber-400 shrink-0" aria-label="Pinned" />}
                                 {isLocked && <Lock className="w-5 h-5 mt-1.5 text-slate-400 shrink-0" aria-label="Locked" />}
-                                <span>{post.title}</span>
+                                <span className="min-w-0 break-words">{post.title}</span>
                             </CardTitle>
                         )}
                         <ReportContent entity="forum_post" recordId={post.id} authorEmail={post.created_by} excerpt={post.content} />
@@ -614,7 +614,7 @@ export default function ForumPostPage() {
                             </div>
                         ) : (
                             <>
-                                <p className="text-slate-200 whitespace-pre-wrap leading-relaxed">
+                                <p className="text-slate-200 whitespace-pre-wrap break-words leading-relaxed">
                                     {post.content}
                                 </p>
                                 <ForumPhotoGrid value={post.image_urls} />

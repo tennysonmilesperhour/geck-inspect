@@ -1120,9 +1120,9 @@ function PostHogEmbeds() {
                 {group.events.map((e) => (
                   <div
                     key={e.name}
-                    className="grid grid-cols-[220px_1fr] gap-3 text-sm items-baseline"
+                    className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-0.5 sm:gap-3 text-sm items-baseline"
                   >
-                    <code className="text-emerald-300 font-mono text-[12px]">
+                    <code className="text-emerald-300 font-mono text-[12px] break-all">
                       {e.name}
                     </code>
                     <span className="text-slate-400">{e.what}</span>

@@ -128,22 +128,25 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
         </AlertDialog>
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <Card className="max-w-4xl w-full max-h-[90vh] flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-slate-700">
-                    <div className="flex items-center gap-4">
-                        <CardTitle className="text-slate-100">{reptile.name}</CardTitle>
-                        <Badge variant="outline" className="text-slate-300">
+                <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-slate-700 p-4 sm:p-6">
+                    {/* Species shows in Basic Information below, so phones
+                        drop the badge and keep the name readable. */}
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                        <CardTitle className="text-slate-100 truncate">{reptile.name}</CardTitle>
+                        <Badge variant="outline" className="text-slate-300 flex-shrink-0 hidden sm:inline-flex">
                             {reptile.species}
                         </Badge>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                         <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => onEdit(reptile)}
                             className="border-slate-600 hover:bg-slate-800"
+                            aria-label="Edit"
                         >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
+                            <Edit className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Edit</span>
                         </Button>
                         <Button variant="ghost" size="icon" onClick={onClose}>
                             <X className="w-5 h-5 text-slate-400" />
@@ -151,7 +154,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                         </div>
                         </CardHeader>
                 
-                <CardContent className="p-6 overflow-y-auto flex-1">
+                <CardContent className="p-4 sm:p-6 overflow-y-auto flex-1">
                     <div className="grid lg:grid-cols-2 gap-8">
                         {/* Left Column: Basic Info & Image */}
                         <div className="space-y-6">

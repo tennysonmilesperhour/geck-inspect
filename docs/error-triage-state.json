@@ -1,5 +1,5 @@
 {
-  "lastRun": "2026-10-10T16:08:36.148Z",
+  "lastRun": "2026-10-13T18:04:18.917Z",
   "signatures": {
     "5a866ee3a287": {
       "status": "skipped",
@@ -40,6 +40,16 @@
       "lastMessage": "permission denied for function generate_referral_code",
       "lastCount": 1,
       "updatedAt": "2026-10-01T17:20:54.832Z"
+    },
+    "5b69b84a1ccf": {
+      "status": "open_pr",
+      "reason": null,
+      "prUrl": "https://github.com/tennysonmilesperhour/geck-inspect/pull/120",
+      "branch": "error-triage/5b69b84a1ccf-2026-10-13",
+      "title": "Guard null primary_morph in ImageCard",
+      "lastMessage": "Cannot read properties of null (reading 'replace')",
+      "lastCount": 1,
+      "updatedAt": "2026-10-13T18:04:18.917Z"
     }
   }
 }

@@ -12,6 +12,10 @@ import { eggStatusFields } from '@/lib/hatchEgg';
 import HatchEggDialog from './HatchEggDialog';
 import DeleteEggDialog from './DeleteEggDialog';
 
+// A date input shows nothing unless its value is exactly YYYY-MM-DD, so a
+// timestamp (an offline or optimistic row) would render as an empty field.
+const toDateInput = (value) => (value ? String(value).slice(0, 10) : '');
+
 export default function EggDetailModal({ egg, breedingPlan, sire, dam, pairEggs = [], onClose, onUpdate }) {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -21,9 +25,9 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, pairEggs 
     const [hatchingEgg, setHatchingEgg] = useState(null);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [editData, setEditData] = useState({
-        lay_date: egg.lay_date,
-        hatch_date_expected: egg.hatch_date_expected,
-        hatch_date_actual: egg.hatch_date_actual || '',
+        lay_date: toDateInput(egg.lay_date),
+        hatch_date_expected: toDateInput(egg.hatch_date_expected),
+        hatch_date_actual: toDateInput(egg.hatch_date_actual),
         status: egg.status,
         grade: egg.grade || '',
     });

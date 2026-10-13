@@ -583,7 +583,7 @@ export default function QualityScale() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 underline break-all"
+                  className="text-emerald-400 hover:text-emerald-300 underline break-words"
                 >
                   {label}
                 </a>

@@ -53,7 +53,7 @@ export default function QualityInput({ value, onChange }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <label className="block text-sm font-medium text-slate-200">
           Quality grade
           <span className="ml-2 text-xs font-normal text-slate-500">
@@ -64,14 +64,14 @@ export default function QualityInput({ value, onChange }) {
           to="/QualityScale"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-emerald-400 hover:text-emerald-300 underline touch:inline-flex touch:items-center touch:min-h-11"
+          className="shrink-0 whitespace-nowrap text-xs text-emerald-400 hover:text-emerald-300 underline touch:inline-flex touch:items-center touch:min-h-11"
         >
           How to score
         </Link>
       </div>
 
       {/* Tier buttons */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {TIERS.map((tier) => {
           const isActive = activeTier?.id === tier.id;
           return (

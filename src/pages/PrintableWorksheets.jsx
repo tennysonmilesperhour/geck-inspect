@@ -516,7 +516,7 @@ function RackLabelPicker({ geckos, selected, onChange, search, onSearch, onPrint
           value={search}
           onChange={(e) => onSearch(e.target.value)}
           placeholder="Search by name, ID or morph"
-          className="max-w-xs"
+          className="sm:max-w-xs"
           aria-label="Search geckos"
         />
         <Button type="button" variant="outline" size="sm" onClick={toggleAll} disabled={shown.length === 0}>

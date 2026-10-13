@@ -970,14 +970,14 @@ export const BLOG_POSTS = [
   // ─── Crested Gecko Enclosure Setup Guide ───────────────────
   {
     slug: 'crested-gecko-enclosure-setup-guide',
-    title: 'Crested Gecko Enclosure Setup: The Complete Guide',
+    title: 'Crested Gecko Enclosure Setup: 18x18x24 Minimum',
     description:
-      'How to set up a crested gecko enclosure from scratch. Covers tank size, substrate, temperature, humidity, lighting, plants, and bioactive vs simple setups.',
+      'Set up a crested gecko enclosure: 18x18x24 minimum for one adult, 72-78F days, 50-70% humidity, plus substrate, lighting, and bioactive vs simple.',
     keyphrase: 'crested gecko enclosure',
     category: 'care',
     tags: ['crested gecko enclosure', 'crested gecko setup', 'crested gecko tank', 'bioactive', 'temperature', 'humidity'],
     datePublished: '2026-05-05',
-    dateModified: '2026-05-05',
+    dateModified: '2026-10-12',
     heroEyebrow: 'Setup guide',
     tldr: [
       'Minimum enclosure size for one adult crested gecko: 18x18x24 inches (45x45x60 cm). Bigger is better, especially vertical space.',
@@ -4230,8 +4230,8 @@ export const BLOG_POSTS = [
   },
   {
     slug: "cappuccino-identification-markers-breeding",
-    title: "Cappuccino Crested Gecko Markers: Stop Guessing",
-    description: "Learn the real visual markers that identify a Cappuccino crested gecko. Distinguish Cappuccino from Frappuccino and well-marked normals before your next pairing or purchase.",
+    title: "Cappuccino Crested Gecko Markers vs Frappuccino",
+    description: "Cappuccino crested gecko markers: a dorsal saddle, warm mocha tone, and dark eye rims. Tell it from a Frappuccino or a well-marked normal before you pair.",
     keyphrase: "cappuccino crested gecko markers",
     category: "identification",
     tags: [
@@ -4243,7 +4243,7 @@ export const BLOG_POSTS = [
       "super-cappuccino",
     ],
     datePublished: "2026-06-08",
-    dateModified: "2026-06-08",
+    dateModified: "2026-10-12",
     heroEyebrow: "Morph Identification",
     tldr: [
       "Cappuccino is an incomplete-dominant morph: one copy produces the visual form, two copies produce the Super Cappuccino (Melanistic) with documented health concerns.",

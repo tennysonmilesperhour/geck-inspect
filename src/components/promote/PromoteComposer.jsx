@@ -826,7 +826,7 @@ export default function PromoteComposer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl w-[100vw] sm:w-auto max-h-[100vh] sm:max-h-[90vh] h-[100vh] sm:h-auto sm:rounded-lg rounded-none overflow-y-auto p-3 sm:p-6 pb-24 sm:pb-6">
+      <DialogContent className="max-w-3xl w-[100vw] sm:w-auto max-h-[100dvh] sm:max-h-[90vh] h-[100dvh] sm:h-auto content-start sm:rounded-lg rounded-none overflow-y-auto p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-emerald-400" />
@@ -1424,10 +1424,10 @@ export default function PromoteComposer({
                 )}
               </div>
 
-              {/* Action buttons. On mobile, pin to the bottom of the
-                  viewport so Publish is always reachable without
+              {/* Action buttons. On mobile, pin them just above the app's
+                  bottom nav bar so Publish is always reachable without
                   scrolling through hashtag chips + previews. */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-emerald-900/40 sm:static fixed bottom-0 inset-x-0 sm:bg-transparent bg-emerald-950/95 sm:backdrop-blur-none backdrop-blur-md sm:p-0 p-3 sm:border-t-emerald-900/40 border-t-emerald-700/60 z-10">
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-emerald-900/40 sticky sm:static -bottom-3 -mx-3 sm:mx-0 sm:bg-transparent bg-emerald-950/95 sm:backdrop-blur-none backdrop-blur-md sm:p-0 p-3 sm:border-t-emerald-900/40 border-t-emerald-700/60 z-10">
                 <Button
                   variant="outline"
                   onClick={handleCopy}

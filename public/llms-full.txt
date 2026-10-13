@@ -1,6 +1,6 @@
 # Geck Inspect, full reference for AI assistants
 
-> Generated: 2026-10-07 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, price index and editorial blog. Smaller topic files are listed in https://geckinspect.com/llms.txt. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
+> Generated: 2026-10-12 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, price index and editorial blog. Smaller topic files are listed in https://geckinspect.com/llms.txt. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
 
 ---
 
@@ -8,7 +8,7 @@
 
 > Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (original asking-price data by trait and market). Everything listed here is free to read and cite.
 >
-> Last updated: 2026-10-06.
+> Last updated: 2026-10-12.
 
 ## How to use and cite this site
 
@@ -1859,12 +1859,12 @@ Insects are beneficial but not strictly required if you are feeding a high-quali
 **Q: What insects can crested geckos eat?**
 Crickets and dubia roaches are the most common feeders. Black soldier fly larvae are also excellent. Avoid mealworms as a primary feeder due to their high chitin content. Always dust insects with calcium + D3 before feeding.
 
-### Crested Gecko Enclosure Setup: The Complete Guide
+### Crested Gecko Enclosure Setup: 18x18x24 Minimum
 
 _Permalink: https://geckinspect.com/blog/crested-gecko-enclosure-setup-guide_
-_Published 2026-05-05_
+_Published 2026-05-05 · Updated 2026-10-12_
 
-> How to set up a crested gecko enclosure from scratch. Covers tank size, substrate, temperature, humidity, lighting, plants, and bioactive vs simple setups.
+> Set up a crested gecko enclosure: 18x18x24 minimum for one adult, 72-78F days, 50-70% humidity, plus substrate, lighting, and bioactive vs simple.
 
 **TL;DR:**
 - Minimum enclosure size for one adult crested gecko: 18x18x24 inches (45x45x60 cm). Bigger is better, especially vertical space.
@@ -3539,12 +3539,12 @@ No. The Lilly White and Axanthic components follow their own Mendelian inheritan
 **Q: How many generations does it take to improve pinstripe coverage?**
 Meaningful improvement in a polygenic trait typically takes 5 to 10 generations of consistent selection pressure. A single pairing of two high-coverage animals shifts the average modestly. Sustained culling of low-coverage animals from the breeding pool across many generations is what actually moves the line.
 
-### Cappuccino Crested Gecko Markers: Stop Guessing
+### Cappuccino Crested Gecko Markers vs Frappuccino
 
 _Permalink: https://geckinspect.com/blog/cappuccino-identification-markers-breeding_
-_Published 2026-06-08_
+_Published 2026-06-08 · Updated 2026-10-12_
 
-> Learn the real visual markers that identify a Cappuccino crested gecko. Distinguish Cappuccino from Frappuccino and well-marked normals before your next pairing or purchase.
+> Cappuccino crested gecko markers: a dorsal saddle, warm mocha tone, and dark eye rims. Tell it from a Frappuccino or a well-marked normal before you pair.
 
 **TL;DR:**
 - Cappuccino is an incomplete-dominant morph: one copy produces the visual form, two copies produce the Super Cappuccino (Melanistic) with documented health concerns.

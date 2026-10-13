@@ -288,63 +288,66 @@ export default function GeneticsGuide() {
               })()}
 
               {/* DNA-strand section layout */}
-              <div className="relative">
-                {/* Vertical DNA backbone, decorative gradient line on the left
-                    rail, connecting every section's numbered node. */}
-                <div className="absolute left-[19px] md:left-[23px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-emerald-500/60 via-teal-400/40 to-purple-500/60 pointer-events-none" />
+              <div>
+                <div className="relative">
+                  {/* Vertical DNA backbone, decorative gradient line on the left
+                      rail, connecting every section's numbered node. Hidden on
+                      phones so the section cards get the full width. */}
+                  <div className="hidden sm:block absolute left-[19px] md:left-[23px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-emerald-500/60 via-teal-400/40 to-purple-500/60 pointer-events-none" />
 
-                <div className="space-y-8">
-                  {levelSections(activeLevel).map((section, sectionIdx) => {
-                    const Icon = section.icon;
-                    const meta = LEVEL_META[section.level];
-                    return (
-                      <div
-                        key={section.id}
-                        ref={(el) => (sectionRefs.current[section.id] = el)}
-                        className="relative pl-12 md:pl-14"
-                      >
-                        {/* Node on the strand */}
-                        <div className="absolute left-0 top-5">
-                          <div
-                            className={`relative w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ${meta.nodeClass}`}
-                          >
-                            {sectionIdx + 1}
-                            <span className="absolute inset-0 rounded-full animate-ping opacity-20 bg-emerald-400" />
-                          </div>
-                        </div>
-
-                        {/* Section card */}
-                        <Card>
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start gap-3 flex-wrap">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <Icon className="w-5 h-5 text-emerald-400 shrink-0" />
-                                <h2 className="text-xl md:text-2xl font-bold text-slate-100 truncate">
-                                  {section.title}
-                                </h2>
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] uppercase tracking-wider border ${meta.badgeClass}`}
-                              >
-                                {meta.label}
-                              </Badge>
+                  <div className="space-y-8">
+                    {levelSections(activeLevel).map((section, sectionIdx) => {
+                      const Icon = section.icon;
+                      const meta = LEVEL_META[section.level];
+                      return (
+                        <div
+                          key={section.id}
+                          ref={(el) => (sectionRefs.current[section.id] = el)}
+                          className="relative sm:pl-12 md:pl-14"
+                        >
+                          {/* Node on the strand */}
+                          <div className="hidden sm:block absolute left-0 top-5">
+                            <div
+                              className={`relative w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ${meta.nodeClass}`}
+                            >
+                              {sectionIdx + 1}
+                              <span className="absolute inset-0 rounded-full animate-ping opacity-20 bg-emerald-400" />
                             </div>
-                            <p className="text-slate-400 text-sm leading-relaxed mt-2">
-                              {section.intro}
-                            </p>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            {section.subsections.map((sub) => (
-                              <Subsection key={sub.title} title={sub.title}>
-                                {sub.content}
-                              </Subsection>
-                            ))}
-                          </CardContent>
-                        </Card>
-                      </div>
-                    );
-                  })}
+                          </div>
+
+                          {/* Section card */}
+                          <Card>
+                            <CardHeader className="pb-3 px-4 sm:px-6">
+                              <div className="flex items-start gap-3 flex-wrap">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  <Icon className="w-5 h-5 text-emerald-400 shrink-0" />
+                                  <h2 className="text-xl md:text-2xl font-bold text-slate-100 sm:truncate">
+                                    {section.title}
+                                  </h2>
+                                </div>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] uppercase tracking-wider border ${meta.badgeClass}`}
+                                >
+                                  {meta.label}
+                                </Badge>
+                              </div>
+                              <p className="text-slate-400 text-sm leading-relaxed mt-2">
+                                {section.intro}
+                              </p>
+                            </CardHeader>
+                            <CardContent className="space-y-3 px-4 sm:px-6">
+                              {section.subsections.map((sub) => (
+                                <Subsection key={sub.title} title={sub.title}>
+                                  {sub.content}
+                                </Subsection>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 <ContentSignupPrompt
                   pageType="genetics_guide"

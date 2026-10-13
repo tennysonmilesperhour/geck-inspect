@@ -143,13 +143,13 @@ export default function TrainingPage() {
         <Tabs defaultValue="contribute" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="contribute">
-              <UploadIcon className="w-4 h-4" /> Contribute
+              <UploadIcon className="hidden sm:block w-4 h-4" /> Contribute
             </TabsTrigger>
             <TabsTrigger value="review">
-              <Scale className="w-4 h-4" /> Review queue
+              <Scale className="hidden sm:block w-4 h-4" /> Review queue
             </TabsTrigger>
             <TabsTrigger value="stats">
-              <BarChart3 className="w-4 h-4" /> Dataset stats
+              <BarChart3 className="hidden sm:block w-4 h-4" /> Dataset stats
             </TabsTrigger>
           </TabsList>
 

@@ -337,9 +337,9 @@ export default function ForumPage() {
                                     {categoryPosts.map((post) => (
                                         <div
                                             key={post.id}
-                                            className="relative p-4 flex items-center justify-between hover:bg-slate-800/60 transition-colors"
+                                            className="relative p-4 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors"
                                         >
-                                            <div className="flex items-center gap-4 min-w-0">
+                                            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                                                 <MessageSquare className="w-5 h-5 text-slate-500 shrink-0" />
                                                 <div className="min-w-0">
                                                     {/* The title link stretches over the whole row
@@ -368,7 +368,7 @@ export default function ForumPage() {
                                                     <Camera className="w-4 h-4 text-emerald-400 shrink-0" aria-label="Has photos" />
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-4 text-xs text-slate-500 shrink-0">
+                                            <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-500 shrink-0">
                                                 <div className="flex items-center gap-1" title="Comments">
                                                     <MessageCircle className="w-4 h-4" />
                                                     <span>{replyCounts[post.id] || 0}</span>

@@ -197,7 +197,6 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
                         inputMode="decimal"
                         value={value}
                         onChange={(e) => handleInputChange(gecko.id, e.target.value)}
-                        placeholder="g"
                         className={`h-9 w-20 text-right pr-7 bg-slate-800 border-slate-600 text-slate-100 ${hasValue ? 'border-emerald-600' : ''}`}
                       />
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-500 pointer-events-none">g</span>

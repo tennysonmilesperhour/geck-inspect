@@ -16,13 +16,13 @@ export function Callout({ items }) {
 export function Subsection({ title, children }) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-900/60">
-      <div className="px-4 py-3 border-b border-slate-800">
+      <div className="px-3 sm:px-4 py-3 border-b border-slate-800">
         <h3 className="text-emerald-300 font-semibold text-base flex items-center gap-2">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span className="inline-block w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-400" />
           {title}
         </h3>
       </div>
-      <div className="px-4 py-3 space-y-2">
+      <div className="px-3 sm:px-4 py-3 space-y-2">
         {children}
       </div>
     </div>

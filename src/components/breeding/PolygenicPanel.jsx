@@ -53,12 +53,12 @@ export default function PolygenicPanel({ sireTags, damTags }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 touch:min-h-11 text-sm text-slate-300 hover:text-slate-100 w-full"
+        className="flex items-center gap-1.5 touch:min-h-11 text-sm text-left text-slate-300 hover:text-slate-100 w-full"
       >
-        {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Brush className="w-4 h-4 text-purple-400" />
+        {open ? <ChevronDown className="w-4 h-4 flex-shrink-0" /> : <ChevronRight className="w-4 h-4 flex-shrink-0" />}
+        <Brush className="w-4 h-4 flex-shrink-0 text-purple-400" />
         Polygenic looks (Harlequin, Pinstripe, Dalmatian, Tiger)
-        <span className="ml-auto text-xs text-slate-500">
+        <span className="ml-auto text-right text-xs text-slate-500">
           {anyExpression ? 'expression bands, not odds' : 'optional'}
         </span>
       </button>

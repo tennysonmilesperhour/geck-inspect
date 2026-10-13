@@ -1,3 +1,4 @@
+import { DEFAULT_WEBSITE, normalizeWebsite } from '@/lib/storeWebsite';
 import GeckoImage from '@/components/shared/GeckoImage';
 import { Link } from 'react-router-dom';
 import { Mail, Sparkles, ArrowRight } from 'lucide-react';
@@ -31,6 +32,7 @@ export const DEFAULT_STORE_SETTINGS = {
   theme: 'emerald',
   showAvailable: true,
   waitlistId: null,
+  website: DEFAULT_WEBSITE,
 };
 
 // Accent presets. Every Tailwind class used here is written out in full so
@@ -120,6 +122,9 @@ export function readStoreSettings(externalLinks) {
   for (const entry of Array.isArray(externalLinks) ? externalLinks : []) {
     if (!isReservedLink(entry)) continue;
     const v = reservedValue(entry);
+    if (entry.kind === '_website') {
+      try { settings.website = normalizeWebsite(typeof v === 'string' ? JSON.parse(v) : v); } catch { /* Ignore malformed legacy settings. */ }
+    }
     if (entry.kind === '_theme' && STORE_THEMES[v]) settings.theme = v;
     if (entry.kind === '_show_available') settings.showAvailable = !(v === false || v === 'false');
     if (entry.kind === '_waitlist_id' && v) settings.waitlistId = String(v);
@@ -137,6 +142,7 @@ export function applyStoreSettings(externalLinks, settings) {
   const out = publicExternalLinks(externalLinks);
   out.push(reservedEntry('_theme', themeFor(settings?.theme).key));
   out.push(reservedEntry('_show_available', settings?.showAvailable !== false));
+  out.push(reservedEntry('_website', JSON.stringify(normalizeWebsite(settings?.website))));
   if (settings?.waitlistId) out.push(reservedEntry('_waitlist_id', settings.waitlistId));
   return out;
 }

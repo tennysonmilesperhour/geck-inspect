@@ -27,6 +27,7 @@ import { createClient } from '@supabase/supabase-js';
 import { evalAccount, authOptions } from '../morph-id-eval/evalAccount.mjs';
 import { buildTraitValueIndex, valueFromTraitTable } from '../../src/lib/traitValuation.js';
 import { CORE_TRAITS, REFERENCE_GECKOS } from './references.mjs';
+import { classifyMorphIdFailure } from './morphIdOutcome.mjs';
 
 const env = process.env;
 const SUPABASE_URL = env.SUPABASE_URL;
@@ -148,17 +149,23 @@ async function checkMorphId(token) {
   for (const row of rows) {
     const { status, payload, seconds } = await identify(token, row);
     const analysis = payload.analysis || {};
-    const ok = status === 200 && payload.success === true
-      && typeof analysis.primary_morph === 'string' && analysis.primary_morph.length > 0
-      && typeof analysis.assessment_status === 'string';
+    const outcome = classifyMorphIdFailure({ status, payload });
     const accepted = new Set([row.expected_primary_morph, ...(row.accepted_morphs || [])]);
     const top3 = [analysis.primary_morph, ...(analysis.candidate_morphs || []).map((c) => c.morph)].filter(Boolean);
     const hit = top3.slice(0, 3).some((m) => accepted.has(m));
-    record('Morph ID', `identifies ${row.id}`, ok,
-      ok
-        ? `${analysis.primary_morph} (${analysis.assessment_status}) in ${seconds.toFixed(0)}s; breeder tagged ${[...accepted].join('/')}; ${hit ? 'match in top 3' : 'no match in top 3'}`
-        : `HTTP ${status}: ${payload.code || ''} ${payload.error || ''}`.trim());
-    if (ok) record('Morph ID', `answers ${row.id} in under 100 seconds`, seconds < 100, `${seconds.toFixed(0)}s`);
+    if (outcome.ok) {
+      record('Morph ID', `identifies ${row.id}`, true,
+        `${analysis.primary_morph} (${analysis.assessment_status}) in ${seconds.toFixed(0)}s; breeder tagged ${[...accepted].join('/')}; ${hit ? 'match in top 3' : 'no match in top 3'}`);
+      record('Morph ID', `answers ${row.id} in under 100 seconds`, seconds < 100, `${seconds.toFixed(0)}s`);
+    } else if (outcome.kind === 'provider_billing') {
+      // Credit-balance failures stay visible, and stay distinct from a
+      // bug in the function. The detail does not repeat the provider body.
+      record('Morph ID', `provider billing error on ${row.id}`, false,
+        'Anthropic credit balance or billing is too low. This is a provider account issue, separate from an application failure.');
+    } else {
+      const detail = `HTTP ${status}: ${payload.code || ''} ${String(payload.error || '').slice(0, 240)}`.trim();
+      record('Morph ID', `application failure on ${row.id}`, false, detail);
+    }
   }
 }
 

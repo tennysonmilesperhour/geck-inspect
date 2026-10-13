@@ -425,7 +425,7 @@ export default function BreederConsultantPage() {
                                     <Bot className="w-5 h-5 text-emerald-400" />
                                 </div>
                             )}
-                            <div className={`max-w-xl p-4 rounded-lg ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}>
+                            <div className={`min-w-0 max-w-xl p-4 rounded-lg break-words [&_pre]:overflow-x-auto [&_table]:block [&_table]:overflow-x-auto ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}>
                                 {msg.role === 'action'
                                     ? renderActionCard(msg)
                                     : <ReactMarkdown className="prose prose-sm prose-invert max-w-none">{msg.content}</ReactMarkdown>}

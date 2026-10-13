@@ -22,7 +22,7 @@ function DiagramFrame({ caption, children, ariaLabel }) {
   return (
     <figure className="my-4">
       <div
-        className="rounded-lg border border-slate-800 bg-slate-950/60 p-4 flex items-center justify-center"
+        className="rounded-lg border border-slate-800 bg-slate-950/60 p-2 sm:p-4 flex items-center justify-center"
         role="img"
         aria-label={ariaLabel}
       >
@@ -361,7 +361,7 @@ export function PigmentLayers({ caption }) {
       }
       ariaLabel="Crested gecko pigment layer anatomy"
     >
-      <svg viewBox="0 0 360 160" width="360" height="160" fontFamily="inherit">
+      <svg viewBox="0 0 450 160" width="450" height="160" fontFamily="inherit">
         {layers.map((layer, i) => {
           const y = 10 + i * 42;
           return (
