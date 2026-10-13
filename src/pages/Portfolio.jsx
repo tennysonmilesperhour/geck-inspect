@@ -514,7 +514,7 @@ export default function Portfolio() {
               <thead>
                 <tr className="border-b border-slate-800">
                   {['Animal', 'Morphs', 'Value', 'Basis'].map((h) => (
-                    <th key={h} className="text-left py-2.5 px-3 text-xs uppercase tracking-wider text-slate-500 font-medium">{h}</th>
+                    <th key={h} className={`text-left py-2.5 px-2 sm:px-3 text-xs uppercase tracking-wider text-slate-500 font-medium ${h === 'Morphs' || h === 'Basis' ? 'hidden sm:table-cell' : ''}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -522,26 +522,32 @@ export default function Portfolio() {
                 {portfolio.animals.map(({ gecko, valuation }) => {
                   const photo = Array.isArray(gecko.image_urls) && gecko.image_urls.length > 0 ? gecko.image_urls[0] : null;
                   const morphs = visualMorphs(gecko);
+                  const morphLabel = morphs.length > 0 ? morphs.slice(0, 3).join(', ') + (morphs.length > 3 ? ` +${morphs.length - 3}` : '') : (gecko.morphs_traits || 'Not tagged');
                   return (
                     <tr key={gecko.id} className="border-b border-slate-800/60 hover:bg-slate-800/30">
-                      <td className="py-2.5 px-3">
+                      <td className="py-2.5 px-2 sm:px-3">
                         <Link to={createPageUrl(`GeckoDetail?id=${gecko.id}`)} className="touch:min-h-11 flex items-center gap-3 group">
                           <GeckoImage src={photo} alt={gecko.name || "Gecko"} className="w-10 h-10 shrink-0 rounded-lg object-cover" />
-                          <span className="text-slate-100 font-medium group-hover:text-emerald-400">{gecko.name || 'Unnamed'}</span>
+                          <span className="min-w-0">
+                            <span className="block text-slate-100 font-medium group-hover:text-emerald-400">{gecko.name || 'Unnamed'}</span>
+                            {/* Phone: morphs sit under the name since the Morphs column is hidden */}
+                            <span className="block sm:hidden text-xs text-slate-400">{morphLabel}</span>
+                          </span>
                         </Link>
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400">
-                        {morphs.length > 0 ? morphs.slice(0, 3).join(', ') + (morphs.length > 3 ? ` +${morphs.length - 3}` : '') : (gecko.morphs_traits || 'Not tagged')}
+                      <td className="hidden sm:table-cell py-2.5 px-3 text-slate-400">
+                        {morphLabel}
                       </td>
-                      <td className="py-2.5 px-3 font-semibold text-slate-100">
+                      <td className="py-2.5 px-2 sm:px-3 font-semibold text-slate-100">
                         {valuation.value > 0 ? formatCurrency(valuation.value) : <span className="text-slate-500">$0</span>}
                         {valuation.basis === 'geck_data' && (
-                          <span className="block text-xs font-normal text-slate-500 whitespace-nowrap">
+                          <span className="block text-xs font-normal text-slate-500 sm:whitespace-nowrap">
                             {valuation.trait}: {formatCurrency(valuation.band.p25)} to {formatCurrency(valuation.band.p75)}
                           </span>
                         )}
+                        <span className="block sm:hidden mt-1"><BasisChip valuation={valuation} /></span>
                       </td>
-                      <td className="py-2.5 px-3"><BasisChip valuation={valuation} /></td>
+                      <td className="hidden sm:table-cell py-2.5 px-3"><BasisChip valuation={valuation} /></td>
                     </tr>
                   );
                 })}

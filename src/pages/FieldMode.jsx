@@ -1138,15 +1138,15 @@ export default function FieldModePage() {
       </div>
 
       {/* Sticky footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-slate-900 border-t border-slate-700 px-4 py-3 flex items-center justify-between">
-        <span className="text-lg text-slate-300">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-slate-900 border-t border-slate-700 px-4 py-3 flex items-center justify-between gap-3">
+        <span className="min-w-0 text-base sm:text-lg text-slate-300">
           {sessionCount === 0
             ? 'No logs yet this session'
             : `${sessionCount} ${sessionCount === 1 ? 'log' : 'logs'} this session`}
         </span>
         <Link
           to={createPageUrl('MyGeckos')}
-          className="min-h-14 px-5 flex items-center rounded-2xl bg-slate-800 border border-slate-600 text-lg font-semibold text-slate-100"
+          className="shrink-0 whitespace-nowrap min-h-14 px-5 flex items-center rounded-2xl bg-slate-800 border border-slate-600 text-lg font-semibold text-slate-100"
         >
           Exit field mode
         </Link>

@@ -133,7 +133,7 @@ export default function Market() {
           </Button>
         </PageHeader>
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="mb-5">
+          <TabsList className="mb-5 flex-wrap sm:flex-nowrap">
             <TabsTrigger value="today"><Sunrise className="w-3.5 h-3.5" /> Today</TabsTrigger>
             <TabsTrigger value="live"><Radio className="w-3.5 h-3.5" /> Live</TabsTrigger>
             <TabsTrigger value="watchlist"><BellRing className="w-3.5 h-3.5" /> Watchlist</TabsTrigger>

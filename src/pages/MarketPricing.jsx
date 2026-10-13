@@ -208,21 +208,21 @@ export default function MarketPricing() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
-                        <th className="py-2.5 px-4 font-medium">Trait</th>
-                        <th className="py-2.5 px-4 font-medium text-right">Low</th>
-                        <th className="py-2.5 px-4 font-medium text-right">Median</th>
-                        <th className="py-2.5 px-4 font-medium text-right">High</th>
-                        <th className="py-2.5 px-4 font-medium text-right">Listings</th>
+                        <th className="py-2.5 px-2 sm:px-4 font-medium">Trait</th>
+                        <th className="py-2.5 px-2 sm:px-4 font-medium text-right">Low</th>
+                        <th className="py-2.5 px-2 sm:px-4 font-medium text-right">Median</th>
+                        <th className="py-2.5 px-2 sm:px-4 font-medium text-right">High</th>
+                        <th className="py-2.5 px-2 sm:px-4 font-medium text-right">Listings</th>
                       </tr>
                     </thead>
                     <tbody>
                       {rows.map((row) => (
                         <tr key={row.name} className="border-b border-slate-800/60 last:border-0">
-                          <td className="py-2.5 px-4 text-slate-100 font-medium">{row.name}</td>
-                          <td className="py-2.5 px-4 text-right text-slate-300">{money(row.p25)}</td>
-                          <td className="py-2.5 px-4 text-right text-emerald-300 font-semibold">{money(row.p50)}</td>
-                          <td className="py-2.5 px-4 text-right text-slate-300">{money(row.p75)}</td>
-                          <td className="py-2.5 px-4 text-right text-slate-500">{row.n.toLocaleString('en-US')}</td>
+                          <td className="py-2.5 px-2 sm:px-4 text-slate-100 font-medium">{row.name}</td>
+                          <td className="py-2.5 px-2 sm:px-4 text-right text-slate-300">{money(row.p25)}</td>
+                          <td className="py-2.5 px-2 sm:px-4 text-right text-emerald-300 font-semibold">{money(row.p50)}</td>
+                          <td className="py-2.5 px-2 sm:px-4 text-right text-slate-300">{money(row.p75)}</td>
+                          <td className="py-2.5 px-2 sm:px-4 text-right text-slate-500">{row.n.toLocaleString('en-US')}</td>
                         </tr>
                       ))}
                       {rows.length === 0 && (

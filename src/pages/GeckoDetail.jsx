@@ -180,16 +180,18 @@ export default function GeckoDetail() {
     return (
         <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8">
             <div className="max-w-5xl mx-auto">
-                {/* Header: Back plus the owner actions in one wrapping row, so
-                    the actions flow onto a second line on phones instead of
-                    running off the right edge. From sm up the actions sit on
-                    the right. */}
+                {/* Header: Back plus the owner actions in one wrapping row.
+                    From sm up the actions sit on the right. */}
                 <div className="flex flex-wrap items-center gap-2 mb-6">
                     <Button variant="outline" onClick={() => navigate(-1)}>
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back
                     </Button>
                     {isOwner && (
-                        <>
+                        // Phones: Back on its own line, then an even 2-column
+                        // grid with the primary action full width below. From
+                        // sm up the wrapper is display:contents, so the row is
+                        // unchanged.
+                        <div className="grid grid-cols-2 gap-2 w-full sm:contents">
                             {/* Genetics calculator, preselects this gecko as the
                                 matching parent slot (unsexed default to sire). */}
                             <Button
@@ -206,10 +208,10 @@ export default function GeckoDetail() {
                             {/* Opens this gecko's record window in My Geckos,
                                 where weights, feedings, sheds, events and vet
                                 visits are logged and the gecko is edited. */}
-                            <Button onClick={() => navigate(`${createPageUrl('MyGeckos')}?gecko=${gecko.id}`)}>
+                            <Button className="col-span-2" onClick={() => navigate(`${createPageUrl('MyGeckos')}?gecko=${gecko.id}`)}>
                                 Open record in My Geckos
                             </Button>
-                        </>
+                        </div>
                     )}
                 </div>
 

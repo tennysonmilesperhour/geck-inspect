@@ -900,7 +900,7 @@ export default function MarketplaceSellPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="asking-price" className="text-slate-300">
                   Asking price (USD)

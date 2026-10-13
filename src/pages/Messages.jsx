@@ -785,7 +785,7 @@ export default function MessagesPage() {
                                             <img
                                                 src={headerProfile.avatarUrl}
                                                 alt=""
-                                                className="w-10 h-10 rounded-full object-cover bg-slate-800"
+                                                className="w-10 h-10 rounded-full object-cover bg-slate-800 shrink-0"
                                                 loading="lazy"
                                             />
                                             <div className="min-w-0">
@@ -911,7 +911,7 @@ export default function MessagesPage() {
                                                         }`}
                                                     >
                                                         <div
-                                                            className={`max-w-xs lg:max-w-md px-4 py-2.5 border shadow-sm ${cornerClasses}`}
+                                                            className={`min-w-0 max-w-xs lg:max-w-md px-4 py-2.5 border shadow-sm break-words ${cornerClasses}`}
                                                             style={bubbleStyle}
                                                         >
                                                             <div className="prose prose-sm max-w-none text-sm leading-relaxed prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-headings:my-2 prose-headings:font-semibold prose-a:text-emerald-700 prose-strong:text-inherit">
@@ -944,7 +944,7 @@ export default function MessagesPage() {
                                     </div>
 
                                     {isSelectMode ? (
-                                        <div className="p-4 border-t border-slate-800 flex items-center justify-between gap-3">
+                                        <div className="p-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
                                             <div className="text-sm text-slate-300">
                                                 {selectedIds.size} selected
                                             </div>

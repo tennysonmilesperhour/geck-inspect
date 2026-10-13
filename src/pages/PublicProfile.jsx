@@ -441,17 +441,17 @@ export default function PublicProfile() {
                     <Tabs defaultValue="for-sale" className="w-full">
                         <TabsList className="mb-6">
                             <TabsTrigger value="for-sale">
-                                <ShoppingCart className="w-4 h-4" />
+                                <ShoppingCart className="hidden sm:block w-4 h-4" />
                                 For Sale ({forSaleGeckos.length})
                             </TabsTrigger>
                             {showBreeders && (
                                 <TabsTrigger value="breeders">
-                                    <GitBranch className="w-4 h-4" />
+                                    <GitBranch className="hidden sm:block w-4 h-4" />
                                     Breeders ({breedingGeckos.length})
                                 </TabsTrigger>
                             )}
                             <TabsTrigger value="collection">
-                                <Heart className="w-4 h-4" />
+                                <Heart className="hidden sm:block w-4 h-4" />
                                 Collection ({collectionGeckos.length})
                             </TabsTrigger>
                         </TabsList>

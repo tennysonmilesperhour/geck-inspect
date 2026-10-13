@@ -491,14 +491,14 @@ export default function MyStore() {
                                 <div className="space-y-2">
                                     <Label htmlFor="store-slug" className="text-slate-200">Store URL</Label>
                                     <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2">
-                                        <span className="text-slate-500 text-sm shrink-0">geckinspect.com/store/</span>
+                                        <span className="text-slate-500 text-xs sm:text-sm shrink-0">geckinspect.com/store/</span>
                                         <Input
                                             id="store-slug"
                                             value={form.slug}
                                             onChange={(e) => set('slug', normalizeSlug(e.target.value))}
                                             placeholder="your-breeder-name"
                                             disabled={cooldownDays > 0}
-                                            className="bg-transparent border-0 focus-visible:ring-0 px-0 h-7 text-emerald-200"
+                                            className="min-w-0 bg-transparent border-0 focus-visible:ring-0 px-0 h-7 text-emerald-200"
                                         />
                                     </div>
                                     {slugLocked && (

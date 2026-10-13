@@ -524,12 +524,12 @@ export default function SettingsPage() {
     };
 
     const renderSwitch = (id, label, description, checked, onCheckedChange) => (
-        <div className="flex items-center justify-between p-4 border border-slate-700 rounded-lg bg-slate-800/50">
-            <div>
+        <div className="flex items-center justify-between gap-3 p-4 border border-slate-700 rounded-lg bg-slate-800/50">
+            <div className="min-w-0">
                 <Label htmlFor={id} className="font-medium text-slate-200">{label}</Label>
                 {description && <p className="text-sm text-slate-400 mt-1">{description}</p>}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
                 <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} className="data-[state=checked]:bg-emerald-500" />
                 <Label htmlFor={id} className={`font-semibold text-sm ${checked ? 'text-emerald-400' : 'text-slate-500'}`}>
                     {checked ? 'On' : 'Off'}
@@ -540,7 +540,7 @@ export default function SettingsPage() {
 
     const renderNotificationSwitch = (notifType, checked, onToggle) => (
          <div key={notifType.key} className="flex items-start justify-between p-3 border border-slate-700 rounded-lg bg-slate-800/50">
-            <div>
+            <div className="min-w-0">
                 <Label htmlFor={notifType.key} className="font-medium text-slate-300">{notifType.label}</Label>
                 <p className="text-sm text-slate-400 mt-1">{notifType.description}</p>
             </div>

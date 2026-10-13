@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { SupportMessage } from '@/entities/all';
 import {
@@ -33,7 +34,11 @@ import {
  * support inbox with the "Feedback" filter.
  *
  * Hidden on mobile auth/onboarding routes so it doesn't cover important UI.
+ * Also hidden on phones on the chat pages, where it would sit on top of
+ * the composer's Send button. The desktop edge tab stays.
  */
+
+const CHAT_ROUTES = ['/Messages', '/BreederConsultant'];
 
 const TYPES = [
   { id: 'feedback', label: 'General feedback', icon: Heart, color: 'text-emerald-400' },
@@ -65,6 +70,8 @@ function StarRow({ value, onChange }) {
 
 export default function FeedbackWidget() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
+  const onChatPage = CHAT_ROUTES.some((route) => pathname.toLowerCase().startsWith(route.toLowerCase()));
   const [open, setOpen] = useState(false);
   const [type, setType] = useState('feedback');
   const [subject, setSubject] = useState('');
@@ -145,7 +152,7 @@ export default function FeedbackWidget() {
         aria-label="Send feedback"
         title="Send feedback"
         data-feedback-trigger
-        className="fixed z-[60] right-2 bottom-[calc(var(--bottom-bar-h)+1rem+var(--floating-notices-h,0px))] h-11 w-11 rounded-full md:right-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:h-auto md:w-auto md:rounded-none md:rounded-l-md md:flex-col md:gap-1.5 md:px-1.5 md:py-3 md:hover:px-2 touch:min-h-11 touch:min-w-11 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 text-xs font-semibold tracking-wider uppercase transition-all active:scale-95 print:hidden"
+        className={`fixed z-[60] right-2 bottom-[calc(var(--bottom-bar-h)+1rem+var(--floating-notices-h,0px))] h-11 w-11 rounded-full md:right-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:h-auto md:w-auto md:rounded-none md:rounded-l-md md:flex-col md:gap-1.5 md:px-1.5 md:py-3 md:hover:px-2 touch:min-h-11 touch:min-w-11 ${onChatPage ? 'hidden md:flex' : 'flex'} items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 text-xs font-semibold tracking-wider uppercase transition-all active:scale-95 print:hidden`}
       >
         <MessageSquare className="w-5 h-5 md:w-3.5 md:h-3.5" />
         <span className="hidden md:inline [writing-mode:vertical-rl] rotate-180">Feedback</span>

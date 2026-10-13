@@ -32,8 +32,11 @@ export default function MarketPreviewGate({ user, surface, height = 360, childre
 
   const price = getTierPricing('enterprise', 'monthly');
 
+  // The upgrade card is pinned to the bottom of the preview, so the
+  // wrapper must be at least as tall as the card. On a phone its copy
+  // wraps to more lines, so the floor is higher there.
   return (
-    <div className="relative" style={{ minHeight: 320 }}>
+    <div className="relative min-h-[420px] sm:min-h-[340px]">
       <div
         ref={previewRef}
         aria-hidden="true"

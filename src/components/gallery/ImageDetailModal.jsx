@@ -71,7 +71,7 @@ export default function ImageDetailModal({ data, onClose }) {
                         <div className="space-y-2 text-sm">
                             <p><strong>Primary Morph:</strong> <Badge>{morphDisplayName}</Badge></p>
                             {image.secondary_morph && <p><strong>Secondary Morph:</strong> <Badge variant="secondary">{image.secondary_morph.replace(/_/g, ' ')}</Badge></p>}
-                            <p><strong>Base Color:</strong> <Badge variant="outline" className="border-slate-500">{image.base_color?.replace(/_/g, ' ')}</Badge></p>
+                            {image.base_color && <p><strong>Base Color:</strong> <Badge variant="outline" className="border-slate-500">{image.base_color?.replace(/_/g, ' ')}</Badge></p>}
                             
                             {image.secondary_traits && image.secondary_traits.length > 0 && (
                                 <div>
@@ -82,8 +82,8 @@ export default function ImageDetailModal({ data, onClose }) {
                                 </div>
                             )}
                             
-                            <p><strong>Age:</strong> <Badge variant="outline" className="border-slate-500">{image.age_estimate?.replace(/_/g, ' ')}</Badge></p>
-                            <p><strong>Fired State:</strong> <Badge variant="outline" className="border-slate-500">{image.fired_state?.replace(/_/g, ' ')}</Badge></p>
+                            {image.age_estimate && <p><strong>Age:</strong> <Badge variant="outline" className="border-slate-500">{image.age_estimate?.replace(/_/g, ' ')}</Badge></p>}
+                            {image.fired_state && <p><strong>Fired State:</strong> <Badge variant="outline" className="border-slate-500">{image.fired_state?.replace(/_/g, ' ')}</Badge></p>}
                         </div>
                         
                         {image.notes && (

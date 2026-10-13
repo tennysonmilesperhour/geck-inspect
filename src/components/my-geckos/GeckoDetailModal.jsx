@@ -438,9 +438,11 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 size="sm"
                 onClick={() => onEdit(gecko)}
                 className="border-slate-600 hover:bg-slate-800"
+                aria-label="Edit"
               >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
+                {/* Icon only on phones, like Full page, so the name keeps room. */}
+                <Edit className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Edit</span>
               </Button>
             ) : (
               <span
@@ -456,7 +458,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
           </div>
         </CardHeader>
         
-        <CardContent className="p-6 overflow-y-auto flex-1">
+        <CardContent className="p-4 sm:p-6 overflow-y-auto flex-1">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left column: Image + Basic Information */}
             <div className="space-y-6">

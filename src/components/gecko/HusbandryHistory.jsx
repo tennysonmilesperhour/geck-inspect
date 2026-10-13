@@ -139,7 +139,7 @@ export default function HusbandryHistory({
               </p>
               {group && (
                 <p className="text-slate-400 text-xs">
-                  Feeding group {group.name || group.label}, every {group.interval_days} day{Number(group.interval_days) === 1 ? '' : 's'}
+                  Feeding group {group.name || group.label}{Number(group.interval_days) > 0 && <>, every {group.interval_days} day{Number(group.interval_days) === 1 ? '' : 's'}</>}
                   {group.last_fed_date ? `, group last fed ${fmtDay(group.last_fed_date)}` : ''}
                 </p>
               )}

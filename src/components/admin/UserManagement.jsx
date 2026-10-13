@@ -510,17 +510,17 @@ export default function UserManagement() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-slate-800 p-4 rounded-lg text-center">
-                                    <div className="text-3xl font-bold text-emerald-400">{userDetails.geckos}</div>
+                            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                                <div className="bg-slate-800 p-3 sm:p-4 rounded-lg text-center">
+                                    <div className="text-2xl sm:text-3xl font-bold text-emerald-400">{userDetails.geckos}</div>
                                     <p className="text-sm text-slate-400 mt-1">Geckos</p>
                                 </div>
-                                <div className="bg-slate-800 p-4 rounded-lg text-center">
-                                    <div className="text-3xl font-bold text-blue-400">{userDetails.images}</div>
+                                <div className="bg-slate-800 p-3 sm:p-4 rounded-lg text-center">
+                                    <div className="text-2xl sm:text-3xl font-bold text-blue-400">{userDetails.images}</div>
                                     <p className="text-sm text-slate-400 mt-1">Images</p>
                                 </div>
-                                <div className="bg-slate-800 p-4 rounded-lg text-center">
-                                    <div className="text-3xl font-bold text-purple-400">{userDetails.posts}</div>
+                                <div className="bg-slate-800 p-3 sm:p-4 rounded-lg text-center">
+                                    <div className="text-2xl sm:text-3xl font-bold text-purple-400">{userDetails.posts}</div>
                                     <p className="text-sm text-slate-400 mt-1">Posts</p>
                                 </div>
                             </div>
