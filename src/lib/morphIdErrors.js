@@ -92,6 +92,8 @@ const REFUND_ASSURED_CODES = new Set([
   'upstream_timeout',
   'upstream_rate_limited',
   'analyzer_unavailable',
+  'image_unreadable',
+  'internal_error',
 ]);
 
 const SETTLED_QUOTA_CODES = new Set([
@@ -134,10 +136,10 @@ export function presentMorphIdError(error, { isFreeTier = false, bonus = 0, keep
     body: 'Try a different photo, or check your connection and try again.',
   };
   // credit_refunded false means the server tried to hand the scan back and
-  // could not. Undefined means an older function that still refunds but
-  // does not say so. Only the explicit failure changes the sentence.
-  if (error?.credit_refunded === false && REFUND_ASSURED_CODES.has(error?.code)) {
-    copy.body = 'Your photos are still here. If a scan was reserved, it is returned when the run does not finish.';
+  // Refund copy is only accurate when the server explicitly confirms it.
+  // False and missing confirmations both leave the RPC outcome uncertain.
+  if (REFUND_ASSURED_CODES.has(error?.code) && error?.credit_refunded !== true) {
+    copy.body = 'Your photos are still here. We could not confirm whether a scan was returned. Please check your remaining scans before trying again.';
   }
   return {
     ...copy,

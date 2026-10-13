@@ -30,10 +30,22 @@ describe('presentMorphIdError', () => {
     expect(copy.body).not.toMatch(/Nothing was charged/);
   });
 
+  it('only promises refunds for confirmed provider, photo, and internal failures', () => {
+    for (const code of ['upstream_error', 'upstream_timeout', 'upstream_rate_limited', 'analyzer_unavailable', 'image_unreadable', 'internal_error']) {
+      const confirmedCopy = presentMorphIdError({ code, credit_refunded: true }).body;
+      expect(confirmedCopy).toMatch(/Nothing was charged|refunded automatically|No credit was used/);
+      for (const confirmation of [false, undefined]) {
+        const copy = presentMorphIdError({ code, credit_refunded: confirmation });
+        expect(copy.body).toMatch(/could not confirm whether a scan was returned/);
+        expect(copy.body).not.toMatch(/Nothing was charged|refunded automatically|No credit was used/);
+      }
+    }
+  });
+
   it('keeps a busy analyzer distinct from an outage', () => {
     const copy = presentMorphIdError({ code: 'upstream_rate_limited' });
     expect(copy.title).toBe('Our AI is busy right now');
-    expect(copy.body).toMatch(/Nothing was charged/);
+    expect(copy.body).toMatch(/could not confirm whether a scan was returned/);
     expect(copy.retryable).toBe(true);
   });
 
