@@ -5,7 +5,9 @@
 # feeding the value estimates, prices four reference geckos with the app's own
 # valuation code, and runs two real identifications. Any failure fails the
 # run, and GitHub emails the repo owner. The run page shows a table of every
-# check.
+# check. A Morph ID failure whose message says the credit balance or billing
+# is too low is labeled "provider billing error", separate from an
+# application failure, so a provider credit outage is not triaged as a bug.
 #
 # Cost: two identifications, about 6 cents a day.
 #

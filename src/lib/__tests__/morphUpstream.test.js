@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { RETRYABLE_UPSTREAM_STATUS, upstreamErrorCode, requestShape } from '../../../supabase/functions/_shared/morph-upstream.ts';
+import {
+  PROVIDER_UNAVAILABLE_MESSAGE,
+  RETRYABLE_UPSTREAM_STATUS,
+  isProviderBillingFailure,
+  requestShape,
+  upstreamErrorCode,
+  upstreamFailureResponse,
+} from '../../../supabase/functions/_shared/morph-upstream.ts';
 
 describe('upstreamErrorCode', () => {
   it('reads overload and rate limits as busy', () => {
@@ -20,6 +27,52 @@ describe('upstreamErrorCode', () => {
   it('keeps other failures generic', () => {
     expect(upstreamErrorCode(400, 'invalid tool schema')).toBe('upstream_error');
     expect(upstreamErrorCode(500, 'internal')).toBe('upstream_error');
+    expect(upstreamErrorCode(400, 'billing portal schema mismatch')).toBe('upstream_error');
+  });
+
+  it('treats a low credit balance as a provider billing failure', () => {
+    const anthropic = '400 {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."}}';
+    expect(isProviderBillingFailure(anthropic)).toBe(true);
+    expect(isProviderBillingFailure('billing too low to continue')).toBe(true);
+    expect(isProviderBillingFailure('invalid tool schema')).toBe(false);
+    expect(isProviderBillingFailure('billing portal schema mismatch')).toBe(false);
+  });
+
+  it('returns a member-safe message and reports whether the scan was handed back', () => {
+    const billing = upstreamFailureResponse({
+      code: 'analyzer_unavailable',
+      diagnostic: 'Anthropic 400: Your credit balance is too low to access the Anthropic API.',
+      creditRefunded: true,
+    });
+    expect(billing.user_message).toBe(PROVIDER_UNAVAILABLE_MESSAGE);
+    expect(billing.failure_kind).toBe('provider_billing');
+    expect(billing.credit_refunded).toBe(true);
+    expect(billing.error).toContain('credit balance is too low');
+
+    const down = upstreamFailureResponse({
+      code: 'upstream_error',
+      diagnostic: 'Anthropic 502: bad gateway',
+      creditRefunded: true,
+    });
+    expect(down.user_message).toBe('Morph ID is temporarily unavailable, try again later');
+    expect(down.failure_kind).toBe('provider_unavailable');
+
+    const timedOut = upstreamFailureResponse({
+      code: 'upstream_timeout',
+      diagnostic: 'Analyzer timed out',
+      creditRefunded: false,
+    });
+    expect(timedOut.user_message).toBe(PROVIDER_UNAVAILABLE_MESSAGE);
+    expect(timedOut.credit_refunded).toBe(false);
+
+    const photo = upstreamFailureResponse({
+      code: 'image_unreadable',
+      diagnostic: 'media type image/avif is not supported',
+      creditRefunded: true,
+    });
+    expect(photo.user_message).toBeUndefined();
+    expect(photo.credit_refunded).toBe(true);
+    expect(photo.failure_kind).toBe('application');
   });
 
   it('retries only transient statuses', () => {

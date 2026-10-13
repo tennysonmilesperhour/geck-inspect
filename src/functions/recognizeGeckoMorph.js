@@ -13,10 +13,11 @@ import { supabase } from '@/lib/supabaseClient';
 //
 // Resolved error shape (for upstream UI):
 //   { code: 'morph_id_credits_exhausted' | 'upstream_rate_limited' |
-//           'upstream_error' | 'upstream_timeout' | 'morph_id_in_progress' |
-//           'auth_required' | 'bad_request' |
+//           'upstream_error' | 'upstream_timeout' | 'analyzer_unavailable' |
+//           'morph_id_in_progress' | 'auth_required' | 'bad_request' |
 //           'credit_check_failed' | 'internal_error',
 //     message: string,
+//     user_message?, credit_refunded?, failure_kind?,
 //     tier?, credits_included?, status? }
 async function readEdgeError(error) {
   if (error?.context?.name === 'AbortError') {
@@ -40,6 +41,9 @@ async function readEdgeError(error) {
   return {
     code: parsed?.code || (error?.name === 'FunctionsFetchError' ? 'network_error' : 'internal_error'),
     message: detail,
+    user_message: typeof parsed?.user_message === 'string' ? parsed.user_message : undefined,
+    credit_refunded: parsed?.credit_refunded === true,
+    failure_kind: typeof parsed?.failure_kind === 'string' ? parsed.failure_kind : undefined,
     tier: parsed?.tier,
     credits_included: parsed?.credits_included,
     status: ctx?.status,
@@ -74,6 +78,9 @@ export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, fired
       error: {
         code: data.code || 'internal_error',
         message: data.error,
+        user_message: typeof data.user_message === 'string' ? data.user_message : undefined,
+        credit_refunded: data.credit_refunded === true,
+        failure_kind: typeof data.failure_kind === 'string' ? data.failure_kind : undefined,
         tier: data.tier,
         credits_included: data.credits_included,
       },

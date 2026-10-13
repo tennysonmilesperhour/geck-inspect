@@ -75,7 +75,7 @@ import {
   type VisualEvidence,
 } from "../_shared/morph-evidence.ts";
 import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
-import { RETRYABLE_UPSTREAM_STATUS, requestShape, upstreamErrorCode } from "../_shared/morph-upstream.ts";
+import { RETRYABLE_UPSTREAM_STATUS, requestShape, upstreamErrorCode, upstreamFailureResponse } from "../_shared/morph-upstream.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
@@ -448,15 +448,20 @@ async function readMorphIdScansRemaining(
   }
 }
 
-async function refundMorphIdCredit(userId: string): Promise<void> {
-  try {
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { error } = await admin.rpc("refund_morph_id_credit", { p_user_id: userId });
-    if (error) console.error("MorphID credit refund failed:", error.message);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("MorphID credit refund threw:", message);
+async function refundMorphIdCredit(userId: string): Promise<boolean> {
+  // One retry: a blip in the refund call must not spend the free try.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data, error } = await admin.rpc("refund_morph_id_credit", { p_user_id: userId });
+      if (!error && data) return true;
+      console.error("MorphID credit refund failed:", error?.message || "no usage row updated");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("MorphID credit refund threw:", message);
+    }
   }
+  return false;
 }
 
 function resolveTier(profile: Profile): string {
@@ -1412,16 +1417,18 @@ serve(async (req) => {
       creditWasConsumed &&
       analysis.assessment_status === "insufficient_evidence"
     ) {
-      await refundMorphIdCredit(profile.auth_user_id);
-      creditWasConsumed = false;
-      creditRefunded = true;
-      creditsConsumed = Math.max(0, creditsConsumed - 1);
-      const refreshed = await readMorphIdScansRemaining(
-        profile.auth_user_id,
-        tier,
-        creditsIncluded,
-      );
-      creditsRemaining = refreshed ?? Math.max(0, (creditsRemaining ?? 0) + 1);
+      const refunded = await refundMorphIdCredit(profile.auth_user_id);
+      if (refunded) {
+        creditWasConsumed = false;
+        creditRefunded = true;
+        creditsConsumed = Math.max(0, creditsConsumed - 1);
+        const refreshed = await readMorphIdScansRemaining(
+          profile.auth_user_id,
+          tier,
+          creditsIncluded,
+        );
+        creditsRemaining = refreshed ?? Math.max(0, (creditsRemaining ?? 0) + 1);
+      }
     }
     await logInvocation({
       surface,
@@ -1463,9 +1470,20 @@ serve(async (req) => {
     await settleRequestKey(profile.auth_user_id, claimedKey, "done", responseBody);
     return json(responseBody);
   } catch (err) {
-    if (creditWasConsumed) await refundMorphIdCredit(profile.auth_user_id);
+    // Provider failures (network, 5xx, billing, timeout) and our own
+    // errors both return the reserved scan. A member's free try is only
+    // kept when an analysis actually comes back.
+    let creditRefundedOnError = false;
+    if (creditWasConsumed) {
+      creditRefundedOnError = await refundMorphIdCredit(profile.auth_user_id);
+    }
     await settleRequestKey(profile.auth_user_id, claimedKey, "failed", null);
     if (err instanceof UpstreamError) {
+      const failure = upstreamFailureResponse({
+        code: err.code,
+        diagnostic: err.message,
+        creditRefunded: creditRefundedOnError,
+      });
       await logInvocation({
         surface,
         model,
@@ -1480,12 +1498,14 @@ serve(async (req) => {
         photo_count: imageUrls.length,
         few_shot_count: null,
         http_status: err.httpStatus,
-        error_code: err.code,
+        // Billing stays distinct from a bad request or a 5xx in our code,
+        // so a credit-balance outage is not triaged as an application bug.
+        error_code: failure.failure_kind === "provider_billing" ? "provider_billing" : err.code,
         duration_ms: err.durationMs,
         request_id: err.requestId,
         ip_hash: ipHash,
       });
-      return json({ error: err.message, code: err.code }, err.status === 429 ? 503 : 502);
+      return json(failure, err.status === 429 ? 503 : 502);
     }
     const message = err instanceof Error ? err.message : String(err);
     await logInvocation({
@@ -1507,6 +1527,11 @@ serve(async (req) => {
       request_id: null,
       ip_hash: ipHash,
     });
-    return json({ error: message, code: "internal_error" }, 500);
+    return json({
+      error: message,
+      code: "internal_error",
+      credit_refunded: creditRefundedOnError,
+      failure_kind: "application",
+    }, 500);
   }
 });
