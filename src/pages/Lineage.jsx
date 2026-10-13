@@ -1496,8 +1496,10 @@ export default function Lineage() {
                                 )}
                             </div>
 
-                            {/* Main Lineage Tree (Center) */}
-                            <div className="flex-shrink-0 flex flex-col items-center order-1 md:order-2">
+                            {/* Main Lineage Tree (Center). min-w-max lets a tree wider
+                                than a phone grow to the right, where the panel can
+                                scroll to it, instead of spilling off both edges. */}
+                            <div className="flex-shrink-0 min-w-max flex flex-col items-center order-1 md:order-2">
                                 <h2 className="text-lg font-bold mb-4 text-emerald-400">Ancestry</h2>
                                 {renderTree(lineage, 1)}
                             </div>

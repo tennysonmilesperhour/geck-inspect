@@ -275,20 +275,20 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
-                                    className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2 sm:px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     title="Add eggs with a lay date and grade"
                                 >
                                     <CalendarIcon size={14} className="drop-shadow" /> Dated clutch
                                 </button>
                             </div>
-                            {/* Wireframe quick-add buttons floating over the photos */}
-                            <div className="absolute top-2 right-2 z-10 flex gap-1.5">
+                            {/* Wireframe quick-add buttons floating over the photos. Stacked on phones so they never collide with "Dated clutch" or run past the card edge. */}
+                            <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1 sm:flex-row sm:gap-1.5">
                                 {[1, 2].map((n) => (
                                     <button
                                         key={n}
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(n); }}
-                                        className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                        className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2 sm:px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                         aria-label={`Add ${n} egg${n > 1 ? 's' : ''}`}
                                     >
                                         <PlusCircle size={14} className="drop-shadow" /> {n} Egg{n > 1 ? 's' : ''}

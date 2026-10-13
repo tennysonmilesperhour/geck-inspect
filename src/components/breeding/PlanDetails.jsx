@@ -173,13 +173,13 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
             />
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center justify-start sm:justify-end ml-auto">
-                   <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 h-9" onClick={onOpenCopulationModal}>
+                   <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 h-9 flex-1 sm:flex-none" onClick={onOpenCopulationModal}>
                        Record Lock
                    </Button>
-                   <Button variant="outline" size="sm" className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/20 h-9" onClick={onOpenEggCheckModal}>
+                   <Button variant="outline" size="sm" className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/20 h-9 flex-1 sm:flex-none" onClick={onOpenEggCheckModal}>
                        {plan.egg_check_day ? 'Edit' : 'Set'} Egg Check
                    </Button>
-                   <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 h-9 text-emerald-300" onClick={() => setIsEditModalOpen(true)}>
+                   <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 h-9 flex-1 sm:flex-none text-emerald-300" onClick={() => setIsEditModalOpen(true)}>
                        <Edit size={14} className="mr-2"/> Edit Plan
                    </Button>
                 </div>
@@ -236,16 +236,18 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
 
                             {/* Status and Actions, single flex row so everything
                                 stays aligned side by side. StatusDisplay and
-                                Hatched! stretch to fill; icon buttons stay fixed. */}
-                            <div className="flex items-center gap-2">
-                                <div className="flex-1 min-w-0">
+                                Hatched! stretch to fill; icon buttons stay fixed.
+                                On phones the icon buttons wrap to their own
+                                right-aligned line when Hatched! is showing. */}
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                                <div className={`flex-1 ${egg.status === 'Incubating' ? 'min-w-[45%] sm:min-w-0' : 'min-w-0'}`}>
                                     <StatusDisplay egg={egg} />
                                 </div>
 
                                 {egg.status === 'Incubating' && (
                                     <Button
                                         size="sm"
-                                        className="h-9 flex-1"
+                                        className="h-9 flex-1 min-w-[45%] sm:min-w-0"
                                         onClick={() => setEggToHatch(egg)}
                                     >
                                         Hatched!
@@ -255,7 +257,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
                                     size="icon"
                                     variant="outline"
                                     onClick={() => handleAddToCalendar(egg)}
-                                    className="border-slate-600 hover:bg-slate-700 h-9 w-9 flex-shrink-0"
+                                    className="border-slate-600 hover:bg-slate-700 h-9 w-9 flex-shrink-0 ml-auto sm:ml-0"
                                     title="Add to Calendar"
                                 >
                                     <CalendarIcon className="w-4 h-4" />

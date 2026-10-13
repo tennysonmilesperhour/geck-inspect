@@ -305,7 +305,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                             <Label>Diet Type *</Label>
                             <Input value={form.diet_type} onChange={e => setForm({...form, diet_type: e.target.value})} placeholder="e.g., Repashy CGD, Pangea, Crickets" className="bg-slate-800 border-slate-600" />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <Label>Interval (days) *</Label>
                                 <Input type="number" min="1" value={form.interval_days} onChange={e => setForm({...form, interval_days: parseInt(e.target.value) || 7})} className="bg-slate-800 border-slate-600" />

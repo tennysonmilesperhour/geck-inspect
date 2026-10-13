@@ -405,7 +405,7 @@ export default function ProjectManager() {
                                 <Label>Description</Label>
                                 <Textarea value={newProject.description} onChange={(e) => setNewProject({...newProject, description: e.target.value})} placeholder="Project details..." className="bg-slate-800 border-slate-600" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <Label>Category</Label>
                                     <Select value={newProject.category} onValueChange={(v) => setNewProject({...newProject, category: v})}>

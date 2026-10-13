@@ -526,7 +526,7 @@ export default function PairingPlannerPage() {
 }
 
 function Thumb({ gecko, ring }) {
-  return <GeckoImage src={gecko.image_urls?.[0]} alt={gecko.name} className={`w-12 h-12 rounded-lg object-cover border ${ring}`} />;
+  return <GeckoImage src={gecko.image_urls?.[0]} alt={gecko.name} className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-lg object-cover border ${ring}`} />;
 }
 
 function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceIndex, sellModel }) {
@@ -541,24 +541,24 @@ function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceInde
 
   return (
     <div
-      className={`bg-slate-900 border rounded-xl p-5 ${
+      className={`bg-slate-900 border rounded-xl p-4 sm:p-5 ${
         blocked ? 'border-rose-700/60' : 'border-slate-700'
       }`}
     >
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-xs font-bold text-slate-500 w-6">#{rank}</span>
+      <div className="flex items-center gap-2 sm:gap-3 mb-4">
+        <span className="text-xs font-bold text-slate-500 w-5 sm:w-6 shrink-0">#{rank}</span>
         <Thumb gecko={sire} ring="border-blue-700" />
         <div className="min-w-0 flex-1">
           <div className="text-sm text-slate-100 truncate font-medium">{sire.name}</div>
           <div className="text-[11px] text-blue-400">Sire</div>
         </div>
-        <Heart className="w-4 h-4 text-slate-600 shrink-0" />
+        <Heart className="hidden sm:block w-4 h-4 text-slate-600 shrink-0" />
         <Thumb gecko={dam} ring="border-pink-700" />
         <div className="min-w-0 flex-1">
           <div className="text-sm text-slate-100 truncate font-medium">{dam.name}</div>
           <div className="text-[11px] text-pink-400 flex items-center gap-1.5 flex-wrap">
             Dam
-            {readiness && readiness.level !== 'unknown' && <ReadinessBadge readiness={readiness} />}
+            {readiness && readiness.level !== 'unknown' && <ReadinessBadge readiness={readiness} className="whitespace-nowrap" />}
           </div>
         </div>
       </div>
@@ -628,12 +628,12 @@ function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceInde
           type="button"
           onClick={() => setShowSeason((v) => !v)}
           aria-expanded={showSeason}
-          className="touch:min-h-11 w-full flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm text-slate-200 hover:border-emerald-700/60"
+          className="touch:min-h-11 w-full flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm text-left text-slate-200 hover:border-emerald-700/60"
         >
           <span className="flex items-center gap-1.5">
-            <CalendarRange className="w-4 h-4 text-emerald-400" /> Season projection: worth, sell time, when to list
+            <CalendarRange className="w-4 h-4 shrink-0 text-emerald-400" /> Season projection: worth, sell time, when to list
           </span>
-          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showSeason ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 shrink-0 text-slate-400 transition-transform ${showSeason ? 'rotate-180' : ''}`} />
         </button>
         {showSeason && (
           <div className="mt-3">

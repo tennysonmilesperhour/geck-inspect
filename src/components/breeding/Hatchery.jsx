@@ -360,7 +360,7 @@ export default function Hatchery() {
 
                         <div className="flex flex-col sm:flex-row gap-2 lg:min-w-[360px]">
                             <Select value={incubationProfileId} onValueChange={setIncubationProfileId}>
-                                <SelectTrigger className="bg-slate-800 border-slate-600 min-w-[250px]">
+                                <SelectTrigger className="bg-slate-800 border-slate-600 sm:min-w-[250px]">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600">
@@ -427,7 +427,7 @@ export default function Hatchery() {
             </Card>
 
             <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                         <div className="relative sm:col-span-2 md:col-span-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -525,7 +525,7 @@ export default function Hatchery() {
                             }`}
                             onClick={() => handleEggClick(egg)}
                         >
-                            <CardContent className="p-4 space-y-3">
+                            <CardContent className="p-3 pb-8 sm:p-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <EggIcon className="w-6 h-6 text-emerald-400" />
                                     <div className="flex items-center gap-1">
@@ -594,27 +594,27 @@ export default function Hatchery() {
                                 )}
 
                                 {egg.status === 'Incubating' && !egg.archived && (
-                                    <div className="pt-2 border-t border-slate-700 flex flex-wrap gap-1.5 touch:gap-2">
+                                    <div className="pt-2 border-t border-slate-700 grid grid-cols-2 gap-1.5 touch:gap-2 sm:flex sm:flex-wrap">
                                         <Button
                                             size="sm"
                                             onClick={(e) => handleHatchEgg(egg, e)}
-                                            className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white px-2"
+                                            className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white px-1 sm:px-2"
                                         >
-                                            <Sparkles className="w-3 h-3 mr-1" /> Hatched
+                                            <Sparkles className="hidden sm:inline w-3 h-3 mr-1" /> Hatched
                                         </Button>
                                         <Button
                                             size="sm"
                                             variant="outline"
                                             onClick={(e) => handleMarkFailed(egg.id, 'Infertile', e)}
-                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-2"
+                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-1 sm:px-2"
                                         >
-                                            <XCircle className="w-3 h-3 mr-1" /> Infertile
+                                            <XCircle className="hidden sm:inline w-3 h-3 mr-1" /> Infertile
                                         </Button>
                                         <Button
                                             size="sm"
                                             variant="outline"
                                             onClick={(e) => handleMarkFailed(egg.id, 'Slug', e)}
-                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-2"
+                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-1 sm:px-2"
                                         >
                                             Slug
                                         </Button>
@@ -622,7 +622,7 @@ export default function Hatchery() {
                                             size="sm"
                                             variant="outline"
                                             onClick={(e) => handleMarkFailed(egg.id, 'Stillbirth', e)}
-                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-2"
+                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-1 sm:px-2"
                                         >
                                             Stillbirth
                                         </Button>
