@@ -28,85 +28,7 @@ import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
 import ViewPhotoUploader from '../components/morph-id/ViewPhotoUploader';
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
 import { AGE_STAGES, FIRED_STATES } from '../components/morph-id/morphTaxonomy';
-
-// User-facing error copy keyed by edge-function error code. Admins skip
-// this and see the raw upstream message instead, so they can debug the
-// 429 from Replicate or whatever else fired.
-const FRIENDLY_ERROR = {
-  morph_id_credits_exhausted: {
-    title: "You're out of MorphID credits for this month",
-    body: 'Your credits reset on the 1st. Upgrade your plan to identify more geckos now.',
-    cta: { label: 'See plans', href: '/Membership' },
-  },
-  // The per-network daily cap runs before a credit is used, so nothing was
-  // charged. Without its own copy this fell through to "try a different
-  // photo", which only invited more retries.
-  morph_id_ip_daily_exhausted: {
-    title: 'Daily Morph ID limit reached on this network',
-    body: 'Please try again tomorrow. No credit was used.',
-  },
-  upstream_rate_limited: {
-    title: 'Our AI is busy right now',
-    body: 'Lots of geckos under the lens. Please try again in a minute.',
-  },
-  upstream_error: {
-    title: "We couldn't reach the analyzer",
-    body: 'Try again in a moment. If it keeps happening, message support and we will take a look.',
-  },
-  request_timeout: {
-    title: 'The analysis took too long',
-    body: 'Your photos are still here. Press Identify again: if the first try finished, you get that answer back without using another credit.',
-  },
-  upstream_timeout: {
-    title: 'The analysis took too long',
-    body: 'Your photos are still here and no credit was used. Please try once more in a moment.',
-  },
-  morph_id_in_progress: {
-    title: 'Still working on these photos',
-    body: 'Your last analysis of these photos is still running. Wait a few seconds, then press Identify again. You will not be charged twice.',
-  },
-  network_error: {
-    title: 'The analyzer request was interrupted',
-    body: 'Your photos are still here. Check your connection or browser privacy extension, then press Identify again. A retry of the same photos is not charged twice.',
-  },
-  auth_required: {
-    title: 'Please sign in to use MorphID',
-    body: 'MorphID counts against your monthly plan, so we need to know who you are first.',
-    cta: { label: 'Sign in', href: '/AuthPortal' },
-  },
-  bad_request: {
-    title: 'Add a top view and a side view',
-    body: 'Morph ID needs one clear photo from above and one from the side. Add both, then press Identify again.',
-  },
-  image_unreadable: {
-    title: "The analyzer couldn't open one of the photos",
-    body: 'No credit was used. Retake it as a normal camera photo (JPG or PNG), or pick a different one, then press Identify again.',
-  },
-  credit_check_failed: {
-    title: "We couldn't check your credits",
-    body: 'Nothing was charged. Please press Try again in a moment.',
-  },
-  analyzer_unavailable: {
-    title: 'Morph ID is down for maintenance',
-    body: 'Nothing was charged and your photos are still here. We have been alerted. Please try again in a few hours.',
-  },
-  config_error: {
-    title: 'Morph ID is down for maintenance',
-    body: 'Nothing was charged. We have been alerted and it should be back shortly.',
-  },
-  internal_error: {
-    title: 'Something went wrong on our side',
-    body: 'Any credit used was refunded automatically. Your photos are still here, so press Try again.',
-  },
-};
-
-// Errors where pressing Identify again with the same photos can work. The
-// request key makes a retry safe: a finished first try is returned, not
-// charged twice.
-const RETRYABLE = new Set([
-  'upstream_rate_limited', 'upstream_error', 'upstream_timeout', 'request_timeout',
-  'morph_id_in_progress', 'network_error', 'credit_check_failed', 'internal_error',
-]);
+import { morphIdErrorSettledQuota, presentMorphIdError } from '@/lib/morphIdErrors';
 
 // What the analyzer is doing, in the order it does it, so a 30 to 90 second
 // wait reads as work in progress instead of a frozen button.
@@ -321,7 +243,12 @@ export default function Recognition() {
         });
         if (funcError.code === 'morph_id_credits_exhausted') {
           upgradePromptShown('morph_id', 'morph_id_exhausted');
-          if (!isAdmin && user?.auth_user_id) await quotaQuery.refetch();
+        }
+        // The scan was reserved before the analyzer ran. On a provider
+        // failure the server hands it back before answering, so reload
+        // the count and keep the free try on screen.
+        if (!isAdmin && user?.auth_user_id && morphIdErrorSettledQuota(funcError)) {
+          await quotaQuery.refetch();
         }
         setError(funcError);
       } else {
@@ -571,7 +498,7 @@ export default function Recognition() {
               <Card className="bg-rose-950/40 border-rose-800">
                 <CardContent className="p-4 text-rose-200 space-y-1">
                   <div className="text-xs uppercase tracking-wide text-rose-300/80">
-                    [admin] {error.code || 'error'}
+                    [admin] {error.code || 'error'}{error.failure_kind === 'provider_billing' ? ' (provider billing)' : ''}
                   </div>
                   <div className="font-mono text-sm whitespace-pre-wrap break-words">
                     {error.message}
@@ -580,18 +507,13 @@ export default function Recognition() {
               </Card>
             );
           }
-          const friendly = (error.code === 'morph_id_credits_exhausted' && isFreeTier)
-            ? {
-                title: gate.bonus > 0 ? 'You have used your Morph ID scans' : 'You have used your free Morph ID',
-                body: `Keeper includes ${TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications a month.`,
-                cta: { label: 'See plans', href: '/Membership' },
-              }
-            : FRIENDLY_ERROR[error.code] || {
-            title: "We couldn't analyze that photo",
-            body: 'Try a different photo, or check your connection and try again.',
-          };
+          const friendly = presentMorphIdError(error, {
+            isFreeTier,
+            bonus: gate.bonus,
+            keeperCredits: TIER_LIMITS.keeper.monthlyMorphIDCredits,
+          });
           const isExhausted = error.code === 'morph_id_credits_exhausted';
-          const canRetry = RETRYABLE.has(error.code) || !FRIENDLY_ERROR[error.code];
+          const canRetry = friendly.retryable;
           return (
             <Card className={isExhausted
               ? 'bg-amber-950/40 border-amber-800'
