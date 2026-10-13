@@ -601,6 +601,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                             onClick={async () => {
                                                 // type="button": inside the form, a plain button
                                                 // also submitted it, running a second full save.
+                                                // Sold asks for the price first, same as archiving.
+                                                if (opt.value === 'sold' && gecko.archive_reason !== 'sold' && onMarkSold) {
+                                                    onMarkSold(gecko.id);
+                                                    return;
+                                                }
                                                 try {
                                                     await Gecko.update(gecko.id, { archive_reason: opt.value });
                                                     if (onSubmit) onSubmit(gecko);

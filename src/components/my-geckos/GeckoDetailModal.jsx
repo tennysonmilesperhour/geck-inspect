@@ -69,7 +69,7 @@ function resolvePrimaryMorphId(gecko) {
 // to compute it; those sites worked under the old "you only see your
 // own geckos" model. New call sites that surface shared geckos
 // (MyGeckos as of Phase B) should pass an explicit value.
-export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, onDelete, allGeckos = [], currentUser = null, canEdit = true }) {
+export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, onMarkSold, onDelete, allGeckos = [], currentUser = null, canEdit = true }) {
   const navigate = useNavigate();
 
   const handleLineageClick = () => {
@@ -1174,6 +1174,11 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                           <button
                             key={opt.value}
                             onClick={async () => {
+                              // Sold asks for the price first, same as archiving.
+                              if (opt.value === 'sold' && gecko.archive_reason !== 'sold' && onMarkSold) {
+                                onMarkSold(gecko.id);
+                                return;
+                              }
                               await Gecko.update(gecko.id, { archive_reason: opt.value });
                               if (onUpdate) onUpdate();
                             }}

@@ -1309,6 +1309,10 @@ export default function MyGeckosPage() {
                         onUpdate={() => loadGeckos()}
                         onEdit={handleEdit}
                         onArchive={handleArchiveGecko}
+                        onMarkSold={(geckoId) => {
+                            setArchiveDialogReason('sold');
+                            setArchiveDialogGeckoId(geckoId);
+                        }}
                         onDelete={handleDelete}
                     />
                 )}
