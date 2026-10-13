@@ -390,18 +390,21 @@ export default function GeneticCalculator({ sire, dam }) {
                 </button>
               );
             })()}
-            <span>Season:</span>
-            <select
-              value={clutches}
-              onChange={(e) => setClutches(Number(e.target.value))}
-              className="touch:min-h-11 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-slate-200"
-              aria-label="Clutches per season"
-            >
-              {Array.from({ length: MAX_CLUTCHES_PER_SEASON }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>{n} clutch{n > 1 ? 'es' : ''}</option>
-              ))}
-            </select>
-            <span className="font-mono text-slate-300">{eggs} eggs</span>
+            {/* Kept as one group so the label never wraps away from its select. */}
+            <span className="inline-flex items-center gap-2">
+              <span>Season:</span>
+              <select
+                value={clutches}
+                onChange={(e) => setClutches(Number(e.target.value))}
+                className="touch:min-h-11 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-slate-200"
+                aria-label="Clutches per season"
+              >
+                {Array.from({ length: MAX_CLUTCHES_PER_SEASON }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{n} clutch{n > 1 ? 'es' : ''}</option>
+                ))}
+              </select>
+              <span className="font-mono text-slate-300">{eggs} eggs</span>
+            </span>
           </div>
         </div>
         <p className="text-xs text-slate-500">

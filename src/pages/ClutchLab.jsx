@@ -283,11 +283,11 @@ export default function ClutchLab() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                   <Button
                     disabled={selectedIds.length !== 2}
                     onClick={runCross}
-                    className="bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-40"
+                    className="col-span-2 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-40"
                   >
                     <Egg className="w-4 h-4 mr-1.5" /> Cross the pair
                   </Button>

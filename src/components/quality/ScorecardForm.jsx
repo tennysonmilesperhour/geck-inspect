@@ -279,7 +279,7 @@ export default function ScorecardForm({ criteria = [] }) {
         {criteria.map((c) => (
           <div key={c.n} className="border border-slate-800 rounded-lg p-3 bg-slate-950/40">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex gap-3 min-w-0 flex-1">
+              <div className="flex gap-3 min-w-0 flex-1 basis-full sm:basis-0">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-mono flex items-center justify-center mt-0.5">
                   {c.n}
                 </span>
@@ -288,7 +288,7 @@ export default function ScorecardForm({ criteria = [] }) {
                   <p className="text-slate-400 text-xs leading-relaxed mt-0.5">{c.blurb}</p>
                 </div>
               </div>
-              <div className="flex gap-1.5 touch:gap-2 flex-shrink-0" role="group" aria-label={`Score for ${c.name}`}>
+              <div className="flex gap-1.5 touch:gap-2 flex-shrink-0 pl-9 sm:pl-0" role="group" aria-label={`Score for ${c.name}`}>
                 {POINT_OPTIONS.map((pt) => {
                   const active = scores[c.n] === pt;
                   return (

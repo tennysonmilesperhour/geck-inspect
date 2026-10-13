@@ -1039,7 +1039,7 @@ export default function Home() {
             A photo and a name is enough to begin. Add its morph and Geck Inspect shows what it&rsquo;s worth.
           </p>
           <p className="text-emerald-200/70 mb-8 text-sm flex items-center justify-center gap-2">
-            <Smartphone className="w-4 h-4" />
+            <Smartphone className="w-4 h-4 shrink-0" />
             Add to your iOS or Android home screen, full-screen, like a native app, no app store needed.
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-3">
