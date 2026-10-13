@@ -93,7 +93,7 @@ CUSTOMIZATION: geck-data
 - Crawlers already drained the Supabase Disk IO budget. Everything for bots must be static and precomputed (JSON/CSV files built on deploy or by a scheduled job). No live-query endpoints for bots. Keep robots.ts blocking /combo, /trait and filtered URLs.
 - Dataset: precomputed index series with Dataset markup; markdown twins for morph and index pages only; llms.txt pointing to /methodology and the index pages.
 - Log bots into the existing public.agent_hits through public.log_agent_hit() (one shared log; the weekly export in geck-inspect can add a site column later). Ask Tennyson before any schema change, which belongs in geck-inspect anyway.
-- Legal: the site republishes scraped MorphMarket listings, photos and seller names. Do not expose more of that to agents, and flag it in your report as a risk for Tennyson to decide on (aggregates are much safer than listing pages).
+- Listings, photos and sellers are members only since 13 Oct (decision 44 in geck-inspect). Never expose them to agents: aggregates only.
 - Decision to raise: robots.txt disallows /api/ while /api-docs documents public endpoints.
 - Review: fold into geck-inspect's Monday review (add a geck-data section to its plan doc) instead of a separate routine.
 ```
@@ -197,5 +197,5 @@ CUSTOMIZATION: dialogue
 
 1. **geckfunnel is a public repo** holding sales strategy, prompts and PIPELINE_TRACKER.xlsx (may contain breeder handles and emails). It also presents tennyscrestedgeckos.com as Tennyson's brand (CLAUDE.md treats that as a bug) and has an em dash in its page title. Recommendation: make it private, then fix the domain.
 2. **eyeinthesky is a public repo** that documents capturing MorphMarket data from logged-in pages. Recommendation: make it private.
-3. **geck-data publicly republishes scraped listings, photos and seller names.** That is the largest legal exposure in the Geck stack. Recommendation: show aggregates publicly and keep listing-level pages members-only.
+3. **Done 13 Oct (decision 44):** geck-data's listings, photos and sellers are members only, aggregates stay public, and the database no longer lets the public key read the listing tables.
 4. **kiwipop's llms.txt** makes health-adjacent claims that should be checked against FDA rules.

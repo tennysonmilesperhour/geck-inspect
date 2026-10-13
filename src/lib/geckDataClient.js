@@ -52,7 +52,7 @@ function normMorph(s) {
  * It used to top up with marketplace listing photos (market_listings joined
  * to listing_images). Those are third-party photos with no licence, shown on
  * public Morph Guide pages, so the top-up was removed on 13 Oct 2026 and the
- * listing tables are members-only (docs/DECISIONS.md, decision 43).
+ * listing tables are members-only (docs/DECISIONS.md, decision 44).
  */
 export async function getMorphReferenceImages(morphName, { limit = 24, species = CRESTED_SPECIES } = {}) {
   if (!geckData) return { data: [], error: 'geck-data anon key not configured' };
