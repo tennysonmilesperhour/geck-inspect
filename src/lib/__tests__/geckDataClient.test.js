@@ -20,12 +20,12 @@ describe('shared reference data contract', () => {
   it('scopes crested references across scientific and collector species names', async () => {
     await client.getMorphReferenceImages('Harlequin');
     expect(mock.queries.find(q => q.table === 'external_reference_images').filters).toContainEqual(['species', 'Correlophus ciliatus']);
-    expect(mock.queries.find(q => q.table === 'market_listings').filters).toContainEqual(['species', 'crested']);
     await client.getMorphTaxonomy('Harlequin');
     expect(mock.queries.find(q => q.table === 'morph_taxonomy').filters).toContainEqual(['species', 'Correlophus ciliatus']);
   });
-  it('does not supplement another species with crested listings', async () => {
+  it('never tops up public reference photos with marketplace listings', async () => {
+    await client.getMorphReferenceImages('Harlequin');
     await client.getMorphReferenceImages('Albino', { species: 'Eublepharis macularius' });
-    expect(mock.queries.some(q => q.table === 'market_listings')).toBe(false);
+    expect(mock.queries.some(q => q.table === 'market_listings' || q.table === 'listing_images')).toBe(false);
   });
 });

@@ -298,11 +298,10 @@ export default function MorphDetail() {
           /* gallery is a bonus; ignore failures */
         }
 
-        // External + extension-sourced reference photos from geck-data.
-        // External refs (Leopard Gecko Wiki, iNaturalist) carry license and
-        // attribution metadata; listing-derived images are unattributed
-        // marketplace photos. Both are best-effort: failures render no
-        // section instead of taking down the page.
+        // Licensed reference photos from geck-data (external sources such as
+        // iNaturalist, with licence and attribution). Marketplace listing
+        // photos are no longer used here (13 Oct 2026). Best-effort: a
+        // failure renders no section instead of taking down the page.
         try {
           const morphName = best?.morph_name || displayName;
           const { data: refs } = await getMorphReferenceImages(morphName, { limit: 12 });
@@ -717,17 +716,14 @@ export default function MorphDetail() {
             <Reveal as="section" id="photos" className="scroll-mt-20">
               <SectionHeading icon={Images}>{morphName} photos</SectionHeading>
 
-              {/* Reference photos pulled from geck-data: external sources
-                  (iNaturalist, Leopard Gecko Wiki, breeder partnerships) and
-                  extension-captured marketplace listings tagged with this
-                  morph. Each card carries an attribution line so license
-                  terms stay visible. */}
+              {/* Reference photos pulled from geck-data: external licensed
+                  sources tagged with this morph. Each card carries an
+                  attribution line so license terms stay visible. */}
               {referenceImages.length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-white mb-1">Reference photos</h3>
                   <p className="text-sm text-neutral-400 mb-4">
-                    Curated reference set drawn from external CC-licensed sources
-                    and extension-captured marketplace listings.
+                    Curated reference set drawn from external CC-licensed sources.
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {referenceImages.map((img, i) => {

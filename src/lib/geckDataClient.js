@@ -44,11 +44,15 @@ function normMorph(s) {
 }
 
 /**
- * Fetch reference images for a named morph. Pulls from the curated
- * external_reference_images table first, with source/license metadata as stored;
- * supplements with listing_images joined to
- * market_listings whose cached_traits include the morph name. Returns up to
- * `limit` rows, each shaped { url, source, license, attribution, source_url }.
+ * Fetch reference images for a named morph from the curated
+ * external_reference_images table, with source/license metadata as stored.
+ * Returns up to `limit` rows, each shaped { url, source, license,
+ * attribution, source_url }.
+ *
+ * It used to top up with marketplace listing photos (market_listings joined
+ * to listing_images). Those are third-party photos with no licence, shown on
+ * public Morph Guide pages, so the top-up was removed on 13 Oct 2026 and the
+ * listing tables are members-only (docs/DECISIONS.md, decision 43).
  */
 export async function getMorphReferenceImages(morphName, { limit = 24, species = CRESTED_SPECIES } = {}) {
   if (!geckData) return { data: [], error: 'geck-data anon key not configured' };
@@ -74,41 +78,7 @@ export async function getMorphReferenceImages(morphName, { limit = 24, species =
       source_url: row.source_url,
     }));
 
-    if (out.length >= limit) return { data: out.slice(0, limit), error: null };
-
-    // Top up with listing-derived images that mention the morph in their
-    // cached traits. We use a pattern match because cached_traits is
-    // free text; PostgREST `ilike` keeps the round trip tiny.
-    // Listing species use collector slugs; do not mix ambiguous or other-species
-    // listings into a crested morph reference gallery.
-    if (species !== CRESTED_SPECIES) return { data: out, error: null };
-    const remaining = limit - out.length;
-    const { data: listings, error: lErr } = await geckData
-      .from('market_listings')
-      .select('id, title, url, cached_traits, listing_images(image_url, storage_path, storage_bucket)')
-      .eq('species', 'crested')
-      .ilike('cached_traits', `%${morphName}%`)
-      .limit(remaining);
-    if (lErr) return { data: out, error: lErr.message };
-
-    for (const row of listings ?? []) {
-      const imgs = Array.isArray(row.listing_images) ? row.listing_images : [];
-      for (const img of imgs) {
-        out.push({
-          url: img.storage_path
-            ? `${URL}/storage/v1/object/public/${img.storage_bucket || 'listing-images'}/${img.storage_path}`
-            : img.image_url,
-          source: 'listing',
-          license: null,
-          attribution: row.title ?? null,
-          source_url: row.url || null,
-        });
-        if (out.length >= limit) break;
-      }
-      if (out.length >= limit) break;
-    }
-
-    return { data: out, error: null };
+    return { data: out.slice(0, limit), error: null };
   } catch (e) {
     return { data: [], error: e.message ?? String(e) };
   }
