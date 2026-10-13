@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { useInAppShell } from '@/lib/appShell';
 import { FounderCredit, GeckIntellectLink } from '@/components/public/SiteCredits';
+import PublicMobileMenu from '@/components/public/PublicMobileMenu';
 
 /**
  * Shared chrome for unauthenticated content pages (About, Contact, Terms,
  * and any future programmatic-SEO landing pages). Inside the app shell it
  * renders the page alone. Otherwise it provides:
- *   - top nav with logo + Sign In CTA
+ *   - top nav with logo + Sign In CTA (links inline from md up, a
+ *     hamburger menu on phones)
  *   - a consistent footer with the site's indexable pages linked
  *     (internal linking density matters for topical authority)
  *
@@ -53,6 +55,7 @@ export default function PublicPageShell({ children }) {
               Start free
             </Button>
           </Link>
+          <PublicMobileMenu />
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import PublicMobileMenu from '@/components/public/PublicMobileMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 import { captureEvent } from '@/lib/posthog';
@@ -560,13 +561,19 @@ export default function Home() {
                   Start free
                 </Link>
               </Button>
+              <PublicMobileMenu
+                onNavigate={(target) => captureEvent('landing_cta_clicked', { cta: 'mobile_menu', target })}
+              />
             </div>
           ) : (
-            <Button asChild variant="ghost" className="home-glass-button home-glass-button--primary">
-              <Link to={createPageUrl('Dashboard')}>
-                Dashboard
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button asChild variant="ghost" className="home-glass-button home-glass-button--primary">
+                <Link to={createPageUrl('Dashboard')}>
+                  Dashboard
+                </Link>
+              </Button>
+              <PublicMobileMenu signedIn />
+            </div>
           )}
         </header>
 
