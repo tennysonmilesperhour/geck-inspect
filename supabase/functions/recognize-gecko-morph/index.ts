@@ -76,6 +76,7 @@ import {
 } from "../_shared/morph-evidence.ts";
 import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
 import { RETRYABLE_UPSTREAM_STATUS, requestShape, upstreamErrorCode, upstreamFailureResponse } from "../_shared/morph-upstream.ts";
+import { refundMorphIdCreditOnce } from "../_shared/morph-refund.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
@@ -449,19 +450,12 @@ async function readMorphIdScansRemaining(
 }
 
 async function refundMorphIdCredit(userId: string): Promise<boolean> {
-  // One retry: a blip in the refund call must not spend the free try.
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      const { data, error } = await admin.rpc("refund_morph_id_credit", { p_user_id: userId });
-      if (!error && data) return true;
-      console.error("MorphID credit refund failed:", error?.message || "no usage row updated");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error("MorphID credit refund threw:", message);
-    }
-  }
-  return false;
+  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const confirmed = await refundMorphIdCreditOnce(() =>
+    admin.rpc("refund_morph_id_credit", { p_user_id: userId }),
+  );
+  if (!confirmed) console.error("MorphID credit refund failed or could not be confirmed");
+  return confirmed;
 }
 
 function resolveTier(profile: Profile): string {
