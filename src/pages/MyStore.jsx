@@ -1,3 +1,5 @@
+import WebsiteBuilder from '@/components/storefront/WebsiteBuilder';
+import { normalizeContactUrl } from '@/lib/storeWebsite';
 import GeckoImage from '@/components/shared/GeckoImage';
 import GeckoBulkActions from '@/components/bulk/GeckoBulkActions';
 import { Gecko } from '@/entities/all';
@@ -16,7 +18,7 @@ import {
 
 import {
     Store, Save, Loader2, ExternalLink, ArrowLeft, Plus, X, Lock, Crown, GitBranch,
-    User, Palette, ShieldCheck,
+    User, ShieldCheck,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
@@ -28,7 +30,7 @@ import {
     SLUG_COOLDOWN_DAYS, slugCooldownRemaining,
 } from '@/lib/storeLinks';
 import {
-    STORE_THEMES, DEFAULT_STORE_SETTINGS, readStoreSettings, applyStoreSettings,
+    DEFAULT_STORE_SETTINGS, readStoreSettings, applyStoreSettings, publicExternalLinks,
 } from '@/components/storefront/StorefrontSections';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import PageHeader from '@/components/shared/PageHeader';
@@ -84,14 +86,6 @@ function ImageDimensionsHint({ url }) {
 // Auto-prepend mailto: for bare emails and https:// for bare domains;
 // pass through anything that already has a scheme (mailto, http, https,
 // tel, sms, etc.).
-function normalizeContactLink(value) {
-    const raw = (value || '').trim();
-    if (!raw) return null;
-    if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) return raw;
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) return `mailto:${raw}`;
-    return `https://${raw}`;
-}
-
 const EMPTY_FORM = {
     slug: '',
     title: '',
@@ -166,12 +160,12 @@ export default function MyStore() {
                     .maybeSingle(),
                 supabase
                     .from('geckos')
-                    .select('id, name, morphs_traits, morph_tags, species, image_urls, status, sex, is_public, archived')
+                    .select('id, name, morphs_traits, morph_tags, species, image_urls, status, sex, asking_price, passport_code, is_public, archived')
                     .eq('created_by', user.email)
                     .eq('archived', false),
                 supabase
                     .from('breeding_plans')
-                    .select('id, sire_id, dam_id, pairing_date, status, is_public, archived')
+                    .select('id, sire_id, dam_id, pairing_date, status, notes, is_public, archived')
                     .eq('created_by', user.email)
                     .eq('archived', false),
                 supabase
@@ -182,7 +176,7 @@ export default function MyStore() {
                 ownerUserId
                     ? supabase
                         .from('gecko_waitlists')
-                        .select('id, title, slug, is_open')
+                        .select('id, title, slug, description, is_open, closes_at')
                         .eq('breeder_user_id', ownerUserId)
                         .eq('is_open', true)
                     : Promise.resolve({ data: [] }),
@@ -199,7 +193,7 @@ export default function MyStore() {
                     header_image_url: existing.header_image_url || '',
                     contact_link: existing.contact_link || '',
                     policies: existing.policies || '',
-                    external_links: Array.isArray(existing.external_links) ? existing.external_links : [],
+                    external_links: publicExternalLinks(existing.external_links),
                     featured_gecko_ids: Array.isArray(existing.featured_gecko_ids) ? existing.featured_gecko_ids : [],
                     featured_breeding_plan_ids: Array.isArray(existing.featured_breeding_plan_ids) ? existing.featured_breeding_plan_ids : [],
                     is_published: !!existing.is_published,
@@ -332,7 +326,7 @@ export default function MyStore() {
             tagline: form.tagline.trim() || null,
             description: form.description.trim() || null,
             header_image_url: form.header_image_url.trim() || null,
-            contact_link: normalizeContactLink(form.contact_link),
+            contact_link: normalizeContactUrl(form.contact_link) || null,
             policies: form.policies.trim() || null,
             external_links: mergedLinks,
             featured_gecko_ids: form.featured_gecko_ids,
@@ -357,7 +351,7 @@ export default function MyStore() {
         }
 
         setPage(res.data);
-        setForm((prev) => ({ ...prev, slug: res.data.slug, external_links: res.data.external_links || [] }));
+        setForm((prev) => ({ ...prev, slug: res.data.slug, external_links: publicExternalLinks(res.data.external_links) }));
         setSiteSettings(readStoreSettings(res.data.external_links));
 
         // Upsert the public breeder profile that powers /Breeder/:slug. On
@@ -446,7 +440,7 @@ export default function MyStore() {
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
             <Helmet><title>My Store - Geck Inspect</title></Helmet>
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-6">
                 <PageHeader
                     icon={Store}
                     title="My Store"
@@ -469,6 +463,10 @@ export default function MyStore() {
                             </a>
                         </Button>
                     )}
+                    <Button onClick={save} disabled={saving || loading}>
+                        {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                        Save store
+                    </Button>
                 </PageHeader>
 
                 {loading ? (
@@ -477,6 +475,9 @@ export default function MyStore() {
                     </div>
                 ) : (
                     <>
+                        <WebsiteBuilder settings={siteSettings} onChange={setSite} form={form} onFormChange={set}
+                            profile={profileForm} geckos={geckos} plans={plans}
+                            waitlist={waitlists.find(w => w.id === siteSettings.waitlistId)} />
                         {/* Identity */}
                         <Card>
                             <CardHeader>
@@ -687,44 +688,10 @@ export default function MyStore() {
                             </CardContent>
                         </Card>
 
-                        {/* Mini-site appearance */}
                         <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
-                                    <Palette className="w-4 h-4 text-emerald-400" /> Mini-site appearance
-                                </CardTitle>
-                                <CardDescription className="text-slate-400">
-                                    Controls how your public breeder page looks and what it shows. These apply the
-                                    next time you save your store.
-                                </CardDescription>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Connected website content</CardTitle>
+                                <CardDescription>Choose which collection and waitlist to show on your website.</CardDescription></CardHeader>
                             <CardContent className="space-y-6">
-                                {/* Accent theme */}
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Accent theme</Label>
-                                    <div className="flex items-center gap-3">
-                                        {Object.values(STORE_THEMES).map((t) => (
-                                            <button
-                                                key={t.key}
-                                                type="button"
-                                                onClick={() => setSite({ theme: t.key })}
-                                                className="w-9 h-9 rounded-full transition-transform hover:scale-110"
-                                                style={{
-                                                    backgroundColor: t.swatchHex,
-                                                    border: siteSettings.theme === t.key ? '3px solid #f8fafc' : '3px solid transparent',
-                                                }}
-                                                title={t.label}
-                                                aria-label={`${t.label} accent theme`}
-                                                aria-pressed={siteSettings.theme === t.key}
-                                            />
-                                        ))}
-                                        <span className="text-xs text-slate-400">
-                                            {(STORE_THEMES[siteSettings.theme] || STORE_THEMES.emerald).label}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-slate-500">Colors the headings, buttons, and morph badges on your public page.</p>
-                                </div>
-
                                 {/* Available now toggle */}
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="space-y-1">

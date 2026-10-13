@@ -1,3 +1,5 @@
+import StorefrontWebsite from '@/components/storefront/StorefrontWebsite';
+import { BREEDER_STORE_PAGE_PUBLIC_COLUMNS } from '@/lib/publicColumns';
 import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useMemo, useState } from 'react';
 import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from "@/lib/constants";
@@ -7,7 +9,6 @@ import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft, ArrowRight, GitBranch, MapPin, ShieldCheck, Sparkles,
-  Mail, Star, FileText, Tag,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { breederCanonical, breederDisplayName, breederSlug } from '@/lib/breederUtils';
@@ -18,8 +19,7 @@ import TrustPanel from '@/components/marketplace/TrustPanel';
 import ReportContent from '@/components/support/ReportContent';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import {
-  DEFAULT_STORE_SETTINGS, readStoreSettings, themeFor,
-  AvailableNowSection, WaitlistCtaSection, BuiltOnGeckInspect,
+  DEFAULT_STORE_SETTINGS, readStoreSettings, BuiltOnGeckInspect,
 } from '@/components/storefront/StorefrontSections';
 
 const LOGO_URL = APP_LOGO_URL;
@@ -95,6 +95,8 @@ export default function Breeder() {
   // theme with the grid shown when no settings row exists.
   const [storeSettings, setStoreSettings] = useState(DEFAULT_STORE_SETTINGS);
   const [waitlist, setWaitlist] = useState(null);
+  const [storePage, setStorePage] = useState(null);
+  const [featuredPlans, setFeaturedPlans] = useState([]);
 
   // Inquiry modal state, `inquiryGecko` is null for the generic
   // "Contact breeder" button, set to a gecko object when the buyer
@@ -106,6 +108,11 @@ export default function Breeder() {
   const canonical = breederCanonical(slug);
 
   useEffect(() => {
+    setStorePage(null);
+    setFeaturedPlans([]);
+    setCuratedGeckos([]);
+    setWaitlist(null);
+    setStoreSettings(DEFAULT_STORE_SETTINGS);
     if (!slug) {
       setMode('inferred');
       return;
@@ -150,6 +157,7 @@ export default function Breeder() {
                     .select('id, name, morphs_traits, image_urls, asking_price, passport_code, sex, status')
                     .eq('owner_profile_id', ownerProf.id)
                     .eq('is_public', true)
+                    .eq('archived', false)
                     .or('status.ilike.%sale%,status.eq.For Sale')
                     .order('asking_price', { ascending: true, nullsFirst: false })
                     .limit(12)
@@ -173,13 +181,14 @@ export default function Breeder() {
               ownerProf?.id
                 ? supabase
                     .from('breeder_store_pages')
-                    .select('external_links, featured_gecko_ids')
+                    .select(BREEDER_STORE_PAGE_PUBLIC_COLUMNS.join(','))
                     .eq('owner_profile_id', ownerProf.id)
                     .eq('is_published', true)
                     .maybeSingle()
                 : Promise.resolve({ data: null }),
             ]);
             if (cancelled) return;
+            setStorePage(storePage || null);
             setForSaleGeckos(geckos || []);
             setReviews(revs || []);
             if (ownerProf?.store_policy) setStorePolicy(ownerProf.store_policy);
@@ -202,6 +211,19 @@ export default function Breeder() {
               }
             }
 
+            const planIds = Array.isArray(storePage?.featured_breeding_plan_ids) ? storePage.featured_breeding_plan_ids : [];
+            if (planIds.length) {
+              const { data: publicPlans } = await supabase.from('breeding_plans')
+                .select('id, sire_id, dam_id, status, notes').in('id', planIds).eq('is_public', true).eq('archived', false);
+              if (cancelled) return;
+              const parentIds = [...new Set((publicPlans || []).flatMap(p => [p.sire_id, p.dam_id]).filter(Boolean))];
+              const parentRes = parentIds.length ? await supabase.from('geckos')
+                .select('id, name, morphs_traits, image_urls').in('id', parentIds).eq('is_public', true).eq('archived', false) : { data: [] };
+              if (cancelled) return;
+              const parents = new Map((parentRes.data || []).map(g => [g.id, g]));
+              const byId = new Map((publicPlans || []).map(p => [p.id, { ...p, sire: parents.get(p.sire_id), dam: parents.get(p.dam_id) }]));
+              setFeaturedPlans(planIds.map(id => byId.get(id)).filter(Boolean));
+            }
             const settings = readStoreSettings(storePage?.external_links);
             setStoreSettings(settings);
             if (settings.waitlistId) {
@@ -302,9 +324,6 @@ export default function Breeder() {
       </div>
     );
   }
-  // Accent theme chosen by the breeder; emerald when unset, so the
-  // inferred mode and pages without settings look unchanged.
-  const theme = themeFor(storeSettings.theme);
   const displayName = isCurated ? (profile.display_name || inferredDisplayName) : inferredDisplayName;
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
@@ -409,7 +428,7 @@ export default function Breeder() {
       <div className="min-h-screen bg-slate-950 text-slate-100">
         {/* Top nav, mirrors the landing page for a coherent public feel.
             Inside the app the shell already has a header. */}
-        {!inAppShell && (
+        {!inAppShell && !isCurated && (
           <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
             <Link to="/" className="touch:min-h-11 flex items-center gap-3 hover:opacity-90 transition-opacity">
               <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
@@ -438,173 +457,16 @@ export default function Breeder() {
 
         {isCurated && (
           <>
-            {/* Banner */}
-            <div
-              className="relative h-48 md:h-64"
-              style={{
-                background: profile.banner_photo
-                  ? `url(${profile.banner_photo}) center/cover`
-                  : theme.bannerGradient,
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/80" />
-              <div className="absolute -bottom-10 left-6 md:left-10">
-                <div
-                  className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-slate-950 flex items-center justify-center text-3xl font-bold shadow-xl bg-slate-800 overflow-hidden"
-                  style={{
-                    backgroundImage: profile.profile_photo ? `url(${profile.profile_photo})` : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                >
-                  {!profile.profile_photo && (displayName || '?')[0]?.toUpperCase()}
-                </div>
-              </div>
+            <StorefrontWebsite page={{ ...storePage, policies: storePage?.policies || storePolicy }} profile={profile}
+              settings={storeSettings} geckos={curatedGeckos.length ? curatedGeckos : forSaleGeckos}
+              plans={featuredPlans} waitlist={waitlist}
+              onInquire={profile.accepts_inquiries === false ? undefined : gecko => { setInquiryGecko(gecko); setInquiryOpen(true); }}
+              trust={profile.created_by ? <TrustPanel email={profile.created_by} variant="full" /> : null}
+              reviews={<BreederReviews reviews={reviews} breederUserId={profile.user_id} breederName={displayName} onReviewsChanged={reloadReviews} />} />
+            <div className="max-w-5xl mx-auto px-6 py-4">
+              <ReportContent targetType="breeder_page" targetId={profile.id} authorEmail={profile.created_by}
+                excerpt={[profile.display_name, profile.bio].filter(Boolean).join('\n')} />
             </div>
-
-            <section className="max-w-5xl mx-auto px-6 pt-14 pb-10">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight flex flex-wrap items-center gap-3">
-                    {displayName}
-                    {profile.is_verified && (
-                      <span
-                        className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-300 tracking-normal"
-                        title="Checked by the Geck Inspect team: identity, their own crested geckos, a sales record, published policies and no open complaints."
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" /> Verified breeder
-                      </span>
-                    )}
-                  </h1>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400">
-                    {profile.location && (
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className={`w-3.5 h-3.5 ${theme.icon}`} />
-                        {profile.location}
-                      </span>
-                    )}
-                    {profile.years_breeding && (
-                      <span>{profile.years_breeding} {profile.years_breeding === 1 ? 'year' : 'years'} breeding</span>
-                    )}
-                    {avgRating && (
-                      <span className="inline-flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5" fill="#f59e0b" style={{ color: '#f59e0b' }} />
-                        <span className="text-white font-semibold">{avgRating}</span>
-                        <span>({reviews.length} review{reviews.length === 1 ? '' : 's'})</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {profile.accepts_inquiries === false ? (
-                  <p className="text-sm text-slate-400 italic">Not taking inquiries right now.</p>
-                ) : (
-                <button
-                  type="button"
-                  onClick={() => { setInquiryGecko(null); setInquiryOpen(true); }}
-                  disabled={!profile.created_by}
-                  className={`touch:min-h-11 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg ${theme.solidBtn} disabled:bg-slate-700 text-white font-semibold text-sm whitespace-nowrap shadow-lg transition-colors`}
-                >
-                  <Mail className="w-4 h-4" />
-                  Contact breeder
-                </button>
-                )}
-                <ReportContent
-                  targetType="breeder_page"
-                  targetId={profile.id}
-                  authorEmail={profile.created_by}
-                  excerpt={[profile.display_name, profile.bio].filter(Boolean).join('\n')}
-                />
-              </div>
-
-              {profile.bio && (
-                <p className="mt-5 text-slate-300 leading-relaxed max-w-3xl">
-                  {profile.bio}
-                </p>
-              )}
-
-              {(profile.specialty_morphs || []).length > 0 && (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {profile.specialty_morphs.map((m) => (
-                    <span
-                      key={m}
-                      className={`inline-flex items-center gap-1 rounded-full border ${theme.badge} px-3 py-1 text-xs font-medium`}
-                    >
-                      <Tag className="w-3 h-3" /> {m}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Trust layer: the breeder's provable, timestamped record
-                  on the platform, rendered from real data rather than
-                  self-written claims. Renders nothing if it can't load. */}
-              {profile.created_by && (
-                <div className="mt-6 max-w-lg">
-                  <TrustPanel email={profile.created_by} variant="full" />
-                </div>
-              )}
-            </section>
-
-            {/* Showcase grid. Uses the owner's hand-picked featured geckos
-                when they set any, otherwise auto-syncs with their public For
-                Sale geckos. Hidden when toggled off in the store editor or
-                when nothing is listed. */}
-            {storeSettings.showAvailable && (
-              <AvailableNowSection
-                geckos={curatedGeckos.length > 0 ? curatedGeckos : forSaleGeckos}
-                theme={theme}
-                onInquire={profile.accepts_inquiries === false
-                  ? undefined
-                  : (gecko) => { setInquiryGecko(gecko); setInquiryOpen(true); }}
-              />
-            )}
-
-            {/* Waitlist call-to-action, links to /waitlist/:slug. Renders
-                nothing when no waitlist is attached or it has closed. */}
-            <WaitlistCtaSection waitlist={waitlist} theme={theme} />
-
-            {/* Store policy */}
-            {storePolicy && (
-              <section className="max-w-4xl mx-auto px-6 pb-12">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <FileText className={`w-5 h-5 ${theme.icon}`} /> Store policy
-                </h2>
-                <div className="rounded-xl border border-slate-700 bg-slate-900 p-6">
-                  <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
-                    {storePolicy}
-                  </p>
-                </div>
-              </section>
-            )}
-
-            {/* Reviews: verified purchases only (D9). */}
-            <BreederReviews
-              reviews={reviews}
-              breederUserId={profile.user_id}
-              breederName={displayName}
-              onReviewsChanged={reloadReviews}
-            />
-
-            {/* Powered-by + sign-in nudge */}
-            <section className="max-w-4xl mx-auto px-6 pb-20">
-              <div className={`rounded-2xl border bg-gradient-to-br ${theme.panel} via-slate-900/60 to-slate-900/40 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5`}>
-                <div className="space-y-2 max-w-xl">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className={`w-5 h-5 ${theme.icon}`} />
-                    <h2 className="text-lg font-bold text-white">Pedigrees you can verify</h2>
-                  </div>
-                  <p className="text-slate-300 text-sm leading-relaxed">
-                    Every gecko sold by {displayName} can ship with a digital passport, full lineage, weight history, photos, transferred to you in one click. Powered by Geck Inspect.
-                  </p>
-                </div>
-                <Link to={createPageUrl('AuthPortal')}>
-                  <Button className={`${theme.solidBtn} text-white font-semibold whitespace-nowrap`}>
-                    Create free account
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </section>
           </>
         )}
 
@@ -714,7 +576,7 @@ export default function Breeder() {
         )}
 
         {/* Footer */}
-        {!inAppShell && (
+        {!inAppShell && !isCurated && (
           <footer className="border-t border-slate-800/50">
             <div className="max-w-6xl mx-auto px-6 py-8 space-y-4">
               <BuiltOnGeckInspect className="text-center" />
