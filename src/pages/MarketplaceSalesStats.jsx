@@ -1563,12 +1563,12 @@ export default function MarketplaceSalesStats() {
                                   {item.kind === 'transfer' && <span className="ml-1 text-emerald-500/70">(transferred with passport)</span>}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-2 ml-auto sm:ml-0 flex-shrink-0">
+                              <div className="flex items-center gap-1.5 ml-auto sm:ml-0 flex-shrink-0">
                                 {item.kind === 'gecko' ? (
                                   <select value={item.category || ''}
                                     onChange={e => handleSaleCategoryChange(item.id, e.target.value)}
                                     aria-label="Sale type"
-                                    className="h-7 touch:min-h-11 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
+                                    className="glass-field">
                                     <option value="">Sale type</option>
                                     {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                                   </select>
@@ -1578,12 +1578,12 @@ export default function MarketplaceSalesStats() {
                                 {item.kind === 'gecko' && (
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-slate-400 text-xs">$</span>
-                                    <Input type="number" step="0.01"
+                                    <input type="number" step="0.01"
                                       aria-label="Sold for"
                                       value={priceOverrides[item.id] !== undefined ? priceOverrides[item.id] : (item.gecko.sold_price ?? '')}
                                       onChange={e => setPriceOverrides(prev => ({ ...prev, [item.id]: e.target.value }))}
                                       placeholder={item.gecko.asking_price ? String(item.gecko.asking_price) : 'Sold for'}
-                                      className="bg-slate-700 border-slate-600 text-slate-100 h-7 text-xs w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                      className="glass-field w-16 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                   </div>
                                 )}
                                 <div className="min-w-[4rem] text-right">
