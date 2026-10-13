@@ -17,7 +17,7 @@ vi.mock('@/lib/supabaseClient', () => ({
     from: table => ({ select: () => ({ eq: (_, email) => table === 'profiles' ? { maybeSingle: () => state.profiles.get(email) } : Promise.resolve({ data: state.entitlements || [] }) }) }),
   },
 }));
-vi.mock('@/lib/posthog', () => ({ identifyUser: vi.fn(), resetUser: vi.fn(), captureEvent: vi.fn() }));
+vi.mock('@/lib/posthog', () => ({ identifyUser: vi.fn(), resetUser: vi.fn(), captureEvent: vi.fn(), setGuestAnalyticsMode: vi.fn() }));
 vi.mock('@/lib/referral', () => ({ applyPendingReferral: vi.fn() }));
 vi.mock('@/lib/store/signupGrant', () => ({ applyPendingSignupGrant: vi.fn() }));
 vi.mock('@/lib/guestMode', () => ({ isGuestMode: () => false, setGuestMode: vi.fn(), GUEST_USER: { id: 'guest' } }));

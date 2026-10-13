@@ -75,7 +75,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
       <div className="relative">
         <SmartImage
           src={primaryImage}
-          alt={gecko.name}
+          alt={gecko.photo_is_illustrative ? `${gecko.name} — illustrative photo, not this demo animal` : gecko.name}
           width={500}
           aspect="auto"
           containerClassName="w-full h-40 sm:h-56"
@@ -103,6 +103,12 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             </span>
           )}
         </div>
+
+        {gecko.photo_is_illustrative && (
+          <span className="absolute bottom-2 left-2 rounded bg-slate-950/85 px-2 py-1 text-[10px] font-semibold text-white shadow">
+            Illustrative photo
+          </span>
+        )}
 
         {/* Top-right: archive reason or quality badge */}
         {archiveIcon ? (

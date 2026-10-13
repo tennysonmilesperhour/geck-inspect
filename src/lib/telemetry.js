@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import { isGuestMode } from '@/lib/guestMode';
 
 /**
  * Telemetry, lightweight event + error logging into Supabase.
@@ -64,7 +65,7 @@ export function withAnalyticsContext(properties = {}) {
 const lastSent = new Map();
 
 export async function trackEvent(name, properties = {}) {
-  if (!name) return;
+  if (!name || isGuestMode()) return;
   try {
     const key = `${name}:${JSON.stringify(properties).slice(0, 80)}`;
     const now = Date.now();
@@ -118,7 +119,7 @@ function shouldReportError(message, component) {
 }
 
 export async function reportError(error, info = {}) {
-  if (!error) return;
+  if (!error || isGuestMode()) return;
   try {
     const message = error?.message || String(error);
     if (!shouldReportError(message, info.component)) return;

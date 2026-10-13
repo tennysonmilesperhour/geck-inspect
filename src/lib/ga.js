@@ -15,6 +15,8 @@
  * `page_view` events manually from feature code.
  */
 
+import { isGuestMode } from '@/lib/guestMode';
+
 export const GA_ID = 'G-WLGHJ7KC2N';
 
 /**
@@ -23,7 +25,7 @@ export const GA_ID = 'G-WLGHJ7KC2N';
  * loader, or during SSR.
  */
 export function gaReady() {
-  return typeof window !== 'undefined' && typeof window.gtag === 'function';
+  return !isGuestMode() && typeof window !== 'undefined' && typeof window.gtag === 'function';
 }
 
 /**

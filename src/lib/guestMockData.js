@@ -1,6 +1,14 @@
 import { DEMO_GECKO_PHOTOS } from '@/lib/demoGeckoPhotos';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { growthBandAt } from '@/lib/growthBand';
+import {
+  DEMO_BREEDER_CLUTCHES,
+  DEMO_BREEDER_COSTS,
+  DEMO_BREEDER_EGGS,
+  DEMO_BREEDER_GECKOS,
+  DEMO_BREEDER_PLANS,
+  DEMO_BREEDER_PHOTO_PLACEHOLDER,
+} from '@/lib/guestBreederDemo';
 
 /**
  * Mock data for guest-mode demos.
@@ -12,8 +20,9 @@ import { growthBandAt } from '@/lib/growthBand';
  * Design notes:
  * - Every mock record uses `created_by: GUEST_EMAIL` so pages that
  *   filter "mine" by email match cleanly.
- * - Photos are bundled, owner-authorized images of age-verified adults
- *   from the admin collection. Mock names and traits remain illustrative.
+ * - Existing photos are bundled, owner-authorized images; added financial
+ *   demo animals use a visibly fictional placeholder until public-domain
+ *   photos are installed. Names and traits are illustrative throughout.
  * - Writes are still blocked by `blockIfGuest()` in the entity layer;
  *   this module only powers reads.
  */
@@ -157,6 +166,8 @@ const GECKOS = [
     archived: true,
     archive_reason: 'sold',
     archived_date: daysAgo(320),
+    sold_price: 420,
+    sale_category: 'retired_breeder',
     feeding_group_id: 'mock-feed-1',
     created_by: GUEST_EMAIL,
     created_date: daysAgo(2300),
@@ -479,15 +490,16 @@ const GECKOS = [
 // ---------------------------------------------------------------------------
 // Gecko images (Gallery feed)
 // ---------------------------------------------------------------------------
-const GECKO_IMAGES = GECKOS.flatMap((g, i) =>
+const ALL_GECKOS = [...GECKOS, ...DEMO_BREEDER_GECKOS];
+const GECKO_IMAGES = ALL_GECKOS.flatMap((g, i) =>
   (g.image_urls || []).map((url, j) => ({
     id: `mock-img-${i + 1}-${j + 1}`,
     image_url: url,
     gecko_id: g.id,
     primary_morph: g.primary_morph,
     secondary_traits: g.morph_tags,
-    caption: `${g.name}, ${g.primary_morph}`,
-    verified: j === 0,
+    caption: `${g.name}, ${g.primary_morph}${url === DEMO_BREEDER_PHOTO_PLACEHOLDER ? ' · Illustrative photo' : ''}`,
+    verified: j === 0 && url !== DEMO_BREEDER_PHOTO_PLACEHOLDER,
     likes_count: 5 + ((i * 3 + j) % 40),
     created_by: GUEST_EMAIL,
     created_date: daysAgo(i * 7 + j),
@@ -505,7 +517,7 @@ const bandMid = (months) => {
   const band = growthBandAt(Math.max(0, months));
   return band ? (band.low + band.high) / 2 : null;
 };
-const WEIGHT_RECORDS = GECKOS.flatMap((g, gi) => {
+const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
   const target = g.weight_grams;
   const points = 6;
   const hatchMs = g.hatch_date ? Date.parse(g.hatch_date) : null;
@@ -589,6 +601,7 @@ const BREEDING_PLANS = [
     created_by: GUEST_EMAIL,
     created_date: daysAgo(400),
   },
+  ...DEMO_BREEDER_PLANS,
 ];
 
 // Hatchery, eggs laid, pipping soon, hatched, failed, and historical.
@@ -748,6 +761,7 @@ const EGGS = [
     created_date: daysAgo(80),
   },
 ];
+const ALL_EGGS = [...EGGS, ...DEMO_BREEDER_EGGS];
 
 // Hatchery events, what shows up on the hatchery dashboard widget.
 const HATCHERY_EVENTS = [
@@ -864,6 +878,7 @@ const CLUTCHES = [
     created_by: GUEST_EMAIL,
     created_date: daysAgo(80),
   },
+  ...DEMO_BREEDER_CLUTCHES,
 ];
 
 // ---------------------------------------------------------------------------
@@ -1045,12 +1060,13 @@ const GECKO_OF_THE_DAY = [
 // Store map, keyed by the Supabase entity name used in supabaseEntities.js
 // ---------------------------------------------------------------------------
 const STORE = {
-  Gecko: GECKOS,
+  Gecko: ALL_GECKOS,
   GeckoImage: GECKO_IMAGES,
   WeightRecord: WEIGHT_RECORDS,
   BreedingPlan: BREEDING_PLANS,
-  Egg: EGGS,
+  Egg: ALL_EGGS,
   Clutch: CLUTCHES,
+  MarketplaceCost: DEMO_BREEDER_COSTS,
   ForumPost: FORUM_POSTS,
   ForumCategory: FORUM_CATEGORIES,
   Notification: NOTIFICATIONS,
