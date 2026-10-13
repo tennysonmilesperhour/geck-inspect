@@ -42,11 +42,6 @@ const STATUS_COLORS = {
     'Sold': { dot: 'bg-slate-500', text: 'text-slate-400', ring: 'ring-slate-500/50', badge: 'bg-slate-500/20 text-slate-400 border-slate-500/40' },
 };
 
-const SEX_BORDER = {
-    Male: 'border-l-blue-400',
-    Female: 'border-l-pink-400',
-};
-
 const formatAge = (hatchDate) => {
     if (!hatchDate) return null;
     try {
@@ -278,7 +273,6 @@ const GeckoCardNode = ({
 
     const sexIcon = gecko.sex === 'Male' ? '♂' : gecko.sex === 'Female' ? '♀' : '?';
     const sexColor = gecko.sex === 'Male' ? 'text-blue-400' : gecko.sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
-    const sexBorder = SEX_BORDER[gecko.sex] || 'border-l-slate-500';
     const statusColor = STATUS_COLORS[gecko.status];
     const age = formatAge(gecko.hatch_date);
     const morphTags = Array.isArray(gecko.morph_tags) ? gecko.morph_tags.filter(Boolean) : [];
@@ -301,7 +295,7 @@ const GeckoCardNode = ({
             onMouseLeave={onHoverLeave}
         >
             <Card
-                className={`relative transition-all duration-300 overflow-hidden border-l-4 ${sexBorder} ${cardSize} ${className} ${isSelected ? 'ring-2 ring-emerald-400 shadow-2xl shadow-emerald-500/30 z-10' : highlightRing || 'shadow-lg'} ${dimClass} bg-slate-800/80 backdrop-blur-sm border-slate-700 hover:shadow-xl hover:ring-2 hover:ring-emerald-500/50 cursor-pointer ${isFaded ? 'opacity-50' : ''}`}
+                className={`relative transition-all duration-300 overflow-hidden ${cardSize} ${className} ${isSelected ? 'ring-2 ring-emerald-400 shadow-2xl shadow-emerald-500/30 z-10' : highlightRing || 'shadow-lg'} ${dimClass} bg-slate-800/80 backdrop-blur-sm border-slate-700 hover:shadow-xl hover:ring-2 hover:ring-emerald-500/50 cursor-pointer ${isFaded ? 'opacity-50' : ''}`}
                 onClick={(e) => { e.stopPropagation(); onNodeClick(gecko.id); }}
             >
                 <div className="w-full h-full bg-slate-700 flex items-center justify-center">
