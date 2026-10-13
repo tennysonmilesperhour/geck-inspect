@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { normalizeWebsite, WEBSITE_TEMPLATES, DEFAULT_WEBSITE } from '@/lib/storeWebsite';
 import { normalizeContactUrl } from '@/lib/storeWebsite';
 import StorefrontWebsite from './StorefrontWebsite';
+import { themeFor } from './StorefrontSections';
 
 const inputClass = 'bg-slate-950 border-slate-700 text-slate-100';
 function Field({ label, id, children }) {
@@ -104,7 +105,7 @@ export default function WebsiteBuilder({ settings, onChange, form, onFormChange,
             <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ background: preset.accent }} /><span className="text-sm font-medium text-slate-100">{preset.label}</span><p className="text-xs text-slate-400 mt-1">{preset.description}</p>
           </button>)}</div></Field>
           <Picker label="Surface" name="mode" value={w.mode} choices={[[ 'dark', 'Dark'], ['light', 'Light']]} onChange={mode => update({ mode, background: '' })} />
-          {[['accent', 'Brand color', '#10b981'], ['background', 'Page background', w.mode === 'light' ? '#faf7f2' : '#0b1210']].map(([key, label, fallback]) => <Field key={key} label={label} id={`website-${key}`}>
+          {[['accent', 'Brand color', themeFor(settings.theme).swatchHex], ['background', 'Page background', w.mode === 'light' ? '#faf7f2' : '#0b1210']].map(([key, label, fallback]) => <Field key={key} label={label} id={`website-${key}`}>
             <div className="flex gap-2 items-center"><input id={`website-${key}`} type="color" value={w[key] || fallback} onChange={e => update({ [key]: e.target.value })} className="h-10 w-12 bg-transparent rounded" /><span className="text-xs font-mono text-slate-400">{w[key] || fallback}</span></div>
           </Field>)}
           <Picker label="Heading font" name="font" value={w.font} choices={[[ 'modern', 'Modern sans'], ['editorial', 'Editorial serif'], ['rounded', 'Friendly rounded']]} onChange={font => update({ font })} />

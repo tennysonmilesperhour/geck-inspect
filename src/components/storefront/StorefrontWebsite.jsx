@@ -13,7 +13,7 @@ export default function StorefrontWebsite({ page = {}, profile = {}, settings = 
   const title = page.title || profile.display_name || 'Your breeding business';
   const bio = page.description || profile.bio;
   const policy = page.policies;
-  const contact = safeWebsiteUrl(page.contact_link, true);
+  const contact = profile.accepts_inquiries === false ? '' : safeWebsiteUrl(page.contact_link, true);
   const links = publicExternalLinks(page.external_links).filter(l => safeWebsiteUrl(l.url, true));
   const logo = w.logoUrl || safeWebsiteUrl(profile.profile_photo || profile.profile_image_url);
   const banner = safeWebsiteUrl(page.header_image_url || profile.banner_photo);

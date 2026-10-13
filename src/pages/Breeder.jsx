@@ -325,6 +325,8 @@ export default function Breeder() {
     );
   }
   const displayName = isCurated ? (profile.display_name || inferredDisplayName) : inferredDisplayName;
+  const siteName = storePage?.title || displayName;
+  const siteDescription = storePage?.tagline || storePage?.description || profile?.bio;
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
     : null;
@@ -337,12 +339,12 @@ export default function Breeder() {
         {
           '@type': 'LocalBusiness',
           '@id': `${breederUrl}#breeder`,
-          name: displayName,
+          name: siteName,
           alternateName: slug,
           url: breederUrl,
-          description: profile.bio || `${displayName}, ${profile.is_verified ? 'a verified' : 'a'} crested gecko breeder on Geck Inspect.`,
-          logo: profile.profile_photo || LOGO_URL,
-          image: profile.banner_photo || profile.profile_photo || LOGO_URL,
+          description: siteDescription || `${displayName}, ${profile.is_verified ? 'a verified' : 'a'} crested gecko breeder on Geck Inspect.`,
+          logo: storeSettings.website?.logoUrl || profile.profile_photo || LOGO_URL,
+          image: storePage?.header_image_url || profile.banner_photo || profile.profile_photo || LOGO_URL,
           ...(profile.location ? { address: { '@type': 'PostalAddress', addressLocality: profile.location } } : {}),
           ...(storeSettings.showAvailable && forSaleGeckos.length > 0 ? {
             makesOffer: forSaleGeckos.slice(0, 25).map((g) => ({
@@ -398,11 +400,11 @@ export default function Breeder() {
   const inferredEmpty = mode === 'inferred' && inferredDone && inferredGeckos.length === 0;
 
   const seoTitle = isCurated
-    ? `${displayName}, Crested Gecko Breeder on Geck Inspect`
+    ? `${siteName}, Crested Gecko Breeder on Geck Inspect`
     : `${displayName}, Crested Gecko Breeder`;
   const seoDescription = isCurated
-    ? (profile.bio
-        ? profile.bio.slice(0, 200)
+    ? (siteDescription
+        ? siteDescription.slice(0, 200)
         : `Browse crested geckos for sale from ${displayName}${profile.location ? ` in ${profile.location}` : ''}. Tracked pedigrees, photo timelines, and direct contact on Geck Inspect.`)
     : `${displayName} is a crested gecko breeder referenced across the Geck Inspect community. Explore geckos whose lineage traces back to ${displayName}.`;
 

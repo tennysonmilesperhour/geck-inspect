@@ -63,7 +63,7 @@ describe('public website renderer', () => {
     expect(html).not.toContain('geck:'); expect(html).toContain('https://instagram.com/fixture');
   });
   it('respects section visibility, availability toggle, and inquiry preference', () => {
-    const html = render({ page: { description: 'Bio' }, profile: { accepts_inquiries: false }, onInquire: () => {},
+    const html = render({ page: { description: 'Bio', contact_link: 'mailto:breeder@example.com' }, profile: { accepts_inquiries: false }, onInquire: () => {},
       geckos: [{ id: 'g1', name: 'Private label fixture' }], settings: { showAvailable: false, website: { sections: [{ id: 'about', visible: false }] } } });
     expect(html).not.toContain('id="website-about"'); expect(html).not.toContain('Private label fixture'); expect(html).not.toContain('Contact breeder');
   });

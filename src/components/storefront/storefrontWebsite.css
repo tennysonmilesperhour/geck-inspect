@@ -60,3 +60,8 @@
 @container (max-width:700px) {.sw-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}.sw-pairings,.sw-custom-with-image {grid-template-columns:1fr;}.sw-callout {align-items:flex-start;flex-direction:column;}.sw-hero-inner {padding-block:48px;}.sw-split .sw-hero-image {left:0;width:100%;opacity:.18;}.sw-split .sw-hero-inner {padding-right:24px;}.sw-card-content {padding:14px;}.sw-card h3 {font-size:18px;}.sw-footer {flex-direction:column;}.sw-main {gap:min(var(--sw-space),56px);}}
 @container (max-width:400px) {.sw-grid {grid-template-columns:1fr;}.sw-hero h1 {font-size:36px;}}
 @media (prefers-reduced-motion:reduce) {.sw-photo img {transition:none;}}
+
+.sw-reviews > section {max-width:none;padding:0;}
+.sw-reviews > section > h2 {display:none;}
+.sw-reviews button:not([role="radio"]) {background:var(--sw-accent);color:var(--sw-button-text);border-radius:var(--sw-radius);}
+.sw-reviews .text-emerald-300 {color:var(--sw-text);}
