@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-12",
+  "generatedAt": "2026-10-14",
   "files": {
     "src/pages/Home.jsx": "2026-10-05",
     "src/pages/About.jsx": "2026-09-29",
@@ -27,7 +27,8 @@
     "src/pages/Forum.jsx": "2026-10-03",
     "src/pages/Marketplace.jsx": "2026-09-29",
     "src/pages/MarketplaceBuy.jsx": "2026-10-05",
-    "src/pages/Membership.jsx": "2026-10-05",
+    "src/pages/Membership.jsx": "2026-10-14",
+    "src/lib/membershipSeo.js": "2026-10-14",
     "src/data/morph-guide.js": "2026-10-06",
     "src/data/care-guide.js": "2026-09-29",
     "src/data/project-lines.js": "2026-10-02",
