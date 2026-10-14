@@ -35,9 +35,10 @@ export const MARKET_INTELLIGENCE_URL =
 export const MARKET_SNAPSHOT_URL =
   import.meta.env.VITE_MARKET_SNAPSHOT_URL || `${MARKET_INTELLIGENCE_URL}/data/market.json`;
 
-// Bundled silhouette: works on production, previews, and native builds.
-export const DEFAULT_GECKO_IMAGE = '/gecko-profile-placeholder.png';
-export const DEFAULT_GECKO_IMAGE_URL = `https://geckinspect.com${DEFAULT_GECKO_IMAGE}`;
+// Bundled tarot card art: works on production, previews, and native builds.
+export const DEFAULT_GECKO_IMAGE = '/gecko-tarot-card.svg';
+// Social previews do not accept SVG, so absolute links use the PNG export.
+export const DEFAULT_GECKO_IMAGE_URL = 'https://geckinspect.com/gecko-tarot-card.png';
 
 export const GECKO_STATUS_OPTIONS = [
   'Pet',

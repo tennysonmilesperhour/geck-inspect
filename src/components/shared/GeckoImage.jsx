@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
-/** Compact photo slots share the same fallback as SmartImage cards. */
+/** Compact photo slots share the same tarot card fallback as SmartImage cards. */
 export default function GeckoImage({ src, alt = '', className = '', style, onError, ...props }) {
   const [failedSource, setFailedSource] = useState(null);
   const hasSource = typeof src === 'string' && src.trim().length > 0;
@@ -15,7 +15,7 @@ export default function GeckoImage({ src, alt = '', className = '', style, onErr
       decoding="async"
       className={className}
       style={placeholder
-        ? { ...style, objectFit: 'contain', objectPosition: 'center', transform: 'none', padding: '8%', backgroundColor: '#dce7df' }
+        ? { ...style, objectFit: 'contain', objectPosition: 'center', transform: 'none', padding: '4%', backgroundColor: '#0b1a14' }
         : style}
       onError={event => {
         if (placeholder) return;

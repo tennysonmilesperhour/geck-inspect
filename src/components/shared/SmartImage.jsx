@@ -115,7 +115,7 @@ export default function SmartImage({
           onError?.(event);
         }}
         style={isSilhouette
-          ? { ...style, objectFit: 'contain', objectPosition: 'center', transform: 'none', padding: '8%', backgroundColor: '#dce7df' }
+          ? { ...style, objectFit: 'contain', objectPosition: 'center', transform: 'none', padding: '4%', backgroundColor: '#0b1a14' }
           : style}
         className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
         {...rest}

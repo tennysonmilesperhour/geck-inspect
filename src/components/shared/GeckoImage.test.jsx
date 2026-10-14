@@ -5,7 +5,7 @@ import SmartImage from './SmartImage';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 describe.each([GeckoImage, SmartImage])('gecko photo fallback', Image => {
-  it('shows the bundled silhouette for absent and whitespace-only photos', async () => {
+  it('shows the bundled tarot card for absent and whitespace-only photos', async () => {
     let view;
     await act(async () => { view = create(<Image src="  " alt="Gecko" />); });
     expect(view.root.findByType('img').props.src).toBe(DEFAULT_GECKO_IMAGE);
