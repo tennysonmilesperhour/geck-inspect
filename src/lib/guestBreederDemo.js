@@ -12,7 +12,9 @@ const COHORTS = [
     saleDates: ['2024-10-04', '2024-10-19', '2024-11-02', '2024-11-17', '2024-12-01', '2024-12-08'],
     prices: [790, 960, 1200, 880, 1550, 1250],
     names: ['Copper', 'Pippin', 'Clover', 'Mochi', 'Saffron', 'Sprout', 'Dune', 'Cinder'],
-    morphs: ['Harlequin', 'Pinstripe', 'Flame', 'Dalmatian', 'Harlequin', 'Pinstripe', 'Flame', 'Harlequin'],
+    // First fictional offspring is labeled Lilly White to fit its visible
+    // pattern and single Lilly White parent; this is a phenotype label only.
+    morphs: ['Lilly White', 'Pinstripe', 'Flame', 'Dalmatian', 'Harlequin', 'Pinstripe', 'Flame', 'Harlequin'],
   },
   {
     year: 2025, plan: 'mock-demo-plan-2025', sire: 'mock-gecko-8', dam: 'mock-gecko-12',
@@ -50,7 +52,37 @@ export const DEMO_BREEDER_ILLUSTRATIVE_PHOTOS = [
   '/demo/geckos/female-2010.jpg',
 ];
 
-// Each licensed photograph is used on one fictional card only. Photos are
+// These owner-authorized images are neutral-named copies of distinct geckos
+// whose own records passed the one-year age check. No source-record identity
+// is included here. Assignments roughly match visible pattern only; images
+// remain illustrative and establish no sample identity, trait, genotype, age,
+// sex, or history.
+export const DEMO_OWNER_PHOTOS = Object.freeze(
+  Array.from({ length: 18 }, (_, i) => `/demo/geckos/owner-photos/owner-photo-${String(i + 1).padStart(2, '0')}.webp`),
+);
+
+const OWNER_PHOTO_ASSIGNMENTS = Object.freeze({
+  'mock-gecko-gp1-diamond': DEMO_OWNER_PHOTOS[0],
+  'mock-gecko-gp2-ruby': DEMO_OWNER_PHOTOS[1],
+  'mock-gecko-gp3-thor': DEMO_OWNER_PHOTOS[2],
+  'mock-gecko-gp4-sunny': DEMO_OWNER_PHOTOS[3],
+  'mock-gecko-4': DEMO_OWNER_PHOTOS[4],
+  'mock-gecko-off-pebble': DEMO_OWNER_PHOTOS[5],
+  'mock-gecko-off-jasper': DEMO_OWNER_PHOTOS[6],
+  'mock-gecko-off-fern': DEMO_OWNER_PHOTOS[7],
+  'mock-gecko-5': DEMO_OWNER_PHOTOS[8],
+  'mock-gecko-7': DEMO_OWNER_PHOTOS[9],
+  'mock-gecko-9': DEMO_OWNER_PHOTOS[10],
+  'mock-gecko-10': DEMO_OWNER_PHOTOS[11],
+  'mock-gecko-11': DEMO_OWNER_PHOTOS[12],
+  'mock-gecko-6': DEMO_OWNER_PHOTOS[13],
+  'mock-gecko-12': DEMO_OWNER_PHOTOS[14],
+  'mock-gecko-8': DEMO_OWNER_PHOTOS[15],
+  'mock-demo-gecko-2024-01': DEMO_OWNER_PHOTOS[16],
+  'mock-demo-gecko-2024-04': DEMO_OWNER_PHOTOS[17],
+});
+
+// Each source photograph is used on one fictional card only. Photos are
 // illustrative and are not evidence about the fictional animal's identity.
 export const DEMO_BREEDER_PHOTO_ASSIGNMENTS = Object.freeze({
   'mock-gecko-1': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[0],
@@ -60,6 +92,7 @@ export const DEMO_BREEDER_PHOTO_ASSIGNMENTS = Object.freeze({
   'mock-demo-gecko-2024-08': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[4],
   'mock-demo-gecko-2026-07': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[5],
   'mock-demo-gecko-2026-08': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[6],
+  ...OWNER_PHOTO_ASSIGNMENTS,
 });
 const now = new Date().toISOString();
 const laidDate = (hatchDate) => {
