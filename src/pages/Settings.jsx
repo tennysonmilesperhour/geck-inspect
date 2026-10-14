@@ -31,8 +31,7 @@ import {
 } from 'lucide-react';
 import { resolveTier } from '@/lib/tierLimits';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import UpgradePlansButton, { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
@@ -1017,7 +1016,13 @@ export default function SettingsPage() {
                           ) : (
                               <p className="text-sm text-slate-400">
                                   The Morning Market Brief and watchlist alerts are part of Market Intelligence on the Enterprise plan.{' '}
-                                  <Link to={createPageUrl('Membership')} className="text-emerald-400 hover:text-emerald-300">See plans</Link>
+                                  <UpgradePlansLink
+                                    limitType="market_intelligence"
+                                    surface="market_alerts_locked"
+                                    className="text-emerald-400 hover:text-emerald-300"
+                                  >
+                                    See plans
+                                  </UpgradePlansLink>
                               </p>
                           )}
                      </CardContent>
@@ -1189,13 +1194,14 @@ export default function SettingsPage() {
                                                     Available on Keeper and up. Upgrade to add a conservative price band to your MorphID results.
                                                 </p>
                                             </div>
-                                            <Button
+                                            <UpgradePlansButton
+                                                limitType="morph_id"
+                                                surface="morph_id_value_locked"
                                                 size="sm"
                                                 className="bg-emerald-600 hover:bg-emerald-500 text-white shrink-0"
-                                                onClick={() => { window.location.href = '/Membership'; }}
                                             >
                                                 See plans
-                                            </Button>
+                                            </UpgradePlansButton>
                                         </div>
                                     )}
                                 </CardContent>

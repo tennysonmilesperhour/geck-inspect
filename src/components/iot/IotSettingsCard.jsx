@@ -9,6 +9,7 @@ import { Thermometer, Loader2, KeyRound, Save, RadioTower, Crown } from 'lucide-
 import { getConnection, saveConnection, saveMappings, pollSensors } from '@/lib/iotClient';
 import { getFeatureUsage } from '@/lib/usageMeter';
 import { getTierLimits } from '@/lib/tierLimits';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 
 const GOVEE_KEY_DOCS_URL = 'https://developer.govee.com/reference/apply-you-govee-api-key';
 
@@ -165,7 +166,7 @@ export default function IotSettingsCard({ user }) {
     setSavingMappings(false);
   };
 
-  const upgradeCta = (text) => (
+  const upgradeCta = (text, surface) => (
     <div className="flex items-start justify-between gap-4 p-4 border border-slate-700 rounded-lg bg-slate-800/50">
       <div>
         <Label className="font-medium text-slate-200 flex items-center gap-2">
@@ -174,13 +175,14 @@ export default function IotSettingsCard({ user }) {
         </Label>
         <p className="text-sm text-slate-400 mt-1">{text}</p>
       </div>
-      <Button
+      <UpgradePlansButton
+        limitType="iot"
+        surface={surface}
         size="sm"
         className="bg-emerald-600 hover:bg-emerald-500 text-white shrink-0"
-        onClick={() => { window.location.href = '/Membership'; }}
       >
         See plans
-      </Button>
+      </UpgradePlansButton>
     </div>
   );
 
@@ -199,7 +201,7 @@ export default function IotSettingsCard({ user }) {
       </CardHeader>
       <CardContent className="space-y-6">
         {!isPaid ? (
-          upgradeCta('Upgrade to Keeper to connect your Govee devices and pull live enclosure readings into your dashboard.')
+          upgradeCta('Upgrade to Keeper to connect your Govee devices and pull live enclosure readings into your dashboard.', 'iot_locked')
         ) : loading ? (
           <div className="flex items-center gap-2 text-slate-400 text-sm">
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -278,7 +280,7 @@ export default function IotSettingsCard({ user }) {
             </div>
 
             {/* Free tier hit the cap or monthly limit reached */}
-            {exhausted && upgradeCta('You have used all of your sensor reads for this month. Upgrade for a bigger monthly allotment.')}
+            {exhausted && upgradeCta('You have used all of your sensor reads for this month. Upgrade for a bigger monthly allotment.', 'iot_exhausted')}
 
             {/* Test connection */}
             {connection?.keyTail && (

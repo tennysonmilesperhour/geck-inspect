@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Loader2, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { createPageUrl } from '@/utils';
+import { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
 import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
 import { predictPairOutcomes } from '@/lib/genetics/pairOutcomes';
@@ -164,7 +163,14 @@ export default function HatchEggDialog({ egg, plan, sire, dam, pairEggs = [], de
                                 {limitReached && (
                                     <p>
                                         The egg is still marked Incubating.{' '}
-                                        <Link to={createPageUrl('Membership')} className="underline text-emerald-300">See plans</Link>
+                                        <UpgradePlansLink
+                                            limitType="geckos"
+                                            surface="plan_limit_geckos"
+                                            trackShown
+                                            className="underline text-emerald-300"
+                                        >
+                                            See plans
+                                        </UpgradePlansLink>
                                         {' '}or archive a gecko you no longer keep, then record the hatch again.
                                     </p>
                                 )}

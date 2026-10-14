@@ -42,7 +42,7 @@ export function activeComp(rows, now = Date.now()) {
     .sort((a, b) => rank[b.tier] - rank[a.tier] || Date.parse(b.ends_at) - Date.parse(a.ends_at))[0] || null;
 }
 
-export async function loadUserProfile(authUser) {
+export async function loadUserProfile(authUser, options = {}) {
   const basic = normalizeSupabaseUser(authUser);
   if (!basic) return null;
   const [profileResult, storeResult, compResult] = await Promise.all([
@@ -60,9 +60,13 @@ export async function loadUserProfile(authUser) {
   });
   if (profileResult.error || storeResult.error) {
     console.warn('User enrichment incomplete:', profileResult.error?.message || storeResult.error?.message);
-    const cached = readCachedProfile(authUser.id);
-    if (cached && !profileResult.data) {
-      return { ...basic, ...cached, auth_user_id: authUser.id, email: authUser.email };
+    // Checkout polling passes fresh so a stored Free profile cannot hide
+    // the plan the webhook just wrote, or stand in for a failed read.
+    if (!options.fresh) {
+      const cached = readCachedProfile(authUser.id);
+      if (cached && !profileResult.data) {
+        return { ...basic, ...cached, auth_user_id: authUser.id, email: authUser.email };
+      }
     }
   }
   const tier = mirroredMembershipTier(storeResult.data || []);

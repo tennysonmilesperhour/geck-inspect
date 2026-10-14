@@ -14,6 +14,7 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import PageHeader from '@/components/shared/PageHeader';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { recordGeckoAdded } from '@/lib/activation';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 
 const LoginPortal = React.lazy(() => import('@/components/auth/LoginPortal'));
 
@@ -116,9 +117,13 @@ export default function ImageImport() {
                             <p className="text-sm md:text-base text-slate-300">
                                 This feature is included with the Breeder and Enterprise plans.
                             </p>
-                            <Button asChild className="mt-4">
-                                <a href="/Membership">View Plans <ArrowRight className="w-4 h-4 ml-2" /></a>
-                            </Button>
+                            <UpgradePlansButton
+                                limitType="image_import"
+                                surface="image_import_locked"
+                                className="mt-4"
+                            >
+                                View Plans <ArrowRight className="w-4 h-4 ml-2" />
+                            </UpgradePlansButton>
                         </CardContent>
                     </Card>
                 </div>

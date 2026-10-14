@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Store, Lock, Crown } from 'lucide-react';
 import {
@@ -14,6 +14,7 @@ import {
 import { supabase } from '@/lib/supabaseClient';
 import { tierOf } from '@/lib/tierLimits';
 import { createPageUrl } from '@/utils';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 
 /**
  * Dashboard hero button for the per-breeder store page.
@@ -83,9 +84,13 @@ export default function MyStoreButton({ user }) {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2">
-                        <Button asChild className="bg-emerald-600 hover:bg-emerald-500">
-                            <Link to={createPageUrl('Membership')}>See plans</Link>
-                        </Button>
+                        <UpgradePlansButton
+                            limitType="my_store"
+                            surface="my_store_locked"
+                            className="bg-emerald-600 hover:bg-emerald-500"
+                        >
+                            See plans
+                        </UpgradePlansButton>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
