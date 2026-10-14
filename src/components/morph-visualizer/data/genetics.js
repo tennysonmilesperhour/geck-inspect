@@ -147,6 +147,27 @@ export function detectWarnings(selections) {
     });
   }
 
+  // Cappuccino and Sable share one gene, so an animal holds two copies at most.
+  const capp = mend.cappuccino || Z.ABSENT;
+  const sable = mend.sable || Z.ABSENT;
+  if (capp !== Z.ABSENT && sable !== Z.ABSENT) {
+    if (capp === Z.SUPER || sable === Z.SUPER) {
+      warnings.push({
+        severity: 'lethal',
+        traitId: 'sable',
+        title: 'Not a possible genotype',
+        body: 'Cappuccino and Sable are versions of the same gene, so a gecko holds two copies at most. A super of one cannot also carry the other. One Cappuccino plus one Sable is a Luwak.',
+      });
+    } else {
+      warnings.push({
+        severity: 'info',
+        traitId: 'sable',
+        title: 'Luwak (Cappuccino + Sable)',
+        body: 'One Cappuccino copy and one Sable copy on the same gene. A Luwak can never be a super, which makes Cappuccino x Sable the safe way to combine them.',
+      });
+    }
+  }
+
   // Empty Back vs pattern traits
   if (mend.empty_back && mend.empty_back !== Z.ABSENT) {
     const pattern = selections.patterns || {};

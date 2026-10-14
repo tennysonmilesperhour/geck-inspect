@@ -68,7 +68,7 @@ const SECTIONS = [
             <BulletList items={[
               'Dominant: a single copy is enough to show the trait. The gecko looks the same whether it has one or two copies.',
               'Recessive: the trait only shows when both alleles are the recessive version. A single copy is "het", invisible but still passable to offspring. Axanthic is the cleanest crested gecko example.',
-              'Incomplete dominant: one copy produces the visual form, and two copies produce a more extreme "super" form. MOST proven crested gecko morphs work this way: Lilly White, Cappuccino, Soft Scale, and White Wall are all incomplete dominants.',
+              'Incomplete dominant: one copy produces the visual form, and two copies produce a more extreme "super" form. MOST proven crested gecko morphs work this way: Lilly White, Cappuccino, Sable, Soft Scale, and White Wall are all incomplete dominants.',
               'Codominant in the strict sense (both alleles expressing simultaneously without blending) is rare in crested geckos. The hobby uses "codominant" and "incomplete dominant" loosely.',
             ]} />
             <Callout items={[
@@ -282,6 +282,25 @@ const SECTIONS = [
               'Cappuccino × Normal → 50% visual Cappuccino, 50% normal (SAFEST)',
               'Cappuccino × Cappuccino → 25% Super Cappuccino (Melanistic, health concerns), 50% Cappuccino, 25% normal',
               'Not every brown crested gecko with a dorsal pattern is Cappuccino, lineage confirms it',
+            ]} />
+          </>
+        )
+      },
+      {
+        title: 'Sable',
+        content: (
+          <>
+            <BulletList items={[
+              'Inheritance: INCOMPLETE DOMINANT. Single copy = Sable (darker, saturated chocolate tones with reduced pattern). Two copies = Super Sable, darker still. There is no hidden het: one copy shows.',
+              'Visual expression: the body stays notably dark even when fired down, and pattern reads quieter than on non-Sable siblings. Lighting and fired state can make any gecko look dark, so lineage confirms it.',
+              'Same gene as Cappuccino: Sable and Cappuccino are different versions (alleles) of one gene, along with Highway. A gecko holds two copies at most, so it can carry one Cappuccino and one Sable, but not two of each.',
+              'Super form health: Super Sable appears viable. Many breeders still prefer Sable × Normal or Sable × Cappuccino.',
+              'History: founded in the Rialto line at Gecko Haven, from Pinch × Mokolii, two unrelated geckos out of Gorgeous Gecko in Texas.',
+            ]} />
+            <Callout items={[
+              'Sable × Normal → 50% visual Sable, 50% normal',
+              'Sable × Sable → 25% Super Sable, 50% Sable, 25% normal',
+              'Cappuccino × Sable → 25% Luwak (one of each), 25% Cappuccino, 25% Sable, 25% normal. Never a super.',
             ]} />
           </>
         )

@@ -167,6 +167,10 @@ export const ILLUSTRATED_GECKO_PRESETS = {
     label: 'Cappuccino',
     phenotype: { palette: { base: '#3d2416', pattern: '#e5cfa6', outline: '#140b06', crest: '#5a3a26' }, dorsal: 1, dorsalStyle: 'saddle' },
   },
+  sable: {
+    label: 'Sable',
+    phenotype: { palette: { base: '#2e1b10', dark: '#160c06', pattern: '#a88a66', outline: '#0e0703', crest: '#3e2616' }, dorsal: 0.6, flameTongues: 0.4, lateral: 0.3 },
+  },
   albino: {
     label: 'Albino',
     phenotype: {

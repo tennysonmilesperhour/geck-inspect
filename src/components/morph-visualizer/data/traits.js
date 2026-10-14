@@ -113,6 +113,29 @@ export const MENDELIAN_MORPHS = [
       'Coffee-toned body with a continuous, paler "coffee-stain" dorsum. Often described as a walking chocolate-cream pattern.',
   },
   {
+    id: 'sable',
+    name: 'Sable',
+    shortCode: 'Sbl',
+    category: 'mendelian',
+    genetics: {
+      type: GENETICS_TYPE.INCOMPLETE_DOMINANT,
+      superForm: 'Super Sable',
+      superLethal: false,
+      summary:
+        'Incomplete dominant. One copy = visual Sable with darker, saturated chocolate tones and reduced pattern. Two copies = Super Sable, darker still, which appears healthy. Same gene as Cappuccino: one copy of each makes a Luwak.',
+    },
+    epistasis: { darkensBase: true, mutesPattern: true },
+    visual: {
+      layer: 'sable',
+      bodyHex: '#2e1b10',
+      superBodyHex: '#1d110a',
+    },
+    rarity: 4,
+    valueHint: 750,
+    description:
+      'Deep, saturated chocolate body that stays notably dark even when fired down, with pattern that reads quieter than on non-Sable siblings.',
+  },
+  {
     id: 'axanthic',
     name: 'Axanthic',
     shortCode: 'Ax',

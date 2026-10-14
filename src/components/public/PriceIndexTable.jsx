@@ -27,7 +27,7 @@ const TRAIT_SLUGS = {
   'Reverse Pinstripe': 'reverse-pinstripe',
 };
 const GUIDE_TRAITS = new Set([
-  'Harlequin', 'Pinstripe', 'Dalmatian', 'Tiger', 'Brindle', 'Axanthic', 'Cappuccino',
+  'Harlequin', 'Pinstripe', 'Dalmatian', 'Tiger', 'Brindle', 'Axanthic', 'Cappuccino', 'Sable',
   'Patternless', 'Lavender', 'Olive', 'Cream', 'Buckskin', 'Hypo',
 ]);
 const slugFor = (trait) => TRAIT_SLUGS[trait] || (GUIDE_TRAITS.has(trait) ? trait.toLowerCase() : null);

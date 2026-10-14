@@ -32,6 +32,7 @@ const GENE_MORPH_LINKS = [
   ['Lilly White', 'lilly-white'],
   ['Axanthic', 'axanthic'],
   ['Cappuccino', 'cappuccino'],
+  ['Sable', 'sable'],
   ['Albino', 'albino'],
 ];
 

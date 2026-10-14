@@ -48,6 +48,18 @@ function lightenHex(hex, amount = 0.2) {
   return `#${nr.toString(16).padStart(2, '0')}${ng.toString(16).padStart(2, '0')}${nb.toString(16).padStart(2, '0')}`;
 }
 
+function mixHex(a, b, amount = 0.5) {
+  // amount 0 → a, 1 → b
+  const pa = a.replace('#', '');
+  const pb = b.replace('#', '');
+  const ch = (i) => {
+    const x = parseInt(pa.slice(i, i + 2), 16);
+    const y = parseInt(pb.slice(i, i + 2), 16);
+    return Math.round(x + (y - x) * amount).toString(16).padStart(2, '0');
+  };
+  return `#${ch(0)}${ch(2)}${ch(4)}`;
+}
+
 function darkenHex(hex, amount = 0.2) {
   const h = hex.replace('#', '');
   const r = parseInt(h.slice(0, 2), 16);
@@ -181,6 +193,33 @@ export function composePhenotype(selections) {
     });
   }
 
+  // Sable, saturated chocolate body that stays dark when fired down, and a
+  // quieter pattern. It sits on the same gene as Cappuccino, so one copy of
+  // each is a Luwak: Cappuccino keeps its dorsum, Sable darkens the body.
+  const sableSuper = mend.sable === Z.SUPER;
+  if (expressed.sable) {
+    const sable = TRAITS_BY_ID.sable.visual;
+    const sableBody = sableSuper ? sable.superBodyHex : sable.bodyHex;
+    palette.base    = expressed.cappuccino ? mixHex(palette.base, sableBody, 0.6) : sableBody;
+    palette.shadow  = darkenHex(palette.base, 0.3);
+    if (!expressed.cappuccino) {
+      palette.dorsum    = lightenHex(palette.base, 0.12);
+      palette.highlight = lightenHex(palette.base, 0.2);
+    }
+    palette.belly   = mixHex(palette.belly, palette.base, 0.4);
+    palette.pattern = mixHex(palette.pattern, palette.base, sableSuper ? 0.55 : 0.35);
+    // Sable stays dark fired down, so the pale fired-down wash is lighter.
+    fireFactor = Math.max(fireFactor, sableSuper ? 0.6 : 0.5);
+    reasoning.push({
+      trait: 'sable',
+      message: expressed.cappuccino
+        ? 'Luwak (Cappuccino + Sable), Cappuccino dorsum over a darker Sable body. Never a super.'
+        : sableSuper
+          ? 'Super Sable, very dark chocolate body and strongly muted pattern, dark even when fired down.'
+          : 'Sable, saturated chocolate body that stays dark when fired down, with a quieter pattern.',
+    });
+  }
+
   // Lilly White, bright body highlights.
   if (expressed.lilly_white) {
     palette.accent    = TRAITS_BY_ID.lilly_white.visual.floodColor;
@@ -221,6 +260,10 @@ export function composePhenotype(selections) {
       palette.base   = desaturateHex(palette.base, amt);
       palette.shadow = desaturateHex(palette.shadow, amt);
       palette.dorsum = desaturateHex(palette.dorsum, amt);
+    }
+    // Sable reads with less pattern; Super Sable with even less.
+    if (expressed.sable && p.id !== 'phantom' && p.id !== 'patternless') {
+      val = Math.max(0, val - (sableSuper ? 2 : 1));
     }
     // Patternless or dorsal suppression mutes dorsal-touching patterns.
     if (suppressed.dorsal && (p.id === 'pinstripe')) {
