@@ -17,7 +17,7 @@
  *      <link rel="canonical">, Open Graph tags, Twitter tags, a page-level
  *      JSON-LD block, and a <noscript> body with real text pulled from the
  *      canonical data sources (morph-guide.js, care-guide.js,
- *      blog-posts.js).
+ *      blog-posts.js, and membershipSeo.js for /Membership).
  *
  * JS-executing crawlers (Googlebot) still hydrate the React SPA over the
  * top of this static shell; react-helmet-async replaces the <title> and
@@ -59,6 +59,12 @@ import {
   morphInheritanceHubs,
 } from './seo-routes.mjs';
 import { OPEN_DATASETS, MCP_URL, openDataJsonLd } from '../src/data/open-datasets.js';
+import {
+  MEMBERSHIP_FAQS,
+  MEMBERSHIP_JSON_LD,
+  MEMBERSHIP_PLAN_TABLE,
+  membershipShellCopy,
+} from '../src/lib/membershipSeo.js';
 import {
   FOUNDER_NAME,
   FOUNDER_URL,
@@ -927,6 +933,28 @@ function openDataMeta(route) {
   };
 }
 
+/**
+ * /Membership: the plan table, the FAQ, and SoftwareApplication Offers.
+ * The React page already shows this to browsers. Non-JS crawlers only
+ * read this shell, so the same copy has to be in the static HTML.
+ */
+function membershipMeta(route) {
+  const meta = genericMeta(route);
+  const copy = membershipShellCopy();
+  const webPage = meta.jsonLd.find((node) => node['@type'] === 'WebPage');
+  return {
+    ...meta,
+    bodyHeading: copy.heading,
+    bodyLead: copy.lead,
+    bodyParagraphs: copy.paragraphs,
+    table: MEMBERSHIP_PLAN_TABLE,
+    faq: MEMBERSHIP_FAQS.map((item) => ({ question: item.q, answer: item.a })),
+    // MEMBERSHIP_JSON_LD already carries the breadcrumb and FAQPage, so
+    // the generic breadcrumb is left out and the two lists do not repeat.
+    jsonLd: [webPage, ...MEMBERSHIP_JSON_LD].filter(Boolean),
+  };
+}
+
 /** /crested-gecko-price: the hand-written guide plus the live asking prices. */
 function priceGuideMeta(route) {
   const meta = genericMeta(route);
@@ -951,6 +979,7 @@ function priceGuideMeta(route) {
 }
 
 function routeMeta(route) {
+  if (route.path === '/Membership') return membershipMeta(route);
   if (route.path === '/MorphGuide') return morphGuideIndexMeta(route);
   if (route.path === '/data') return openDataMeta(route);
   if (route.path === '/crested-gecko-price') return priceGuideMeta(route);

@@ -31,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { RETIRED_PAGES } from '../src/lib/retiredPages.js';
 // Live prices, so the prerendered /Membership snippet can never drift
 // from what the page actually charges.
-import { TIER_PRICING, TRIAL_DAYS } from '../src/lib/stripe-config.js';
+import { membershipMetaDescription } from '../src/lib/membershipSeo.js';
 // The morph dataset is a plain, dependency-free ES module, so Node imports
 // it directly. Hub titles, counts and the morph route list come from it.
 import { MORPHS, INHERITANCE, MORPH_CATEGORIES } from '../src/data/morph-guide.js';
@@ -446,11 +446,10 @@ export const STATIC_ROUTES = [
     path: '/Membership',
     priority: 0.6,
     changefreq: 'monthly',
-    lastmod: dateOf('src/pages/Membership.jsx', 'src/lib/stripe-config.js'),
+    lastmod: dateOf('src/pages/Membership.jsx', 'src/lib/stripe-config.js', 'src/lib/membershipSeo.js'),
     meta: {
       title: 'Pricing & Plans, Geck Inspect',
-      description:
-        `Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper (${TIER_PRICING.keeper.monthly.price}/mo or ${TIER_PRICING.keeper.annual.price}/yr), Breeder (${TIER_PRICING.breeder.monthly.price}/mo or ${TIER_PRICING.breeder.annual.price}/yr), and Enterprise. ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`,
+      description: membershipMetaDescription(),
     },
   },
   // /AuthPortal is intentionally absent: a sign-in form has no place in the

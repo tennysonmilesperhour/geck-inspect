@@ -52,6 +52,7 @@ const FILES = [
   'src/pages/Marketplace.jsx',
   'src/pages/MarketplaceBuy.jsx',
   'src/pages/Membership.jsx',
+  'src/lib/membershipSeo.js',
   'src/data/morph-guide.js',
   'src/data/care-guide.js',
   'src/data/project-lines.js',
