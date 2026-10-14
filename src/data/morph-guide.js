@@ -778,6 +778,10 @@ export const MORPHS = [
       {
         "slug": "frappuccino",
         "difference": "Frappuccino combines Cappuccino with Lilly White; appearance is variable and requires supporting lineage."
+      },
+      {
+        "slug": "sable",
+        "difference": "Sable is a different version of the same gene; Cappuccino x Sable makes a Luwak, not a super."
       }
     ],
     aliases: ['Cap', 'Cappy'],
@@ -801,11 +805,54 @@ export const MORPHS = [
     ],
     history:
       "The project was developed in South Korea and later investigated through breeder collaborations, including Pangea.",
-    combinesWith: ['lilly-white', 'soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
+    combinesWith: ['lilly-white', 'sable', 'soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
     sources: [
       "https://www.pangeareptile.com/blogs/blog/cappuccino-frappuccino-melanistic"
     ],
     notes: "Two Cappuccino copies produce the melanistic form associated with serious health concerns. Avoid Cappuccino-to-Cappuccino pairings.",
+  },
+  {
+    slug: 'sable',
+    name: 'Sable',
+    definition:
+      "A Sable crested gecko carries one copy of an incomplete-dominant trait that gives darker, saturated chocolate tones with reduced pattern, and it sits on the same gene as Cappuccino.",
+    lookalikes: [
+      {
+        "slug": "cappuccino",
+        "difference": "Cappuccino and Sable are different versions of the same gene; a dark brown animal needs lineage to say which one it carries."
+      },
+      {
+        "slug": "chocolate",
+        "difference": "Chocolate is a base color description; Sable is a proven gene and stays notably dark even when fired down."
+      }
+    ],
+    aliases: ['Super Sable'],
+    category: 'color',
+    inheritance: 'incomplete-dominant',
+    rarity: 'uncommon',
+    priceTier: '$$$',
+    priceRange: '$550 to $1,200',
+    summary:
+      "Incomplete-dominant trait with darker, saturated tones and reduced pattern. Same gene as Cappuccino.",
+    description:
+      "One copy makes a visual Sable and two copies make a Super Sable, so there is no hidden het. Sable sits on the same gene as Cappuccino and Highway. A Cappuccino x Sable pairing produces Luwak (one copy of each), which can never be a super. Lighting, fired state and image processing can make any gecko look dark, so photos alone do not prove Sable.",
+    keyFeatures: [
+      "Darker, saturated chocolate tones",
+      "Reduced pattern compared with non-Sable siblings",
+      "Stays notably dark even when fired down",
+      "No hidden het: one copy is visible"
+    ],
+    visualIdentifiers: [
+      "Compare fired-down photos with non-Sable siblings",
+      "Confirm with documented lineage, since many dark geckos get labeled Sable"
+    ],
+    history:
+      "Founded in the Rialto line at Gecko Haven: Pinch x Mokolii, two unrelated geckos from Gorgeous Gecko in Texas, hatched Rialto, the first known Sable.",
+    combinesWith: ['cappuccino', 'lilly-white', 'axanthic', 'extreme-harlequin'],
+    sources: [
+      "https://www.morphmarket.com/morphpedia/crested-geckos/sable/"
+    ],
+    notes: "Super Sable appears viable. Cappuccino x Sable (Luwak) is the safe way to combine the two, since it can never make a Super Cappuccino.",
   },
   {
     slug: 'frappuccino',

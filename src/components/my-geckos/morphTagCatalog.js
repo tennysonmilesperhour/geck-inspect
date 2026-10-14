@@ -34,6 +34,7 @@ export const MORPH_CATEGORIES = {
     morphs: [
       "Lilly White",
       "Cappuccino", "Super Cappuccino",
+      "Sable", "Super Sable",
       "Soft Scale", "Super Soft Scale",
       "Empty Back", "Super Empty Back",
       "White Wall",
@@ -52,9 +53,12 @@ export const MORPH_CATEGORIES = {
     badge: "bg-fuchsia-700",
     morphs: [
       "Frappuccino",
+      "Luwak",
       "Cappuccino Lilly White",
+      "Sable Lilly White",
       "Axanthic Lilly White",
       "Axanthic Cappuccino",
+      "Axanthic Sable",
       "Soft Scale Lilly White",
       "Soft Scale Cappuccino",
       "Moonglow Lilly White",

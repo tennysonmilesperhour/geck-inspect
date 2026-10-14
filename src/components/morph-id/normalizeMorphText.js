@@ -46,6 +46,8 @@ const ALIASES = {
   axanthic_vca:  ['axanthic vca', 'vca axanthic', 'axanthic (vca)', 'vca line axanthic'],
   axanthic_tsm:  ['axanthic tsm', 'tsm axanthic', 'axanthic (tsm)'],
   cappuccino:    ['cappuccino', 'cappu', 'capp'],
+  sable:         ['sable', 'super sable'],
+  luwak:         ['luwak'],
   frappuccino:   ['frappuccino', 'frappu', 'frapp'],
   phantom_expression: ['phantom'],
   cream_on_cream: ['cream on cream', 'cream-on-cream', 'c2', 'c squared', 'cream squared'],

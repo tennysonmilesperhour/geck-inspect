@@ -128,6 +128,7 @@ export const KNOWN_PATH_PATTERNS = [
   "/MorphGuide/white-wall",
   "/MorphGuide/white-wall-white-spot",
   "/MorphGuide/cappuccino",
+  "/MorphGuide/sable",
   "/MorphGuide/frappuccino",
   "/MorphGuide/lilly-white",
   "/MorphGuide/axanthic",

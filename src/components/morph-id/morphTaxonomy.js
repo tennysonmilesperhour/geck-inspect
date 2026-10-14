@@ -18,7 +18,7 @@
 // and prefer adding new entries over mutating existing ids (ids are persisted
 // in the `gecko_images` table and used for label stability across versions).
 
-export const TAXONOMY_VERSION = '2026.09.28.3';
+export const TAXONOMY_VERSION = '2026.10.14.1';
 
 export const VISUAL_PROFILE_AXES = [
   { key: 'pattern_family', label: 'Pattern coverage' },
@@ -98,6 +98,10 @@ export const GENETIC_TRAITS = [
     notes: 'Different axanthic line; cross-line compatibility unconfirmed in some tests.' },
   { id: 'cappuccino',       label: 'Cappuccino',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'cappuccino',
     notes: 'Foundation Genetics: incomplete dominant (NOT codominant). Discovered by Reptile City Korea (Donald Hendrickson, ~2020). Super form = Super Cappuccino / Melanistic, with documented health concerns (reduced nostril size, breathing difficulty). Allelic with Sable and Highway.' },
+  { id: 'sable',            label: 'Sable',             inheritance: 'incomplete_dominant',  canonical_trait_id: 'sable',
+    notes: 'Foundation Genetics: incomplete dominant. Founded in the Rialto line (Gecko Haven). Darker, saturated chocolate tones with reduced pattern that stay dark even fired down. Super form = Super Sable. Allelic with Cappuccino and Highway, so Cappuccino x Sable makes Luwak, never a super. Lighting and fired state can make any gecko look dark; lineage confirms it.' },
+  { id: 'luwak',            label: 'Luwak',             inheritance: 'combo phenotype',
+    notes: 'Combo morph: one Cappuccino allele plus one Sable allele at the same locus (compound heterozygote). Not a super form. Needs lineage to confirm.' },
   { id: 'frappuccino',      label: 'Frappuccino',       inheritance: 'combo phenotype',
     notes: 'Combo morph: Cappuccino + Lilly White. Not a single gene.' },
   { id: 'phantom_expression', label: 'Phantom',          inheritance: 'lineage_required',

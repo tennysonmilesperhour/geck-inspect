@@ -194,11 +194,11 @@ export const MORPH_GUIDE = {
                 'Brown/tan base with reduction of orange/yellow. Discovered by Reptile City Korea. Super cappuccino exists and is viable (unlike super Lilly White).',
             },
             {
-              meta: 'RECESSIVE',
+              meta: 'INCOMPLETE DOMINANT',
               tone: 'moss',
               title: 'Sable',
               text:
-                'Dark, muted expression with reduced red/orange pigmentation. Newer trait, still being proven out. Pairs beautifully with Cappuccino and Lilly White lines.',
+                'Dark, saturated chocolate tones with reduced pattern. Same gene as Cappuccino, so Cappuccino x Sable makes a Luwak, never a super. Super Sable appears healthy.',
             },
           ],
         },
@@ -222,12 +222,12 @@ export const MORPH_GUIDE = {
             {
               title: 'RECESSIVE',
               text:
-                'Needs TWO copies to show. Hidden carriers ("hets") look normal. Axanthic and Sable work this way. A het × het pairing = 25% visual, 50% het, 25% normal.',
+                'Needs TWO copies to show. Hidden carriers ("hets") look normal. Axanthic and Phantom work this way. A het × het pairing = 25% visual, 50% het, 25% normal.',
             },
             {
               title: 'INCOMPLETE DOMINANT',
               text:
-                'One copy shows a visible partial expression. Two copies = "super" form, sometimes lethal. Lilly White and Cappuccino work this way.',
+                'One copy shows a visible partial expression. Two copies = "super" form, sometimes lethal. Lilly White, Cappuccino and Sable work this way.',
             },
             {
               title: 'POLYGENIC',
@@ -452,7 +452,7 @@ export const MORPH_GUIDE = {
               badge: '25% visual',
               tone: 'moss',
               title: 'Het × Het (recessive)',
-              text: 'Axanthic or Sable. Lots of siblings to sort through.',
+              text: 'Axanthic or Phantom. Lots of siblings to sort through.',
             },
             {
               badge: '50/50',

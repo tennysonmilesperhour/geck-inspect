@@ -2,7 +2,7 @@
 // Kept as a flat list here so the edge function prompt can constrain the
 // model to return canonical ids. If you change the client taxonomy, update
 // this file and bump TAXONOMY_VERSION below.
-export const TAXONOMY_VERSION = "2026.09.28.3";
+export const TAXONOMY_VERSION = "2026.10.14.1";
 
 export const PRIMARY_MORPH_IDS = [
   "patternless", "flame", "chevron_flame", "harlequin", "extreme_harlequin",
@@ -14,14 +14,14 @@ export const PRIMARY_MORPH_IDS = [
 
 export const GENETIC_TRAIT_IDS = [
   "lily_white", "axanthic", "axanthic_vca", "axanthic_tsm", "cappuccino",
-  "frappuccino", "phantom_expression", "cream_on_cream", "moonglow", "soft_scale",
+  "sable", "luwak", "frappuccino", "phantom_expression", "cream_on_cream", "moonglow", "soft_scale",
   "whiteout", "empty_back", "white_wall", "hypo", "melanistic",
 ];
 
 // Deliberately narrower than the human annotation taxonomy. These are the
 // visible-expression labels the photo model may return without lineage data.
 export const PHOTO_GENETIC_TRAIT_IDS = [
-  "lily_white", "axanthic", "cappuccino", "frappuccino",
+  "lily_white", "axanthic", "cappuccino", "sable", "luwak", "frappuccino",
   "phantom_expression", "cream_on_cream", "soft_scale", "whiteout",
   "empty_back", "white_wall", "hypo",
 ];

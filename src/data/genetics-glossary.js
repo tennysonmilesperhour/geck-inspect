@@ -88,6 +88,8 @@ const GLOSSARY_GROUPS = [
       { term: 'Super Lilly White', def: 'The homozygous form of Lilly White. Confirmed embryonic-lethal, eggs develop partially then fail to hatch.' },
       { term: 'Axanthic', def: 'Recessive morph lacking yellow/red pigment. Appears gray/white/black regardless of base color genes. Two copies required.' },
       { term: 'Cappuccino', def: 'Incomplete-dominant morph with dark coffee-brown coloration and a connected dorsal pattern. Two copies produce the Super Cappuccino (Melanistic), which has documented health concerns.' },
+      { term: 'Sable', def: 'Incomplete-dominant morph with darker, saturated chocolate tones and reduced pattern that stay dark even when fired down. Two copies produce the Super Sable, which appears healthy. Sable sits on the same gene as Cappuccino and Highway.' },
+      { term: 'Luwak', def: 'A combo morph: one Cappuccino copy and one Sable copy on the same gene. Because Cappuccino and Sable are different versions of one gene, a Luwak is never a super, which makes Cappuccino x Sable the safe way to pair them.' },
       { term: 'Frappuccino', def: 'A combo morph: Cappuccino paired with Lilly White. It is not a super form and is not produced by Cappuccino x Cappuccino. Hatches brighter and whiter than a standard Lilly White, with dramatic head spotting.' },
       { term: 'Soft Scale', def: 'Incomplete-dominant morph with smaller, softer scales. Super form exists with some reported fertility concerns.' },
       { term: 'White Wall', def: 'Incomplete-dominant morph producing a distinct white lateral stripe along the belly wall. Foundation Genetics calls the same gene Whiteout. Unlike Super Lilly White, the super form is healthy.' },

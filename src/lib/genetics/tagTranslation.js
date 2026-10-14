@@ -93,6 +93,11 @@ const APP_TAGS = new Map(Object.entries({
   },
   'phantom frappuccino': { engine: ['Cappuccino', 'Lilly White', 'Visual Phantom'] },
   'luwak': { engine: ['Cappuccino', 'Sable'] },
+  // The engine has no "Super Sable" tag, so the genotype is set directly.
+  'super sable': { genotype: { SABLE_COMPLEX: ['sable', 'sable'] } },
+  'sable lilly white': { engine: ['Sable', 'Lilly White'] },
+  'lilly white sable': { engine: ['Sable', 'Lilly White'] },
+  'axanthic sable': { engine: ['Axanthic', 'Sable'] },
 
   // Pattern variants of a modeled gene
   'full pinstripe': { engine: ['Pinstripe'] },
@@ -336,6 +341,13 @@ export function translateMorphTags(tags) {
     const mapped = APP_TAGS.get(body);
     if (mapped?.reason) {
       notUsed.push({ tag, reason: mapped.reason });
+      continue;
+    }
+    if (mapped?.genotype) {
+      for (const [locus, pair] of Object.entries(mapped.genotype)) {
+        mergeLocus(loci, locus, [{ pair: [...pair], weight: 1 }]);
+      }
+      used.push({ tag, chance: 1 });
       continue;
     }
     // One engine call per part: the engine keeps only the last tag at a

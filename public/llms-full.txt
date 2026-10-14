@@ -1,6 +1,6 @@
 # Geck Inspect, full reference for AI assistants
 
-> Generated: 2026-10-12 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, price index and editorial blog. Smaller topic files are listed in https://geckinspect.com/llms.txt. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
+> Generated: 2026-10-14 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, price index and editorial blog. Smaller topic files are listed in https://geckinspect.com/llms.txt. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
 
 ---
 
@@ -65,7 +65,7 @@ Geck Inspect is a free-to-start web and mobile app for crested gecko keepers and
 
 ## Per-morph guide pages (public, crawlable)
 
-Each of the 34 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
+Each of the 35 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
 
 - Harlequin: https://geckinspect.com/MorphGuide/harlequin
 - Extreme Harlequin: https://geckinspect.com/MorphGuide/extreme-harlequin
@@ -83,6 +83,7 @@ Each of the 34 crested gecko morphs in the guide has its own page with a definit
 - White Wall: https://geckinspect.com/MorphGuide/white-wall
 - White Wall White Spot: https://geckinspect.com/MorphGuide/white-wall-white-spot
 - Cappuccino: https://geckinspect.com/MorphGuide/cappuccino
+- Sable: https://geckinspect.com/MorphGuide/sable
 - Frappuccino: https://geckinspect.com/MorphGuide/frappuccino
 - Lilly White: https://geckinspect.com/MorphGuide/lilly-white
 - Axanthic: https://geckinspect.com/MorphGuide/axanthic
@@ -917,6 +918,29 @@ Cappuccino appearance varies with age, base color and other traits. Breeders oft
 - Confirmation depends on the breeder's documented line and evidence
 
 **Notes.** Two Cappuccino copies produce the melanistic form associated with serious health concerns. Avoid Cappuccino-to-Cappuccino pairings.
+
+### Sable
+
+_Permalink: https://geckinspect.com/MorphGuide/sable_
+
+**Rarity:** Uncommon  
+**Inheritance:** Incomplete dominant  
+**Category:** Color modifier  
+**Typical adult price:** $550 to $1,200
+
+Incomplete-dominant trait with darker, saturated tones and reduced pattern. Same gene as Cappuccino.
+
+One copy makes a visual Sable and two copies make a Super Sable, so there is no hidden het. Sable sits on the same gene as Cappuccino and Highway. A Cappuccino x Sable pairing produces Luwak (one copy of each), which can never be a super. Lighting, fired state and image processing can make any gecko look dark, so photos alone do not prove Sable.
+
+**History.** Founded in the Rialto line at Gecko Haven: Pinch x Mokolii, two unrelated geckos from Gorgeous Gecko in Texas, hatched Rialto, the first known Sable.
+
+**Key features:**
+- Darker, saturated chocolate tones
+- Reduced pattern compared with non-Sable siblings
+- Stays notably dark even when fired down
+- No hidden het: one copy is visible
+
+**Notes.** Super Sable appears viable. Cappuccino x Sable (Luwak) is the safe way to combine the two, since it can never make a Super Cappuccino.
 
 ### Frappuccino
 
