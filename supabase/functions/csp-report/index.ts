@@ -28,6 +28,13 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const ALLOWED_DOCUMENT = /^https:\/\/(www\.)?geckinspect\.com(\/|$)/;
 const MAX_REPORTS_PER_REQUEST = 5;
 
+// Browser add-ons run their own scripts inside the page, and the policy
+// reports those as if the site had broken it. Their reports name the
+// extension scheme as the source or blocked file (on 14 Oct 2026, 3 of the
+// 13 "eval" and "wasm-eval" rows came from chrome-extension), so they are
+// dropped instead of logged.
+const EXTENSION_SOURCE = /^(chrome|moz|safari|safari-web|ms-browser|edge)-extension(:|$)/i;
+
 // Keep scheme, host and path only. A blocked address can carry a query
 // string with personal data (21 stored reports held a member's email
 // address that way), and the path is all the enforce decision needs.
@@ -105,6 +112,9 @@ Deno.serve(async (req: Request) => {
 
     const directive = pick(report, "effective-directive", "violated-directive", "effectiveDirective").slice(0, 80) || "unknown";
     const blocked = withoutQuery(pick(report, "blocked-uri", "blockedURL")).slice(0, 300);
+    const sourceFile = withoutQuery(pick(report, "source-file", "sourceFile")).slice(0, 300);
+    if (EXTENSION_SOURCE.test(sourceFile) || EXTENSION_SOURCE.test(blocked)) continue;
+
     const message = `CSP ${directive} blocked ${blocked || "(inline)"}`.slice(0, 1000);
     const url = withoutQuery(documentUri).slice(0, 500);
 
@@ -129,7 +139,7 @@ Deno.serve(async (req: Request) => {
         source: "csp-report",
         directive,
         blocked_uri: blocked,
-        source_file: withoutQuery(pick(report, "source-file", "sourceFile")).slice(0, 300) || null,
+        source_file: sourceFile || null,
         line_number: pick(report, "line-number", "lineNumber") || null,
         disposition: pick(report, "disposition") || null,
         original_policy_length: pick(report, "original-policy", "originalPolicy").length,
