@@ -24,7 +24,13 @@
 // dashboard is not changed from here): charge.refunded,
 // charge.dispute.created, charge.dispute.updated, charge.dispute.closed,
 // charge.dispute.funds_withdrawn, charge.dispute.funds_reinstated,
-// customer.subscription.trial_will_end.
+// customer.subscription.trial_will_end,
+// checkout.session.async_payment_succeeded.
+// Lifetime purchases are fulfilled from checkout.session.completed when
+// payment_status is paid (and from async_payment_succeeded for delayed
+// payment methods). A full refund or a dispute of that payment removes
+// lifetime access. customer.subscription.updated and deleted for the old
+// plan must not downgrade a lifetime member.
 // Keep both invoice.paid and invoice.payment_succeeded. They are one
 // payment delivered twice, and the handler applies that payment once.
 //
@@ -45,15 +51,17 @@ function jsonResponse(body: unknown, status = 200) {
 // src/lib/stripe-config.js and the copy in stripe-checkout (a unit test
 // keeps all three in sync). Used to turn a Stripe price id back into a
 // tier and a billing cycle when a subscription renews or changes.
-type Cycle = "monthly" | "annual";
+type Cycle = "monthly" | "annual" | "lifetime";
 const PRICE_CATALOG: Record<string, Partial<Record<Cycle, string>>> = {
   keeper: {
     monthly: "price_1TUxEsLBdc4xGjxqyPV4DOYb",
     annual: "price_1TVMLeLBdc4xGjxqA856z0Oe",
+    lifetime: "price_1UQV93LBdc4xGjxq4AvXpui4",
   },
   breeder: {
     monthly: "price_1TUxHGLBdc4xGjxqeieYNdE4",
     annual: "price_1TVMOCLBdc4xGjxqK2HTmGfm",
+    lifetime: "price_1UQV94LBdc4xGjxqwzNWvXyI",
   },
   enterprise: {
     monthly: "price_1TVLvmLBdc4xGjxqCVzbz0GQ",
@@ -390,6 +398,129 @@ async function verifyStripeSignature(
   return true;
 }
 
+// A paid one-time Checkout session for a lifetime price. Unpaid sessions
+// (delayed payment methods) wait for async_payment_succeeded. Line items
+// are not always expanded, so session metadata is the fallback.
+function lifetimeCheckoutFulfillable(session: any): boolean {
+  if (session?.mode !== "payment" || session?.payment_status !== "paid") return false;
+  const fromLine = priceIdToPlan(linePriceId(membershipLine(session?.line_items?.data)));
+  if (fromLine?.cycle === "lifetime") return true;
+  const cycle = session?.metadata?.billing_cycle
+    || (typeof session?.payment_intent === "object" ? session.payment_intent?.metadata?.billing_cycle : null);
+  return cycle === "lifetime";
+}
+
+function lifetimeTierFromSession(session: any): string | null {
+  const fromLine = priceIdToPlan(linePriceId(membershipLine(session?.line_items?.data)));
+  if (fromLine?.cycle === "lifetime" && (fromLine.tier === "keeper" || fromLine.tier === "breeder")) {
+    return fromLine.tier;
+  }
+  const tier = session?.metadata?.tier
+    || (typeof session?.payment_intent === "object" ? session.payment_intent?.metadata?.tier : null);
+  if (tier === "keeper" || tier === "breeder") return tier;
+  return null;
+}
+
+// Repeat delivery of the same paid session must not move the start date.
+// A refunded or disputed payment must not be granted again.
+function lifetimeGrantPatch(profile: { membership_billing_cycle?: string | null } | null, tier: string) {
+  const already = profile?.membership_billing_cycle === "lifetime";
+  return {
+    membership_tier: tier,
+    membership_billing_cycle: "lifetime" as const,
+    stripe_subscription_id: null,
+    subscription_status: "active",
+    membership_expires_at: null,
+    ...(already ? {} : { paid_membership_started_at: new Date().toISOString() }),
+  };
+}
+
+function lifetimeGrantBlockedByPaymentStatus(status: string | null | undefined): boolean {
+  return status === "refunded" || status === "disputed";
+}
+
+function lifetimePaymentKey(paymentIntentId: string): string {
+  return `stripe-lifetime:${paymentIntentId}`;
+}
+
+// Subscription lifecycle events must not take lifetime access away.
+// The database write also filters on billing cycle, because this snapshot
+// can be stale if the lifetime grant commits while the event is in flight.
+function shouldApplySubscriptionEvent(profile: { membership_billing_cycle?: string | null } | null): boolean {
+  return profile?.membership_billing_cycle !== "lifetime";
+}
+
+function subscriptionAccessWrite(profile: { membership_billing_cycle?: string | null } | null, sub: any) {
+  if (!shouldApplySubscriptionEvent(profile)) return null;
+  return subscriptionAccessPatch(sub);
+}
+
+// Statuses that still bill. incomplete is included so a half-finished
+// subscription cannot start charging after a lifetime purchase.
+const CANCEL_AFTER_LIFETIME = new Set([
+  "active", "trialing", "past_due", "unpaid", "paused", "incomplete",
+]);
+
+function subscriptionIdsToCancel(
+  profileSubId: string | null | undefined,
+  listed: { id?: string; status?: string }[] | null | undefined,
+): string[] {
+  const ids: string[] = [];
+  const add = (id: string | null | undefined) => {
+    if (id && !ids.includes(id)) ids.push(id);
+  };
+  add(profileSubId);
+  for (const sub of listed || []) {
+    if (CANCEL_AFTER_LIFETIME.has(sub?.status || "")) add(sub?.id);
+  }
+  return ids;
+}
+
+// DELETE /v1/subscriptions/:id. Both default to false; setting them makes
+// the "no credit, no proration" choice explicit. prorate=true would credit
+// unused time back to the customer.
+function immediateCancelBody(): URLSearchParams {
+  const body = new URLSearchParams();
+  body.set("prorate", "false");
+  body.set("invoice_now", "false");
+  return body;
+}
+
+function revokeAccessPatch() {
+  return {
+    subscription_status: "canceled",
+    membership_tier: "free",
+    membership_billing_cycle: null,
+    stripe_subscription_id: null,
+    membership_expires_at: null,
+  };
+}
+
+function lifetimeRestorePatch(tier: string) {
+  return {
+    membership_tier: tier,
+    membership_billing_cycle: "lifetime" as const,
+    stripe_subscription_id: null,
+    subscription_status: "active",
+    membership_expires_at: null,
+  };
+}
+
+function lifetimeChargeMatched(args: {
+  paymentEventCycle?: string | null;
+  paymentIntentMetadataCycle?: string | null;
+  invoiceCycle?: string | null;
+}): boolean {
+  return args.paymentEventCycle === "lifetime"
+    || args.paymentIntentMetadataCycle === "lifetime"
+    || args.invoiceCycle === "lifetime";
+}
+
+function lifetimeChargeDecision(matched: boolean, fullRefund: boolean): "revoke" | "partial" | "ignore" {
+  if (!matched) return "ignore";
+  return fullRefund ? "revoke" : "partial";
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
@@ -455,7 +586,7 @@ Deno.serve(async (req: Request) => {
     if (!customerId) return null;
     const { data } = await supabase
       .from("profiles")
-      .select("id, email, membership_tier, stripe_subscription_id, subscription_status")
+      .select("id, email, membership_tier, membership_billing_cycle, stripe_subscription_id, subscription_status")
       .eq("stripe_customer_id", customerId)
       .maybeSingle();
     return data || null;
@@ -533,11 +664,16 @@ Deno.serve(async (req: Request) => {
   // disputed latest payment stays revoked until a newer invoice is paid.
   const applySubscriptionAccess = async (profile: any, sub: any) => {
     if (!profile?.email || !sub?.id) return;
+    if (!shouldApplySubscriptionEvent(profile)) {
+      console.warn(`ignored subscription ${sub.id}: lifetime access stays in place`);
+      return;
+    }
     if (!isCurrentSubscription(profile, sub.id)) {
       console.warn(`ignored subscription ${sub.id}: ${profile.stripe_subscription_id} is current`);
       return;
     }
-    const patch = subscriptionAccessPatch(sub);
+    const patch = subscriptionAccessWrite(profile, sub);
+    if (!patch) return;
     let tier = patch.membership_tier;
     let cycle = patch.membership_billing_cycle;
     if (tier && tier !== "free") {
@@ -547,7 +683,7 @@ Deno.serve(async (req: Request) => {
         cycle = undefined;
       }
     }
-    await upsertProfileByEmail(profile.email, {
+    await writeBillingUnlessLifetime(profile.email, {
       stripe_subscription_id: patch.stripe_subscription_id,
       subscription_status: patch.subscription_status,
       ...(tier ? { membership_tier: tier } : {}),
@@ -635,7 +771,7 @@ Deno.serve(async (req: Request) => {
     }
   };
 
-  const claimPaidInvoice = async (inv: any, profile: any, tier: string | null) => {
+  const claimPaidInvoice = async (inv: any, profile: any, tier: string | null, cycle: string | null = null) => {
     const id = invoicePaymentKey(inv.id);
     const { data: existing, error: readError } = await supabase
       .from("payment_events")
@@ -656,6 +792,7 @@ Deno.serve(async (req: Request) => {
       amount_cents: inv.amount_paid,
       currency: inv.currency,
       membership_tier: tier,
+      billing_cycle: cycle,
       event_timestamp: new Date(Number(event.created || 0) * 1000).toISOString(),
     });
     if (error?.code === "23505") return "duplicate";
@@ -663,12 +800,249 @@ Deno.serve(async (req: Request) => {
     return "claimed";
   };
 
+  // Subscription writes skip a row whose billing cycle is already lifetime,
+  // including when this event was read before the lifetime grant committed.
+  // Null billing cycle still updates: SQL `<>` would drop those rows.
+  const writeBillingUnlessLifetime = async (email: string, patch: Record<string, unknown>) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ ...patch, updated_date: new Date().toISOString() })
+      .eq("email", email)
+      .or("membership_billing_cycle.is.null,membership_billing_cycle.neq.lifetime")
+      .select("id");
+    if (error) {
+      console.warn("billing update failed:", email, error.message);
+      throw error;
+    }
+    if (data && data.length > 0) return "updated";
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id, membership_billing_cycle")
+      .eq("email", email)
+      .maybeSingle();
+    if (existing?.membership_billing_cycle === "lifetime") return "lifetime";
+    if (!existing) {
+      await upsertProfileByEmail(email, patch);
+      return "inserted";
+    }
+    console.warn("billing update matched no row", email);
+    return "skipped";
+  };
+
+  const stripeSend = async (path: string, method: "POST" | "DELETE", form?: URLSearchParams) => {
+    const key = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!key) throw new Error("STRIPE_SECRET_KEY not set");
+    const res = await fetch(`https://api.stripe.com/v1/${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${key}`,
+        ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
+      },
+      body: form,
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  };
+
+  const cancelSubscriptionNow = async (subscriptionId: string) => {
+    const result = await stripeSend(`subscriptions/${subscriptionId}`, "DELETE", immediateCancelBody());
+    if (result.ok) return;
+    const message = String(result.data?.error?.message || "");
+    if (/canceled|incomplete_expired/i.test(message)) return;
+    throw new Error(message || `cancel ${subscriptionId} failed (${result.status})`);
+  };
+
+  const cancelPriorSubscriptions = async (customerId: string | null, profileSubId: string | null) => {
+    let listed: { id?: string; status?: string }[] = [];
+    if (customerId) {
+      const page = await stripeGet(
+        `subscriptions?customer=${encodeURIComponent(customerId)}&status=all&limit=100`,
+      );
+      if (!page) throw new Error("could not list subscriptions after lifetime purchase");
+      listed = page.data || [];
+    }
+    for (const id of subscriptionIdsToCancel(profileSubId, listed)) {
+      await cancelSubscriptionNow(id);
+    }
+  };
+
+  const lookupLifetimeCharge = async (charge: any) => {
+    const pi = chargePaymentIntentId(charge);
+    const invoiceId = await invoiceIdForCharge(charge);
+    let paymentEvent: any = null;
+    if (pi) {
+      const { data } = await supabase
+        .from("payment_events")
+        .select("id, billing_cycle, membership_tier, status, stripe_invoice_id")
+        .eq("id", lifetimePaymentKey(pi))
+        .maybeSingle();
+      paymentEvent = data;
+    }
+    if (!paymentEvent && invoiceId) {
+      const { data } = await supabase
+        .from("payment_events")
+        .select("id, billing_cycle, membership_tier, status, stripe_invoice_id")
+        .eq("stripe_invoice_id", invoiceId)
+        .eq("billing_cycle", "lifetime")
+        .limit(1);
+      paymentEvent = data?.[0] || null;
+    }
+    let intentCycle: string | null = null;
+    let intentTier: string | null = null;
+    let intent: any = null;
+    if (pi && !paymentEvent) {
+      intent = await stripeGet(`payment_intents/${pi}`);
+      intentCycle = intent?.metadata?.billing_cycle || null;
+      intentTier = intent?.metadata?.tier || null;
+    }
+    let invoiceCycle: string | null = null;
+    let invoiceTier: string | null = null;
+    if (invoiceId && !paymentEvent && intentCycle !== "lifetime") {
+      const inv = await stripeGet(`invoices/${invoiceId}`);
+      if (inv?.metadata?.billing_cycle === "lifetime") invoiceCycle = "lifetime";
+      const plan = priceIdToPlan(linePriceId(membershipLine(inv?.lines?.data)));
+      if (plan?.cycle === "lifetime") {
+        invoiceCycle = "lifetime";
+        invoiceTier = plan.tier;
+      }
+    }
+    const matched = lifetimeChargeMatched({
+      paymentEventCycle: paymentEvent?.billing_cycle,
+      paymentIntentMetadataCycle: intentCycle,
+      invoiceCycle,
+    });
+    return {
+      matched,
+      tier: paymentEvent?.membership_tier || intentTier || invoiceTier || null,
+      paymentEventId: paymentEvent?.id || (pi ? lifetimePaymentKey(pi) : null),
+      invoiceId: paymentEvent?.stripe_invoice_id || invoiceId,
+      status: paymentEvent?.status || null,
+      intentUnreadable: Boolean(pi && !paymentEvent && !intent && intentCycle !== "lifetime"),
+    };
+  };
+
+  const markLifetimePayment = async (
+    match: { paymentEventId: string | null; invoiceId: string | null },
+    status: string,
+    extras: {
+      email: string;
+      customerId: string | null;
+      amount?: number | null;
+      currency?: string | null;
+      tier?: string | null;
+    },
+  ) => {
+    if (match.paymentEventId) {
+      const { data, error } = await supabase
+        .from("payment_events")
+        .update({ status })
+        .eq("id", match.paymentEventId)
+        .select("id");
+      if (error) console.warn("lifetime payment status update failed:", error.message);
+      if ((!data || data.length === 0) && status !== "paid") {
+        const { error: insertError } = await supabase.from("payment_events").insert({
+          id: match.paymentEventId,
+          user_email: extras.email,
+          stripe_event_id: String(event.id || ""),
+          stripe_invoice_id: match.invoiceId,
+          stripe_customer_id: extras.customerId,
+          event_type: event.type,
+          status,
+          amount_cents: extras.amount ?? null,
+          currency: extras.currency || "usd",
+          membership_tier: extras.tier || null,
+          billing_cycle: "lifetime",
+          event_timestamp: new Date().toISOString(),
+        });
+        if (insertError && insertError.code !== "23505") {
+          console.warn("lifetime payment marker failed:", insertError.message);
+        }
+      }
+    }
+    if (match.invoiceId) {
+      await markInvoiceStatus(match.invoiceId, status, {
+        email: extras.email,
+        eventId: String(event.id || ""),
+        eventType: event.type,
+        customerId: extras.customerId,
+        subscriptionId: null,
+        amount: extras.amount,
+        currency: extras.currency,
+        insertIfMissing: false,
+      });
+    }
+  };
+
+  const grantLifetimeFromSession = async (session: any) => {
+    const customerId = stripeId(session.customer);
+    const profile = customerId ? await findProfileFromCustomer(customerId) : null;
+    const email = session.metadata?.supabase_email
+      || session.customer_details?.email
+      || profile?.email
+      || null;
+    if (!email) throw new Error("lifetime checkout has no member email");
+    const tier = lifetimeTierFromSession(session);
+    if (!tier) throw new Error("lifetime checkout has no keeper or breeder tier");
+    const pi = stripeId(session.payment_intent);
+    const paymentKey = pi ? lifetimePaymentKey(pi) : `stripe-lifetime-session:${session.id}`;
+    const { data: existingPay } = await supabase
+      .from("payment_events")
+      .select("status")
+      .eq("id", paymentKey)
+      .maybeSingle();
+    if (lifetimeGrantBlockedByPaymentStatus(existingPay?.status)) {
+      console.warn("lifetime grant skipped: payment is", existingPay?.status);
+      return;
+    }
+    const priorSubId = profile?.stripe_subscription_id || null;
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          email,
+          created_by: email,
+          stripe_customer_id: customerId,
+          ...lifetimeGrantPatch(profile, tier),
+          updated_date: new Date().toISOString(),
+        },
+        { onConflict: "email" },
+      )
+      .select("id");
+    if (profileError) throw profileError;
+    const { error: payError } = await supabase.from("payment_events").insert({
+      id: paymentKey,
+      user_email: email,
+      stripe_event_id: String(event.id || ""),
+      stripe_invoice_id: stripeId(session.invoice),
+      stripe_customer_id: customerId,
+      stripe_subscription_id: null,
+      event_type: event.type,
+      status: "paid",
+      amount_cents: session.amount_total ?? null,
+      currency: session.currency || "usd",
+      membership_tier: tier,
+      billing_cycle: "lifetime",
+      event_timestamp: new Date(Number(event.created || 0) * 1000).toISOString(),
+    });
+    if (payError && payError.code !== "23505") throw payError;
+    await cancelPriorSubscriptions(customerId, priorSubId);
+  };
+
   try {
     switch (event.type) {
-      case "checkout.session.completed": {
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded": {
         const session = event.data.object;
+        if (session.mode === "payment" || event.type === "checkout.session.async_payment_succeeded") {
+          if (session.mode === "payment" && lifetimeCheckoutFulfillable(session)) {
+            await grantLifetimeFromSession(session);
+          } else if (session.mode === "payment" && session.payment_status === "paid") {
+            console.warn("paid payment checkout is not a lifetime plan", session.id);
+          }
+          break;
+        }
         const profile = session.customer
-          ? await findProfileFromCustomer(session.customer)
+          ? await findProfileFromCustomer(stripeId(session.customer))
           : null;
         const email =
           session.metadata?.supabase_email ||
@@ -726,11 +1100,15 @@ Deno.serve(async (req: Request) => {
         const sub = event.data.object;
         const profile = await findProfileFromCustomer(stripeId(sub.customer));
         if (profile?.email) {
+          if (!shouldApplySubscriptionEvent(profile)) {
+            console.warn(`ignored ${event.type} for ${sub.id}: lifetime access stays in place`);
+            break;
+          }
           if (!isCurrentSubscription(profile, sub.id)) {
             console.warn(`ignored ${event.type} for ${sub.id}: ${profile.stripe_subscription_id} is current`);
             break;
           }
-          await upsertProfileByEmail(profile.email, {
+          await writeBillingUnlessLifetime(profile.email, {
             subscription_status: "canceled",
             membership_tier: "free",
             membership_billing_cycle: null,
@@ -741,8 +1119,13 @@ Deno.serve(async (req: Request) => {
       case "invoice.payment_failed": {
         const inv = event.data.object;
         const profile = await findProfileFromCustomer(stripeId(inv.customer));
-        if (profile?.email && isCurrentSubscription(profile, invoiceSubscriptionId(inv))) {
-          await upsertProfileByEmail(profile.email, {
+        if (!profile?.email) break;
+        if (!shouldApplySubscriptionEvent(profile)) {
+          console.warn(`ignored invoice.payment_failed: lifetime access stays in place`);
+          break;
+        }
+        if (isCurrentSubscription(profile, invoiceSubscriptionId(inv))) {
+          await writeBillingUnlessLifetime(profile.email, {
             subscription_status: "past_due",
           });
         }
@@ -753,6 +1136,28 @@ Deno.serve(async (req: Request) => {
         const profile = await findProfileFromCustomer(stripeId(charge.customer));
         if (!profile?.email) {
           console.warn("ignored charge.refunded: could not match the charge to a member");
+          break;
+        }
+        const lifetime = await lookupLifetimeCharge(charge);
+        if (profile.membership_billing_cycle === "lifetime" && lifetime.intentUnreadable && !lifetime.matched) {
+          throw new Error("could not read payment intent to match lifetime refund");
+        }
+        if (lifetime.matched) {
+          const effect = lifetimeChargeDecision(true, isFullRefund(charge));
+          await markLifetimePayment(
+            lifetime,
+            effect === "revoke" ? "refunded" : "partial_refund",
+            {
+              email: profile.email,
+              customerId: stripeId(charge.customer),
+              amount: charge.amount_refunded,
+              currency: charge.currency,
+              tier: lifetime.tier,
+            },
+          );
+          if (effect === "revoke") {
+            await upsertProfileByEmail(profile.email, revokeAccessPatch());
+          }
           break;
         }
         const invoiceId = await invoiceIdForCharge(charge);
@@ -802,6 +1207,39 @@ Deno.serve(async (req: Request) => {
         const profile = await findProfileFromCustomer(stripeId(charge?.customer));
         if (!profile?.email) {
           console.warn(`ignored ${event.type}: could not match the charge to a member`);
+          break;
+        }
+        const lifetime = await lookupLifetimeCharge(charge || { payment_intent: dispute.payment_intent });
+        if (profile.membership_billing_cycle === "lifetime" && lifetime.intentUnreadable && !lifetime.matched) {
+          throw new Error("could not read payment intent to match lifetime dispute");
+        }
+        if (lifetime.matched) {
+          const customerId = stripeId(charge?.customer);
+          if (decision === "restore") {
+            if (lifetime.status === "refunded") break;
+            await markLifetimePayment(lifetime, "paid", {
+              email: profile.email,
+              customerId,
+              tier: lifetime.tier,
+            });
+            if (lifetime.tier === "keeper" || lifetime.tier === "breeder") {
+              await upsertProfileByEmail(profile.email, lifetimeRestorePatch(lifetime.tier));
+            } else {
+              console.warn("dispute won but the lifetime tier is unknown");
+            }
+            break;
+          }
+          await markLifetimePayment(lifetime, "disputed", {
+            email: profile.email,
+            customerId,
+            amount: dispute.amount,
+            currency: dispute.currency,
+            tier: lifetime.tier,
+          });
+          await upsertProfileByEmail(profile.email, {
+            ...revokeAccessPatch(),
+            subscription_status: dispute.status === "lost" ? "canceled" : "disputed",
+          });
           break;
         }
         const invoiceId = await invoiceIdForCharge(charge || { payment_intent: dispute.payment_intent });
@@ -872,7 +1310,7 @@ Deno.serve(async (req: Request) => {
           // Live and test both claim the invoice id. invoice.paid and
           // invoice.payment_succeeded then cannot both apply the referral.
           // A lost race or a second delivery returns duplicate.
-          const claim = await claimPaidInvoice(inv, profile, tier);
+          const claim = await claimPaidInvoice(inv, profile, tier, plan?.cycle || null);
           if (claim !== "claimed") break;
           // The subscription event is what changes the plan. A paid invoice
           // can list the old price as a credit, so it must not write the tier.

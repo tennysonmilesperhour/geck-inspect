@@ -17,6 +17,11 @@ access to the same account and feature limits.
 
 RevenueCat project: `20585b81`. Apple app: `app3838b2750d`.
 Bundle identifier: `com.geckinspect.app`. Offering: `default`.
+
+Web Keeper lifetime is $149 (`price_1UQV93LBdc4xGjxq4AvXpui4`) and web Breeder
+lifetime is $349 (`price_1UQV94LBdc4xGjxqwzNWvXyI`). Both are one-time Stripe
+Checkout payments. iOS and RevenueCat have no lifetime product. The Apple
+packages stay monthly and annual only.
 The four Apple packages have custom identifiers (`keeper_monthly`, etc.), so
 `packageType === CUSTOM` is expected. The native screen identifies the actual
 product and takes localized prices from the store. Unknown products are not sold

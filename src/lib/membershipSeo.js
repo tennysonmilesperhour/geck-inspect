@@ -7,7 +7,8 @@
  * puts in the static shell. Prices come from stripe-config.js and gecko
  * caps from tierLimits.js. Lifetime rows stay out of the table and the
  * Offer list until they have a live Stripe price id, which is the same
- * rule the Membership page uses for its buy buttons.
+ * rule the Membership page uses for the Lifetime toggle and its buy
+ * buttons. A live lifetime price is a one-time Offer, not a subscription.
  */
 
 import { ORG_ID, SITE_URL } from './organization-schema.js';
@@ -64,7 +65,13 @@ export function membershipMetaDescription() {
   const keeper = TIER_PRICING.keeper;
   const breeder = TIER_PRICING.breeder;
   const enterprise = TIER_PRICING.enterprise;
-  return `Geck Inspect plans for crested gecko keepers and breeders. Free (${freeGeckos} geckos), Keeper (${keeper.monthly.price}/mo or ${keeper.annual.price}/yr), Breeder (${breeder.monthly.price}/mo or ${breeder.annual.price}/yr), and Enterprise (${enterprise.monthly.price}/mo or ${enterprise.annual.price}/yr). Optional ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`;
+  const keeperPrice = keeper.lifetime?.price_id
+    ? `${keeper.monthly.price}/mo, ${keeper.annual.price}/yr, or ${keeper.lifetime.price} lifetime`
+    : `${keeper.monthly.price}/mo or ${keeper.annual.price}/yr`;
+  const breederPrice = breeder.lifetime?.price_id
+    ? `${breeder.monthly.price}/mo, ${breeder.annual.price}/yr, or ${breeder.lifetime.price} lifetime`
+    : `${breeder.monthly.price}/mo or ${breeder.annual.price}/yr`;
+  return `Geck Inspect plans for crested gecko keepers and breeders. Free (${freeGeckos} geckos), Keeper (${keeperPrice}), Breeder (${breederPrice}), and Enterprise (${enterprise.monthly.price}/mo or ${enterprise.annual.price}/yr). Optional ${TRIAL_DAYS}-day free trial on monthly and yearly plans. Cancel anytime.`;
 }
 
 /**
@@ -75,7 +82,7 @@ export function membershipMetaDescription() {
 export const MEMBERSHIP_FAQS = [
   {
     q: 'How much does Geck Inspect cost?',
-    a: `Geck Inspect has a Free plan (up to ${TIER_LIMITS.free.maxGeckos} geckos), Keeper at ${spokenMonthly('keeper')} or ${spokenYearly('keeper')}, and Breeder at ${spokenMonthly('breeder')} or ${spokenYearly('breeder')}. Enterprise, with Market Intelligence, is ${spokenMonthly('enterprise')} or ${spokenYearly('enterprise')}. Subscribing bills you straight away, and each paid plan also offers an optional ${TRIAL_DAYS}-day free trial. Paying yearly saves about ${maxAnnualSavingsPercent()}%.`,
+    a: `Geck Inspect has a Free plan (up to ${TIER_LIMITS.free.maxGeckos} geckos), Keeper at ${spokenMonthly('keeper')} or ${spokenYearly('keeper')}, and Breeder at ${spokenMonthly('breeder')} or ${spokenYearly('breeder')}. Lifetime is ${TIER_PRICING.keeper.lifetime.price} for Keeper and ${TIER_PRICING.breeder.lifetime.price} for Breeder, paid once, with no renewals. Enterprise, with Market Intelligence, is ${spokenMonthly('enterprise')} or ${spokenYearly('enterprise')}. Subscribing bills you straight away, and each monthly or yearly paid plan also offers an optional ${TRIAL_DAYS}-day free trial. A lifetime purchase has no trial. Paying yearly saves about ${maxAnnualSavingsPercent()}%.`,
   },
   {
     q: 'Can I try a paid plan before subscribing?',
@@ -91,7 +98,11 @@ export const MEMBERSHIP_FAQS = [
   },
   {
     q: 'Can I cancel anytime?',
-    a: 'Yes. Monthly and yearly subscriptions can be cancelled at any time. Use the Manage billing button on this page or in Settings to open your Stripe billing portal, where you can cancel, change plans, update your card, or download invoices.',
+    a: 'Yes. Monthly and yearly subscriptions can be cancelled at any time. Use the Manage billing button on this page or in Settings to open your Stripe billing portal, where you can cancel, change plans, update your card, or download invoices. Lifetime access does not renew, so there is nothing to cancel.',
+  },
+  {
+    q: 'Can I buy lifetime access?',
+    a: `Yes. Keeper lifetime is ${TIER_PRICING.keeper.lifetime.price} and Breeder lifetime is ${TIER_PRICING.breeder.lifetime.price}. Each is a one-time payment with no renewals and no free trial. If you already pay monthly or yearly, you can buy lifetime and that subscription stops right away. Unused time on the old plan is not credited. Enterprise has no lifetime option.`,
   },
 ];
 
@@ -190,11 +201,16 @@ export const MEMBERSHIP_PLAN_TABLE = {
 export function membershipShellCopy() {
   const freeGeckos = TIER_LIMITS.free.maxGeckos;
   const keeperMonthly = TIER_PRICING.keeper.monthly.price;
+  const keeperLife = TIER_PRICING.keeper.lifetime;
+  const breederLife = TIER_PRICING.breeder.lifetime;
+  const lifetimeLine = keeperLife?.price_id && breederLife?.price_id
+    ? ` Lifetime Keeper is ${keeperLife.price} and lifetime Breeder is ${breederLife.price}, each a one-time payment with no renewals.`
+    : '';
   return {
     heading: 'Plans for every crested gecko collection',
     lead: `Start free with up to ${freeGeckos} geckos. Upgrade when your collection or your breeding outgrows it, from ${keeperMonthly} a month.`,
     paragraphs: [
-      `Paid plans start today, or after an optional ${TRIAL_DAYS}-day free trial. Cancel anytime.`,
+      `Paid plans start today, or after an optional ${TRIAL_DAYS}-day free trial. Cancel anytime.${lifetimeLine}`,
       'Your records are yours. Export your whole collection to CSV or PDF from My Geckos at any time, on every plan.',
     ],
   };
