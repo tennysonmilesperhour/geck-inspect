@@ -10,8 +10,7 @@ import { ChevronUp, Compass, Info, LogIn, UserPlus, X } from 'lucide-react';
  * Requirements (from the product ask):
  *   - Semi-transparent yellow, demo-y and distinct from the green app
  *   - Distinguishes sample collection records from public community activity
- *   - Notes the images are fair-use demos and may not actually match
- *     the traits they're being paired with
+ *   - Explains that morph-matched photos accompany fictional demo records
  *   - Login / Create-account buttons adjacent, but not obtrusive
  *   - Dismissible, so the user can hide it mid-demo if it's in the way
  *
@@ -75,10 +74,9 @@ export default function GuestMockDisclaimer({ onOpenTours }) {
             )}
             <div className={expanded ? 'block mt-1' : 'hidden md:block'}>
               <p className="text-xs leading-snug text-yellow-50/95">
-                Demo collection records are fictional; public community activity may
-                be live. Illustrative photos do not establish animal identity,
-                genotype, health, or sales history. Create an account to save your
-                own records.
+                Real gecko photos are matched to their listed morphs. Names, care,
+                family trees, and sales are sample data; public community activity
+                may be live. Create an account to save your own records.
               </p>
               <div className="mt-2.5 flex items-center gap-2">
                 <Link

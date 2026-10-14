@@ -50,7 +50,7 @@ export const TOURS = [
         id: 'calculator',
         path: NIMBUS_PARENTS_CALC,
         title: 'Odds before you pair',
-        body: "Nimbus's parents, Spud and Harley, are loaded. Their clutch odds are listed below them on this page, down to the possible hets.",
+        body: "Nimbus's parents, Spud and Harley, are loaded. See the odds for Lilly White and non-Lilly White offspring below them.",
         next: 'See what geckos sell for',
       },
       {
