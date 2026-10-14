@@ -1,5 +1,5 @@
 import GeckoImage from '@/components/shared/GeckoImage';
-import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { DEFAULT_GECKO_CARD } from '@/lib/constants';
 import StickerGeckoActions from '@/components/store/StickerGeckoActions';
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
@@ -221,7 +221,8 @@ export default function GeckoDetail() {
                         <Card className="overflow-hidden">
                             <div className="aspect-square w-full bg-slate-800">
                                 <GeckoImage
-                                    src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
+                                    src={gecko.image_urls?.[0]}
+                                    fallback={DEFAULT_GECKO_CARD}
                                     alt={gecko.name}
                                     className="w-full h-full object-cover"
                                 />

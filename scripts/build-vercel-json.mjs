@@ -203,22 +203,25 @@ function buildConfig() {
               'accelerometer=(), autoplay=(self), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(self), usb=(), interest-cohort=()',
           },
           { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-          // Report-only for now: violations post to the csp-report edge
-          // function (see below) without blocking anything. Promote to
-          // Content-Security-Policy once a week of real traffic shows no
-          // unexpected origins in error_logs. A 6 Sep source audit added
-          // the origins report-only traffic had not yet exercised: Stripe.js
-          // fraud-signal frames (m.stripe.network, hooks.stripe.com) and
-          // telemetry (r.stripe.com), GA4 signals (stats.g.doubleclick.net, plus the www.google.com/g/collect and
-          // www.googletagmanager.com/td beacons that 14 Oct reports caught),
-          // the PostHog embedded dashboards on the admin analytics page,
-          // and the Amazon affiliate widget frames on store product pages.
+          // Enforced since 14 Oct 2026, after 30 days of report-only data
+          // showed no blocked origin the site needs (the GA4 beacons were
+          // the last gap; the rest were browser extensions, a crawler and
+          // the retired geckintellect unread-count poll). Violations still
+          // post to the csp-report edge function. Origins added by a 6 Sep
+          // source audit that report-only traffic had not yet exercised:
+          // Stripe.js fraud-signal frames (m.stripe.network, hooks.stripe.com)
+          // and telemetry (r.stripe.com), GA4 signals (stats.g.doubleclick.net,
+          // www.google.com/g/collect, www.googletagmanager.com/td), the
+          // PostHog embedded dashboards on the admin analytics page, and the
+          // Amazon affiliate widget frames on store product pages.
           // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Google
           // Fonts, Supabase (API, storage, the Robauto pixel project),
           // RevenueCat, Unsplash and Supabase images, inline theme scripts
           // in index.html ('unsafe-inline' for script until they get nonces).
+          // A new third-party script, frame or API origin must be added here
+          // or browsers will block it.
           {
-            key: 'Content-Security-Policy-Report-Only',
+            key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com",
@@ -234,7 +237,6 @@ function buildConfig() {
               "form-action 'self' https://checkout.stripe.com",
               // Violations post to the csp-report edge function, which
               // writes them to error_logs (created_by = 'csp-report').
-              // Until this existed, report-only mode reported to nobody.
               'report-uri https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/csp-report',
               'report-to csp-endpoint',
             ].join('; '),

@@ -10,7 +10,7 @@ export const CREST_PATHS = {
   side: ['M220 193 Q265 201 299 208 Q337 216 379 204 Q441 186 501 204 Q554 216 590 238 Q619 253 652 262'],
   top: ['M260 261 Q305 277 345 261 Q401 236 455 244 Q528 250 587 267 Q636 281 687 291', 'M260 351 Q298 341 342 359 Q399 388 453 375 Q525 366 584 351 Q638 337 686 330'],
 };
-const REGIONS = {
+export const REGIONS = {
   side: {
     dorsal: 'M80 173 Q172 140 269 204 Q335 221 398 204 Q474 183 561 220 L658 266 L642 288 Q554 242 451 246 Q342 268 263 245 L180 220 L83 213 Z',
     lateral: 'M177 272 Q267 247 354 268 Q471 240 645 289 L676 491 L158 491 Z',
@@ -70,7 +70,7 @@ function pigmentsFor(view) {
     .then(entries => ({ ...Object.fromEntries(entries), view })));
   return extractedLayers.get(view);
 }
-function usePigments(view) {
+export function usePigments(view) {
   const [layers, setLayers] = useState({});
   useEffect(() => {
     let active = true;
@@ -97,7 +97,7 @@ function CoverageMask({ id, value, region, view }) {
     </g>}
   </mask>;
 }
-function RegionAnnotation({ view, focus }) {
+export function RegionAnnotation({ view, focus }) {
   const pinning = focus === 'pinstripe', dorsal = focus === 'dorsal' || focus === 'tiger';
   const label = pinning ? 'Paired crest rows' : dorsal ? 'Dorsal field' : focus === 'spots' ? 'Discrete pigment spots' : 'Flanks and limbs';
   return <g fill="none" stroke="#21544a" strokeWidth="2.5" opacity=".9">

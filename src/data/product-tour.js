@@ -24,13 +24,13 @@
 export const PRODUCT_TOUR_SLIDES = [
   // Shipped October 2026, captured from the guest demo collection (sample
   // geckos) with value estimates from the real Geck Data listings table.
-  // Each has a 1600 x 1000 laptop file and a 780 x 976 (4:5) phone file
-  // (`mobileFile`), WebP. Recaptured with bundled, owner-authorized adult
-  // gecko photos from the admin collection; no external photo hosts needed.
+  // Each has a 1600 x 1000 laptop file and a 390 x 488 (4:5) phone file.
+  // Recaptured October 14 with owner-authorized photos and reviewed morph
+  // labels from demo-gecko-portraits.js; no external photo hosts needed.
   {
     id: 'gecko-record',
-    file: 'gecko-record-real.webp',
-    mobileFile: 'gecko-record-real-phone.webp',
+    file: 'gecko-record-matched.webp',
+    mobileFile: 'gecko-record-matched-phone.webp',
     title: 'One record per gecko',
     caption: 'Morph, weigh-ins against the typical range for its age, and a value estimate from real crested gecko listings.',
     captureUrl: '/GeckoDetail?id=mock-gecko-4 (demo)',
@@ -38,8 +38,8 @@ export const PRODUCT_TOUR_SLIDES = [
   },
   {
     id: 'calculator',
-    file: 'genetics-calculator.webp',
-    mobileFile: 'genetics-calculator-phone.webp',
+    file: 'genetics-calculator-matched.webp',
+    mobileFile: 'genetics-calculator-matched-phone.webp',
     title: 'Genetics calculator',
     caption: 'Pick a sire and dam and see every possible baby with its odds and a guide price for each outcome.',
     captureUrl: '/calculator?sireGecko=mock-gecko-2&damGecko=mock-gecko-1 (demo)',
@@ -47,8 +47,8 @@ export const PRODUCT_TOUR_SLIDES = [
   },
   {
     id: 'lineage',
-    file: 'lineage-tree-real.webp',
-    mobileFile: 'lineage-tree-real-phone.webp',
+    file: 'lineage-tree-matched.webp',
+    mobileFile: 'lineage-tree-matched-phone.webp',
     title: 'Multi-generation lineage',
     caption: 'Trace any gecko back through its parents and grandparents, with known ancestors and inbreeding (COI) at a glance.',
     captureUrl: '/Lineage?geckoId=mock-gecko-4 (demo)',
@@ -56,8 +56,8 @@ export const PRODUCT_TOUR_SLIDES = [
   },
   {
     id: 'breeding-planner',
-    file: 'breeding-planner-real.webp',
-    mobileFile: 'breeding-planner-real-phone.webp',
+    file: 'breeding-planner-matched.webp',
+    mobileFile: 'breeding-planner-matched-phone.webp',
     title: 'Breeding plans',
     caption: 'Every pairing in one place: days since the last egg, clutches logged, and the hatchery one tab away.',
     captureUrl: '/Breeding (demo)',
@@ -65,8 +65,8 @@ export const PRODUCT_TOUR_SLIDES = [
   },
   {
     id: 'portfolio',
-    file: 'portfolio.webp',
-    mobileFile: 'portfolio-phone.webp',
+    file: 'portfolio-matched.webp',
+    mobileFile: 'portfolio-matched-phone.webp',
     title: 'Collection value',
     caption: 'Automatic value estimates for every gecko from real crested gecko listings, with your collection total tracked over time.',
     captureUrl: '/Portfolio (demo)',

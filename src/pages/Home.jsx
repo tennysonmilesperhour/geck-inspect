@@ -435,11 +435,11 @@ function HeroProductShot() {
               and tablets from downloading the screenshot at all. */}
           <source media="(max-width: 1023px)" srcSet="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
         <img
-          src="/screenshots/hero-gecko-record.webp"
+          src="/screenshots/hero-gecko-record-matched.webp"
           width="1040"
-          height="1055"
+          height="844"
           decoding="async"
-          alt="A gecko record in Geck Inspect: Lilly White and Harlequin traits, an estimated value of $350 from real crested gecko listings, and a weight chart against the typical range for its age."
+          alt="A gecko record in Geck Inspect: Lilly White traits, an estimated value of $350 from real crested gecko listings, and a weight chart against the typical range for its age."
           className="w-full h-auto block rounded-[14px]"
         />
         </picture>

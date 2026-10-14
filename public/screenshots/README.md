@@ -1,29 +1,25 @@
 # Landing-page product tour screenshots
 
-This folder feeds the `<ProductTour />` slideshow on the public landing page (`src/components/landing/ProductTour.jsx`) and the product shot beside the landing headline on laptops (`hero-gecko-record-real.webp`, used in `src/pages/Home.jsx`). The slide list and captions are defined in `src/data/product-tour.js`. A slide is only requested once it has `shipped: true`, so commit the image and flip the flag in the same change.
+This folder feeds `ProductTour` on the public homepage and `HeroProductShot` beside the main headline. The active filenames and captions are defined in `src/data/product-tour.js` and `src/pages/Home.jsx`.
 
-## What is here (October 2026)
+## Morph-matched captures, October 14, 2026
 
-Recaptured from the guest demo collection with bundled real photos from the admin collection. All eight source geckos have exact hatch dates before October 6, 2024, verified on October 6, 2026. Photo names and hatch dates are recorded in `src/lib/demoGeckoPhotos.js`; the demo records remain illustrative. Value estimates use the existing dated Geck Data snapshot. Both the product tour and `hero-gecko-record-real.webp` now include actual gecko photos.
+The current `*-matched.webp` assets were captured from the actual guest demo in Chrome. Every pictured animal uses the reviewed photo-and-trait registry in `src/data/demo-gecko-portraits.js`. Source records and the visual audit are documented in `public/demo-geckos/README.md`. The sample names, pedigrees, care records, and sales are fictional. Value estimates use the existing dated Geck Data snapshot or the sample asking price shown in the app.
 
-| Slide | Laptop file (1600 x 1000) | Phone file (780 x 976, 4:5) | Demo page |
+| Slide | Desktop (1600 × 1000) | Phone (390 × 488) | Demo route |
 |---|---|---|---|
-| One record per gecko | `gecko-record-real.webp` | `gecko-record-real-phone.webp` | `/GeckoDetail?id=mock-gecko-4` |
-| Genetics calculator | `genetics-calculator.webp` | `genetics-calculator-phone.webp` | `/calculator?sireGecko=mock-gecko-2&damGecko=mock-gecko-1` |
-| Multi-generation lineage | `lineage-tree-real.webp` | `lineage-tree-real-phone.webp` | `/Lineage?geckoId=mock-gecko-4` |
-| Breeding plans | `breeding-planner-real.webp` | `breeding-planner-real-phone.webp` | `/Breeding` |
-| Collection value | `portfolio.webp` | `portfolio-phone.webp` | `/Portfolio` |
+| One record per gecko | `gecko-record-matched.webp` | `gecko-record-matched-phone.webp` | `/GeckoDetail?id=mock-gecko-4` |
+| Genetics calculator | `genetics-calculator-matched.webp` | `genetics-calculator-matched-phone.webp` | `/calculator?sireGecko=mock-gecko-2&damGecko=mock-gecko-1` |
+| Multi-generation lineage | `lineage-tree-matched.webp` | `lineage-tree-matched-phone.webp` | `/Lineage?geckoId=mock-gecko-4` |
+| Breeding plans | `breeding-planner-matched.webp` | `breeding-planner-matched-phone.webp` | `/Breeding` |
+| Collection value | `portfolio-matched.webp` | `portfolio-matched-phone.webp` | `/Portfolio` |
 
-Still to capture: dashboard, morph guide, AI morph ID, breeder storefront, photo timeline.
+The hero uses `hero-gecko-record-matched.webp`, a 1040 × 844 crop of the same record capture. Older unreferenced screenshots remain historical assets; current references use new filenames so cached previews cannot retain the old mismatches.
 
-## Capture tips
+## Capture guidance
 
-- Laptop: 1600 x 1000 viewport, dark theme, sidebar collapsed, demo tour card and toasts closed. Phone: 390 px wide at 2x, a 488 px crop below the header. Calculator and portfolio phone captures scroll to the populated photo rows.
-- WebP at quality 78, with optimized bundled photos for reliable captures.
-- Phone files go in `mobileFile`; the tour shows them below 640 px wide in a 4:5 frame.
-
-## How to add a NEW slide
-
-1. Add an entry to `PRODUCT_TOUR_SLIDES` in `src/data/product-tour.js` (`id`, `file`, optional `mobileFile`, `title`, `caption`, `captureUrl`).
-2. Drop the matching files here.
-3. Set `shipped: true` and commit both.
+- Desktop viewport: 1600 × 1000, dark theme, sidebar collapsed, tour and notice dismissed.
+- Phone viewport: 390 × 844, cropped to 390 × 488 below the header. The lineage view uses 75% zoom with traits visible. Calculator and portfolio captures scroll to the populated photo rows.
+- WebP at quality 85. Only mechanical cropping and compression, with no image retouching or replacement of screenshot content.
+- When a portrait or morph label changes, refresh every affected desktop and phone slide plus the hero in the same change.
+- A slide is requested only when `shipped: true`; add its assets and flag together. Dashboard, morph guide, Morph ID, breeder storefront, and photo timeline remain unshipped.

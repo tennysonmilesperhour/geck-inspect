@@ -1,3 +1,4 @@
+import { DEMO_GECKO_PORTRAITS } from '@/data/demo-gecko-portraits';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { growthBandAt } from '@/lib/growthBand';
 import {
@@ -19,8 +20,9 @@ import {
  * Design notes:
  * - Every mock record uses `created_by: GUEST_EMAIL` so pages that
  *   filter "mine" by email match cleanly.
- * - Every gecko photo is a verified public-domain/CC0 asset and is labeled
- *   illustrative. Names and traits are fictional throughout.
+ * - Names, traits, care records, sales, and pedigrees are synthetic.
+ *   Public-domain photos are independently assigned and never establish a
+ *   record animal's identity, morph, genetics, age, sex, or history.
  * - Writes are still blocked by `blockIfGuest()` in the entity layer;
  *   this module only powers reads.
  */
@@ -32,17 +34,16 @@ export function fallbackForMorph() {
   return DEFAULT_GECKO_IMAGE;
 }
 
-// Keep a unique licensed photo on each selected guest card. Other synthetic
-// animals deliberately have no photo instead of cycling the same few images.
-const BASE_PHOTOS_BY_SEED = Object.freeze({
-  harley: DEMO_BREEDER_PHOTO_ASSIGNMENTS['mock-gecko-1'],
-  spud: DEMO_BREEDER_PHOTO_ASSIGNMENTS['mock-gecko-2'],
-  moss: DEMO_BREEDER_PHOTO_ASSIGNMENTS['mock-gecko-3'],
-});
-const IMG = (seed) => {
-  const key = String(seed).replace(/-\d+$/, '');
-  const photo = BASE_PHOTOS_BY_SEED[key];
-  return photo ? [photo] : [];
+// Keep synthetic visible-trait labels separate from photo files. A
+// public-domain illustrative image never supplies a record's traits.
+const demoProfile = (key) => {
+  const traits = DEMO_GECKO_PORTRAITS[key]?.traits;
+  if (!traits) throw new Error(`Unknown synthetic demo profile: ${key}`);
+  return {
+    primary_morph: traits[0],
+    morphs_traits: traits.join(', '),
+    morph_tags: [...traits],
+  };
 };
 
 const nowMs = Date.now();
@@ -88,10 +89,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2018-06-11'),
     weight_grams: 54,
-    primary_morph: 'Harlequin',
-    morphs_traits: 'Harlequin, High-Contrast',
-    morph_tags: ['Harlequin', 'High-Contrast'],
-    image_urls: IMG('diamond-01'),
+    ...demoProfile('pepperjack'),
     gecko_id_code: 'GI-F01',
     species: 'Crested Gecko',
     generation: 1,
@@ -109,10 +107,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2018-04-02'),
     weight_grams: 50,
-    primary_morph: 'Cream',
-    morphs_traits: 'Cream, Partial Pin',
-    morph_tags: ['Cream', 'Pinstripe'],
-    image_urls: IMG('ruby-01'),
+    ...demoProfile('moonlight'),
     gecko_id_code: 'GI-F02',
     species: 'Crested Gecko',
     generation: 1,
@@ -130,10 +125,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2017-08-25'),
     weight_grams: 58,
-    primary_morph: 'Pinstripe',
-    morphs_traits: 'Pinstripe, Full',
-    morph_tags: ['Pinstripe'],
-    image_urls: IMG('thor-01'),
+    ...demoProfile('pony-boy'),
     gecko_id_code: 'GI-F03',
     species: 'Crested Gecko',
     generation: 1,
@@ -151,10 +143,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2017-11-03'),
     weight_grams: 49,
-    primary_morph: 'Yellow',
-    morphs_traits: 'Yellow, Partial Pin',
-    morph_tags: ['Yellow', 'Pinstripe'],
-    image_urls: IMG('sunny-01'),
+    ...demoProfile('blush'),
     gecko_id_code: 'GI-F04',
     species: 'Crested Gecko',
     generation: 1,
@@ -176,10 +165,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2022-08-14'),
     weight_grams: 52,
-    primary_morph: 'Harlequin',
-    morphs_traits: 'Harlequin, Cream, High-Contrast',
-    morph_tags: ['Harlequin', 'Cream', 'High-Contrast'],
-    image_urls: IMG('harley-01'),
+    ...demoProfile('mossball'),
     gecko_id_code: 'GI-001',
     species: 'Crested Gecko',
     generation: 2,
@@ -201,10 +187,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2021-05-02'),
     weight_grams: 48,
-    primary_morph: 'Pinstripe',
-    morphs_traits: 'Pinstripe, Yellow, Partial',
-    morph_tags: ['Pinstripe', 'Yellow'],
-    image_urls: IMG('spud-01'),
+    ...demoProfile('raindrop'),
     gecko_id_code: 'GI-002',
     species: 'Crested Gecko',
     generation: 2,
@@ -224,10 +207,7 @@ const GECKOS = [
     status: 'Ready to Breed',
     hatch_date: hatched('2023-02-19'),
     weight_grams: 41,
-    primary_morph: 'Dalmatian',
-    morphs_traits: 'Dalmatian, Red Base, Black Spots',
-    morph_tags: ['Dalmatian', 'Red'],
-    image_urls: IMG('moss-01'),
+    ...demoProfile('cheeto'),
     gecko_id_code: 'GI-003',
     species: 'Crested Gecko',
     sire_name: null,
@@ -244,10 +224,7 @@ const GECKOS = [
     status: 'Holdback',
     hatch_date: hatched('2024-06-30'),
     weight_grams: 22,
-    primary_morph: 'Lilly White',
-    morphs_traits: 'Lilly White, Harlequin',
-    morph_tags: ['Lilly White', 'Harlequin'],
-    image_urls: IMG('nimbus-01'),
+    ...demoProfile('hermes'),
     gecko_id_code: 'GI-004',
     species: 'Crested Gecko',
     generation: 3,
@@ -269,10 +246,7 @@ const GECKOS = [
     status: 'Holdback',
     hatch_date: hatched('2024-07-02'),
     weight_grams: 21,
-    primary_morph: 'Harlequin',
-    morphs_traits: 'Harlequin Pinstripe, Cream Base',
-    morph_tags: ['Harlequin', 'Pinstripe', 'Cream'],
-    image_urls: IMG('pebble-01'),
+    ...demoProfile('odin'),
     gecko_id_code: 'GI-013',
     species: 'Crested Gecko',
     generation: 3,
@@ -293,10 +267,7 @@ const GECKOS = [
     status: 'For Sale',
     hatch_date: hatched('2024-09-14'),
     weight_grams: 16,
-    primary_morph: 'Pinstripe',
-    morphs_traits: 'Pinstripe, Cream Dorsal',
-    morph_tags: ['Pinstripe', 'Cream'],
-    image_urls: IMG('jasper-01'),
+    ...demoProfile('sparky'),
     gecko_id_code: 'GI-014',
     species: 'Crested Gecko',
     generation: 3,
@@ -318,10 +289,7 @@ const GECKOS = [
     status: 'Future Breeder',
     hatch_date: hatched('2024-10-03'),
     weight_grams: 12,
-    primary_morph: 'Harlequin',
-    morphs_traits: 'Harlequin, Yellow Base',
-    morph_tags: ['Harlequin', 'Yellow'],
-    image_urls: IMG('fern-01'),
+    ...demoProfile('selva'),
     gecko_id_code: 'GI-015',
     species: 'Crested Gecko',
     generation: 3,
@@ -342,10 +310,7 @@ const GECKOS = [
     status: 'Future Breeder',
     hatch_date: hatched('2023-09-12'),
     weight_grams: 34,
-    primary_morph: 'Cappuccino',
-    morphs_traits: 'Cappuccino, Dark Base',
-    morph_tags: ['Cappuccino'],
-    image_urls: IMG('cappy-01'),
+    ...demoProfile('olivia'),
     gecko_id_code: 'GI-005',
     species: 'Crested Gecko',
     archived: false,
@@ -360,10 +325,7 @@ const GECKOS = [
     status: 'For Sale',
     hatch_date: hatched('2023-04-03'),
     weight_grams: 44,
-    primary_morph: 'Flame',
-    morphs_traits: 'Flame, Red, Full Stripe',
-    morph_tags: ['Flame', 'Red'],
-    image_urls: IMG('ember-01'),
+    ...demoProfile('blush'),
     gecko_id_code: 'GI-006',
     species: 'Crested Gecko',
     asking_price: 350,
@@ -379,10 +341,7 @@ const GECKOS = [
     status: 'Pet',
     hatch_date: hatched('2024-11-07'),
     weight_grams: 9,
-    primary_morph: 'Brindle',
-    morphs_traits: 'Brindle, Chocolate',
-    morph_tags: ['Brindle'],
-    image_urls: IMG('pixel-01'),
+    ...demoProfile('frito'),
     gecko_id_code: 'GI-007',
     species: 'Crested Gecko',
     archived: false,
@@ -397,10 +356,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2020-10-21'),
     weight_grams: 56,
-    primary_morph: 'Axanthic',
-    morphs_traits: 'Axanthic, Reverse Pin',
-    morph_tags: ['Axanthic', 'Pinstripe'],
-    image_urls: IMG('onyx-01'),
+    ...demoProfile('odin'),
     gecko_id_code: 'GI-008',
     species: 'Crested Gecko',
     archived: false,
@@ -415,10 +371,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2022-03-18'),
     weight_grams: 47,
-    primary_morph: 'Tiger',
-    morphs_traits: 'Tiger, Orange Base',
-    morph_tags: ['Tiger'],
-    image_urls: IMG('tiger-01'),
+    ...demoProfile('cheeto'),
     gecko_id_code: 'GI-009',
     species: 'Crested Gecko',
     archived: false,
@@ -433,10 +386,7 @@ const GECKOS = [
     status: 'Ready to Breed',
     hatch_date: hatched('2022-12-01'),
     weight_grams: 43,
-    primary_morph: 'Harlequin',
-    morphs_traits: 'Harlequin, Tricolor',
-    morph_tags: ['Harlequin', 'Tricolor'],
-    image_urls: IMG('aria-01'),
+    ...demoProfile('bliss'),
     gecko_id_code: 'GI-010',
     species: 'Crested Gecko',
     archived: false,
@@ -451,10 +401,7 @@ const GECKOS = [
     status: 'Future Breeder',
     hatch_date: hatched('2024-02-22'),
     weight_grams: 28,
-    primary_morph: 'Pinstripe',
-    morphs_traits: 'Pinstripe, Dalmatian',
-    morph_tags: ['Pinstripe', 'Dalmatian'],
-    image_urls: IMG('bramble-01'),
+    ...demoProfile('raindrop'),
     gecko_id_code: 'GI-011',
     species: 'Crested Gecko',
     archived: false,
@@ -469,10 +416,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2021-09-09'),
     weight_grams: 50,
-    primary_morph: 'Cream',
-    morphs_traits: 'Cream, Partial Pin',
-    morph_tags: ['Cream', 'Pinstripe'],
-    image_urls: IMG('willow-01'),
+    ...demoProfile('moonlight'),
     gecko_id_code: 'GI-012',
     species: 'Crested Gecko',
     archived: false,
@@ -485,7 +429,13 @@ const GECKOS = [
 // ---------------------------------------------------------------------------
 // Gecko images (Gallery feed)
 // ---------------------------------------------------------------------------
-const ALL_GECKOS = [...GECKOS, ...DEMO_BREEDER_GECKOS].map((gecko) => ({
+const GECKOS_WITH_PUBLIC_PHOTOS = GECKOS.map((gecko) => ({
+  ...gecko,
+  image_urls: DEMO_BREEDER_PHOTO_ASSIGNMENTS[gecko.id]
+    ? [DEMO_BREEDER_PHOTO_ASSIGNMENTS[gecko.id]]
+    : [],
+}));
+const ALL_GECKOS = [...GECKOS_WITH_PUBLIC_PHOTOS, ...DEMO_BREEDER_GECKOS].map((gecko) => ({
   ...gecko,
   photo_is_illustrative: true,
 }));
@@ -520,10 +470,10 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
   const target = g.weight_grams;
   const points = 6;
   const hatchMs = g.hatch_date ? Date.parse(g.hatch_date) : null;
+  const ageAt = (ms) => (hatchMs == null ? null : (ms - hatchMs) / (86400000 * 30.4375));
   const soldAtMs = g.archived && g.archive_reason === 'sold' && g.archived_date
     ? Date.parse(g.archived_date)
     : nowMs;
-  const ageAt = (ms) => (hatchMs == null ? null : (ms - hatchMs) / (86400000 * 30.4375));
   const finalMid = bandMid(ageAt(soldAtMs) ?? 36);
   const scale = finalMid ? Math.min(1.3, Math.max(0.7, target / finalMid)) : 1;
   return Array.from({ length: points }, (_, i) => {
@@ -531,14 +481,13 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
     const age = ageAt(ms);
     const jitter = (((gi + i) % 3) - 1) * 0.5;
     const grams = age == null || age < 0 ? target : Math.min(target, bandMid(age) * scale);
-    const recordedAt = new Date(ms);
     return {
       id: `mock-wr-${g.id}-${i}`,
       gecko_id: g.id,
       weight_grams: Math.max(2, Math.round((grams + jitter) * 10) / 10),
-      record_date: recordedAt.toISOString().slice(0, 10),
+      record_date: new Date(ms).toISOString().slice(0, 10),
       created_by: GUEST_EMAIL,
-      created_date: recordedAt.toISOString(),
+      created_date: new Date(ms).toISOString(),
     };
   }).filter((r) => (hatchMs == null || Date.parse(r.record_date) >= hatchMs)
     && Date.parse(r.record_date) <= soldAtMs);
@@ -558,7 +507,7 @@ const BREEDING_PLANS = [
     status: 'Active',
     laying_active: true,
     archived: false,
-    notes: 'Strong pattern expressed on both sides. Hoping for harley pins.',
+    notes: 'Lilly White paired to a pinstripe harlequin. Track Lilly White and non-Lilly White offspring.',
     created_by: GUEST_EMAIL,
     created_date: daysAgo(90),
   },
@@ -572,7 +521,7 @@ const BREEDING_PLANS = [
     status: 'Active',
     laying_active: true,
     archived: false,
-    notes: 'Targeting axanthic tricolor hatchlings.',
+    notes: 'Track harlequin expression and cream coverage as offspring develop.',
     created_by: GUEST_EMAIL,
     created_date: daysAgo(60),
   },
@@ -592,16 +541,16 @@ const BREEDING_PLANS = [
   },
   {
     id: 'mock-bp-4',
-    breeding_id: 'Willow × Spud 2025',
+    breeding_id: 'Harley × Spud 2025',
     sire_id: 'mock-gecko-2',
-    dam_id: 'mock-gecko-12',
+    dam_id: 'mock-gecko-1',
     pairing_date: daysAgo(400),
     breeding_season: '2025 Spring',
     status: 'Successful',
     laying_active: false,
     archived: true,
     archived_date: daysAgo(120),
-    notes: '6 eggs, 5 hatched. Strong pinstripe expression.',
+    notes: 'Lilly White and harlequin offspring retained for the sample pedigree.',
     created_by: GUEST_EMAIL,
     created_date: daysAgo(400),
   },
@@ -784,7 +733,7 @@ const HATCHERY_EVENTS = [
     egg_id: 'mock-egg-ao-2025-1',
     gecko_id: 'mock-gecko-off-fern',
     breeding_plan_id: 'mock-bp-2',
-    message: 'Fern hatched from Aria × Onyx 2025, strong harlequin, yellow base.',
+    message: 'Fern hatched from Aria × Onyx 2025, harlequin pattern on the sides and limbs.',
     created_by: 'system@geckinspect',
     created_date: daysAgo(8),
   },
