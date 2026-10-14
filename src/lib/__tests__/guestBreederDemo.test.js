@@ -29,12 +29,14 @@ describe('synthetic guest breeder demo', () => {
     }
   });
 
-  it('shows two positive fictional seasons and a downside season after listed costs', () => {
-    const entries = revenueEntries({ geckos: DEMO_BREEDER_GECKOS, eggs: DEMO_BREEDER_EGGS });
+  it('shows two positive fictional seasons and a downside season after listed costs', async () => {
+    // The business ledger includes all guest geckos, including an older
+    // synthetic retired-breeder sale outside the three featured pairings.
+    const entries = revenueEntries({ geckos: await guestMockList('Gecko'), eggs: DEMO_BREEDER_EGGS });
     const seasons = profitBySeason(entries, DEMO_BREEDER_COSTS);
     expect(seasons.map(({ year, sales, revenue, costs, profit }) => ({ year, sales, revenue, costs, profit }))).toEqual([
       { year: 2026, sales: 6, revenue: 12100, costs: 7260, profit: 4840 },
-      { year: 2025, sales: 8, revenue: 15825, costs: 8730, profit: 7095 },
+      { year: 2025, sales: 9, revenue: 16245, costs: 8730, profit: 7515 },
       { year: 2024, sales: 6, revenue: 6630, costs: 10090, profit: -3460 },
     ]);
     expect(DEMO_BREEDER_FINANCIAL_ASSUMPTIONS.label).toBe('Demo data • Fictional results, not expected earnings');

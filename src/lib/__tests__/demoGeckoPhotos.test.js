@@ -17,18 +17,19 @@ describe('preview gecko photos', () => {
     }
   });
 
-  it('uses bundled demo photos or an explicit unverified placeholder', async () => {
-    const photos = new Set(DEMO_GECKO_PHOTOS.map(photo => photo.src));
-    const allowed = new Set([...photos, ...DEMO_BREEDER_ILLUSTRATIVE_PHOTOS, DEMO_BREEDER_PHOTO_PLACEHOLDER]);
+  it('uses only attributable public-domain/CC0 illustrations in guest records', async () => {
+    const allowed = new Set([...DEMO_BREEDER_ILLUSTRATIVE_PHOTOS, DEMO_BREEDER_PHOTO_PLACEHOLDER]);
     const geckos = await guestMockList('Gecko');
     const gallery = await guestMockList('GeckoImage');
     expect(geckos.length).toBeGreaterThan(0);
     expect(gallery.length).toBeGreaterThan(0);
+    expect(geckos.every(gecko => gecko.photo_is_illustrative === true)).toBe(true);
     for (const gecko of geckos) {
       expect(gecko.image_urls.length).toBeGreaterThan(0);
       expect(gecko.image_urls.every(src => allowed.has(src))).toBe(true);
     }
-    expect(gallery.every(image => allowed.has(image.image_url))).toBe(true);
+    expect(gallery.every(image => allowed.has(image.image_url) && image.verified === false)).toBe(true);
+    expect(gallery.every(image => /illustrative photo/i.test(image.caption))).toBe(true);
     const breederDemoGeckos = geckos.filter(gecko => gecko.id?.startsWith('mock-demo-gecko-'));
     expect(breederDemoGeckos.length).toBeGreaterThan(0);
     expect(breederDemoGeckos.every(gecko => gecko.photo_is_illustrative === true)).toBe(true);

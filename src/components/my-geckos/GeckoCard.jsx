@@ -75,7 +75,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
       <div className="relative">
         <SmartImage
           src={primaryImage}
-          alt={gecko.photo_is_illustrative ? `${gecko.name} — illustrative photo, not this demo animal` : gecko.name}
+          alt={gecko.photo_is_illustrative ? `${gecko.name}, illustrative photo, not this demo animal` : gecko.name}
           width={500}
           aspect="auto"
           containerClassName="w-full h-40 sm:h-56"

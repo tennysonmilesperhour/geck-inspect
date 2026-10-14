@@ -1,4 +1,3 @@
-import { DEMO_GECKO_PHOTOS } from '@/lib/demoGeckoPhotos';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { growthBandAt } from '@/lib/growthBand';
 import {
@@ -6,8 +5,8 @@ import {
   DEMO_BREEDER_COSTS,
   DEMO_BREEDER_EGGS,
   DEMO_BREEDER_GECKOS,
+  DEMO_BREEDER_ILLUSTRATIVE_PHOTOS,
   DEMO_BREEDER_PLANS,
-  DEMO_BREEDER_PHOTO_PLACEHOLDER,
 } from '@/lib/guestBreederDemo';
 
 /**
@@ -20,17 +19,16 @@ import {
  * Design notes:
  * - Every mock record uses `created_by: GUEST_EMAIL` so pages that
  *   filter "mine" by email match cleanly.
- * - Existing photos are bundled, owner-authorized images; added financial
- *   demo animals use a visibly fictional placeholder until public-domain
- *   photos are installed. Names and traits are illustrative throughout.
+ * - Every gecko photo is a verified public-domain/CC0 asset and is labeled
+ *   illustrative. Names and traits are fictional throughout.
  * - Writes are still blocked by `blockIfGuest()` in the entity layer;
  *   this module only powers reads.
  */
 
 export const GUEST_EMAIL = 'guest@local';
 
-// Real adult photos ship with previews and native builds, without hotlinks.
-const GECKO_PHOTOS = DEMO_GECKO_PHOTOS.map(photo => photo.src);
+// Public-domain/CC0 photos are reused only as clearly labeled illustrations.
+const GECKO_PHOTOS = DEMO_BREEDER_ILLUSTRATIVE_PHOTOS;
 
 // Retained for consumers that explicitly request a demo image fallback.
 export function fallbackForMorph() {
@@ -45,7 +43,7 @@ const PHOTO_SEEDS = [
   'onyx', 'tiger', 'aria', 'bramble', 'willow',
 ];
 const IMG = (seed) => {
-  // Keep one real animal per sample record, including its extra photo slots.
+  // Assign a stable illustration without claiming it depicts the demo animal.
   const index = PHOTO_SEEDS.indexOf(String(seed).replace(/-\d+$/, ''));
   return GECKO_PHOTOS[Math.max(0, index) % GECKO_PHOTOS.length];
 };
@@ -490,7 +488,10 @@ const GECKOS = [
 // ---------------------------------------------------------------------------
 // Gecko images (Gallery feed)
 // ---------------------------------------------------------------------------
-const ALL_GECKOS = [...GECKOS, ...DEMO_BREEDER_GECKOS];
+const ALL_GECKOS = [...GECKOS, ...DEMO_BREEDER_GECKOS].map((gecko) => ({
+  ...gecko,
+  photo_is_illustrative: true,
+}));
 const GECKO_IMAGES = ALL_GECKOS.flatMap((g, i) =>
   (g.image_urls || []).map((url, j) => ({
     id: `mock-img-${i + 1}-${j + 1}`,
@@ -498,8 +499,8 @@ const GECKO_IMAGES = ALL_GECKOS.flatMap((g, i) =>
     gecko_id: g.id,
     primary_morph: g.primary_morph,
     secondary_traits: g.morph_tags,
-    caption: `${g.name}, ${g.primary_morph}${url === DEMO_BREEDER_PHOTO_PLACEHOLDER ? ' · Illustrative photo' : ''}`,
-    verified: j === 0 && url !== DEMO_BREEDER_PHOTO_PLACEHOLDER,
+    caption: `${g.name}, ${g.primary_morph} · Illustrative photo`,
+    verified: false,
     likes_count: 5 + ((i * 3 + j) % 40),
     created_by: GUEST_EMAIL,
     created_date: daysAgo(i * 7 + j),

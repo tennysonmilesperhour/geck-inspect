@@ -10,6 +10,7 @@ import { captureEvent } from '@/lib/posthog';
 import { supabase } from '@/lib/supabaseClient';
 import { safeExternalUrl } from '@/lib/safeExternalUrl';
 import { isAwaitingCheckout } from '@/lib/store/checkoutFlags';
+import { isGuestMode } from '@/lib/guestMode';
 
 /**
  * AddToCartButton handles all four fulfillment modes.
@@ -98,7 +99,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
   }
 
   async function handleAffiliate() {
-    if (!vendorUrl) return;
+    if (!vendorUrl || isGuestMode()) return;
     try {
       // Best-effort log, never block the click.
       try {
