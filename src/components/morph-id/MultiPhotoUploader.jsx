@@ -219,7 +219,7 @@ export default function MultiPhotoUploader({
               }
               inputRef.current?.click();
             }}
-            className="touch:min-h-11 aspect-square flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-600 hover:border-emerald-500 hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-emerald-300"
+            className="touch:min-h-11 aspect-square flex flex-col items-center justify-center rounded-lg border-2 border-slate-600 hover:border-emerald-500 hover:bg-slate-800/50 transition-[border-color,background-color,color,box-shadow] duration-200 hover:shadow-[0_0_12px_rgba(16,185,129,0.35)] text-slate-400 hover:text-emerald-300"
           >
             <Upload className="w-6 h-6 mb-1" />
             <span className="text-xs">Add photo</span>
