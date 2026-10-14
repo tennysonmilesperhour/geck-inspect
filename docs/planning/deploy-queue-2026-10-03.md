@@ -94,3 +94,11 @@ New on `main`:
 ## Added 7 October: Promote drafting
 
 Deployed: `generate-social-post` v22 (matches the repo). Not yet exercised against the live Anthropic API because this session has no key. First check: as an admin, open Promote, pick a gecko with photos and weights, write a line under "What's going on", and press Write 3 drafts. If it errors, the function log line `anthropic failed` shows why.
+
+## Added 14 October: Sable in Morph ID
+
+Waiting: redeploy `recognize-gecko-morph` (live v70 matches the repo except `taxonomy.ts`). The new `taxonomy.ts` lets the model return `sable` and `luwak`; until it is deployed, Morph ID cannot name a Sable. The rest of the Sable work (tag picker, morph guide page, glossary, marketplace filter, calculator) is already live through Vercel.
+
+```
+supabase functions deploy recognize-gecko-morph --no-verify-jwt --project-ref mmuglfphhwlaluyfyxsp
+```
