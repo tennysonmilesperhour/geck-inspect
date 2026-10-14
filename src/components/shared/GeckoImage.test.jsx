@@ -2,13 +2,21 @@ import { act, create } from 'react-test-renderer';
 import { describe, expect, it } from 'vitest';
 import GeckoImage from './GeckoImage';
 import SmartImage from './SmartImage';
-import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { DEFAULT_GECKO_CARD, DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 describe.each([GeckoImage, SmartImage])('gecko photo fallback', Image => {
-  it('shows the bundled tarot card for absent and whitespace-only photos', async () => {
+  it('shows the square placeholder for absent and whitespace-only photos', async () => {
     let view;
     await act(async () => { view = create(<Image src="  " alt="Gecko" />); });
     expect(view.root.findByType('img').props.src).toBe(DEFAULT_GECKO_IMAGE);
+    expect(view.root.findByType('img').props.style.objectFit).toBe('cover');
+    await act(async () => view.unmount());
+  });
+
+  it('letterboxes the full card when a large view asks for it', async () => {
+    let view;
+    await act(async () => { view = create(<Image src={undefined} fallback={DEFAULT_GECKO_CARD} alt="Gecko" />); });
+    expect(view.root.findByType('img').props.src).toBe(DEFAULT_GECKO_CARD);
     expect(view.root.findByType('img').props.style.objectFit).toBe('contain');
     await act(async () => view.unmount());
   });

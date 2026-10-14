@@ -1,4 +1,4 @@
-import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { DEFAULT_GECKO_CARD } from '@/lib/constants';
 import StickerGeckoActions from '@/components/store/StickerGeckoActions';
 import { useState, useEffect, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -518,7 +518,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                               ? `rotate(${gecko.image_crop_data[currentSlide.url].rotation}deg)`
                               : undefined,
                           }}
-                          fallback={DEFAULT_GECKO_IMAGE}
+                          fallback={DEFAULT_GECKO_CARD}
                         />
                         <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
                           {LIFE_STAGE_LABELS[currentSlide.stage] || currentSlide.stage} · {slideshowIndex + 1}/{taggedSlides.length}
@@ -551,7 +551,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                           ? `rotate(${gecko.image_crop_data[gecko.image_urls[0]].rotation}deg)`
                           : undefined,
                       }}
-                      fallback={DEFAULT_GECKO_IMAGE}
+                      fallback={DEFAULT_GECKO_CARD}
                     />
                   </div>
                 )}

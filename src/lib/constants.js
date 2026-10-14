@@ -35,10 +35,13 @@ export const MARKET_INTELLIGENCE_URL =
 export const MARKET_SNAPSHOT_URL =
   import.meta.env.VITE_MARKET_SNAPSHOT_URL || `${MARKET_INTELLIGENCE_URL}/data/market.json`;
 
-// Bundled tarot card art: works on production, previews, and native builds.
-export const DEFAULT_GECKO_IMAGE = '/gecko-tarot-card.svg';
-// Social previews do not accept SVG, so absolute links use the PNG export.
-export const DEFAULT_GECKO_IMAGE_URL = 'https://geckinspect.com/gecko-tarot-card.png';
+// Bundled tarot-style art: works on production, previews, and native builds.
+// The square crop fills thumbnails and photo slots; the full card is for the
+// large single-gecko photo views.
+export const DEFAULT_GECKO_IMAGE = '/gecko-tarot-square.svg';
+export const DEFAULT_GECKO_CARD = '/gecko-tarot-card.svg';
+// Social previews do not accept SVG, so absolute links use the JPG export.
+export const DEFAULT_GECKO_IMAGE_URL = 'https://geckinspect.com/gecko-tarot-square.jpg';
 
 export const GECKO_STATUS_OPTIONS = [
   'Pet',

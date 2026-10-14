@@ -17,6 +17,7 @@
  */
 import { useEffect, useState } from 'react';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { geckoPlaceholderStyle, isGeckoPlaceholder } from '@/lib/geckoPlaceholder';
 
 const ASPECT_PRESETS = {
   square: '1 / 1',
@@ -90,7 +91,7 @@ export default function SmartImage({
   }
 
   if (typeof src !== 'string' || !src.trim()) resolvedSrc = fallback;
-  const isSilhouette = resolvedSrc === DEFAULT_GECKO_IMAGE;
+  const isPlaceholder = isGeckoPlaceholder(resolvedSrc);
 
   return (
     <div
@@ -114,9 +115,7 @@ export default function SmartImage({
           setLoaded(true);
           onError?.(event);
         }}
-        style={isSilhouette
-          ? { ...style, objectFit: 'contain', objectPosition: 'center', transform: 'none', padding: '4%', backgroundColor: '#0b1a14' }
-          : style}
+        style={isPlaceholder ? geckoPlaceholderStyle(resolvedSrc, style) : style}
         className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
         {...rest}
       />
