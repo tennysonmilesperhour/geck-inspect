@@ -171,6 +171,10 @@ export const ILLUSTRATED_GECKO_PRESETS = {
     label: 'Sable',
     phenotype: { palette: { base: '#2e1b10', dark: '#160c06', pattern: '#a88a66', outline: '#0e0703', crest: '#3e2616' }, dorsal: 0.6, flameTongues: 0.4, lateral: 0.3 },
   },
+  highway: {
+    label: 'Highway',
+    phenotype: { palette: { base: '#6e4528', pattern: '#ecd6ad', outline: '#1d1209', crest: '#8a5a36' }, dorsal: 1, dorsalStyle: 'solid' },
+  },
   albino: {
     label: 'Albino',
     phenotype: {

@@ -136,6 +136,28 @@ export const MENDELIAN_MORPHS = [
       'Deep, saturated chocolate body that stays notably dark even when fired down, with pattern that reads quieter than on non-Sable siblings.',
   },
   {
+    id: 'highway',
+    name: 'Highway',
+    shortCode: 'Hwy',
+    category: 'mendelian',
+    genetics: {
+      type: GENETICS_TYPE.INCOMPLETE_DOMINANT,
+      superForm: 'Super Highway',
+      superLethal: false,
+      summary:
+        'Incomplete dominant. One copy = visual Highway with a continuous, clean dorsal stripe and clean sides. Two copies = Super Highway, which has reported nostril and health issues. Provisionally the third version of the Cappuccino and Sable gene.',
+    },
+    epistasis: { suppressesDorsalPattern: true },
+    visual: {
+      layer: 'highway',
+      stripeHex: '#ead3a6',
+    },
+    rarity: 4,
+    valueHint: 600,
+    description:
+      'An unbroken cream stripe from head to tail base over clean sides. Empty Back (incomplete dominant), Phantom (recessive) and line-bred patternless animals can look similar, so lineage confirms it.',
+  },
+  {
     id: 'axanthic',
     name: 'Axanthic',
     shortCode: 'Ax',

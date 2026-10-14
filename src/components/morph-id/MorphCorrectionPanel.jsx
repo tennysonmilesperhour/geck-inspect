@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  AlertTriangle, BrainCircuit, Check, CheckCircle2, Eye,
+  AlertTriangle, BrainCircuit, Check, CheckCircle2, Eye, GitBranch,
   ImagePlus, Images, Loader2, Pencil, Save, ShieldQuestion,
 } from 'lucide-react';
 import { User } from '@/entities/all';
@@ -20,7 +21,7 @@ import ConfidenceSlider from './ConfidenceSlider';
 import {
   BASE_COLORS, PATTERN_INTENSITIES, WHITE_AMOUNTS,
   FIRED_STATES, TAXONOMY_VERSION, VISUAL_PROFILE_AXES,
-  labelFor, patternColorLabel, visualAxisLabel,
+  labelFor, lookalikeNotes, patternColorLabel, visualAxisLabel,
 } from './morphTaxonomy';
 
 const STATUS = {
@@ -403,6 +404,33 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                 <p className="text-xs text-slate-400 mt-2">Photos cannot prove genotype, lineage, or hidden hets. Confirm those from breeding records.</p>
               </div>
             )}
+          </section>
+        )}
+
+        {!withholdIdentification && (
+          <section className="rounded-lg border border-amber-800/70 bg-amber-950/20 p-4">
+            <h3 className="font-semibold text-amber-100 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-300" /> What this photo can't confirm
+            </h3>
+            <p className="text-xs text-amber-100/80 mt-1">
+              This is a read of what is visible, not a genetic test. Line-bred looks, fired state and lighting can make different morphs look the same.
+            </p>
+            {lookalikeNotes([
+              state.primary_morph,
+              ...(state.genetics || []),
+              ...(state.secondary_traits || []),
+              ...candidates.map((c) => c.morph),
+            ]).map((note) => (
+              <p key={note} className="text-xs text-slate-300 mt-2">{note}</p>
+            ))}
+            <p className="text-xs text-emerald-200/90 mt-3 flex items-start gap-2">
+              <GitBranch className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>
+                Record this gecko with its sire and dam in{' '}
+                <Link to="/MyGeckos" className="underline text-emerald-300 hover:text-emerald-200">My Geckos</Link>
+                {' '}so its genes are known for certain, not guessed from a photo.
+              </span>
+            </p>
           </section>
         )}
 

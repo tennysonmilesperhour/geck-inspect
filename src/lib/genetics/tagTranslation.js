@@ -93,8 +93,15 @@ const APP_TAGS = new Map(Object.entries({
   },
   'phantom frappuccino': { engine: ['Cappuccino', 'Lilly White', 'Visual Phantom'] },
   'luwak': { engine: ['Cappuccino', 'Sable'] },
-  // The engine has no "Super Sable" tag, so the genotype is set directly.
+  // The engine has no "Super Sable" or "Super Highway" tag, so the
+  // genotype is set directly.
   'super sable': { genotype: { SABLE_COMPLEX: ['sable', 'sable'] } },
+  'super highway': {
+    genotype: { SABLE_COMPLEX: ['highway', 'highway'] },
+    note: 'Super Highway hatchlings have reported nostril and health issues.',
+  },
+  'cappuccino highway': { engine: ['Cappuccino', 'Highway'] },
+  'sable highway': { engine: ['Sable', 'Highway'] },
   'sable lilly white': { engine: ['Sable', 'Lilly White'] },
   'lilly white sable': { engine: ['Sable', 'Lilly White'] },
   'axanthic sable': { engine: ['Axanthic', 'Sable'] },
@@ -348,6 +355,7 @@ export function translateMorphTags(tags) {
         mergeLocus(loci, locus, [{ pair: [...pair], weight: 1 }]);
       }
       used.push({ tag, chance: 1 });
+      if (mapped.note) notes.push(mapped.note);
       continue;
     }
     // One engine call per part: the engine keeps only the last tag at a

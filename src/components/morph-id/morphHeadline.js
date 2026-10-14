@@ -5,8 +5,8 @@
  * - Harlequin is the base. It is so common that most other morphs sit on
  *   top of it, and when anything else is present that name leads. A Lilly
  *   White with harlequin patterning is a Lilly White.
- * - Lilly White, Axanthic, Cappuccino, Sable, Luwak, Frappuccino, Soft Scale
- *   and White Wall lead the name when Morph ID sees them, and they stack with any
+ * - Lilly White, Axanthic, Cappuccino, Sable, Highway, Luwak, Frappuccino,
+ *   Soft Scale and White Wall lead the name when Morph ID sees them, and they stack with any
  *   pattern other than plain Harlequin: "Pinstripe White Wall".
  *
  * Stacking follows breeder listings (9,920 MorphMarket titles in
@@ -32,6 +32,7 @@ const HEADLINE_GENES = [
   ['luwak', 'Luwak'],
   ['cappuccino', 'Cappuccino'],
   ['sable', 'Sable'],
+  ['highway', 'Highway'],
 ];
 
 /**

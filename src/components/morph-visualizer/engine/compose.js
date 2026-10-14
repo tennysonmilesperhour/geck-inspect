@@ -220,6 +220,23 @@ export function composePhenotype(selections) {
     });
   }
 
+  // Highway, continuous clean dorsal stripe over clean sides. Cappuccino's
+  // dorsum takes priority when both are present.
+  const highwaySuper = mend.highway === Z.SUPER;
+  if (expressed.highway) {
+    suppressed.dorsal = true;
+    reasoning.push({
+      trait: 'highway',
+      message: expressed.cappuccino
+        ? 'Cappuccino + Highway, one copy of each on the same gene. Never a super.'
+        : expressed.sable
+          ? 'Sable + Highway, clean stripe over a darker Sable body. One copy of each, never a super.'
+          : highwaySuper
+            ? 'Super Highway, clean stripe and very clean sides. Reported nostril and health issues.'
+            : 'Highway, continuous clean dorsal stripe with clean sides.',
+    });
+  }
+
   // Lilly White, bright body highlights.
   if (expressed.lilly_white) {
     palette.accent    = TRAITS_BY_ID.lilly_white.visual.floodColor;
@@ -264,6 +281,10 @@ export function composePhenotype(selections) {
     // Sable reads with less pattern; Super Sable with even less.
     if (expressed.sable && p.id !== 'phantom' && p.id !== 'patternless') {
       val = Math.max(0, val - (sableSuper ? 2 : 1));
+    }
+    // Highway keeps the sides clean.
+    if (expressed.highway && ['harlequin', 'flame', 'tiger', 'brindle', 'dalmatian'].includes(p.id)) {
+      val = Math.max(0, val - (highwaySuper ? 2 : 1));
     }
     // Patternless or dorsal suppression mutes dorsal-touching patterns.
     if (suppressed.dorsal && (p.id === 'pinstripe')) {

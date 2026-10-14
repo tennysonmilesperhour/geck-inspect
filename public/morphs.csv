@@ -16,6 +16,7 @@ white-wall,White Wall,structure,incomplete-dominant,rare,$$$$,"$1,500 to $4,000"
 white-wall-white-spot,White Wall White Spot,structure,incomplete-dominant,rare,$$$$,"$1,500 to $4,000",A white-pattern label whose meaning needs breeder context.,https://geckinspect.com/MorphGuide/white-wall-white-spot
 cappuccino,Cappuccino,structure,incomplete-dominant,uncommon,$$$,"$400 to $1,200",A genetic trait with variable appearance across ages and combinations.,https://geckinspect.com/MorphGuide/cappuccino
 sable,Sable,color,incomplete-dominant,uncommon,$$$,"$550 to $1,200","Incomplete-dominant trait with darker, saturated tones and reduced pattern. Same gene as Cappuccino.",https://geckinspect.com/MorphGuide/sable
+highway,Highway,pattern,incomplete-dominant,rare,,,"Incomplete-dominant trait with a continuous, clean dorsal stripe. Provisionally the third version of the Cappuccino and Sable gene.",https://geckinspect.com/MorphGuide/highway
 frappuccino,Frappuccino,combo,incomplete-dominant,rare,$$$$,"$1,500 to $3,500","The combination of Cappuccino and Lilly White, with variable expression.",https://geckinspect.com/MorphGuide/frappuccino
 lilly-white,Lilly White,structure,incomplete-dominant,uncommon,$$$,$300 to $900,"Proven incomplete-dominant trait producing bold white markings, the super form is lethal.",https://geckinspect.com/MorphGuide/lilly-white
 axanthic,Axanthic,color,recessive,rare,$$$$,"$1,500 to $4,000","Proven recessive trait that removes yellow and red pigment, animals appear black, gray, and white.",https://geckinspect.com/MorphGuide/axanthic

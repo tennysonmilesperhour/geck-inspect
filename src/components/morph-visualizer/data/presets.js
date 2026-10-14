@@ -158,6 +158,21 @@ export const PRESETS = [
     },
   },
   {
+    id: 'highway',
+    name: 'Highway',
+    description: 'One copy of Highway. A continuous, clean cream stripe down the back over clean sides.',
+    rarityTier: 4,
+    valueHint: 600,
+    selections: {
+      baseColor: 'brown',
+      mendelian: { highway: Z.VISUAL },
+      patterns: { harlequin: 1 },
+      accents: {},
+      structural: { crest_size: 'normal', tail: 'present', eye_color: 'copper' },
+      environmental: { fire_state: 'fired_up', age: 'adult', shed_state: 'normal' },
+    },
+  },
+  {
     id: 'axanthic',
     name: 'Axanthic',
     description: 'Recessive morph lacking warm pigment. Grayscale regardless of base color carried.',

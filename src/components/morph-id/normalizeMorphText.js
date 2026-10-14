@@ -47,6 +47,7 @@ const ALIASES = {
   axanthic_tsm:  ['axanthic tsm', 'tsm axanthic', 'axanthic (tsm)'],
   cappuccino:    ['cappuccino', 'cappu', 'capp'],
   sable:         ['sable', 'super sable'],
+  highway:       ['highway', 'super highway'],
   luwak:         ['luwak'],
   frappuccino:   ['frappuccino', 'frappu', 'frapp'],
   phantom_expression: ['phantom'],

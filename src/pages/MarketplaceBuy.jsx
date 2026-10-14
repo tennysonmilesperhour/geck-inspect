@@ -260,7 +260,7 @@ export default function MarketplaceBuyPage({ embedded = false }) {
     const blocked = useBlockedMembers();
 
     const MORPH_FILTERS = [
-        'Lilly White', 'Axanthic', 'Cappuccino', 'Sable', 'Soft Scale', 'Moonglow',
+        'Lilly White', 'Axanthic', 'Cappuccino', 'Sable', 'Highway', 'Soft Scale', 'Moonglow',
         'Frappuccino', 'Luwak', 'Harlequin', 'Extreme Harlequin', 'Pinstripe',
         'Dalmatian', 'Super Dalmatian', 'Flame', 'Tiger', 'Patternless',
         'Bicolor', 'Tricolor', 'Empty Back', 'White Wall',

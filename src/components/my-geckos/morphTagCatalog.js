@@ -35,6 +35,7 @@ export const MORPH_CATEGORIES = {
       "Lilly White",
       "Cappuccino", "Super Cappuccino",
       "Sable", "Super Sable",
+      "Highway", "Super Highway",
       "Soft Scale", "Super Soft Scale",
       "Empty Back", "Super Empty Back",
       "White Wall",
@@ -54,6 +55,8 @@ export const MORPH_CATEGORIES = {
     morphs: [
       "Frappuccino",
       "Luwak",
+      "Cappuccino Highway",
+      "Sable Highway",
       "Cappuccino Lilly White",
       "Sable Lilly White",
       "Axanthic Lilly White",

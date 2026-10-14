@@ -147,23 +147,42 @@ export function detectWarnings(selections) {
     });
   }
 
-  // Cappuccino and Sable share one gene, so an animal holds two copies at most.
-  const capp = mend.cappuccino || Z.ABSENT;
-  const sable = mend.sable || Z.ABSENT;
-  if (capp !== Z.ABSENT && sable !== Z.ABSENT) {
-    if (capp === Z.SUPER || sable === Z.SUPER) {
-      warnings.push({
-        severity: 'lethal',
-        traitId: 'sable',
-        title: 'Not a possible genotype',
-        body: 'Cappuccino and Sable are versions of the same gene, so a gecko holds two copies at most. A super of one cannot also carry the other. One Cappuccino plus one Sable is a Luwak.',
-      });
-    } else {
+  // Super Highway health note
+  if (mend.highway === Z.SUPER) {
+    warnings.push({
+      severity: 'info',
+      traitId: 'highway',
+      title: 'Super Highway',
+      body: 'Homozygous Highway. Hatchlings have reported nostril and health issues, so Highway x Highway is not recommended.',
+    });
+  }
+
+  // Cappuccino, Sable and Highway share one gene, so an animal holds two
+  // copies at most.
+  const complex = ['cappuccino', 'sable', 'highway'].filter((id) => (mend[id] || Z.ABSENT) !== Z.ABSENT);
+  const copies = complex.reduce((n, id) => n + (mend[id] === Z.SUPER ? 2 : 1), 0);
+  if (copies > 2) {
+    warnings.push({
+      severity: 'lethal',
+      traitId: complex[complex.length - 1],
+      title: 'Not a possible genotype',
+      body: 'Cappuccino, Sable and Highway are versions of the same gene, so a gecko holds two copies at most: one copy each of two of them, or a super of one. One Cappuccino plus one Sable is a Luwak.',
+    });
+  } else if (complex.length === 2) {
+    if (complex.includes('cappuccino') && complex.includes('sable')) {
       warnings.push({
         severity: 'info',
         traitId: 'sable',
         title: 'Luwak (Cappuccino + Sable)',
         body: 'One Cappuccino copy and one Sable copy on the same gene. A Luwak can never be a super, which makes Cappuccino x Sable the safe way to combine them.',
+      });
+    } else {
+      const [a, b] = complex.map((id) => TRAITS_BY_ID[id].name);
+      warnings.push({
+        severity: 'info',
+        traitId: 'highway',
+        title: `${a} + ${b} (compound)`,
+        body: `One ${a} copy and one ${b} copy on the same gene. It can never be a super.`,
       });
     }
   }

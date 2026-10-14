@@ -18,7 +18,7 @@
 // and prefer adding new entries over mutating existing ids (ids are persisted
 // in the `gecko_images` table and used for label stability across versions).
 
-export const TAXONOMY_VERSION = '2026.10.14.1';
+export const TAXONOMY_VERSION = '2026.10.14.2';
 
 export const VISUAL_PROFILE_AXES = [
   { key: 'pattern_family', label: 'Pattern coverage' },
@@ -100,6 +100,8 @@ export const GENETIC_TRAITS = [
     notes: 'Foundation Genetics: incomplete dominant (NOT codominant). Discovered by Reptile City Korea (Donald Hendrickson, ~2020). Super form = Super Cappuccino / Melanistic, with documented health concerns (reduced nostril size, breathing difficulty). Allelic with Sable and Highway.' },
   { id: 'sable',            label: 'Sable',             inheritance: 'incomplete_dominant',  canonical_trait_id: 'sable',
     notes: 'Foundation Genetics: incomplete dominant. Founded in the Rialto line (Gecko Haven). Darker, saturated chocolate tones with reduced pattern that stay dark even fired down. Super form = Super Sable. Allelic with Cappuccino and Highway, so Cappuccino x Sable makes Luwak, never a super. Lighting and fired state can make any gecko look dark; lineage confirms it.' },
+  { id: 'highway',          label: 'Highway',           inheritance: 'incomplete_dominant',  canonical_trait_id: 'highway',
+    notes: 'Foundation Genetics: incomplete dominant, provisionally the third allele in the Cappuccino/Sable complex (still badged Emerging). Continuous, clean dorsal stripe with clean lateral regions. Super Highway has reported nostril and health issues. A clean back can also come from Empty Back, Phantom or line-bred patternless animals, so lineage confirms it.' },
   { id: 'luwak',            label: 'Luwak',             inheritance: 'combo phenotype',
     notes: 'Combo morph: one Cappuccino allele plus one Sable allele at the same locus (compound heterozygote). Not a super form. Needs lineage to confirm.' },
   { id: 'frappuccino',      label: 'Frappuccino',       inheritance: 'combo phenotype',
@@ -351,7 +353,7 @@ export const MORPH_ID_CAPABILITIES = [
   {
     id: 'expression',
     label: 'Possible genetic expression',
-    items: ['lily_white', 'axanthic', 'cappuccino', 'frappuccino', 'phantom_expression', 'cream_on_cream', 'soft_scale', 'whiteout', 'empty_back', 'white_wall', 'hypo'],
+    items: ['lily_white', 'axanthic', 'cappuccino', 'sable', 'highway', 'luwak', 'frappuccino', 'phantom_expression', 'cream_on_cream', 'soft_scale', 'whiteout', 'empty_back', 'white_wall', 'hypo'],
   },
   {
     id: 'color_scheme',
@@ -359,6 +361,61 @@ export const MORPH_ID_CAPABILITIES = [
     items: ['black_base', 'red', 'orange', 'yellow', 'cream', 'pink', 'olive', 'buckskin', 'lavender', 'charcoal', 'bicolor', 'tricolor'],
   },
 ];
+
+// ---------------------------------------------------------------------------
+// What a photo cannot settle. Line-bred looks, fired state, lighting and
+// shared genes make different animals look alike; only lineage separates
+// them. Shown before upload and under every result.
+
+export const PHOTO_LIMITS = [
+  {
+    title: 'Line-bred looks copy proven genes',
+    body: 'Years of selective breeding produce dark, pale, clean-backed and high-white animals with no single gene behind them. A line-bred dark gecko and a Sable, or a line-bred pale gecko and a Lilly White, can look the same in a photo.',
+  },
+  {
+    title: 'Some genes look alike by design',
+    body: 'Cappuccino, Sable and Highway are versions of one gene, and a Luwak carries two of them. Lilly White, White Wall and Whiteout all add white. Axanthic and a gray Lavender can match. A photo narrows the list; it cannot pick between them.',
+  },
+  {
+    title: 'Hidden genes never show',
+    body: 'A het Axanthic or het Phantom looks exactly like a normal gecko. Only the parents and offspring reveal them.',
+  },
+  {
+    title: 'Fired state and light change everything',
+    body: 'The same gecko can look like two different morphs fired up and fired down, or under a warm bulb and in daylight.',
+  },
+];
+
+// Visible results that have look-alikes a photo cannot separate, keyed by
+// taxonomy id. Each line names what lineage would settle.
+const LOOKALIKE_GROUPS = [
+  {
+    ids: ['cappuccino', 'sable', 'highway', 'luwak', 'frappuccino', 'melanistic'],
+    text: 'Cappuccino, Sable, Highway and Luwak share one gene and overlap in looks, and line-bred dark animals can match all of them. The parents tell you which version this gecko carries.',
+  },
+  {
+    ids: ['lily_white', 'white_wall', 'whiteout', 'cream_on_cream', 'moonglow'],
+    text: 'Lilly White, White Wall, Whiteout and line-bred high-white animals can look alike. Lilly White matters most to know for certain: two Lilly Whites must never be paired.',
+  },
+  {
+    ids: ['axanthic', 'axanthic_vca', 'axanthic_tsm'],
+    text: 'A gray Lavender, a fired-down gecko or a cool-toned photo can pass for Axanthic, and Axanthic lines may not be compatible with each other. Lineage confirms the line, and a het never shows at all.',
+  },
+  {
+    ids: ['phantom_expression', 'phantom_pinstripe', 'patternless', 'empty_back'],
+    text: 'Phantom, Empty Back, Highway and line-bred patternless animals can all show a quiet back. Phantom is recessive, so lineage is the only way to know if this gecko carries it.',
+  },
+  {
+    ids: ['soft_scale'],
+    text: 'Soft Scale is a texture, and photos flatten texture. Confirm it in hand and from the parents.',
+  },
+];
+
+/** Look-alike warnings for the ids in a result, without repeats. */
+export function lookalikeNotes(ids = []) {
+  const seen = new Set(ids.filter(Boolean));
+  return LOOKALIKE_GROUPS.filter((g) => g.ids.some((id) => seen.has(id))).map((g) => g.text);
+}
 
 // ---------------------------------------------------------------------------
 // Lookup helpers, used by both /recognition and /training flows.

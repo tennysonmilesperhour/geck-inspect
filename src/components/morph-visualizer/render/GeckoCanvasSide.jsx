@@ -27,13 +27,14 @@ import Harlequin from './layers/Harlequin';
 import Dalmatian from './layers/Dalmatian';
 import LillyWhite from './layers/LillyWhite';
 import Cappuccino from './layers/Cappuccino';
+import Highway from './layers/Highway';
 import WhiteWall from './layers/WhiteWall';
 import Accents from './layers/Accents';
 import Crests from './layers/Crests';
 import Eye from './layers/Eye';
 import ScaleTexture from './layers/ScaleTexture';
 import FireState from './layers/FireState';
-import { ZYGOSITY as Z } from '../data/traits';
+import { ZYGOSITY as Z, TRAITS_BY_ID } from '../data/traits';
 
 export default function GeckoCanvas({ phenotype, selections }) {
   const {
@@ -117,6 +118,11 @@ export default function GeckoCanvas({ phenotype, selections }) {
 
       {/* Cappuccino repaints the dorsum, draw after pattern to override. */}
       <Cappuccino expressed={expressed.cappuccino} isSuper={cappSuper} palette={palette} />
+
+      {/* Highway stripe down the spine. */}
+      <g clipPath={`url(#${BODY_CLIP_ID})`}>
+        <Highway expressed={expressed.highway} covered={expressed.cappuccino} stripeHex={TRAITS_BY_ID.highway.visual.stripeHex} />
+      </g>
 
       {/* Lilly White splashes sit on top of everything except details. */}
       <LillyWhite expressed={expressed.lilly_white} isSuper={lwSuper} />

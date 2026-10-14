@@ -65,7 +65,7 @@ Geck Inspect is a free-to-start web and mobile app for crested gecko keepers and
 
 ## Per-morph guide pages (public, crawlable)
 
-Each of the 35 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
+Each of the 36 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
 
 - Harlequin: https://geckinspect.com/MorphGuide/harlequin
 - Extreme Harlequin: https://geckinspect.com/MorphGuide/extreme-harlequin
@@ -84,6 +84,7 @@ Each of the 35 crested gecko morphs in the guide has its own page with a definit
 - White Wall White Spot: https://geckinspect.com/MorphGuide/white-wall-white-spot
 - Cappuccino: https://geckinspect.com/MorphGuide/cappuccino
 - Sable: https://geckinspect.com/MorphGuide/sable
+- Highway: https://geckinspect.com/MorphGuide/highway
 - Frappuccino: https://geckinspect.com/MorphGuide/frappuccino
 - Lilly White: https://geckinspect.com/MorphGuide/lilly-white
 - Axanthic: https://geckinspect.com/MorphGuide/axanthic
@@ -941,6 +942,25 @@ One copy makes a visual Sable and two copies make a Super Sable, so there is no 
 - No hidden het: one copy is visible
 
 **Notes.** Super Sable appears viable. Cappuccino x Sable (Luwak) is the safe way to combine the two, since it can never make a Super Cappuccino.
+
+### Highway
+
+_Permalink: https://geckinspect.com/MorphGuide/highway_
+
+**Rarity:** Rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Pattern
+
+Incomplete-dominant trait with a continuous, clean dorsal stripe. Provisionally the third version of the Cappuccino and Sable gene.
+
+One copy makes a visual Highway and two copies make a Super Highway. Highway is treated as the third version of the Cappuccino and Sable gene, mainly because Super Highway hatchlings show nostril and health issues like Super Cappuccino; the community has not fully settled this, so it is still badged Emerging. A gecko holds two versions of the gene at most, so it can be Cappuccino plus Highway or Sable plus Highway. A clean, unbroken back also comes from Empty Back, Phantom and line-bred patternless animals, so a photo alone does not prove Highway.
+
+**Key features:**
+- Continuous, unbroken dorsal stripe
+- Clean sides
+- One copy is visible: no hidden het
+
+**Notes.** Avoid Highway x Highway: Super Highway hatchlings have reported nostril and health issues. Pair Highway to a normal, or to a Cappuccino or Sable for a compound with no super.
 
 ### Frappuccino
 

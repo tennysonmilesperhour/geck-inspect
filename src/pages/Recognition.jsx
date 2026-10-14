@@ -24,6 +24,7 @@ import { onPhotoPath } from '@/lib/firstGeckoFlow';
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
 import MorphIdCoverageCard from '../components/morph-id/MorphIdCoverageCard';
+import MorphIdLimitsCard from '../components/morph-id/MorphIdLimitsCard';
 import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
 import ViewPhotoUploader from '../components/morph-id/ViewPhotoUploader';
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
@@ -323,6 +324,8 @@ export default function Recognition() {
             Crested geckos only. Other species will be rejected as insufficient evidence.
           </p>
         </div>
+
+        <MorphIdLimitsCard />
 
         <details className="rounded-xl border border-slate-700 p-4">
           <summary className="cursor-pointer font-medium text-slate-200 touch:py-2.5">Photo tips and supported morphs</summary>

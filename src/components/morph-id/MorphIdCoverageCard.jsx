@@ -37,7 +37,7 @@ export default function MorphIdCoverageCard() {
             <div className="rounded-md border border-amber-800/70 bg-amber-950/20 p-3 flex gap-2">
               <ShieldAlert className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-100/80">
-                Photos can suggest visible expression, but cannot prove a genetic line, hidden het, or inheritance. Axanthic line and other lineage claims stay unverified until records support them.
+                Photos can suggest visible expression, but cannot prove a genetic line, hidden het, or inheritance. Line-bred looks can match proven genes, and Cappuccino, Sable, Highway and Luwak share one gene. Those claims stay unverified until lineage records support them.
               </p>
             </div>
           </div>

@@ -68,7 +68,7 @@ const SECTIONS = [
             <BulletList items={[
               'Dominant: a single copy is enough to show the trait. The gecko looks the same whether it has one or two copies.',
               'Recessive: the trait only shows when both alleles are the recessive version. A single copy is "het", invisible but still passable to offspring. Axanthic is the cleanest crested gecko example.',
-              'Incomplete dominant: one copy produces the visual form, and two copies produce a more extreme "super" form. MOST proven crested gecko morphs work this way: Lilly White, Cappuccino, Sable, Soft Scale, and White Wall are all incomplete dominants.',
+              'Incomplete dominant: one copy produces the visual form, and two copies produce a more extreme "super" form. MOST proven crested gecko morphs work this way: Lilly White, Cappuccino, Sable, Highway, Soft Scale, and White Wall are all incomplete dominants.',
               'Codominant in the strict sense (both alleles expressing simultaneously without blending) is rare in crested geckos. The hobby uses "codominant" and "incomplete dominant" loosely.',
             ]} />
             <Callout items={[
@@ -301,6 +301,24 @@ const SECTIONS = [
               'Sable × Normal → 50% visual Sable, 50% normal',
               'Sable × Sable → 25% Super Sable, 50% Sable, 25% normal',
               'Cappuccino × Sable → 25% Luwak (one of each), 25% Cappuccino, 25% Sable, 25% normal. Never a super.',
+            ]} />
+          </>
+        )
+      },
+      {
+        title: 'Highway',
+        content: (
+          <>
+            <BulletList items={[
+              'Inheritance: INCOMPLETE DOMINANT. Single copy = Highway (a continuous, clean dorsal stripe with clean sides). Two copies = Super Highway.',
+              'Same gene, provisionally: Highway is treated as the third version of the Cappuccino and Sable gene. The main evidence is that Super Highway hatchlings show nostril and health issues like Super Cappuccino. The community has not fully settled it, so Geck Inspect badges it Emerging.',
+              'Super form health: Super Highway has reported nostril and health issues. Avoid Highway × Highway.',
+              'Look-alikes: Empty Back (incomplete dominant), Phantom (recessive) and line-bred patternless animals can all show a clean back. Lineage, not a photo, tells them apart.',
+            ]} />
+            <Callout items={[
+              'Highway × Normal → 50% visual Highway, 50% normal (SAFEST)',
+              'Highway × Highway → 25% Super Highway (health concerns), 50% Highway, 25% normal',
+              'Highway × Cappuccino or Sable → 25% compound (one of each), 25% each single, 25% normal. Never a super.',
             ]} />
           </>
         )

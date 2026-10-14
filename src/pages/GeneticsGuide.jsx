@@ -33,6 +33,7 @@ const GENE_MORPH_LINKS = [
   ['Axanthic', 'axanthic'],
   ['Cappuccino', 'cappuccino'],
   ['Sable', 'sable'],
+  ['Highway', 'highway'],
   ['Albino', 'albino'],
 ];
 

@@ -27,7 +27,7 @@ import {
   BRANCH_TOP_PATH,
 } from './svgShapesTop';
 import { mulberry32 } from './svgShapes';
-import { ZYGOSITY as Z } from '../data/traits';
+import { ZYGOSITY as Z, TRAITS_BY_ID } from '../data/traits';
 
 const BODY_TOP_CLIP = 'gecko-body-top-clip';
 
@@ -134,6 +134,11 @@ export default function GeckoCanvasTop({ phenotype, selections }) {
         {/* --- Cappuccino dorsum repaint --- */}
         {expressed.cappuccino && (
           <CappuccinoTop isSuper={cappSuper} palette={palette} />
+        )}
+
+        {/* --- Highway stripe down the spine --- */}
+        {expressed.highway && !expressed.cappuccino && (
+          <path d="M 170,262 C 300,259 450,258 600,260 C 640,261 665,262 690,263" stroke={TRAITS_BY_ID.highway.visual.stripeHex} strokeWidth="16" fill="none" strokeLinecap="round" opacity="0.95" />
         )}
 
         {/* --- Lilly White splashes --- */}

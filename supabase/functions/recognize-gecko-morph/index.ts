@@ -704,6 +704,13 @@ Rules:
   axanthic-like phenotype; never infer axanthic_vca or axanthic_tsm from photos.
   Phantom and Cream-on-Cream are visual-expression suggestions, not proof of their
   underlying genotype.
+- Line-bred phenotypes, fired state and lighting make different morphs look alike.
+  Cappuccino, Sable and Highway share one gene (Luwak is Cappuccino plus Sable) and
+  overlap with line-bred dark or clean-backed animals; Lilly White overlaps with
+  White Wall, Whiteout and line-bred high white. Only list sable, highway or luwak
+  when the expression is strong and distinctive, and when a look-alike fits, say
+  in uncertainty_reasons which look-alikes the photos cannot rule out and that recorded
+  lineage settles it.
 - secondary_traits is observational modifiers. Multiple allowed.
 - Harlequin is the base pattern most other crested gecko patterns sit on. When a
   harlequin also shows another pattern, that pattern is primary_morph, the way

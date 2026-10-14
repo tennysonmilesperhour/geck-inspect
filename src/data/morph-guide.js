@@ -805,7 +805,7 @@ export const MORPHS = [
     ],
     history:
       "The project was developed in South Korea and later investigated through breeder collaborations, including Pangea.",
-    combinesWith: ['lilly-white', 'sable', 'soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
+    combinesWith: ['lilly-white', 'sable', 'highway', 'soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
     sources: [
       "https://www.pangeareptile.com/blogs/blog/cappuccino-frappuccino-melanistic"
     ],
@@ -848,11 +848,50 @@ export const MORPHS = [
     ],
     history:
       "Founded in the Rialto line at Gecko Haven: Pinch x Mokolii, two unrelated geckos from Gorgeous Gecko in Texas, hatched Rialto, the first known Sable.",
-    combinesWith: ['cappuccino', 'lilly-white', 'axanthic', 'extreme-harlequin'],
+    combinesWith: ['cappuccino', 'highway', 'lilly-white', 'axanthic', 'extreme-harlequin'],
     sources: [
       "https://www.morphmarket.com/morphpedia/crested-geckos/sable/"
     ],
     notes: "Super Sable appears viable. Cappuccino x Sable (Luwak) is the safe way to combine the two, since it can never make a Super Cappuccino.",
+  },
+  {
+    slug: 'highway',
+    name: 'Highway',
+    definition:
+      "A Highway crested gecko carries one copy of an incomplete-dominant trait associated with a continuous, clean dorsal stripe, provisionally placed on the same gene as Cappuccino and Sable.",
+    lookalikes: [
+      {
+        "slug": "cappuccino",
+        "difference": "Cappuccino and Highway are thought to be versions of the same gene; a clean-backed animal needs lineage to say which one it carries."
+      },
+      {
+        "slug": "patternless",
+        "difference": "Line-bred patternless animals can show a clean back with no Highway gene at all."
+      },
+      {
+        "slug": "phantom-pinstripe",
+        "difference": "A Phantom Pinstripe also reads as a quiet, unbroken back; Phantom is recessive and only lineage separates the two."
+      }
+    ],
+    aliases: ['Super Highway'],
+    category: 'pattern',
+    inheritance: 'incomplete-dominant',
+    rarity: 'rare',
+    summary:
+      "Incomplete-dominant trait with a continuous, clean dorsal stripe. Provisionally the third version of the Cappuccino and Sable gene.",
+    description:
+      "One copy makes a visual Highway and two copies make a Super Highway. Highway is treated as the third version of the Cappuccino and Sable gene, mainly because Super Highway hatchlings show nostril and health issues like Super Cappuccino; the community has not fully settled this, so it is still badged Emerging. A gecko holds two versions of the gene at most, so it can be Cappuccino plus Highway or Sable plus Highway. A clean, unbroken back also comes from Empty Back, Phantom and line-bred patternless animals, so a photo alone does not prove Highway.",
+    keyFeatures: [
+      "Continuous, unbroken dorsal stripe",
+      "Clean sides",
+      "One copy is visible: no hidden het"
+    ],
+    visualIdentifiers: [
+      "Look for an unbroken stripe from head to tail base",
+      "Confirm with documented lineage, since several genes and line-bred looks give a clean back"
+    ],
+    combinesWith: ['cappuccino', 'sable', 'lilly-white', 'axanthic'],
+    notes: "Avoid Highway x Highway: Super Highway hatchlings have reported nostril and health issues. Pair Highway to a normal, or to a Cappuccino or Sable for a compound with no super.",
   },
   {
     slug: 'frappuccino',
