@@ -38,6 +38,7 @@ import { saveOnboarding } from '@/lib/onboardingState';
 import SignInRequired from '@/components/shared/SignInRequired';
 import PageHeader from '@/components/shared/PageHeader';
 import WeighInReminderSetting from '@/components/settings/WeighInReminderSetting';
+import CollectionArtworkSetting from '@/components/settings/CollectionArtworkSetting';
 
 const STORE_POLICY_EXAMPLE = [
     "• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon-Wed only. Shipping cost is the buyer's responsibility.",
@@ -682,10 +683,11 @@ export default function SettingsPage() {
                             Appearance
                         </CardTitle>
                         <CardDescription className="text-slate-400">
-                            Color theme for the whole app.
+                            Your collection artwork and the colors of the app.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-8">
+                        <CollectionArtworkSetting user={user} />
                         <AppearanceSection />
                     </CardContent>
                 </Card>

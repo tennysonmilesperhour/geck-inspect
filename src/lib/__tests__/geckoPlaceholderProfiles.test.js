@@ -7,6 +7,16 @@ const NOW = new Date(2026, 9, 14, 12);
 const profile = gecko => geckoPlaceholderProfile(gecko, NOW);
 
 describe('record-driven gecko artwork', () => {
+  it('inherits the owner default, keeps individual overrides, and restores the stable mix', () => {
+    const gecko = { id: 'owner-preference', inherited_placeholder_style: 'nouveau' };
+    expect(profile(gecko).style.id).toBe('nouveau');
+    expect(profile({ ...gecko, inherited_placeholder_style: 'woodcut' }).style.id).toBe('woodcut');
+    expect(profile({ ...gecko, placeholder_style: 'celestial' }).style.id).toBe('celestial');
+    expect(profile({ ...gecko, placeholder_style: 'invalid' }).style.id).toBe('nouveau');
+    expect(profile({ ...gecko, placeholder_style: null, inherited_placeholder_style: null }).style.id).toBe(geckoArtStyle(gecko).id);
+    expect(geckoPlaceholderProfile(gecko, NOW, 'terracotta').style.id).toBe('terracotta');
+  });
+
   it('honors every saved style as age and sex change, and restores the original automatic style', () => {
     const gecko = { id: 'chosen-style', name: 'Fern' };
     const originalStyle = profile(gecko).style.id;

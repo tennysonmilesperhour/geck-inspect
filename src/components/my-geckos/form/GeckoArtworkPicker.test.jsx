@@ -14,7 +14,7 @@ function Editor({ onChange }) {
 }
 
 describe('artwork style picker', () => {
-  it('previews each choice immediately and sends null when Automatic is restored', async () => {
+  it('previews each choice immediately and sends null when the collection default is restored', async () => {
     const onChange = vi.fn();
     let tree;
     await act(async () => { tree = create(<Editor onChange={onChange} />); });
@@ -30,6 +30,24 @@ describe('artwork style picker', () => {
     await act(async () => radio(tree, 'automatic').props.onChange());
     expect(onChange).toHaveBeenLastCalledWith(null);
     expect(preview(tree).props['data-art-style']).toBe(original);
+    await act(async () => tree.unmount());
+  });
+
+  it('shows the inherited style without selecting it as an individual override', async () => {
+    let tree;
+    await act(async () => { tree = create(<GeckoArtworkPicker gecko={{ ...gecko, inherited_placeholder_style: 'terracotta' }} onChange={vi.fn()} />); });
+    expect(radio(tree, 'automatic').props['aria-label']).toBe('Collection default');
+    expect(radio(tree, 'automatic').props.checked).toBe(true);
+    expect(radio(tree, 'terracotta').props.checked).toBe(false);
+    expect(preview(tree).props['data-art-style']).toBe('terracotta');
+    await act(async () => tree.unmount());
+  });
+
+  it('offers the stable automatic mix in the collection settings', async () => {
+    let tree;
+    await act(async () => { tree = create(<GeckoArtworkPicker gecko={gecko} collectionDefault onChange={vi.fn()} />); });
+    expect(radio(tree, 'automatic').props['aria-label']).toBe('Automatic mix');
+    expect(preview(tree).props['data-art-style']).toBe(geckoArtStyle(gecko).id);
     await act(async () => tree.unmount());
   });
 

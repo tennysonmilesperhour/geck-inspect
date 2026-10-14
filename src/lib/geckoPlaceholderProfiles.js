@@ -23,7 +23,8 @@ export const GECKO_ART_AGES = {
   unknown: 'Age not set',
 };
 
-// Null means Automatic. Unknown values never become an asset path or a saved choice.
+// Null inherits the owner's default; a null owner default uses the stable mix.
+// Unknown values never become an asset path or a saved choice.
 export function normalizeGeckoArtStyle(value) {
   return GECKO_ART_STYLES.some(style => style.id === value) ? value : null;
 }
@@ -73,7 +74,9 @@ function recordedAge(gecko, now) {
 }
 
 export function geckoPlaceholderProfile(gecko, now = new Date(), styleId) {
-  const selectedStyle = normalizeGeckoArtStyle(styleId) || normalizeGeckoArtStyle(gecko?.placeholder_style);
+  const selectedStyle = normalizeGeckoArtStyle(styleId)
+    || normalizeGeckoArtStyle(gecko?.placeholder_style)
+    || normalizeGeckoArtStyle(gecko?.inherited_placeholder_style);
   const style = GECKO_ART_STYLES.find(item => item.id === selectedStyle) || geckoArtStyle(gecko);
   const sex = normalizeSex(gecko?.sex);
   const age = recordedAge(gecko, now);

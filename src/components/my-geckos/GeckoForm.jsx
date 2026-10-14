@@ -1025,7 +1025,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
                         <div className="mb-4">
                             <GeckoArtworkPicker
-                                gecko={{ ...gecko, ...formData }}
+                                gecko={{ ...gecko, ...formData, inherited_placeholder_style: gecko?.id
+                                    ? gecko.inherited_placeholder_style
+                                    : currentUser?.gecko_artwork_style }}
                                 onChange={style => handleChange('placeholder_style', style)}
                                 disabled={isArchived || isSaving}
                             />
