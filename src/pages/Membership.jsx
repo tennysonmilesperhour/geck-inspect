@@ -18,7 +18,11 @@ import {
   maxAnnualSavingsPercent,
 } from '@/lib/stripe-config';
 import Seo from '@/components/seo/Seo';
-import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+import {
+  MEMBERSHIP_FAQS,
+  MEMBERSHIP_JSON_LD,
+  membershipMetaDescription,
+} from '@/lib/membershipSeo';
 import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
@@ -150,112 +154,6 @@ const CYCLE_OPTIONS = [
   { key: 'monthly',  label: 'Monthly' },
   { key: 'annual',   label: 'Annual',   hint: `Save up to ${maxAnnualSavingsPercent()}%` },
   ...(LIFETIME_AVAILABLE ? [{ key: 'lifetime', label: 'Lifetime', hint: 'Pay once' }] : []),
-];
-
-// SoftwareApplication + Offer JSON-LD for the pricing page. AI assistants
-// (ChatGPT, Perplexity, Claude) parse this directly when answering "how
-// much does Geck Inspect cost / what plans are available". Offers cover
-// every (tier × billing cycle) combo with a live Stripe price.
-const PRICED_TIERS = ['keeper', 'breeder', 'enterprise'];
-function priceToNumber(p) {
-  // "$4" → 4, "$38.40" → 38.4, "$0" → 0
-  return Number(String(p).replace(/[^0-9.]/g, ''));
-}
-const MEMBERSHIP_OFFERS = PRICED_TIERS.flatMap((tier) =>
-  Object.entries(TIER_PRICING[tier])
-    .filter(([, p]) => p.price_id) // only combos that are actually purchasable
-    .map(([cycle, p]) => ({
-    '@type': 'Offer',
-    name: `Geck Inspect ${tier[0].toUpperCase() + tier.slice(1)} (${cycle})`,
-    price: priceToNumber(p.price).toFixed(2),
-    priceCurrency: 'USD',
-    availability: 'https://schema.org/InStock',
-    url: `${SITE_URL}/Membership`,
-    category: cycle === 'lifetime' ? 'one-time' : 'subscription',
-    description: p.priceCaption,
-    })),
-);
-const MEMBERSHIP_HIGH_PRICE = Math.max(
-  ...MEMBERSHIP_OFFERS.map((o) => Number(o.price)),
-).toFixed(0);
-// One list for the visible FAQ and the FAQPage JSON-LD. Google expects
-// the two to match, and until October 2026 the questions were only in the
-// structured data, so visitors never saw them.
-const MEMBERSHIP_FAQS = [
-  {
-    q: 'How much does Geck Inspect cost?',
-    a: `Geck Inspect has a Free plan (up to 10 geckos), Keeper at $2.99 a month or $30 a year, and Breeder at $5.99 a month or $60 a year. Enterprise, with Market Intelligence, is $99.99 a month or $1,000 a year. Subscribing bills you straight away, and each paid plan also offers an optional ${TRIAL_DAYS}-day free trial. Paying yearly saves about 17%.`,
-  },
-  {
-    q: 'Can I try a paid plan before subscribing?',
-    a: `Yes. Every monthly or yearly paid plan has a ${TRIAL_DAYS}-day free trial you can start from the plan card. It is one per account, and it is optional: subscribing without it bills you today.`,
-  },
-  {
-    q: 'What is included in the Free plan?',
-    a: 'Up to 10 geckos, 1 active breeding pair, weights, feeding groups and event logs, lineage trees, sales and cost records, value estimates from real listings, one free Morph ID, the genetics calculator and guides, and the community forum. It is free for as long as you use it, with no credit card.',
-  },
-  {
-    q: 'Can I export my records?',
-    a: 'Yes, on every plan. Export your roster to CSV or PDF from My Geckos, and your collection and care records as JSON from Settings. Your records stay yours if you ever leave.',
-  },
-  {
-    q: 'Can I cancel anytime?',
-    a: 'Yes. Monthly and yearly subscriptions can be cancelled at any time. Use the Manage billing button on this page or in Settings to open your Stripe billing portal, where you can cancel, change plans, update your card, or download invoices.',
-  },
-];
-
-const MEMBERSHIP_JSON_LD = [
-  {
-    '@type': 'SoftwareApplication',
-    '@id': `${SITE_URL}/Membership#softwareapplication`,
-    name: 'Geck Inspect',
-    description:
-      'Crested gecko collection, breeding, and community platform. Plans for hobbyists through professional breeders, with AI morph ID, lineage trees, marketplace sync, and certificates.',
-    applicationCategory: 'BusinessApplication',
-    applicationSubCategory: 'Reptile breeding and collection management',
-    operatingSystem: 'Web, iOS Safari, Android Chrome',
-    url: `${SITE_URL}/Membership`,
-    publisher: { '@id': ORG_ID },
-    offers: {
-      '@type': 'AggregateOffer',
-      priceCurrency: 'USD',
-      lowPrice: '0',
-      highPrice: MEMBERSHIP_HIGH_PRICE,
-      offerCount: MEMBERSHIP_OFFERS.length + 3, // + 3 free-tier rows
-      offers: MEMBERSHIP_OFFERS,
-    },
-    featureList: [
-      'Crested gecko collection tracker',
-      'Breeding pair manager with lineage tree',
-      'AI-powered morph identification',
-      'Weight and feeding logs',
-      'MorphMarket CSV sync (Breeder tier)',
-      'Pairing waitlists with deposit tracking (Breeder tier)',
-      'Genetics calculator and morph guide',
-      'Community forum and marketplace',
-      'Crested gecko Market Intelligence (Enterprise tier)',
-    ],
-  },
-  {
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Membership',
-        item: `${SITE_URL}/Membership`,
-      },
-    ],
-  },
-  {
-    '@type': 'FAQPage',
-    mainEntity: MEMBERSHIP_FAQS.map((item) => ({
-      '@type': 'Question',
-      name: item.q,
-      acceptedAnswer: { '@type': 'Answer', text: item.a },
-    })),
-  },
 ];
 
 function HoveringBadge({ children, variant = 'popular' }) {
@@ -583,7 +481,7 @@ export default function MembershipPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 md:p-8">
       <Seo
         title="Pricing & Plans"
-        description={`Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo or $30/yr), Breeder ($5.99/mo or $60/yr), and Enterprise ($99.99/mo or $1,000/yr). Optional ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`}
+        description={membershipMetaDescription()}
         path="/Membership"
         type="website"
         imageAlt="Geck Inspect membership plans, Free, Keeper, Breeder, and Enterprise tiers"
