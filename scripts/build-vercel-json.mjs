@@ -209,7 +209,8 @@ function buildConfig() {
           // unexpected origins in error_logs. A 6 Sep source audit added
           // the origins report-only traffic had not yet exercised: Stripe.js
           // fraud-signal frames (m.stripe.network, hooks.stripe.com) and
-          // telemetry (r.stripe.com), GA4 signals (stats.g.doubleclick.net),
+          // telemetry (r.stripe.com), GA4 signals (stats.g.doubleclick.net, plus the www.google.com/g/collect and
+          // www.googletagmanager.com/td beacons that 14 Oct reports caught),
           // the PostHog embedded dashboards on the admin analytics page,
           // and the Amazon affiliate widget frames on store product pages.
           // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Google
@@ -225,7 +226,7 @@ function buildConfig() {
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https:",
               "media-src 'self' blob: https:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://images.unsplash.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://www.google.com https://www.googletagmanager.com https://images.unsplash.com",
               "frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com https://hooks.stripe.com https://m.stripe.network https://us.posthog.com https://rcm-na.amazon-adsystem.com https://ws-na.amazon-adsystem.com https://z-na.amazon-adsystem.com",
               "worker-src 'self' blob:",
               "object-src 'none'",
