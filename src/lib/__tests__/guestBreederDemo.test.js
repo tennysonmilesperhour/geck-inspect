@@ -59,4 +59,19 @@ describe('synthetic guest breeder demo', () => {
     expect(costs).toHaveLength(DEMO_BREEDER_COSTS.length);
     expect(costs.every((c) => c.user_email === 'guest@local')).toBe(true);
   });
+
+  it('keeps sold demo weigh-ins on or before each sale date', async () => {
+    const [geckos, weighIns] = await Promise.all([
+      guestMockList('Gecko'),
+      guestMockList('WeightRecord'),
+    ]);
+    const soldGeckos = geckos.filter((gecko) => gecko.archive_reason === 'sold' && gecko.archived_date);
+    expect(soldGeckos.length).toBeGreaterThan(0);
+    for (const gecko of soldGeckos) {
+      const saleDate = gecko.archived_date.slice(0, 10);
+      const animalWeighIns = weighIns.filter((record) => record.gecko_id === gecko.id);
+      expect(animalWeighIns.length).toBeGreaterThan(0);
+      expect(animalWeighIns.every((record) => record.record_date <= saleDate)).toBe(true);
+    }
+  });
 });

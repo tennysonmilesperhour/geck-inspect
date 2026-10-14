@@ -5,7 +5,7 @@ import {
   DEMO_BREEDER_COSTS,
   DEMO_BREEDER_EGGS,
   DEMO_BREEDER_GECKOS,
-  DEMO_BREEDER_ILLUSTRATIVE_PHOTOS,
+  DEMO_BREEDER_PHOTO_ASSIGNMENTS,
   DEMO_BREEDER_PLANS,
 } from '@/lib/guestBreederDemo';
 
@@ -27,25 +27,22 @@ import {
 
 export const GUEST_EMAIL = 'guest@local';
 
-// Public-domain/CC0 photos are reused only as clearly labeled illustrations.
-const GECKO_PHOTOS = DEMO_BREEDER_ILLUSTRATIVE_PHOTOS;
-
 // Retained for consumers that explicitly request a demo image fallback.
 export function fallbackForMorph() {
   return DEFAULT_GECKO_IMAGE;
 }
 
-// Deterministic photo pick so the same gecko always shows the same
-// photo across refreshes and navigations.
-const PHOTO_SEEDS = [
-  'diamond', 'ruby', 'thor', 'sunny', 'harley', 'spud', 'moss',
-  'nimbus', 'pebble', 'jasper', 'fern', 'cappy', 'ember', 'pixel',
-  'onyx', 'tiger', 'aria', 'bramble', 'willow',
-];
+// Keep a unique licensed photo on each selected guest card. Other synthetic
+// animals deliberately have no photo instead of cycling the same few images.
+const BASE_PHOTOS_BY_SEED = Object.freeze({
+  harley: DEMO_BREEDER_PHOTO_ASSIGNMENTS['mock-gecko-1'],
+  spud: DEMO_BREEDER_PHOTO_ASSIGNMENTS['mock-gecko-2'],
+  moss: DEMO_BREEDER_PHOTO_ASSIGNMENTS['mock-gecko-3'],
+});
 const IMG = (seed) => {
-  // Assign a stable illustration without claiming it depicts the demo animal.
-  const index = PHOTO_SEEDS.indexOf(String(seed).replace(/-\d+$/, ''));
-  return GECKO_PHOTOS[Math.max(0, index) % GECKO_PHOTOS.length];
+  const key = String(seed).replace(/-\d+$/, '');
+  const photo = BASE_PHOTOS_BY_SEED[key];
+  return photo ? [photo] : [];
 };
 
 const nowMs = Date.now();
@@ -94,7 +91,7 @@ const GECKOS = [
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin, High-Contrast',
     morph_tags: ['Harlequin', 'High-Contrast'],
-    image_urls: [IMG('diamond-01')],
+    image_urls: IMG('diamond-01'),
     gecko_id_code: 'GI-F01',
     species: 'Crested Gecko',
     generation: 1,
@@ -115,7 +112,7 @@ const GECKOS = [
     primary_morph: 'Cream',
     morphs_traits: 'Cream, Partial Pin',
     morph_tags: ['Cream', 'Pinstripe'],
-    image_urls: [IMG('ruby-01')],
+    image_urls: IMG('ruby-01'),
     gecko_id_code: 'GI-F02',
     species: 'Crested Gecko',
     generation: 1,
@@ -136,7 +133,7 @@ const GECKOS = [
     primary_morph: 'Pinstripe',
     morphs_traits: 'Pinstripe, Full',
     morph_tags: ['Pinstripe'],
-    image_urls: [IMG('thor-01')],
+    image_urls: IMG('thor-01'),
     gecko_id_code: 'GI-F03',
     species: 'Crested Gecko',
     generation: 1,
@@ -157,7 +154,7 @@ const GECKOS = [
     primary_morph: 'Yellow',
     morphs_traits: 'Yellow, Partial Pin',
     morph_tags: ['Yellow', 'Pinstripe'],
-    image_urls: [IMG('sunny-01')],
+    image_urls: IMG('sunny-01'),
     gecko_id_code: 'GI-F04',
     species: 'Crested Gecko',
     generation: 1,
@@ -182,7 +179,7 @@ const GECKOS = [
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin, Cream, High-Contrast',
     morph_tags: ['Harlequin', 'Cream', 'High-Contrast'],
-    image_urls: [IMG('harley-01'), IMG('harley-02')],
+    image_urls: IMG('harley-01'),
     gecko_id_code: 'GI-001',
     species: 'Crested Gecko',
     generation: 2,
@@ -207,7 +204,7 @@ const GECKOS = [
     primary_morph: 'Pinstripe',
     morphs_traits: 'Pinstripe, Yellow, Partial',
     morph_tags: ['Pinstripe', 'Yellow'],
-    image_urls: [IMG('spud-01')],
+    image_urls: IMG('spud-01'),
     gecko_id_code: 'GI-002',
     species: 'Crested Gecko',
     generation: 2,
@@ -230,7 +227,7 @@ const GECKOS = [
     primary_morph: 'Dalmatian',
     morphs_traits: 'Dalmatian, Red Base, Black Spots',
     morph_tags: ['Dalmatian', 'Red'],
-    image_urls: [IMG('moss-01'), IMG('moss-02')],
+    image_urls: IMG('moss-01'),
     gecko_id_code: 'GI-003',
     species: 'Crested Gecko',
     sire_name: null,
@@ -250,7 +247,7 @@ const GECKOS = [
     primary_morph: 'Lilly White',
     morphs_traits: 'Lilly White, Harlequin',
     morph_tags: ['Lilly White', 'Harlequin'],
-    image_urls: [IMG('nimbus-01')],
+    image_urls: IMG('nimbus-01'),
     gecko_id_code: 'GI-004',
     species: 'Crested Gecko',
     generation: 3,
@@ -275,7 +272,7 @@ const GECKOS = [
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin Pinstripe, Cream Base',
     morph_tags: ['Harlequin', 'Pinstripe', 'Cream'],
-    image_urls: [IMG('pebble-01')],
+    image_urls: IMG('pebble-01'),
     gecko_id_code: 'GI-013',
     species: 'Crested Gecko',
     generation: 3,
@@ -299,7 +296,7 @@ const GECKOS = [
     primary_morph: 'Pinstripe',
     morphs_traits: 'Pinstripe, Cream Dorsal',
     morph_tags: ['Pinstripe', 'Cream'],
-    image_urls: [IMG('jasper-01'), IMG('jasper-02')],
+    image_urls: IMG('jasper-01'),
     gecko_id_code: 'GI-014',
     species: 'Crested Gecko',
     generation: 3,
@@ -324,7 +321,7 @@ const GECKOS = [
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin, Yellow Base',
     morph_tags: ['Harlequin', 'Yellow'],
-    image_urls: [IMG('fern-01')],
+    image_urls: IMG('fern-01'),
     gecko_id_code: 'GI-015',
     species: 'Crested Gecko',
     generation: 3,
@@ -348,7 +345,7 @@ const GECKOS = [
     primary_morph: 'Cappuccino',
     morphs_traits: 'Cappuccino, Dark Base',
     morph_tags: ['Cappuccino'],
-    image_urls: [IMG('cappy-01')],
+    image_urls: IMG('cappy-01'),
     gecko_id_code: 'GI-005',
     species: 'Crested Gecko',
     archived: false,
@@ -366,7 +363,7 @@ const GECKOS = [
     primary_morph: 'Flame',
     morphs_traits: 'Flame, Red, Full Stripe',
     morph_tags: ['Flame', 'Red'],
-    image_urls: [IMG('ember-01'), IMG('ember-02')],
+    image_urls: IMG('ember-01'),
     gecko_id_code: 'GI-006',
     species: 'Crested Gecko',
     asking_price: 350,
@@ -385,7 +382,7 @@ const GECKOS = [
     primary_morph: 'Brindle',
     morphs_traits: 'Brindle, Chocolate',
     morph_tags: ['Brindle'],
-    image_urls: [IMG('pixel-01')],
+    image_urls: IMG('pixel-01'),
     gecko_id_code: 'GI-007',
     species: 'Crested Gecko',
     archived: false,
@@ -403,7 +400,7 @@ const GECKOS = [
     primary_morph: 'Axanthic',
     morphs_traits: 'Axanthic, Reverse Pin',
     morph_tags: ['Axanthic', 'Pinstripe'],
-    image_urls: [IMG('onyx-01'), IMG('onyx-02')],
+    image_urls: IMG('onyx-01'),
     gecko_id_code: 'GI-008',
     species: 'Crested Gecko',
     archived: false,
@@ -421,7 +418,7 @@ const GECKOS = [
     primary_morph: 'Tiger',
     morphs_traits: 'Tiger, Orange Base',
     morph_tags: ['Tiger'],
-    image_urls: [IMG('tiger-01')],
+    image_urls: IMG('tiger-01'),
     gecko_id_code: 'GI-009',
     species: 'Crested Gecko',
     archived: false,
@@ -439,7 +436,7 @@ const GECKOS = [
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin, Tricolor',
     morph_tags: ['Harlequin', 'Tricolor'],
-    image_urls: [IMG('aria-01'), IMG('aria-02')],
+    image_urls: IMG('aria-01'),
     gecko_id_code: 'GI-010',
     species: 'Crested Gecko',
     archived: false,
@@ -457,7 +454,7 @@ const GECKOS = [
     primary_morph: 'Pinstripe',
     morphs_traits: 'Pinstripe, Dalmatian',
     morph_tags: ['Pinstripe', 'Dalmatian'],
-    image_urls: [IMG('bramble-01')],
+    image_urls: IMG('bramble-01'),
     gecko_id_code: 'GI-011',
     species: 'Crested Gecko',
     archived: false,
@@ -475,7 +472,7 @@ const GECKOS = [
     primary_morph: 'Cream',
     morphs_traits: 'Cream, Partial Pin',
     morph_tags: ['Cream', 'Pinstripe'],
-    image_urls: [IMG('willow-01')],
+    image_urls: IMG('willow-01'),
     gecko_id_code: 'GI-012',
     species: 'Crested Gecko',
     archived: false,
@@ -497,9 +494,10 @@ const GECKO_IMAGES = ALL_GECKOS.flatMap((g, i) =>
     id: `mock-img-${i + 1}-${j + 1}`,
     image_url: url,
     gecko_id: g.id,
-    primary_morph: g.primary_morph,
-    secondary_traits: g.morph_tags,
-    caption: `${g.name}, ${g.primary_morph} · Illustrative photo`,
+    primary_morph: null,
+    secondary_traits: [],
+    caption: 'Illustrative photo. This is not the animal shown in the fictional demo record.',
+    photo_is_illustrative: true,
     verified: false,
     likes_count: 5 + ((i * 3 + j) % 40),
     created_by: GUEST_EMAIL,
@@ -522,23 +520,28 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
   const target = g.weight_grams;
   const points = 6;
   const hatchMs = g.hatch_date ? Date.parse(g.hatch_date) : null;
+  const soldAtMs = g.archived && g.archive_reason === 'sold' && g.archived_date
+    ? Date.parse(g.archived_date)
+    : nowMs;
   const ageAt = (ms) => (hatchMs == null ? null : (ms - hatchMs) / (86400000 * 30.4375));
-  const nowMid = bandMid(ageAt(nowMs) ?? 36);
-  const scale = nowMid ? Math.min(1.3, Math.max(0.7, target / nowMid)) : 1;
+  const finalMid = bandMid(ageAt(soldAtMs) ?? 36);
+  const scale = finalMid ? Math.min(1.3, Math.max(0.7, target / finalMid)) : 1;
   return Array.from({ length: points }, (_, i) => {
-    const ms = nowMs - (points - i) * 45 * 86400000;
+    const ms = soldAtMs - (points - i) * 45 * 86400000;
     const age = ageAt(ms);
     const jitter = (((gi + i) % 3) - 1) * 0.5;
     const grams = age == null || age < 0 ? target : Math.min(target, bandMid(age) * scale);
+    const recordedAt = new Date(ms);
     return {
       id: `mock-wr-${g.id}-${i}`,
       gecko_id: g.id,
       weight_grams: Math.max(2, Math.round((grams + jitter) * 10) / 10),
-      record_date: daysAgo((points - i) * 45).slice(0, 10),
+      record_date: recordedAt.toISOString().slice(0, 10),
       created_by: GUEST_EMAIL,
-      created_date: daysAgo((points - i) * 45),
+      created_date: recordedAt.toISOString(),
     };
-  }).filter((r) => hatchMs == null || Date.parse(r.record_date) >= hatchMs);
+  }).filter((r) => (hatchMs == null || Date.parse(r.record_date) >= hatchMs)
+    && Date.parse(r.record_date) <= soldAtMs);
 });
 
 // ---------------------------------------------------------------------------

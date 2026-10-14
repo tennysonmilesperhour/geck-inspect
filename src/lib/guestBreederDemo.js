@@ -43,9 +43,24 @@ export const DEMO_BREEDER_PHOTO_PLACEHOLDER = '/demo/geckos/illustrative-placeho
 export const DEMO_BREEDER_ILLUSTRATIVE_PHOTOS = [
   '/demo/geckos/macro-portrait.jpg',
   '/demo/geckos/licking-lips.jpg',
-  '/demo/geckos/orange.png',
   '/demo/geckos/super-empty-back.jpg',
+  '/demo/geckos/orange.png',
+  '/demo/geckos/geneva-young.jpg',
+  '/demo/geckos/crusted-gecko.jpg',
+  '/demo/geckos/female-2010.jpg',
 ];
+
+// Each licensed photograph is used on one fictional card only. Photos are
+// illustrative and are not evidence about the fictional animal's identity.
+export const DEMO_BREEDER_PHOTO_ASSIGNMENTS = Object.freeze({
+  'mock-gecko-1': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[0],
+  'mock-gecko-2': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[1],
+  'mock-gecko-3': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[2],
+  'mock-demo-gecko-2024-07': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[3],
+  'mock-demo-gecko-2024-08': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[4],
+  'mock-demo-gecko-2026-07': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[5],
+  'mock-demo-gecko-2026-08': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[6],
+});
 const now = new Date().toISOString();
 const laidDate = (hatchDate) => {
   const d = new Date(`${hatchDate}T12:00:00.000Z`);
@@ -70,7 +85,7 @@ const records = COHORTS.flatMap((cohort) => cohort.names.map((name, i) => {
     primary_morph: cohort.morphs[i],
     morphs_traits: cohort.morphs[i],
     morph_tags: [cohort.morphs[i]],
-    image_urls: [DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[(cohort.year + i) % DEMO_BREEDER_ILLUSTRATIVE_PHOTOS.length]],
+    image_urls: DEMO_BREEDER_PHOTO_ASSIGNMENTS[id] ? [DEMO_BREEDER_PHOTO_ASSIGNMENTS[id]] : [],
     photo_is_illustrative: true,
     gecko_id_code: `DEMO-${cohort.year}-${String(i + 1).padStart(2, '0')}`,
     species: 'Crested Gecko',

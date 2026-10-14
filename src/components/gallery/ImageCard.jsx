@@ -11,7 +11,7 @@ export default function ImageCard({ image, onImageSelect, thumbnail = false }) {
       <div className="relative aspect-square">
         <GeckoImage
           src={image.image_url}
-          alt={image.primary_morph}
+          alt={image.photo_is_illustrative ? 'Illustrative gecko photo, not the demo animal' : image.primary_morph}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
           decoding="async"
@@ -23,14 +23,20 @@ export default function ImageCard({ image, onImageSelect, thumbnail = false }) {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute bottom-2 left-2 right-2 text-white">
-          <h3 className="font-bold text-slate-100 text-sm capitalize truncate">{(image.primary_morph ?? '').replace(/_/g, ' ')}</h3>
-          {image.secondary_traits && image.secondary_traits.length > 0 && (
-            <p className="text-xs text-slate-300 capitalize truncate">
-              {image.secondary_traits.join(', ').replace(/_/g, ' ')}
-            </p>
-          )}
-        </div>
+        {image.photo_is_illustrative ? (
+          <span className="absolute bottom-2 left-2 rounded bg-slate-950/90 px-2 py-1 text-[10px] font-semibold text-white shadow">
+            Illustrative photo
+          </span>
+        ) : (
+          <div className="absolute bottom-2 left-2 right-2 text-white">
+            <h3 className="font-bold text-slate-100 text-sm capitalize truncate">{(image.primary_morph ?? '').replace(/_/g, ' ')}</h3>
+            {image.secondary_traits && image.secondary_traits.length > 0 && (
+              <p className="text-xs text-slate-300 capitalize truncate">
+                {image.secondary_traits.join(', ').replace(/_/g, ' ')}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </Card>
   );

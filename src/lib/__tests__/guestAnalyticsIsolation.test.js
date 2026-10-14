@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const state = vi.hoisted(() => ({ guest: true }));
 const supabase = vi.hoisted(() => ({
@@ -6,6 +8,7 @@ const supabase = vi.hoisted(() => ({
   from: vi.fn(),
 }));
 const analytics = vi.hoisted(() => ({ trackEvent: vi.fn() }));
+const indexHtml = readFileSync(fileURLToPath(new URL('../../../index.html', import.meta.url)), 'utf8');
 
 vi.mock('@/lib/guestMode', () => ({ isGuestMode: () => state.guest }));
 vi.mock('@/lib/supabaseClient', () => ({ supabase }));
@@ -41,5 +44,12 @@ describe('guest demo analytics isolation', () => {
     capturePageview('/MarketplaceSalesStats');
     identifyUser({ email: 'guest@local' });
     expect(analytics.trackEvent).not.toHaveBeenCalled();
+  });
+
+  it('skips the static visitor beacon when a page reloads in guest mode', () => {
+    const guestGuard = indexHtml.indexOf('sessionStorage.getItem("geck_inspect_guest_mode")');
+    const beaconEndpoint = indexHtml.indexOf('/functions/v1/track');
+    expect(guestGuard).toBeGreaterThan(-1);
+    expect(beaconEndpoint).toBeGreaterThan(guestGuard);
   });
 });
