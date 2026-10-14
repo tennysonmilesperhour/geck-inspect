@@ -62,11 +62,12 @@ describe.each([GeckoImage, SmartImage])('personalized gecko artwork', Image => {
   });
 
   it('uses personalized artwork after a broken real photo and recovers when replaced', async () => {
-    const gecko = { id: 'photo-fallback', sex: 'Male', hatch_date: '2020-01-01' };
+    const gecko = { id: 'photo-fallback', sex: 'Male', hatch_date: '2020-01-01', placeholder_style: 'celestial' };
     let view;
     await act(async () => { view = create(<Image gecko={gecko} src="/missing-photo.jpg" />); });
     await act(async () => view.root.findByType('img').props.onError({}));
     expect(view.root.findByProps({ 'data-gecko-placeholder': 'personalized' }).props['data-sex']).toBe('male');
+    expect(view.root.findByProps({ 'data-gecko-placeholder': 'personalized' }).props['data-art-style']).toBe('celestial');
     await act(async () => view.update(<Image gecko={gecko} src="/replacement.jpg" />));
     expect(view.root.findByType('img').props.src).toBe('/replacement.jpg');
     expect(view.root.findAllByType('svg')).toHaveLength(0);

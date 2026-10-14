@@ -61,6 +61,7 @@ export const INITIAL_FORM_DATA = {
   notes: '',
   status: 'Pet',
   image_urls: [],
+  placeholder_style: null,
   weight_grams: '',
   asking_price: '',
   marketplace_description: '',

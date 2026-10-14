@@ -41,6 +41,7 @@ const migration = (name) => readFileSync(
   'utf8',
 );
 const GECKO_MIGRATION = migration('20261008081011_anon_hide_owner_email_columns.sql');
+const GECKO_ARTWORK_MIGRATION = migration('20261014173814_gecko_placeholder_style.sql');
 const MORE_MIGRATION = migration('20261008081043_anon_hide_email_columns_more.sql');
 const WEIGHT_MIGRATION = migration('20261003004122_passport_transfers_lineage.sql');
 const WELCOME_MIGRATION = migration('20261003022738_owner_profile_id_forum_store_welcome.sql');
@@ -89,7 +90,7 @@ describe('columns a signed-out visitor may read', () => {
   });
 
   it('match the anon column grants in the database migration exactly', () => {
-    expect(grantedColumns(GECKO_MIGRATION, 'geckos')).toEqual(GECKO_PUBLIC_COLUMNS);
+    expect([...grantedColumns(GECKO_MIGRATION, 'geckos'), ...grantedColumns(GECKO_ARTWORK_MIGRATION, 'geckos')]).toEqual(GECKO_PUBLIC_COLUMNS);
     expect(grantedColumns(GECKO_MIGRATION, 'gecko_images')).toEqual(GECKO_IMAGE_PUBLIC_COLUMNS);
   });
 

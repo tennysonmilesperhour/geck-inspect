@@ -1,12 +1,27 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { GECKO_ART_STYLES, geckoArtStyle, geckoPlaceholderAsset, geckoPlaceholderProfile } from '../geckoPlaceholderProfiles';
+import { GECKO_ART_STYLES, geckoArtStyle, geckoPlaceholderAsset, geckoPlaceholderProfile, normalizeGeckoArtStyle } from '../geckoPlaceholderProfiles';
 
 const NOW = new Date(2026, 9, 14, 12);
 const profile = gecko => geckoPlaceholderProfile(gecko, NOW);
 
 describe('record-driven gecko artwork', () => {
+  it('honors every saved style as age and sex change, and restores the original automatic style', () => {
+    const gecko = { id: 'chosen-style', name: 'Fern' };
+    const originalStyle = profile(gecko).style.id;
+    for (const { id } of GECKO_ART_STYLES) {
+      expect(profile({ ...gecko, placeholder_style: id }).style.id).toBe(id);
+      expect(profile({ ...gecko, placeholder_style: id, sex: 'Female', hatch_date: '2026-09-14' }))
+        .toMatchObject({ style: { id }, sex: 'female', ageGroup: 'hatchling' });
+      expect(geckoPlaceholderProfile({ ...gecko, placeholder_style: id }, NOW, 'woodcut').style.id).toBe('woodcut');
+    }
+    for (const placeholder_style of [null, undefined, '', 'automatic', 'unknown', '../../file', 5]) {
+      expect(normalizeGeckoArtStyle(placeholder_style)).toBeNull();
+      expect(profile({ ...gecko, placeholder_style }).style.id).toBe(originalStyle);
+    }
+  });
+
   it('keeps a saved animal in the same family after edits and reordering', () => {
     const gecko = { id: '9c4a4b22-8191-4286-8ed5-10475aa7f37f', name: 'Fern', sex: 'Unsexed' };
     const family = geckoArtStyle(gecko).id;

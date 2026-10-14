@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { subMonths } from 'date-fns';
 import GeckoPlaceholder from '@/components/shared/GeckoPlaceholder';
 import GeckoCard from '@/components/my-geckos/GeckoCard';
+import GeckoArtworkPicker from '@/components/my-geckos/form/GeckoArtworkPicker';
 import { GECKO_ART_STYLES, GECKO_ART_AGES, GECKO_ART_SEXES, geckoArtStyle } from '@/lib/geckoPlaceholderProfiles';
 import { todayLocalISO } from '@/lib/dateUtils';
 
@@ -18,6 +19,7 @@ const AGE_MONTHS = { hatchling: 2, juvenile: 10, adult: 30 };
 export default function GeckoPlaceholderGallery() {
   const [sex, setSex] = useState('unsexed');
   const [age, setAge] = useState('adult');
+  const [selectedStyle, setSelectedStyle] = useState(null);
   const [today] = useState(() => new Date());
   const hatchDate = age === 'unknown' ? null : todayLocalISO(subMonths(today, AGE_MONTHS[age]));
   const examples = EXAMPLES.map(gecko => ({ ...gecko, sex: GECKO_ART_SEXES[sex].label, hatch_date: hatchDate }));
@@ -26,7 +28,7 @@ export default function GeckoPlaceholderGallery() {
     <div className="mb-7 max-w-3xl">
       <p className="mb-3 text-xs font-semibold uppercase tracking-[.24em] text-amber-300">The collection editions</p>
       <h2 id="placeholder-heading" className="text-3xl font-semibold sm:text-4xl">A little character, before the first photo.</h2>
-      <p className="mt-4 leading-relaxed text-stone-400">Five ornate defaults, automatically mixed through your collection. Each gecko keeps its own style as its details change. Add a photo and the illustration gives way to the real animal.</p>
+      <p className="mt-4 leading-relaxed text-stone-400">Five ornate defaults. Pick a favorite for each gecko, or let Automatic mix styles through your collection. Each gecko keeps its style as its details change. Add a photo and the illustration gives way to the real animal.</p>
     </div>
     <div className="mb-7 flex flex-wrap gap-x-10 gap-y-5 rounded-xl border border-stone-700 bg-white/[.03] p-4">
       <fieldset>
@@ -47,6 +49,9 @@ export default function GeckoPlaceholderGallery() {
           </button>
         )}</div>
       </fieldset>
+    </div>
+    <div id="artwork-picker" className="mb-10 max-w-4xl scroll-mt-6">
+      <GeckoArtworkPicker gecko={{ ...examples[0], placeholder_style: selectedStyle }} onChange={setSelectedStyle} />
     </div>
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5" data-placeholder-gallery>
       {examples.map((gecko, index) => <figure key={gecko.id}>

@@ -29,6 +29,7 @@ export const GECKO_PUBLIC_COLUMNS = [
   'breeder_user_id', 'hatch_facility', 'listing_price', 'estimated_hatch_year',
   'collection_id', 'quality_score', 'last_meaningful_change_at', 'tail_status',
   'growth_slideshow_enabled', 'sold_price', 'sale_category', 'owner_profile_id',
+  'placeholder_style',
 ];
 
 export const GECKO_IMAGE_PUBLIC_COLUMNS = [

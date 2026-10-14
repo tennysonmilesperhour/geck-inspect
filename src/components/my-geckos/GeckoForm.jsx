@@ -32,7 +32,8 @@ import ParentAutocomplete from './form/ParentAutocomplete';
 import { parentNameForSave } from '@/lib/parentNames';
 import { isNativePlatform } from '@/lib/revenuecat';
 import { captureDevicePhoto } from '@/lib/devicePhoto';
-import GeckoPlaceholder from '@/components/shared/GeckoPlaceholder';
+import GeckoArtworkPicker from './form/GeckoArtworkPicker';
+import { normalizeGeckoArtStyle } from '@/lib/geckoPlaceholderProfiles';
 
 // Back-compat alias so the rest of this file doesn't need to change
 const initialFormData = INITIAL_FORM_DATA;
@@ -139,6 +140,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 notes: gecko.notes || '',
                 status: gecko.status || 'Pet',
                 image_crop_data: gecko.image_crop_data || {},
+                placeholder_style: normalizeGeckoArtStyle(gecko.placeholder_style),
                 growth_slideshow_enabled: gecko.growth_slideshow_enabled || false,
             };
 
@@ -491,6 +493,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                              parseFloat(formData.asking_price) : null,
                 marketplace_description: formData.marketplace_description || null,
                 image_crop_data: cropData,
+                placeholder_style: normalizeGeckoArtStyle(formData.placeholder_style),
                 species: formData.species || 'Crested Gecko',
                 // Pass the chosen collection through so the new row lands
                 // in the right bucket. If null, the
@@ -1020,15 +1023,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             and add a fired-up and a fired-down photo so buyers see both.
                         </p>
 
-                        {formData.image_urls.length === 0 && (
-                            <div className="mb-4 flex items-center gap-4 rounded-xl border border-slate-700 bg-slate-800/40 p-3">
-                                <GeckoPlaceholder gecko={{ ...gecko, ...formData }} className="h-32 w-32 shrink-0 rounded-lg" />
-                                <div className="min-w-0">
-                                    <p className="text-sm font-medium text-slate-200">Their card, before the first photo</p>
-                                    <p className="mt-1 text-xs leading-relaxed text-slate-400">The illustration follows the sex and age you enter. Each saved gecko keeps its own artwork style.</p>
-                                </div>
-                            </div>
-                        )}
+                        <div className="mb-4">
+                            <GeckoArtworkPicker
+                                gecko={{ ...gecko, ...formData }}
+                                onChange={style => handleChange('placeholder_style', style)}
+                                disabled={isArchived || isSaving}
+                            />
+                        </div>
 
                         {/* Fired-up and fired-down slots. Buyers ask to see
                             both; the listing and passport show them side by
