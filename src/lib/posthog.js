@@ -1,4 +1,5 @@
 import { trackEvent, withAnalyticsContext } from '@/lib/telemetry';
+import { isGuestMode } from '@/lib/guestMode';
 
 /**
  * PostHog client wrapper.
@@ -54,6 +55,7 @@ function afterFirstPaint(fn) {
 
 export function initPostHog() {
   if (initialized || loading) return;
+  if (isGuestMode()) return;
   if (!API_KEY || typeof window === 'undefined') {
     // Intentionally quiet, noisy warnings in local dev are annoying.
     return;
@@ -75,9 +77,9 @@ function initClient(ph) {
       api_host: API_HOST,
       // SPAs need manual pageview capture (we do it in PostHogPageTracker).
       capture_pageview: false,
-      capture_pageleave: true,
+      capture_pageleave: !isGuestMode(),
       // Autocapture clicks, form submits, etc., the whole point of PostHog.
-      autocapture: true,
+      autocapture: !isGuestMode(),
       // Mask all text and attributes by default to protect PII (bios,
       // messages, shipping addresses). PostHog still tracks interactions
       // structurally but never captures the actual content.
@@ -89,7 +91,7 @@ function initClient(ph) {
       // Honor Do-Not-Track headers on user browsers.
       respect_dnt: true,
       // Uncaught errors and unhandled rejections. console.error stays off.
-      capture_exceptions: true,
+      capture_exceptions: !isGuestMode(),
       loaded: (client) => {
         if (import.meta.env.DEV) client.debug(false);
       },
@@ -110,7 +112,7 @@ function initClient(ph) {
 }
 
 export function identifyUser(user) {
-  if (!user?.email) return;
+  if (!user?.email || isGuestMode()) return;
   withClient((ph) =>
     ph.identify(user.email, {
       email: user.email,
@@ -126,6 +128,7 @@ export function resetUser() {
 }
 
 export function capturePageview(path) {
+  if (isGuestMode()) return;
   const url = typeof window !== 'undefined' ? window.location.href : null;
   withClient((ph) => ph.capture('$pageview', { $current_url: url, path }));
 }
@@ -146,10 +149,28 @@ export function capturePageview(path) {
  * $pageview would double-count.
  */
 export function captureEvent(name, properties = {}) {
+  if (isGuestMode()) return;
   // Fire-and-forget; trackEvent swallows its own errors.
   trackEvent(name, properties);
   const props = withAnalyticsContext(properties);
   withClient((ph) => ph.capture(name, props));
+}
+
+/** Pause click autocapture for the browser-local, read-only guest demo. */
+export function setGuestAnalyticsMode(enabled) {
+  if (initialized && posthog) {
+    try {
+      posthog.set_config({
+        autocapture: !enabled,
+        capture_pageleave: !enabled,
+        capture_exceptions: !enabled,
+      });
+    } catch {
+      // Analytics must never affect the guest experience.
+    }
+  } else if (!enabled) {
+    initPostHog();
+  }
 }
 
 /** The live client, or null until posthog-js has loaded. */

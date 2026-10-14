@@ -22,6 +22,7 @@ import { getTierLimits, formatBytes } from '@/lib/tierLimits';
 import { convertHeicForUpload, downscaleImage, isHeicFile } from '@/lib/imageResize';
 import { imageStoragePath } from '@/lib/imageStoragePath';
 import { loadUserProfile } from '@/lib/userProfile';
+import { blockIfGuest } from '@/lib/guestMode';
 
 const BUCKET = 'geck-inspect-media';
 
@@ -83,6 +84,7 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   if (!file) {
     throw new Error('uploadFile: no file provided');
   }
+  blockIfGuest('upload photos');
 
   // HEIC/HEIF is converted to JPEG below. Some iOS pickers report an empty
   // MIME type, so the filename extension is also accepted for this format.

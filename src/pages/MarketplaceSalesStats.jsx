@@ -33,6 +33,8 @@ import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
 import WaitlistsTab from '@/components/business/WaitlistsTab';
 import MarketPreviewGate from '@/components/subscription/MarketPreviewGate';
 import { lazy } from '@/lib/lazyWithRetry';
+import { isGuestMode } from '@/lib/guestMode';
+import { DEMO_BREEDER_FINANCIAL_ASSUMPTIONS } from '@/lib/guestBreederDemo';
 // Market analytics sits on the Pricing tab, so its code (and its charts)
 // download only when that tab is opened.
 const MarketAnalytics = lazy(() => import('@/components/market-analytics/v2/MarketAnalyticsLive'));
@@ -880,7 +882,7 @@ function PricingTab() {
 // Profit: by season (calendar year) and by pairing
 // ---------------------------------------------------------------------------
 
-function ProfitTab({ seasons, pairings, currency, hasPlans }) {
+function ProfitTab({ seasons, pairings, currency, hasPlans, isDemo }) {
   const profitClass = (n) => (n >= 0 ? 'text-emerald-400' : 'text-red-400');
   return (
     <>
@@ -898,7 +900,7 @@ function ProfitTab({ seasons, pairings, currency, hasPlans }) {
                   <th className="py-2 px-2 sm:px-3 font-medium text-right hidden sm:table-cell">Sales</th>
                   <th className="py-2 px-2 sm:px-3 font-medium text-right">Revenue</th>
                   <th className="py-2 px-2 sm:px-3 font-medium text-right">Costs</th>
-                  <th className="py-2 px-2 sm:px-3 font-medium text-right">Profit</th>
+                  <th className="py-2 px-2 sm:px-3 font-medium text-right">{isDemo ? 'Illustrative balance' : 'Profit'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -962,6 +964,7 @@ function ProfitTab({ seasons, pairings, currency, hasPlans }) {
 }
 
 export default function MarketplaceSalesStats() {
+  const isDemo = isGuestMode();
   const [statsPrefs, setStatsPrefs] = usePageSettings('sales_stats_prefs', {
     defaultTab: 'money',
     expandQuarters: true,
@@ -1293,13 +1296,24 @@ export default function MarketplaceSalesStats() {
           }
         />
 
+        {isDemo && (
+          <aside role="note" aria-label={DEMO_BREEDER_FINANCIAL_ASSUMPTIONS.label}
+            className="rounded-xl border border-amber-400/40 bg-amber-950/50 p-4 text-amber-50">
+            <p className="font-bold text-sm">{DEMO_BREEDER_FINANCIAL_ASSUMPTIONS.label}</p>
+            <p className="mt-1 text-xs leading-relaxed text-amber-100/90">
+              Every sale, cost, animal, and date is fabricated for this product demo. The balance is revenue minus listed sample costs only; it is not net profit, a projection, or a market forecast. Costs include acquisition, food and care, veterinary care, event and processing fees, shipping, and the labor assumption below. Excluded costs include income taxes, insurance, capital equipment depreciation, financing, and unplanned medical events.
+            </p>
+            <p className="mt-1 text-xs text-amber-100/90">{DEMO_BREEDER_FINANCIAL_ASSUMPTIONS.labor}</p>
+          </aside>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
             { label: 'Total Revenue', value: money(totals.revenue, statsPrefs.currency), sub: [`${soldCount} sold`, manualSales.length && `${manualSales.length} manual`, transferCount && `${transferCount} transferred`].filter(Boolean).join(' + '), color: 'text-emerald-400', Icon: DollarSign },
             { label: 'Pending', value: money(pendingSales.reduce((s, p) => s + Number(p.reserve_price || 0), 0), statsPrefs.currency), sub: `${pendingSales.length} reserve${pendingSales.length !== 1 ? 's' : ''}`, color: 'text-amber-400', Icon: Clock },
             { label: 'YTD Revenue', value: money(totals.ytdRevenue, statsPrefs.currency), sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
             { label: 'Total Costs', value: money(totals.costs, statsPrefs.currency), sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
-            { label: 'Net Profit', value: money(totals.profit, statsPrefs.currency), sub: 'All time', color: totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
+            { label: isDemo ? 'Demo balance' : 'Net Profit', value: money(totals.profit, statsPrefs.currency), sub: isDemo ? 'After listed sample costs' : 'All time', color: totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
           ].map(({ label, value, sub, color, Icon }, i, all) => (
             // Five tiles in a two-column phone grid: the last one spans the
             // row instead of sitting alone next to an empty cell.
@@ -1342,7 +1356,7 @@ export default function MarketplaceSalesStats() {
 
             {/* Money: profit per season and pairing, then costs */}
             <TabsContent value="money" className="space-y-6">
-              <ProfitTab seasons={seasons} pairings={pairings} currency={statsPrefs.currency} hasPlans={plans.length > 0} />
+              <ProfitTab seasons={seasons} pairings={pairings} currency={statsPrefs.currency} hasPlans={plans.length > 0} isDemo={isDemo} />
               <section className="space-y-4">
                 <h3 className="text-base font-semibold text-slate-100">Costs</h3>
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 space-y-3">
@@ -1414,7 +1428,7 @@ export default function MarketplaceSalesStats() {
                       <span className="text-orange-400 font-semibold">{money(totals.costs)}</span>
                     </div>
                     <div className="border-t border-emerald-900/50 pt-2 flex justify-between font-bold">
-                      <span className="text-slate-200">Net Profit:</span>
+                      <span className="text-slate-200">{isDemo ? 'Illustrative balance:' : 'Net Profit:'}</span>
                       <span className={totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}>{money(totals.profit)}</span>
                     </div>
                   </div>

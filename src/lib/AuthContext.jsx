@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
-import { identifyUser, resetUser, captureEvent } from '@/lib/posthog';
+import { identifyUser, resetUser, captureEvent, setGuestAnalyticsMode } from '@/lib/posthog';
 import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
 import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
@@ -56,11 +56,13 @@ export const AuthProvider = ({ children }) => {
         resetUser();
         setAnalyticsContext({ isAdmin: false });
         const guest = isGuestMode();
+        setGuestAnalyticsMode(guest);
         setUser(guest ? GUEST_USER : null);
         setIsGuest(guest);
         return;
       }
       setGuestMode(false);
+      setGuestAnalyticsMode(false);
       setIsGuest(false);
       const basic = normalizeSupabaseUser(session.user);
       setUser((prev) => (prev?.auth_user_id || prev?.id) === basic.id
@@ -180,8 +182,9 @@ export const AuthProvider = ({ children }) => {
     revisionRef.current++;
     queryClientInstance.clear();
     dataCache.clearAll();
-    captureEvent('guest_mode_entered');
     setGuestMode(true);
+    setGuestAnalyticsMode(true);
+    captureEvent('guest_mode_entered');
     setUser(GUEST_USER);
     setIsGuest(true);
     setIsAuthenticated(false);
@@ -189,6 +192,7 @@ export const AuthProvider = ({ children }) => {
 
   const exitGuestMode = () => {
     setGuestMode(false);
+    setGuestAnalyticsMode(false);
     setIsGuest(false);
     setUser(null);
   };

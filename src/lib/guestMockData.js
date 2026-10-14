@@ -1,6 +1,13 @@
-import { DEMO_GECKO_PHOTOS } from '@/lib/demoGeckoPhotos';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { growthBandAt } from '@/lib/growthBand';
+import {
+  DEMO_BREEDER_CLUTCHES,
+  DEMO_BREEDER_COSTS,
+  DEMO_BREEDER_EGGS,
+  DEMO_BREEDER_GECKOS,
+  DEMO_BREEDER_ILLUSTRATIVE_PHOTOS,
+  DEMO_BREEDER_PLANS,
+} from '@/lib/guestBreederDemo';
 
 /**
  * Mock data for guest-mode demos.
@@ -12,16 +19,16 @@ import { growthBandAt } from '@/lib/growthBand';
  * Design notes:
  * - Every mock record uses `created_by: GUEST_EMAIL` so pages that
  *   filter "mine" by email match cleanly.
- * - Photos are bundled, owner-authorized images of age-verified adults
- *   from the admin collection. Mock names and traits remain illustrative.
+ * - Every gecko photo is a verified public-domain/CC0 asset and is labeled
+ *   illustrative. Names and traits are fictional throughout.
  * - Writes are still blocked by `blockIfGuest()` in the entity layer;
  *   this module only powers reads.
  */
 
 export const GUEST_EMAIL = 'guest@local';
 
-// Real adult photos ship with previews and native builds, without hotlinks.
-const GECKO_PHOTOS = DEMO_GECKO_PHOTOS.map(photo => photo.src);
+// Public-domain/CC0 photos are reused only as clearly labeled illustrations.
+const GECKO_PHOTOS = DEMO_BREEDER_ILLUSTRATIVE_PHOTOS;
 
 // Retained for consumers that explicitly request a demo image fallback.
 export function fallbackForMorph() {
@@ -36,7 +43,7 @@ const PHOTO_SEEDS = [
   'onyx', 'tiger', 'aria', 'bramble', 'willow',
 ];
 const IMG = (seed) => {
-  // Keep one real animal per sample record, including its extra photo slots.
+  // Assign a stable illustration without claiming it depicts the demo animal.
   const index = PHOTO_SEEDS.indexOf(String(seed).replace(/-\d+$/, ''));
   return GECKO_PHOTOS[Math.max(0, index) % GECKO_PHOTOS.length];
 };
@@ -157,6 +164,8 @@ const GECKOS = [
     archived: true,
     archive_reason: 'sold',
     archived_date: daysAgo(320),
+    sold_price: 420,
+    sale_category: 'retired_breeder',
     feeding_group_id: 'mock-feed-1',
     created_by: GUEST_EMAIL,
     created_date: daysAgo(2300),
@@ -479,15 +488,19 @@ const GECKOS = [
 // ---------------------------------------------------------------------------
 // Gecko images (Gallery feed)
 // ---------------------------------------------------------------------------
-const GECKO_IMAGES = GECKOS.flatMap((g, i) =>
+const ALL_GECKOS = [...GECKOS, ...DEMO_BREEDER_GECKOS].map((gecko) => ({
+  ...gecko,
+  photo_is_illustrative: true,
+}));
+const GECKO_IMAGES = ALL_GECKOS.flatMap((g, i) =>
   (g.image_urls || []).map((url, j) => ({
     id: `mock-img-${i + 1}-${j + 1}`,
     image_url: url,
     gecko_id: g.id,
     primary_morph: g.primary_morph,
     secondary_traits: g.morph_tags,
-    caption: `${g.name}, ${g.primary_morph}`,
-    verified: j === 0,
+    caption: `${g.name}, ${g.primary_morph} · Illustrative photo`,
+    verified: false,
     likes_count: 5 + ((i * 3 + j) % 40),
     created_by: GUEST_EMAIL,
     created_date: daysAgo(i * 7 + j),
@@ -505,7 +518,7 @@ const bandMid = (months) => {
   const band = growthBandAt(Math.max(0, months));
   return band ? (band.low + band.high) / 2 : null;
 };
-const WEIGHT_RECORDS = GECKOS.flatMap((g, gi) => {
+const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
   const target = g.weight_grams;
   const points = 6;
   const hatchMs = g.hatch_date ? Date.parse(g.hatch_date) : null;
@@ -589,6 +602,7 @@ const BREEDING_PLANS = [
     created_by: GUEST_EMAIL,
     created_date: daysAgo(400),
   },
+  ...DEMO_BREEDER_PLANS,
 ];
 
 // Hatchery, eggs laid, pipping soon, hatched, failed, and historical.
@@ -748,6 +762,7 @@ const EGGS = [
     created_date: daysAgo(80),
   },
 ];
+const ALL_EGGS = [...EGGS, ...DEMO_BREEDER_EGGS];
 
 // Hatchery events, what shows up on the hatchery dashboard widget.
 const HATCHERY_EVENTS = [
@@ -864,6 +879,7 @@ const CLUTCHES = [
     created_by: GUEST_EMAIL,
     created_date: daysAgo(80),
   },
+  ...DEMO_BREEDER_CLUTCHES,
 ];
 
 // ---------------------------------------------------------------------------
@@ -1045,12 +1061,13 @@ const GECKO_OF_THE_DAY = [
 // Store map, keyed by the Supabase entity name used in supabaseEntities.js
 // ---------------------------------------------------------------------------
 const STORE = {
-  Gecko: GECKOS,
+  Gecko: ALL_GECKOS,
   GeckoImage: GECKO_IMAGES,
   WeightRecord: WEIGHT_RECORDS,
   BreedingPlan: BREEDING_PLANS,
-  Egg: EGGS,
+  Egg: ALL_EGGS,
   Clutch: CLUTCHES,
+  MarketplaceCost: DEMO_BREEDER_COSTS,
   ForumPost: FORUM_POSTS,
   ForumCategory: FORUM_CATEGORIES,
   Notification: NOTIFICATIONS,

@@ -24,6 +24,7 @@ import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
 import { featuresWithConsultant, pageIsLive } from '@/lib/membershipFeatures';
 import { lastUpgradePrompt } from '@/lib/activation';
+import { isGuestMode } from '@/lib/guestMode';
 
 /**
  * Membership / pricing page.
@@ -467,6 +468,13 @@ export default function MembershipPage() {
   };
 
   const handleCTA = async (tier, pricing, intent = 'purchase') => {
+    if (isGuestMode()) {
+      toast({
+        title: 'Guest demo is view-only',
+        description: 'Sign in or create an account before starting membership checkout.',
+      });
+      return;
+    }
     if (tier.comingSoon) {
       toast({
         title: 'Enterprise waitlist',

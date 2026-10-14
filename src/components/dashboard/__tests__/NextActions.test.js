@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/entities/all', () => ({
   Egg: {}, BreedingPlan: {}, WeightRecord: {}, FutureBreedingPlan: {}, FeedingGroup: {}, OtherReptile: {},
@@ -17,6 +17,13 @@ const daysAgo = (n) => {
   return d.toISOString().slice(0, 10);
 };
 const base = { geckos: [], eggs: [], plans: [], weights: [], futurePlans: [], feedingGroups: [], reptiles: [] };
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-10-14T12:00:00.000Z'));
+});
+
+afterEach(() => vi.useRealTimers());
 
 describe('Today card feeding items', () => {
   it('lists a feeding group on its due day and when overdue, like the server reminder', () => {

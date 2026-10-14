@@ -75,9 +75,10 @@ export default function GuestMockDisclaimer({ onOpenTours }) {
             )}
             <div className={expanded ? 'block mt-1' : 'hidden md:block'}>
               <p className="text-xs leading-snug text-yellow-50/95">
-                Demo collection records are samples; public community activity may
-                be live. Sample photos illustrate the layout and may not match
-                their listed traits. Create an account to save your own records.
+                Demo collection records are fictional; public community activity may
+                be live. Illustrative photos do not establish animal identity,
+                genotype, health, or sales history. Create an account to save your
+                own records.
               </p>
               <div className="mt-2.5 flex items-center gap-2">
                 <Link
