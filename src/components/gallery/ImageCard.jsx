@@ -24,7 +24,7 @@ export default function ImageCard({ image, onImageSelect, thumbnail = false }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute bottom-2 left-2 right-2 text-white">
-          <h3 className="font-bold text-slate-100 text-sm capitalize truncate">{image.primary_morph.replace(/_/g, ' ')}</h3>
+          <h3 className="font-bold text-slate-100 text-sm capitalize truncate">{(image.primary_morph ?? '').replace(/_/g, ' ')}</h3>
           {image.secondary_traits && image.secondary_traits.length > 0 && (
             <p className="text-xs text-slate-300 capitalize truncate">
               {image.secondary_traits.join(', ').replace(/_/g, ' ')}
