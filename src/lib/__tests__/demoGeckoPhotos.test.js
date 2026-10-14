@@ -7,6 +7,7 @@ import {
   DEMO_BREEDER_ILLUSTRATIVE_PHOTOS,
   DEMO_BREEDER_PHOTO_ASSIGNMENTS,
   DEMO_BREEDER_PHOTO_PLACEHOLDER,
+  DEMO_OWNER_PHOTOS,
 } from '../guestBreederDemo';
 
 const bundled = (src) => existsSync(fileURLToPath(new URL(`../../../public${src}`, import.meta.url)));
@@ -20,22 +21,25 @@ describe('preview gecko photos', () => {
     }
   });
 
-  it('uses distinct licensed photos only as illustrative guest imagery', async () => {
-    const allowed = new Set(DEMO_BREEDER_ILLUSTRATIVE_PHOTOS);
+  it('uses distinct licensed and owner-authorized photos only as illustrative guest imagery', async () => {
+    const allowed = new Set([...DEMO_BREEDER_ILLUSTRATIVE_PHOTOS, ...DEMO_OWNER_PHOTOS]);
     const geckos = await guestMockList('Gecko');
     const gallery = await guestMockList('GeckoImage');
     expect(geckos).toHaveLength(43);
     expect(geckos.every((gecko) => gecko.photo_is_illustrative === true)).toBe(true);
 
     const assignedUrls = geckos.flatMap((gecko) => gecko.image_urls || []);
-    expect(assignedUrls).toHaveLength(7);
+    expect(assignedUrls).toHaveLength(25);
     expect(new Set(assignedUrls).size).toBe(assignedUrls.length);
+    expect(DEMO_OWNER_PHOTOS).toHaveLength(18);
+    expect(new Set(DEMO_OWNER_PHOTOS).size).toBe(DEMO_OWNER_PHOTOS.length);
+    for (const src of DEMO_OWNER_PHOTOS) expect(bundled(src)).toBe(true);
     for (const gecko of geckos) {
       expect((gecko.image_urls || []).every((src) => allowed.has(src)), gecko.name).toBe(true);
     }
     for (const src of allowed) expect(bundled(src)).toBe(true);
 
-    expect(gallery).toHaveLength(7);
+    expect(gallery).toHaveLength(25);
     expect(gallery.every((image) => allowed.has(image.image_url) && image.verified === false)).toBe(true);
     expect(gallery.every((image) => image.photo_is_illustrative === true)).toBe(true);
     expect(gallery.every((image) => image.primary_morph === null && image.secondary_traits.length === 0)).toBe(true);
@@ -43,11 +47,16 @@ describe('preview gecko photos', () => {
 
     const breederDemoGeckos = geckos.filter((gecko) => gecko.id?.startsWith('mock-demo-gecko-'));
     expect(breederDemoGeckos).toHaveLength(24);
-    expect(Object.keys(DEMO_BREEDER_PHOTO_ASSIGNMENTS)).toHaveLength(7);
-    expect(breederDemoGeckos.filter((gecko) => gecko.image_urls.length > 0)).toHaveLength(4);
+    expect(Object.keys(DEMO_BREEDER_PHOTO_ASSIGNMENTS)).toHaveLength(25);
+    expect(breederDemoGeckos.filter((gecko) => gecko.image_urls.length > 0)).toHaveLength(6);
     expect(breederDemoGeckos.every((gecko) => !gecko.image_urls.length
       || allowed.has(gecko.image_urls[0]))).toBe(true);
     expect(breederDemoGeckos.every((gecko) => /illustrative photo/i.test(gecko.notes))).toBe(true);
+    expect(breederDemoGeckos.find((gecko) => gecko.id === 'mock-demo-gecko-2024-01').morph_tags)
+      .toEqual(['Lilly White']);
+    const foundationGeckos = geckos.filter((gecko) => !gecko.id?.startsWith('mock-demo-gecko-'));
+    expect(foundationGeckos).toHaveLength(19);
+    expect(foundationGeckos.every((gecko) => gecko.image_urls.length === 1)).toBe(true);
     expect(bundled(DEMO_BREEDER_PHOTO_PLACEHOLDER)).toBe(true);
   });
 

@@ -21,8 +21,9 @@ import {
  * - Every mock record uses `created_by: GUEST_EMAIL` so pages that
  *   filter "mine" by email match cleanly.
  * - Names, traits, care records, sales, and pedigrees are synthetic.
- *   Public-domain photos are independently assigned and never establish a
- *   record animal's identity, morph, genetics, age, sex, or history.
+ *   Licensed and owner-authorized photos are independently assigned and
+ *   never establish a record animal's identity, morph, genetics, age, sex,
+ *   or history.
  * - Writes are still blocked by `blockIfGuest()` in the entity layer;
  *   this module only powers reads.
  */

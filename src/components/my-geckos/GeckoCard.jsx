@@ -124,6 +124,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
         {gecko.photo_is_illustrative && !demoPhotoUnavailable && (
           <span className="absolute bottom-2 left-2 rounded bg-slate-950/85 px-2 py-1 text-[10px] font-semibold text-white shadow">
             Illustrative photo
+            <span className="block text-[9px] font-normal text-slate-200">Not the sample animal</span>
           </span>
         )}
 
