@@ -31,11 +31,18 @@ const Tile = memo(function Tile({ image, uploader: _uploader, onClick }) {
         >
             <GeckoImage
                 src={image.image_url}
-                alt={morph}
+                alt={image.photo_is_illustrative
+                    ? 'Illustrative gecko photo, not the demo animal'
+                    : morph}
                 loading="lazy"
                 decoding="async"
                 className="w-full h-full object-cover"
             />
+            {image.photo_is_illustrative && (
+                <span className="absolute top-2 right-2 z-10 rounded bg-black/85 px-2 py-1 text-[10px] font-semibold text-amber-100 shadow">
+                    Illustrative photo
+                </span>
+            )}
             <div className="tile-overlay">
                 <div className="tile-meta">
                     <div className="tile-morph">{morph}</div>

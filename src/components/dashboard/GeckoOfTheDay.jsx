@@ -50,9 +50,16 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
                 <div onClick={handleSelect} className="relative aspect-[4/3] rounded-lg overflow-hidden cursor-pointer group">
                     <GeckoImage
                         src={image.image_url}
-                        alt={isOfficial ? "Gecko of the day" : "Featured gecko"}
+                        alt={image.photo_is_illustrative
+                            ? 'Illustrative gecko photo, not the demo animal'
+                            : isOfficial ? 'Gecko of the day' : 'Featured gecko'}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
+                    {image.photo_is_illustrative && (
+                        <span className="absolute top-3 right-3 z-10 rounded bg-black/85 px-2 py-1 text-xs font-semibold text-amber-100 shadow">
+                            Illustrative photo
+                        </span>
+                    )}
                     <div className="absolute bottom-4 left-4 text-white">
                         <h3 className="text-xl font-bold drop-shadow-lg">
                             {image.primary_morph ? image.primary_morph.replace(/_/g, ' ') : 'Crested Gecko'}
