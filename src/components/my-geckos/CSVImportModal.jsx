@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { importGeckosFromCSV } from '@/functions/importGeckosFromCSV';
 import { recordGeckoAdded } from '@/lib/activation';
+import { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
 import { geckoLimitFor } from '@/lib/geckoLimit';
 import { generateCSVTemplate } from '@/functions/generateCSVTemplate';
 import { parseCSV, readFileAsText, transformRows } from './csv/csvParser';
@@ -509,7 +510,14 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
                                 {importResults.skippedForLimit > 0 && (
                                     <div className="rounded-lg border border-amber-600/40 bg-amber-950/30 p-3 text-sm text-amber-200">
                                         {importResults.skippedForLimit} new {importResults.skippedForLimit === 1 ? 'gecko was' : 'geckos were'} not added because your plan&apos;s gecko limit is full.{' '}
-                                        <a href="/Membership" className="underline underline-offset-2 hover:text-amber-100">See plans</a>
+                                        <UpgradePlansLink
+                                            limitType="geckos"
+                                            surface="plan_limit_geckos"
+                                            trackShown
+                                            className="underline underline-offset-2 hover:text-amber-100"
+                                        >
+                                            See plans
+                                        </UpgradePlansLink>
                                     </div>
                                 )}
 

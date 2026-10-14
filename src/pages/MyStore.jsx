@@ -4,7 +4,7 @@ import GeckoImage from '@/components/shared/GeckoImage';
 import GeckoBulkActions from '@/components/bulk/GeckoBulkActions';
 import { Gecko } from '@/entities/all';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 import { tierOf } from '@/lib/tierLimits';
 import {
     LINK_KINDS, linkKindMeta, normalizeLinkUrl, normalizeSlug, SLUG_RE,
@@ -427,9 +428,9 @@ export default function MyStore() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button asChild>
-                                <Link to={createPageUrl('Membership')}>See plans</Link>
-                            </Button>
+                            <UpgradePlansButton limitType="my_store" surface="my_store_locked">
+                                See plans
+                            </UpgradePlansButton>
                         </CardContent>
                     </Card>
                 </div>

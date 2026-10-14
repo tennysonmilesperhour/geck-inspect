@@ -1,11 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowRight, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import { getTierPricing } from '@/lib/stripe-config';
-import { upgradePromptClicked, upgradePromptShown } from '@/lib/activation';
-import { createPageUrl } from '@/utils';
+import { upgradePromptShown } from '@/lib/activation';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 
 /**
  * Market Intelligence is an Enterprise feature (decision 6 Oct 2026).
@@ -79,14 +77,14 @@ export default function MarketPreviewGate({ user, surface, height = 360, serverG
             The daily brief, the live feed of new listings and price cuts, watchlist alerts and the
             pricing analytics.{price ? ` ${price.price}${price.billing}, cancel anytime.` : ''}
           </p>
-          <Button asChild className="mt-4 w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600">
-            <Link
-              to={createPageUrl('Membership')}
-              onClick={() => upgradePromptClicked('market_intelligence', surface)}
-            >
-              See Enterprise <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
+          <UpgradePlansButton
+            limitType="market_intelligence"
+            surface={surface}
+            trackShown={false}
+            className="mt-4 w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
+          >
+            See Enterprise <ArrowRight className="ml-1 h-4 w-4" />
+          </UpgradePlansButton>
         </div>
       </div>
     </div>

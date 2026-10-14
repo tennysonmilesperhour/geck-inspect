@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Lock, Timer } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import { estimateSellTime, formatSellDays, loadSellTimeModel } from '@/lib/sellTime';
-import { upgradePromptClicked } from '@/lib/activation';
-import { createPageUrl } from '@/utils';
+import { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
 
 const pct = (p) => `${Math.round(p * 100)}%`;
 const shortDate = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -44,13 +42,13 @@ export default function SellTimeEstimate({ gecko, traitIndex, price = null, medi
           <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
           <span>
             How long geckos like this take to sell, from real MorphMarket sales, is part of Enterprise.{' '}
-            <Link
-              to={createPageUrl('Membership')}
-              onClick={() => upgradePromptClicked('market_intelligence', surface || 'sell_time')}
+            <UpgradePlansLink
+              limitType="market_intelligence"
+              surface={surface || 'sell_time'}
               className="text-amber-300 hover:text-amber-200 font-medium"
             >
               See Enterprise
-            </Link>
+            </UpgradePlansLink>
           </span>
         </p>
       </div>
