@@ -16,7 +16,7 @@
  *   <SmartImage src={url} alt="Gallery" aspect="auto" containerClassName="h-40" width={500} />
  */
 import { useEffect, useState } from 'react';
-import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { DEFAULT_GECKO_CARD, DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { geckoPlaceholderStyle, isGeckoPlaceholder } from '@/lib/geckoPlaceholder';
 
 const ASPECT_PRESETS = {
@@ -92,11 +92,16 @@ export default function SmartImage({
 
   if (typeof src !== 'string' || !src.trim()) resolvedSrc = fallback;
   const isPlaceholder = isGeckoPlaceholder(resolvedSrc);
+  // Give auto-height detail views a definite box before their max-height
+  // is applied, so the full frame fits instead of overflowing the wrapper.
+  const containerAspect = isPlaceholder && aspect === 'auto'
+    ? (resolvedSrc === DEFAULT_GECKO_CARD ? '2 / 3' : '1 / 1')
+    : aspectRatio;
 
   return (
     <div
       className={`relative overflow-hidden bg-slate-800 ${containerClassName}`}
-      style={{ aspectRatio }}
+      style={{ aspectRatio: containerAspect }}
     >
       {/* Shimmer placeholder while loading */}
       {!loaded && (

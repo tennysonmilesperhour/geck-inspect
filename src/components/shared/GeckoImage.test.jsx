@@ -9,7 +9,7 @@ describe.each([GeckoImage, SmartImage])('gecko photo fallback', Image => {
     let view;
     await act(async () => { view = create(<Image src="  " alt="Gecko" />); });
     expect(view.root.findByType('img').props.src).toBe(DEFAULT_GECKO_IMAGE);
-    expect(view.root.findByType('img').props.style.objectFit).toBe('cover');
+    expect(view.root.findByType('img').props.style.objectFit).toBe('contain');
     await act(async () => view.unmount());
   });
 

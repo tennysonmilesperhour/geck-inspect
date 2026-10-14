@@ -6,13 +6,12 @@ export function isGeckoPlaceholder(src) {
 }
 
 /**
- * Inline style for a placeholder. The square crop fills its slot; the tall
- * card is letterboxed on a matching dark green backdrop. Rotation from a
- * real photo's crop data never applies to placeholders.
+ * Keep the complete engraved frame and Add Photo label visible at every
+ * slot size. Rotation from a real photo never applies to placeholders.
  */
 export function geckoPlaceholderStyle(src, style) {
   if (src === DEFAULT_GECKO_CARD) {
     return { ...style, objectFit: 'contain', objectPosition: 'center', transform: 'none', padding: '4%', backgroundColor: '#0b1a14' };
   }
-  return { ...style, objectFit: 'cover', objectPosition: 'center', transform: 'none', padding: 0, backgroundColor: '#0b1a14' };
+  return { ...style, objectFit: 'contain', objectPosition: 'center', transform: 'none', padding: 0, backgroundColor: '#0b1a14' };
 }
