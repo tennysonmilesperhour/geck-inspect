@@ -1,4 +1,4 @@
-import { demoPortrait } from '@/data/demo-gecko-portraits';
+import { DEMO_GECKO_PORTRAITS } from '@/data/demo-gecko-portraits';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { growthBandAt } from '@/lib/growthBand';
 import {
@@ -6,6 +6,7 @@ import {
   DEMO_BREEDER_COSTS,
   DEMO_BREEDER_EGGS,
   DEMO_BREEDER_GECKOS,
+  DEMO_BREEDER_PHOTO_ASSIGNMENTS,
   DEMO_BREEDER_PLANS,
 } from '@/lib/guestBreederDemo';
 
@@ -19,8 +20,9 @@ import {
  * Design notes:
  * - Every mock record uses `created_by: GUEST_EMAIL` so pages that
  *   filter "mine" by email match cleanly.
- * - Owner-authorized photos and reviewed morph labels come from one registry.
- *   Names, care records, sales, and pedigrees are fictional illustrations.
+ * - Names, traits, care records, sales, and pedigrees are synthetic.
+ *   Public-domain photos are independently assigned and never establish a
+ *   record animal's identity, morph, genetics, age, sex, or history.
  * - Writes are still blocked by `blockIfGuest()` in the entity layer;
  *   this module only powers reads.
  */
@@ -31,6 +33,18 @@ export const GUEST_EMAIL = 'guest@local';
 export function fallbackForMorph() {
   return DEFAULT_GECKO_IMAGE;
 }
+
+// Keep synthetic visible-trait labels separate from photo files. A
+// public-domain illustrative image never supplies a record's traits.
+const demoProfile = (key) => {
+  const traits = DEMO_GECKO_PORTRAITS[key]?.traits;
+  if (!traits) throw new Error(`Unknown synthetic demo profile: ${key}`);
+  return {
+    primary_morph: traits[0],
+    morphs_traits: traits.join(', '),
+    morph_tags: [...traits],
+  };
+};
 
 const nowMs = Date.now();
 const daysAgo = (n) => new Date(nowMs - n * 86400000).toISOString();
@@ -75,7 +89,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2018-06-11'),
     weight_grams: 54,
-    ...demoPortrait('pepperjack'),
+    ...demoProfile('pepperjack'),
     gecko_id_code: 'GI-F01',
     species: 'Crested Gecko',
     generation: 1,
@@ -93,7 +107,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2018-04-02'),
     weight_grams: 50,
-    ...demoPortrait('moonlight'),
+    ...demoProfile('moonlight'),
     gecko_id_code: 'GI-F02',
     species: 'Crested Gecko',
     generation: 1,
@@ -111,7 +125,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2017-08-25'),
     weight_grams: 58,
-    ...demoPortrait('pony-boy'),
+    ...demoProfile('pony-boy'),
     gecko_id_code: 'GI-F03',
     species: 'Crested Gecko',
     generation: 1,
@@ -129,7 +143,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2017-11-03'),
     weight_grams: 49,
-    ...demoPortrait('blush'),
+    ...demoProfile('blush'),
     gecko_id_code: 'GI-F04',
     species: 'Crested Gecko',
     generation: 1,
@@ -151,7 +165,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2022-08-14'),
     weight_grams: 52,
-    ...demoPortrait('mossball'),
+    ...demoProfile('mossball'),
     gecko_id_code: 'GI-001',
     species: 'Crested Gecko',
     generation: 2,
@@ -173,7 +187,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2021-05-02'),
     weight_grams: 48,
-    ...demoPortrait('raindrop'),
+    ...demoProfile('raindrop'),
     gecko_id_code: 'GI-002',
     species: 'Crested Gecko',
     generation: 2,
@@ -193,7 +207,7 @@ const GECKOS = [
     status: 'Ready to Breed',
     hatch_date: hatched('2023-02-19'),
     weight_grams: 41,
-    ...demoPortrait('cheeto'),
+    ...demoProfile('cheeto'),
     gecko_id_code: 'GI-003',
     species: 'Crested Gecko',
     sire_name: null,
@@ -210,7 +224,7 @@ const GECKOS = [
     status: 'Holdback',
     hatch_date: hatched('2024-06-30'),
     weight_grams: 22,
-    ...demoPortrait('hermes'),
+    ...demoProfile('hermes'),
     gecko_id_code: 'GI-004',
     species: 'Crested Gecko',
     generation: 3,
@@ -232,7 +246,7 @@ const GECKOS = [
     status: 'Holdback',
     hatch_date: hatched('2024-07-02'),
     weight_grams: 21,
-    ...demoPortrait('odin'),
+    ...demoProfile('odin'),
     gecko_id_code: 'GI-013',
     species: 'Crested Gecko',
     generation: 3,
@@ -253,7 +267,7 @@ const GECKOS = [
     status: 'For Sale',
     hatch_date: hatched('2024-09-14'),
     weight_grams: 16,
-    ...demoPortrait('sparky'),
+    ...demoProfile('sparky'),
     gecko_id_code: 'GI-014',
     species: 'Crested Gecko',
     generation: 3,
@@ -275,7 +289,7 @@ const GECKOS = [
     status: 'Future Breeder',
     hatch_date: hatched('2024-10-03'),
     weight_grams: 12,
-    ...demoPortrait('selva'),
+    ...demoProfile('selva'),
     gecko_id_code: 'GI-015',
     species: 'Crested Gecko',
     generation: 3,
@@ -296,7 +310,7 @@ const GECKOS = [
     status: 'Future Breeder',
     hatch_date: hatched('2023-09-12'),
     weight_grams: 34,
-    ...demoPortrait('olivia'),
+    ...demoProfile('olivia'),
     gecko_id_code: 'GI-005',
     species: 'Crested Gecko',
     archived: false,
@@ -311,7 +325,7 @@ const GECKOS = [
     status: 'For Sale',
     hatch_date: hatched('2023-04-03'),
     weight_grams: 44,
-    ...demoPortrait('blush'),
+    ...demoProfile('blush'),
     gecko_id_code: 'GI-006',
     species: 'Crested Gecko',
     asking_price: 350,
@@ -327,7 +341,7 @@ const GECKOS = [
     status: 'Pet',
     hatch_date: hatched('2024-11-07'),
     weight_grams: 9,
-    ...demoPortrait('frito'),
+    ...demoProfile('frito'),
     gecko_id_code: 'GI-007',
     species: 'Crested Gecko',
     archived: false,
@@ -342,7 +356,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2020-10-21'),
     weight_grams: 56,
-    ...demoPortrait('odin'),
+    ...demoProfile('odin'),
     gecko_id_code: 'GI-008',
     species: 'Crested Gecko',
     archived: false,
@@ -357,7 +371,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2022-03-18'),
     weight_grams: 47,
-    ...demoPortrait('cheeto'),
+    ...demoProfile('cheeto'),
     gecko_id_code: 'GI-009',
     species: 'Crested Gecko',
     archived: false,
@@ -372,7 +386,7 @@ const GECKOS = [
     status: 'Ready to Breed',
     hatch_date: hatched('2022-12-01'),
     weight_grams: 43,
-    ...demoPortrait('bliss'),
+    ...demoProfile('bliss'),
     gecko_id_code: 'GI-010',
     species: 'Crested Gecko',
     archived: false,
@@ -387,7 +401,7 @@ const GECKOS = [
     status: 'Future Breeder',
     hatch_date: hatched('2024-02-22'),
     weight_grams: 28,
-    ...demoPortrait('raindrop'),
+    ...demoProfile('raindrop'),
     gecko_id_code: 'GI-011',
     species: 'Crested Gecko',
     archived: false,
@@ -402,7 +416,7 @@ const GECKOS = [
     status: 'Proven',
     hatch_date: hatched('2021-09-09'),
     weight_grams: 50,
-    ...demoPortrait('moonlight'),
+    ...demoProfile('moonlight'),
     gecko_id_code: 'GI-012',
     species: 'Crested Gecko',
     archived: false,
@@ -415,7 +429,13 @@ const GECKOS = [
 // ---------------------------------------------------------------------------
 // Gecko images (Gallery feed)
 // ---------------------------------------------------------------------------
-const ALL_GECKOS = [...GECKOS, ...DEMO_BREEDER_GECKOS].map((gecko) => ({
+const GECKOS_WITH_PUBLIC_PHOTOS = GECKOS.map((gecko) => ({
+  ...gecko,
+  image_urls: DEMO_BREEDER_PHOTO_ASSIGNMENTS[gecko.id]
+    ? [DEMO_BREEDER_PHOTO_ASSIGNMENTS[gecko.id]]
+    : [],
+}));
+const ALL_GECKOS = [...GECKOS_WITH_PUBLIC_PHOTOS, ...DEMO_BREEDER_GECKOS].map((gecko) => ({
   ...gecko,
   photo_is_illustrative: true,
 }));
@@ -424,9 +444,10 @@ const GECKO_IMAGES = ALL_GECKOS.flatMap((g, i) =>
     id: `mock-img-${i + 1}-${j + 1}`,
     image_url: url,
     gecko_id: g.id,
-    primary_morph: g.primary_morph,
-    secondary_traits: g.morph_tags,
-    caption: `${g.name}, ${g.primary_morph} · Illustrative photo`,
+    primary_morph: null,
+    secondary_traits: [],
+    caption: 'Illustrative photo. This is not the animal shown in the fictional demo record.',
+    photo_is_illustrative: true,
     verified: false,
     likes_count: 5 + ((i * 3 + j) % 40),
     created_by: GUEST_EMAIL,
@@ -450,10 +471,13 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
   const points = 6;
   const hatchMs = g.hatch_date ? Date.parse(g.hatch_date) : null;
   const ageAt = (ms) => (hatchMs == null ? null : (ms - hatchMs) / (86400000 * 30.4375));
-  const nowMid = bandMid(ageAt(nowMs) ?? 36);
-  const scale = nowMid ? Math.min(1.3, Math.max(0.7, target / nowMid)) : 1;
+  const soldAtMs = g.archived && g.archive_reason === 'sold' && g.archived_date
+    ? Date.parse(g.archived_date)
+    : nowMs;
+  const finalMid = bandMid(ageAt(soldAtMs) ?? 36);
+  const scale = finalMid ? Math.min(1.3, Math.max(0.7, target / finalMid)) : 1;
   return Array.from({ length: points }, (_, i) => {
-    const ms = nowMs - (points - i) * 45 * 86400000;
+    const ms = soldAtMs - (points - i) * 45 * 86400000;
     const age = ageAt(ms);
     const jitter = (((gi + i) % 3) - 1) * 0.5;
     const grams = age == null || age < 0 ? target : Math.min(target, bandMid(age) * scale);
@@ -461,11 +485,12 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
       id: `mock-wr-${g.id}-${i}`,
       gecko_id: g.id,
       weight_grams: Math.max(2, Math.round((grams + jitter) * 10) / 10),
-      record_date: daysAgo((points - i) * 45).slice(0, 10),
+      record_date: new Date(ms).toISOString().slice(0, 10),
       created_by: GUEST_EMAIL,
-      created_date: daysAgo((points - i) * 45),
+      created_date: new Date(ms).toISOString(),
     };
-  }).filter((r) => hatchMs == null || Date.parse(r.record_date) >= hatchMs);
+  }).filter((r) => (hatchMs == null || Date.parse(r.record_date) >= hatchMs)
+    && Date.parse(r.record_date) <= soldAtMs);
 });
 
 // ---------------------------------------------------------------------------

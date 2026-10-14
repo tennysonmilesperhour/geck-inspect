@@ -18,6 +18,7 @@ export default function ImageDetailModal({ data, onClose }) {
         return null;
     }
     const { image, uploader } = data;
+    const isIllustrative = image.photo_is_illustrative === true;
 
     const morphDisplayName = image.primary_morph
         ? image.primary_morph.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -36,29 +37,35 @@ export default function ImageDetailModal({ data, onClose }) {
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="max-w-4xl bg-slate-900 border-slate-700 text-white">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl text-slate-100">{morphDisplayName}</DialogTitle>
+                    <DialogTitle className="text-2xl text-slate-100">{isIllustrative ? 'Illustrative photo' : morphDisplayName}</DialogTitle>
                     <DialogDescription className="text-slate-400">
-                        Uploaded by{' '}
-                        {showUploader ? (
-                            <Link to={createPageUrl(`PublicProfile?userId=${uploader.id}`)} className="text-emerald-400 hover:underline">
-                                {uploaderName}
-                            </Link>
+                        {isIllustrative ? (
+                            'This photo is not the animal shown in the fictional demo record and does not establish its identity or traits.'
                         ) : (
-                            <span>{uploaderName}</span>
-                        )}
-                        {image.created_date && (
                             <>
-                                {' '}
-                                {formatDistanceToNow(new Date(image.created_date), { addSuffix: true })}
+                                Uploaded by{' '}
+                                {showUploader ? (
+                                    <Link to={createPageUrl(`PublicProfile?userId=${uploader.id}`)} className="text-emerald-400 hover:underline">
+                                        {uploaderName}
+                                    </Link>
+                                ) : (
+                                    <span>{uploaderName}</span>
+                                )}
+                                {image.created_date && (
+                                    <>
+                                        {' '}
+                                        {formatDistanceToNow(new Date(image.created_date), { addSuffix: true })}
+                                    </>
+                                )}.
                             </>
-                        )}.
+                        )}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                     <div>
                         <div className="relative">
-                            <GeckoImage src={image.image_url} alt={morphDisplayName} className="rounded-lg w-full h-auto object-contain" />
-                            {image.verified && (
+                            <GeckoImage src={image.image_url} alt={isIllustrative ? 'Illustrative gecko photo, not the demo animal' : morphDisplayName} className="rounded-lg w-full h-auto object-contain" />
+                            {image.verified && !isIllustrative && (
                                 <div className="absolute top-3 left-3 flex items-center gap-2 bg-green-600/80 text-white text-xs font-bold px-3 py-1 rounded-full">
                                     <CheckCircle className="w-4 h-4"/>
                                     Verified
@@ -67,6 +74,13 @@ export default function ImageDetailModal({ data, onClose }) {
                         </div>
                     </div>
                     <div className="space-y-4">
+                        {isIllustrative ? (
+                            <div className="rounded-lg border border-amber-500/40 bg-amber-950/30 p-4 space-y-2">
+                                <Badge variant="outline" className="border-amber-400/60 text-amber-200">Illustrative photo</Badge>
+                                <p className="text-sm text-slate-300">The photo is decorative only. It does not show or identify this fictional demo gecko, its morph, genetics, age, sex, health, or history.</p>
+                            </div>
+                        ) : (
+                          <>
                         <h3 className="font-semibold text-lg text-slate-200 border-b border-slate-700 pb-2">Classification Details</h3>
                         <div className="space-y-2 text-sm">
                             <p><strong>Primary Morph:</strong> <Badge>{morphDisplayName}</Badge></p>
@@ -91,6 +105,8 @@ export default function ImageDetailModal({ data, onClose }) {
                                 <h4 className="font-semibold text-md text-slate-300">Uploader Notes</h4>
                                 <p className="text-slate-400 text-sm italic mt-1">"{image.notes}"</p>
                             </div>
+                        )}
+                          </>
                         )}
 
                         <div className="pt-2 border-t border-slate-800">

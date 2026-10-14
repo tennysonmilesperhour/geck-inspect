@@ -1,5 +1,3 @@
-import { demoPortrait } from '../data/demo-gecko-portraits';
-
 const GUEST_EMAIL = 'guest@local';
 
 // Synthetic, read-only breeder ledger for guest mode. Every amount, name,
@@ -14,7 +12,7 @@ const COHORTS = [
     saleDates: ['2024-10-04', '2024-10-19', '2024-11-02', '2024-11-17', '2024-12-01', '2024-12-08'],
     prices: [790, 960, 1200, 880, 1550, 1250],
     names: ['Copper', 'Pippin', 'Clover', 'Mochi', 'Saffron', 'Sprout', 'Dune', 'Cinder'],
-    portraits: ['pepperjack', 'raindrop', 'moonlight', 'pony-boy', 'mossball', 'raindrop', 'odin', 'selva'],
+    morphs: ['Harlequin', 'Pinstripe', 'Flame', 'Dalmatian', 'Harlequin', 'Pinstripe', 'Flame', 'Harlequin'],
   },
   {
     year: 2025, plan: 'mock-demo-plan-2025', sire: 'mock-gecko-8', dam: 'mock-gecko-12',
@@ -24,7 +22,7 @@ const COHORTS = [
     saleDates: ['2025-09-07', '2025-09-21', '2025-10-05', '2025-10-19', '2025-11-02', '2025-11-16', '2025-11-30', '2025-12-07'],
     prices: [1850, 2100, 1675, 1950, 2300, 1700, 2050, 2200],
     names: ['Juniper', 'Comet', 'Marble', 'Echo', 'Lumen', 'Tansy', 'Orbit', 'Mica'],
-    portraits: ['odin', 'raindrop', 'moonlight', 'pony-boy', 'bliss', 'raindrop', 'selva', 'odin'],
+    morphs: ['Harlequin', 'Pinstripe', 'Flame', 'Dalmatian', 'Harlequin', 'Pinstripe', 'Flame', 'Harlequin'],
   },
   {
     // Keep this successful ledger pairing distinct from the existing 2026
@@ -37,10 +35,32 @@ const COHORTS = [
     saleDates: ['2026-07-26', '2026-08-09', '2026-08-23', '2026-09-06', '2026-09-20', '2026-10-04'],
     prices: [1950, 2200, 1800, 2400, 1650, 2100],
     names: ['Biscuit', 'Kestrel', 'Poppy', 'Fable', 'Waffles', 'Miso', 'Acorn', 'Bramble II'],
-    portraits: ['odin', 'raindrop', 'moonlight', 'frito', 'bliss', 'raindrop', 'cheeto', 'selva'],
+    morphs: ['Harlequin', 'Pinstripe', 'Flame', 'Dalmatian', 'Harlequin', 'Pinstripe', 'Flame', 'Harlequin'],
   },
 ];
 
+export const DEMO_BREEDER_PHOTO_PLACEHOLDER = '/demo/geckos/illustrative-placeholder.svg';
+export const DEMO_BREEDER_ILLUSTRATIVE_PHOTOS = [
+  '/demo/geckos/macro-portrait.jpg',
+  '/demo/geckos/licking-lips.jpg',
+  '/demo/geckos/super-empty-back.jpg',
+  '/demo/geckos/orange.png',
+  '/demo/geckos/geneva-young.jpg',
+  '/demo/geckos/crusted-gecko.jpg',
+  '/demo/geckos/female-2010.jpg',
+];
+
+// Each licensed photograph is used on one fictional card only. Photos are
+// illustrative and are not evidence about the fictional animal's identity.
+export const DEMO_BREEDER_PHOTO_ASSIGNMENTS = Object.freeze({
+  'mock-gecko-1': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[0],
+  'mock-gecko-2': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[1],
+  'mock-gecko-3': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[2],
+  'mock-demo-gecko-2024-07': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[3],
+  'mock-demo-gecko-2024-08': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[4],
+  'mock-demo-gecko-2026-07': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[5],
+  'mock-demo-gecko-2026-08': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[6],
+});
 const now = new Date().toISOString();
 const laidDate = (hatchDate) => {
   const d = new Date(`${hatchDate}T12:00:00.000Z`);
@@ -62,7 +82,10 @@ const records = COHORTS.flatMap((cohort) => cohort.names.map((name, i) => {
     status: sold ? 'Sold' : (i === 6 ? 'Holdback' : 'For Sale'),
     hatch_date: hatchDate,
     weight_grams: 18 + ((i * 3) % 15),
-    ...demoPortrait(cohort.portraits[i]),
+    primary_morph: cohort.morphs[i],
+    morphs_traits: cohort.morphs[i],
+    morph_tags: [cohort.morphs[i]],
+    image_urls: DEMO_BREEDER_PHOTO_ASSIGNMENTS[id] ? [DEMO_BREEDER_PHOTO_ASSIGNMENTS[id]] : [],
     photo_is_illustrative: true,
     gecko_id_code: `DEMO-${cohort.year}-${String(i + 1).padStart(2, '0')}`,
     species: 'Crested Gecko',
@@ -80,7 +103,7 @@ const records = COHORTS.flatMap((cohort) => cohort.names.map((name, i) => {
     sale_category: sold ? 'produced_in_house' : null,
     created_by: GUEST_EMAIL,
     created_date: `${hatchDate}T12:00:00.000Z`,
-    notes: 'Fictional demo animal. Illustrative photo is matched to the listed morph; identity, pedigree, care, and sales history are sample data.',
+    notes: 'Fictional demo animal. Illustrative photo does not establish this animal’s identity, traits, or history.',
   };
 }));
 

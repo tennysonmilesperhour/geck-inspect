@@ -3,7 +3,11 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { DEMO_GECKO_PHOTOS } from '../demoGeckoPhotos';
 import { guestMockList } from '../guestMockData';
-import { DEMO_GECKO_PORTRAITS, demoPortrait } from '../../data/demo-gecko-portraits';
+import {
+  DEMO_BREEDER_ILLUSTRATIVE_PHOTOS,
+  DEMO_BREEDER_PHOTO_ASSIGNMENTS,
+  DEMO_BREEDER_PHOTO_PLACEHOLDER,
+} from '../guestBreederDemo';
 
 const bundled = (src) => existsSync(fileURLToPath(new URL(`../../../public${src}`, import.meta.url)));
 
@@ -16,51 +20,49 @@ describe('preview gecko photos', () => {
     }
   });
 
-  it('uses reviewed, bundled portraits with matching labels in every demo record', async () => {
-    const byPhoto = new Map(Object.keys(DEMO_GECKO_PORTRAITS).map((key) => {
-      const portrait = demoPortrait(key);
-      expect(DEMO_GECKO_PORTRAITS[key].sourceId).toMatch(/^[a-f0-9]{24}$/);
-      expect(bundled(portrait.image_urls[0])).toBe(true);
-      return [portrait.image_urls[0], portrait];
-    }));
+  it('uses distinct licensed photos only as illustrative guest imagery', async () => {
+    const allowed = new Set(DEMO_BREEDER_ILLUSTRATIVE_PHOTOS);
     const geckos = await guestMockList('Gecko');
-    expect(geckos).toHaveLength(43);
-    for (const gecko of geckos) {
-      expect(gecko.image_urls, gecko.name).toHaveLength(1);
-      const portrait = byPhoto.get(gecko.image_urls[0]);
-      expect(portrait, gecko.name).toBeDefined();
-      expect(gecko, gecko.name).toMatchObject(portrait);
-      expect(gecko.photo_is_illustrative).toBe(true);
-    }
     const gallery = await guestMockList('GeckoImage');
-    expect(gallery).toHaveLength(geckos.length);
-    for (const image of gallery) {
-      const gecko = geckos.find((g) => g.id === image.gecko_id);
-      expect(image.image_url).toBe(gecko.image_urls[0]);
-      expect(image.primary_morph).toBe(gecko.primary_morph);
-      expect(image.secondary_traits).toEqual(gecko.morph_tags);
-      expect(image.verified).toBe(false);
-      expect(image.caption).toMatch(/illustrative photo/i);
+    expect(geckos).toHaveLength(43);
+    expect(geckos.every((gecko) => gecko.photo_is_illustrative === true)).toBe(true);
+
+    const assignedUrls = geckos.flatMap((gecko) => gecko.image_urls || []);
+    expect(assignedUrls).toHaveLength(7);
+    expect(new Set(assignedUrls).size).toBe(assignedUrls.length);
+    for (const gecko of geckos) {
+      expect((gecko.image_urls || []).every((src) => allowed.has(src)), gecko.name).toBe(true);
     }
-    expect(() => demoPortrait('unreviewed-photo')).toThrow('Unreviewed demo portrait');
+    for (const src of allowed) expect(bundled(src)).toBe(true);
+
+    expect(gallery).toHaveLength(7);
+    expect(gallery.every((image) => allowed.has(image.image_url) && image.verified === false)).toBe(true);
+    expect(gallery.every((image) => image.photo_is_illustrative === true)).toBe(true);
+    expect(gallery.every((image) => image.primary_morph === null && image.secondary_traits.length === 0)).toBe(true);
+    expect(gallery.every((image) => /illustrative photo/i.test(image.caption))).toBe(true);
+
+    const breederDemoGeckos = geckos.filter((gecko) => gecko.id?.startsWith('mock-demo-gecko-'));
+    expect(breederDemoGeckos).toHaveLength(24);
+    expect(Object.keys(DEMO_BREEDER_PHOTO_ASSIGNMENTS)).toHaveLength(7);
+    expect(breederDemoGeckos.filter((gecko) => gecko.image_urls.length > 0)).toHaveLength(4);
+    expect(breederDemoGeckos.every((gecko) => !gecko.image_urls.length
+      || allowed.has(gecko.image_urls[0]))).toBe(true);
+    expect(breederDemoGeckos.every((gecko) => /illustrative photo/i.test(gecko.notes))).toBe(true);
+    expect(bundled(DEMO_BREEDER_PHOTO_PLACEHOLDER)).toBe(true);
   });
 
-  it('prevents the visually audited mismatches from returning', async () => {
+  it('keeps synthetic visible-trait labels and pedigree links coherent', async () => {
     const geckos = await guestMockList('Gecko');
-    const named = (name) => geckos.find((g) => g.name === name);
-    // Frito has black spots, Odin has cream side/leg pattern, and Olivia
-    // is olive. None of these photos establishes Axanthic or Cappuccino.
+    const named = (name) => geckos.find((gecko) => gecko.name === name);
     expect(named('Pixel').morph_tags).toEqual(['Dalmatian']);
     expect(named('Onyx').morph_tags).toEqual(['Harlequin']);
     expect(named('Cappy').morph_tags).toEqual(['Olive']);
     expect(named('Spud').morph_tags).toEqual(['Pinstripe', 'Harlequin']);
     expect(named('Aria').morph_tags).toEqual(['Harlequin', 'Tricolor']);
-    expect(geckos.flatMap((g) => g.morph_tags).some((tag) => /axanthic|cappuccino|het|full pin|partial pin/i.test(tag))).toBe(false);
-  });
+    expect(geckos.flatMap((gecko) => gecko.morph_tags)
+      .some((tag) => /axanthic|cappuccino|het|full pin|partial pin/i.test(tag))).toBe(false);
 
-  it('keeps Lilly White pedigrees and hatchling parent links coherent', async () => {
-    const geckos = await guestMockList('Gecko');
-    const byId = new Map(geckos.map((g) => [g.id, g]));
+    const byId = new Map(geckos.map((gecko) => [gecko.id, gecko]));
     const isLilly = (id) => byId.get(id)?.morph_tags.includes('Lilly White');
     for (const gecko of geckos) {
       if (isLilly(gecko.id) && (gecko.sire_id || gecko.dam_id)) {
@@ -71,11 +73,11 @@ describe('preview gecko photos', () => {
     for (const plan of plans) {
       expect(isLilly(plan.sire_id) && isLilly(plan.dam_id), plan.breeding_id).toBe(false);
     }
-    const byPlan = new Map(plans.map((p) => [p.id, p]));
+    const plansById = new Map(plans.map((plan) => [plan.id, plan]));
     const eggs = await guestMockList('Egg');
-    for (const egg of eggs.filter((e) => e.gecko_id)) {
+    for (const egg of eggs.filter((record) => record.gecko_id)) {
       const gecko = byId.get(egg.gecko_id);
-      const plan = byPlan.get(egg.breeding_plan_id);
+      const plan = plansById.get(egg.breeding_plan_id);
       expect(gecko.sire_id, gecko.name).toBe(plan.sire_id);
       expect(gecko.dam_id, gecko.name).toBe(plan.dam_id);
     }

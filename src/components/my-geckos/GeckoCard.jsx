@@ -25,6 +25,9 @@ const ARCHIVE_LABELS = {
   other: 'Other',
 };
 
+const initialsForName = (name = '') => String(name).trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'GI';
+const hueForName = (name = '') => [...String(name)].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 360, 17);
+
 // `isOwner` controls the visual "Shared" badge (i.e. is this row in the
 // caller's own collection or one shared with them). `canEdit` controls
 // whether write affordances are rendered. Pre-Phase-B those were the
@@ -42,6 +45,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
   }, [gecko.id, weightRecords]);
 
   const primaryImage = gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE;
+  const demoPhotoUnavailable = gecko.photo_is_illustrative && !gecko.image_urls?.[0];
   const primaryMeta = gecko.image_crop_data?.[primaryImage] || {};
   const primaryStyle = {
     objectPosition: `${primaryMeta.x ?? 50}% ${primaryMeta.y ?? 50}%`,
@@ -73,16 +77,28 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
       {/* Image area. Corners are clipped by the parent .gecko-card's
           overflow:hidden + 9px radius, so no inner radius needed. */}
       <div className="relative">
-        <SmartImage
-          src={primaryImage}
-          alt={gecko.photo_is_illustrative ? `${gecko.name}, illustrative photo, not this demo animal` : gecko.name}
-          width={500}
-          aspect="auto"
-          containerClassName="w-full h-40 sm:h-56"
-          className="w-full h-full object-cover"
-          style={primaryStyle}
-          fallback={DEFAULT_GECKO_IMAGE}
-        />
+        {demoPhotoUnavailable ? (
+          <div
+            className="w-full h-40 sm:h-56 flex flex-col items-center justify-center text-white"
+            style={{ background: `radial-gradient(circle at 70% 25%, hsl(${hueForName(gecko.name)} 52% 38%), hsl(${hueForName(gecko.name)} 42% 16%))` }}
+            role="img"
+            aria-label={`${gecko.name}, no illustrative photo assigned`}
+          >
+            <span className="text-4xl font-semibold tracking-wide opacity-90">{initialsForName(gecko.name)}</span>
+            <span className="mt-2 rounded bg-slate-950/70 px-2 py-1 text-[10px] font-semibold">No photo</span>
+          </div>
+        ) : (
+          <SmartImage
+            src={primaryImage}
+            alt={gecko.photo_is_illustrative ? `${gecko.name}, illustrative photo, not this demo animal` : gecko.name}
+            width={500}
+            aspect="auto"
+            containerClassName="w-full h-40 sm:h-56"
+            className="w-full h-full object-cover"
+            style={primaryStyle}
+            fallback={DEFAULT_GECKO_IMAGE}
+          />
+        )}
 
         {/* Top-left: bare sex symbol + feeding group pill (aligned heights) */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
@@ -104,7 +120,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           )}
         </div>
 
-        {gecko.photo_is_illustrative && (
+        {gecko.photo_is_illustrative && !demoPhotoUnavailable && (
           <span className="absolute bottom-2 left-2 rounded bg-slate-950/85 px-2 py-1 text-[10px] font-semibold text-white shadow">
             Illustrative photo
           </span>

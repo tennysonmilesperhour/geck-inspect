@@ -171,6 +171,11 @@
          grant tokens. None of that may leave the site. -->
     <script>
     (function(){
+      try {
+        if (sessionStorage.getItem("geck_inspect_guest_mode") === "1") return;
+      } catch (_) {
+        // Session storage may be unavailable in restricted browser contexts.
+      }
       var pid="94be07bb-a48d-44fa-b1d0-c9d88d2fc975";
       var ep="https://hkeytqaukllckucnhzey.supabase.co/functions/v1/track";
       var safeUrl=location.origin+location.pathname;
