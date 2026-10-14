@@ -13,6 +13,8 @@ The active plan is `docs/planning/feature-completeness-audit-2026-09-29.md`. Wor
 
 Progress is tracked in that file: each step gets a dated status line when it ships. "What's next on the roadmap?" means the first unfinished item there.
 
+A full review of the whole product, scored in 39 categories with a 90-day plan, is in `docs/planning/comprehensive-review-2026-10-14.md`. Its Part E is the proposed order of work for the next 90 days and waits on Tennyson's decision; until he adopts it, the plan above stands.
+
 ## Shelved until Tennyson says otherwise
 
 - **Blog posts and articles (shelved 30 Sep).** Don't write, draft, publish or suggest articles or blog posts, and don't turn the blog pipeline back on (paused since 15 July in `.github/workflows/blog-pipeline.yml`). The blog stays live as it is. The comparison draft stays in `docs/drafts/` untouched. The weekly growth report still lists search queries with no matching page as blog topics; treat those as data, not tasks. The blog half of plan step 33 waits with this.
