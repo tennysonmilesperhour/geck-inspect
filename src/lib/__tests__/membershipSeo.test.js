@@ -15,8 +15,9 @@ const textOf = (value) => JSON.stringify(value);
 describe('membership prerender copy', () => {
   it('describes the live plans with the prices on the Membership page', () => {
     expect(membershipMetaDescription()).toBe(
-      'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo or $30/yr), Breeder ($5.99/mo or $60/yr), and Enterprise ($99.99/mo or $1,000/yr). Optional 7-day free trial on paid plans. Cancel anytime.',
+      'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo, $30/yr, or $149 lifetime), Breeder ($5.99/mo, $60/yr, or $349 lifetime), and Enterprise ($99.99/mo or $1,000/yr). Optional 7-day free trial on monthly and yearly plans. Cancel anytime.',
     );
+    expect(membershipMetaDescription()).toContain('lifetime');
     expect(membershipMetaDescription().length).toBeGreaterThanOrEqual(60);
     expect(membershipMetaDescription().length).toBeLessThanOrEqual(320);
   });
@@ -25,20 +26,20 @@ describe('membership prerender copy', () => {
     const rows = Object.fromEntries(MEMBERSHIP_PLAN_TABLE.rows.map((row) => [row[0], row]));
     expect(rows.Free[1]).toBe('$0');
     expect(rows.Free[2]).toContain(`Up to ${TIER_LIMITS.free.maxGeckos} geckos`);
-    expect(rows.Keeper[1]).toBe(`${TIER_PRICING.keeper.monthly.price}/mo or ${TIER_PRICING.keeper.annual.price}/yr`);
+    expect(rows.Keeper[1]).toBe(`${TIER_PRICING.keeper.monthly.price}/mo or ${TIER_PRICING.keeper.annual.price}/yr or ${TIER_PRICING.keeper.lifetime.price} one-time`);
     expect(rows.Keeper[2]).toContain(`Up to ${TIER_LIMITS.keeper.maxGeckos} geckos`);
     expect(rows.Keeper[2]).toContain(`${TRIAL_DAYS}-day free trial`);
-    expect(rows.Breeder[1]).toBe(`${TIER_PRICING.breeder.monthly.price}/mo or ${TIER_PRICING.breeder.annual.price}/yr`);
+    expect(rows.Breeder[1]).toBe(`${TIER_PRICING.breeder.monthly.price}/mo or ${TIER_PRICING.breeder.annual.price}/yr or ${TIER_PRICING.breeder.lifetime.price} one-time`);
     expect(rows.Breeder[2]).toContain('Unlimited geckos');
     expect(rows.Breeder[2]).toContain(`${TRIAL_DAYS}-day free trial`);
     expect(rows.Enterprise[1]).toBe(`${TIER_PRICING.enterprise.monthly.price}/mo or ${TIER_PRICING.enterprise.annual.price}/yr`);
   });
 
-  it('leaves unlisted lifetime prices out of the crawlable table', () => {
+  it('lists live lifetime prices as one-time payments', () => {
     const flat = MEMBERSHIP_PLAN_TABLE.rows.flat().join(' ');
-    expect(flat).not.toContain('$149');
-    expect(flat).not.toContain('$349');
-    expect(flat).not.toContain(TIER_PRICING.keeper.lifetime.price + ' one-time');
+    expect(flat).toContain(`${TIER_PRICING.keeper.lifetime.price} one-time`);
+    expect(flat).toContain(`${TIER_PRICING.breeder.lifetime.price} one-time`);
+    expect(MEMBERSHIP_PLAN_TABLE.rows.find((row) => row[0] === 'Enterprise')[1]).not.toContain('one-time');
   });
 
   it('answers trial, cancel, and export with the page wording', () => {
@@ -48,8 +49,9 @@ describe('membership prerender copy', () => {
     expect(byQuestion['Can I export my records?']).toContain('CSV or PDF');
     expect(byQuestion['How much does Geck Inspect cost?']).toContain('Keeper at $2.99 a month or $30 a year');
     expect(byQuestion['How much does Geck Inspect cost?']).toContain('Breeder at $5.99 a month or $60 a year');
-    expect(textOf(MEMBERSHIP_FAQS)).not.toContain('$149');
-    expect(textOf(MEMBERSHIP_FAQS)).not.toContain('$349');
+    expect(byQuestion['How much does Geck Inspect cost?']).toContain('Lifetime is $149 for Keeper and $349 for Breeder');
+    expect(byQuestion['Can I buy lifetime access?']).toContain('one-time payment');
+    expect(byQuestion['Can I buy lifetime access?']).toContain('not credited');
     expect(textOf(MEMBERSHIP_FAQS)).not.toMatch(/\u2014|\u2013/);
   });
 
@@ -62,13 +64,17 @@ describe('membership prerender copy', () => {
     expect(prices).toEqual([
       'Geck Inspect Keeper (monthly) 2.99 USD',
       'Geck Inspect Keeper (annual) 30.00 USD',
+      'Geck Inspect Keeper (lifetime) 149.00 USD',
       'Geck Inspect Breeder (monthly) 5.99 USD',
       'Geck Inspect Breeder (annual) 60.00 USD',
+      'Geck Inspect Breeder (lifetime) 349.00 USD',
       'Geck Inspect Enterprise (monthly) 99.99 USD',
       'Geck Inspect Enterprise (annual) 1000.00 USD',
     ]);
     expect(MEMBERSHIP_OFFERS.every((offer) => offer['@type'] === 'Offer')).toBe(true);
-    expect(MEMBERSHIP_OFFERS.some((offer) => offer.name.includes('lifetime'))).toBe(false);
+    const lifetimeOffers = MEMBERSHIP_OFFERS.filter((offer) => offer.name.includes('lifetime'));
+    expect(lifetimeOffers.map((offer) => offer.category)).toEqual(['one-time', 'one-time']);
+    expect(MEMBERSHIP_OFFERS.filter((offer) => !offer.name.includes('lifetime')).every((offer) => offer.category === 'subscription')).toBe(true);
     expect(app.offers.offers).toBe(MEMBERSHIP_OFFERS);
     const faq = MEMBERSHIP_JSON_LD.find((node) => node['@type'] === 'FAQPage');
     expect(faq.mainEntity.map((q) => q.name)).toEqual(MEMBERSHIP_FAQS.map((item) => item.q));
@@ -82,6 +88,9 @@ describe('membership prerender copy', () => {
     );
     expect(copy.paragraphs[0]).toContain(`${TRIAL_DAYS}-day free trial`);
     expect(copy.paragraphs[0]).toContain('Cancel anytime');
+    expect(copy.paragraphs[0]).toContain('Lifetime Keeper is $149');
+    expect(copy.paragraphs[0]).toContain('lifetime Breeder is $349');
+    expect(copy.paragraphs[0]).toContain('one-time payment');
     expect(copy.paragraphs[1]).toContain('CSV or PDF');
   });
 });

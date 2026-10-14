@@ -22,6 +22,7 @@ import {
   MEMBERSHIP_FAQS,
   MEMBERSHIP_JSON_LD,
   membershipMetaDescription,
+  membershipShellCopy,
 } from '@/lib/membershipSeo';
 import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
@@ -455,6 +456,14 @@ export default function MembershipPage() {
           await handleManageBilling();
           return;
         }
+        if (parsed?.code === 'already_lifetime') {
+          setLoadingAction(null);
+          toast({
+            title: 'You already have lifetime access',
+            description: 'Lifetime is paid once and does not need to be bought again.',
+          });
+          return;
+        }
         throw new Error(parsed?.error || parsed?.message || detail);
       }
       if (data?.url) {
@@ -476,6 +485,8 @@ export default function MembershipPage() {
   };
 
   if (isNativePlatform()) return <NativeMembership user={user} />;
+
+  const planCopy = membershipShellCopy();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 md:p-8">
@@ -499,20 +510,16 @@ export default function MembershipPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-2xl md:text-4xl font-bold text-slate-100">
-            Plans for every crested gecko collection
+            {planCopy.heading}
           </h1>
           <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto">
-            Start free with up to 10 geckos. Upgrade when your collection or
-            your breeding outgrows it, from $2.99 a month.
+            {planCopy.lead}
           </p>
-          <p className="text-sm text-slate-400 max-w-xl mx-auto">
-            Paid plans start today, or after an optional {TRIAL_DAYS}-day free
-            trial. Cancel anytime.
-          </p>
-          <p className="text-sm text-slate-400 max-w-xl mx-auto">
-            Your records are yours. Export your whole collection to CSV or PDF
-            from My Geckos at any time, on every plan.
-          </p>
+          {planCopy.paragraphs.map((text) => (
+            <p key={text} className="text-sm text-slate-400 max-w-xl mx-auto">
+              {text}
+            </p>
+          ))}
 
           <div className="flex justify-center pt-2">
             <CycleToggle value={cycle} onChange={setCycle} />

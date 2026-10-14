@@ -82,12 +82,12 @@ export const TIER_PRICING = {
   keeper: {
     monthly:  { price: '$2.99',  billing: '/month',   priceCaption: 'Billed monthly, starting today. Cancel anytime.',                    mode: 'subscription',  price_id: 'price_1TUxEsLBdc4xGjxqyPV4DOYb', cta: 'Start Keeper' },
     annual:   { price: '$30',    billing: '/year',    priceCaption: 'Billed yearly, starting today. Save vs monthly. Cancel anytime.',     mode: 'subscription',  price_id: 'price_1TVMLeLBdc4xGjxqA856z0Oe', cta: 'Start Keeper' },
-    lifetime: { price: '$149',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: null, cta: 'Get Lifetime Keeper' },
+    lifetime: { price: '$149',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: 'price_1UQV93LBdc4xGjxq4AvXpui4', cta: 'Get Lifetime Keeper' },
   },
   breeder: {
     monthly:  { price: '$5.99',  billing: '/month',   priceCaption: 'Billed monthly, starting today. Cancel anytime.',                    mode: 'subscription',  price_id: 'price_1TUxHGLBdc4xGjxqeieYNdE4', cta: 'Start Breeder' },
     annual:   { price: '$60',    billing: '/year',    priceCaption: 'Billed yearly, starting today. Save vs monthly. Cancel anytime.',     mode: 'subscription',  price_id: 'price_1TVMOCLBdc4xGjxqK2HTmGfm', cta: 'Start Breeder' },
-    lifetime: { price: '$349',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: null, cta: 'Get Lifetime Breeder' },
+    lifetime: { price: '$349',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: 'price_1UQV94LBdc4xGjxqwzNWvXyI', cta: 'Get Lifetime Breeder' },
   },
   // Enterprise: real pricing, $99.99/mo or $1,000/yr, both self-serve. No
   // lifetime entry; Enterprise doesn't get a one-time pay-once option.

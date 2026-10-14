@@ -20,7 +20,7 @@
 //
 // Body shape:
 //   { tier: 'keeper' | 'breeder' | 'enterprise',
-//     billing_cycle?: 'monthly' | 'annual',
+//     billing_cycle?: 'monthly' | 'annual' | 'lifetime',
 //     price_id?: string,          // must match the catalog for tier+cycle
 //     returnUrl?: string,
 //     intent?: 'purchase' | 'trial' | 'keeper_trial' }
@@ -37,10 +37,16 @@
 //        the checkout completes, so closing the tab does not spend it
 //   anything else (the default)               -> no trial, billed immediately
 //
-// Plan changes. Checkout always starts a new subscription, so a member
-// who already pays is refused (409, code already_subscribed) and the
+// Plan changes. Checkout starts a new subscription, so a member who
+// already pays is refused (409, code already_subscribed) and the
 // Membership page sends them to the billing portal, which switches the
 // existing subscription instead of adding a second one.
+//
+// Lifetime is the exception. It is a one-time payment (mode=payment),
+// with no trial. A member who already pays monthly or yearly can buy
+// it. After that payment succeeds, stripe-webhook cancels the old
+// subscription immediately with no credit and no proration. A member
+// who already has lifetime access is refused (409, code already_lifetime).
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -60,17 +66,19 @@ function jsonResponse(body: unknown, status = 200) {
 
 // Price catalog, tier x billing cycle. Mirrors TIER_PRICING in
 // src/lib/stripe-config.js (a unit test keeps the two in sync). Price
-// ids are public identifiers, not secrets. Lifetime rows are absent on
-// purpose: they are not for sale until a price exists in Stripe.
-type Cycle = "monthly" | "annual";
+// ids are public identifiers, not secrets. Lifetime is a one-time
+// price: Checkout uses mode=payment, not a subscription.
+type Cycle = "monthly" | "annual" | "lifetime";
 const PRICE_CATALOG: Record<string, Partial<Record<Cycle, string>>> = {
   keeper: {
     monthly: "price_1TUxEsLBdc4xGjxqyPV4DOYb",
     annual: "price_1TVMLeLBdc4xGjxqA856z0Oe",
+    lifetime: "price_1UQV93LBdc4xGjxq4AvXpui4",
   },
   breeder: {
     monthly: "price_1TUxHGLBdc4xGjxqeieYNdE4",
     annual: "price_1TVMOCLBdc4xGjxqK2HTmGfm",
+    lifetime: "price_1UQV94LBdc4xGjxqwzNWvXyI",
   },
   enterprise: {
     monthly: "price_1TVLvmLBdc4xGjxqCVzbz0GQ",
@@ -154,6 +162,88 @@ async function findOrCreateCustomer(stripeKey: string, email: string): Promise<s
   return customer.id;
 }
 
+// Why checkout is refused before a session is created. Lifetime does not
+// use the already_subscribed refusal: a paying member may buy it, and the
+// webhook cancels the old subscription after the payment succeeds.
+function checkoutRefusal(input: {
+  grandfathered?: boolean;
+  billingCycle?: string | null;
+  cycle: string;
+  hasLiveSubscription?: boolean;
+}): { status: number; error: string; code?: string } | null {
+  if (input.grandfathered) {
+    return {
+      status: 400,
+      error: "This account is grandfathered into Breeder, no checkout needed.",
+    };
+  }
+  if (input.billingCycle === "lifetime") {
+    return {
+      status: 409,
+      code: "already_lifetime",
+      error: "You already have lifetime access.",
+    };
+  }
+  if (input.cycle !== "lifetime" && input.hasLiveSubscription) {
+    return {
+      status: 409,
+      code: "already_subscribed",
+      error: "You already have a membership. Change your plan or billing cycle in the billing portal so you are never charged twice.",
+    };
+  }
+  return null;
+}
+
+function randomLetters(length: number): string {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz";
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+}
+
+// Dashboard label for comparing this checkout flow. The suffix is 8 random
+// letters, which is what Stripe asks for on integration_identifier.
+function lifetimeIntegrationId(suffix: string): string {
+  return `geck_lifetime_${suffix}`;
+}
+
+// One-time Checkout. No subscription_data and no trial. invoice_creation
+// writes an invoice so a later refund or dispute can be matched. The
+// PaymentIntent metadata is what the webhook reads if the invoice is not
+// on the charge yet.
+function buildLifetimeCheckoutForm(args: {
+  customerId: string;
+  priceId: string;
+  tier: string;
+  userId: string;
+  email: string;
+  returnUrl: string;
+  intent: string;
+  integrationId: string;
+}): URLSearchParams {
+  const sessionForm = new URLSearchParams();
+  sessionForm.set("mode", "payment");
+  sessionForm.set("customer", args.customerId);
+  sessionForm.set("line_items[0][price]", args.priceId);
+  sessionForm.set("line_items[0][quantity]", "1");
+  sessionForm.set("invoice_creation[enabled]", "true");
+  sessionForm.set("invoice_creation[invoice_data][metadata][user_id]", args.userId);
+  sessionForm.set("invoice_creation[invoice_data][metadata][tier]", args.tier);
+  sessionForm.set("invoice_creation[invoice_data][metadata][billing_cycle]", "lifetime");
+  sessionForm.set("payment_intent_data[metadata][user_id]", args.userId);
+  sessionForm.set("payment_intent_data[metadata][tier]", args.tier);
+  sessionForm.set("payment_intent_data[metadata][billing_cycle]", "lifetime");
+  sessionForm.set("success_url", `${args.returnUrl}?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
+  sessionForm.set("cancel_url", `${args.returnUrl}?checkout=cancelled`);
+  sessionForm.set("metadata[supabase_email]", args.email);
+  sessionForm.set("metadata[user_id]", args.userId);
+  sessionForm.set("metadata[tier]", args.tier);
+  sessionForm.set("metadata[billing_cycle]", "lifetime");
+  sessionForm.set("metadata[intent]", args.intent || "purchase");
+  sessionForm.set("allow_promotion_codes", "true");
+  sessionForm.set("integration_identifier", args.integrationId);
+  return sessionForm;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
@@ -182,13 +272,7 @@ Deno.serve(async (req: Request) => {
   const tier = (body.tier || "").toLowerCase();
   const intent = (body.intent || "").toLowerCase();
   const cycleRaw = (body.billing_cycle || "monthly").toLowerCase();
-  if (cycleRaw === "lifetime") {
-    return jsonResponse(
-      { error: "Lifetime plans are not available yet. Pick monthly or annual." },
-      400,
-    );
-  }
-  if (cycleRaw !== "monthly" && cycleRaw !== "annual") {
+  if (cycleRaw !== "monthly" && cycleRaw !== "annual" && cycleRaw !== "lifetime") {
     return jsonResponse({ error: `Unknown billing cycle '${cycleRaw}'.` }, 400);
   }
   const cycle = cycleRaw as Cycle;
@@ -237,16 +321,20 @@ Deno.serve(async (req: Request) => {
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("stripe_customer_id, subscription_status, keeper_trial_used, free_trial_used")
+    .select("stripe_customer_id, subscription_status, membership_billing_cycle, keeper_trial_used, free_trial_used")
     .eq("email", user.email)
     .maybeSingle();
 
-  if (profile?.subscription_status === "grandfathered") {
+  const earlyBlock = checkoutRefusal({
+    grandfathered: profile?.subscription_status === "grandfathered",
+    billingCycle: profile?.membership_billing_cycle,
+    cycle,
+    hasLiveSubscription: false,
+  });
+  if (earlyBlock) {
     return jsonResponse(
-      {
-        error: "This account is grandfathered into Breeder, no checkout needed.",
-      },
-      400,
+      { error: earlyBlock.error, ...(earlyBlock.code ? { code: earlyBlock.code } : {}) },
+      earlyBlock.status,
     );
   }
 
@@ -273,28 +361,56 @@ Deno.serve(async (req: Request) => {
   // Ask Stripe, not the profile, whether this member already pays: the
   // profile can lag a webhook. A Keeper who picked Breeder used to end up
   // with two subscriptions billing side by side. Fails closed, since a
-  // missed check could start a second subscription.
-  try {
-    const q = new URLSearchParams({ customer: customerId!, status: "all", limit: "20" });
-    const subs = await stripeRequest(`/subscriptions?${q}`, "GET", stripeKey);
-    const live = (subs?.data || []).find((s: { status?: string }) =>
-      LIVE_SUBSCRIPTION_STATUSES.has(s?.status || "")
-    );
-    if (live) {
+  // missed check could start a second subscription. Lifetime skips this
+  // refusal on purpose: the webhook cancels the live subscription after
+  // the one-time payment succeeds, with no credit and no proration.
+  if (cycle !== "lifetime") {
+    try {
+      const q = new URLSearchParams({ customer: customerId!, status: "all", limit: "20" });
+      const subs = await stripeRequest(`/subscriptions?${q}`, "GET", stripeKey);
+      const live = (subs?.data || []).find((s: { status?: string }) =>
+        LIVE_SUBSCRIPTION_STATUSES.has(s?.status || "")
+      );
+      const block = checkoutRefusal({
+        billingCycle: profile?.membership_billing_cycle,
+        cycle,
+        hasLiveSubscription: Boolean(live),
+      });
+      if (block) {
+        return jsonResponse(
+          { error: block.error, ...(block.code ? { code: block.code } : {}) },
+          block.status,
+        );
+      }
+    } catch (err) {
+      console.error("subscription check failed:", (err as Error).message);
       return jsonResponse(
-        {
-          error: "You already have a membership. Change your plan or billing cycle in the billing portal so you are never charged twice.",
-          code: "already_subscribed",
-        },
-        409,
+        { error: "Could not check your current membership. Try again in a minute." },
+        502,
       );
     }
-  } catch (err) {
-    console.error("subscription check failed:", (err as Error).message);
-    return jsonResponse(
-      { error: "Could not check your current membership. Try again in a minute." },
-      502,
-    );
+  }
+
+  const returnUrl = safeReturnUrl(body.returnUrl);
+  if (cycle === "lifetime") {
+    // No trial on a one-time price. A trial intent is ignored so the
+    // member is billed today instead of being offered free days.
+    const sessionForm = buildLifetimeCheckoutForm({
+      customerId: customerId!,
+      priceId,
+      tier,
+      userId: user.id,
+      email: user.email,
+      returnUrl,
+      intent: intent || "purchase",
+      integrationId: lifetimeIntegrationId(randomLetters(8)),
+    });
+    try {
+      const session = await stripeRequest("/checkout/sessions", "POST", stripeKey, sessionForm);
+      return jsonResponse({ url: session.url, id: session.id });
+    } catch (err) {
+      return jsonResponse({ error: (err as Error).message }, 502);
+    }
   }
 
   // Trial-period decision tree. Zero means no trial, which is the default:
@@ -327,7 +443,6 @@ Deno.serve(async (req: Request) => {
     isStandardTrial = true;
   }
 
-  const returnUrl = safeReturnUrl(body.returnUrl);
   const sessionForm = new URLSearchParams();
   sessionForm.set("mode", "subscription");
   sessionForm.set("customer", customerId!);
