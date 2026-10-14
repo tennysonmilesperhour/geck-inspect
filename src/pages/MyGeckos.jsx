@@ -1019,7 +1019,7 @@ export default function MyGeckosPage() {
                                                         <div className="space-y-2">
                                                             {speciesGeckos.map(gecko => (
                                                                 <div key={gecko.id} className="bg-slate-900 border border-slate-700 rounded-xl p-2 md:p-4 hover:border-emerald-600 transition-colors cursor-pointer flex items-center gap-3" onClick={() => handleOpenDetailModal(gecko)}>
-                                                                    <GeckoImage src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" decoding="async" />
+                                                                    <GeckoImage gecko={gecko} src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" decoding="async" />
                                                                     <div className="flex-1 min-w-0">
                                                                         <h3 className="font-bold text-slate-100 truncate">{gecko.name}</h3>
                                                                         <div className="flex flex-wrap gap-1 mt-1">
@@ -1080,6 +1080,7 @@ export default function MyGeckosPage() {
                                                 >
                                                     <div className="flex items-center gap-2 md:gap-4">
                                                         <GeckoImage
+                                                                    gecko={gecko}
                                                                     src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                                                                     alt={gecko.name}
                                                                     className="w-12 h-12 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"

@@ -32,6 +32,7 @@ import ParentAutocomplete from './form/ParentAutocomplete';
 import { parentNameForSave } from '@/lib/parentNames';
 import { isNativePlatform } from '@/lib/revenuecat';
 import { captureDevicePhoto } from '@/lib/devicePhoto';
+import GeckoPlaceholder from '@/components/shared/GeckoPlaceholder';
 
 // Back-compat alias so the rest of this file doesn't need to change
 const initialFormData = INITIAL_FORM_DATA;
@@ -1018,6 +1019,16 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             Click any photo to crop or rotate. Tag a life stage to include it in the Growth Slideshow,
                             and add a fired-up and a fired-down photo so buyers see both.
                         </p>
+
+                        {formData.image_urls.length === 0 && (
+                            <div className="mb-4 flex items-center gap-4 rounded-xl border border-slate-700 bg-slate-800/40 p-3">
+                                <GeckoPlaceholder gecko={{ ...gecko, ...formData }} className="h-32 w-32 shrink-0 rounded-lg" />
+                                <div className="min-w-0">
+                                    <p className="text-sm font-medium text-slate-200">Their card, before the first photo</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-slate-400">The illustration follows the sex and age you enter. Each saved gecko keeps its own artwork style.</p>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Fired-up and fired-down slots. Buyers ask to see
                             both; the listing and passport show them side by

@@ -221,6 +221,7 @@ export default function GeckoDetail() {
                         <Card className="overflow-hidden">
                             <div className="aspect-square w-full bg-slate-800">
                                 <GeckoImage
+                                    gecko={gecko}
                                     src={gecko.image_urls?.[0]}
                                     fallback={DEFAULT_GECKO_CARD}
                                     alt={gecko.name}
@@ -309,6 +310,7 @@ export default function GeckoDetail() {
                                     <ChevronLeft className="w-6 h-6" />
                                 </button>
                                 <GeckoImage
+                                    gecko={gecko}
                                     src={gecko.image_urls[lightboxIndex]}
                                     alt={`${gecko.name} ${lightboxIndex + 1}`}
                                     className="max-h-[85vh] max-w-full object-contain rounded-lg"

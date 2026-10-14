@@ -258,6 +258,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                             {[{ gecko: sire, role: 'Sire', symbol: '♂' }, { gecko: dam, role: 'Dam', symbol: '♀' }].map(({ gecko, role, symbol }) => (
                                 <div key={role} className="relative w-1/2 overflow-hidden">
                                     <GeckoImage
+                                        gecko={gecko}
                                         src={gecko?.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                                         alt={gecko?.name ? `${role}: ${gecko.name}` : role}
                                         className="absolute inset-0 w-full h-full object-cover"

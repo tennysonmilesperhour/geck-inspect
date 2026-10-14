@@ -92,6 +92,7 @@ function GeckoLightbox({ gecko, onClose }) {
             >
                 <div className="md:flex-[2] min-h-0 flex items-center justify-center">
                     <GeckoImage
+                        gecko={gecko}
                         src={main}
                         alt={gecko.name}
                         className="max-h-[70vh] w-full object-contain rounded-lg shadow-2xl"

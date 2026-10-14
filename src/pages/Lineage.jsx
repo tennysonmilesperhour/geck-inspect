@@ -300,6 +300,7 @@ const GeckoCardNode = ({
             >
                 <div className="w-full h-full bg-slate-700 flex items-center justify-center">
                     <SmartImage
+                        gecko={gecko}
                         src={hasImage ? gecko.image_urls[0] : null}
                         alt={gecko.name}
                         width={400}
@@ -1158,6 +1159,7 @@ export default function Lineage() {
                                             onMouseDown={() => handleSearchSelect(gecko)}
                                         >
                                             <SmartImage
+                                                gecko={gecko}
                                                 src={gecko.image_urls?.[0]}
                                                 alt={gecko.name}
                                                 width={120}
@@ -1292,6 +1294,7 @@ export default function Lineage() {
                     >
                         <div className="max-w-7xl mx-auto px-3 md:px-6 py-3 flex flex-col md:flex-row gap-4 items-start md:items-center">
                             <SmartImage
+                                gecko={selectedGecko}
                                 src={selectedGecko.image_urls?.[0]}
                                 alt={selectedGecko.name}
                                 width={240}
@@ -1387,6 +1390,7 @@ export default function Lineage() {
                                         title={g.gecko_id_code || g.name}
                                     >
                                         <SmartImage
+                                            gecko={g}
                                             src={g.image_urls?.[0]}
                                             alt=""
                                             width={64}

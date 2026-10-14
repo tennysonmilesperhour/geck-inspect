@@ -94,6 +94,7 @@ function ParentPortrait({ gecko, role }) {
         }`}
       >
         <GeckoImage
+          gecko={gecko}
           src={img}
           alt={gecko?.name || (isSire ? 'Unknown sire' : 'Unknown dam')}
           className="w-full h-full object-cover"

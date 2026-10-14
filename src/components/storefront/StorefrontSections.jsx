@@ -188,6 +188,7 @@ function AvailableTile({ gecko, theme, onInquire }) {
       <Link to={geckoDetailHref(gecko)} className="block flex-1">
         <div className="aspect-square bg-slate-800">
           <GeckoImage
+            gecko={gecko}
             src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
             alt={gecko.name || 'Crested gecko for sale'}
             className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"

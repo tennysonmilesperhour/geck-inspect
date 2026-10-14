@@ -888,6 +888,7 @@ export default function FieldModePage() {
                     className="flex items-center gap-4 p-3 rounded-2xl bg-slate-900 border border-slate-700 active:bg-slate-800 text-left min-h-14"
                   >
                     <GeckoImage
+                      gecko={gecko}
                       src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                       alt={gecko.name}
                       loading="lazy"
@@ -915,6 +916,7 @@ export default function FieldModePage() {
                 <ArrowLeft className="w-7 h-7" />
               </button>
               <GeckoImage
+                gecko={selectedGecko}
                 src={selectedGecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                 alt={selectedGecko.name}
                 className="w-14 h-14 rounded-xl object-cover border border-slate-700"

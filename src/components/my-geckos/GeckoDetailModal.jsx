@@ -506,6 +506,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       </button>
                       <div className="relative flex-1 rounded-lg overflow-hidden bg-slate-800 min-h-[160px]">
                         <SmartImage
+                          gecko={gecko}
                           key={`slide-${currentSlide.url}`}
                           src={currentSlide.url}
                           alt={`${gecko.name} at ${LIFE_STAGE_LABELS[currentSlide.stage] || currentSlide.stage}`}
@@ -540,6 +541,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 ) : (
                   <div className="w-full rounded-lg overflow-hidden">
                     <SmartImage
+                      gecko={gecko}
                       src={gecko.image_urls?.[0]}
                       alt={gecko.name}
                       width={800}

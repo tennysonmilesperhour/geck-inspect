@@ -116,6 +116,7 @@ function LikedGeckosScreen() {
                                     <div className="aspect-square w-full overflow-hidden relative group">
                                         <Link to={createPageUrl(`GeckoDetail?id=${gecko.id}`)}>
                                             <SmartImage
+                                                gecko={gecko}
                                                 src={gecko.image_urls?.[0]}
                                                 alt={gecko.name}
                                                 width={500}

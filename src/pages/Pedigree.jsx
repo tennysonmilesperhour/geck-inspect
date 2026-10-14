@@ -201,6 +201,7 @@ function NodeCard({ node, x, y, onClick }) {
       >
         <div className="w-24 h-full flex-shrink-0 bg-slate-800">
           <GeckoImage
+            gecko={g}
             src={img}
             alt={g.name}
             className="w-full h-full object-cover"

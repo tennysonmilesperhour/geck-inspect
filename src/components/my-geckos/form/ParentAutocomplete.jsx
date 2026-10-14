@@ -82,6 +82,7 @@ export default function ParentAutocomplete({
               }}
             >
               <GeckoImage
+                gecko={g}
                 src={g.image_urls?.[0] || DEFAULT_THUMB}
                 alt={g.name}
                 className="w-6 h-6 rounded object-cover flex-shrink-0"

@@ -172,6 +172,7 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
                 return (
                   <li key={gecko.id} className="flex items-center gap-3 py-2.5">
                     <GeckoImage
+                      gecko={gecko}
                       src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                       alt={gecko.name}
                       className="w-10 h-10 rounded object-cover flex-shrink-0 border border-slate-700"

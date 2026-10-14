@@ -62,8 +62,8 @@ export default function StorefrontWebsite({ page = {}, profile = {}, settings = 
           {section.id === 'available' && <div className="sw-grid">
             {geckos.map(gecko => <article className="sw-card" key={gecko.id}>
               {onOpenGecko ? <button type="button" className="sw-photo" onClick={() => onOpenGecko(gecko)} aria-label={`View ${gecko.name || 'gecko'}`}>
-                <GeckoImage src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={gecko.name || 'Crested gecko'} loading="lazy" />
-              </button> : <Link className="sw-photo" to={geckoDetailHref(gecko)}><GeckoImage src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={gecko.name || 'Crested gecko'} loading="lazy" /></Link>}
+                <GeckoImage gecko={gecko} src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={gecko.name || 'Crested gecko'} loading="lazy" />
+              </button> : <Link className="sw-photo" to={geckoDetailHref(gecko)}><GeckoImage gecko={gecko} src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={gecko.name || 'Crested gecko'} loading="lazy" /></Link>}
               <div className="sw-card-content"><h3>{gecko.name || 'Crested gecko'}</h3>
                 <p>{gecko.morphs_traits || 'Crested gecko'}</p>
                 <div className="sw-card-meta"><span>{String(gecko.status || 'Showcase').replace(/_/g, ' ')}</span>
@@ -75,7 +75,7 @@ export default function StorefrontWebsite({ page = {}, profile = {}, settings = 
           {section.id === 'pairings' && <div className="sw-pairings">{plans.map(plan => <article key={plan.id} className="sw-card sw-pairing">
             <h3>{[plan.sire?.name, plan.dam?.name].filter(Boolean).join(' × ') || 'Planned pairing'}</h3>
             <div className="sw-parents">{[plan.sire, plan.dam].map((parent, i) => <div key={i}>
-              <GeckoImage src={parent?.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={parent?.name || (i ? 'Dam' : 'Sire')} loading="lazy" />
+              <GeckoImage gecko={parent} src={parent?.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={parent?.name || (i ? 'Dam' : 'Sire')} loading="lazy" />
               <p>{i ? 'Dam' : 'Sire'}: {parent?.name || 'Unknown'}</p>
             </div>)}</div>{plan.notes && <p className="sw-prose">{plan.notes}</p>}
           </article>)}</div>}

@@ -35,6 +35,7 @@ function InferredTile({ gecko }) {
     >
       <div className="aspect-square bg-slate-800">
         <GeckoImage
+          gecko={gecko}
           src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
           alt={gecko.name || 'Crested gecko'}
           className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"

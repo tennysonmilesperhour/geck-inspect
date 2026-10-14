@@ -126,6 +126,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
         <Card className="overflow-hidden group-hover:border-emerald-500/50 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-colors duration-200 h-full flex flex-col">
             <div className="aspect-square w-full overflow-hidden relative">
                 <SmartImage
+                    gecko={gecko}
                     src={gecko.image_urls?.[0]}
                     alt={gecko.name}
                     width={500}

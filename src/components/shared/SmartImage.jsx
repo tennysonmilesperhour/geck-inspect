@@ -18,6 +18,7 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_GECKO_CARD, DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { geckoPlaceholderStyle, isGeckoPlaceholder } from '@/lib/geckoPlaceholder';
+import GeckoPlaceholder from './GeckoPlaceholder';
 
 const ASPECT_PRESETS = {
   square: '1 / 1',
@@ -58,6 +59,7 @@ function transformUrl(src, width) {
 export default function SmartImage({
   src,
   alt,
+  gecko,
   aspect = 'square',
   width,
   className = '',
@@ -92,10 +94,11 @@ export default function SmartImage({
 
   if (typeof src !== 'string' || !src.trim()) resolvedSrc = fallback;
   const isPlaceholder = isGeckoPlaceholder(resolvedSrc);
+  const personalized = isPlaceholder && gecko;
   // Give auto-height detail views a definite box before their max-height
   // is applied, so the full frame fits instead of overflowing the wrapper.
   const containerAspect = isPlaceholder && aspect === 'auto'
-    ? (resolvedSrc === DEFAULT_GECKO_CARD ? '2 / 3' : '1 / 1')
+    ? (!personalized && resolvedSrc === DEFAULT_GECKO_CARD ? '2 / 3' : '1 / 1')
     : aspectRatio;
 
   return (
@@ -107,7 +110,16 @@ export default function SmartImage({
       {!loaded && (
         <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800" />
       )}
-      <img
+      {personalized ? <GeckoPlaceholder
+        {...rest}
+        gecko={gecko}
+        alt={alt}
+        width={width}
+        className={`w-full h-full ${className}`}
+        style={style}
+        onLoad={(event) => { setLoaded(true); onLoad?.(event); }}
+        onError={onError}
+      /> : <img
         src={resolvedSrc}
         alt={alt || ''}
         loading="lazy"
@@ -123,7 +135,7 @@ export default function SmartImage({
         style={isPlaceholder ? geckoPlaceholderStyle(resolvedSrc, style) : style}
         className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
         {...rest}
-      />
+      />}
     </div>
   );
 }
