@@ -1119,5 +1119,85 @@ begin
 end
 $t$;
 
+-- Changing the capital letters in an address does not get past the
+-- notification limits. send-email and send-push lower-case the address,
+-- so every spelling of a@x.com is the same inbox: it must also be the same
+-- person for the 10-minute repeat check and the 30-an-hour count. Even a
+-- member with a private profile is covered.
+do $t$
+declare n integer; v_to text; v_variant text; v_ok integer := 0; m integer; i integer; r record;
+begin
+  perform pg_temp.mk('casevic', 'Case Victim');
+  perform pg_temp.mk('casesnd', 'Case Sender');
+  update public.profiles set is_public_profile = false where email = pg_temp.who('casevic');
+  v_to := pg_temp.who('casevic');
+
+  perform pg_temp.as_member('casesnd');
+  for m in 0..63 loop
+    v_variant := '';
+    for i in 1..length(v_to) loop
+      v_variant := v_variant || case when i <= 6 and (m >> (i - 1)) & 1 = 1
+                                     then upper(substr(v_to, i, 1)) else substr(v_to, i, 1) end;
+    end loop;
+    if m = 63 then v_variant := '  ' || upper(v_to) || ' '; end if;
+    insert into public.direct_messages (sender_email, recipient_email, content, created_by)
+    values (pg_temp.who('casesnd'), v_variant, 'x', pg_temp.who('casesnd'));
+    begin
+      insert into public.notifications (user_email, type, content, created_by)
+      values (v_variant, 'new_message', 'x', pg_temp.who('casesnd'));
+      v_ok := v_ok + 1;
+    exception when others then
+      raise exception 'FAIL: a case variant notification raised instead of being dropped: %', sqlerrm;
+    end;
+  end loop;
+  -- A direct call with a capitalised address sees the same person too.
+  if (public.member_notification_template(upper(v_to), 'new_message', null) ->> 'skip')::boolean is not true then
+    raise exception 'FAIL: member_notification_template treats a capitalised address as a new person';
+  end if;
+
+  perform pg_temp.as_postgres();
+  select count(*) into n from public.notifications where lower(user_email) = v_to and type = 'new_message';
+  if n <> 1 then raise exception 'FAIL: % notifications reached one member through case variants', n; end if;
+  select * into r from public.notifications where lower(user_email) = v_to and type = 'new_message';
+  if r.user_email <> v_to then raise exception 'FAIL: the stored address was not lower-cased: %', r.user_email; end if;
+  -- The messages land in the member's real inbox, where they can see and
+  -- block the sender.
+  select count(*) into n from public.direct_messages where recipient_email = v_to and sender_email = pg_temp.who('casesnd');
+  if n <> 64 then raise exception 'FAIL: case variant messages missed the inbox (% of 64)', n; end if;
+
+  -- Eleven minutes later one more goes out, not one per spelling.
+  update public.notifications set created_date = created_date - interval '11 minutes' where created_by = pg_temp.who('casesnd');
+  update public.direct_messages set created_date = created_date - interval '11 minutes' where sender_email = pg_temp.who('casesnd');
+  perform pg_temp.as_member('casesnd');
+  insert into public.direct_messages (sender_email, recipient_email, content, created_by)
+  values (pg_temp.who('casesnd'), upper(v_to), 'x', pg_temp.who('casesnd'));
+  insert into public.notifications (user_email, type, content, created_by) values (upper(v_to), 'new_message', 'x', pg_temp.who('casesnd'));
+  insert into public.notifications (user_email, type, content, created_by) values (initcap(v_to), 'new_message', 'x', pg_temp.who('casesnd'));
+  insert into public.notifications (user_email, type, content, created_by) values (v_to, 'new_message', 'x', pg_temp.who('casesnd'));
+  perform pg_temp.as_postgres();
+  select count(*) into n from public.notifications where lower(user_email) = v_to and type = 'new_message';
+  if n <> 2 then raise exception 'FAIL: expected 2 notifications after the second round, found %', n; end if;
+
+  -- The 30-different-people count is per person, not per spelling: thirty
+  -- spellings of one address leave room for a real second person.
+  perform pg_temp.mk('casethird', 'Case Third');
+  perform pg_temp.as_member('casesnd');
+  insert into public.direct_messages (sender_email, recipient_email, content, created_by)
+  values (pg_temp.who('casesnd'), pg_temp.who('casethird'), 'x', pg_temp.who('casesnd'));
+  insert into public.notifications (user_email, type, content, created_by)
+  values (upper(pg_temp.who('casethird')), 'new_message', 'x', pg_temp.who('casesnd'));
+  -- The member's own address, in any case, is still a note to themselves.
+  insert into public.notifications (user_email, type, content)
+  values (upper(pg_temp.who('casesnd')), 'level_up', 'Level 2');
+  perform pg_temp.as_postgres();
+  if not exists (select 1 from public.notifications where user_email = pg_temp.who('casethird') and type = 'new_message') then
+    raise exception 'FAIL: a real notification to a second member was lost';
+  end if;
+  if not exists (select 1 from public.notifications where user_email = pg_temp.who('casesnd') and type = 'level_up') then
+    raise exception 'FAIL: a capitalised self note was not stored under the member''s own address';
+  end if;
+end
+$t$;
+
 select 'comms_exposure_regressions: all checks passed' as result;
 rollback;

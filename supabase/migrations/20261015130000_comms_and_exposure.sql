@@ -224,6 +224,12 @@ set search_path to ''
 as $function$
 declare
   v_me text := auth.email();
+  -- One spelling per person. Email addresses are not case sensitive, and
+  -- send-email and send-push lower-case the address, so "A@X.COM" and
+  -- "a@x.com" are the same member. Every check below compares lower-cased
+  -- addresses; otherwise each capitalisation would count as a new person
+  -- and slip past the repeat check and the 30-an-hour limit.
+  v_to text := lower(btrim(p_recipient_email));
   v_post text := nullif(btrim(coalesce(p_metadata ->> 'post_id', '')), '');
   v_fanout boolean := p_type in ('new_gecko_listing', 'new_breeding_plan');
   v_reached integer;
@@ -231,7 +237,7 @@ begin
   if v_me is null then
     raise exception 'Sign in to send notifications' using errcode = '42501';
   end if;
-  if p_recipient_email is null or p_recipient_email = v_me then
+  if v_to is null or v_to = '' or v_to = lower(v_me) then
     raise exception 'This check is for notifications to other members' using errcode = '22023';
   end if;
   if p_type is null or p_type not in
@@ -243,7 +249,7 @@ begin
   -- The event must exist, and be the caller's own.
   if p_type = 'new_message' then
     if not exists (select 1 from public.direct_messages d
-                    where d.sender_email = v_me and d.recipient_email = p_recipient_email
+                    where d.sender_email = v_me and lower(d.recipient_email) = v_to
                       and d.created_date > now() - interval '1 hour') then
       raise exception 'There is no recent message to this member' using errcode = '42501';
     end if;
@@ -254,22 +260,22 @@ begin
             and c.created_date > now() - interval '1 hour') then
       raise exception 'There is no recent comment of yours on that post' using errcode = '42501';
     end if;
-    if not exists (select 1 from public.forum_posts fp where fp.id = v_post and fp.created_by = p_recipient_email)
-       and not exists (select 1 from public.forum_comments c where c.post_id = v_post and c.created_by = p_recipient_email) then
+    if not exists (select 1 from public.forum_posts fp where fp.id = v_post and lower(fp.created_by) = v_to)
+       and not exists (select 1 from public.forum_comments c where c.post_id = v_post and lower(c.created_by) = v_to) then
       raise exception 'That member has not posted in this thread' using errcode = '42501';
     end if;
   elsif p_type = 'new_follower' then
     -- Only a follow made in the last hour: an old follow cannot be used to
     -- send "started following you" again and again.
     if not exists (select 1 from public.user_follows f
-                    where f.follower_email = v_me and f.following_email = p_recipient_email
+                    where f.follower_email = v_me and lower(f.following_email) = v_to
                       and f.created_date > now() - interval '1 hour') then
       raise exception 'You have not just followed this member' using errcode = '42501';
     end if;
   else
     -- New gecko or breeding plan: only to the caller's own followers.
     if not exists (select 1 from public.user_follows f
-                    where f.follower_email = p_recipient_email and f.following_email = v_me) then
+                    where lower(f.follower_email) = v_to and f.following_email = v_me) then
       raise exception 'Only your followers hear about your new listings' using errcode = '42501';
     end if;
   end if;
@@ -280,8 +286,8 @@ begin
   -- after the event, so a direct call only says so about a member the
   -- caller has just followed, messaged or answered.
   if exists (select 1 from public.user_blocks b
-              where (lower(b.blocker_email) = lower(p_recipient_email) and lower(b.blocked_email) = lower(v_me))
-                 or (lower(b.blocker_email) = lower(v_me) and lower(b.blocked_email) = lower(p_recipient_email))) then
+              where (lower(b.blocker_email) = v_to and lower(b.blocked_email) = lower(v_me))
+                 or (lower(b.blocker_email) = lower(v_me) and lower(b.blocked_email) = v_to)) then
     raise exception 'You cannot notify this member' using errcode = '42501';
   end if;
 
@@ -290,7 +296,7 @@ begin
   -- once a day, as follow_profile does, so unfollowing and following again
   -- does not repeat it.
   if exists (select 1 from public.notifications n
-              where n.created_by = v_me and n.user_email = p_recipient_email and n.type = p_type
+              where n.created_by = v_me and lower(n.user_email) = v_to and n.type = p_type
                 and n.created_date > now() - case when p_type = 'new_follower'
                                                   then interval '1 day' else interval '10 minutes' end
                 and (v_post is null or n.metadata ->> 'post_id' = v_post)) then
@@ -299,11 +305,11 @@ begin
 
   -- At most 30 different people an hour, apart from one's own followers.
   if not v_fanout then
-    select count(distinct n.user_email) into v_reached
+    select count(distinct lower(n.user_email)) into v_reached
       from public.notifications n
      where n.created_by = v_me
-       and n.user_email <> v_me
-       and n.user_email <> p_recipient_email
+       and lower(n.user_email) <> lower(v_me)
+       and lower(n.user_email) <> v_to
        and n.type not in ('new_gecko_listing', 'new_breeding_plan')
        and n.created_date > now() - interval '1 hour';
     if v_reached >= 30 then
@@ -311,7 +317,7 @@ begin
     end if;
   end if;
 
-  return public._member_notification(v_me, p_recipient_email, p_type, v_post)
+  return public._member_notification(v_me, v_to, p_type, v_post)
          || jsonb_build_object('skip', false);
 end;
 $function$;
@@ -359,6 +365,16 @@ begin
     raise exception 'Sign in to create notifications' using errcode = '42501';
   end if;
   new.created_by := v_email;
+  -- One spelling per person: the address is trimmed and lower-cased, the
+  -- way send-email and send-push read it. Otherwise "A@X.COM" and
+  -- "a@x.com" would reach the same inbox while counting as two people for
+  -- the rate limits below. A member's own address keeps its exact
+  -- spelling so the row still matches notifications_read_own.
+  if lower(btrim(coalesce(new.user_email, ''))) = lower(v_email) then
+    new.user_email := v_email;
+  else
+    new.user_email := lower(btrim(new.user_email));
+  end if;
   -- The time is the database's, never the browser's: the rate limits
   -- below count by created_date, and a backdated row would dodge them.
   new.created_date := now();
@@ -518,7 +534,8 @@ create policy direct_messages_update_own on public.direct_messages
 -- admins (Mass Messaging) and our own server code only. A member's insert
 -- with message_type 'system' is refused, so nobody can dress a message up
 -- as the team's. send_direct_message_to_profile already turns it into
--- 'direct'; this covers a plain insert.
+-- 'direct'; this covers a plain insert. A member's message also has its
+-- recipient address trimmed and lower-cased (one spelling per person).
 create or replace function public.guard_direct_message_insert()
 returns trigger
 language plpgsql
@@ -532,6 +549,10 @@ begin
   if lower(coalesce(new.message_type, '')) = 'system' and not public.is_admin() then
     raise exception 'Only Geck Inspect sends system messages' using errcode = '42501';
   end if;
+  -- The recipient address is stored trimmed and lower-cased, so a message
+  -- to "A@X.COM" lands in a@x.com's inbox (where they can see and block
+  -- the sender) instead of sitting unseen while it unlocks notifications.
+  new.recipient_email := lower(btrim(new.recipient_email));
   return new;
 end;
 $function$;
