@@ -276,9 +276,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
           };
 
           if (type === 'ownership') {
-              generateOwnershipCertificatePDF(gecko, currentUser, { breedingHistory: breedingHistoryProps });
+              await generateOwnershipCertificatePDF(gecko, currentUser, { breedingHistory: breedingHistoryProps });
           } else {
-              generateLineageCertificatePDF({
+              await generateLineageCertificatePDF({
                   gecko,
                   sire,
                   dam,
@@ -339,7 +339,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               weights: weightRecords, feedings, feedingGroup,
               seller: currentUser, passportUrl,
           });
-          downloadPdf(renderBuyerPacketPDF(packet, { photo, qr, firePhotos }), packetFilename(gecko));
+          downloadPdf(await renderBuyerPacketPDF(packet, { photo, qr, firePhotos }), packetFilename(gecko));
           toast({
               title: 'Buyer packet downloaded',
               description: passportUrl

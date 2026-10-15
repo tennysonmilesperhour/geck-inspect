@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/select";
 import { differenceInMonths, format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import html2canvas from 'html2canvas';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { inferSeasonLabel, compareSeasonLabels } from '@/lib/seasons';
 import { formatHetTag } from '@/lib/hetUtils';
@@ -825,6 +824,9 @@ export default function Lineage() {
         const previousTransform = target.style.transform;
         target.style.transform = 'scale(1)';
         try {
+            // html2canvas (about 200 kB) loads only when someone exports,
+            // so opening the Lineage page does not download it.
+            const { default: html2canvas } = await import('html2canvas');
             const canvas = await html2canvas(target, {
                 backgroundColor: '#020617',
                 scale: 2,

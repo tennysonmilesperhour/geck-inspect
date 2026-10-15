@@ -564,7 +564,12 @@ export default function AnimalPassport() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => exportProvenanceCertificate(gecko, ownershipRecords, url)}
+                  // The PDF library loads on click, so the export is async;
+                  // log a failure instead of leaving an unhandled rejection.
+                  onClick={() => {
+                    exportProvenanceCertificate(gecko, ownershipRecords, url)
+                      .catch((err) => console.error('Certificate export failed:', err));
+                  }}
                   className="border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 bg-transparent"
                   title="Download a printable provenance certificate. The QR code on it links back to this live passport."
                 >

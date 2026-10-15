@@ -75,17 +75,17 @@ describe('buildBuyerPacket', () => {
     expect(packet.diet).toEqual(['Diet: Complete diet (CGD)', 'Fed every 3 days']);
   });
 
-  it('renders a PDF without a photo or QR code', () => {
-    const doc = renderBuyerPacketPDF(packet);
+  it('renders a PDF without a photo or QR code', async () => {
+    const doc = await renderBuyerPacketPDF(packet);
     expect(doc.getNumberOfPages()).toBeGreaterThanOrEqual(1);
     expect(doc.output('arraybuffer').byteLength).toBeGreaterThan(1000);
   });
 
-  it('adds the fired-up and fired-down photos when given', () => {
+  it('adds the fired-up and fired-down photos when given', async () => {
     // A 1 x 1 PNG stands in for each photo.
     const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-    const plain = renderBuyerPacketPDF(packet).output('arraybuffer').byteLength;
-    const doc = renderBuyerPacketPDF(packet, {
+    const plain = (await renderBuyerPacketPDF(packet)).output('arraybuffer').byteLength;
+    const doc = await renderBuyerPacketPDF(packet, {
       firePhotos: [{ label: 'Fired up', dataUrl: png }, { label: 'Fired down', dataUrl: png }, { label: 'Missing', dataUrl: null }],
     });
     expect(doc.output('arraybuffer').byteLength).toBeGreaterThan(plain);

@@ -1,4 +1,3 @@
-import jsPDF from 'jspdf';
 import {
   summarizeBreedingHistory,
   breedingHistoryTotals,
@@ -243,7 +242,17 @@ function drawBreedingHistorySection(doc, history, x, y, width) {
 // Public API
 // ---------------------------------------------------------------------------
 
-export function generateOwnershipCertificatePDF(gecko, owner, opts = {}) {
+// jsPDF (about 390 kB plus its canvg helper) is loaded only when someone
+// actually downloads a certificate. A top-level import pulled it into the
+// My Geckos page for every visit, because the gecko detail modal imports
+// this file. Both generators are therefore async; callers await them.
+async function loadJsPDF() {
+  const { default: jsPDF } = await import('jspdf');
+  return jsPDF;
+}
+
+export async function generateOwnershipCertificatePDF(gecko, owner, opts = {}) {
+  const jsPDF = await loadJsPDF();
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const { pageW, pageH, margin } = drawHeader(doc, 'Certificate of Ownership', owner);
 
@@ -320,7 +329,8 @@ export function generateOwnershipCertificatePDF(gecko, owner, opts = {}) {
   downloadPdfBlob(doc, `ownership-certificate-${slug}.pdf`);
 }
 
-export function generateLineageCertificatePDF({ gecko, sire, dam, grandparents = {}, owner, breedingHistory }) {
+export async function generateLineageCertificatePDF({ gecko, sire, dam, grandparents = {}, owner, breedingHistory }) {
+  const jsPDF = await loadJsPDF();
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const { pageW, pageH, margin } = drawHeader(doc, 'Certificate of Lineage', owner);
 
