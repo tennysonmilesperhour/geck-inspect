@@ -1,5 +1,7 @@
 # Product
 
+> Scope: this brief was written for Morph ID. The Users, Design Principles and Accessibility sections describe Morph ID specifically; for what the whole product is today, read `docs/CONTEXT.md`.
+
 ## Register
 
 product

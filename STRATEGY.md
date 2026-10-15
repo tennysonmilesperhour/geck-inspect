@@ -2,7 +2,7 @@
 
 # STRATEGY.md - Geck Inspect
 
-Last updated: May 2026
+Last updated: May 2026. For the current competitor picture, read `docs/planning/competitive-landscape-2026-10.md` (5 October 2026) first; facts below that have since changed are marked "Update".
 Source: Landscape & Competitor Deep Dive (full doc in /docs/landscape-analysis-vol1.docx and /docs/landscape-analysis-vol2.docx)
 
 ## The market in one paragraph
@@ -54,10 +54,10 @@ His weaknesses (which Geck Inspect can exploit):
 ## Where Geck Inspect is behind
 
 - No native iOS app. (ReptiDex has one. The Reptile Keeper has one. MorphMarket has one. Cltch has one.)
-- No public-facing breeder website builder. (Breed Ledger's biggest pitch.)
+- No public-facing breeder website builder. (Breed Ledger's biggest pitch.) Update, 13 Oct 2026: shipped. My Store has a visual website editor for members' breeder pages (`docs/WEBSITE_BUILDER.md`).
 - No registry partnership. (GSGC is locked up by Breed Ledger.)
 - Smaller breeder operation behind the platform. (Geckistry generates real production data.)
-- No financial / P&L tracking. (HatchLedger has this.)
+- No financial / P&L tracking. (HatchLedger has this.) Update, Oct 2026: shipped. Business Tools records sales and costs and shows profit by season and by pairing.
 - No genetic testing integration. (Cltch has this for ball pythons.)
 
 ## Where everyone is behind (open opportunities)

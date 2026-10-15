@@ -1,5 +1,12 @@
 # Ops scripts for the /recognition + /training pipeline
 
+> Scope: this file documents only the Morph ID deploy helpers below. The
+> rest of `scripts/` is build-time tooling (sitemap, prerender, llms files,
+> SEO audit, content dates, genetics consistency check) and the scripts the
+> scheduled GitHub workflows run (growth report, agent traffic, canary,
+> error triage, Morph ID evaluation); the workflow files in
+> `.github/workflows/` say which script each one runs.
+
 Two helpers that take the "follow the deploy guide" step out of shipping
 updates to the morph-ID system.
 

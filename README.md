@@ -43,11 +43,15 @@ so the sitemap's lastmod values reflect real change dates.
 - `supabase/migrations/` schema history (read docs/MIGRATIONS.md before
   touching it)
 - `scripts/` build-time SEO tooling and the scheduled jobs' scripts
+  (`scripts/README.md` covers only the Morph ID deploy helpers)
 - `docs/` project context, decisions, specs, audits
 
 ## Rules that matter
 
-- Work on `main`. No preview branches or pull requests unless asked.
+- Work on `main`. No preview branches or pull requests unless asked. (One
+  exception exists: the `error-triage` workflow opens draft pull requests
+  on `error-triage/*` branches when it runs. Its nightly schedule is off
+  since 15 Oct 2026, so it only runs when started by hand.)
 - No em dashes anywhere in copy, UI strings, docs, or comments.
 - Crested gecko terminology stays specific (Lilly White, Harlequin,
   Phantom, Cappuccino, Axanthic, Sable, Highway).
