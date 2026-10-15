@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const db = vi.hoisted(() => {
   const tables = { weight: [], feeding: [], shed: [], groups: [] };
-  const state = { abortAfterCommit: 0, failNext: null };
+  const state = { abortAfterCommit: 0, failNext: null, hold: null };
   const abortError = () => Object.assign(new Error('signal is aborted without reason'), { name: 'AbortError' });
   const duplicate = (table) => ({
     code: '23505',
@@ -20,6 +20,7 @@ const db = vi.hoisted(() => {
   function table(name, pg) {
     return {
       async create(row) {
+        if (state.hold) await state.hold;
         if (state.failNext) {
           const e = state.failNext;
           state.failNext = null;
@@ -79,7 +80,16 @@ import {
   readQueue,
   setQueueOwner,
 } from '../offlineQueue';
-import { executeQueuedWrite, prepareFieldLog, saveFieldLog, writeOrQueue } from '../offlineSync';
+import {
+  executeQueuedWrite,
+  hasLeftQueue,
+  prepareFieldLog,
+  saveFieldLog,
+  syncNow,
+  takeBackQueued,
+  undoQueuedLog,
+  writeOrQueue,
+} from '../offlineSync';
 
 function fakeStorage() {
   const map = new Map();
@@ -101,6 +111,7 @@ beforeEach(() => {
   db.tables.groups = [];
   db.state.abortAfterCommit = 0;
   db.state.failNext = null;
+  db.state.hold = null;
   __setQueueStorage(fakeStorage());
   __setQueueLocks(null);
   setQueueOwner(null);
@@ -252,5 +263,42 @@ describe('a log the server saved after the phone gave up is saved once', () => {
     db.state.failNext = { status: 401, message: 'JWT expired' };
     await expect(saveFieldLog({ kind: 'fed', geckoId: 'g1', date: '2026-10-16' }, { offline: false })).rejects.toMatchObject({ status: 401 });
     expect(readQueue()).toHaveLength(0);
+  });
+});
+
+describe('undo on a log kept on the phone', () => {
+  it('takes it out while it waits, and the queue never sends it', async () => {
+    const { queued } = await saveFieldLog({ kind: 'shed', geckoId: 'g1', date: '2026-10-16' }, { offline: true });
+    expect(hasLeftQueue(queued.id)).toBe(false);
+    await expect(undoQueuedLog(queued.id)).resolves.toBeUndefined();
+    await flushQueue(executeQueuedWrite);
+    expect(db.tables.shed).toHaveLength(0);
+  });
+
+  it('says it was not undone once the queue has sent it', async () => {
+    const { queued } = await saveFieldLog({ kind: 'shed', geckoId: 'g1', date: '2026-10-16' }, { offline: true });
+    await syncNow();
+    expect(db.tables.shed).toHaveLength(1);
+    expect(hasLeftQueue(queued.id)).toBe(true);
+    expect(takeBackQueued(queued.id)).toBe('sent');
+    await expect(undoQueuedLog(queued.id)).rejects.toThrow(/already synced/);
+  });
+
+  it('says it was not undone while the queue is sending it, and the log is saved', async () => {
+    const { queued } = await saveFieldLog({ kind: 'shed', geckoId: 'g1', date: '2026-10-16' }, { offline: true });
+    let release;
+    db.state.hold = new Promise((r) => { release = r; });
+    const sending = syncNow();
+    await Promise.resolve();
+    expect(takeBackQueued(queued.id)).toBe('syncing');
+    await expect(undoQueuedLog(queued.id)).rejects.toThrow(/being sent right now/);
+    release();
+    await sending;
+    expect(db.tables.shed).toHaveLength(1);
+  });
+
+  it('knows nothing about the queue when nobody owns it', () => {
+    setQueueOwner(null);
+    expect(hasLeftQueue('anything')).toBe(false);
   });
 });

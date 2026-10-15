@@ -14,6 +14,8 @@ import {
   isAuthError,
   isNetworkError,
   pendingCount,
+  readQueue,
+  removeQueued,
   subscribeQueue,
 } from '@/lib/offlineQueue';
 
@@ -183,6 +185,39 @@ export async function syncNow() {
 
 export function isSyncing() {
   return syncing;
+}
+
+/**
+ * Take a log made with no signal back out of the queue, for an Undo.
+ * Returns 'removed' when it was still waiting, 'syncing' when the queue is
+ * being sent right now (the log may be saving at this moment), or 'sent'
+ * when it already left the queue (saved, or refused by the server).
+ * Removing it is only an undo in the first case, so the caller must not
+ * say "undone" for the other two.
+ */
+export function takeBackQueued(id) {
+  if (syncing) return 'syncing';
+  return removeQueued(id) ? 'removed' : 'sent';
+}
+
+export const UNDO_SYNCING_MESSAGE = 'It is being sent right now, so it was not undone. Try Undo again in a moment.';
+export const UNDO_SENT_MESSAGE = "It has already synced, so it was not undone. Remove it from the gecko's record instead.";
+
+/** Undo for a queued log: takes it out, or throws a plain message saying why it could not. */
+export async function undoQueuedLog(id) {
+  const outcome = takeBackQueued(id);
+  if (outcome === 'syncing') throw new Error(UNDO_SYNCING_MESSAGE);
+  if (outcome === 'sent') throw new Error(UNDO_SENT_MESSAGE);
+}
+
+/**
+ * True once a queued log is no longer waiting on this phone (it was sent).
+ * False while it waits, and when no account owns the queue (nothing is
+ * known then).
+ */
+export function hasLeftQueue(id) {
+  if (!id || !getQueueOwner()) return false;
+  return !readQueue().some((i) => i.id === id);
 }
 
 /** Live { pending, online } for the offline status display. */

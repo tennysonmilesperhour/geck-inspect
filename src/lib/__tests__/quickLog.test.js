@@ -14,7 +14,7 @@ const SAFE_LINK = /^\/([^/\\\s"'<>`][^\\\s"'<>`]*)?$/;
 describe('reading a reminder link', () => {
   it('reads type, geckos and groups', () => {
     expect(parseQuickLogParams('?type=weight&gecko=lg-w1,lg-w2')).toEqual({
-      type: 'weight', geckoIds: ['lg-w1', 'lg-w2'], groupIds: [], from: null,
+      type: 'weight', geckoIds: ['lg-w1', 'lg-w2'], groupIds: [], more: 0, from: null,
     });
     expect(parseQuickLogParams('?type=feeding&gecko=g1&group=grp-1')).toMatchObject({
       type: 'feeding', geckoIds: ['g1'], groupIds: ['grp-1'],
@@ -25,6 +25,14 @@ describe('reading a reminder link', () => {
     const ids = Array.from({ length: 14 }, (_, i) => `g${i}`).join(',');
     expect(parseQuickLogParams(`?gecko=${ids}`).geckoIds).toHaveLength(10);
     expect(parseQuickLogParams('?gecko=a,a,b%20c,<x>,../y,ok_1').geckoIds).toEqual(['a', 'ok_1']);
+  });
+
+  it('reads how many geckos the reminder left out of the link', () => {
+    expect(parseQuickLogParams('?type=weight&gecko=g1&more=190').more).toBe(190);
+    expect(parseQuickLogParams('?gecko=g1&more=0').more).toBe(0);
+    expect(parseQuickLogParams('?gecko=g1&more=-3').more).toBe(0);
+    expect(parseQuickLogParams('?gecko=g1&more=4x').more).toBe(0);
+    expect(parseQuickLogParams('?gecko=g1&more=99999999').more).toBe(0);
   });
 
   it('falls back to feeding for an unknown type and accepts Field Mode\'s "fed"', () => {
@@ -50,6 +58,14 @@ describe('building a link', () => {
     const back = quickLogPath({ type: 'weight', geckoIds: ['g1'], from: '/Dashboard' });
     expect(back).toBe('/log?type=weight&gecko=g1&from=%2FDashboard');
     expect(parseQuickLogParams(back.slice(4)).from).toBe('/Dashboard');
+  });
+
+  it('says how many geckos did not fit in the link', () => {
+    const ids = Array.from({ length: 13 }, (_, i) => `g${i}`);
+    const link = quickLogPath({ type: 'weight', geckoIds: ids });
+    expect(link).toBe('/log?type=weight&gecko=g0,g1,g2,g3,g4,g5,g6,g7,g8,g9&more=3');
+    expect(SAFE_LINK.test(link)).toBe(true);
+    expect(parseQuickLogParams(link.slice(4)).more).toBe(3);
   });
 });
 

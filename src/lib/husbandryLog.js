@@ -272,3 +272,15 @@ export function isAuthFailure(error) {
   const text = `${error.message || ''} ${error.error_description || ''}`.toLowerCase();
   return /not authenticated|jwt expired|invalid jwt|refresh token|auth session missing|session.*expired/.test(text);
 }
+
+/**
+ * Plain words for a care log the database refused. The raw database text
+ * (for example "new row violates row-level security policy") belongs in
+ * the console, not in front of members.
+ */
+export function careLogErrorText(error, fallback = 'Please try again in a minute.') {
+  const code = String(error?.code || '');
+  if (code === '42501') return 'You can no longer log for this gecko.';
+  if (code === '23505') return 'This was already logged.';
+  return fallback;
+}

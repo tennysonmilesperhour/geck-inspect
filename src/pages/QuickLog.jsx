@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, CheckCircle2, CloudOff, Loader2, LogIn, Scale, Sparkles, Undo2, Utensils } from 'lucide-react';
@@ -8,14 +8,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { api } from '@/api/appClient';
-import { FeedingGroup, Gecko, ShedRecord, WeightRecord } from '@/entities/all';
+import { FeedingGroup, FeedingRecord, Gecko, ShedRecord, WeightRecord } from '@/entities/all';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { fieldModeQueryKey, loadWritableGeckos } from '@/lib/fieldModeData';
 import { isGuestMode } from '@/lib/guestMode';
-import { isAuthFailure, markGroupFed, undoFeedings } from '@/lib/husbandryLog';
-import { removeQueued } from '@/lib/offlineQueue';
-import { saveFieldLog, useOfflineQueue } from '@/lib/offlineSync';
+import { careLogErrorText, isAuthFailure, markGroupFed, undoFeedings } from '@/lib/husbandryLog';
+import {
+  hasLeftQueue,
+  saveFieldLog,
+  takeBackQueued,
+  UNDO_SENT_MESSAGE,
+  UNDO_SYNCING_MESSAGE,
+  useOfflineQueue,
+} from '@/lib/offlineSync';
+import { rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { captureEvent } from '@/lib/posthog';
 import {
   parseQuickLogParams,
@@ -26,12 +33,14 @@ import {
 
 /**
  * The one-tap log a reminder opens (review item E2 15):
- *   /log?type=weight|feeding|shed&gecko=<ids>&group=<ids>&from=<path>
+ *   /log?type=weight|feeding|shed&gecko=<ids>&group=<ids>&more=<n>&from=<path>
  *
  * It shows the geckos the reminder named, each with one button: "Fed",
  * "Shed today", or a weight box and "Save". Feedings and sheds need no
  * value, so they save in one tap; a weight needs the number. A feeding
- * group in the link lists its geckos with "Mark all fed".
+ * group in the link lists its geckos with "Mark all fed". When the
+ * reminder covered more geckos than fit in the link, `more` says how many
+ * and the page points to Field Mode for the rest.
  *
  * Saves go through the same path as Field Mode (saveFieldLog in
  * src/lib/offlineSync.js): with no signal the log is kept on the phone
@@ -44,6 +53,39 @@ import {
  * the previous page in the app, or the Dashboard when the link was opened
  * from an email or a phone notification.
  */
+
+// An error whose message is written for members and can be shown as is.
+function plainError(message) {
+  return Object.assign(new Error(message), { plain: true });
+}
+
+// True when a gecko's own Undo can still take its log back: saved from
+// this page, kept on the phone, or kept and since synced when the saved
+// row can be found again by its request id.
+function canUndo(entry) {
+  if (!entry) return false;
+  if (entry.status === 'queued') return true;
+  if (entry.status !== 'saved') return false;
+  if (!entry.synced) return true;
+  // A synced feeding may have moved its group's schedule, and the phone
+  // does not know where the schedule was before, so that one is left to
+  // the gecko's record.
+  return Boolean(entry.requestId) && !(entry.kind === 'fed' && entry.accepted && entry.groupId);
+}
+
+// A feeding saved on this page that counts as feeding its group (D21).
+function isAcceptedFeeding(entry) {
+  return entry?.status === 'saved' && entry.kind === 'fed' && entry.accepted === true;
+}
+
+async function deleteByRequestId(client, requestId) {
+  const rows = requestId ? await client.filter({ client_request_id: requestId }) : [];
+  const row = Array.isArray(rows) ? rows[0] : null;
+  if (!row?.id) return false;
+  await client.delete(row.id);
+  return true;
+}
+
 export default function QuickLog() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -81,13 +123,14 @@ export default function QuickLog() {
     () => pickQuickLogGeckos({ geckos: geckoQuery.data || [], geckoIds: params.geckoIds, groupIds: params.groupIds }),
     [geckoQuery.data, params.geckoIds, params.groupIds],
   );
+  const allGeckos = [...picked.listed, ...picked.groups.flatMap((g) => g.geckos)];
 
   // Group names, and the group itself for "Mark the group fed" when no
   // gecko is in it. Needs a connection; offline the group is just
   // "Feeding group".
   const [groups, setGroups] = useState({});
   useEffect(() => {
-    if (!user?.email || guest || params.type !== 'feeding' || params.groupIds.length === 0) return undefined;
+    if (!user?.email || guest || params.groupIds.length === 0) return undefined;
     let cancelled = false;
     Promise.all(params.groupIds.map((id) => FeedingGroup.get(id).catch(() => null)))
       .then((rows) => {
@@ -97,16 +140,33 @@ export default function QuickLog() {
         setGroups(next);
       });
     return () => { cancelled = true; };
-  }, [user?.email, guest, params.type, params.groupIds]);
+  }, [user?.email, guest, params.groupIds]);
 
   useEffect(() => {
     captureEvent('quick_log', { type: params.type, action: 'opened', geckos: params.geckoIds.length, groups: params.groupIds.length });
   }, [params.type, params.geckoIds.length, params.groupIds.length]);
 
-  // Per gecko: { status: 'saving' | 'saved' | 'queued' | 'error', undo, label }
+  // Per gecko: { status: 'saving' | 'saved' | 'queued' | 'error', label,
+  // kind, accepted, groupId, result, queuedId, requestId, prevWeight,
+  // synced }. statusRef holds the same statuses without waiting for a
+  // render, so a second tap (on Mark all, or on a gecko's own button while
+  // Mark all runs) sees a save already under way and does not save twice.
   const [logs, setLogs] = useState({});
+  const statusRef = useRef({});
   const [weights, setWeights] = useState({});
-  const setLog = (id, value) => setLogs((prev) => ({ ...prev, [id]: value }));
+  const setLog = (id, value) => {
+    statusRef.current = { ...statusRef.current, [id]: value?.status };
+    setLogs((prev) => ({ ...prev, [id]: value }));
+  };
+
+  // A log kept on the phone stops saying so once the queue has sent it.
+  useEffect(() => {
+    for (const [id, entry] of Object.entries(logs)) {
+      if (entry?.status === 'queued' && hasLeftQueue(entry.queuedId)) {
+        setLog(id, { ...entry, status: 'saved', synced: true });
+      }
+    }
+  }, [pending, logs]);
 
   const refreshCollection = () => {
     queryClient.invalidateQueries({ queryKey: ['my-geckos'] });
@@ -114,16 +174,9 @@ export default function QuickLog() {
     window.dispatchEvent(new Event('geckos_changed'));
   };
 
-  const undoFor = (kind, result, gecko, prevWeight) => {
-    if (kind === 'fed') return () => undoFeedings(result);
-    if (kind === 'shed') return async () => { if (result?.id) await ShedRecord.delete(result.id); };
-    return async () => {
-      if (result?.id) await WeightRecord.delete(result.id);
-      await Gecko.update(gecko.id, { weight_grams: prevWeight });
-    };
-  };
-
   const save = async (gecko, { accepted = true, grams = null } = {}) => {
+    // Already saving, saved or kept for this gecko: never a second record.
+    if (['saving', 'saved', 'queued'].includes(statusRef.current[gecko.id])) return true;
     const kind = params.type === 'weight' ? 'weight' : params.type === 'shed' ? 'shed' : 'fed';
     const data = kind === 'weight'
       ? { kind, geckoId: gecko.id, grams, date: today, mirror: true }
@@ -133,11 +186,17 @@ export default function QuickLog() {
     const label = kind === 'weight' ? `${grams} g` : kind === 'shed' ? 'Shed logged' : accepted ? 'Fed' : 'Refused';
     setLog(gecko.id, { status: 'saving' });
     try {
-      const { result, queued } = await saveFieldLog(data);
+      const { result, queued, data: sent } = await saveFieldLog(data);
       setLog(gecko.id, {
         status: queued ? 'queued' : 'saved',
         label,
-        undo: queued ? async () => { removeQueued(queued.id); } : undoFor(kind, result, gecko, gecko.weight_grams ?? null),
+        kind,
+        accepted: kind === 'fed' ? accepted : undefined,
+        groupId: kind === 'fed' ? gecko.feeding_group_id || null : null,
+        result: queued ? null : result,
+        queuedId: queued?.id || null,
+        requestId: sent?.requestId || null,
+        prevWeight: gecko.weight_grams ?? null,
       });
       if (!queued) refreshCollection();
       captureEvent('quick_log', { type: params.type, action: 'saved', queued: Boolean(queued), accepted: kind === 'fed' ? accepted : undefined });
@@ -148,22 +207,82 @@ export default function QuickLog() {
         setSessionExpired(true);
         toast({ title: 'Sign in again', description: 'Your sign-in expired, so that log was not saved.', variant: 'destructive' });
       } else {
-        toast({ title: 'Not saved', description: error?.message || 'Please try again.', variant: 'destructive' });
+        console.warn('Quick log not saved:', error);
+        toast({ title: 'Not saved', description: careLogErrorText(error), variant: 'destructive' });
       }
       return false;
     }
   };
 
+  // Take back a feeding saved from this page. The first gecko of a group
+  // logged today is the one whose save moved the group's schedule. When
+  // another gecko of that group on this page is still logged as fed, the
+  // group stays fed (D21) and the job of moving it back passes to that
+  // gecko's Undo, so only the last one undone moves the group back.
+  const undoSavedFeeding = async (gecko, entry) => {
+    const keep = [];
+    const handOff = new Map();
+    for (const plan of entry.result?.advanced || []) {
+      const heir = allGeckos.find((g) => g.id !== gecko.id
+        && (g.feeding_group_id || null) === plan.id
+        && isAcceptedFeeding(logs[g.id]));
+      if (!heir) keep.push(plan);
+      // A synced feeding cannot be undone here, so the group just stays fed.
+      else if (!logs[heir.id].synced) handOff.set(heir.id, [...(handOff.get(heir.id) || []), plan]);
+    }
+    await undoFeedings({ ...entry.result, advanced: keep });
+    for (const [heirId, plans] of handOff) {
+      setLogs((prev) => {
+        const heir = prev[heirId];
+        if (!heir?.result) return prev;
+        return { ...prev, [heirId]: { ...heir, result: { ...heir.result, advanced: [...(heir.result.advanced || []), ...plans] } } };
+      });
+    }
+  };
+
+  // Take back a log the phone kept and has since sent, by finding its row
+  // again by the request id it was saved with.
+  const undoSynced = async (gecko, entry) => {
+    if (entry.kind === 'fed' && entry.accepted && entry.groupId) throw plainError(UNDO_SENT_MESSAGE);
+    const client = entry.kind === 'fed' ? FeedingRecord : entry.kind === 'shed' ? ShedRecord : WeightRecord;
+    if (!(await deleteByRequestId(client, entry.requestId))) throw plainError(UNDO_SENT_MESSAGE);
+    if (entry.kind === 'weight') await Gecko.update(gecko.id, { weight_grams: entry.prevWeight });
+  };
+
   const undo = async (gecko) => {
     const entry = logs[gecko.id];
-    if (!entry?.undo) return;
+    if (!canUndo(entry)) return;
     try {
-      await entry.undo();
+      if (entry.status === 'queued') {
+        const outcome = takeBackQueued(entry.queuedId);
+        if (outcome === 'syncing') throw plainError(UNDO_SYNCING_MESSAGE);
+        // Sent while the card still said "kept on this phone": undo the
+        // saved row instead, or say plainly that it stays.
+        if (outcome === 'sent') await undoSynced(gecko, entry);
+      } else if (entry.synced) {
+        await undoSynced(gecko, entry);
+      } else if (entry.kind === 'fed') {
+        await undoSavedFeeding(gecko, entry);
+      } else if (entry.kind === 'shed') {
+        if (entry.result?.id) await ShedRecord.delete(entry.result.id);
+      } else {
+        if (entry.result?.id) await WeightRecord.delete(entry.result.id);
+        await Gecko.update(gecko.id, { weight_grams: entry.prevWeight });
+      }
       setLog(gecko.id, undefined);
       refreshCollection();
       captureEvent('quick_log', { type: params.type, action: 'undone' });
     } catch (error) {
-      toast({ title: 'Undo failed', description: error?.message || 'Remove it from the gecko record instead.', variant: 'destructive' });
+      if (!error?.plain) console.warn('Quick log undo failed:', error);
+      // It may have synced in the meantime; the card says so from now on.
+      if (entry.status === 'queued' && hasLeftQueue(entry.queuedId)) {
+        setLog(gecko.id, { ...entry, status: 'saved', synced: true });
+      }
+      toast({
+        title: 'Undo failed',
+        description: error?.plain ? error.message : "Remove it from the gecko's record instead.",
+        variant: 'destructive',
+      });
     }
   };
 
@@ -177,11 +296,22 @@ export default function QuickLog() {
     save(gecko, { grams });
   };
 
+  // "Mark all" saves one gecko at a time, in order, so the group schedule
+  // moves once. While it runs, both Mark all buttons show a spinner and
+  // ignore taps, and save() skips any gecko already saving or saved.
+  const [markingAll, setMarkingAll] = useState(false);
+  const markingAllRef = useRef(false);
   const markAll = async (list) => {
-    for (const gecko of list) {
-      if (logs[gecko.id]?.status === 'saved' || logs[gecko.id]?.status === 'queued') continue;
-      // One at a time, in order, so the group schedule moves once.
-      if (!(await save(gecko))) break;
+    if (markingAllRef.current) return;
+    markingAllRef.current = true;
+    setMarkingAll(true);
+    try {
+      for (const gecko of list) {
+        if (!(await save(gecko))) break;
+      }
+    } finally {
+      markingAllRef.current = false;
+      setMarkingAll(false);
     }
   };
 
@@ -196,9 +326,28 @@ export default function QuickLog() {
       setGroupOnlyDone((prev) => ({ ...prev, [groupId]: true }));
       refreshCollection();
     } catch (error) {
-      toast({ title: 'Not saved', description: error?.message || 'Please try again.', variant: 'destructive' });
+      console.warn('Group feeding not saved:', error);
+      toast({ title: 'Not saved', description: careLogErrorText(error), variant: 'destructive' });
     }
     setGroupOnlySaving(null);
+  };
+
+  // Signing in again after the sign-in expired. This tab can still hold
+  // the old session, and the sign-in page sends anyone it thinks is signed
+  // in straight back here, so the session is ended in this browser first
+  // (other devices stay signed in). The link is remembered
+  // (src/lib/postAuthRedirect.js), so signing in by password, email link
+  // or Google ends back on this same log.
+  const signInAgain = async (event) => {
+    event?.preventDefault?.();
+    const back = `${location.pathname}${location.search}`;
+    rememberPostAuthRedirect(back);
+    try {
+      await api.auth.endLocalSession();
+    } catch {
+      // The sign-in page still opens.
+    }
+    window.location.assign(`/AuthPortal?redirect=${encodeURIComponent(back)}`);
   };
 
   const finish = () => {
@@ -207,7 +356,6 @@ export default function QuickLog() {
     else navigate(target);
   };
 
-  const allGeckos = [...picked.listed, ...picked.groups.flatMap((g) => g.geckos)];
   const doneCount = allGeckos.filter((g) => ['saved', 'queued'].includes(logs[g.id]?.status)).length;
   const allDone = allGeckos.length > 0 && doneCount === allGeckos.length;
   const hasList = Boolean(geckoQuery.data);
@@ -243,9 +391,11 @@ export default function QuickLog() {
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
               {entry.status === 'queued' ? `${entry.label}, kept on this phone` : `${entry.label}, saved`}
             </span>
-            <Button type="button" variant="ghost" onClick={() => undo(gecko)} className="min-h-11 text-slate-200">
-              <Undo2 className="w-4 h-4 mr-1" /> Undo
-            </Button>
+            {canUndo(entry) && (
+              <Button type="button" variant="ghost" disabled={markingAll} onClick={() => undo(gecko)} className="min-h-11 text-slate-200">
+                <Undo2 className="w-4 h-4 mr-1" /> Undo
+              </Button>
+            )}
           </div>
         ) : params.type === 'weight' ? (
           <form
@@ -326,7 +476,7 @@ export default function QuickLog() {
         {/* Come back to this same log after signing in: a reminder tapped
             with an expired session should still end on the form it opened. */}
         <Button asChild className="min-h-12 px-6 bg-emerald-600 hover:bg-emerald-700">
-          <Link to={`/AuthPortal?redirect=${encodeURIComponent(`${location.pathname}${location.search}`)}`}>
+          <Link to={`/AuthPortal?redirect=${encodeURIComponent(`${location.pathname}${location.search}`)}`} onClick={signInAgain}>
             <LogIn className="w-5 h-5 mr-2" /> Sign in
           </Link>
         </Button>
@@ -345,25 +495,34 @@ export default function QuickLog() {
       </p>
     );
   } else {
-    const multiple = picked.listed.length > 1 && params.type !== 'weight';
-    const pendingListed = picked.listed.filter((g) => !['saved', 'queued'].includes(logs[g.id]?.status));
+    const canMarkAll = params.type !== 'weight';
+    const notDone = (list) => list.filter((g) => !['saved', 'queued'].includes(logs[g.id]?.status));
+    const pendingListed = notDone(picked.listed);
+    const markAllButton = (list) => (
+      <Button
+        type="button"
+        disabled={markingAll}
+        onClick={() => markAll(list)}
+        className="w-full min-h-12 mb-3 text-lg font-semibold bg-emerald-700 hover:bg-emerald-800"
+      >
+        {markingAll
+          ? <Loader2 className="w-5 h-5 animate-spin" aria-label="Saving" />
+          : params.type === 'shed' ? `Log a shed for all ${list.length}` : `Mark all ${list.length} fed`}
+      </Button>
+    );
+    // A weigh-in or shed link can name a feeding group too (quickLogPath
+    // allows it); its geckos show as plain cards. Only a feeding can mark
+    // a group that has no geckos.
+    const shownGroups = picked.groups.filter((group) => params.type === 'feeding' || group.geckos.length > 0);
     body = (
       <>
-        {multiple && pendingListed.length > 1 && (
-          <Button
-            type="button"
-            onClick={() => markAll(pendingListed)}
-            className="w-full min-h-12 mb-3 text-lg font-semibold bg-emerald-700 hover:bg-emerald-800"
-          >
-            {params.type === 'shed' ? `Log a shed for all ${pendingListed.length}` : `Mark all ${pendingListed.length} fed`}
-          </Button>
-        )}
+        {canMarkAll && picked.listed.length > 1 && pendingListed.length > 1 && markAllButton(pendingListed)}
         {picked.listed.length > 0 && <ul className="space-y-3">{picked.listed.map(card)}</ul>}
 
-        {params.type === 'feeding' && picked.groups.map((group) => {
+        {shownGroups.map((group) => {
           const info = groups[group.id];
           const name = info?.name || info?.label || 'Feeding group';
-          const pendingInGroup = group.geckos.filter((g) => !['saved', 'queued'].includes(logs[g.id]?.status));
+          const pendingInGroup = notDone(group.geckos);
           return (
             <section key={group.id} className="mt-6">
               <h2 className="text-base font-semibold text-slate-200 mb-2">{name}</h2>
@@ -386,15 +545,7 @@ export default function QuickLog() {
                 )
               ) : (
                 <>
-                  {pendingInGroup.length > 1 && (
-                    <Button
-                      type="button"
-                      onClick={() => markAll(pendingInGroup)}
-                      className="w-full min-h-12 mb-3 text-lg font-semibold bg-emerald-700 hover:bg-emerald-800"
-                    >
-                      Mark all {pendingInGroup.length} fed
-                    </Button>
-                  )}
+                  {canMarkAll && pendingInGroup.length > 1 && markAllButton(pendingInGroup)}
                   <ul className="space-y-3">{group.geckos.map(card)}</ul>
                 </>
               )}
@@ -402,14 +553,20 @@ export default function QuickLog() {
           );
         })}
 
-        {picked.missing > 0 && (
-          <p className="mt-4 text-sm text-slate-400">
-            {picked.missing === 1 ? 'One gecko from this reminder is' : `${picked.missing} geckos from this reminder are`} no longer in your collection.
+        {params.more > 0 && (
+          <p className="mt-4 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300">
+            {params.more === 1 ? '1 more gecko is' : `${params.more} more geckos are`} due but did not fit on this page.{' '}
+            <Link to="/FieldMode" className="underline text-emerald-300">Log the rest in Field Mode</Link>.
           </p>
         )}
-        {allGeckos.length === 0 && picked.groups.length === 0 && (
+        {picked.missing > 0 && (
+          <p className="mt-4 text-sm text-slate-400">
+            {picked.missing === 1 ? 'One gecko from this reminder is' : `${picked.missing} geckos from this reminder are`} not in this collection. It may have been archived or sold, or you may be signed in to a different account.
+          </p>
+        )}
+        {allGeckos.length === 0 && shownGroups.length === 0 && (
           <div className="rounded-2xl border border-slate-700 bg-slate-900 p-4 text-slate-300">
-            <p className="mb-3">Nothing to log here. The gecko may have been archived, sold or moved.</p>
+            <p className="mb-3">Nothing to log here. The gecko may have been archived, sold or moved, or you may be signed in to a different account.</p>
             <Link to="/MyGeckos" className="underline">Open My Geckos</Link>
           </div>
         )}

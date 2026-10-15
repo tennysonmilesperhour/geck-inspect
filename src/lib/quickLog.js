@@ -1,11 +1,13 @@
 // The one-tap log that reminder links open (review item E2 15).
 //
-//   /log?type=weight|feeding|shed&gecko=<id>,<id>&group=<id>&from=<path>
+//   /log?type=weight|feeding|shed&gecko=<id>,<id>&group=<id>&more=<n>&from=<path>
 //
 // The reminder jobs build these links (public.care_log_link in
 // supabase/migrations/20261015151100_reminders_and_offline_logging.sql):
 // at most 10 ids of each kind, each made of letters, digits, "_" and "-",
-// so the link passes the notification link rule. This file holds the
+// so the link passes the notification link rule. When a reminder covers
+// more geckos than fit, `more` says how many were left out, so the page
+// can say so instead of looking finished after the first 10. This file holds the
 // parts with no React: reading the link, picking the geckos, and where
 // to go back to afterwards. The screen is src/pages/QuickLog.jsx.
 import { safeInternalPath } from '@/lib/safeInternalPath';
@@ -13,6 +15,8 @@ import { safeInternalPath } from '@/lib/safeInternalPath';
 export const QUICK_LOG_TYPES = ['weight', 'feeding', 'shed'];
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const MAX_IDS = 10;
+// Upper bound for `more`; a larger or malformed value is ignored.
+const MAX_MORE = 100000;
 
 function idList(value) {
   const seen = new Set();
@@ -31,10 +35,18 @@ function cleanFrom(value) {
   return path;
 }
 
+/** The count of geckos left out of the link, or 0. */
+function moreCount(value) {
+  const raw = String(value ?? '').trim();
+  if (!/^\d{1,6}$/.test(raw)) return 0;
+  const n = Number(raw);
+  return n > 0 && n <= MAX_MORE ? n : 0;
+}
+
 /**
- * { type, geckoIds, groupIds, from } from the address bar. An unknown
- * type falls back to feeding, the most common reminder; a bad id is
- * dropped rather than trusted.
+ * { type, geckoIds, groupIds, more, from } from the address bar. An
+ * unknown type falls back to feeding, the most common reminder; a bad id
+ * is dropped rather than trusted.
  */
 export function parseQuickLogParams(search) {
   const params = new URLSearchParams(search || '');
@@ -45,6 +57,7 @@ export function parseQuickLogParams(search) {
     type,
     geckoIds: idList(params.get('gecko')),
     groupIds: idList(params.get('group')),
+    more: moreCount(params.get('more')),
     from: cleanFrom(params.get('from')),
   };
 }
@@ -57,6 +70,9 @@ export function quickLogPath({ type = 'feeding', geckoIds = [], groupIds = [], f
   const groups = idList((groupIds || []).join(','));
   if (geckos.length) params.set('gecko', geckos.join(','));
   if (groups.length) params.set('group', groups.join(','));
+  // Ids past the first 10 do not fit in the link; say how many there were.
+  const dropped = new Set((geckoIds || []).map((id) => String(id).trim()).filter((id) => ID_RE.test(id))).size - geckos.length;
+  if (dropped > 0) params.set('more', String(dropped));
   const back = cleanFrom(from);
   if (back) params.set('from', back);
   // URLSearchParams writes "," as "%2C"; plain commas keep the link short

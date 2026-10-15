@@ -38,9 +38,10 @@ import {
   revertGroupAdvances,
   logShed as writeShed,
   isAuthFailure,
+  careLogErrorText,
 } from '@/lib/husbandryLog';
 import { createPageUrl } from '@/utils';
-import { queueFieldLog, isDeviceOffline, useOfflineQueue } from '@/lib/offlineSync';
+import { queueFieldLog, isDeviceOffline, isSyncing, undoQueuedLog, useOfflineQueue } from '@/lib/offlineSync';
 import { enqueue, removeQueued, updateQueued, isNetworkError } from '@/lib/offlineQueue';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { createCareRecordOnce, newClientRequestId } from '@/lib/careLogOnce';
@@ -370,7 +371,14 @@ export default function FieldModePage() {
       toast({ title: 'Sign in again', description: 'Your sign-in expired, so that log was not saved.', variant: 'destructive' });
       return;
     }
-    toast({ title: 'Save failed', description: error?.message || fallback, variant: 'destructive' });
+    // A database refusal carries a code; its own text is not for members.
+    // Errors without one are this app's own words (for example "This
+    // browser would not keep the log").
+    toast({
+      title: 'Save failed',
+      description: error?.code ? careLogErrorText(error, fallback) : (error?.message || fallback),
+      variant: 'destructive',
+    });
   };
 
   // Offline: a log that cannot reach the server is kept on the phone and
@@ -408,7 +416,7 @@ export default function FieldModePage() {
     };
     const queueWhole = () => {
       const item = queueFieldLog({ kind: 'weight', geckoId: gecko.id, grams, date, mirror, requestId });
-      finish({ queued: item, undo: async () => { removeQueued(item.id); } });
+      finish({ queued: item, undo: () => undoQueuedLog(item.id) });
     };
     try {
       if (isDeviceOffline()) {
@@ -444,8 +452,10 @@ export default function FieldModePage() {
         undo: async () => {
           if (record?.id) await WeightRecord.delete(record.id);
           if (!mirror) return;
-          if (mirrorItem) removeQueued(mirrorItem.id);
-          else await Gecko.update(gecko.id, { weight_grams: prevWeight });
+          // The shown-weight update kept for later: take it out of the
+          // queue, or, when it was already sent, put the weight back.
+          if (mirrorItem && !isSyncing() && removeQueued(mirrorItem.id)) return;
+          await Gecko.update(gecko.id, { weight_grams: prevWeight });
         },
       });
     } catch (error) {
@@ -467,7 +477,7 @@ export default function FieldModePage() {
         quality,
         queued: true,
         message: savedLabel(true, `Shed for ${gecko.name}`),
-        undo: async () => { removeQueued(item.id); },
+        undo: () => undoQueuedLog(item.id),
       });
     };
     try {
@@ -519,7 +529,7 @@ export default function FieldModePage() {
         accepted,
         queued: true,
         message: savedLabel(true, `Feeding for ${gecko.name}`),
-        undo: async () => { removeQueued(item.id); },
+        undo: () => undoQueuedLog(item.id),
       });
     };
     try {
@@ -591,7 +601,7 @@ export default function FieldModePage() {
     };
     const queueNote = () => {
       const item = queueFieldLog({ kind: 'note', geckoId: gecko.id, eventDate: when.toISOString(), notes: trimmed });
-      done({ queued: true, message: savedLabel(true, `Note for ${gecko.name}`), undo: async () => { removeQueued(item.id); } });
+      done({ queued: true, message: savedLabel(true, `Note for ${gecko.name}`), undo: () => undoQueuedLog(item.id) });
     };
     try {
       if (isDeviceOffline()) {
@@ -628,9 +638,14 @@ export default function FieldModePage() {
   const refineShedQuality = async (quality) => {
     if (!undoEntry || undoEntry.kind !== 'shed') return;
     try {
-      // A shed still waiting to sync is changed in the queue.
-      if (undoEntry.queueId) updateQueued(undoEntry.queueId, { quality });
-      else await ShedRecord.update(undoEntry.recordId, { quality });
+      // A shed still waiting to sync is changed in the queue. Once the
+      // queue is sending it, the change would be lost, so say so.
+      if (undoEntry.queueId) {
+        if (isSyncing() || !updateQueued(undoEntry.queueId, { quality })) {
+          toast({ title: 'Not changed', description: "That shed has already synced. Change it from the gecko's record.", variant: 'destructive' });
+          return;
+        }
+      } else await ShedRecord.update(undoEntry.recordId, { quality });
       setUndoEntry((e) => (e && e.kind === 'shed' ? { ...e, quality } : e));
     } catch (error) {
       console.error('Shed quality update failed:', error);
@@ -645,7 +660,10 @@ export default function FieldModePage() {
     // A feeding still waiting to sync: change it in the queue. The group
     // schedule moves (or not) when it replays.
     if (entry.queueId) {
-      updateQueued(entry.queueId, { accepted: next });
+      if (isSyncing() || !updateQueued(entry.queueId, { accepted: next })) {
+        toast({ title: 'Not changed', description: "That feeding has already synced. Change it from the gecko's record.", variant: 'destructive' });
+        return;
+      }
       setUndoEntry((e) => (e && e.kind === 'fed' ? { ...e, accepted: next } : e));
       return;
     }
