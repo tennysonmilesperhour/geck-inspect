@@ -27,32 +27,35 @@ function pageFor(pathname) {
   return { body: APP_HTML, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=0, must-revalidate' } };
 }
 
-function loadWorker() {
-  const stores = new Map();
+function loadWorker(stores = new Map()) {
   const keyOf = (req) => (typeof req === 'string' ? req : new URL(req.url).pathname);
+  const state = { online: true };
+  const fetchImpl = async (req) => {
+    if (!state.online) throw new TypeError('Failed to fetch');
+    const { pathname } = new URL(req.url);
+    const { body, headers } = pathname.startsWith('/assets/')
+      ? { body: 'console.log("app")', headers: { 'content-type': 'text/javascript' } }
+      : pageFor(pathname);
+    const res = new Response(body, { status: 200, headers });
+    Object.defineProperty(res, 'type', { value: 'basic' });
+    return res;
+  };
   const caches = {
     async open(name) {
       if (!stores.has(name)) stores.set(name, new Map());
       const store = stores.get(name);
-      return {
+      const cache = {
         async put(req, res) { store.set(keyOf(req), { body: await res.text(), headers: Object.fromEntries(res.headers) }); },
         async match(req) {
           const hit = store.get(keyOf(req));
           return hit ? new Response(hit.body, { headers: hit.headers }) : undefined;
         },
-        async add() {},
+        async add(url) { await cache.put(url, await fetchImpl({ url: `https://geckinspect.com${url}` })); },
       };
+      return cache;
     },
     async keys() { return [...stores.keys()]; },
     async delete(name) { return stores.delete(name); },
-  };
-  const state = { online: true };
-  const fetchImpl = async (req) => {
-    if (!state.online) throw new TypeError('Failed to fetch');
-    const { body, headers } = pageFor(new URL(req.url).pathname);
-    const res = new Response(body, { status: 200, headers });
-    Object.defineProperty(res, 'type', { value: 'basic' });
-    return res;
   };
   const listeners = {};
   const self = {
@@ -63,13 +66,20 @@ function loadWorker() {
   };
   vm.runInNewContext(swSource, { self, caches, fetch: fetchImpl, URL, Response, console });
 
-  async function navigate(path) {
+  async function request(path, mode) {
     let responded;
-    const request = { method: 'GET', mode: 'navigate', url: `https://geckinspect.com${path}` };
-    listeners.fetch({ request, respondWith: (p) => { responded = p; } });
+    const req = { method: 'GET', mode, url: `https://geckinspect.com${path}` };
+    listeners.fetch({ request: req, respondWith: (p) => { responded = p; } });
     return (await responded).text();
   }
-  return { navigate, state, stores };
+  const navigate = (path) => request(path, 'navigate');
+  const asset = (path) => request(path, 'cors');
+  async function lifecycle(type) {
+    const waits = [];
+    listeners[type]({ waitUntil: (p) => waits.push(p) });
+    await Promise.all(waits);
+  }
+  return { navigate, asset, lifecycle, state, stores };
 }
 
 describe('service worker offline shell', () => {
@@ -92,7 +102,22 @@ describe('service worker offline shell', () => {
     expect(await sw.navigate('/FieldMode')).toBe(APP_HTML);
   });
 
-  it('uses a new cache generation, so a shell stored by the old worker is dropped', () => {
-    expect(swSource).toMatch(/const CACHE_VERSION = 'v2'/);
+  it('on update, drops a shell the old worker stored but keeps the app files for offline use', async () => {
+    // What the old worker left behind: a share card stored as the shell,
+    // and the app's own files.
+    const stores = new Map([
+      ['geck-shell-v1', new Map([['/', { body: '<title>Likely Harlequin crested gecko</title>', headers: { 'content-type': 'text/html' } }]])],
+      ['geck-static-v1', new Map([['/assets/index-abc.js', { body: 'console.log("app")', headers: { 'content-type': 'text/javascript' } }]])],
+    ]);
+    const sw = loadWorker(stores);
+    await sw.lifecycle('install');
+    await sw.lifecycle('activate');
+    expect(stores.has('geck-shell-v1')).toBe(false);
+    expect(stores.has('geck-static-v1')).toBe(true);
+    sw.state.online = false;
+    expect(await sw.navigate('/log?type=feeding&gecko=g1')).toBe(APP_HTML);
+    // The visit that installed the worker did not fetch the app's files
+    // again, so they must still be there for the first offline visit.
+    expect(await sw.asset('/assets/index-abc.js')).toBe('console.log("app")');
   });
 });

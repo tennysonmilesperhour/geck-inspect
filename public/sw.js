@@ -33,15 +33,18 @@
  *     is NEVER intercepted. API data is always live; we never serve a
  *     stale gecko record from cache.
  *
- * Bump CACHE_VERSION whenever the caching logic below changes so the
- * activate handler purges the previous generation of caches.
+ * Bump a cache's version whenever the logic that fills it changes, so the
+ * activate handler purges its previous generation. Bump only the cache
+ * that changed: the visit that installs a new worker does not request the
+ * app's files again, so a purged file cache would leave the next offline
+ * visit without them.
  */
 
-// v2 (15 Oct 2026): drops a shell copy that a shared Morph ID card page
-// could have replaced under v1.
-const CACHE_VERSION = 'v2';
-const SHELL_CACHE = `geck-shell-${CACHE_VERSION}`;
-const STATIC_CACHE = `geck-static-${CACHE_VERSION}`;
+// Shell v2 (15 Oct 2026): drops a shell copy that a shared Morph ID card
+// page could have replaced under v1. The file cache did not change, so it
+// stays v1 and keeps the app's files for offline use.
+const SHELL_CACHE = 'geck-shell-v2';
+const STATIC_CACHE = 'geck-static-v1';
 const CURRENT_CACHES = new Set([SHELL_CACHE, STATIC_CACHE]);
 
 // Minimal set precached at install so the very first offline visit still
@@ -77,7 +80,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      // Drop caches left behind by a previous CACHE_VERSION.
+      // Drop caches left behind by a previous version (geck-shell-v1, ...).
       const names = await caches.keys();
       await Promise.all(
         names
