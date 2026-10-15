@@ -1,4 +1,4 @@
--- Follow-ups from the final review of round 1 (16 Oct 2026).
+-- Follow-ups from the final review of round 1 (15 Oct 2026).
 --
 -- 20261015120000_ownership_checks.sql and 20261015130000_comms_and_exposure.sql
 -- closed the holes the comprehensive review found. Their final review left

@@ -171,7 +171,7 @@ export default function WeeklyScoreboard() {
         <Metric
           label="Claimers still active 2 weeks on"
           value={board ? n(passports.claimers_active_after_14d) : null}
-          detail={`Out of ${n(passports.claimers_eligible_14d)} buyers who claimed at least 14 days ago (all sellers)`}
+          detail={`Out of ${n(passports.claimers_eligible_14d)} buyers who claimed at least 14 days ago (buyers of your own sales left out)`}
           definition="Buyers who signed in or used the app 14 days or more after their claim."
           targets={SCOREBOARD_TARGETS.claimersActive}
           next={next}

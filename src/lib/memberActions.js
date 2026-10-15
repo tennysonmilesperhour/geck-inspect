@@ -58,7 +58,7 @@ export async function breederSlugForProfile(profileId, { client = supabase } = {
 }
 
 /**
- * What to tell a member whose message did not send. Since 16 Oct 2026
+ * What to tell a member whose message did not send. Since the October 2026 release
  * (supabase/migrations/20261015151000_followups.sql) the database only
  * accepts a member's message to someone with a public profile, the owner
  * of a public gecko, or someone who has messaged them, and caps new

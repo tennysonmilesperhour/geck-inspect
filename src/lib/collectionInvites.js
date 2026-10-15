@@ -45,7 +45,7 @@ export function invitePlan(memberships, email, now = new Date()) {
  * The token to send when the owner presses Resend. A link that still
  * works is sent again as it is. An expired one is replaced first: the
  * seat gets a new token and 30 more days (`update(id, fields)` saves
- * them), and the new token is returned. Before 16 Oct 2026 Resend sent
+ * them), and the new token is returned. Before the October 2026 release Resend sent
  * the expired link, which the invited person could not use.
  */
 export async function tokenForResend(seat, { update, invitedBy, makeToken, now = new Date() }) {

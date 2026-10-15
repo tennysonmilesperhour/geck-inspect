@@ -56,7 +56,7 @@ describe('membership prerender copy', () => {
     expect(byQuestion['Can I buy lifetime access?']).toContain('one-time payment');
     expect(byQuestion['Can I buy lifetime access?']).toContain('not credited');
     expect(textOf(MEMBERSHIP_FAQS)).not.toMatch(/\u2014|\u2013/);
-    // One free Morph ID a month since 16 Oct 2026 (TIER_LIMITS.free.monthlyMorphIDCredits).
+    // One free Morph ID a month since the October 2026 release (TIER_LIMITS.free.monthlyMorphIDCredits).
     expect(byQuestion['What is included in the Free plan?']).toContain('one free Morph ID a month');
   });
 

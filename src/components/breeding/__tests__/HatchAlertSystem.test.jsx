@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The database drops a repeat hatch alert (same egg within 20 hours) by
 // returning no row, which the entity client reports as PGRST116. Before
-// 16 Oct 2026 the app logged a warning and tried again on every 15-minute
+// the October 2026 release the app logged a warning and tried again on every 15-minute
 // poll; now it treats the egg as already alerted.
 const state = vi.hoisted(() => ({ createError: null, created: [], recent: [], filterCalls: [] }));
 vi.mock('@/entities/all', () => ({
