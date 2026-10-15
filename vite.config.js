@@ -26,6 +26,12 @@ const BUILD_INFO = {
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Vitest settings. Claude Code puts agent worktrees under .claude/worktrees
+  // inside the repo; without this exclude, `pnpm test` (and so `pnpm build`)
+  // also runs every worktree's copy of the tests.
+  test: {
+    exclude: ['**/node_modules/**', '**/.git/**', '.claude/**'],
+  },
   define: {
     __BUILD_INFO__: JSON.stringify(BUILD_INFO),
   },

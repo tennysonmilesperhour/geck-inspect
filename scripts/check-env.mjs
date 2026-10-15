@@ -26,10 +26,11 @@ const VERBOSE = process.argv.includes('--verbose');
 
 // [name, required-in-production, classifier]
 const CHECKS = [
-  // supabaseClient.js carries a hardcoded fallback for the production
-  // project, so these two are informational rather than required.
-  ['VITE_SUPABASE_URL', false, null],
-  ['VITE_SUPABASE_ANON_KEY', false, null],
+  // Required: src/lib/supabaseClient.js has no fallback outside tests (an
+  // older comment here said it did), so a production build without these
+  // two would ship a site that cannot sign anyone in or load any data.
+  ['VITE_SUPABASE_URL', true, (v) => (v.startsWith('https://') ? 'set' : 'set, not an https URL')],
+  ['VITE_SUPABASE_ANON_KEY', true, null],
   [
     'VITE_REVENUECAT_WEB_API_KEY',
     !IS_NATIVE_RELEASE,

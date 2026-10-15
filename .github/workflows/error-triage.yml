@@ -1,6 +1,7 @@
-# Nightly autonomous error-triage agent.
+# Autonomous error-triage agent. Manual runs only since 15 October 2026
+# (see the note above `on:`).
 #
-# Runs daily at 04:00 Arizona MST (UTC-7, no DST) = 11:00 UTC. GitHub
+# It used to run daily at 04:00 Arizona MST (UTC-7, no DST) = 11:00 UTC. GitHub
 # Actions cron can drift 5-30 minutes; that's fine for this schedule.
 # If you ever want Mountain-WITH-DST instead, the cron becomes
 #   0 10 * * 3-11  (DST active, 04:00 MDT)
@@ -30,9 +31,15 @@
 
 name: error-triage
 
+# The nightly schedule is off since 15 October 2026. Both reviews of the
+# app found that this job gives anonymous error text to an AI that edits
+# files while the job holds the database service key and the Anthropic key,
+# and its three pull requests were all closed unmerged. It can still be run
+# by hand (Actions, error-triage, Run workflow). The script now only lets
+# the agent edit files under src/ and runs lint and typecheck without any
+# secret in their environment. Splitting it into a job that holds secrets
+# and a job that runs the agent is the step before turning the schedule on.
 on:
-  schedule:
-    - cron: '0 11 * * *'
   workflow_dispatch:
     inputs:
       placeholder:

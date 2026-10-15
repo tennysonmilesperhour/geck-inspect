@@ -188,6 +188,15 @@ function buildConfig() {
     // `npm install`, which ignored pnpm-lock.yaml and failed while resolving
     // stale cached dependencies before the application build could start.
     installCommand: 'pnpm install --frozen-lockfile',
+    // Skip the production build when a push changes only docs/ or
+    // top-level Markdown files. The scheduled bots commit reports and
+    // ledgers to docs/ several times a week and each used to rebuild and
+    // redeploy the whole site. The comparison is against the last deployed
+    // commit (VERCEL_GIT_PREVIOUS_SHA), so a push that also carries code
+    // always builds; if git cannot compare (shallow clone, first deploy),
+    // the command exits 1 and the build runs.
+    ignoreCommand:
+      'if git diff --quiet "${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}" HEAD -- . \':(exclude)docs\' \':(exclude,glob)*.md\'; then exit 0; else exit 1; fi',
     rewrites,
     headers: [
       {

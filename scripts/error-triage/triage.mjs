@@ -281,7 +281,32 @@ function git(args, opts = {}) {
   return execSync(`git ${args}`, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], ...opts });
 }
 
+// The agent reads error text that anyone can submit (error_logs accepts
+// signed-out inserts), so its edits are treated as untrusted. It may only
+// rewrite application source under src/, never config, scripts, workflows,
+// package files, database migrations or anything that runs during lint or
+// typecheck (eslint.config.js, vite and tsconfig files execute or steer
+// those tools). A size cap keeps a proposal reviewable.
+const FIX_PATH_ALLOWED = /^src\/[A-Za-z0-9_./-]+\.(?:js|jsx|ts|tsx|css)$/;
+const FIX_MAX_FILES = 3;
+const FIX_MAX_BYTES = 60_000;
+
+function assertFixAllowed(files) {
+  if (!Array.isArray(files) || files.length === 0) throw new Error('propose_fix sent no files.');
+  if (files.length > FIX_MAX_FILES) throw new Error(`propose_fix touched ${files.length} files; the limit is ${FIX_MAX_FILES}.`);
+  let total = 0;
+  for (const f of files) {
+    const rel = String(f.path || '').replace(/^\.\//, '');
+    if (!FIX_PATH_ALLOWED.test(rel) || rel.includes('..') || /\.(?:config|test)\./.test(rel)) {
+      throw new Error(`propose_fix may only edit application source under src/ (refused: ${f.path}).`);
+    }
+    total += Buffer.byteLength(String(f.newContent || ''), 'utf8');
+  }
+  if (total > FIX_MAX_BYTES) throw new Error(`propose_fix sent ${total} bytes; the limit is ${FIX_MAX_BYTES}.`);
+}
+
 function applyFixFiles(files) {
+  assertFixAllowed(files);
   for (const f of files) {
     const abs = safePathUnder(REPO_ROOT, f.path);
     // Refuse to CREATE new files. The agent should only modify existing
@@ -303,8 +328,22 @@ function resetWorkingTree() {
  * throwing. We do not want `execSync`'s throw-on-nonzero behaviour here,
  * a nonzero lint baseline is expected in this repo.
  */
+// Lint and typecheck run with the agent's edits on disk, so they must not
+// see any secret: no Anthropic key, no database service key, no GitHub
+// token or credential helper.
+const SECRET_ENV = /^(?:ANTHROPIC_API_KEY|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_URL|GH_TOKEN|GITHUB_TOKEN|ACTIONS_RUNTIME_TOKEN|ACTIONS_ID_TOKEN_REQUEST_TOKEN|ACTIONS_ID_TOKEN_REQUEST_URL|GIT_CONFIG_.*)$/;
+
+function scrubbedEnv() {
+  const env = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (!SECRET_ENV.test(key)) env[key] = value;
+  }
+  env.CI = 'true';
+  return env;
+}
+
 function runCapture(cmd) {
-  const env = { ...process.env, CI: 'true' };
+  const env = scrubbedEnv();
   try {
     const stdout = execSync(cmd, { cwd: REPO_ROOT, env, stdio: 'pipe' }).toString();
     return { ok: true, output: stdout };
