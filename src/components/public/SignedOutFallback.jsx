@@ -66,11 +66,23 @@ const MEMBER_PAGES = {
 
 const PAGE_KEYS = new Map(Object.keys(PAGES).map((k) => [k.toLowerCase(), k]));
 
+// Members-only addresses that are not in the page registry. /log is where
+// reminder emails and phone notifications go; a signed-out member signs
+// in and comes straight back to the same log.
+const EXTRA_MEMBER_PATHS = {
+  log: {
+    name: 'QuickLog',
+    title: 'Quick log',
+    body: 'Log a feeding, shed or weigh-in for your crested geckos in one tap, straight from a reminder.',
+  },
+};
+
 /** The registered member page an address points at, or null. Exported for tests. */
 export function memberPageFor(pathname) {
   const first = String(pathname || '').split('/').filter(Boolean)[0] || '';
   const key = first.toLowerCase();
   if (!key || key === 'home' || key === 'authportal') return null;
+  if (EXTRA_MEMBER_PATHS[key]) return { ...EXTRA_MEMBER_PATHS[key] };
   const name = PAGE_KEYS.get(key);
   if (!name) return null;
   const known = MEMBER_PAGES[key];

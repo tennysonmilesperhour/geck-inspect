@@ -21,6 +21,7 @@ export const KNOWN_PATH_PATTERNS = [
   "/Recognition",
   "/Membership",
   "/Home",
+  "/log",
   "/AdminPanel",
   "/AuthPortal",
   "/Breeder",

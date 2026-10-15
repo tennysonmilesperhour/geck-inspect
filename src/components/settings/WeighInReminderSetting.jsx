@@ -42,7 +42,7 @@ export default function WeighInReminderSetting({ email }) {
       <div className="min-w-0">
         <Label htmlFor="weighin-reminders-enabled" className="font-medium text-slate-200">Weigh-in Reminders</Label>
         <p className="text-sm text-slate-400 mt-1">
-          A note when a gecko is due to be weighed: every 14 days while it is growing, every 30 days for adults.
+          A note when a gecko is due to be weighed: every 2 weeks while it is growing (under 15 g or under a year old), every 3 weeks as a sub-adult and once a month as an adult.
           New geckos get one by default; turn a single gecko off on its record.
         </p>
       </div>

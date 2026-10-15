@@ -26,9 +26,9 @@ import {
   X,
   CloudOff,
 } from 'lucide-react';
-import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent, CollectionMember } from '@/entities/all';
+import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent } from '@/entities/all';
 import { api } from '@/api/appClient';
-import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
+import { fieldModeQueryKey, loadWritableGeckos } from '@/lib/fieldModeData';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { format, subDays } from 'date-fns';
 import {
@@ -43,6 +43,7 @@ import { createPageUrl } from '@/utils';
 import { queueFieldLog, isDeviceOffline, useOfflineQueue } from '@/lib/offlineSync';
 import { enqueue, removeQueued, updateQueued, isNetworkError } from '@/lib/offlineQueue';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { createCareRecordOnce, newClientRequestId } from '@/lib/careLogOnce';
 
 /**
  * Field Mode, a one-thumb logging screen for when you literally have a
@@ -248,16 +249,10 @@ export default function FieldModePage() {
   // react-query, so the last loaded list is kept in this browser and Field
   // Mode opens with no signal (src/lib/offlineCache.js persists this key).
   const geckoQuery = useQuery({
-    queryKey: ['field-mode', user?.email || null],
+    queryKey: fieldModeQueryKey(user?.email),
     enabled: Boolean(user?.email),
     retry: (count, error) => !isAuthFailure(error) && count < 2,
-    queryFn: async () => {
-      const [allGeckos, memberships] = await Promise.all([
-        getVisibleGeckos(user, {}, '-created_date', 500),
-        CollectionMember.filter({ status: 'accepted' }).catch(() => []),
-      ]);
-      return (allGeckos || []).filter((g) => !g.archived && canWriteGecko(g, user, memberships));
-    },
+    queryFn: () => loadWritableGeckos(user),
   });
 
   useEffect(() => {
@@ -386,6 +381,9 @@ export default function FieldModePage() {
 
   const logWeight = async (gecko, grams, date = logDate) => {
     setIsSaving(true);
+    // One id for the try and any queued copy, so a weigh-in the server
+    // saved after the phone gave up is not saved twice (careLogOnce.js).
+    const requestId = newClientRequestId();
     const prevWeight = gecko.weight_grams ?? null;
     // The gecko's current weight follows today's weigh-in. A backdated
     // weigh-in only fills it when the gecko has no weight yet.
@@ -409,7 +407,7 @@ export default function FieldModePage() {
       setActivePanel(null);
     };
     const queueWhole = () => {
-      const item = queueFieldLog({ kind: 'weight', geckoId: gecko.id, grams, date, mirror });
+      const item = queueFieldLog({ kind: 'weight', geckoId: gecko.id, grams, date, mirror, requestId });
       finish({ queued: item, undo: async () => { removeQueued(item.id); } });
     };
     try {
@@ -419,7 +417,12 @@ export default function FieldModePage() {
       }
       let record;
       try {
-        record = await WeightRecord.create({ gecko_id: gecko.id, weight_grams: grams, record_date: date });
+        record = await createCareRecordOnce(WeightRecord, {
+          gecko_id: gecko.id,
+          weight_grams: grams,
+          record_date: date,
+          client_request_id: requestId,
+        });
       } catch (error) {
         if (!shouldQueue(error)) throw error;
         queueWhole();
@@ -439,7 +442,7 @@ export default function FieldModePage() {
       finish({
         queued: null,
         undo: async () => {
-          await WeightRecord.delete(record.id);
+          if (record?.id) await WeightRecord.delete(record.id);
           if (!mirror) return;
           if (mirrorItem) removeQueued(mirrorItem.id);
           else await Gecko.update(gecko.id, { weight_grams: prevWeight });
@@ -455,8 +458,9 @@ export default function FieldModePage() {
 
   const logShed = async (gecko, quality = 'unknown', date = logDate) => {
     setIsSaving(true);
+    const requestId = newClientRequestId();
     const queueShed = () => {
-      const item = queueFieldLog({ kind: 'shed', geckoId: gecko.id, date, quality });
+      const item = queueFieldLog({ kind: 'shed', geckoId: gecko.id, date, quality, requestId });
       afterLog({
         kind: 'shed',
         queueId: item.id,
@@ -471,14 +475,14 @@ export default function FieldModePage() {
         queueShed();
         return;
       }
-      const record = await writeShed({ gecko, date, quality });
+      const record = await writeShed({ gecko, date, quality, clientRequestId: requestId });
       afterLog({
         kind: 'shed',
         recordId: record.id,
         quality,
         message: `Shed for ${gecko.name}`,
         undo: async () => {
-          await ShedRecord.delete(record.id);
+          if (record?.id) await ShedRecord.delete(record.id);
         },
       });
     } catch (error) {
@@ -495,6 +499,7 @@ export default function FieldModePage() {
 
   const logFed = async (gecko, accepted = true, date = logDate) => {
     setIsSaving(true);
+    const requestId = newClientRequestId();
     // Kept offline as a whole log; it replays through logFeedings, which
     // also moves the group schedule then (never back in time).
     const queueFed = () => {
@@ -504,6 +509,7 @@ export default function FieldModePage() {
         feedingGroupId: gecko.feeding_group_id || null,
         accepted,
         date,
+        requestId,
       });
       afterLog({
         kind: 'fed',
@@ -523,7 +529,7 @@ export default function FieldModePage() {
       }
       // Writes the feeding row and moves the gecko's group schedule when
       // it ate (D21), so Dashboard and reminders stop calling it due.
-      const result = await logFeedings({ entries: [{ gecko, accepted }], date });
+      const result = await logFeedings({ entries: [{ gecko, accepted, clientRequestId: requestId }], date });
       afterLog({
         kind: 'fed',
         recordId: result.records[0]?.id,

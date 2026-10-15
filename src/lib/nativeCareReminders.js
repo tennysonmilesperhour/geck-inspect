@@ -3,7 +3,7 @@
 // the Settings card, not on launch.
 import { isNativePlatform } from '@/lib/revenuecat';
 import { supabase } from '@/lib/supabaseClient';
-import { memberWeighInEnabled, weighInSection } from '@/lib/careReminders';
+import { effectiveWeighInMap, memberWeighInEnabled } from '@/lib/careReminders';
 import { CARE_REMINDER_CHANNEL, buildCareNotifications } from '@/lib/nativeCareSchedule';
 
 const STORAGE_KEY = 'geckinspect.nativeCareNotificationIds';
@@ -28,7 +28,7 @@ function writeIds(ids) {
 async function loadScheduleInput(email, feedingAlertsEnabled) {
   const [profileRes, geckoRes, groupRes] = await Promise.all([
     supabase.from('profiles').select('extra_data, feeding_alerts_enabled').eq('email', email).maybeSingle(),
-    supabase.from('geckos').select('id,name,archived').eq('created_by', email),
+    supabase.from('geckos').select('id,name,archived,created_date,hatch_date,weight_grams').eq('created_by', email),
     supabase.from('feeding_groups').select('id,name,label,last_fed_date,interval_days,feeding_reminder_enabled').eq('created_by', email),
   ]);
   if (profileRes.error) throw profileRes.error;
@@ -42,7 +42,9 @@ async function loadScheduleInput(email, feedingAlertsEnabled) {
     feedingAlertsEnabled: feedingOn,
     weighInEnabled: memberWeighInEnabled(extra),
     geckos: geckoRes.data || [],
-    weighInGeckos: weighInSection(extra).geckos || {},
+    // New geckos get a weigh-in reminder by default (careReminders.js), so
+    // the phone schedules the same ones the server reminds about.
+    weighInGeckos: effectiveWeighInMap(extra, geckoRes.data || []),
     feedingGroups: groupRes.data || [],
   });
 }
