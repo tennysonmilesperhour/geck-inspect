@@ -1,5 +1,3 @@
-import jsPDF from 'jspdf';
-
 /**
  * Buyer packet: one PDF a breeder hands over with a sold gecko. It holds
  * what a new keeper needs and what backs up the sale: photo, traits and
@@ -135,9 +133,15 @@ const GREEN = [86, 107, 95];
  * Draw the packet. photo and qr are optional PNG/JPEG data URLs.
  * firePhotos is an optional list of { label, dataUrl } for the gecko's
  * fired-up and fired-down photos (src/lib/fireStatePhotos.js); entries
- * without a dataUrl are skipped. Returns the jsPDF document.
+ * without a dataUrl are skipped. Resolves to the jsPDF document.
+ *
+ * jsPDF (about 390 kB plus its canvg helper) is loaded here, on demand,
+ * rather than imported at the top of the file. The gecko detail modal
+ * imports this file, so a top-level import made every visit to My Geckos
+ * download the PDF library even when nobody built a packet.
  */
-export function renderBuyerPacketPDF(packet, { photo = null, qr = null, firePhotos = [] } = {}) {
+export async function renderBuyerPacketPDF(packet, { photo = null, qr = null, firePhotos = [] } = {}) {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();

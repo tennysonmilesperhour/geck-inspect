@@ -141,13 +141,13 @@ export default function Market() {
             <TabsTrigger value="listings"><Store className="w-3.5 h-3.5" /> Your listings</TabsTrigger>
           </TabsList>
           <TabsContent value="today">
-            <MarketPreviewGate user={user} surface="market_today"><MarketBriefPanel user={user} /></MarketPreviewGate>
+            <MarketPreviewGate user={user} surface="market_today" serverGated><MarketBriefPanel user={user} /></MarketPreviewGate>
           </TabsContent>
           <TabsContent value="live">
-            <MarketPreviewGate user={user} surface="market_live"><MarketTapePanel /></MarketPreviewGate>
+            <MarketPreviewGate user={user} surface="market_live" serverGated><MarketTapePanel /></MarketPreviewGate>
           </TabsContent>
           <TabsContent value="watchlist">
-            <MarketPreviewGate user={user} surface="market_watchlist"><WatchlistPanel /></MarketPreviewGate>
+            <MarketPreviewGate user={user} surface="market_watchlist" serverGated><WatchlistPanel /></MarketPreviewGate>
           </TabsContent>
           <TabsContent value="browse" className={EMBEDDED}>
             <MarketplaceBuyPage embedded />

@@ -4,6 +4,7 @@ import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
+import { breederSlugForProfile } from '@/lib/memberActions';
 import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
@@ -13,6 +14,7 @@ import { Store, ArrowLeft, ArrowUpRight, X,
 } from 'lucide-react';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { BREEDER_STORE_PAGE_PUBLIC_COLUMNS, publicDisplayName } from '@/lib/publicColumns';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 /**
  * Public breeder storefront. Route: /store/:slug
@@ -55,16 +57,17 @@ function GeckInspectPill() {
 }
 
 function GeckoLightbox({ gecko, onClose }) {
+    // Dialog role, Escape to close and data-state="open" (which the rule
+    // that hides floating widgets over dialogs looks for) come from the
+    // shared hook. It also leaves Escape to a menu open above the lightbox.
+    const overlay = useModalOverlay(onClose, Boolean(gecko));
     useEffect(() => {
-        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-        window.addEventListener('keydown', onKey);
         const prev = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         return () => {
-            window.removeEventListener('keydown', onKey);
             document.body.style.overflow = prev;
         };
-    }, [onClose]);
+    }, []);
 
     if (!gecko) return null;
     const images = (gecko.image_urls || []).filter(Boolean);
@@ -75,8 +78,8 @@ function GeckoLightbox({ gecko, onClose }) {
         <div
             className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
             onClick={onClose}
-            role="dialog"
-            aria-modal="true"
+            {...overlay}
+            aria-label={gecko.name || 'Gecko photos'}
         >
             <button
                 type="button"
@@ -193,24 +196,21 @@ export default function StorePage() {
                 setPage(data);
 
                 // Prefer redirecting to the canonical /Breeder page when the
-                // owner has a breeder profile with a custom slug.
+                // owner has a breeder profile with a custom slug. The slug is
+                // looked up by profile id on the server: profiles no longer
+                // carry other members' emails.
                 const profilesRes = data.owner_profile_id
                     ? await supabase
                         .rpc('read_profiles')
-                        .select('id, full_name, business_name, profile_image_url, email, bio, location, instagram_handle')
+                        .select('id, full_name, business_name, profile_image_url, bio, location, instagram_handle')
                         .eq('id', data.owner_profile_id)
                         .maybeSingle()
                     : { data: null };
                 if (cancelled) return;
-                const ownerEmail = profilesRes.data?.email;
-                if (ownerEmail && data.is_published) {
-                    const profileSlugRes = await supabase
-                        .from('breeder_profiles')
-                        .select('custom_slug')
-                        .eq('created_by', ownerEmail)
-                        .maybeSingle();
-                    if (!cancelled && profileSlugRes.data?.custom_slug) {
-                        setRedirectSlug(profileSlugRes.data.custom_slug);
+                if (data.owner_profile_id && data.is_published) {
+                    const customSlug = await breederSlugForProfile(data.owner_profile_id).catch(() => null);
+                    if (!cancelled && customSlug) {
+                        setRedirectSlug(customSlug);
                         return;
                     }
                 }

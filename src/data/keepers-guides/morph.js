@@ -191,7 +191,7 @@ export const MORPH_GUIDE = {
               tone: 'fern',
               title: 'Cappuccino',
               text:
-                'Brown/tan base with reduction of orange/yellow. Discovered by Reptile City Korea. Super cappuccino exists and is viable (unlike super Lilly White).',
+                'Brown/tan base with reduction of orange/yellow. Discovered by Reptile City Korea. Unlike Super Lilly White, a Super Cappuccino hatches, but it has documented severe health problems (reduced nostrils, breathing difficulty), so Cappuccino x Cappuccino is discouraged.',
             },
             {
               meta: 'INCOMPLETE DOMINANT',
@@ -621,7 +621,7 @@ export const MORPH_GUIDE = {
               tone: 'amber',
               title: '"Super [rare morph] available"',
               text:
-                "Only some morphs have viable supers (Cappuccino, Dalmatian). Super Lilly White doesn't exist viably. Research before buying.",
+                "Supers differ by gene. Super Lilly White dies in the egg, Super Cappuccino has documented severe health problems, and Super Soft Scale is healthy. \"Super Dalmatian\" usually just means heavy spotting. Research before buying.",
             },
             {
               tone: 'amber',

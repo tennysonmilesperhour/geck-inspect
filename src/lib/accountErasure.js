@@ -21,6 +21,20 @@ export const DELETION_REQUEST_SUBJECT = 'Account deletion request';
 
 export const ERASURE_FUNCTION = 'admin-delete-account';
 
+/**
+ * True when a deletion request was sent by the signed-in account it names.
+ * The database stamps filed_by_email from the session (migration
+ * 20261015130000_comms_and_exposure); a signed-out visitor or another
+ * member can type any address into a support form, so only these tickets
+ * can start an erasure. admin-delete-account checks the same thing.
+ */
+export function isVerifiedDeletionRequest(ticket) {
+  if (!ticket || ticket.subject !== DELETION_REQUEST_SUBJECT) return false;
+  const filer = String(ticket.filed_by_email || '').trim().toLowerCase();
+  const named = String(ticket.user_email || '').trim().toLowerCase();
+  return Boolean(filer) && filer === named;
+}
+
 /** The signed-in member's own deletion. The function ignores any email
  *  in the body and erases only the account on the session. */
 export const SELF_DELETE_FUNCTION = 'delete-my-account';

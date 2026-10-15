@@ -56,7 +56,17 @@ const Tile = memo(function Tile({ image, uploader: _uploader, onClick }) {
 });
 
 export default function RecentActivity({ geckoImages, isLoading, onImageSelect, users = [] }) {
-    const usersMap = useMemo(() => new Map(users.map((u) => [u.email, u])), [users]);
+    // Profiles carry no email for other members (only admins see
+    // addresses), so uploaders are matched by profile id first.
+    const usersMap = useMemo(() => {
+        const map = new Map();
+        for (const u of users) {
+            if (u.id != null) map.set(`id:${u.id}`, u);
+            if (u.email) map.set(`email:${u.email}`, u);
+        }
+        return map;
+    }, [users]);
+    const uploaderOf = (image) => usersMap.get(`id:${image.owner_profile_id}`) || usersMap.get(`email:${image.created_by}`);
 
     return (
         <Card className="gecko-card">
@@ -77,8 +87,8 @@ export default function RecentActivity({ geckoImages, isLoading, onImageSelect, 
                             <Tile
                                 key={image.id}
                                 image={image}
-                                uploader={usersMap.get(image.created_by)}
-                                onClick={() => onImageSelect(image, usersMap.get(image.created_by))}
+                                uploader={uploaderOf(image)}
+                                onClick={() => onImageSelect(image, uploaderOf(image))}
                             />
                         ))}
                     </div>

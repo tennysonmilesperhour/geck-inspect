@@ -218,6 +218,8 @@ export default function GeneticCalculator({ sire, dam }) {
           </p>
         </div>
         <TagsNotUsed sire={sire} dam={dam} />
+        {/* Polygenic looks still get their likely-range bands, never odds */}
+        <PolygenicPanel sireTags={sireTraits} damTags={damTraits} />
       </div>
     );
   }
@@ -259,7 +261,9 @@ export default function GeneticCalculator({ sire, dam }) {
           </div>
           {(sire.inferred_hets || []).map((h) => (
             <p key={h.trait} className="text-[11px] text-purple-300 mt-1">
-              lineage suggests {pct(h.probability)} poss het {h.trait}
+              {h.probability >= 1
+                ? `lineage proves het ${h.trait}`
+                : `lineage suggests ${pct(h.probability)} poss het ${h.trait}`}
             </p>
           ))}
         </div>
@@ -272,7 +276,9 @@ export default function GeneticCalculator({ sire, dam }) {
           </div>
           {(dam.inferred_hets || []).map((h) => (
             <p key={h.trait} className="text-[11px] text-purple-300 mt-1">
-              lineage suggests {pct(h.probability)} poss het {h.trait}
+              {h.probability >= 1
+                ? `lineage proves het ${h.trait}`
+                : `lineage suggests ${pct(h.probability)} poss het ${h.trait}`}
             </p>
           ))}
         </div>
@@ -676,10 +682,10 @@ export default function GeneticCalculator({ sire, dam }) {
       </div>
 
       <p className="text-xs text-slate-500 text-center pt-2">
-        Per-egg probabilities from exact Punnett math across independent genes, aligned with the
-        Foundation Genetics consensus (<a className="underline" href="https://lmreptiles.com/fg-overview" target="_blank" rel="noopener noreferrer">lmreptiles.com/fg-overview</a>).
-        Polygenic traits (Harlequin, Pinstripe coverage, Dalmatian density) are not given fake
-        percentages; that honesty is deliberate.
+        Per-egg probabilities from exact Punnett math across independent single genes, using the
+        Foundation Genetics model by LM Reptiles (<a className="underline" href="https://lmreptiles.com/fg-overview" target="_blank" rel="noopener noreferrer">lmreptiles.com/fg-overview</a>).
+        Polygenic looks (Harlequin, Pinstripe, Dalmatian, Tiger, base colors) are never given
+        percentages, even when a parent is tagged with them; they are shown as likely ranges instead.
       </p>
     </div>
   );

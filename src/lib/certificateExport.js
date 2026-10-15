@@ -1,4 +1,3 @@
-import jsPDF from 'jspdf';
 import { TRANSFER_METHOD_LABELS } from './passportUtils';
 
 /**
@@ -124,7 +123,11 @@ function passportQrDataUrl() {
 // Public API
 // ---------------------------------------------------------------------------
 
-export function exportProvenanceCertificate(gecko, ownershipRecords, passportUrl) {
+// jsPDF is loaded on demand so the passport page (often opened by a buyer
+// scanning a QR code on a phone) does not download the PDF library unless
+// the certificate button is pressed. The function is async as a result.
+export async function exportProvenanceCertificate(gecko, ownershipRecords, passportUrl) {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();   // 297
   const pageH = doc.internal.pageSize.getHeight();  // 210

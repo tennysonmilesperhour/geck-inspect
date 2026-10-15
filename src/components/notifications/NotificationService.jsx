@@ -8,6 +8,15 @@ import { Notification, UserFollow, Gecko } from '@/entities/all';
 // only needs to insert the row, no client-side SendEmail or per-user
 // preference lookup. The trigger reads the recipient's preferences and
 // skips channels the user has disabled.
+//
+// Notifications to another member (messages, forum replies, new listings
+// for followers) are checked by the database: it confirms the message,
+// comment or follow exists and writes the words and the link itself from a
+// fixed template with the sender's display name (migration
+// 20261015130000_comms_and_exposure). Whatever content or link is sent
+// from here for those is replaced, so these helpers send only the type,
+// the recipient and the ids the template needs. Follows notify from the
+// database (follow_profile), so there is no follower helper here.
 
 const LEVEL_THRESHOLDS = [1, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 500];
 const LEVEL_TITLES = {
@@ -46,9 +55,9 @@ export async function notifyFollowersNewGecko(gecko, ownerEmail, ownerName) {
             Notification.create({
                 user_email: follow.follower_email,
                 type: 'new_gecko_listing',
-                content: `${ownerName || ownerEmail} listed a new gecko: ${gecko.name}`,
-                link: `/PublicProfile?email=${encodeURIComponent(ownerEmail)}`,
-                metadata: { gecko_id: gecko.id, gecko_name: gecko.name, owner_email: ownerEmail },
+                content: `${ownerName || 'A breeder you follow'} listed a new gecko`,
+                link: '/',
+                metadata: { gecko_id: gecko.id },
             }).catch(e => console.error('Failed to notify follower:', e))
         ));
     } catch (error) {
@@ -68,28 +77,13 @@ export async function notifyFollowersNewBreedingPlan(plan, sire, dam, ownerEmail
             Notification.create({
                 user_email: follow.follower_email,
                 type: 'new_breeding_plan',
-                content: `${ownerName || ownerEmail} started a new breeding project: ${pairName}`,
-                link: `/PublicProfile?email=${encodeURIComponent(ownerEmail)}`,
-                metadata: { plan_id: plan.id, owner_email: ownerEmail },
+                content: `${ownerName || 'A breeder you follow'} started a new breeding project: ${pairName}`,
+                link: '/',
+                metadata: { plan_id: plan.id },
             }).catch(e => console.error('Failed to notify follower:', e))
         ));
     } catch (error) {
         console.error('Failed to notify followers of new breeding plan:', error);
-    }
-}
-
-// Notify a user when someone follows them
-export async function notifyNewFollower(followedUserEmail, followerEmail, followerName) {
-    try {
-        await Notification.create({
-            user_email: followedUserEmail,
-            type: 'new_follower',
-            content: `${followerName || followerEmail} started following you!`,
-            link: `/PublicProfile?email=${encodeURIComponent(followerEmail)}`,
-            metadata: { follower_email: followerEmail },
-        });
-    } catch (error) {
-        console.error('Failed to notify of new follower:', error);
     }
 }
 
@@ -108,45 +102,20 @@ export async function notifyGeckoOfTheDay(ownerEmail, geckoName) {
     }
 }
 
-// Notify when a future breeding plan's target window opens
-export async function notifyFutureBreedingReady(userEmail, planName, sireName, damName) {
-    try {
-        await Notification.create({
-            user_email: userEmail,
-            type: 'future_breeding_ready',
-            content: `Your future breeding plan "${planName}" (${sireName} × ${damName}) is now in its target window!`,
-            link: '/ProjectManager',
-            metadata: { plan_name: planName, sire: sireName, dam: damName },
-        });
-    } catch (error) {
-        console.error('Failed to notify future breeding ready:', error);
-    }
-}
-
-// Notify a seller about a marketplace inquiry (distinct from regular DMs)
-export async function notifyMarketplaceInquiry(sellerEmail, buyerEmail, buyerName, geckoName) {
-    try {
-        await Notification.create({
-            user_email: sellerEmail,
-            type: 'marketplace_inquiry',
-            content: `${buyerName || buyerEmail} is interested in your gecko "${geckoName}"`,
-            link: `/Messages?recipient=${encodeURIComponent(buyerEmail)}`,
-            metadata: { buyer_email: buyerEmail, gecko_name: geckoName },
-        });
-    } catch (error) {
-        console.error('Failed to notify marketplace inquiry:', error);
-    }
-}
+// A future breeding plan's target window is announced by the server
+// (enqueue_season_planner_reminders). Since 15 Oct 2026 the database
+// refuses that type from the browser, so there is no helper for it here.
 
 // Notify when a user receives a direct message
-export async function notifyNewMessage(recipientEmail, senderEmail, senderName, messagePreview) {
+export async function notifyNewMessage(recipientEmail, senderEmail, senderName) {
     try {
+        // The database writes "<name> sent you a message." and the link to
+        // the conversation; the message text itself never goes in an email.
         await Notification.create({
             user_email: recipientEmail,
             type: 'new_message',
-            content: `New message from ${senderName || senderEmail}: ${messagePreview.substring(0, 50)}...`,
+            content: `${senderName || 'A member'} sent you a message.`,
             link: `/Messages?recipient=${encodeURIComponent(senderEmail)}`,
-            metadata: { sender_email: senderEmail },
         });
     } catch (error) {
         console.error('Failed to notify of new message:', error);

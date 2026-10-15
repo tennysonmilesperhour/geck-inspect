@@ -74,9 +74,11 @@ export default function LiveFeed({ currentUserEmail }) {
         if (!eventList?.length) return;
         const types = [...new Set(eventList.map((e) => e.event_type))];
         const ids = [...new Set(eventList.map((e) => e.event_id))];
+        // Whose reaction it is matters only to a signed-in member (their own
+        // highlighted); signed-out visitors cannot read user_email at all.
         const { data } = await supabase
             .from('community_event_reactions')
-            .select('event_type, event_id, user_email, reaction')
+            .select(currentUserEmail ? 'event_type, event_id, user_email, reaction' : 'event_type, event_id, reaction')
             .in('event_type', types)
             .in('event_id', ids);
         const grouped = {};
@@ -85,7 +87,7 @@ export default function LiveFeed({ currentUserEmail }) {
             (grouped[key] ||= []).push(r);
         }
         setReactionsByKey(grouped);
-    }, []);
+    }, [currentUserEmail]);
 
     useEffect(() => {
         let cancelled = false;

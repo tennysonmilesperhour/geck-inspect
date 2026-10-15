@@ -25,7 +25,17 @@
 // Iteration cap: hard-stops at 10 generations per draft post (admins
 // exempt). The composer shows the count.
 //
-// Secrets: ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// Monthly metering: every call that reaches the model also takes one
+// `social_draft` credit from the member's monthly allowance
+// (consume_feature_credit, the same ledger as health screens and the
+// assistant). Before this, starting a new draft post reset the 10-try
+// cap, so one account could run up unlimited AI spend. The allowance per
+// plan lives in feature_credit_allotments (migration
+// 20261015140000_social_draft_allotments.sql). A call that produces no
+// drafts gives the credit back (refund_feature_credit). Admins bypass.
+//
+// Secrets: ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+//          SUPABASE_ANON_KEY (injected automatically)
 // Deploy:  supabase functions deploy generate-social-post
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
@@ -35,6 +45,10 @@ import { scrubDashes } from "../_shared/promote.ts";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+
+// The feature_usage ledger key for drafting.
+const DRAFT_FEATURE = "social_draft";
 
 const MODEL = "claude-sonnet-5-5";
 
@@ -531,6 +545,45 @@ serve(async (req) => {
   const kind = body.kind || "generate";
   const variantCount = kind === "tweak" ? 1 : Math.max(1, Math.min(5, body.variant_count || 3));
 
+  // Take one credit before the model call, so two quick requests cannot
+  // both slip under the limit. consume_feature_credit reads auth.uid(), so
+  // it runs with the member's own token, not the service role.
+  let charged = false;
+  if (!isAdmin) {
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
+    });
+    const { error: creditErr } = await userClient.rpc("consume_feature_credit", {
+      p_feature: DRAFT_FEATURE,
+      p_tier: null,
+      p_included: null,
+      p_cost: 1,
+    });
+    if (creditErr) {
+      if (String(creditErr.message || "").includes("feature_credits_exhausted")) {
+        return json({ error: "draft_credits_exhausted" }, 402);
+      }
+      console.error("draft credit check failed", creditErr.message);
+      return json({ error: "credit_check_failed" }, 503);
+    }
+    charged = true;
+  }
+
+  // Every failure below means the member got no drafts, so the credit goes
+  // back. Only the service role may run refund_feature_credit.
+  const fail = async (payload: Record<string, unknown>, status: number) => {
+    if (charged) {
+      const { error: refundErr } = await supabase.rpc("refund_feature_credit", {
+        p_user_id: user.id,
+        p_feature: DRAFT_FEATURE,
+      });
+      if (refundErr) console.warn("draft credit refund failed", refundErr.message);
+      else charged = false;
+    }
+    return json({ ...payload, refunded: !charged && !isAdmin }, status);
+  };
+
   let res: Response | null = null;
   try {
     const first = await callClaude(body, variantCount, true);
@@ -546,11 +599,11 @@ serve(async (req) => {
     console.error("anthropic unreachable", e);
     res = null;
   }
-  if (!res) return json({ error: "anthropic_unreachable" }, 502);
+  if (!res) return await fail({ error: "anthropic_unreachable" }, 502);
   if (!res.ok) {
     const text = await res.text();
     console.error("anthropic failed", res.status, text.slice(0, 500));
-    return json({ error: "anthropic_failed", status: res.status }, 502);
+    return await fail({ error: "anthropic_failed", status: res.status }, 502);
   }
 
   const completion = await res.json() as {
@@ -589,7 +642,7 @@ serve(async (req) => {
   });
 
   if (completion.stop_reason === "refusal") {
-    return json({ error: "declined" }, 422);
+    return await fail({ error: "declined" }, 422);
   }
 
   const toolBlock = completion.content?.find((c) => c.type === "tool_use" && c.name === TOOL_DEF.name);
@@ -598,7 +651,7 @@ serve(async (req) => {
     ? raw.map(tidyVariant).filter((v) => v.hook || v.body).slice(0, variantCount)
     : [];
   if (variants.length === 0) {
-    return json({ error: "no_variants_returned" }, 502);
+    return await fail({ error: "no_variants_returned" }, 502);
   }
 
   // Only a call that produced drafts uses up one of the post's tries.

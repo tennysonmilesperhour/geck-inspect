@@ -6,6 +6,7 @@ import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from "@/lib/constants";
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
+import { readColumns } from '@/api/supabaseEntities';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft, ArrowRight, GitBranch, MapPin, ShieldCheck, Sparkles,
@@ -23,6 +24,27 @@ import {
 } from '@/components/storefront/StorefrontSections';
 
 const LOGO_URL = APP_LOGO_URL;
+
+/**
+ * The breeder page owner's profile id and store policy, found from the
+ * slug by breeder_page_owner() without the owner's email. Until that
+ * function exists (migration 20261015130000 not applied yet) it falls back
+ * to the old lookup by the owner's address.
+ */
+async function loadBreederPageOwner(slug, ownerEmail) {
+  const { data, error } = await supabase.rpc('breeder_page_owner', { p_slug: slug });
+  if (!error) {
+    const row = Array.isArray(data) ? data[0] : data;
+    return row?.profile_id ? { id: row.profile_id, store_policy: row.store_policy } : null;
+  }
+  if (!ownerEmail) return null;
+  const { data: prof } = await supabase
+    .rpc('read_profiles', { p_emails: [ownerEmail] })
+    .select('id, store_policy')
+    .eq('email', ownerEmail)
+    .maybeSingle();
+  return prof || null;
+}
 
 // Inferred tile, same look as the original Breeder page when no
 // breeder_profiles row exists; used by the fallback "people referenced
@@ -126,9 +148,11 @@ export default function Breeder() {
       try {
         // 1. Curated lookup first, does a breeder_profiles row claim
         //    this slug? If so we render the rich storefront.
+        // Signed-out visitors cannot read created_by (the owner's email),
+        // so they get the public column list.
         const { data: bp } = await supabase
           .from('breeder_profiles')
-          .select('*')
+          .select(await readColumns('BreederProfile'))
           .eq('custom_slug', slug)
           .maybeSingle();
 
@@ -136,21 +160,16 @@ export default function Breeder() {
           setProfile(bp);
           setMode('curated');
 
-          const ownerEmail = bp.created_by;
           // For-sale listings owned by this breeder. We accept any
           // status that mentions "sale" to handle the schema's mixed
           // casing ("For Sale", "for_sale", "available_for_sale", etc).
           // Only public geckos appear, capped at 12 for the grid.
-          if (ownerEmail) {
-            // Signed-out visitors cannot read geckos.created_by (it holds
-            // the owner's email), so listings are matched on the owner's
-            // profile id instead.
-            const { data: ownerProf } = await supabase
-              .rpc('read_profiles', { p_emails: [ownerEmail] })
-              .select('id, store_policy')
-              .eq('email', ownerEmail)
-              .maybeSingle();
-            if (cancelled) return;
+          // Listings and the store page are matched on the owner's profile
+          // id, which breeder_page_owner() gives from the slug without the
+          // owner's email (signed-out visitors cannot read emails).
+          const ownerProf = await loadBreederPageOwner(slug, bp.created_by);
+          if (cancelled) return;
+          if (ownerProf || bp.user_id) {
             const [{ data: geckos }, { data: revs }, { data: storePage }] = await Promise.all([
               ownerProf?.id
                 ? supabase

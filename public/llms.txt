@@ -2,7 +2,7 @@
 
 > Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (original asking-price data by trait and market). Everything listed here is free to read and cite.
 >
-> Last updated: 2026-10-12.
+> Last updated: 2026-10-14.
 
 ## How to use and cite this site
 

@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMont
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseLocalDate } from '@/lib/dateUtils';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 // Due dates are calendar days (a date, or a timestamp at UTC midnight).
 // Formatting them through new Date() moved them to the day before for
@@ -18,6 +19,9 @@ const EVENT_COLORS = {
 export default function ProjectCalendar({ tasks, projects, feedingGroups, otherReptiles = [] }) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [expandedDay, setExpandedDay] = useState(null); // 'yyyy-MM-dd' or null
+    // The expanded-day overlay: dialog role, Escape to close, and the
+    // data-state the floating-widget hide rule needs.
+    const dayOverlay = useModalOverlay(() => setExpandedDay(null), Boolean(expandedDay));
 
     const days = useMemo(() => {
         const start = startOfMonth(currentMonth);
@@ -176,6 +180,8 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                 const dayDate = new Date(expandedDay + 'T12:00:00');
                 return (
                     <div
+                        {...dayOverlay}
+                        aria-label={format(dayDate, 'EEEE, MMMM d')}
                         className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
                         onClick={() => setExpandedDay(null)}
                     >
@@ -190,6 +196,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                                 <button
                                     type="button"
                                     onClick={() => setExpandedDay(null)}
+                                    aria-label="Close"
                                     className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200 text-xl leading-none"
                                 >
                                     ✕

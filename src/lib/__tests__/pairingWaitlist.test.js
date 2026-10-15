@@ -12,19 +12,27 @@ import {
 
 describe('pairing waitlist outcomes', () => {
   it('lists the likeliest babies with their odds', () => {
+    // Pinstripe is polygenic, so it never gets a percentage: only the
+    // Axanthic and Cappuccino genes split the odds (2 x 2 = 4 outcomes).
     const outcomes = waitlistOutcomes({ morph_tags: ['Axanthic', 'Pinstripe'] }, { morph_tags: ['Het Axanthic', 'Cappuccino'] });
-    expect(outcomes).toHaveLength(8);
-    expect(outcomes[0].probability).toBeCloseTo(0.125);
-    expect(outcomes.map((o) => o.label)).toContain('Visual Axanthic, Pinstripe, Cappuccino');
+    expect(outcomes).toHaveLength(4);
+    expect(outcomes[0].probability).toBeCloseTo(0.25);
+    expect(outcomes.map((o) => o.label)).toContain('Visual Axanthic, Cappuccino');
+    expect(outcomes.some((o) => /Pinstripe/.test(o.label))).toBe(false);
     const total = outcomes.reduce((s, o) => s + o.probability, 0);
     expect(total).toBeCloseTo(1);
   });
 
   it('names a plain baby in words and caps the list', () => {
     expect(waitlistOutcomes({ morph_tags: [] }, { morph_tags: [] })).toEqual([
-      { label: 'Normal (no listed traits)', probability: 1 },
+      { label: 'No single-gene traits', probability: 1 },
     ]);
-    expect(waitlistOutcomes({ morph_tags: ['Lilly White', 'Harlequin'] }, { morph_tags: ['Harlequin', 'Dalmatian'] }, { max: 3 })).toHaveLength(3);
+    // Harlequin is polygenic: these babies are not "Normal", they simply
+    // have no single-gene trait to give odds for.
+    expect(waitlistOutcomes({ morph_tags: ['Harlequin'] }, { morph_tags: ['Extreme Harlequin'] })).toEqual([
+      { label: 'No single-gene traits', probability: 1 },
+    ]);
+    expect(waitlistOutcomes({ morph_tags: ['Lilly White', 'Het Axanthic'] }, { morph_tags: ['Het Axanthic', 'Cappuccino'] }, { max: 3 })).toHaveLength(3);
     expect(waitlistOutcomes(null, null)).toEqual([]);
   });
 });

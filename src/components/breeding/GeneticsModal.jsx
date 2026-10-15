@@ -1,11 +1,17 @@
 import { X, Dna } from 'lucide-react';
 import GeneticCalculator from './GeneticCalculator';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 export default function GeneticsModal({ isOpen, onClose, sire, dam }) {
+    // Called before the early return (hooks must run on every render); the
+    // open flag makes it set up again each time the calculator opens.
+    const overlay = useModalOverlay(onClose, isOpen);
     if (!isOpen) return null;
 
     return (
         <div
+            {...overlay}
+            aria-label="Genetic Calculator"
             className="fixed inset-0 z-[200] flex items-center justify-center p-4"
             style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
             onClick={onClose}

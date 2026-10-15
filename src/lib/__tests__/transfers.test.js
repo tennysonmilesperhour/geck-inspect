@@ -6,6 +6,7 @@ vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke } } }))
 const {
   animalFromPreview,
   buildTransferRow,
+  claimErrorKind,
   claimUrlFor,
   effectiveTransferStatus,
   isValidEmail,
@@ -159,5 +160,31 @@ describe('public passport weigh-ins', () => {
     expect(PUBLIC_WEIGHT_COLUMNS).not.toMatch(/created_by/);
     expect(PUBLIC_WEIGHT_COLUMNS).toMatch(/weight_grams/);
     expect(PUBLIC_WEIGHT_COLUMNS).toMatch(/record_date/);
+  });
+});
+
+describe('claim errors', () => {
+  // Messages raised by claim_transfer() and the gecko limit trigger
+  // (supabase/migrations/20261015120000_ownership_checks.sql).
+  it('maps each server message to the page message', () => {
+    expect(claimErrorKind({ message: 'already claimed' })).toBe('already_claimed');
+    expect(claimErrorKind({ message: 'transfer cancelled' })).toBe('cancelled');
+    expect(claimErrorKind({ message: 'transfer expired' })).toBe('expired');
+    expect(claimErrorKind({ message: 'transfer not found' })).toBe('not_found');
+    expect(claimErrorKind({ message: 'animal not found' })).toBe('not_found');
+    expect(claimErrorKind({ message: 'not the intended recipient' })).toBe('wrong_account');
+    expect(claimErrorKind({ message: 'the sender no longer owns this animal' })).toBe('seller_changed');
+  });
+
+  it('recognises a full plan by hint or by wording', () => {
+    expect(claimErrorKind({ message: 'anything', hint: 'gecko_limit_reached' })).toBe('gecko_limit');
+    expect(claimErrorKind({
+      message: 'The Keeper plan holds up to 50 active geckos. Archive one you no longer keep, or upgrade your plan to add more.',
+    })).toBe('gecko_limit');
+  });
+
+  it('falls back to a generic failure', () => {
+    expect(claimErrorKind({ message: 'connection reset' })).toBe('claim_failed');
+    expect(claimErrorKind(null)).toBe('claim_failed');
   });
 });

@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { format } from 'date-fns';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 /**
  * Weigh-in mode, one-row-per-gecko batch weight entry.
@@ -32,6 +33,9 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
  */
 export default function WeighInMode({ geckos = [], weightRecords = [], onClose, onSaved }) {
   const { toast } = useToast();
+  // Dialog role, Escape to close, and the hook the floating-widget hide
+  // rule needs (the feedback tab used to cover Cancel and Save here).
+  const overlay = useModalOverlay(onClose);
   const [inputs, setInputs] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [recordDate, setRecordDate] = useState(todayLocalISO());
@@ -124,6 +128,8 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
+      {...overlay}
+      aria-label="Weigh-in"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40" onClick={onClose}></div>

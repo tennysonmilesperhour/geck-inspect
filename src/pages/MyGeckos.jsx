@@ -295,8 +295,9 @@ export default function MyGeckosPage() {
             return;
         }
         // Restoring a gecko adds it back to the active count, so the plan
-        // limit applies, the same as adding a new one. The database only
-        // checks new rows, never edits, so this check lives here.
+        // limit applies, the same as adding a new one. The database checks
+        // this too (geckos_enforce_free_limit runs on unarchive); checking
+        // here first shows the upgrade prompt without a round trip.
         if (!shouldArchive) {
             const target = geckos.find((g) => g.id === geckoId);
             const ownsIt = target && String(target.created_by || '').toLowerCase() === String(user?.email || '').toLowerCase();
@@ -334,6 +335,10 @@ export default function MyGeckosPage() {
         } catch (error) {
             console.error("Failed to archive gecko:", error);
             setArchiveDialogGeckoId(null);
+            if (!shouldArchive && isGeckoLimitError(error)) {
+                setShowUpgradeModal(true);
+                return;
+            }
             toast({
                 title: "Error",
                 description: error?.message || "Failed to archive gecko. Please try again.",
@@ -893,7 +898,7 @@ export default function MyGeckosPage() {
                 </div>
 
                 {!isLoading && activeTab === 'collection' && (
-                    <GeckoBulkActions records={filteredAndSortedGeckos.filter(g => canWriteGecko(g, user, memberships))} onComplete={loadGeckos} />
+                    <GeckoBulkActions records={filteredAndSortedGeckos.filter(g => canWriteGecko(g, user, memberships))} onComplete={loadGeckos} user={user} />
                 )}
 
                 {isLoading ? (

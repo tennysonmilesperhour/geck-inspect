@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Send, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 /**
  * Buyer-side inquiry modal rendered on the public breeder storefront
@@ -11,7 +12,8 @@ import { supabase } from '@/lib/supabaseClient';
  * Props:
  *   - open: boolean
  *   - onClose: () => void
- *   - breederEmail: string (display only in the thank-you note)
+ *   - breederEmail: string (display only in the thank-you note; empty for
+ *     signed-out visitors, who cannot read the breeder's address)
  *   - breederSlug: string (required: the function finds the recipient
  *     from the storefront slug; it never takes an address from here)
  *   - breederName?: string (display only)
@@ -37,6 +39,9 @@ export default function BuyerInquiryModal({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  // Dialog role, Escape to close, and the hook the floating-widget hide
+  // rule needs. This component stays mounted while closed, so it passes open.
+  const overlay = useModalOverlay(onClose, open);
 
   useEffect(() => {
     if (!open) return;
@@ -100,6 +105,8 @@ export default function BuyerInquiryModal({
 
   return (
     <div
+      {...overlay}
+      aria-label={breederName ? `Ask ${breederName} about a gecko` : 'Send an inquiry'}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
@@ -123,8 +130,14 @@ export default function BuyerInquiryModal({
             </div>
             <h3 className="text-xl font-bold text-white">Inquiry sent</h3>
             <p className="text-sm text-slate-400 leading-relaxed">
-              {breederName || 'The breeder'} will get an email at{' '}
-              <span className="text-emerald-300">{breederEmail}</span> and can reply directly to your address.
+              {breederEmail ? (
+                <>
+                  {breederName || 'The breeder'} will get an email at{' '}
+                  <span className="text-emerald-300">{breederEmail}</span> and can reply directly to your address.
+                </>
+              ) : (
+                <>{breederName || 'The breeder'} will get your message by email and can reply directly to your address.</>
+              )}
             </p>
             <button
               type="button"

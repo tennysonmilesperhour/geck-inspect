@@ -30,6 +30,7 @@ import { createPageUrl } from '@/utils';
 import { Collection, CollectionMember } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits } from '@/lib/tierLimits';
+import { invitePlan, reopenedInviteFields } from '@/lib/collectionInvites';
 import CollectionActivity from './CollectionActivity';
 
 /**
@@ -70,6 +71,11 @@ async function sendInviteEmail({ toEmail, inviter, collectionName, role, token }
  *   - Keeper:  up to maxCollaborators (default 5) accepted+pending invites
  *              across all owned collections combined
  *   - Breeder: unlimited
+ *
+ * The database enforces the same caps (trigger
+ * collection_members_enforce_limit, migration 20261015120000), and an
+ * invitation for someone else must start as pending: only the invited
+ * person can accept it.
  */
 
 function generateToken() {
@@ -370,19 +376,40 @@ function CollectionRow({
       });
       return;
     }
+    // Someone already invited or in the collection keeps their seat;
+    // someone who left gets their old seat back as a fresh invitation
+    // (the database allows one row per person per collection).
+    const plan = invitePlan(memberships, email);
+    if (plan.action === 'exists') {
+      toast({
+        title: 'Already invited',
+        description: plan.seat.status === 'accepted'
+          ? `${email} is already in this collection.`
+          : `${email} already has an invitation. Use Resend to send it again.`,
+      });
+      return;
+    }
     setInviting(true);
     try {
       const token = generateToken();
-      await CollectionMember.create({
-        collection_id: collection.id,
-        member_email: email,
-        role: inviteRole,
-        status: 'pending',
-        invite_token: token,
-        invited_by_email: user.email,
-        invited_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
-      });
+      if (plan.action === 'reopen') {
+        await CollectionMember.update(plan.seat.id, reopenedInviteFields({
+          role: inviteRole,
+          token,
+          invitedBy: user.email,
+        }));
+      } else {
+        await CollectionMember.create({
+          collection_id: collection.id,
+          member_email: email,
+          role: inviteRole,
+          status: 'pending',
+          invite_token: token,
+          invited_by_email: user.email,
+          invited_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+        });
+      }
       // Fire-and-await the transactional email. Failures fall back to
       // the existing copy-link UX, so this never blocks the invite.
       const emailResult = await sendInviteEmail({

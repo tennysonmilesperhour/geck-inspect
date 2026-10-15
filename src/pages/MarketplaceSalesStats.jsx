@@ -35,6 +35,7 @@ import MarketPreviewGate from '@/components/subscription/MarketPreviewGate';
 import { lazy } from '@/lib/lazyWithRetry';
 import { isGuestMode } from '@/lib/guestMode';
 import { DEMO_BREEDER_FINANCIAL_ASSUMPTIONS } from '@/lib/guestBreederDemo';
+import useModalOverlay from '@/hooks/useModalOverlay';
 // Market analytics sits on the Pricing tab, so its code (and its charts)
 // download only when that tab is opened.
 const MarketAnalytics = lazy(() => import('@/components/market-analytics/v2/MarketAnalyticsLive'));
@@ -993,6 +994,9 @@ export default function MarketplaceSalesStats() {
     name: '', amount: '', date: todayLocalISO(), category: 'produced_in_house'
   });
   const [addSaleModalOpen, setAddSaleModalOpen] = useState(false);
+  // The "Add Gecko Sale" chooser: dialog role, Escape to close, and the
+  // data-state the floating-widget hide rule needs.
+  const addSaleOverlay = useModalOverlay(() => setAddSaleModalOpen(false), addSaleModalOpen);
   const [saleMode, setSaleMode] = useState(null);
   const [selectionModalOpen, setSelectionModalOpen] = useState(false);
 
@@ -1444,7 +1448,7 @@ export default function MarketplaceSalesStats() {
                 </Button>
 
                 {addSaleModalOpen && (
-                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
+                  <div {...addSaleOverlay} aria-label="Add Gecko Sale" className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
                        onClick={(e) => { if (e.target === e.currentTarget) setAddSaleModalOpen(false); }}>
                     <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 max-w-lg w-full"
                          onClick={(e) => e.stopPropagation()}>
@@ -1650,7 +1654,9 @@ export default function MarketplaceSalesStats() {
                   <Globe className="w-4 h-4 text-emerald-400" /> Market analytics
                 </h3>
                 <Suspense fallback={<div className="h-64 rounded-xl bg-slate-900 border border-slate-700 animate-pulse" />}>
-                  <MarketPreviewGate user={user} surface="business_market_analytics" height={420}>
+                  {/* market_analytics_v2 answers Enterprise only (since 15 Oct
+                      2026), so other plans see placeholder rows, not an error. */}
+                  <MarketPreviewGate user={user} surface="business_market_analytics" height={420} serverGated>
                     <MarketAnalytics user={user} />
                   </MarketPreviewGate>
                 </Suspense>

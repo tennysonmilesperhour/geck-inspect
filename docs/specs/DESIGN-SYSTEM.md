@@ -1,6 +1,8 @@
 # Geck Inspect Global Design System
 
-Paste this block into every Claude Code prompt you write.
+> **Note (15 October 2026): this document does not describe the shipped look.** The app did not adopt this light palette or the DM Serif Display and DM Sans fonts. What ships is dark by default: six color themes defined as CSS variables in `src/index.css` (default `blizzard`, page background `#0a0f19`), mapped through `tailwind.config.js` and switched by `src/lib/ThemeContext.jsx` and the theme script in `index.html`, with Montserrat, Righteous and Inter loaded in `index.html`. Those files are the source of truth for colors and fonts. Do not paste the palette below into prompts. The layout, badge and interaction guidance further down is still useful as intent.
+
+Originally: paste this block into every Claude Code prompt you write.
 
 ---
 

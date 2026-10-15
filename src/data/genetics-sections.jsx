@@ -241,7 +241,7 @@ const SECTIONS = [
             <BulletList items={[
               'Inheritance: INCOMPLETE DOMINANT. Single copy = visual Lilly White. Two copies = Super Lilly White, which is embryonic-lethal, fertilized eggs develop partially then fail to hatch. Never pair two Lilly Whites together.',
               'Visual expression: distinct areas of pure white or pale cream, usually on the lateral body walls, tail, and sometimes the head. Not to be confused with White Wall (a separate gene, see below), fire-up pale markings, or cream harlequin extension.',
-              'Discovered: in 2014 by Lilly Exotics. Named for the breeder, not the color.',
+              'Discovered: late 2010, from an unusual hatchling at Lilly Exotics (Nick Lumb, UK). Named for the breeder, not the color.',
               'Pairing strategy: Lilly White × Normal produces ~50% visual Lilly White + ~50% normal. This is the ONLY safe way to produce more LW.',
               'Price: high-quality visual LW typically $500 to $1500+ depending on base trait combinations and breeder reputation.',
             ]} />

@@ -1,6 +1,8 @@
 # Deploy queue, 3 October 2026
 
-The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file records what went to production on 3 October and the one step still waiting on Tennyson.
+The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file records what went to production on 3 October and after.
+
+**Status 15 October: the SQL queue is cleared.** Everything that was waiting on the SQL Editor run reached production on 8 October. Production's migration history (checked read-only on 15 October) records each one under a new version number, and PR 107 renamed the repo files to match. Details in "Cleared on 8 October" below. The open items left in this file are the two leftover functions under "Also for Tennyson", the real-device checks, and the 14 October Morph ID redeploy.
 
 Project: `mmuglfphhwlaluyfyxsp`.
 
@@ -18,7 +20,7 @@ Project: `mmuglfphhwlaluyfyxsp`.
 | `set-platform-connection` | v17 | Bluesky handle and app password checked before saving |
 | `publish-social-post` | v27 | Copy-out costs no post credit; two-Pages fix |
 | `recognize-gecko-morph` | v63 (v64 on 5 Oct) | Free Morph ID try refunded on "better photos needed" (D19) |
-| `admin-delete-account` | v1 (new) | Account erasure; says "not installed yet" until the SQL below runs |
+| `admin-delete-account` | v1 (new) | Account erasure; said "not installed yet" until the erasure migration ran on 8 October (now v2) |
 
 **Migrations applied:**
 - `20261003204952_morph_photo_credits`: closed the open read rule on `morph_reference_images` (anyone could read pending and rejected submissions with the submitter's email), added `morph_community_photos()`, and every new notification title.
@@ -26,20 +28,25 @@ Project: `mmuglfphhwlaluyfyxsp`.
 - `20261003210328_reptile_event_weight_backfill`: 14 old reptile weights copied into the number column.
 - `20261003210527_scrub_stored_email_names`: emails stored as names and reviewer emails in photo training data replaced (0 left).
 
-## Waiting on Tennyson: one SQL script
+## Cleared on 8 October: the SQL script
 
-The Supabase MCP tool treats any statement containing `delete`, `drop` or `revoke` as destructive and waits for a confirmation that never appears in a Claude session, so these four could not be applied from here. They are bundled, with the 5 Oct weigh-in reminder job, in **`docs/planning/deploy-queue-2026-10-03.sql`**: open Supabase, SQL Editor, paste the whole file, Run. It is one transaction (all or nothing), records the four migrations in the history, and ends with checks that should all read true.
+These were bundled in `docs/planning/deploy-queue-2026-10-03.sql` because the Supabase MCP tool would not run statements containing `delete`, `drop` or `revoke`. They all reached production on 8 October 2026. The versions below are what production's migration history records (the timestamp is the time it ran, in UTC); PR 107 renamed the repo files under `supabase/migrations/` to the same names. Do not run the `.sql` bundle again.
 
-1. `20261003220000_account_erasure`: `admin_erase_account()` (server only, with a second guard inside the function) and the admin alert on a deletion request.
-2. `20261003220100_anon_hide_owner_email_columns`: signed-out visitors stop seeing owner emails on geckos and photos.
-3. `20261003220200_anon_hide_email_columns_more`: the same for 20 more tables.
-4. `20261003220300_waitlist_require_confirmation`: the old direct waitlist signup closes.
+| Was queued as | Applied as (8 Oct, UTC) | Checked 15 Oct |
+|---|---|---|
+| `20261003220000_account_erasure` | `20261008081305_account_erasure` | `admin_erase_account()` exists; `admin-delete-account` is live (v2) |
+| `20261003220100_anon_hide_owner_email_columns` | `20261008081011_anon_hide_owner_email_columns` | signed-out visitors cannot read `geckos.created_by` |
+| `20261003220200_anon_hide_email_columns_more` | `20261008081043_anon_hide_email_columns_more` | in the history |
+| `20261003220300_waitlist_require_confirmation` | inside `20261008063704_lock_security_definer_execute` (lines 41 and 48 of that file) | signed-out and signed-in callers can no longer run `join_waitlist()`; only the server can, so waitlist signups go through the confirmation email |
+| `20261005190000_personal_weighin_reminders` | `20261008081343_personal_weighin_reminders` | the `personal-weighin-reminders-daily` job runs at 14:20 UTC and is active |
 
-Right after running it, open these signed out: the landing page, a passport, a morph page, a /Breeder page, a /store page and a waitlist page. If one breaks, `grant select on public.<table> to anon;` restores that table's old access while it is fixed.
+The same day also applied `20261008081101_public_gecko_photos` and `20261008083025_pin_function_search_path`.
+
+The signed-out page checks that were meant to follow the run (landing page, a passport, a morph page, a /Breeder page, a /store page and a waitlist page) are still worth doing once on a phone. If one of them breaks, `grant select on public.<table> to anon;` restores that table's old access while it is fixed.
 
 ## Also for Tennyson
 
-- Undeploy `rapid-api` (hello-world template, no caller). `admin-end-trial` is a disabled stub and can go too.
+- Undeploy `rapid-api` (hello-world template, no caller). `admin-end-trial` is a disabled stub and can go too. Both were still deployed on 15 October (`rapid-api` v19, `admin-end-trial` v9).
 - Promote and the AI Consultant are off for members in the admin Pages tool. Turn them on when ready.
 
 ## Real-device and real-email checks
@@ -50,7 +57,7 @@ Right after running it, open these signed out: the landing page, a passport, a m
 - Waitlist: sign up, confirm from the email, get the "your place" email, the breeder is notified.
 - Report something, then hide it from Admin, Reports; it is gone for another account and signed out.
 - Hatch an egg from each entry point on a phone; check the limit message on a Free account with 10 geckos.
-- After the SQL script: erase a disposable account from the Support inbox. The login is gone, its files are gone, a sold gecko's photo still loads for the buyer, the ticket closes.
+- Now that the erasure migration is live (8 Oct): erase a disposable account from the Support inbox. The login is gone, its files are gone, a sold gecko's photo still loads for the buyer, the ticket closes.
 - One-click unsubscribe from a real Gmail message.
 - Connect a real Bluesky account and publish; a copy-out leaves "Posts this month" unchanged.
 - A blurry free-account Morph ID gives the free try back.
@@ -66,9 +73,9 @@ Done on 5 October (details in `instrumentation-2026-10.md`):
 
 The Breeder member who cancelled on 30 Sep gets a free month instead of the credit back (next section).
 
-## Added 5 October: personal weigh-in reminders (not applied)
+## Added 5 October: personal weigh-in reminders (applied 8 October)
 
-- Migration `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, written and **not applied**. It adds `enqueue_personal_weighin_reminders()` (a daily job at 14:20 UTC that reads `profiles.extra_data.care_reminders`), makes the weekly 30-day weigh-in nudge skip geckos the daily job covers and members who turned weigh-in reminders off, and schedules the job. It contains `revoke` lines, so the Supabase MCP tool will wait for a confirmation; it is now included in `deploy-queue-2026-10-03.sql`, so the one SQL Editor run covers it. The app works without it (the switches save and the dates show), but no weigh-in push or email goes out for new geckos until it runs. Details in `activation-2026-10.md`.
+- **Applied 8 October** as `20261008081343_personal_weighin_reminders` (see "Cleared on 8 October" above). What follows is the 5 October note, kept for history. Migration `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, written and not applied at the time. It adds `enqueue_personal_weighin_reminders()` (a daily job at 14:20 UTC that reads `profiles.extra_data.care_reminders`), makes the weekly 30-day weigh-in nudge skip geckos the daily job covers and members who turned weigh-in reminders off, and schedules the job. It contains `revoke` lines, so the Supabase MCP tool will wait for a confirmation; it is now included in `deploy-queue-2026-10-03.sql`, so the one SQL Editor run covers it. The app works without it (the switches save and the dates show), but no weigh-in push or email goes out for new geckos until it runs. Details in `activation-2026-10.md`.
 
 ## Added 5 October: complimentary plans (applied)
 

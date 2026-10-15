@@ -14,8 +14,12 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import TransferDialog from '@/components/transfers/TransferDialog';
 import { reptileWeightRecords, newReptileWeightEvent } from '@/lib/reptileWeights';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit, onArchive }) {
+    // Dialog role, Escape to close, and the data-state the floating-widget
+    // hide rule needs. Called before the early return, as hooks must be.
+    const overlay = useModalOverlay(onClose, Boolean(reptile));
     const [weightRecords, setWeightRecords] = useState([]);
     const [eventHistory, setEventHistory] = useState([]);
     const [showAddWeight, setShowAddWeight] = useState(false);
@@ -126,7 +130,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div {...overlay} aria-label={reptile.name || 'Reptile details'} className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <Card className="max-w-4xl w-full max-h-[90vh] flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-slate-700 p-4 sm:p-6">
                     {/* Species shows in Basic Information below, so phones
@@ -148,7 +152,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                             <Edit className="w-4 h-4 sm:mr-2" />
                             <span className="hidden sm:inline">Edit</span>
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={onClose}>
+                        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
                             <X className="w-5 h-5 text-slate-400" />
                         </Button>
                         </div>

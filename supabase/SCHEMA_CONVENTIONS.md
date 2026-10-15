@@ -78,19 +78,60 @@ ownership differently (the `social_*` tables use `created_by_user_id` /
 
 ## 4. Migrations are not applied by merging
 
-Files in `supabase/migrations/` are the record of intent. **Merging to
+Files in `supabase/migrations/` are the record of what ran. **Merging to
 `main` does not run them against production.** The GitHub integration
 builds preview branches; it does not migrate the production database.
 
-After merging a migration, apply it one of these ways:
+The order is the one in `docs/MIGRATIONS.md` ("How to make a schema
+change today"): apply to production first, then commit.
 
-- the Supabase MCP tools (`apply_migration`) from an agent session,
-- `supabase db push` from the CLI, or
-- pasting the SQL into the dashboard's SQL editor.
+1. Write the file with a full 14-digit timestamp and make it idempotent.
+2. Apply it to production with the Supabase MCP `apply_migration` tool,
+   which records it in the migration history. If it has to go through the
+   dashboard's SQL editor instead, record it afterwards with
+   `supabase migration repair --status applied <version>`, because the
+   editor does not record history on its own.
+3. Read back the version production recorded. If it differs from the
+   filename, rename the file to match, then commit it.
 
-Then confirm the table exists before assuming the feature works. Two
-Phase 3 calculator features sat inert for hours because the migrations had
-merged but never run.
+`docs/MIGRATIONS.md` does not use `supabase db push` to apply changes. Run
+it only with `--dry-run`, as the check described there, and never with
+`--include-all`.
+
+Then confirm the table or function exists before assuming the feature works.
+Two Phase 3 calculator features sat inert for hours because the migrations
+had merged but never run.
+
+## 4a. Grants: every new function says who may run it
+
+From `20261015130000_comms_and_exposure.sql` (section 8) on, a function a
+migration creates gets **no EXECUTE for `anon`, `authenticated` or
+`PUBLIC`** by default. The default privileges for role `postgres` were
+changed so that nothing is callable from the API by accident. `service_role`
+and the owner still get it.
+
+So every migration that adds a function must grant it explicitly, for
+example:
+
+```sql
+revoke all on function public.my_fn(text) from public, anon;
+grant execute on function public.my_fn(text) to authenticated;
+```
+
+This includes small SQL helpers that a row security policy or a SECURITY
+INVOKER trigger calls: those run as the member, so the member's role needs
+EXECUTE too. Without the grant the app gets "permission denied for
+function".
+
+**DROP plus CREATE loses the grants.** `create or replace function` keeps
+an existing function's grants. Dropping a function and creating it again
+(for example to change its return type or its arguments) makes a new
+function with no API grants at all, so re-grant it in the same migration.
+Prefer `create or replace` whenever the signature allows it.
+
+Objects created as `supabase_admin` (the dashboard, some extensions) do not
+follow this rule: that role's default privileges still grant the API roles
+everything. Grant and revoke explicitly there too.
 
 ## 5. Historical artifacts
 

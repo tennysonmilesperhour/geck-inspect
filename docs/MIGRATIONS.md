@@ -28,11 +28,24 @@ Read this before running any `supabase db ...` command against production.
 1. Generate the next file with `supabase migration new <slug>`, then write the
    SQL into that file with its full 14-digit timestamp. Make it idempotent (`create or replace`,
    `if not exists`, `drop policy if exists` before `create policy`).
-2. Apply it to production with the Supabase MCP `apply_migration` tool (or
-   the SQL editor), which records it in the migration history.
+2. Apply it to production with the Supabase MCP `apply_migration` tool, which
+   records it in the migration history. (The dashboard's SQL editor works
+   too, but it does not record history, so record it afterwards with
+   `supabase migration repair --status applied <version>`.)
 3. Verify the recorded version, align the new filename if the apply tool chose
    a different timestamp, and commit the file in the same change. Do not rename
    previously committed applied history.
+
+### Grants on new functions
+
+Since `20261015130000_comms_and_exposure.sql`, a new function gets no
+EXECUTE for `anon`, `authenticated` or `PUBLIC` unless the migration grants
+it. Every migration that adds a function must end with an explicit
+`revoke ... from public` and `grant execute ... to <roles>` for it,
+including helpers that policies or SECURITY INVOKER triggers call as the
+member. `create or replace` keeps existing grants; a DROP followed by a
+CREATE (for a new return type or arguments) does not, so re-grant in the
+same file. See `supabase/SCHEMA_CONVENTIONS.md` section 4a.
 
 ## Baseline layout
 

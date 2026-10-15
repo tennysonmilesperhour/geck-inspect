@@ -99,7 +99,7 @@ export default function HiddenHetPanel({ gecko }) {
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-semibold text-slate-100">
-                    Het {entry.traitName}
+                    Het {entry.displayName || entry.traitName}
                   </span>
                   <span className="text-sm font-semibold text-emerald-300 tabular-nums">
                     ~{Math.round(entry.probability * 100)}%

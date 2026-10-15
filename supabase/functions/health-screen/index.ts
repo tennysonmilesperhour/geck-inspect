@@ -10,7 +10,8 @@
 // (consume_feature_credit RPC, called with the USER's JWT so auth.uid()
 // resolves). Tier allotments mirror src/lib/tierLimits.js
 // monthlyHealthScreens: free=1, keeper=5, breeder=15, enterprise=40.
-// Keep the two in sync when changing quotas. Admins bypass.
+// Keep the two in sync when changing quotas. Admins bypass. A screen
+// that fails after the credit was taken gives it back (refunded: true).
 //
 // POST { image_url: string, context?: { name, hatch_date, weight_grams, morphs } }
 // 200 -> { observations: [{ area, finding, severity, note }], overall_note,
@@ -52,6 +53,34 @@ Respond with ONLY a JSON object: {"observations":[{"area":string,"finding":strin
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  // The credit is taken before the AI call so two quick requests cannot
+  // both slip under the monthly limit. If the screen then fails (the AI
+  // call errors, its answer cannot be read, or anything throws), the
+  // credit is given back with refund_feature_credit, the same way the
+  // assistant (invoke-llm) does it. Only the service role may run that
+  // function, so a member cannot refund screens they really used.
+  let charged = false;
+  let chargedUserId: string | null = null;
+  const fail = async (body: Record<string, unknown>, status: number) => {
+    if (charged && chargedUserId) {
+      try {
+        const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+        const { error: refundErr } = await admin.rpc("refund_feature_credit", {
+          p_user_id: chargedUserId,
+          p_feature: "health_screen",
+        });
+        if (!refundErr) {
+          charged = false;
+          return json({ ...body, refunded: true }, status);
+        }
+        console.warn("health-screen: refund failed", refundErr.message);
+      } catch (refundThrew) {
+        console.warn("health-screen: refund threw", refundThrew);
+      }
+      return json({ ...body, refunded: false }, status);
+    }
+    return json(body, status);
+  };
   try {
     if (!ANTHROPIC_API_KEY) return json({ error: "ANTHROPIC_API_KEY not set", code: "config_error" }, 500);
 
@@ -64,6 +93,7 @@ Deno.serve(async (req) => {
     });
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return json({ error: "Sign in to use health screening.", code: "unauthenticated" }, 401);
+    chargedUserId = user.id;
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: prof } = await admin.from("profiles")
@@ -73,6 +103,13 @@ Deno.serve(async (req) => {
     if (tierError) return json({ error: "Could not verify membership access." }, 503);
     const tier = verifiedTier && TIER_SCREENS[verifiedTier] != null ? verifiedTier : "free";
     const isAdmin = prof?.role === "admin";
+
+    // Read and check the request before taking a credit, so a malformed
+    // request does not cost the member a screen.
+    const { image_url, context } = await req.json().catch(() => ({}));
+    if (!image_url || typeof image_url !== "string") {
+      return json({ error: "image_url is required", code: "bad_request" }, 400);
+    }
 
     let creditsRemaining: number | null = null;
     if (!isAdmin) {
@@ -96,11 +133,7 @@ Deno.serve(async (req) => {
       creditsRemaining = usage?.credits_included == null
         ? null
         : Math.max(0, usage.credits_included - usage.credits_consumed);
-    }
-
-    const { image_url, context } = await req.json();
-    if (!image_url || typeof image_url !== "string") {
-      return json({ error: "image_url is required", code: "bad_request" }, 400);
+      charged = true;
     }
 
     const contextLines = context
@@ -129,7 +162,7 @@ Deno.serve(async (req) => {
     });
     if (!resp.ok) {
       const detail = await resp.text();
-      return json({ error: `vision call failed (${resp.status})`, code: "vision_error", detail: detail.slice(0, 300) }, 502);
+      return await fail({ error: `vision call failed (${resp.status})`, code: "vision_error", detail: detail.slice(0, 300) }, 502);
     }
     const payload = await resp.json();
     const text = (payload?.content || []).filter((b: { type: string }) => b.type === "text")
@@ -139,7 +172,7 @@ Deno.serve(async (req) => {
       const match = text.match(/\{[\s\S]*\}/);
       parsed = match ? JSON.parse(match[0]) : {};
     } catch {
-      return json({ error: "could not parse screening result", code: "parse_error" }, 502);
+      return await fail({ error: "could not parse screening result", code: "parse_error" }, 502);
     }
 
     return json({
@@ -149,6 +182,6 @@ Deno.serve(async (req) => {
       credits_remaining: creditsRemaining,
     });
   } catch (err) {
-    return json({ error: String((err as Error)?.message || err), code: "server_error" }, 500);
+    return await fail({ error: String((err as Error)?.message || err), code: "server_error" }, 500);
   }
 });

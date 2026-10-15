@@ -32,11 +32,81 @@
  */
 import { TRAITS, tagToGenotype, WILD_TYPE } from './index.js';
 import { POSSIBLE_HET_CHANCE } from '../hetUtils.js';
+import { LILLY_WHITE_LOOKALIKE_TAGS, specCarriesLillyWhite } from './lethalLookalike.js';
 
 /** Chance used for a "Possible Het" tag that carries no number. */
 export { POSSIBLE_HET_CHANCE };
 
 const MENDELIAN = new Set(['recessive', 'dominant', 'incomplete_dominant']);
+
+/**
+ * Engine loci that are polygenic in the hobby's experience. The vendored
+ * Foundation Genetics engine models Harlequin, Pinstripe, Dalmatian and
+ * the base colours as single genes, so if their tags reached the Punnett
+ * math a Harlequin x Harlequin pairing would print "25% Extreme
+ * Harlequin". Breeders know these looks come from many small genes:
+ * best to best raises the odds and guarantees nothing. So these tags
+ * never enter the percentages. They are returned in `polygenic` instead,
+ * and screens describe them as "likely" or "possible" (see
+ * lib/genetics/polygenic.js). This also makes collection mode agree with
+ * manual mode, which never offered these loci.
+ *
+ * Single-gene traits (Lilly White, Axanthic, Cappuccino, Sable, Highway,
+ * Soft Scale, Phantom, Empty Back and the rest) keep their percentages.
+ */
+export const POLYGENIC_LOCI = new Set([
+  'HQ', // Harlequin, Extreme Harlequin
+  'PIN', // Pinstripe
+  'DAL', // Dalmatian, Super Dalmatian
+  'TIG', // Tiger
+  'FLAME',
+  'TANGERINE',
+  'WP', // White Pattern (also part of Tricolor)
+  'OP', // Orange Pattern
+  'BASE_RED',
+  'BASE_YELLOW',
+  'BASE_BLACK',
+]);
+
+const LOOK_NAME_BY_LOCUS = new Map();
+const LOCUS_BY_LOOK_NAME = new Map();
+for (const trait of TRAITS) {
+  if (POLYGENIC_LOCI.has(trait.locus) && !LOOK_NAME_BY_LOCUS.has(trait.locus)) {
+    LOOK_NAME_BY_LOCUS.set(trait.locus, trait.name);
+    LOCUS_BY_LOOK_NAME.set(trait.name, trait.locus);
+  }
+}
+
+/**
+ * The polygenic look names, one per locus ("Harlequin", "Pinstripe",
+ * "Dalmatian", "Tiger", base colours and the rest). These are the names
+ * the `polygenic` list of translateMorphTags uses, so the Pairing Planner
+ * can offer them as "likely / possible" targets instead of percentages.
+ */
+export const POLYGENIC_LOOK_NAMES = [...LOOK_NAME_BY_LOCUS.values()];
+
+/**
+ * Engine traits the collection odds can actually produce a percentage
+ * for: a single gene with a known inheritance pattern. Polygenic loci
+ * (above) and traits whose inheritance is unconfirmed (Snowflake, Furry,
+ * Marbling) never reach the Punnett math, so a screen that offered them
+ * as a target would always read "0% chance".
+ */
+export function isPercentTrait(trait) {
+  return Boolean(trait) && MENDELIAN.has(trait.dominance) && !POLYGENIC_LOCI.has(trait.locus);
+}
+
+/**
+ * True when an engine combo morph depends on a polygenic locus, in its
+ * requirements (Extreme Harlequin, Tricolor, Halloween, Lavender...) or in
+ * its exclusions (Patternless is "visual Phantom that is NOT Harlequin and
+ * NOT Dalmatian"). Since polygenic loci stay out of the math, the engine
+ * can no longer judge these combos, so screens must not give them odds.
+ */
+export function comboTouchesPolygenic(combo) {
+  return [...(combo?.requirements || []), ...(combo?.exclusions || [])]
+    .some((r) => POLYGENIC_LOCI.has(r.locus));
+}
 
 const TRAIT_BY_NAME = new Map();
 for (const trait of TRAITS) {
@@ -49,7 +119,10 @@ const REASON = {
   pattern: 'Pattern descriptor. It describes how the gecko looks, not a gene the odds can use.',
   tiger: 'Foundation Genetics treats Tiger as present in every crested gecko, so it does not change the odds.',
   flame: 'Flame is polygenic (many small genes), so no ratio can be calculated.',
-  baseShade: 'Base color shade. Only Red Base and Yellow Base are calculated.',
+  baseShade: 'Base color shade. Base colors are polygenic, so no ratio can be calculated.',
+  polygenicLook:
+    'Polygenic (many small genes), so it is not given a percentage. A parent that shows it makes it possible in the babies, and two parents that show it make it likely.',
+  polygenicHet: 'This look is polygenic, so there is no single hidden copy to count.',
   phantomLook: 'Can be how a visual Phantom looks. Add a Phantom tag if this gecko is a visual Phantom.',
   spots: 'Spot descriptor. Add a Dalmatian tag if this gecko is a Dalmatian.',
   colorTrait: 'Polygenic color descriptor, so no ratio can be calculated.',
@@ -74,6 +147,9 @@ const APP_TAGS = new Map(Object.entries({
   // D13: White Wall is the engine's Whiteout
   'white wall': { engine: ['Whiteout'] },
   'super white wall': { engine: ['Super Whiteout'] },
+  // Two-word spelling some breeders use for Whiteout
+  'white out': { engine: ['Whiteout'] },
+  'super white out': { engine: ['Super Whiteout'] },
   // D13: a bare Phantom tag means a visual Phantom
   'phantom': { engine: ['Visual Phantom'] },
   'visual phantom': { engine: ['Visual Phantom'] },
@@ -124,12 +200,12 @@ const APP_TAGS = new Map(Object.entries({
   'bright yellow base': { engine: ['Yellow Base'] },
 
   // Not used: pattern and marking descriptors
-  'flame': { reason: REASON.flame },
-  'chevron flame': { reason: REASON.flame },
-  'tiger': { reason: REASON.tiger },
-  'tiger striping': { reason: REASON.tiger },
-  'brindle': { reason: REASON.tiger },
-  'extreme brindle': { reason: REASON.tiger },
+  'flame': { reason: REASON.flame, look: 'Flame' },
+  'chevron flame': { reason: REASON.flame, look: 'Flame' },
+  'tiger': { reason: REASON.tiger, look: 'Tiger' },
+  'tiger striping': { reason: REASON.tiger, look: 'Tiger' },
+  'brindle': { reason: REASON.tiger, look: 'Tiger' },
+  'extreme brindle': { reason: REASON.tiger, look: 'Tiger' },
   'patternless': { reason: REASON.phantomLook },
   'bicolor': { reason: REASON.phantomLook },
   'quad stripe': { reason: REASON.pattern },
@@ -296,17 +372,27 @@ function mergeLocus(loci, locus, options) {
  *
  * @param {string[]} tags
  * @returns {{
- *   spec: { loci: Record<string, Array<{pair: string[], weight: number}>> },
+ *   spec: {
+ *     loci: Record<string, Array<{pair: string[], weight: number}>>,
+ *     lillyWhiteLookalike?: boolean,
+ *     polygenicLoci?: string[],
+ *   },
  *   used: Array<{ tag: string, chance: number }>,
  *   notUsed: Array<{ tag: string, reason: string }>,
  *   notes: string[],
+ *   polygenic: Array<{ tag: string, look: string }>,
  * }}
+ * `polygenic` lists the looks this gecko shows that are polygenic
+ * (see POLYGENIC_LOCI): they are also in notUsed, with the reason, and
+ * screens describe them as likely or possible instead of a percentage.
  */
 export function translateMorphTags(tags) {
   const loci = {};
   const used = [];
   const notUsed = [];
   const notes = [];
+  const polygenic = [];
+  const polygenicLoci = new Set();
   const seen = new Set();
 
   for (const raw of tags || []) {
@@ -323,6 +409,10 @@ export function translateMorphTags(tags) {
       if (!trait || !MENDELIAN.has(trait.dominance)) {
         const mapped = APP_TAGS.get(body);
         notUsed.push({ tag, reason: mapped?.reason || REASON.hetOfNonGene });
+        continue;
+      }
+      if (POLYGENIC_LOCI.has(trait.locus)) {
+        notUsed.push({ tag, reason: REASON.polygenicHet });
         continue;
       }
       const carrier = [trait.id, WILD_TYPE];
@@ -348,6 +438,10 @@ export function translateMorphTags(tags) {
     const mapped = APP_TAGS.get(body);
     if (mapped?.reason) {
       notUsed.push({ tag, reason: mapped.reason });
+      if (mapped.look) {
+        polygenic.push({ tag, look: mapped.look });
+        if (LOCUS_BY_LOOK_NAME.has(mapped.look)) polygenicLoci.add(LOCUS_BY_LOOK_NAME.get(mapped.look));
+      }
       continue;
     }
     if (mapped?.genotype) {
@@ -368,16 +462,53 @@ export function translateMorphTags(tags) {
       notUsed.push({ tag, reason: known ? displayReason(known) : REASON.unknown });
       continue;
     }
+    // Polygenic loci stay out of the Punnett math (see POLYGENIC_LOCI).
+    let geneCount = 0;
+    const looks = [];
     for (const result of parts) {
       for (const [locus, pair] of Object.entries(result.genotype || {})) {
+        if (POLYGENIC_LOCI.has(locus)) {
+          if (pair.some((a) => a !== WILD_TYPE)) {
+            looks.push(LOOK_NAME_BY_LOCUS.get(locus) || tag);
+            polygenicLoci.add(locus);
+          }
+          continue;
+        }
         mergeLocus(loci, locus, [{ pair: [...pair], weight: 1 }]);
+        geneCount += 1;
       }
+    }
+    for (const look of new Set(looks)) polygenic.push({ tag, look });
+    if (geneCount === 0) {
+      notUsed.push({ tag, reason: REASON.polygenicLook });
+      continue;
     }
     used.push({ tag, chance: 1 });
     if (mapped?.note) notes.push(mapped.note);
+    if (looks.length > 0) {
+      notes.push(`${tag}: the ${[...new Set(looks)].join(' and ')} part is polygenic, so it is not given a percentage.`);
+    }
   }
 
-  return { spec: { loci }, used, notUsed, notes };
+  const spec = { loci };
+  // A White Wall, Whiteout or high white gecko might really be a Lilly
+  // White (see lethalLookalike.js); predictWeighted warns on that.
+  const looksWhite = [...seen].some((t) => {
+    const { kind, body } = parseTag(t);
+    // "Het White Wall" counts too: White Wall shows with one copy, so a
+    // "het" tag still describes a white-looking gecko. A "Possible Het"
+    // tag does not describe a look, so it is left out.
+    return kind !== 'possible' && LILLY_WHITE_LOOKALIKE_TAGS.has(body);
+  });
+  if (looksWhite && !specCarriesLillyWhite(spec)) spec.lillyWhiteLookalike = true;
+  // The polygenic loci this gecko shows (HQ for a Harlequin, DAL for a
+  // Dalmatian). They are kept out of the odds, but predictWeighted still
+  // needs to know about them: the engine's Patternless combo means "visual
+  // Phantom that is NOT Harlequin and NOT Dalmatian", and with HQ missing
+  // from the spec it would call every Harlequin Phantom baby Patternless.
+  if (polygenicLoci.size > 0) spec.polygenicLoci = [...polygenicLoci].sort();
+
+  return { spec, used, notUsed, notes, polygenic };
 }
 
 // Engine review notes use em dashes; the app does not.

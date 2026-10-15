@@ -77,6 +77,7 @@ import {
 import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
 import { RETRYABLE_UPSTREAM_STATUS, requestShape, upstreamErrorCode, upstreamFailureResponse } from "../_shared/morph-upstream.ts";
 import { refundMorphIdCreditOnce } from "../_shared/morph-refund.ts";
+import { clientIp } from "../_shared/client-ip.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
@@ -132,18 +133,10 @@ async function hashIp(ip: string | null): Promise<string | null> {
     .join("");
 }
 
+// The shared helper explains which headers can be trusted. Local
+// invocations (curl from the same host) have neither and return null.
 function extractClientIp(req: Request): string | null {
-  // Supabase Edge Functions sit behind a Cloudflare-style edge; both
-  // headers are populated for genuine client requests. Local invocations
-  // (curl from the same host) skip these and return null.
-  const cf = req.headers.get("cf-connecting-ip");
-  if (cf) return cf.trim();
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) {
-    const first = xff.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  return null;
+  return clientIp(req.headers);
 }
 
 // Returns the morph_id_per_ip_daily cap from geck_data.runtime_config (or
@@ -705,7 +698,8 @@ Rules:
   Phantom and Cream-on-Cream are visual-expression suggestions, not proof of their
   underlying genotype.
 - Line-bred phenotypes, fired state and lighting make different morphs look alike.
-  Cappuccino, Sable and Highway share one gene (Luwak is Cappuccino plus Sable) and
+  Cappuccino, Sable and Highway are widely reported to be forms of one gene, though
+  that is not settled (Luwak is reported as Cappuccino plus Sable), and they
   overlap with line-bred dark or clean-backed animals; Lilly White overlaps with
   White Wall, Whiteout and line-bred high white. Only list sable, highway or luwak
   when the expression is strong and distinctive, and when a look-alike fits, say

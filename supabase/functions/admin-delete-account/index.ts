@@ -7,9 +7,14 @@
 // What it does, in order:
 //   1. Checks the caller is a signed-in admin (profiles.role = 'admin').
 //   2. Works out whose account it is: from the ticket, the profile id or
-//      the email in the body. It refuses the caller's own account, admin
-//      accounts, and members with a live Stripe subscription (cancel it in
-//      Stripe first, or the card keeps being charged with no account).
+//      the email in the body. A ticket counts only when the signed-in
+//      account it names filed it (support_messages.filed_by_email, which
+//      the database stamps from the session, migration
+//      20261015130000_comms_and_exposure). Anyone could otherwise file a
+//      deletion request in someone else's name. It refuses the caller's own
+//      account, admin accounts, and members with a live Stripe subscription
+//      (cancel it in Stripe first, or the card keeps being charged with no
+//      account).
 //   3. Calls public.admin_erase_account(email). That SQL function, in one
 //      transaction, deletes the member's own data and anonymises the rows
 //      other members depend on (claimed transfers, lineage parents, the
@@ -134,12 +139,30 @@ Deno.serve(async (req) => {
   if (typeof body.support_message_id === "string" && body.support_message_id) {
     const { data: ticket, error } = await admin
       .from("support_messages")
-      .select("id, user_email, subject")
+      .select("id, user_email, subject, filed_by_email")
       .eq("id", body.support_message_id)
       .maybeSingle();
+    if (error?.code === "42703") {
+      // filed_by_email does not exist yet: the migration is not applied.
+      return fail(
+        503,
+        "erasure_not_installed",
+        "The database check for deletion requests is not installed yet (migration 20261015130000_comms_and_exposure). Nothing was deleted.",
+      );
+    }
     if (error || !ticket) return fail(404, "ticket_not_found", "That support ticket no longer exists.");
     if (ticket.subject !== DELETION_SUBJECT) {
       return fail(400, "not_a_deletion_request", "Only an Account deletion request ticket can start an erasure.");
+    }
+    // Only a request filed by the signed-in account it names. A signed-out
+    // visitor, or another member, can type any email into a support form.
+    const filer = normEmail(ticket.filed_by_email);
+    if (!filer || filer !== normEmail(ticket.user_email)) {
+      return fail(
+        403,
+        "unverified_request",
+        "This deletion request was not sent from the signed-in account it names, so it cannot start an erasure. Nothing was deleted. Ask the member to sign in and use Settings, Delete account, or reply to confirm it is really them.",
+      );
     }
     candidates.push(normEmail(ticket.user_email));
   }
@@ -273,6 +296,7 @@ Deno.serve(async (req) => {
         resolved_date: new Date().toISOString(),
         user_email: tombstoneEmail(),
         created_by: null,
+        filed_by_email: null,
         body: "Account deletion request. The account and its personal data were erased; see the admin notes.",
         admin_notes: note,
       })

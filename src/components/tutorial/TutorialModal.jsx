@@ -316,8 +316,14 @@ export default function TutorialModal({ isOpen, onClose }) {
               }
             : pinnedStyle;
 
+    // The card is the dialog. data-state="open" lets the rule in index.css
+    // hide floating widgets during the tour; Escape is handled above.
     const card = (
         <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="App tour"
+            data-state="open"
             className="fixed z-[10000] rounded-2xl border border-emerald-500/30 bg-slate-900/95 backdrop-blur-md shadow-2xl p-5 text-slate-100"
             style={anchoredStyle}
         >

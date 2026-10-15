@@ -15,16 +15,16 @@ Screenshots: [activation-2026-10/](activation-2026-10/) (22 files, numbered in t
 7. **Guest demo: prices are visible.** Market in the demo was a sign-in wall. It now shows a labelled sample: every demo gecko priced (the demo collection is worth $3,211 to $7,563, 15 of 15 priced) and the middle asking price by morph (Sable, Axanthic, Lilly White, Cappuccino and others), from a snapshot of the real Geck Data trait table taken 5 October, plus a sign-up button. The same snapshot puts the value card on demo gecko records, so tour stop 2 (Nimbus) now shows "what he is worth" ([before](activation-2026-10/15-m-guest-market-before.jpg), [after](activation-2026-10/16-m-guest-market-after.jpg), [laptop](activation-2026-10/17-d-guest-market-after.jpg), [Nimbus](activation-2026-10/22-d-guest-tour-2-after.jpg)).
 8. **Guest demo: the tour card no longer covers the page.** On phones the tour is a one-line bar (stop, title, *Next*, a chevron for the full text, close), about 60 px tall instead of a third of the screen. Stop 3 no longer says "scroll down for the odds" while covering them. Floating notices (the tour or guest notice and feeding reminders) now share one stacked corner instead of overlapping, the sample feeding reminders wait until the tour is closed, and every page gets bottom padding equal to the stack's height so its last content can scroll clear ([stop 1 before](activation-2026-10/18-m-guest-tour-1-before.jpg), [after](activation-2026-10/19-m-guest-tour-1-after.jpg), [stop 3 before](activation-2026-10/20-m-guest-tour-3-before.jpg), [after](activation-2026-10/21-m-guest-tour-3-after.jpg)).
 
-## 2. The server change, written but not applied
+## 2. The server change (applied 8 October)
 
 Weigh-in reminder settings live in `profiles.extra_data.care_reminders` (an existing column only the member and admins can read or write), so the app works today with no database change: the switches save, and the dates on screen are right.
 
-What does need the server is **sending** the new weigh-in reminders. That is `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, **not applied**:
+What does need the server is **sending** the new weigh-in reminders. That is the migration written on 5 October as `20261005190000_personal_weighin_reminders.sql`. It was **applied to production on 8 October** and is recorded there as `20261008081343_personal_weighin_reminders` (the repo file `supabase/migrations/20261008081343_personal_weighin_reminders.sql` was renamed to match in PR 107). On 15 October the `personal-weighin-reminders-daily` job was active at 14:20 UTC. What it does:
 
 - `enqueue_personal_weighin_reminders()`, a daily job at 14:20 UTC (ten minutes after feeding reminders). One message per member per day naming the geckos that are due ("Time to weigh Mango..."), linking straight to that gecko's record when there is one. Each gecko is reminded once per due date; weighing it moves the date. The member switch and the usual push and email preferences apply.
 - The weekly 30-day nudge skips geckos the daily job covers and members who turned weigh-in reminders off, so nobody gets both.
 
-The selection logic was checked read-only against production with made-up settings (parsing, bad values ignored); 0 members have settings today, and no email is on two profiles. It contains `revoke` lines, so apply it in the SQL Editor rather than through the MCP tool. It is listed in `deploy-queue-2026-10-03.md`.
+The selection logic was checked read-only against production with made-up settings (parsing, bad values ignored); 0 members have settings today, and no email is on two profiles. It contains `revoke` lines, so it went in through the SQL Editor rather than the MCP tool. The run is recorded in `deploy-queue-2026-10-03.md`.
 
 ## 3. How it is measured
 
@@ -57,7 +57,7 @@ The proposed activation definition from the funnel diagnosis still applies: 3 or
 
 ## 6. Known limits and what to do next
 
-1. **Apply the migration** (section 2). Until then the weigh-in reminders exist only as switches; the reason to come back is not delivered. This is the single most important follow-up.
+1. **Apply the migration** (section 2). Done 8 October: the daily weigh-in job is live, so the reminders are now sent, not just saved as switches. What remains is checking on a phone that one arrives.
 2. **A day-1 email for members with no gecko** (funnel item 2, needs Tennyson's copy approval). The flow fixes the first session; a member who leaves before step 1 still hears nothing. The weigh-in job covers those who added one.
 3. **Other add paths do not set a weigh-in reminder by default.** The full form, CSV import, hatching and Morph ID with an existing collection add geckos without one (any gecko can be switched on from its record). Once the migration has run and the first numbers look right, consider defaulting every new gecko, with the same per-gecko and account switches.
 4. **The demo draft lives in one browser.** Signing up on a phone and confirming the email on a laptop leaves the gecko on the phone; it is saved the next time My Geckos opens there. It expires after two weeks.

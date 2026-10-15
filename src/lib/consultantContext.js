@@ -18,6 +18,7 @@ import { predictWeighted } from '@/lib/genetics/predictWeighted';
 import { parsePairing } from '@/lib/genetics/pairingParser';
 import { stateToSpec, stateHasSelection, stateToChips } from '@/lib/genetics/calculatorCatalog';
 import { translateMorphTags } from '@/lib/genetics/tagTranslation';
+import { polygenicLookChances } from '@/lib/genetics/polygenic';
 import { displayText } from '@/lib/genetics';
 import { valueFromTraitTable } from '@/lib/traitValuation';
 
@@ -84,12 +85,29 @@ function orderPair(a, b) {
 
 function describeGecko(g) {
   const tags = (g.morph_tags || []).filter(Boolean);
-  const { notUsed } = translateMorphTags(tags);
+  const { notUsed, polygenic } = translateMorphTags(tags);
   const lines = [`${g.name} (${sexWord(g)}): ${tags.length ? tags.join(', ') : 'no morph tags'}`];
-  if (notUsed.length) {
-    lines.push(`  Tags the calculator cannot use: ${notUsed.map((n) => n.tag).join(', ')}`);
+  // Polygenic looks are listed on their own so the consultant never turns
+  // them into a percentage.
+  const polygenicTags = new Set(polygenic.map((p) => p.tag));
+  const cannotUse = notUsed.filter((n) => !polygenicTags.has(n.tag));
+  if (polygenicTags.size) {
+    lines.push(`  Polygenic looks (no percentage can be given): ${[...polygenicTags].join(', ')}`);
+  }
+  if (cannotUse.length) {
+    lines.push(`  Tags the calculator cannot use: ${cannotUse.map((n) => n.tag).join(', ')}`);
   }
   return lines.join('\n');
+}
+
+// "Harlequin: likely (both parents show it)..." lines for a collection pair.
+function lookLines(sire, dam) {
+  const chances = polygenicLookChances(
+    translateMorphTags(sire.morph_tags || []).polygenic,
+    translateMorphTags(dam.morph_tags || []).polygenic,
+  );
+  if (chances.length === 0) return [];
+  return ['Polygenic looks in the babies (describe as likely or possible, never as a percentage):', ...chances.map((c) => `- ${c.text}`)];
 }
 
 function outcomeLines(prediction, priceIndex) {
@@ -129,8 +147,9 @@ function collectionPairingBlock(sire, dam, priceIndex) {
     'Pairing from the member\'s collection:',
     describeGecko(sire),
     describeGecko(dam),
-    'Offspring odds per egg:',
+    'Offspring odds per egg (single-gene traits only):',
     ...outcomeLines(prediction, priceIndex),
+    ...lookLines(sire, dam),
   ].join('\n');
 }
 

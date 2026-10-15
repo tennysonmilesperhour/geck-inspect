@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { shouldCloseOnEscape } from "@/hooks/useModalOverlay";
 
 // Create a context to hold sidebar state
 const SidebarContext = React.createContext();
@@ -61,6 +62,19 @@ export function useSidebar() {
  */
 export function Sidebar({ children, className }) {
     const { isMobileOpen, toggleSidebar } = useSidebar();
+    const drawerRef = React.useRef(null);
+
+    // Escape closes the open phone drawer, like the app's other dialogs.
+    React.useEffect(() => {
+        if (!isMobileOpen) return undefined;
+        const onKeyDown = (event) => {
+            if (!shouldCloseOnEscape(event, drawerRef.current)) return;
+            event.preventDefault();
+            toggleSidebar();
+        };
+        document.addEventListener('keydown', onKeyDown);
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, [isMobileOpen, toggleSidebar]);
 
     return (
         <>
@@ -70,10 +84,17 @@ export function Sidebar({ children, className }) {
             </aside>
 
             {/* Mobile Sidebar (overlay) */}
+            {/* The drawer stays mounted off-screen when closed. It is only a
+                modal dialog while open; when closed, inert and aria-hidden
+                keep its links out of the Tab order and away from screen
+                readers (they used to be 33 invisible Tab stops). */}
             <div
-                role="dialog"
-                aria-modal="true"
+                ref={drawerRef}
+                role={isMobileOpen ? 'dialog' : undefined}
+                aria-modal={isMobileOpen ? 'true' : undefined}
                 aria-label="Menu"
+                aria-hidden={isMobileOpen ? undefined : 'true'}
+                inert={isMobileOpen ? undefined : ''}
                 data-state={isMobileOpen ? 'open' : 'closed'}
                 className={`fixed inset-0 z-50 flex md:hidden transition-transform duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
                 style={{ overscrollBehavior: 'none', touchAction: isMobileOpen ? 'pan-y' : 'none' }}

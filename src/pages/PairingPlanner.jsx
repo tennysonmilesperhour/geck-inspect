@@ -10,6 +10,7 @@ import { seedFrom } from '@/lib/seasonProjection';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import SeasonProjectionPanel from '@/components/breeding/SeasonProjectionPanel';
 import { translateMorphTags } from '@/lib/genetics/tagTranslation';
+import { buildMorphTargetOptions, scoreMorphTarget } from '@/lib/genetics/plannerTargets';
 import useFemaleReadiness from '@/hooks/useFemaleReadiness';
 import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
 import {
@@ -17,7 +18,6 @@ import {
   outcomeCombos,
   outcomeTraits,
   TRAITS,
-  COMBO_MORPHS,
 } from '@/lib/genetics';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -97,28 +97,9 @@ const STATIC_COMBO_WEIGHTS = {
   lucy: 4,
 };
 
-// Build the goal dropdown: engine trait names first, then known combo
-// morphs. All crested-gecko-specific, all sourced from the engine so the
-// list can never drift from the genetics facts.
-function buildMorphOptions() {
-  const traits = TRAITS.map((t) => ({ value: `trait:${t.name}`, label: t.name }));
-  const combos = COMBO_MORPHS.map((c) => ({ value: `combo:${c.name}`, label: `${c.name} (combo)` }));
-  return [...traits, ...combos].sort((a, b) => a.label.localeCompare(b.label));
-}
-
-// Does an offspring phenotype satisfy the targeted morph? We match the
-// engine's phenotype_description string for traits and the lowercase
-// combo id list for combo morphs.
-function phenotypeHitsTarget(pheno, target) {
-  if (!target) return false;
-  const [kind, name] = target.split(/:(.+)/);
-  if (kind === 'combo') {
-    const wanted = name.toLowerCase();
-    return (pheno.matching_combo_morphs || []).some((c) => c.toLowerCase() === wanted);
-  }
-  // trait: match against the human-readable description, case-insensitive.
-  return (pheno.phenotype_description || '').toLowerCase().includes(name.toLowerCase());
-}
+// The goal dropdown, the per-egg odds and the polygenic "likely /
+// possible" answers live in lib/genetics/plannerTargets.js so they can be
+// tested: polygenic looks such as Harlequin are never given a percentage.
 
 // A pairing is "blocked by default" when it carries a critical (lethal or
 // documented-harm) warning. Lilly White x Lilly White is the canonical
@@ -210,16 +191,11 @@ export default function PairingPlannerPage() {
   // Score one offspring distribution against the active goal. Returns a
   // number where higher is better (0 for "no contribution").
   const scoreDistribution = useMemo(() => {
-    return (phenotypes) => {
+    return (phenotypes, sireLooks, damLooks) => {
       if (goal === 'morph') {
-        // Probability of producing at least the targeted morph in a
-        // single egg, summed over every matching phenotype. Expressed as
-        // a percentage so the card label reads naturally.
-        let p = 0;
-        for (const ph of phenotypes) {
-          if (phenotypeHitsTarget(ph, targetMorph)) p += ph.probability;
-        }
-        return Math.round(p * 1000) / 10;
+        // Per-egg chance of the targeted single-gene morph, or "likely /
+        // possible" for a polygenic look (see plannerTargets.js).
+        return scoreMorphTarget(targetMorph, phenotypes, sireLooks, damLooks);
       }
       if (goal === 'value') {
         // Expected per-egg value: sum over outcomes of probability times
@@ -286,13 +262,24 @@ export default function PairingPlannerPage() {
         const warnings = prediction.warnings || [];
         const blocked = isBlocked(warnings);
 
-        const score = scoreDistribution(phenotypes);
+        const sireTags = translateMorphTags(sire.morph_tags);
+        const damTags = translateMorphTags(dam.morph_tags);
+        const scored = scoreDistribution(phenotypes, sireTags.polygenic, damTags.polygenic);
+        // The morph goal returns { score, label }; the other goals a number.
+        const score = typeof scored === 'number' ? scored : scored.score;
+        const morphLabel = typeof scored === 'number' ? null : scored.label;
 
         const top = [...phenotypes]
           .sort((a, b) => b.probability - a.probability)
           .slice(0, 3)
           .map((p) => ({
-            label: [outcomeTraits(p), ...outcomeCombos(p).map((name) => `(${name})`)].join(' '),
+            // "Wild-type" reads as "plain normal babies" to a breeder, but
+            // a Harlequin x Harlequin egg in this bucket can still be a
+            // Harlequin: the bucket only means no single-gene trait.
+            label: [
+              outcomeTraits(p) === 'Wild-type' ? 'No single-gene traits' : outcomeTraits(p),
+              ...outcomeCombos(p).map((name) => `(${name})`),
+            ].join(' '),
             percent: Math.round(p.probability * 1000) / 10,
             risk: p.health_risk,
           }));
@@ -301,14 +288,12 @@ export default function PairingPlannerPage() {
           sire,
           dam,
           score,
+          morphLabel,
           top,
           phenotypes,
           warnings,
           blocked,
-          unusedTags: [
-            ...translateMorphTags(sire.morph_tags).notUsed,
-            ...translateMorphTags(dam.morph_tags).notUsed,
-          ].map((t) => t.tag),
+          unusedTags: [...sireTags.notUsed, ...damTags.notUsed].map((t) => t.tag),
         });
       }
     }
@@ -415,7 +400,7 @@ export default function PairingPlannerPage() {
                       <SelectValue placeholder="Select a trait or combo..." />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-slate-600 text-slate-200 max-h-72">
-                      {buildMorphOptions().map((opt) => (
+                      {buildMorphTargetOptions().map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </SelectItem>
@@ -532,10 +517,10 @@ function Thumb({ gecko, ring }) {
 function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceIndex, sellModel }) {
   const [showSeason, setShowSeason] = useState(false);
   const damNotReady = readiness && (readiness.level === 'not_yet' || readiness.level === 'nearly');
-  const { sire, dam, top, warnings, blocked, score, unusedTags = [] } = row;
+  const { sire, dam, top, warnings, blocked, score, morphLabel, unusedTags = [] } = row;
 
   let scoreLabel = null;
-  if (goal === 'morph') scoreLabel = `${score}% chance per egg`;
+  if (goal === 'morph') scoreLabel = morphLabel;
   else if (goal === 'value')
     scoreLabel = usingStaticWeights ? `Value score ${score}` : `~$${Math.round(score)} expected per egg`;
 

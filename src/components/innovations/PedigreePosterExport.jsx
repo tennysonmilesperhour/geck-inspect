@@ -3,7 +3,9 @@
  * high-res PNG with a "Made with Geck Inspect" watermark.
  *
  * Uses html2canvas (already a dep) to render a hidden pedigree
- * container to a canvas, then triggers a download.
+ * container to a canvas, then triggers a download. html2canvas is
+ * loaded on demand when the button is pressed, so the Pedigree page
+ * does not download about 200 kB it only needs for an export.
  *
  * Usage:
  *   <PedigreePosterExport
@@ -12,7 +14,6 @@
  *   />
  */
 import { useState } from 'react';
-import html2canvas from 'html2canvas';
 import { Button } from '@/components/ui/button';
 import { Download, Image as ImageIcon, Loader2 } from 'lucide-react';
 
@@ -25,6 +26,7 @@ async function captureAndDownload(element, geckoName, setStatus) {
   setStatus('rendering');
 
   try {
+    const { default: html2canvas } = await import('html2canvas');
     const canvas = await html2canvas(element, {
       backgroundColor: '#020617', // slate-950
       scale: 2, // 2x for retina quality

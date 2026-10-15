@@ -78,8 +78,11 @@ describe('translateMorphTags: the tags step 24 found ignored', () => {
     expect(options[0]).toEqual({ pair: ['axanthic', 'wild_type'], weight: 0.66 });
     expect(options[1].weight).toBeCloseTo(0.34, 10);
     expect(tagsToSpec(['100% Het Axanthic']).loci.AX).toEqual([{ pair: ['axanthic', 'wild_type'], weight: 1 }]);
-    // On a plain tag a percentage is coverage, not odds.
-    expect(tagsToSpec(['100% Pinstripe']).loci.PIN).toEqual([{ pair: ['pinstripe', 'wild_type'], weight: 1 }]);
+    // On a plain tag a percentage is coverage, not odds. Pinstripe is
+    // polygenic, so it is listed as a look and kept out of the odds.
+    const pin = translateMorphTags(['100% Pinstripe']);
+    expect(pin.spec.loci.PIN).toBeUndefined();
+    expect(pin.polygenic).toEqual([{ tag: '100% Pinstripe', look: 'Pinstripe' }]);
   });
 
   it('possible het x visual gives the marginal per-egg odds', () => {

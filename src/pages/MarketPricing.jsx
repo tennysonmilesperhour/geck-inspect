@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { DollarSign, Plus, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { MORPH_PRICE_ENTRY_PUBLIC_COLUMNS } from '@/lib/publicColumns';
 import { useAuth } from '@/lib/AuthContext';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { createPageUrl } from '@/utils';
@@ -77,7 +78,11 @@ export default function MarketPricing() {
   }, [signedIn]);
 
   const loadSales = async () => {
-    const { data } = await supabase.from('morph_price_entries').select('*').order('sale_date', { ascending: false });
+    // Named columns: signed-out visitors cannot read created_by (the
+    // member's email), and the page never shows who logged a sale.
+    const { data } = await supabase.from('morph_price_entries')
+      .select(MORPH_PRICE_ENTRY_PUBLIC_COLUMNS.join(','))
+      .order('sale_date', { ascending: false });
     setSales(data || []);
   };
   useEffect(() => { loadSales(); }, []);

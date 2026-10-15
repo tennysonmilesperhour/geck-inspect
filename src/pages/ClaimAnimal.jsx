@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
 import { ArrowRightLeft, ShieldCheck, Clock, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { animalFromPreview } from '@/lib/transfers';
+import { animalFromPreview, claimErrorKind } from '@/lib/transfers';
 import { recordGeckoAdded } from '@/lib/activation';
 
 // The page a buyer opens from a transfer link. It uses the app's own
@@ -96,13 +96,7 @@ export default function ClaimAnimal() {
 
       if (rpcError) {
         console.error('Claim failed:', rpcError);
-        const msg = (rpcError.message || '').toLowerCase();
-        if (msg.includes('already claimed')) setError('already_claimed');
-        else if (msg.includes('cancelled')) setError('cancelled');
-        else if (msg.includes('expired')) setError('expired');
-        else if (msg.includes('not found')) setError('not_found');
-        else if (msg.includes('intended recipient')) setError('wrong_account');
-        else setError('claim_failed');
+        setError(claimErrorKind(rpcError));
         return;
       }
 
@@ -168,6 +162,8 @@ export default function ClaimAnimal() {
           ? `This transfer was sent to ${transfer.to_email_masked}. Sign in with that email address to claim it.`
           : 'This transfer was sent to a different email address. Sign in with that address to claim it.',
       },
+      seller_changed: { title: 'Transfer no longer valid', msg: 'The seller no longer owns this animal, so this transfer cannot be completed. Ask the seller to send a new one.' },
+      gecko_limit: { title: 'Your plan is full', msg: 'Your plan has no room for another active gecko. Archive one you no longer keep, or upgrade your plan, then open this link again.' },
       claim_failed: { title: 'Claim failed', msg: 'Something went wrong. Please try again or contact the seller.' },
       error: { title: 'Something went wrong', msg: 'Please try again later.' },
     };

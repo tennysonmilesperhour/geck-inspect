@@ -62,6 +62,7 @@ import FireStatePair from '@/components/shared/FireStatePair';
 import { hasFireStatePhotos } from '@/lib/fireStatePhotos';
 import MessageUserButton from '../components/ui/MessageUserButton';
 import RecommendedKitForGecko from '../components/store/RecommendedKitForGecko';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 export default function GeckoDetail() {
     const [gecko, setGecko] = useState(null);
@@ -74,6 +75,9 @@ export default function GeckoDetail() {
     const [geckoEvents, setGeckoEvents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [lightboxIndex, setLightboxIndex] = useState(null);
+    // The photo lightbox: dialog role, Escape to close, and the data-state
+    // the floating-widget hide rule needs.
+    const lightbox = useModalOverlay(() => setLightboxIndex(null), lightboxIndex !== null);
     const navigate = useNavigate();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -298,14 +302,15 @@ export default function GeckoDetail() {
 
                         {/* Lightbox */}
                         {lightboxIndex !== null && gecko.image_urls?.length > 0 && (
-                            <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setLightboxIndex(null)}>
-                                <button className="touch-hit absolute top-4 right-4 text-white hover:text-slate-300 z-10" onClick={() => setLightboxIndex(null)}>
+                            <div {...lightbox} aria-label={`${gecko.name || 'Gecko'} photos`} className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setLightboxIndex(null)}>
+                                <button className="touch-hit absolute top-4 right-4 text-white hover:text-slate-300 z-10" onClick={() => setLightboxIndex(null)} aria-label="Close">
                                     <X className="w-8 h-8" />
                                 </button>
                                 <button
                                     className="touch-hit absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
                                     disabled={lightboxIndex === 0}
                                     onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => Math.max(0, prev - 1)); }}
+                                    aria-label="Previous photo"
                                 >
                                     <ChevronLeft className="w-6 h-6" />
                                 </button>
@@ -320,6 +325,7 @@ export default function GeckoDetail() {
                                     className="touch-hit absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
                                     disabled={lightboxIndex === gecko.image_urls.length - 1}
                                     onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => Math.min(gecko.image_urls.length - 1, i + 1)); }}
+                                    aria-label="Next photo"
                                 >
                                     <ChevronRight className="w-6 h-6" />
                                 </button>
@@ -349,9 +355,11 @@ export default function GeckoDetail() {
                                             )}
                                         </div>
                                     </Link>
+                                    {/* A signed-in member reads the owner's address on
+                                        the gecko row; profiles no longer carry it. */}
                                     {currentUser && !isOwner && (
                                         <MessageUserButton
-                                            recipientEmail={owner.email}
+                                            recipientEmail={owner.email || gecko.created_by}
                                             recipientName={owner.full_name}
                                             variant="outline"
                                             size="sm"

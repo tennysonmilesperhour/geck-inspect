@@ -73,6 +73,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     // Drives the Collection picker. Empty / single-entry → picker
     // hides because there's nothing meaningful to choose between.
     const [writableCollections, setWritableCollections] = useState([]);
+    // A new gecko is the member's own; an existing one only when they
+    // created it.
+    const isOwnGecko = !gecko?.id
+        || String(gecko.created_by || '').toLowerCase() === String(currentUser?.email || '').toLowerCase();
     // sire/dam suggestion visibility + refs now live inside ParentAutocomplete
 
     useEffect(() => {
@@ -976,8 +980,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     {/* Collection picker, only renders when the user has more
                         than one writable collection. Solo-collection users
                         don't need a chooser; their default lands every gecko
-                        in the right place via the trigger. */}
-                    {writableCollections.length > 1 && (
+                        in the right place via the trigger. Only the gecko's
+                        owner may move it (the database refuses anyone else),
+                        so a collection editor never sees the picker on
+                        someone else's gecko. */}
+                    {writableCollections.length > 1 && isOwnGecko && (
                         <div>
                             <Label htmlFor="collection_id">Collection</Label>
                             <Select

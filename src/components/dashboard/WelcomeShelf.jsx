@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseClient';
 import { Sparkles, UserPlus, UserCheck, Eye } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import { UserFollow } from '@/entities/all';
-import { notifyNewFollower } from '@/components/notifications/NotificationService';
+import { followedProfileIds, setFollow } from '@/lib/memberActions';
 import { useToast } from '@/components/ui/use-toast';
 
 /**
@@ -20,9 +19,8 @@ import { useToast } from '@/components/ui/use-toast';
  */
 export default function WelcomeShelf({ currentUser }) {
     const [keepers, setKeepers] = useState(null);
-    const [followByEmail, setFollowByEmail] = useState({});
-    const [emailById, setEmailById] = useState({});
-    const [busyEmail, setBusyEmail] = useState({});
+    const [followedIds, setFollowedIds] = useState(() => new Set());
+    const [busyId, setBusyId] = useState({});
     const { toast } = useToast();
 
     useEffect(() => {
@@ -34,27 +32,14 @@ export default function WelcomeShelf({ currentUser }) {
         return () => { cancelled = true; };
     }, []);
 
-    // welcome_shelf() never returns email addresses. Follows are still
-    // stored by email, so a signed-in member's browser looks up the
-    // address of each keeper on the shelf by profile id.
+    // welcome_shelf() never returns email addresses, and neither does any
+    // other read a member can make (15 Oct 2026). Follows go by profile id.
     useEffect(() => {
         if (!currentUser?.email || !keepers || keepers.length === 0) return;
         let cancelled = false;
-        (async () => {
-            const ids = keepers.map((k) => k.id).filter(Boolean);
-            const [myFollows, { data: rows }] = await Promise.all([
-                UserFollow.filter({ follower_email: currentUser.email }).catch(() => []),
-                supabase.rpc('read_profiles').select('id, email').in('id', ids)
-                    .then((r) => r, () => ({ data: [] })),
-            ]);
-            if (cancelled) return;
-            const emails = {};
-            for (const r of rows || []) if (r.email) emails[r.id] = r.email;
-            setEmailById(emails);
-            const idx = {};
-            for (const f of myFollows || []) idx[f.following_email] = f;
-            setFollowByEmail(idx);
-        })();
+        followedProfileIds(keepers.map((k) => k.id))
+            .then((ids) => { if (!cancelled) setFollowedIds(ids); })
+            .catch(() => {});
         return () => { cancelled = true; };
     }, [currentUser?.email, keepers]);
 
@@ -66,34 +51,17 @@ export default function WelcomeShelf({ currentUser }) {
             });
             return;
         }
-        const keeperEmail = emailById[keeper.id];
-        if (!keeperEmail || busyEmail[keeperEmail]) return;
-        setBusyEmail((b) => ({ ...b, [keeperEmail]: true }));
+        const id = String(keeper.id);
+        if (busyId[id]) return;
+        setBusyId((b) => ({ ...b, [id]: true }));
         try {
-            const existing = followByEmail[keeperEmail];
-            if (existing) {
-                await UserFollow.delete(existing.id);
-                setFollowByEmail((f) => {
-                    const next = { ...f };
-                    delete next[keeperEmail];
-                    return next;
-                });
-            } else {
-                const newFollow = await UserFollow.create({
-                    follower_email: currentUser.email,
-                    following_email: keeperEmail,
-                });
-                setFollowByEmail((f) => ({ ...f, [keeperEmail]: newFollow }));
-                try {
-                    await notifyNewFollower(
-                        keeperEmail,
-                        currentUser.email,
-                        currentUser.full_name,
-                    );
-                } catch (notifyErr) {
-                    console.error('Follower notification failed:', notifyErr);
-                }
-            }
+            // follow_profile() also notifies the keeper, from the database.
+            const following = await setFollow(id, !followedIds.has(id));
+            setFollowedIds((prev) => {
+                const next = new Set(prev);
+                if (following) next.add(id); else next.delete(id);
+                return next;
+            });
         } catch (err) {
             console.error('Follow toggle failed:', err);
             toast({
@@ -102,7 +70,7 @@ export default function WelcomeShelf({ currentUser }) {
                 variant: 'destructive',
             });
         } finally {
-            setBusyEmail((b) => ({ ...b, [keeperEmail]: false }));
+            setBusyId((b) => ({ ...b, [id]: false }));
         }
     };
 
@@ -122,11 +90,9 @@ export default function WelcomeShelf({ currentUser }) {
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
                     {keepers.map((k) => {
-                        const kEmail = emailById[k.id];
-                        const isMe = (Boolean(currentUser?.id) && k.id === String(currentUser.id))
-                            || (Boolean(kEmail) && kEmail === currentUser?.email);
-                        const isFollowing = Boolean(kEmail && followByEmail[kEmail]);
-                        const isBusy = Boolean(kEmail && busyEmail[kEmail]);
+                        const isMe = Boolean(currentUser?.id) && String(k.id) === String(currentUser.id);
+                        const isFollowing = followedIds.has(String(k.id));
+                        const isBusy = Boolean(busyId[String(k.id)]);
                         return (
                             <div
                                 key={k.id}

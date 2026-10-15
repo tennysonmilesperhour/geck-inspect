@@ -9,13 +9,29 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { REPORT_CATEGORIES, REPORT_TARGETS, submitReport } from '@/lib/moderation';
+import { blockProfile } from '@/lib/memberActions';
 
-/** The author's email for blocking, looked up by profile id when the row only has that. */
-async function resolveAuthorEmail(authorEmail, authorProfileId) {
-  if (authorEmail) return authorEmail;
-  if (!authorProfileId) return null;
-  const { data } = await supabase.rpc('read_profiles').select('email').eq('id', authorProfileId).maybeSingle();
-  return data?.email || null;
+/**
+ * Block the author. With their email (rows a member can read carry it) the
+ * block is written directly. With only a profile id, block_profile() looks
+ * the address up on the server, because members no longer receive other
+ * members' emails. Resolves with an error object, or null.
+ */
+async function blockAuthor(user, authorEmail, authorProfileId) {
+  if (authorEmail) {
+    const { error } = await supabase.from('user_blocks').upsert(
+      { blocker_email: user.email, blocked_email: authorEmail },
+      { onConflict: 'blocker_email,blocked_email', ignoreDuplicates: true },
+    );
+    return error || null;
+  }
+  if (!authorProfileId) return { message: 'We could not find this member to block.' };
+  try {
+    await blockProfile(authorProfileId);
+    return null;
+  } catch (error) {
+    return error;
+  }
 }
 
 /**
@@ -63,10 +79,7 @@ export default function ReportContent({
         targetType: type, targetId: id, category, reason, excerpt, page: window.location.pathname,
       });
       if (block) {
-        const email = await resolveAuthorEmail(authorEmail, authorProfileId);
-        const { error } = email
-          ? await supabase.from('user_blocks').upsert({ blocker_email: user.email, blocked_email: email }, { onConflict: 'blocker_email,blocked_email', ignoreDuplicates: true })
-          : { error: { message: 'We could not find this member to block.' } };
+        const error = await blockAuthor(user, authorEmail, authorProfileId);
         if (error) {
           toast({ title: 'Report saved; blocking failed', description: error.message, variant: 'destructive' });
           return;

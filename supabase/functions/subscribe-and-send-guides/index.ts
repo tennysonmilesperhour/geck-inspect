@@ -5,7 +5,9 @@
 //   2. Allows one email per address per day and a few per network per
 //      hour, counted in `guide_email_sends`, so a script cannot use the
 //      form to send mail to strangers.
-//   3. Upserts a row in `newsletter_subscribers` (idempotent on email).
+//   3. Adds a new address to `newsletter_subscribers`. An address already
+//      there keeps its consent and any unsubscribe, and an unsubscribed
+//      address is not emailed.
 //   4. Sends an email via Resend with download links for the Care
 //      Guide and Genetics Guide PDFs (hosted as static assets on the
 //      site at /downloads/<filename>.pdf).
@@ -21,6 +23,7 @@
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { clientIp } from "../_shared/client-ip.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Geck Inspect <alerts@geckinspect.com>";
@@ -52,8 +55,7 @@ const LIMIT_PER_NETWORK_PER_HOUR = 10;
 // A keyed hash of the caller's IP, so repeat senders can be counted
 // without storing the address itself.
 async function networkKey(req: Request): Promise<string | null> {
-  const raw = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
-    (req.headers.get("x-real-ip") || "").trim();
+  const raw = clientIp(req.headers);
   if (!raw || !SERVICE_ROLE_KEY) return null;
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -182,24 +184,41 @@ serve(async (req) => {
     return json({ error: "Could not send the guides right now." }, 500);
   }
 
-  // Idempotent upsert. Re-subscribing is fine, just refreshes
-  // updated_at and clears any unsubscribed_at flag.
-  const { error: upsertErr } = await supabase
+  // Anyone can type any address into this form, so it must never change
+  // the choice someone already made. A new address is added. An address
+  // already on the list is left exactly as it is: in particular an
+  // unsubscribe is never cleared (this used to set consent back to true
+  // and wipe unsubscribed_at for whatever email was typed).
+  const { data: existing, error: lookupErr } = await supabase
     .from("newsletter_subscribers")
-    .upsert(
-      {
-        email,
-        source,
-        consent_marketing: true,
-        unsubscribed_at: null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "email" }
-    );
-
-  if (upsertErr) {
-    console.warn("subscribe-and-send-guides: upsert failed", upsertErr);
+    .select("id, unsubscribed_at")
+    .eq("email", email)
+    .maybeSingle();
+  if (lookupErr) {
+    console.warn("subscribe-and-send-guides: subscriber lookup failed", lookupErr);
     return json({ error: "Could not record subscription." }, 500);
+  }
+  if (!existing) {
+    // ignoreDuplicates: a second request racing this one leaves the first
+    // row alone instead of overwriting it.
+    const { error: insertErr } = await supabase
+      .from("newsletter_subscribers")
+      .upsert(
+        { email, source, consent_marketing: true, updated_at: new Date().toISOString() },
+        { onConflict: "email", ignoreDuplicates: true },
+      );
+    if (insertErr) {
+      console.warn("subscribe-and-send-guides: insert failed", insertErr);
+      return json({ error: "Could not record subscription." }, 500);
+    }
+  }
+
+  // Someone who unsubscribed gets no mail from this form. The page shows
+  // the download links after any successful submit, so a person asking
+  // for the guides still gets them. The reply does not say why, so the
+  // form cannot be used to learn who has unsubscribed.
+  if (existing?.unsubscribed_at) {
+    return json({ ok: true, delivered: 0 });
   }
 
   if (!RESEND_API_KEY) {

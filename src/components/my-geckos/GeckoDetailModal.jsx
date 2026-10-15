@@ -27,6 +27,7 @@ import FireStatePair from '@/components/shared/FireStatePair';
 import { FIRE_SLOTS, fireStatePhotos } from '@/lib/fireStatePhotos';
 import CollectionActivity from '@/components/settings/CollectionActivity';
 import { isGuestMode } from '@/lib/guestMode';
+import { canDeleteGecko } from '@/lib/geckoAccess';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -40,6 +41,7 @@ import { generatePassportCode } from '@/lib/passportUtils';
 import { createPageUrl } from '@/utils';
 import { PRIMARY_MORPHS } from '@/components/morph-id/morphTaxonomy';
 import TransferDialog from '@/components/transfers/TransferDialog';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 // The species ("Crested Gecko") is NOT a morph, and genetic traits
 // (Lilly White, Axanthic, ...) are not primary morphs. When syncing a
@@ -62,7 +64,7 @@ function resolvePrimaryMorphId(gecko) {
   return null;
 }
 
-// `canEdit` mirrors the geckos UPDATE/DELETE RLS policy on the client
+// `canEdit` mirrors the geckos UPDATE RLS policy on the client
 //, it's true for the gecko's original creator and for any accepted
 // owner/editor member of the gecko's collection. Defaults to true for
 // backwards compatibility with call sites that haven't been migrated
@@ -71,6 +73,9 @@ function resolvePrimaryMorphId(gecko) {
 // (MyGeckos as of Phase B) should pass an explicit value.
 export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, onMarkSold, onDelete, allGeckos = [], currentUser = null, canEdit = true }) {
   const navigate = useNavigate();
+  // Dialog role, Escape to close, and the hook the floating-widget hide
+  // rule needs. Called before the early return below, as hooks must be.
+  const overlay = useModalOverlay(onClose);
 
   const handleLineageClick = () => {
     const url = `${createPageUrl('Lineage')}?geckoId=${gecko.id}`;
@@ -276,9 +281,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
           };
 
           if (type === 'ownership') {
-              generateOwnershipCertificatePDF(gecko, currentUser, { breedingHistory: breedingHistoryProps });
+              await generateOwnershipCertificatePDF(gecko, currentUser, { breedingHistory: breedingHistoryProps });
           } else {
-              generateLineageCertificatePDF({
+              await generateLineageCertificatePDF({
                   gecko,
                   sire,
                   dam,
@@ -339,7 +344,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               weights: weightRecords, feedings, feedingGroup,
               seller: currentUser, passportUrl,
           });
-          downloadPdf(renderBuyerPacketPDF(packet, { photo, qr, firePhotos }), packetFilename(gecko));
+          downloadPdf(await renderBuyerPacketPDF(packet, { photo, qr, firePhotos }), packetFilename(gecko));
           toast({
               title: 'Buyer packet downloaded',
               description: passportUrl
@@ -368,7 +373,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   if (!gecko) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div {...overlay} aria-label={gecko.name || 'Gecko details'} className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <TransferDialog
         open={showTransfer}
         onOpenChange={setShowTransfer}
@@ -1145,14 +1150,18 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     Generate Passport
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={() => setShowTransfer(true)}
-                  className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
-                >
-                  <ArrowRightLeft className="w-4 h-4 mr-2" />
-                  Transfer Ownership
-                </Button>
+                {/* Only the gecko's owner can transfer it; the database
+                    refuses a transfer started by a collaborator. */}
+                {isOwner && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTransfer(true)}
+                    className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
+                  >
+                    <ArrowRightLeft className="w-4 h-4 mr-2" />
+                    Transfer Ownership
+                  </Button>
+                )}
               </div>
 
               <Button
@@ -1210,7 +1219,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     )}
                   </Button>
 
-                  {gecko.archived && onDelete && (
+                  {/* Only the owner (or an admin) may delete: collection
+                      editors can edit a shared gecko but not remove it. */}
+                  {gecko.archived && onDelete && canDeleteGecko(gecko, currentUser) && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
