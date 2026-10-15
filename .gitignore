@@ -76,3 +76,6 @@ public/CareGuide/
 public/llms/
 public/data/*
 !public/data/price-index.json
+
+# Claude Code agent worktrees (created inside the repo by workflows)
+.claude/worktrees/
