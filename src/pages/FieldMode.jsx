@@ -41,7 +41,7 @@ import {
   careLogErrorText,
 } from '@/lib/husbandryLog';
 import { createPageUrl } from '@/utils';
-import { queueFieldLog, isDeviceOffline, isSyncing, undoQueuedLog, useOfflineQueue } from '@/lib/offlineSync';
+import { queueFieldLog, isDeviceOffline, isSyncing, undoQueuedLog, UNDO_SYNCING_MESSAGE, useOfflineQueue } from '@/lib/offlineSync';
 import { enqueue, removeQueued, updateQueued, isNetworkError } from '@/lib/offlineQueue';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { createCareRecordOnce, newClientRequestId } from '@/lib/careLogOnce';
@@ -347,6 +347,10 @@ export default function FieldModePage() {
       toast({ title: 'Undone', description: entry.message });
     } catch (error) {
       console.error('Undo failed:', error);
+      // A log the queue is sending right now may still be waiting behind
+      // another one. The message says to try Undo again, so the Undo bar
+      // comes back for that.
+      if (error?.message === UNDO_SYNCING_MESSAGE) registerUndo(entry);
       toast({ title: 'Undo failed', description: error.message || 'Try again from the gecko page.', variant: 'destructive' });
     }
   };
@@ -641,7 +645,11 @@ export default function FieldModePage() {
       // A shed still waiting to sync is changed in the queue. Once the
       // queue is sending it, the change would be lost, so say so.
       if (undoEntry.queueId) {
-        if (isSyncing() || !updateQueued(undoEntry.queueId, { quality })) {
+        if (isSyncing()) {
+          toast({ title: 'Not changed', description: 'That shed is being sent right now, so it was not changed. Try again in a moment.', variant: 'destructive' });
+          return;
+        }
+        if (!updateQueued(undoEntry.queueId, { quality })) {
           toast({ title: 'Not changed', description: "That shed has already synced. Change it from the gecko's record.", variant: 'destructive' });
           return;
         }
@@ -660,7 +668,11 @@ export default function FieldModePage() {
     // A feeding still waiting to sync: change it in the queue. The group
     // schedule moves (or not) when it replays.
     if (entry.queueId) {
-      if (isSyncing() || !updateQueued(entry.queueId, { accepted: next })) {
+      if (isSyncing()) {
+        toast({ title: 'Not changed', description: 'That feeding is being sent right now, so it was not changed. Try again in a moment.', variant: 'destructive' });
+        return;
+      }
+      if (!updateQueued(entry.queueId, { accepted: next })) {
         toast({ title: 'Not changed', description: "That feeding has already synced. Change it from the gecko's record.", variant: 'destructive' });
         return;
       }
