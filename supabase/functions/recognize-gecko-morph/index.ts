@@ -698,7 +698,8 @@ Rules:
   Phantom and Cream-on-Cream are visual-expression suggestions, not proof of their
   underlying genotype.
 - Line-bred phenotypes, fired state and lighting make different morphs look alike.
-  Cappuccino, Sable and Highway share one gene (Luwak is Cappuccino plus Sable) and
+  Cappuccino, Sable and Highway are widely reported to be forms of one gene, though
+  that is not settled (Luwak is reported as Cappuccino plus Sable), and they
   overlap with line-bred dark or clean-backed animals; Lilly White overlaps with
   White Wall, Whiteout and line-bred high white. Only list sable, highway or luwak
   when the expression is strong and distinctive, and when a look-alike fits, say
