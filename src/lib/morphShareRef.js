@@ -9,11 +9,20 @@
 // morph_share_signup. The id is forgotten only once that call goes
 // through, so a call that failed is tried again on the next session.
 //
-// Only the card id is kept. Nothing here identifies a person.
+// A card can only have brought a sign-up if it was opened first, so the
+// id is credited only when it was kept before the account was created
+// (getMorphShareRefForAccount). A member who opens someone's card after
+// joining is not counted as a sign-up from it.
+//
+// Only the card id and when it was kept are stored. Nothing here
+// identifies a person.
 import { isShareId, SHARE_REF_PARAM } from '@/lib/morphShareCard';
 
 const STORAGE_KEY = 'geck_morph_share_ref_v1';
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+// The stored time comes from this device's clock and created_at from the
+// server's, so allow the same ten minutes isNewAccount does.
+const CLOCK_SLACK_MS = 10 * 60 * 1000;
 
 /** Read ?ms= off the address bar, keep it, and remove it from the URL. */
 export function captureMorphShareRef(now = Date.now()) {
@@ -33,18 +42,41 @@ export function captureMorphShareRef(now = Date.now()) {
   }
 }
 
-/** The card id this browser arrived from, if it is recent enough. */
-export function getMorphShareRef(now = Date.now()) {
+/** The stored { id, at } this browser arrived from, if it is recent enough. */
+export function getMorphShareRefEntry(now = Date.now()) {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!isShareId(parsed?.id) || !Number.isFinite(parsed?.at) || now - parsed.at > MAX_AGE_MS) return null;
-    return parsed.id;
+    return { id: parsed.id, at: parsed.at };
   } catch {
     return null;
   }
+}
+
+/** The card id this browser arrived from, if it is recent enough. */
+export function getMorphShareRef(now = Date.now()) {
+  return getMorphShareRefEntry(now)?.id ?? null;
+}
+
+/**
+ * The card id to credit for this account's sign-up: one this browser kept
+ * before the account was created. A card opened after the account existed
+ * did not bring the member here, so that id is forgotten and null comes
+ * back.
+ */
+export function getMorphShareRefForAccount(authUser, now = Date.now()) {
+  const entry = getMorphShareRefEntry(now);
+  if (!entry) return null;
+  const created = Date.parse(authUser?.created_at || '');
+  if (!Number.isFinite(created)) return null;
+  if (entry.at > created + CLOCK_SLACK_MS) {
+    clearMorphShareRef();
+    return null;
+  }
+  return entry.id;
 }
 
 export function clearMorphShareRef() {
