@@ -18,6 +18,7 @@ import GeckoCard from '../components/my-geckos/GeckoCard';
 import { createPageUrl, getDisplayName } from '@/utils';
 import SignInRequired, { AccountOnly } from '@/components/shared/SignInRequired';
 import SignOutButton from '@/components/auth/SignOutButton';
+import { isQuietNotification } from '@/lib/notificationsApi';
 
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
@@ -290,7 +291,7 @@ function MyProfileScreen() {
                         if (results[2].status === 'fulfilled') stats.forumPosts = results[2].value.length;
                         if (results[3].status === 'fulfilled') stats.comments = results[3].value.length;
                         if (results[4].status === 'fulfilled') stats.messages = results[4].value.length;
-                        if (results[5].status === 'fulfilled') stats.notifications = results[5].value.length;
+                        if (results[5].status === 'fulfilled') stats.notifications = results[5].value.filter((n) => !isQuietNotification(n)).length;
                         if (results[6].status === 'fulfilled') stats.morphSubmissions = results[6].value.length;
                         if (results[7].status === 'fulfilled') {
                             stats.eggsHatched = results[7].value.filter(e => e.status === 'Hatched').length;

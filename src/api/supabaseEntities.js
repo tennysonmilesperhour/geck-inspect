@@ -329,7 +329,7 @@ export function parseSort(sort, entityName) {
   }).filter(Boolean);
 }
 
-function applyFilter(query, filterObj) {
+export function applyFilter(query, filterObj) {
   if (!filterObj || typeof filterObj !== 'object') return query;
   for (const [key, value] of Object.entries(filterObj)) {
     if (key === '$or') {
@@ -338,6 +338,9 @@ function applyFilter(query, filterObj) {
         const [[k, v]] = Object.entries(clause);
         if (v === null || v === undefined) return `${k}.is.null`;
         if (typeof v === 'boolean') return `${k}.is.${v}`;
+        // { col: { $ne: v } }: "not equal" (a NULL never matches neq, so
+        // pair it with { col: null } when empty values should count).
+        if (typeof v === 'object' && !Array.isArray(v) && '$ne' in v) return `${k}.neq.${v.$ne}`;
         // For strings, use eq
         return `${k}.eq.${v}`;
       });
