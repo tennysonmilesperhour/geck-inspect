@@ -157,7 +157,7 @@ declare
   v_body jsonb;
   v_n int;
 begin
-  -- Day 0, within the hour.
+  -- Day 0, once the account is an hour old.
   if public.enqueue_lifecycle_emails(v_t0 + interval '1 hour') <> 1 then
     raise exception 'FAIL: day0 was not handed to send-email';
   end if;

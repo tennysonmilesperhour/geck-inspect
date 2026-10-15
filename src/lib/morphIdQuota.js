@@ -8,7 +8,8 @@
  *
  * If the function is not installed yet, Free falls back to the old
  * "1 minus lifetime use" read so the uploader still locks after the
- * free scan. That fallback predates one free scan a month (16 Oct 2026)
+ * free scan. That fallback predates one free scan a month (the October
+ * 2026 release, migration 20261015151300)
  * and does not know about bonus credits; the server still allows the
  * monthly scan and returns a fresh count after it.
  */

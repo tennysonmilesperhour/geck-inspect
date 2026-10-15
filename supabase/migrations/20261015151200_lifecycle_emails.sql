@@ -508,7 +508,8 @@ revoke all on function public.enqueue_lifecycle_emails(timestamptz) from public,
 grant execute on function public.enqueue_lifecycle_emails(timestamptz) to service_role;
 
 -- Every hour at 35 past. A daily run would send the welcome up to a day
--- after someone joins; hourly lands it within the hour, and each later
+-- after someone joins; hourly sends it with the first run after the
+-- account is an hour old (one to two hours after joining), and each later
 -- step arrives at about the time of day the member signed up. The ledger
 -- makes the extra runs harmless, and while the switch is off each run is
 -- one lookup.

@@ -1409,7 +1409,7 @@ serve(async (req) => {
     analysis.user_reported_fired_state = firedState;
     // D19: a "better photos needed" answer gives the member nothing to act
     // on, so the credit is handed back and they can retake the photos. Since
-    // 6 Oct 2026 this covers paid monthly credits too, not only the free try.
+    // 6 Oct 2026 this covers paid monthly credits too, not only the free scan.
     let creditRefunded = false;
     if (
       creditWasConsumed &&
@@ -1473,8 +1473,8 @@ serve(async (req) => {
     return json(responseBody);
   } catch (err) {
     // Provider failures (network, 5xx, billing, timeout) and our own
-    // errors both return the reserved scan. A member's free try is only
-    // kept when an analysis actually comes back.
+    // errors both return the reserved scan. A member's monthly scan is
+    // only used up when an analysis actually comes back.
     let creditRefundedOnError = false;
     if (creditWasConsumed) {
       creditRefundedOnError = await refundMorphIdCredit(profile.auth_user_id);

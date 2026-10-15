@@ -128,7 +128,7 @@ export default function Recognition() {
   const primaryUrl = imageUrls[0] || null;
 
   // The server reports scans left (the plan allowance plus any unexpired
-  // bonus credits). Free is 1 a month (since 16 Oct 2026). Paid plans are
+  // bonus credits). Free is 1 a month (since the October 2026 release). Paid plans are
   // the monthly cap. Lock only once that number is known to be 0. If the
   // read fails, the server still enforces the limit and returns a clear
   // error.
@@ -254,7 +254,7 @@ export default function Recognition() {
         }
         // The scan was reserved before the analyzer ran. On a provider
         // failure the server hands it back before answering, so reload
-        // the count and keep the free try on screen.
+        // the count and keep the unused scan on screen.
         if (!isAdmin && user?.auth_user_id && morphIdErrorSettledQuota(funcError)) {
           await quotaQuery.refetch();
         }

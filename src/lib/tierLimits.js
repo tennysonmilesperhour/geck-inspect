@@ -37,8 +37,9 @@ export const TIER_LIMITS = {
     maxStorageBytes: 1 * GB,
     maxCollaborators: 1,
     monthlySocialPosts: 1,
-    // One AI Morph ID a month on Free (16 Oct 2026, plan item E2 17; it
-    // was one ever from 27 Sep). A steady free identification is what
+    // One AI Morph ID a month on Free (the October 2026 release, plan item
+    // E2 17, migration 20261015151300; before it Free had one ever, from
+    // 27 Sep). A steady free identification is what
     // feeds the shareable result card, and it costs about 3 to 5 cents.
     // Enforced server-side in consume_morph_id_credit(), which uses 1 for
     // Free whatever the caller passes. Extra scans granted in

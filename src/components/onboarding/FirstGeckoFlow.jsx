@@ -375,7 +375,7 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
                   <p className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-emerald-400" /> What is {name} worth?</p>
                   <p className="text-xs text-slate-400 mt-1">Add its morph (say, Lilly White or Harlequin) and Geck Inspect estimates its value from real crested gecko listings.</p>
                   <Link to="/Recognition" onClick={() => onClose?.()} className="touch:min-h-11 mt-2 inline-flex text-sm text-emerald-300 hover:text-emerald-200">
-                    Not sure of the morph? Try Morph ID free
+                    Not sure of the morph? Try Morph ID (one free a month)
                   </Link>
                 </div>
               )}

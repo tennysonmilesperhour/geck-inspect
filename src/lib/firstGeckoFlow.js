@@ -1,6 +1,6 @@
 // The guided first gecko (activation pass, 5 Oct 2026). Three short,
 // skippable steps on an empty collection: add the gecko (by photo through
-// Morph ID's free try, or by name and morph), add its parents if known,
+// Morph ID, one free a month, or by name and morph), add its parents if known,
 // then a payoff screen with its family card, what it needs next and its
 // value estimate. See docs/planning/activation-2026-10.md.
 //

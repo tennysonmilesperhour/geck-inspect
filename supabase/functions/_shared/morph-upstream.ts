@@ -11,7 +11,7 @@ export const RETRYABLE_UPSTREAM_STATUS = new Set([429, 500, 502, 503, 504, 529])
 export const PROVIDER_UNAVAILABLE_MESSAGE =
   "Morph ID is temporarily unavailable, try again later";
 
-// These codes mean the analyzer never returned an answer. The free try and
+// These codes mean the analyzer never returned an answer. Free and paid
 // monthly scans are reserved before the call and must be handed back.
 const TEMPORARY_UNAVAILABLE_CODES = new Set([
   "upstream_error",

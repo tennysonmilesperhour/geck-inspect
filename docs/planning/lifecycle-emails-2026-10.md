@@ -29,7 +29,7 @@ Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend b
 
   | Step | When | Only if | One next step |
   |---|---|---|---|
-  | Day 0 | within the hour of joining | always | add a first gecko; or weigh it; or add the rest |
+  | Day 0 | one to two hours after joining | always | add a first gecko; or weigh it; or add the rest |
   | Day 1 | 24 to 72 hours after joining | no gecko yet | add the gecko you know best |
   | Day 3 | days 3 to 5 | has a gecko | add the sire and dam, open the family tree |
   | Day 7 | days 7 to 9 | has a gecko | weigh the first gecko (one-tap log link) |
@@ -38,7 +38,7 @@ Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend b
   The review counts day 7 and day 14 as one weigh-in email, which is why the plan says "four". A member who never adds a gecko gets day 0 and day 1 and nothing more.
 - **Never twice.** Each member and step gets one row in `lifecycle_email_sends` before the email is handed over, and the row is unique, so a repeated or overlapping run cannot send a step again. At most one lifecycle email per member in any 20 hours. A step whose window has passed is dropped, so turning the switch on never sends a "welcome" to someone who joined weeks ago.
 - **Preferences.** Day 0, 1 and 3 follow the member's *Platform Announcements* email switch; day 7 and 14 follow *Breeding & Care Updates*. The master email switch, the unsubscribe link and the one-click List-Unsubscribe header work exactly as for every other notification email.
-- **When.** A job runs every hour at 35 past (`lifecycle-emails-hourly`). The brief asked for a daily job; hourly lands the welcome within the hour instead of up to a day later, and each later step arrives at about the time of day the member joined. While the switch is off each run is one lookup.
+- **When.** A job runs every hour at 35 past (`lifecycle-emails-hourly`). The welcome waits until the account is an hour old, so it can mention what the member did in onboarding (a first gecko, a first weight), and goes with the next hourly run after that: one to two hours after joining. The brief asked for a daily job; hourly sends the welcome within two hours instead of up to a day later, and each later step arrives at about the time of day the member joined. While the switch is off each run is one lookup.
 - **Where the words live.** `supabase/functions/_shared/lifecycle-copy.ts`. Changing a sentence is a `send-email` deploy, not a migration. The test `src/lib/__tests__/lifecycleEmails.test.js` fails if this preview and the real copy drift apart; after a copy change, refresh the preview with `WRITE_LIFECYCLE_PREVIEW=1 pnpm vitest run src/lib/__tests__/lifecycleEmails.test.js`.
 - **Dependency.** The weigh-in links open `/log?gecko=<id>&type=weight`, the one-tap log page being built in the same round. Do not turn the switch on before that page is live, or day 0 and the weigh-in emails link to a page that does not exist yet.
 
