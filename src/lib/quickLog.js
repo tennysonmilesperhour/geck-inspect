@@ -3,7 +3,7 @@
 //   /log?type=weight|feeding|shed&gecko=<id>,<id>&group=<id>&from=<path>
 //
 // The reminder jobs build these links (public.care_log_link in
-// supabase/migrations/20261016100000_reminders_and_offline_logging.sql):
+// supabase/migrations/20261015151100_reminders_and_offline_logging.sql):
 // at most 10 ids of each kind, each made of letters, digits, "_" and "-",
 // so the link passes the notification link rule. This file holds the
 // parts with no React: reading the link, picking the geckos, and where

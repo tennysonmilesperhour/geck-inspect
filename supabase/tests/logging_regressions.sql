@@ -1,6 +1,6 @@
 -- Reminders that follow the animal, and offline logs saved once.
 -- Regression checks for
--- supabase/migrations/20261016100000_reminders_and_offline_logging.sql.
+-- supabase/migrations/20261015151100_reminders_and_offline_logging.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members, switches roles the way the API does

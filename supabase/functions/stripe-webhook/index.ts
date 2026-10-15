@@ -7,7 +7,7 @@
 // award_referral_reward in supabase/migrations).
 //
 // payment_events is the payment ledger the admin revenue tile reads
-// (admin_revenue_summary, migration 20261016130000). Every paid invoice,
+// (admin_revenue_summary, migration 20261015151400). Every paid invoice,
 // lifetime purchase, refund and dispute writes or updates a row there, and
 // so does every cancellation: cancel_scheduled when a member cancels and
 // keeps access to the end of the period, cancel_withdrawn when they undo
@@ -338,7 +338,7 @@ function subscriptionWasCancelPending(sub: any, previous: any): boolean {
 // Which churn row a subscription event writes, if any. The ids are
 // deterministic so a redelivered event, the paired follow-up event Stripe
 // sends when the member adds feedback, and the backfill in migration
-// 20261016130000 all land on the same row instead of adding another.
+// 20261015151400 all land on the same row instead of adding another.
 //   cancel_scheduled: the member cancelled and keeps access until the
 //     period ends. One row per cancellation request (keyed by canceled_at).
 //   cancel_withdrawn: they changed their mind before it ended.
@@ -416,7 +416,7 @@ function cancellationRow(
   };
 }
 
-// Columns that migration 20261016130000 adds for churn rows.
+// Columns that migration 20261015151400 adds for churn rows.
 const CANCELLATION_DETAIL_COLUMNS = [
   "cancellation_reason", "cancellation_feedback", "cancellation_comment", "cancel_at",
 ];
@@ -1056,7 +1056,7 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
 
   // How much of a payment went back, so the revenue tile can show money
   // kept rather than money charged. A separate, best-effort write: if the
-  // column is missing (the 20261016130000 migration not applied yet) the
+  // column is missing (the 20261015151400 migration not applied yet) the
   // status change above, which is what access depends on, still stands.
   // A status of "paid" (a dispute that was won) leaves the amount alone: an
   // invoice that was partly refunded before the dispute still had that
@@ -1131,7 +1131,7 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
       }
       const { error } = await supabase.from("payment_events").update(patch).eq("id", row.id);
       if (error && missingColumn(error)) {
-        console.warn("cancellation details not saved, migration 20261016130000 not applied:", error.message);
+        console.warn("cancellation details not saved, migration 20261015151400 not applied:", error.message);
         return;
       }
       if (error) throw new Error(`cancellation update failed: ${error.message}`);
@@ -1139,10 +1139,10 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
     if (existing?.id) return refresh();
     let { error } = await supabase.from("payment_events").insert(row);
     if (error && missingColumn(error)) {
-      // This function went out before migration 20261016130000. Keep the
+      // This function went out before migration 20261015151400. Keep the
       // churn row without Stripe's reason rather than failing every
       // cancellation (Stripe would retry each one for three days).
-      console.warn("cancellation saved without details, migration 20261016130000 not applied:", error.message);
+      console.warn("cancellation saved without details, migration 20261015151400 not applied:", error.message);
       const basic = { ...row };
       for (const key of CANCELLATION_DETAIL_COLUMNS) delete basic[key];
       ({ error } = await supabase.from("payment_events").insert(basic));

@@ -53,7 +53,7 @@ describe('reminders that follow the animal (review item E2 15)', () => {
 
   it('starts on the same day as the reminder jobs', () => {
     const sql = readFileSync(
-      new URL('../../../supabase/migrations/20261016100000_reminders_and_offline_logging.sql', import.meta.url),
+      new URL('../../../supabase/migrations/20261015151100_reminders_and_offline_logging.sql', import.meta.url),
       'utf8',
     );
     expect(sql).toContain(`select date '${CARE_DEFAULTS_FROM}';`);

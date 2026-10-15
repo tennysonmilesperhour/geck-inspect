@@ -9,7 +9,7 @@
 // The fix: every log gets a client request id, made once, before the first
 // try, and kept with the queued copy. weight_records, feeding_records and
 // shed_records each have a unique index on client_request_id
-// (supabase/migrations/20261016100000_reminders_and_offline_logging.sql),
+// (supabase/migrations/20261015151100_reminders_and_offline_logging.sql),
 // so the second copy is refused. A refusal for that reason means "this log
 // is already saved", and is treated as success.
 //

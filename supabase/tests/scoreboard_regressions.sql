@@ -1,5 +1,5 @@
 -- The weekly scoreboard (admin Funnel card).
--- Regression checks for supabase/migrations/20261016140000_scoreboard.sql.
+-- Regression checks for supabase/migrations/20261015151500_scoreboard.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members and switches roles the way the API does

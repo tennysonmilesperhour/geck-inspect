@@ -8,7 +8,7 @@
 //
 // The weigh-in reminder job uses the same rule
 // (public.weighin_interval_days in
-// supabase/migrations/20261016100000_reminders_and_offline_logging.sql),
+// supabase/migrations/20261015151100_reminders_and_offline_logging.sql),
 // with the same test cases in supabase/tests/logging_regressions.sql and
 // src/lib/__tests__/lifeStage.test.js. Change all three together.
 

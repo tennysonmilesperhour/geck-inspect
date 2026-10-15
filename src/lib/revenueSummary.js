@@ -1,5 +1,5 @@
 // Plain-language helpers for the admin revenue card. The numbers come from
-// public.admin_revenue_summary() (migration 20261016130000_stripe_ledger),
+// public.admin_revenue_summary() (migration 20261015151400_stripe_ledger),
 // which reads the payment ledger the Stripe webhook keeps. Amounts arrive
 // in cents.
 

@@ -1,5 +1,5 @@
 -- Lifecycle emails, the email delivery log and suppressions.
--- Regression checks for supabase/migrations/20261016110000_lifecycle_emails.sql.
+-- Regression checks for supabase/migrations/20261015151200_lifecycle_emails.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members, moves the clock with the p_now argument the

@@ -103,7 +103,7 @@ export async function computeTrustSignals(identifier) {
 
 /**
  * The same signals for a curated breeder page, by its slug, from the
- * database function breeder_page_trust (migration 20261016090000). The
+ * database function breeder_page_trust (migration 20261015151000). The
  * breeder page needs this for signed-out buyers: they cannot read the
  * owner's email, which computeTrustSignals starts from, and the function
  * returns only the numbers, never the email. It counts what anyone can

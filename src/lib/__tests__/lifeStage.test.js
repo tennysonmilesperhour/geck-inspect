@@ -76,7 +76,7 @@ describe('the thresholds are the care guide life stages', () => {
 
 describe('the reminder job uses the same numbers', () => {
   const sql = readFileSync(
-    new URL('../../../supabase/migrations/20261016100000_reminders_and_offline_logging.sql', import.meta.url),
+    new URL('../../../supabase/migrations/20261015151100_reminders_and_offline_logging.sql', import.meta.url),
     'utf8',
   );
   it('has the same grams, months and days', () => {

@@ -52,7 +52,7 @@ const GECKO_ARTWORK_MIGRATION = migration('20261014173814_gecko_placeholder_styl
 const GECKO_DEFAULT_ARTWORK_MIGRATION = migration('20261014184837_collection_artwork_default.sql');
 const MORE_MIGRATION = migration('20261008081043_anon_hide_email_columns_more.sql');
 const COMMS_MIGRATION = migration('20261015130000_comms_and_exposure.sql');
-const FOLLOWUPS_MIGRATION = migration('20261016090000_followups.sql');
+const FOLLOWUPS_MIGRATION = migration('20261015151000_followups.sql');
 const WEIGHT_MIGRATION = migration('20261003004122_passport_transfers_lineage.sql');
 const WELCOME_MIGRATION = migration('20261003022738_owner_profile_id_forum_store_welcome.sql');
 
@@ -208,7 +208,7 @@ describe('member emails on the tables 20261015130000 narrows', () => {
   });
 });
 
-// Section 6 of 20261016090000: created_by taken from signed-out visitors
+// Section 6 of 20261015151000: created_by taken from signed-out visitors
 // on seven more tables (the database test checks every other column is
 // still granted).
 const FOLLOWUPS_HIDDEN = [
@@ -216,7 +216,7 @@ const FOLLOWUPS_HIDDEN = [
   'blog_categories', 'blog_posts', 'blog_tags',
 ];
 
-describe('author emails on the tables 20261016090000 narrows', () => {
+describe('author emails on the tables 20261015151000 narrows', () => {
   it.each(FOLLOWUPS_HIDDEN)('%s: the migration takes created_by from anon', (table) => {
     expect(FOLLOWUPS_MIGRATION).toMatch(new RegExp(`\\('${table}',\\s+array\\['created_by'\\]\\)`));
   });

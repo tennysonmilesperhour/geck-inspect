@@ -40,7 +40,7 @@ function n(v) {
  * saying which was which (C15 item 13). Computed numbers come from
  * public.admin_scoreboard(); conversations, imports and cost come from
  * public.scoreboard_entries, which Tennyson fills in with the form below.
- * Both answer admins only (migration 20261016140000_scoreboard.sql).
+ * Both answer admins only (migration 20261015151500_scoreboard.sql).
  */
 export default function WeeklyScoreboard() {
   const [board, setBoard] = useState(null);
@@ -83,7 +83,7 @@ export default function WeeklyScoreboard() {
       <section aria-labelledby="scoreboard-heading" className="space-y-2">
         <ScoreboardHeading next={next} />
         <p className="text-sm text-amber-200/90">
-          The scoreboard needs migration 20261016140000_scoreboard.sql. It has not been applied yet, so
+          The scoreboard needs migration 20261015151500_scoreboard.sql. It has not been applied yet, so
           there is nothing to show.
         </p>
       </section>
@@ -442,7 +442,7 @@ function EntryList({ entries, error, onChanged }) {
     return (
       <p className="text-xs text-red-300">
         {isMissing(error)
-          ? 'The hand-recorded entries need migration 20261016140000_scoreboard.sql.'
+          ? 'The hand-recorded entries need migration 20261015151500_scoreboard.sql.'
           : `Could not load the entries: ${error.message}`}
       </p>
     );

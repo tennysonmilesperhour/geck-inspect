@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Signed-out buyers on /Breeder/<slug> cannot read the owner's email, so
 // the Track record panel used to disappear for them. It now asks the
 // database for the numbers by slug (breeder_page_trust, migration
-// 20261016090000), and only falls back to the email path for signed-in
+// 20261015151000), and only falls back to the email path for signed-in
 // visitors while that function is not deployed.
 const state = vi.hoisted(() => ({ rpcCalls: [], rpcResult: null, emailCalls: [] }));
 vi.mock('@/lib/supabaseClient', () => ({

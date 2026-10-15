@@ -20,7 +20,7 @@
 //
 // The daily job that reads it is in
 // supabase/migrations/20261008081343_personal_weighin_reminders.sql,
-// changed by 20261016100000_reminders_and_offline_logging.sql.
+// changed by 20261015151100_reminders_and_offline_logging.sql.
 //
 // Since 16 Oct 2026 (review item E2 15) reminders follow the animal:
 //   * A gecko added on or after CARE_DEFAULTS_FROM with no stored choice

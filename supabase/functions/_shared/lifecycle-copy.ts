@@ -1,6 +1,6 @@
 // The words of the new-member lifecycle emails (plan item E2 16).
 //
-// enqueue_lifecycle_emails() (migration 20261016110000) decides who is due
+// enqueue_lifecycle_emails() (migration 20261015151200) decides who is due
 // which step and sends the member's own facts: first name, how many geckos,
 // their first gecko's name, morph and id, whether it has a sire and dam on
 // record, and its weigh-ins. send-email calls lifecycleEmail() with them and

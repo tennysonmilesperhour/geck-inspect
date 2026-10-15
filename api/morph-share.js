@@ -4,7 +4,7 @@
  * GET /morph-id/r/<share id>  (vercel.json rewrites it to /api/morph-share?id=<share id>)
  *
  * A member makes a card by tapping Share after an identification
- * (create_morph_id_share in supabase/migrations/20261016120000_morph_id_share_card.sql).
+ * (create_morph_id_share in supabase/migrations/20261015151300_morph_id_share_card.sql).
  * This edge function serves the whole page as server HTML, the way
  * api/share.js does for calculator pairings, so Facebook, Messenger,
  * iMessage and Discord read a real title, description and photo when the

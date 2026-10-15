@@ -1,5 +1,5 @@
 -- Morph ID share card and one free identification a month.
--- Regression checks for supabase/migrations/20261016120000_morph_id_share_card.sql.
+-- Regression checks for supabase/migrations/20261015151300_morph_id_share_card.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members and switches roles the way the API does

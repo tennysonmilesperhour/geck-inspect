@@ -104,7 +104,7 @@ it('lists email delivery rows when the view exists', async () => {
 it('explains a missing migration instead of failing', async () => {
   state.rpc = Promise.resolve({ data: null, error: { code: 'PGRST202', message: 'Could not find the function public.admin_scoreboard' } });
   await act(async () => { tree = create(<WeeklyScoreboard />); });
-  expect(text()).toContain('20261016140000_scoreboard.sql');
+  expect(text()).toContain('20261015151500_scoreboard.sql');
 });
 
 it('saves a conversation without an amount and a cost with one', async () => {

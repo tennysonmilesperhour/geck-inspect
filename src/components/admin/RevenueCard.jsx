@@ -63,7 +63,7 @@ export default function RevenueCard() {
         <CardContent>
           {isMissingFunction(error) ? (
             <p className="text-sm text-amber-200/90">
-              Revenue needs the database function in migration 20261016130000_stripe_ledger.sql. It has not been
+              Revenue needs the database function in migration 20261015151400_stripe_ledger.sql. It has not been
               applied yet, so there is nothing to show.
             </p>
           ) : (

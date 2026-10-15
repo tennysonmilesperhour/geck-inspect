@@ -5,7 +5,7 @@ Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend b
 ## 1. What Tennyson needs to do
 
 1. **Read the copy in section 4** and reply with changes or "approved". Every variant a member can receive is shown, filled in for a sample member (Sam, whose first gecko is Mango, a Lilly White Harlequin).
-2. **Apply the migration** `supabase/migrations/20261016110000_lifecycle_emails.sql` and **deploy** `send-email` and the new `resend-webhook` function (`supabase functions deploy resend-webhook --no-verify-jwt`). The migration is additive and safe to run twice.
+2. **Apply the migration** `supabase/migrations/20261015151200_lifecycle_emails.sql` and **deploy** `send-email` and the new `resend-webhook` function (`supabase functions deploy resend-webhook --no-verify-jwt`). The migration is additive and safe to run twice.
 3. **Connect Resend's webhook.** In the Resend dashboard: Webhooks, Add endpoint, `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/resend-webhook`, tick the email events (sent, delivered, delivery delayed, opened, clicked, bounced, complained). Copy its signing secret (starts with `whsec_`) into the Supabase function secret `RESEND_WEBHOOK_SECRET`. Turn on open and click tracking for the sending domain, or opens and clicks stay at zero.
 4. **Add a postal address** to the footer: the function secret `EMAIL_POSTAL_ADDRESS` (a PO box or registered agent address works). US law expects one in email that mentions upgrades; the footer prints it as soon as the secret is set.
 5. **Turn the lifecycle emails on** once the copy is approved, in the SQL editor:

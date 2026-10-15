@@ -278,9 +278,9 @@ describe('cancellations are recorded the hour they happen', () => {
     expect(res.status).toBe(500);
   });
 
-  it('ids match the backfill in migration 20261016130000', () => {
+  it('ids match the backfill in migration 20261015151400', () => {
     const { context } = webhook();
-    const sql = readFileSync(new URL('../../../supabase/migrations/20261016130000_stripe_ledger.sql', import.meta.url), 'utf8');
+    const sql = readFileSync(new URL('../../../supabase/migrations/20261015151400_stripe_ledger.sql', import.meta.url), 'utf8');
     expect(context.cancellationRecord('customer.subscription.deleted', 'e', 1, { id: 's' }, null).id).toBe('stripe-cancel:s');
     expect(sql).toContain("'stripe-cancel:' || (s.obj ->> 'id')");
     expect(context.cancellationRecord('customer.subscription.updated', 'e', 1, { id: 's', status: 'active', cancel_at: 9, canceled_at: 5 }, {}).id)
@@ -506,7 +506,7 @@ describe('edges the review found', () => {
 });
 
 describe('the SQL price catalog matches src/lib/stripe-config.js', () => {
-  const sql = readFileSync(new URL('../../../supabase/migrations/20261016130000_stripe_ledger.sql', import.meta.url), 'utf8');
+  const sql = readFileSync(new URL('../../../supabase/migrations/20261015151400_stripe_ledger.sql', import.meta.url), 'utf8');
   const toCents = (price) => Math.round(Number(String(price).replace(/[^0-9.]/g, '')) * 100);
 
   for (const [tier, cycles] of Object.entries(TIER_PRICING)) {

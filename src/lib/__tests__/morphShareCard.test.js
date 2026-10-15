@@ -268,7 +268,7 @@ describe('routing for the share page', () => {
 
 describe('one free identification a month agrees everywhere', () => {
   const migration = readFileSync(
-    new URL('../../../supabase/migrations/20261016120000_morph_id_share_card.sql', import.meta.url),
+    new URL('../../../supabase/migrations/20261015151300_morph_id_share_card.sql', import.meta.url),
     'utf8',
   );
 

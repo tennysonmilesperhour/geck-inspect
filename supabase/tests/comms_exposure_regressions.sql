@@ -1131,7 +1131,7 @@ begin
   perform pg_temp.mk('casesnd', 'Case Sender');
   update public.profiles set is_public_profile = false where email = pg_temp.who('casevic');
   v_to := pg_temp.who('casevic');
-  -- Since 20261016090000 a member can write to a private member only once
+  -- Since 20261015151000 a member can write to a private member only once
   -- that member has written to them, so the victim starts the conversation.
   insert into public.direct_messages (sender_email, recipient_email, content, created_by)
   values (v_to, pg_temp.who('casesnd'), 'Hello', v_to);

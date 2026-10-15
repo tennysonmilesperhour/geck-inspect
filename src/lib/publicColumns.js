@@ -179,7 +179,7 @@ export const COMMUNITY_EVENT_REACTION_PUBLIC_COLUMNS = [
   'event_type', 'event_id', 'reaction', 'created_date',
 ];
 
-// 20261016090000_followups.sql (section 6) took created_by (the author's
+// 20261015151000_followups.sql (section 6) took created_by (the author's
 // email) from signed-out visitors on seven more tables. Four of them
 // (breeding_projects, clutches, genetic_outcome_predictions,
 // question_votes) are never read signed out. The blog pages read the

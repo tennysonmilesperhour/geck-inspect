@@ -1,4 +1,4 @@
--- Stripe ledger regressions (migration 20261016130000_stripe_ledger.sql).
+-- Stripe ledger regressions (migration 20261015151400_stripe_ledger.sql).
 --
 -- Plain SQL script for a local Postgres copy of the schema. It needs a
 -- superuser: it writes auth.users and switches roles with set_config. It
