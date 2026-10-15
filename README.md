@@ -15,7 +15,11 @@ guides (morphs, care, genetics) built only for *Correlophus ciliatus*.
   Functions (Deno), pg_cron, Vault
 - Stripe for memberships (checkout, webhook, customer portal), RevenueCat
   for the mobile shells
-- Vercel for hosting; every push to `main` deploys production
+- Vercel for hosting; every push to `main` deploys production (pushes
+  that only touch `docs/` or top-level Markdown files are skipped)
+- Merging to `main` also applies new files in `supabase/migrations/` and
+  deploys the edge functions declared in `supabase/config.toml`, through
+  the Supabase GitHub integration (docs/MIGRATIONS.md)
 
 ## Working locally
 

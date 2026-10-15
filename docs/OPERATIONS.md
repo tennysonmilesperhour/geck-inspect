@@ -10,13 +10,13 @@ Keep it true: when a service, secret, job or price changes, change this file in 
 
 | Service | What Geck Inspect uses it for | Plan | Monthly cost |
 |---|---|---|---|
-| **Supabase** (project `mmuglfphhwlaluyfyxsp`) | The database (members, geckos, records, market data in `geck_data`), sign-in, photo storage, the 33 edge functions, scheduled jobs (pg_cron) and the secret store (Vault) | **Paid, tier unknown.** Storage holds about 8.2 GB, which is above the Free plan's 1 GB, so it cannot be the Free plan | **Unknown.** Check Billing in the Supabase dashboard |
-| **Vercel** | Hosts geckinspect.com (the app, prerendered pages, `api/` routes, `middleware.js`). Every push to `main` deploys production. A second Vercel project hosts Geck Intellect (geck-data) | **Unknown** | **Unknown** |
-| **Stripe** | Website memberships: checkout, the billing portal, the membership webhook; also the supplies store webhook | Pay as you go | No monthly fee. About 2.9% plus $0.30 a charge (about 12.9% of a $2.99 charge). Stripe Tax is not turned on in checkout |
+| **Supabase** (project `mmuglfphhwlaluyfyxsp`) | The database (members, geckos, records, market data in `geck_data`), sign-in, photo storage, the edge functions (35 in `supabase/functions`; 33 were deployed on 15 October, and which ones deploy on merge is in `docs/planning/deploy-queue-2026-10-03.md`), scheduled jobs (pg_cron) and the secret store (Vault). Merging to `main` applies new migrations and deploys the functions declared in `supabase/config.toml` (`docs/MIGRATIONS.md`) | **Paid, tier unknown.** Storage holds about 8.2 GB, which is above the Free plan's 1 GB, so it cannot be the Free plan | **Unknown.** Check Billing in the Supabase dashboard |
+| **Vercel** | Hosts geckinspect.com: the app, prerendered pages, `middleware.js`, and four serverless routes in `api/` (`mcp.js`, `share.js`, `og-pairing.js`, and `morph-share.js` for shared Morph ID cards at `/morph-id/r/<id>`). Every push to `main` that changes more than `docs/` and top-level Markdown files deploys production (the `ignoreCommand` in `vercel.json` skips docs-only pushes). A second Vercel project hosts Geck Intellect (geck-data) | **Unknown** | **Unknown** |
+| **Stripe** | Website memberships: checkout, the billing portal, the membership webhook. The supplies store has its own checkout and webhook functions in the repo, but they are not deployed and store checkout is switched off (`src/lib/store/checkoutFlags.js`) | Pay as you go | No monthly fee. About 2.9% plus $0.30 a charge (about 12.9% of a $2.99 charge). Stripe Tax is not turned on in checkout |
 | **RevenueCat** (project `20585b81`) | Store purchases inside the iPhone app; mirrors App Store entitlements into `revenuecat_entitlements` (`docs/BILLING.md`) | **Unknown** | **Unknown** |
 | **Apple Developer Program** | Needed to ship the iPhone app | $99 a year (`docs/native-shell-plan.md`) | About $8 a month, if enrolled (enrolment status not recorded) |
 | **Google Play Console** | Needed to ship the Android app | $25 once | None after sign-up (sign-up status not recorded) |
-| **Resend** | All email: reminders, digests, invites, inquiries, guide downloads, waitlist, the weekly reports. Senders seen in code: alerts@, invites@, hi@, system@, admin@ geckinspect.com | **Unknown** | **Unknown** |
+| **Resend** | All email: reminders, digests, lifecycle emails, invites, inquiries, guide downloads, waitlist, the weekly reports. Senders seen in code: alerts@, invites@, hi@, system@, admin@ geckinspect.com. Resend reports each email's delivery, opens, clicks, bounces and spam complaints back to the `resend-webhook` function, which records them in `email_deliveries` and stops mail to addresses that hard bounced or complained (`email_suppressions`). That needs the webhook set up in Resend (section 2) | **Unknown** | **Unknown** |
 | **Anthropic** (Claude API) | Morph ID, health screen, AI Consultant, Promote drafting, spreadsheet and photo import, the weekly changelog, the error-triage agent, Morph ID evaluation | Pay as you go (prepaid credit; it has run out once) | Usage based. Recorded: Morph ID about 3 cents a call; a full evaluation run about $6; the daily canary about 6 cents a day. Evaluation runs cost $23.84 in the 30 days before 14 October against $0.59 of member Morph ID use |
 | **Replicate** | Photo fingerprints (embeddings) that Morph ID uses to find similar reference photos | Pay as you go | Usage based, small. Under $5 of credit, Replicate allows one request at a time, which slows evaluation runs |
 | **PostHog** | Product analytics (the production build requires its key) | **Unknown** | **Unknown** |
@@ -30,7 +30,7 @@ Keep it true: when a service, secret, job or price changes, change this file in 
 | **Claude Code sessions** | Most of the building and the reviews | **Unknown** | **Unknown.** The adversarial review session alone cost over $100 |
 | **geck-data scraper** | Collects public crested gecko listings into `geck_data` (a separate repository; the adversarial review says it runs on Tennyson's Mac) | n/a | A residential proxy, if bought to restore the US feed, would add $5 to $15 a month |
 
-**Total:** unknown. The adversarial review estimated $60 to $300 a month, against $8.98 of monthly recurring revenue on 14 October. The plan's day 30 target (Part E5) is a monthly cost under $100, and a tripwire fires at more than $150 a month with revenue under $50 at day 60. **Tennyson: please fill in each "Unknown" from the dashboards; that one table is what the scoreboard's "monthly cost" line needs.**
+**Total:** unknown. The adversarial review estimated $60 to $300 a month, against $8.98 of monthly recurring revenue on 14 October (Stripe's figure, which the Revenue card shows; $2.99 with comped payers left out, and the comped $5.99 Breeder month ends about 1 November). The plan's day 30 target (Part E5) is a monthly cost under $100, and a tripwire fires at more than $150 a month with revenue under $50 at day 60. **Tennyson: please fill in each "Unknown" from the dashboards; that one table is what the scoreboard's "monthly cost" line needs.**
 
 ## 2. Secrets: names and where they live
 
@@ -44,9 +44,11 @@ These are shared by every function in the project.
 |---|---|
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` | Most functions (Supabase provides these automatically) |
 | `STRIPE_SECRET_KEY` | `stripe-checkout`, `stripe-webhook`, `stripe-billing-portal`, `store-checkout`, `store-stripe-webhook`, `report-social-overage`, `delete-my-account` |
-| `STRIPE_WEBHOOK_SECRET` | `stripe-webhook` and `store-stripe-webhook`. Both read the same name, so either both Stripe endpoints share one signing secret or one of the two webhooks cannot verify its events. Check in Stripe how many endpoints exist (review, production check 9) |
+| `STRIPE_WEBHOOK_SECRET` | `stripe-webhook`, and `store-stripe-webhook` once it is deployed (it is not today). Both read the same name, so when the store webhook goes live, either both Stripe endpoints share one signing secret or one of the two cannot verify its events. Check in Stripe how many endpoints exist (review, production check 9) |
 | `STRIPE_KEEPER_PRICE_ID`, `STRIPE_BREEDER_PRICE_ID`, `STRIPE_ENTERPRISE_PRICE_ID`, `STRIPE_OVERAGE_PRICE_ID`, `STRIPE_OVERAGE_ENABLED` | Optional price overrides and the paused social-post overage |
 | `RESEND_API_KEY`, `EMAIL_FROM`, `SITE_URL` | `send-email`, `send-collection-invite`, `send-breeder-inquiry`, `subscribe-and-send-guides`, `waitlist-signup` (and `SITE_URL` also in `email-unsubscribe`, `store-checkout`) |
+| `RESEND_WEBHOOK_SECRET` | `resend-webhook`. The signing secret Resend shows for the webhook endpoint (it starts with `whsec_`). Without it the function refuses every call, so no delivery events are recorded |
+| `EMAIL_POSTAL_ADDRESS`, `UNSUBSCRIBE_MAILTO` | `send-email`, both optional. The postal address goes in the email footer (US law expects one in commercial email). The mailto address goes in the List-Unsubscribe header only when a signed unsubscribe link could not be made |
 | `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `HEALTH_SCREEN_MODEL` | `recognize-gecko-morph`, `health-screen`, `invoke-llm`, `generate-social-post`, `recognize-import-data` |
 | `REPLICATE_API_TOKEN`, `SIGLIP_MODEL` | `recognize-gecko-morph`, `embed-gecko-image` |
 | `IP_HASH_SALT`, `EVAL_SHARED_SECRET`, `MORPH_VISUAL_RETRIEVAL`, `MORPH_RETRIEVAL_MIN_SIMILARITY`, `MORPH_RETRIEVAL_MAX_PHOTOS`, `FEW_SHOT_PER_MORPH`, `FEW_SHOT_MAX_TOTAL`, `FEW_SHOT_FILLER_URL_PREFIX` | `recognize-gecko-morph` |
@@ -61,14 +63,17 @@ These are shared by every function in the project.
 
 Present on 15 October 2026: `email_unsubscribe_secret`, `notification_service_role_key`.
 
+To be created by Tennyson (round 2): `morph_share_view_key`, 32 or more random characters. The same value goes in the Vercel setting `MORPH_SHARE_VIEW_KEY` (below). The database counts a view of a shared Morph ID card only when the share page sends this key, so until both exist every card's view count stays 0. The cards themselves work without it.
+
 ### Vercel environment variables (Project, Settings, Environment Variables)
 
-All are `VITE_` variables, which Vite builds into the public JavaScript. They are public by design (the Supabase anon key, the PostHog project key, RevenueCat's public SDK keys); nothing secret may ever be given a `VITE_` name. `scripts/check-env.mjs` fails a production build when a required one is missing.
+Almost all are `VITE_` variables, which Vite builds into the public JavaScript. They are public by design (the Supabase anon key, the PostHog project key, RevenueCat's public SDK keys); nothing secret may ever be given a `VITE_` name. `scripts/check-env.mjs` fails a production build when a required one is missing.
 
 - Required in production: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_REVENUECAT_WEB_API_KEY`, `VITE_POSTHOG_KEY`, `VITE_VAPID_PUBLIC_KEY`.
 - Required for a store build: `VITE_REVENUECAT_IOS_API_KEY` (iPhone) or `VITE_REVENUECAT_ANDROID_API_KEY` (Android).
 - Optional: `VITE_POSTHOG_HOST`, `VITE_GECK_DATA_SUPABASE_URL`, `VITE_GECK_DATA_SUPABASE_ANON_KEY`, `VITE_MARKET_SNAPSHOT_URL`, `VITE_MARKET_INTEL_URL`, `VITE_IMAGE_TRANSFORMS`.
-- `middleware.js` also reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` on the server to log crawler visits.
+- Server-only, never `VITE_`: `MORPH_SHARE_VIEW_KEY`, read by `api/morph-share.js` on the server to count card views. It must equal the Vault secret `morph_share_view_key`. No `VITE_` prefix: those names are for public values the build may put in the browser's JavaScript, and anyone holding this key could inflate the view counts.
+- `middleware.js` (through `api/_lib/bots.js`) and `api/morph-share.js` also read `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` on the server, to log crawler visits and to read shared cards.
 
 ### GitHub Actions secrets (Repository, Settings, Secrets and variables, Actions)
 
@@ -107,6 +112,16 @@ Plan item E1 11 asks for: the backup tier confirmed and written into `docs/MIGRA
 - In-app support form and ticket inbox (admin panel), which records replies.
 - Reports on forum posts, gallery items, messages and listings go to the admin reports view, with hide, remove and block. No response-time target is written down yet (release gate 5 in `docs/RELEASE_READINESS.md`).
 
+### Email records and account deletion
+
+Three tables (migration `20261015151200_lifecycle_emails.sql`) hold email addresses. Admins can read them; only the server adds rows.
+
+- `email_deliveries`, one row per email event (sent, delivered, opened, clicked, bounced, complained). It keeps the address only when the address belongs to someone who can sign in (`email_has_login`); events for anyone else are counted with no address.
+- `lifecycle_email_sends`, which getting-started email went to which address, so each one is sent once.
+- `email_suppressions`, addresses that hard bounced or marked our email as spam. Notifications, digests, reminders and lifecycle emails are not sent to them. An admin can delete a row to lift it.
+
+Deleting an account (`admin_erase_account`, migration `20261015151600_erase_email_logs.sql`) clears the address and the event detail from that member's `email_deliveries` rows (the counts stay), deletes their `lifecycle_email_sends` rows, and clears any comment they typed when cancelling a subscription. `email_suppressions` is kept on purpose: an address that bounced or complained must never be mailed again, even after the account is gone.
+
 ## 5. Scheduled jobs and bots
 
 ### In the database (pg_cron), as found on 15 October 2026
@@ -119,7 +134,7 @@ Times are UTC. "Last 7 days" is the run history the database keeps (section 3).
 | `refresh-market-matviews` | hourly at :20 | Rebuilds the market summary views | 74 ok, **104 failed** |
 | `market-brief-morning` | :35 past each hour, 13:00 to 20:00 | The Market page's daily brief | 58 ok |
 | `market-value-daily` | 12:40 | Value estimate snapshot | 8 ok |
-| `hatch-alerts-daily` | 13:00 | Hatch window alerts | 8 ok |
+| `hatch-alerts-daily` | 13:00 | Hatch window alerts (from round 2: one alert a day per member while an egg is near its date, one every 6 days otherwise) | 8 ok |
 | `feeding-reminders-daily` | 14:10 | Feeding reminders | 8 ok |
 | `personal-weighin-reminders-daily` | 14:20 | Weigh-in reminders that follow each gecko | 8 ok |
 | `season-planner-reminders-daily` | 14:20 | Breeding season reminders | 8 ok |
@@ -133,8 +148,9 @@ Times are UTC. "Last 7 days" is the run history the database keeps (section 3).
 | `monthly-overage-billing` | 02:00 on the 1st | Social post overage billing (overage is paused) | not due |
 | `process-scheduled-blog-posts` | every 5 minutes | **Inactive** (blog shelved) | |
 | `promote_drain_scheduled` | every 5 minutes | **Inactive** (scheduled social posts) | |
+| `lifecycle-emails-hourly` | :35 past each hour (`35 * * * *`) | The getting-started emails (day 0 to day 14). **Added by round 2.** It sends nothing until `app_settings` `lifecycle_emails_enabled` is true, which waits on Tennyson approving the copy in `docs/planning/lifecycle-emails-2026-10.md` | new |
 
-Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no time zone (review C15 item 3). Round 2 of the plan adds jobs (lifecycle emails, reminder changes); re-run the query in section 6 rather than trusting this table.
+Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no time zone (review C15 item 3). Round 2 also changes what the reminder and digest jobs send (defaults by life stage, `/log` links, nothing for addresses that cannot sign in) without changing their schedules. Re-run the query in section 6 rather than trusting this table.
 
 ### In GitHub Actions (`.github/workflows/`)
 
@@ -175,9 +191,9 @@ Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no
    ```
    Anything with failures, or a daily job with no run in the last day, gets a look. History only goes back about 7 days.
 4. **Schema in step.** `supabase migration list` shows the same versions locally and on production (`docs/MIGRATIONS.md`); nothing is waiting in a deploy queue document.
-5. **Money.** Stripe: new payments, failed payments, cancellations, disputes and refunds this week, and that the admin revenue tile agrees. RevenueCat: any store purchases.
+5. **Money.** Stripe: new payments, failed payments, cancellations, disputes and refunds this week. Check that the Monthly recurring figure on the Revenue card (Admin, Overview), which should match Stripe, agrees with Stripe; the scoreboard's figure leaves out comped payers, so it can be lower. RevenueCat: any store purchases.
 6. **Credit balances.** Anthropic and Replicate have enough credit for a month (both have run dry once). Note any bill that moved.
-7. **Email health.** Resend: bounce and complaint rates for the alerts sender, and any domain warnings.
+7. **Email health.** Resend: bounce and complaint rates for the alerts sender, and any domain warnings. In the app: the email delivery table on the Weekly scoreboard card, and any new rows in `email_suppressions`.
 8. **Errors.** The newest rows in `error_logs`, grouped by message.
 9. **Support and moderation.** The support inbox and the in-app tickets are answered; the reports view is empty or handled.
 10. **Market feed.** Is the US feed running? If not, the Market page and value estimates are getting stale; note it on the scoreboard.

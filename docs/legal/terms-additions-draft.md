@@ -64,7 +64,7 @@ Behaviour this describes:
 - Trials are opt-in: `intent = 'trial'` gives `TRIAL_DAYS` (7); `intent = 'keeper_trial'` gives `KEEPER_PROMO_TRIAL_DAYS` (30) on Keeper only; any other purchase has no trial (`src/lib/stripe-config.js`, `stripe-checkout` lines 28 to 38 and 416 to 444).
 - One of each per account: `free_trial_used` and `keeper_trial_used` on the profile, set by the webhook when the checkout completes, so closing the checkout tab does not use up a trial.
 - Card at the start: Stripe Checkout in subscription mode collects a payment method by default; the code does not change that.
-- No reminder is sent by the app today. The webhook receives `customer.subscription.trial_will_end` (about three days before) and only refreshes the plan (`stripe-webhook`, around line 1192).
+- No reminder is sent by the app today. The webhook receives `customer.subscription.trial_will_end` (about three days before) and only refreshes the plan (the `customer.subscription.trial_will_end` case in `stripe-webhook`).
 - A trial that ends without a successful payment moves the subscription to `incomplete_expired` or `unpaid`, which ends access.
 
 ## 4. Changing or cancelling a plan (new section)
@@ -100,7 +100,7 @@ Behaviour this describes:
 
 - There is no written refund policy today, and refunds are issued by hand in the Stripe dashboard (the review records one such case, E1 item 12).
 - A full refund or a dispute of a lifetime payment removes lifetime access; a dispute that is won, or funds reinstated, restores it (`disputeAccessDecision`, `lifetimeChargeDecision` in `stripe-webhook`).
-- A refunded or disputed subscription payment keeps the plan revoked until a newer invoice is paid (`stripe-webhook`, around line 763). A partial refund does not end access.
+- A refunded or disputed subscription payment keeps the plan revoked until a newer invoice is paid (`applySubscriptionAccess` in `stripe-webhook`). A partial refund does not end access. A refund or dispute on an older invoice, one that no longer decides access, is recorded as an amount only and does not change the plan (since round 2).
 - The support address is `SUPPORT_EMAIL` in `src/lib/supportContact.js` (a personal Gmail address on 15 October; E1 item 9 moves it to support@geckinspect.com).
 
 ## 6. Lifetime plans (new section)
@@ -118,7 +118,7 @@ Behaviour this describes:
 - Prices and the one-time Checkout: Keeper $149 and Breeder $349, `mode = payment`, no trial, an invoice is created for each (`TIER_PRICING`; `stripe-checkout` lines 45 to 49 and 205 to 245). There is no lifetime Enterprise.
 - Web only: iOS and RevenueCat have no lifetime product (`docs/BILLING.md`). Whether the website's lifetime plans may be shown inside the iPhone app is an App Store guideline question (review C15 item 1).
 - Existing subscription cancelled with no credit and no proration (`stripe-checkout` lines 45 to 49; `stripe-webhook` lifetime fulfilment); a second lifetime purchase is refused (409 `already_lifetime`).
-- Subscription events cannot downgrade a lifetime member (`stripe-webhook`, header lines 29 to 33).
+- Subscription events cannot downgrade a lifetime member (`stripe-webhook`, the header comment on lifetime purchases, and `applySubscriptionAccess`).
 - Access is permanent in the entitlement layer (`membership_billing_cycle = 'lifetime'`; header comment in `src/lib/stripe-config.js`).
 - The review notes the lifetime webhook path has not been exercised with a real or test-mode purchase (C15 item 1). Run one test-mode lifetime purchase, refund and dispute before relying on this wording.
 
@@ -139,7 +139,7 @@ Behaviour this describes:
 - Morph ID wording already in the product: "This is a read of what is visible, not a genetic test" and "treat the result as a starting point, not a genetic test" (`src/components/morph-id/MorphCorrectionPanel.jsx`, `MorphIdLimitsCard.jsx`); "an identification aid, not a genetic test ... never treats model scores as calibrated probabilities" (`supabase/functions/recognize-gecko-morph/README.md`).
 - Health screen wording in the product: "A photo check is a starting point for routine care, not a substitute for hands-on husbandry or a vet visit" (`src/components/health/HealthScreenCard.jsx`).
 - Providers: `ANTHROPIC_API_KEY` and `REPLICATE_API_TOKEN` in the functions listed in `docs/OPERATIONS.md`.
-- Monthly allowances with no rollover, counted by calendar month: `TIER_LIMITS` (`src/lib/tierLimits.js`) and `supabase/migrations/20261008215000_morph_id_bonus_credits.sql` (`month_key_now()`, "no rollover"). The free plan's single lifetime try becomes one a month under E2 item 17; the Terms should say "as shown on the Membership page" so they do not need to change with it.
+- Monthly allowances with no rollover, counted by calendar month (the month turns at midnight UTC on the 1st): `TIER_LIMITS` (`src/lib/tierLimits.js`) and `supabase/migrations/20261008215000_morph_id_bonus_credits.sql` (`month_key_now()`, "no rollover"). The free plan's single lifetime try became one identification a month under E2 item 17 (decision 46, `consume_morph_id_credit` in `supabase/migrations/20261015151300_morph_id_share_card.sql`), so every plan, Free included, now has a monthly Morph ID allowance. The Terms should still say "as shown on the Membership page" so they do not need to change with the numbers.
 - Failed or timed-out identifications are refunded (`refund_morph_id_credit` in `recognize-gecko-morph`).
 - Training only with opt-in: the current Terms section 3 already says this.
 

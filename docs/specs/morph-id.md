@@ -38,11 +38,14 @@ Target WCAG 2.2 AA. Morph ID must support keyboard operation, visible focus, scr
 
 | Part | Files |
 |---|---|
-| The page members use | `src/pages/Recognition.jsx` (route `/recognition`), components in `src/components/morph-id/` |
+| The page members use | `src/pages/Recognition.jsx` (route `/Recognition`, with a capital R), components in `src/components/morph-id/` |
 | The trait list it may return | `src/components/morph-id/morphTaxonomy.js`, mirrored in `supabase/functions/recognize-gecko-morph/taxonomy.ts` |
-| The identification itself | `supabase/functions/recognize-gecko-morph` (Anthropic Claude vision plus similar-photo retrieval through Replicate). Its `README.md` documents the response shape, retrieval and deploy steps |
-| Allowances and credits | `src/lib/tierLimits.js` (Free: 1 ever; Keeper 3, Breeder 6, Enterprise 15 a month), `src/lib/morphIdQuota.js`, SQL `consume_morph_id_credit` and `morph_id_scans_remaining`, ledger `morph_id_usage`, extra scans in `morph_id_bonus_credits` |
+| The identification itself | `supabase/functions/recognize-gecko-morph` (Anthropic Claude vision plus similar-photo retrieval through Replicate). Its `README.md` documents the response shape, retrieval and deploy steps. It is declared in `supabase/config.toml`, so merging to `main` deploys it |
+| Allowances and credits | `src/lib/tierLimits.js` (Free 1, Keeper 3, Breeder 6, Enterprise 15 a month, reset at midnight UTC on the 1st; decision 46), `src/lib/morphIdQuota.js`, SQL `consume_morph_id_credit` (uses 1 for Free whatever the function sends) and `morph_id_scans_remaining`, ledger `morph_id_usage`, extra scans in `morph_id_bonus_credits` |
+| The shareable result card | The member taps Share on a result (`src/components/morph-id/MorphShareCard.jsx`). The database copies the card from the stored answer, never from the browser (`create_morph_id_share`, table `morph_id_shares`, migration `20261015151300_morph_id_share_card.sql`), and the card's photo must be one the answer read. The public page is `/morph-id/r/<id>`, served as real HTML by `api/morph-share.js` so link previews show the photo; it says "Visual traits, not proven genes" and links to Morph ID with the card id. The owner can take a card down. Events: `docs/planning/instrumentation-2026-10.md` |
 | Corrections and training review | `src/pages/Training.jsx`, `MorphCorrectionPanel.jsx`, `AIFeedbackQueue.jsx` |
 | Accuracy checks | `scripts/morph-id-eval/` and the hand-run `morph-id-eval` workflow (220 held-out geckos, about $6 a full run); the `daily-canary` workflow runs two real identifications each morning |
 
-Open work from the 14 October review: the shareable result card and one free identification a month (Part E, item 17), and an adjudicated, seller-disjoint gold set with a published accuracy number (item 29). The honest framing stays: visual traits, not proven genes.
+Done in round 2 of the 14 October review's plan (Part E, item 17): the shareable result card and one free identification a month. Card views are counted only once the Vault secret `morph_share_view_key` and the Vercel setting `MORPH_SHARE_VIEW_KEY` are set (`docs/planning/deploy-queue-2026-10-03.md`).
+
+Open work: an adjudicated, seller-disjoint gold set with a published accuracy number (item 29). The honest framing stays: visual traits, not proven genes.
