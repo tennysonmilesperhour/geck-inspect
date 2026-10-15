@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Loader2, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabaseClient';
+import WeeklyScoreboard from '@/components/admin/WeeklyScoreboard';
 
 // Plain names for the first-touch source buckets (src/lib/attribution.js).
 const SOURCE_LABELS = {
@@ -74,6 +75,11 @@ function isMissingFunction(error) {
  * week 2 (7 to 14 days after), split by first-touch source. Admin
  * accounts are left out. From public.admin_growth_funnel(), which only
  * answers admins (migration 20261005120000).
+ *
+ * The weekly scoreboard (comprehensive review, Part E5) sits at the top
+ * of the same card, because the plan names this card as the one place
+ * the scoreboard lives. It loads on its own, so a funnel error does not
+ * hide it.
  */
 export default function GrowthFunnelCard({ weeks = 12 }) {
   const [payload, setPayload] = useState(null);
@@ -116,6 +122,9 @@ export default function GrowthFunnelCard({ weeks = 12 }) {
   if (error) {
     return (
       <Card>
+        <CardContent className="pt-6 pb-2">
+          <WeeklyScoreboard />
+        </CardContent>
         {header}
         <CardContent>
           {isMissingFunction(error) ? (
@@ -133,6 +142,9 @@ export default function GrowthFunnelCard({ weeks = 12 }) {
 
   return (
     <Card>
+      <CardContent className="pt-6 pb-2">
+        <WeeklyScoreboard />
+      </CardContent>
       {header}
       <CardContent>
         {payload === null ? (
