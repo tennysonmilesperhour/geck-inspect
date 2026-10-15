@@ -38,6 +38,7 @@ import NativeCareSync from '@/components/native/NativeCareSync';
 import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
 import { captureFirstTouch } from '@/lib/attribution';
+import { captureMorphShareRef } from '@/lib/morphShareRef';
 import { captureSignupGrantFromUrl } from '@/lib/store/signupGrant';
 import { RETIRED_PAGES } from '@/lib/retiredPages';
 
@@ -45,6 +46,10 @@ import { RETIRED_PAGES } from '@/lib/retiredPages';
 // recorded once per browser. It has to run before the two helpers below
 // strip ?ref and ?grant from the address bar.
 captureFirstTouch();
+// ?ms=<card id> from a shared Morph ID card, kept so a later sign-up is
+// credited to the card. After captureFirstTouch, which reads the UTM tags
+// the same link carries.
+captureMorphShareRef();
 // Pull ?ref=<code> off the URL into localStorage as early as possible,
 // before any router renders, so the param is captured even on the very
 // first navigation away from the landing page. applyPendingReferral

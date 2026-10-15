@@ -13,7 +13,7 @@ import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
 import PageHeader from '@/components/shared/PageHeader';
-import { getTierLimits, TIER_LIMITS } from '@/lib/tierLimits';
+import { tierOf, TIER_LIMITS } from '@/lib/tierLimits';
 import { loadMorphIdQuota, morphIdGate, morphIdScansLeftLabel } from '@/lib/morphIdQuota';
 import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis, applyCorrections } from '@/lib/morphIdDraft';
@@ -25,6 +25,7 @@ import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
 import MorphIdCoverageCard from '../components/morph-id/MorphIdCoverageCard';
 import MorphIdLimitsCard from '../components/morph-id/MorphIdLimitsCard';
+import MorphShareCard, { MyMorphShares } from '../components/morph-id/MorphShareCard';
 import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
 import ViewPhotoUploader from '../components/morph-id/ViewPhotoUploader';
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
@@ -100,6 +101,9 @@ export default function Recognition() {
   // collection" so it saves what they confirmed.
   const [corrected, setCorrected] = useState(null);
   const [elapsed, setElapsed] = useState(0);
+  // The request key of the answer on screen. The share card is copied on
+  // the server from the answer stored under this key.
+  const [analysisKey, setAnalysisKey] = useState(null);
   const resultRef = useRef(null);
 
   useEffect(() => {
@@ -123,11 +127,12 @@ export default function Recognition() {
   const primaryUrl = imageUrls[0] || null;
 
   // The server reports scans left (the plan allowance plus any unexpired
-  // bonus credits). Free is 1 lifetime try. Paid plans are the monthly
-  // cap. Lock only once that number is known to be 0. If the read fails,
-  // the server still enforces the limit and returns a clear error.
+  // bonus credits). Free is 1 a month (since 16 Oct 2026). Paid plans are
+  // the monthly cap. Lock only once that number is known to be 0. If the
+  // read fails, the server still enforces the limit and returns a clear
+  // error.
   const isFreeTier =
-    Boolean(user) && !isGuest && !isAdmin && getTierLimits(user).monthlyMorphIDCredits === 0;
+    Boolean(user) && !isGuest && !isAdmin && tierOf(user) === 'free';
   const quotaQuery = useQuery({
     // Usage is keyed by the sign-in id (auth_user_id). user.id is the
     // profile id, which differs for every free account.
@@ -182,6 +187,7 @@ export default function Recognition() {
     setError(null);
     setSavedOnce(false);
     setCorrected(null);
+    setAnalysisKey(null);
     setIsUploadingPhotos(false);
     requestKeyRef.current = { signature: null, key: null };
   };
@@ -266,6 +272,7 @@ export default function Recognition() {
         // match the scan that just finished (including a refund).
         if (!isAdmin && user?.auth_user_id) await quotaQuery.refetch();
         setMeta(respMeta || null);
+        setAnalysisKey(requestKey);
         setAnalysis(data);
       }
     } catch (err) {
@@ -327,6 +334,8 @@ export default function Recognition() {
 
         <MorphIdLimitsCard />
 
+        {user && !isGuest && <MyMorphShares userId={user.auth_user_id} />}
+
         <details className="rounded-xl border border-slate-700 p-4">
           <summary className="cursor-pointer font-medium text-slate-200 touch:py-2.5">Photo tips and supported morphs</summary>
           <div className="mt-4 space-y-4"><PhotoTipsCard /><MorphIdCoverageCard /></div>
@@ -338,12 +347,12 @@ export default function Recognition() {
               <Lock className="w-6 h-6 text-amber-300" />
               <p className="font-semibold text-amber-100">
                 {isFreeTier
-                  ? (gate.bonus > 0 ? 'You have used your Morph ID scans' : 'You have used your free Morph ID')
+                  ? (gate.bonus > 0 ? 'You have used your Morph ID scans' : "You have used this month's free Morph ID")
                   : "You're out of Morph ID scans for this month"}
               </p>
               <p className="text-sm text-amber-200/80 max-w-md">
                 {isFreeTier
-                  ? <>Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.</>
+                  ? <>Your next free identification arrives on the 1st. Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.</>
                   : 'Your monthly scans reset on the 1st. Upgrade your plan to identify more geckos now.'}
               </p>
               <div className="flex flex-wrap gap-2 justify-center mt-1">
@@ -369,7 +378,7 @@ export default function Recognition() {
               <>
               {showFirstFreeBanner && (
                 <div className="rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100">
-                  <p className="font-semibold">Your first identification is free.</p>
+                  <p className="font-semibold">Your free identification this month is ready.</p>
                   <p className="text-emerald-200/80 mt-1">
                     Make it count: a sharp top view and side view in daylight, plus a third photo if you can.
                   </p>
@@ -400,9 +409,9 @@ export default function Recognition() {
             ) : (
               <div className="py-8 text-center max-w-lg mx-auto">
                 <Lock className="w-7 h-7 text-emerald-400 mx-auto" />
-                <h2 className="text-lg font-semibold text-slate-100 mt-3">Your first identification is free</h2>
+                <h2 className="text-lg font-semibold text-slate-100 mt-3">One free identification every month</h2>
                 <p className="text-sm text-slate-400 mt-2">
-                  Create a free account to try Morph ID once on your own crested gecko. An account keeps your photos
+                  Create a free account to run Morph ID on your own crested gecko once a month. An account keeps your photos
                   and result together, and lets you save the gecko to your collection afterwards.
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center mt-4">
@@ -478,7 +487,7 @@ export default function Recognition() {
                   </div>
                   <p className="text-xs text-slate-500">
                     {isFreeTier && gate.bonus === 0
-                      ? 'Your free try is used only when we can give you an answer. If the photos are not clear enough, you keep it and can try again with better photos.'
+                      ? 'Your free identification is used only when we can give you an answer. If the photos are not clear enough, you keep it and can try again with better photos.'
                       : 'A credit is used only when we can give you an answer. If the photos are not clear enough, or the analyzer fails, the credit comes back automatically.'}
                   </p>
                 </div>
@@ -565,7 +574,7 @@ export default function Recognition() {
         )}
         {meta && !meta.is_admin && !meta.credit_refunded && isFreeTier && gate.known && gate.remaining === 0 && gate.bonus === 0 && (
           <p className="text-xs text-slate-500 text-center">
-            That was your free identification. Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
+            That was this month&rsquo;s free identification. The next one arrives on the 1st, or Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
           </p>
         )}
         {meta && !meta.is_admin && showScansLeft && (
@@ -627,6 +636,16 @@ export default function Recognition() {
               </Button>
             </CardContent>
           </Card>
+        )}
+
+        {analysis && primaryUrl && user && !isGuest && (
+          <MorphShareCard
+            key={analysisKey || 'admin'}
+            analysis={analysis}
+            imageUrl={primaryUrl}
+            requestKey={analysisKey}
+            isAdmin={isAdmin}
+          />
         )}
 
         {savedOnce && (

@@ -208,6 +208,7 @@ export const KNOWN_PATH_PATTERNS = [
   "/claim/:token",
   "/collection-invite/:token",
   "/blog/:slug",
+  "/morph-id/r/:id",
   "/store/:slug",
   "/blog/category/:slug",
   "/blog/tag/:slug",

@@ -94,7 +94,7 @@ export const MEMBERSHIP_FAQS = [
   },
   {
     q: 'What is included in the Free plan?',
-    a: `Up to ${TIER_LIMITS.free.maxGeckos} geckos, 1 active breeding pair, weights, feeding groups and event logs, lineage trees, sales and cost records, value estimates from real listings, one free Morph ID, the genetics calculator and guides, and the community forum. It is free for as long as you use it, with no credit card.`,
+    a: `Up to ${TIER_LIMITS.free.maxGeckos} geckos, 1 active breeding pair, weights, feeding groups and event logs, lineage trees, sales and cost records, value estimates from real listings, one free Morph ID a month, the genetics calculator and guides, and the community forum. It is free for as long as you use it, with no credit card.`,
   },
   {
     q: 'Can I export my records?',

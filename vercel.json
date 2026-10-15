@@ -8,6 +8,10 @@
       "destination": "/api/mcp"
     },
     {
+      "source": "/morph-id/r/:id",
+      "destination": "/api/morph-share?id=:id"
+    },
+    {
       "source": "/(.*)",
       "destination": "/app.html"
     }

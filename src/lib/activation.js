@@ -8,6 +8,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { captureEvent } from '@/lib/posthog';
 import { getFirstTouch, firstTouchProperties, getSignupCta, signupCtaProperties } from '@/lib/attribution';
+import { creditMorphShareSignup, getMorphShareRef } from '@/lib/morphShareRef';
 
 // An account counts as new on its first authenticated session within this
 // long of being created. Email confirmation can take a while, so a day.
@@ -58,11 +59,16 @@ export async function recordSignupIfNew(authUser, profile) {
   writeFlag(flag);
   const touch = getFirstTouch();
   const signupCta = getSignupCta();
+  const morphShareId = getMorphShareRef();
   captureEvent('signup_completed', {
     method: authUser.app_metadata?.provider || 'email',
     ...firstTouchProperties(touch),
     ...signupCtaProperties(signupCta),
+    ...(morphShareId ? { morph_share_id: morphShareId } : {}),
   });
+  // Arrived from a shared Morph ID card: count the sign-up on that card
+  // (the database logs morph_share_signup once per account).
+  if (morphShareId) creditMorphShareSignup(supabase, morphShareId);
   // Only when the profile row has loaded, so an absent row is not
   // overwritten; the event above is the record either way.
   if (profile?.id && authUser.email) {

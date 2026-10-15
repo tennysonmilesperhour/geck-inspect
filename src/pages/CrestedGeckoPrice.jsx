@@ -253,7 +253,7 @@ export default function CrestedGeckoPrice() {
           <ol className="space-y-3 text-sm">
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono flex items-center justify-center mt-0.5">1</span>
-              <p className="text-slate-400 leading-relaxed">Identify the morph. Not sure? The <Link to="/MorphGuide" className="text-emerald-400 hover:text-emerald-300">morph guide</Link> and <Link to="/Recognition" className="text-emerald-400 hover:text-emerald-300">Morph ID</Link> (your first identification is free) help you name the traits.</p>
+              <p className="text-slate-400 leading-relaxed">Identify the morph. Not sure? The <Link to="/MorphGuide" className="text-emerald-400 hover:text-emerald-300">morph guide</Link> and <Link to="/Recognition" className="text-emerald-400 hover:text-emerald-300">Morph ID</Link> (one free identification a month) help you name the traits.</p>
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono flex items-center justify-center mt-0.5">2</span>

@@ -436,7 +436,7 @@ export const STATIC_ROUTES = [
     meta: {
       title: 'Crested Gecko Morph ID: Identify Your Gecko From Photos',
       description:
-        'Upload a top and a side photo of your crested gecko and get a ranked morph shortlist (Harlequin, Lilly White, Phantom, Cappuccino and more), the visible traits behind it, and what the photos cannot confirm. Your first identification is free.',
+        'Upload a top and a side photo of your crested gecko and get a ranked morph shortlist (Harlequin, Lilly White, Phantom, Cappuccino and more), the visible traits behind it, and what the photos cannot confirm. One free identification a month.',
     },
   },
   // /Gallery, /Forum, /Marketplace and /MarketplaceBuy are not listed:
@@ -807,6 +807,8 @@ export function getAllSpaPathPatterns() {
 // in the sitemap because the id lives in the database (a breeder slug,
 // a passport code, a blog post published from the admin).
 const EDGE_EXTRA_PATTERNS = [
+  // A shared Morph ID result card, served by api/morph-share.js.
+  '/morph-id/r/:id',
   '/store/:slug',
   '/blog/category/:slug',
   '/blog/tag/:slug',

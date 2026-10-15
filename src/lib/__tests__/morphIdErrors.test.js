@@ -59,7 +59,7 @@ describe('presentMorphIdError', () => {
       { code: 'morph_id_credits_exhausted' },
       { isFreeTier: true, bonus: 0, keeperCredits: 3 },
     );
-    expect(copy.title).toBe('You have used your free Morph ID');
+    expect(copy.title).toBe("You have used this month's free Morph ID");
     expect(copy.retryable).toBe(false);
   });
 });

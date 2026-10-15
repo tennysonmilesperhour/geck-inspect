@@ -124,8 +124,8 @@ export function morphIdErrorSettledQuota(error) {
 export function presentMorphIdError(error, { isFreeTier = false, bonus = 0, keeperCredits = 3 } = {}) {
   if (error?.code === 'morph_id_credits_exhausted' && isFreeTier) {
     return {
-      title: bonus > 0 ? 'You have used your Morph ID scans' : 'You have used your free Morph ID',
-      body: `Keeper includes ${keeperCredits} identifications a month.`,
+      title: bonus > 0 ? 'You have used your Morph ID scans' : "You have used this month's free Morph ID",
+      body: `Your next free identification arrives on the 1st. Keeper includes ${keeperCredits} identifications a month.`,
       cta: { label: 'See plans', href: '/Membership' },
       retryable: false,
     };

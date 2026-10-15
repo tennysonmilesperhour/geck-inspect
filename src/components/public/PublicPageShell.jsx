@@ -90,7 +90,7 @@ export function PublicFooter() {
             <li><Link to="/breeding-records" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Breeding Records</Link></li>
             <li><Link to="/crested-gecko-price" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Price Guide</Link></li>
             <li><Link to="/data" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Open Data</Link></li>
-            <li><Link to="/Recognition" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Morph ID (first one free)</Link></li>
+            <li><Link to="/Recognition" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Morph ID (one free a month)</Link></li>
           </ul>
         </div>
         <div>
