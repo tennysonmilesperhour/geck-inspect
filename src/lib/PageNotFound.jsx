@@ -1,12 +1,24 @@
+import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { api } from '@/api/appClient';
 import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
+import { claimStaleRouteReload } from '@/lib/staleRouteReload';
 
 
 export default function PageNotFound({}) {
     const location = useLocation();
     const pageName = location.pathname.substring(1);
+
+    // A tab opened before a deploy does not know newer pages: reload once
+    // to fetch the current app (src/lib/staleRouteReload.js).
+    const [reloading, setReloading] = useState(false);
+    useEffect(() => {
+        if (claimStaleRouteReload(location.pathname)) {
+            setReloading(true);
+            window.location.reload();
+        }
+    }, [location.pathname]);
 
     const { data: authData, isFetched } = useQuery({
         queryKey: ['user'],
@@ -19,6 +31,10 @@ export default function PageNotFound({}) {
             }
         }
     });
+
+    if (reloading) {
+        return <div className="min-h-screen bg-slate-950" aria-busy="true" />;
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-slate-950 text-slate-100">
