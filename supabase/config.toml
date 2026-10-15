@@ -31,3 +31,50 @@ verify_jwt = false
 # no Supabase session; the signed token in the URL is the proof.
 [functions.email-unsubscribe]
 verify_jwt = false
+
+# The functions below were deployed by hand until 15 October 2026, so their
+# gateway setting lived only in the deploy command. Declaring them here
+# records that setting in the repo and lets the Supabase GitHub integration
+# deploy them from main, the same way it deploys the functions above.
+# Each value matches what production had on 15 October 2026.
+
+# Stripe signs its webhook calls; the handler checks the Stripe-Signature
+# header with the signing secret. Stripe sends no Supabase session.
+[functions.stripe-webhook]
+verify_jwt = false
+
+# Promote drafting. Members only; the handler meters each draft against the
+# member's monthly allowance.
+[functions.generate-social-post]
+verify_jwt = true
+
+# AI health screen. Members only; the handler charges and refunds the
+# member's health-screen credit.
+[functions.health-screen]
+verify_jwt = true
+
+# Called by the notifications database trigger with a dispatch secret, which
+# the handler checks against verify_notification_dispatch_secret().
+[functions.send-email]
+verify_jwt = false
+
+# Collection invites. The handler reads the caller's session itself and
+# takes the inviter's name from their profile.
+[functions.send-collection-invite]
+verify_jwt = false
+
+# Public "send me the guides" form on the landing page. Signed-out visitors
+# use it; the handler rate-limits by network and never clears an
+# unsubscribe.
+[functions.subscribe-and-send-guides]
+verify_jwt = false
+
+# Public breeder inquiry form. Signed-out buyers use it; the handler
+# rate-limits by network.
+[functions.send-breeder-inquiry]
+verify_jwt = false
+
+# Morph ID. Guests get a limited try; the handler reads the session itself
+# when there is one and meters signed-in members.
+[functions.recognize-gecko-morph]
+verify_jwt = false
