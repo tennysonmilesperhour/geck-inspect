@@ -4,8 +4,10 @@
 // sign-up form with ?ms=<card id>. This file keeps that id for 30 days so
 // a visitor who looks around, comes back the next evening and signs up is
 // still credited to the card. On the new account's first session
-// recordSignupIfNew (src/lib/activation.js) sends it to the database once,
-// which counts the sign-up on the card and logs morph_share_signup.
+// recordSignupIfNew (src/lib/activation.js) sends it to the database,
+// which counts the sign-up on the card (once per account) and logs
+// morph_share_signup. The id is forgotten only once that call goes
+// through, so a call that failed is tried again on the next session.
 //
 // Only the card id is kept. Nothing here identifies a person.
 import { isShareId, SHARE_REF_PARAM } from '@/lib/morphShareCard';

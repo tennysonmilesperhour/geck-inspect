@@ -50,10 +50,16 @@ export function isNewAccount(authUser, now = Date.now()) {
 export async function recordSignupIfNew(authUser, profile) {
   if (!authUser?.id || !isNewAccount(authUser)) return false;
   const flag = `${SIGNUP_FLAG_PREFIX}${authUser.id}`;
-  if (readFlag(flag)) return false;
   const extra = profile && typeof profile.extra_data === 'object' && profile.extra_data ? profile.extra_data : null;
-  if (extra?.signup_tracked_at) {
+  if (readFlag(flag) || extra?.signup_tracked_at) {
     writeFlag(flag);
+    // The card credit has its own once-only mark: the stored card id,
+    // which creditMorphShareSignup clears only when the database call
+    // goes through. A call that failed (no signal, a deploy under way) is
+    // tried again on a later session; the database counts it once per
+    // account, and only for an account under two days old.
+    const pendingShare = getMorphShareRef();
+    if (pendingShare) creditMorphShareSignup(supabase, pendingShare);
     return false;
   }
   writeFlag(flag);

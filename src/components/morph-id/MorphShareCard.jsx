@@ -156,6 +156,7 @@ export default function MorphShareCard({ analysis, imageUrl, requestKey, isAdmin
 export function MyMorphShares({ userId }) {
   const queryClient = useQueryClient();
   const [removing, setRemoving] = useState(null);
+  const [removeError, setRemoveError] = useState(null);
   const query = useQuery({
     queryKey: [...MY_SHARES_KEY, userId],
     enabled: Boolean(userId),
@@ -175,11 +176,21 @@ export function MyMorphShares({ userId }) {
   const rows = query.data || [];
   if (!rows.length) return null;
 
+  // A card that could not be taken down is still public, so say so
+  // rather than leave the member thinking it is gone.
   const remove = async (id) => {
     setRemoving(id);
-    await supabase.from('morph_id_shares').delete().eq('id', id);
-    setRemoving(null);
-    queryClient.invalidateQueries({ queryKey: MY_SHARES_KEY });
+    setRemoveError(null);
+    try {
+      const { error } = await supabase.from('morph_id_shares').delete().eq('id', id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: MY_SHARES_KEY });
+    } catch (err) {
+      console.warn('Could not stop sharing a Morph ID card:', err);
+      setRemoveError(id);
+    } finally {
+      setRemoving(null);
+    }
   };
 
   return (
@@ -198,6 +209,11 @@ export function MyMorphShares({ userId }) {
                   <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" /> {row.view_count} {row.view_count === 1 ? 'view' : 'views'}</span>
                   <span className="inline-flex items-center gap-1"><UserPlus className="w-3 h-3" /> {row.signup_count} {row.signup_count === 1 ? 'sign-up' : 'sign-ups'}</span>
                 </p>
+                {removeError === row.id && (
+                  <p role="alert" className="text-xs text-rose-300 mt-1">
+                    Could not stop sharing this card just now, so it is still public. Please try again.
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-300 underline underline-offset-4 touch:min-h-11 inline-flex items-center">Open</a>
