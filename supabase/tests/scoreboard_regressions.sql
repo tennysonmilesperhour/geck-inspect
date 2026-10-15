@@ -321,9 +321,14 @@ begin
   if (s #>> '{signups,first_gecko_eligible}')::int <> 2 then raise exception 'FAIL: eligible %', s -> 'signups'; end if;
   if (s #>> '{signups,first_gecko_1d}')::int <> 1 then raise exception 'FAIL: first gecko %', s -> 'signups'; end if;
 
-  -- Email delivery: the view does not exist in this copy.
-  if (s #>> '{email_delivery,available}')::boolean then
-    raise exception 'FAIL: email delivery should read as unavailable without the view';
+  -- Email delivery: available exactly when the lifecycle email view exists
+  -- in this copy (it does once 20261015151200_lifecycle_emails.sql is in).
+  if to_regclass('public.email_delivery_stats') is null then
+    if (s #>> '{email_delivery,available}')::boolean then
+      raise exception 'FAIL: email delivery should read as unavailable without the view';
+    end if;
+  elsif not (s #>> '{email_delivery,available}')::boolean then
+    raise exception 'FAIL: email delivery should read the real view, got %', s -> 'email_delivery';
   end if;
 end
 $t$;
@@ -331,6 +336,9 @@ $t$;
 -- 4. Email delivery passes through when the view exists, and a broken view
 --    does not take the card down. ---------------------------------------------
 
+-- Swap in a small stand-in view (the real one, if present, is put back by
+-- the rollback at the end).
+drop view if exists public.email_delivery_stats;
 create view public.email_delivery_stats as
   select 'reminder'::text as category, 10 as sent, 9 as delivered, 1 as bounced;
 do $t$
