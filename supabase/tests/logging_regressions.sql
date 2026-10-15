@@ -14,11 +14,11 @@
 begin;
 
 -- ---------------------------------------------------------------------------
--- 0. The day the defaults start is stored once in app_settings (public),
---    as the app's own day (CARE_DEFAULTS_FROM, 16 Oct 2026) or the day the
---    migration ran if that is later, so a release on or before 16 Oct
---    agrees with the gecko record's switches. A bad value falls back to
---    the app's day instead of stopping the reminder jobs.
+-- 0. The day the defaults start is stored once in app_settings (public,
+--    so the app reads the same row for the gecko record's switches), as
+--    the fallback day (16 Oct 2026, the app's CARE_DEFAULTS_FROM) or the
+--    day the migration ran if that is later. A bad value falls back to
+--    that day instead of stopping the reminder jobs.
 -- ---------------------------------------------------------------------------
 do $start$
 declare
@@ -54,6 +54,11 @@ begin
   end if;
   if public.care_log_link('feeding', array['g1'], array['grp-1']) <> '/BatchHusbandry' then
     raise exception 'FAIL: release-day feeding link %', public.care_log_link('feeding', array['g1'], array['grp-1']);
+  end if;
+  -- More than 10 geckos on release day: the old page, with no "more".
+  if public.care_log_link('weight', array['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11']) <> '/MyGeckos' then
+    raise exception 'FAIL: release-day link for 11 geckos %',
+      public.care_log_link('weight', array['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11']);
   end if;
 
   -- The next day: /log.
@@ -161,8 +166,29 @@ begin
   if public.care_log_link('weight', array['bad id'], null) <> '/MyGeckos' then raise exception 'FAIL: weight fallback'; end if;
   if public.care_log_link('surprise', array['g1'], null) <> '/MyGeckos' then raise exception 'FAIL: unknown type'; end if;
 
+  -- More than 10 geckos: the first 10 go in the link, and "more" says how
+  -- many did not fit, so the /log page can say so (it reads 1 to 100000).
   v := public.care_log_link('shed', array['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','a11','a12']);
-  if v <> '/log?type=shed&gecko=a1,a2,a3,a4,a5,a6,a7,a8,a9,a10' then raise exception 'FAIL: more than 10 ids: %', v; end if;
+  if v <> '/log?type=shed&gecko=a1,a2,a3,a4,a5,a6,a7,a8,a9,a10&more=2' then raise exception 'FAIL: more than 10 ids: %', v; end if;
+  if public.safe_internal_link(v) <> v then raise exception 'FAIL: link with more changed by safe_internal_link: %', v; end if;
+
+  -- Exactly 10 usable ids (the bad ones are not counted): no "more".
+  v := public.care_log_link('weight', array['a1','a2','a3','a4','a5','a6','a7','a8','a9','a10','x y','../evil','q"x']);
+  if v <> '/log?type=weight&gecko=a1,a2,a3,a4,a5,a6,a7,a8,a9,a10' then raise exception 'FAIL: 10 usable ids: %', v; end if;
+
+  -- A gecko named twice counts once, in the place it first appears.
+  v := public.care_log_link('weight', array['a1','a2','a1','a3','a4','a5','a6','a7','a8','a9','a10','a11','a2']);
+  if v <> '/log?type=weight&gecko=a1,a2,a3,a4,a5,a6,a7,a8,a9,a10&more=1' then raise exception 'FAIL: repeated ids: %', v; end if;
+
+  -- A feeding reminder with a group and 13 geckos on their own.
+  v := public.care_log_link('feeding', array['f1','f2','f3','f4','f5','f6','f7','f8','f9','f10','f11','f12','f13'], array['grp-1']);
+  if v <> '/log?type=feeding&gecko=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10&group=grp-1&more=3' then raise exception 'FAIL: feeding link with more: %', v; end if;
+  if public.safe_internal_link(v) <> v then raise exception 'FAIL: feeding link with more changed by safe_internal_link: %', v; end if;
+
+  -- A big collection: digits only, never a sign or a space.
+  v := public.care_log_link('weight', (select array_agg('g' || i) from generate_series(1, 250) i));
+  if v !~ '&more=240$' then raise exception 'FAIL: 250 geckos: %', v; end if;
+  if public.safe_internal_link(v) <> v then raise exception 'FAIL: 250-gecko link changed by safe_internal_link'; end if;
   raise notice 'PASS log links';
 end
 $links$;

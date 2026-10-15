@@ -19,9 +19,9 @@
 --    without the member opening Settings, whichever way it was added
 --    (Quick Add, the full form, a spreadsheet import, a hatchling, Morph
 --    ID). That day is stored once in app_settings
---    'care_reminder_defaults_from': 16 Oct 2026 (the app's
---    CARE_DEFAULTS_FROM), or the day this file runs if that is later
---    (the Helpers section below says why):
+--    'care_reminder_defaults_from', which the app reads too: 16 Oct 2026
+--    (the app's fallback, CARE_DEFAULTS_FROM), or the day this file runs
+--    if that is later (the Helpers section below says why):
 --      * weigh-ins: every 14 days while growing (under 15 g or under 12
 --        months, the care guide's hatchling and juvenile stages), every 21
 --        days as a sub-adult (under 35 g or under 18 months) and every 30
@@ -37,10 +37,10 @@
 --        egg in that daily window first) and counts the rest ("3 eggs in
 --        your incubator ..."), so a full incubator sends one email, not
 --        one per egg. Each egg still gets its own row at least every 6
---        days, so the app's hatch check (metadata.egg_id, last 7 days)
---        sees every egg as alerted; the rows that are not the day's alert
---        are marked quiet, already read, and are not sent
---        (notify_dispatch_on_insert below).
+--        days, so the app's hatch check (last 7 days) sees every egg as
+--        alerted, in older open tabs too; the rows that are not the day's
+--        alert are marked quiet, already read, are not sent
+--        (notify_dispatch_on_insert below) and are not listed in the app.
 --    The member can still change or switch off each one: per gecko on its
 --    record (profiles.extra_data.care_reminders.weigh_in.geckos.<id> and
 --    .feeding.geckos.<id>, with "on": false), or for the whole account in
@@ -94,11 +94,11 @@ create unique index if not exists shed_records_client_request_id_key
 -- 2. Helpers
 -- ===========================================================================
 
--- The app's day: CARE_DEFAULTS_FROM in src/lib/careReminders.js, which
--- the gecko record uses to show its Feeding and Weigh-in switches and
--- the phone app uses for its own reminder notes. A test
--- (src/lib/__tests__/careReminders.test.js) checks the two match. Also
--- used when the setting row below is missing or not a real day.
+-- The fallback day: the same as CARE_DEFAULTS_FROM in
+-- src/lib/careReminders.js, which the app uses when it cannot read the
+-- setting row below. A test (src/lib/__tests__/careReminders.test.js)
+-- checks the two match. Used here when the setting row is missing or not
+-- a real day.
 create or replace function public.care_reminder_defaults_fallback()
 returns date
 language sql
@@ -112,26 +112,23 @@ $function$;
 -- get reminders without a stored setting. Written once, when this file
 -- first runs in production ("on conflict do nothing" keeps the first
 -- value when the file runs again), as the later of:
---   * the app's day above. The app does not read this row yet, so a
---     release on or before 16 Oct must use that exact day. Otherwise a
---     gecko added on release day by the full form, an import, a hatchling
---     or Morph ID would get feeding and weigh-in reminders by push and
---     email while its switches show off.
+--   * the fallback day above, 16 Oct 2026. A release before then starts
+--     the defaults on that day.
 --   * the day this file runs (UTC). A release that slips past 16 Oct
 --     then does not start reminding geckos added before it, in tabs that
 --     had no switch to turn the reminder off.
--- What is left: if the release is after 16 Oct, a gecko added between
--- 16 Oct and the release shows its switches on in the new app while the
--- server sends it nothing, until the app reads this row (it is public,
--- is_public, so the app can) instead of its fixed day. A release on or
--- before 16 Oct has no gap.
+-- The row is public (is_public), and the gecko record and the phone app
+-- read it (loadCareDefaultsFrom in src/lib/careReminders.js), so their
+-- Feeding and Weigh-in switches show the same geckos as on that the
+-- reminder jobs remind about. Until this file has run the app uses the
+-- fallback day, and it reads the row again on the next page load.
 insert into public.app_settings (key, value, is_public, description)
 values (
   'care_reminder_defaults_from',
   to_jsonb(greatest((now() at time zone 'utc')::date,
                     public.care_reminder_defaults_fallback())::text),
   true,
-  'Geckos added on or after this day (UTC) get weigh-in and feeding reminders by life stage without a stored choice, and reminders link to the one-tap log page from the next day. Written once by migration 20261015151100: 16 Oct 2026 (the app''s own day) or the day the migration ran, whichever is later.'
+  'Geckos added on or after this day (UTC) get weigh-in and feeding reminders by life stage without a stored choice, and reminders link to the one-tap log page from the next day. Written once by migration 20261015151100: 16 Oct 2026 (the fallback day) or the day the migration ran, whichever is later. The app reads it too, so the gecko record shows the same reminders the server sends.'
 )
 on conflict (key) do nothing;
 
@@ -210,13 +207,17 @@ $function$;
 revoke all on function public.weighin_interval_days(numeric, date, date) from public, anon, authenticated;
 grant execute on function public.weighin_interval_days(numeric, date, date) to service_role;
 
--- The one-tap log link for a reminder: /log?type=<type>&gecko=<ids>&group=<ids>.
+-- The one-tap log link for a reminder:
+-- /log?type=<type>&gecko=<ids>&group=<ids>&more=<n>.
 -- Only ids made of letters, digits, "_" and "-" (up to 64) go in, at most
--- 10 of each, so the link always passes public.safe_internal_link. With
--- no usable id it falls back to the page that lists them, and so it does
--- until the day after the defaults start (care_log_links_live above):
--- feedings open Batch Husbandry, and a weigh-in for one gecko opens it in
--- My Geckos, as the reminders did before.
+-- 10 of each, so the link always passes public.safe_internal_link. A
+-- gecko named twice counts once. When more than 10 geckos are due,
+-- "more" is how many did not fit (digits only), so the /log page says so
+-- instead of looking finished after the first 10. With no usable id it
+-- falls back to the page that lists them, and so it does until the day
+-- after the defaults start (care_log_links_live above): feedings open
+-- Batch Husbandry, and a weigh-in for one gecko opens it in My Geckos, as
+-- the reminders did before.
 create or replace function public.care_log_link(
   p_type text,
   p_gecko_ids text[],
@@ -227,12 +228,18 @@ language sql
 stable
 set search_path to ''
 as $function$
-  with g as (
+  with gv as (
+    -- Each usable gecko id once, where it first appears.
+    select x, min(o) as o
+      from unnest(coalesce(p_gecko_ids, '{}'::text[])) with ordinality as t(x, o)
+     where x ~ '^[A-Za-z0-9_-]{1,64}$'
+     group by x
+  ),
+  g as (
     select array_to_string((array_agg(x order by o))[1:10], ',') as ids,
            count(*) as n,
            (array_agg(x order by o))[1] as first_id
-      from unnest(coalesce(p_gecko_ids, '{}'::text[])) with ordinality as t(x, o)
-     where x ~ '^[A-Za-z0-9_-]{1,64}$'
+      from gv
   ),
   f as (
     select array_to_string((array_agg(x order by o))[1:10], ',') as ids
@@ -250,6 +257,7 @@ as $function$
     else '/log?type=' || p_type
          || case when coalesce(g.ids, '') <> '' then '&gecko=' || g.ids else '' end
          || case when coalesce(f.ids, '') <> '' then '&group=' || f.ids else '' end
+         || case when g.n > 10 then '&more=' || (g.n - 10)::text else '' end
   end
   from g, f;
 $function$;
@@ -560,14 +568,17 @@ grant execute on function public.enqueue_feeding_reminders() to service_role;
 --
 -- The other eggs still need their own rows. The app's hatch check
 -- (src/components/breeding/HatchAlertSystem.jsx) decides "already
--- alerted" from metadata.egg_id over the last 7 days. An egg with no row
--- in that time looks unalerted, and the app then writes its own alert,
--- which is pushed and emailed. (The member insert guard,
+-- alerted" from the hatch alerts of the last 7 days: from this release
+-- it reads metadata.egg_id and metadata.egg_ids, but a tab opened before
+-- it reads only metadata.egg_id, from the 50 newest rows. An egg with no
+-- row in that time looks unalerted to that tab, and it then writes its
+-- own alert, which is pushed and emailed. (The member insert guard,
 -- guard_notification_insert, only drops a repeat for the same egg within
 -- 20 hours, so it does not stop that.) So every egg in its window gets a
 -- row at least every 6 days. Those rows carry metadata.quiet = true and
--- is_read = true: the dispatcher below does not send them, and they do
--- not add to the unread count.
+-- is_read = true: the dispatcher below does not send them, they do not
+-- add to the unread count, and the app's notification lists leave them
+-- out (src/lib/notificationsApi.js).
 --
 -- When it sends:
 --   * any egg within 7 days before to 14 days after its expected hatch

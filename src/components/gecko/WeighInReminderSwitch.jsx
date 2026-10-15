@@ -4,8 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
 import {
+  CARE_DEFAULTS_FROM,
   effectiveGeckoFeeding,
   effectiveWeighIn,
+  loadCareDefaultsFrom,
   loadCareReminderSettings,
   setGeckoFeedingReminder,
   setGeckoWeighInReminder,
@@ -29,30 +31,34 @@ const selectClass = 'mt-2 w-full rounded-md border border-slate-700 bg-slate-900
  * The gecko record's care reminders: the weigh-in reminder, and the
  * feeding reminder for a gecko that is not in a feeding group.
  *
- * Since 16 Oct 2026 a newly added gecko has both on without the member
- * opening Settings (review item E2 15): weigh-ins every 2, 3 or 4 weeks by
- * its life stage, feeding every 3 days. Each can be switched off here, or
- * given a fixed schedule. Older geckos start off and can be switched on.
- * The account switches in Settings override these (shown as a note).
+ * A gecko added on or after the day the defaults start (the October 2026
+ * release, review item E2 15) has both on without the member opening
+ * Settings: weigh-ins every 2, 3 or 4 weeks by its life stage, feeding
+ * every 3 days. That day comes from the same setting the reminder jobs
+ * read (loadCareDefaultsFrom), so these switches show what the server
+ * sends. Each can be switched off here, or given a fixed schedule. Older
+ * geckos start off and can be switched on. The account switches in
+ * Settings override these (shown as a note).
  *
  * Props: gecko, email (the owner), lastWeighDate (YYYY-MM-DD or null).
  */
 export default function WeighInReminderSwitch({ gecko, email, lastWeighDate = null }) {
-  const [state, setState] = useState({ status: 'loading', extra: {} });
+  const [state, setState] = useState({ status: 'loading', extra: {}, defaultsFrom: CARE_DEFAULTS_FROM });
 
   useEffect(() => {
     if (!email || !gecko?.id) return undefined;
     let cancelled = false;
-    loadCareReminderSettings(email)
-      .then((extra) => { if (!cancelled) setState({ status: 'ready', extra }); })
-      .catch(() => { if (!cancelled) setState({ status: 'error', extra: {} }); });
+    Promise.all([loadCareReminderSettings(email), loadCareDefaultsFrom()])
+      .then(([extra, defaultsFrom]) => { if (!cancelled) setState({ status: 'ready', extra, defaultsFrom }); })
+      .catch(() => { if (!cancelled) setState({ status: 'error', extra: {}, defaultsFrom: CARE_DEFAULTS_FROM }); });
     return () => { cancelled = true; };
   }, [email, gecko?.id]);
 
   if (state.status === 'error' || !gecko?.id) return null;
 
-  const weigh = effectiveWeighIn(state.extra, gecko);
-  const feed = effectiveGeckoFeeding(state.extra, gecko);
+  const { defaultsFrom } = state;
+  const weigh = effectiveWeighIn(state.extra, gecko, { defaultsFrom });
+  const feed = effectiveGeckoFeeding(state.extra, gecko, { defaultsFrom });
   const busy = state.status !== 'ready';
 
   const update = async (write) => {
@@ -60,7 +66,7 @@ export default function WeighInReminderSwitch({ gecko, email, lastWeighDate = nu
     setState({ ...state, status: 'saving' });
     try {
       const extra = await write();
-      setState({ status: 'ready', extra: extra || before.extra });
+      setState({ status: 'ready', extra: extra || before.extra, defaultsFrom: before.defaultsFrom });
     } catch (err) {
       setState(before);
       toast({ title: 'Could not change the reminder', description: err.message, variant: 'destructive' });

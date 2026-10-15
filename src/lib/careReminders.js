@@ -22,10 +22,12 @@
 // supabase/migrations/20261008081343_personal_weighin_reminders.sql,
 // changed by 20261015151100_reminders_and_offline_logging.sql.
 //
-// Since 16 Oct 2026 (review item E2 15) reminders follow the animal:
-//   * A gecko added on or after CARE_DEFAULTS_FROM with no stored choice
-//     gets a weigh-in reminder anyway, every 14, 21 or 30 days by its life
-//     stage (src/lib/lifeStage.js). A stored every_days is only used when
+// From the October 2026 release (review item E2 15) reminders follow the
+// animal:
+//   * A gecko added on or after the day the defaults start (see
+//     loadCareDefaultsFrom below) with no stored choice gets a weigh-in
+//     reminder anyway, every 14, 21 or 30 days by its life stage
+//     (src/lib/lifeStage.js). A stored every_days is only used when
 //     the member picked it ("fixed": true); otherwise the cadence moves
 //     with the gecko as it grows.
 //   * The same new gecko, when it is in no feeding group, gets a feeding
@@ -35,9 +37,29 @@
 import { supabase } from '@/lib/supabaseClient';
 import { weighInIntervalDays } from '@/lib/lifeStage';
 
-// The day the defaults start. The reminder jobs read the same date from
-// public.care_reminder_defaults_from(); a test checks they match.
+// The day the defaults start is stored once, when the release's migration
+// runs, in the public app_settings row 'care_reminder_defaults_from': 16
+// Oct 2026 or the day the migration ran, whichever is later. The reminder
+// jobs read it through public.care_reminder_defaults_from(), and the app
+// reads the same row (loadCareDefaultsFrom below), so the gecko record's
+// switches and the server agree on which geckos get default reminders.
+//
+// CARE_DEFAULTS_FROM is only the fallback, for when the row is missing
+// (the migration has not run yet), cannot be read, or is not a real day.
+// It is the same day as the SQL fallback,
+// public.care_reminder_defaults_fallback(); a test checks they match.
 export const CARE_DEFAULTS_FROM = '2026-10-16';
+
+/** True for a real calendar day written YYYY-MM-DD (the SQL's check). */
+export function isCareDefaultsDay(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime())
+    && parsed.getUTCFullYear() >= 1
+    && parsed.toISOString().slice(0, 10) === value;
+}
+
+const defaultsDay = (value) => (isCareDefaultsDay(value) ? value : CARE_DEFAULTS_FROM);
 
 // Feeding every 3 days on crested gecko diet, the activation default.
 export const DEFAULT_GECKO_FEEDING_DAYS = 3;
@@ -83,19 +105,24 @@ export function withGeckoWeighIn(extra, geckoId, { on = true, everyDays = 14, si
   return withWeighIn(extra, { geckos });
 }
 
-/** True when a gecko was added after the defaults started. */
-export function coveredByDefaults(gecko) {
+/**
+ * True when a gecko was added on or after the day the defaults start.
+ * `defaultsFrom` is that day (from loadCareDefaultsFrom); without one, or
+ * with one that is not a real day, CARE_DEFAULTS_FROM is used.
+ */
+export function coveredByDefaults(gecko, defaultsFrom = CARE_DEFAULTS_FROM) {
   const created = String(gecko?.created_date || gecko?.created_at || '').slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(created) && created >= CARE_DEFAULTS_FROM;
+  return /^\d{4}-\d{2}-\d{2}$/.test(created) && created >= defaultsDay(defaultsFrom);
 }
 
 /**
  * The weigh-in reminder that applies to this gecko, the way the daily job
  * sees it: { on, everyDays, fixed, source } where source is 'chosen'
  * (the member set it), 'default' (new gecko, no choice made) or 'none'.
- * `weightGrams` is the latest weigh-in when the caller knows it.
+ * `weightGrams` is the latest weigh-in when the caller knows it, and
+ * `defaultsFrom` the day the defaults start (loadCareDefaultsFrom).
  */
-export function effectiveWeighIn(extra, gecko, { weightGrams, now = new Date() } = {}) {
+export function effectiveWeighIn(extra, gecko, { weightGrams, now = new Date(), defaultsFrom } = {}) {
   const stageDays = weighInIntervalDays(gecko, now, weightGrams !== undefined ? { weightGrams } : {});
   const memberEnabled = memberWeighInEnabled(extra);
   const entry = gecko?.id ? geckoWeighInSetting(extra, gecko.id) : null;
@@ -104,7 +131,7 @@ export function effectiveWeighIn(extra, gecko, { weightGrams, now = new Date() }
     const everyDays = fixed ? Math.max(7, Math.min(90, Math.round(Number(entry.every_days)))) : stageDays;
     return { on: entry.on === true && memberEnabled, chosenOn: entry.on === true, everyDays, fixed, source: 'chosen', memberEnabled, since: entry.since || null };
   }
-  const isDefault = coveredByDefaults(gecko);
+  const isDefault = coveredByDefaults(gecko, defaultsFrom);
   return { on: isDefault && memberEnabled, chosenOn: isDefault, everyDays: stageDays, fixed: false, source: isDefault ? 'default' : 'none', memberEnabled, since: null };
 }
 
@@ -112,11 +139,11 @@ export function effectiveWeighIn(extra, gecko, { weightGrams, now = new Date() }
  * { [geckoId]: { on, every_days, since } } for every gecko with a weigh-in
  * reminder, defaults included (the shape nativeCareSchedule.js reads).
  */
-export function effectiveWeighInMap(extra, geckos = []) {
+export function effectiveWeighInMap(extra, geckos = [], { defaultsFrom } = {}) {
   const out = {};
   for (const gecko of geckos || []) {
     if (!gecko?.id || gecko.archived) continue;
-    const eff = effectiveWeighIn(extra, gecko);
+    const eff = effectiveWeighIn(extra, gecko, { defaultsFrom });
     if (!eff.on) continue;
     const since = eff.since || String(gecko.created_date || '').slice(0, 10) || null;
     out[gecko.id] = { on: true, every_days: eff.everyDays, ...(since ? { since } : {}) };
@@ -153,16 +180,17 @@ export function withGeckoFeeding(extra, geckoId, { on = true, everyDays } = {}) 
 /**
  * The feeding reminder for a gecko on its own (not in a feeding group):
  * { on, everyDays, source } as the daily job sees it. Geckos in a group
- * follow the group's schedule instead (source 'group').
+ * follow the group's schedule instead (source 'group'). `defaultsFrom`
+ * is the day the defaults start (loadCareDefaultsFrom).
  */
-export function effectiveGeckoFeeding(extra, gecko) {
+export function effectiveGeckoFeeding(extra, gecko, { defaultsFrom } = {}) {
   if (gecko?.feeding_group_id) return { on: false, everyDays: null, source: 'group' };
   const entry = gecko?.id ? geckoFeedingSetting(extra, gecko.id) : null;
   const days = Number(entry?.every_days);
   const everyDays = Number.isFinite(days) && days > 0 ? Math.max(1, Math.min(30, Math.round(days))) : DEFAULT_GECKO_FEEDING_DAYS;
   if (entry && entry.on === false) return { on: false, everyDays, source: 'chosen' };
   if (entry && entry.on === true) return { on: true, everyDays, source: 'chosen' };
-  const isDefault = coveredByDefaults(gecko);
+  const isDefault = coveredByDefaults(gecko, defaultsFrom);
   return { on: isDefault, everyDays, source: isDefault ? 'default' : 'none' };
 }
 
@@ -193,6 +221,37 @@ export async function loadWeighInReminder(email, geckoId) {
 export async function loadCareReminderSettings(email) {
   if (!email) return {};
   return readExtra(email);
+}
+
+// The day is written once and never changes, so a good read is kept for
+// the rest of the page load. A missing row is not kept: the migration
+// that writes it may run after this copy of the app has loaded.
+let storedDefaultsFrom = null;
+
+/**
+ * The day the life-stage defaults start (YYYY-MM-DD), read from the
+ * public app_settings row the reminder jobs use. Falls back to
+ * CARE_DEFAULTS_FROM when the row is missing, cannot be read, or does not
+ * hold a real day, the same rule as public.care_reminder_defaults_from().
+ * Never throws. `refresh` reads the row again.
+ */
+export async function loadCareDefaultsFrom({ refresh = false } = {}) {
+  if (storedDefaultsFrom && !refresh) return storedDefaultsFrom;
+  storedDefaultsFrom = null;
+  try {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'care_reminder_defaults_from')
+      .maybeSingle();
+    if (!error && isCareDefaultsDay(data?.value)) {
+      storedDefaultsFrom = data.value;
+      return storedDefaultsFrom;
+    }
+  } catch {
+    // Offline or blocked: the fallback below.
+  }
+  return CARE_DEFAULTS_FROM;
 }
 
 /**
