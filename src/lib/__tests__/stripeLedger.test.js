@@ -138,6 +138,36 @@ describe('every paid invoice writes one correct ledger row', () => {
     expect(db.rpcCalls('award_referral_reward')).toHaveLength(0);
   });
 
+  it('leaves the referral pending when no member matches yet, and the paired delivery awards it', async () => {
+    // The customer id was not on the profile yet (checkout.session.completed
+    // had not landed, or saving it failed), so the first delivery writes
+    // the row under the invoice email.
+    const first = database(null);
+    await webhook().send(invoiceEvent(invoice()), first);
+    expect(ledgerInserts(first)[0]).toMatchObject({
+      id: 'stripe-invoice:in_1', failure_reason: 'referral_pending: member not matched yet',
+    });
+    expect(first.rpcCalls('award_referral_reward')).toHaveLength(0);
+
+    // The paired delivery sees the member: the row exists, the pending
+    // marker is taken back, and the referral is paid.
+    const second = database(member(), (call) => {
+      if (call.table === 'payment_events' && actionOf(call) === 'select') return { data: { id: 'stripe-invoice:in_1' }, error: null };
+      if (call.table === 'payment_events' && actionOf(call) === 'update' && filterValue(call, 'like', 'failure_reason')) {
+        return { data: [{ id: 'stripe-invoice:in_1' }], error: null };
+      }
+      return undefined;
+    });
+    await webhook().send(invoiceEvent(invoice(), 'evt_inv_2', 'invoice.payment_succeeded'), second);
+    expect(second.rpcCalls('award_referral_reward')).toHaveLength(1);
+  });
+
+  it('a $0 invoice with no member matched leaves no referral pending', async () => {
+    const db = database(null);
+    await webhook().send(invoiceEvent(invoice({ amount_paid: 0 })), db);
+    expect(ledgerInserts(db)[0]).not.toHaveProperty('failure_reason');
+  });
+
   it('writes nothing more on the paired delivery of the same invoice', async () => {
     const db = database(member(), (call) => (call.table === 'payment_events' && actionOf(call) === 'select'
       && filterValue(call, 'eq', 'id') === 'stripe-invoice:in_1'
@@ -367,24 +397,30 @@ describe('refunds and disputes that leave access alone still reach the ledger', 
   const profileWrites = (db) => db.table('profiles').filter((c) => actionOf(c) !== 'select');
   const statusUpdate = (db) => ledgerUpdates(db).find((c) => 'status' in (payloadOf(c) || {}));
 
-  it('a full refund of an older invoice marks that invoice refunded, with the amount', async () => {
+  // The status of an older invoice is never changed here. The access check
+  // reads the newest invoice row with money on it; when every newer
+  // invoice is $0 (a referral credit, a prorated switch), a refunded or
+  // disputed status on the older one would read as the latest payment and
+  // hold back the plan the member pays for. Only the amount is recorded.
+  it('a full refund of an older invoice records the amount and leaves its status alone', async () => {
     const db = ledgerDb(member({ membership_tier: 'keeper' }));
     const charge = { id: 'ch_old', customer: 'cus_1', invoice: 'in_old', amount: 299, amount_refunded: 299, refunded: true };
     const res = await stripe().send({ id: 'evt_r_old', type: 'charge.refunded', data: { object: charge } }, db);
     expect(res.status).toBe(200);
-    expect(payloadOf(statusUpdate(db))).toEqual({ status: 'refunded' });
-    expect(filterValue(statusUpdate(db), 'eq', 'stripe_invoice_id')).toBe('in_old');
-    expect(ledgerUpdates(db).map(payloadOf)).toContainEqual({ amount_refunded_cents: 299 });
+    expect(statusUpdate(db)).toBeUndefined();
+    const amount = ledgerUpdates(db).find((c) => 'amount_refunded_cents' in (payloadOf(c) || {}));
+    expect(payloadOf(amount)).toEqual({ amount_refunded_cents: 299 });
+    expect(filterValue(amount, 'eq', 'stripe_invoice_id')).toBe('in_old');
     // Only the existing row changes: no marker row that could look newest.
     expect(ledgerInserts(db)).toHaveLength(0);
     expect(profileWrites(db)).toHaveLength(0);
   });
 
-  it('a partial refund of an older invoice is recorded as partial', async () => {
+  it('a partial refund of an older invoice records the amount', async () => {
     const db = ledgerDb(member({ membership_tier: 'keeper' }));
     const charge = { id: 'ch_old', customer: 'cus_1', invoice: 'in_old', amount: 299, amount_refunded: 100, refunded: false };
     await stripe().send({ id: 'evt_pr_old', type: 'charge.refunded', data: { object: charge } }, db);
-    expect(payloadOf(statusUpdate(db))).toEqual({ status: 'partial_refund' });
+    expect(statusUpdate(db)).toBeUndefined();
     expect(ledgerUpdates(db).map(payloadOf)).toContainEqual({ amount_refunded_cents: 100 });
     expect(profileWrites(db)).toHaveLength(0);
   });
@@ -393,12 +429,13 @@ describe('refunds and disputes that leave access alone still reach the ledger', 
     const db = ledgerDb(member({ membership_tier: 'breeder', stripe_subscription_id: 'sub_2' }));
     const charge = { id: 'ch_old', customer: 'cus_1', invoice: 'in_old', amount: 299, amount_refunded: 299, refunded: true };
     await stripe().send({ id: 'evt_r_other', type: 'charge.refunded', data: { object: charge } }, db);
-    expect(payloadOf(statusUpdate(db))).toEqual({ status: 'refunded' });
+    expect(statusUpdate(db)).toBeUndefined();
+    expect(ledgerUpdates(db).map(payloadOf)).toContainEqual({ amount_refunded_cents: 299 });
     expect(ledgerInserts(db)).toHaveLength(0);
     expect(profileWrites(db)).toHaveLength(0);
   });
 
-  it('a dispute on an older invoice marks it disputed and leaves the plan alone', async () => {
+  it('a dispute on an older invoice records the disputed amount and leaves the plan and status alone', async () => {
     const db = ledgerDb(member({ membership_tier: 'keeper' }));
     const dispute = {
       id: 'dp_old', status: 'needs_response', amount: 299, currency: 'usd',
@@ -406,18 +443,22 @@ describe('refunds and disputes that leave access alone still reach the ledger', 
     };
     const res = await stripe().send({ id: 'evt_d_old', type: 'charge.dispute.created', data: { object: dispute } }, db);
     expect(res.status).toBe(200);
-    expect(payloadOf(statusUpdate(db))).toEqual({ status: 'disputed' });
+    expect(statusUpdate(db)).toBeUndefined();
+    const amount = ledgerUpdates(db).find((c) => 'amount_disputed_cents' in (payloadOf(c) || {}));
+    expect(payloadOf(amount)).toEqual({ amount_disputed_cents: 299 });
+    expect(filterValue(amount, 'eq', 'stripe_invoice_id')).toBe('in_old');
     expect(ledgerInserts(db)).toHaveLength(0);
     expect(profileWrites(db)).toHaveLength(0);
   });
 
-  it('winning that dispute puts the row back to paid, only if it is still disputed', async () => {
+  it('winning that dispute clears the amount, and puts a row marked disputed back to paid', async () => {
     const db = ledgerDb(member({ membership_tier: 'keeper' }));
     const dispute = {
       id: 'dp_old', status: 'won', amount: 299, currency: 'usd',
       charge: { id: 'ch_old', customer: 'cus_1', invoice: 'in_old' },
     };
     await stripe().send({ id: 'evt_w_old', type: 'charge.dispute.closed', data: { object: dispute } }, db);
+    expect(ledgerUpdates(db).map(payloadOf)).toContainEqual({ amount_disputed_cents: null });
     const update = statusUpdate(db);
     expect(payloadOf(update)).toEqual({ status: 'paid' });
     expect(filterValue(update, 'eq', 'status')).toBe('disputed');

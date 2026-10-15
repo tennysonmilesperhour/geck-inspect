@@ -334,6 +334,43 @@ begin
 end
 $t$;
 
+-- A dispute on an older invoice (A2, older than A3) is noted as an amount
+-- with the row left paid, so it can never read as the latest payment. The
+-- money leaves revenue and shows as disputed until the dispute is won.
+do $t$
+declare
+  s0 jsonb;
+  s1 jsonb;
+  s2 jsonb;
+begin
+  update public.payment_events set status = 'paid', amount_refunded_cents = null where id = 'stripe-invoice:in_A2';
+  perform set_config('request.jwt.claims', '{"email":"admin@ledger.test","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  s0 := public.admin_revenue_summary();
+  perform set_config('role', 'postgres', true);
+
+  update public.payment_events set amount_disputed_cents = 299 where id = 'stripe-invoice:in_A2';
+  perform set_config('role', 'authenticated', true);
+  s1 := public.admin_revenue_summary();
+  perform set_config('role', 'postgres', true);
+  perform ledger_test.expect('a dispute on an older invoice leaves revenue and shows as disputed, MRR unchanged',
+    (s1 ->> 'revenue_cents')::numeric = (s0 ->> 'revenue_cents')::numeric - 299
+    and (s1 ->> 'disputed_cents')::numeric = (s0 ->> 'disputed_cents')::numeric + 299
+    and (s1 ->> 'gross_cents')::numeric = (s0 ->> 'gross_cents')::numeric
+    and (s1 ->> 'mrr_cents')::numeric = (s0 ->> 'mrr_cents')::numeric, s1::text);
+
+  -- Won: the webhook clears the amount and the money is back.
+  update public.payment_events set amount_disputed_cents = null where id = 'stripe-invoice:in_A2';
+  perform set_config('role', 'authenticated', true);
+  s2 := public.admin_revenue_summary();
+  perform set_config('role', 'postgres', true);
+  perform set_config('request.jwt.claims', '', true);
+  perform ledger_test.expect('a won dispute on an older invoice puts the money back',
+    (s2 ->> 'revenue_cents')::numeric = (s0 ->> 'revenue_cents')::numeric
+    and (s2 ->> 'disputed_cents')::numeric = (s0 ->> 'disputed_cents')::numeric, s2::text);
+end
+$t$;
+
 -- Grants -----------------------------------------------------------------------
 
 do $t$

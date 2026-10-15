@@ -1076,6 +1076,21 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
     if (error) console.warn("refunded amount not recorded:", error.message);
   };
 
+  // Money held in a dispute on an invoice that does not decide access,
+  // noted without changing the row's status (see the dispute case below).
+  // null clears it when the dispute is won. Best effort, like the refunded
+  // amount: a missing column (migration 20261015151400 not applied yet)
+  // only logs.
+  const noteDisputedAmount = async (invoiceId: string, amount: number | null | undefined) => {
+    const cents = amount === null ? null : Number(amount);
+    if (cents !== null && !(Number.isFinite(cents) && cents > 0)) return;
+    const { error } = await supabase
+      .from("payment_events")
+      .update({ amount_disputed_cents: cents })
+      .eq("stripe_invoice_id", invoiceId);
+    if (error) console.warn("disputed amount not recorded:", error.message);
+  };
+
   // Writes the ledger row for a paid invoice. "claimed" means this
   // delivery wrote it, "duplicate" that an earlier delivery already did.
   const claimPaidInvoice = async (inv: any, email: string, failureReason: string | null = null) => {
@@ -1567,23 +1582,22 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
           fullRefund: isFullRefund(charge),
         });
         if (effect === "ignore" || effect === "record") {
-          // The money still went back, so the ledger records it even though
-          // access does not change: an older invoice than the subscription's
-          // latest, or one from a subscription that is no longer the
-          // member's current one. Only an existing row is updated, so no
-          // new row can appear and look like the newest payment.
+          // The money still went back, so the ledger records how much even
+          // though access does not change: an older invoice than the
+          // subscription's latest, or one from a subscription that is no
+          // longer the member's current one. Only the amount is written.
+          // Its status stays as it was: the access check reads the newest
+          // invoice row with money on it, and when every newer invoice is
+          // $0 (a referral credit, a prorated switch) a "refunded" status
+          // here would read as the latest payment and hold back the plan
+          // the member is paying for. Revenue already subtracts the amount.
           if (invoiceId) {
-            await markInvoiceStatus(invoiceId, isFullRefund(charge) ? "refunded" : "partial_refund", {
-              email: profile.email,
-              eventId: String(event.id || ""),
-              eventType: event.type,
-              customerId: stripeId(charge.customer),
-              subscriptionId: linked,
-              amount: charge.amount_refunded,
-              currency: charge.currency,
-              refunded: charge.amount_refunded,
-              insertIfMissing: false,
-            });
+            await noteRefundedAmount(
+              "stripe_invoice_id",
+              invoiceId,
+              isFullRefund(charge) ? "refunded" : "partial_refund",
+              charge.amount_refunded,
+            );
           }
           break;
         }
@@ -1670,23 +1684,18 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
           fullRefund: true,
         });
         if (effect === "ignore" || effect === "record") {
-          // Ledger only, as for refunds above: the disputed money leaves the
-          // revenue figures (and comes back if the dispute is won), and the
-          // member's access is not touched.
+          // Ledger only, as for refunds above: the disputed amount is noted
+          // on the row with its status left alone, so the money leaves the
+          // revenue figures (and comes back if the dispute is won) and the
+          // member's access is not touched, now or by a later plan change.
           if (invoiceId) {
             if (decision === "restore") {
+              await noteDisputedAmount(invoiceId, null);
+              // A row marked disputed while it was the invoice that
+              // decided access, and since overtaken by a newer one.
               await restoreDisputedInvoice(invoiceId);
             } else {
-              await markInvoiceStatus(invoiceId, "disputed", {
-                email: profile.email,
-                eventId: String(event.id || ""),
-                eventType: event.type,
-                customerId: stripeId(charge?.customer),
-                subscriptionId: linked,
-                amount: dispute.amount,
-                currency: dispute.currency,
-                insertIfMissing: false,
-              });
+              await noteDisputedAmount(invoiceId, dispute.amount);
             }
           }
           break;
@@ -1749,20 +1758,26 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
         // billing_reason=subscription_create because a member who took the
         // trial pays their first real invoice on renewal. The database
         // allows one referral reward per referred member.
-        const referralCandidate = (inv.amount_paid || 0) > 0 && Boolean(profile?.email);
+        const paidMoney = (inv.amount_paid || 0) > 0;
+        const referralCandidate = paidMoney && Boolean(profile?.email);
         const current = profile ? isCurrentSubscription(profile, invoiceSubscriptionId(inv)) : false;
         // A new subscription's first invoice can arrive while the profile
         // still points at the old one, a moment before
-        // customer.subscription.created switches it. The row is written now
-        // with the referral left pending, so the paired delivery, which may
-        // see the switched profile, can still award it. Before the ledger
-        // wrote every invoice, nothing was claimed here and that worked by
-        // itself.
-        const claim = await claimPaidInvoice(
-          inv,
-          email,
-          referralCandidate && !current ? `${REFERRAL_PENDING}: subscription not current yet` : null,
-        );
+        // customer.subscription.created switches it, or before
+        // checkout.session.completed has saved the Stripe customer on the
+        // profile at all (then no member matches yet and the row goes in
+        // under the invoice email). Either way the row is written now with
+        // the referral left pending, so the paired delivery, which may see
+        // the updated profile, can still award it. Before the ledger wrote
+        // every invoice, nothing was claimed here and that worked by itself.
+        const pendingReason = !paidMoney
+          ? null
+          : !profile?.email
+          ? `${REFERRAL_PENDING}: member not matched yet`
+          : !current
+          ? `${REFERRAL_PENDING}: subscription not current yet`
+          : null;
+        const claim = await claimPaidInvoice(inv, email, pendingReason);
         if (!referralCandidate || !profile?.email) break;
         if (!current) break;
         // A lost race or a second delivery returns duplicate, and only

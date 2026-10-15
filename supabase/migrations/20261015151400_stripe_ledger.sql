@@ -12,7 +12,11 @@
 -- and gives the admin panel one function to read.
 --
 -- 1. payment_events gains cancellation_reason, cancellation_feedback,
---    cancellation_comment, cancel_at and amount_refunded_cents.
+--    cancellation_comment, cancel_at, amount_refunded_cents and
+--    amount_disputed_cents. A refund or dispute on an older invoice (one
+--    that no longer decides access) is recorded as an amount only: a new
+--    status there could make that invoice read as the latest payment when
+--    every newer invoice is $0, and block the member's plan.
 -- 2. stripe_object_id, stripe_price_plan and stripe_plan_monthly_cents:
 --    small helpers that read a Stripe id, map a price id to its tier and
 --    billing cycle, and give a plan's price per month. The catalog mirrors
@@ -45,6 +49,7 @@ alter table public.payment_events add column if not exists cancellation_feedback
 alter table public.payment_events add column if not exists cancellation_comment text;
 alter table public.payment_events add column if not exists cancel_at timestamptz;
 alter table public.payment_events add column if not exists amount_refunded_cents numeric;
+alter table public.payment_events add column if not exists amount_disputed_cents numeric;
 
 comment on column public.payment_events.cancellation_reason is
   'Stripe cancellation_details.reason: cancellation_requested, payment_failed or payment_disputed.';
@@ -56,6 +61,8 @@ comment on column public.payment_events.cancel_at is
   'When a scheduled cancellation takes effect, or when the subscription ended.';
 comment on column public.payment_events.amount_refunded_cents is
   'Money returned on this payment, so revenue can be counted net of refunds.';
+comment on column public.payment_events.amount_disputed_cents is
+  'Money held in a dispute on a payment that no longer decides the member''s access (an older invoice). Its status is left as it was, so it can never read as the latest payment and block a plan; cleared when the dispute is won.';
 
 create index if not exists payment_events_subscription_time_idx
   on public.payment_events (stripe_subscription_id, event_timestamp desc);
@@ -555,7 +562,9 @@ grant execute on function public.rebuild_payment_events_from_webhook_log() to se
 -- risk is shown next to it.
 --
 -- All-time revenue is money kept: paid invoices and lifetime purchases,
--- less refunds. Disputed payments are left out until the dispute is won.
+-- less refunds. Disputed payments are left out until the dispute is won,
+-- whether the dispute is on the row's status (the invoice that decided
+-- access) or noted as an amount (an older invoice).
 -- App Store purchases are not in this table and are not counted.
 create or replace function public.admin_revenue_summary()
 returns jsonb
@@ -595,10 +604,12 @@ begin
   money as (
     select
       -- A paid row can still carry an earlier partial refund (a dispute
-      -- that was won after it), so refunds always come off.
+      -- that was won after it), so refunds always come off. Money held in
+      -- a dispute on an older invoice (amount_disputed_cents, status left
+      -- alone so access is not touched) comes off too.
       coalesce(sum(case
-        when status = 'paid' then amount_cents - coalesce(amount_refunded_cents, 0)
-        when status = 'partial_refund' then amount_cents - coalesce(amount_refunded_cents, 0)
+        when status = 'paid' then amount_cents - coalesce(amount_refunded_cents, 0) - coalesce(amount_disputed_cents, 0)
+        when status = 'partial_refund' then amount_cents - coalesce(amount_refunded_cents, 0) - coalesce(amount_disputed_cents, 0)
         when status = 'refunded' then amount_cents - coalesce(amount_refunded_cents, amount_cents)
         else 0 end), 0) as net_cents,
       coalesce(sum(amount_cents) filter (where status in ('paid', 'partial_refund', 'refunded', 'disputed')), 0) as gross_cents,
@@ -606,7 +617,8 @@ begin
         when status in ('paid', 'partial_refund') then coalesce(amount_refunded_cents, 0)
         when status = 'refunded' then coalesce(amount_refunded_cents, amount_cents)
         else 0 end), 0) as refunded_cents,
-      coalesce(sum(amount_cents) filter (where status = 'disputed'), 0) as disputed_cents,
+      coalesce(sum(amount_cents) filter (where status = 'disputed'), 0)
+        + coalesce(sum(amount_disputed_cents) filter (where status in ('paid', 'partial_refund')), 0) as disputed_cents,
       count(*) filter (where id like 'stripe-invoice:%' and status <> 'disputed') as paid_invoices,
       count(*) filter (where id like 'stripe-invoice:%' and coalesce(amount_cents, 0) > 0) as charged_invoices,
       count(*) filter (where id like 'stripe-lifetime%' and status in ('paid', 'partial_refund')) as lifetime_purchases,
