@@ -1,5 +1,7 @@
 # P5: Geck Answers (Q&A Knowledge Base)
 
+> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+
 **Priority:** P5
 **Dependencies:** None, standalone feature
 **Origin:** iHerp analysis, iHerp Answers built real domain authority. Stack Overflow-style Q&A separate from forums.
@@ -121,10 +123,10 @@ not behind auth walls. Public read, account required to ask or answer.
 DATABASE:
 [PASTE Question, Answer, QuestionVote models]
 
-Seed with 10–15 high-quality starter questions covering: feeding frequency, weight goals
+Seed with 10 to 15 high-quality starter questions covering: feeding frequency, weight goals
 by age, shedding problems, Lilly White care, incubation temperatures, first breeding age,
 CGD brands, habitat setup, juvenile vs adult care differences, common health issues.
-Each seeded question should have 2–3 answers with one marked as best.
+Each seeded question should have 2 to 3 answers with one marked as best.
 
 BUILD:
 

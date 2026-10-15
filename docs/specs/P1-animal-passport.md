@@ -1,5 +1,7 @@
 # P1: Animal Passport + Ownership Transfer
 
+> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+
 **Priority:** P1 (Highest)
 **Dependencies:** None, core data model everything else depends on
 **Origin:** iHerp analysis confirmed this is their single most powerful network-effect feature

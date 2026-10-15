@@ -2,67 +2,92 @@
 
 > **Purpose of this file.** This is the factual, long-lived context for Geck Inspect. It answers the question *"what is this project, and what's the state of it right now?"* for any future collaborator (human or AI). It should not contain aspirational goals, strategy, or reasoning for decisions. Those live in `INTENT.md` and `DECISIONS.md`. When something material changes (stack, schema, pricing, ownership, critical file paths), update this file.
 
+> **Last reconciled with the code: 15 October 2026** (sections 1 to 5 and 8, plan item E2 21 of `docs/planning/comprehensive-review-2026-10-14.md`). Each statement names the file it comes from, so the next reconcile can check it quickly. When the code and this file disagree, the code wins and this file gets fixed.
+
 ---
 
 ## 1. What Geck Inspect is
 
-Geck Inspect is a web platform for crested gecko (*Correlophus ciliatus*) breeders and keepers. It is not a generic reptile tracking app. It is species-specific, built from the ground up around the taxonomy, genetics, and market dynamics of cresties.
+Geck Inspect is a web app for crested gecko (*Correlophus ciliatus*) keepers and breeders at `geckinspect.com`. It is built around crested gecko traits, genetics and records, not reptiles in general. One small exception exists: an "Other Reptiles" list (`src/pages/OtherReptiles.jsx`) lets members keep simple records for animals that are not geckos.
 
-The platform combines five things in one product:
+What a member can do today (pages in `src/pages`, menus in `src/lib/navItems.js`):
 
-1. **Collection management**: per-animal records (photos, weight history, feedings, sheds, notes, lineage, custom IDs).
-2. **AI morph identification (Morph ID)**: upload a top and a side photo, get an evidence-first shortlist of traits (Lilly White, Harlequin, Dalmatian, Cappuccino, Pinstripe and others; Sable and Highway are in the repo and go live with the next `recognize-gecko-morph` deploy) with the visible evidence, uncertainty reasons and look-alikes. Its scores are rankings, not calibrated probabilities (`supabase/functions/recognize-gecko-morph/README.md`).
-3. **Genetics calculator**: predicts clutch outcomes using correct inheritance modeling for crestie traits: Lilly White (incomplete dominant), axanthic (recessive), phantom, Cappuccino/Sable/Frappuccino allelic series, polygenic patterning. Tracks het carriers across generations.
-4. **Multi-generation pedigrees**: visual, clickable pedigree trees per animal. Each animal gets a QR code that resolves to its live record. Cross-breeder lineage linking with approval workflow.
-5. **Market analytics (live: the Market page, value estimates on gecko records, and Business Tools)**: combines first-party app data (listings, completed sales, search behavior, regional activity, trait-level transactions) with scraped external market signals (MorphMarket, Pangea, FB groups, international classifieds, expo releases) to give breeders, investors, and shop owners strategic market intelligence.
+1. **Keep a record for each gecko.** Photos, weights with a healthy growth band, feedings, sheds, vet visits, notes, a status (Pet, Holdback, Future Breeder, Ready to Breed, Proven, For Sale, Sold and others) and an ID code. Field Mode and Batch Husbandry log care at the rack. Field Mode logs wait on the phone when there is no signal and sync later (`src/lib/offlineQueue.js`).
+2. **Breed and trace lineage.** Breeding plans with eggs and hatch dates (`Breeding`, `BreedingSeason`, `PairingPlanner`), multi-generation lineage (`Lineage`, `Pedigree`), passports with a QR code (`AnimalPassport`, `PassportQR`), and transfers where the buyer claims the animal with its history (`ClaimAnimal`, `src/lib/transfers.js`).
+3. **Run the genetics calculator.** Clutch odds, a reverse calculator and Clutch Lab, all driven by the vendored genetics engine (section 4).
+4. **Ask Morph ID.** Upload photos and get a ranked, evidence-first shortlist of visible traits, what the photos cannot confirm and which photo would help next (`src/pages/Recognition.jsx`, `supabase/functions/recognize-gecko-morph`). It is an identification aid, not a genetic test, and its scores are rankings, not calibrated probabilities. The Morph ID brief is `docs/specs/morph-id.md`.
+5. **Read the reference guides.** Morph Guide, Care Guide, Genetics Guide and the Quality Scale. They are public and prerendered for search engines.
+6. **See prices.** A value estimate on each gecko record, pairing value on breeding plans, the public Geck Inspect Price Index, and the members-only Market page (`src/pages/Market.jsx`, `src/lib/marketAnalytics/`). Prices come from asking prices on public crested gecko listings collected into the `geck_data` schema, not from confirmed sales. Market Intelligence (Enterprise) is off sale (section 5).
+7. **Run the breeder side.** A public breeder page and store page, waitlists with written deposit terms (no money is taken online, decision 33), Business Tools for sales and costs with profit by season and by pairing (`src/pages/MarketplaceSalesStats.jsx`), printable worksheets, rack labels, buyer packets and a MorphMarket CSV export.
+8. **Join the community.** Forum, gallery, direct messages and notifications, with report and block buttons.
+9. **Let AI agents read the open data.** `/data` files, `llms.txt`, markdown twins of public pages and a read-only MCP server at `/mcp` (`api/mcp.js`). See `docs/planning/agent-access-2026-10.md`.
 
-Historical pricing benchmarks (entry $50 to $250, mid $120 to $450, high-end $400 to $800+, Lilly White $250 to $1,200, Axanthic up to $2,500, average about $350) were originally sourced from an external investment guide written by an unrelated breeder who happens to share Tennyson's first name. That site is NOT Tennyson's brand and its address is deliberately not repeated here (see the domain disambiguation note in CLAUDE.md). The app's own prices now come from its listing data (the Geck Inspect Price Index and the Market page), not from this guide.
+Optional tools that make paid AI calls and are metered per plan (`src/lib/tierLimits.js`): the AI Consultant chat, the photo health screen, visual search, growth reels and Promote (social posts). Plan item 23 of the comprehensive review proposes retiring several of these behind flags.
+
+Historical pricing benchmarks in older docs (entry $50 to $250, mid $120 to $450, high-end $400 to $800+, Lilly White $250 to $1,200, Axanthic up to $2,500, average about $350) came from an external guide written by an unrelated breeder who happens to share Tennyson's first name. That site is NOT Tennyson's brand and its address is deliberately not repeated here (see the domain disambiguation note in CLAUDE.md). The app's own prices come from its listing data.
 
 ## 2. Who it's for
 
-Three distinct user personas, each addressed by a membership tier (prices in section 5):
+Three kinds of member, each matched to a plan (prices in section 5):
 
-- **The keeper**: hobbyist with 1 to 10 geckos. Wants to never forget a feeding, track weights, remember sheds. Uses the Free tier (up to 10 geckos).
-- **The hobbyist breeder**: 10 to 100 animals, runs pairings, cares about lineage and morph accuracy. Uses Keeper (up to 50 geckos) or Breeder (no gecko limit).
-- **The business**: commercial breeders, importers, shops with 100+ animals, multiple staff, wholesale operations, branded store pages. Enterprise (Market Intelligence) is off sale since 15 October 2026; the Membership page shows it as "Coming soon" with a waitlist button.
+- **The keeper**: one to ten geckos, wants feedings, weights and sheds remembered. Free covers up to 10 active geckos.
+- **The hobby breeder**: runs pairings, cares about lineage and getting traits right. Keeper (up to 50 geckos) or Breeder (no gecko limit).
+- **The business**: larger breeders and shops. Enterprise (Market Intelligence) is off sale since 15 October 2026; the Membership page shows it as "Coming soon" with a waitlist button.
+
+What the evidence says about who pays, as of 14 October 2026 (the comprehensive review and the adversarial review it reconciles): no self-identified keeper has paid (0 of 5), the 10-gecko free limit has stopped someone once, and the one habit seen in the data is breeders acting on hatch alerts. Part E of `docs/planning/comprehensive-review-2026-10-14.md` therefore treats breeders as the customer to test for the next 90 days. That is the plan, not a change to the product, which still serves keepers.
 
 ## 3. Stack and infrastructure
 
-- **Frontend:** React + Vite, deployed on Vercel at `geck-inspect.vercel.app` with production domain `geckinspect.com`.
-- **Backend / database:** Supabase (Postgres + Auth + Storage).
-- **Source control:** GitHub, repo `tennysonmilesperhour/geck-inspect`.
-- **Local development:** Mac mini, path `/Users/tennyson/dyad-apps/geck inspect`.
-- **Payments:** Stripe is live on the web (checkout, webhook and customer portal, with live price ids in `src/lib/stripe-config.js`). RevenueCat handles purchases in the mobile shells. See `docs/BILLING.md`.
-- **Historical:** The app was originally built on Base44. Migrated off Base44 in early April 2026 to the current stack. At time of migration: 38 entities in the Base44 schema, ~88 registered users, ~250 gecko records, security vulnerabilities and Stripe gaps identified and partially fixed.
-- **Auth status:** Supabase Auth everywhere (`src/lib/AuthContext.jsx`, `src/lib/supabaseClient.js`). Nothing routes through Base44 any more.
-- **Analytics:** Google Analytics 4 runs on production pages (`index.html`, `src/lib/ga.js`) and honours Do Not Track; the weekly growth report is built on it. Product events go to `public.user_events` through `captureEvent`, and to PostHog when it is switched on (`src/lib/posthog.js`).
+- **Web app:** React 18 and Vite 6, a single-page app with build-time prerendered public pages (`package.json`, `scripts/prerender.mjs`). Tailwind CSS 3 with Radix-based shadcn primitives (`src/components/ui`). There is no Next.js in this repo.
+- **Hosting:** Vercel, production domain `geckinspect.com`. Every push to `main` deploys production. Vercel also serves three serverless routes (`api/mcp.js`, `api/share.js`, `api/og-pairing.js`) and the routing middleware (`middleware.js`), which logs crawler visits to `agent_hits` and returns real 404 pages.
+- **Backend:** one Supabase project, `mmuglfphhwlaluyfyxsp` (Postgres, Auth, Storage, Edge Functions, pg_cron, Vault). On 15 October 2026 the `public` schema had 128 tables and 197 functions, and the `geck_data` schema (market and reference data, written by the separate geck-data repo) had 62 tables. The 33 edge functions are in `supabase/functions`. How schema changes reach production is in `docs/MIGRATIONS.md`.
+- **Auth:** Supabase Auth everywhere (`src/lib/AuthContext.jsx`, `src/lib/supabaseClient.js`). Nothing routes through Base44 any more.
+- **Source control and CI:** GitHub, `tennysonmilesperhour/geck-inspect`. GitHub Actions runs CI and the scheduled bots, listed in `docs/OPERATIONS.md`.
+- **Payments:** Stripe on the web (`supabase/functions/stripe-checkout`, `stripe-webhook`, `stripe-billing-portal`; live price ids in `src/lib/stripe-config.js`). RevenueCat with Apple StoreKit inside the native app (`docs/BILLING.md`).
+- **Native app:** Capacitor 8 projects for iOS and Android (`capacitor.config.ts`, app id `com.geckinspect.app`). Nothing has been submitted to either store (`docs/RELEASE_READINESS.md`).
+- **Email and push:** Resend sends email from the edge functions (`send-email` and others); web push uses VAPID keys (`send-push`).
+- **AI:** Anthropic Claude for Morph ID, the health screen, the AI Consultant, Promote drafting and import parsing. Replicate makes the photo fingerprints that Morph ID uses to find similar reference photos (`supabase/functions/_shared/visual-embedding.ts`).
+- **Analytics:** Google Analytics 4 loads on production hostnames only, and not at all when Do Not Track or Global Privacy Control is on (`index.html`, `src/lib/ga.js`). PostHog is on in production: the production build refuses to finish without `VITE_POSTHOG_KEY` (`scripts/check-env.mjs`), and the client loads it after the first paint, except in guest mode (`src/lib/posthog.js`). First-party product events go to `public.user_events` (`src/lib/telemetry.js`). A Robauto.ai pixel in `index.html` counts visits from AI assistants. The weekly growth report reads GA4 and Google Search Console.
+- **Services, costs and secrets:** every outside service, what it costs where that is written down, and where each secret lives is in `docs/OPERATIONS.md`.
+- **History:** the app started on Base44 and moved to this stack in early April 2026 (at the time: 38 Base44 entities, about 88 registered users, about 250 gecko records).
 
 ## 4. Core data model (high level)
 
-The Base44 migration preserved the structural shape of the schema even as it moved to Supabase. The essential entities are:
+Most tables record the owner by email in `created_by`; some also carry a uuid (`geckos.owner_profile_id`). `supabase/SCHEMA_CONVENTIONS.md` explains why, and how to read profiles safely. The main tables in `public`:
 
-- **Geckos**: the central entity. Fields include owner, species (fixed to C. ciliatus), sex, hatch date, morph tags, weight history, photo URLs, parents (sire_id, dam_id), status (active, sold, deceased, loaned), custom ID, notes.
-- **Clutches / Pairings**: links two geckos (sire + dam), records incubation data, expected/actual hatch dates, offspring linking.
-- **Feedings, Sheds, Weights**: time-series events attached to a gecko.
-- **Morph traits**: the canonical taxonomy of crestie morphs and their inheritance rules. This is the "genetic truth layer" that drives the calculator.
-- **Users, Memberships, Subscriptions**: account data and Stripe subscription linkage.
-- **Listings / Sales**: marketplace-adjacent data feeding Market Analytics.
-- **AppSettings, PageConfig**: configuration tables driving navigation and feature flags.
+- **`geckos`**: the central record. Name, species (almost all "Crested Gecko"; some rows are blank and two are "Gargoyle Gecko"), sex, hatch date or estimated hatch year, morph tags, parents (`sire_id`, `dam_id`, plus free-text parent names for parents not in the app), status, photos, weight, ID code, passport code, quality score, asking, listing and sold prices, archive state and reason, and collection.
+- **Care history:** `weight_records`, `feeding_records`, `shed_records`, `vet_records` and `gecko_events`, each tied to a gecko. `gecko_images` holds photos.
+- **Breeding:** `breeding_plans` (a sire and a dam with season details) and `eggs` (lay date, hatch date and status, each belonging to a plan, so an egg's parents are the plan's pair).
+- **Ownership and sharing:** `transfer_requests` and `ownership_records` (passport transfers and their history), `collections` and `collection_members` (shared collections).
+- **Accounts and plans:** `profiles` (one row per member, including Stripe fields and preferences), `membership_comps` (complimentary plans), `revenuecat_entitlements` (store purchases), `payment_events`.
+- **Metering:** `morph_id_usage` and `feature_usage` record each metered AI call against the plan's allowance.
+- **Breeder and community:** `breeder_profiles`, `breeder_store_pages`, `breeder_reviews`, `gecko_waitlists`, the `forum_*` tables, `direct_messages`, `notifications`, `testimonials`.
+- **Operations:** `user_events`, `error_logs`, `agent_hits`, `page_config` and `app_settings` (navigation and feature flags).
 
-A separate headless genetics engine (the "Foundation Genetics" module, package `crested-gecko-app`) is the canonical source for traits and inheritance math. It is vendored in `/vendor` and integrated: the app reaches it only through `src/lib/genetics/index.js`, and `scripts/check-genetics-consistency.mjs` (`pnpm check:genetics`) checks the hand-curated surfaces against it.
+Market and reference data live in the `geck_data` schema and are read through `src/lib/geckDataClient.js`.
+
+The genetics engine is the vendored package `crested-gecko-app` (`vendor/crested-gecko-app-0.1.0.tgz`, called "Foundation Genetics" in older docs). The app reaches it only through `src/lib/genetics/index.js`, and `pnpm check:genetics` (`scripts/check-genetics-consistency.mjs`) checks the hand-written guide content against it. Where the package's source lives and what its licence is are not recorded in this repo (comprehensive review, C15 item 6).
 
 ## 5. Membership tiers (current pricing)
 
-The source of truth is `TIER_PRICING` in `src/lib/stripe-config.js` and `TIER_LIMITS` in `src/lib/tierLimits.js`. As of 15 October 2026:
+The source of truth is `TIER_PRICING` and `ENTERPRISE_ON_SALE` in `src/lib/stripe-config.js` and `TIER_LIMITS` in `src/lib/tierLimits.js`. As of 15 October 2026:
 
-| Tier | Price | Notes |
-|---|---|---|
-| Free | $0 | Up to 10 geckos; one free Morph ID try |
-| Keeper | $2.99/mo, $30/yr, or $149 once (lifetime) | Up to 50 geckos; 3 Morph IDs a month |
-| Breeder | $5.99/mo, $60/yr, or $349 once (lifetime) | No gecko limit; 6 Morph IDs a month |
-| Enterprise | $99.99/mo or $1,000/yr when on sale | Off sale since 15 Oct 2026 (`ENTERPRISE_ON_SALE = false`); shown as "Coming soon" with a waitlist |
+| Plan | Price | Gecko limit | Morph ID |
+|---|---|---|---|
+| Free | $0 | 10 active geckos | 1 identification, ever (`lifetimeFreeMorphIDs`) |
+| Keeper | $2.99 a month, $30 a year, or $149 once (lifetime) | 50 | 3 a month |
+| Breeder | $5.99 a month, $60 a year, or $349 once (lifetime) | none | 6 a month |
+| Enterprise | $99.99 a month or $1,000 a year when on sale | none | 15 a month |
 
-Growth target: 1,000 users.
+- Enterprise is off sale (`ENTERPRISE_ON_SALE = false`, decision 45). Existing Enterprise members and complimentary grants keep access. Admins are treated as Enterprise.
+- Lifetime plans are one-time Stripe payments on the website only. The iPhone app sells monthly and yearly Keeper and Breeder through the App Store (`docs/BILLING.md`).
+- Trials are opt-in: a 7-day trial (`TRIAL_DAYS`) from its own button, once per account, and a one-time 30-day Keeper promo offered on the Promote page (`KEEPER_PROMO_TRIAL_DAYS`). A plain purchase is billed the same day.
+- Each plan also has monthly allowances for the AI Consultant, health screens, visual searches, growth reels, enclosure sensor reads and social posts (`TIER_LIMITS`).
+- Plan item 17 of the comprehensive review changes Free to one Morph ID a month. Once that ships, `tierLimits.js` and the `consume_morph_id_credit` SQL function are the truth, not this table.
+
+A member's plan is the highest of: the Stripe plan on their profile, a verified App Store purchase, an active complimentary plan, and a grandfathered Breeder grant (`resolveTier` in `src/lib/tierLimits.js`, mirrored in SQL by `effective_tier_for_current_user()`).
+
+Goals: the old "1,000 users" target is retired. The current scoreboard (paying breeders, passports issued and claimed, weekly active breeders, monthly cost) and the day 30, 60 and 90 checkpoints are in Part E5 of `docs/planning/comprehensive-review-2026-10-14.md`.
 
 ## 6. Key files and paths
 
@@ -87,62 +112,28 @@ Geck Inspect's differentiation: **the only platform built specifically for crest
 
 ## 8. The landing page
 
-> Added April 2026. The marketing landing page at `geckinspect.com` is a separate concern from the app itself and deserves its own context block. For the strategy and reasoning behind the landing page design, see `INTENT.md`.
+The landing page is `src/pages/Home.jsx`, served at `/` and prerendered to static HTML at build time (`scripts/prerender.mjs`), so it can be read without JavaScript and loads fast on a phone. It is part of the same Vite app, not a separate site.
 
-> **Status 15 October 2026.** Sections 8.1 to 8.6 are the April 2026 brief and are kept for history. What shipped differs: the landing page (`src/pages/Home.jsx`) is prerendered at build time and has a hero with a product screenshot, free tools, feature sections, a comparison table, a founder section, guides, an FAQ (with FAQPage structured data) and a final call to action; pricing lives on `/Membership`, linked from the nav and footer. Analytics is Google Analytics 4 plus first-party events (section 3), not Plausible. The shipped colors and fonts are the theme tokens in `src/index.css` and `tailwind.config.js` and the fonts loaded in `index.html` (Montserrat, Righteous, Inter), not the palette in 8.4.
+What is on it, top to bottom:
 
-### 8.1 State in April 2026
+1. The hero: "Price right. Pair smart." with one "Start free" button. Larger screens also show a product screenshot; phones skip downloading it.
+2. Free tools usable before signing up: the genetics calculator and Morph ID.
+3. A product tour (`src/components/landing/ProductTour.jsx`) and live counts (`LiveStats.jsx`).
+4. Three feature sections from the positioning in decision 32: price every gecko from real listings; see what a pairing's eggs are worth before you pair; hand every buyer the full history, and see what you made.
+5. "Also in every account", a comparison block ("Built for crested gecko breeders") and the founder section ("Made by a crested gecko breeder, for the next one").
+6. An email capture card and testimonials (`Testimonials.jsx` stays hidden until at least three approved quotes exist).
+7. Free crested gecko tools and guides, a short "About the crested gecko" section, an FAQ (the same list feeds the FAQPage structured data) and a closing call to action ("Start with one gecko.").
 
-As of April 2026 the landing page was minimal: essentially the app's JS bundle shell with basic SEO metadata. A cold visitor to `geckinspect.com` saw a brief text description of the platform and was directed to create a free account. There was no hero section, no product demonstration, no social proof, no pricing visible, no founder story, no feature showcase.
+Pricing is not on the landing page. It lives on `/Membership`, linked from the navigation and the footer.
 
-The app itself (`/app` or wherever auth-gated routes live) is a React SPA. The marketing page needs to be treated as a **separate, static-rendered surface** so it loads fast, is crawlable, and does not depend on the JS bundle to be visible.
+How it looks: the landing page uses Montserrat (`.landing-font` in `src/styles/layout-theme.css`) and the app uses Inter. Colours come from the theme tokens described in `docs/specs/DESIGN-SYSTEM.md`. The April 2026 design brief (charcoal with a cream accent, Satoshi and JetBrains Mono) was never built and does not describe the current look.
 
-### 8.2 Target architecture for the landing page
+How it is measured: GA4 page views and events, PostHog, and first-party events in `public.user_events` (section 3). Signups by first-touch source are on the admin Funnel card.
 
-- **Rendering:** Static HTML (server-rendered or fully pre-built). Not a client-side React render. Target sub-2-second load on mobile.
-- **Deployment:** One Vercel project serves the Vite + React application and build-time prerendered public pages. The landing page is `/`; authenticated routes use the same application.
-- **SEO:** Full semantic HTML, meta tags, OpenGraph, structured data for the product (Schema.org `SoftwareApplication`).
-- **Assets:** All images WebP, compressed. One hero product video (WebM + H.264 fallback, autoplay muted, lazy-loaded, poster image). Real crested gecko photography sourced from Tennyson's own collection. No stock imagery.
-- **Analytics:** Plausible or PostHog (privacy-friendly, lightweight). Single primary conversion event: "started sign-up."
-
-### 8.3 Landing page section structure
-
-The landing page is built around eight sections, in order. See `INTENT.md` for the reasoning behind this structure. The high-level skeleton:
-
-1. **Nav** (minimal): Logo | Features | Morph Guide | Pricing | Log in | Start Free →
-2. **Hero**: split layout. Left: headline + subhead + primary CTA + trust micro-copy. Right: animated product preview (looping 6 to 10 second video of the app in use).
-3. **Objection bar**: four short trust signals addressing data ownership, free tier, founder credibility, setup time.
-4. **Feature showcase**: three deep sections (not a grid): AI Morph ID, genetics calculator, pedigrees with QR codes. Each with its own real product visual.
-5. **Persona segmentation**: three cards: For the keeper / For the hobbyist breeder / For the business.
-6. **Social proof**: testimonials with names and photos, live stats counter (geckos tracked, keepers, clutches planned), one video testimonial if available, founder story with Tennyson's photo and brand.
-7. **Competitive comparison table**: honest feature comparison vs. Husbandry Pro, MorphMarket Animal Manager, spreadsheets.
-8. **Pricing**: three cards (Free / Keeper / Breeder / Enterprise), with an FAQ below addressing top objections.
-9. **Final CTA**: distraction-free, one button.
-10. **Footer**: Terms, Privacy, Contact, Blog, Morph Guide, About.
-
-### 8.4 Design direction
-
-- **Color palette:** Dark mode primary. Background deep charcoal with green undertone (~`#0E1410`). Accent color crestie cream/sulfur (`#F4E4A1` or similar vibrant Lilly White cream). Secondary accent deep forest green for genetics/data moments. Light mode toggle supported.
-- **Typography:** Oversized confident hero type (Satoshi, Inter Tight, or General Sans for headlines). Warm monospace (JetBrains Mono) for genetics/numeric callouts.
-- **Motion:** Subtle scroll-triggered animations. Pedigree tree builds branch-by-branch on scroll. Stats count up. Genetics calculator fills in predictions. Everything CSS-animated where possible, not JS-heavy. Respect `prefers-reduced-motion`.
-- **Photography:** Tennyson's own geckos, clean backgrounds, shallow depth of field, gecko looking at the viewer. No stock.
-
-### 8.5 Assets still needed
-
-As of drafting this:
-
-- Testimonials with photos from existing ~88 users (outreach email pending).
-- 5 to 10 high-quality gecko photos from Tennyson's own collection for hero and feature sections.
-- A 30 to 60 second video testimonial from one existing power user.
-- A 6 to 10 second looping hero product video showing: collection grid → gecko profile → pedigree tree → genetics calculator → predicted clutch.
-- A 200-word founder story with headshot.
-
-### 8.6 Metrics to track
-
-Single primary conversion: **started sign-up** (clicked the primary CTA and reached the sign-up form). Secondary: **scroll depth to pricing section**, **time on page**, **completed sign-up**. All tracked via Plausible/PostHog, no Google Analytics.
+The April 2026 brief this section used to hold (the state at the time, a target architecture, a section plan, a design direction, an asset list and metrics) is in git history before 15 October 2026. The reasoning behind it is in `docs/INTENT.md` and decisions 1 to 16 in `docs/DECISIONS.md`.
 
 ---
 
 ## 9. Ongoing / open items
 
-The April 2026 list here (auth migration, Stripe, Foundation Genetics integration, Market Analytics buildout, landing page revamp) is done. Open work is tracked in `docs/planning/feature-completeness-audit-2026-09-29.md`, and the proposed 90-day order is Part E of `docs/planning/comprehensive-review-2026-10-14.md`. Enterprise is off sale until the US market feed is reliable (section 5).
+The April 2026 list here (auth migration, Stripe, Foundation Genetics integration, Market Analytics buildout, landing page revamp) is done. The active plan is Part E of `docs/planning/comprehensive-review-2026-10-14.md` (Tennyson asked on 15 October 2026 for it to be implemented; see `ROADMAP.md`). The feature audit, `docs/planning/feature-completeness-audit-2026-09-29.md`, is kept for its status lines. Enterprise is off sale until the US market feed is reliable (section 5).

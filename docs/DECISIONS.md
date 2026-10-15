@@ -1,6 +1,8 @@
-# Geck Inspect Landing Page: DECISIONS.md
+# Geck Inspect: DECISIONS.md, the product and engineering decision log
 
-> **Purpose of this file.** A running log of every meaningful decision made about the landing page, the reasoning behind it, and the context at the time. `CONTEXT.md` answers *what is this*. `INTENT.md` answers *why is it that way*. This file answers *what changed, when, and why*, so that months from now we can see the full history of how the landing page evolved, which experiments worked, and which ideas were tried and rejected.
+> **Title note (15 October 2026).** This file was titled "Geck Inspect Landing Page: DECISIONS.md" because entries 1 to 16 were written in an April 2026 landing page session. From entry 17 on it records decisions about the whole product: pricing, billing, data, security, positioning and process. The title now says so. No entry's text was changed.
+
+> **Purpose of this file.** A running log of every meaningful decision made about Geck Inspect (originally only the landing page), the reasoning behind it, and the context at the time. `CONTEXT.md` answers *what is this*. `INTENT.md` answers *why is it that way*. This file answers *what changed, when, and why*, so that months from now we can see the full history of how the landing page evolved, which experiments worked, and which ideas were tried and rejected.
 >
 > **How to use this file.**
 > - Each decision gets its own numbered entry.
@@ -190,6 +192,8 @@ These entries capture the strategic decisions made during the initial landing pa
 **Decision:** Use Plausible or PostHog (privacy-friendly, lightweight alternatives). Single primary conversion event: "started sign-up." Secondary events: scroll depth to pricing, completed sign-up, time on page.
 **Reasoning:** Lighter than GA4 (faster page load), privacy-friendly (no cookie banner required in most jurisdictions), and the audience skews toward people who appreciate privacy-aware tools. Tracks what we actually need without the complexity.
 **Consequences:** Commits to a particular analytics vendor. Commits to not chasing vanity metrics (page views, sessions, bounce rate in isolation), only metrics that correlate with sign-ups.
+
+> **Superseded in practice (note added 15 October 2026).** Google Analytics 4 was added after this decision and runs today: `index.html` loads it on production hostnames only, skips it when Do Not Track or Global Privacy Control is on, and the weekly growth report (`.github/workflows/growth-report.yml`) was set up to read it from late April 2026. PostHog runs too (`src/lib/posthog.js`; the production build requires its key, `scripts/check-env.mjs`) and first-party events go to `public.user_events`. The same applies to the "not adding Google Analytics" line in decision 23. No decision entry recorded the switch. Whether to keep GA4 is open: the 14 October review (Part E, item 31) recommends removing it or putting it behind a consent banner for visitors in the EU and UK.
 
 ---
 

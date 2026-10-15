@@ -1,5 +1,7 @@
 # P3: Breeding ROI Dashboard
 
+> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+
 **Priority:** P3
 **Dependencies:** P1 (Animal Passport), P2 (Market Pricing)
 **Origin:** Original spec, unchanged
@@ -54,7 +56,7 @@ GeneticOutcomePrediction {
   id:                    UUID
   project_id:            UUID → BreedingProject
   morph_combination:     string
-  probability:           decimal  (0.0–1.0, all rows must sum to 1.0)
+  probability:           decimal  (0.0 to 1.0, all rows must sum to 1.0)
   price_low:             decimal
   price_mid:             decimal
   price_high:            decimal
@@ -70,7 +72,7 @@ Clutch {
   egg_count:             integer
   infertile_count:       integer nullable
   incubation_temp_f:     decimal
-  expected_hatch_date:   date  (laid_date + 75 days, midpoint of 60–90 day range)
+  expected_hatch_date:   date  (laid_date + 75 days, midpoint of 60 to 90 day range)
   actual_hatch_date:     date nullable
   status:                enum [incubating, hatched, failed]
   hatchling_animal_ids:  array of UUID → Animal

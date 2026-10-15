@@ -1,5 +1,7 @@
 # P6: Batch Husbandry Operations
 
+> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+
 **Priority:** P6
 **Dependencies:** P1 (Animal Passport. FeedingRecord and WeightRecord tables)
 **Origin:** iHerp analysis, iHerp's "batch feed a group" is one of its most-used daily features
