@@ -503,9 +503,15 @@ serve(async (req) => {
 
   // Lifecycle emails arrive as facts; the words are made here.
   if (isLifecycleType(type)) {
-    const facts = payload.facts && typeof payload.facts === "object"
-      ? payload.facts as Record<string, unknown>
-      : {};
+    // Only enqueue_lifecycle_emails() sends these, and it always sends
+    // facts. Anything else with a lifecycle type (a notification row a
+    // member wrote for themselves reaches this function through the
+    // dispatcher with a title and body, no facts) is skipped, so the
+    // master switch and the once-per-step ledger stay the only way in.
+    if (!payload.facts || typeof payload.facts !== "object" || Array.isArray(payload.facts)) {
+      return json({ delivered: 0, skipped: "lifecycle-without-facts" });
+    }
+    const facts = payload.facts as Record<string, unknown>;
     const email = lifecycleEmail(type, facts);
     if (!email) return json({ delivered: 0, skipped: "lifecycle-not-applicable" });
     title = email.title;

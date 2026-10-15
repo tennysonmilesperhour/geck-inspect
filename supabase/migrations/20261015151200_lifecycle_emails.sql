@@ -24,6 +24,8 @@
 --      day14  the same nudge a week later (needs a gecko)
 --    The review counts day 7 and day 14 as one "weigh-in" email, which is
 --    why the plan calls these four lifecycle emails.
+--    The welcome goes once the account is an hour old, so it reflects
+--    what the member did in onboarding.
 --    lifecycle_email_sends is the ledger: one row per member per step,
 --    unique, written before the email is handed to send-email, so a
 --    second run (or two runs at once) can never send a step twice. At most
@@ -204,11 +206,18 @@ begin
     v_email := coalesce(v_email, v_known_email);
   end if;
 
+  -- The log keeps an address only while it belongs to an account. Resend
+  -- can report an open, a click or a bounce days after the email went
+  -- out; for an account deleted since (admin_erase_account clears the
+  -- address from this table) the late event must not write it back. A
+  -- bounce or a complaint still puts the address on the suppression list
+  -- below, so it is never mailed again.
   insert into public.email_deliveries
     (event_key, resend_email_id, email, email_type, event, occurred_at, detail)
   values
-    (left(p_event_key, 200), left(p_resend_email_id, 200), left(v_email, 320), left(v_type, 64),
-     p_event, coalesce(p_occurred_at, now()), v_detail)
+    (left(p_event_key, 200), left(p_resend_email_id, 200),
+     case when v_email is not null and public.email_has_login(v_email) then left(v_email, 320) end,
+     left(v_type, 64), p_event, coalesce(p_occurred_at, now()), v_detail)
   on conflict (event_key) do nothing;
   v_new := found;
 
@@ -376,15 +385,19 @@ as $function$
   due as (
     select f.*, s.step, s.ord
       from facts f
+      -- The welcome waits until the account is an hour old, so it is
+      -- written from what the member did in onboarding (a first gecko, a
+      -- first weight) instead of greeting them as empty a minute after
+      -- they joined.
       cross join (values
-        ('day0', 0, 0, 2),
-        ('day1', 1, 1, 3),
-        ('day3', 2, 3, 5),
-        ('day7', 3, 7, 9),
-        ('day14', 4, 14, 16)
-      ) as s(step, ord, from_day, to_day)
-     where f.age >= make_interval(days => s.from_day)
-       and f.age < make_interval(days => s.to_day)
+        ('day0', 0, interval '1 hour', interval '2 days'),
+        ('day1', 1, interval '1 day', interval '3 days'),
+        ('day3', 2, interval '3 days', interval '5 days'),
+        ('day7', 3, interval '7 days', interval '9 days'),
+        ('day14', 4, interval '14 days', interval '16 days')
+      ) as s(step, ord, from_age, to_age)
+     where f.age >= s.from_age
+       and f.age < s.to_age
        and case s.step
              when 'day0' then true
              when 'day1' then f.gecko_count = 0

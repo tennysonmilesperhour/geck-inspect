@@ -137,6 +137,22 @@ describe('resend-webhook', () => {
     expect(args.p_detail).toEqual({ link: 'https://geckinspect.com/MyGeckos' });
   });
 
+  it('drops the query string and fragment of a clicked link', async () => {
+    // An unsubscribe link carries the member's signed token in its query.
+    for (const [link, kept] of [
+      ['https://geckinspect.com/Unsubscribe?t=p1.secret-signature', 'https://geckinspect.com/Unsubscribe'],
+      ['https://geckinspect.com/log?gecko=g1&type=weight#top', 'https://geckinspect.com/log'],
+      ['https://geckinspect.com/Settings#email-notifications', 'https://geckinspect.com/Settings'],
+    ]) {
+      const { db, fn } = setup();
+      await fn.handle(webhook({
+        type: 'email.clicked',
+        data: { email_id: 're_10', to: 'sam@example.com', click: { link } },
+      }));
+      expect(db.rpcCalls('record_email_event')[0].args.p_detail).toEqual({ link: kept });
+    }
+  });
+
   it('never trusts a tag that is not a plain type name', async () => {
     const { db, fn } = setup();
     await fn.handle(webhook({ ...bounced, data: { ...bounced.data, tags: { type: "x'; drop table" } } }));

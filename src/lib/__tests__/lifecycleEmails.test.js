@@ -192,6 +192,19 @@ describe('send-email sends lifecycle emails', () => {
     expect(net.requests[0].body.text).not.toContain('spam');
   });
 
+  it('skips a lifecycle type that arrives without facts, as a notification row would', async () => {
+    // A member can write a notification to themselves with any type the
+    // guard allows; the dispatcher then calls send-email with a title and
+    // body but no facts. That must not send a welcome around the master
+    // switch and the ledger.
+    for (const facts of [undefined, null, 'day0', ['x'], 5]) {
+      const { net, send } = setup();
+      const out = await send({ user_email: 'sam@example.com', type: 'lifecycle_day0', title: 'Geck Inspect', body: 'Hi', url: '/', facts });
+      expect(out).toMatchObject({ delivered: 0, skipped: 'lifecycle-without-facts' });
+      expect(net.requests).toHaveLength(0);
+    }
+  });
+
   it('escapes a gecko name in the html', async () => {
     const { net, send } = setup();
     await send({ user_email: 'sam@example.com', type: 'lifecycle_day7', facts: { ...MANGO, gecko_name: '<img src=x>' } });

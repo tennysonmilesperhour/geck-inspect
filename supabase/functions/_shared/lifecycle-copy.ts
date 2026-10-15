@@ -125,7 +125,7 @@ function day0(facts: LifecycleFacts): LifecycleEmail {
       body: paragraphs(
         greeting(facts),
         "Thanks for joining. Geck Inspect is a record book built for crested geckos: weights, feedings, sheds, parents and pairings, kept in one place you can show a buyer.",
-        "One thing to do today: add one gecko. A name and a morph are enough. Write the morph the way the breeder listed it, such as Lilly White, Harlequin, Dalmatian or Phantom. Not sure? Morph ID can read a photo, and your first one is free.",
+        "One thing to do today: add one gecko. A name and a morph are enough. Write the morph the way the breeder listed it, such as Lilly White, Harlequin, Dalmatian or Phantom. Not sure? Morph ID reads a top photo and a side photo and suggests the likely morph. Free members get one identification a month.",
         "Everything else hangs off that record: the weight chart, the feeding day and the family tree.",
       ),
       url: "/MyGeckos",

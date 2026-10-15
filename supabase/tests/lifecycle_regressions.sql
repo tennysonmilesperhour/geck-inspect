@@ -256,6 +256,16 @@ begin
     raise exception 'FAIL: a member with no gecko is due a lineage or weigh-in email';
   end if;
 
+  -- Joined less than an hour ago: the welcome waits, so it can reflect
+  -- what they did in onboarding.
+  perform pg_temp.mk('fresh', v_t0);
+  if pg_temp.step_for('fresh', v_t0 + interval '59 minutes') is not null then
+    raise exception 'FAIL: day0 is due before the account is an hour old';
+  end if;
+  if pg_temp.step_for('fresh', v_t0 + interval '1 hour') is distinct from 'day0' then
+    raise exception 'FAIL: day0 is not due once the account is an hour old';
+  end if;
+
   -- Unconfirmed address.
   perform pg_temp.mk('unconfirmed', v_t0, p_confirmed => false);
   if pg_temp.step_for('unconfirmed', v_t0 + interval '1 hour') is not null then
@@ -473,5 +483,60 @@ begin
 end $$;
 
 select pg_temp.as_postgres();
+
+-- 7. Deleting an account takes the address out of the delivery log and the
+--    ledger, keeps the counts, and keeps the suppression list -------------
+do $$
+declare
+  v_t0 timestamptz := (select t0 from _t0);
+  v_e text := pg_temp.mk('erase', v_t0);
+  v_before jsonb;
+  v_after jsonb;
+begin
+  perform public.record_email_event('sent', 'sent:re_erase', 're_erase', v_e, 'weekly_digest', v_t0);
+  -- A click borrows the address from the sent row.
+  perform public.record_email_event('clicked', 'msg_erase_click', 're_erase', null, null, v_t0 + interval '1 hour',
+                                    '{"link":"https://geckinspect.com/Dashboard"}'::jsonb);
+  if (select email from public.email_deliveries where event_key = 'msg_erase_click') is distinct from v_e then
+    raise exception 'FAIL: the click did not borrow the address';
+  end if;
+  insert into public.lifecycle_email_sends (email, step, created_date) values (v_e, 'day0', v_t0);
+  select jsonb_agg(to_jsonb(s) order by s.week, s.email_type) into v_before from public.email_delivery_stats s;
+
+  perform public.admin_erase_account(v_e);
+
+  if exists (select 1 from public.profiles where lower(email) = v_e) then
+    raise exception 'FAIL: the profile survived erasure';
+  end if;
+  if exists (select 1 from public.email_deliveries where lower(email) = v_e) then
+    raise exception 'FAIL: email_deliveries still holds the address after erasure';
+  end if;
+  if (select detail from public.email_deliveries where event_key = 'msg_erase_click') <> '{}'::jsonb then
+    raise exception 'FAIL: the clicked link survived erasure';
+  end if;
+  if exists (select 1 from public.lifecycle_email_sends where email = v_e) then
+    raise exception 'FAIL: lifecycle_email_sends still holds the address after erasure';
+  end if;
+  select jsonb_agg(to_jsonb(s) order by s.week, s.email_type) into v_after from public.email_delivery_stats s;
+  if v_after is distinct from v_before then
+    raise exception 'FAIL: erasure changed the delivery counts: % then %', v_before, v_after;
+  end if;
+
+  -- admin-delete-account removes the login next. A late open from Resend
+  -- does not write the address back; a late complaint still suppresses it.
+  delete from auth.users where lower(email) = v_e;
+  perform public.record_email_event('opened', 'msg_erase_open', 're_erase', v_e, 'weekly_digest', v_t0 + interval '2 hours');
+  perform public.record_email_event('complained', 'msg_erase_spam', 're_erase', v_e, 'weekly_digest', v_t0 + interval '3 hours');
+  if exists (select 1 from public.email_deliveries where lower(email) = v_e) then
+    raise exception 'FAIL: a late webhook wrote the erased address back';
+  end if;
+  if (select count(*) from public.email_deliveries where resend_email_id = 're_erase') <> 4 then
+    raise exception 'FAIL: the late events were not counted';
+  end if;
+  if not public.email_is_suppressed(v_e) then
+    raise exception 'FAIL: a complaint after erasure did not suppress the address';
+  end if;
+end $$;
+
 select 'lifecycle regressions: all passed' as result;
 rollback;

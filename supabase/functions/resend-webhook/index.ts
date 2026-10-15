@@ -140,9 +140,18 @@ function firstRecipient(to: unknown): string | null {
 
 const cut = (value: unknown, max: number) => (typeof value === "string" ? value.slice(0, max) : undefined);
 
+// The clicked link without its query string or fragment. Those can carry
+// a member's signed unsubscribe token or other per-member values, and the
+// address and path are enough to say which button worked.
+function linkWithoutQuery(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  return value.split(/[?#]/, 1)[0].slice(0, 500);
+}
+
 // Only what is needed to act on the event: the bounce type decides whether
 // the address is suppressed, the message says why, and the clicked link
-// says which button worked. Never the whole payload.
+// (without its query string) says which button worked. Never the whole
+// payload.
 function detailFor(event: string, data: Record<string, unknown>): Record<string, unknown> {
   if (event === "bounced") {
     const bounce = (data.bounce && typeof data.bounce === "object" ? data.bounce : {}) as Record<string, unknown>;
@@ -154,7 +163,7 @@ function detailFor(event: string, data: Record<string, unknown>): Record<string,
   }
   if (event === "clicked") {
     const click = (data.click && typeof data.click === "object" ? data.click : {}) as Record<string, unknown>;
-    return { link: cut(click.link, 500) };
+    return { link: linkWithoutQuery(click.link) };
   }
   return {};
 }
