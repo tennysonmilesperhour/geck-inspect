@@ -9,6 +9,7 @@ import { initPostHog } from '@/lib/posthog'
 import { installGlobalErrorHandlers } from '@/lib/telemetry'
 import { registerServiceWorker } from '@/lib/serviceWorker'
 import { installTranslationGuard } from '@/lib/translationGuard'
+import { installReducedMotion } from '@/lib/reducedMotion'
 
 // Initialize PostHog as early as possible so autocapture picks up the
 // very first click. No-op if VITE_POSTHOG_KEY isn't set.
@@ -30,6 +31,9 @@ installNativeShell().catch(() => console.warn('Native shell chrome could not sta
 // Keep the app alive when a visitor uses the browser's page translation.
 // See translationGuard.js for why this crashed sign-up and the dashboard.
 installTranslationGuard();
+
+// Honour the device's reduced-motion setting in Framer Motion animations.
+installReducedMotion();
 
 // The liquid glass bars bend the page behind them with an SVG backdrop
 // filter, which only Chromium renders. Safari drops the whole glass if it

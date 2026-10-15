@@ -41,8 +41,8 @@ function Moves({ design, modern, compact }) {
 function Matchups({ design, modern }) {
   const cell = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.7cqw' };
   return <div className="grid grid-cols-3 text-center" style={{ borderTop: modern ? undefined : '0.3cqw solid #383729', padding: '1cqw 0', fontSize: modern ? '2.25cqw' : '2.65cqw', lineHeight: 1.05, background: modern ? 'linear-gradient(#eceee8,#b9bfba)' : undefined, borderRadius: modern ? '0.5cqw' : 0 }}>
-    <div style={modern ? cell : undefined}>weakness<div style={{ ...cell, marginTop: modern ? 0 : '0.7cqw' }}>{design.weakness_type ? <><Energy type={design.weakness_type} size={modern ? 3.2 : 4.1} /><span>{design.weakness_multiplier}</span></> : '—'}</div></div>
-    <div style={modern ? cell : undefined}>resistance<div style={{ ...cell, marginTop: modern ? 0 : '0.7cqw' }}>{design.resistance_type ? <><Energy type={design.resistance_type} size={modern ? 3.2 : 4.1} /><span>{design.resistance_amount}</span></> : '—'}</div></div>
+    <div style={modern ? cell : undefined}>weakness<div style={{ ...cell, marginTop: modern ? 0 : '0.7cqw' }}>{design.weakness_type ? <><Energy type={design.weakness_type} size={modern ? 3.2 : 4.1} /><span>{design.weakness_multiplier}</span></> : 'none'}</div></div>
+    <div style={modern ? cell : undefined}>resistance<div style={{ ...cell, marginTop: modern ? 0 : '0.7cqw' }}>{design.resistance_type ? <><Energy type={design.resistance_type} size={modern ? 3.2 : 4.1} /><span>{design.resistance_amount}</span></> : 'none'}</div></div>
     <div style={modern ? cell : undefined}>retreat<div style={{ marginTop: modern ? 0 : '0.7cqw' }}><Cost count={design.retreat_cost} type="colorless" size={modern ? 3.2 : 4.1} /></div></div>
   </div>;
 }

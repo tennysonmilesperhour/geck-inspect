@@ -31,6 +31,7 @@ import ReportContent from '@/components/support/ReportContent';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+import { swapToFallback } from '@/lib/imgFallback';
 
 // Cap the per-page Product graph at 24 listings. The full result set can
 // run hundreds of geckos deep, emitting all of them blows up the
@@ -181,7 +182,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                                 alt={owner?.full_name}
                                 loading="lazy"
                                 decoding="async"
-                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://geckinspect.com/logo.png'; }}
+                                onError={(e) => swapToFallback(e, 'https://geckinspect.com/logo.png')}
                             />
                             <span className="truncate group-hover:underline">{owner?.full_name || 'Breeder'}</span>
                         </Link>

@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { startVisiblePolling } from '@/lib/pagePolling';
+import { safeInternalPath } from '@/lib/safeInternalPath';
 
 const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
     const [notifications, setNotifications] = useState([]);
@@ -92,7 +93,7 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
                         <div className="max-h-96 overflow-y-auto">
                             {notifications.map(notif => (
                                 <Link
-                                    to={notif.link || '#'}
+                                    to={safeInternalPath(notif.link, '/Notifications')}
                                     key={notif.id}
                                     className={`block p-3 border-b border-sage-100 hover:bg-sage-50 ${!notif.is_read ? 'bg-blue-50' : ''}`}
                                     onClick={() => !notif.is_read && handleMarkAsRead(notif.id)}

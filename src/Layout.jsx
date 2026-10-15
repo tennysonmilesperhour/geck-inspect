@@ -8,6 +8,7 @@ import { api } from '@/api/appClient';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
+import { swapToFallback } from '@/lib/imgFallback';
 import {
   Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home, TrendingUp
 } from "lucide-react";
@@ -1019,10 +1020,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               className="h-8 w-8 object-contain rounded-lg"
               loading="lazy"
               decoding="async"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = 'https://geckinspect.com/logo.png';
-              }}
+              onError={(e) => swapToFallback(e, APP_LOGO_URL)}
             />
           )}
               <span className="text-lg font-bold text-emerald-100" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
@@ -1185,10 +1183,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       className="h-10 w-10 object-contain rounded-lg flex-shrink-0"
                       loading="lazy"
                       decoding="async"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = APP_LOGO_URL;
-                      }}
+                      onError={(e) => swapToFallback(e, APP_LOGO_URL)}
                     />
                   )}
                   <span className="text-xl font-bold text-emerald-100 sidebar-collapse-hide whitespace-nowrap" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>

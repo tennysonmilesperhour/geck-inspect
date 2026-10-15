@@ -16,73 +16,41 @@ Disallow: /MyListings
 Disallow: /Subscription
 
 # --- AI crawlers (explicitly welcomed) ---
-
-# OpenAI / ChatGPT
+#
+# One group for all of them. A crawler obeys only the most specific group
+# that names it, so when each AI crawler had its own "Allow: /" group, the
+# private-page rules in the "*" group above did not apply to them. Keep the
+# Disallow lines here in step with the "*" group.
+# OpenAI (GPTBot, ChatGPT-User, OAI-SearchBot), Anthropic (ClaudeBot,
+# Claude-Web, Claude-SearchBot, anthropic-ai), Perplexity, Google AI
+# (Google-Extended, GoogleOther), Common Crawl, Apple, Meta, ByteDance,
+# Cohere, DuckDuckGo.
 User-agent: GPTBot
-Allow: /
-
 User-agent: ChatGPT-User
-Allow: /
-
 User-agent: OAI-SearchBot
-Allow: /
-
-# Anthropic / Claude
 User-agent: ClaudeBot
-Allow: /
-
 User-agent: Claude-Web
-Allow: /
-
 User-agent: Claude-SearchBot
-Allow: /
-
 User-agent: anthropic-ai
-Allow: /
-
-# Perplexity
 User-agent: PerplexityBot
-Allow: /
-
 User-agent: Perplexity-User
-Allow: /
-
-# Google AI / Gemini / AI Overviews
 User-agent: Google-Extended
-Allow: /
-
 User-agent: GoogleOther
-Allow: /
-
-# Common Crawl (powers many LLM training sets)
 User-agent: CCBot
-Allow: /
-
-# Apple Intelligence
 User-agent: Applebot
-Allow: /
-
 User-agent: Applebot-Extended
-Allow: /
-
-# Meta AI
 User-agent: Meta-ExternalAgent
-Allow: /
-
 User-agent: FacebookBot
-Allow: /
-
-# ByteDance (Doubao, Cici)
 User-agent: Bytespider
-Allow: /
-
-# Cohere
 User-agent: cohere-ai
-Allow: /
-
-# DuckDuckGo
 User-agent: DuckDuckBot
 Allow: /
+Disallow: /AdminPanel
+Disallow: /Settings
+Disallow: /Messages
+Disallow: /Notifications
+Disallow: /MyListings
+Disallow: /Subscription
 
 # Sitemap
 Sitemap: https://geckinspect.com/sitemap.xml

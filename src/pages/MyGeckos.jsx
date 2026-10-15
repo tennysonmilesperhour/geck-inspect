@@ -54,6 +54,7 @@ import { recordGeckoAdded } from '@/lib/activation';
 import { useGeckoFilters } from '@/hooks/useGeckoFilters';
 import { retryApiCall } from '@/lib/layoutCache';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { swapToFallback } from '@/lib/imgFallback';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -1086,7 +1087,7 @@ export default function MyGeckosPage() {
                                                                     className="w-12 h-12 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"
                                                                     loading="lazy"
                                                                     decoding="async"
-                                                                    onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_GECKO_IMAGE; }}
+                                                                    onError={(e) => swapToFallback(e, DEFAULT_GECKO_IMAGE)}
                                                                 />
                                                         <div className="flex-1 min-w-0">
                                                             {/* Mobile: Name only */}

@@ -87,6 +87,14 @@ function contentDate(file, fallback) {
   return CONTENT_DATES[file] || fallback;
 }
 
+// Newest recorded date across several source files, the same rule the
+// sitemap uses (dateOf in scripts/seo-routes.mjs), so a page's structured
+// data and its sitemap entry agree on when it last changed.
+function latestContentDate(files, fallback) {
+  const dates = files.map((f) => CONTENT_DATES[f]).filter(Boolean).sort();
+  return dates.length ? dates[dates.length - 1] : fallback;
+}
+
 // Per-path publication and last-update metadata. Fill this out over
 // time, every path we don't list falls back to the defaults above.
 // Paths are stored without a trailing slash to match the canonical
@@ -95,16 +103,27 @@ const PER_PATH = {
   '/': { published: '2025-06-01', modified: '2026-09-29' },
   '/About': { published: '2026-04-17', modified: '2026-09-29' },
   '/Contact': { published: '2026-04-17', modified: '2026-09-29' },
-  '/Terms': { published: '2026-04-17', modified: '2026-04-17' },
+  // Legal pages: keep in step with LAST_UPDATED in Terms.jsx and
+  // PrivacyPolicy.jsx, which is the date shown to readers.
+  '/Terms': { published: '2026-04-17', modified: '2026-09-08' },
   '/MarketplaceVerification': { published: '2026-04-17', modified: '2026-04-17' },
-  '/PrivacyPolicy': { published: '2025-06-01', modified: '2026-04-05' },
+  '/PrivacyPolicy': { published: '2025-06-01', modified: '2026-10-08' },
   // The guides follow their data file: the Care Guide changes when
   // care-guide.js changes, the Morph Guide (and every morph page) when
   // morph-guide.js changes. Mirrored by EDITORIAL_DATES in prerender.mjs.
   '/CareGuide': { published: '2025-06-15', modified: contentDate('src/data/care-guide.js', '2026-04-17') },
   '/MorphGuide': { published: '2025-07-01', modified: contentDate('src/data/morph-guide.js', '2026-09-28') },
-  '/GeneticsGuide': { published: '2025-07-15', modified: '2026-04-17' },
-  '/calculator': { published: '2025-08-01', modified: '2026-04-17' },
+  '/GeneticsGuide': {
+    published: '2025-07-15',
+    modified: latestContentDate(
+      ['src/pages/GeneticsGuide.jsx', 'src/data/genetics-sections.jsx', 'src/data/genetics-glossary.js'],
+      '2026-04-17',
+    ),
+  },
+  '/calculator': {
+    published: '2025-08-01',
+    modified: latestContentDate(['src/pages/GeneticCalculator.jsx', 'src/lib/genetics/calculatorCatalog.js'], '2026-04-17'),
+  },
   // Blog index, bumped whenever a new post ships. Per-post pages
   // resolve their dates from src/data/blog-posts.js (datePublished /
   // dateModified) via the /blog/<slug> branch in editorialFor().

@@ -38,6 +38,7 @@ import {
     fetchNotificationsPage,
     markAllNotificationsRead,
 } from '@/lib/notificationsApi';
+import { safeInternalPath } from '@/lib/safeInternalPath';
 
 /**
  * Notifications page, dark slate theme, matches the rest of the app.
@@ -380,7 +381,7 @@ export default function NotificationsPage() {
                                                 )}
                                                 {notification.link && (
                                                     <Link
-                                                        to={notification.link}
+                                                        to={safeInternalPath(notification.link, '/Notifications')}
                                                         onClick={() => isUnread && markAsRead(notification.id)}
                                                     >
                                                         <Button

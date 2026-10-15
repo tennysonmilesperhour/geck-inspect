@@ -213,7 +213,25 @@ self.addEventListener('push', (event) => {
 // installed PWA window.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/';
+  // Only open paths inside Geck Inspect. A protocol-relative link such as
+  // "//other-site.com" starts with "/" but opens a different website, so the
+  // rule is one leading slash followed by anything except "/" or "\".
+  // A full URL is accepted only when it points at this same site.
+  const rawUrl = event.notification.data?.url;
+  let targetUrl = '/';
+  if (typeof rawUrl === 'string') {
+    const candidate = rawUrl.trim();
+    if (/^\/(?![/\\])[^\s]*$/.test(candidate)) {
+      targetUrl = candidate;
+    } else {
+      try {
+        const parsed = new URL(candidate);
+        if (parsed.origin === self.location.origin) {
+          targetUrl = parsed.pathname + parsed.search + parsed.hash;
+        }
+      } catch {}
+    }
+  }
 
   event.waitUntil(
     (async () => {
