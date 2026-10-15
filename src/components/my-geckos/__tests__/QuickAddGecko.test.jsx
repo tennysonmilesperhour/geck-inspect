@@ -96,7 +96,8 @@ describe('QuickAddGecko', () => {
     expect(args.p_record_weight).toBe(true);
     expect(onSaved).toHaveBeenCalledTimes(1);
     expect(textOf(tree)).toContain('Mango is in your collection');
-    expect(textOf(tree)).toContain('Try Morph ID free');
+    // Free gets one Morph ID a month, not one ever.
+    expect(textOf(tree)).toContain('Try Morph ID (one free a month)');
   });
 
   it('gives the new gecko the next ID code, counting geckos saved in this dialog', async () => {

@@ -1,5 +1,7 @@
 # P7: Printable Worksheets
 
+> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+
 **Priority:** P7
 **Dependencies:** P1 (Animal Passport, all animal data, care logs, and lineage)
 **Origin:** iHerp analysis, practical, high-perceived-value, low build cost
@@ -34,7 +36,7 @@ This feature generates PDFs or print-optimized HTML from that data.
 
 BUILD FOUR PRINT LAYOUTS (accessible from animal detail page → "Print" menu):
 
-1. FEEDING LOG SHEET (weekly): animal name/morph/DOB header, 7-column table (Mon–Sun),
+1. FEEDING LOG SHEET (weekly): animal name/morph/DOB header, 7-column table (Mon to Sun),
    each cell has Food type line + Accepted checkbox. Minimal, fits one page, printable.
 
 2. VET HEALTH CARD: professional one-pager. Header with animal name, species, DOB, sex.

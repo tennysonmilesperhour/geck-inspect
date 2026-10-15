@@ -5,7 +5,7 @@ import Seo from '@/components/seo/Seo';
 import { DirectMessage, User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { notifyNewMessage } from '@/components/notifications/NotificationService';
-import { sendMessageToProfile } from '@/lib/memberActions';
+import { sendMessageToProfile, messageSendErrorText } from '@/lib/memberActions';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -620,7 +620,7 @@ export default function MessagesPage() {
             setNewMessage('');
         } catch (error) {
             console.error('Failed to send message:', error);
-            toast({ title: "Failed to Send", description: "Failed to send message. Please try again.", variant: "destructive" });
+            toast({ title: "Failed to Send", description: messageSendErrorText(error), variant: "destructive" });
         }
         setIsSending(false);
     };

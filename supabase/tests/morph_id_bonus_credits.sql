@@ -5,7 +5,8 @@
 -- not meant to be pasted into the Supabase SQL editor.
 -- Every change rolls back.
 --
--- Free with and without a bonus, paid monthly scans with a bonus used
+-- Free (one scan a month from the October 2026 release) with and without a bonus,
+-- paid monthly scans with a bonus used
 -- only after that month's allowance, expiry, a refund giving the scan
 -- back, a signed-in member who cannot insert a grant, and a
 -- non-superuser role (not anon or authenticated) that can look up
@@ -334,22 +335,24 @@ begin
   end if;
   perform pg_temp.expect_exhausted(v_expired_keeper, 'keeper', 3);
 
-  -- Free try spent in an earlier month. This month's scans are bonus.
+  -- Free scan spent in an earlier month. Since the October 2026 release Free gets one
+  -- identification every month, so this month has a fresh free scan and
+  -- the bonus is used only after it.
   v_earlier_free := pg_temp.make_user('free');
   insert into public.morph_id_usage (user_id, month_key, tier_at_start, credits_included, credits_consumed)
   values (v_earlier_free, '2020-01', 'free', 1, 1);
   insert into public.morph_id_bonus_credits (user_id, credits, reason)
   values (v_earlier_free, 3, 'later-month');
-  if pg_temp.scans(v_earlier_free, 'free', 0) <> 3 then
-    raise exception 'spent free try should leave the 3 bonus, got %',
+  if pg_temp.scans(v_earlier_free, 'free', 0) <> 4 then
+    raise exception 'a new month should give 1 free scan plus the 3 bonus, got %',
       pg_temp.scans(v_earlier_free, 'free', 0);
   end if;
   perform public.consume_morph_id_credit(v_earlier_free, 'free', 0);
   select credits_included, credits_consumed into v_included, v_consumed
     from public.morph_id_usage
    where user_id = v_earlier_free and month_key = public.month_key_now();
-  if v_included <> 0 or v_consumed <> 1 or pg_temp.scans(v_earlier_free, 'free', 0) <> 2 then
-    raise exception 'later-month bonus scan should use a 0 plan cap (included %, consumed %, left %)',
+  if v_included <> 1 or v_consumed <> 1 or pg_temp.scans(v_earlier_free, 'free', 0) <> 3 then
+    raise exception 'this month''s free scan should come before bonus (included %, consumed %, left %)',
       v_included, v_consumed, pg_temp.scans(v_earlier_free, 'free', 0);
   end if;
 

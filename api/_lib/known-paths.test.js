@@ -34,6 +34,8 @@ describe('edge path allowlist', () => {
       '/data/price-index.json',
       '/llms/morphs.md',
       '/CareGuide/series/feeding',
+      // The one-tap log reminder emails and notifications link to.
+      '/log',
     ]) {
       expect(isKnownAppPath(path), path).toBe(true);
     }

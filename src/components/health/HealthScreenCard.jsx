@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { isGuestMode } from '@/lib/guestMode';
 import { getFeatureUsage } from '@/lib/usageMeter';
+import { creditResetWhen } from '@/lib/creditReset';
 import { getTierLimits, tierOf, TIER_LIMITS } from '@/lib/tierLimits';
 import { runHealthScreen, firstPhotoUrl } from '@/lib/healthScreen';
 
@@ -222,7 +223,9 @@ export default function HealthScreenCard({ gecko, user }) {
                 {limitForPlan != null
                   ? `The ${planLabel} plan includes ${limitForPlan} health check${limitForPlan === 1 ? '' : 's'} per month. `
                   : ''}
-                Upgrade for more monthly checks, or your allotment resets at the start of next month.
+                {/* The month turns at midnight UTC, the evening before in the US,
+                    so say the moment in the member's own time. */}
+                Upgrade for more monthly checks, or your allotment resets {creditResetWhen()}.
               </p>
               <Link to={createPageUrl('Membership')} className="inline-block mt-2">
                 <Button size="sm">View plans</Button>

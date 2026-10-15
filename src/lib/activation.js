@@ -8,6 +8,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { captureEvent } from '@/lib/posthog';
 import { getFirstTouch, firstTouchProperties, getSignupCta, signupCtaProperties } from '@/lib/attribution';
+import { creditMorphShareSignup, getMorphShareRefForAccount } from '@/lib/morphShareRef';
 
 // An account counts as new on its first authenticated session within this
 // long of being created. Email confirmation can take a while, so a day.
@@ -49,20 +50,35 @@ export function isNewAccount(authUser, now = Date.now()) {
 export async function recordSignupIfNew(authUser, profile) {
   if (!authUser?.id || !isNewAccount(authUser)) return false;
   const flag = `${SIGNUP_FLAG_PREFIX}${authUser.id}`;
-  if (readFlag(flag)) return false;
   const extra = profile && typeof profile.extra_data === 'object' && profile.extra_data ? profile.extra_data : null;
-  if (extra?.signup_tracked_at) {
+  if (readFlag(flag) || extra?.signup_tracked_at) {
     writeFlag(flag);
+    // The card credit has its own once-only mark: the stored card id,
+    // which creditMorphShareSignup clears only when the database call
+    // goes through. A call that failed (no signal, a deploy under way) is
+    // tried again on a later session; the database counts it once per
+    // account, and only for an account under two days old. The database
+    // cannot tell whether the card was opened before the sign-up, so only
+    // an id this browser kept before the account was created is sent: a
+    // member who opens someone's card on their first day is not counted
+    // as a sign-up from it.
+    const pendingShare = getMorphShareRefForAccount(authUser);
+    if (pendingShare) creditMorphShareSignup(supabase, pendingShare);
     return false;
   }
   writeFlag(flag);
   const touch = getFirstTouch();
   const signupCta = getSignupCta();
+  const morphShareId = getMorphShareRefForAccount(authUser);
   captureEvent('signup_completed', {
     method: authUser.app_metadata?.provider || 'email',
     ...firstTouchProperties(touch),
     ...signupCtaProperties(signupCta),
+    ...(morphShareId ? { morph_share_id: morphShareId } : {}),
   });
+  // Arrived from a shared Morph ID card: count the sign-up on that card
+  // (the database logs morph_share_signup once per account).
+  if (morphShareId) creditMorphShareSignup(supabase, morphShareId);
   // Only when the profile row has loaded, so an absent row is not
   // overwritten; the event above is the record either way.
   if (profile?.id && authUser.email) {

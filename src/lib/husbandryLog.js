@@ -23,6 +23,7 @@
  */
 import { FeedingRecord, ShedRecord, FeedingGroup, Gecko } from '@/entities/all';
 import { todayLocalISO } from '@/lib/dateUtils';
+import { createCareRecordOnce } from '@/lib/careLogOnce';
 
 export const DEFAULT_FOOD_TYPE = 'CGD';
 
@@ -133,7 +134,9 @@ export async function revertGroupAdvances(advanced) {
 /**
  * Log one feeding per gecko and move their groups.
  *
- *   entries:  [{ gecko, accepted = true, notes = null, foodType }]
+ *   entries:  [{ gecko, accepted = true, notes = null, foodType, clientRequestId }]
+ *             clientRequestId (optional) makes a retried log save once
+ *             (src/lib/careLogOnce.js).
  *   date:     YYYY-MM-DD, defaults to today (backdating is allowed)
  *   foodType: default food for entries without their own
  *   groups:   feeding_groups rows already in memory (optional)
@@ -147,12 +150,13 @@ export async function logFeedings({ entries, date, foodType = DEFAULT_FOOD_TYPE,
   for (const entry of entries || []) {
     if (!entry?.gecko?.id) continue;
     const accepted = entry.accepted !== false;
-    const record = await FeedingRecord.create({
+    const record = await createCareRecordOnce(FeedingRecord, {
       animal_id: entry.gecko.id,
       date: day,
       food_type: entry.foodType || foodType || DEFAULT_FOOD_TYPE,
       accepted,
       notes: entry.notes ?? null,
+      ...(entry.clientRequestId ? { client_request_id: entry.clientRequestId } : {}),
     });
     records.push(record);
   }
@@ -201,15 +205,16 @@ export async function markGroupFed({ group, geckos, date, foodType } = {}) {
   return { ...result, fedCount: members.length, lastFed };
 }
 
-/** Log one shed. */
-export async function logShed({ gecko, date, quality = 'unknown', notes = null } = {}) {
+/** Log one shed. clientRequestId (optional) makes a retried log save once. */
+export async function logShed({ gecko, date, quality = 'unknown', notes = null, clientRequestId = null } = {}) {
   if (!gecko?.id) throw new Error('Pick a gecko first.');
   const value = SHED_QUALITY_OPTIONS.some((q) => q.value === quality) ? quality : 'unknown';
-  return ShedRecord.create({
+  return createCareRecordOnce(ShedRecord, {
     animal_id: gecko.id,
     date: normalizeLogDate(date),
     quality: value,
     notes: notes || null,
+    ...(clientRequestId ? { client_request_id: clientRequestId } : {}),
   });
 }
 
@@ -266,4 +271,16 @@ export function isAuthFailure(error) {
   if (error.code === 'PGRST301' || error.code === 'PGRST303') return true;
   const text = `${error.message || ''} ${error.error_description || ''}`.toLowerCase();
   return /not authenticated|jwt expired|invalid jwt|refresh token|auth session missing|session.*expired/.test(text);
+}
+
+/**
+ * Plain words for a care log the database refused. The raw database text
+ * (for example "new row violates row-level security policy") belongs in
+ * the console, not in front of members.
+ */
+export function careLogErrorText(error, fallback = 'Please try again in a minute.') {
+  const code = String(error?.code || '');
+  if (code === '42501') return 'You can no longer log for this gecko.';
+  if (code === '23505') return 'This was already logged.';
+  return fallback;
 }

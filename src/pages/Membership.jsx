@@ -88,7 +88,7 @@ const tiers = [
       'Lineage tree for your geckos',
       'Sales records and cost tracking',
       'Automatic value estimates from real listings',
-      'One free AI Morph ID to try it',
+      'One free AI Morph ID every month',
       '1 GB of photo storage',
       'Morph Guide, genetics calculator, and care guides',
       'Public marketplace browsing',

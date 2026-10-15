@@ -5,7 +5,7 @@ import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema } from '@/lib/organization-schema';
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 
-const LAST_UPDATED = '2026-10-08';
+const LAST_UPDATED = '2026-10-15';
 
 const Section = ({ title, children }) => (
     <div className="space-y-3">
@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
                         <Shield className="w-8 h-8 text-emerald-400 flex-shrink-0" />
                         <div>
                             <h1 className="text-2xl font-bold text-slate-100">Privacy Policy</h1>
-                            <p className="text-slate-500 text-sm">Last updated: October 8, 2026</p>
+                            <p className="text-slate-500 text-sm">Last updated: October 15, 2026</p>
                         </div>
                     </div>
 
@@ -110,7 +110,7 @@ export default function PrivacyPolicy() {
                             <li><strong className="text-slate-300">Anthropic</strong> (AI): the gecko photos and text you submit to the morph identifier, health screen, breeder consultant, and social post generator.</li>
                             <li><strong className="text-slate-300">Replicate</strong> (visual comparison): when enabled, the gecko image or image URL used to generate visual embeddings for similarity search and morph reference retrieval.</li>
                             <li><strong className="text-slate-300">Govee</strong> (optional enclosure sensors): when you connect this integration, server-side requests use your Govee API credentials and device identifiers to retrieve sensor readings.</li>
-                            <li><strong className="text-slate-300">Resend</strong> (email delivery): your email address and the content of emails we send you.</li>
+                            <li><strong className="text-slate-300">Resend</strong> (email delivery): your email address and the content of emails we send you. Resend tells us whether each email was delivered, bounced or reported as spam and, when open and click tracking is turned on, whether it was opened and which link was clicked. We keep that record so we know our emails arrive.</li>
                             <li><strong className="text-slate-300">Google Analytics</strong> and <strong className="text-slate-300">PostHog</strong> (analytics): pages visited, features used, and general device information. PostHog is configured to mask the text on the page and does not record sessions. Both honour the browser Do Not Track setting.</li>
                             <li><strong className="text-slate-300">Robauto</strong> (AI referral attribution): the path of the page you visit and the referring site, so we can tell when a visit came from an AI assistant. No account data is sent.</li>
                         </ul>
@@ -134,6 +134,8 @@ export default function PrivacyPolicy() {
                         <p>We retain your account data for as long as your account is active. Signed-in members can delete an account in Settings, on the website or in the iOS and Android apps. Deletion removes the login and personal records. Records other keepers still depend on (lineage, forum posts, and similar shared history) stay in anonymized form, under the name Former member.</p>
                         <p>A membership bought on the website is cancelled as part of that deletion when automatic deletion is available, so the card is not charged again. Deleting an account does not cancel an App Store or Google Play subscription. Cancel that in the store if you do not want it to renew.</p>
                         <p>If automatic deletion is unavailable, Settings records a request and we delete or anonymize the personal data within 30 days. We also keep records we are required to retain by law, such as payment amounts. Files that could not be removed automatically are cleared within 30 days.</p>
+                        <p>Deletion also removes your email address from our email delivery records, along with the details tied to it (a bounce message, or which link you clicked). What is left has no address and no details: technical references for each email, the kind of email, what happened to it (for example, delivered or opened) and when. That is enough to still count how many emails arrived.</p>
+                        <p>One short list is kept on purpose. If an address bounced or its owner marked our email as spam, we keep that address on a do-not-email list so we never email it again, even after the account is deleted. It holds the address, the reason (a bounce or a spam report), when it was added and last changed, the reference our email service gave the email that caused it, and for a bounce, the kind of bounce and the short message the receiving mail server sent back, which can repeat the address. To ask for an address to be taken off it, contact us at the email below.</p>
                     </Section>
 
                     <Section title="9. Children's Privacy">

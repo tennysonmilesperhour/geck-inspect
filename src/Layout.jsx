@@ -70,7 +70,7 @@ import {
   KEEPER_MODE_STORAGE_KEY,
 } from '@/lib/navItems';
 import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
-import { markAllNotificationsRead } from '@/lib/notificationsApi';
+import { NOT_QUIET_FILTER, isQuietNotification, markAllNotificationsRead } from '@/lib/notificationsApi';
 import { listenForPushRotation, syncPushSubscription } from '@/lib/webPush';
 
 
@@ -342,13 +342,14 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
         if (errorCount < MAX_ERRORS) {
           dataCache.markRequestMade(cacheKey);
-          const unreadNotifications = await retryApiCall(() => 
-            api.entities.Notification.filter({ user_email: user.email, is_read: false })
+          const unreadNotifications = await retryApiCall(() =>
+            api.entities.Notification.filter({ user_email: user.email, is_read: false, ...NOT_QUIET_FILTER })
           );
           if (unreadNotifications) {
-            // Filter out any notifications the user dismissed this session
+            // Filter out any notifications the user dismissed this session,
+            // and quiet bookkeeping rows (notificationsApi.js).
             const filtered = unreadNotifications.filter(
-              n => !dismissedNotificationIds.current.has(n.id)
+              n => !dismissedNotificationIds.current.has(n.id) && !isQuietNotification(n)
             );
             dataCache.set(cacheKey, filtered);
             setUnreadNotificationsCount(filtered.length);

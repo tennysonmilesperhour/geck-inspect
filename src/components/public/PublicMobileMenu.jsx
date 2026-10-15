@@ -32,7 +32,7 @@ const SECTIONS = [
     label: 'Tools',
     links: [
       { to: '/calculator', label: 'Morph & Breeding Calculator' },
-      { to: '/Recognition', label: 'Morph ID (first one free)' },
+      { to: '/Recognition', label: 'Morph ID (one free a month)' },
       { to: '/crested-gecko-price', label: 'Price Guide' },
     ],
   },

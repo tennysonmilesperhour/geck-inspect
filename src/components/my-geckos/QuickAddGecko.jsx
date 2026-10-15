@@ -45,7 +45,7 @@ const SEXES = ['Unsexed', 'Female', 'Male'];
  *
  * First-gecko flow (activation pass, 5 Oct 2026), all optional:
  *   offerPhotoChoice: open on two choices, "identify it from a photo"
- *     (onChoosePhoto, which goes to Morph ID's free try) or "type a name
+ *     (onChoosePhoto, which goes to Morph ID, one free a month) or "type a name
  *     and morph" (this form).
  *   initialDraft: prefill from a Morph ID result or a guest's saved draft
  *     ({ name, sex, hatch_date, morphs_traits, morph_tags, notes,
@@ -274,7 +274,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               <Camera className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
               <span>
                 <span className="block font-semibold text-slate-100">Add it by photo</span>
-                <span className="block text-sm text-slate-300 mt-0.5">Morph ID reads the morph from a top and a side photo (say, Lilly White or Harlequin) and fills it in. Your first one is free.</span>
+                <span className="block text-sm text-slate-300 mt-0.5">Morph ID reads the morph from a top and a side photo (say, Lilly White or Harlequin) and fills it in. Free accounts get one a month.</span>
               </span>
             </button>
             <button
@@ -327,7 +327,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               {!saved.hadMorph && (
                 <Link to="/Recognition" onClick={() => onClose?.()} className="block">
                   <Button variant="outline" className="w-full min-h-11 border-slate-600 text-slate-100">
-                    <Sparkles className="w-4 h-4 mr-2" /> Not sure of the morph? Try Morph ID free
+                    <Sparkles className="w-4 h-4 mr-2" /> Not sure of the morph? Try Morph ID (one free a month)
                   </Button>
                 </Link>
               )}

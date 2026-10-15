@@ -179,9 +179,12 @@ the optimized RPC with the existing public-view definition across five cases.
 
 Work on main under the repository's current agreement. Before pushing, inspect
 the diff, remove generated scratch material, and run appropriate gates. Vercel
-executes the web build on every push; explicitly verify the production deployment
-is Ready. Edge functions, migrations, secrets, auth URLs and store configuration
-are separate deployment steps. Never infer that a file's presence means it is live.
+builds the web app on every push to `main` that changes more than `docs/` and
+top-level Markdown (`ignoreCommand` in `vercel.json`); explicitly verify the
+production deployment is Ready. The same push applies new migration files and deploys the edge
+functions declared in `supabase/config.toml` (`docs/MIGRATIONS.md`). Functions
+that are not declared, secrets, auth URLs and store configuration are separate
+deployment steps. Never infer that a file's presence means it is live.
 
 ## Native release and operational gates
 

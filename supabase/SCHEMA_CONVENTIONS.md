@@ -76,31 +76,28 @@ ownership differently (the `social_*` tables use `created_by_user_id` /
 `src/api/supabaseEntities.js`, or inserts fail with "Could not find the
 'created_by' column in the schema cache".
 
-## 4. Migrations are not applied by merging
+## 4. Merging to main applies migrations
 
-Files in `supabase/migrations/` are the record of what ran. **Merging to
-`main` does not run them against production.** The GitHub integration
-builds preview branches; it does not migrate the production database.
+**Merging to `main` is the apply step.** The Supabase GitHub integration
+runs every new root-level file in `supabase/migrations/` against
+production, in filename order, and deploys the edge functions declared in
+`supabase/config.toml`. Vercel deploys the site from the same commit, and
+nothing fixes which of them finishes first. `docs/MIGRATIONS.md` has the
+full rules; in short:
 
-The order is the one in `docs/MIGRATIONS.md` ("How to make a schema
-change today"): apply to production first, then commit.
+- SQL that is written but must not run yet goes in `supabase/pending/`,
+  never in `supabase/migrations/`.
+- Name the file with a full 14-digit timestamp (the time you write it, in
+  UTC) and make it idempotent, because it can run twice.
+- It must be safe for the app that is already open in members' browsers,
+  whether the site deploys before or after it.
+- Do not apply it by hand before merging. The integration would still see
+  the file as new and run it again.
+- Run `supabase db push` against production only with `--dry-run`, as the
+  check in `docs/MIGRATIONS.md`, and never with `--include-all`.
 
-1. Write the file with a full 14-digit timestamp and make it idempotent.
-2. Apply it to production with the Supabase MCP `apply_migration` tool,
-   which records it in the migration history. If it has to go through the
-   dashboard's SQL editor instead, record it afterwards with
-   `supabase migration repair --status applied <version>`, because the
-   editor does not record history on its own.
-3. Read back the version production recorded. If it differs from the
-   filename, rename the file to match, then commit it.
-
-`docs/MIGRATIONS.md` does not use `supabase db push` to apply changes. Run
-it only with `--dry-run`, as the check described there, and never with
-`--include-all`.
-
-Then confirm the table or function exists before assuming the feature works.
-Two Phase 3 calculator features sat inert for hours because the migrations
-had merged but never run.
+After the merge, check that production's migration history lists the file
+(`supabase migration list`) before assuming the feature works.
 
 ## 4a. Grants: every new function says who may run it
 

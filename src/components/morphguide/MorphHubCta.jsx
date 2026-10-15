@@ -34,7 +34,7 @@ export function hubCtaFor(variant, id) {
     to: '/Recognition',
     icon: Camera,
     title: 'Not sure what your gecko is?',
-    body: 'Upload a photo and Morph ID reads the base color, pattern and traits for you. Your first one is free.',
+    body: 'Upload a photo and Morph ID reads the base color, pattern and traits for you. One free a month with an account.',
     cta: 'Identify my gecko from a photo',
   };
 }

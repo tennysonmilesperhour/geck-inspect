@@ -25,6 +25,7 @@ import {
   BreederProfile,
   UserEntity,
 } from '@/api/supabaseEntities';
+import { supabase } from '@/lib/supabaseClient';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -97,6 +98,38 @@ export async function computeTrustSignals(identifier) {
     avgRating,
     isVerifiedBreeder: breederProfile?.is_verified === true,
     isFeaturedBreeder: profile.is_featured_breeder === true,
+  };
+}
+
+/**
+ * The same signals for a curated breeder page, by its slug, from the
+ * database function breeder_page_trust (migration 20261015151000). The
+ * breeder page needs this for signed-out buyers: they cannot read the
+ * owner's email, which computeTrustSignals starts from, and the function
+ * returns only the numbers, never the email. It counts what anyone can
+ * already see one by one (public geckos, records on public passports,
+ * verified reviews).
+ *
+ * Resolves with null when the page has no visible owner. Rejects when the
+ * function is missing (the migration is not applied yet), so the caller
+ * can fall back to the email path for signed-in visitors.
+ */
+export async function breederPageTrustSignals(slug, { client = supabase } = {}) {
+  if (!slug) return null;
+  const { data, error } = await client.rpc('breeder_page_trust', { p_slug: slug });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  return {
+    accountAgeMonths: num(row.account_age_months),
+    animalsTracked: num(row.animals_tracked),
+    weightLogsCount: num(row.weight_logs_count),
+    ownershipTransfers: num(row.ownership_transfers),
+    reviewCount: num(row.review_count),
+    avgRating: row.avg_rating == null ? null : Number(row.avg_rating),
+    isVerifiedBreeder: row.is_verified_breeder === true,
+    isFeaturedBreeder: row.is_featured_breeder === true,
   };
 }
 

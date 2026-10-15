@@ -30,7 +30,7 @@ import { createPageUrl } from '@/utils';
 import { Collection, CollectionMember } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits } from '@/lib/tierLimits';
-import { invitePlan, reopenedInviteFields } from '@/lib/collectionInvites';
+import { invitePlan, isInviteExpired, reopenedInviteFields, tokenForResend } from '@/lib/collectionInvites';
 import CollectionActivity from './CollectionActivity';
 
 /**
@@ -453,12 +453,28 @@ function CollectionRow({
 
   const resendInvite = async (m) => {
     setResendingId(m.id);
+    // An expired link cannot be accepted, so re-sending it would only
+    // send a dead link. Give the seat a new token and 30 more days first.
+    let token;
+    try {
+      const renewal = await tokenForResend(m, {
+        update: (id, fields) => CollectionMember.update(id, fields),
+        invitedBy: user.email,
+        makeToken: generateToken,
+      });
+      token = renewal.token;
+      if (renewal.renewed) onChange?.();
+    } catch (e) {
+      setResendingId(null);
+      toast({ title: 'Could not renew the invitation', description: e.message, variant: 'destructive' });
+      return;
+    }
     const result = await sendInviteEmail({
       toEmail: m.member_email,
       inviter: user,
       collectionName: collection.name,
       role: m.role,
-      token: m.invite_token,
+      token,
     });
     setResendingId(null);
     toast({
@@ -560,7 +576,7 @@ function CollectionRow({
                           : 'bg-slate-700 text-slate-300 text-[10px]'
                     }
                   >
-                    {m.status}
+                    {isInviteExpired(m) ? 'expired' : m.status}
                   </Badge>
                 </div>
               </div>
@@ -573,7 +589,7 @@ function CollectionRow({
                       onClick={() => resendInvite(m)}
                       disabled={resendingId === m.id}
                       className="text-slate-400 hover:text-emerald-300 text-xs"
-                      title="Re-send the invitation email"
+                      title={isInviteExpired(m) ? 'This link has expired. Resend sends a new one.' : 'Re-send the invitation email'}
                     >
                       {resendingId === m.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />

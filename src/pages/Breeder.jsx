@@ -483,7 +483,10 @@ export default function Breeder() {
               settings={storeSettings} geckos={curatedGeckos.length ? curatedGeckos : forSaleGeckos}
               plans={featuredPlans} waitlist={waitlist}
               onInquire={profile.accepts_inquiries === false ? undefined : gecko => { setInquiryGecko(gecko); setInquiryOpen(true); }}
-              trust={profile.created_by ? <TrustPanel email={profile.created_by} variant="full" /> : null}
+              // By slug, so signed-out buyers see the track record too (they
+              // cannot read the owner's email). The email is only a fallback
+              // for signed-in visitors until breeder_page_trust is deployed.
+              trust={<TrustPanel breederSlug={profile.custom_slug || slug} email={profile.created_by || undefined} variant="full" />}
               reviews={<BreederReviews reviews={reviews} breederUserId={profile.user_id} breederName={displayName} onReviewsChanged={reloadReviews} />} />
             <div className="max-w-5xl mx-auto px-6 py-4">
               <ReportContent targetType="breeder_page" targetId={profile.id} authorEmail={profile.created_by}

@@ -169,8 +169,11 @@ function buildConfig() {
   // Dashboard, My Geckos) preloaded a 427 KB hero image it never renders.
   // /mcp is the public MCP server for AI agents (api/mcp.js); it must come
   // before the SPA catch-all.
+  // /morph-id/r/<id> is a shared Morph ID result card (api/morph-share.js):
+  // server HTML so social apps read its title, description and photo.
   const rewrites = [
     { source: '/mcp', destination: '/api/mcp' },
+    { source: '/morph-id/r/:id', destination: '/api/morph-share?id=:id' },
     { source: '/(.*)', destination: '/app.html' },
   ];
 

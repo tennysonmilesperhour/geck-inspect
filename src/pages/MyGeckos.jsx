@@ -490,7 +490,7 @@ export default function MyGeckosPage() {
     }
 
     // The empty collection's add is the guided first gecko: step 1 offers
-    // "by photo" (Morph ID's free try) or "type it" unless the member
+    // "by photo" (Morph ID, one free a month) or "type it" unless the member
     // already chose (opts.type).
     function openAddFlow(opts = {}) {
         const live = geckos.filter((g) => !g.archived).length;

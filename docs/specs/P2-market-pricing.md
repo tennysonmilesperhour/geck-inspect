@@ -1,5 +1,7 @@
 # P2: Market Pricing Intelligence
 
+> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+
 **Priority:** P2
 **Dependencies:** P1 (Animal Passport, animals must exist)
 **Origin:** Original spec, enhanced by iHerp analysis (transfer -> sale price contribution loop)

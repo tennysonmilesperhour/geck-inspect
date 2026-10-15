@@ -2,9 +2,72 @@
 
 The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file records what went to production on 3 October and after.
 
-**Status 15 October: the SQL queue is cleared.** Everything that was waiting on the SQL Editor run reached production on 8 October. Production's migration history (checked read-only on 15 October) records each one under a new version number, and PR 107 renamed the repo files to match. Details in "Cleared on 8 October" below. The open items left in this file are the two leftover functions under "Also for Tennyson", the real-device checks, and the 14 October Morph ID redeploy.
+**Status 15 October: the SQL queue is cleared, and deploys go through merges.** Everything that was waiting on the SQL Editor run reached production on 8 October (details in "Cleared on 8 October" below). Merging to `main` does three things at once, through Vercel and the Supabase GitHub integration: Vercel deploys the site, Supabase applies every new file in `supabase/migrations/`, and Supabase deploys the edge functions declared in `supabase/config.toml`. The integration already did this before 15 October, alongside changes applied by hand; round 1 of the review fixes went out with nothing run by hand (below), and that is the rule now. How to write a migration for this is in `docs/MIGRATIONS.md`.
+
+What is still open in this file: round 2 (written, not merged yet, with its steps for Tennyson), the two leftover functions under "Also for Tennyson", and the real-device checks.
 
 Project: `mmuglfphhwlaluyfyxsp`.
+
+## How a merge to main deploys
+
+- **Three deploys, no fixed order.** Vercel builds the site, the integration applies new migration files in filename order, and it deploys declared functions. Any of the three can finish first, and members keep old copies of the app open for hours, so every change has to work with the old app and the new one, before and after its migration.
+- **Migrations are recorded under the file's own version.** Production's history shows round 1 as `20261015120000_ownership_checks` and so on, with no author, which is how the integration records them (the 8 October files, applied by hand, carry a new timestamp and an author instead).
+- **Declared functions deploy from `main`.** 15 are declared in `supabase/config.toml` (14 live today plus `resend-webhook`, new in round 2). A declared function's repo copy is what goes live, so it must always be the version you want in production.
+- **18 production functions are still deployed by hand, on purpose.** They are live and have a copy in the repo but are not declared, so a merge never touches them: `invoke-llm`, `stripe-checkout`, `stripe-billing-portal`, `send-push`, `embed-gecko-image`, `export-training-corpus`, `recognize-import-data`, `publish-social-post`, `set-platform-connection`, `report-social-overage`, `meta-oauth-start`, `meta-oauth-callback`, `reddit-oauth-start`, `reddit-oauth-callback`, `iot-poll`, `csp-report`, `market-value-snapshot` and `admin-end-trial`. Each one gets declared only after its live code has been compared with the repo copy, because declaring it would deploy the repo copy on the next merge. (`rapid-api` is also live and has no repo copy; see "Also for Tennyson". `store-checkout` and `store-stripe-webhook` are in the repo but not deployed, and the store's own checkout is switched off in `src/lib/store/checkoutFlags.js`.)
+
+## Round 1: applied 15 October (PRs 128 and 129)
+
+Checked read-only on 15 October 2026 against production's migration history and function list.
+
+**Migrations**, applied by the integration when PR 128 merged (14:48 UTC):
+
+- `20261015120000_ownership_checks`: writes to transfers, care records, eggs, ownership records, collections and profiles check that the caller may act on that animal or account; gecko limits enforced for every plan.
+- `20261015130000_comms_and_exposure`: member-to-member notifications use server templates, rate limits and in-app links only; message, follow and deletion-request rules; no member emails from profile functions; new functions get no default EXECUTE grant.
+- `20261015140000_social_draft_allotments` and `20261015140100_email_has_login` (the "can this address sign in?" check that reminders, digests and send-email now use).
+
+**Edge functions:**
+
+- `admin-delete-account` v3, deployed by the integration with PR 128 (it was already declared).
+- PR 129 (merged 14:59 UTC) declared the eight round 1 functions that had only ever been deployed by hand, each with the gateway setting production already had. The integration then deployed them from the repo at 15:00 UTC: `stripe-webhook` v40, `generate-social-post` v23, `health-screen` v11, `send-email` v26, `send-collection-invite` v22, `subscribe-and-send-guides` v21, `send-breeder-inquiry` v21 and `recognize-gecko-morph` v71. It redeployed `revenuecat-webhook` (v121) and `revenuecat-sync` (v110) at the same time, unchanged.
+- `recognize-gecko-morph` v71 includes the 14 October `taxonomy.ts`, so the Sable and Highway redeploy at the end of this file is done.
+
+## Round 2: written, merges next
+
+Plan items E2 15 to 22 and E5 of `docs/planning/comprehensive-review-2026-10-14.md`. Merging to `main` ships all of it the same way as round 1: no SQL and no function deploy is run by hand. A few dashboard settings wait on Tennyson (the list at the end of this section); until then the parts that need them stay quiet rather than break.
+
+**Migrations** (applied in this order; each one is safe to run twice):
+
+| File | What it does |
+|---|---|
+| `20261015151000_followups` | The round 1 review's follow-ups: the breeder page's Track record panel works again for signed-out visitors (numbers only, no email), display names with "&", "," or "." in notifications, tighter message rules, member emails hidden from signed-out visitors on seven more tables |
+| `20261015151100_reminders_and_offline_logging` | Reminders by life stage for every gecko added from 16 October (or the release day, if later), whichever way it was added: weigh-ins every 14, 21 or 30 days by size and age, feeding every 3 days for a gecko not in a feeding group, and one hatch alert a day per member while an egg is near its date. Reminder links open the one-tap log at `/log`; no reminders or digests for addresses that cannot sign in; a request id on each weight, feeding and shed so an offline log is saved once |
+| `20261015151200_lifecycle_emails` | The five getting-started emails (off until `lifecycle_emails_enabled` is true), the job `lifecycle-emails-hourly` (35 past each hour), the delivery log `email_deliveries`, the suppression list `email_suppressions` and the admin's weekly email numbers |
+| `20261015151300_morph_id_share_card` | Free gets one Morph ID a month instead of one ever; the shareable result card (`morph_id_shares`), and the `morph_share_created`, `morph_share_viewed` and `morph_share_signup` events |
+| `20261015151400_stripe_ledger` | Cancellation and refund columns on `payment_events`, a one-time rebuild of missing rows from the webhook log, and `admin_revenue_summary()` for the Revenue card |
+| `20261015151500_scoreboard` | The weekly scoreboard: `scoreboard_entries` (what Tennyson records by hand), `admin_scoreboard()`, and a rule that a `user_events` row from the app always names the member who wrote it |
+| `20261015151600_erase_email_logs` | Account deletion also clears the address from `email_deliveries`, deletes the member's `lifecycle_email_sends` rows and clears a typed cancellation comment. `email_suppressions` is kept on purpose |
+
+**Edge functions** (all declared, so the merge deploys them): `send-email` (the lifecycle email copy, the delivery log, skipping suppressed addresses, an optional postal address in the footer), `resend-webhook` (new: records Resend's delivery events, checks Resend's signature), `stripe-webhook` (a ledger row for every paid invoice and every cancellation, refund and dispute amounts), `send-collection-invite` (matches the invite to the token in its link) and `recognize-gecko-morph` (Free at one a month; returns the photos it read, which a share card must use).
+
+**Vercel:** the new route `api/morph-share.js`, reached through the rewrite `/morph-id/r/:id` in `vercel.json`, serves a shared Morph ID card as a real page so Facebook and Messenger show its photo and title. The app gains the one-tap log at `/log`, the Revenue and Weekly scoreboard cards on Admin, Overview, and a reload-once when an open tab reaches a page it does not know yet (this helps from the next deploy on; tabs already open on the old app do not have it).
+
+**Service worker:** the offline shell cache is now `geck-shell-v2`, which drops a shell copy a shared card page could have replaced. The file cache deliberately stays `geck-static-v1`: bumping it would purge the app's files, and the visit that installs the new worker does not fetch them again, so the next offline visit would have the shell but not the code.
+
+**Safe in either order:** the Revenue and Weekly scoreboard cards say their migration is not applied yet until it is; a care log sent before its migration is saved without the request id instead of being refused; Free's one a month works before or after `recognize-gecko-morph` is redeployed (the database uses 1 for Free whatever the function sends); reminder links switch to `/log` only from the day after the defaults start, so tabs left open from before the release get a day to reload.
+
+### Round 2: what still needs Tennyson
+
+1. **Resend webhook** (until then nothing is recorded after "sent", and bounces do not stop mail):
+   - In Resend, Webhooks, add the endpoint `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/resend-webhook` with the email events (sent, delivered, delivery delayed, opened, clicked, bounced, complained).
+   - Copy its signing secret (it starts with `whsec_`) into the Supabase function secret `RESEND_WEBHOOK_SECRET`. Without it the function refuses every call.
+   - Turn on open and click tracking for the sending domain in Resend, or opens and clicks stay at 0.
+2. **Email footer:** set the function secret `EMAIL_POSTAL_ADDRESS` (the postal address US law expects in commercial email). Optional: `UNSUBSCRIBE_MAILTO`, an address that handles unsubscribe requests by hand, used only when a signed unsubscribe link cannot be made.
+3. **Morph ID card views:** create the Vault secret `morph_share_view_key` (32 or more random characters) and set the same value as the Vercel setting `MORPH_SHARE_VIEW_KEY`. It is a server-only setting: never give it a `VITE_` name, because `VITE_` names are for public values the build may put in the browser's JavaScript. Then redeploy production in Vercel (Deployments, the latest production deployment, Redeploy), because a changed setting reaches only new deployments, and a later merge that touches only docs does not make one. Until both values exist and that redeploy is done, cards work but every card's view count stays at 0.
+4. **Lifecycle emails:** approve the copy in `docs/planning/lifecycle-emails-2026-10.md`, then turn them on in the SQL Editor: `update public.app_settings set value = 'true'::jsonb where key = 'lifecycle_emails_enabled';`. Until then the hourly job sends nothing.
+5. **Phone checks:**
+   - Add a gecko with no weight on or after 16 October UTC (6 pm on 15 October, Denver time), and not before the release day: the next day (the job runs at 14:20 UTC, 8:20 am Denver time) a weigh-in reminder arrives, and its link opens `/log` with that gecko. Do not test sooner. A gecko added before then gets a reminder only if its own reminder switch is on, and on the first day the defaults apply, reminders still link to the older pages, so a sooner test can look broken when nothing is wrong.
+   - Airplane mode: log a feeding in Field Mode or on `/log`, go back online, and the feeding is saved once (not zero times, not twice).
+   - Share a Morph ID result and paste the card link into Messenger or a Facebook thread: the preview shows the photo and the title.
 
 ## Done on 3 October
 
@@ -46,7 +109,8 @@ The signed-out page checks that were meant to follow the run (landing page, a pa
 
 ## Also for Tennyson
 
-- Undeploy `rapid-api` (hello-world template, no caller). `admin-end-trial` is a disabled stub and can go too. Both were still deployed on 15 October (`rapid-api` v19, `admin-end-trial` v9).
+- Undeploy `rapid-api` (hello-world template, no caller, no copy in the repo). `admin-end-trial` is a disabled stub and can go too (also delete its folder in `supabase/functions/`). Both were still deployed on 15 October (`rapid-api` v19, `admin-end-trial` v9).
+- Round 2's dashboard steps are listed under "Round 2: what still needs Tennyson" above.
 - Promote and the AI Consultant are off for members in the admin Pages tool. Turn them on when ready.
 
 ## Real-device and real-email checks
@@ -60,7 +124,7 @@ The signed-out page checks that were meant to follow the run (landing page, a pa
 - Now that the erasure migration is live (8 Oct): erase a disposable account from the Support inbox. The login is gone, its files are gone, a sold gecko's photo still loads for the buyer, the ticket closes.
 - One-click unsubscribe from a real Gmail message.
 - Connect a real Bluesky account and publish; a copy-out leaves "Posts this month" unchanged.
-- A blurry free-account Morph ID gives the free try back.
+- A blurry free-account Morph ID gives the month's free identification back.
 - Print the rack label sheet on US Letter.
 
 ## Added 5 October: funnel and Morph ID credits
@@ -102,10 +166,8 @@ New on `main`:
 
 Deployed: `generate-social-post` v22 (matches the repo). Not yet exercised against the live Anthropic API because this session has no key. First check: as an admin, open Promote, pick a gecko with photos and weights, write a line under "What's going on", and press Write 3 drafts. If it errors, the function log line `anthropic failed` shows why.
 
-## Added 14 October: Sable and Highway in Morph ID
+## Added 14 October: Sable and Highway in Morph ID (deployed 15 October)
 
-Waiting: redeploy `recognize-gecko-morph` (live v70 matches the repo except `taxonomy.ts`). The new `taxonomy.ts` lets the model return `sable`, `highway` and `luwak`, and `index.ts` now tells the model to name the look-alikes a photo cannot rule out (line-bred looks, shared genes) in its uncertainty reasons. Until it is deployed, Morph ID cannot name a Sable or Highway. The rest of the Sable work (tag picker, morph guide page, glossary, marketplace filter, calculator) is already live through Vercel.
+**Done 15 October:** `recognize-gecko-morph` v71, deployed from the repo by the Supabase GitHub integration when PR 129 merged (see "Round 1" above), includes this `taxonomy.ts`. The note below is kept for history.
 
-```
-supabase functions deploy recognize-gecko-morph --no-verify-jwt --project-ref mmuglfphhwlaluyfyxsp
-```
+The new `taxonomy.ts` lets the model return `sable`, `highway` and `luwak`, and `index.ts` tells the model to name the look-alikes a photo cannot rule out (line-bred looks, shared genes) in its uncertainty reasons. The rest of the Sable work (tag picker, morph guide page, glossary, marketplace filter, calculator) was already live through Vercel.

@@ -38,6 +38,7 @@ import NativeCareSync from '@/components/native/NativeCareSync';
 import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
 import { captureFirstTouch } from '@/lib/attribution';
+import { captureMorphShareRef } from '@/lib/morphShareRef';
 import { captureSignupGrantFromUrl } from '@/lib/store/signupGrant';
 import { RETIRED_PAGES } from '@/lib/retiredPages';
 
@@ -45,6 +46,10 @@ import { RETIRED_PAGES } from '@/lib/retiredPages';
 // recorded once per browser. It has to run before the two helpers below
 // strip ?ref and ?grant from the address bar.
 captureFirstTouch();
+// ?ms=<card id> from a shared Morph ID card, kept so a later sign-up is
+// credited to the card. After captureFirstTouch, which reads the UTM tags
+// the same link carries.
+captureMorphShareRef();
 // Pull ?ref=<code> off the URL into localStorage as early as possible,
 // before any router renders, so the param is captured even on the very
 // first navigation away from the landing page. applyPendingReferral
@@ -149,6 +154,8 @@ const PedigreeTracker       = lazy(() => import('./pages/PedigreeTracker'));
 const BreedingRecords       = lazy(() => import('./pages/BreedingRecords'));
 const CrestedGeckoPrice     = lazy(() => import('./pages/CrestedGeckoPrice'));
 const OpenData              = lazy(() => import('./pages/OpenData'));
+// The one-tap log reminder links open (/log?type=...&gecko=...).
+const QuickLog              = lazy(() => import('./pages/QuickLog'));
 
 // P1, Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
@@ -299,6 +306,7 @@ const AuthenticatedApp = () => {
     if (!isAuthenticated || typeof window === 'undefined') return undefined;
     const prefetch = () => {
       import('./pages/FieldMode').catch(() => {});
+      import('./pages/QuickLog').catch(() => {});
       import('./pages/MyGeckos').catch(() => {});
     };
     if (window.requestIdleCallback) {
@@ -488,6 +496,9 @@ const AuthenticatedApp = () => {
         <Route path="/breeding-records" element={<BreedingRecords />} />
         <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
         <Route path="/data" element={<OpenData />} />
+        {/* Reminder notifications link here: a short form for the named
+            geckos, prefilled, that saves in one tap (works offline). */}
+        <Route path="/log" element={<QuickLog />} />
         <Route path="/Subscription" element={<Navigate to="/Membership" replace />} />
         <Route path="/GeckAnswers" element={<Navigate to="/Forum" replace />} />
         {retiredRoutes}

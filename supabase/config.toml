@@ -78,3 +78,9 @@ verify_jwt = false
 # when there is one and meters signed-in members.
 [functions.recognize-gecko-morph]
 verify_jwt = false
+
+# Resend's delivery webhooks (delivered, opened, bounced, complained).
+# Resend has no Supabase session; the handler checks the Svix signature
+# against RESEND_WEBHOOK_SECRET and refuses everything else.
+[functions.resend-webhook]
+verify_jwt = false

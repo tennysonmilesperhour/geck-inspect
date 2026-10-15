@@ -6,6 +6,14 @@
 // referred the paying member (one free month of Keeper, see
 // award_referral_reward in supabase/migrations).
 //
+// payment_events is the payment ledger the admin revenue tile reads
+// (admin_revenue_summary, migration 20261015151400). Every paid invoice,
+// lifetime purchase, refund and dispute writes or updates a row there, and
+// so does every cancellation: cancel_scheduled when a member cancels and
+// keeps access to the end of the period, cancel_withdrawn when they undo
+// it, subscription_cancelled when the subscription ends, each with
+// Stripe's reason and the member's feedback.
+//
 // Required env vars:
 //   STRIPE_WEBHOOK_SECRET      whsec_... (from the Stripe dashboard endpoint)
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY (available automatically)
@@ -274,6 +282,157 @@ function referredTierForInvoice(inv: any, profileTier: string | null | undefined
   if (profileTier === "keeper" || profileTier === "breeder" || profileTier === "enterprise") return profileTier;
   return null;
 }
+
+// The plan an invoice paid for, read from its own lines. The payment
+// ledger (payment_events) takes the tier from here and never from the
+// member's profile: a Breeder invoice that arrived before the profile was
+// updated was once recorded as "free" because the profile still said so.
+function invoiceLedgerPlan(inv: any): { tier: string; cycle: Cycle } | null {
+  return priceIdToPlan(linePriceId(membershipLine(inv?.lines?.data)));
+}
+
+// The ledger row for one paid invoice. Every paid invoice gets one,
+// including $0 ones (a trial start, a 100 percent coupon, a prorated plan
+// switch), so the row count matches the paid invoices in Stripe. amount
+// is what was actually collected.
+function invoiceLedgerRow(inv: any, email: string, eventId: string, eventCreated: number) {
+  const plan = invoiceLedgerPlan(inv);
+  return {
+    id: invoicePaymentKey(inv.id),
+    user_email: email,
+    stripe_event_id: eventId,
+    stripe_invoice_id: inv.id,
+    stripe_customer_id: stripeId(inv.customer),
+    stripe_subscription_id: invoiceSubscriptionId(inv),
+    event_type: "invoice.paid",
+    status: "paid",
+    amount_cents: Number(inv.amount_paid || 0),
+    currency: inv.currency || "usd",
+    membership_tier: plan?.tier ?? null,
+    billing_cycle: plan?.cycle ?? null,
+    event_timestamp: new Date(Number(eventCreated || 0) * 1000).toISOString(),
+  };
+}
+
+// A cancellation that is waiting for the end of the paid period. This
+// account's API version (2026-04-22.dahlia) sets cancel_at and leaves
+// cancel_at_period_end false when a member cancels in the portal, so both
+// are checked.
+function subscriptionCancelPending(sub: any): boolean {
+  if (!LIVE_STATUSES.has(sub?.status || "")) return false;
+  return sub?.cancel_at_period_end === true || (sub?.cancel_at !== null && sub?.cancel_at !== undefined);
+}
+
+// Whether the subscription was waiting to cancel before this update.
+// Stripe lists only the fields that changed in previous_attributes, so a
+// field it does not list kept its current value.
+function subscriptionWasCancelPending(sub: any, previous: any): boolean {
+  if (!previous || typeof previous !== "object") return false;
+  const touched = "cancel_at" in previous || "cancel_at_period_end" in previous || "canceled_at" in previous;
+  if (!touched) return false;
+  const cape = "cancel_at_period_end" in previous ? previous.cancel_at_period_end : sub?.cancel_at_period_end;
+  const cancelAt = "cancel_at" in previous ? previous.cancel_at : sub?.cancel_at;
+  return cape === true || (cancelAt !== null && cancelAt !== undefined);
+}
+
+// Which churn row a subscription event writes, if any. The ids are
+// deterministic so a redelivered event, the paired follow-up event Stripe
+// sends when the member adds feedback, and the backfill in migration
+// 20261015151400 all land on the same row instead of adding another.
+//   cancel_scheduled: the member cancelled and keeps access until the
+//     period ends. One row per cancellation request (keyed by canceled_at).
+//   cancel_withdrawn: they changed their mind before it ended.
+//   subscription_cancelled: the subscription has ended.
+function cancellationRecord(
+  eventType: string,
+  eventId: string,
+  eventCreated: number,
+  sub: any,
+  previous: any,
+): { id: string; kind: "cancel_scheduled" | "cancel_withdrawn" | "subscription_cancelled" } | null {
+  if (!sub?.id) return null;
+  if (eventType === "customer.subscription.deleted") {
+    return { id: `stripe-cancel:${sub.id}`, kind: "subscription_cancelled" };
+  }
+  if (eventType !== "customer.subscription.created" && eventType !== "customer.subscription.updated") return null;
+  if (subscriptionCancelPending(sub)) {
+    const key = sub.canceled_at ?? sub.cancel_at ?? eventCreated;
+    return { id: `stripe-cancel-scheduled:${sub.id}:${key}`, kind: "cancel_scheduled" };
+  }
+  if (subscriptionWasCancelPending(sub, previous)) {
+    return { id: `stripe-cancel-withdrawn:${eventId}`, kind: "cancel_withdrawn" };
+  }
+  return null;
+}
+
+function unixToIso(value: unknown): string | null {
+  const n = Number(value);
+  return value !== null && value !== undefined && Number.isFinite(n) && n > 0
+    ? new Date(n * 1000).toISOString()
+    : null;
+}
+
+// The payment_events row for a churn record. Stripe's reason
+// (cancellation_requested, payment_failed, payment_disputed) and the
+// member's portal feedback (too_expensive, unused, missing_features and so
+// on) are copied as they are. An ended subscription that is not churn gets
+// its own status, so the churn count (status subscription_cancelled) leaves
+// it out: replaced_by_lifetime when the member bought a lifetime plan, and
+// second_subscription_ended when the member is still paying on their
+// current subscription (a duplicate one that was refunded by hand).
+type EndedAs = "churn" | "replaced_by_lifetime" | "second_subscription_ended";
+function cancellationRow(
+  record: { id: string; kind: string },
+  sub: any,
+  email: string,
+  eventId: string,
+  eventCreated: number,
+  endedAs: EndedAs = "churn",
+) {
+  const plan = priceIdToPlan(linePriceId(membershipLine(sub?.items?.data)));
+  const details = sub?.cancellation_details || {};
+  const effective = record.kind === "subscription_cancelled"
+    ? unixToIso(sub?.ended_at ?? sub?.canceled_at ?? eventCreated)
+    : record.kind === "cancel_scheduled"
+      ? unixToIso(sub?.cancel_at ?? sub?.current_period_end ?? sub?.items?.data?.[0]?.current_period_end)
+      : null;
+  return {
+    id: record.id,
+    user_email: email,
+    stripe_event_id: eventId,
+    stripe_customer_id: stripeId(sub?.customer),
+    stripe_subscription_id: sub.id,
+    stripe_invoice_id: null,
+    event_type: record.kind,
+    status: record.kind === "subscription_cancelled" && endedAs !== "churn" ? endedAs : record.kind,
+    amount_cents: null,
+    membership_tier: plan?.tier ?? null,
+    billing_cycle: plan?.cycle ?? null,
+    cancellation_reason: details.reason ?? null,
+    cancellation_feedback: details.feedback ?? null,
+    cancellation_comment: details.comment ?? null,
+    cancel_at: effective,
+    event_timestamp: new Date(Number(eventCreated || 0) * 1000).toISOString(),
+  };
+}
+
+// Columns that migration 20261015151400 adds for churn rows.
+const CANCELLATION_DETAIL_COLUMNS = [
+  "cancellation_reason", "cancellation_feedback", "cancellation_comment", "cancel_at",
+];
+
+// A write that names a column the table does not have yet. PostgREST
+// answers PGRST204 when its schema cache lacks the column; Postgres itself
+// answers 42703.
+function missingColumn(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "PGRST204" || error?.code === "42703";
+}
+
+// The marker a failed referral leaves on the invoice's ledger row so the
+// paired delivery (invoice.paid and invoice.payment_succeeded arrive
+// together) can try again. It used to delete the ledger row instead,
+// which is one reason payment_events held fewer rows than Stripe.
+const REFERRAL_PENDING = "referral_pending";
 
 function accessBlockedByPaymentStatus(status: string | null | undefined): boolean {
   return status === "refunded" || status === "disputed";
@@ -748,12 +907,19 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
     return res.json();
   };
 
+  // Only invoice rows decide access. Cancellation rows carry the same
+  // subscription id but no invoice, and a $0 invoice (a prorated plan
+  // switch) is not the "newer paid invoice" that lifts a refund block;
+  // neither had a row before the ledger recorded them, so leaving them out
+  // keeps access decisions exactly as they were.
   const latestPaymentRow = async (subscriptionId: string | null) => {
     if (!subscriptionId) return null;
     const { data } = await supabase
       .from("payment_events")
       .select("status, stripe_invoice_id")
       .eq("stripe_subscription_id", subscriptionId)
+      .not("stripe_invoice_id", "is", null)
+      .or("amount_cents.gt.0,status.neq.paid")
       .order("event_timestamp", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -839,6 +1005,7 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
       subscriptionId: string | null;
       amount?: number | null;
       currency?: string | null;
+      refunded?: number | null;
       insertIfMissing: boolean;
     },
   ) => {
@@ -851,6 +1018,7 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
       console.warn("payment status update failed:", error.message);
       return;
     }
+    await noteRefundedAmount("stripe_invoice_id", invoiceId, status, extras.refunded);
     if ((data && data.length > 0) || !extras.insertIfMissing) return;
     const { error: insertError } = await supabase.from("payment_events").insert({
       id: invoicePaymentKey(invoiceId),
@@ -863,41 +1031,139 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
       status,
       amount_cents: extras.amount ?? null,
       currency: extras.currency || "usd",
-      membership_tier: "free",
+      // The plan is unknown here. This used to write "free", which made a
+      // refunded paid invoice read as a free one in revenue reports.
+      membership_tier: null,
       event_timestamp: new Date().toISOString(),
     });
     if (insertError && insertError.code !== "23505") {
       console.warn("payment status marker failed:", insertError.message);
     }
+    if (!insertError) await noteRefundedAmount("stripe_invoice_id", invoiceId, status, extras.refunded);
   };
 
-  const claimPaidInvoice = async (inv: any, profile: any, tier: string | null, cycle: string | null = null) => {
-    const id = invoicePaymentKey(inv.id);
+  // A won dispute on an invoice that does not decide access: the ledger
+  // row goes back to paid, but only if it is still marked disputed, so a
+  // refunded row is never turned back into money kept.
+  const restoreDisputedInvoice = async (invoiceId: string) => {
+    const { error } = await supabase
+      .from("payment_events")
+      .update({ status: "paid" })
+      .eq("stripe_invoice_id", invoiceId)
+      .eq("status", "disputed");
+    if (error) console.warn("dispute restore not recorded:", error.message);
+  };
+
+  // How much of a payment went back, so the revenue tile can show money
+  // kept rather than money charged. A separate, best-effort write: if the
+  // column is missing (the 20261015151400 migration not applied yet) the
+  // status change above, which is what access depends on, still stands.
+  // A status of "paid" (a dispute that was won) leaves the amount alone: an
+  // invoice that was partly refunded before the dispute still had that
+  // money returned, and the revenue figures take it off a paid row too.
+  const noteRefundedAmount = async (
+    column: "id" | "stripe_invoice_id",
+    value: string,
+    status: string,
+    refunded: number | null | undefined,
+  ) => {
+    const cents = Number(refunded);
+    if (status === "paid" || !(Number.isFinite(cents) && cents > 0)) return;
+    const { error } = await supabase
+      .from("payment_events")
+      .update({ amount_refunded_cents: cents })
+      .eq(column, value);
+    if (error) console.warn("refunded amount not recorded:", error.message);
+  };
+
+  // Money held in a dispute on an invoice that does not decide access,
+  // noted without changing the row's status (see the dispute case below).
+  // null clears it when the dispute is won. Best effort, like the refunded
+  // amount: a missing column (migration 20261015151400 not applied yet)
+  // only logs.
+  const noteDisputedAmount = async (invoiceId: string, amount: number | null | undefined) => {
+    const cents = amount === null ? null : Number(amount);
+    if (cents !== null && !(Number.isFinite(cents) && cents > 0)) return;
+    const { error } = await supabase
+      .from("payment_events")
+      .update({ amount_disputed_cents: cents })
+      .eq("stripe_invoice_id", invoiceId);
+    if (error) console.warn("disputed amount not recorded:", error.message);
+  };
+
+  // Writes the ledger row for a paid invoice. "claimed" means this
+  // delivery wrote it, "duplicate" that an earlier delivery already did.
+  const claimPaidInvoice = async (inv: any, email: string, failureReason: string | null = null) => {
+    const row = {
+      ...invoiceLedgerRow(inv, email, String(event.id || ""), Number(event.created || 0)),
+      ...(failureReason ? { failure_reason: failureReason } : {}),
+    };
     const { data: existing, error: readError } = await supabase
       .from("payment_events")
       .select("id")
-      .eq("id", id)
+      .eq("id", row.id)
       .maybeSingle();
     if (readError) throw readError;
     if (existing?.id) return "duplicate";
-    const { error } = await supabase.from("payment_events").insert({
-      id,
-      user_email: profile.email,
-      stripe_event_id: String(event.id || ""),
-      stripe_invoice_id: inv.id,
-      stripe_customer_id: stripeId(inv.customer),
-      stripe_subscription_id: invoiceSubscriptionId(inv),
-      event_type: "invoice.paid",
-      status: "paid",
-      amount_cents: inv.amount_paid,
-      currency: inv.currency,
-      membership_tier: tier,
-      billing_cycle: cycle,
-      event_timestamp: new Date(Number(event.created || 0) * 1000).toISOString(),
-    });
+    const { error } = await supabase.from("payment_events").insert(row);
     if (error?.code === "23505") return "duplicate";
     if (error) throw error;
     return "claimed";
+  };
+
+  // Takes back a referral that an earlier delivery of this invoice left
+  // pending. The update is the lock: only one delivery gets the row back.
+  const reclaimPendingReferral = async (invoiceId: string) => {
+    const { data, error } = await supabase
+      .from("payment_events")
+      .update({ failure_reason: null })
+      .eq("id", invoicePaymentKey(invoiceId))
+      .like("failure_reason", `${REFERRAL_PENDING}%`)
+      .select("id");
+    if (error) {
+      console.warn("pending referral check failed:", error.message);
+      return false;
+    }
+    return Boolean(data && data.length > 0);
+  };
+
+  // Writes or refreshes one churn row. Stripe sends a second update when
+  // the member adds feedback after cancelling, so an existing row takes
+  // the newer reason, feedback and comment instead of adding a row.
+  // A failure throws: the event is retried, which is safe because the
+  // access writes before it are repeatable.
+  const recordCancellation = async (row: Record<string, any>) => {
+    const { data: existing, error: readError } = await supabase
+      .from("payment_events")
+      .select("id")
+      .eq("id", row.id)
+      .maybeSingle();
+    if (readError) throw new Error(`cancellation lookup failed: ${readError.message}`);
+    const refresh = async () => {
+      const patch: Record<string, unknown> = { updated_date: new Date().toISOString() };
+      for (const key of CANCELLATION_DETAIL_COLUMNS) {
+        if (row[key] !== null && row[key] !== undefined) patch[key] = row[key];
+      }
+      const { error } = await supabase.from("payment_events").update(patch).eq("id", row.id);
+      if (error && missingColumn(error)) {
+        console.warn("cancellation details not saved, migration 20261015151400 not applied:", error.message);
+        return;
+      }
+      if (error) throw new Error(`cancellation update failed: ${error.message}`);
+    };
+    if (existing?.id) return refresh();
+    let { error } = await supabase.from("payment_events").insert(row);
+    if (error && missingColumn(error)) {
+      // This function went out before migration 20261015151400. Keep the
+      // churn row without Stripe's reason rather than failing every
+      // cancellation (Stripe would retry each one for three days).
+      console.warn("cancellation saved without details, migration 20261015151400 not applied:", error.message);
+      const basic = { ...row };
+      for (const key of CANCELLATION_DETAIL_COLUMNS) delete basic[key];
+      ({ error } = await supabase.from("payment_events").insert(basic));
+    }
+    if (error?.code === "23505") return refresh();
+    if (error) throw new Error(`cancellation record failed: ${error.message}`);
   };
 
   // Subscription writes skip a row whose billing cycle is already lifetime,
@@ -1197,26 +1463,59 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
         // unpaid, or incomplete_expired.
         const sub = event.data.object;
         const profile = await findProfileFromCustomer(stripeId(sub.customer));
-        if (profile?.email) await applySubscriptionAccess(profile, sub);
+        if (profile?.email) {
+          await applySubscriptionAccess(profile, sub);
+          // A cancellation (or a change of mind) goes in the ledger the
+          // moment Stripe reports it, so the admin sees churn the same hour
+          // instead of a month later when the plan runs out.
+          const record = cancellationRecord(
+            event.type,
+            String(event.id || ""),
+            Number(event.created || 0),
+            sub,
+            event.data?.previous_attributes,
+          );
+          if (record) {
+            await recordCancellation(
+              cancellationRow(record, sub, profile.email, String(event.id || ""), Number(event.created || 0)),
+            );
+          }
+        }
         break;
       }
       case "customer.subscription.deleted": {
         const sub = event.data.object;
         const profile = await findProfileFromCustomer(stripeId(sub.customer));
         if (profile?.email) {
-          if (!shouldApplySubscriptionEvent(profile)) {
+          const lifetime = !shouldApplySubscriptionEvent(profile);
+          const current = isCurrentSubscription(profile, sub.id);
+          if (lifetime) {
             console.warn(`ignored ${event.type} for ${sub.id}: lifetime access stays in place`);
-            break;
-          }
-          if (!isCurrentSubscription(profile, sub.id)) {
+          } else if (!current) {
             console.warn(`ignored ${event.type} for ${sub.id}: ${profile.stripe_subscription_id} is current`);
-            break;
+          } else {
+            await writeBillingUnlessLifetime(profile.email, {
+              subscription_status: "canceled",
+              membership_tier: "free",
+              membership_billing_cycle: null,
+            });
           }
-          await writeBillingUnlessLifetime(profile.email, {
-            subscription_status: "canceled",
-            membership_tier: "free",
-            membership_billing_cycle: null,
-          });
+          // Recorded after the access write, and also when access did not
+          // change: an ended subscription stops billing either way (a
+          // lifetime member's old plan, or a second subscription), so the
+          // revenue figures must drop it. A lifetime upgrade is marked as
+          // such so it does not count as churn.
+          const record = cancellationRecord(event.type, String(event.id || ""), Number(event.created || 0), sub, null);
+          if (record) {
+            await recordCancellation(cancellationRow(
+              record,
+              sub,
+              profile.email,
+              String(event.id || ""),
+              Number(event.created || 0),
+              lifetime ? "replaced_by_lifetime" : current ? "churn" : "second_subscription_ended",
+            ));
+          }
         }
         break;
       }
@@ -1259,6 +1558,14 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
               tier: lifetime.tier,
             },
           );
+          if (lifetime.paymentEventId) {
+            await noteRefundedAmount(
+              "id",
+              lifetime.paymentEventId,
+              effect === "revoke" ? "refunded" : "partial_refund",
+              charge.amount_refunded,
+            );
+          }
           if (effect === "revoke") {
             await upsertProfileByEmail(profile.email, revokeAccessPatch());
           }
@@ -1274,7 +1581,26 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
           latestInvoiceId,
           fullRefund: isFullRefund(charge),
         });
-        if (effect === "ignore" || effect === "record") break;
+        if (effect === "ignore" || effect === "record") {
+          // The money still went back, so the ledger records how much even
+          // though access does not change: an older invoice than the
+          // subscription's latest, or one from a subscription that is no
+          // longer the member's current one. Only the amount is written.
+          // Its status stays as it was: the access check reads the newest
+          // invoice row with money on it, and when every newer invoice is
+          // $0 (a referral credit, a prorated switch) a "refunded" status
+          // here would read as the latest payment and hold back the plan
+          // the member is paying for. Revenue already subtracts the amount.
+          if (invoiceId) {
+            await noteRefundedAmount(
+              "stripe_invoice_id",
+              invoiceId,
+              isFullRefund(charge) ? "refunded" : "partial_refund",
+              charge.amount_refunded,
+            );
+          }
+          break;
+        }
         if (invoiceId) {
           await markInvoiceStatus(invoiceId, effect === "partial" ? "partial_refund" : "refunded", {
             email: profile.email,
@@ -1284,6 +1610,7 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
             subscriptionId: linked,
             amount: charge.amount_refunded,
             currency: charge.currency,
+            refunded: charge.amount_refunded,
             insertIfMissing: effect === "revoke",
           });
         }
@@ -1356,7 +1683,23 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
           latestInvoiceId,
           fullRefund: true,
         });
-        if (effect === "ignore" || effect === "record") break;
+        if (effect === "ignore" || effect === "record") {
+          // Ledger only, as for refunds above: the disputed amount is noted
+          // on the row with its status left alone, so the money leaves the
+          // revenue figures (and comes back if the dispute is won) and the
+          // member's access is not touched, now or by a later plan change.
+          if (invoiceId) {
+            if (decision === "restore") {
+              await noteDisputedAmount(invoiceId, null);
+              // A row marked disputed while it was the invoice that
+              // decided access, and since overtaken by a newer one.
+              await restoreDisputedInvoice(invoiceId);
+            } else {
+              await noteDisputedAmount(invoiceId, dispute.amount);
+            }
+          }
+          break;
+        }
         if (decision === "restore") {
           if (invoiceId) {
             await markInvoiceStatus(invoiceId, "paid", {
@@ -1397,46 +1740,75 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
       case "invoice.paid":
       case "invoice.payment_succeeded": {
         const inv = event.data.object;
-        // One payment produces both events. The first delivery inserts
-        // payment_events id stripe-invoice:<invoice id> and is the only
-        // delivery that applies the referral. The plan itself comes from the
-        // subscription price, not from this invoice. The database still
-        // allows one referral reward per referred member. award is not
-        // limited to billing_reason=subscription_create because a member who
-        // took the trial pays their first real invoice on renewal.
-        if ((inv.amount_paid || 0) > 0) {
-          const profile = await findProfileFromCustomer(stripeId(inv.customer));
-          if (!profile?.email) break;
-          const subscriptionId = invoiceSubscriptionId(inv);
-          if (!isCurrentSubscription(profile, subscriptionId)) break;
-          const tier = referredTierForInvoice(inv, profile.membership_tier);
-          const plan = priceIdToPlan(linePriceId(membershipLine(inv.lines?.data)));
-          // Live and test both claim the invoice id. invoice.paid and
-          // invoice.payment_succeeded then cannot both apply the referral.
-          // A lost race or a second delivery returns duplicate.
-          const claim = await claimPaidInvoice(inv, profile, tier, plan?.cycle || null);
-          if (claim !== "claimed") break;
-          // The subscription event is what changes the plan. A paid invoice
-          // can list the old price as a credit, so it must not write the tier.
-          if (!plan) {
-            console.warn("paid invoice has no catalog price", inv.id);
-          }
-          if (!tier) {
-            console.warn("referral skipped: invoice has no known membership price", inv.id);
-            break;
-          }
-          try {
-            const { data: reward, error } = await supabase.rpc("award_referral_reward", {
-              p_referred_email: profile.email,
-              p_referred_tier: tier,
-              p_stripe_invoice_id: inv.id,
-            });
-            if (error) throw error;
-            await applyReferralStripeCredit(supabase, reward);
-          } catch (err) {
-            console.warn("referral reward failed:", (err as Error).message);
-            await supabase.from("payment_events").delete().eq("id", invoicePaymentKey(inv.id));
-          }
+        if (!inv?.id) break;
+        // One payment produces both events. The first delivery writes the
+        // ledger row, payment_events id stripe-invoice:<invoice id>, and is
+        // the only delivery that applies the referral. Every paid invoice
+        // gets a row, $0 ones and ones from a second subscription included,
+        // with the tier and amount from the invoice itself; the plan the
+        // member has is still set by the subscription events, not here.
+        const profile = await findProfileFromCustomer(stripeId(inv.customer));
+        const email = profile?.email || inv.customer_email || null;
+        if (!email) {
+          console.warn("paid invoice not recorded: no member or email for the customer", inv.id);
+          break;
+        }
+        // The referral rules are unchanged: a real payment, from a known
+        // member, on their current subscription. award is not limited to
+        // billing_reason=subscription_create because a member who took the
+        // trial pays their first real invoice on renewal. The database
+        // allows one referral reward per referred member.
+        const paidMoney = (inv.amount_paid || 0) > 0;
+        const referralCandidate = paidMoney && Boolean(profile?.email);
+        const current = profile ? isCurrentSubscription(profile, invoiceSubscriptionId(inv)) : false;
+        // A new subscription's first invoice can arrive while the profile
+        // still points at the old one, a moment before
+        // customer.subscription.created switches it, or before
+        // checkout.session.completed has saved the Stripe customer on the
+        // profile at all (then no member matches yet and the row goes in
+        // under the invoice email). Either way the row is written now with
+        // the referral left pending, so the paired delivery, which may see
+        // the updated profile, can still award it. Before the ledger wrote
+        // every invoice, nothing was claimed here and that worked by itself.
+        const pendingReason = !paidMoney
+          ? null
+          : !profile?.email
+          ? `${REFERRAL_PENDING}: member not matched yet`
+          : !current
+          ? `${REFERRAL_PENDING}: subscription not current yet`
+          : null;
+        const claim = await claimPaidInvoice(inv, email, pendingReason);
+        if (!referralCandidate || !profile?.email) break;
+        if (!current) break;
+        // A lost race or a second delivery returns duplicate, and only
+        // goes on when an earlier attempt left the referral pending.
+        if (claim !== "claimed" && !(await reclaimPendingReferral(inv.id))) break;
+        const tier = referredTierForInvoice(inv, profile.membership_tier);
+        if (!invoiceLedgerPlan(inv)) {
+          console.warn("paid invoice has no catalog price", inv.id);
+        }
+        if (!tier) {
+          console.warn("referral skipped: invoice has no known membership price", inv.id);
+          break;
+        }
+        try {
+          const { data: reward, error } = await supabase.rpc("award_referral_reward", {
+            p_referred_email: profile.email,
+            p_referred_tier: tier,
+            p_stripe_invoice_id: inv.id,
+          });
+          if (error) throw error;
+          await applyReferralStripeCredit(supabase, reward);
+        } catch (err) {
+          // The ledger row stays (the money was received); the marker lets
+          // the paired delivery try the referral again.
+          const message = (err as Error).message;
+          console.warn("referral reward failed:", message);
+          await supabase
+            .from("payment_events")
+            .update({ failure_reason: `${REFERRAL_PENDING}: ${message}`.slice(0, 500) })
+            .eq("id", invoicePaymentKey(inv.id))
+            .then(() => {}, () => {});
         }
         break;
       }

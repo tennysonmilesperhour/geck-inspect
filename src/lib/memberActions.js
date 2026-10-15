@@ -56,3 +56,27 @@ export async function breederSlugForProfile(profileId, { client = supabase } = {
   const slug = await rpc('breeder_slug_for_profile', { p_profile_id: String(profileId) }, client);
   return typeof slug === 'string' && slug.trim() ? slug.trim() : null;
 }
+
+/**
+ * What to tell a member whose message did not send. Since the October 2026 release
+ * (supabase/migrations/20261015151000_followups.sql) the database only
+ * accepts a member's message to someone with a public profile, the owner
+ * of a public gecko, or someone who has messaged them, and caps new
+ * conversations at 20 an hour. Those refusals get a plain explanation
+ * instead of "please try again", which would never work.
+ */
+export function messageSendErrorText(error) {
+  const code = error?.code;
+  const message = String(error?.message || '');
+  if (code === '54000' || /too many new conversations/i.test(message)) {
+    return 'You have started a lot of new conversations in the last hour. Try again later.';
+  }
+  if (code === '42501' && /row-level security/i.test(message)) {
+    return 'This member is not taking messages from new contacts. You can message members with a public profile, sellers with a public gecko, or anyone who has messaged you.';
+  }
+  // prevent_blocked_message: one of you has blocked the other.
+  if (/conversation is unavailable/i.test(message)) {
+    return 'This conversation is unavailable.';
+  }
+  return 'Failed to send message. Please try again.';
+}

@@ -299,8 +299,11 @@ function json(body: unknown, status = 200) {
 // `free`, matching the frontend's tierOf() helper. Bonus scans are not
 // in this map. The database adds them on top, and only after the
 // monthly allowance is used.
+// Free is one a month from the October 2026 release (migration
+// 20261015151300). The database uses 1 for Free whatever this map says,
+// so the change holds before a redeploy.
 const TIER_MORPH_ID_CREDITS: Record<string, number> = {
-  free: 0,
+  free: 1,
   keeper: 3,
   breeder: 6,
   enterprise: 15,
@@ -1406,7 +1409,7 @@ serve(async (req) => {
     analysis.user_reported_fired_state = firedState;
     // D19: a "better photos needed" answer gives the member nothing to act
     // on, so the credit is handed back and they can retake the photos. Since
-    // 6 Oct 2026 this covers paid monthly credits too, not only the free try.
+    // 6 Oct 2026 this covers paid monthly credits too, not only the free scan.
     let creditRefunded = false;
     if (
       creditWasConsumed &&
@@ -1461,13 +1464,17 @@ serve(async (req) => {
       credits_remaining: creditsRemaining,
       credit_refunded: creditRefunded,
       value_estimate_included: includeValueEstimate,
+      // The photos this answer read, exactly as sent. A share card may only
+      // show one of these (create_morph_id_share compares the strings), so
+      // a strong answer cannot be paired with a different photo.
+      image_urls: imageUrls,
     };
     await settleRequestKey(profile.auth_user_id, claimedKey, "done", responseBody);
     return json(responseBody);
   } catch (err) {
     // Provider failures (network, 5xx, billing, timeout) and our own
-    // errors both return the reserved scan. A member's free try is only
-    // kept when an analysis actually comes back.
+    // errors both return the reserved scan. A member's monthly scan is
+    // only used up when an analysis actually comes back.
     let creditRefundedOnError = false;
     if (creditWasConsumed) {
       creditRefundedOnError = await refundMorphIdCredit(profile.auth_user_id);

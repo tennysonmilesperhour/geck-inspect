@@ -17,7 +17,7 @@ import {
   friendlyDay,
   weighInIntervalDays,
 } from '@/lib/firstGeckoFlow';
-import { ensureDefaultWeighInReminder, setGeckoWeighInReminder } from '@/lib/careReminders';
+import { ensureDefaultWeighInReminder, setGeckoFeedingReminder, setGeckoWeighInReminder } from '@/lib/careReminders';
 
 /**
  * Steps 2 and 3 of the guided first gecko (step 1 is QuickAddGecko).
@@ -175,13 +175,19 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
           target = { ...target, ...(await FeedingGroup.update(target.id, { feeding_reminder_enabled: true })) };
         }
         await Gecko.update(gecko.id, { feeding_group_id: target.id });
+        // Clears an earlier "off" so the gecko is reminded again if it
+        // ever leaves the group.
+        await setGeckoFeedingReminder(user.email, gecko.id, { on: true }).catch(() => null);
         setGroup(target);
         const next = { ...gecko, feeding_group_id: target.id };
         setGecko(next);
         onUpdated?.(next);
       } else {
         // Off for this gecko only: it leaves the feeding group, so other
-        // geckos in the group keep their reminders.
+        // geckos in the group keep their reminders. A gecko in no group
+        // would get the default every-3-days reminder, so it is also
+        // switched off by name.
+        await setGeckoFeedingReminder(user.email, gecko.id, { on: false });
         await Gecko.update(gecko.id, { feeding_group_id: null });
         const next = { ...gecko, feeding_group_id: null };
         setGecko(next);
@@ -369,7 +375,7 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
                   <p className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-emerald-400" /> What is {name} worth?</p>
                   <p className="text-xs text-slate-400 mt-1">Add its morph (say, Lilly White or Harlequin) and Geck Inspect estimates its value from real crested gecko listings.</p>
                   <Link to="/Recognition" onClick={() => onClose?.()} className="touch:min-h-11 mt-2 inline-flex text-sm text-emerald-300 hover:text-emerald-200">
-                    Not sure of the morph? Try Morph ID free
+                    Not sure of the morph? Try Morph ID (one free a month)
                   </Link>
                 </div>
               )}

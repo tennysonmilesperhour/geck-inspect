@@ -18,6 +18,12 @@
  *     always gets fresh HTML from the server; the cached shell is only
  *     ever served when the network is unreachable. That means a stale
  *     cached page can never shadow a new deploy for an online user.
+ *   - The cached shell is only ever the app's own HTML. Pages the server
+ *     builds on its own (a shared Morph ID card at /morph-id/r/<id>, the
+ *     older /api/share page, anything marked no-store) and files that are
+ *     not HTML (llms.txt, the /data CSVs, the .md copies) are passed
+ *     through and never stored, or the next offline visit to /log or Field
+ *     Mode would open that page in place of the app.
  *   - Hashed build assets under /assets/ are immutable (Vite fingerprints
  *     the filename), so they are safe to serve cache-first.
  *   - Other same-origin static files (logo, manifest, icons) use
@@ -27,13 +33,18 @@
  *     is NEVER intercepted. API data is always live; we never serve a
  *     stale gecko record from cache.
  *
- * Bump CACHE_VERSION whenever the caching logic below changes so the
- * activate handler purges the previous generation of caches.
+ * Bump a cache's version whenever the logic that fills it changes, so the
+ * activate handler purges its previous generation. Bump only the cache
+ * that changed: the visit that installs a new worker does not request the
+ * app's files again, so a purged file cache would leave the next offline
+ * visit without them.
  */
 
-const CACHE_VERSION = 'v1';
-const SHELL_CACHE = `geck-shell-${CACHE_VERSION}`;
-const STATIC_CACHE = `geck-static-${CACHE_VERSION}`;
+// Shell v2 (15 Oct 2026): drops a shell copy that a shared Morph ID card
+// page could have replaced under v1. The file cache did not change, so it
+// stays v1 and keeps the app's files for offline use.
+const SHELL_CACHE = 'geck-shell-v2';
+const STATIC_CACHE = 'geck-static-v1';
 const CURRENT_CACHES = new Set([SHELL_CACHE, STATIC_CACHE]);
 
 // Minimal set precached at install so the very first offline visit still
@@ -69,7 +80,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      // Drop caches left behind by a previous CACHE_VERSION.
+      // Drop caches left behind by a previous version (geck-shell-v1, ...).
       const names = await caches.keys();
       await Promise.all(
         names
@@ -92,11 +103,28 @@ function isCacheableResponse(response) {
   );
 }
 
+// True only for the app's own HTML, the one page that may be stored as the
+// offline shell. A navigation can also land on a page the server renders
+// by itself (a shared Morph ID card, /api/share), on a page that says it
+// must not be stored, or on a plain file such as /llms.txt. Storing any of
+// those under '/' would replace the app for the next offline visit.
+function isAppShell(request, response) {
+  let pathname = '';
+  try {
+    pathname = new URL(request.url).pathname;
+  } catch {
+    return false;
+  }
+  if (pathname.startsWith('/api/') || pathname.startsWith('/morph-id/r/')) return false;
+  if (/\bno-store\b/i.test(response.headers.get('cache-control') || '')) return false;
+  return (response.headers.get('content-type') || '').includes('text/html');
+}
+
 async function networkFirstShell(request) {
   const cache = await caches.open(SHELL_CACHE);
   try {
     const response = await fetch(request);
-    if (isCacheableResponse(response)) {
+    if (isCacheableResponse(response) && isAppShell(request, response)) {
       // Keep a single canonical shell copy under '/', regardless of which
       // client-side route the navigation was for. The SPA router handles
       // the path once the shell boots.

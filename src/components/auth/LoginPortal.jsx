@@ -265,7 +265,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
             way back before). Sign-up gets a short reminder of what the
             free account includes, each line true today: the Free plan's
             10 geckos (src/lib/tierLimits.js), value estimates on every
-            plan, and one free Morph ID. */}
+            plan, and one free Morph ID a month. */}
         <div className="text-center space-y-2 md:space-y-3">
           <Link to="/" className="inline-block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400" aria-label="Geck Inspect home">
             <img
@@ -289,7 +289,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
               {[
                 'Up to 10 geckos free, no credit card',
                 'Value estimates from real crested gecko listings',
-                'Your first AI Morph ID is free',
+                'One free AI Morph ID every month',
               ].map((line) => (
                 <li key={line} className="flex items-start gap-2">
                   <Check className="w-4 h-4 mt-0.5 text-emerald-400 shrink-0" aria-hidden="true" />

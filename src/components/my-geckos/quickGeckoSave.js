@@ -3,6 +3,7 @@
 import { FeedingGroup } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { todayLocalISO } from '@/lib/dateUtils';
+import { setGeckoFeedingReminder } from '@/lib/careReminders';
 import { DEFAULT_FEEDING_INTERVAL_DAYS } from '@/lib/firstGeckoFlow';
 import { generateNextGeckoId } from './form/helpers';
 
@@ -64,6 +65,13 @@ export async function saveQuickGecko({ user, fields, remind = true, pool = [], i
     p_record_date: todayLocalISO(),
   });
   if (error) throw error;
+  // "Remind me on feeding days" was unticked. A new gecko in no feeding
+  // group gets an every-3-days reminder by default, so record the choice.
+  if (!remind && gecko?.id) {
+    await setGeckoFeedingReminder(user.email, gecko.id, { on: false }).catch((err) => {
+      console.warn('Feeding reminder choice not saved:', err);
+    });
+  }
   // Lets the Dashboard (and any open list) drop its cached counts.
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'created' } }));

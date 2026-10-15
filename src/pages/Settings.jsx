@@ -295,8 +295,8 @@ const notificationTypes = [
     { key: 'following_activity', label: 'Following Activity', description: 'When breeders you follow list new geckos or breeding plans' },
     { key: 'gecko_of_day', label: 'Gecko of the Day', description: 'When your gecko photo is selected as featured' },
     { key: 'forum_replies', label: 'Forum Activity', description: 'Replies to your forum posts and comments' },
-    { key: 'breeding_updates', label: 'Breeding & Care Updates', description: 'Hatch alerts, breeding plan updates, and feeding, weigh-in, vet follow-up and Season Planner task reminders' },
-    { key: 'announcements', label: 'Platform Announcements', description: 'Important news and feature updates' },
+    { key: 'breeding_updates', label: 'Breeding & Care Updates', description: 'Hatch alerts, breeding plan updates, and feeding, weigh-in, vet follow-up and Season Planner task reminders, including the two weigh-in emails in your first two weeks (day 7 and day 14)' },
+    { key: 'announcements', label: 'Platform Announcements', description: 'Important news, feature updates, and the welcome emails in your first few days' },
     { key: 'market_alert', label: 'Watchlist Matches', description: 'When a new listing or a price cut matches one of your market watches' },
     { key: 'market_brief', label: 'Morning Market Brief', description: 'The daily crested gecko market brief, once you switch it on below' }
 ];
@@ -311,7 +311,7 @@ const pushNotificationTypes = [
     { key: 'new_message', label: 'New Messages', description: 'Direct messages from other users' },
     { key: 'marketplace_inquiry', label: 'Marketplace Inquiries', description: 'When someone asks about one of your listings' },
     { key: 'hatch_alert', label: 'Hatch Alerts', description: 'When eggs in your incubator reach their hatch window' },
-    { key: 'feeding_due', label: 'Feeding & Weigh-in Reminders', description: 'When a feeding group is due, the weekly weigh-in nudge, vet follow-ups and Season Planner tasks' },
+    { key: 'feeding_due', label: 'Feeding & Weigh-in Reminders', description: 'When a gecko or feeding group is due to be fed or weighed, vet follow-ups and Season Planner tasks' },
     { key: 'new_comment', label: 'Comments on Your Posts', description: 'Comments on your forum posts' },
     { key: 'new_reply', label: 'Replies to You', description: 'Replies to your comments' },
     { key: 'new_follower', label: 'New Followers', description: 'When someone starts following you' },
@@ -992,7 +992,7 @@ export default function SettingsPage() {
                  <Card>
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Clock className="w-5 h-5"/>Feeding Alerts</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
-                          {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'One reminder a day by push and email when any feeding group or reptile is due, even with the app closed', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
+                          {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'One reminder a day by push and email when any gecko, feeding group or reptile is due, even with the app closed', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
                          {formData.feeding_alerts_enabled && (
                              <>
                                  {renderSwitch('feeding-late-reminders-enabled', 'Late Reminders', 'Keep sending daily reminders while a feeding remains overdue. Off by default, you only get one notification on the day feeding is due.', formData.feeding_late_reminders_enabled, (checked) => handleChange('feeding_late_reminders_enabled', checked))}

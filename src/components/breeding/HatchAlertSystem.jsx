@@ -4,6 +4,7 @@ import { differenceInDays, differenceInCalendarDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
 import { startVisiblePolling } from '@/lib/pagePolling';
 import { getEstimatedHatchDates, getIncubationProfile } from '@/lib/incubationProfiles';
+import { HATCH_ALERT_LOOKBACK_DAYS, hatchAlertedEggIds, isDroppedRepeatNotification } from '@/lib/notificationsApi';
 
 /**
  * HatchAlertSystem, silent producer for `hatch_alert` notifications.
@@ -29,6 +30,10 @@ import { getEstimatedHatchDates, getIncubationProfile } from '@/lib/incubationPr
 const POLL_INTERVAL_MS = 15 * 60 * 1000;       // 15 min
 const NOTIFY_DEDUP_HOURS = 72;                 // re-ping at most every 3 days
 const DEFAULT_HATCH_ALERT_DAYS = 60;
+// A week of hatch alert rows for one member: at most one sent alert a
+// day plus a quiet row per egg every 6 days, so even a breeder with a few
+// hundred eggs in the window fits.
+const RECENT_ALERTS_LIMIT = 1000;
 
 function shouldNotify(eggId) {
   try {
@@ -68,17 +73,21 @@ export default function HatchAlertSystem({ user, enabled }) {
         const today = new Date();
         // Eggs already alerted in the last 7 days, whether by this tab,
         // another tab, or the nightly server job (enqueue_hatch_alerts).
+        // The server sends one alert a day that counts every egg
+        // (metadata.egg_ids) and keeps a quiet row per other egg, so a
+        // full incubator can write many rows a week: ask for all of the
+        // last 7 days, not just the newest few.
+        const cutoff = Date.now() - HATCH_ALERT_LOOKBACK_DAYS * 24 * 60 * 60 * 1000;
         const recent = await Notification.filter(
-          { user_email: user.email, type: 'hatch_alert' },
+          {
+            user_email: user.email,
+            type: 'hatch_alert',
+            created_date: { $gte: new Date(cutoff).toISOString() },
+          },
           '-created_date',
-          50,
+          RECENT_ALERTS_LIMIT,
         ).catch(() => []);
-        const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        const alertedEggIds = new Set(
-          (recent || [])
-            .filter((n) => n?.metadata?.egg_id && new Date(n.created_date).getTime() > cutoff)
-            .map((n) => n.metadata.egg_id),
-        );
+        const alertedEggIds = hatchAlertedEggIds(recent, cutoff);
 
         for (const egg of eggs || []) {
           if (egg.status !== 'Incubating') continue;
@@ -132,7 +141,15 @@ export default function HatchAlertSystem({ user, enabled }) {
             });
             markNotified(egg.id);
           } catch (err) {
-            console.warn('hatch_alert notification failed:', err);
+            // The database drops a repeat alert for the same egg within 20
+            // hours (another tab or the nightly job got there first) and
+            // the insert comes back empty. That egg is already alerted:
+            // mark it, or this would retry every 15 minutes.
+            if (isDroppedRepeatNotification(err)) {
+              markNotified(egg.id);
+            } else {
+              console.warn('hatch_alert notification failed:', err);
+            }
           }
         }
       } catch (err) {

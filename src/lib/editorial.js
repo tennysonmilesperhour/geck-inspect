@@ -107,7 +107,7 @@ const PER_PATH = {
   // PrivacyPolicy.jsx, which is the date shown to readers.
   '/Terms': { published: '2026-04-17', modified: '2026-09-08' },
   '/MarketplaceVerification': { published: '2026-04-17', modified: '2026-04-17' },
-  '/PrivacyPolicy': { published: '2025-06-01', modified: '2026-10-08' },
+  '/PrivacyPolicy': { published: '2025-06-01', modified: '2026-10-15' },
   // The guides follow their data file: the Care Guide changes when
   // care-guide.js changes, the Morph Guide (and every morph page) when
   // morph-guide.js changes. Mirrored by EDITORIAL_DATES in prerender.mjs.

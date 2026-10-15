@@ -163,7 +163,7 @@ const BUSINESS_SECTIONS = [
 // Everything else gets one line each (DECISIONS.md 13: no feature grids).
 // An item can be { label, to } when it has a public page to open.
 const ALSO_INCLUDED = [
-  { label: 'AI Morph ID (your first one is free)', to: '/Recognition' },
+  { label: 'AI Morph ID (one free a month)', to: '/Recognition' },
   'Weight and growth tracking',
   'Egg and incubation timeline',
   'Multi-generation lineage',
@@ -282,8 +282,8 @@ const SECTION_VISUALS = { worth: ValueVisual, pair: PairingVisual, sell: PacketV
 
 // The two free hooks a cold visitor can use right away. The calculator
 // needs no account (src/pages/GeneticCalculatorTool.jsx); Morph ID needs a
-// free account and the first identification is free
-// (TIER_LIMITS.free.lifetimeFreeMorphIDs, src/pages/Recognition.jsx).
+// free account and gives one free identification a month
+// (TIER_LIMITS.free.monthlyMorphIDCredits, src/pages/Recognition.jsx).
 const FREE_HOOKS = [
   {
     to: '/calculator',
@@ -297,7 +297,7 @@ const FREE_HOOKS = [
   {
     to: '/Recognition',
     icon: Sparkles,
-    eyebrow: 'First one free',
+    eyebrow: 'One free a month',
     title: 'Ask Morph ID what your gecko is',
     desc: 'Upload a top and a side photo. Get a ranked morph shortlist, the traits it can see and what photo would settle it.',
     cta: 'Try Morph ID',
@@ -332,7 +332,7 @@ const LANDING_FAQS = [
   },
   {
     q: 'What is Geck Inspect?',
-    a: 'Geck Inspect is a web app for crested gecko breeders, built for the business side of breeding: what each gecko is worth, what a pairing\'s eggs should bring, what each season made, and proof of lineage for buyers. It also covers collection records, weights, breeding plans and eggs, lineage trees, AI-assisted morph identification (your first identification is free), morph and care guides, and a community forum. It is free to start and works for a keeper with one gecko as well as a breeder with hundreds.',
+    a: 'Geck Inspect is a web app for crested gecko breeders, built for the business side of breeding: what each gecko is worth, what a pairing\'s eggs should bring, what each season made, and proof of lineage for buyers. It also covers collection records, weights, breeding plans and eggs, lineage trees, AI-assisted morph identification (one free identification a month), morph and care guides, and a community forum. It is free to start and works for a keeper with one gecko as well as a breeder with hundreds.',
   },
   {
     q: 'How do I track my crested gecko collection?',
@@ -1129,7 +1129,7 @@ export default function Home() {
                 <li><Link to="/breeding-records" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Breeding Records</Link></li>
                 <li><Link to="/QualityScale" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Quality Scale</Link></li>
                 <li><Link to="/crested-gecko-price" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Price Guide</Link></li>
-                <li><Link to="/Recognition" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Morph ID (first one free)</Link></li>
+                <li><Link to="/Recognition" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Morph ID (one free a month)</Link></li>
                 <li><Link to="/blog" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Blog</Link></li>
               </ul>
             </div>

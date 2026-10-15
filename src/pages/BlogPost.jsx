@@ -360,14 +360,14 @@ export default function BlogPost() {
         )}
 
         {/* Sign-up prompt (template only; the old box opened the Sign In
-            form and said Morph ID was paid only, but the first one is free). */}
+            form and said Morph ID was paid only, but Free includes one a month). */}
         <ContentSignupPrompt
           variant="panel"
           pageType="article"
           ctaId="article_end"
           className="mt-12"
           headline="Keep your own crested geckos in one place, free"
-          body="Weights, parents, morphs and photos on one record per gecko, a pedigree that builds itself as you add parents, and a genetics calculator that reads your own pairings. Your first AI Morph ID is free too."
+          body="Weights, parents, morphs and photos on one record per gecko, a pedigree that builds itself as you add parents, and a genetics calculator that reads your own pairings. One AI Morph ID a month is free too."
         />
       </article>
     </PublicPageShell>

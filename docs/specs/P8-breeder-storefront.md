@@ -1,5 +1,7 @@
 # P8: Enhanced Breeder Storefront
 
+> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+
 **Priority:** P8
 **Dependencies:** P1 (Animal Passport), P2 (Market Pricing)
 **Origin:** iHerp analysis, turns each breeder's public profile into a proper business page
@@ -37,7 +39,7 @@ BreederReview {
   reviewer_user_id: UUID → User
   reviewed_user_id: UUID → User
   animal_id:        UUID nullable → Animal  (the animal the transaction was about)
-  rating:           integer  (1–5)
+  rating:           integer  (1 to 5)
   title:            string
   body:             text
   transaction_type: enum [purchase, breeding_loan, trade]
@@ -108,7 +110,7 @@ Preview button shows storefront as buyers see it.
 
 3. REVIEW SYSTEM
 Buyers can leave a review for a seller after a confirmed transfer (OwnershipRecord exists).
-Review form: rating (1–5 stars), title, body, transaction type.
+Review form: rating (1 to 5 stars), title, body, transaction type.
 Reviews display on storefront and in animal passport ownership timeline.
 
 4. EMBED WIDGET (/b/:slug/widget)

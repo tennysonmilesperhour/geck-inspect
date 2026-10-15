@@ -127,15 +127,20 @@ ROADMAP.md (root) - points to the active plan and lists what is shelved
 docs/CONTEXT.md - what this project is and why it exists
 docs/INTENT.md - what we are trying to accomplish
 docs/DECISIONS.md - log of important choices
-docs/MIGRATIONS.md - how the database schema is managed and why the deploy scripts must not replay migrations
+docs/MIGRATIONS.md - how the database schema is managed: merging to main applies new migration files and deploys the edge functions declared in supabase/config.toml (Supabase GitHub integration), so every migration must be safe for the app version still open in members' browsers
 docs/planning/ - older audit and planning documents, kept for history
 docs/planning/launch-review-2026-09-04.md - the pre-launch review (62 findings with status) and its open items. Start here to continue that work.
 docs/planning/vip-audit-2026-09-27.md - post-launch audit: usage data, competitor research, and a phased plan that was completed 29 Sep. Kept for history.
-docs/planning/feature-completeness-audit-2026-09-29.md - the active plan: how finished each feature is, the decisions waiting on Tennyson, and the step-by-step plan to finish the app (least finished first). Start here for product work.
-docs/planning/deploy-queue-2026-10-03.md - the database migrations and edge functions that are built but not yet applied, in order. Check it before any database or function work.
+docs/planning/feature-completeness-audit-2026-09-29.md - the plan before 15 Oct, kept as reference: how finished each feature is, the decisions waiting on Tennyson, and its phone and money checks. Where it and Part E of the comprehensive review disagree, Part E wins.
+docs/planning/deploy-queue-2026-10-03.md - what each round of database migrations and edge functions changed, when it went live, and the dashboard steps still waiting on Tennyson. Check it before any database or function work.
 docs/planning/growth-plan-2026-10.md - the October growth plan: where the business stands, the three loops (activation, retention, distribution through breeders), the next 30 days and the decisions waiting. Start here for anything about growth, onboarding or priorities.
 docs/planning/activation-2026-10.md - the guided first gecko, default weigh-in and feeding reminders, and the guest demo fixes (5 Oct). Start here for onboarding and activation work.
 docs/planning/agent-access-2026-10.md - AI agents and crawlers: the open data at /data, the Geck Inspect Price Index, markdown twins, the MCP server at /mcp, the AI traffic log, why agents are not charged, and the weekly agent review with its log and backlog. Start here for anything about AI visibility or agent access.
 docs/planning/market-habit-2026-09-30.md - the Market page (brief, live feed, watchlists, Guess the Price, seller view): what shipped, what is left for Tennyson, and the habit number. Start here for market work.
-docs/planning/comprehensive-review-2026-10-14.md - the full review of the product on every front (39 scored categories, security findings, the reconciliation with the adversarial review, and a 90-day plan in Part E). Read Part E before proposing priorities; its items are proposals until Tennyson adopts them.
-IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md and this file; do not invent those documents' contents.
+docs/planning/comprehensive-review-2026-10-14.md - the full review of the product on every front (39 scored categories, security findings, the reconciliation with the adversarial review, and a 90-day plan in Part E). Part E is the active plan: on 15 Oct Tennyson asked for all of it to be implemented. Read it before proposing priorities.
+docs/NOW.md - the weekly scoreboard (paying breeders, passports, weekly active breeders, monthly cost) and the current top ten.
+docs/OPERATIONS.md - the services the app runs on, what each costs, the scheduled jobs and secrets by name, and the production checks.
+docs/planning/lifecycle-emails-2026-10.md - the getting-started emails (day 0 to day 14): the copy waiting for Tennyson's approval and the switch that turns them on.
+docs/legal/terms-additions-draft.md - draft additions to the Terms (subscriptions, renewals, trials, refunds, lifetime plans, AI output). Not published; the decisions in it are Tennyson's.
+docs/specs/morph-id.md - the Morph ID product brief (users, what a result must show, voice). docs/specs/DESIGN-SYSTEM.md - the one design document, written from the code; the code wins if they disagree.
+IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md, docs/specs/DESIGN-SYSTEM.md and this file; do not invent those documents' contents.

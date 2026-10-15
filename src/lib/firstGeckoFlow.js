@@ -1,6 +1,6 @@
 // The guided first gecko (activation pass, 5 Oct 2026). Three short,
 // skippable steps on an empty collection: add the gecko (by photo through
-// Morph ID's free try, or by name and morph), add its parents if known,
+// Morph ID, one free a month, or by name and morph), add its parents if known,
 // then a payoff screen with its family card, what it needs next and its
 // value estimate. See docs/planning/activation-2026-10.md.
 //
@@ -8,6 +8,7 @@
 // carries through sign-up, the care schedule shown on the payoff screen,
 // and the one funnel event the flow sends.
 import { captureEvent } from '@/lib/posthog';
+import { weighInIntervalDays } from '@/lib/lifeStage';
 
 // A gecko typed into Quick Add in the guest demo. It lives in localStorage
 // (not sessionStorage) because sign-up often means confirming an email in
@@ -74,20 +75,11 @@ export function clearPendingGecko() {
 // Crested geckos on CGD are usually fed every 2 to 3 days.
 export const DEFAULT_FEEDING_INTERVAL_DAYS = 3;
 
-/**
- * How often to weigh this gecko. Growing crested geckos are weighed every
- * two weeks (they can double in weight in a couple of months); adults,
- * past about 18 months, once a month is plenty. Unknown age counts as
- * growing, since most first geckos are bought as juveniles.
- */
-export function weighInIntervalDays(gecko, now = new Date()) {
-  const hatched = Date.parse(gecko?.hatch_date || '');
-  if (Number.isFinite(hatched)) {
-    const months = (now.getTime() - hatched) / (30.44 * 24 * 60 * 60 * 1000);
-    if (months >= 18) return 30;
-  }
-  return 14;
-}
+// How often to weigh: 14 days while growing, 21 as a sub-adult, 30 as an
+// adult, from the care guide's life stages (src/lib/lifeStage.js, the
+// same rule the reminder job uses). Re-exported for the screens that
+// already import it from here.
+export { weighInIntervalDays };
 
 const pad = (n) => String(n).padStart(2, '0');
 export function addDaysISO(isoDate, days) {

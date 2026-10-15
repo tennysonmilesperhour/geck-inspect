@@ -14,7 +14,7 @@ const HOOKS = [
     icon: Camera,
     eyebrow: 'Morph ID',
     title: 'Not sure what you have?',
-    body: 'Upload a photo and get a read on base color, pattern and traits like Lilly White or Dalmatian spots. Your first one is free.',
+    body: 'Upload a photo and get a read on base color, pattern and traits like Lilly White or Dalmatian spots. One free a month with an account.',
     cta: 'Identify my gecko',
     tone: 'border-emerald-500/40 from-emerald-900/50 hover:border-emerald-400/70',
     iconTone: 'bg-emerald-500/20 text-emerald-300',

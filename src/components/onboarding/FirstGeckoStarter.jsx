@@ -59,7 +59,7 @@ export default function FirstGeckoStarter({ onStart, startHref, onImport, import
           <>
             <Button asChild className="min-h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
               <Link to="/Recognition?first_gecko=1" onClick={photoClick}>
-                <Camera className="w-4 h-4 mr-2" /> Add by photo, first Morph ID free
+                <Camera className="w-4 h-4 mr-2" /> Add by photo, one Morph ID free a month
               </Link>
             </Button>
             {startProps ? (

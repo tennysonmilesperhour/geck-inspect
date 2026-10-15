@@ -6,6 +6,7 @@ import { Loader2, Users, Camera, MessageSquare, Database, Sparkles, Bell, Activi
 import { formatDistanceToNow } from 'date-fns';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 import GrowthFunnelCard from '@/components/admin/GrowthFunnelCard';
+import RevenueCard from '@/components/admin/RevenueCard';
 
 const SPARK_COLORS = {
   emerald: '#10b981',
@@ -229,6 +230,8 @@ export default function AdminOverview({ onNavigate }) {
           accent="blue"
         />
       </div>
+
+      <RevenueCard />
 
       <GrowthFunnelCard />
 

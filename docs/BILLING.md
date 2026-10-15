@@ -111,16 +111,18 @@ customer ID, then inspect the customer's entitlements and delivery history. Chec
 Use RevenueCat's resend action for a failed delivery, or have the signed-in
 customer refresh store access. Never insert a guessed active row to fix a receipt.
 
-Deploy from the repository root:
+Both billing functions are declared in `supabase/config.toml`, so merging a change
+to `main` deploys them through the Supabase GitHub integration, and new migration
+files are applied the same way ([MIGRATIONS.md](MIGRATIONS.md)). To deploy by hand
+instead, from the repository root:
 
 ```bash
 supabase functions deploy revenuecat-webhook --project-ref mmuglfphhwlaluyfyxsp --use-api
 supabase functions deploy revenuecat-sync --project-ref mmuglfphhwlaluyfyxsp --use-api
 ```
 
-Apply schema changes separately using [MIGRATIONS.md](MIGRATIONS.md). Web deploys
-do not deploy edge functions or migrations. After changing shared mapping code,
-redeploy both billing functions.
+After changing shared mapping code, make sure both billing functions are
+redeployed.
 
 ## Release checks
 

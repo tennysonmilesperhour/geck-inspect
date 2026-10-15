@@ -26,17 +26,39 @@
 //     title:      string,  // used as subject line
 //     body:       string,  // used as the plain-text body
 //     url?:       string,  // link rendered in the CTA button
+//     facts?:     object,  // lifecycle_* types only, see below
 //   }
+//
+// Lifecycle emails (lifecycle_day0, _day1, _day3, _day7, _day14) come from
+// enqueue_lifecycle_emails() with the member's own facts instead of a
+// title and body. The words are built here by _shared/lifecycle-copy.ts,
+// so the database never holds email copy. They ride the announcements
+// preference (day 0, 1, 3) or the care updates one (day 7, 14).
+//
+// Delivery log: every email handed to Resend is tagged with its type and
+// recorded as 'sent' in email_deliveries (record_email_event); the
+// resend-webhook function adds delivered, opened, clicked, bounced and
+// complained. An address that hard bounced or complained is in
+// email_suppressions and is skipped here with "suppressed".
 //
 // Secrets (required):
 //   RESEND_API_KEY       starts with "re_"
 //   EMAIL_FROM           e.g. "Geck Inspect <alerts@geckinspect.com>"
+// Optional:
+//   EMAIL_POSTAL_ADDRESS the sender's postal address for the footer, which
+//                        US law (CAN-SPAM) expects in commercial email
+//   UNSUBSCRIBE_MAILTO   an address that handles unsubscribe requests by
+//                        hand, added to the List-Unsubscribe header only
+//                        when no signed link could be made
 //
 // Unsubscribe: every email carries a signed per-member token
 // (email_unsubscribe_token, service role only). The footer links to
 // SITE_URL/Unsubscribe?t=<token>, which works signed out, and the
 // List-Unsubscribe header points at the email-unsubscribe function for
-// one-click unsubscribe from the mail app (RFC 8058).
+// one-click unsubscribe from the mail app (RFC 8058). If the token cannot
+// be made even on a second try, the email still carries a working route:
+// the header and footer point at the email switches in Settings, which
+// every recipient can reach because addresses with no login are skipped.
 //
 // Recipients without a sign-in account (profiles imported from the old
 // platform, no auth.users row) are skipped with "no-login".
@@ -45,12 +67,15 @@
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { isLifecycleType, lifecycleEmail, lifecycleReason } from "../_shared/lifecycle-copy.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Geck Inspect <alerts@geckinspect.com>";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://geckinspect.com";
+const EMAIL_POSTAL_ADDRESS = (Deno.env.get("EMAIL_POSTAL_ADDRESS") || "").trim();
+const UNSUBSCRIBE_MAILTO = (Deno.env.get("UNSUBSCRIBE_MAILTO") || "").trim();
 
 // Notification.type -> legacy email preference key.
 // See src/pages/Settings.jsx notificationTypes list for the keys the
@@ -90,6 +115,14 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   // An admin answered the member's support ticket. Rides the messages
   // preference, since it is a reply to something they wrote.
   support_reply: "new_message",
+  // New-member emails in the first two weeks. Welcome, "add a gecko" and
+  // the lineage email are product news to a new member; the two weigh-in
+  // emails are care reminders, so they follow the care switch.
+  lifecycle_day0: "announcements",
+  lifecycle_day1: "announcements",
+  lifecycle_day3: "announcements",
+  lifecycle_day7: "breeding_updates",
+  lifecycle_day14: "breeding_updates",
 };
 
 // Alerts for the admin team. They go to admins whatever their email
@@ -160,13 +193,19 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-// The two unsubscribe addresses for one member, or null when no token
-// could be made (the Vault secret is missing). The page link works signed
-// out; the one-click address takes the POST a mail app sends.
-type UnsubscribeLinks = { page: string; oneClick: string };
+// Where a member can stop these emails. With a signed token: the page
+// link works signed out, and the one-click address takes the POST a mail
+// app sends. Without one (the Vault secret is missing or the database did
+// not answer twice) the email must still carry a route that works, because
+// an email with no way out is the fastest way to be marked as spam: the
+// email switches in Settings, plus a hand-handled mailbox if one is set.
+// The old code dropped the header and the footer link entirely here.
+type UnsubscribeLinks = { page: string; oneClick: string | null };
 
-function unsubscribeLinks(token: string | null | undefined): UnsubscribeLinks | null {
-  if (!token) return null;
+const SETTINGS_EMAIL_URL = `${SITE_URL}/Settings#email-notifications`;
+
+function unsubscribeLinks(token: string | null | undefined): UnsubscribeLinks {
+  if (!token) return { page: SETTINGS_EMAIL_URL, oneClick: null };
   const t = encodeURIComponent(token);
   return {
     page: `${SITE_URL}/Unsubscribe?t=${t}`,
@@ -174,11 +213,10 @@ function unsubscribeLinks(token: string | null | undefined): UnsubscribeLinks | 
   };
 }
 
-async function unsubscribeToken(
-  supabase: ReturnType<typeof createClient>,
-  profileId: string | null | undefined,
+async function unsubscribeTokenOnce(
+  supabase: RpcClient,
+  profileId: string,
 ): Promise<string | null> {
-  if (!profileId) return null;
   try {
     const { data, error } = await supabase.rpc("email_unsubscribe_token", { p_profile_id: profileId });
     if (error) {
@@ -192,6 +230,20 @@ async function unsubscribeToken(
   }
 }
 
+// One retry covers a dropped connection; a missing secret fails both
+// times and the caller falls back to the Settings route.
+async function unsubscribeToken(
+  supabase: RpcClient,
+  profileId: string | null | undefined,
+): Promise<string | null> {
+  if (!profileId) return null;
+  const first = await unsubscribeTokenOnce(supabase, profileId);
+  if (first) return first;
+  const second = await unsubscribeTokenOnce(supabase, profileId);
+  if (!second) console.warn("send-email: no unsubscribe token, using the Settings link");
+  return second;
+}
+
 // Whether the address belongs to an account that can sign in
 // (email_has_login, service role only). null means "could not tell": the
 // lookup failed or the migration that adds the function is not applied
@@ -200,6 +252,40 @@ async function unsubscribeToken(
 type RpcClient = {
   rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
 };
+
+// Has this address hard bounced or complained (email_is_suppressed)? null
+// means "could not tell", and the email goes out as before.
+async function isSuppressed(supabase: RpcClient, email: string): Promise<boolean | null> {
+  try {
+    const { data, error } = await supabase.rpc("email_is_suppressed", { p_email: email });
+    if (error) {
+      console.warn("send-email: suppression check failed", error.message);
+      return null;
+    }
+    return typeof data === "boolean" ? data : null;
+  } catch (err) {
+    console.warn("send-email: suppression check threw", err);
+    return null;
+  }
+}
+
+// The 'sent' row in the delivery log. Best effort: a failed write is
+// logged and never stops or repeats the email.
+async function recordSent(supabase: RpcClient, resendId: unknown, email: string, type: string) {
+  if (typeof resendId !== "string" || !resendId) return;
+  try {
+    const { error } = await supabase.rpc("record_email_event", {
+      p_event: "sent",
+      p_event_key: `sent:${resendId}`,
+      p_resend_email_id: resendId,
+      p_email: email,
+      p_email_type: type,
+    });
+    if (error) console.warn("send-email: delivery log write failed", error.message);
+  } catch (err) {
+    console.warn("send-email: delivery log write threw", err);
+  }
+}
 
 async function hasLogin(supabase: RpcClient, email: string): Promise<boolean | null> {
   try {
@@ -237,9 +323,30 @@ function textLink(url: string): string {
   });
 }
 
-function renderHtml(title: string, body: string, linkUrl: string, unsubscribe: UnsubscribeLinks | null): string {
+type RenderOptions = {
+  // The button's words. Notifications say "Open in Geck Inspect".
+  cta?: string;
+  // Why this email came. Defaults to the notification-settings line.
+  reason?: string;
+};
+
+const DEFAULT_REASON = "You\u2019re getting this because email notifications are enabled in your Geck Inspect settings.";
+
+function renderHtml(
+  title: string,
+  body: string,
+  linkUrl: string,
+  unsubscribe: UnsubscribeLinks,
+  options: RenderOptions = {},
+): string {
   const safeTitle = escapeHtml(title);
   const safeBody = escapeHtml(body).replace(/\n/g, "<br>");
+  const safeCta = escapeHtml(options.cta || "Open in Geck Inspect");
+  const safeReason = escapeHtml(options.reason || DEFAULT_REASON);
+  const unsubscribeWords = unsubscribe.oneClick ? "unsubscribe from these emails" : "turn these emails off";
+  const postal = EMAIL_POSTAL_ADDRESS
+    ? `<br>Geck Inspect, ${escapeHtml(EMAIL_POSTAL_ADDRESS)}`
+    : "";
   // Escaped for the href attribute: a quote or bracket in the link can
   // never end the attribute and add markup to the email.
   const safeUrl = escapeHtml(absoluteLink(linkUrl));
@@ -252,8 +359,8 @@ function renderHtml(title: string, body: string, linkUrl: string, unsubscribe: U
           <p style="margin:0 0 8px 0;color:#86efac;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">Geck Inspect</p>
           <h1 style="margin:0 0 16px 0;color:#d1fae5;font-size:22px;font-weight:700;line-height:1.3;">${safeTitle}</h1>
           <p style="margin:0 0 24px 0;color:#a7f3d0;font-size:15px;line-height:1.55;">${safeBody}</p>
-          <a href="${safeUrl}" style="display:inline-block;background:#10b981;color:#022c22;padding:12px 20px;border-radius:8px;font-weight:600;text-decoration:none;">Open in Geck Inspect</a>
-          <p style="margin:32px 0 0 0;color:#6ee7b7;font-size:12px;line-height:1.5;">You&rsquo;re getting this because email notifications are enabled in your Geck Inspect settings. <a href="${SITE_URL}/Settings#email-notifications" style="color:#86efac;">Change preferences</a>${unsubscribe ? ` or <a href="${escapeHtml(unsubscribe.page)}" style="color:#86efac;">unsubscribe from these emails</a>` : ""}.</p>
+          <a href="${safeUrl}" style="display:inline-block;background:#10b981;color:#022c22;padding:12px 20px;border-radius:8px;font-weight:600;text-decoration:none;">${safeCta}</a>
+          <p style="margin:32px 0 0 0;color:#6ee7b7;font-size:12px;line-height:1.5;">${safeReason} <a href="${SETTINGS_EMAIL_URL}" style="color:#86efac;">Change preferences</a> or <a href="${escapeHtml(unsubscribe.page)}" style="color:#86efac;">${unsubscribeWords}</a>.${postal}</p>
         </td></tr>
       </table>
     </td></tr>
@@ -272,12 +379,28 @@ class RateLimited extends Error {
 // List-Unsubscribe plus List-Unsubscribe-Post makes Gmail, Yahoo and
 // Apple Mail show their own Unsubscribe button, which POSTs to the
 // one-click address. Bulk senders are expected to include both.
-function unsubscribeHeaders(unsubscribe: UnsubscribeLinks | null): Record<string, string> | undefined {
-  if (!unsubscribe) return undefined;
-  return {
-    "List-Unsubscribe": `<${unsubscribe.oneClick}>`,
-    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-  };
+// Without a signed link there is no one-click address, so the header
+// names the Settings page (and the hand-handled mailbox when one is set)
+// and leaves out List-Unsubscribe-Post, which promises one-click.
+function unsubscribeHeaders(unsubscribe: UnsubscribeLinks): Record<string, string> {
+  if (unsubscribe.oneClick) {
+    return {
+      "List-Unsubscribe": `<${unsubscribe.oneClick}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+  }
+  const targets = [`<${unsubscribe.page}>`];
+  if (/^[^\s@<>]+@[^\s@<>]+$/.test(UNSUBSCRIBE_MAILTO)) {
+    targets.push(`<mailto:${UNSUBSCRIBE_MAILTO}?subject=unsubscribe>`);
+  }
+  return { "List-Unsubscribe": targets.join(", ") };
+}
+
+// Resend tags must be letters, digits, underscores or dashes. The type
+// tag comes back on every webhook, which is how the delivery log knows
+// which email an open or a bounce belongs to.
+function typeTag(type: string): string {
+  return type.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 64) || "other";
 }
 
 async function sendEmail(
@@ -286,6 +409,7 @@ async function sendEmail(
   text: string,
   html: string,
   headers?: Record<string, string>,
+  tags?: Array<{ name: string; value: string }>,
 ) {
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
   const res = await fetch("https://api.resend.com/emails", {
@@ -294,7 +418,15 @@ async function sendEmail(
       "Authorization": `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from: EMAIL_FROM, to, subject, text, html, ...(headers ? { headers } : {}) }),
+    body: JSON.stringify({
+      from: EMAIL_FROM,
+      to,
+      subject,
+      text,
+      html,
+      ...(headers ? { headers } : {}),
+      ...(tags ? { tags } : {}),
+    }),
   });
   if (!res.ok) {
     const msg = await res.text();
@@ -320,11 +452,12 @@ async function sendWithRetry(
   text: string,
   html: string,
   headers?: Record<string, string>,
+  tags?: Array<{ name: string; value: string }>,
 ) {
   await sleep(Math.random() * 8_000);
   for (let attempt = 1; ; attempt += 1) {
     try {
-      return await sendEmail(to, subject, text, html, headers);
+      return await sendEmail(to, subject, text, html, headers, tags);
     } catch (err) {
       if (!(err instanceof RateLimited) || attempt >= 6) throw err;
       await sleep(Math.max(err.retryAfterMs, 1_000 * 2 ** attempt) + Math.random() * 2_000);
@@ -359,12 +492,33 @@ serve(async (req) => {
 
   const userEmail = String(payload.user_email || "").trim().toLowerCase();
   const type = String(payload.type || "").trim();
-  const title = String(payload.title || "Geck Inspect").trim();
-  const body = String(payload.body || "").trim();
-  const url = String(payload.url || "/");
+  let title = String(payload.title || "Geck Inspect").trim();
+  let body = String(payload.body || "").trim();
+  let url = String(payload.url || "/");
+  const render: RenderOptions = {};
 
   if (!userEmail || !type) {
     return json({ error: "user_email and type are required" }, 400);
+  }
+
+  // Lifecycle emails arrive as facts; the words are made here.
+  if (isLifecycleType(type)) {
+    // Only enqueue_lifecycle_emails() sends these, and it always sends
+    // facts. Anything else with a lifecycle type (a notification row a
+    // member wrote for themselves reaches this function through the
+    // dispatcher with a title and body, no facts) is skipped, so the
+    // master switch and the once-per-step ledger stay the only way in.
+    if (!payload.facts || typeof payload.facts !== "object" || Array.isArray(payload.facts)) {
+      return json({ delivered: 0, skipped: "lifecycle-without-facts" });
+    }
+    const facts = payload.facts as Record<string, unknown>;
+    const email = lifecycleEmail(type, facts);
+    if (!email) return json({ delivered: 0, skipped: "lifecycle-not-applicable" });
+    title = email.title;
+    body = email.body;
+    url = email.url;
+    render.cta = email.cta;
+    render.reason = lifecycleReason(facts);
   }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
@@ -405,14 +559,29 @@ serve(async (req) => {
     if ((await hasLogin(supabase, userEmail)) === false) {
       return json({ delivered: 0, skipped: "no-login" });
     }
+
+    // A hard bounce or a spam complaint stops every email that is not an
+    // admin alert. Mailing those addresses again is what gets a sending
+    // domain blocked, and then reminders stop reaching everyone.
+    if ((await isSuppressed(supabase, userEmail)) === true) {
+      return json({ delivered: 0, skipped: "suppressed" });
+    }
   }
 
   const unsubscribe = unsubscribeLinks(await unsubscribeToken(supabase, profile?.id));
-  const html = renderHtml(title, body, url, unsubscribe);
-  const text = `${body}\n\n${textLink(absoluteLink(url))}` +
-    (unsubscribe ? `\n\nUnsubscribe from these emails: ${unsubscribe.page}` : "");
-  const delivery = sendWithRetry(userEmail, title, text, html, unsubscribeHeaders(unsubscribe))
-    .then((result) => ({ delivered: 1, id: result?.id }))
+  const html = renderHtml(title, body, url, unsubscribe, render);
+  const text = `${body}\n\n${render.cta ? `${render.cta}: ` : ""}${textLink(absoluteLink(url))}` +
+    `\n\n${render.reason || DEFAULT_REASON}` +
+    (unsubscribe.oneClick
+      ? `\nUnsubscribe from these emails: ${unsubscribe.page}`
+      : `\nTurn these emails off in Settings: ${unsubscribe.page}`) +
+    (EMAIL_POSTAL_ADDRESS ? `\nGeck Inspect, ${EMAIL_POSTAL_ADDRESS}` : "");
+  const tags = [{ name: "type", value: typeTag(type) }];
+  const delivery = sendWithRetry(userEmail, title, text, html, unsubscribeHeaders(unsubscribe), tags)
+    .then(async (result) => {
+      await recordSent(supabase, result?.id, userEmail, typeTag(type));
+      return { delivered: 1, id: result?.id };
+    })
     .catch((err) => {
       console.warn("send-email: delivery failed", err);
       return { delivered: 0, skipped: "delivery-failed", error: String(err) };

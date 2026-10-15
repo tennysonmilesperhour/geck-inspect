@@ -26,9 +26,9 @@ import {
   X,
   CloudOff,
 } from 'lucide-react';
-import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent, CollectionMember } from '@/entities/all';
+import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent } from '@/entities/all';
 import { api } from '@/api/appClient';
-import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
+import { fieldModeQueryKey, loadWritableGeckos } from '@/lib/fieldModeData';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { format, subDays } from 'date-fns';
 import {
@@ -38,11 +38,13 @@ import {
   revertGroupAdvances,
   logShed as writeShed,
   isAuthFailure,
+  careLogErrorText,
 } from '@/lib/husbandryLog';
 import { createPageUrl } from '@/utils';
-import { queueFieldLog, isDeviceOffline, useOfflineQueue } from '@/lib/offlineSync';
+import { queueFieldLog, isDeviceOffline, isSyncing, undoQueuedLog, UNDO_SYNCING_MESSAGE, useOfflineQueue } from '@/lib/offlineSync';
 import { enqueue, removeQueued, updateQueued, isNetworkError } from '@/lib/offlineQueue';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { createCareRecordOnce, newClientRequestId } from '@/lib/careLogOnce';
 
 /**
  * Field Mode, a one-thumb logging screen for when you literally have a
@@ -248,16 +250,10 @@ export default function FieldModePage() {
   // react-query, so the last loaded list is kept in this browser and Field
   // Mode opens with no signal (src/lib/offlineCache.js persists this key).
   const geckoQuery = useQuery({
-    queryKey: ['field-mode', user?.email || null],
+    queryKey: fieldModeQueryKey(user?.email),
     enabled: Boolean(user?.email),
     retry: (count, error) => !isAuthFailure(error) && count < 2,
-    queryFn: async () => {
-      const [allGeckos, memberships] = await Promise.all([
-        getVisibleGeckos(user, {}, '-created_date', 500),
-        CollectionMember.filter({ status: 'accepted' }).catch(() => []),
-      ]);
-      return (allGeckos || []).filter((g) => !g.archived && canWriteGecko(g, user, memberships));
-    },
+    queryFn: () => loadWritableGeckos(user),
   });
 
   useEffect(() => {
@@ -351,6 +347,10 @@ export default function FieldModePage() {
       toast({ title: 'Undone', description: entry.message });
     } catch (error) {
       console.error('Undo failed:', error);
+      // A log the queue is sending right now may still be waiting behind
+      // another one. The message says to try Undo again, so the Undo bar
+      // comes back for that.
+      if (error?.message === UNDO_SYNCING_MESSAGE) registerUndo(entry);
       toast({ title: 'Undo failed', description: error.message || 'Try again from the gecko page.', variant: 'destructive' });
     }
   };
@@ -375,7 +375,14 @@ export default function FieldModePage() {
       toast({ title: 'Sign in again', description: 'Your sign-in expired, so that log was not saved.', variant: 'destructive' });
       return;
     }
-    toast({ title: 'Save failed', description: error?.message || fallback, variant: 'destructive' });
+    // A database refusal carries a code; its own text is not for members.
+    // Errors without one are this app's own words (for example "This
+    // browser would not keep the log").
+    toast({
+      title: 'Save failed',
+      description: error?.code ? careLogErrorText(error, fallback) : (error?.message || fallback),
+      variant: 'destructive',
+    });
   };
 
   // Offline: a log that cannot reach the server is kept on the phone and
@@ -386,6 +393,9 @@ export default function FieldModePage() {
 
   const logWeight = async (gecko, grams, date = logDate) => {
     setIsSaving(true);
+    // One id for the try and any queued copy, so a weigh-in the server
+    // saved after the phone gave up is not saved twice (careLogOnce.js).
+    const requestId = newClientRequestId();
     const prevWeight = gecko.weight_grams ?? null;
     // The gecko's current weight follows today's weigh-in. A backdated
     // weigh-in only fills it when the gecko has no weight yet.
@@ -409,8 +419,8 @@ export default function FieldModePage() {
       setActivePanel(null);
     };
     const queueWhole = () => {
-      const item = queueFieldLog({ kind: 'weight', geckoId: gecko.id, grams, date, mirror });
-      finish({ queued: item, undo: async () => { removeQueued(item.id); } });
+      const item = queueFieldLog({ kind: 'weight', geckoId: gecko.id, grams, date, mirror, requestId });
+      finish({ queued: item, undo: () => undoQueuedLog(item.id) });
     };
     try {
       if (isDeviceOffline()) {
@@ -419,7 +429,12 @@ export default function FieldModePage() {
       }
       let record;
       try {
-        record = await WeightRecord.create({ gecko_id: gecko.id, weight_grams: grams, record_date: date });
+        record = await createCareRecordOnce(WeightRecord, {
+          gecko_id: gecko.id,
+          weight_grams: grams,
+          record_date: date,
+          client_request_id: requestId,
+        });
       } catch (error) {
         if (!shouldQueue(error)) throw error;
         queueWhole();
@@ -439,10 +454,12 @@ export default function FieldModePage() {
       finish({
         queued: null,
         undo: async () => {
-          await WeightRecord.delete(record.id);
+          if (record?.id) await WeightRecord.delete(record.id);
           if (!mirror) return;
-          if (mirrorItem) removeQueued(mirrorItem.id);
-          else await Gecko.update(gecko.id, { weight_grams: prevWeight });
+          // The shown-weight update kept for later: take it out of the
+          // queue, or, when it was already sent, put the weight back.
+          if (mirrorItem && !isSyncing() && removeQueued(mirrorItem.id)) return;
+          await Gecko.update(gecko.id, { weight_grams: prevWeight });
         },
       });
     } catch (error) {
@@ -455,15 +472,16 @@ export default function FieldModePage() {
 
   const logShed = async (gecko, quality = 'unknown', date = logDate) => {
     setIsSaving(true);
+    const requestId = newClientRequestId();
     const queueShed = () => {
-      const item = queueFieldLog({ kind: 'shed', geckoId: gecko.id, date, quality });
+      const item = queueFieldLog({ kind: 'shed', geckoId: gecko.id, date, quality, requestId });
       afterLog({
         kind: 'shed',
         queueId: item.id,
         quality,
         queued: true,
         message: savedLabel(true, `Shed for ${gecko.name}`),
-        undo: async () => { removeQueued(item.id); },
+        undo: () => undoQueuedLog(item.id),
       });
     };
     try {
@@ -471,14 +489,14 @@ export default function FieldModePage() {
         queueShed();
         return;
       }
-      const record = await writeShed({ gecko, date, quality });
+      const record = await writeShed({ gecko, date, quality, clientRequestId: requestId });
       afterLog({
         kind: 'shed',
         recordId: record.id,
         quality,
         message: `Shed for ${gecko.name}`,
         undo: async () => {
-          await ShedRecord.delete(record.id);
+          if (record?.id) await ShedRecord.delete(record.id);
         },
       });
     } catch (error) {
@@ -495,6 +513,7 @@ export default function FieldModePage() {
 
   const logFed = async (gecko, accepted = true, date = logDate) => {
     setIsSaving(true);
+    const requestId = newClientRequestId();
     // Kept offline as a whole log; it replays through logFeedings, which
     // also moves the group schedule then (never back in time).
     const queueFed = () => {
@@ -504,6 +523,7 @@ export default function FieldModePage() {
         feedingGroupId: gecko.feeding_group_id || null,
         accepted,
         date,
+        requestId,
       });
       afterLog({
         kind: 'fed',
@@ -513,7 +533,7 @@ export default function FieldModePage() {
         accepted,
         queued: true,
         message: savedLabel(true, `Feeding for ${gecko.name}`),
-        undo: async () => { removeQueued(item.id); },
+        undo: () => undoQueuedLog(item.id),
       });
     };
     try {
@@ -523,7 +543,7 @@ export default function FieldModePage() {
       }
       // Writes the feeding row and moves the gecko's group schedule when
       // it ate (D21), so Dashboard and reminders stop calling it due.
-      const result = await logFeedings({ entries: [{ gecko, accepted }], date });
+      const result = await logFeedings({ entries: [{ gecko, accepted, clientRequestId: requestId }], date });
       afterLog({
         kind: 'fed',
         recordId: result.records[0]?.id,
@@ -585,7 +605,7 @@ export default function FieldModePage() {
     };
     const queueNote = () => {
       const item = queueFieldLog({ kind: 'note', geckoId: gecko.id, eventDate: when.toISOString(), notes: trimmed });
-      done({ queued: true, message: savedLabel(true, `Note for ${gecko.name}`), undo: async () => { removeQueued(item.id); } });
+      done({ queued: true, message: savedLabel(true, `Note for ${gecko.name}`), undo: () => undoQueuedLog(item.id) });
     };
     try {
       if (isDeviceOffline()) {
@@ -622,9 +642,18 @@ export default function FieldModePage() {
   const refineShedQuality = async (quality) => {
     if (!undoEntry || undoEntry.kind !== 'shed') return;
     try {
-      // A shed still waiting to sync is changed in the queue.
-      if (undoEntry.queueId) updateQueued(undoEntry.queueId, { quality });
-      else await ShedRecord.update(undoEntry.recordId, { quality });
+      // A shed still waiting to sync is changed in the queue. Once the
+      // queue is sending it, the change would be lost, so say so.
+      if (undoEntry.queueId) {
+        if (isSyncing()) {
+          toast({ title: 'Not changed', description: 'That shed is being sent right now, so it was not changed. Try again in a moment.', variant: 'destructive' });
+          return;
+        }
+        if (!updateQueued(undoEntry.queueId, { quality })) {
+          toast({ title: 'Not changed', description: "That shed has already synced. Change it from the gecko's record.", variant: 'destructive' });
+          return;
+        }
+      } else await ShedRecord.update(undoEntry.recordId, { quality });
       setUndoEntry((e) => (e && e.kind === 'shed' ? { ...e, quality } : e));
     } catch (error) {
       console.error('Shed quality update failed:', error);
@@ -639,7 +668,14 @@ export default function FieldModePage() {
     // A feeding still waiting to sync: change it in the queue. The group
     // schedule moves (or not) when it replays.
     if (entry.queueId) {
-      updateQueued(entry.queueId, { accepted: next });
+      if (isSyncing()) {
+        toast({ title: 'Not changed', description: 'That feeding is being sent right now, so it was not changed. Try again in a moment.', variant: 'destructive' });
+        return;
+      }
+      if (!updateQueued(entry.queueId, { accepted: next })) {
+        toast({ title: 'Not changed', description: "That feeding has already synced. Change it from the gecko's record.", variant: 'destructive' });
+        return;
+      }
       setUndoEntry((e) => (e && e.kind === 'fed' ? { ...e, accepted: next } : e));
       return;
     }

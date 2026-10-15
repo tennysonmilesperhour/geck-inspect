@@ -1,6 +1,8 @@
-# Geck Inspect Landing Page: DECISIONS.md
+# Geck Inspect: DECISIONS.md, the product and engineering decision log
 
-> **Purpose of this file.** A running log of every meaningful decision made about the landing page, the reasoning behind it, and the context at the time. `CONTEXT.md` answers *what is this*. `INTENT.md` answers *why is it that way*. This file answers *what changed, when, and why*, so that months from now we can see the full history of how the landing page evolved, which experiments worked, and which ideas were tried and rejected.
+> **Title note (15 October 2026).** This file was titled "Geck Inspect Landing Page: DECISIONS.md" because entries 1 to 16 were written in an April 2026 landing page session. From entry 17 on it records decisions about the whole product: pricing, billing, data, security, positioning and process. The title now says so. No entry's text was changed.
+
+> **Purpose of this file.** A running log of every meaningful decision made about Geck Inspect (originally only the landing page), the reasoning behind it, and the context at the time. `CONTEXT.md` answers *what is this*. `INTENT.md` answers *why is it that way*. This file answers *what changed, when, and why*, so that months from now we can see the full history of how the landing page evolved, which experiments worked, and which ideas were tried and rejected.
 >
 > **How to use this file.**
 > - Each decision gets its own numbered entry.
@@ -80,6 +82,8 @@ These entries capture the strategic decisions made during the initial landing pa
 **Decision:** Primary visual direction is dark mode: deep charcoal background (~`#0E1410`) with green undertone. Accent color is crestie cream/sulfur (`#F4E4A1`). Secondary accent is forest green for genetics/data moments. Light mode toggle supported but dark is default.
 **Reasoning:** Dark mode reads as premium and modern, signals "tech product" vs. "hobbyist utility," and makes crested gecko photography look dramatically better. The competitive contrast alone is a positioning signal.
 **Consequences:** All design work proceeds dark-first. Photography must be lit for dark backgrounds. Light mode is a later concern, not a day-one requirement.
+
+> **Note added 15 October 2026.** The dark charcoal and cream palette described here never shipped; the app's real themes are in `docs/specs/DESIGN-SYSTEM.md`.
 
 ---
 
@@ -191,6 +195,8 @@ These entries capture the strategic decisions made during the initial landing pa
 **Reasoning:** Lighter than GA4 (faster page load), privacy-friendly (no cookie banner required in most jurisdictions), and the audience skews toward people who appreciate privacy-aware tools. Tracks what we actually need without the complexity.
 **Consequences:** Commits to a particular analytics vendor. Commits to not chasing vanity metrics (page views, sessions, bounce rate in isolation), only metrics that correlate with sign-ups.
 
+> **Superseded in practice (note added 15 October 2026).** Google Analytics 4 was added after this decision and runs today: `index.html` loads it on production hostnames only, skips it when Do Not Track or Global Privacy Control is on, and the weekly growth report (`.github/workflows/growth-report.yml`) was set up to read it from late April 2026. PostHog runs too (`src/lib/posthog.js`; the production build requires its key, `scripts/check-env.mjs`) and first-party events go to `public.user_events`. The same applies to the "not adding Google Analytics" line in decision 23. No decision entry recorded the switch. Whether to keep GA4 is open: the 14 October review (Part E, item 31) recommends removing it or putting it behind a consent banner for visitors in the EU and UK.
+
 ---
 
 ### 16. Split CONTEXT / INTENT / DECISIONS across three files
@@ -283,6 +289,8 @@ These entries capture the strategic decisions made during the initial landing pa
 **Reasoning:** A/B testing before ~500 visitors per variant is statistical noise. Two weeks of clean observation establishes a real baseline. Plausible/PostHog over GA4 because they're lighter, privacy-friendly, and match the audience's values.
 **Consequences:** Requires an analytics vendor decision before launch. Commits to not adding Google Analytics or other heavyweight trackers. Slight learning curve for whichever tool is chosen.
 
+> **Superseded in practice (note added 15 October 2026).** Google Analytics 4 runs on production alongside PostHog and first-party events; see the note under decision 15.
+
 ---
 
 ### 24. Plan the first round of A/B tests
@@ -354,6 +362,8 @@ These entries capture the strategic decisions made during the initial landing pa
 **Reasoning:** Network-first navigation converts the highest-risk item in the plan into a low-risk one: the worst case for an online user is one extra network round-trip (identical to no SW at all), and the benefit is that the app opens instantly and the last-seen shell is readable offline. This is the standard, boring, safe PWA pattern.
 **Recovery path (important, since a SW outlives a git revert):** If a future SW change ever misbehaves on a device, the fix is to (1) bump `CACHE_VERSION` and change the SW body so the browser detects an update and `skipWaiting()` swaps it in on next load, or (2) as a hard reset, ship a SW whose `activate` handler runs `caches.keys()` then deletes every `geck-*` cache and calls `self.registration.unregister()`. Because navigations are network-first, even a totally empty/broken cache still falls through to the live network, so a returning user is never fully stranded.
 
+> **Note added 15 October 2026.** There is no single `CACHE_VERSION` any more. Each cache carries its own version in `public/sw.js` (`geck-shell-v2` for the offline page, `geck-static-v1` for the app's files), and only the cache whose filling logic changed gets bumped. Bumping the file cache purges the app's files, and the visit that installs the new worker does not fetch them again, so the next offline visit would have the page but not the code to run it. The hard reset in recovery step (2) still works as written.
+
 ---
 
 ### 30. Referral reward is a free month of Keeper, not a revenue share
@@ -386,6 +396,8 @@ These entries capture the strategic decisions made during the initial landing pa
 **Decision:** Lead with the business side. The landing page opens with "Price right. Pair smart. Sell with proof." and gives its three showcase sections (decision 13) to: know what it's worth (value estimates and asking-price ranges from real listings), pair for profit (offspring odds times hatchling prices, per egg), and sell with proof (passport, transfer, buyer packet, profit tracking). Everything else is one line under "Also in every account". Crested-gecko-first stays the identity: every number comes from crested gecko listings and the genetics engine is crested-only.
 **Reasoning:** Competitors are multi-species or marketplace-first (STRATEGY.md). A new breeder's hardest questions are money questions (what to charge, which pairing is worth the eggs, did the season pay), and Geck Inspect can answer them from real crested gecko data. The three sections replace the showcase picks in decision 13 (Morph ID, calculator, pedigrees): the calculator and pedigrees now appear inside "pair for profit" and "sell with proof", and Morph ID moves to the "also included" line with its free first identification.
 **Consequences:** Landing copy, SEO titles and social previews say "crested gecko breeding app for pricing, pairings and sales". Business Tools, the Portfolio, the pairing value panel and the buyer packet are the product's front door and must keep showing honest numbers: asking prices labeled as asking prices, unconfirmed sales flagged. Morph ID accuracy work continues but is no longer the headline.
+
+> **Note added 15 October 2026.** The "free first identification" became one free identification a month; see decision 46.
 
 ---
 
@@ -506,3 +518,12 @@ These entries capture the strategic decisions made during the initial landing pa
 **Decision:** `ENTERPRISE_ON_SALE` in `src/lib/stripe-config.js` is false. The Membership page shows Enterprise as "Coming soon" with a waitlist button that opens the support form, and the meta description, FAQ, plan table and structured-data offers leave its price out. The Stripe prices are unchanged.
 **Reasoning:** A $99.99 plan on data that is partly stale and legally contestable invites refunds and chargebacks, and nobody has bought it. Selling it again is a one-line change.
 **Consequences:** Existing Enterprise members and complimentary grants keep their access. The market functions get a server-side tier check in the same round of fixes, so Market Intelligence is not readable by members who were never sold it. Revisit when the feed has run cleanly for four weeks and a breeder asks.
+
+### 46. Free gets one Morph ID identification a month (15 Oct 2026)
+
+**Date:** 2026-10-15
+**Status:** Accepted (Tennyson asked for all of Part E of the comprehensive review to be implemented; this is item E2 17)
+**Context:** Since 27 September 2026 a Free account had one Morph ID identification, ever. The comprehensive review of 14 October (section B8 of `docs/planning/comprehensive-review-2026-10-14.md`) noted that Geckistry's identifier is free and unlimited, and that the shareable result card (posted into "what morph is this?" threads, the most common crested gecko thread type) needs a steady stream of results to share. It recommended one free identification a month for every account.
+**Decision:** Free gets one identification each calendar month, in place of the one lifetime try. Keeper (3), Breeder (6) and Enterprise (15) are unchanged. The month turns at midnight UTC on the 1st (the evening before in the US), as for every other allowance. Extra scans in `morph_id_bonus_credits` sit on top and are used after the month's plan scan, and a failed run or a "better photos needed" answer gives the scan back, as before. The server is the truth: `consume_morph_id_credit` (migration `20261015151300_morph_id_share_card.sql`) uses 1 for Free whatever the edge function passes, and `TIER_LIMITS.free.monthlyMorphIDCredits` in `src/lib/tierLimits.js` is 1 (`lifetimeFreeMorphIDs` is gone). App copy says "one free a month".
+**Reasoning:** A typical identification costs 3 to 5 cents, so a month of free scans for every active Free member is a few dollars at today's numbers, and it is the cheapest steady source of shareable cards. One lifetime try gave a new member nothing to come back for and gave the card nothing to carry.
+**Consequences:** Morph ID spend now grows with active Free members, so the Anthropic spend alert (plan item E1 11) matters more. Each new account is a new free scan. The only guard against one person opening many accounts is the per-network daily cap in `recognize-gecko-morph` (`morph_id_per_ip_daily` in `geck_data.runtime_config`, 50 calls a day on 15 October, and only when `IP_HASH_SALT` is set), which is loose; tighten it if free scans start to cost real money. To change the allowance again, change `tierLimits.js`, the map in `recognize-gecko-morph` and `consume_morph_id_credit` together, and the "one free a month" copy on the landing page, the Morph Guide and the first gecko flow.

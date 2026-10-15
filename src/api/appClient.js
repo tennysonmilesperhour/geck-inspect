@@ -29,6 +29,12 @@ const authFacade = {
   async logout() {
     return supabase.auth.signOut();
   },
+  // Ends the session in this browser only (the member's other devices stay
+  // signed in). Used before sending someone with an expired sign-in to the
+  // sign-in page, which otherwise sends a "signed-in" tab straight back.
+  async endLocalSession() {
+    return supabase.auth.signOut({ scope: 'local' });
+  },
   loginWithRedirect() {
     window.location.href = '/AuthPortal';
   },

@@ -8,7 +8,10 @@
  *
  * If the function is not installed yet, Free falls back to the old
  * "1 minus lifetime use" read so the uploader still locks after the
- * free try. That fallback does not know about bonus credits.
+ * free scan. That fallback predates one free scan a month (the October
+ * 2026 release, migration 20261015151300)
+ * and does not know about bonus credits; the server still allows the
+ * monthly scan and returns a fresh count after it.
  */
 
 export function morphIdGate({ isFreeTier = false, remaining = null, bonus = 0 } = {}) {
@@ -21,8 +24,8 @@ export function morphIdGate({ isFreeTier = false, remaining = null, bonus = 0 } 
     remaining: left,
     bonus: bonusCredits,
     locked: known && left === 0,
-    // The original "first identification is free" line, only when this
-    // is the unused lifetime try and no extra scans were granted.
+    // The "free identification this month" line, only when this is the
+    // unused monthly free scan and no extra scans were granted.
     showFirstFreeBanner: Boolean(isFreeTier) && known && left === 1 && !hasBonus,
     showScansLeft: known && left > 0 && (!isFreeTier || hasBonus || left > 1),
   };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { existingSeatFor, invitePlan, reopenedInviteFields } from '../collectionInvites';
+import { existingSeatFor, invitePlan, isInviteExpired, reopenedInviteFields, tokenForResend } from '../collectionInvites';
 
 const seats = [
   { id: 'o', member_email: 'owner@example.com', role: 'owner', status: 'accepted' },
@@ -40,5 +40,44 @@ describe('inviting someone to a collection', () => {
       accepted_at: null,
       declined_at: null,
     });
+  });
+});
+
+describe('an invitation whose link has expired', () => {
+  const now = new Date('2026-10-16T12:00:00Z');
+  const expired = { id: 'x', member_email: 'late@example.com', role: 'editor', status: 'pending',
+    invite_token: 'old-token', expires_at: '2026-10-01T00:00:00Z' };
+  const fresh = { ...expired, id: 'f', member_email: 'fresh@example.com', expires_at: '2026-11-01T00:00:00Z' };
+
+  it('is expired only while pending and past its date', () => {
+    expect(isInviteExpired(expired, now)).toBe(true);
+    expect(isInviteExpired(fresh, now)).toBe(false);
+    expect(isInviteExpired({ ...expired, status: 'accepted' }, now)).toBe(false);
+    expect(isInviteExpired({ ...expired, expires_at: null }, now)).toBe(false);
+  });
+
+  it('Invite reopens it with a new token instead of saying "use Resend"', () => {
+    expect(invitePlan([expired], 'late@example.com', now)).toMatchObject({ action: 'reopen', seat: { id: 'x' } });
+    expect(invitePlan([fresh], 'fresh@example.com', now)).toMatchObject({ action: 'exists' });
+  });
+
+  it('Resend issues and saves a new token, never the expired one', async () => {
+    const saved = [];
+    const result = await tokenForResend(expired, {
+      update: async (id, fields) => { saved.push([id, fields]); },
+      invitedBy: 'owner@example.com',
+      makeToken: () => 'new-token',
+      now,
+    });
+    expect(result).toEqual({ token: 'new-token', renewed: true });
+    expect(saved).toEqual([['x', expect.objectContaining({
+      status: 'pending', invite_token: 'new-token', role: 'editor', expires_at: '2026-11-15T12:00:00.000Z',
+    })]]);
+  });
+
+  it('Resend sends a working link as it is, without saving anything', async () => {
+    const update = async () => { throw new Error('should not save'); };
+    const result = await tokenForResend(fresh, { update, invitedBy: 'owner@example.com', makeToken: () => 'unused', now });
+    expect(result).toEqual({ token: 'old-token', renewed: false });
   });
 });
