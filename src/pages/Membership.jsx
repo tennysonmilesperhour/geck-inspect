@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import {
+  ENTERPRISE_ON_SALE,
   getTierPricing,
   TIER_PRICING,
   TRIAL_DAYS,
@@ -135,7 +136,9 @@ const tiers = [
     icon: Sparkles,
     description: 'For breeders who price by the market',
     featured: false,
-    comingSoon: false,
+    // Off sale while ENTERPRISE_ON_SALE is false (see stripe-config.js):
+    // the card shows "Coming soon" and a waitlist button instead of checkout.
+    comingSoon: !ENTERPRISE_ON_SALE,
     features: [
       'Everything in Breeder',
       '15 AI Morph IDs per month',
@@ -629,7 +632,8 @@ export default function MembershipPage() {
               (isEnterprise ? true : !currentCycle || currentCycle === cycle);
             // A tier flagged comingSoon is greyed out with a waitlist CTA,
             // except for members who already hold it. None is today:
-            // Enterprise went on sale on 6 Oct 2026.
+            // Enterprise was on sale from 6 to 15 Oct 2026 and is now behind
+            // ENTERPRISE_ON_SALE in stripe-config.js.
             const isEnterpriseLocked = tier.comingSoon && !isCurrent;
             const busy = loadingAction === `${tier.key}:purchase`;
             const trialBusy = loadingAction === `${tier.key}:trial`;
@@ -775,7 +779,7 @@ export default function MembershipPage() {
                           promise ("Billed monthly, starting today"). */}
                       {isEnterpriseLocked ? (
                         <p className="text-xs mt-1.5 text-slate-500 italic">
-                          Not on sale yet. Join the waitlist and we will tell you first.
+                          Not on sale right now. Join the waitlist and we will tell you first.
                         </p>
                       ) : (pricing?.priceCaption || enterpriseLifetimeUnavailable) && (
                         <p className="text-xs mt-1.5 text-slate-500 italic">

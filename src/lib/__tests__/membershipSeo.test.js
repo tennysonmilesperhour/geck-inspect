@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TIER_PRICING, TRIAL_DAYS } from '../stripe-config';
+import { ENTERPRISE_ON_SALE, TIER_PRICING, TRIAL_DAYS } from '../stripe-config';
 import { TIER_LIMITS } from '../tierLimits';
 import {
   MEMBERSHIP_FAQS,
@@ -15,7 +15,7 @@ const textOf = (value) => JSON.stringify(value);
 describe('membership prerender copy', () => {
   it('describes the live plans with the prices on the Membership page', () => {
     expect(membershipMetaDescription()).toBe(
-      'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo, $30/yr, or $149 lifetime), Breeder ($5.99/mo, $60/yr, or $349 lifetime), and Enterprise ($99.99/mo or $1,000/yr). Optional 7-day free trial on monthly and yearly plans. Cancel anytime.',
+      'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo, $30/yr, or $149 lifetime), Breeder ($5.99/mo, $60/yr, or $349 lifetime), and an Enterprise waitlist. Optional 7-day free trial on monthly and yearly plans. Cancel anytime.',
     );
     expect(membershipMetaDescription()).toContain('lifetime');
     expect(membershipMetaDescription().length).toBeGreaterThanOrEqual(60);
@@ -32,7 +32,10 @@ describe('membership prerender copy', () => {
     expect(rows.Breeder[1]).toBe(`${TIER_PRICING.breeder.monthly.price}/mo or ${TIER_PRICING.breeder.annual.price}/yr or ${TIER_PRICING.breeder.lifetime.price} one-time`);
     expect(rows.Breeder[2]).toContain('Unlimited geckos');
     expect(rows.Breeder[2]).toContain(`${TRIAL_DAYS}-day free trial`);
-    expect(rows.Enterprise[1]).toBe(`${TIER_PRICING.enterprise.monthly.price}/mo or ${TIER_PRICING.enterprise.annual.price}/yr`);
+    // Enterprise is off sale (ENTERPRISE_ON_SALE false): no price is published.
+    expect(ENTERPRISE_ON_SALE).toBe(false);
+    expect(rows.Enterprise[1]).toBe('Waitlist');
+    expect(rows.Enterprise[2]).toContain('Not on sale right now');
   });
 
   it('lists live lifetime prices as one-time payments', () => {
@@ -68,9 +71,9 @@ describe('membership prerender copy', () => {
       'Geck Inspect Breeder (monthly) 5.99 USD',
       'Geck Inspect Breeder (annual) 60.00 USD',
       'Geck Inspect Breeder (lifetime) 349.00 USD',
-      'Geck Inspect Enterprise (monthly) 99.99 USD',
-      'Geck Inspect Enterprise (annual) 1000.00 USD',
     ]);
+    // No Enterprise Offer while it is off sale.
+    expect(prices.some((p) => p.includes('Enterprise'))).toBe(false);
     expect(MEMBERSHIP_OFFERS.every((offer) => offer['@type'] === 'Offer')).toBe(true);
     const lifetimeOffers = MEMBERSHIP_OFFERS.filter((offer) => offer.name.includes('lifetime'));
     expect(lifetimeOffers.map((offer) => offer.category)).toEqual(['one-time', 'one-time']);

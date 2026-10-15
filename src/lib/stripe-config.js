@@ -73,6 +73,16 @@ export function maxAnnualSavingsPercent() {
 // `cta` overrides the default "Start <Tier>" copy when set.
 // `mode` tells the checkout function which Stripe mode to use.
 // `price_id` is the live Stripe Price; null = not yet configured.
+// Enterprise (Market Intelligence) is off sale since 15 October 2026. Both
+// reviews of the app (docs/planning/comprehensive-review-2026-10-14.md)
+// found the US market feed it is sold on degraded, and recommended not
+// selling a $99.99 plan on it until the feed is reliable and a breeder asks
+// for it. While this is false the Membership page shows Enterprise as
+// "Coming soon" with a waitlist button, and the pricing text and the
+// structured data leave its price out. Existing Enterprise members and
+// complimentary grants are unaffected. Set it back to true to resell.
+export const ENTERPRISE_ON_SALE = false;
+
 export const TIER_PRICING = {
   free: {
     monthly:  { price: '$0',     billing: '/month',   priceCaption: 'Free forever',                         mode: null,            price_id: null, cta: 'Get Started Free' },
@@ -89,8 +99,10 @@ export const TIER_PRICING = {
     annual:   { price: '$60',    billing: '/year',    priceCaption: 'Billed yearly, starting today. Save vs monthly. Cancel anytime.',     mode: 'subscription',  price_id: 'price_1TVMOCLBdc4xGjxqK2HTmGfm', cta: 'Start Breeder' },
     lifetime: { price: '$349',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: 'price_1UQV94LBdc4xGjxqwzNWvXyI', cta: 'Get Lifetime Breeder' },
   },
-  // Enterprise: real pricing, $99.99/mo or $1,000/yr, both self-serve. No
-  // lifetime entry; Enterprise doesn't get a one-time pay-once option.
+  // Enterprise: $99.99/mo or $1,000/yr. No lifetime entry; Enterprise
+  // doesn't get a one-time pay-once option. Whether it can be bought at all
+  // is ENTERPRISE_ON_SALE below; the prices stay here so existing members'
+  // plans still display correctly.
   enterprise: {
     monthly:  { price: '$99.99', billing: '/month',   priceCaption: 'Billed monthly, starting today. Cancel anytime.', mode: 'subscription',  price_id: 'price_1TVLvmLBdc4xGjxqCVzbz0GQ', cta: 'Start Enterprise' },
     annual:   { price: '$1,000', billing: '/year',    priceCaption: 'Billed yearly, starting today. Save ~17% vs monthly.', mode: 'subscription',  price_id: 'price_1TVMQYLBdc4xGjxqpZFuqV96', cta: 'Start Enterprise' },
