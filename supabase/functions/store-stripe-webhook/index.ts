@@ -32,6 +32,9 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const enc = new TextEncoder();
 
+// Marks this function's rows in the shared stripe_webhook_logs table.
+const LOG_SOURCE = "store-stripe-webhook";
+
 // Constant-time string compare for HMAC.
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -120,14 +123,19 @@ serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
   // Idempotency: leverage existing stripe_webhook_logs table if present;
-  // soft-fail if it isn't.
+  // soft-fail if it isn't. The membership webhook (stripe-webhook) logs
+  // every event Stripe sends it in the same table, including store
+  // checkouts, so only this function's own rows count. Without that filter
+  // a store order could be skipped as "already processed" whenever the
+  // membership webhook saw the event first.
   try {
     const { data: existing } = await supabase
       .from("stripe_webhook_logs")
       .select("id")
       .eq("stripe_event_id", event.id)
-      .maybeSingle();
-    if (existing) return new Response("already_processed", { status: 200 });
+      .eq("created_by", LOG_SOURCE)
+      .limit(1);
+    if (existing && existing.length > 0) return new Response("already_processed", { status: 200 });
   } catch {
     // table might not exist in this branch, ignore
   }
@@ -258,12 +266,17 @@ serve(async (req) => {
     }
   }
 
-  // Best-effort idempotency log.
+  // Best-effort idempotency log. The column names are the table's real
+  // ones; the old insert used event_type and payload, which do not exist,
+  // so it always failed and nothing was ever recorded.
   try {
     await supabase.from("stripe_webhook_logs").insert({
       stripe_event_id: event.id,
-      event_type: event.type,
-      payload: event,
+      stripe_event_type: event.type,
+      processing_status: "processed",
+      processed_at: new Date().toISOString(),
+      raw_payload: rawBody,
+      created_by: LOG_SOURCE,
     });
   } catch {
     // table may not exist; ignore.

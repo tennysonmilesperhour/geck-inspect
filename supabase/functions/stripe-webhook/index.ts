@@ -34,6 +34,12 @@
 // Keep both invoice.paid and invoice.payment_succeeded. They are one
 // payment delivered twice, and the handler applies that payment once.
 //
+// Each event id is applied once: a redelivery or a dashboard replay of an
+// event that already finished is answered 200 and skipped. A database
+// write that fails makes the whole event fail (500), so Stripe retries it.
+// Only Checkout sessions created by stripe-checkout for a membership
+// change a plan; store orders and other checkouts are ignored here.
+//
 // verify_jwt=false. Stripe can't send a Supabase JWT, so we authenticate
 // via the webhook signature instead.
 
@@ -360,6 +366,16 @@ async function applyReferralStripeCredit(supabase: any, reward: any) {
     .eq("id", reward.id);
 }
 
+// Compares two signatures in the same time whatever they contain. A plain
+// === stops at the first differing character, and how long that takes can
+// leak, one character at a time, what the right signature looks like.
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 async function verifyStripeSignature(
   payload: string,
   signatureHeader: string,
@@ -371,7 +387,10 @@ async function verifyStripeSignature(
   const v1Parts = parts.filter((p) => p.startsWith("v1="));
   if (!tsPart || v1Parts.length === 0) return false;
 
+  // A timestamp that is not a number would make the age check below
+  // compare against NaN, which is never "too old".
   const timestamp = parseInt(tsPart.slice(2), 10);
+  if (!Number.isFinite(timestamp)) return false;
   const signedPayload = `${timestamp}.${payload}`;
 
   const key = await crypto.subtle.importKey(
@@ -390,7 +409,7 @@ async function verifyStripeSignature(
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  const matches = v1Parts.some((p) => p.slice(3) === expected);
+  const matches = v1Parts.some((p) => timingSafeEqual(p.slice(3), expected));
   if (!matches) return false;
 
   const now = Math.floor(Date.now() / 1000);
@@ -521,7 +540,47 @@ function lifetimeChargeDecision(matched: boolean, fullRefund: boolean): "revoke"
   return fullRefund ? "revoke" : "partial";
 }
 
-Deno.serve(async (req: Request) => {
+const PAID_TIERS = new Set(["keeper", "breeder", "enterprise"]);
+
+// Which membership purchase a completed Checkout session is, or null when
+// it is not one. Stripe sends this endpoint every Checkout on the account,
+// including store orders and anything made by hand in the dashboard. Only
+// sessions that stripe-checkout created count: a subscription carries the
+// member's account email and plan in its metadata, and a lifetime purchase
+// is a one-time payment for a lifetime price. Anything else used to be
+// treated as a membership for whatever email was typed at Checkout.
+function membershipCheckoutKind(session: any): "subscription" | "lifetime" | null {
+  if (session?.mode === "subscription") {
+    const accountEmail = session?.metadata?.supabase_email;
+    const fromLine = priceIdToPlan(linePriceId(membershipLine(session?.line_items?.data)));
+    const hasPlan = PAID_TIERS.has(session?.metadata?.tier || "") || Boolean(fromLine);
+    return accountEmail && hasPlan ? "subscription" : null;
+  }
+  if (session?.mode === "payment") {
+    const fromLine = priceIdToPlan(linePriceId(membershipLine(session?.line_items?.data)));
+    if (fromLine?.cycle === "lifetime") return "lifetime";
+    const cycle = session?.metadata?.billing_cycle
+      || (typeof session?.payment_intent === "object" ? session.payment_intent?.metadata?.billing_cycle : null);
+    return cycle === "lifetime" ? "lifetime" : null;
+  }
+  return null;
+}
+
+// Marks the rows this function writes in stripe_webhook_logs, so the store
+// webhook (which shares the table) never mistakes them for its own.
+const LOG_SOURCE = "stripe-webhook";
+
+function defaultClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+  );
+}
+
+// The whole request handler. It takes the database client as a parameter
+// so the unit tests can run real events through it against a fake
+// database; production always uses defaultClient().
+async function handleStripeWebhook(req: Request, makeClient: () => any = defaultClient): Promise<Response> {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
@@ -548,10 +607,32 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "Invalid JSON" }, 400);
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  );
+  const supabase = makeClient();
+
+  // Each event is applied once. Stripe redelivers an event when it does
+  // not get a 2xx in time, and the same event can be replayed from the
+  // dashboard. If an earlier delivery of this event id finished
+  // ("processed"), answer 200 and do nothing. An earlier delivery that
+  // failed or never finished does not count, so Stripe's retry runs it
+  // again. If this lookup itself fails the event is processed anyway: the
+  // handlers below are written to be safe to repeat, and dropping a
+  // payment is worse than applying it twice. Rows with no created_by were
+  // written by this function before the column was filled in.
+  const eventId = String(event.id || "");
+  if (eventId) {
+    const { data: done, error: doneError } = await supabase
+      .from("stripe_webhook_logs")
+      .select("id")
+      .eq("stripe_event_id", eventId)
+      .eq("processing_status", "processed")
+      .or(`created_by.is.null,created_by.eq.${LOG_SOURCE}`)
+      .limit(1);
+    if (doneError) {
+      console.warn("idempotency check failed, processing anyway:", doneError.message);
+    } else if (done && done.length > 0) {
+      return jsonResponse({ received: true, duplicate: true });
+    }
+  }
 
   // Audit row. Column names match the stripe_webhook_logs table
   // (stripe_event_id, stripe_event_type, processing_status, raw_payload).
@@ -560,12 +641,13 @@ Deno.serve(async (req: Request) => {
   const logId = crypto.randomUUID();
   await supabase.from("stripe_webhook_logs").insert({
     id: logId,
-    stripe_event_id: String(event.id || ""),
+    stripe_event_id: eventId,
     stripe_event_type: String(event.type || "unknown"),
     processing_status: "received",
     raw_payload: payload,
     created_date: new Date().toISOString(),
-  }).then(({ error }) => {
+    created_by: LOG_SOURCE,
+  }).then(({ error }: { error: { message: string } | null }) => {
     if (error) console.warn("Failed to log webhook event:", error.message);
   });
 
@@ -582,13 +664,24 @@ Deno.serve(async (req: Request) => {
       .then(() => {}, () => {});
   };
 
+  // A failed lookup throws rather than reading as "no such member", which
+  // would skip the event with a 200 and Stripe would never retry it. Two
+  // profiles on one Stripe customer (PGRST116) is not something a retry
+  // can fix, so that case keeps the old behavior and is only logged.
   const findProfileFromCustomer = async (customerId: string | null) => {
     if (!customerId) return null;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, email, membership_tier, membership_billing_cycle, stripe_subscription_id, subscription_status")
       .eq("stripe_customer_id", customerId)
       .maybeSingle();
+    if (error) {
+      if (error.code === "PGRST116") {
+        console.error("more than one profile has Stripe customer", customerId);
+        return null;
+      }
+      throw new Error(`profile lookup failed: ${error.message}`);
+    }
     return data || null;
   };
 
@@ -614,6 +707,12 @@ Deno.serve(async (req: Request) => {
   // landed, so live paid subscriptions were being dropped on the floor: the
   // webhook logged "processed" and the member stayed on Free. A real upsert
   // means a missing row can never lose a payment again.
+  //
+  // A failed write throws. The handler then marks the event failed and
+  // answers 500, so Stripe retries it (for up to three days) and the
+  // failure shows in the Stripe dashboard. It used to log a warning and
+  // carry on, the event was marked "processed" with a 200, and a member
+  // who had paid could stay on Free with nobody told.
   const upsertProfileByEmail = async (
     email: string,
     patch: Record<string, unknown>,
@@ -627,11 +726,12 @@ Deno.serve(async (req: Request) => {
       )
       .select("id");
     if (error) {
-      console.warn("profile upsert failed:", email, error.message);
-      return;
+      console.error("profile upsert failed:", email, error.message);
+      throw new Error(`profile write failed: ${error.message}`);
     }
     if (!data || data.length === 0) {
-      console.warn("profile upsert wrote no row:", email);
+      console.error("profile upsert wrote no row:", email);
+      throw new Error("profile write saved no row");
     }
   };
 
@@ -1033,22 +1133,26 @@ Deno.serve(async (req: Request) => {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded": {
         const session = event.data.object;
-        if (session.mode === "payment" || event.type === "checkout.session.async_payment_succeeded") {
-          if (session.mode === "payment" && lifetimeCheckoutFulfillable(session)) {
+        const kind = membershipCheckoutKind(session);
+        if (!kind) {
+          // A store order, a payment link or a dashboard checkout. The
+          // store has its own webhook; nothing here changes a membership.
+          console.warn("ignored checkout that is not a membership purchase", session.id, session.mode);
+          break;
+        }
+        if (kind === "lifetime" || event.type === "checkout.session.async_payment_succeeded") {
+          if (kind === "lifetime" && lifetimeCheckoutFulfillable(session)) {
             await grantLifetimeFromSession(session);
-          } else if (session.mode === "payment" && session.payment_status === "paid") {
-            console.warn("paid payment checkout is not a lifetime plan", session.id);
           }
           break;
         }
         const profile = session.customer
           ? await findProfileFromCustomer(stripeId(session.customer))
           : null;
-        const email =
-          session.metadata?.supabase_email ||
-          session.customer_details?.email ||
-          profile?.email ||
-          null;
+        // The account email stripe-checkout put on the session. The email
+        // typed into Checkout (customer_details) is not used: it can be
+        // any address, and the plan would land on whoever owns it.
+        const email = session.metadata?.supabase_email || null;
         if (email) {
           const chosen = checkoutPlan(session, profile);
           const isKeeperPromoTrial = session.metadata?.keeper_promo_trial === "1";
@@ -1345,4 +1449,6 @@ Deno.serve(async (req: Request) => {
 
   await markLog("processed");
   return jsonResponse({ received: true });
-});
+}
+
+Deno.serve((req: Request) => handleStripeWebhook(req));
