@@ -28,7 +28,8 @@
 --        not in a feeding group (geckos in a group keep the group's
 --        schedule, as before).
 --      * eggs: once a day from 7 days before the expected hatch date to 14
---        days after it, and weekly otherwise (as before).
+--        days after it, and weekly otherwise (as before). Still one
+--        reminder per egg, so the app's own hatch check sees each one.
 --    The member can still change or switch off each one: per gecko on its
 --    record (profiles.extra_data.care_reminders.weigh_in.geckos.<id> and
 --    .feeding.geckos.<id>, with "on": false), or for the whole account in
@@ -454,8 +455,16 @@ revoke all on function public.enqueue_feeding_reminders() from public, anon, aut
 grant execute on function public.enqueue_feeding_reminders() to service_role;
 
 -- ===========================================================================
--- 5. Hatch alerts: daily while an egg is due, one message per member
+-- 5. Hatch alerts: daily while an egg is due, weekly otherwise
 -- ===========================================================================
+-- One row per egg, each naming only its own egg in metadata.egg_id. The
+-- app's own hatch check (src/components/breeding/HatchAlertSystem.jsx)
+-- and the member insert guard (guard_notification_insert) both decide
+-- "already alerted" from metadata.egg_id alone. A single row covering
+-- several eggs would leave eggs 2 and up looking unalerted, so the app
+-- would send its own push and email for each of them on the same day.
+-- Grouping a clutch into one message waits until the app also reads a
+-- list of eggs.
 
 create or replace function public.enqueue_hatch_alerts()
  returns integer
@@ -486,78 +495,45 @@ begin
          and (current_date - e.lay_date) >= coalesce(p.hatch_alert_days, 60)
          and current_date <= coalesce(e.hatch_date_expected + 30, e.lay_date + 150)
          and public.email_has_login(e.created_by)
-    ),
-    ready as (
-      select o.*
-        from eggs_open o
-       where not exists (
-         select 1 from public.notifications n
-          where n.user_email = o.created_by
-            and n.type = 'hatch_alert'
-            and (n.metadata ->> 'egg_id' = o.id or coalesce(n.metadata -> 'egg_ids', '[]'::jsonb) ? o.id)
-            and n.created_date > case when o.daily then current_date::timestamptz
-                                      else now() - interval '7 days' end
-       )
     )
-    select x.created_by,
-           array_agg(x.id order by x.hatch_date_expected nulls last, x.lay_date) as ids,
-           count(*) as n,
-           count(*) filter (where x.hatch_date_expected >= current_date) as due_ahead,
-           count(*) filter (where x.hatch_date_expected < current_date) as past_date,
-           min(x.hatch_date_expected - current_date) filter (where x.hatch_date_expected >= current_date) as soonest,
-           (array_agg(x.lay_date order by x.hatch_date_expected nulls last, x.lay_date))[1] as lay_date,
-           (array_agg(x.hatch_date_expected order by x.hatch_date_expected nulls last, x.lay_date))[1] as hatch_date_expected
-      from ready x
+    select o.*
+      from eggs_open o
      where not exists (
-       -- One hatch reminder a member a day from this job.
+       -- Any hatch alert for this egg, from this job or from the app,
+       -- since the start of today (daily) or in the last 7 days (weekly).
        select 1 from public.notifications n
-        where n.user_email = x.created_by
+        where n.user_email = o.created_by
           and n.type = 'hatch_alert'
-          and n.metadata ->> 'source' = 'cron'
+          and n.metadata ->> 'egg_id' = o.id
           and coalesce(n.metadata ->> 'kind', '') <> 'status_check'
-          and n.created_date >= current_date
+          and n.created_date > case when o.daily then current_date::timestamptz
+                                    else now() - interval '7 days' end
      )
-     group by x.created_by
+     order by o.created_by, o.hatch_date_expected nulls last, o.lay_date
   loop
-    if r.n = 1 then
-      v_days_incubating := current_date - r.lay_date;
-      v_days_to_expected := case when r.hatch_date_expected is null then null
-                                 else r.hatch_date_expected - current_date end;
-      v_body := case
-        when v_days_to_expected is not null and v_days_to_expected >= 0 then
-          format('An egg in your incubator is due to hatch in %s day%s (incubating for %s days). Time to check on it.',
-                 v_days_to_expected, case when v_days_to_expected = 1 then '' else 's' end, v_days_incubating)
-        when v_days_to_expected is not null then
-          format('An egg in your incubator is %s day%s past its expected hatch date. Check on it as soon as you can.',
-                 abs(v_days_to_expected), case when abs(v_days_to_expected) = 1 then '' else 's' end)
-        else
-          format('An egg has been incubating for %s days, within the hatch window.', v_days_incubating)
-      end;
-    else
-      v_body := format('%s eggs in your incubator are in their hatch window%s. Time to check on them.',
-        r.n,
-        case
-          when r.due_ahead > 0 and r.past_date > 0 then
-            format(': %s not yet at the expected date and %s past it', r.due_ahead, r.past_date)
-          when r.due_ahead > 0 then
-            format(', the next one due in %s day%s', r.soonest, case when r.soonest = 1 then '' else 's' end)
-          when r.past_date > 0 then
-            format(', %s past the expected date', r.past_date)
-          else ''
-        end);
-    end if;
+    v_days_incubating := current_date - r.lay_date;
+    v_days_to_expected := case when r.hatch_date_expected is null then null
+                               else r.hatch_date_expected - current_date end;
+    v_body := case
+      when v_days_to_expected is not null and v_days_to_expected >= 0 then
+        format('An egg in your incubator is due to hatch in %s day%s (incubating for %s days). Time to check on it.',
+               v_days_to_expected, case when v_days_to_expected = 1 then '' else 's' end, v_days_incubating)
+      when v_days_to_expected is not null then
+        format('An egg in your incubator is %s day%s past its expected hatch date. Check on it as soon as you can.',
+               abs(v_days_to_expected), case when abs(v_days_to_expected) = 1 then '' else 's' end)
+      else
+        format('An egg has been incubating for %s days, within the hatch window.', v_days_incubating)
+    end;
 
     insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
     values (
       r.created_by, 'hatch_alert', v_body, '/Breeding?tab=hatchery',
       jsonb_build_object(
-        -- egg_id stays for the app's own hatch check, which reads it.
-        'egg_id', r.ids[1],
-        'egg_ids', to_jsonb(r.ids),
-        'count', r.n,
+        'egg_id', r.id,
         'lay_date', r.lay_date,
         'hatch_date_expected', r.hatch_date_expected,
-        'days_incubating', current_date - r.lay_date,
+        'days_incubating', v_days_incubating,
+        'cadence', case when r.daily then 'daily' else 'weekly' end,
         'source', 'cron'
       ),
       false, r.created_by

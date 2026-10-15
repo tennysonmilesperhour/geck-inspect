@@ -22,10 +22,11 @@ const mocks = vi.hoisted(() => ({
   removeQueued: vi.fn(),
   undoFeedings: vi.fn(async () => {}),
   geckos: [],
+  me: null,
 }));
 
 vi.mock('@/api/appClient', () => ({
-  api: { auth: { me: async () => ({ email: 'keeper@example.test' }), redirectToLogin: vi.fn() } },
+  api: { auth: { me: () => mocks.me(), redirectToLogin: vi.fn() } },
 }));
 vi.mock('@/lib/fieldModeData', () => ({
   fieldModeQueryKey: (email) => ['field-mode', email || null],
@@ -37,7 +38,7 @@ vi.mock('@/lib/offlineSync', () => ({
 }));
 vi.mock('@/lib/offlineQueue', () => ({ removeQueued: (...args) => mocks.removeQueued(...args) }));
 vi.mock('@/lib/husbandryLog', () => ({
-  isAuthFailure: () => false,
+  isAuthFailure: (error) => error?.status === 401,
   markGroupFed: vi.fn(),
   undoFeedings: (...args) => mocks.undoFeedings(...args),
 }));
@@ -93,6 +94,7 @@ beforeEach(() => {
     { id: 'g1', name: 'Mango', feeding_group_id: 'grp', weight_grams: 16 },
     { id: 'g2', name: 'Kiwi', feeding_group_id: null, weight_grams: null },
   ];
+  mocks.me = async () => ({ email: 'keeper@example.test' });
   mocks.save.mockImplementation(async (data) => ({ result: { records: [{ id: 'r1' }], advanced: [] }, queued: null, data }));
   window.history.state = { idx: 0 };
 });
@@ -162,6 +164,17 @@ describe('the one-tap log a reminder opens', () => {
   it('says so when the gecko is gone', async () => {
     const tree = await open('/log?type=feeding&gecko=gone');
     expect(textOf(tree.root)).toContain('no longer in your collection');
+    await act(async () => tree.unmount());
+  });
+
+  it('an expired sign-in sends the member back to this same log afterwards', async () => {
+    mocks.me = async () => { throw Object.assign(new Error('JWT expired'), { status: 401 }); };
+    const url = '/log?type=weight&gecko=g2&from=/MyGeckos';
+    const tree = await open(url);
+    expect(textOf(tree.root)).toContain('Your sign-in expired');
+    const link = tree.root.findAll((n) => n.props && typeof n.props.to === 'string' && n.props.to.startsWith('/AuthPortal'));
+    expect(link.length).toBeGreaterThan(0);
+    expect(link[0].props.to).toBe(`/AuthPortal?redirect=${encodeURIComponent(url)}`);
     await act(async () => tree.unmount());
   });
 });

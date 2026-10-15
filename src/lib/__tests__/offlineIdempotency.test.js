@@ -68,6 +68,7 @@ import {
   createCareRecordOnce,
   isClientRequestId,
   isDuplicateRequestError,
+  isMissingRequestIdColumnError,
   newClientRequestId,
 } from '../careLogOnce';
 import {
@@ -158,6 +159,39 @@ describe('createCareRecordOnce', () => {
     await expect(createCareRecordOnce(client, { animal_id: 'g1', client_request_id: newClientRequestId() })).rejects.toMatchObject({ code: '42501' });
     const saved = await createCareRecordOnce(client, { animal_id: 'g1', client_request_id: 'not-a-uuid' });
     expect(saved).not.toHaveProperty('client_request_id');
+  });
+
+  // If the app ships before the migration that adds the column, PostgREST
+  // answers PGRST204. The log must still be saved, not refused or dropped.
+  it('saves without the id when the database does not know the column yet', async () => {
+    const client = db.table('feeding', 'feeding_records');
+    const missing = {
+      code: 'PGRST204',
+      message: "Could not find the 'client_request_id' column of 'feeding_records' in the schema cache",
+    };
+    expect(isMissingRequestIdColumnError(missing)).toBe(true);
+    expect(isMissingRequestIdColumnError({ code: 'PGRST204', message: "Could not find the 'notes' column" })).toBe(false);
+    expect(isMissingRequestIdColumnError({ code: '23505', message: 'client_request_id' })).toBe(false);
+
+    db.state.failNext = missing;
+    const saved = await createCareRecordOnce(client, { animal_id: 'g1', accepted: true, client_request_id: newClientRequestId() });
+    expect(saved).toMatchObject({ animal_id: 'g1', accepted: true });
+    expect(db.tables.feeding).toHaveLength(1);
+    expect(db.tables.feeding[0]).not.toHaveProperty('client_request_id');
+  });
+
+  it('a queued log replayed before the column exists is saved, not dropped', async () => {
+    db.state.failNext = {
+      code: 'PGRST204',
+      message: "Could not find the 'client_request_id' column of 'weight_records' in the schema cache",
+    };
+    await executeQueuedWrite({
+      entity: 'WeightRecord',
+      op: 'create',
+      data: { gecko_id: 'g1', weight_grams: 21, record_date: '2026-10-16', client_request_id: newClientRequestId() },
+    });
+    expect(db.tables.weight).toHaveLength(1);
+    expect(db.tables.weight[0]).toMatchObject({ gecko_id: 'g1', weight_grams: 21 });
   });
 });
 

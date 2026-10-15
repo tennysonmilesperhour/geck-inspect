@@ -48,6 +48,18 @@ export function isDuplicateRequestError(error) {
 }
 
 /**
+ * True when PostgREST refused a save because it does not know the
+ * client_request_id column yet (error PGRST204). That happens only if the
+ * app reaches members before the migration that adds the column has run.
+ * Such an error is not a network error, so without care a live log would
+ * show "Not saved" and the offline queue would drop a queued log.
+ */
+export function isMissingRequestIdColumnError(error) {
+  if (!error || String(error.code) !== 'PGRST204') return false;
+  return /client_request_id/.test(`${error.message || ''} ${error.details || ''}`);
+}
+
+/**
  * Create one care record with its client request id. If the database says
  * that log is already saved, return the saved row instead of failing (or,
  * when the member cannot read it back, what was sent, marked duplicate).
@@ -62,6 +74,13 @@ export async function createCareRecordOnce(client, record) {
   try {
     return await client.create(row);
   } catch (error) {
+    if (requestId && isMissingRequestIdColumnError(error)) {
+      // The database does not have the column yet: save the log the old
+      // way rather than lose it. It is then not protected against a
+      // double save, which is how every log behaved before.
+      const { client_request_id: _unused, ...plain } = row;
+      return client.create(plain);
+    }
     if (!requestId || !isDuplicateRequestError(error)) throw error;
     const rows = await Promise.resolve(client.filter({ client_request_id: requestId })).catch(() => []);
     return (Array.isArray(rows) && rows[0]) || { ...row, duplicate: true };

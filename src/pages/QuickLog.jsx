@@ -323,8 +323,12 @@ export default function QuickLog() {
         <p className="text-lg text-slate-300 mb-5">
           {sessionExpired ? 'Your sign-in expired. Sign in again to log this.' : 'Sign in to log this.'}
         </p>
-        <Button onClick={() => api.auth.redirectToLogin()} className="min-h-12 px-6 bg-emerald-600 hover:bg-emerald-700">
-          <LogIn className="w-5 h-5 mr-2" /> Sign in
+        {/* Come back to this same log after signing in: a reminder tapped
+            with an expired session should still end on the form it opened. */}
+        <Button asChild className="min-h-12 px-6 bg-emerald-600 hover:bg-emerald-700">
+          <Link to={`/AuthPortal?redirect=${encodeURIComponent(`${location.pathname}${location.search}`)}`}>
+            <LogIn className="w-5 h-5 mr-2" /> Sign in
+          </Link>
         </Button>
       </div>
     );

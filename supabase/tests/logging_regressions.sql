@@ -396,7 +396,9 @@ end
 $feed$;
 
 -- ---------------------------------------------------------------------------
--- 8. Hatch windows: daily while due, weekly otherwise, one message a day.
+-- 8. Hatch windows: daily while due, weekly otherwise, one row per egg so
+--    the app's own hatch check (which reads metadata.egg_id only) never
+--    adds a second alert for an egg the server already covered.
 -- ---------------------------------------------------------------------------
 do $hatch$
 declare
@@ -405,41 +407,96 @@ declare
   s text := (select v from _t where k = 's');
   n record;
   v_rows integer;
+  v_ids jsonb;
 begin
   delete from public.notifications where user_email in (a, l);
   perform public.enqueue_hatch_alerts();
   select count(*) into v_rows from public.notifications where user_email = l;
   if v_rows <> 0 then raise exception 'FAIL: a hatch alert was made for an address with no login'; end if;
 
-  select * into n from public.notifications where user_email = a and type = 'hatch_alert';
-  if n is null then raise exception 'FAIL: no hatch alert'; end if;
-  if n.metadata->'egg_ids' <> jsonb_build_array('lg-e1-' || s, 'lg-e2-' || s) then
-    raise exception 'FAIL: hatch eggs %', n.metadata->'egg_ids';
+  -- One row for each of the two eggs, each naming only its own egg.
+  select jsonb_agg(metadata->>'egg_id' order by metadata->>'egg_id') into v_ids
+    from public.notifications where user_email = a and type = 'hatch_alert';
+  if v_ids is distinct from jsonb_build_array('lg-e1-' || s, 'lg-e2-' || s) then
+    raise exception 'FAIL: hatch rows name %', v_ids;
   end if;
-  if n.link <> '/Breeding?tab=hatchery' then raise exception 'FAIL: hatch link %', n.link; end if;
-  -- House style: no em dash (U+2014) or en dash (U+2013) in member copy.
-  if strpos(n.content, chr(8212)) > 0 or strpos(n.content, chr(8211)) > 0 then
-    raise exception 'FAIL: dash in hatch text';
-  end if;
+  for n in select * from public.notifications where user_email = a and type = 'hatch_alert' loop
+    if n.link <> '/Breeding?tab=hatchery' then raise exception 'FAIL: hatch link %', n.link; end if;
+    if n.metadata ? 'egg_ids' then raise exception 'FAIL: grouped hatch row %', n.metadata; end if;
+    -- House style: no em dash (U+2014) or en dash (U+2013) in member copy.
+    if strpos(n.content, chr(8212)) > 0 or strpos(n.content, chr(8211)) > 0 then
+      raise exception 'FAIL: dash in hatch text';
+    end if;
+  end loop;
+
+  -- The app's check, as HatchAlertSystem.jsx does it: eggs named by
+  -- metadata.egg_id in the last 7 days count as already alerted. Both
+  -- in-window eggs must be covered, so the app adds nothing of its own.
+  select count(*) into v_rows
+    from public.eggs e
+   where e.created_by = a and e.status = 'Incubating'
+     and e.id in ('lg-e1-' || s, 'lg-e2-' || s)
+     and not exists (select 1 from public.notifications x
+                      where x.user_email = a and x.type = 'hatch_alert'
+                        and x.metadata->>'egg_id' = e.id
+                        and x.created_date > now() - interval '7 days');
+  if v_rows <> 0 then raise exception 'FAIL: % eggs look unalerted to the app', v_rows; end if;
 
   perform public.enqueue_hatch_alerts();
   select count(*) into v_rows from public.notifications where user_email = a and type = 'hatch_alert';
-  if v_rows <> 1 then raise exception 'FAIL: % hatch alerts after a second run the same day', v_rows; end if;
+  if v_rows <> 2 then raise exception 'FAIL: % hatch alerts after a second run the same day', v_rows; end if;
 
   -- The next day: the due egg again, the other not until a week has passed.
   update public.notifications set created_date = created_date - interval '1 day' where user_email = a;
   perform public.enqueue_hatch_alerts();
+  select count(*) into v_rows from public.notifications
+   where user_email = a and type = 'hatch_alert' and created_date >= current_date;
+  if v_rows <> 1 then raise exception 'FAIL: % hatch alerts the next day', v_rows; end if;
   select * into n from public.notifications
    where user_email = a and type = 'hatch_alert' and created_date >= current_date;
-  if n is null or n.metadata->'egg_ids' <> jsonb_build_array('lg-e1-' || s) then
-    raise exception 'FAIL: next-day hatch alert %', n.metadata->'egg_ids';
+  if n.metadata->>'egg_id' <> 'lg-e1-' || s or n.metadata->>'cadence' <> 'daily' then
+    raise exception 'FAIL: next-day hatch alert %', n.metadata;
   end if;
   if n.content not like 'An egg in your incubator is due to hatch in 3 days%' then
     raise exception 'FAIL: single-egg text %', n.content;
   end if;
+
+  -- Eight days on, the weekly egg is due again.
+  update public.notifications set created_date = created_date - interval '7 days' where user_email = a;
+  perform public.enqueue_hatch_alerts();
+  select jsonb_agg(metadata->>'egg_id' order by metadata->>'egg_id') into v_ids
+    from public.notifications where user_email = a and type = 'hatch_alert' and created_date >= current_date;
+  if v_ids is distinct from jsonb_build_array('lg-e1-' || s, 'lg-e2-' || s) then
+    raise exception 'FAIL: after a week the job named %', v_ids;
+  end if;
   raise notice 'PASS hatch alerts';
 end
 $hatch$;
+
+-- The member's own copy (what HatchAlertSystem.jsx would insert) for an
+-- egg the server alerted today is dropped by the insert guard, so even a
+-- stale tab cannot double a server alert.
+select set_config('request.jwt.claims',
+  json_build_object('sub', (select v from _t where k = 'a_uid'), 'email', (select v from _t where k = 'a'), 'role', 'authenticated')::text, true);
+set local role authenticated;
+do $hatch_app$
+declare
+  a text := auth.email();
+  s text := (select v from _t where k = 's');
+  v_before integer;
+  v_after integer;
+begin
+  select count(*) into v_before from public.notifications where user_email = a and type = 'hatch_alert';
+  insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
+  values (a, 'hatch_alert', 'An egg has been incubating for 61 days, within the hatch window.', '/Breeding',
+          jsonb_build_object('egg_id', 'lg-e2-' || s), false, a);
+  select count(*) into v_after from public.notifications where user_email = a and type = 'hatch_alert';
+  if v_after <> v_before then raise exception 'FAIL: app hatch alert doubled a server alert'; end if;
+  raise notice 'PASS app hatch alert does not double the server one';
+end
+$hatch_app$;
+reset role;
+select set_config('request.jwt.claims', '', true);
 
 -- ---------------------------------------------------------------------------
 -- 9. Weekly digest: nothing for an address with no login.
