@@ -115,6 +115,51 @@ describe('send-collection-invite uses names from the database', () => {
     expect(mail.text).not.toContain('Verify your account here');
   });
 
+  it('finds the invite by the token in the link and mails a rebuilt link', async () => {
+    const memberCalls = [];
+    const db = fakeSupabase((call) => {
+      if (call.table === 'collections' && filterValue(call, 'ilike', 'owner_email')) return { data: [{ id: 'c1' }, { id: 'c2' }], error: null };
+      if (call.table === 'collection_members') {
+        memberCalls.push(call);
+        return filterValue(call, 'eq', 'invite_token') === 'tok-c2'
+          ? { data: [{ id: 'm2', collection_id: 'c2', role: 'editor' }], error: null }
+          : { data: [], error: null };
+      }
+      if (call.table === 'collections') return { data: { name: filterValue(call, 'eq', 'id') === 'c2' ? 'Harlequin holdbacks' : 'Wrong one' }, error: null };
+      if (call.table === 'profiles') return { data: { full_name: 'Real Keeper' }, error: null };
+      return undefined;
+    }, { user: USER });
+    const net = fakeFetch(() => ({ body: { id: 'email-2' } }));
+    const fn = loadFunction('send-collection-invite', {
+      env: ENV,
+      globals: { createClient: () => db.client, fetch: net.fetch },
+    });
+    const res = await fn.handle(postJson('https://x.test/', {
+      to_email: 'friend@example.com',
+      inviter_email: USER.email,
+      role: 'viewer',
+      invite_url: 'https://www.geckinspect.com/collection-invite/tok-c2?next=https://evil.test',
+    }, { authorization: 'Bearer user-jwt' }));
+    expect(await res.json()).toMatchObject({ delivered: 1 });
+    expect(filterValue(memberCalls[0], 'eq', 'invite_token')).toBe('tok-c2');
+    const mail = net.requests[0].body;
+    expect(mail.html).toContain('Harlequin holdbacks');
+    expect(mail.html).toContain('https://geckinspect.com/collection-invite/tok-c2');
+    expect(mail.html).not.toContain('evil.test');
+    expect(mail.text).toContain('editor');
+  });
+
+  it('refuses a link with no invite token', async () => {
+    const fn = loadFunction('send-collection-invite', { env: ENV });
+    const res = await fn.handle(postJson('https://x.test/', {
+      to_email: 'friend@example.com',
+      inviter_email: USER.email,
+      role: 'viewer',
+      invite_url: 'https://geckinspect.com/collection-invite/',
+    }, { authorization: 'Bearer user-jwt' }));
+    expect(res.status).toBe(400);
+  });
+
   it('falls back to the verified sign-in email when the profile has no name', () => {
     const { context } = loadFunction('send-collection-invite', { env: ENV });
     expect(context.inviterDisplayName(null, 'a@b.c')).toBe('a@b.c');

@@ -66,6 +66,23 @@ const ALLOWED_INVITE_PREFIXES = [
   "https://www.geckinspect.com/collection-invite/",
 ];
 
+// The invite token is the last part of the link. Anything after it (a
+// query string, a fragment, a trailing slash) is dropped, and a token with
+// a slash in it is refused, so the link mailed out is always rebuilt from
+// the token alone.
+function inviteTokenFromUrl(url: string): string {
+  const prefix = ALLOWED_INVITE_PREFIXES.find((p) => url.startsWith(p));
+  if (!prefix) return "";
+  const raw = url.slice(prefix.length).split(/[?#]/)[0].replace(/\/+$/, "");
+  let token = "";
+  try {
+    token = decodeURIComponent(raw);
+  } catch {
+    return "";
+  }
+  return token && !token.includes("/") ? token : "";
+}
+
 function bearerToken(req: Request): string {
   const auth = req.headers.get("authorization") || "";
   return auth.startsWith("Bearer ") ? auth.slice(7).trim() : auth.trim();
@@ -409,6 +426,10 @@ serve(async (req) => {
   if (!ALLOWED_INVITE_PREFIXES.some((p) => inviteUrl.startsWith(p))) {
     return json({ error: "invite_url must point at geckinspect.com/collection-invite" }, 400);
   }
+  const inviteToken = inviteTokenFromUrl(inviteUrl);
+  if (!inviteToken) {
+    return json({ error: "invite_url has no invite token" }, 400);
+  }
 
   // Who is calling? The bearer must be a real user session and that user
   // must be the inviter named in the payload.
@@ -430,8 +451,11 @@ serve(async (req) => {
   }
 
   // Does the caller own a collection with a pending invite for this
-  // address? The pending row is created by the client under RLS before
-  // this function is called, so its absence means the request is forged.
+  // address, carrying the token in the link? The pending row is created by
+  // the client under RLS before this function is called, so its absence
+  // means the request is forged. Matching the token (not just the address)
+  // picks the right collection when one address has pending invites to
+  // several of the caller's collections.
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
@@ -449,9 +473,10 @@ serve(async (req) => {
   }
   const { data: pending, error: pendingErr } = await admin
     .from("collection_members")
-    .select("id, collection_id")
+    .select("id, collection_id, role")
     .in("collection_id", ownedIds)
     .ilike("member_email", likeLiteral(toEmail))
+    .eq("invite_token", inviteToken)
     .eq("status", "pending")
     .limit(1);
   if (pendingErr) {
@@ -481,10 +506,13 @@ serve(async (req) => {
   const inviterDisplay = inviterDisplayName(inviterProfile, callerEmail);
   const collectionName = String(collection?.name || "").trim() || "a shared collection";
   const subject = `${inviterDisplay} invited you to a crested gecko collection`;
+  const link = `${ALLOWED_INVITE_PREFIXES[0]}${encodeURIComponent(inviteToken)}`;
+  // The role shown is the one stored on the invite, not the one in the request.
+  const invitedRole = pending[0].role === "editor" ? "editor" : "viewer";
 
   try {
-    const html = renderHtml({ inviterDisplay, collectionName, role, inviteUrl });
-    const text = renderText({ inviterDisplay, collectionName, role, inviteUrl });
+    const html = renderHtml({ inviterDisplay, collectionName, role: invitedRole, inviteUrl: link });
+    const text = renderText({ inviterDisplay, collectionName, role: invitedRole, inviteUrl: link });
     const result = await sendEmail(toEmail, subject, text, html);
     return json({ delivered: 1, id: result?.id });
   } catch (err) {
