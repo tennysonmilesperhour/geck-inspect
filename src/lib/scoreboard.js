@@ -199,3 +199,64 @@ export function percent(part, whole) {
   if (!whole) return 'n/a';
   return `${Math.round((Number(part) / Number(whole)) * 100)}%`;
 }
+
+// The email delivery table, in a fixed column order. admin_scoreboard()
+// returns each row as jsonb, which keeps its keys in its own order (short
+// keys first), so the table cannot take its columns from the first row.
+export const EMAIL_DELIVERY_COLUMNS = [
+  { key: 'week', label: 'Week of' },
+  { key: 'email_type', label: 'Email' },
+  { key: 'sent', label: 'Sent' },
+  { key: 'delivered', label: 'Delivered' },
+  { key: 'opened', label: 'Opened' },
+  { key: 'open_rate', label: 'Opened of delivered' },
+  { key: 'clicked', label: 'Clicked' },
+  { key: 'bounced', label: 'Bounced' },
+  { key: 'complained', label: 'Marked spam' },
+];
+
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** "12 Oct 2026" for 2026-10-12; anything else as given. */
+export function weekLabel(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso ?? ''));
+  if (!m) return String(iso ?? '');
+  const month = MONTHS_SHORT[Number(m[2]) - 1];
+  return month ? `${Number(m[3])} ${month} ${m[1]}` : String(iso);
+}
+
+/**
+ * The email_delivery rows from admin_scoreboard(), newest week first
+ * (then by email type), each with the cells in EMAIL_DELIVERY_COLUMNS
+ * order ready to show. open_rate is opened of delivered.
+ */
+export function emailDeliveryTable(rows) {
+  const count = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  return (Array.isArray(rows) ? rows : [])
+    .filter((r) => r && typeof r === 'object')
+    .map((r) => ({
+      week: String(r.week ?? ''),
+      email_type: String(r.email_type ?? 'other'),
+      sent: count(r.sent),
+      delivered: count(r.delivered),
+      opened: count(r.opened),
+      clicked: count(r.clicked),
+      bounced: count(r.bounced),
+      complained: count(r.complained),
+    }))
+    .sort((a, b) => (a.week === b.week ? a.email_type.localeCompare(b.email_type) : a.week < b.week ? 1 : -1))
+    .map((r) => ({
+      ...r,
+      cells: {
+        week: weekLabel(r.week),
+        email_type: r.email_type.replace(/_/g, ' '),
+        sent: String(r.sent),
+        delivered: String(r.delivered),
+        opened: String(r.opened),
+        open_rate: r.delivered ? percent(r.opened, r.delivered) : '',
+        clicked: String(r.clicked),
+        bounced: String(r.bounced),
+        complained: String(r.complained),
+      },
+    }));
+}

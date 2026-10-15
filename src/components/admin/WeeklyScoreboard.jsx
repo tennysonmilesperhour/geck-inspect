@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabaseClient';
 import {
+  EMAIL_DELIVERY_COLUMNS,
   SCOREBOARD_CHECKPOINTS,
   SCOREBOARD_TARGETS,
   denverToday,
+  emailDeliveryTable,
   formatUsd,
   meetsTarget,
   nextCheckpoint,
@@ -306,8 +308,7 @@ function Targets({ targets, value, next, money }) {
 
 function EmailDelivery({ delivery, loading }) {
   if (loading) return null;
-  const rows = Array.isArray(delivery?.rows) ? delivery.rows : [];
-  const columns = rows.length ? Object.keys(rows[0]) : [];
+  const rows = emailDeliveryTable(delivery?.rows);
   return (
     <div>
       <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Email delivery</p>
@@ -324,14 +325,14 @@ function EmailDelivery({ delivery, loading }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-[11px] uppercase tracking-wider text-slate-500 text-left">
-                {columns.map((c) => <th key={c} className="py-1.5 pr-3 font-medium">{c.replace(/_/g, ' ')}</th>)}
+                {EMAIL_DELIVERY_COLUMNS.map((c) => <th key={c.key} className="py-1.5 pr-3 font-medium">{c.label}</th>)}
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} className="border-t border-slate-800 text-slate-200">
-                  {columns.map((c) => (
-                    <td key={c} className="py-1.5 pr-3">{r[c] === null || r[c] === undefined ? '' : String(r[c])}</td>
+                <tr key={`${r.week}|${r.email_type}|${i}`} className="border-t border-slate-800 text-slate-200">
+                  {EMAIL_DELIVERY_COLUMNS.map((c) => (
+                    <td key={c.key} className="py-1.5 pr-3 whitespace-nowrap">{r.cells[c.key]}</td>
                   ))}
                 </tr>
               ))}

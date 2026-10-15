@@ -223,6 +223,10 @@ describe('the public share page (api/morph-share.js)', () => {
     expect(html).toContain(`/AuthPortal?mode=signup&amp;ms=${ID}`);
     expect(html).not.toMatch(DASHES);
     expect(html).not.toContain('<script');
+    // The same icons as index.html: the site has no /favicon.ico.
+    expect(html).toContain('<link rel="icon" type="image/png" href="/icon-192.png">');
+    expect(html).toContain('<link rel="apple-touch-icon" href="/icon-192.png">');
+    expect(html).not.toContain('favicon.ico');
     // Read through the public function with the anon key, counting a
     // person's view with the share page's own key.
     expect(calls[0].url).toBe('https://p.supabase.co/rest/v1/rpc/get_morph_id_share');

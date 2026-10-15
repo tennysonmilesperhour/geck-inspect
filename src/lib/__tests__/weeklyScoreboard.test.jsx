@@ -104,11 +104,25 @@ it('works without the email delivery view', async () => {
 });
 
 it('lists email delivery rows when the view exists', async () => {
-  state.rpc = Promise.resolve({ data: { ...BOARD, email_delivery: { available: true, rows: [{ category: 'reminder', sent: 12, bounced: 1 }] } }, error: null });
+  // admin_scoreboard() returns jsonb rows, whose keys come back shortest
+  // first, not in the view's column order.
+  const rows = [
+    { sent: 9, week: '2026-09-28', opened: 3, bounced: 0, clicked: 1, delivered: 9, complained: 0, email_type: 'weighin_reminder' },
+    { sent: 12, week: '2026-10-12', opened: 5, bounced: 1, clicked: 2, delivered: 10, complained: 0, email_type: 'weighin_reminder' },
+    { sent: 4, week: '2026-10-12', opened: 0, bounced: 0, clicked: 0, delivered: 0, complained: 1, email_type: 'lifecycle_day0' },
+  ];
+  state.rpc = Promise.resolve({ data: { ...BOARD, email_delivery: { available: true, rows } }, error: null });
   await act(async () => { tree = create(<WeeklyScoreboard />); });
-  const t = text();
-  expect(t).toContain('reminder');
-  expect(t).toContain('bounced');
+  const table = tree.root.findByType('table');
+  const cellsOf = (tr) => tr.findAll((n) => n.type === 'th' || n.type === 'td').map((c) => c.children.join(''));
+  const [head, ...body] = table.findAll((n) => n.type === 'tr').map(cellsOf);
+  expect(head).toEqual(['Week of', 'Email', 'Sent', 'Delivered', 'Opened', 'Opened of delivered', 'Clicked', 'Bounced', 'Marked spam']);
+  // Newest week first, then by email type.
+  expect(body).toEqual([
+    ['12 Oct 2026', 'lifecycle day0', '4', '0', '0', '', '0', '0', '1'],
+    ['12 Oct 2026', 'weighin reminder', '12', '10', '5', '50%', '2', '1', '0'],
+    ['28 Sep 2026', 'weighin reminder', '9', '9', '3', '33%', '1', '0', '0'],
+  ]);
 });
 
 it('explains a missing migration instead of failing', async () => {
