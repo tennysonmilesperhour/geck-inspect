@@ -15,9 +15,11 @@
 --    copy, and the app treats that refusal as "already saved".
 --
 -- 2. Reminder defaults by life stage (item 15).
---    A gecko added from 16 Oct 2026 on gets reminders without the member
---    opening Settings, whichever way it was added (Quick Add, the full
---    form, a spreadsheet import, a hatchling, Morph ID):
+--    A gecko added on or after the day this file runs (stored once in
+--    app_settings 'care_reminder_defaults_from', so the date is the real
+--    release day even if the release slips) gets reminders without the
+--    member opening Settings, whichever way it was added (Quick Add, the
+--    full form, a spreadsheet import, a hatchling, Morph ID):
 --      * weigh-ins: every 14 days while growing (under 15 g or under 12
 --        months, the care guide's hatchling and juvenile stages), every 21
 --        days as a sub-adult (under 35 g or under 18 months) and every 30
@@ -27,25 +29,35 @@
 --      * feeding: every 3 days from its last feeding, for a gecko that is
 --        not in a feeding group (geckos in a group keep the group's
 --        schedule, as before).
---      * eggs: once a day from 7 days before the expected hatch date to 14
---        days after it, and weekly otherwise (as before). Still one
---        reminder per egg, so the app's own hatch check sees each one.
+--      * eggs: one hatch alert a day per member while any egg is within 7
+--        days before to 14 days after its expected hatch date, and one
+--        every 6 days otherwise. The alert names the egg due soonest and
+--        counts the rest ("3 eggs in your incubator ..."), so a full
+--        incubator sends one email, not one per egg. Each egg still gets
+--        its own row at least every 6 days, so the app's hatch check and
+--        the insert guard (both read metadata.egg_id) see every egg as
+--        alerted; the rows that are not the day's alert are marked quiet,
+--        already read, and are not sent (notify_dispatch_on_insert below).
 --    The member can still change or switch off each one: per gecko on its
 --    record (profiles.extra_data.care_reminders.weigh_in.geckos.<id> and
 --    .feeding.geckos.<id>, with "on": false), or for the whole account in
---    Settings. Geckos added before 16 Oct keep what they had: the
+--    Settings. Geckos added before that day keep what they had: the
 --    per-gecko switch and the weekly "not weighed in 30 days" line.
 --
 -- 3. One-tap log links (item 15). Weigh-in and feeding reminders link to
 --    /log?type=weight|feeding&gecko=<ids>&group=<ids>, which opens a short
---    form for exactly those geckos. Hatch reminders open the hatchery tab.
+--    form for exactly those geckos, from the day after this file runs.
+--    On the day itself they keep the old pages: a tab opened before the
+--    release has no /log page and would show "Page not found".
+--    Hatch reminders open the hatchery tab.
 --
 -- 4. No reminders or digests for addresses that cannot sign in (item 15).
 --    About 83 of 147 profiles were imported from the old platform and have
 --    no login. In the 30 days to 15 Oct, 76 of 135 weekly digests and 12
 --    of 31 weigh-in reminders went to them. Every reminder and digest job
---    below now leaves those addresses out, so no row is created at all
---    (public.email_has_login, migration 20261015140100).
+--    below (task and season planner reminders included) now leaves those
+--    addresses out, so no row is created at all (public.email_has_login,
+--    migration 20261015140100).
 --
 -- Needs 20261015140100_email_has_login.sql first (it is listed before
 -- this file).
@@ -80,9 +92,26 @@ create unique index if not exists shed_records_client_request_id_key
 -- ===========================================================================
 
 -- The day the life-stage defaults start: geckos created on or after it
--- get reminders without a stored setting. The app reads the same date
--- (CARE_DEFAULTS_FROM in src/lib/careReminders.js); a test checks both.
-create or replace function public.care_reminder_defaults_from()
+-- get reminders without a stored setting. It is the day this file first
+-- runs in production (UTC), written once: "on conflict do nothing" keeps
+-- the first value when the file runs again. A fixed date in the file would
+-- be wrong whenever the release moved, either leaving out geckos added on
+-- release day or reminding geckos added in a tab opened before the
+-- release, which had no way to turn the reminder off. The row is public
+-- (is_public), so the app can read the same date.
+insert into public.app_settings (key, value, is_public, description)
+values (
+  'care_reminder_defaults_from',
+  to_jsonb(((now() at time zone 'utc')::date)::text),
+  true,
+  'Geckos added on or after this day (UTC) get weigh-in and feeding reminders by life stage without a stored choice, and reminders link to the one-tap log page from the next day. Written once by migration 20261015151100 on the day it ran.'
+)
+on conflict (key) do nothing;
+
+-- Only when the setting row above is missing. The app's own fallback
+-- (CARE_DEFAULTS_FROM in src/lib/careReminders.js) is the same date; a
+-- test checks both.
+create or replace function public.care_reminder_defaults_fallback()
 returns date
 language sql
 immutable
@@ -91,8 +120,49 @@ as $function$
   select date '2026-10-16';
 $function$;
 
+create or replace function public.care_reminder_defaults_from()
+returns date
+language plpgsql
+stable
+set search_path to ''
+as $function$
+declare
+  v_raw text;
+begin
+  select s.value #>> '{}' into v_raw
+    from public.app_settings s
+   where s.key = 'care_reminder_defaults_from';
+  -- Only a well-formed day is used, so a bad hand edit cannot stop the
+  -- reminder jobs.
+  if v_raw ~ '^\d{4}-\d{2}-\d{2}$' and pg_input_is_valid(v_raw, 'date') then
+    return v_raw::date;
+  end if;
+  return public.care_reminder_defaults_fallback();
+end;
+$function$;
+
+revoke all on function public.care_reminder_defaults_fallback() from public, anon, authenticated;
+grant execute on function public.care_reminder_defaults_fallback() to service_role;
 revoke all on function public.care_reminder_defaults_from() from public, anon, authenticated;
 grant execute on function public.care_reminder_defaults_from() to service_role;
+
+-- True from the day after the defaults start. The one-tap log page (/log)
+-- ships in the same release as this file, and members keep tabs open for
+-- hours: a tab opened before the release has no /log page and shows "Page
+-- not found" when a reminder is opened in it. So on release day the
+-- reminders keep linking to the pages every version has, and from the
+-- next day to /log.
+create or replace function public.care_log_links_live()
+returns boolean
+language sql
+stable
+set search_path to ''
+as $function$
+  select current_date > public.care_reminder_defaults_from();
+$function$;
+
+revoke all on function public.care_log_links_live() from public, anon, authenticated;
+grant execute on function public.care_log_links_live() to service_role;
 
 -- Days between weigh-ins for a crested gecko, from the care guide's life
 -- stages (src/data/care-guide.js, "Life Stages"):
@@ -128,7 +198,10 @@ grant execute on function public.weighin_interval_days(numeric, date, date) to s
 -- The one-tap log link for a reminder: /log?type=<type>&gecko=<ids>&group=<ids>.
 -- Only ids made of letters, digits, "_" and "-" (up to 64) go in, at most
 -- 10 of each, so the link always passes public.safe_internal_link. With
--- no usable id it falls back to the page that lists them.
+-- no usable id it falls back to the page that lists them, and so it does
+-- on release day (care_log_links_live above): feedings open Batch
+-- Husbandry, and a weigh-in for one gecko opens it in My Geckos, as the
+-- reminders did before.
 create or replace function public.care_log_link(
   p_type text,
   p_gecko_ids text[],
@@ -136,11 +209,13 @@ create or replace function public.care_log_link(
 )
 returns text
 language sql
-immutable
+stable
 set search_path to ''
 as $function$
   with g as (
-    select array_to_string((array_agg(x order by o))[1:10], ',') as ids
+    select array_to_string((array_agg(x order by o))[1:10], ',') as ids,
+           count(*) as n,
+           (array_agg(x order by o))[1] as first_id
       from unnest(coalesce(p_gecko_ids, '{}'::text[])) with ordinality as t(x, o)
      where x ~ '^[A-Za-z0-9_-]{1,64}$'
   ),
@@ -153,6 +228,10 @@ as $function$
     when p_type not in ('weight', 'feeding', 'shed') then '/MyGeckos'
     when coalesce(g.ids, '') = '' and coalesce(f.ids, '') = '' then
       case when p_type = 'feeding' then '/BatchHusbandry' else '/MyGeckos' end
+    when not public.care_log_links_live() then
+      case when p_type = 'feeding' then '/BatchHusbandry'
+           when g.n = 1 and coalesce(f.ids, '') = '' then '/MyGeckos?gecko=' || g.first_id
+           else '/MyGeckos' end
     else '/log?type=' || p_type
          || case when coalesce(g.ids, '') <> '' then '&gecko=' || g.ids else '' end
          || case when coalesce(f.ids, '') <> '' then '&group=' || f.ids else '' end
@@ -455,16 +534,31 @@ revoke all on function public.enqueue_feeding_reminders() from public, anon, aut
 grant execute on function public.enqueue_feeding_reminders() to service_role;
 
 -- ===========================================================================
--- 5. Hatch alerts: daily while an egg is due, weekly otherwise
+-- 5. Hatch alerts: one a day per member while an egg is due, every 6 days
+--    otherwise, and only the alert itself is sent
 -- ===========================================================================
--- One row per egg, each naming only its own egg in metadata.egg_id. The
--- app's own hatch check (src/components/breeding/HatchAlertSystem.jsx)
--- and the member insert guard (guard_notification_insert) both decide
--- "already alerted" from metadata.egg_id alone. A single row covering
--- several eggs would leave eggs 2 and up looking unalerted, so the app
--- would send its own push and email for each of them on the same day.
--- Grouping a clutch into one message waits until the app also reads a
--- list of eggs.
+-- A member with 22 eggs from one clutch used to get 22 emails and 22
+-- pushes in one go. Now each run sends a member at most one hatch alert:
+-- the row for the egg due soonest, whose words count the others ("3 eggs
+-- in your incubator are close to hatching. The first is due in 2 days.")
+-- and whose metadata.egg_ids lists them all.
+--
+-- The other eggs still need their own rows. The app's hatch check
+-- (src/components/breeding/HatchAlertSystem.jsx) and the member insert
+-- guard (guard_notification_insert) decide "already alerted" from
+-- metadata.egg_id, over the last 7 days. An egg with no row in that time
+-- looks unalerted, and the app then sends its own push and email for it.
+-- So every egg in its window gets a row at least every 6 days. Those rows
+-- carry metadata.quiet = true and is_read = true: the dispatcher below
+-- does not send them, and they do not add to the unread count.
+--
+-- When it sends:
+--   * any egg within 7 days before to 14 days after its expected hatch
+--     date: once a day;
+--   * otherwise: when an egg has gone 6 days without a row, and then every
+--     egg is refreshed together, so a member with clutches laid on
+--     different days still gets one email every 6 days, not one per clutch.
+-- Never twice in one day for the same member (a second run adds nothing).
 
 create or replace function public.enqueue_hatch_alerts()
  returns integer
@@ -473,19 +567,42 @@ create or replace function public.enqueue_hatch_alerts()
  set search_path to 'public'
 as $function$
 declare
+  m record;
   r record;
   v_count integer := 0;
+  v_i integer;
   v_days_incubating integer;
   v_days_to_expected integer;
   v_body text;
+  v_more integer;
 begin
-  for r in
+  for m in
     with eggs_open as (
       select e.id, e.created_by, e.lay_date, e.hatch_date_expected,
              -- Due: from 7 days before the expected hatch date to 14 days
-             -- after it. A reminder a day then; a week apart otherwise.
+             -- after it.
              (e.hatch_date_expected is not null
-              and current_date between e.hatch_date_expected - 7 and e.hatch_date_expected + 14) as daily
+              and current_date between e.hatch_date_expected - 7 and e.hatch_date_expected + 14) as daily,
+             -- No row for this egg (from this job or the app) for 6 days,
+             -- less an hour so a run a few seconds early still counts it.
+             -- The app and the guard look back 7 days, so a row every 6
+             -- keeps the egg covered without a gap.
+             not exists (
+               select 1 from public.notifications n
+                where n.user_email = e.created_by
+                  and n.type = 'hatch_alert'
+                  and n.metadata ->> 'egg_id' = e.id
+                  and coalesce(n.metadata ->> 'kind', '') <> 'status_check'
+                  and n.created_date > now() - interval '6 days' + interval '1 hour'
+             ) as stale,
+             not exists (
+               select 1 from public.notifications n
+                where n.user_email = e.created_by
+                  and n.type = 'hatch_alert'
+                  and n.metadata ->> 'egg_id' = e.id
+                  and coalesce(n.metadata ->> 'kind', '') <> 'status_check'
+                  and n.created_date >= current_date
+             ) as none_today
         from public.eggs e
         left join public.profiles p on p.email = e.created_by
        where e.status = 'Incubating'
@@ -496,54 +613,118 @@ begin
          and current_date <= coalesce(e.hatch_date_expected + 30, e.lay_date + 150)
          and public.email_has_login(e.created_by)
     )
-    select o.*
+    select o.created_by as email,
+           count(*)::int as n,
+           bool_or(o.daily) as has_daily,
+           bool_or(o.stale) as any_stale,
+           -- Soonest expected hatch first; eggs with no expected date last,
+           -- oldest first.
+           array_agg(o.id order by o.hatch_date_expected nulls last, o.lay_date, o.id) as ids,
+           array_agg(o.lay_date order by o.hatch_date_expected nulls last, o.lay_date, o.id) as lay_dates,
+           array_agg(o.hatch_date_expected order by o.hatch_date_expected nulls last, o.lay_date, o.id) as expected,
+           array_agg(o.daily order by o.hatch_date_expected nulls last, o.lay_date, o.id) as daily,
+           array_agg(o.stale order by o.hatch_date_expected nulls last, o.lay_date, o.id) as stale,
+           array_agg(o.none_today order by o.hatch_date_expected nulls last, o.lay_date, o.id) as none_today
       from eggs_open o
-     where not exists (
-       -- Any hatch alert for this egg, from this job or from the app,
-       -- since the start of today (daily) or in the last 7 days (weekly).
-       select 1 from public.notifications n
-        where n.user_email = o.created_by
-          and n.type = 'hatch_alert'
-          and n.metadata ->> 'egg_id' = o.id
-          and coalesce(n.metadata ->> 'kind', '') <> 'status_check'
-          and n.created_date > case when o.daily then current_date::timestamptz
-                                    else now() - interval '7 days' end
-     )
-     order by o.created_by, o.hatch_date_expected nulls last, o.lay_date
+     group by o.created_by
+     order by o.created_by
   loop
-    v_days_incubating := current_date - r.lay_date;
-    v_days_to_expected := case when r.hatch_date_expected is null then null
-                               else r.hatch_date_expected - current_date end;
+    -- At most one sent alert a day: a second run the same day, or a run
+    -- after this job already wrote today's alert, adds nothing.
+    if exists (
+      select 1 from public.notifications n
+       where n.user_email = m.email
+         and n.type = 'hatch_alert'
+         and n.metadata ->> 'source' = 'cron'
+         and coalesce(n.metadata ->> 'kind', '') <> 'status_check'
+         and coalesce(n.metadata ->> 'quiet', '') <> 'true'
+         and n.created_date >= current_date
+    ) then
+      continue;
+    end if;
+    if not (m.has_daily or m.any_stale) then
+      continue;
+    end if;
+
+    -- The alert: the egg due soonest, with the count of the others.
+    v_days_incubating := current_date - m.lay_dates[1];
+    v_days_to_expected := case when m.expected[1] is null then null
+                               else m.expected[1] - current_date end;
+    v_more := m.n - 1;
     v_body := case
-      when v_days_to_expected is not null and v_days_to_expected >= 0 then
+      when m.n = 1 and v_days_to_expected is not null and v_days_to_expected >= 0 then
         format('An egg in your incubator is due to hatch in %s day%s (incubating for %s days). Time to check on it.',
                v_days_to_expected, case when v_days_to_expected = 1 then '' else 's' end, v_days_incubating)
-      when v_days_to_expected is not null then
+      when m.n = 1 and v_days_to_expected is not null then
         format('An egg in your incubator is %s day%s past its expected hatch date. Check on it as soon as you can.',
                abs(v_days_to_expected), case when abs(v_days_to_expected) = 1 then '' else 's' end)
-      else
+      when m.n = 1 then
         format('An egg has been incubating for %s days, within the hatch window.', v_days_incubating)
+      when v_days_to_expected is not null and v_days_to_expected >= 0 then
+        format('%s eggs in your incubator are close to hatching. The first is due in %s day%s (incubating for %s days). Time to check on them.',
+               m.n, v_days_to_expected, case when v_days_to_expected = 1 then '' else 's' end, v_days_incubating)
+      when v_days_to_expected is not null then
+        format('%s eggs in your incubator are close to hatching. The first is %s day%s past its expected hatch date. Check on them as soon as you can.',
+               m.n, abs(v_days_to_expected), case when abs(v_days_to_expected) = 1 then '' else 's' end)
+      else
+        format('%s eggs in your incubator are within the hatch window. The oldest has been incubating for %s days.',
+               m.n, v_days_incubating)
     end;
 
     insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
     values (
-      r.created_by, 'hatch_alert', v_body, '/Breeding?tab=hatchery',
+      m.email, 'hatch_alert', v_body, '/Breeding?tab=hatchery',
       jsonb_build_object(
-        'egg_id', r.id,
-        'lay_date', r.lay_date,
-        'hatch_date_expected', r.hatch_date_expected,
+        'egg_id', m.ids[1],
+        'egg_ids', to_jsonb(m.ids),
+        'count', m.n,
+        'lay_date', m.lay_dates[1],
+        'hatch_date_expected', m.expected[1],
         'days_incubating', v_days_incubating,
-        'cadence', case when r.daily then 'daily' else 'weekly' end,
+        'cadence', case when m.has_daily then 'daily' else 'weekly' end,
         'source', 'cron'
       ),
-      false, r.created_by
+      false, m.email
     );
     v_count := v_count + 1;
+
+    -- The other eggs: a quiet row where one is needed to keep the egg
+    -- covered for 7 days, and, on a 6-day send, for every egg not yet
+    -- covered today, so the member's eggs stay on one schedule.
+    for v_i in 2 .. m.n loop
+      if m.stale[v_i] or (not m.has_daily and m.none_today[v_i]) then
+        v_days_incubating := current_date - m.lay_dates[v_i];
+        insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
+        values (
+          m.email, 'hatch_alert',
+          format('An egg in your incubator is in its hatch window (incubating for %s days). It is counted in today''s hatch alert.',
+                 v_days_incubating),
+          '/Breeding?tab=hatchery',
+          jsonb_build_object(
+            'egg_id', m.ids[v_i],
+            'lay_date', m.lay_dates[v_i],
+            'hatch_date_expected', m.expected[v_i],
+            'days_incubating', v_days_incubating,
+            'cadence', case when m.daily[v_i] then 'daily' else 'weekly' end,
+            'quiet', true,
+            'grouped_in', m.ids[1],
+            'source', 'cron'
+          ),
+          true, m.email
+        );
+        v_count := v_count + 1;
+      end if;
+    end loop;
   end loop;
 
-  -- Past the hatch window: one status check per egg, ever.
-  for r in
-    select e.id, e.created_by, e.lay_date
+  -- Past the hatch window: one status check per egg, ever. Each member gets
+  -- one sent message per run, naming how many eggs it covers; the other
+  -- eggs' checks are quiet rows.
+  for m in
+    select e.created_by as email,
+           count(*)::int as n,
+           array_agg(e.id order by e.lay_date, e.id) as ids,
+           array_agg(e.lay_date order by e.lay_date, e.id) as lay_dates
       from public.eggs e
      where e.status = 'Incubating'
        and coalesce(e.archived, false) = false
@@ -558,24 +739,39 @@ begin
             and n.metadata ->> 'egg_id' = e.id
             and n.metadata ->> 'kind' = 'status_check'
        )
+     group by e.created_by
+     order by e.created_by
   loop
-    v_days_incubating := current_date - r.lay_date;
-    insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
-    values (
-      r.created_by, 'hatch_alert',
-      format('An egg laid %s is still marked incubating after %s days, past its hatch window. If it hatched or did not make it, update it on the Breeding page so your records stay accurate. This is the last reminder for this egg.',
-             to_char(r.lay_date, 'FMMonth FMDD, YYYY'), v_days_incubating),
-      '/Breeding?tab=hatchery',
-      jsonb_build_object(
-        'egg_id', r.id,
-        'lay_date', r.lay_date,
-        'days_incubating', v_days_incubating,
-        'kind', 'status_check',
-        'source', 'cron'
-      ),
-      false, r.created_by
-    );
-    v_count := v_count + 1;
+    for v_i in 1 .. m.n loop
+      v_days_incubating := current_date - m.lay_dates[v_i];
+      v_body := case
+        when v_i > 1 then
+          format('An egg laid %s is still marked incubating after %s days, past its hatch window. It is counted in today''s reminder.',
+                 to_char(m.lay_dates[v_i], 'FMMonth FMDD, YYYY'), v_days_incubating)
+        when m.n = 1 then
+          format('An egg laid %s is still marked incubating after %s days, past its hatch window. If it hatched or did not make it, update it on the Breeding page so your records stay accurate. This is the last reminder for this egg.',
+                 to_char(m.lay_dates[1], 'FMMonth FMDD, YYYY'), v_days_incubating)
+        else
+          format('%s eggs are still marked incubating past their hatch window, the oldest laid %s. If they hatched or did not make it, update them on the Breeding page so your records stay accurate. This is the last reminder for these eggs.',
+                 m.n, to_char(m.lay_dates[1], 'FMMonth FMDD, YYYY'))
+      end;
+      insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
+      values (
+        m.email, 'hatch_alert', v_body, '/Breeding?tab=hatchery',
+        jsonb_build_object(
+          'egg_id', m.ids[v_i],
+          'lay_date', m.lay_dates[v_i],
+          'days_incubating', v_days_incubating,
+          'kind', 'status_check',
+          'source', 'cron'
+        )
+        || case when v_i = 1 and m.n > 1 then jsonb_build_object('egg_ids', to_jsonb(m.ids), 'count', m.n)
+                when v_i > 1 then jsonb_build_object('quiet', true, 'grouped_in', m.ids[1])
+                else '{}'::jsonb end,
+        v_i > 1, m.email
+      );
+      v_count := v_count + 1;
+    end loop;
   end loop;
 
   return v_count;
@@ -584,6 +780,112 @@ $function$;
 
 revoke all on function public.enqueue_hatch_alerts() from public, anon, authenticated;
 grant execute on function public.enqueue_hatch_alerts() to service_role;
+
+-- The push and email dispatcher. Same body as
+-- 20261008081305_account_erasure.sql plus one early return: a hatch alert
+-- row marked quiet (written above for an egg that is counted in the day's
+-- alert) is kept but never sent. Safe in any deploy order: no earlier code
+-- writes the flag, and a member can only write hatch alerts to themselves
+-- (guard_notification_insert), so the flag can only quiet their own rows.
+create or replace function public.notify_dispatch_on_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public', 'extensions', 'vault'
+as $function$
+declare
+  v_push_url  constant text :=
+    'https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/send-push';
+  v_email_url constant text :=
+    'https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/send-email';
+  v_key       text;
+  v_title     text;
+  v_body      text;
+  v_link      text;
+  v_payload   jsonb;
+  v_headers   jsonb;
+begin
+  -- A hatch alert for an egg already counted in the day's grouped alert.
+  if NEW.type = 'hatch_alert' and NEW.metadata ->> 'quiet' = 'true' then
+    return NEW;
+  end if;
+
+  -- Pull the service-role key from Vault. If it's not configured,
+  -- skip both channels cleanly so the notifications INSERT itself
+  -- still succeeds.
+  select decrypted_secret
+    into v_key
+    from vault.decrypted_secrets
+   where name = 'notification_service_role_key'
+   limit 1;
+
+  if v_key is null or v_key = '' then
+    return NEW;
+  end if;
+
+  v_title := case NEW.type
+    when 'new_message'            then 'New message'
+    when 'marketplace_inquiry'    then 'Marketplace inquiry'
+    when 'hatch_alert'            then 'Hatch alert'
+    when 'feeding_due'            then 'Feeding due'
+    when 'weighin_reminder'       then 'Weigh-in reminder'
+    when 'new_comment'            then 'New comment'
+    when 'new_reply'              then 'New reply'
+    when 'new_follower'           then 'New follower'
+    when 'new_gecko_listing'      then 'New gecko listed'
+    when 'new_breeding_plan'      then 'New breeding plan'
+    when 'future_breeding_ready'  then 'Breeding window ready'
+    when 'gecko_of_the_day'       then 'Gecko of the Day'
+    when 'level_up'               then 'Level up!'
+    when 'expert_status'          then 'Expert status update'
+    when 'submission_approved'    then 'Submission approved'
+    when 'submission_rejected'    then 'Photo not added to the Morph Guide'
+    when 'announcement'           then 'Geck Inspect announcement'
+    when 'role_change'            then 'Role updated'
+    when 'referral_reward'        then 'Your referral paid off'
+    when 'referral_grant_ended'   then 'Your free month of Keeper has ended'
+    when 'weekly_digest'          then 'Your week on Geck Inspect'
+    when 'waitlist_signup'        then 'New waitlist signup'
+    when 'market_alert'           then 'Watchlist match'
+    when 'market_brief'           then 'Your crested gecko market today'
+    when 'vet_followup'           then 'Vet follow-up'
+    when 'account_deletion_request' then 'Account deletion request'
+    when 'task_reminder'          then 'Task reminder'
+    when 'support_reply'          then 'Reply from Geck Inspect support'
+    else 'Geck Inspect'
+  end;
+  v_body := coalesce(NEW.content, '');
+  v_link := coalesce(NEW.link, '/');
+
+  v_headers := jsonb_build_object(
+    'Content-Type',  'application/json',
+    'Authorization', 'Bearer ' || v_key
+  );
+
+  v_payload := jsonb_build_object(
+    'user_email', NEW.user_email,
+    'type',       NEW.type,
+    'title',      v_title,
+    'body',       v_body,
+    'url',        v_link,
+    'tag',        NEW.type
+  );
+
+  begin
+    perform net.http_post(url := v_push_url, headers := v_headers, body := v_payload);
+  exception when others then
+    raise warning 'notify_dispatch_on_insert: send-push pg_net call failed: %', sqlerrm;
+  end;
+
+  begin
+    perform net.http_post(url := v_email_url, headers := v_headers, body := v_payload);
+  exception when others then
+    raise warning 'notify_dispatch_on_insert: send-email pg_net call failed: %', sqlerrm;
+  end;
+
+  return NEW;
+end;
+$function$;
 
 -- ===========================================================================
 -- 6. Vet follow-ups: unchanged except for the login check
@@ -806,3 +1108,151 @@ $function$;
 
 revoke all on function public.enqueue_weekly_digest() from public, anon, authenticated;
 grant execute on function public.enqueue_weekly_digest() to service_role;
+
+-- ===========================================================================
+-- 8. Task, plan and season planner reminders: unchanged except for the
+--    login check
+-- ===========================================================================
+-- Same body as 20261003031932_season_planner_server_reminders.sql (the
+-- live version on 15 Oct 2026) with public.email_has_login added to each
+-- of the three lists, like every other reminder job above. A future
+-- breeding plan for an address with no login stays unnotified, so it is
+-- still announced if that person later makes an account while the window
+-- is open.
+
+create or replace function public.enqueue_season_planner_reminders()
+returns integer
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  r record;
+  v_count integer := 0;
+  v_body text;
+  v_when text;
+  v_label text;
+begin
+  -- Only the scheduled job (no signed-in caller), the service role or an
+  -- admin may run this.
+  if coalesce(auth.role(), '') not in ('', 'service_role') and not public.is_admin() then
+    raise exception 'Not allowed' using errcode = '42501';
+  end if;
+
+  -- 3a. Tasks: due-day reminders and "N days before" reminders.
+  for r in
+    with due_tasks as (
+      select t.id, t.title, t.created_by, t.is_recurring,
+             (coalesce(case when t.is_recurring then t.next_due_date end, t.due_date) at time zone 'UTC')::date as due,
+             case when coalesce(t.reminder_enabled, false) then greatest(coalesce(t.reminder_days_before, 0), 0)::int else 0 end as days_before
+        from public.tasks t
+        left join public.projects p on p.id = t.project_id
+       where coalesce(t.is_completed, false) = false
+         and t.created_by is not null
+         and public.email_has_login(t.created_by)
+         and coalesce(case when t.is_recurring then t.next_due_date end, t.due_date) is not null
+         and (p.id is null or coalesce(p.status, 'active') = 'active')
+    ),
+    candidates as (
+      select d.*, 'due'::text as kind from due_tasks d
+       where d.due between current_date - 3 and current_date
+      union all
+      select d.*, 'early'::text as kind from due_tasks d
+       where d.days_before > 0
+         and d.due > current_date
+         and (d.due - d.days_before) between current_date - 3 and current_date
+    )
+    select c.* from candidates c
+     where not exists (
+       select 1 from public.notifications n
+        where n.user_email = c.created_by
+          and n.type = 'task_reminder'
+          and n.metadata ->> 'task_id' = c.id
+          and n.metadata ->> 'due' = c.due::text
+          and n.metadata ->> 'kind' = c.kind
+     )
+  loop
+    v_label := coalesce(nullif(trim(r.title), ''), 'A task');
+    if r.kind = 'early' then
+      v_when := case when r.due - current_date = 1 then 'is due tomorrow'
+                     else format('is due in %s days (%s)', r.due - current_date, to_char(r.due, 'FMMonth FMDD')) end;
+    else
+      v_when := case when r.due = current_date then 'is due today'
+                     else format('was due %s', to_char(r.due, 'FMMonth FMDD')) end;
+    end if;
+    v_body := format('Task "%s" %s%s.', v_label, v_when, case when r.is_recurring then ' (repeats)' else '' end);
+
+    insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
+    values (
+      r.created_by, 'task_reminder', left(v_body, 500), '/ProjectManager?tab=projects',
+      jsonb_build_object('task_id', r.id, 'due', r.due, 'kind', r.kind, 'source', 'cron'),
+      false, r.created_by
+    );
+    v_count := v_count + 1;
+  end loop;
+
+  -- 3b. Plans (projects) on their due date.
+  for r in
+    select p.id, p.name, p.created_by, p.due_date as due
+      from public.projects p
+     where coalesce(p.status, 'active') = 'active'
+       and p.created_by is not null
+       and public.email_has_login(p.created_by)
+       and p.due_date between current_date - 3 and current_date
+       and not exists (
+         select 1 from public.notifications n
+          where n.user_email = p.created_by
+            and n.type = 'task_reminder'
+            and n.metadata ->> 'project_id' = p.id
+            and n.metadata ->> 'due' = p.due_date::text
+       )
+  loop
+    v_label := coalesce(nullif(trim(r.name), ''), 'A plan');
+    v_when := case when r.due = current_date then 'is due today'
+                   else format('was due %s', to_char(r.due, 'FMMonth FMDD')) end;
+    insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
+    values (
+      r.created_by, 'task_reminder', left(format('Plan "%s" %s.', v_label, v_when), 500), '/ProjectManager?tab=projects',
+      jsonb_build_object('project_id', r.id, 'due', r.due, 'kind', 'due', 'source', 'cron'),
+      false, r.created_by
+    );
+    v_count := v_count + 1;
+  end loop;
+
+  -- 3c. Future breeding plans whose season window is open.
+  for r in
+    select f.id, f.created_by, f.target_season, f.target_year,
+           coalesce(nullif(trim(s.name), ''), 'your sire') as sire_name,
+           coalesce(nullif(trim(d.name), ''), 'your dam') as dam_name
+      from public.future_breeding_plans f
+      left join public.geckos s on s.id = f.sire_id
+      left join public.geckos d on d.id = f.dam_id
+     where coalesce(f.notified, false) = false
+       and f.started_breeding_plan_id is null
+       and f.created_by is not null
+       and public.email_has_login(f.created_by)
+       and public.season_window_start(f.target_season, f.target_year) is not null
+       and current_date between public.season_window_start(f.target_season, f.target_year)
+                            and public.season_window_end(f.target_season, f.target_year)
+  loop
+    insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
+    values (
+      r.created_by, 'future_breeding_ready',
+      left(format('Your %s %s pairing window is open: %s x %s. Open the Season Planner and tap Start this pairing.',
+        initcap(r.target_season), r.target_year, r.sire_name, r.dam_name), 500),
+      '/ProjectManager?tab=future',
+      jsonb_build_object('future_breeding_plan_id', r.id, 'source', 'cron'),
+      false, r.created_by
+    );
+    update public.future_breeding_plans
+       set notified = true, notified_date = now()
+     where id = r.id;
+    v_count := v_count + 1;
+  end loop;
+
+  return v_count;
+end;
+$function$;
+
+revoke all on function public.enqueue_season_planner_reminders() from public, anon, authenticated;
+grant execute on function public.enqueue_season_planner_reminders() to service_role;
