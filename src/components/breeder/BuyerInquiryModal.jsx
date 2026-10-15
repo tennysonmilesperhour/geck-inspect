@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Send, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 /**
  * Buyer-side inquiry modal rendered on the public breeder storefront
@@ -37,6 +38,9 @@ export default function BuyerInquiryModal({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  // Dialog role, Escape to close, and the hook the floating-widget hide
+  // rule needs. This component stays mounted while closed, so it passes open.
+  const overlay = useModalOverlay(onClose, open);
 
   useEffect(() => {
     if (!open) return;
@@ -100,6 +104,8 @@ export default function BuyerInquiryModal({
 
   return (
     <div
+      {...overlay}
+      aria-label={breederName ? `Ask ${breederName} about a gecko` : 'Send an inquiry'}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >

@@ -22,9 +22,13 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onArchive: _onArchive }) {
     const { toast } = useToast();
+    // Dialog role, Escape to cancel, and the hook the floating-widget hide
+    // rule needs.
+    const overlay = useModalOverlay(onCancel);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -167,6 +171,8 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
+            {...overlay}
+            aria-label={reptile ? `Edit ${reptile.name}` : 'Add New Reptile'}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40" onClick={onCancel}></div>

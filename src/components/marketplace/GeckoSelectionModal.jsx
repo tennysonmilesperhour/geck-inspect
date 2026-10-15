@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { X, Search, Check } from 'lucide-react';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEmail }) {
   const [geckos, setGeckos] = useState([]);
@@ -14,6 +15,9 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
   const [selectedGeckos, setSelectedGeckos] = useState(new Set());
   const [missingPrices, setMissingPrices] = useState({});
   const [step, setStep] = useState('select'); // 'select' or 'fillMissing'
+  // Dialog role, Escape to close, and the data-state the floating-widget
+  // hide rule needs. Spread on each of the three overlay roots below.
+  const overlay = useModalOverlay(onClose);
 
   useEffect(() => {
     const fetchGeckos = async () => {
@@ -95,7 +99,7 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div {...overlay} aria-label="Select geckos" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 max-w-2xl w-full">
           <div className="flex justify-center">
             <div className="w-8 h-8 border-4 border-slate-600 border-t-emerald-500 rounded-full animate-spin"></div>
@@ -107,11 +111,11 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
 
   if (step === 'fillMissing') {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div {...overlay} aria-label="Select geckos" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-slate-100">Enter Missing Prices</h2>
-            <button onClick={onClose} className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200">
+            <button onClick={onClose} aria-label="Close" className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -176,7 +180,7 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div {...overlay} aria-label="Select geckos" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -187,7 +191,7 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
               {selectedGeckos.size} selected
             </p>
           </div>
-          <button onClick={onClose} className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200">
+          <button onClick={onClose} aria-label="Close" className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200">
             <X className="w-5 h-5" />
           </button>
         </div>

@@ -13,6 +13,7 @@ import { Store, ArrowLeft, ArrowUpRight, X,
 } from 'lucide-react';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { BREEDER_STORE_PAGE_PUBLIC_COLUMNS, publicDisplayName } from '@/lib/publicColumns';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 /**
  * Public breeder storefront. Route: /store/:slug
@@ -55,16 +56,17 @@ function GeckInspectPill() {
 }
 
 function GeckoLightbox({ gecko, onClose }) {
+    // Dialog role, Escape to close and data-state="open" (which the rule
+    // that hides floating widgets over dialogs looks for) come from the
+    // shared hook. It also leaves Escape to a menu open above the lightbox.
+    const overlay = useModalOverlay(onClose, Boolean(gecko));
     useEffect(() => {
-        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-        window.addEventListener('keydown', onKey);
         const prev = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         return () => {
-            window.removeEventListener('keydown', onKey);
             document.body.style.overflow = prev;
         };
-    }, [onClose]);
+    }, []);
 
     if (!gecko) return null;
     const images = (gecko.image_urls || []).filter(Boolean);
@@ -75,8 +77,8 @@ function GeckoLightbox({ gecko, onClose }) {
         <div
             className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
             onClick={onClose}
-            role="dialog"
-            aria-modal="true"
+            {...overlay}
+            aria-label={gecko.name || 'Gecko photos'}
         >
             <button
                 type="button"

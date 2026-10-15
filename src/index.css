@@ -1029,6 +1029,11 @@ body:has([role="alertdialog"][data-state="open"]) [data-feedback-trigger],
 body:has([role="dialog"][data-state="open"]) [data-floating-notice],
 body:has([role="alertdialog"][data-state="open"]) [data-floating-notice] { display: none; }
 
+/* Hand-built overlays (src/hooks/useModalOverlay.js) take keyboard focus
+   when they open so the keyboard lands inside them. The overlay itself is
+   not a control, so it gets no focus ring; its buttons keep theirs. */
+[data-modal-overlay]:focus { outline: none; }
+
 /* Field Mode is a full-screen rack-side logger with its own bottom bar.
    Floating UI would sit on its gecko list and its "Exit field mode" link. */
 body:has([data-field-mode]) [data-feedback-trigger],

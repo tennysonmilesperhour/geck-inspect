@@ -40,6 +40,7 @@ import { generatePassportCode } from '@/lib/passportUtils';
 import { createPageUrl } from '@/utils';
 import { PRIMARY_MORPHS } from '@/components/morph-id/morphTaxonomy';
 import TransferDialog from '@/components/transfers/TransferDialog';
+import useModalOverlay from '@/hooks/useModalOverlay';
 
 // The species ("Crested Gecko") is NOT a morph, and genetic traits
 // (Lilly White, Axanthic, ...) are not primary morphs. When syncing a
@@ -71,6 +72,9 @@ function resolvePrimaryMorphId(gecko) {
 // (MyGeckos as of Phase B) should pass an explicit value.
 export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, onMarkSold, onDelete, allGeckos = [], currentUser = null, canEdit = true }) {
   const navigate = useNavigate();
+  // Dialog role, Escape to close, and the hook the floating-widget hide
+  // rule needs. Called before the early return below, as hooks must be.
+  const overlay = useModalOverlay(onClose);
 
   const handleLineageClick = () => {
     const url = `${createPageUrl('Lineage')}?geckoId=${gecko.id}`;
@@ -368,7 +372,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   if (!gecko) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div {...overlay} aria-label={gecko.name || 'Gecko details'} className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <TransferDialog
         open={showTransfer}
         onOpenChange={setShowTransfer}
