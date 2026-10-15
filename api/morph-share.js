@@ -14,8 +14,9 @@
  * invitation to try Morph ID that carries the card id to sign-up.
  *
  * A view is counted only for a person: crawlers, scripts and link-preview
- * fetchers read the card without counting it. The page is not cached at
- * the edge, so a card the owner deletes disappears at once.
+ * fetchers read the card without counting it, and the count needs the
+ * page's own key (shareRequestBody below). The page is not cached at the
+ * edge, so a card the owner deletes disappears at once.
  */
 import { classifyAgent } from './_lib/bots.js';
 import {
@@ -201,10 +202,23 @@ function html(status, markup) {
 }
 
 /**
- * Build the handler. Tests pass their own fetch and settings; production
- * reads the same public Supabase settings the middleware uses.
+ * What the page asks the database for. A view is counted only with the
+ * share page's own key: get_morph_id_share is public, so a count request
+ * without the key (from a browser or a script) reads the card and counts
+ * nothing. Without the key set, every visit is a plain read.
  */
-export function createHandler({ fetchImpl, supabaseUrl, anonKey } = {}) {
+export function shareRequestBody(id, req, viewKey) {
+  if (viewKey && countsAsView(req)) return { p_id: id, p_count_view: true, p_view_key: viewKey };
+  return { p_id: id, p_count_view: false };
+}
+
+/**
+ * Build the handler. Tests pass their own fetch and settings; production
+ * reads the same public Supabase settings the middleware uses, plus
+ * MORPH_SHARE_VIEW_KEY (a server-only Vercel setting, never VITE_, equal
+ * to the Vault secret morph_share_view_key) for counting views.
+ */
+export function createHandler({ fetchImpl, supabaseUrl, anonKey, viewKey } = {}) {
   return async function handler(req) {
     const url = new URL(req.url);
     const id = shareIdFromRequest(url);
@@ -212,6 +226,7 @@ export function createHandler({ fetchImpl, supabaseUrl, anonKey } = {}) {
 
     const base = supabaseUrl || process.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
     const key = anonKey || process.env.VITE_SUPABASE_ANON_KEY;
+    const countKey = viewKey ?? process.env.MORPH_SHARE_VIEW_KEY ?? '';
     const doFetch = fetchImpl || fetch;
     if (!key) return html(503, renderGonePage({ unavailable: true }));
 
@@ -220,7 +235,7 @@ export function createHandler({ fetchImpl, supabaseUrl, anonKey } = {}) {
       const res = await doFetch(`${base}/rest/v1/rpc/get_morph_id_share`, {
         method: 'POST',
         headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_id: id, p_count_view: countsAsView(req) }),
+        body: JSON.stringify(shareRequestBody(id, req, countKey)),
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) return html(503, renderGonePage({ unavailable: true }));

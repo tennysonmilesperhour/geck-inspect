@@ -16,12 +16,20 @@
 --    owner can delete it, anyone with the link can read that one card, and
 --    nothing lists other members' cards. The card is copied on the server
 --    from the stored Morph ID answer (morph_id_requests), never from the
---    browser, so a card cannot claim a result Morph ID did not give.
+--    browser, so a card cannot claim a result Morph ID did not give, and
+--    the card's photo must be one of the photos that answer read
+--    (image_urls in the stored answer). That does not prove the photo
+--    shows the animal the answer describes: a member can still send
+--    photos of different geckos in one run.
 --
 -- 3. Measurement. Card created, share page viewed (by a person, counted by
 --    the share page server) and sign-up from a card each write one row to
 --    public.user_events (morph_share_created, morph_share_viewed,
---    morph_share_signup) and bump a counter on the card.
+--    morph_share_signup) and bump a counter on the card. A view counts
+--    only when the share page asks with its own key (get_morph_id_share
+--    below), so views stay at zero until Tennyson adds the Vault secret
+--    'morph_share_view_key' and the same value as the Vercel setting
+--    MORPH_SHARE_VIEW_KEY. The cards themselves work without it.
 --
 -- Idempotent: safe to run twice.
 
@@ -424,6 +432,18 @@ begin
        and r.status = 'done';
   end if;
 
+  -- The photo must be one of the photos that answer read (Morph ID stores
+  -- them in the answer as image_urls since this release). Without the
+  -- check a member could run Morph ID on someone else's Lilly White and
+  -- put the "Strong visual match" on a photo of their own gecko. An answer
+  -- stored before image_urls existed has nothing to compare, so it is
+  -- refused too: running Morph ID again on the photos stores them.
+  if v_response is not null
+     and not coalesce(jsonb_typeof(v_response->'image_urls') = 'array'
+                      and v_response->'image_urls' ? p_image_url, false) then
+    raise exception 'morph_share_no_result' using errcode = 'P0002';
+  end if;
+
   if v_response is not null and jsonb_typeof(v_response->'analysis') = 'object' then
     v_card := public.morph_id_share_card_from(v_response->'analysis');
   elsif v_admin and p_analysis is not null then
@@ -493,10 +513,24 @@ revoke all on function public.create_morph_id_share(text, text, jsonb) from publ
 grant execute on function public.create_morph_id_share(text, text, jsonb) to authenticated, service_role;
 
 -- Read one card by its id, for the public share page. Returns null for an
--- unknown or deleted id. With p_count_view the page has decided a person
--- (not a link-preview robot) opened it: the view is counted and logged.
--- Nothing here names the owner.
-create or replace function public.get_morph_id_share(p_id text, p_count_view boolean default false)
+-- unknown or deleted id. Nothing here names the owner.
+--
+-- Counting a view: the share page (api/morph-share.js) decides whether a
+-- person, not a link-preview robot, opened the card, and then asks for the
+-- view to be counted. Anyone can call this function with the public key,
+-- so a plain p_count_view = true from a browser or a script must not
+-- count, or the view numbers (the E2 17 measurement) could be inflated at
+-- will. A view is counted only when the caller is the service role, or
+-- passes p_view_key matching the Vault secret 'morph_share_view_key',
+-- which only the share page holds (Vercel setting MORPH_SHARE_VIEW_KEY).
+-- Without either, the card is read and nothing is counted.
+drop function if exists public.get_morph_id_share(text, boolean);
+
+create or replace function public.get_morph_id_share(
+  p_id text,
+  p_count_view boolean default false,
+  p_view_key text default null
+)
 returns jsonb
 language plpgsql
 volatile
@@ -505,12 +539,22 @@ set search_path to 'public'
 as $function$
 declare
   v_row public.morph_id_shares%rowtype;
+  v_count boolean := false;
 begin
   if p_id is null or p_id !~ '^[0-9a-f]{16}$' then
     return null;
   end if;
 
   if coalesce(p_count_view, false) then
+    v_count := coalesce(auth.role(), '') = 'service_role'
+      or (length(coalesce(p_view_key, '')) >= 32
+          and p_view_key = (select s.decrypted_secret
+                              from vault.decrypted_secrets s
+                             where s.name = 'morph_share_view_key'
+                             limit 1));
+  end if;
+
+  if coalesce(v_count, false) then
     update public.morph_id_shares s
        set view_count = s.view_count + 1
      where s.id = p_id
@@ -536,8 +580,8 @@ begin
 end;
 $function$;
 
-revoke all on function public.get_morph_id_share(text, boolean) from public;
-grant execute on function public.get_morph_id_share(text, boolean) to anon, authenticated, service_role;
+revoke all on function public.get_morph_id_share(text, boolean, text) from public;
+grant execute on function public.get_morph_id_share(text, boolean, text) to anon, authenticated, service_role;
 
 -- A new account that arrived from a card. Counted once per account, only
 -- for an account made in the last 2 days, never for the card's owner.

@@ -1463,6 +1463,10 @@ serve(async (req) => {
       credits_remaining: creditsRemaining,
       credit_refunded: creditRefunded,
       value_estimate_included: includeValueEstimate,
+      // The photos this answer read, exactly as sent. A share card may only
+      // show one of these (create_morph_id_share compares the strings), so
+      // a strong answer cannot be paired with a different photo.
+      image_urls: imageUrls,
     };
     await settleRequestKey(profile.auth_user_id, claimedKey, "done", responseBody);
     return json(responseBody);

@@ -15,7 +15,7 @@ import {
   shareInviteHref,
   shareUrl,
 } from '../morphShareCard';
-import { createHandler, shareIdFromRequest, countsAsView } from '../../../api/morph-share.js';
+import { createHandler, shareIdFromRequest, countsAsView, shareRequestBody } from '../../../api/morph-share.js';
 import { TIER_LIMITS } from '../tierLimits';
 import { functionSource } from './edgeHarness';
 
@@ -175,14 +175,16 @@ describe('the public share page (api/morph-share.js)', () => {
     created_date: '2026-10-16T00:00:00Z',
   };
 
-  function run(answer, ua = SAFARI, path = `/api/morph-share?id=${ID}`) {
+  const VIEW_KEY = 'v'.repeat(40);
+
+  function run(answer, ua = SAFARI, path = `/api/morph-share?id=${ID}`, viewKey = VIEW_KEY) {
     const calls = [];
     const fetchImpl = vi.fn(async (url, init) => {
       calls.push({ url, body: JSON.parse(init.body), headers: init.headers });
       const out = await answer();
       return new Response(JSON.stringify(out.body), { status: out.status || 200 });
     });
-    const handler = createHandler({ fetchImpl, supabaseUrl: 'https://p.supabase.co', anonKey: 'anon' });
+    const handler = createHandler({ fetchImpl, supabaseUrl: 'https://p.supabase.co', anonKey: 'anon', viewKey });
     const req = new Request(`https://geckinspect.com${path}`, { headers: { 'user-agent': ua } });
     return { calls, res: handler(req) };
   }
@@ -203,15 +205,30 @@ describe('the public share page (api/morph-share.js)', () => {
     expect(html).toContain(`/AuthPortal?mode=signup&amp;ms=${ID}`);
     expect(html).not.toMatch(DASHES);
     expect(html).not.toContain('<script');
-    // Read through the public function with the anon key, counting a person's view.
+    // Read through the public function with the anon key, counting a
+    // person's view with the share page's own key.
     expect(calls[0].url).toBe('https://p.supabase.co/rest/v1/rpc/get_morph_id_share');
-    expect(calls[0].body).toEqual({ p_id: ID, p_count_view: true });
+    expect(calls[0].body).toEqual({ p_id: ID, p_count_view: true, p_view_key: VIEW_KEY });
+  });
+
+  it('only asks for a view to be counted when it holds the view key', async () => {
+    // get_morph_id_share is public, so the database counts a view only
+    // with the key; without it set, the page reads the card and counts nothing.
+    const { calls, res } = run(() => ({ body: share }), SAFARI, `/api/morph-share?id=${ID}`, '');
+    expect((await res).status).toBe(200);
+    expect(calls[0].body).toEqual({ p_id: ID, p_count_view: false });
+    const person = new Request('https://x.test/', { headers: { 'user-agent': SAFARI } });
+    const robot = new Request('https://x.test/', { headers: { 'user-agent': 'facebookexternalhit/1.1' } });
+    expect(shareRequestBody(ID, person, VIEW_KEY)).toEqual({ p_id: ID, p_count_view: true, p_view_key: VIEW_KEY });
+    expect(shareRequestBody(ID, robot, VIEW_KEY)).toEqual({ p_id: ID, p_count_view: false });
+    expect(shareRequestBody(ID, person, undefined)).toEqual({ p_id: ID, p_count_view: false });
   });
 
   it('reads the card for a link preview without counting a view', async () => {
     const { calls, res } = run(() => ({ body: share }), 'facebookexternalhit/1.1');
     expect((await res).status).toBe(200);
     expect(calls[0].body.p_count_view).toBe(false);
+    expect(calls[0].body).not.toHaveProperty('p_view_key');
   });
 
   it('does not count a crawler or a prefetch', async () => {

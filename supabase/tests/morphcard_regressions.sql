@@ -70,6 +70,13 @@ create function pg_temp.photo(p_tag text, p_folder text default 'uploads') retur
          || coalesce(p_folder || '/', '') || uid::text || '/' || gen_random_uuid()::text || '.webp'
     from _who where tag = p_tag
 $$;
+-- The same photo address every time for one member and number, so an
+-- answer can list the photos it read and a card can name one of them.
+create function pg_temp.shot(p_tag text, p_n integer default 1, p_folder text default 'uploads') returns text language sql stable as $$
+  select 'https://mmuglfphhwlaluyfyxsp.supabase.co/storage/v1/object/public/geck-inspect-media/'
+         || coalesce(p_folder || '/', '') || uid::text || '/' || md5(p_tag || ':' || p_n)::uuid::text || '.webp'
+    from _who where tag = p_tag
+$$;
 create function pg_temp.must_fail(p_label text, p_sql text, p_error_like text default '%') returns void language plpgsql as $$
 begin
   begin
@@ -98,10 +105,11 @@ select pg_temp.mk('keeper', 'user', 'keeper');
 
 -- A finished Morph ID answer as recognize-gecko-morph stores it, with
 -- the model's free-text reasons that must not reach the card.
-create function pg_temp.answer(p_status text default 'tentative') returns jsonb language sql immutable as $$
+create function pg_temp.answer(p_status text default 'tentative', p_photos text[] default null) returns jsonb language sql immutable as $$
   select jsonb_build_object(
     'success', true,
     'tier', 'free',
+    'image_urls', to_jsonb(p_photos),
     'analysis', jsonb_build_object(
       'primary_morph', 'harlequin',
       'genetic_traits', jsonb_build_array('lily_white', 'Not An Id!'),
@@ -116,15 +124,32 @@ create function pg_temp.answer(p_status text default 'tentative') returns jsonb 
       'explanation', 'Long private explanation',
       'taxonomy_version', '2026-09'
     )
-  )
+  ) - case when p_photos is null then 'image_urls' else '' end
 $$;
 grant execute on all functions in schema pg_temp to public;
 
+-- Each finished answer lists the photos it read, as recognize-gecko-morph
+-- stores them; alice-key-noimg is an answer from before image_urls.
 insert into public.morph_id_requests (user_id, request_key, status, response) values
-  (pg_temp.uid('alice'), 'alice-key-0001', 'done', pg_temp.answer()),
-  (pg_temp.uid('alice'), 'alice-key-poor', 'done', pg_temp.answer('insufficient_evidence')),
+  (pg_temp.uid('alice'), 'alice-key-0001', 'done', pg_temp.answer('tentative', array[pg_temp.shot('alice', 1), pg_temp.shot('alice', 2, null)])),
+  (pg_temp.uid('alice'), 'alice-key-0002', 'done', pg_temp.answer('best_match', array[pg_temp.shot('alice', 3), pg_temp.shot('alice', 4)])),
+  (pg_temp.uid('alice'), 'alice-key-noimg', 'done', pg_temp.answer('best_match')),
+  (pg_temp.uid('alice'), 'alice-key-poor', 'done', pg_temp.answer('insufficient_evidence', array[pg_temp.shot('alice', 1)])),
   (pg_temp.uid('alice'), 'alice-key-runs', 'running', null),
-  (pg_temp.uid('bob'), 'bob-key-00001', 'done', pg_temp.answer());
+  (pg_temp.uid('bob'), 'bob-key-00001', 'done', pg_temp.answer('tentative', array[pg_temp.shot('bob', 1)]));
+
+-- The share page's view key, as Tennyson stores it in Vault (and in the
+-- Vercel setting MORPH_SHARE_VIEW_KEY).
+do $$
+declare v_key text;
+begin
+  select decrypted_secret into v_key from vault.decrypted_secrets where name = 'morph_share_view_key' limit 1;
+  if v_key is null then
+    v_key := 'test-view-key-' || md5(random()::text);
+    perform vault.create_secret(v_key, 'morph_share_view_key', 'test');
+  end if;
+  perform set_config('morphcard.view_key', v_key, true);
+end $$;
 
 -- =====================================================================
 -- 1. One free identification a month
@@ -183,7 +208,7 @@ do $t$
 declare r jsonb; r2 jsonb; c jsonb; n integer; v_id text;
 begin
   perform pg_temp.as_member('alice');
-  r := public.create_morph_id_share('alice-key-0001', pg_temp.photo('alice'));
+  r := public.create_morph_id_share('alice-key-0001', pg_temp.shot('alice', 1));
   if (r->>'id') !~ '^[0-9a-f]{16}$' or (r->>'created')::boolean is not true then
     raise exception 'FAIL: card not created: %', r;
   end if;
@@ -191,7 +216,7 @@ begin
   perform set_config('morphcard.share', v_id, true);
 
   -- Sharing the same answer again hands back the same card.
-  r2 := public.create_morph_id_share('alice-key-0001', pg_temp.photo('alice', null));
+  r2 := public.create_morph_id_share('alice-key-0001', pg_temp.shot('alice', 2, null));
   if r2->>'id' <> v_id or (r2->>'created')::boolean then
     raise exception 'FAIL: second share of one answer made a new card: %', r2;
   end if;
@@ -199,6 +224,26 @@ begin
   -- The owner can see their own card.
   select count(*) into n from public.morph_id_shares;
   if n <> 1 then raise exception 'FAIL: owner should see 1 card, saw %', n; end if;
+
+  -- The photo must be one the answer read: a strong answer cannot be put
+  -- on a different photo from the member's own folder (one that was never
+  -- analysed, or does not even exist), and an answer stored before Morph
+  -- ID recorded its photos is refused until the member runs it again.
+  perform pg_temp.must_fail('card with an own-folder photo the answer did not read',
+    format('select public.create_morph_id_share(%L, %L)', 'alice-key-0002', pg_temp.photo('alice')),
+    'morph_share_no_result');
+  perform pg_temp.must_fail('card with the right file in another folder',
+    format('select public.create_morph_id_share(%L, %L)', 'alice-key-0002', pg_temp.shot('alice', 3, 'geckos')),
+    'morph_share_no_result');
+  perform pg_temp.must_fail('card from an answer with no photo list',
+    format('select public.create_morph_id_share(%L, %L)', 'alice-key-noimg', pg_temp.shot('alice', 1)),
+    'morph_share_no_result');
+  -- Any photo the answer read is fine, not only the first.
+  r2 := public.create_morph_id_share('alice-key-0002', pg_temp.shot('alice', 4));
+  if (r2->>'created')::boolean is not true then
+    raise exception 'FAIL: card with the second analysed photo was refused: %', r2;
+  end if;
+  delete from public.morph_id_shares where id = r2->>'id';
 
   -- Not someone else's photo, not a photo from another place.
   perform pg_temp.must_fail('card with another member''s photo',
@@ -215,13 +260,13 @@ begin
 
   -- Not someone else's answer, not an unfinished one, not "better photos needed".
   perform pg_temp.must_fail('card from another member''s answer',
-    format('select public.create_morph_id_share(%L, %L)', 'bob-key-00001', pg_temp.photo('alice')),
+    format('select public.create_morph_id_share(%L, %L)', 'bob-key-00001', pg_temp.shot('alice', 1)),
     'morph_share_no_result');
   perform pg_temp.must_fail('card from a running answer',
-    format('select public.create_morph_id_share(%L, %L)', 'alice-key-runs', pg_temp.photo('alice')),
+    format('select public.create_morph_id_share(%L, %L)', 'alice-key-runs', pg_temp.shot('alice', 1)),
     'morph_share_no_result');
   perform pg_temp.must_fail('card from an insufficient answer',
-    format('select public.create_morph_id_share(%L, %L)', 'alice-key-poor', pg_temp.photo('alice')),
+    format('select public.create_morph_id_share(%L, %L)', 'alice-key-poor', pg_temp.shot('alice', 1)),
     'morph_share_nothing_to_share');
 
   -- A member cannot write their own result onto a card.
@@ -277,10 +322,10 @@ begin
   select substr(md5(g::text || 'rate'), 1, 16), pg_temp.uid('carol'), 'x', '{}'::jsonb
     from generate_series(1, 30) g;
   insert into public.morph_id_requests (user_id, request_key, status, response)
-  values (pg_temp.uid('carol'), 'carol-key-0001', 'done', pg_temp.answer());
+  values (pg_temp.uid('carol'), 'carol-key-0001', 'done', pg_temp.answer('tentative', array[pg_temp.shot('carol', 1)]));
   perform pg_temp.as_member('carol');
   perform pg_temp.must_fail('31st card in a day',
-    format('select public.create_morph_id_share(%L, %L)', 'carol-key-0001', pg_temp.photo('carol')),
+    format('select public.create_morph_id_share(%L, %L)', 'carol-key-0001', pg_temp.shot('carol', 1)),
     'morph_share_rate_limited');
   perform pg_temp.as_postgres();
 end
@@ -308,17 +353,33 @@ begin
      or public.get_morph_id_share(null) is not null then
     raise exception 'FAIL: unknown ids should read as null';
   end if;
-  -- A view counted by the share page.
+  -- Anyone can ask for a view to be counted with the public key, so a
+  -- count request without the share page's key reads the card and
+  -- counts nothing: no key, a wrong key, a short key.
   r := public.get_morph_id_share(v_id, true);
-  r := public.get_morph_id_share(v_id, true);
-  -- A link preview robot: read without counting.
-  r := public.get_morph_id_share(v_id, false);
+  r := public.get_morph_id_share(v_id, true, repeat('x', 40));
+  r := public.get_morph_id_share(v_id, true, '');
+  if r is null or r->'card'->>'primary_morph' <> 'harlequin' then
+    raise exception 'FAIL: a count request without the key did not read the card';
+  end if;
+  -- The share page, with its key: counted.
+  r := public.get_morph_id_share(v_id, true, current_setting('morphcard.view_key'));
+  -- A link preview robot: read without counting, key or not.
+  r := public.get_morph_id_share(v_id, false, current_setting('morphcard.view_key'));
   -- Counting an unknown id logs nothing.
-  r := public.get_morph_id_share('ffffffffffffffff', true);
+  r := public.get_morph_id_share('ffffffffffffffff', true, current_setting('morphcard.view_key'));
   perform pg_temp.must_fail('anon making a card',
     format('select public.create_morph_id_share(%L, %L)', 'alice-key-0001', 'https://x/y'), '%permission denied%');
   perform pg_temp.must_fail('anon recording a sign-up',
     format('select public.record_morph_id_share_signup(%L)', v_id), '%permission denied%');
+  -- A signed-in member without the key cannot count either.
+  perform pg_temp.as_member('bob');
+  r := public.get_morph_id_share(v_id, true);
+  -- The service role (a server) can.
+  perform set_config('role', 'postgres', true);
+  perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+  perform set_config('role', 'service_role', true);
+  r := public.get_morph_id_share(v_id, true);
   perform pg_temp.as_postgres();
 
   if (select view_count from public.morph_id_shares where id = v_id) <> 2 then
