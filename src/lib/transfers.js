@@ -4,9 +4,11 @@ import { supabase } from '@/lib/supabaseClient';
  * Ownership transfers: the seller starts one, the buyer gets an email with a
  * claim link, and the buyer claims it on /claim/:token.
  *
- * The rows live in transfer_requests. The seller can read, update and delete
- * their own rows (RLS keys on created_by); the claim itself runs server side
- * in claim_transfer().
+ * The rows live in transfer_requests. Only the animal's owner can start or
+ * change one (RLS plus the guard_transfer_request trigger); the seller can
+ * read, cancel and delete their own rows. The claim itself runs server side
+ * in claim_transfer(), which checks again that the seller still owns the
+ * animal.
  */
 
 export const TRANSFER_TTL_HOURS = 72;
@@ -56,6 +58,25 @@ export function animalFromPreview(tr) {
   };
 }
 
+/**
+ * Turn a claim_transfer() error into the claim page's message key. The
+ * server raises short fixed phrases; matching on them keeps the page in
+ * step with the database without parsing codes.
+ */
+export function claimErrorKind(error) {
+  const msg = String(error?.message || '').toLowerCase();
+  const hint = String(error?.hint || '').toLowerCase();
+  if (msg.includes('already claimed')) return 'already_claimed';
+  if (msg.includes('cancelled')) return 'cancelled';
+  if (msg.includes('expired')) return 'expired';
+  if (msg.includes('no longer owns')) return 'seller_changed';
+  // The buyer's plan is full (the same check as adding a gecko).
+  if (hint === 'gecko_limit_reached' || /holds up to \d+ active geckos/.test(msg)) return 'gecko_limit';
+  if (msg.includes('not found')) return 'not_found';
+  if (msg.includes('intended recipient')) return 'wrong_account';
+  return 'claim_failed';
+}
+
 /** A pending transfer whose link has run out counts as expired. */
 export function effectiveTransferStatus(transfer, now = new Date()) {
   if (!transfer) return 'pending';
@@ -78,8 +99,9 @@ export function buildTransferRow({ animalId, animalType = 'gecko', userId, userE
     token,
     sale_price: salePrice ?? null,
     message: String(message || '').trim() || null,
-    // The insert rule needs created_by to be the signed-in user; the
-    // animal's creator may be a collaborator.
+    // The insert rule needs created_by to be the signed-in user, and the
+    // database also checks that this user owns the animal (collaborators
+    // cannot transfer it). The buyer's claim checks ownership again.
     created_by: userEmail,
     expires_at: new Date(now + TRANSFER_TTL_HOURS * 60 * 60 * 1000).toISOString(),
   };

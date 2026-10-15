@@ -1149,14 +1149,18 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     Generate Passport
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={() => setShowTransfer(true)}
-                  className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
-                >
-                  <ArrowRightLeft className="w-4 h-4 mr-2" />
-                  Transfer Ownership
-                </Button>
+                {/* Only the gecko's owner can transfer it; the database
+                    refuses a transfer started by a collaborator. */}
+                {isOwner && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTransfer(true)}
+                    className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
+                  >
+                    <ArrowRightLeft className="w-4 h-4 mr-2" />
+                    Transfer Ownership
+                  </Button>
+                )}
               </div>
 
               <Button

@@ -70,6 +70,11 @@ async function sendInviteEmail({ toEmail, inviter, collectionName, role, token }
  *   - Keeper:  up to maxCollaborators (default 5) accepted+pending invites
  *              across all owned collections combined
  *   - Breeder: unlimited
+ *
+ * The database enforces the same caps (trigger
+ * collection_members_enforce_limit, migration 20261015120000), and an
+ * invitation for someone else must start as pending: only the invited
+ * person can accept it.
  */
 
 function generateToken() {

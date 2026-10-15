@@ -3,9 +3,10 @@
  * Enterprise unlimited), counted the same way everywhere a gecko can be
  * added: the full form, Quick Add, CSV import, and unarchiving.
  *
- * The database enforces the Free limit too (trigger
- * geckos_enforce_free_limit, migration 20261002221052), and this file
- * counts the same way it does:
+ * The database enforces every plan's limit too (trigger
+ * geckos_enforce_free_limit, migrations 20261002221052 and
+ * 20261015120000), on new geckos, on unarchiving and on claimed
+ * transfers, and this file counts the same way it does:
  *
  *   - only geckos the member owns (created_by is their email). Geckos
  *     that other people share with them through a collection do not use
