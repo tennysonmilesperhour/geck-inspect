@@ -48,10 +48,12 @@ so the sitemap's lastmod values reflect real change dates.
 
 ## Rules that matter
 
-- Work on `main`. No preview branches or pull requests unless asked. (One
-  exception exists: the `error-triage` workflow opens draft pull requests
-  on `error-triage/*` branches when it runs. Its nightly schedule is off
-  since 15 Oct 2026, so it only runs when started by hand.)
+- Work on `main`. No preview branches or pull requests unless asked. (The
+  `error-triage` workflow files its proposed fixes as GitHub issues with
+  the patch in the body; it pushes no branch. Its nightly schedule is off
+  since 15 Oct 2026, so it only runs when started by hand. Dependabot
+  opens weekly update pull requests.) Services, secrets and the scheduled
+  jobs are listed in `docs/OPERATIONS.md`.
 - No em dashes anywhere in copy, UI strings, docs, or comments.
 - Crested gecko terminology stays specific (Lilly White, Harlequin,
   Phantom, Cappuccino, Axanthic, Sable, Highway).
