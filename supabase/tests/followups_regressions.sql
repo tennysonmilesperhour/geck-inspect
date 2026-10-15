@@ -177,7 +177,10 @@ begin
     'Lilly White Geckos Inc.',
     'Supportive Keeper',
     'Staffordshire Cresties',
-    'Tenny''s Cresties 2'
+    'Tenny''s Cresties 2',
+    'O''Brien Cresties',
+    'O’Brien Cresties',
+    'Mid-Atlantic Cappuccino Geckos'
   ] loop
     update public.profiles set full_name = v_name, business_name = null, breeder_name = null
      where email = pg_temp.who('carol');
@@ -225,6 +228,17 @@ begin
     'Admins, Moderators',
     'Staff.',
     '5upport',
+    -- team words split by punctuation or a digit inside the word
+    'Su&pport Team',
+    'Sup,port Team',
+    'Supp-ort Team',
+    'Supp''ort Team',
+    'Adm-in',
+    'Ad’min',
+    'Supp-0rt',
+    'Supp2ort Team',
+    'Sec.urity',
+    'Bill-ing',
     -- phone numbers
     'Call 18005550199 now',
     'Text 555 0199 123'
@@ -335,6 +349,15 @@ begin
   select message_type into v_type from public.direct_messages where id = v_id;
   if v_type is distinct from 'system' then
     raise exception 'FAIL: admin system message stored as %', v_type;
+  end if;
+  -- A bidi isolate (U+2066) is trimmed too, so the stored type still
+  -- matches Messages' exact "system" test.
+  perform pg_temp.as_member('admin');
+  v_id := pg_temp.dm(pg_temp.who('alice'), 'system' || chr(8294));
+  perform pg_temp.as_postgres();
+  select message_type into v_type from public.direct_messages where id = v_id;
+  if v_type is distinct from 'system' then
+    raise exception 'FAIL: admin system message with a bidi mark stored as %', v_type;
   end if;
 end
 $t$;

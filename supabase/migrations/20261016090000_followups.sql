@@ -135,7 +135,10 @@ grant execute on function public.breeder_page_trust(text) to anon, authenticated
 --     word. A word that ends in one of the team words ("GeckSupport"), or
 --     starts with one followed by a team-like word ("Securityteam",
 --     "SupportDesk"), is caught too. Words that merely start with one
---     ("Supportive", "Staffordshire") are still fine.
+--     ("Supportive", "Staffordshire") are still fine. Letters split only
+--     by punctuation or a digit ("Su&pport", "Supp-ort", "Ad'min") count
+--     as one word, so the newly allowed "&" and "," cannot split a team
+--     word apart.
 --   * Names with seven or more digits (a phone number) fall back too.
 create or replace function public._member_notification(
   p_sender_email text,
@@ -189,9 +192,14 @@ begin
   v_letters := translate(lower(v_name),
                  'àáâãäåèéêëìíîïòóôõöøùúûüýÿñç013457l',
                  'aaaaaaeeeeiiiioooooouuuuyyncoieasti');
-  -- The same, with each run of non-letters as one space, so the words
-  -- stay apart for the team-word check.
-  v_words := btrim(regexp_replace(v_letters, '[^a-z]+', ' ', 'g'));
+  -- The same, split into words for the team-word check. Only a space
+  -- separates words. Letters split by anything else ("&", ",", ".", a
+  -- hyphen, an apostrophe or a leftover digit) are joined first, because
+  -- "Su&pport", "Supp-ort", "Ad'min" and "Supp2ort" all read as the word
+  -- to the person getting the email. Real names keep their spaces
+  -- ("Pangea & Co. Geckos" stays three words; "O'Brien" becomes "obrien").
+  v_words := regexp_replace(v_letters, '([a-z])[^a-z ]+(?=[a-z])', '\1', 'g');
+  v_words := btrim(regexp_replace(v_words, '[^a-z]+', ' ', 'g'));
   v_letters := regexp_replace(v_letters, '[^a-z]', '', 'g');
   if v_name !~ '^[A-Za-z0-9À-ÖØ-öø-ÿ ''’&,.-]{1,40}$'
      or v_name ~ '\.[^ ]'
@@ -328,11 +336,12 @@ declare
   -- Spaces, tabs, line breaks, other control characters, and the Unicode
   -- spaces and invisible marks [:space:] does not cover: no-break space,
   -- the U+2000 to U+200F spaces and zero-width marks, the line and
-  -- paragraph separators to U+202F, U+205F, U+2060, the ideographic space
+  -- paragraph separators to U+202F, U+205F to U+2069 (the word joiner,
+  -- invisible operators and the bidi isolates), the ideographic space
   -- and the byte order mark.
   v_blank constant text := '[[:space:][:cntrl:]' || chr(160) || chr(5760)
                            || chr(8192) || '-' || chr(8207) || chr(8232) || '-' || chr(8239)
-                           || chr(8287) || chr(8288) || chr(12288) || chr(65279) || ']';
+                           || chr(8287) || '-' || chr(8297) || chr(12288) || chr(65279) || ']';
 begin
   if current_user not in ('anon', 'authenticated') then
     return new;
