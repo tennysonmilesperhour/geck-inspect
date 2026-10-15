@@ -7,6 +7,10 @@ import { editorialFor } from '@/lib/editorial';
 // the delivery log loses the address, and email_suppressions keeps
 // addresses that bounced or reported spam, on purpose.
 const PAGE = readFileSync(new URL('../../pages/PrivacyPolicy.jsx', import.meta.url), 'utf8');
+const LIFECYCLE_SQL = readFileSync(
+  new URL('../../../supabase/migrations/20261015151200_lifecycle_emails.sql', import.meta.url),
+  'utf8',
+);
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 describe('Privacy Policy: email records and deletion', () => {
@@ -18,6 +22,31 @@ describe('Privacy Policy: email records and deletion', () => {
     expect(PAGE).toMatch(/bounced or its owner marked our email as spam/);
     expect(PAGE).toMatch(/do-not-email list/);
     expect(PAGE).toMatch(/even after the account is deleted/);
+  });
+
+  // email_suppressions survives account deletion, so the policy has to
+  // name every column it keeps. A new column without matching wording
+  // here (and in the policy) fails this test.
+  it('names everything the do-not-email list keeps', () => {
+    const table = LIFECYCLE_SQL.match(/create table if not exists public\.email_suppressions \(([\s\S]*?)\n\);/)?.[1];
+    expect(table).toBeTruthy();
+    const columns = table
+      .split('\n')
+      .map((line) => line.trim().match(/^([a-z_]+)\s/)?.[1])
+      .filter((name) => name && name !== 'constraint');
+    const wording = {
+      email: 'It holds the address',
+      reason: 'the reason (a bounce or a spam report)',
+      created_date: 'when it was added',
+      updated_date: 'last changed',
+      resend_email_id: 'the reference our email service gave the email',
+      detail: 'the short message the receiving mail server sent back',
+    };
+    expect([...columns].sort()).toEqual(Object.keys(wording).sort());
+    const paragraph = PAGE.match(/One short list is kept on purpose\.[^<]*/)?.[0] ?? '';
+    for (const phrase of Object.values(wording)) {
+      expect(paragraph).toContain(phrase);
+    }
   });
 
   it('shows the same last-updated date everywhere', () => {

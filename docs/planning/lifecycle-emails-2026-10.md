@@ -47,6 +47,8 @@ Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend b
 - `send-email` tags every email with its type and writes a `sent` row to `public.email_deliveries`.
 - `resend-webhook` checks Resend's signature (Svix) and writes delivered, delivery delayed, opened, clicked, bounced and complained rows. Resend retrying the same event never counts twice.
 - A **hard bounce** or a **spam complaint** puts the address in `public.email_suppressions`, and `send-email` stops sending it notifications, digests, reminders and lifecycle emails. A soft bounce (full mailbox, server down) is logged but does not suppress. An admin lifts a suppression by deleting its row.
+- Deleting an account keeps its suppression row on purpose, so the Privacy Policy (section 8) names every column the row holds: the address, the reason, the two dates, Resend's id for the email and, for a bounce, the bounce type and the mail server's message. `src/lib/__tests__/privacyPolicy.test.js` fails if a column is added to `email_suppressions` without matching wording in the policy.
+- Opened and clicked rows only arrive while open and click tracking is turned on for the sending domain in Resend. The Privacy Policy says so.
 - `public.email_delivery_stats` gives sent, delivered, opened, clicked, bounced and complained by email type and week, for the admin Funnel card (built by the scoreboard work).
 - Only admins can read any of it. Members and visitors cannot.
 
