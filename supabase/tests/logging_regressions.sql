@@ -14,9 +14,11 @@
 begin;
 
 -- ---------------------------------------------------------------------------
--- 0. The day the defaults start is the day the migration ran, stored once
---    in app_settings (public, so the app can read it), and a bad value
---    falls back to the fixed date instead of stopping the reminder jobs.
+-- 0. The day the defaults start is stored once in app_settings (public),
+--    as the app's own day (CARE_DEFAULTS_FROM, 16 Oct 2026) or the day the
+--    migration ran if that is later, so a release on or before 16 Oct
+--    agrees with the gecko record's switches. A bad value falls back to
+--    the app's day instead of stopping the reminder jobs.
 -- ---------------------------------------------------------------------------
 do $start$
 declare
@@ -30,6 +32,15 @@ begin
   end if;
   if public.care_reminder_defaults_from() <> v_raw::date then
     raise exception 'FAIL: care_reminder_defaults_from() = %, setting says %', public.care_reminder_defaults_from(), v_raw;
+  end if;
+  -- Never before the app's day: a gecko the app shows with its switches
+  -- off must not be reminded. (A copy built today stores the later of
+  -- today and 16 Oct.)
+  if v_raw::date < public.care_reminder_defaults_fallback() then
+    raise exception 'FAIL: the defaults start % before the app''s day %', v_raw, public.care_reminder_defaults_fallback();
+  end if;
+  if v_raw::date > greatest(current_date, public.care_reminder_defaults_fallback()) then
+    raise exception 'FAIL: the defaults start % after the day the migration ran', v_raw;
   end if;
 
   -- The release day itself: the links keep the old pages.
@@ -61,7 +72,7 @@ begin
 end
 $start$;
 
--- The defaults start on the release day in production. Here they start 60
+-- In production the defaults start on the stored day. Here they start 60
 -- days ago, so geckos "added" a few days back count as new without
 -- waiting for the calendar. Rolled back with everything else.
 create or replace function public.care_reminder_defaults_from()
@@ -600,6 +611,45 @@ begin
   raise notice 'PASS a full incubator sends one hatch email a day';
 end
 $flood$;
+
+-- The day's alert names an egg that is due, not one long overdue whose
+-- expected date happens to be earliest, and its words fit that egg.
+do $naming$
+declare
+  a text := (select v from _t where k = 'a');
+  s text := (select v from _t where k = 's');
+  n record;
+begin
+  delete from public.notifications where user_email = a;
+  update public.eggs set status = 'Hatched' where created_by = a;
+  insert into public.eggs (id, breeding_plan_id, created_by, status, lay_date, hatch_date_expected) values
+    ('lg-nm-old-' || s, 'plan', a, 'Incubating', current_date - 80, current_date - 20),  -- 20 days overdue, not daily
+    ('lg-nm-due-' || s, 'plan', a, 'Incubating', current_date - 62, current_date + 2);   -- due in 2 days: daily
+  perform public.enqueue_hatch_alerts();
+  select * into n from public.notifications
+   where user_email = a and type = 'hatch_alert' and coalesce(metadata->>'quiet', '') <> 'true';
+  if n is null or n.metadata->>'egg_id' <> 'lg-nm-due-' || s or n.metadata->>'cadence' <> 'daily' then
+    raise exception 'FAIL: the daily alert named %', to_jsonb(n);
+  end if;
+  if n.content not like '2 eggs in your incubator are close to hatching. The first is due in 2 days%' then
+    raise exception 'FAIL: daily alert text %', n.content;
+  end if;
+  if pg_temp.uncovered(a) <> 0 then raise exception 'FAIL: the overdue egg looks unalerted to the app'; end if;
+
+  -- When the first egg is past its date, the words do not call it close.
+  delete from public.notifications where user_email = a;
+  update public.eggs set hatch_date_expected = current_date - 10 where id = 'lg-nm-old-' || s;
+  perform public.enqueue_hatch_alerts();
+  select * into n from public.notifications
+   where user_email = a and type = 'hatch_alert' and coalesce(metadata->>'quiet', '') <> 'true';
+  if n is null or n.metadata->>'egg_id' <> 'lg-nm-old-' || s
+     or n.content not like '2 eggs in your incubator need a look. The first is 10 days past its expected hatch date.%' then
+    raise exception 'FAIL: overdue alert %', to_jsonb(n);
+  end if;
+  update public.eggs set status = 'Hatched' where id in ('lg-nm-old-' || s, 'lg-nm-due-' || s);
+  raise notice 'PASS the daily hatch alert names an egg that is due';
+end
+$naming$;
 
 -- Eggs not yet due, from two clutches laid on different days: one email
 -- every 6 days for both, not one per clutch.

@@ -15,11 +15,13 @@
 --    copy, and the app treats that refusal as "already saved".
 --
 -- 2. Reminder defaults by life stage (item 15).
---    A gecko added on or after the day this file runs (stored once in
---    app_settings 'care_reminder_defaults_from', so the date is the real
---    release day even if the release slips) gets reminders without the
---    member opening Settings, whichever way it was added (Quick Add, the
---    full form, a spreadsheet import, a hatchling, Morph ID):
+--    A gecko added on or after the day the defaults start gets reminders
+--    without the member opening Settings, whichever way it was added
+--    (Quick Add, the full form, a spreadsheet import, a hatchling, Morph
+--    ID). That day is stored once in app_settings
+--    'care_reminder_defaults_from': 16 Oct 2026 (the app's
+--    CARE_DEFAULTS_FROM), or the day this file runs if that is later
+--    (the Helpers section below says why):
 --      * weigh-ins: every 14 days while growing (under 15 g or under 12
 --        months, the care guide's hatchling and juvenile stages), every 21
 --        days as a sub-adult (under 35 g or under 18 months) and every 30
@@ -31,13 +33,14 @@
 --        schedule, as before).
 --      * eggs: one hatch alert a day per member while any egg is within 7
 --        days before to 14 days after its expected hatch date, and one
---        every 6 days otherwise. The alert names the egg due soonest and
---        counts the rest ("3 eggs in your incubator ..."), so a full
---        incubator sends one email, not one per egg. Each egg still gets
---        its own row at least every 6 days, so the app's hatch check and
---        the insert guard (both read metadata.egg_id) see every egg as
---        alerted; the rows that are not the day's alert are marked quiet,
---        already read, and are not sent (notify_dispatch_on_insert below).
+--        every 6 days otherwise. The alert names the egg due soonest (an
+--        egg in that daily window first) and counts the rest ("3 eggs in
+--        your incubator ..."), so a full incubator sends one email, not
+--        one per egg. Each egg still gets its own row at least every 6
+--        days, so the app's hatch check (metadata.egg_id, last 7 days)
+--        sees every egg as alerted; the rows that are not the day's alert
+--        are marked quiet, already read, and are not sent
+--        (notify_dispatch_on_insert below).
 --    The member can still change or switch off each one: per gecko on its
 --    record (profiles.extra_data.care_reminders.weigh_in.geckos.<id> and
 --    .feeding.geckos.<id>, with "on": false), or for the whole account in
@@ -46,8 +49,8 @@
 --
 -- 3. One-tap log links (item 15). Weigh-in and feeding reminders link to
 --    /log?type=weight|feeding&gecko=<ids>&group=<ids>, which opens a short
---    form for exactly those geckos, from the day after this file runs.
---    On the day itself they keep the old pages: a tab opened before the
+--    form for exactly those geckos, from the day after the defaults
+--    start. Until then they keep the old pages: a tab opened before the
 --    release has no /log page and would show "Page not found".
 --    Hatch reminders open the hatchery tab.
 --
@@ -91,26 +94,11 @@ create unique index if not exists shed_records_client_request_id_key
 -- 2. Helpers
 -- ===========================================================================
 
--- The day the life-stage defaults start: geckos created on or after it
--- get reminders without a stored setting. It is the day this file first
--- runs in production (UTC), written once: "on conflict do nothing" keeps
--- the first value when the file runs again. A fixed date in the file would
--- be wrong whenever the release moved, either leaving out geckos added on
--- release day or reminding geckos added in a tab opened before the
--- release, which had no way to turn the reminder off. The row is public
--- (is_public), so the app can read the same date.
-insert into public.app_settings (key, value, is_public, description)
-values (
-  'care_reminder_defaults_from',
-  to_jsonb(((now() at time zone 'utc')::date)::text),
-  true,
-  'Geckos added on or after this day (UTC) get weigh-in and feeding reminders by life stage without a stored choice, and reminders link to the one-tap log page from the next day. Written once by migration 20261015151100 on the day it ran.'
-)
-on conflict (key) do nothing;
-
--- Only when the setting row above is missing. The app's own fallback
--- (CARE_DEFAULTS_FROM in src/lib/careReminders.js) is the same date; a
--- test checks both.
+-- The app's day: CARE_DEFAULTS_FROM in src/lib/careReminders.js, which
+-- the gecko record uses to show its Feeding and Weigh-in switches and
+-- the phone app uses for its own reminder notes. A test
+-- (src/lib/__tests__/careReminders.test.js) checks the two match. Also
+-- used when the setting row below is missing or not a real day.
 create or replace function public.care_reminder_defaults_fallback()
 returns date
 language sql
@@ -119,6 +107,33 @@ set search_path to ''
 as $function$
   select date '2026-10-16';
 $function$;
+
+-- The day the life-stage defaults start: geckos created on or after it
+-- get reminders without a stored setting. Written once, when this file
+-- first runs in production ("on conflict do nothing" keeps the first
+-- value when the file runs again), as the later of:
+--   * the app's day above. The app does not read this row yet, so a
+--     release on or before 16 Oct must use that exact day. Otherwise a
+--     gecko added on release day by the full form, an import, a hatchling
+--     or Morph ID would get feeding and weigh-in reminders by push and
+--     email while its switches show off.
+--   * the day this file runs (UTC). A release that slips past 16 Oct
+--     then does not start reminding geckos added before it, in tabs that
+--     had no switch to turn the reminder off.
+-- What is left: if the release is after 16 Oct, a gecko added between
+-- 16 Oct and the release shows its switches on in the new app while the
+-- server sends it nothing, until the app reads this row (it is public,
+-- is_public, so the app can) instead of its fixed day. A release on or
+-- before 16 Oct has no gap.
+insert into public.app_settings (key, value, is_public, description)
+values (
+  'care_reminder_defaults_from',
+  to_jsonb(greatest((now() at time zone 'utc')::date,
+                    public.care_reminder_defaults_fallback())::text),
+  true,
+  'Geckos added on or after this day (UTC) get weigh-in and feeding reminders by life stage without a stored choice, and reminders link to the one-tap log page from the next day. Written once by migration 20261015151100: 16 Oct 2026 (the app''s own day) or the day the migration ran, whichever is later.'
+)
+on conflict (key) do nothing;
 
 create or replace function public.care_reminder_defaults_from()
 returns date
@@ -149,9 +164,9 @@ grant execute on function public.care_reminder_defaults_from() to service_role;
 -- True from the day after the defaults start. The one-tap log page (/log)
 -- ships in the same release as this file, and members keep tabs open for
 -- hours: a tab opened before the release has no /log page and shows "Page
--- not found" when a reminder is opened in it. So on release day the
--- reminders keep linking to the pages every version has, and from the
--- next day to /log.
+-- not found" when a reminder is opened in it. So on release day (and on
+-- 16 Oct too, for a release before it) the reminders keep linking to the
+-- pages every version has, and from the next day to /log.
 create or replace function public.care_log_links_live()
 returns boolean
 language sql
@@ -199,9 +214,9 @@ grant execute on function public.weighin_interval_days(numeric, date, date) to s
 -- Only ids made of letters, digits, "_" and "-" (up to 64) go in, at most
 -- 10 of each, so the link always passes public.safe_internal_link. With
 -- no usable id it falls back to the page that lists them, and so it does
--- on release day (care_log_links_live above): feedings open Batch
--- Husbandry, and a weigh-in for one gecko opens it in My Geckos, as the
--- reminders did before.
+-- until the day after the defaults start (care_log_links_live above):
+-- feedings open Batch Husbandry, and a weigh-in for one gecko opens it in
+-- My Geckos, as the reminders did before.
 create or replace function public.care_log_link(
   p_type text,
   p_gecko_ids text[],
@@ -544,13 +559,15 @@ grant execute on function public.enqueue_feeding_reminders() to service_role;
 -- and whose metadata.egg_ids lists them all.
 --
 -- The other eggs still need their own rows. The app's hatch check
--- (src/components/breeding/HatchAlertSystem.jsx) and the member insert
--- guard (guard_notification_insert) decide "already alerted" from
--- metadata.egg_id, over the last 7 days. An egg with no row in that time
--- looks unalerted, and the app then sends its own push and email for it.
--- So every egg in its window gets a row at least every 6 days. Those rows
--- carry metadata.quiet = true and is_read = true: the dispatcher below
--- does not send them, and they do not add to the unread count.
+-- (src/components/breeding/HatchAlertSystem.jsx) decides "already
+-- alerted" from metadata.egg_id over the last 7 days. An egg with no row
+-- in that time looks unalerted, and the app then writes its own alert,
+-- which is pushed and emailed. (The member insert guard,
+-- guard_notification_insert, only drops a repeat for the same egg within
+-- 20 hours, so it does not stop that.) So every egg in its window gets a
+-- row at least every 6 days. Those rows carry metadata.quiet = true and
+-- is_read = true: the dispatcher below does not send them, and they do
+-- not add to the unread count.
 --
 -- When it sends:
 --   * any egg within 7 days before to 14 days after its expected hatch
@@ -585,8 +602,8 @@ begin
               and current_date between e.hatch_date_expected - 7 and e.hatch_date_expected + 14) as daily,
              -- No row for this egg (from this job or the app) for 6 days,
              -- less an hour so a run a few seconds early still counts it.
-             -- The app and the guard look back 7 days, so a row every 6
-             -- keeps the egg covered without a gap.
+             -- The app looks back 7 days, so a row every 6 keeps the egg
+             -- covered without a gap.
              not exists (
                select 1 from public.notifications n
                 where n.user_email = e.created_by
@@ -617,14 +634,16 @@ begin
            count(*)::int as n,
            bool_or(o.daily) as has_daily,
            bool_or(o.stale) as any_stale,
-           -- Soonest expected hatch first; eggs with no expected date last,
-           -- oldest first.
-           array_agg(o.id order by o.hatch_date_expected nulls last, o.lay_date, o.id) as ids,
-           array_agg(o.lay_date order by o.hatch_date_expected nulls last, o.lay_date, o.id) as lay_dates,
-           array_agg(o.hatch_date_expected order by o.hatch_date_expected nulls last, o.lay_date, o.id) as expected,
-           array_agg(o.daily order by o.hatch_date_expected nulls last, o.lay_date, o.id) as daily,
-           array_agg(o.stale order by o.hatch_date_expected nulls last, o.lay_date, o.id) as stale,
-           array_agg(o.none_today order by o.hatch_date_expected nulls last, o.lay_date, o.id) as none_today
+           -- On a daily run an egg in the daily window comes first, so
+           -- the alert names an egg that is due, not one long overdue.
+           -- Then soonest expected hatch first; eggs with no expected
+           -- date last, oldest first.
+           array_agg(o.id order by o.daily desc, o.hatch_date_expected nulls last, o.lay_date, o.id) as ids,
+           array_agg(o.lay_date order by o.daily desc, o.hatch_date_expected nulls last, o.lay_date, o.id) as lay_dates,
+           array_agg(o.hatch_date_expected order by o.daily desc, o.hatch_date_expected nulls last, o.lay_date, o.id) as expected,
+           array_agg(o.daily order by o.daily desc, o.hatch_date_expected nulls last, o.lay_date, o.id) as daily,
+           array_agg(o.stale order by o.daily desc, o.hatch_date_expected nulls last, o.lay_date, o.id) as stale,
+           array_agg(o.none_today order by o.daily desc, o.hatch_date_expected nulls last, o.lay_date, o.id) as none_today
       from eggs_open o
      group by o.created_by
      order by o.created_by
@@ -664,7 +683,7 @@ begin
         format('%s eggs in your incubator are close to hatching. The first is due in %s day%s (incubating for %s days). Time to check on them.',
                m.n, v_days_to_expected, case when v_days_to_expected = 1 then '' else 's' end, v_days_incubating)
       when v_days_to_expected is not null then
-        format('%s eggs in your incubator are close to hatching. The first is %s day%s past its expected hatch date. Check on them as soon as you can.',
+        format('%s eggs in your incubator need a look. The first is %s day%s past its expected hatch date. Check on them as soon as you can.',
                m.n, abs(v_days_to_expected), case when abs(v_days_to_expected) = 1 then '' else 's' end)
       else
         format('%s eggs in your incubator are within the hatch window. The oldest has been incubating for %s days.',
