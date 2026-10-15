@@ -84,7 +84,7 @@ export const PRODUCT_TOUR_SLIDES = [
     id: 'morph-guide',
     file: 'morph-guide.webp',
     title: 'Morph guide',
-    caption: 'Photo-led references for every major morph. Browse by pattern, base, or inheritance.',
+    caption: 'Plain-language references for the major morphs, with photos where a verified example exists. Browse by pattern, base, or inheritance.',
     captureUrl: 'https://geckinspect.com/MorphGuide',
   },
   {
