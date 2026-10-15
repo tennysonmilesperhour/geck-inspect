@@ -29,8 +29,7 @@ export default function MessageUserButton({ recipientEmail, recipientName, varia
             await notifyNewMessage(
                 recipientEmail,
                 currentUser.email,
-                currentUser.full_name || currentUser.breeder_name || currentUser.email,
-                message.trim()
+                currentUser.full_name || currentUser.breeder_name,
             ).catch(e => console.error('Notification failed:', e));
 
             setMessage('');

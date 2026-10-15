@@ -5,7 +5,29 @@ vi.mock('@/lib/supabaseClient', () => ({
   supabase: { functions: { invoke: (...args) => invoke(...args) } },
 }));
 
-const { eraseAccount, readErasureError, erasureSummary, ERASURE_FUNCTION } = await import('../accountErasure');
+const { eraseAccount, readErasureError, erasureSummary, ERASURE_FUNCTION, isVerifiedDeletionRequest } = await import('../accountErasure');
+
+describe('isVerifiedDeletionRequest', () => {
+  const ticket = (over) => ({
+    subject: 'Account deletion request',
+    user_email: 'keeper@example.com',
+    filed_by_email: 'keeper@example.com',
+    ...over,
+  });
+
+  it('accepts a request sent from the account it names', () => {
+    expect(isVerifiedDeletionRequest(ticket())).toBe(true);
+    // Case and stray spaces do not matter.
+    expect(isVerifiedDeletionRequest(ticket({ filed_by_email: ' Keeper@Example.com ' }))).toBe(true);
+  });
+
+  it('refuses a request filed signed out or by someone else', () => {
+    expect(isVerifiedDeletionRequest(ticket({ filed_by_email: null }))).toBe(false);
+    expect(isVerifiedDeletionRequest(ticket({ filed_by_email: 'someone-else@example.com' }))).toBe(false);
+    expect(isVerifiedDeletionRequest(ticket({ subject: 'Help' }))).toBe(false);
+    expect(isVerifiedDeletionRequest(null)).toBe(false);
+  });
+});
 
 function httpError(status, body) {
   const err = new Error('Edge Function returned a non-2xx status code');

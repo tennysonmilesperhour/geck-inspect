@@ -14,6 +14,10 @@
  * grants the anon role exactly these columns. Once it is applied, a
  * signed-out `select *` on these tables fails, so every signed-out read must
  * use these lists. A test keeps the two in step.
+ *
+ * geckos.sold_price was in that grant and was taken back from signed-out
+ * visitors by 20261015130000_comms_and_exposure.sql: what a gecko sold for
+ * is the seller's business, and no public page shows it.
  */
 
 export const GECKO_PUBLIC_COLUMNS = [
@@ -28,7 +32,7 @@ export const GECKO_PUBLIC_COLUMNS = [
   'passport_code', 'pattern_grade', 'genetics_notes', 'breeder_name',
   'breeder_user_id', 'hatch_facility', 'listing_price', 'estimated_hatch_year',
   'collection_id', 'quality_score', 'last_meaningful_change_at', 'tail_status',
-  'growth_slideshow_enabled', 'sold_price', 'sale_category', 'owner_profile_id',
+  'growth_slideshow_enabled', 'sale_category', 'owner_profile_id',
   'placeholder_style', 'inherited_placeholder_style',
 ];
 

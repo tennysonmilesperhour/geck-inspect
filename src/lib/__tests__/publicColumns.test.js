@@ -44,6 +44,7 @@ const GECKO_MIGRATION = migration('20261008081011_anon_hide_owner_email_columns.
 const GECKO_ARTWORK_MIGRATION = migration('20261014173814_gecko_placeholder_style.sql');
 const GECKO_DEFAULT_ARTWORK_MIGRATION = migration('20261014184837_collection_artwork_default.sql');
 const MORE_MIGRATION = migration('20261008081043_anon_hide_email_columns_more.sql');
+const COMMS_MIGRATION = migration('20261015130000_comms_and_exposure.sql');
 const WEIGHT_MIGRATION = migration('20261003004122_passport_transfers_lineage.sql');
 const WELCOME_MIGRATION = migration('20261003022738_owner_profile_id_forum_store_welcome.sql');
 
@@ -52,6 +53,12 @@ function grantedColumns(sql, table, role = 'anon') {
   const match = sql.match(new RegExp(`grant select \\(([^)]*)\\)\\s+on public\\.${table} to ${role};`));
   if (!match) throw new Error(`no ${role} grant for ${table}`);
   return match[1].split(',').map((c) => c.trim()).filter(Boolean);
+}
+
+/** Columns a later migration takes back with `revoke select (...) on public.<table> from <role>`. */
+function revokedColumns(sql, table, role = 'anon') {
+  return [...sql.matchAll(new RegExp(`revoke select \\(([^)]*)\\) on public\\.${table} from ${role};`, 'g'))]
+    .flatMap((m) => m[1].split(',').map((c) => c.trim()).filter(Boolean));
 }
 
 /** Columns that hold an email address somewhere in these tables. */
@@ -85,13 +92,22 @@ describe('columns a signed-out visitor may read', () => {
     expect(GECKO_IMAGE_PUBLIC_COLUMNS).not.toContain('training_meta');
   });
 
+  it('leave out what a gecko sold for', () => {
+    expect(GECKO_PUBLIC_COLUMNS).not.toContain('sold_price');
+    // Passport lineage still needs the parents.
+    expect(GECKO_PUBLIC_COLUMNS).toEqual(expect.arrayContaining(['sire_id', 'dam_id']));
+  });
+
   it('carry the owner profile id so pages can show a display name', () => {
     expect(GECKO_PUBLIC_COLUMNS).toContain('owner_profile_id');
     expect(GECKO_IMAGE_PUBLIC_COLUMNS).toContain('owner_profile_id');
   });
 
   it('match the anon column grants in the database migration exactly', () => {
-    expect([...grantedColumns(GECKO_MIGRATION, 'geckos'), ...grantedColumns(GECKO_ARTWORK_MIGRATION, 'geckos'), ...grantedColumns(GECKO_DEFAULT_ARTWORK_MIGRATION, 'geckos')]).toEqual(GECKO_PUBLIC_COLUMNS);
+    const revoked = revokedColumns(COMMS_MIGRATION, 'geckos');
+    expect(revoked).toEqual(['sold_price']);
+    expect([...grantedColumns(GECKO_MIGRATION, 'geckos'), ...grantedColumns(GECKO_ARTWORK_MIGRATION, 'geckos'), ...grantedColumns(GECKO_DEFAULT_ARTWORK_MIGRATION, 'geckos')]
+      .filter((c) => !revoked.includes(c))).toEqual(GECKO_PUBLIC_COLUMNS);
     expect(grantedColumns(GECKO_MIGRATION, 'gecko_images')).toEqual(GECKO_IMAGE_PUBLIC_COLUMNS);
   });
 

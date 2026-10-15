@@ -37,7 +37,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { DELETION_REQUEST_SUBJECT, eraseAccount, erasureSummary } from '@/lib/accountErasure';
+import { DELETION_REQUEST_SUBJECT, eraseAccount, erasureSummary, isVerifiedDeletionRequest } from '@/lib/accountErasure';
 import {
     LifeBuoy,
     Loader2,
@@ -72,7 +72,9 @@ import { formatDistanceToNowStrict, format } from 'date-fns';
  *   the user's email as the recipient
  * - An open "Account deletion request" ticket gets an "Erase account"
  *   button that runs the admin-delete-account edge function; on success
- *   the function closes the ticket itself
+ *   the function closes the ticket itself. Only when the signed-in account
+ *   it names sent it (filed_by_email): anyone can type an address into a
+ *   support form, so other requests say so instead of offering the button.
  */
 
 const STATUSES = [
@@ -585,15 +587,24 @@ export default function SupportInbox() {
                                                 {eraseError}
                                             </p>
                                         )}
-                                        <Button
-                                            size="sm"
-                                            variant="destructive"
-                                            disabled={isErasing}
-                                            onClick={() => setConfirmErase(true)}
-                                        >
-                                            {isErasing && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-                                            Erase account
-                                        </Button>
+                                        {isVerifiedDeletionRequest(selected) ? (
+                                            <Button
+                                                size="sm"
+                                                variant="destructive"
+                                                disabled={isErasing}
+                                                onClick={() => setConfirmErase(true)}
+                                            >
+                                                {isErasing && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                                                Erase account
+                                            </Button>
+                                        ) : (
+                                            <p className="rounded-md border border-amber-500/40 bg-amber-950/40 p-2 text-xs text-amber-200">
+                                                This request was not sent from the signed-in account it names, so it
+                                                cannot start an erasure. Anyone can type an email address into a support
+                                                form. Ask the member to sign in and use Settings, Delete account, or
+                                                confirm it is really them before erasing from Admin Panel, Users.
+                                            </p>
+                                        )}
                                     </div>
                                 )}
 

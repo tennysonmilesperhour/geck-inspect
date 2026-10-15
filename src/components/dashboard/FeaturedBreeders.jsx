@@ -116,11 +116,14 @@ export default function FeaturedBreeders() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {breeders.map((b) => {
               const sales = saleCounts[b.id] || 0;
-              const displayName = b.business_name || b.full_name || b.email.split('@')[0];
+              // Profiles carry no email for other members (only admins
+              // see addresses), so the link and the fallback name do not
+              // use one.
+              const displayName = b.business_name || b.full_name || 'Geck Inspect breeder';
               return (
                 <Link
-                  key={b.id || b.email}
-                  to={`/PublicProfile?email=${encodeURIComponent(b.email)}`}
+                  key={b.id}
+                  to={`/PublicProfile?userId=${encodeURIComponent(b.id)}`}
                   className="touch:min-h-11 group flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-emerald-500/40 p-3 transition-colors"
                 >
                   <img

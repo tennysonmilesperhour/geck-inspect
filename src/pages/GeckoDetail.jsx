@@ -355,9 +355,11 @@ export default function GeckoDetail() {
                                             )}
                                         </div>
                                     </Link>
+                                    {/* A signed-in member reads the owner's address on
+                                        the gecko row; profiles no longer carry it. */}
                                     {currentUser && !isOwner && (
                                         <MessageUserButton
-                                            recipientEmail={owner.email}
+                                            recipientEmail={owner.email || gecko.created_by}
                                             recipientName={owner.full_name}
                                             variant="outline"
                                             size="sm"

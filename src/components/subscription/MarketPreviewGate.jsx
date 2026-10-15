@@ -15,8 +15,30 @@ import { createPageUrl } from '@/utils';
  *
  * `inert` blocks clicks, focus and screen readers inside the preview.
  * React 18 does not know the attribute, so it is set on the node.
+ *
+ * `serverGated`: the panel's database functions refuse other plans too
+ * (the brief, the live feed and watchlists, since 15 Oct 2026), so the
+ * real panel would only show its error state. Those surfaces get neutral
+ * placeholder rows behind the upgrade card instead.
  */
-export default function MarketPreviewGate({ user, surface, height = 360, children }) {
+function PlaceholderRows() {
+  return (
+    <div className="space-y-3 p-1">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/60 p-3">
+          <div className="h-12 w-12 shrink-0 rounded-md bg-slate-800" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3 w-2/3 rounded bg-slate-800" />
+            <div className="h-3 w-1/3 rounded bg-slate-800/70" />
+          </div>
+          <div className="h-4 w-14 rounded bg-slate-800" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function MarketPreviewGate({ user, surface, height = 360, serverGated = false, children }) {
   const allowed = canUseFeature(user, 'market_intelligence');
   const previewRef = useRef(null);
 
@@ -43,7 +65,7 @@ export default function MarketPreviewGate({ user, surface, height = 360, childre
         className="overflow-hidden select-none pointer-events-none"
         style={{ maxHeight: height }}
       >
-        {children}
+        {serverGated ? <PlaceholderRows /> : children}
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/10 via-slate-950/80 to-slate-950" />
       <div className="absolute inset-x-0 bottom-0 flex justify-center p-4">

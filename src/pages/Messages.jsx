@@ -5,6 +5,7 @@ import Seo from '@/components/seo/Seo';
 import { DirectMessage, User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { notifyNewMessage } from '@/components/notifications/NotificationService';
+import { sendMessageToProfile } from '@/lib/memberActions';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,7 @@ function canUnsend(message, myEmail, now = Date.now()) {
 // real profile when we have one and falling back to the email prefix +
 // auto-generated initials avatar. The system identity gets its own brand
 // label so it reads as "Geck Inspect Team" rather than "system".
-function resolveProfile(email, profileMap) {
+function resolveProfile(email, profileMap, fallbackProfile = null) {
     if (email === SYSTEM_EMAIL) {
         return {
             displayName: 'Geck Inspect Team',
@@ -64,8 +65,11 @@ function resolveProfile(email, profileMap) {
             isSystem: true,
         };
     }
-    const profile = profileMap?.get(email);
-    const displayName = profile?.full_name || email.split('@')[0];
+    // A conversation started from the member list has no address until the
+    // first message is sent; it shows the profile it was started from.
+    const profile = (email && profileMap?.get(email)) || fallbackProfile;
+    const displayName = profile?.full_name || profile?.business_name
+        || (email ? email.split('@')[0] : 'Geck Inspect member');
     const avatarUrl =
         profile?.profile_image_url || initialsAvatarUrl(displayName, 64);
     return { displayName, avatarUrl, isSystem: false };
@@ -280,9 +284,11 @@ export default function MessagesPage() {
         if (allProfiles !== null || isLoadingProfiles) return;
         setIsLoadingProfiles(true);
         try {
+            // No email addresses: members only ever receive their own (15 Oct
+            // 2026). A conversation is started by profile id instead.
             const { data } = await supabase
                 .rpc('read_profiles')
-                .select('email, full_name, profile_image_url')
+                .select('id, full_name, business_name, profile_image_url')
                 .order('full_name', { ascending: true })
                 .limit(2000);
             setAllProfiles(data || []);
@@ -294,21 +300,24 @@ export default function MessagesPage() {
     };
 
     const startConversationWith = (profile) => {
-        const existing = conversations.find((c) => c.email === profile.email);
+        // The member list has profile ids, not addresses. If a conversation
+        // with this member is already open in the list (its profile row
+        // came from the address lookup above), use it; otherwise start a
+        // new one keyed by profile id until the first message is sent.
+        const existing = conversations.find((c) => {
+            const known = c.email ? profileMap.get(c.email) : null;
+            return known && String(known.id) === String(profile.id);
+        });
         if (existing) {
             setSelectedConversation(existing);
         } else {
             setSelectedConversation({
-                email: profile.email,
+                email: null,
+                profile,
                 messages: [],
                 latestMessage: null,
                 unreadCount: 0,
                 isSystem: false,
-            });
-            setProfileMap((prev) => {
-                const next = new Map(prev);
-                next.set(profile.email, profile);
-                return next;
             });
         }
         setIsComposeOpen(false);
@@ -395,7 +404,7 @@ export default function MessagesPage() {
                 if (otherEmails.length > 0 && !guest) {
                     const { data: profiles } = await supabase
                         .rpc('read_profiles', { p_emails: otherEmails })
-                        .select('email, full_name, profile_image_url')
+                        .select('id, email, full_name, profile_image_url')
                         .in('email', otherEmails);
                     if (profiles) {
                         setProfileMap((prev) => {
@@ -559,15 +568,28 @@ export default function MessagesPage() {
         setIsSending(true);
         try {
             const messageContent = newMessage.trim();
-            const message = await DirectMessage.create({
-                sender_email: currentUser.email,
-                recipient_email: selectedConversation.email,
-                content: messageContent
-            });
-            await notifyNewMessage(selectedConversation.email, currentUser.email, currentUser.full_name, messageContent);
+            // A conversation started from the member list has no address
+            // yet: the database sends the first message by profile id, and
+            // the saved message tells us the address from then on.
+            const message = selectedConversation.email
+                ? await DirectMessage.create({
+                    sender_email: currentUser.email,
+                    recipient_email: selectedConversation.email,
+                    content: messageContent
+                })
+                : await sendMessageToProfile(selectedConversation.profile.id, messageContent);
+            const recipientEmail = selectedConversation.email || message.recipient_email;
+            if (!selectedConversation.email && selectedConversation.profile) {
+                setProfileMap((prev) => {
+                    const next = new Map(prev);
+                    next.set(recipientEmail, selectedConversation.profile);
+                    return next;
+                });
+            }
+            await notifyNewMessage(recipientEmail, currentUser.email, currentUser.full_name);
 
             setConversations(prev => {
-                const existingIndex = prev.findIndex(c => c.email === selectedConversation.email);
+                const existingIndex = prev.findIndex(c => c.email === recipientEmail);
                 if (existingIndex >= 0) {
                     const updated = [...prev];
                     updated[existingIndex] = {
@@ -578,7 +600,7 @@ export default function MessagesPage() {
                     return updated.sort((a, b) => new Date(b.latestMessage.created_date) - new Date(a.latestMessage.created_date));
                 } else {
                     return [{
-                        email: selectedConversation.email,
+                        email: recipientEmail,
                         displayName: selectedConversation.displayName,
                         messages: [message],
                         latestMessage: message,
@@ -590,6 +612,7 @@ export default function MessagesPage() {
 
             setSelectedConversation(prev => ({
                 ...prev,
+                email: recipientEmail,
                 messages: [...prev.messages, message],
                 latestMessage: message
             }));
@@ -767,7 +790,8 @@ export default function MessagesPage() {
                         {selectedConversation ? (() => {
                             const headerProfile = resolveProfile(
                                 selectedConversation.email,
-                                profileMap
+                                profileMap,
+                                selectedConversation.profile
                             );
                             return (
                             <Card className="h-full flex flex-col">
@@ -802,7 +826,7 @@ export default function MessagesPage() {
                                                 </div>
                                             </div>
                                         </CardTitle>
-                                        {!selectedConversation.isSystem && <ReportContent entity="conversation" recordId={selectedConversation.email} authorEmail={selectedConversation.email} excerpt={selectedConversation.messages.slice(-5).map(m => m.content).join("\n")} />}
+                                        {!selectedConversation.isSystem && <ReportContent entity="conversation" recordId={selectedConversation.email || selectedConversation.profile?.id} authorEmail={selectedConversation.email || undefined} authorProfileId={selectedConversation.profile?.id} excerpt={selectedConversation.messages.slice(-5).map(m => m.content).join("\n")} />}
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
@@ -1027,7 +1051,7 @@ export default function MessagesPage() {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <Input
                             autoFocus
-                            placeholder="Search by name or email..."
+                            placeholder="Search by name..."
                             value={composeSearch}
                             onChange={(e) => setComposeSearch(e.target.value)}
                             className="pl-10 bg-slate-950 border-slate-700 text-slate-100"
@@ -1042,12 +1066,12 @@ export default function MessagesPage() {
                         {!isLoadingProfiles && allProfiles && (() => {
                             const term = composeSearch.trim().toLowerCase();
                             const results = allProfiles
-                                .filter((p) => p.email && p.email !== currentUser?.email)
+                                .filter((p) => p.id && String(p.id) !== String(currentUser?.id))
                                 .filter((p) => {
                                     if (!term) return true;
                                     return (
                                         (p.full_name || '').toLowerCase().includes(term) ||
-                                        p.email.toLowerCase().includes(term)
+                                        (p.business_name || '').toLowerCase().includes(term)
                                     );
                                 })
                                 .slice(0, 50);
@@ -1059,10 +1083,10 @@ export default function MessagesPage() {
                                 );
                             }
                             return results.map((profile) => {
-                                const name = profile.full_name || profile.email.split('@')[0];
+                                const name = profile.full_name || profile.business_name || 'Geck Inspect member';
                                 return (
                                     <button
-                                        key={profile.email}
+                                        key={profile.id}
                                         type="button"
                                         onClick={() => startConversationWith(profile)}
                                         className="touch:min-h-11 w-full flex items-center gap-3 py-2 px-2 rounded-md hover:bg-slate-800 text-left"
@@ -1075,7 +1099,9 @@ export default function MessagesPage() {
                                         />
                                         <div className="min-w-0">
                                             <div className="text-sm text-slate-100 truncate">{name}</div>
-                                            <div className="text-xs text-slate-500 truncate">{profile.email}</div>
+                                            {profile.business_name && profile.business_name !== name && (
+                                                <div className="text-xs text-slate-500 truncate">{profile.business_name}</div>
+                                            )}
                                         </div>
                                     </button>
                                 );

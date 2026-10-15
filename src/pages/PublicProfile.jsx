@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
-import { User, UserFollow } from '@/entities/all';
-import { notifyNewFollower } from '@/components/notifications/NotificationService';
+import { User } from '@/entities/all';
+import { followedProfileIds, setFollow } from '@/lib/memberActions';
 import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,7 +106,6 @@ export default function PublicProfile() {
     const [weightRecords, setWeightRecords] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [isFollowing, setIsFollowing] = useState(false);
-    const [followRecord, setFollowRecord] = useState(null);
     const [storePage, setStorePage] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -149,15 +148,13 @@ export default function PublicProfile() {
                 
                 setProfileUser(user);
 
-                // Check if current user is following this profile
-                if (loggedInUser && loggedInUser.email !== user.email) {
+                // Check if current user is following this profile. The
+                // profile no longer carries the member's email (only admins
+                // see other members' addresses), so this goes by profile id.
+                if (loggedInUser && loggedInUser.email !== user.email && String(loggedInUser.id) !== String(user.id)) {
                     try {
-                        const myFollows = await UserFollow.filter({ follower_email: loggedInUser.email });
-                        const existingFollow = myFollows.find(f => f.following_email === user.email);
-                        if (existingFollow) {
-                            setIsFollowing(true);
-                            setFollowRecord(existingFollow);
-                        }
+                        const followed = await followedProfileIds([user.id]);
+                        setIsFollowing(followed.has(String(user.id)));
                     } catch (err) {
                         console.error("Error checking follow status:", err);
                     }
@@ -192,39 +189,13 @@ export default function PublicProfile() {
         }
 
         try {
-            if (isFollowing && followRecord) {
-                await UserFollow.delete(followRecord.id);
-                setIsFollowing(false);
-                setFollowRecord(null);
-                toast({ title: "Unfollowed", description: `You've unfollowed ${profileUser.full_name}` });
-            } else {
-                // Check if already following to prevent duplicates
-                const myFollows = await UserFollow.filter({ follower_email: currentUser.email });
-                const existingFollow = myFollows.find(f => f.following_email === profileUser.email);
-                
-                if (existingFollow) {
-                    setIsFollowing(true);
-                    setFollowRecord(existingFollow);
-                    toast({ title: "Already Following", description: `You're already following ${profileUser.full_name}` });
-                    return;
-                }
-                
-                const newFollow = await UserFollow.create({
-                    follower_email: currentUser.email,
-                    following_email: profileUser.email
-                });
-                setIsFollowing(true);
-                setFollowRecord(newFollow);
-                
-                // Notify the user they have a new follower
-                try {
-                    await notifyNewFollower(profileUser.email, currentUser.email, currentUser.full_name);
-                } catch (notifyErr) {
-                    console.error("Failed to send follow notification:", notifyErr);
-                }
-                
-                toast({ title: "Following!", description: `You're now following ${profileUser.full_name}` });
-            }
+            // follow_profile() also tells the member they have a new
+            // follower, from the database.
+            const following = await setFollow(profileUser.id, !isFollowing);
+            setIsFollowing(following);
+            toast(following
+                ? { title: "Following!", description: `You're now following ${profileUser.full_name}` }
+                : { title: "Unfollowed", description: `You've unfollowed ${profileUser.full_name}` });
         } catch (error) {
             console.error('Failed to toggle follow:', error);
             toast({ title: "Error", description: "Failed to update follow status", variant: "destructive" });
@@ -328,7 +299,7 @@ export default function PublicProfile() {
                                 </p>
                             )}
                         </div>
-                        {currentUser && currentUser.email !== profileUser.email && (
+                        {currentUser && currentUser.email !== profileUser.email && String(currentUser.id) !== String(profileUser.id) && (
                             <Button
                                 onClick={handleFollowToggle}
                                 className={`mt-4 sm:mt-0 ${isFollowing ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-600 hover:bg-emerald-700'}`}

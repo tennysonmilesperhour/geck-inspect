@@ -4,6 +4,7 @@ import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
+import { breederSlugForProfile } from '@/lib/memberActions';
 import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
@@ -195,24 +196,21 @@ export default function StorePage() {
                 setPage(data);
 
                 // Prefer redirecting to the canonical /Breeder page when the
-                // owner has a breeder profile with a custom slug.
+                // owner has a breeder profile with a custom slug. The slug is
+                // looked up by profile id on the server: profiles no longer
+                // carry other members' emails.
                 const profilesRes = data.owner_profile_id
                     ? await supabase
                         .rpc('read_profiles')
-                        .select('id, full_name, business_name, profile_image_url, email, bio, location, instagram_handle')
+                        .select('id, full_name, business_name, profile_image_url, bio, location, instagram_handle')
                         .eq('id', data.owner_profile_id)
                         .maybeSingle()
                     : { data: null };
                 if (cancelled) return;
-                const ownerEmail = profilesRes.data?.email;
-                if (ownerEmail && data.is_published) {
-                    const profileSlugRes = await supabase
-                        .from('breeder_profiles')
-                        .select('custom_slug')
-                        .eq('created_by', ownerEmail)
-                        .maybeSingle();
-                    if (!cancelled && profileSlugRes.data?.custom_slug) {
-                        setRedirectSlug(profileSlugRes.data.custom_slug);
+                if (data.owner_profile_id && data.is_published) {
+                    const customSlug = await breederSlugForProfile(data.owner_profile_id).catch(() => null);
+                    if (!cancelled && customSlug) {
+                        setRedirectSlug(customSlug);
                         return;
                     }
                 }
