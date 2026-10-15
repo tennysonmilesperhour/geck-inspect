@@ -21,35 +21,60 @@
  * canonicalized through the genetics adapter, so spelling variants and
  * "Het" / "Possible Het" prefixes normalize to the engine's trait names.
  *
- * For each recessive (and, for explicit het tags only, incomplete
- * dominant) trait, each ancestor that references that trait contributes
- * one independent "line" of carrier probability for the subject. Depth
- * d counts hops from the subject: a parent is d = 1, a grandparent
- * d = 2, a great-grandparent d = 3.
+ * The pedigree is treated as a family tree, not a list. For each trait we
+ * work out, for every recorded animal, the chance it carries 0, 1 or 2
+ * copies of the allele, starting at the oldest ancestors and moving down
+ * one generation at a time:
  *
- *   - Visual recessive ancestor (homozygous, shows the trait):
- *         p = 0.5 ^ (d - 1)
- *     A visual recessive PARENT passes one allele for certain, so the
- *     subject is 100% het (d = 1 -> 1.0). A visual recessive GRANDPARENT
- *     guarantees its child (the subject's parent) is het, and that
- *     parent passes the allele down with probability 0.5, so the subject
- *     is 50% het (d = 2 -> 0.5). A great-grandparent gives 25%
- *     (d = 3 -> 0.25).
+ *   1. An animal's OWN tag is the best evidence about it, so it wins:
+ *        visual "Axanthic"         -> 2 copies for certain
+ *        "Het Axanthic"            -> 1 copy for certain (breeders use
+ *                                     this for a proven carrier)
+ *        "Possible Het Axanthic"   -> 1 copy with 50% confidence
+ *        "66% Het Axanthic"        -> 1 copy with 66% confidence
+ *      A tag already sums up that animal's own background (a breeder
+ *      tags a sire "Het Axanthic" BECAUSE his dam was Axanthic), so once
+ *      an animal has a definite tag we do not also count its parents.
+ *      Counting both would add the same path twice. That was the bug in
+ *      the old version: a Het Axanthic sire with a visual Axanthic dam
+ *      read as 75% for the subject when the true figure is 50%.
+ *      The one exception: when a "Possible Het" (or percentage) tag is
+ *      weaker than what the recorded parents prove, we use the parents,
+ *      because the parents are the stronger evidence (a "Possible Het"
+ *      out of a visual parent is in fact a certain het).
  *
- *   - "Het X" tagged ancestor (one known copy, invisible):
- *         p = 0.5 ^ d
- *     A het PARENT passes the allele with probability 0.5 (d = 1 -> 0.5).
- *     A het grandparent: 0.5 to reach the parent, 0.5 again to the
- *     subject (d = 2 -> 0.25).
+ *   2. An untagged animal's odds come from its parents. Each parent hands
+ *      down the allele with chance t = P(2 copies) + 0.5 * P(1 copy), and
+ *      the two parents act independently:
+ *        P(2 copies) = tSire * tDam
+ *        P(1 copy)   = tSire * (1 - tDam) + (1 - tSire) * tDam
+ *      Missing or unrecorded parents count as non-carriers (t = 0), the
+ *      same "untagged means normal" assumption the calculator makes.
  *
- *   - "Possible Het X" tagged ancestor (50% confidence the tag holds):
- *         p = 0.5 * 0.5 ^ d
- *     A possible-het PARENT gives 0.25 (d = 1 -> 0.25). We treat the
- *     breeder's "possible" as a flat 0.5 confidence that the ancestor is
- *     actually het, then propagate as above.
+ *   3. For recessive traits, an animal we can see is NOT visual cannot be
+ *      carrying two copies, so we condition on that:
+ *        P(het | not visual) = P(1 copy) / (1 - P(2 copies))
+ *      This is why a normal-looking baby from Het x Het is 2/3 het
+ *      (about 67%), not 3/4. We apply it to the subject always, and to
+ *      any recorded ancestor that has at least one morph tag (an animal
+ *      with no tags at all might simply never have been described).
  *
- * Multiple independent lines combine the standard way for "at least one
- * succeeds":  P = 1 - prod(1 - p_i).
+ * The subject's result is the chance it carries at least one hidden copy.
+ *
+ * Worked examples (these are the unit tests):
+ *   Het sire x normal dam                          -> 50%
+ *   Visual sire x normal dam                       -> 100% (shown as a
+ *                                                     certainty, not a
+ *                                                     "possible" het)
+ *   Het x Het, normal-looking baby                 -> 2/3, about 67%
+ *   Het sire (whose own dam is visual) x normal    -> 50%, not 75%
+ *   Untagged sire out of visual grandparent        -> 50%
+ *   Sire tagged only with other traits (so known not to be Axanthic)
+ *   out of Het x Het grandparents                  -> 2/3 * 1/2 = 1/3
+ *
+ * Inbreeding: if the same ancestor appears on both sides, we treat the
+ * two paths as independent. That is the usual simplification for a
+ * three-generation pedigree and can overstate the odds slightly.
  *
  * Incomplete dominants (Lilly White, Cappuccino, Sable, Highway, etc.)
  * are visible whenever a single copy is present, so there is no such
@@ -58,17 +83,19 @@
  * which breeders use to record genuine uncertainty in low-expression
  * lines (a barely-visible Lilly White, say). We never invent a het for
  * an incomplete dominant from a visual ancestor, because a visual
- * ancestor of an incomplete dominant would itself be expressing it.
+ * ancestor of an incomplete dominant would itself be expressing it, and
+ * we do not apply the "not visual" step to them.
  *
  * Traits already visible on the subject are skipped: if the animal
  * already shows Axanthic, "might be het Axanthic" is meaningless.
  *
- * Only traits with a combined probability >= 0.1 are returned, sorted
+ * Only traits with a probability >= 0.1 are returned, sorted
  * highest-probability first.
  */
 
 import {
   TRAITS,
+  canonicalizeMorphTag,
   canonicalizeMorphTags,
 } from './index.js';
 import { POSSIBLE_HET_CHANCE } from '../hetUtils.js';
@@ -91,12 +118,22 @@ const TRAIT_DOMINANCE = (() => {
 // with the calculator's tag reading and the profile badges.
 const POSSIBLE_HET_CONFIDENCE = POSSIBLE_HET_CHANCE;
 
-// Minimum combined probability worth surfacing.
+// Minimum probability worth surfacing.
 const MIN_PROBABILITY = 0.1;
+
+// Label for the animal being looked at; ancestors get "Sire", "Dam's sire"...
+const SUBJECT_LABEL = 'Subject';
+
+// "66% Het Axanthic", "50 % het Phantom": breeder shorthand for a
+// carrier with a stated chance. Canonicalization leaves these untouched,
+// so we read them here.
+const PERCENT_HET_RE = /^(\d{1,3})\s*%\s*(?:het\s+)?(.+)$/i;
 
 /**
  * Classify a single canonicalized morph tag against a trait name.
- * Returns 'visual' | 'het' | 'possible_het' | null.
+ * Returns { kind: 'visual' | 'het' | 'possible_het', chance } or null,
+ * where `chance` is how sure the tag is that the animal carries one copy
+ * (only meaningful for het kinds).
  *
  * Canonicalization (see genetics/index.js) guarantees het tags read
  * exactly "Het <Trait>" or "Possible Het <Trait>" and visual tags read
@@ -105,46 +142,88 @@ const MIN_PROBABILITY = 0.1;
 function classifyTag(tag, traitName) {
   if (typeof tag !== 'string') return null;
   const lower = tag.toLowerCase();
-  const name = traitName.toLowerCase();
-  if (lower === name) return 'visual';
-  if (lower === `het ${name}`) return 'het';
-  if (lower === `possible het ${name}`) return 'possible_het';
+  // Compare against the app spelling the tags are stored in ("Soft Scale",
+  // not the engine's "Softscale").
+  const name = (canonicalizeMorphTag(traitName) || traitName).toLowerCase();
+  if (lower === name) return { kind: 'visual', chance: 1 };
+  if (lower === `het ${name}`) return { kind: 'het', chance: 1 };
+  if (lower === `possible het ${name}`) {
+    return { kind: 'possible_het', chance: POSSIBLE_HET_CONFIDENCE };
+  }
+  const pct = tag.match(PERCENT_HET_RE);
+  if (pct && /het/i.test(tag)) {
+    const body = canonicalizeMorphTag(pct[2]);
+    if (typeof body === 'string' && body.toLowerCase() === name) {
+      const chance = Math.max(0, Math.min(100, Number(pct[1]))) / 100;
+      if (chance >= 1) return { kind: 'het', chance: 1 };
+      if (chance > 0) return { kind: 'possible_het', chance };
+    }
+  }
   return null;
 }
 
 /**
- * Per-source carrier probability for the subject, given how an ancestor
- * at `depth` references a trait. See the module header for the model.
- *
- * @param {'visual'|'het'|'possible_het'} kind
- * @param {number} depth, 1 = parent, 2 = grandparent, ...
- * @param {string} dominance, the trait's engine dominance
- * @returns {number} probability in [0, 1], or 0 if this source contributes nothing
+ * The strongest tag an animal carries for one trait (visual beats het
+ * beats possible het), or null when its tags say nothing about it.
  */
-function sourceProbability(kind, depth, dominance) {
-  if (kind === 'visual') {
-    // A visual incomplete dominant ancestor is expressing the trait, not
-    // hiding it, so it tells us nothing about a hidden het in the subject.
-    if (dominance !== RECESSIVE) return 0;
-    return 0.5 ** (depth - 1);
+function strongestTag(tags, traitName) {
+  let best = null;
+  const rank = { visual: 3, het: 2, possible_het: 1 };
+  for (const tag of tags) {
+    const found = classifyTag(tag, traitName);
+    if (!found) continue;
+    if (
+      !best ||
+      rank[found.kind] > rank[best.kind] ||
+      (found.kind === best.kind && found.chance > best.chance)
+    ) {
+      best = found;
+    }
   }
-  if (kind === 'het') {
-    return 0.5 ** depth;
-  }
-  if (kind === 'possible_het') {
-    return POSSIBLE_HET_CONFIDENCE * 0.5 ** depth;
-  }
-  return 0;
+  return best;
+}
+
+// Genotype odds for one animal at one trait: chance of 0, 1 or 2 copies.
+const NON_CARRIER = Object.freeze({ zero: 1, one: 0, two: 0 });
+
+/** Chance an animal passes one copy of the allele to a given baby. */
+function transmission(dist) {
+  return dist.two + 0.5 * dist.one;
+}
+
+/** Odds for a baby from two parents' transmission chances (step 2). */
+function childFromParents(tSire, tDam) {
+  return {
+    two: tSire * tDam,
+    one: tSire * (1 - tDam) + (1 - tSire) * tDam,
+    zero: (1 - tSire) * (1 - tDam),
+  };
+}
+
+/**
+ * Condition on "this animal does not show the recessive trait" (step 3).
+ * If the parents make a visual baby certain but the animal is not tagged
+ * visual, the tags disagree with the pedigree; we keep the unconditioned
+ * odds rather than divide by zero, which still says "certainly carries".
+ */
+function conditionNotVisual(dist) {
+  const notVisual = 1 - dist.two;
+  if (notVisual <= 1e-9) return dist;
+  return { zero: dist.zero / notVisual, one: dist.one / notVisual, two: 0 };
 }
 
 /**
  * Human-readable basis line for one contributing ancestor.
  */
-function basisLine(label, kind, traitName) {
+function basisLine(label, found, traitName) {
   const who = label || 'An ancestor';
+  const { kind, chance } = found;
   if (kind === 'visual') return `${who} is visual ${traitName}`;
   if (kind === 'het') return `${who} tagged Het ${traitName}`;
-  if (kind === 'possible_het') return `${who} tagged Possible Het ${traitName}`;
+  if (kind === 'possible_het') {
+    if (chance === POSSIBLE_HET_CONFIDENCE) return `${who} tagged Possible Het ${traitName}`;
+    return `${who} tagged ${Math.round(chance * 100)}% Het ${traitName}`;
+  }
   return `${who} references ${traitName}`;
 }
 
@@ -263,68 +342,126 @@ function relationLabel(parentRelation, kind, depth) {
 /**
  * Infer hidden hets for a gecko from its ancestry.
  *
- * @param {object} gecko, the subject (uses morph_tags to skip visible traits)
+ * @param {object} gecko, the subject (uses morph_tags to skip visible
+ *   traits, and sire_id / dam_id to place its parents in the tree)
  * @param {Array<{ gecko: object, depth: number, relation: string }>} ancestry
- *   As returned by buildAncestry.
+ *   As returned by buildAncestry. Each ancestor's own sire_id / dam_id
+ *   links it to the generation above. When an animal has no parent ids we
+ *   fall back to the relation labels ("Sire", "Sire's dam", ...) to
+ *   rebuild the tree.
  * @returns {Array<{ traitName: string, probability: number, basis: string[] }>}
  *   Sorted by probability descending, only entries >= MIN_PROBABILITY.
  */
 export function inferHiddenHets(gecko, ancestry = []) {
-  // Traits the subject already shows, so we don't claim a het for them.
-  const subjectVisible = new Set();
   const subjectTags = canonicalizeMorphTags(gecko?.morph_tags || []) || [];
-  for (const tag of subjectTags) {
-    for (const traitName of TRAIT_DOMINANCE.keys()) {
-      if (classifyTag(tag, traitName) === 'visual') {
-        subjectVisible.add(traitName);
-      }
+
+  // Index ancestors by id and by relation label so we can walk the tree.
+  const byId = new Map();
+  const relationById = new Map();
+  const byRelation = new Map();
+  for (const entry of ancestry || []) {
+    const rec = entry?.gecko;
+    if (!rec) continue;
+    if (rec.id != null) {
+      byId.set(rec.id, rec);
+      relationById.set(rec.id, entry.relation);
     }
+    if (entry.relation) byRelation.set(entry.relation, rec);
   }
 
-  // trait -> { lines: [{ p, basis }] }
-  const byTrait = new Map();
-
-  for (const entry of ancestry) {
-    const { gecko: ancestor, depth, relation } = entry;
-    if (!ancestor) continue;
-    const tags = canonicalizeMorphTags(ancestor.morph_tags || []) || [];
-    if (tags.length === 0) continue;
-
-    for (const [traitName, dominance] of TRAIT_DOMINANCE.entries()) {
-      if (subjectVisible.has(traitName)) continue;
-
-      for (const tag of tags) {
-        const kind = classifyTag(tag, traitName);
-        if (!kind) continue;
-        const p = sourceProbability(kind, depth, dominance);
-        if (p <= 0) continue;
-
-        let bucket = byTrait.get(traitName);
-        if (!bucket) {
-          bucket = { lines: [] };
-          byTrait.set(traitName, bucket);
-        }
-        bucket.lines.push({ p, basis: basisLine(relation, kind, traitName) });
-      }
+  const tagCache = new Map();
+  const tagsFor = (rec) => {
+    if (!tagCache.has(rec)) {
+      tagCache.set(rec, canonicalizeMorphTags(rec.morph_tags || []) || []);
     }
+    return tagCache.get(rec);
+  };
+
+  // The recorded sire and dam of an animal, each { rec, label } or null.
+  function parentsOf(rec, label) {
+    return ['sire', 'dam'].map((role) => {
+      const roleLabel =
+        label === SUBJECT_LABEL ? (role === 'sire' ? 'Sire' : 'Dam') : `${label}'s ${role}`;
+      const id = rec?.[`${role}_id`];
+      if (id != null) {
+        const parent = byId.get(id);
+        return parent ? { rec: parent, label: relationById.get(id) || roleLabel } : null;
+      }
+      const parent = byRelation.get(roleLabel);
+      return parent ? { rec: parent, label: roleLabel } : null;
+    });
   }
 
   const results = [];
-  for (const [traitName, bucket] of byTrait.entries()) {
-    // Combine independent lines: P = 1 - prod(1 - p_i).
-    const probability = 1 - bucket.lines.reduce((acc, line) => acc * (1 - line.p), 1);
+  for (const [traitName, dominance] of TRAIT_DOMINANCE.entries()) {
+    const isRecessive = dominance === RECESSIVE;
+
+    // Skip traits the subject already shows.
+    if (strongestTag(subjectTags, traitName)?.kind === 'visual') continue;
+
+    const memo = new Map();
+    const visiting = new Set();
+
+    // Genotype odds for one animal plus the evidence lines behind them.
+    function evaluate(rec, label, isSubject) {
+      if (memo.has(rec)) return memo.get(rec);
+      // Guard against a corrupt pedigree that loops back on itself.
+      if (visiting.has(rec)) return { dist: NON_CARRIER, basis: [] };
+      visiting.add(rec);
+
+      const tags = isSubject ? subjectTags : tagsFor(rec);
+      // The subject's own Het tags are not inference (the profile already
+      // shows them), so for the subject we only ask what the lineage says.
+      const own = isSubject ? null : strongestTag(tags, traitName);
+
+      let result;
+      if (own?.kind === 'visual') {
+        // Step 1. A visual incomplete dominant is expressing the trait, not
+        // hiding it, so it says nothing about a hidden copy.
+        result = isRecessive
+          ? { dist: { zero: 0, one: 0, two: 1 }, basis: [basisLine(label, own, traitName)] }
+          : { dist: NON_CARRIER, basis: [] };
+      } else if (own?.kind === 'het') {
+        // Step 1. A definite Het tag settles it; its parents are not
+        // counted again.
+        result = { dist: { zero: 0, one: 1, two: 0 }, basis: [basisLine(label, own, traitName)] };
+      } else {
+        // Step 2: work it out from the parents.
+        const [sire, dam] = parentsOf(rec, label);
+        const sireRes = sire ? evaluate(sire.rec, sire.label, false) : null;
+        const damRes = dam ? evaluate(dam.rec, dam.label, false) : null;
+        let dist = childFromParents(
+          sireRes ? transmission(sireRes.dist) : 0,
+          damRes ? transmission(damRes.dist) : 0,
+        );
+        // Step 3: an animal we can see is not visual has at most one copy.
+        // The subject always counts as seen; an ancestor only when it has
+        // at least one morph tag.
+        if (isRecessive && (isSubject || tags.length > 0)) {
+          dist = conditionNotVisual(dist);
+        }
+        let basis = [...(sireRes?.basis || []), ...(damRes?.basis || [])];
+
+        // Step 1 exception: a Possible Het or percentage tag is used only
+        // when it says more than the recorded parents already prove.
+        if (own?.kind === 'possible_het' && own.chance > dist.one + dist.two) {
+          dist = { zero: 1 - own.chance, one: own.chance, two: 0 };
+          basis = [basisLine(label, own, traitName)];
+        }
+        result = { dist, basis };
+      }
+
+      visiting.delete(rec);
+      memo.set(rec, result);
+      return result;
+    }
+
+    const { dist, basis } = evaluate(gecko || {}, SUBJECT_LABEL, true);
+    const probability = Math.min(1, dist.one + dist.two);
     if (probability < MIN_PROBABILITY) continue;
 
     // De-duplicate identical basis strings, keep insertion order.
-    const seenBasis = new Set();
-    const basis = [];
-    for (const line of bucket.lines) {
-      if (seenBasis.has(line.basis)) continue;
-      seenBasis.add(line.basis);
-      basis.push(line.basis);
-    }
-
-    results.push({ traitName, probability, basis });
+    results.push({ traitName, probability, basis: [...new Set(basis)] });
   }
 
   results.sort((a, b) => b.probability - a.probability);
