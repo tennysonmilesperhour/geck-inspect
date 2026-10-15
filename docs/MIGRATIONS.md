@@ -2,7 +2,7 @@
 
 Read this before writing a migration, changing an edge function, or running any `supabase db ...` command against production.
 
-## How a change reaches production (since 15 October 2026)
+## How a change reaches production
 
 The Supabase GitHub integration watches `main`. When a commit lands there (a direct push or a merged pull request) it:
 
@@ -96,4 +96,4 @@ As of 5 September 2026:
   unavailable. Re-run `supabase db reset` after Docker Desktop is repaired
   as an environment-level confirmation.
 
-Between September and 15 October, migrations were applied with the Supabase MCP `apply_migration` tool or the SQL Editor, which recorded a new timestamp; the repo files were renamed afterwards to match (PR 107 did this for the 8 October files). That is why some versions in the history are not the times the files were first written.
+Between September and 15 October, most migrations were applied by hand, mostly with the Supabase MCP `apply_migration` tool, which records the time it ran as the version and the person who ran it as the author; the repo files were renamed afterwards to match (PR 107 did this for the 8 October files). That is why many versions in the history are not the times the files were first written. The integration was already applying merged files then: a few are recorded under their own file versions with no author, such as `20261008215000_morph_id_bonus_credits` and `20261014180000_skip_lifetime_in_referral_lapse`. Round 1 of the review fixes (15 October) ran nothing by hand, and that is the rule now.

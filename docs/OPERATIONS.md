@@ -63,7 +63,7 @@ These are shared by every function in the project.
 
 Present on 15 October 2026: `email_unsubscribe_secret`, `notification_service_role_key`.
 
-To be created by Tennyson (round 2): `morph_share_view_key`, 32 or more random characters. The same value goes in the Vercel setting `MORPH_SHARE_VIEW_KEY` (below). The database counts a view of a shared Morph ID card only when the share page sends this key, so until both exist every card's view count stays 0. The cards themselves work without it.
+To be created by Tennyson (round 2): `morph_share_view_key`, 32 or more random characters. The same value goes in the Vercel setting `MORPH_SHARE_VIEW_KEY` (below), then redeploy production in Vercel (Deployments, the latest production deployment, Redeploy), because a changed setting reaches only new deployments. The database counts a view of a shared Morph ID card only when the share page sends this key, so until both exist and that redeploy is done every card's view count stays 0. The cards themselves work without it.
 
 ### Vercel environment variables (Project, Settings, Environment Variables)
 
@@ -72,7 +72,7 @@ Almost all are `VITE_` variables, which Vite builds into the public JavaScript. 
 - Required in production: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_REVENUECAT_WEB_API_KEY`, `VITE_POSTHOG_KEY`, `VITE_VAPID_PUBLIC_KEY`.
 - Required for a store build: `VITE_REVENUECAT_IOS_API_KEY` (iPhone) or `VITE_REVENUECAT_ANDROID_API_KEY` (Android).
 - Optional: `VITE_POSTHOG_HOST`, `VITE_GECK_DATA_SUPABASE_URL`, `VITE_GECK_DATA_SUPABASE_ANON_KEY`, `VITE_MARKET_SNAPSHOT_URL`, `VITE_MARKET_INTEL_URL`, `VITE_IMAGE_TRANSFORMS`.
-- Server-only, never `VITE_`: `MORPH_SHARE_VIEW_KEY`, read by `api/morph-share.js` on the server to count card views. It must equal the Vault secret `morph_share_view_key`. No `VITE_` prefix: those names are for public values the build may put in the browser's JavaScript, and anyone holding this key could inflate the view counts.
+- Server-only, never `VITE_`: `MORPH_SHARE_VIEW_KEY`, read by `api/morph-share.js` on the server to count card views. It must equal the Vault secret `morph_share_view_key`. After setting or changing it, redeploy production (Deployments, the latest production deployment, Redeploy): like every Vercel setting, it reaches only new deployments, and a push that changes only docs does not build one. No `VITE_` prefix: those names are for public values the build may put in the browser's JavaScript, and anyone holding this key could inflate the view counts.
 - `middleware.js` (through `api/_lib/bots.js`) and `api/morph-share.js` also read `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` on the server, to log crawler visits and to read shared cards.
 
 ### GitHub Actions secrets (Repository, Settings, Secrets and variables, Actions)

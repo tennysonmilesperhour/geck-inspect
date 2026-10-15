@@ -46,6 +46,6 @@ Target WCAG 2.2 AA. Morph ID must support keyboard operation, visible focus, scr
 | Corrections and training review | `src/pages/Training.jsx`, `MorphCorrectionPanel.jsx`, `AIFeedbackQueue.jsx` |
 | Accuracy checks | `scripts/morph-id-eval/` and the hand-run `morph-id-eval` workflow (220 held-out geckos, about $6 a full run); the `daily-canary` workflow runs two real identifications each morning |
 
-Done in round 2 of the 14 October review's plan (Part E, item 17): the shareable result card and one free identification a month. Card views are counted only once the Vault secret `morph_share_view_key` and the Vercel setting `MORPH_SHARE_VIEW_KEY` are set (`docs/planning/deploy-queue-2026-10-03.md`).
+Done in round 2 of the 14 October review's plan (Part E, item 17): the shareable result card and one free identification a month. Card views are counted only once the Vault secret `morph_share_view_key` and the Vercel setting `MORPH_SHARE_VIEW_KEY` are set and production has been redeployed in Vercel after the setting was added (`docs/planning/deploy-queue-2026-10-03.md`).
 
 Open work: an adjudicated, seller-disjoint gold set with a published accuracy number (item 29). The honest framing stays: visual traits, not proven genes.

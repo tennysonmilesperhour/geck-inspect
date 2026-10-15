@@ -2,13 +2,13 @@
 
 The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file records what went to production on 3 October and after.
 
-**Status 15 October: the SQL queue is cleared, and deploys are now automatic.** Everything that was waiting on the SQL Editor run reached production on 8 October (details in "Cleared on 8 October" below). Since 15 October, merging to `main` does three things at once, through Vercel and the Supabase GitHub integration: Vercel deploys the site, Supabase applies every new file in `supabase/migrations/`, and Supabase deploys the edge functions declared in `supabase/config.toml`. Round 1 of the review fixes went out that way (below). How to write a migration for this is in `docs/MIGRATIONS.md`.
+**Status 15 October: the SQL queue is cleared, and deploys go through merges.** Everything that was waiting on the SQL Editor run reached production on 8 October (details in "Cleared on 8 October" below). Merging to `main` does three things at once, through Vercel and the Supabase GitHub integration: Vercel deploys the site, Supabase applies every new file in `supabase/migrations/`, and Supabase deploys the edge functions declared in `supabase/config.toml`. The integration already did this before 15 October, alongside changes applied by hand; round 1 of the review fixes went out with nothing run by hand (below), and that is the rule now. How to write a migration for this is in `docs/MIGRATIONS.md`.
 
 What is still open in this file: round 2 (written, not merged yet, with its steps for Tennyson), the two leftover functions under "Also for Tennyson", and the real-device checks.
 
 Project: `mmuglfphhwlaluyfyxsp`.
 
-## How a merge to main deploys (since 15 October)
+## How a merge to main deploys
 
 - **Three deploys, no fixed order.** Vercel builds the site, the integration applies new migration files in filename order, and it deploys declared functions. Any of the three can finish first, and members keep old copies of the app open for hours, so every change has to work with the old app and the new one, before and after its migration.
 - **Migrations are recorded under the file's own version.** Production's history shows round 1 as `20261015120000_ownership_checks` and so on, with no author, which is how the integration records them (the 8 October files, applied by hand, carry a new timestamp and an author instead).
@@ -62,10 +62,10 @@ Plan items E2 15 to 22 and E5 of `docs/planning/comprehensive-review-2026-10-14.
    - Copy its signing secret (it starts with `whsec_`) into the Supabase function secret `RESEND_WEBHOOK_SECRET`. Without it the function refuses every call.
    - Turn on open and click tracking for the sending domain in Resend, or opens and clicks stay at 0.
 2. **Email footer:** set the function secret `EMAIL_POSTAL_ADDRESS` (the postal address US law expects in commercial email). Optional: `UNSUBSCRIBE_MAILTO`, an address that handles unsubscribe requests by hand, used only when a signed unsubscribe link cannot be made.
-3. **Morph ID card views:** create the Vault secret `morph_share_view_key` (32 or more random characters) and set the same value as the Vercel setting `MORPH_SHARE_VIEW_KEY`. It is a server-only setting: never give it a `VITE_` name, because `VITE_` names are for public values the build may put in the browser's JavaScript. Until both exist, cards work but every card's view count stays at 0.
+3. **Morph ID card views:** create the Vault secret `morph_share_view_key` (32 or more random characters) and set the same value as the Vercel setting `MORPH_SHARE_VIEW_KEY`. It is a server-only setting: never give it a `VITE_` name, because `VITE_` names are for public values the build may put in the browser's JavaScript. Then redeploy production in Vercel (Deployments, the latest production deployment, Redeploy), because a changed setting reaches only new deployments, and a later merge that touches only docs does not make one. Until both values exist and that redeploy is done, cards work but every card's view count stays at 0.
 4. **Lifecycle emails:** approve the copy in `docs/planning/lifecycle-emails-2026-10.md`, then turn them on in the SQL Editor: `update public.app_settings set value = 'true'::jsonb where key = 'lifecycle_emails_enabled';`. Until then the hourly job sends nothing.
 5. **Phone checks:**
-   - Add a gecko with no weight after the release: the next day (the job runs at 14:20 UTC) a weigh-in reminder arrives, and its link opens `/log` with that gecko.
+   - Add a gecko with no weight on or after 16 October UTC (6 pm on 15 October, Denver time), and not before the release day: the next day (the job runs at 14:20 UTC, 8:20 am Denver time) a weigh-in reminder arrives, and its link opens `/log` with that gecko. Do not test sooner. A gecko added before then gets a reminder only if its own reminder switch is on, and on the first day the defaults apply, reminders still link to the older pages, so a sooner test can look broken when nothing is wrong.
    - Airplane mode: log a feeding in Field Mode or on `/log`, go back online, and the feeding is saved once (not zero times, not twice).
    - Share a Morph ID result and paste the card link into Messenger or a Facebook thread: the preview shows the photo and the title.
 

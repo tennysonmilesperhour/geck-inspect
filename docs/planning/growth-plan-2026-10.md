@@ -19,10 +19,10 @@ Win crested gecko keepers one gecko at a time: get the first gecko in within a m
 Three loops matter, in this order:
 
 1. **Activation:** first gecko in under a minute, with its lineage card, its value and what it needs next. Success: 60% of signups add a gecko on day one (today 32%).
-2. **Retention:** personal reminders (weigh-ins, feeding, hatch dates, vet follow-ups) and a weekly note about your own animals, not a generic digest. Success: weekly active breeders (logging records), the scoreboard's number (members logging care for their own geckos in the last 7 days, admin excluded), grows every week from about 1 today.
+2. **Retention:** personal reminders (weigh-ins, feeding, hatch dates, vet follow-ups) and a weekly note about your own animals, not a generic digest. Success: weekly active breeders (logging records), the scoreboard's number (members logging care for their own geckos in the last 7 days, admin excluded), grows every week from 2 on 15 October (it was between 1 and 3 in each of the last 8 weeks; `docs/NOW.md`).
 3. **Distribution through breeders:** every animal a breeder sells goes out with a passport QR card and a transfer link, so the buyer arrives with a gecko already in their account. Success: signups that arrive by passport, transfer, waitlist or store link.
 
-North-star metric: **weekly active breeders (logging records)**, as the Weekly scoreboard card on Admin, Overview names it (`docs/NOW.md`). It sits beside the Growth funnel card (signups, first gecko within a day, and day-1 and week-2 return by source).
+North-star metric: **weekly active breeders (logging records)**, as the Weekly scoreboard card on Admin, Overview names it (`docs/NOW.md`). It sits just above the Growth funnel card (signups, first gecko within a day, and day-1 and week-2 return by source).
 
 ## 3. What changed on 5 October
 
