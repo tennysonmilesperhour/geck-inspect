@@ -161,7 +161,7 @@ export const TOURS = [
         id: 'morphs-id',
         path: '/Recognition',
         title: 'Morph ID from two photos',
-        body: 'Add a top and a side view and get a ranked shortlist of likely traits, with the evidence behind each one. Your first check is free with an account.',
+        body: 'Add a top and a side view and get a ranked shortlist of likely traits, with the evidence behind each one. A free account gets one check a month.',
         next: 'Learn the genetics',
       },
       {

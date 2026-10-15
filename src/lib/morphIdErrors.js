@@ -1,5 +1,7 @@
 import { PROVIDER_UNAVAILABLE_MESSAGE } from '../../supabase/functions/_shared/morph-upstream.ts';
 
+import { creditResetWhen } from './creditReset';
+
 export { PROVIDER_UNAVAILABLE_MESSAGE };
 
 // User-facing error copy keyed by edge-function error code. Admins skip
@@ -8,7 +10,7 @@ export { PROVIDER_UNAVAILABLE_MESSAGE };
 const FRIENDLY_ERROR = {
   morph_id_credits_exhausted: {
     title: "You're out of MorphID credits for this month",
-    body: 'Your credits reset on the 1st. Upgrade your plan to identify more geckos now.',
+    body: 'Your credits reset at midnight UTC on the 1st. Upgrade your plan to identify more geckos now.',
     cta: { label: 'See plans', href: '/Membership' },
   },
   // The per-network daily cap runs before a credit is used, so nothing was
@@ -121,13 +123,23 @@ export function morphIdErrorSettledQuota(error) {
  * Provider outages use one sentence so a credit-balance failure, a 5xx,
  * and a timeout all read the same to a member.
  */
-export function presentMorphIdError(error, { isFreeTier = false, bonus = 0, keeperCredits = 3 } = {}) {
+export function presentMorphIdError(error, { isFreeTier = false, bonus = 0, keeperCredits = 3, now = new Date(), timeZone } = {}) {
+  // Allowances reset at midnight UTC on the 1st, which in the US is the
+  // evening before, so say the moment in the member's own time.
+  const resetWhen = creditResetWhen(now, timeZone);
   if (error?.code === 'morph_id_credits_exhausted' && isFreeTier) {
     return {
       title: bonus > 0 ? 'You have used your Morph ID scans' : "You have used this month's free Morph ID",
-      body: `Your next free identification arrives on the 1st. Keeper includes ${keeperCredits} identifications a month.`,
+      body: `Your next free identification arrives ${resetWhen}. Keeper includes ${keeperCredits} identifications a month.`,
       cta: { label: 'See plans', href: '/Membership' },
       retryable: false,
+    };
+  }
+  if (error?.code === 'morph_id_credits_exhausted') {
+    return {
+      ...FRIENDLY_ERROR.morph_id_credits_exhausted,
+      body: `Your credits reset ${resetWhen}. Upgrade your plan to identify more geckos now.`,
+      retryable: MORPH_ID_RETRYABLE.has(error.code),
     };
   }
   const known = FRIENDLY_ERROR[error?.code];

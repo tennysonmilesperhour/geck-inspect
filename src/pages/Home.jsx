@@ -163,7 +163,7 @@ const BUSINESS_SECTIONS = [
 // Everything else gets one line each (DECISIONS.md 13: no feature grids).
 // An item can be { label, to } when it has a public page to open.
 const ALSO_INCLUDED = [
-  { label: 'AI Morph ID (your first one is free)', to: '/Recognition' },
+  { label: 'AI Morph ID (one free a month)', to: '/Recognition' },
   'Weight and growth tracking',
   'Egg and incubation timeline',
   'Multi-generation lineage',

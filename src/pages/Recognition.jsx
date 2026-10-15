@@ -31,6 +31,7 @@ import ViewPhotoUploader from '../components/morph-id/ViewPhotoUploader';
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
 import { AGE_STAGES, FIRED_STATES } from '../components/morph-id/morphTaxonomy';
 import { morphIdErrorSettledQuota, presentMorphIdError } from '@/lib/morphIdErrors';
+import { creditResetWhen } from '@/lib/creditReset';
 
 // What the analyzer is doing, in the order it does it, so a 30 to 90 second
 // wait reads as work in progress instead of a frozen button.
@@ -352,8 +353,8 @@ export default function Recognition() {
               </p>
               <p className="text-sm text-amber-200/80 max-w-md">
                 {isFreeTier
-                  ? <>Your next free identification arrives on the 1st. Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.</>
-                  : 'Your monthly scans reset on the 1st. Upgrade your plan to identify more geckos now.'}
+                  ? <>Your next free identification arrives {creditResetWhen()}. Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.</>
+                  : `Your monthly scans reset ${creditResetWhen()}. Upgrade your plan to identify more geckos now.`}
               </p>
               <div className="flex flex-wrap gap-2 justify-center mt-1">
                 <Button onClick={() => { upgradePromptClicked('morph_id', 'morph_id_locked'); navigate('/Membership'); }}>
@@ -574,7 +575,7 @@ export default function Recognition() {
         )}
         {meta && !meta.is_admin && !meta.credit_refunded && isFreeTier && gate.known && gate.remaining === 0 && gate.bonus === 0 && (
           <p className="text-xs text-slate-500 text-center">
-            That was this month&rsquo;s free identification. The next one arrives on the 1st, or Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
+            That was this month&rsquo;s free identification. The next one arrives {creditResetWhen()}, or Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
           </p>
         )}
         {meta && !meta.is_admin && showScansLeft && (

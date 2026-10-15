@@ -16,7 +16,7 @@ export default function MorphActions({ slug, name, priceRange }) {
       to: '/Recognition',
       icon: Camera,
       title: `Is your gecko ${article(name)} ${name}?`,
-      body: 'Identify it from a photo with Morph ID. Your first check is free.',
+      body: 'Identify it from a photo with Morph ID. One free check a month with an account.',
       tone: 'from-emerald-500/15 to-emerald-500/5 border-emerald-500/30 hover:border-emerald-400/60',
       iconTone: 'bg-emerald-500/15 text-emerald-300',
     },

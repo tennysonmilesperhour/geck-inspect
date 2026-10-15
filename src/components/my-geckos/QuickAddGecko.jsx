@@ -274,7 +274,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               <Camera className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
               <span>
                 <span className="block font-semibold text-slate-100">Add it by photo</span>
-                <span className="block text-sm text-slate-300 mt-0.5">Morph ID reads the morph from a top and a side photo (say, Lilly White or Harlequin) and fills it in. Your first one is free.</span>
+                <span className="block text-sm text-slate-300 mt-0.5">Morph ID reads the morph from a top and a side photo (say, Lilly White or Harlequin) and fills it in. Free accounts get one a month.</span>
               </span>
             </button>
             <button

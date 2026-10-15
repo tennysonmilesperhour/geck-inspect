@@ -40,3 +40,13 @@ export function creditResetLocalText(now = new Date(), timeZone = undefined) {
     return 'midnight UTC on the 1st';
   }
 }
+
+/**
+ * The same moment, ready to follow "resets" or "arrives": "on Oct 31 at
+ * 8:00 PM your time", or "at midnight UTC on the 1st" when the browser
+ * cannot format dates.
+ */
+export function creditResetWhen(now = new Date(), timeZone = undefined) {
+  const text = creditResetLocalText(now, timeZone);
+  return text.startsWith('midnight') ? `at ${text}` : `on ${text}`;
+}
