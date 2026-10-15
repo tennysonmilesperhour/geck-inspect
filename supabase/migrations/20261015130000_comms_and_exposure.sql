@@ -67,8 +67,12 @@
 --     message, comment or follow exists, then writes the text and the link
 --     itself from a fixed template plus the sender's display name. Whatever
 --     text or link the browser sent is thrown away. The same notification
---     is sent at most once every 10 minutes, and a member can reach at most
---     30 different people an hour this way.
+--     is sent at most once every 10 minutes (a follow once a day, and only
+--     a follow made in the last hour), and a member can reach at most 30
+--     different people an hour this way.
+--   * Nothing goes between two members when either has blocked the other.
+--   * A display name that reads as the team ("Geck Inspect ...") is
+--     replaced by "A Geck Inspect member".
 -- Follows now go through follow_profile() (section 4), which writes the
 -- follower notification itself.
 
@@ -119,7 +123,9 @@ begin
    limit 1;
   v_name := btrim(regexp_replace(coalesce(v_name, ''), '[[:cntrl:]]+', ' ', 'g'));
   if v_name = ''
-     or v_name ~* '(@|://|www\.|\.(com|net|org|io|co|app|xyz|info|link|me|shop|store)([^[:alnum:]]|$))' then
+     or v_name ~* '(@|://|www\.|\.(com|net|org|io|co|app|xyz|info|link|me|shop|store)([^[:alnum:]]|$))'
+     -- Nor a name that would read as the team writing ("Geck Inspect Team").
+     or v_name ~* 'geck[^[:alnum:]]*inspect' then
     v_name := 'A Geck Inspect member';
   end if;
   v_name := left(v_name, 60);
@@ -204,9 +210,12 @@ begin
       raise exception 'That member has not posted in this thread' using errcode = '42501';
     end if;
   elsif p_type = 'new_follower' then
+    -- Only a follow made in the last hour: an old follow cannot be used to
+    -- send "started following you" again and again.
     if not exists (select 1 from public.user_follows f
-                    where f.follower_email = v_me and f.following_email = p_recipient_email) then
-      raise exception 'You do not follow this member' using errcode = '42501';
+                    where f.follower_email = v_me and f.following_email = p_recipient_email
+                      and f.created_date > now() - interval '1 hour') then
+      raise exception 'You have not just followed this member' using errcode = '42501';
     end if;
   else
     -- New gecko or breeding plan: only to the caller's own followers.
@@ -216,11 +225,25 @@ begin
     end if;
   end if;
 
+  -- Blocking stops every notification between two members, in both
+  -- directions, whatever the event (a follow made before the block, a
+  -- comment in a shared thread, a message sent just before it). Checked
+  -- after the event, so a direct call only says so about a member the
+  -- caller has just followed, messaged or answered.
+  if exists (select 1 from public.user_blocks b
+              where (lower(b.blocker_email) = lower(p_recipient_email) and lower(b.blocked_email) = lower(v_me))
+                 or (lower(b.blocker_email) = lower(v_me) and lower(b.blocked_email) = lower(p_recipient_email))) then
+    raise exception 'You cannot notify this member' using errcode = '42501';
+  end if;
+
   -- The same notification at most once every 10 minutes (a burst of chat
-  -- messages becomes one email, not ten).
+  -- messages becomes one email, not ten). A follow is announced at most
+  -- once a day, as follow_profile does, so unfollowing and following again
+  -- does not repeat it.
   if exists (select 1 from public.notifications n
               where n.created_by = v_me and n.user_email = p_recipient_email and n.type = p_type
-                and n.created_date > now() - interval '10 minutes'
+                and n.created_date > now() - case when p_type = 'new_follower'
+                                                  then interval '1 day' else interval '10 minutes' end
                 and (v_post is null or n.metadata ->> 'post_id' = v_post)) then
     return jsonb_build_object('skip', true);
   end if;
@@ -1101,6 +1124,17 @@ begin
 end;
 $function$;
 
+-- Watches are written only through the functions above. The geck_data
+-- schema is reachable through the API, and the old policies let a member
+-- insert a watch, or switch one back on, straight into geck_data.alerts,
+-- which skipped the Enterprise check (match_alerts then emails and pushes
+-- every active watch). Members keep reading and deleting their own
+-- watches directly; inserts and updates go through market_watch_save and
+-- market_watch_set_active, which run as the table owner and need no grant.
+drop policy if exists "owner insert alerts" on geck_data.alerts;
+drop policy if exists "owner update alerts" on geck_data.alerts;
+revoke insert, update on table geck_data.alerts from anon, authenticated;
+
 -- =====================================================================
 -- 6. Account deletion requests come from the account itself
 -- =====================================================================
@@ -1129,6 +1163,13 @@ security invoker
 set search_path to ''
 as $function$
 begin
+  -- An erased account's ticket keeps no trace of its email. Both erasure
+  -- edge functions close the member's deletion ticket by replacing
+  -- user_email with a deleted-account address; this clears the filer's
+  -- address in the same update, whichever function made it.
+  if tg_op = 'UPDATE' and new.user_email like '%@deleted.geckinspect.invalid' then
+    new.filed_by_email := null;
+  end if;
   if current_user not in ('anon', 'authenticated') then
     return new;
   end if;
@@ -1633,6 +1674,16 @@ begin
   delete from public.support_messages s
    where (lower(s.user_email) = v_email or lower(coalesce(s.created_by, '')) = v_email)
      and s.subject is distinct from 'Account deletion request';
+  -- 15 Oct 2026: a deletion request this member filed naming someone else
+  -- is kept for the team's records, without the member's address. The
+  -- member's own deletion ticket is left alone here: the edge function
+  -- that called this closes it (and the guard then clears its filer), and
+  -- a retried erasure from the inbox still needs it to be verifiable.
+  update public.support_messages s
+     set filed_by_email = null,
+         created_by = case when lower(coalesce(s.created_by, '')) = v_email then null else s.created_by end
+   where lower(s.filed_by_email) = v_email
+     and lower(coalesce(s.user_email, '')) <> v_email;
   delete from public.push_subscriptions x where lower(x.user_email) = v_email;
   -- Tables added on 3 Oct 2026.
   delete from public.content_reports x where lower(x.reporter_email) = v_email;

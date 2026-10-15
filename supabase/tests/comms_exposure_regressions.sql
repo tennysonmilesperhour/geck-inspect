@@ -236,6 +236,97 @@ begin
 end
 $t$;
 
+-- Blocking stops notifications, and an old follow cannot announce itself
+-- again and again.
+do $t$
+declare v_cat text; v_post text; n integer;
+begin
+  perform pg_temp.as_postgres();
+  insert into public.forum_categories (name, description) values ('Comms block test', 'Regression fixture') returning id into v_cat;
+  insert into public.forum_posts (title, content, category_id, author_name, created_by)
+  values ('Harlequin pairing', 'Thoughts?', v_cat, 'Alice Keeper', pg_temp.who('alice')) returning id into v_post;
+
+  -- Alice blocks Bob.
+  perform pg_temp.as_member('alice');
+  perform public.block_profile(pg_temp.who('bob', 'profile'));
+
+  -- Bob follows Alice by writing the follow row himself (skipping
+  -- follow_profile), comments on her post, then tries to notify her.
+  perform pg_temp.as_member('bob');
+  insert into public.user_follows (follower_email, following_email, created_by)
+  values (pg_temp.who('bob'), pg_temp.who('alice'), pg_temp.who('bob'));
+  insert into public.forum_comments (post_id, content, author_name, created_by)
+  values (v_post, 'Nice Harlequin', 'Bob Breeder', pg_temp.who('bob'));
+  perform pg_temp.must_fail('follower notification from a blocked member',
+    format($q$insert into public.notifications (user_email, type, content) values (%L, 'new_follower', 'x')$q$,
+           pg_temp.who('alice')), '%cannot notify%');
+  perform pg_temp.must_fail('comment notification from a blocked member',
+    format($q$insert into public.notifications (user_email, type, content, metadata) values (%L, 'new_comment', 'x', %L)$q$,
+           pg_temp.who('alice'), jsonb_build_object('post_id', v_post)), '%cannot notify%');
+  -- And the other way round: Alice cannot notify the member she blocked.
+  perform pg_temp.as_member('alice');
+  insert into public.forum_comments (post_id, content, author_name, created_by)
+  values (v_post, 'Thanks', 'Alice Keeper', pg_temp.who('alice'));
+  perform pg_temp.must_fail('reply notification to a blocked member',
+    format($q$insert into public.notifications (user_email, type, content, metadata) values (%L, 'new_reply', 'x', %L)$q$,
+           pg_temp.who('bob'), jsonb_build_object('post_id', v_post)), '%cannot notify%');
+  perform pg_temp.as_postgres();
+  select count(*) into n from public.notifications
+   where user_email = pg_temp.who('alice') and created_by = pg_temp.who('bob')
+     and metadata ->> 'post_id' is not distinct from v_post;
+  if n <> 0 then raise exception 'FAIL: a blocked member reached the member who blocked him (% notifications)', n; end if;
+
+  -- Carol follows Alice directly. The first "started following you" goes
+  -- out; the same follow cannot send it again later.
+  perform pg_temp.as_member('carol');
+  insert into public.user_follows (follower_email, following_email, created_by)
+  values (pg_temp.who('carol'), pg_temp.who('alice'), pg_temp.who('carol'));
+  insert into public.notifications (user_email, type, content) values (pg_temp.who('alice'), 'new_follower', 'x');
+  perform pg_temp.as_postgres();
+  update public.notifications set created_date = now() - interval '11 minutes'
+   where user_email = pg_temp.who('alice') and created_by = pg_temp.who('carol') and type = 'new_follower';
+  perform pg_temp.as_member('carol');
+  insert into public.notifications (user_email, type, content) values (pg_temp.who('alice'), 'new_follower', 'x');
+  perform pg_temp.as_postgres();
+  select count(*) into n from public.notifications
+   where user_email = pg_temp.who('alice') and created_by = pg_temp.who('carol') and type = 'new_follower';
+  if n <> 1 then raise exception 'FAIL: the same follow announced itself % times', n; end if;
+  -- A day later the follow is old, so it cannot be announced at all.
+  update public.notifications set created_date = now() - interval '2 days'
+   where user_email = pg_temp.who('alice') and created_by = pg_temp.who('carol') and type = 'new_follower';
+  update public.user_follows set created_date = now() - interval '2 days'
+   where follower_email = pg_temp.who('carol') and following_email = pg_temp.who('alice');
+  perform pg_temp.as_member('carol');
+  perform pg_temp.must_fail('follower notification for an old follow',
+    format($q$insert into public.notifications (user_email, type, content) values (%L, 'new_follower', 'x')$q$,
+           pg_temp.who('alice')), '%just followed%');
+
+  -- Clean up so later sections start from plain members.
+  perform pg_temp.as_postgres();
+  delete from public.user_blocks where blocker_email = pg_temp.who('alice');
+  delete from public.user_follows where following_email = pg_temp.who('alice');
+end
+$t$;
+
+-- A display name that reads as the team never reaches an email.
+do $t$
+declare r record;
+begin
+  perform pg_temp.as_postgres();
+  update public.profiles set full_name = 'Geck Inspect Team' where email = pg_temp.who('carol');
+  perform pg_temp.as_member('carol');
+  insert into public.direct_messages (sender_email, recipient_email, content, created_by)
+  values (pg_temp.who('carol'), pg_temp.who('bob'), 'Hello', pg_temp.who('carol'));
+  insert into public.notifications (user_email, type, content) values (pg_temp.who('bob'), 'new_message', 'x');
+  perform pg_temp.as_postgres();
+  select * into r from public.notifications where user_email = pg_temp.who('bob') and created_by = pg_temp.who('carol');
+  if r.content <> 'A Geck Inspect member sent you a message.' then
+    raise exception 'FAIL: a team-like display name reached the notification: %', r.content;
+  end if;
+  update public.profiles set full_name = null where email = pg_temp.who('carol');
+end
+$t$;
+
 -- =====================================================================
 -- 2. Direct messages
 -- =====================================================================
@@ -360,6 +451,12 @@ begin
   perform pg_temp.must_fail('free member reads watch matches', 'select * from public.market_watch_matches(5)', '%Enterprise%');
   perform pg_temp.must_fail('free member saves a watch',
     $q$select public.market_watch_save(null, array['Lilly White'], 500)$q$, '%Enterprise%');
+  -- Nor by writing the watch table directly (geck_data is reachable
+  -- through the API).
+  perform pg_temp.must_fail('free member inserts a watch directly',
+    format($q$insert into geck_data.alerts (owner_id, name, query, active)
+              values (%L, 'x', '{"species":"crested","max_price":500}', true)$q$, pg_temp.who('bob', 'uid')),
+    '%permission denied%');
 
   -- Enterprise members and admins use it.
   perform pg_temp.as_member('ent');
@@ -377,6 +474,12 @@ begin
   perform public.market_watch_set_active(v_id, false);
   perform pg_temp.must_fail('switch a watch back on without Enterprise',
     format('select public.market_watch_set_active(%L, true)', v_id), '%Enterprise%');
+  perform pg_temp.must_fail('switch a watch back on directly',
+    format('update geck_data.alerts set active = true where id = %L', v_id), '%permission denied%');
+  -- Members still read their own watches directly.
+  if (select count(*) from geck_data.alerts where id = v_id) <> 1 then
+    raise exception 'FAIL: a member can no longer read their own watch';
+  end if;
   perform public.market_watch_remove(v_id);
   perform pg_temp.as_postgres();
 end
@@ -507,6 +610,48 @@ begin
   end if;
   if exists (select 1 from public.weight_records where created_by = pg_temp.who('bob') and weight_grams = 38) is not true then
     raise exception 'FAIL: the new owner''s own record changed';
+  end if;
+end
+$t$;
+
+-- Erasure leaves no filer address on support tickets: neither on the
+-- member's own deletion ticket once the edge function closes it, nor on a
+-- deletion request the member filed naming someone else.
+do $t$
+declare v_own text; v_other text; v_email text := pg_temp.who('carol'); r record;
+begin
+  perform pg_temp.as_member('carol');
+  insert into public.support_messages (user_email, subject, body)
+  values (v_email, 'Account deletion request', 'Carol wants out') returning id into v_own;
+  insert into public.support_messages (user_email, subject, body)
+  values (pg_temp.who('bob'), 'Account deletion request', 'Carol names Bob') returning id into v_other;
+
+  perform pg_temp.as_postgres();
+  perform public.admin_erase_account(v_email);
+  -- The member's own ticket still verifies after the SQL step, so a retried
+  -- erasure from the inbox is not refused.
+  if (select filed_by_email from public.support_messages where id = v_own) is distinct from v_email then
+    raise exception 'FAIL: the member''s own deletion ticket lost its filer before the edge function closed it';
+  end if;
+  select * into r from public.support_messages where id = v_other;
+  if r.filed_by_email is not null or r.created_by is not null then
+    raise exception 'FAIL: a ticket the erased member filed about someone else kept her address';
+  end if;
+
+  -- What delete-my-account (and admin-delete-account) do to close the
+  -- member's own ticket, as the service role.
+  perform pg_temp.as_service();
+  update public.support_messages
+     set status = 'resolved', resolved_by = 'self-service', resolved_date = now(),
+         user_email = 'deleted-' || replace(gen_random_uuid()::text, '-', '') || '@deleted.geckinspect.invalid',
+         created_by = null, body = 'Account deletion request. The member deleted the account from Settings.'
+   where id = v_own;
+  perform pg_temp.as_postgres();
+  if exists (select 1 from public.support_messages s
+              where lower(coalesce(s.filed_by_email, '')) = v_email
+                 or lower(coalesce(s.user_email, '')) = v_email
+                 or lower(coalesce(s.created_by, '')) = v_email) then
+    raise exception 'FAIL: the erased member''s email is still on a support ticket';
   end if;
 end
 $t$;
