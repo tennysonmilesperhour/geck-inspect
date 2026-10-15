@@ -15,7 +15,8 @@
 -- after and everything passes.
 --
 -- Covered: transfer takeover, forged care records and eggs, owner deletes
--- of forged rows, created_by freeze, collection placement and moves,
+-- of forged rows, created_by freeze, collection placement and moves
+-- (including a member's own gecko after they leave a shared collection),
 -- invitations (pending start, owner cannot accept, pending sees nothing
 -- inside), collaborator and gecko caps per plan (including unarchive and
 -- claims), profile planting, email and "member since" changes, the
@@ -257,6 +258,12 @@ begin
                  where x.id = g and c.owner_email = 'own-y@example.com')
     and exists (select 1 from public.ownership_records where animal_id = g and created_by = 'own-y@example.com')
     and (select status from public.transfer_requests where token = 'own-test-tok-a1') = 'claimed', r);
+
+  -- Once claimed, the sender cannot relabel the sale as cancelled.
+  r := ownership_test.try_as('own-a@example.com',
+    $s$update public.transfer_requests set status = 'cancelled', updated_date = now() where token = 'own-test-tok-a1'$s$);
+  perform ownership_test.expect('transfer: a claimed transfer cannot be cancelled afterwards',
+    (select status from public.transfer_requests where token = 'own-test-tok-a1') = 'claimed', r);
 
   -- Legitimate: the sender cancels a pending transfer.
   r := ownership_test.try_as('own-a@example.com', format(
@@ -502,6 +509,78 @@ begin
 end
 $g$;
 
+-- A member's own gecko filed in someone else's shared collection stays
+-- editable after they leave, are removed, or are made a viewer (the
+-- collection is only checked when a gecko moves). Each case gets its own
+-- collection owned by A with E as an accepted editor.
+do $leave$
+declare
+  r text;
+  v_case text;
+  v_cid uuid;
+  v_g text;
+  cid_b uuid := ownership_test.fx('cid_b')::uuid;
+  cid_e uuid := ownership_test.fx('cid_e')::uuid;
+begin
+  foreach v_case in array array['left', 'removed', 'made viewer'] loop
+    insert into public.collections (owner_email, name, is_default)
+    values ('own-a@example.com', 'Shared Harlequin project (' || v_case || ')', false)
+    returning id into v_cid;
+    insert into public.collection_members (collection_id, member_email, role, status, accepted_at)
+    values (v_cid, 'own-a@example.com', 'owner', 'accepted', now()),
+           (v_cid, 'own-e@example.com', 'editor', 'accepted', now());
+    v_g := 'own-test-left-' || replace(v_case, ' ', '-');
+    r := ownership_test.try_as('own-e@example.com', format(
+      $s$insert into public.geckos (id, name, created_by, collection_id) values (%L, 'E Sable', 'own-e@example.com', %L)$s$, v_g, v_cid));
+    perform ownership_test.expect('collections (legit): editor files their own gecko in the shared collection (' || v_case || ')', r = 'ok:1', r);
+
+    -- The three ways a member stops being an editor. Leaving and removal
+    -- are what CollectionsCard does (leave sets declined, remove deletes
+    -- the seat); a role change to viewer is covered as well.
+    if v_case = 'left' then
+      r := ownership_test.try_as('own-e@example.com', format(
+        $s$update public.collection_members set status = 'declined', declined_at = now() where collection_id = %L and member_email = 'own-e@example.com'$s$, v_cid));
+    elsif v_case = 'removed' then
+      r := ownership_test.try_as('own-a@example.com', format(
+        $s$delete from public.collection_members where collection_id = %L and member_email = 'own-e@example.com'$s$, v_cid));
+    else
+      r := ownership_test.try_as('own-a@example.com', format(
+        $s$update public.collection_members set role = 'viewer' where collection_id = %L and member_email = 'own-e@example.com'$s$, v_cid));
+    end if;
+    perform ownership_test.expect('collections (legit): editor seat ends (' || v_case || ')', r = 'ok:1', r);
+
+    r := ownership_test.try_as('own-e@example.com', format(
+      $s$update public.geckos set name = 'E Sable renamed' where id = %L$s$, v_g));
+    perform ownership_test.expect('collections (legit): owner renames their gecko after the seat ends (' || v_case || ')',
+      r = 'ok:1' and (select name from public.geckos where id = v_g) = 'E Sable renamed', r);
+
+    -- The gecko form re-sends the unchanged collection_id.
+    r := ownership_test.try_as('own-e@example.com', format(
+      $s$select public.save_gecko_record(jsonb_build_object('name', 'E Sable via form', 'collection_id', %L), gen_random_uuid(), %L, false, current_date)$s$,
+      v_cid, v_g));
+    perform ownership_test.expect('collections (legit): owner saves through the gecko form after the seat ends (' || v_case || ')',
+      r = 'ok:1' and (select name from public.geckos where id = v_g) = 'E Sable via form', r);
+
+    r := ownership_test.try_as('own-e@example.com', format(
+      $s$update public.geckos set archived = true, archived_date = now() where id = %L$s$, v_g));
+    perform ownership_test.expect('collections (legit): owner archives their gecko after the seat ends (' || v_case || ')',
+      r = 'ok:1' and (select archived from public.geckos where id = v_g), r);
+
+    -- Still no way into a collection they cannot edit (B's default one).
+    r := ownership_test.try_as('own-e@example.com', format(
+      $s$update public.geckos set collection_id = %L where id = %L$s$, cid_b, v_g));
+    perform ownership_test.expect('collections: after the seat ends, owner still cannot move the gecko into a collection they cannot edit (' || v_case || ')',
+      (select collection_id from public.geckos where id = v_g) = v_cid, r);
+
+    -- Moving it home to their own collection works.
+    r := ownership_test.try_as('own-e@example.com', format(
+      $s$update public.geckos set collection_id = %L where id = %L$s$, cid_e, v_g));
+    perform ownership_test.expect('collections (legit): owner moves the gecko back to their own collection (' || v_case || ')',
+      r = 'ok:1' and (select collection_id from public.geckos where id = v_g) = cid_e, r);
+  end loop;
+end
+$leave$;
+
 do $m$
 declare
   r text;
@@ -654,6 +733,12 @@ begin
     $s$update public.profiles set email = 'someone-else@example.com', created_by = 'someone-else@example.com' where email = 'own-b@example.com'$s$);
   perform ownership_test.expect('profiles: member cannot move their profile to another address',
     exists (select 1 from public.profiles where email = 'own-b@example.com' and created_by = 'own-b@example.com'), r);
+
+  perform ownership_test.put('b_profile_id', (select id::text from public.profiles where email = 'own-b@example.com'));
+  r := ownership_test.try_as('own-b@example.com',
+    $s$update public.profiles set id = gen_random_uuid() where email = 'own-b@example.com'$s$);
+  perform ownership_test.expect('profiles: member cannot change their profile id',
+    (select id::text from public.profiles where email = 'own-b@example.com') = ownership_test.fx('b_profile_id'), r);
 
   r := ownership_test.try_as('own-b@example.com',
     $s$update public.profiles set full_name = 'Member B', bio = 'Lilly White projects' where email = 'own-b@example.com'$s$);

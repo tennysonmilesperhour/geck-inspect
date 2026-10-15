@@ -325,6 +325,13 @@ begin
   new.to_user_id := old.to_user_id;
   new.claimed_at := old.claimed_at;
 
+  -- A claimed transfer is history (Transfer History and sales stats read
+  -- it), so the sender cannot later relabel it as cancelled or expired.
+  if old.status = 'claimed' then
+    raise exception 'A claimed transfer can no longer be changed.'
+      using errcode = '42501';
+  end if;
+
   if new.status = 'claimed' and old.status is distinct from 'claimed' then
     raise exception 'A transfer is only marked claimed when the buyer claims it.'
       using errcode = '42501';
@@ -522,7 +529,13 @@ $$;
 -- show them as the owner everywhere.
 -- Also: only the gecko's owner (or the owner of the collection it is
 -- leaving) may move it to another collection, so an editor cannot carry
--- someone else's gecko off into a collection of their own.
+-- someone else's gecko off into a collection of their own. And the
+-- collection it moves into must be one the member may write to, or one
+-- the gecko's own owner owns (that is how deleting a collection sends
+-- each gecko home). This destination check lives here, not in the update
+-- policy, because only a trigger can tell whether the collection actually
+-- changed: a member who left a shared collection must still be able to
+-- rename or archive their own gecko that is still filed there.
 create or replace function public.guard_gecko_ownership()
 returns trigger
 language plpgsql
@@ -555,6 +568,21 @@ begin
     raise exception 'Only the gecko''s owner can move it to another collection.'
       using errcode = '42501';
   end if;
+
+  -- Where it lands: no collection (allowed before this change too), a
+  -- collection the member may write to, or one owned by the gecko's owner.
+  -- (is_collection_owner only answers for the signed-in member, so the
+  -- gecko owner's collection is looked up directly.)
+  if new.collection_id is not null
+     and not public.can_write_collection(new.collection_id)
+     and not exists (
+       select 1 from public.collections c
+        where c.id = new.collection_id
+          and lower(c.owner_email) = lower(coalesce(new.created_by, ''))
+     ) then
+    raise exception 'You can only move a gecko into a collection you can edit.'
+      using errcode = '42501';
+  end if;
   return new;
 end;
 $$;
@@ -578,8 +606,11 @@ create policy "geckos_insert_own" on public.geckos
     and (collection_id is null or public.can_write_collection(collection_id))
   );
 
--- Updates: same people as before (owner or collection editor), and the
--- gecko must stay in, or move to, a collection the member may write to.
+-- Updates: same people as before (owner or collection editor). Moving a
+-- gecko to another collection is checked by guard_gecko_ownership above,
+-- only when the collection really changes. Checking the collection here
+-- instead would lock a member out of their own gecko once they leave, are
+-- removed from, or are made a viewer of the shared collection it sits in.
 drop policy if exists "geckos_update_own" on public.geckos;
 create policy "geckos_update_own" on public.geckos
   for update to authenticated
@@ -588,11 +619,8 @@ create policy "geckos_update_own" on public.geckos
     or public.is_collection_editor(collection_id, (select auth.email()))
   )
   with check (
-    (
-      (select auth.email()) = created_by
-      or public.is_collection_editor(collection_id, (select auth.email()))
-    )
-    and (collection_id is null or public.can_write_collection(collection_id))
+    (select auth.email()) = created_by
+    or public.is_collection_editor(collection_id, (select auth.email()))
   );
 
 -- Plan caps on active geckos. Production definition (20261002221052) with
@@ -1089,6 +1117,7 @@ begin
     new.paid_membership_started_at := old.paid_membership_started_at;
     new.social_post_credits := old.social_post_credits;
     -- Added 15 Oct 2026.
+    new.id := old.id;
     new.email := old.email;
     new.created_by := old.created_by;
     new.created_date := old.created_date;
