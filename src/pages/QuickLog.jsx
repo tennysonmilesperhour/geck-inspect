@@ -208,7 +208,15 @@ export default function QuickLog() {
         toast({ title: 'Sign in again', description: 'Your sign-in expired, so that log was not saved.', variant: 'destructive' });
       } else {
         console.warn('Quick log not saved:', error);
-        toast({ title: 'Not saved', description: careLogErrorText(error), variant: 'destructive' });
+        // A database refusal carries a code, and its own text is not for
+        // members. Errors without one are this app's own words, such as
+        // "This browser would not keep the log" in a private window, where
+        // "try again in a minute" would be the wrong advice.
+        toast({
+          title: 'Not saved',
+          description: error?.code ? careLogErrorText(error) : (error?.message || careLogErrorText(error)),
+          variant: 'destructive',
+        });
       }
       return false;
     }
@@ -249,9 +257,18 @@ export default function QuickLog() {
     if (entry.kind === 'weight') await Gecko.update(gecko.id, { weight_grams: entry.prevWeight });
   };
 
+  // One Undo at a time. Two feedings of the same group undone in quick
+  // succession would each hand the group's schedule to the other, and the
+  // group would stay marked fed with no feedings left on the page. While
+  // an Undo runs, the other Undo buttons are disabled and a tap is ignored.
+  const [undoing, setUndoing] = useState(false);
+  const undoingRef = useRef(false);
+
   const undo = async (gecko) => {
     const entry = logs[gecko.id];
-    if (!canUndo(entry)) return;
+    if (!canUndo(entry) || undoingRef.current) return;
+    undoingRef.current = true;
+    setUndoing(true);
     try {
       if (entry.status === 'queued') {
         const outcome = takeBackQueued(entry.queuedId);
@@ -283,6 +300,9 @@ export default function QuickLog() {
         description: error?.plain ? error.message : "Remove it from the gecko's record instead.",
         variant: 'destructive',
       });
+    } finally {
+      undoingRef.current = false;
+      setUndoing(false);
     }
   };
 
@@ -392,7 +412,7 @@ export default function QuickLog() {
               {entry.status === 'queued' ? `${entry.label}, kept on this phone` : `${entry.label}, saved`}
             </span>
             {canUndo(entry) && (
-              <Button type="button" variant="ghost" disabled={markingAll} onClick={() => undo(gecko)} className="min-h-11 text-slate-200">
+              <Button type="button" variant="ghost" disabled={markingAll || undoing} onClick={() => undo(gecko)} className="min-h-11 text-slate-200">
                 <Undo2 className="w-4 h-4 mr-1" /> Undo
               </Button>
             )}

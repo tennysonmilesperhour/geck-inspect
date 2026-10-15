@@ -324,6 +324,38 @@ describe('undo after Mark all fed keeps the group schedule right', () => {
     expect(mocks.rows.FeedingRecord[0].accepted).toBe(false);
     await act(async () => tree.unmount());
   });
+
+  it('runs one Undo at a time, so two quick taps in a group do not lose its schedule', async () => {
+    const today = todayLocalISO();
+    const tree = await open('/log?type=feeding&group=grp');
+    await act(async () => { buttons(tree, 'Mark all 3 fed')[0].props.onClick(); });
+    await settle();
+    expect(mocks.group.last_fed_date).toBe(today);
+
+    // Alder's Undo waits on the server; meanwhile the other Undo buttons
+    // are disabled and a tap on Birch's does nothing.
+    let release;
+    FeedingRecord.delete.mockImplementationOnce((id) => new Promise((resolve) => {
+      release = () => { mocks.rows.FeedingRecord = mocks.rows.FeedingRecord.filter((r) => r.id !== id); resolve(); };
+    }));
+    const [alder, birch] = undoButtons(tree);
+    let first;
+    await act(async () => { first = alder.props.onClick(); });
+    expect(undoButtons(tree).every((b) => b.props.disabled)).toBe(true);
+    await act(async () => { await birch.props.onClick(); });
+    await act(async () => { release(); await first; });
+
+    expect(mocks.rows.FeedingRecord.map((r) => r.animal_id)).toEqual(['g2', 'g3']);
+    expect(mocks.group.last_fed_date).toBe(today);
+    expect(undoButtons(tree).some((b) => b.props.disabled)).toBe(false);
+
+    // The schedule passed to Birch, so undoing the other two moves it back.
+    await act(async () => { await undoButtons(tree)[0].props.onClick(); });
+    await act(async () => { await undoButtons(tree)[0].props.onClick(); });
+    expect(mocks.rows.FeedingRecord).toEqual([]);
+    expect(mocks.group.last_fed_date).toBe('2026-10-10');
+    await act(async () => tree.unmount());
+  });
 });
 
 describe('undo on a log kept on the phone', () => {
@@ -403,6 +435,20 @@ describe('plain words on the page', () => {
       title: 'Not saved', description: 'You can no longer log for this gecko.',
     }));
     expect(JSON.stringify(mocks.toast.mock.calls)).not.toContain('row-level security');
+    await act(async () => tree.unmount());
+  });
+
+  it('shows this app\'s own reason as is when the phone could not keep a log', async () => {
+    // A private window: no signal, and the browser would not store the log.
+    mocks.save.mockImplementation(async () => {
+      throw new Error('This browser would not keep the log. It was not saved.');
+    });
+    const tree = await open('/log?type=shed&gecko=g1');
+    await act(async () => { buttons(tree, 'Shed today')[0].props.onClick(); });
+    expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Not saved', description: 'This browser would not keep the log. It was not saved.',
+    }));
+    expect(buttons(tree, 'Shed today')).toHaveLength(1);
     await act(async () => tree.unmount());
   });
 
