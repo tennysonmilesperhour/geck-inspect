@@ -14,8 +14,8 @@
 #   2. For each, a tool-using Claude Sonnet agent investigates the repo
 #      and either proposes a patch or skips.
 #   3. Successful patches that clear `pnpm lint` + `pnpm typecheck` are
-#      pushed to branch `error-triage/<sig>-<date>` and opened as DRAFT
-#      PRs labelled `error-triage`.
+#      filed as issues labelled `error-triage`, with the patch in the body.
+#      No branch is pushed.
 #   4. docs/error-triage-state.json is updated every run and committed
 #      back to main so the same signature doesn't retrigger.
 #
@@ -57,8 +57,9 @@ concurrency:
 jobs:
   triage:
     permissions:
+      # contents: write only for the state-file commit; fixes are filed as
+      # issues, so no pull-request permission is needed.
       contents: write
-      pull-requests: write
       issues: write
     runs-on: ubuntu-latest
     steps:

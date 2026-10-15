@@ -7,22 +7,24 @@
  * hands the top ranked groups to Claude via a tool-use loop. When Claude
  * proposes a fix we:
  *
- *   1. Apply the new file contents to a fresh `error-triage/<sig>-<date>`
- *      branch.
- *   2. Run `pnpm lint` and `pnpm typecheck`. If either fails we abort the
- *      fix, record `fix_failed`, and move on.
- *   3. `gh pr create --draft` with a body summarising the error + the
- *      agent's analysis + the risk assessment.
+ *   1. Apply the new file contents to the working tree (application
+ *      source under src/ only, see assertFixAllowed).
+ *   2. Run `pnpm lint` and `pnpm typecheck` without secrets in their
+ *      environment. If either fails we abort the fix, record
+ *      `fix_failed`, and move on.
+ *   3. `gh issue create` with the error, the agent's analysis, the risk
+ *      assessment and the patch, then reset the tree. No branch is pushed
+ *      (a pushed branch starts a Vercel preview deployment).
  *
  * All agent outcomes (including `skip` and `fix_failed`) are recorded in
  * docs/error-triage-state.json so the same signature doesn't re-trigger
- * a PR on the next run. The workflow commits state file updates back to
- * main at the end of every run.
+ * an issue on the next run. The workflow commits state file updates back
+ * to main at the end of every run.
  *
  * Safety posture:
- *   - Only draft PRs. Nothing merges without a human.
- *   - Max 3 fix PRs per run (MAX_FIXES_PER_RUN in lib.mjs).
- *   - Lint + typecheck gate before opening the PR.
+ *   - Issues only. Nothing is pushed or merged without a human.
+ *   - Max 3 fixes per run (MAX_FIXES_PER_RUN in lib.mjs).
+ *   - Lint + typecheck gate before filing the issue.
  *   - Claude instructed to skip transient/third-party/network errors.
  *   - Confidence floor: skip if Claude is less than "medium" confident.
  */
@@ -89,7 +91,7 @@ const TOOLS = [
   {
     name: 'propose_fix',
     description:
-      'Terminal. Emit a proposed fix. Provide full new contents for every file you want to change, NOT a diff. The workflow will apply them, run lint + typecheck, and open a draft PR if those pass.',
+      'Terminal. Emit a proposed fix. Provide full new contents for every file you want to change, NOT a diff. The workflow will apply them, run lint + typecheck, and file an issue with the patch if those pass.',
     input_schema: {
       type: 'object',
       properties: {
@@ -411,36 +413,36 @@ function captureBaseline() {
   };
 }
 
-function openDraftPR({ signature, group, fix, baseBranch }) {
-  const date = new Date().toISOString().slice(0, 10);
-  const branch = `error-triage/${signature}-${date}`;
-  git('config user.name "geckinspect-triage-bot"');
-  git('config user.email "triage-bot@users.noreply.github.com"');
-  git(`checkout -b ${branch}`);
-  git('add -A');
-  const msg = `error-triage: ${fix.title}`.slice(0, 72);
-  git(`commit -m ${shellQuote(msg)}`);
-  git(`push -u origin ${branch}`);
+// Files the proposed fix as a GitHub issue with the patch in the body.
+// Until 15 October 2026 the bot pushed an error-triage/* branch and opened
+// a draft pull request. Every pushed branch also started a Vercel preview
+// deployment, which the owner does not want (CLAUDE.md), and all three of
+// its pull requests were closed unmerged. An issue keeps the analysis and
+// the patch in one place; a person (or a session asked to) applies it.
+const ISSUE_BODY_LIMIT = 60_000;
 
-  // Idempotent label create.
-  try { execSync('gh label create error-triage --color B60205 --description "Auto-generated PR from nightly error-triage"', { cwd: REPO_ROOT, stdio: 'pipe' }); } catch {}
-
-  const body = buildPrBody({ signature, group, fix });
+function openPatchIssue({ signature, group, fix }) {
+  const patch = git('diff');
+  try { execSync('gh label create error-triage --color B60205 --description "Fix proposed by error-triage"', { cwd: REPO_ROOT, stdio: 'pipe' }); } catch {}
+  let body = buildPrBody({ signature, group, fix });
+  const patchBlock = ['', '### Proposed patch', '', 'Apply with `git apply` after reading it.', '', '```diff', patch, '```', ''].join('\n');
+  if (body.length + patchBlock.length <= ISSUE_BODY_LIMIT) {
+    body += patchBlock;
+  } else {
+    body += '\n\n_The patch was too long for an issue body and is not included. Re-run the triage for this signature to see it in the workflow log._\n';
+  }
   const out = execSync(
     [
-      'gh', 'pr', 'create',
-      '--base', baseBranch,
-      '--head', branch,
-      '--title', fix.title.slice(0, 70),
+      'gh', 'issue', 'create',
+      '--title', `error-triage: ${fix.title}`.slice(0, 120),
       '--body-file', '-',
       '--label', 'error-triage',
-      '--draft',
     ].map(shellQuote).join(' '),
     { cwd: REPO_ROOT, encoding: 'utf8', input: body }
   );
   const url = out.trim().split('\n').filter((l) => l.startsWith('http'))[0] || out.trim();
-  git(`checkout ${baseBranch}`);
-  return { branch, url };
+  resetWorkingTree();
+  return { url };
 }
 
 function buildPrBody({ signature, group, fix }) {
@@ -512,7 +514,7 @@ async function triageGroup({ client, group, baseBranch, placeholder, baseline })
 
   if (placeholder) {
     console.log('  (placeholder mode, not opening PR, not applying files)');
-    return { status: 'skipped', reason: 'placeholder mode: agent proposed fix but PR creation disabled', prUrl: null };
+    return { status: 'skipped', reason: 'placeholder mode: agent proposed fix but issue creation disabled', prUrl: null };
   }
 
   // Apply to a clean tree.
@@ -532,15 +534,15 @@ async function triageGroup({ client, group, baseBranch, placeholder, baseline })
 
   let pr;
   try {
-    pr = openDraftPR({ signature: group.signature, group, fix, baseBranch });
+    pr = openPatchIssue({ signature: group.signature, group, fix });
   } catch (err) {
     // Leave the tree clean, but keep the failure out of the state as
     // fix_failed so we retry rather than silently losing it.
     try { git(`checkout ${baseBranch}`); } catch {}
     resetWorkingTree();
-    return { status: 'fix_failed', reason: `pr_create: ${err.message}`, prUrl: null };
+    return { status: 'fix_failed', reason: `issue_create: ${err.message}`, prUrl: null };
   }
-  return { status: 'open_pr', prUrl: pr.url, branch: pr.branch, title: fix.title };
+  return { status: 'open_issue', prUrl: pr.url, branch: null, title: fix.title };
 }
 
 // --------------------------------------------------------------------------
