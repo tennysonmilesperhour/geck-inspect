@@ -27,6 +27,8 @@
 -- 4. admin_revenue_summary(): monthly recurring revenue, all-time
 --    revenue, refunds, and the cancellations waiting to take effect, for
 --    the admin overview. It checks is_admin() and raises for anyone else.
+--    A lifetime purchase is counted once, from its grant row, although
+--    Stripe also sends its receipt as a paid invoice.
 --
 -- Refund and dispute events are not rebuilt from the log: the current
 -- Stripe API leaves the invoice off a charge, and finding it needs a
@@ -473,7 +475,12 @@ begin
   get diagnostics v_withdrawn = row_count;
 
   -- Ended. A lifetime member's old subscription is marked as replaced by
-  -- the lifetime plan, which is an upgrade, not churn.
+  -- the lifetime plan, which is an upgrade, not churn. The webhook cancels
+  -- the old plan seconds after the lifetime purchase, so only an ending
+  -- within a day of a lifetime purchase counts as replaced: a member who
+  -- cancelled for real and bought lifetime months later stays churn. A
+  -- lifetime member with no purchase row at all (bought before the ledger)
+  -- falls back to the profile.
   insert into public.payment_events (
     id, user_email, stripe_event_id, stripe_customer_id, stripe_subscription_id,
     event_type, status, amount_cents, membership_tier, billing_cycle,
@@ -484,11 +491,25 @@ begin
          'stripe-cancel:' || (s.obj ->> 'id'), s.email, s.stripe_event_id,
          public.stripe_object_id(s.obj -> 'customer'), s.obj ->> 'id',
          'subscription_cancelled',
-         case when exists (
-           select 1 from public.profiles p
-            where p.stripe_customer_id = public.stripe_object_id(s.obj -> 'customer')
-              and p.membership_billing_cycle = 'lifetime'
-         ) then 'replaced_by_lifetime' else 'subscription_cancelled' end,
+         case
+           when exists (
+             select 1 from public.payment_events l
+              where l.id like 'stripe-lifetime%'
+                and l.stripe_customer_id = public.stripe_object_id(s.obj -> 'customer')
+                and l.event_timestamp between to_timestamp(s.created) - interval '1 day'
+                                          and to_timestamp(s.created) + interval '1 day'
+           ) then 'replaced_by_lifetime'
+           when not exists (
+             select 1 from public.payment_events l
+              where l.id like 'stripe-lifetime%'
+                and l.stripe_customer_id = public.stripe_object_id(s.obj -> 'customer')
+           ) and exists (
+             select 1 from public.profiles p
+              where p.stripe_customer_id = public.stripe_object_id(s.obj -> 'customer')
+                and p.membership_billing_cycle = 'lifetime'
+           ) then 'replaced_by_lifetime'
+           else 'subscription_cancelled'
+         end,
          null, plan.tier, plan.cycle,
          nullif(s.obj #>> '{cancellation_details,reason}', ''),
          nullif(s.obj #>> '{cancellation_details,feedback}', ''),
@@ -550,21 +571,39 @@ begin
     raise exception 'admin_only' using errcode = '42501';
   end if;
 
-  with charges as (
+  -- One lifetime purchase writes two rows: the grant row
+  -- (stripe-lifetime:<payment intent>) and, because stripe-checkout asks
+  -- Stripe for a receipt invoice, an invoice row for the same money. The
+  -- grant row carries the money and its refunds, so the invoice row is
+  -- left out here. It stays in the table: the referral claim uses it as a
+  -- lock. Matched on the invoice id, or for a grant row that has none, on
+  -- the lifetime price and the customer.
+  with lifetime_rows as (
+    select pe.stripe_invoice_id, pe.stripe_customer_id
+    from public.payment_events pe
+    where pe.id like 'stripe-lifetime%'
+  ),
+  charges as (
     select pe.*
     from public.payment_events pe
-    where pe.id like 'stripe-invoice:%' or pe.id like 'stripe-lifetime%'
+    where pe.id like 'stripe-lifetime%'
+       or (pe.id like 'stripe-invoice:%'
+           and not exists (select 1 from lifetime_rows l where l.stripe_invoice_id = pe.stripe_invoice_id)
+           and not (pe.billing_cycle = 'lifetime'
+                    and exists (select 1 from lifetime_rows l where l.stripe_customer_id = pe.stripe_customer_id)))
   ),
   money as (
     select
+      -- A paid row can still carry an earlier partial refund (a dispute
+      -- that was won after it), so refunds always come off.
       coalesce(sum(case
-        when status = 'paid' then amount_cents
+        when status = 'paid' then amount_cents - coalesce(amount_refunded_cents, 0)
         when status = 'partial_refund' then amount_cents - coalesce(amount_refunded_cents, 0)
         when status = 'refunded' then amount_cents - coalesce(amount_refunded_cents, amount_cents)
         else 0 end), 0) as net_cents,
       coalesce(sum(amount_cents) filter (where status in ('paid', 'partial_refund', 'refunded', 'disputed')), 0) as gross_cents,
       coalesce(sum(case
-        when status = 'partial_refund' then coalesce(amount_refunded_cents, 0)
+        when status in ('paid', 'partial_refund') then coalesce(amount_refunded_cents, 0)
         when status = 'refunded' then coalesce(amount_refunded_cents, amount_cents)
         else 0 end), 0) as refunded_cents,
       coalesce(sum(amount_cents) filter (where status = 'disputed'), 0) as disputed_cents,

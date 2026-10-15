@@ -30,6 +30,8 @@ describe('admin revenue card helpers', () => {
     expect(lifecycleLabel({ kind: 'cancel_withdrawn' })).toBe('Changed their mind and stayed');
     expect(lifecycleLabel({ kind: 'subscription_cancelled', status: 'replaced_by_lifetime' })).toBe('Moved to a lifetime plan');
     expect(lifecycleLabel({ kind: 'subscription_cancelled', status: 'subscription_cancelled' })).toBe('Subscription ended');
+    expect(lifecycleLabel({ kind: 'subscription_cancelled', status: 'second_subscription_ended' }))
+      .toBe('Extra subscription ended, still paying on another');
     expect(lifecycleLabel({ kind: 'cancel_scheduled', cancel_at: '2026-10-31T12:00:00Z' })).toMatch(/^Cancelled, ends Oct 31, 2026$/);
   });
 

@@ -15,8 +15,11 @@
 -- webhook recorded as "free", a portal cancellation that sets cancel_at
 -- (not cancel_at_period_end) followed a second later by the member's
 -- feedback, a subscription that ended, one that was cancelled and then
--- resumed, a lifetime purchase, a store-webhook row and a payload that is
--- not JSON. Each check prints PASS or FAIL; the script ends with an error
+-- resumed, a lifetime purchase that also arrives as a receipt invoice (it
+-- must count once, and leave revenue once when refunded), a lifetime
+-- bought months after a real cancellation and one bought just before the
+-- old plan was cancelled, a store-webhook row and a payload that is not
+-- JSON. Each check prints PASS or FAIL; the script ends with an error
 -- when any check fails.
 begin;
 
@@ -137,12 +140,37 @@ begin
   values ('stripe-cancel-scheduled:sub_C:' || (t_c + 2000), 'breeder@ledger.test', 'evt_C2', 'cus_LEDGER_C', 'sub_C',
           'cancel_scheduled', 'cancel_scheduled', 'breeder', 'monthly', 'cancellation_requested', to_timestamp(t_future), to_timestamp(t_c + 2000));
 
-  -- D: a lifetime Keeper purchase.
+  -- D: a lifetime Keeper purchase. stripe-checkout turns on
+  -- invoice_creation, so the same $149 also arrives as a paid invoice.
   perform ledger_test.log('evt_D1', 'checkout.session.completed', t_recent,
     jsonb_build_object('id', 'cs_D', 'object', 'checkout.session', 'mode', 'payment', 'payment_status', 'paid',
-                       'customer', 'cus_LEDGER_D', 'payment_intent', 'pi_D', 'amount_total', 14900, 'currency', 'usd',
+                       'customer', 'cus_LEDGER_D', 'payment_intent', 'pi_D', 'invoice', 'in_D', 'amount_total', 14900, 'currency', 'usd',
                        'metadata', jsonb_build_object('supabase_email', 'lifetime@ledger.test', 'tier', 'keeper', 'billing_cycle', 'lifetime'),
                        'line_items', jsonb_build_object('data', jsonb_build_array(jsonb_build_object('amount', 14900, 'price', jsonb_build_object('id', keeper_life))))));
+  perform ledger_test.log('evt_D2', 'invoice.paid', t_recent + 1,
+    ledger_test.inv('in_D', 'cus_LEDGER_D', null, 14900, 'manual', jsonb_build_array(jsonb_build_array(keeper_life, 14900))));
+
+  -- G: cancelled for real 90 days ago, bought lifetime 10 days ago. The
+  -- old ending is churn, not an upgrade.
+  -- H: bought lifetime, and the webhook cancelled the old plan a minute
+  -- later. That ending is an upgrade.
+  perform ledger_test.mk_user('lategold@ledger.test', 'cus_LEDGER_G');
+  perform ledger_test.mk_user('upgrade@ledger.test', 'cus_LEDGER_H');
+  update public.profiles set membership_tier = 'keeper', membership_billing_cycle = 'lifetime'
+   where email in ('lategold@ledger.test', 'upgrade@ledger.test');
+  perform ledger_test.log('evt_G1', 'customer.subscription.deleted', extract(epoch from now() - interval '90 days')::bigint,
+    ledger_test.sub('sub_G', 'cus_LEDGER_G', 'canceled', keeper, null, extract(epoch from now() - interval '90 days')::bigint,
+                    'cancellation_requested', 'too_expensive', extract(epoch from now() - interval '90 days')::bigint));
+  perform ledger_test.log('evt_G2', 'checkout.session.completed', t_recent,
+    jsonb_build_object('id', 'cs_G', 'object', 'checkout.session', 'mode', 'payment', 'payment_status', 'paid',
+                       'customer', 'cus_LEDGER_G', 'payment_intent', 'pi_G', 'amount_total', 14900, 'currency', 'usd',
+                       'metadata', jsonb_build_object('supabase_email', 'lategold@ledger.test', 'tier', 'keeper', 'billing_cycle', 'lifetime')));
+  perform ledger_test.log('evt_H1', 'checkout.session.completed', t_recent,
+    jsonb_build_object('id', 'cs_H', 'object', 'checkout.session', 'mode', 'payment', 'payment_status', 'paid',
+                       'customer', 'cus_LEDGER_H', 'payment_intent', 'pi_H', 'amount_total', 14900, 'currency', 'usd',
+                       'metadata', jsonb_build_object('supabase_email', 'upgrade@ledger.test', 'tier', 'keeper', 'billing_cycle', 'lifetime')));
+  perform ledger_test.log('evt_H2', 'customer.subscription.deleted', t_recent + 60,
+    ledger_test.sub('sub_H', 'cus_LEDGER_H', 'canceled', keeper, null, t_recent + 60, 'cancellation_requested', null, t_recent + 60));
 
   -- E: cancelled, then resumed, and still paying.
   perform ledger_test.log('evt_E1', 'invoice.paid', t_recent, ledger_test.inv('in_E1', 'cus_LEDGER_E', 'sub_E', 299, 'subscription_cycle', jsonb_build_array(jsonb_build_array(keeper, 299))));
@@ -169,13 +197,13 @@ declare
   n_before integer;
 begin
   r := public.rebuild_payment_events_from_webhook_log();
-  perform ledger_test.expect('rebuild: six missing invoices added (C1 already existed)', (r ->> 'invoices_added')::int = 6, r::text);
+  perform ledger_test.expect('rebuild: seven missing invoices added, the lifetime receipt included (C1 already existed)', (r ->> 'invoices_added')::int = 7, r::text);
   perform ledger_test.expect('rebuild: the Breeder invoice recorded as free is corrected', (r ->> 'invoice_plans_corrected')::int = 1, r::text);
-  perform ledger_test.expect('rebuild: the lifetime purchase is added', (r ->> 'lifetime_added')::int = 1, r::text);
+  perform ledger_test.expect('rebuild: the three lifetime purchases are added', (r ->> 'lifetime_added')::int = 3, r::text);
   perform ledger_test.expect('rebuild: scheduled cancellations for B and E added, C kept', (r ->> 'cancel_scheduled_added')::int = 2, r::text);
   perform ledger_test.expect('rebuild: C''s row picks up the later feedback', (r ->> 'cancel_scheduled_refreshed')::int = 1, r::text);
   perform ledger_test.expect('rebuild: the resumed subscription is recorded', (r ->> 'cancel_withdrawn_added')::int = 1, r::text);
-  perform ledger_test.expect('rebuild: the ended subscription is recorded', (r ->> 'subscriptions_ended_added')::int = 1, r::text);
+  perform ledger_test.expect('rebuild: the three ended subscriptions are recorded', (r ->> 'subscriptions_ended_added')::int = 3, r::text);
 
   select count(*) into n_before from public.payment_events;
   r2 := public.rebuild_payment_events_from_webhook_log();
@@ -187,8 +215,15 @@ $t$;
 do $t$
 begin
   perform ledger_test.expect('one row per paid invoice, not one per delivery',
-    (select count(*) from public.payment_events where id like 'stripe-invoice:%') = 7
-    and (select count(distinct stripe_invoice_id) from public.payment_events where id like 'stripe-invoice:%') = 7);
+    (select count(*) from public.payment_events where id like 'stripe-invoice:%') = 8
+    and (select count(distinct stripe_invoice_id) from public.payment_events where id like 'stripe-invoice:%') = 8);
+  perform ledger_test.expect('the lifetime receipt invoice keeps its row (the referral claim locks on it)',
+    (select billing_cycle = 'lifetime' and stripe_subscription_id is null and amount_cents = 14900
+       from public.payment_events where id = 'stripe-invoice:in_D'));
+  perform ledger_test.expect('a lifetime purchase months after a real cancellation leaves that cancellation as churn',
+    (select status from public.payment_events where id = 'stripe-cancel:sub_G') = 'subscription_cancelled');
+  perform ledger_test.expect('the plan the webhook cancelled right after a lifetime purchase is an upgrade',
+    (select status from public.payment_events where id = 'stripe-cancel:sub_H') = 'replaced_by_lifetime');
   perform ledger_test.expect('store webhook and broken payloads are ignored',
     not exists (select 1 from public.payment_events where stripe_invoice_id = 'in_store' or stripe_event_id = 'evt_broken'));
   perform ledger_test.expect('Breeder invoice now reads breeder monthly, amount unchanged',
@@ -245,8 +280,11 @@ begin
   perform ledger_test.expect('MRR: Keeper 2.99 + Breeder 5.99 + resumed Keeper 2.99 (the coupon and the ended plan count nothing)',
     (s ->> 'mrr_cents')::numeric = 1197 and (s ->> 'paying_subscriptions')::int = 3, s::text);
   perform ledger_test.expect('MRR at risk is the Breeder plan waiting to cancel', (s ->> 'mrr_at_risk_cents')::numeric = 599, s::text);
-  perform ledger_test.expect('all-time revenue: 2.99 + 2.99 + 5.99 + 2.99 + 149 lifetime', (s ->> 'revenue_cents')::numeric = 16396, s::text);
-  perform ledger_test.expect('lifetime purchases counted', (s ->> 'lifetime_purchases')::int = 1 and (s ->> 'lifetime_cents')::numeric = 14900, s::text);
+  -- D's $149 arrives as a grant row and a receipt invoice row; it counts once.
+  perform ledger_test.expect('all-time revenue: 2.99 + 2.99 + 5.99 + 2.99 + three 149 lifetimes, each counted once',
+    (s ->> 'revenue_cents')::numeric = 1496 + 3 * 14900, s::text);
+  perform ledger_test.expect('lifetime purchases counted', (s ->> 'lifetime_purchases')::int = 3 and (s ->> 'lifetime_cents')::numeric = 3 * 14900, s::text);
+  perform ledger_test.expect('the lifetime receipt is not a charged subscription invoice', (s ->> 'charged_invoices')::int = 4, s::text);
   perform ledger_test.expect('one cancellation scheduled (C), not the resumed or ended ones',
     (s ->> 'cancellations_scheduled')::int = 1 and s #>> '{scheduled,0,email}' = 'breeder@ledger.test'
     and s #>> '{scheduled,0,feedback}' = 'unused', s::text);
@@ -261,9 +299,38 @@ begin
   s := public.admin_revenue_summary();
   perform set_config('role', 'postgres', true);
   perform set_config('request.jwt.claims', '', true);
-  perform ledger_test.expect('refunds come off all-time revenue', (s ->> 'revenue_cents')::numeric = 16396 - 299 - 100
+  perform ledger_test.expect('refunds come off all-time revenue', (s ->> 'revenue_cents')::numeric = 1496 + 3 * 14900 - 299 - 100
     and (s ->> 'refunded_cents')::numeric = 399, s::text);
   perform ledger_test.expect('a partial refund keeps the subscription in MRR', (s ->> 'mrr_cents')::numeric = 1197, s::text);
+
+  -- A3 was partly refunded, then disputed, and the dispute was won: the
+  -- webhook sets it back to paid and leaves the refunded amount alone.
+  update public.payment_events set status = 'paid' where id = 'stripe-invoice:in_A3';
+  -- D's lifetime purchase is fully refunded. The webhook marks both rows
+  -- refunded and records the amount on the grant row.
+  update public.payment_events set status = 'refunded', amount_refunded_cents = 14900 where id = 'stripe-lifetime:pi_D';
+  update public.payment_events set status = 'refunded' where id = 'stripe-invoice:in_D';
+  perform set_config('request.jwt.claims', '{"email":"admin@ledger.test","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  s := public.admin_revenue_summary();
+  perform set_config('role', 'postgres', true);
+  perform set_config('request.jwt.claims', '', true);
+  perform ledger_test.expect('a refunded lifetime purchase leaves revenue entirely, once; a won dispute keeps the earlier refund off',
+    (s ->> 'revenue_cents')::numeric = 1496 + 2 * 14900 - 299 - 100
+    and (s ->> 'lifetime_purchases')::int = 2
+    and (s ->> 'refunded_cents')::numeric = 299 + 100 + 14900, s::text);
+
+  -- A grant row that has no invoice id still covers its receipt invoice,
+  -- matched on the lifetime price and the customer.
+  update public.payment_events set status = 'paid', amount_refunded_cents = null, stripe_invoice_id = null where id = 'stripe-lifetime:pi_D';
+  update public.payment_events set status = 'paid' where id = 'stripe-invoice:in_D';
+  perform set_config('request.jwt.claims', '{"email":"admin@ledger.test","role":"authenticated"}', true);
+  perform set_config('role', 'authenticated', true);
+  s := public.admin_revenue_summary();
+  perform set_config('role', 'postgres', true);
+  perform set_config('request.jwt.claims', '', true);
+  perform ledger_test.expect('a lifetime purchase is counted once without an invoice id on the grant row',
+    (s ->> 'revenue_cents')::numeric = 1496 + 3 * 14900 - 299 - 100, s::text);
 end
 $t$;
 

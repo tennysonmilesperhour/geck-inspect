@@ -58,6 +58,7 @@ export function lifecycleLabel(row) {
   if (row?.kind === 'cancel_scheduled') return `Cancelled, ends ${shortDate(row.cancel_at) || 'at period end'}`;
   if (row?.kind === 'cancel_withdrawn') return 'Changed their mind and stayed';
   if (row?.status === 'replaced_by_lifetime') return 'Moved to a lifetime plan';
+  if (row?.status === 'second_subscription_ended') return 'Extra subscription ended, still paying on another';
   if (row?.kind === 'subscription_cancelled') return 'Subscription ended';
   return row?.kind || '';
 }

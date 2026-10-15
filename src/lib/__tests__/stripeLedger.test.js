@@ -321,9 +321,187 @@ describe('refunds record how much went back', () => {
     expect(updates).toContainEqual({ amount_refunded_cents: 599 });
   });
 
+  it('a won dispute does not wipe out an earlier partial refund', async () => {
+    const dispute = {
+      id: 'dp_1', status: 'won', amount: 599, currency: 'usd',
+      charge: { id: 'ch_1', customer: 'cus_1', invoice: 'in_1' },
+    };
+    const db = database(member({ membership_tier: 'free', subscription_status: 'disputed' }), (call) => {
+      if (call.table === 'payment_events' && actionOf(call) === 'select' && filterValue(call, 'eq', 'stripe_invoice_id') === 'in_1') {
+        return { data: { stripe_subscription_id: 'sub_1' }, error: null };
+      }
+      if (call.table === 'payment_events' && actionOf(call) === 'update') return { data: [{ id: 'stripe-invoice:in_1' }], error: null };
+      return undefined;
+    });
+    const res = await webhook((req) => (req.url.includes('/subscriptions/sub_1')
+      ? { body: subscription({ latest_invoice: 'in_1' }) }
+      : { body: { data: [] } })).send({ id: 'evt_won', type: 'charge.dispute.closed', data: { object: dispute } }, db);
+    expect(res.status).toBe(200);
+    const updates = ledgerUpdates(db).map(payloadOf);
+    expect(updates).toContainEqual({ status: 'paid' });
+    expect(updates.some((u) => 'amount_refunded_cents' in u)).toBe(false);
+  });
+
   it('a refund marker no longer labels the payment as free', () => {
     const src = readFileSync(new URL('../../../supabase/functions/stripe-webhook/index.ts', import.meta.url), 'utf8');
     expect(src).not.toContain('membership_tier: "free",\n      event_timestamp');
+  });
+});
+
+// Refunds and disputes that do not change access: an invoice older than
+// the subscription's latest ("record"), or one from a subscription that is
+// not the member's current one ("ignore"). The money still went back, so
+// the ledger row changes; the member's plan does not.
+describe('refunds and disputes that leave access alone still reach the ledger', () => {
+  // in_old belongs to sub_1; Stripe says sub_1's latest invoice is in_new.
+  const ledgerDb = (profile) => database(profile, (call) => {
+    if (call.table === 'payment_events' && actionOf(call) === 'select' && filterValue(call, 'eq', 'stripe_invoice_id') === 'in_old') {
+      return { data: { stripe_subscription_id: 'sub_1' }, error: null };
+    }
+    if (call.table === 'payment_events' && actionOf(call) === 'update') return { data: [{ id: 'stripe-invoice:in_old' }], error: null };
+    return undefined;
+  });
+  const stripe = () => webhook((req) => (req.url.includes('/subscriptions/sub_1')
+    ? { body: { id: 'sub_1', latest_invoice: 'in_new' } }
+    : { body: { data: [] } }));
+  const profileWrites = (db) => db.table('profiles').filter((c) => actionOf(c) !== 'select');
+  const statusUpdate = (db) => ledgerUpdates(db).find((c) => 'status' in (payloadOf(c) || {}));
+
+  it('a full refund of an older invoice marks that invoice refunded, with the amount', async () => {
+    const db = ledgerDb(member({ membership_tier: 'keeper' }));
+    const charge = { id: 'ch_old', customer: 'cus_1', invoice: 'in_old', amount: 299, amount_refunded: 299, refunded: true };
+    const res = await stripe().send({ id: 'evt_r_old', type: 'charge.refunded', data: { object: charge } }, db);
+    expect(res.status).toBe(200);
+    expect(payloadOf(statusUpdate(db))).toEqual({ status: 'refunded' });
+    expect(filterValue(statusUpdate(db), 'eq', 'stripe_invoice_id')).toBe('in_old');
+    expect(ledgerUpdates(db).map(payloadOf)).toContainEqual({ amount_refunded_cents: 299 });
+    // Only the existing row changes: no marker row that could look newest.
+    expect(ledgerInserts(db)).toHaveLength(0);
+    expect(profileWrites(db)).toHaveLength(0);
+  });
+
+  it('a partial refund of an older invoice is recorded as partial', async () => {
+    const db = ledgerDb(member({ membership_tier: 'keeper' }));
+    const charge = { id: 'ch_old', customer: 'cus_1', invoice: 'in_old', amount: 299, amount_refunded: 100, refunded: false };
+    await stripe().send({ id: 'evt_pr_old', type: 'charge.refunded', data: { object: charge } }, db);
+    expect(payloadOf(statusUpdate(db))).toEqual({ status: 'partial_refund' });
+    expect(ledgerUpdates(db).map(payloadOf)).toContainEqual({ amount_refunded_cents: 100 });
+    expect(profileWrites(db)).toHaveLength(0);
+  });
+
+  it('a refund on a subscription that is no longer current is recorded too', async () => {
+    const db = ledgerDb(member({ membership_tier: 'breeder', stripe_subscription_id: 'sub_2' }));
+    const charge = { id: 'ch_old', customer: 'cus_1', invoice: 'in_old', amount: 299, amount_refunded: 299, refunded: true };
+    await stripe().send({ id: 'evt_r_other', type: 'charge.refunded', data: { object: charge } }, db);
+    expect(payloadOf(statusUpdate(db))).toEqual({ status: 'refunded' });
+    expect(ledgerInserts(db)).toHaveLength(0);
+    expect(profileWrites(db)).toHaveLength(0);
+  });
+
+  it('a dispute on an older invoice marks it disputed and leaves the plan alone', async () => {
+    const db = ledgerDb(member({ membership_tier: 'keeper' }));
+    const dispute = {
+      id: 'dp_old', status: 'needs_response', amount: 299, currency: 'usd',
+      charge: { id: 'ch_old', customer: 'cus_1', invoice: 'in_old' },
+    };
+    const res = await stripe().send({ id: 'evt_d_old', type: 'charge.dispute.created', data: { object: dispute } }, db);
+    expect(res.status).toBe(200);
+    expect(payloadOf(statusUpdate(db))).toEqual({ status: 'disputed' });
+    expect(ledgerInserts(db)).toHaveLength(0);
+    expect(profileWrites(db)).toHaveLength(0);
+  });
+
+  it('winning that dispute puts the row back to paid, only if it is still disputed', async () => {
+    const db = ledgerDb(member({ membership_tier: 'keeper' }));
+    const dispute = {
+      id: 'dp_old', status: 'won', amount: 299, currency: 'usd',
+      charge: { id: 'ch_old', customer: 'cus_1', invoice: 'in_old' },
+    };
+    await stripe().send({ id: 'evt_w_old', type: 'charge.dispute.closed', data: { object: dispute } }, db);
+    const update = statusUpdate(db);
+    expect(payloadOf(update)).toEqual({ status: 'paid' });
+    expect(filterValue(update, 'eq', 'status')).toBe('disputed');
+    expect(profileWrites(db)).toHaveLength(0);
+  });
+});
+
+describe('lifetime purchases', () => {
+  const LIFETIME = 'price_1UQV93LBdc4xGjxq4AvXpui4';
+
+  it('the receipt invoice of a lifetime purchase is recorded as a lifetime row with no subscription, and the referral still runs', async () => {
+    const db = database(member({ membership_tier: 'keeper', membership_billing_cycle: 'lifetime', stripe_subscription_id: null }));
+    const inv = invoice({
+      id: 'in_life', amount_paid: 14900, billing_reason: 'manual', parent: null,
+      lines: { data: [{ amount: 14900, pricing: { type: 'price_details', price_details: { price: LIFETIME } } }] },
+    });
+    const res = await webhook().send(invoiceEvent(inv, 'evt_life_inv'), db);
+    expect(res.status).toBe(200);
+    // admin_revenue_summary leaves this row out of revenue: the grant row
+    // stripe-lifetime:<intent> carries the same $149 (regression SQL checks it).
+    expect(ledgerInserts(db)[0]).toMatchObject({
+      id: 'stripe-invoice:in_life',
+      stripe_subscription_id: null,
+      membership_tier: 'keeper',
+      billing_cycle: 'lifetime',
+      amount_cents: 14900,
+    });
+    expect(ledgerInserts(db)[0].failure_reason).toBeUndefined();
+    expect(db.rpcCalls('award_referral_reward')).toHaveLength(1);
+    // The invoice never changes the plan.
+    expect(db.table('profiles').filter((c) => actionOf(c) !== 'select')).toHaveLength(0);
+  });
+});
+
+describe('edges the review found', () => {
+  it('a duplicate subscription ending while the member pays on another is not churn', async () => {
+    const db = database(member({ membership_tier: 'breeder', stripe_subscription_id: 'sub_current', subscription_status: 'active' }));
+    await webhook().send(subEvent(subscription({ status: 'canceled' }), null, 'evt_dup_end', 'customer.subscription.deleted'), db);
+    expect(db.table('profiles').filter((c) => actionOf(c) !== 'select')).toHaveLength(0);
+    expect(ledgerInserts(db)[0]).toMatchObject({
+      id: 'stripe-cancel:sub_1', event_type: 'subscription_cancelled', status: 'second_subscription_ended',
+    });
+  });
+
+  it('a first invoice that lands before the profile switches subscription leaves the referral pending, and the paired delivery awards it', async () => {
+    // First delivery: the profile still points at a live older subscription.
+    const first = database(member({ stripe_subscription_id: 'sub_old', subscription_status: 'active' }));
+    await webhook().send(invoiceEvent(invoice()), first);
+    expect(ledgerInserts(first)[0]).toMatchObject({
+      id: 'stripe-invoice:in_1', failure_reason: 'referral_pending: subscription not current yet',
+    });
+    expect(first.rpcCalls('award_referral_reward')).toHaveLength(0);
+
+    // Paired delivery: customer.subscription.created has switched the profile.
+    const second = database(member({ stripe_subscription_id: 'sub_1' }), (call) => {
+      if (call.table === 'payment_events' && actionOf(call) === 'select') return { data: { id: 'stripe-invoice:in_1' }, error: null };
+      if (call.table === 'payment_events' && actionOf(call) === 'update' && filterValue(call, 'like', 'failure_reason')) {
+        return { data: [{ id: 'stripe-invoice:in_1' }], error: null };
+      }
+      return undefined;
+    });
+    await webhook().send(invoiceEvent(invoice(), 'evt_inv_2', 'invoice.payment_succeeded'), second);
+    expect(second.rpcCalls('award_referral_reward')).toHaveLength(1);
+  });
+
+  it('a cancellation still gets a row if the function goes out before the migration', async () => {
+    let inserts = 0;
+    const db = database(member(), (call) => {
+      if (call.table === 'payment_events' && actionOf(call) === 'insert') {
+        inserts += 1;
+        if (inserts === 1) {
+          return { data: null, error: { code: 'PGRST204', message: "Could not find the 'cancel_at' column of 'payment_events'" } };
+        }
+      }
+      return undefined;
+    });
+    const sub = subscription({ cancel_at: 1_793_509_879, canceled_at: 1_790_834_160 });
+    const res = await webhook().send(subEvent(sub, { cancel_at: null }), db);
+    expect(res.status).toBe(200);
+    const rows = ledgerInserts(db);
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toMatchObject({ id: 'stripe-cancel-scheduled:sub_1:1790834160', event_type: 'cancel_scheduled' });
+    expect('cancel_at' in rows[1]).toBe(false);
+    expect('cancellation_reason' in rows[1]).toBe(false);
   });
 });
 
