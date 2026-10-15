@@ -25,7 +25,12 @@ describe('pairing waitlist outcomes', () => {
 
   it('names a plain baby in words and caps the list', () => {
     expect(waitlistOutcomes({ morph_tags: [] }, { morph_tags: [] })).toEqual([
-      { label: 'Normal (no listed traits)', probability: 1 },
+      { label: 'No single-gene traits', probability: 1 },
+    ]);
+    // Harlequin is polygenic: these babies are not "Normal", they simply
+    // have no single-gene trait to give odds for.
+    expect(waitlistOutcomes({ morph_tags: ['Harlequin'] }, { morph_tags: ['Extreme Harlequin'] })).toEqual([
+      { label: 'No single-gene traits', probability: 1 },
     ]);
     expect(waitlistOutcomes({ morph_tags: ['Lilly White', 'Het Axanthic'] }, { morph_tags: ['Het Axanthic', 'Cappuccino'] }, { max: 3 })).toHaveLength(3);
     expect(waitlistOutcomes(null, null)).toEqual([]);

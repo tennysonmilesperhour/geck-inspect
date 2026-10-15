@@ -29,6 +29,8 @@ export const LILLY_WHITE_LOOKALIKE_TAGS = new Set([
   'super whitewall',
   'whiteout',
   'super whiteout',
+  'white out',
+  'super white out',
   'high white',
 ]);
 

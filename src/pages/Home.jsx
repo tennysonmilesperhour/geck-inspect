@@ -139,7 +139,7 @@ const BUSINESS_SECTIONS = [
     title: 'See what a pairing’s eggs are worth before you pair',
     lead: 'Pick a sire and dam from your collection. Geck Inspect works out the odds for every baby and prices each outcome at what hatchlings with those traits list for.',
     points: [
-      'Offspring odds for Lilly White, Cappuccino, Axanthic, Soft Scale, Harlequin, Pinstripe and more.',
+      'Per-egg odds for single-gene traits like Lilly White, Cappuccino, Axanthic, Soft Scale and Phantom. Polygenic looks like Harlequin and Pinstripe are shown as likely or possible, never a percentage.',
       'Expected value per egg on every breeding plan, next to the costs you tied to that pairing.',
       'Lethal combinations like Lilly White x Lilly White are flagged and counted at $0.',
       'Readiness badges show which females are at the weight and age to breed.',
@@ -216,20 +216,22 @@ function ValueVisual() {
 }
 
 function PairingVisual() {
-  // pairingEggValue(Lilly White Harlequin sire, Pinstripe dam), Sept 2026 hatchling bands.
+  // What pairingEggValue(Lilly White Harlequin sire, Pinstripe dam) returns
+  // today: Lilly White is one gene, so half the eggs; Harlequin and
+  // Pinstripe are polygenic, so they get "possible" and no percentage.
+  // Sept 2026 hatchling bands: Lilly White $250, no listed trait $65.
+  // Per egg: 0.5 x $250 + 0.5 x $65 = $157.50, shown as $158.
   const rows = [
     ['50%', 'Lilly White', '$250'],
-    ['25%', 'Pinstripe', '$150'],
-    ['12.5%', 'Harlequin', '$120'],
-    ['12.5%', 'No listed trait', '$65'],
+    ['50%', 'No single-gene trait', '$65'],
   ];
   return (
     <VisualFrame
       label="Pairing value"
-      caption="Genetics calculator odds times median hatchling asking prices."
+      caption="Single-gene odds times median hatchling asking prices. Polygenic looks are described, not given odds."
     >
       <p className="text-sm text-slate-300">Lilly White Harlequin &times; Pinstripe</p>
-      <p className="text-4xl font-bold text-emerald-300 mt-1 tabular-nums">$186</p>
+      <p className="text-4xl font-bold text-emerald-300 mt-1 tabular-nums">$158</p>
       <p className="text-sm text-slate-400">expected per egg</p>
       <ul className="mt-4 space-y-1.5">
         {rows.map(([share, trait, price]) => (
@@ -239,6 +241,9 @@ function PairingVisual() {
           </li>
         ))}
       </ul>
+      <p className="text-sm text-slate-400 mt-3">
+        Harlequin and Pinstripe: possible (one parent shows each). Polygenic, so no percentage.
+      </p>
     </VisualFrame>
   );
 }

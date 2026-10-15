@@ -1,5 +1,5 @@
 import { config } from "zod";
-import { TRAITS, getComboMorph, WILD_TYPE, tagToGenotype, predict, LOCI } from "crested-gecko-app";
+import { TRAITS, getComboMorph, WILD_TYPE, tagToGenotype, predict, LOCI, COMBO_MORPHS } from "crested-gecko-app";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 const MORPH_CATEGORIES = [
@@ -2215,6 +2215,8 @@ const LILLY_WHITE_LOOKALIKE_TAGS = /* @__PURE__ */ new Set([
   "super whitewall",
   "whiteout",
   "super whiteout",
+  "white out",
+  "super white out",
   "high white"
 ]);
 const LOOKALIKE_WARNING_CODE = "lilly_white_lookalike";
@@ -2267,11 +2269,14 @@ const POLYGENIC_LOCI = /* @__PURE__ */ new Set([
   "BASE_BLACK"
 ]);
 const LOOK_NAME_BY_LOCUS = /* @__PURE__ */ new Map();
+const LOCUS_BY_LOOK_NAME = /* @__PURE__ */ new Map();
 for (const trait of TRAITS) {
   if (POLYGENIC_LOCI.has(trait.locus) && !LOOK_NAME_BY_LOCUS.has(trait.locus)) {
     LOOK_NAME_BY_LOCUS.set(trait.locus, trait.name);
+    LOCUS_BY_LOOK_NAME.set(trait.name, trait.locus);
   }
 }
+[...LOOK_NAME_BY_LOCUS.values()];
 const TRAIT_BY_NAME = /* @__PURE__ */ new Map();
 for (const trait of TRAITS) {
   TRAIT_BY_NAME.set(trait.name.toLowerCase(), trait);
@@ -2302,6 +2307,9 @@ const APP_TAGS = new Map(Object.entries({
   // D13: White Wall is the engine's Whiteout
   "white wall": { engine: ["Whiteout"] },
   "super white wall": { engine: ["Super Whiteout"] },
+  // Two-word spelling some breeders use for Whiteout
+  "white out": { engine: ["Whiteout"] },
+  "super white out": { engine: ["Super Whiteout"] },
   // D13: a bare Phantom tag means a visual Phantom
   "phantom": { engine: ["Visual Phantom"] },
   "visual phantom": { engine: ["Visual Phantom"] },
@@ -2495,6 +2503,7 @@ function translateMorphTags(tags) {
   const notUsed = [];
   const notes = [];
   const polygenic = [];
+  const polygenicLoci = /* @__PURE__ */ new Set();
   const seen = /* @__PURE__ */ new Set();
   for (const raw of tags || []) {
     if (typeof raw !== "string" || !raw.trim()) continue;
@@ -2534,7 +2543,10 @@ function translateMorphTags(tags) {
     const mapped = APP_TAGS.get(body);
     if (mapped?.reason) {
       notUsed.push({ tag, reason: mapped.reason });
-      if (mapped.look) polygenic.push({ tag, look: mapped.look });
+      if (mapped.look) {
+        polygenic.push({ tag, look: mapped.look });
+        if (LOCUS_BY_LOOK_NAME.has(mapped.look)) polygenicLoci.add(LOCUS_BY_LOOK_NAME.get(mapped.look));
+      }
       continue;
     }
     if (mapped?.genotype) {
@@ -2556,7 +2568,10 @@ function translateMorphTags(tags) {
     for (const result of parts) {
       for (const [locus, pair] of Object.entries(result.genotype || {})) {
         if (POLYGENIC_LOCI.has(locus)) {
-          if (pair.some((a) => a !== WILD_TYPE)) looks.push(LOOK_NAME_BY_LOCUS.get(locus) || tag);
+          if (pair.some((a) => a !== WILD_TYPE)) {
+            looks.push(LOOK_NAME_BY_LOCUS.get(locus) || tag);
+            polygenicLoci.add(locus);
+          }
           continue;
         }
         mergeLocus(loci, locus, [{ pair: [...pair], weight: 1 }]);
@@ -2577,9 +2592,10 @@ function translateMorphTags(tags) {
   const spec = { loci };
   const looksWhite = [...seen].some((t) => {
     const { kind, body } = parseTag(t);
-    return kind === "visual" && LILLY_WHITE_LOOKALIKE_TAGS.has(body);
+    return kind !== "possible" && LILLY_WHITE_LOOKALIKE_TAGS.has(body);
   });
   if (looksWhite && !specCarriesLillyWhite(spec)) spec.lillyWhiteLookalike = true;
+  if (polygenicLoci.size > 0) spec.polygenicLoci = [...polygenicLoci].sort();
   return { spec, used, notUsed, notes, polygenic };
 }
 function displayReason(text2) {
@@ -2916,6 +2932,33 @@ function toAnimal(id, genotype) {
   };
 }
 const pairKey = (pair) => `${pair[0]}|${pair[1]}`;
+function dropUnjudgeableCombos(phenotypes, sireSpec, damSpec) {
+  const shown = /* @__PURE__ */ new Set([...sireSpec?.polygenicLoci || [], ...damSpec?.polygenicLoci || []]);
+  if (shown.size === 0) return phenotypes;
+  const drop = new Set(
+    COMBO_MORPHS.filter((combo) => (combo.exclusions || []).some((e) => shown.has(e.locus))).map((combo) => combo.id)
+  );
+  if (drop.size === 0) return phenotypes;
+  const merged = /* @__PURE__ */ new Map();
+  for (const op of phenotypes) {
+    const combos = op.matching_combo_morphs || [];
+    let next = op;
+    if (combos.some((id) => drop.has(id))) {
+      const kept = combos.filter((id) => !drop.has(id));
+      const base = String(op.phenotype_description || "").replace(/\s*\[combos:[^\]]*\]\s*$/, "") || "Wild-type";
+      const names = kept.map((id) => getComboMorph(id)?.name || id);
+      next = {
+        ...op,
+        matching_combo_morphs: kept,
+        phenotype_description: names.length > 0 ? `${base} [combos: ${names.join(", ")}]` : base
+      };
+    }
+    const existing = merged.get(next.phenotype_description);
+    if (existing) existing.probability += next.probability;
+    else merged.set(next.phenotype_description, { ...next });
+  }
+  return [...merged.values()].sort((a, b) => b.probability - a.probability);
+}
 function predictWeighted(sireSpec, damSpec) {
   const { engineSpec: sireEngine, extraLoci: sireExtra } = splitExtraLoci(sireSpec);
   const { engineSpec: damEngine, extraLoci: damExtra } = splitExtraLoci(damSpec);
@@ -2993,7 +3036,11 @@ function predictWeighted(sireSpec, damSpec) {
       else bucket.outcomes.set(key, { genotype: [WILD_TYPE, WILD_TYPE], phenotype_label: "Wild-type", probability: missing });
     }
   }
-  let offspring_phenotypes = [...phenoMap.values()].map(({ _weight, ...rest }) => ({ ...rest, probability: rest.probability / totalWeight })).sort((a, b) => b.probability - a.probability);
+  let offspring_phenotypes = dropUnjudgeableCombos(
+    [...phenoMap.values()].map(({ _weight, ...rest }) => ({ ...rest, probability: rest.probability / totalWeight })).sort((a, b) => b.probability - a.probability),
+    sireSpec,
+    damSpec
+  );
   const locus_predictions = [...locusMap.values()].map((bucket) => ({
     locus: bucket.locus,
     trait: bucket.trait,

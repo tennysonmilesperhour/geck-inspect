@@ -17,7 +17,7 @@
  * wants. Example: 66% poss het Axanthic x visual Axanthic gives
  * 2/3 x 1/2 = 33.3% visual per egg.
  */
-import { predict, WILD_TYPE, LOCI } from '@/lib/genetics';
+import { predict, WILD_TYPE, LOCI, COMBO_MORPHS, getComboMorph } from '@/lib/genetics';
 import { getSimpleTraits } from './calculatorCatalog';
 import { tagsToSpec } from './tagTranslation';
 import { lillyWhiteLookalikeWarning } from './lethalLookalike';
@@ -117,6 +117,50 @@ function toAnimal(id, genotype) {
 }
 
 const pairKey = (pair) => `${pair[0]}|${pair[1]}`;
+
+/**
+ * Remove combo labels the engine can no longer judge.
+ *
+ * Polygenic looks (Harlequin, Dalmatian and the rest) are kept out of the
+ * Punnett math (see POLYGENIC_LOCI in tagTranslation.js). Some engine
+ * combos are defined by the ABSENCE of one of them: Patternless means
+ * "visual Phantom that is NOT Harlequin and NOT Dalmatian". With HQ gone
+ * from the spec the engine would call every baby of two Harlequin Phantoms
+ * Patternless at 100%, which is wrong. So when either parent shows a
+ * polygenic look that a combo's exclusion names, that combo label is
+ * dropped from the outcome and its "[combos: ...]" description suffix.
+ * Outcomes whose description then matches are merged.
+ */
+function dropUnjudgeableCombos(phenotypes, sireSpec, damSpec) {
+  const shown = new Set([...(sireSpec?.polygenicLoci || []), ...(damSpec?.polygenicLoci || [])]);
+  if (shown.size === 0) return phenotypes;
+  const drop = new Set(
+    COMBO_MORPHS
+      .filter((combo) => (combo.exclusions || []).some((e) => shown.has(e.locus)))
+      .map((combo) => combo.id),
+  );
+  if (drop.size === 0) return phenotypes;
+
+  const merged = new Map();
+  for (const op of phenotypes) {
+    const combos = op.matching_combo_morphs || [];
+    let next = op;
+    if (combos.some((id) => drop.has(id))) {
+      const kept = combos.filter((id) => !drop.has(id));
+      const base = String(op.phenotype_description || '').replace(/\s*\[combos:[^\]]*\]\s*$/, '') || 'Wild-type';
+      const names = kept.map((id) => getComboMorph(id)?.name || id);
+      next = {
+        ...op,
+        matching_combo_morphs: kept,
+        phenotype_description: names.length > 0 ? `${base} [combos: ${names.join(', ')}]` : base,
+      };
+    }
+    const existing = merged.get(next.phenotype_description);
+    if (existing) existing.probability += next.probability;
+    else merged.set(next.phenotype_description, { ...next });
+  }
+  return [...merged.values()].sort((a, b) => b.probability - a.probability);
+}
 
 /**
  * Run the weighted prediction.
@@ -221,9 +265,13 @@ export function predictWeighted(sireSpec, damSpec) {
     }
   }
 
-  let offspring_phenotypes = [...phenoMap.values()]
-    .map(({ _weight, ...rest }) => ({ ...rest, probability: rest.probability / totalWeight }))
-    .sort((a, b) => b.probability - a.probability);
+  let offspring_phenotypes = dropUnjudgeableCombos(
+    [...phenoMap.values()]
+      .map(({ _weight, ...rest }) => ({ ...rest, probability: rest.probability / totalWeight }))
+      .sort((a, b) => b.probability - a.probability),
+    sireSpec,
+    damSpec,
+  );
 
   const locus_predictions = [...locusMap.values()].map((bucket) => ({
     locus: bucket.locus,

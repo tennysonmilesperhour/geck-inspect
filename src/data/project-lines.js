@@ -351,7 +351,7 @@ export const PROJECT_LINES = [
       'There are no living Super Lilly Whites to buy: two copies die before or shortly after hatching, so treat any "Super Lilly White" offer as a mislabel',
     ],
     verificationAdvice: [
-      'Ask for pedigree tracing to ACR foundation animals, or at minimum to a breeder who acquired from ACR',
+      'Ask for pedigree tracing to ACR (AC Reptiles) animals, or at minimum to a breeder who acquired from ACR. The gene itself traces back to Lilly Exotics in the UK',
       'Lilly White is incomplete-dominant; LW x normal produces 50% visual LW, while LW x LW loses about 25% of eggs to the lethal Super LW',
       'Visual Lilly White is required for the trait to express; there are no het Lilly Whites',
       'ACR\'s historical animals are well-documented; ask for the named ancestor in the pedigree if buying at a premium',

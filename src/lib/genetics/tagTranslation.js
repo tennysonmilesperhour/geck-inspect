@@ -69,10 +69,43 @@ export const POLYGENIC_LOCI = new Set([
 ]);
 
 const LOOK_NAME_BY_LOCUS = new Map();
+const LOCUS_BY_LOOK_NAME = new Map();
 for (const trait of TRAITS) {
   if (POLYGENIC_LOCI.has(trait.locus) && !LOOK_NAME_BY_LOCUS.has(trait.locus)) {
     LOOK_NAME_BY_LOCUS.set(trait.locus, trait.name);
+    LOCUS_BY_LOOK_NAME.set(trait.name, trait.locus);
   }
+}
+
+/**
+ * The polygenic look names, one per locus ("Harlequin", "Pinstripe",
+ * "Dalmatian", "Tiger", base colours and the rest). These are the names
+ * the `polygenic` list of translateMorphTags uses, so the Pairing Planner
+ * can offer them as "likely / possible" targets instead of percentages.
+ */
+export const POLYGENIC_LOOK_NAMES = [...LOOK_NAME_BY_LOCUS.values()];
+
+/**
+ * Engine traits the collection odds can actually produce a percentage
+ * for: a single gene with a known inheritance pattern. Polygenic loci
+ * (above) and traits whose inheritance is unconfirmed (Snowflake, Furry,
+ * Marbling) never reach the Punnett math, so a screen that offered them
+ * as a target would always read "0% chance".
+ */
+export function isPercentTrait(trait) {
+  return Boolean(trait) && MENDELIAN.has(trait.dominance) && !POLYGENIC_LOCI.has(trait.locus);
+}
+
+/**
+ * True when an engine combo morph depends on a polygenic locus, in its
+ * requirements (Extreme Harlequin, Tricolor, Halloween, Lavender...) or in
+ * its exclusions (Patternless is "visual Phantom that is NOT Harlequin and
+ * NOT Dalmatian"). Since polygenic loci stay out of the math, the engine
+ * can no longer judge these combos, so screens must not give them odds.
+ */
+export function comboTouchesPolygenic(combo) {
+  return [...(combo?.requirements || []), ...(combo?.exclusions || [])]
+    .some((r) => POLYGENIC_LOCI.has(r.locus));
 }
 
 const TRAIT_BY_NAME = new Map();
@@ -114,6 +147,9 @@ const APP_TAGS = new Map(Object.entries({
   // D13: White Wall is the engine's Whiteout
   'white wall': { engine: ['Whiteout'] },
   'super white wall': { engine: ['Super Whiteout'] },
+  // Two-word spelling some breeders use for Whiteout
+  'white out': { engine: ['Whiteout'] },
+  'super white out': { engine: ['Super Whiteout'] },
   // D13: a bare Phantom tag means a visual Phantom
   'phantom': { engine: ['Visual Phantom'] },
   'visual phantom': { engine: ['Visual Phantom'] },
@@ -336,7 +372,11 @@ function mergeLocus(loci, locus, options) {
  *
  * @param {string[]} tags
  * @returns {{
- *   spec: { loci: Record<string, Array<{pair: string[], weight: number}>> },
+ *   spec: {
+ *     loci: Record<string, Array<{pair: string[], weight: number}>>,
+ *     lillyWhiteLookalike?: boolean,
+ *     polygenicLoci?: string[],
+ *   },
  *   used: Array<{ tag: string, chance: number }>,
  *   notUsed: Array<{ tag: string, reason: string }>,
  *   notes: string[],
@@ -352,6 +392,7 @@ export function translateMorphTags(tags) {
   const notUsed = [];
   const notes = [];
   const polygenic = [];
+  const polygenicLoci = new Set();
   const seen = new Set();
 
   for (const raw of tags || []) {
@@ -397,7 +438,10 @@ export function translateMorphTags(tags) {
     const mapped = APP_TAGS.get(body);
     if (mapped?.reason) {
       notUsed.push({ tag, reason: mapped.reason });
-      if (mapped.look) polygenic.push({ tag, look: mapped.look });
+      if (mapped.look) {
+        polygenic.push({ tag, look: mapped.look });
+        if (LOCUS_BY_LOOK_NAME.has(mapped.look)) polygenicLoci.add(LOCUS_BY_LOOK_NAME.get(mapped.look));
+      }
       continue;
     }
     if (mapped?.genotype) {
@@ -424,7 +468,10 @@ export function translateMorphTags(tags) {
     for (const result of parts) {
       for (const [locus, pair] of Object.entries(result.genotype || {})) {
         if (POLYGENIC_LOCI.has(locus)) {
-          if (pair.some((a) => a !== WILD_TYPE)) looks.push(LOOK_NAME_BY_LOCUS.get(locus) || tag);
+          if (pair.some((a) => a !== WILD_TYPE)) {
+            looks.push(LOOK_NAME_BY_LOCUS.get(locus) || tag);
+            polygenicLoci.add(locus);
+          }
           continue;
         }
         mergeLocus(loci, locus, [{ pair: [...pair], weight: 1 }]);
@@ -448,9 +495,18 @@ export function translateMorphTags(tags) {
   // White (see lethalLookalike.js); predictWeighted warns on that.
   const looksWhite = [...seen].some((t) => {
     const { kind, body } = parseTag(t);
-    return kind === 'visual' && LILLY_WHITE_LOOKALIKE_TAGS.has(body);
+    // "Het White Wall" counts too: White Wall shows with one copy, so a
+    // "het" tag still describes a white-looking gecko. A "Possible Het"
+    // tag does not describe a look, so it is left out.
+    return kind !== 'possible' && LILLY_WHITE_LOOKALIKE_TAGS.has(body);
   });
   if (looksWhite && !specCarriesLillyWhite(spec)) spec.lillyWhiteLookalike = true;
+  // The polygenic loci this gecko shows (HQ for a Harlequin, DAL for a
+  // Dalmatian). They are kept out of the odds, but predictWeighted still
+  // needs to know about them: the engine's Patternless combo means "visual
+  // Phantom that is NOT Harlequin and NOT Dalmatian", and with HQ missing
+  // from the spec it would call every Harlequin Phantom baby Patternless.
+  if (polygenicLoci.size > 0) spec.polygenicLoci = [...polygenicLoci].sort();
 
   return { spec, used, notUsed, notes, polygenic };
 }

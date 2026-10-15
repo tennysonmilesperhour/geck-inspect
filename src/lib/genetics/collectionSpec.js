@@ -30,11 +30,16 @@ export function applyInferredHets(spec, inferred) {
     if (!trait || trait.dominance !== 'recessive') continue;
     // Explicit tags at this locus win over inference.
     if (spec.loci[trait.locus]) continue;
-    if (!(probability > 0) || probability >= 1) continue;
-    spec.loci[trait.locus] = [
-      { pair: [trait.id, WILD_TYPE], weight: probability },
-      { pair: [WILD_TYPE, WILD_TYPE], weight: 1 - probability },
-    ];
+    if (!(probability > 0)) continue;
+    // A certain het (a normal-looking baby out of a visual Axanthic, for
+    // example) is a definite single copy. Until 15 Oct these were skipped,
+    // so the calculator treated a proven het as a plain normal.
+    spec.loci[trait.locus] = probability >= 1
+      ? [{ pair: [trait.id, WILD_TYPE], weight: 1 }]
+      : [
+          { pair: [trait.id, WILD_TYPE], weight: probability },
+          { pair: [WILD_TYPE, WILD_TYPE], weight: 1 - probability },
+        ];
     applied.push({ trait: trait.name, probability, basis });
   }
   return applied;

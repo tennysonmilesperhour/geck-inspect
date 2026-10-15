@@ -99,6 +99,7 @@ import {
   canonicalizeMorphTags,
 } from './index.js';
 import { POSSIBLE_HET_CHANCE } from '../hetUtils.js';
+import { parseTag } from './tagTranslation.js';
 
 const RECESSIVE = 'recessive';
 const INCOMPLETE_DOMINANT = 'incomplete_dominant';
@@ -159,7 +160,21 @@ function classifyTag(tag, traitName) {
       if (chance > 0) return { kind: 'possible_het', chance };
     }
   }
+  // Last, read the tag the way the calculator does (tagTranslation.parseTag),
+  // so "66% Possible Het Axanthic", "Poss Het Axanthic" and "Axanthic Het"
+  // mean the same thing here as they do in the odds. Only carrier tags are
+  // taken from it; a plain trait name was already matched above.
+  const parsed = parseTag(tag);
+  if (parsed.kind !== 'visual' && parsed.body === name.replace(/[\s_-]+/g, ' ')) {
+    if (parsed.kind === 'het' || parsed.chance >= 1) return { kind: 'het', chance: 1 };
+    if (parsed.chance > 0) return { kind: 'possible_het', chance: parsed.chance };
+  }
   return null;
+}
+
+/** The app spelling of an engine trait name ("Softscale" -> "Soft Scale"). */
+function appName(traitName) {
+  return canonicalizeMorphTag(traitName) || traitName;
 }
 
 /**
@@ -215,8 +230,9 @@ function conditionNotVisual(dist) {
 /**
  * Human-readable basis line for one contributing ancestor.
  */
-function basisLine(label, found, traitName) {
+function basisLine(label, found, engineName) {
   const who = label || 'An ancestor';
+  const traitName = appName(engineName);
   const { kind, chance } = found;
   if (kind === 'visual') return `${who} is visual ${traitName}`;
   if (kind === 'het') return `${who} tagged Het ${traitName}`;
@@ -349,7 +365,7 @@ function relationLabel(parentRelation, kind, depth) {
  *   links it to the generation above. When an animal has no parent ids we
  *   fall back to the relation labels ("Sire", "Sire's dam", ...) to
  *   rebuild the tree.
- * @returns {Array<{ traitName: string, probability: number, basis: string[] }>}
+ * @returns {Array<{ traitName: string, displayName: string, probability: number, basis: string[] }>}
  *   Sorted by probability descending, only entries >= MIN_PROBABILITY.
  */
 export function inferHiddenHets(gecko, ancestry = []) {
@@ -461,7 +477,9 @@ export function inferHiddenHets(gecko, ancestry = []) {
     if (probability < MIN_PROBABILITY) continue;
 
     // De-duplicate identical basis strings, keep insertion order.
-    results.push({ traitName, probability, basis: [...new Set(basis)] });
+    // traitName stays the engine name (collectionSpec looks traits up by
+    // it); displayName is the app spelling screens should show.
+    results.push({ traitName, displayName: appName(traitName), probability, basis: [...new Set(basis)] });
   }
 
   results.sort((a, b) => b.probability - a.probability);

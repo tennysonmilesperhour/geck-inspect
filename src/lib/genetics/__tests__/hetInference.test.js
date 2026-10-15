@@ -218,3 +218,28 @@ describe('inferHiddenHets: incomplete dominants', () => {
     expect(oddsFor(out, 'Lilly White')).toBeCloseTo(0.25, 10);
   });
 });
+
+describe('inferHiddenHets reads tags the way the calculator does', () => {
+  it('"66% Possible Het Axanthic" sire x normal: 0.66 x 1/2 = 0.33', () => {
+    const sire = animal('s', ['66% Possible Het Axanthic']);
+    const subject = animal('x', [], { sire: 's' });
+    const out = inferHiddenHets(subject, ancestry([sire, 1, 'Sire']));
+    expect(oddsFor(out, 'Axanthic')).toBeCloseTo(0.33, 10);
+  });
+
+  it('"Axanthic Het" (suffix form) sire x normal: a definite het, so 1/2', () => {
+    const sire = animal('s', ['Axanthic Het']);
+    const subject = animal('x', [], { sire: 's' });
+    const out = inferHiddenHets(subject, ancestry([sire, 1, 'Sire']));
+    expect(oddsFor(out, 'Axanthic')).toBeCloseTo(0.5, 10);
+  });
+
+  it('Soft Scale is shown with the app spelling, but keyed by the engine name', () => {
+    const sire = animal('s', ['Het Soft Scale']);
+    const subject = animal('x', [], { sire: 's' });
+    const out = inferHiddenHets(subject, ancestry([sire, 1, 'Sire']));
+    const entry = out.find((r) => r.traitName === 'Softscale');
+    expect(entry.displayName).toBe('Soft Scale');
+    expect(entry.basis).toEqual(['Sire tagged Het Soft Scale']);
+  });
+});

@@ -261,7 +261,9 @@ export default function GeneticCalculator({ sire, dam }) {
           </div>
           {(sire.inferred_hets || []).map((h) => (
             <p key={h.trait} className="text-[11px] text-purple-300 mt-1">
-              lineage suggests {pct(h.probability)} poss het {h.trait}
+              {h.probability >= 1
+                ? `lineage proves het ${h.trait}`
+                : `lineage suggests ${pct(h.probability)} poss het ${h.trait}`}
             </p>
           ))}
         </div>
@@ -274,7 +276,9 @@ export default function GeneticCalculator({ sire, dam }) {
           </div>
           {(dam.inferred_hets || []).map((h) => (
             <p key={h.trait} className="text-[11px] text-purple-300 mt-1">
-              lineage suggests {pct(h.probability)} poss het {h.trait}
+              {h.probability >= 1
+                ? `lineage proves het ${h.trait}`
+                : `lineage suggests ${pct(h.probability)} poss het ${h.trait}`}
             </p>
           ))}
         </div>

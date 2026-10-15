@@ -68,7 +68,10 @@ export function waitlistOutcomes(sire, dam, { max = 8, min = 0.03 } = {}) {
   const merged = new Map();
   for (const o of value.outcomes) {
     if (o.lethal) continue;
-    const label = o.label && o.label !== 'Wild-type' ? o.label : 'Normal (no listed traits)';
+    // Not "Normal": polygenic looks (Harlequin, Pinstripe...) carry no
+    // odds, so a Harlequin x Harlequin baby lands in this bucket and may
+    // well be a Harlequin. The bucket only means no single-gene trait.
+    const label = o.label && o.label !== 'Wild-type' ? o.label : 'No single-gene traits';
     merged.set(label, (merged.get(label) || 0) + (Number(o.probability) || 0));
   }
   return [...merged.entries()]
