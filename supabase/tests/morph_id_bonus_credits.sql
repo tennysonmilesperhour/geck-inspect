@@ -5,7 +5,7 @@
 -- not meant to be pasted into the Supabase SQL editor.
 -- Every change rolls back.
 --
--- Free (one scan a month since 16 Oct 2026) with and without a bonus,
+-- Free (one scan a month from the October 2026 release) with and without a bonus,
 -- paid monthly scans with a bonus used
 -- only after that month's allowance, expiry, a refund giving the scan
 -- back, a signed-in member who cannot insert a grant, and a
@@ -335,7 +335,7 @@ begin
   end if;
   perform pg_temp.expect_exhausted(v_expired_keeper, 'keeper', 3);
 
-  -- Free scan spent in an earlier month. Since 16 Oct 2026 Free gets one
+  -- Free scan spent in an earlier month. Since the October 2026 release Free gets one
   -- identification every month, so this month has a fresh free scan and
   -- the bonus is used only after it.
   v_earlier_free := pg_temp.make_user('free');

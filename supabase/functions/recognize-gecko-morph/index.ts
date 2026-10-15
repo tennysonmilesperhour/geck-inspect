@@ -299,8 +299,9 @@ function json(body: unknown, status = 200) {
 // `free`, matching the frontend's tierOf() helper. Bonus scans are not
 // in this map. The database adds them on top, and only after the
 // monthly allowance is used.
-// Free is one a month since 16 Oct 2026 (the database uses 1 for Free
-// whatever this map says, so the change holds before a redeploy).
+// Free is one a month from the October 2026 release (migration
+// 20261015151300). The database uses 1 for Free whatever this map says,
+// so the change holds before a redeploy.
 const TIER_MORPH_ID_CREDITS: Record<string, number> = {
   free: 1,
   keeper: 3,

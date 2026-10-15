@@ -346,7 +346,7 @@ begin
   if current_user not in ('anon', 'authenticated') then
     return new;
   end if;
-  -- 16 Oct 2026: trimmed of blank characters at either end and
+  -- From the October 2026 release: trimmed of blank characters at either end and
   -- lower-cased, before the check below.
   new.message_type := nullif(lower(regexp_replace(coalesce(new.message_type, ''),
                         '^' || v_blank || '+|' || v_blank || '+$', '', 'g')), '');
@@ -359,7 +359,7 @@ begin
   -- to "A@X.COM" lands in a@x.com's inbox (where they can see and block
   -- the sender) instead of sitting unseen while it unlocks notifications.
   new.recipient_email := lower(btrim(new.recipient_email));
-  -- 16 Oct 2026: the same limit as send_direct_message_to_profile. A
+  -- From the October 2026 release: the same limit as send_direct_message_to_profile. A
   -- first message to someone is how a member learns that an address is
   -- real, so new conversations are capped at 20 an hour.
   if not public.is_admin()

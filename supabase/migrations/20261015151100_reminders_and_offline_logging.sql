@@ -1,5 +1,5 @@
 -- Reminders that follow the animal, and offline logs saved once.
--- Comprehensive review, Part E2, items 15 and 19 (16 Oct 2026).
+-- Comprehensive review, Part E2, items 15 and 19 (October 2026 release).
 --
 -- Additive and safe to run more than once: columns and indexes use
 -- "if not exists", every function is "create or replace", and no cron
