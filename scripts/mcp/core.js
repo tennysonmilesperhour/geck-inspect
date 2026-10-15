@@ -13,6 +13,7 @@ import * as MorphGuide from '../../src/data/morph-guide.js';
 import { CARE_CATEGORIES } from '../../src/data/care-guide.js';
 import { translateMorphTags } from '../../src/lib/genetics/tagTranslation.js';
 import { predictWeighted } from '../../src/lib/genetics/predictWeighted.js';
+import { polygenicLookChances } from '../../src/lib/genetics/polygenic.js';
 import { outcomeTraits, outcomeCombos } from '../../src/lib/genetics/index.js';
 import bundledPriceIndex from '../../public/data/price-index.json';
 import {
@@ -155,7 +156,7 @@ export const TOOLS = [
     name: 'predict_pairing',
     title: 'Predict offspring odds for a crested gecko pairing',
     description:
-      'Per-egg offspring odds for a sire and dam, from the same genetics engine as the Geck Inspect calculator. Pass each parent as a list of trait tags, e.g. ["Lilly White", "Het Axanthic"] or ["66% Possible Het Axanthic"]. Polygenic looks (Harlequin extent, Flame) are reported as not calculable. Includes health warnings such as the lethal Super Lilly White.',
+      'Per-egg offspring odds for a sire and dam, from the same genetics engine as the Geck Inspect calculator. Pass each parent as a list of trait tags, e.g. ["Lilly White", "Het Axanthic"] or ["66% Possible Het Axanthic"]. Only single-gene traits get percentages. Polygenic looks (Harlequin, Pinstripe, Dalmatian, Tiger, Flame, base colors) are described as likely or possible, never as a percentage. Includes health warnings such as the lethal Super Lilly White, and a caution when a White Wall or Whiteout parent could be a misread Lilly White.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -230,9 +231,15 @@ const HANDLERS = {
     if (!Array.isArray(sire) || !Array.isArray(dam)) return fail('Pass sire and dam as arrays of trait tags.');
     const s = translateMorphTags(sire.map(String).slice(0, 20));
     const d = translateMorphTags(dam.map(String).slice(0, 20));
+    // Polygenic looks are described in words, never as a percentage.
+    const looks = polygenicLookChances(s.polygenic, d.polygenic);
+    const lookLines = looks.length ? ['', 'Polygenic looks (no percentage):', ...looks.map((l) => `- ${l.text}`)] : [];
     if (!Object.keys(s.spec.loci).length && !Object.keys(d.spec.loci).length) {
       const why = [...s.notUsed, ...d.notUsed].map((n) => `- ${n.tag}: ${n.reason}`).join('\n');
-      return text(`Neither parent has a single-gene trait the calculator can use, so no odds can be given.\n${why}`, { outcomes: [], notUsed: [...s.notUsed, ...d.notUsed] });
+      return text(
+        [`Neither parent has a single-gene trait the calculator can use, so no odds can be given.\n${why}`, ...lookLines].join('\n'),
+        { outcomes: [], notUsed: [...s.notUsed, ...d.notUsed], polygenic_looks: looks },
+      );
     }
     const result = predictWeighted(s.spec, d.spec);
     // Label = named combo (if any) plus the traits, so two outcomes that
@@ -252,14 +259,15 @@ const HANDLERS = {
     const warnings = (result.warnings || []).map((w) => ({ severity: w.severity, message: noDashes(w.message) }));
     const notUsed = [...s.notUsed.map((n) => ({ parent: 'sire', ...n })), ...d.notUsed.map((n) => ({ parent: 'dam', ...n }))];
     const out = [
-      'Per-egg odds:',
+      'Per-egg odds (single-gene traits):',
       ...outcomes.map((o) => `- ${o.outcome}: ${(o.probability * 100).toFixed(1)}%${o.health_risk && o.health_risk !== 'none' ? ` (health risk: ${o.health_risk})` : ''}`),
       ...(warnings.length ? ['', 'Warnings:', ...warnings.map((w) => `- ${w.severity}: ${w.message}`)] : []),
+      ...lookLines,
       ...(notUsed.length ? ['', 'Tags not counted:', ...notUsed.map((n) => `- ${n.parent} "${n.tag}": ${n.reason}`)] : []),
       '',
       `Each egg is independent; a clutch can differ from these odds. Calculator: ${SITE_URL}/calculator`,
     ];
-    return text(out.join('\n'), { outcomes, warnings, notUsed, uncertain: Boolean(result.uncertain) });
+    return text(out.join('\n'), { outcomes, warnings, notUsed, polygenic_looks: looks, uncertain: Boolean(result.uncertain) });
   },
 };
 

@@ -20,6 +20,7 @@
 import { predict, WILD_TYPE, LOCI } from '@/lib/genetics';
 import { getSimpleTraits } from './calculatorCatalog';
 import { tagsToSpec } from './tagTranslation';
+import { lillyWhiteLookalikeWarning } from './lethalLookalike';
 
 // Tags become a spec in one shared place (tagTranslation.js), so every
 // screen reads app tags the same way. Re-exported for existing callers.
@@ -306,6 +307,12 @@ export function predictWeighted(sireSpec, damSpec) {
       }
     }
   }
+
+  // A White Wall or Whiteout parent might be a misread Lilly White, which
+  // would make this a lethal Lilly White x Lilly White pairing. Warn (never
+  // block) so a mislabel cannot quietly hide the lethal warning.
+  const lookalike = lillyWhiteLookalikeWarning(sireSpec, damSpec);
+  if (lookalike && !warnings.some((w) => w.code === lookalike.code)) warnings.push(lookalike);
 
   return { offspring_phenotypes, locus_predictions, warnings, uncertain };
 }

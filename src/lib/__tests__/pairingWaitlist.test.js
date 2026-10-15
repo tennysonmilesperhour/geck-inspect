@@ -12,10 +12,13 @@ import {
 
 describe('pairing waitlist outcomes', () => {
   it('lists the likeliest babies with their odds', () => {
+    // Pinstripe is polygenic, so it never gets a percentage: only the
+    // Axanthic and Cappuccino genes split the odds (2 x 2 = 4 outcomes).
     const outcomes = waitlistOutcomes({ morph_tags: ['Axanthic', 'Pinstripe'] }, { morph_tags: ['Het Axanthic', 'Cappuccino'] });
-    expect(outcomes).toHaveLength(8);
-    expect(outcomes[0].probability).toBeCloseTo(0.125);
-    expect(outcomes.map((o) => o.label)).toContain('Visual Axanthic, Pinstripe, Cappuccino');
+    expect(outcomes).toHaveLength(4);
+    expect(outcomes[0].probability).toBeCloseTo(0.25);
+    expect(outcomes.map((o) => o.label)).toContain('Visual Axanthic, Cappuccino');
+    expect(outcomes.some((o) => /Pinstripe/.test(o.label))).toBe(false);
     const total = outcomes.reduce((s, o) => s + o.probability, 0);
     expect(total).toBeCloseTo(1);
   });
@@ -24,7 +27,7 @@ describe('pairing waitlist outcomes', () => {
     expect(waitlistOutcomes({ morph_tags: [] }, { morph_tags: [] })).toEqual([
       { label: 'Normal (no listed traits)', probability: 1 },
     ]);
-    expect(waitlistOutcomes({ morph_tags: ['Lilly White', 'Harlequin'] }, { morph_tags: ['Harlequin', 'Dalmatian'] }, { max: 3 })).toHaveLength(3);
+    expect(waitlistOutcomes({ morph_tags: ['Lilly White', 'Het Axanthic'] }, { morph_tags: ['Het Axanthic', 'Cappuccino'] }, { max: 3 })).toHaveLength(3);
     expect(waitlistOutcomes(null, null)).toEqual([]);
   });
 });

@@ -73,3 +73,36 @@ export function expressionBand(a, b) {
 
   return { band, mid, headline, detail };
 }
+
+/**
+ * Plain-language chances for polygenic looks, for screens and tools that
+ * list pairing outcomes as text (the MCP pairing tool, the AI consultant).
+ * Input is the `polygenic` list from translateMorphTags for each parent.
+ * A look both parents show is "likely" in the babies; a look one parent
+ * shows is "possible". Never a percentage: these looks come from many
+ * small genes, so Punnett math on them would be fake precision.
+ *
+ * @param {Array<{look: string}>} sireLooks
+ * @param {Array<{look: string}>} damLooks
+ * @returns {Array<{ look: string, chance: 'likely' | 'possible', text: string }>}
+ */
+export function polygenicLookChances(sireLooks, damLooks) {
+  const sire = new Set((sireLooks || []).map((l) => l.look).filter(Boolean));
+  const dam = new Set((damLooks || []).map((l) => l.look).filter(Boolean));
+  const all = [...new Set([...sire, ...dam])];
+  return all
+    .map((look) => {
+      const both = sire.has(look) && dam.has(look);
+      const chance = both ? 'likely' : 'possible';
+      const who = both ? 'both parents show it' : `the ${sire.has(look) ? 'sire' : 'dam'} shows it`;
+      return {
+        look,
+        chance,
+        text: `${look}: ${chance} (${who}). Polygenic, so no percentage; how strongly it shows varies from baby to baby.`,
+      };
+    })
+    .sort((a, b) => {
+      if (a.chance !== b.chance) return a.chance === 'likely' ? -1 : 1;
+      return a.look.localeCompare(b.look);
+    });
+}
