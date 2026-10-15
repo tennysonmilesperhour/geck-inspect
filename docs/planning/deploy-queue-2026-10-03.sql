@@ -1,3 +1,12 @@
+-- ALREADY APPLIED. DO NOT RUN THIS AGAIN.
+-- Everything in this file reached production on 8 October 2026. The
+-- migration history records it as 20261008081305_account_erasure,
+-- 20261008081011_anon_hide_owner_email_columns,
+-- 20261008081043_anon_hide_email_columns_more,
+-- 20261008081343_personal_weighin_reminders, and the join_waitlist lock
+-- inside 20261008063704_lock_security_definer_execute (checked 15 Oct).
+-- Kept for history only. See deploy-queue-2026-10-03.md.
+--
 -- Geck Inspect: the five migrations the Supabase MCP tool could not run
 -- (3 Oct 2026). Paste this whole file into Supabase > SQL Editor and run it.
 --

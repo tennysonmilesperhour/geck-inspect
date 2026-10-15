@@ -7,7 +7,7 @@ Every feature in Geck Inspect was traced end to end: the screen, the button hand
 - Start with Phase 0 (section 6). Those items are small, but they involve money, member data or the domain's email reputation, so they go before feature work even though the rest of the plan runs least finished first.
 - Then work the steps in section 7 in order. Each step says what is missing, why it matters, its size, any decision it needs and when it counts as done. Sizes: S is under a day, M is one to three days, L is a week or more.
 - Several steps start with a decision only Tennyson can make. They are collected in section 5 with a recommendation each, so they can be answered in one sitting. A step whose decision is "retire" becomes an S: remove it from navigation, the sitemap and marketing, then delete or redirect it.
-- What is built but waiting on a production deploy or migration is listed, in order, in docs/planning/deploy-queue-2026-10-03.md.
+- What is built but waiting on a production deploy or migration is listed, in order, in docs/planning/deploy-queue-2026-10-03.md. (15 Oct: its SQL queue was cleared on 8 October; see that file.)
 - When a step ships, add a dated status line under it here. This file is the roadmap now (ROADMAP.md points here and lists what is shelved).
 - Section 8 lists the checks that need a real phone or real money (the sandbox cannot reach the live API). Those are Tennyson's, and they are the last gate before calling a feature finished.
 
@@ -160,6 +160,8 @@ Status 30 Sep: done. (a) send-email v24 and send-push v22 route the waitlist, in
 
 Status 2 Oct: part one live. Migration 20261002220914 adds `owner_profile_id` to geckos and gecko_images (set by trigger) and new email-free functions; public pages read by profile id and signed-out reads use the column list in `src/lib/publicColumns.js`. Pending: `20261002235000_anon_hide_owner_email_columns.sql` removes `created_by` from signed-out reads; apply only after the client is deployed. The scan found more anon-readable email columns (forum, user_activity, morph guides and others); a follow-up is in progress.
 
+Status 8 Oct: done. Both email-hiding migrations are live, recorded in production as `20261008081011_anon_hide_owner_email_columns` and `20261008081043_anon_hide_email_columns_more` (checked 15 Oct: signed-out visitors cannot read `geckos.created_by`).
+
 ## 7. The plan, least finished first
 
 **Step 1. Vet records (20%, M).** Nothing in the app creates, edits or deletes a vet record, though the passport's Vet tab and the export read them and ROADMAP item 9 lists them as built. Add a Vet section to the gecko record: date, vet or clinic, reason, findings, treatment, follow-up date and attachments, with a follow-up reminder through the existing notification jobs. First make the entity layer treat a blank `follow_up` date as empty (`supabaseEntities.js:110`), or saving a visit without one fails. Done when a visit logged on a gecko shows on its passport and its follow-up date sends a reminder.
@@ -173,6 +175,8 @@ Status 3 Oct: built. Field Mode and My Geckos keep the last loaded list per acco
 **Step 3. Account deletion (30%, M, D16).** The Danger Zone files a support ticket and nothing else: no admin alert, and the erasure is manual. The privacy policy promises deletion within 30 days, the App Store requires in-app deletion (guideline 5.1.1(v)), and admin "Delete User" removes only the profile row. Build one admin edge function that deletes or anonymises the profile, geckos, photos (including storage), messages and the login, run it from the ticket in the Support inbox and from Delete User, and email the admin when a request arrives. Done when a disposable account is fully erased and the ticket closes itself.
 
 Status 2 Oct: built, not deployed. `admin_erase_account()` (pending migration 20261002230000_account_erasure.sql) and the new `admin-delete-account` function, run from the Support inbox ticket and Delete User; admins get a bell and email alert on each request. Lineage parents, claimed transfers and forum posts are anonymised as "Former member"; the rest is deleted. Needs the migration, the function and `send-email` deployed, then the end-to-end test in section 8.
+
+Status 8 Oct: live. The erasure migration is recorded in production as `20261008081305_account_erasure`, and `admin-delete-account` (v2) and `send-email` are deployed. Still needs the end-to-end test in section 8.
 
 **Step 4. Morph Guide photo submissions (30%, M, D3).** Members can submit morph photos and admins can approve them, but approved photos (`morph_reference_images`) are never shown anywhere public, and the approval notification sends the member to a Morph Guide page where their photo never appears. The rejection notice is titled "Submission approved" (`MorphSubmissionReview.jsx:58-63`). Show approved photos on each morph page with credit to the contributor, fix the rejection title, and have the submission form list the 33 built-in morphs instead of the database rows. Or, if D3 says retire, remove the page, its palette entry and the admin tab. Done when an approved photo appears on its morph page with the member's name.
 
@@ -280,7 +284,7 @@ Status 3 Oct: done. Unlist restores the status the gecko had before listing; Rep
 
 **Step 31. Field Mode, Other Reptiles, Dashboard and worksheets (85%, S).** Field Mode cannot backdate a log and "Fed" does not move the gecko's group schedule (step 13); an expired session shows a connection error instead of "Sign in". Other Reptiles stores weights as text in event notes ("Weight: 45g"), so they cannot be charted. The Dashboard shows "Add your first gecko" for up to two minutes after the first gecko is added. Worksheets print one QR code per gecko and need a passport; breeders expect a sheet of rack labels. Fix each, and add a printable label sheet. Done when a rack of 20 labels prints from one screen.
 
-Status 3 Oct: done. Field Mode backdating, group moves and Sign in; reptile weights as numbers (backfill pending: 20261003121100); Dashboard first-gecko fix; rack label sheet.
+Status 3 Oct: done. Field Mode backdating, group moves and Sign in; reptile weights as numbers (backfill pending: 20261003121100); Dashboard first-gecko fix; rack label sheet. (The backfill ran on 3 Oct as `20261003210328_reptile_event_weight_backfill`.)
 
 **Step 32. Sign in and onboarding (85%, S).** Sign-up never asks for a name, so members appear as "Geck Inspect member" until they add one; the role question and keeper mode are stored per browser, so a second device asks again; after "Make it yours" the role question opens on top of the add-a-gecko form; "Email not confirmed" has no resend button; the tutorial still mentions shipping and Q&A. Ask for a display name at sign-up, store onboarding state on the profile, skip the role question while an add or invite is pending, add the resend button, and update the tutorial. Done when a new member on a second phone is not asked the role question again.
 
@@ -289,6 +293,8 @@ Status 3 Oct: done (migration 20261003023621). Display name at sign-up, onboardi
 **Step 33. Waitlists, Care Guide and blog (90%, S).** Waitlist buyers get no confirmation email with their place in line and the terms they agreed to, and anyone can sign up any email address (send a confirmation link). Blog posts written in the admin editor never reach the sitemap, the prerendered pages or the llms files (`scripts/seo-routes.mjs:110-116` reads only `src/data/blog-posts.js`). Blog work is shelved until Tennyson says otherwise (ROADMAP.md), so that half waits; the waitlist half does not. Done when a waitlist signup gets a confirmation (and, once the blog is back, an admin-written post appears in the sitemap).
 
 Status 3 Oct: built (migration 20261003030254). Waitlist signups confirm by email and buyers get their place and terms. Needs the new `waitlist-signup` function deployed, then pending 20261003121000 closes the old signup path. Blog half still shelved.
+
+Status 8 Oct: waitlist half done. `waitlist-signup` is deployed, and the old signup path is closed: `20261008063704_lock_security_definer_execute` removed everyone but the server from `join_waitlist()` (checked 15 Oct), so the pending file was retired.
 
 **Step 34. Platform hygiene (S each).**
 - The nightly error-triage job pushes `error-triage/*` branches and draft pull requests (preview deploys CLAUDE.md wants to avoid) and commits its state file to main most nights, and each commit triggers a production deploy. Keep its state outside main, or skip deploys for docs-only commits.
