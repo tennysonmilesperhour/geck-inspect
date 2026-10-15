@@ -9,7 +9,9 @@
  * probabilities (the evaluation puts top-1 near 40 percent), so a card
  * that said "58%" would read as a measurement it is not. The card says
  * "likely" and "possible" and a confidence word instead, and always
- * carries the line "Visual traits, not proven genes".
+ * carries the line "Visual traits, not proven genes". Only a best match
+ * is called "likely"; a tentative answer, even one where a look leads,
+ * says "possibly", because Morph ID itself did not commit to it.
  */
 import { labelFor } from '../components/morph-id/morphTaxonomy.js';
 import { morphHeadline } from '../components/morph-id/morphHeadline.js';
@@ -25,10 +27,12 @@ export const SHARE_UTM = {
   utm_campaign: 'morph_card',
 };
 
-// A candidate leads ("likely") only when it clearly beats the next one.
-// Below these numbers the card lists every fitting look as "possible".
-const LIKELY_MIN_SCORE = 50;
-const LIKELY_MIN_LEAD = 10;
+// In a tentative answer, a look leads only when it clearly beats the next
+// one. A leader is named alone ("Possibly Harlequin") with moderate
+// confidence; below these numbers the card offers two looks with low
+// confidence.
+const LEAD_MIN_SCORE = 50;
+const LEAD_MIN_MARGIN = 10;
 const POSSIBLE_MIN_SCORE = 20;
 
 // Taxonomy labels written for breeders sometimes carry a number
@@ -71,17 +75,19 @@ export function shareCardView(card) {
   const candidates = candidatesOf(card);
   const top = candidates[0] || null;
   const lead = top ? top.score - (candidates[1]?.score ?? 0) : 0;
+  // Only Morph ID's own best match is "likely".
   const strong = status === 'best_match' && Boolean(top);
-  const leads = Boolean(top) && (strong || (top.score >= LIKELY_MIN_SCORE && lead >= LIKELY_MIN_LEAD));
+  const leads = Boolean(top) && (strong || (top.score >= LEAD_MIN_SCORE && lead >= LEAD_MIN_MARGIN));
   const genes = (Array.isArray(card?.genetic_traits) ? card.genetic_traits : [])
     .filter((id) => typeof id === 'string' && id);
 
   const likely = [];
   const possible = [];
-  if (leads) likely.push(plainLabel(top.morph));
+  if (strong) likely.push(plainLabel(top.morph));
   for (const c of candidates) {
-    if (leads && c === top) continue;
-    if (c.score >= POSSIBLE_MIN_SCORE || (!leads && c === top)) possible.push(plainLabel(c.morph));
+    if (strong && c === top) continue;
+    // The top look is always listed, first among the possible ones.
+    if (c.score >= POSSIBLE_MIN_SCORE || c === top) possible.push(plainLabel(c.morph));
   }
   // A photo can suggest Lilly White or Axanthic but cannot prove the
   // gene, so a trait is only "likely" when the whole answer is strong.
@@ -93,7 +99,11 @@ export function shareCardView(card) {
 
   let headline;
   if (leads) {
-    headline = `Likely ${morphHeadline(top.morph, strong ? genes : []).name.replace(/\s*\(\d+%\)/g, '') || likelyOut[0]}`;
+    // A tentative leader is named the same way, without the photo-read
+    // genes (those stay "possible"), and with "Possibly" in front.
+    const name = morphHeadline(top.morph, strong ? genes : []).name.replace(/\s*\(\d+%\)/g, '')
+      || (strong ? likelyOut[0] : possibleOut[0]);
+    headline = `${strong ? 'Likely' : 'Possibly'} ${name}`;
   } else if (possibleOut.length) {
     headline = `Possibly ${possibleOut.slice(0, 2).join(' or ')}`;
   } else {

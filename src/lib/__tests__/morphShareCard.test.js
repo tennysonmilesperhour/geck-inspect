@@ -54,11 +54,13 @@ const STRONG_LILLY = {
 };
 
 describe('the words on a card', () => {
-  it('names a clear leader as likely and the rest as possible, without numbers', () => {
+  it('names a tentative leader as possible, first, without numbers', () => {
+    // Morph ID did not commit to it (tentative), so the card does not
+    // either: "Possibly", never "Likely", even with a clear lead.
     const view = shareCardView(TENTATIVE_LEAD);
-    expect(view.headline).toBe('Likely Harlequin');
-    expect(view.likely).toEqual(['Harlequin']);
-    expect(view.possible).toEqual(['Partial Pinstripe', 'Dalmatian']);
+    expect(view.headline).toBe('Possibly Harlequin');
+    expect(view.likely).toEqual([]);
+    expect(view.possible).toEqual(['Harlequin', 'Partial Pinstripe', 'Dalmatian']);
     expect(view.confidence.word).toBe('Moderate confidence');
     expect(view.disclaimer).toBe('Visual traits, not proven genes');
     expect(JSON.stringify(view)).not.toMatch(/\d+\s*%|58|25/);
@@ -80,20 +82,34 @@ describe('the words on a card', () => {
     expect(strong.confidence.word).toBe('Strong visual match');
 
     const weak = shareCardView({ ...STRONG_LILLY, assessment_status: 'tentative', candidate_morphs: [{ morph: 'harlequin', score: 55 }] });
-    expect(weak.likely).toEqual(['Harlequin']);
-    expect(weak.possible).toContain('Lilly White');
+    expect(weak.headline).toBe('Possibly Harlequin');
+    expect(weak.likely).toEqual([]);
+    expect(weak.possible).toEqual(['Harlequin', 'Lilly White']);
+  });
+
+  it('says "Likely" only for a best match', () => {
+    for (const card of [TENTATIVE_LEAD, TENTATIVE_TIE, { ...STRONG_LILLY, assessment_status: 'tentative' }]) {
+      const view = shareCardView(card);
+      expect(view.headline).toMatch(/^Possibly /);
+      expect(view.likely).toEqual([]);
+      expect(shareCardMeta(card).description).not.toContain('Likely');
+    }
+    expect(shareCardView(STRONG_LILLY).headline).toMatch(/^Likely /);
   });
 
   it('drops the percentage some taxonomy labels carry', () => {
     const view = shareCardView({ candidate_morphs: [{ morph: 'full_pinstripe', score: 80 }], assessment_status: 'tentative' });
-    expect(view.headline).toBe('Likely Full Pinstripe');
+    expect(view.headline).toBe('Possibly Full Pinstripe');
+    const strong = shareCardView({ candidate_morphs: [{ morph: 'full_pinstripe', score: 80 }], assessment_status: 'best_match' });
+    expect(strong.headline).toBe('Likely Full Pinstripe');
   });
 
   it('writes social preview text with the disclaimer and no dashes', () => {
     const { title, description } = shareCardMeta(TENTATIVE_LEAD);
-    expect(title).toBe('Likely Harlequin crested gecko | Geck Inspect Morph ID');
+    expect(title).toBe('Possibly Harlequin crested gecko | Geck Inspect Morph ID');
     expect(description).toContain('Visual traits, not proven genes.');
-    expect(description).toContain('Likely: Harlequin.');
+    expect(description).toContain('Possible: Harlequin, Partial Pinstripe, Dalmatian.');
+    expect(shareCardMeta(STRONG_LILLY).description).toContain('Likely: Harlequin, Lilly White.');
     expect(description).toContain('Try Morph ID free');
     for (const card of [TENTATIVE_LEAD, TENTATIVE_TIE, STRONG_LILLY]) {
       expect(JSON.stringify(shareCardMeta(card))).not.toMatch(DASHES);
@@ -196,7 +212,9 @@ describe('the public share page (api/morph-share.js)', () => {
     expect(response.headers.get('cache-control')).toBe('private, no-store');
     expect(response.headers.get('x-robots-tag')).toContain('noindex');
     const html = await response.text();
-    expect(html).toContain('<meta property="og:title" content="Likely Harlequin crested gecko | Geck Inspect Morph ID">');
+    // The public page uses the same helper, so a tentative answer reads "Possibly" there too.
+    expect(html).toContain('<meta property="og:title" content="Possibly Harlequin crested gecko | Geck Inspect Morph ID">');
+    expect(html).not.toContain('<h2>Likely</h2>');
     expect(html).toContain(`<meta property="og:image" content="https://p.supabase.co/storage/v1/object/public/geck-inspect-media/${share.image_path}">`);
     expect(html).toContain(`<meta property="og:url" content="https://geckinspect.com/morph-id/r/${ID}">`);
     expect(html).toContain('Visual traits, not proven genes.');
