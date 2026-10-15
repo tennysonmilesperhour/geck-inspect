@@ -1,6 +1,6 @@
 # Geck Inspect, full reference for AI assistants
 
-> Generated: 2026-10-14 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, price index and editorial blog. Smaller topic files are listed in https://geckinspect.com/llms.txt. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
+> Generated: 2026-10-15 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, price index and editorial blog. Smaller topic files are listed in https://geckinspect.com/llms.txt. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
 
 ---
 
@@ -8,7 +8,7 @@
 
 > Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (original asking-price data by trait and market). Everything listed here is free to read and cite.
 >
-> Last updated: 2026-10-12.
+> Last updated: 2026-10-14.
 
 ## How to use and cite this site
 
@@ -1812,7 +1812,7 @@ Super Cappuccinos show a more amplified dorsal saddle than single-copy Cappuccin
 The 'scam' label usually refers to sellers marketing Super Cappuccinos without disclosing potential viability concerns, or to buyers overpaying based on incomplete genetics claims. The morph itself is genetically legitimate. The risk is in buying from a line without documented health and clutch data.
 
 **Q: How is Super Cappuccino different from Super Lilly White?**
-Super Lilly White is confirmed embryonic-lethal, two copies of the LW gene means eggs fail to hatch. Super Cappuccinos do survive and can be healthy animals. The concern is that some Cap × Cap pairings show reduced viability or clutch problems, but this is a debated soft effect, not a confirmed hard lethal.
+Super Lilly White is confirmed embryonic-lethal, two copies of the LW gene means eggs fail to hatch. Super Cappuccinos usually hatch, but they have documented health problems, including reduced nostril size and breathing difficulty, and they cannot be sold on MorphMarket. Some breeders also report lower hatch rates and smaller clutches from Cap × Cap pairings; that clutch-level effect is still debated.
 
 **Q: What questions should I ask before buying a Super Cappuccino crested gecko?**
 Ask for the clutch hatch rate, how many siblings from the same Cap × Cap pairing are alive and healthy, the Super Cappuccino's age and weight trajectory, and the health history of both parents. A reputable breeder will have documentation. Reluctance to share this data is a red flag.
@@ -2694,7 +2694,7 @@ Yes. Soft Scale stacks with any other proven morph. Popular combinations in deve
 ### Lilly White Identification: How Top Breeders Spot Carriers
 
 _Permalink: https://geckinspect.com/blog/lilly-white-identification-breeding_
-_Published 2026-05-15_
+_Published 2026-05-15 · Updated 2026-10-15_
 
 > Learn how experienced breeders identify Lilly White crested geckos before pairing. Covers visual markers, the lethal super form, and why lineage beats eyeballing every time.
 
@@ -2703,7 +2703,7 @@ _Published 2026-05-15_
 - The white markings on a visual Lilly White are structural and persist even when the gecko is fully fired down.
 - Lineage documentation is the only reliable way to confirm Lilly White status. Visual assessment alone is not proof.
 - Never pair two visual Lilly Whites: roughly 25% of fertilized eggs will fail to hatch as lethal Super LW embryos.
-- Lilly White was discovered by Anthony Caponetto at ACR in 2014 and named after his daughter.
+- Lilly White began with an unusual hatchling at Lilly Exotics (Nick Lumb, UK) in late 2010; AC Reptiles later imported the line and popularised it.
 
 A hobbyist at a 2024 reptile expo paid $650 for what the seller called a "Lilly White harlequin." Two seasons of pairings later, she had zero Lilly White offspring. The animal was a high-quality cream harlequin with pale markings. Beautiful gecko, wrong genetics entirely. She lost not just the money but two breeding seasons she could have used on a proven animal.
 
@@ -2717,7 +2717,7 @@ The answer is uncomfortable: you cannot identify a Lilly White with 100% certain
 
 Lilly White is a proven incomplete-dominant morph. A single copy of the gene produces a visual animal with distinct white markings. Two copies produce Super Lilly White, which is an embryonic-lethal genotype: the fertilized egg develops partially and then fails to hatch. The breeder loses those eggs entirely.
 
-The morph was discovered by Anthony Caponetto at AC Reptiles in 2014. He named it after his daughter Lilly. That origin matters for one practical reason: any animal marketed as "Lilly White" with no traceable lineage back to an ACR-proven line or a documented test-breed should be treated with skepticism.
+The morph began with an unusual hatchling at Lilly Exotics, Nick Lumb's breeding operation in the United Kingdom, in late 2010. AC Reptiles later imported the line and popularised it. That origin matters for one practical reason: any animal marketed as "Lilly White" with no traceable lineage back to a documented Lilly White line or a documented test-breed should be treated with skepticism.
 
 The incomplete-dominant inheritance model means this is not a recessive you can "carry invisibly." If an animal has one copy of the Lilly White gene, it shows. If you are looking at a normal-appearing crested gecko and someone tells you it is a "het Lilly White," they are either misusing terminology or trying to sell you something. There is no such thing as a phenotypically normal Lilly White carrier. A gecko either displays the trait or does not carry it.
 
@@ -2755,7 +2755,7 @@ A seller who can show you:
 
 I have seen beautiful animals listed as "Lilly White" on marketplace platforms that, when I asked for pairing documentation, turned out to be animals the seller had purchased as "possible LW" from a third party who had also not documented pairings. The confidence in the genetics dilutes at every undocumented link in the chain. If you cannot trace the lineage at least two generations back to a confirmed visual, price the animal accordingly and do not assume the genetics when planning your own projects.
 
-One concrete thing you can do: ask specifically which line the animal descends from. Animals from ACR's original proven stock, or from breeders who documented their test-breed outcomes, have verifiable histories. Animals from "my friend had a clutch that looked like Lilly Whites" do not.
+One concrete thing you can do: ask specifically which line the animal descends from. Animals from documented Lilly White lines (Lilly Exotics or AC Reptiles stock, for example), or from breeders who documented their test-breed outcomes, have verifiable histories. Animals from "my friend had a clutch that looked like Lilly Whites" do not.
 
 **The lethal pairing problem**
 
@@ -2811,7 +2811,7 @@ The most reliable marker is fire-state persistence. Lilly White's white markings
 Approximately 25% of fertilized eggs will develop as Super Lilly White homozygotes, which are embryonic-lethal. Those eggs stall mid-incubation and never hatch. The safe pairing is always Lilly White x non-LW, which produces about 50% visual Lilly White offspring with no lethal risk.
 
 **Q: Who discovered the Lilly White morph?**
-Lilly White was discovered by Anthony Caponetto at AC Reptiles (ACR) in 2014. It is named after his daughter Lilly. Animals tracing back to ACR's original proven line have the most reliable documentation of the morph's inheritance.
+Lilly White began with an unusual hatchling at Lilly Exotics, Nick Lumb's breeding operation in the United Kingdom, in late 2010. AC Reptiles (ACR) later imported the line and popularised it. Animals that trace back to a documented Lilly White line have the most reliable record of the morph's inheritance.
 
 **Q: What percentage of offspring from a Lilly White x normal pairing will be Lilly White?**
 Approximately 50%. Lilly White is incomplete-dominant: one copy produces a visual animal. Pairing a visual LW with a non-carrier gives roughly 50% visual Lilly White offspring and 50% normal offspring, with no Super LW risk.

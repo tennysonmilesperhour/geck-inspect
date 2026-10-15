@@ -2668,7 +2668,7 @@ const SIMPLE_TRAITS = [
 const COMPLEX_OPTIONS = [
   { value: "none", label: "No (wild-type)", pair: [WILD_TYPE, WILD_TYPE] },
   { value: "cappuccino", label: "Cappuccino", pair: ["cappuccino", WILD_TYPE], confidence: "proven" },
-  { value: "sable", label: "Sable", pair: ["sable", WILD_TYPE], confidence: "proven" },
+  { value: "sable", label: "Sable", pair: ["sable", WILD_TYPE], confidence: "emerging" },
   {
     value: "highway",
     label: "Highway (provisional allele)",
@@ -2679,19 +2679,21 @@ const COMPLEX_OPTIONS = [
     value: "luwak",
     label: "Luwak (Cappuccino + Sable)",
     pair: ["cappuccino", "sable"],
-    confidence: "proven"
+    confidence: "emerging"
   },
   {
     value: "capp_highway",
     label: "Cappuccino + Highway (compound)",
     pair: ["cappuccino", "highway"],
-    confidence: "emerging"
+    confidence: "emerging",
+    caution: "The health of this compound is not documented yet. Check nostril openings at hatch, as with any animal carrying two versions of this gene."
   },
   {
     value: "sable_highway",
     label: "Sable + Highway (compound)",
     pair: ["sable", "highway"],
-    confidence: "emerging"
+    confidence: "emerging",
+    caution: "The health of this compound is not documented yet. Check nostril openings at hatch, as with any animal carrying two versions of this gene."
   },
   {
     value: "super_cappuccino",
@@ -2704,8 +2706,8 @@ const COMPLEX_OPTIONS = [
     value: "super_sable",
     label: "Super Sable",
     pair: ["sable", "sable"],
-    confidence: "proven",
-    caution: "Super Sable appears viable; the community norm is to check nostril openings at hatch on any super in this complex."
+    confidence: "emerging",
+    caution: "Super Sable appears viable but is thinly documented; the community norm is to check nostril openings at hatch on any super in this complex."
   },
   {
     value: "super_highway",
@@ -2749,8 +2751,8 @@ const CALCULATOR_PAGES = [
   {
     slug: "sable",
     label: "Sable",
-    blurb: "Incomplete dominant, allelic with Cappuccino (the hobby’s first proven allelic complex). Sable x Cappuccino produces Luwak; Super Sable appears viable with a check-nostrils-at-hatch caution.",
-    confidence: "proven",
+    blurb: "Incomplete dominant. Treated here as a second version of the Cappuccino gene, which is widely reported but not yet settled, so it is badged Emerging. Under that model Sable x Cappuccino produces Luwak; Super Sable appears viable with a check-nostrils-at-hatch caution.",
+    confidence: "emerging",
     super_lethal: false,
     defaultState: { [COMPLEX_ID]: "sable" }
   },

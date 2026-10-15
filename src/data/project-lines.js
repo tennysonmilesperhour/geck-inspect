@@ -337,30 +337,29 @@ export const PROJECT_LINES = [
     priceTier: '$$$',
     priceRange: '$300-$1,500+',
     summary:
-      'Founding line for the Lilly White morph. ACR is widely cited as the source and primary historical producer of Lilly White animals.',
+      'The line that imported and popularised the Lilly White morph, which began at Lilly Exotics (Nick Lumb, UK) in late 2010. ACR is a major historical producer of Lilly White animals.',
     description:
-      'Anthony Caponetto Reptiles (ACR) is widely credited as the source line for the Lilly White morph, an incomplete-dominant trait that became one of the most influential crested gecko discoveries of the 2010s. The line still operates and continues to produce Lilly White and Super Lilly White animals. Many other breeders\' Lilly White stock traces back to ACR foundation animals, either directly or through a few intermediate generations.',
+      'Lilly White, an incomplete-dominant trait and one of the most influential crested gecko discoveries of the 2010s, began with an unusual hatchling at Lilly Exotics (Nick Lumb, United Kingdom) in late 2010. AC Reptiles (ACR) later imported the line and popularised it, and it still produces Lilly White animals. Many breeders\' Lilly White stock traces back to ACR animals, either directly or through a few intermediate generations. Super Lilly White (two copies) is lethal, so it is not something any responsible line produces on purpose.',
     visualIdentity: [
       'High white or cream coverage across the body, especially the belly and lateral surfaces',
       'White expansion progresses as the animal matures; juveniles may show less white than adults',
-      'Super Lilly Whites (homozygous) carry significantly more white, often near-solid',
       'Co-expresses cleanly with most pattern and base color morphs',
     ],
     identificationTips: [
       'White should be present on the belly and laterals, not just dorsally',
       'A genuine Lilly White matures into more white over time; static juveniles are suspicious',
-      'Super Lilly White has been historically associated with reduced viability; verify the animal is healthy and feeding',
+      'There are no living Super Lilly Whites to buy: two copies die before or shortly after hatching, so treat any "Super Lilly White" offer as a mislabel',
     ],
     verificationAdvice: [
       'Ask for pedigree tracing to ACR foundation animals, or at minimum to a breeder who acquired from ACR',
-      'Lilly White is incomplete-dominant; LW x normal produces 50% visual LW, LW x LW produces 25% Super LW',
+      'Lilly White is incomplete-dominant; LW x normal produces 50% visual LW, while LW x LW loses about 25% of eggs to the lethal Super LW',
       'Visual Lilly White is required for the trait to express; there are no het Lilly Whites',
       'ACR\'s historical animals are well-documented; ask for the named ancestor in the pedigree if buying at a premium',
     ],
     morphMarketSearchUrl: 'https://www.morphmarket.com/morphpedia/crested-geckos/lilly-white/',
     relatedMorphs: ['lilly-white', 'super-lilly-white'],
     caveats: [
-      'Lilly White as a morph is widely produced; the ACR-specific line is the historical foundation but no longer the only credible source.',
+      'Lilly White as a morph is widely produced; the ACR line is a major historical source but not the only credible one, and the morph itself began at Lilly Exotics.',
     ],
   },
   {

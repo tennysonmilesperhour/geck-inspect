@@ -768,7 +768,7 @@ export const BLOG_POSTS = [
         },
         {
           question: 'How is Super Cappuccino different from Super Lilly White?',
-          answer: 'Super Lilly White is confirmed embryonic-lethal, two copies of the LW gene means eggs fail to hatch. Super Cappuccinos do survive and can be healthy animals. The concern is that some Cap × Cap pairings show reduced viability or clutch problems, but this is a debated soft effect, not a confirmed hard lethal.',
+          answer: 'Super Lilly White is confirmed embryonic-lethal, two copies of the LW gene means eggs fail to hatch. Super Cappuccinos usually hatch, but they have documented health problems, including reduced nostril size and breathing difficulty, and they cannot be sold on MorphMarket. Some breeders also report lower hatch rates and smaller clutches from Cap × Cap pairings; that clutch-level effect is still debated.',
         },
         {
           question: 'What questions should I ask before buying a Super Cappuccino crested gecko?',
@@ -2543,14 +2543,14 @@ export const BLOG_POSTS = [
       "super-lilly-white",
     ],
     datePublished: "2026-05-15",
-    dateModified: "2026-05-15",
+    dateModified: "2026-10-15",
     heroEyebrow: "Identification Guide",
     tldr: [
       "Lilly White is an incomplete-dominant morph: one copy is visual, two copies produce a lethal Super Lilly White that never hatches.",
       "The white markings on a visual Lilly White are structural and persist even when the gecko is fully fired down.",
       "Lineage documentation is the only reliable way to confirm Lilly White status. Visual assessment alone is not proof.",
       "Never pair two visual Lilly Whites: roughly 25% of fertilized eggs will fail to hatch as lethal Super LW embryos.",
-      "Lilly White was discovered by Anthony Caponetto at ACR in 2014 and named after his daughter.",
+      "Lilly White began with an unusual hatchling at Lilly Exotics (Nick Lumb, UK) in late 2010; AC Reptiles later imported the line and popularised it.",
     ],
     body: [
       {
@@ -2576,7 +2576,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "The morph was discovered by Anthony Caponetto at AC Reptiles in 2014. He named it after his daughter Lilly. That origin matters for one practical reason: any animal marketed as \"Lilly White\" with no traceable lineage back to an ACR-proven line or a documented test-breed should be treated with skepticism.",
+        text: "The morph began with an unusual hatchling at Lilly Exotics, Nick Lumb's breeding operation in the United Kingdom, in late 2010. AC Reptiles later imported the line and popularised it. That origin matters for one practical reason: any animal marketed as \"Lilly White\" with no traceable lineage back to a documented Lilly White line or a documented test-breed should be treated with skepticism.",
       },
       {
         type: "p",
@@ -2646,7 +2646,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "One concrete thing you can do: ask specifically which line the animal descends from. Animals from ACR's original proven stock, or from breeders who documented their test-breed outcomes, have verifiable histories. Animals from \"my friend had a clutch that looked like Lilly Whites\" do not.",
+        text: "One concrete thing you can do: ask specifically which line the animal descends from. Animals from documented Lilly White lines (Lilly Exotics or AC Reptiles stock, for example), or from breeders who documented their test-breed outcomes, have verifiable histories. Animals from \"my friend had a clutch that looked like Lilly Whites\" do not.",
       },
       {
         type: "callout",
@@ -2737,7 +2737,7 @@ export const BLOG_POSTS = [
       },
       {
         question: "Who discovered the Lilly White morph?",
-        answer: "Lilly White was discovered by Anthony Caponetto at AC Reptiles (ACR) in 2014. It is named after his daughter Lilly. Animals tracing back to ACR's original proven line have the most reliable documentation of the morph's inheritance.",
+        answer: "Lilly White began with an unusual hatchling at Lilly Exotics, Nick Lumb's breeding operation in the United Kingdom, in late 2010. AC Reptiles (ACR) later imported the line and popularised it. Animals that trace back to a documented Lilly White line have the most reliable record of the morph's inheritance.",
       },
       {
         question: "What percentage of offspring from a Lilly White x normal pairing will be Lilly White?",
