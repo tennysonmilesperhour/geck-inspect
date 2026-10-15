@@ -101,6 +101,10 @@ export const MEMBERSHIP_FAQS = [
     a: 'Yes, on every plan. Export your roster to CSV or PDF from My Geckos, and your collection and care records as JSON from Settings. Your records stay yours if you ever leave.',
   },
   {
+    q: 'When do monthly allowances reset?',
+    a: 'At midnight UTC on the 1st of each month. In the US that is the evening of the last day of the month: 8 pm Eastern or 5 pm Pacific while daylight saving time is on, 7 pm Eastern or 4 pm Pacific in winter. Morph IDs, health checks and AI drafts all reset together, and unused monthly allowance does not roll over.',
+  },
+  {
     q: 'Can I cancel anytime?',
     a: 'Yes. Monthly and yearly subscriptions can be cancelled at any time. Use the Manage billing button on this page or in Settings to open your Stripe billing portal, where you can cancel, change plans, update your card, or download invoices. Lifetime access does not renew, so there is nothing to cancel.',
   },

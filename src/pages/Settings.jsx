@@ -296,7 +296,7 @@ const notificationTypes = [
     { key: 'gecko_of_day', label: 'Gecko of the Day', description: 'When your gecko photo is selected as featured' },
     { key: 'forum_replies', label: 'Forum Activity', description: 'Replies to your forum posts and comments' },
     { key: 'breeding_updates', label: 'Breeding & Care Updates', description: 'Hatch alerts, breeding plan updates, and feeding, weigh-in, vet follow-up and Season Planner task reminders' },
-    { key: 'announcements', label: 'Platform Announcements', description: 'Important news and feature updates' },
+    { key: 'announcements', label: 'Platform Announcements', description: 'Important news, feature updates, and a few getting-started emails in your first two weeks' },
     { key: 'market_alert', label: 'Watchlist Matches', description: 'When a new listing or a price cut matches one of your market watches' },
     { key: 'market_brief', label: 'Morning Market Brief', description: 'The daily crested gecko market brief, once you switch it on below' }
 ];
