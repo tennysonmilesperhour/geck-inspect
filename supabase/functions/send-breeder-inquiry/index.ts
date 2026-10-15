@@ -32,6 +32,7 @@
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { clientIp } from "../_shared/client-ip.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Geck Inspect <alerts@geckinspect.com>";
@@ -74,8 +75,7 @@ const LIMIT_PER_BREEDER_PER_DAY = 30;
 // A keyed hash of the caller's IP, so repeat senders can be counted
 // without storing the address itself.
 async function networkKey(req: Request): Promise<string | null> {
-  const raw = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
-    (req.headers.get("x-real-ip") || "").trim();
+  const raw = clientIp(req.headers);
   if (!raw || !SERVICE_ROLE_KEY) return null;
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(

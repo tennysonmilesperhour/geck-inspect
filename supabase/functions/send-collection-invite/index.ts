@@ -14,9 +14,9 @@
 //   Headers: Authorization: Bearer <anon-or-authed-key>
 //   Body: {
 //     to_email:        string,  // required
-//     inviter_email:   string,  // required (for "From" attribution copy)
-//     inviter_name?:   string,  // optional display name
-//     collection_name: string,  // required
+//     inviter_email:   string,  // required, must be the signed-in user
+//     inviter_name?:   string,  // ignored: the name comes from the profile
+//     collection_name?: string, // ignored: the name comes from the collection
 //     role:            'editor' | 'viewer',  // required
 //     invite_url:      string,  // required, full https URL
 //   }
@@ -69,6 +69,17 @@ const ALLOWED_INVITE_PREFIXES = [
 function bearerToken(req: Request): string {
   const auth = req.headers.get("authorization") || "";
   return auth.startsWith("Bearer ") ? auth.slice(7).trim() : auth.trim();
+}
+
+// The inviter's name as their profile shows it. Falls back to their
+// verified sign-in email, which is what invites showed before.
+function inviterDisplayName(
+  profile: { full_name?: string | null; breeder_name?: string | null; business_name?: string | null } | null,
+  callerEmail: string,
+): string {
+  return [profile?.full_name, profile?.breeder_name, profile?.business_name]
+    .map((v) => String(v || "").trim())
+    .find(Boolean) || callerEmail;
 }
 
 // Escape the two LIKE wildcards so an ilike equality check stays exact.
@@ -384,12 +395,12 @@ serve(async (req) => {
 
   const toEmail = String(payload.to_email || "").trim().toLowerCase();
   const inviterEmail = String(payload.inviter_email || "").trim().toLowerCase();
-  const inviterName = String(payload.inviter_name || "").trim();
-  const collectionName = String(payload.collection_name || "").trim();
+  // inviter_name and collection_name are still sent by older clients but
+  // are ignored: both names are read from the database below.
   const role = String(payload.role || "").trim();
   const inviteUrl = String(payload.invite_url || "").trim();
 
-  if (!toEmail || !inviterEmail || !collectionName || !role || !inviteUrl) {
+  if (!toEmail || !inviterEmail || !role || !inviteUrl) {
     return json({ error: "missing required fields" }, 400);
   }
   if (role !== "editor" && role !== "viewer") {
@@ -438,7 +449,7 @@ serve(async (req) => {
   }
   const { data: pending, error: pendingErr } = await admin
     .from("collection_members")
-    .select("id")
+    .select("id, collection_id")
     .in("collection_id", ownedIds)
     .ilike("member_email", likeLiteral(toEmail))
     .eq("status", "pending")
@@ -451,7 +462,24 @@ serve(async (req) => {
     return json({ error: "no pending invite for that address" }, 403);
   }
 
-  const inviterDisplay = inviterName || inviterEmail;
+  // The names in the email come from the database, never from the request.
+  // The caller used to supply the inviter name (and the collection name),
+  // so a signed-in member could send a real Geck Inspect email to their
+  // invitee claiming to be anyone. The collection is the one the pending
+  // invite belongs to; the inviter is the caller's own profile name.
+  const { data: collection } = await admin
+    .from("collections")
+    .select("name")
+    .eq("id", pending[0].collection_id)
+    .maybeSingle();
+  const { data: inviterProfile } = await admin
+    .from("profiles")
+    .select("full_name, breeder_name, business_name")
+    .ilike("email", likeLiteral(callerEmail))
+    .limit(1)
+    .maybeSingle();
+  const inviterDisplay = inviterDisplayName(inviterProfile, callerEmail);
+  const collectionName = String(collection?.name || "").trim() || "a shared collection";
   const subject = `${inviterDisplay} invited you to a crested gecko collection`;
 
   try {

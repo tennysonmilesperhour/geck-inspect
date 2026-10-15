@@ -77,6 +77,7 @@ import {
 import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
 import { RETRYABLE_UPSTREAM_STATUS, requestShape, upstreamErrorCode, upstreamFailureResponse } from "../_shared/morph-upstream.ts";
 import { refundMorphIdCreditOnce } from "../_shared/morph-refund.ts";
+import { clientIp } from "../_shared/client-ip.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
@@ -132,18 +133,10 @@ async function hashIp(ip: string | null): Promise<string | null> {
     .join("");
 }
 
+// The shared helper explains which headers can be trusted. Local
+// invocations (curl from the same host) have neither and return null.
 function extractClientIp(req: Request): string | null {
-  // Supabase Edge Functions sit behind a Cloudflare-style edge; both
-  // headers are populated for genuine client requests. Local invocations
-  // (curl from the same host) skip these and return null.
-  const cf = req.headers.get("cf-connecting-ip");
-  if (cf) return cf.trim();
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) {
-    const first = xff.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  return null;
+  return clientIp(req.headers);
 }
 
 // Returns the morph_id_per_ip_daily cap from geck_data.runtime_config (or

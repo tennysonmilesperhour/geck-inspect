@@ -38,6 +38,9 @@
 // List-Unsubscribe header points at the email-unsubscribe function for
 // one-click unsubscribe from the mail app (RFC 8058).
 //
+// Recipients without a sign-in account (profiles imported from the old
+// platform, no auth.users row) are skipped with "no-login".
+//
 // Deploy: supabase functions deploy send-email --no-verify-jwt
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
@@ -185,6 +188,29 @@ async function unsubscribeToken(
     return typeof data === "string" && data ? data : null;
   } catch (err) {
     console.warn("send-email: unsubscribe token threw", err);
+    return null;
+  }
+}
+
+// Whether the address belongs to an account that can sign in
+// (email_has_login, service role only). null means "could not tell": the
+// lookup failed or the migration that adds the function is not applied
+// yet. The caller then sends as before, so a database hiccup never drops
+// mail to a real member.
+type RpcClient = {
+  rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+};
+
+async function hasLogin(supabase: RpcClient, email: string): Promise<boolean | null> {
+  try {
+    const { data, error } = await supabase.rpc("email_has_login", { p_email: email });
+    if (error) {
+      console.warn("send-email: login check failed", error.message);
+      return null;
+    }
+    return typeof data === "boolean" ? data : null;
+  } catch (err) {
+    console.warn("send-email: login check threw", err);
     return null;
   }
 }
@@ -346,6 +372,14 @@ serve(async (req) => {
     const prefKey = TYPE_TO_EMAIL_KEY[type] || type;
     if (!allowed.includes(prefKey)) {
       return json({ delivered: 0, skipped: "type-not-allowed" });
+    }
+
+    // Profiles imported from the old platform have no sign-in account, so
+    // they cannot open the app or change these settings. More than half of
+    // notification mail was going to them. Admin alerts above always go to
+    // real admin accounts and skip this check.
+    if ((await hasLogin(supabase, userEmail)) === false) {
+      return json({ delivered: 0, skipped: "no-login" });
     }
   }
 

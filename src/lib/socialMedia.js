@@ -67,6 +67,8 @@ const GENERATION_ERROR_MESSAGES = {
   anthropic_failed: 'The writer is busy right now. Try again in a minute.',
   anthropic_unreachable: 'The writer is busy right now. Try again in a minute.',
   anthropic_key_missing: 'Drafting is not available right now. Please try again later.',
+  draft_credits_exhausted: 'You have used this month\'s drafts for your plan. More arrive at the start of next month, or upgrade for more.',
+  credit_check_failed: 'Drafting is not available right now. Please try again in a minute.',
 };
 
 export function generationErrorMessage(code) {
