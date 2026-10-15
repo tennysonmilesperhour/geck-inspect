@@ -333,6 +333,62 @@ begin
 end
 $t$;
 
+-- 3b. The email delivery table: the last eight weeks, newest first, every
+--     type of the current week present ------------------------------------
+
+do $t$
+declare
+  s jsonb;
+  v_row jsonb;
+  v_prev_week date;
+  v_prev_type text;
+  v_newest date := (date_trunc('week', now() at time zone 'utc'))::date;
+  n integer;
+begin
+  if to_regclass('public.email_deliveries') is null then
+    return;
+  end if;
+  -- 20 email types sent every week for ten weeks: 200 type-weeks, far
+  -- more than the old 50-row read.
+  insert into public.email_deliveries (event_key, resend_email_id, email_type, event, occurred_at)
+  select 'sb-' || w || '-' || t, 'sb-re-' || w || '-' || t, 'type_' || lpad(t::text, 2, '0'), 'sent',
+         now() - w * interval '7 days'
+    from generate_series(0, 9) w, generate_series(1, 20) t;
+
+  perform pg_temp.as_member('admin');
+  s := public.admin_scoreboard();
+  perform pg_temp.as_postgres();
+  if not (s #>> '{email_delivery,available}')::boolean then
+    raise exception 'FAIL: email delivery not available: %', s -> 'email_delivery';
+  end if;
+  for v_row in select * from jsonb_array_elements(s #> '{email_delivery,rows}') loop
+    if (v_row ->> 'week')::date < current_date - 56 then
+      raise exception 'FAIL: a week older than eight weeks came back: %', v_row;
+    end if;
+    if v_prev_week is not null and (v_row ->> 'week')::date > v_prev_week then
+      raise exception 'FAIL: weeks are not newest first at %', v_row;
+    end if;
+    if v_prev_week = (v_row ->> 'week')::date and (v_row ->> 'email_type') <= v_prev_type then
+      raise exception 'FAIL: email types out of order within a week at %', v_row;
+    end if;
+    v_prev_week := (v_row ->> 'week')::date;
+    v_prev_type := v_row ->> 'email_type';
+  end loop;
+  if (s #>> '{email_delivery,rows,0,week}')::date <> v_newest then
+    raise exception 'FAIL: the first row is not the current week: %', s #> '{email_delivery,rows,0}';
+  end if;
+  select count(*) into n from jsonb_array_elements(s #> '{email_delivery,rows}') r
+   where (r ->> 'week')::date = v_newest and r ->> 'email_type' like 'type_%';
+  if n <> 20 then raise exception 'FAIL: the current week shows % of its 20 email types', n; end if;
+  select count(*) into n from jsonb_array_elements(s #> '{email_delivery,rows}') r
+   where r ->> 'email_type' like 'type_%';
+  if n % 20 <> 0 or n < 160 then
+    raise exception 'FAIL: % rows came back, expected whole weeks of 20 types', n;
+  end if;
+  delete from public.email_deliveries where event_key like 'sb-%';
+end
+$t$;
+
 -- 4. Email delivery passes through when the view exists, and a broken view
 --    does not take the card down. ---------------------------------------------
 
@@ -340,7 +396,8 @@ $t$;
 -- the rollback at the end).
 drop view if exists public.email_delivery_stats;
 create view public.email_delivery_stats as
-  select 'reminder'::text as category, 10 as sent, 9 as delivered, 1 as bounced;
+  select (date_trunc('week', now() at time zone 'utc'))::date as week, 'reminder'::text as email_type,
+         10 as sent, 9 as delivered, 1 as bounced;
 do $t$
 declare s jsonb;
 begin
@@ -355,7 +412,8 @@ end
 $t$;
 
 create or replace view public.email_delivery_stats as
-  select 'reminder'::text as category, 10 / (select 0) as sent, 9 as delivered, 1 as bounced;
+  select (date_trunc('week', now() at time zone 'utc'))::date as week, 'reminder'::text as email_type,
+         10 / (select 0) as sent, 9 as delivered, 1 as bounced;
 do $t$
 declare s jsonb;
 begin
@@ -367,6 +425,108 @@ begin
   end if;
   if (s #>> '{activity,weekly_active_breeders}') is null then
     raise exception 'FAIL: a broken email view took the rest of the scoreboard down';
+  end if;
+end
+$t$;
+
+-- 5. App Store payers, the admin's own sales, and who may write analytics
+--    rows in a member's name ---------------------------------------------------
+
+select pg_temp.mk('storekeep');    -- App Store Keeper (annual product): paying keeper
+select pg_temp.mk('storebreed');   -- App Store Breeder monthly: paying breeder
+select pg_temp.mk('storeboth');    -- Keeper and Breeder both active: counted once, as Breeder
+select pg_temp.mk('storelegacy');  -- the legacy 'Geck Inspect Pro' entitlement from the App Store: Breeder
+select pg_temp.mk('storepromo');   -- a promotional grant: not paying
+select pg_temp.mk('storetrial');   -- an App Store trial: not paying
+select pg_temp.mk('storetest');    -- the RevenueCat Test Store: not paying
+select pg_temp.mk('adminbuyer');   -- bought from the admin and came back: not a claimer
+select pg_temp.mk('idle');         -- did nothing this week
+
+insert into public.revenuecat_entitlements
+  (app_user_id, entitlement_identifier, is_active, period_type, store, product_identifier, expires_at, updated_at)
+values
+  ((select uid from _who where tag = 'storekeep'), 'keeper', true, 'normal', 'app_store', 'com.geckinspect.keeper.annual', now() + interval '300 days', now()),
+  ((select uid from _who where tag = 'storebreed'), 'breeder', true, 'normal', 'app_store', 'com.geckinspect.breeder.monthly', now() + interval '20 days', now()),
+  ((select uid from _who where tag = 'storeboth'), 'keeper', true, 'normal', 'app_store', 'com.geckinspect.keeper.monthly', now() + interval '20 days', now()),
+  ((select uid from _who where tag = 'storeboth'), 'breeder', true, 'normal', 'app_store', 'com.geckinspect.breeder.monthly', now() + interval '20 days', now() - interval '1 day'),
+  ((select uid from _who where tag = 'storelegacy'), 'Geck Inspect Pro', true, 'normal', 'app_store', 'com.geckinspect.pro.monthly', now() + interval '20 days', now()),
+  ((select uid from _who where tag = 'storepromo'), 'breeder', true, 'normal', 'promotional', 'rc_promo_breeder_monthly', now() + interval '20 days', now()),
+  ((select uid from _who where tag = 'storetrial'), 'breeder', true, 'trial', 'app_store', 'com.geckinspect.breeder.monthly', now() + interval '5 days', now()),
+  ((select uid from _who where tag = 'storetest'), 'Geck Inspect Pro', false, 'normal', 'test_store', 'geck_pro_monthly', now() - interval '5 days', now()),
+  ((select uid from _who where tag = 'storetest'), 'breeder', true, 'normal', 'test_store', 'geck_breeder_monthly', now() + interval '20 days', now()),
+  -- payer already pays through Stripe: counted once, through Stripe.
+  ((select uid from _who where tag = 'payer'), 'breeder', true, 'normal', 'app_store', 'com.geckinspect.breeder.monthly', now() + interval '20 days', now());
+
+-- The admin sold a gecko 20 days ago; the buyer came back 16 days later.
+insert into public.transfer_requests (animal_id, animal_type, from_user_id, to_email, token, status, created_by, claimed_at, expires_at)
+values ('score-gecko-admin1', 'gecko', (select uid from _who where tag = 'admin'), pg_temp.who('adminbuyer'), 'score-tok-3', 'claimed',
+        pg_temp.who('admin'), now() - interval '20 days', now() + interval '3 days');
+insert into public.user_events (event_name, user_email, created_date)
+values ('page_view', pg_temp.who('adminbuyer'), now() - interval '4 days');
+
+do $t$
+declare
+  s jsonb;
+  paid jsonb;
+  n integer;
+  v_before integer;
+  v_email text;
+begin
+  perform pg_temp.as_member('admin');
+  s := public.admin_scoreboard();
+  perform pg_temp.as_postgres();
+  paid := s -> 'paid_plans';
+
+  select coalesce(sum((r ->> 'n')::int), 0) into n from jsonb_array_elements(paid) r
+   where r ->> 'source' = 'app_store' and r ->> 'tier' = 'keeper' and r ->> 'cycle' = 'annual';
+  if n <> 1 then raise exception 'FAIL: expected 1 App Store keeper (annual), got % (%)', n, paid; end if;
+  select coalesce(sum((r ->> 'n')::int), 0) into n from jsonb_array_elements(paid) r
+   where r ->> 'source' = 'app_store' and r ->> 'tier' = 'breeder';
+  -- storebreed, storeboth (as Breeder) and storelegacy.
+  if n <> 3 then raise exception 'FAIL: expected 3 App Store breeders, got % (%)', n, paid; end if;
+  select coalesce(sum((r ->> 'n')::int), 0) into n from jsonb_array_elements(paid) r
+   where r ->> 'source' = 'app_store';
+  if n <> 4 then
+    raise exception 'FAIL: promotional, trial, Test Store or a Stripe payer leaked into App Store payers: % (%)', n, paid;
+  end if;
+  -- payer still counts once, through Stripe: the 5 Stripe rows from
+  -- section 3 stand.
+  select coalesce(sum((r ->> 'n')::int), 0) into n from jsonb_array_elements(paid) r
+   where r ->> 'source' = 'stripe';
+  if n <> 5 then raise exception 'FAIL: Stripe payers changed to % (%)', n, paid; end if;
+
+  -- The admin's buyer does not count toward claimers still active.
+  if (s #>> '{passports,claimers_eligible_14d}')::int <> 1
+     or (s #>> '{passports,claimers_active_after_14d}')::int <> 1 then
+    raise exception 'FAIL: buyers of the admin''s own sales counted as claimers: %', s -> 'passports';
+  end if;
+  v_before := (s #>> '{activity,weekly_active_signed_in}')::int;
+
+  -- A signed-out visitor writes an analytics row naming an idle member:
+  -- the row keeps no address, and the member does not become active.
+  perform pg_temp.as_anon();
+  insert into public.user_events (event_name, user_email, page, created_by)
+  values ('page_view', pg_temp.who('idle'), 'Home', pg_temp.who('idle'));
+  -- A signed-in member tries the same: the row carries their own address.
+  perform pg_temp.as_member('storetrial');
+  insert into public.user_events (event_name, user_email, page, created_by)
+  values ('page_view', pg_temp.who('idle'), 'Home', pg_temp.who('idle'));
+  perform pg_temp.as_postgres();
+  if exists (select 1 from public.user_events where lower(user_email) = pg_temp.who('idle')
+                                                 or lower(created_by) = pg_temp.who('idle')) then
+    raise exception 'FAIL: an analytics row was written in another member''s name';
+  end if;
+  select user_email into v_email from public.user_events where page = 'Home' and user_email is not null;
+  if v_email is distinct from pg_temp.who('storetrial') then
+    raise exception 'FAIL: a member''s analytics row should carry their own address, got %', v_email;
+  end if;
+
+  perform pg_temp.as_member('admin');
+  s := public.admin_scoreboard();
+  perform pg_temp.as_postgres();
+  -- storetrial really used the app (+1); idle did not.
+  if (s #>> '{activity,weekly_active_signed_in}')::int <> v_before + 1 then
+    raise exception 'FAIL: weekly active signed in went from % to %', v_before, s #>> '{activity,weekly_active_signed_in}';
   end if;
 end
 $t$;

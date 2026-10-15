@@ -14,14 +14,20 @@
 -- 1. public.scoreboard_entries: a small table where Tennyson records the
 --    things only he knows (a breeder conversation held, a collection
 --    imported for a breeder, the month's running cost). Admins only.
--- 2. public.admin_scoreboard(): every other number, computed live. Admin
+-- 2. A trigger on public.user_events that sets user_email (and
+--    created_by) from the session for calls from the app, so a row can
+--    only name the member who wrote it. The "weekly active" numbers below
+--    read that table, and before this a signed-out visitor could write a
+--    row naming any member and make them count as active.
+-- 3. public.admin_scoreboard(): every other number, computed live. Admin
 --    accounts and the Morph ID evaluation account are left out, the same
 --    way admin_growth_funnel() leaves them out. It also passes through
 --    public.email_delivery_stats when that view exists (another migration
 --    creates it); when it does not, the card says so and carries on.
 --
--- Safe to run more than once. Both objects answer admins only: the table
--- through row security, the function by checking is_admin() itself.
+-- Safe to run more than once. The table and the function answer admins
+-- only: the table through row security, the function by checking
+-- is_admin() itself.
 
 -- 1. Hand-recorded scoreboard entries --------------------------------------
 
@@ -101,7 +107,42 @@ create trigger scoreboard_entries_touch
   before update on public.scoreboard_entries
   for each row execute function public.scoreboard_entries_touch();
 
--- 2. The computed numbers ----------------------------------------------------
+-- 2. Analytics rows name only the member who wrote them ----------------------
+--
+-- The insert policy 'anyone can record events' lets the app write
+-- analytics rows signed in or out, and nothing pinned user_email, so a
+-- signed-out visitor could write a row in any member's name. The app only
+-- ever writes its own address there (src/lib/telemetry.js), or none when
+-- signed out, so taking the address from the session changes nothing for
+-- it, in this release or an older one still open in a tab. Server code
+-- (the service role, and security definer functions such as the Morph ID
+-- card events) is left alone. Rows written before this are not changed.
+create or replace function public.user_events_stamp_caller()
+returns trigger
+language plpgsql
+security invoker
+set search_path to ''
+as $function$
+begin
+  if current_user in ('anon', 'authenticated') then
+    new.user_email := auth.email();
+    new.created_by := auth.email();
+  end if;
+  return new;
+end;
+$function$;
+
+-- Runs as whoever inserts the row, so the API roles need EXECUTE
+-- (SCHEMA_CONVENTIONS 4a). A trigger function cannot be called directly.
+revoke all on function public.user_events_stamp_caller() from public;
+grant execute on function public.user_events_stamp_caller() to anon, authenticated, service_role;
+
+drop trigger if exists user_events_stamp_caller on public.user_events;
+create trigger user_events_stamp_caller
+  before insert on public.user_events
+  for each row execute function public.user_events_stamp_caller();
+
+-- 3. The computed numbers ----------------------------------------------------
 
 create or replace function public.admin_scoreboard()
 returns jsonb
@@ -163,10 +204,15 @@ begin
       )
     order by lower(p.email), p.updated_date desc nulls last
   ),
+  -- App Store payers, mapped the way effective_tier_for_email maps them:
+  -- the keeper entitlement is Keeper; breeder and the legacy 'Geck Inspect
+  -- Pro' are Breeder (docs/BILLING.md). One row per member, Breeder over
+  -- Keeper. Trials, promotional grants and the RevenueCat Test Store are
+  -- not money. Apple sandbox purchases cannot be told apart in this table.
   store_payers as (
     select distinct on (lower(au.email))
       lower(au.email) as email,
-      'breeder' as tier,
+      case when re.entitlement_identifier = 'keeper' then 'keeper' else 'breeder' end as tier,
       case
         when re.product_identifier ilike '%lifetime%' then 'lifetime'
         when re.product_identifier ilike '%annual%' or re.product_identifier ilike '%year%' then 'annual'
@@ -175,14 +221,17 @@ begin
       'app_store' as source
     from public.revenuecat_entitlements re
     join auth.users au on au.id = re.app_user_id
-    where re.entitlement_identifier = 'Geck Inspect Pro'
+    where re.entitlement_identifier in ('keeper', 'breeder', 'Geck Inspect Pro')
       and re.is_active
       and coalesce(re.period_type, 'normal') <> 'trial'
+      and coalesce(re.store, '') not in ('test_store', 'promotional')
       and (re.expires_at is null or re.expires_at > v_now)
       and au.email is not null
       and lower(au.email) not in (select email from admin_emails)
       and lower(au.email) not in (select email from stripe_payers)
-    order by lower(au.email), re.updated_at desc nulls last
+    order by lower(au.email),
+             (re.entitlement_identifier = 'keeper') asc,
+             re.updated_at desc nulls last
   ),
   payers as (
     select * from stripe_payers
@@ -239,11 +288,14 @@ begin
     'claimed_admin', (select count(*) from claims where seller_is_admin),
     -- Day 60 asks for claimers still active two weeks after claiming:
     -- any signed-in app use or sign-in from 14 days after the claim on.
+    -- Buyers of the admin's own sales are left out, like the claim counts.
     'claimers_eligible_14d', (select count(distinct claimer_email) from claims
-                              where claimed_at <= v_now - interval '14 days'),
+                              where claimed_at <= v_now - interval '14 days'
+                                and not seller_is_admin),
     'claimers_active_after_14d', (
       select count(distinct c.claimer_email) from claims c
       where c.claimed_at <= v_now - interval '14 days'
+        and not c.seller_is_admin
         and (
           exists (select 1 from public.user_events ue
                   where lower(ue.user_email) = c.claimer_email
@@ -260,7 +312,8 @@ begin
   -- Weekly active breeders: members who logged a weigh-in, feeding, shed,
   -- vet visit or event on a gecko they own in the last 7 days.
   -- Weekly active members (signed in): members who signed in or used the
-  -- app while signed in during the last 7 days.
+  -- app while signed in during the last 7 days. "Used the app" reads
+  -- user_events, whose address comes from the session since section 2.
   with admin_emails as (
     select lower(p.email) as email from public.profiles p
     where p.role = 'admin' and p.email is not null
@@ -357,12 +410,19 @@ begin
   -- Email delivery, if the view from the lifecycle email work exists. Read
   -- through dynamic SQL so this function still compiles and runs before
   -- that view is created, and a broken view cannot take the card down.
+  -- The view has a row per email type per week, about 30 types, so it is
+  -- cut to the last eight weeks and sorted newest week first; the order is
+  -- set inside jsonb_agg, because a subquery's order does not survive the
+  -- aggregate. 300 rows is nine weeks of 30-odd types.
   if to_regclass('public.email_delivery_stats') is null then
     v_email := jsonb_build_object('available', false, 'reason', 'missing');
   else
     begin
-      execute 'select coalesce(jsonb_agg(to_jsonb(s)), ''[]''::jsonb)
-                 from (select * from public.email_delivery_stats limit 50) s'
+      execute 'select coalesce(jsonb_agg(to_jsonb(s) order by s.week desc, s.email_type), ''[]''::jsonb)
+                 from (select * from public.email_delivery_stats
+                        where week >= (now() at time zone ''utc'')::date - 56
+                        order by week desc, email_type
+                        limit 300) s'
         into v_email;
       v_email := jsonb_build_object('available', true, 'rows', v_email);
     exception when others then
