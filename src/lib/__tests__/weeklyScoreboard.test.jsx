@@ -121,3 +121,36 @@ it('saves a conversation without an amount and a cost with one', async () => {
   expect(state.inserted[1]).toMatchObject({ kind: 'monthly_cost', breeder_name: null, amount_usd: 87.56 });
   expect(onSaved).toHaveBeenCalledTimes(2);
 });
+
+// The cost shows as a formatted string ("$64.00"), so the chip has to
+// compare the plain amount. This failed before targetValue existed: the
+// chip stayed amber even when the cost was under $100.
+function costChip() {
+  const chips = tree.root.findAll((node) => node.type === 'span'
+    && typeof node.props.title === 'string'
+    && node.props.title.startsWith('Day 30')
+    && [].concat(node.props.children).join('').includes('under $100'));
+  expect(chips).toHaveLength(1);
+  return chips[0];
+}
+
+it('marks the day 30 cost target met when the newest cost is under $100', async () => {
+  await act(async () => { tree = create(<WeeklyScoreboard />); });
+  const chip = costChip();
+  expect(chip.props.title).toContain(': met');
+  expect(chip.props.className).toContain('emerald');
+});
+
+it('does not mark the day 30 cost target met at $100 or with no cost recorded', async () => {
+  state.entries = Promise.resolve({ data: [
+    { id: 'c', kind: 'monthly_cost', entry_date: '2026-10-12', amount_usd: 100, created_date: '2026-10-12T00:00:00Z' },
+  ], error: null });
+  await act(async () => { tree = create(<WeeklyScoreboard />); });
+  expect(costChip().props.title).not.toContain(': met');
+  act(() => tree.unmount());
+
+  state.entries = Promise.resolve({ data: [], error: null });
+  await act(async () => { tree = create(<WeeklyScoreboard />); });
+  expect(text()).toContain('Not recorded');
+  expect(costChip().props.title).not.toContain(': met');
+});

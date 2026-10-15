@@ -122,7 +122,7 @@ export default function GrowthFunnelCard({ weeks = 12 }) {
   if (error) {
     return (
       <Card>
-        <CardContent className="pt-6 pb-2">
+        <CardContent className="pt-6 pb-4 mb-2 border-b border-slate-800">
           <WeeklyScoreboard />
         </CardContent>
         {header}
@@ -142,7 +142,7 @@ export default function GrowthFunnelCard({ weeks = 12 }) {
 
   return (
     <Card>
-      <CardContent className="pt-6 pb-2">
+      <CardContent className="pt-6 pb-4 mb-2 border-b border-slate-800">
         <WeeklyScoreboard />
       </CardContent>
       {header}

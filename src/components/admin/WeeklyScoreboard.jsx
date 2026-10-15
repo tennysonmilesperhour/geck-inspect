@@ -139,6 +139,7 @@ export default function WeeklyScoreboard() {
         <Metric
           label="Monthly recurring revenue"
           value={board ? formatUsd(money.mrr) : null}
+          targetValue={board ? money.mrr : null}
           detail={`From ${money.payingAll} paying member${money.payingAll === 1 ? '' : 's'} on any plan${money.lifetime ? `, ${money.lifetime} of them lifetime` : ''}`}
           definition="Each paying, non-comped member's plan price per month at today's list prices. Annual plans count a twelfth of the year; lifetime plans count nothing, because they do not recur."
           targets={SCOREBOARD_TARGETS.mrr}
@@ -178,6 +179,7 @@ export default function WeeklyScoreboard() {
         <Metric
           label="Monthly cost"
           value={entries === null ? null : manual.latestCost ? formatUsd(manual.latestCost.amount) : 'Not recorded'}
+          targetValue={manual.latestCost ? manual.latestCost.amount : null}
           detail={manual.latestCost ? `As of ${manual.latestCost.entry_date}` : 'Add a Monthly cost entry below'}
           definition="What the services cost this month (Supabase, Vercel, Resend, AI and the rest), entered by hand. The newest entry shows."
           targets={SCOREBOARD_TARGETS.monthlyCost}
@@ -241,7 +243,15 @@ function ScoreboardHeading({ next, generatedAt }) {
   );
 }
 
-function Metric({ label, value, detail, definition, targets, next, money = false }) {
+/**
+ * One number on the card. `value` is what shows; `targetValue` is the
+ * plain number the target chips compare against. They differ for money,
+ * where the display is a formatted string like "$64.00" that cannot be
+ * compared with "under $100". Without `targetValue`, a numeric `value`
+ * is used, so counts need nothing extra.
+ */
+function Metric({ label, value, targetValue, detail, definition, targets, next, money = false }) {
+  const compareWith = targetValue !== undefined ? targetValue : typeof value === 'number' ? value : null;
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 flex flex-col gap-1 min-w-0">
       <p className="text-xs font-medium text-slate-300">{label}</p>
@@ -250,13 +260,13 @@ function Metric({ label, value, detail, definition, targets, next, money = false
       </p>
       {detail ? <p className="text-[11px] text-slate-400">{detail}</p> : null}
       <p className="text-[11px] text-slate-500">{definition}</p>
-      {targets ? <Targets targets={targets} value={value} next={next} money={money} /> : null}
+      {targets ? <Targets targets={targets} value={compareWith} next={next} money={money} /> : null}
     </div>
   );
 }
 
 function Targets({ targets, value, next, money }) {
-  const numeric = typeof value === 'number' ? value : null;
+  const numeric = typeof value === 'number' && Number.isFinite(value) ? value : null;
   return (
     <div className="mt-1 space-y-1">
       <div className="flex flex-wrap gap-1.5">
