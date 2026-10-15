@@ -1,5 +1,6 @@
 import { trackEvent, withAnalyticsContext } from '@/lib/telemetry';
 import { isGuestMode } from '@/lib/guestMode';
+import { sanitizeUrl } from '@/lib/ga';
 
 /**
  * PostHog client wrapper.
@@ -90,6 +91,14 @@ function initClient(ph) {
       disable_session_recording: true,
       // Honor Do-Not-Track headers on user browsers.
       respect_dnt: true,
+      // Clean every event's page address before it leaves the browser:
+      // sign-in tokens can sit after "#" or in ?code= for a moment.
+      before_send: (event) => {
+        if (event?.properties?.$current_url) {
+          event.properties.$current_url = sanitizeUrl(event.properties.$current_url);
+        }
+        return event;
+      },
       // Uncaught errors and unhandled rejections. console.error stays off.
       capture_exceptions: !isGuestMode(),
       loaded: (client) => {
@@ -129,7 +138,7 @@ export function resetUser() {
 
 export function capturePageview(path) {
   if (isGuestMode()) return;
-  const url = typeof window !== 'undefined' ? window.location.href : null;
+  const url = typeof window !== 'undefined' ? sanitizeUrl(window.location.href) : null;
   withClient((ph) => ph.capture('$pageview', { $current_url: url, path }));
 }
 

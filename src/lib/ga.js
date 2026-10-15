@@ -37,7 +37,9 @@ export function gaReady() {
 export function trackEvent(name, params = {}) {
   if (!gaReady()) return;
   try {
-    window.gtag('event', name, params);
+    // Every event carries page_location; give it the cleaned address so
+    // a token in the URL bar at that moment is never sent.
+    window.gtag('event', name, { page_location: currentLocation(), ...params });
   } catch {
     // Swallow, analytics failures must never break the UX.
   }
@@ -47,6 +49,19 @@ export function trackEvent(name, params = {}) {
 // member's email address, which must never be sent to Google Analytics.
 const redactEmails = (s) => (s ? String(s).replace(/([?&](?:email|recipient)=)[^&#]*/gi, '$1redacted') : s);
 
+// Sign-in links land with tokens in the address: after "#" for the browser
+// sign-in flow (access_token, refresh_token) and sometimes in the query
+// (code, token). None of that may reach Google Analytics, so the part after
+// "#" is dropped and token-like query values are redacted.
+const TOKEN_PARAMS = /([?&](?:access_token|refresh_token|provider_token|id_token|code|token|token_hash|grant)=)[^&#]*/gi;
+export const sanitizeUrl = (s) => {
+  if (!s) return s;
+  const noHash = String(s).split('#')[0];
+  return redactEmails(noHash).replace(TOKEN_PARAMS, '$1redacted');
+};
+
+const currentLocation = () => (typeof window !== 'undefined' ? sanitizeUrl(window.location.href) : undefined);
+
 /**
  * Explicit page_view emission. Prefer the GA4PageTracker component
  * over calling this directly.
@@ -55,8 +70,8 @@ export function trackPageView(pathWithQuery, title) {
   if (!gaReady()) return;
   try {
     window.gtag('event', 'page_view', {
-      page_path: redactEmails(pathWithQuery),
-      page_location: typeof window !== 'undefined' ? redactEmails(window.location.href) : undefined,
+      page_path: sanitizeUrl(pathWithQuery),
+      page_location: currentLocation(),
       page_title: title || (typeof document !== 'undefined' ? document.title : undefined),
     });
   } catch {

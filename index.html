@@ -81,6 +81,13 @@
         var h = location.hostname;
         var isProd = h === 'geckinspect.com' || h === 'www.geckinspect.com';
         if (!isProd) return;
+        // The privacy policy promises that analytics honour the browser's
+        // Do Not Track setting. PostHog does that through respect_dnt;
+        // Google Analytics does not on its own, so it is not loaded at all
+        // when Do Not Track or Global Privacy Control is on.
+        var n = window.navigator || {};
+        var dnt = n.doNotTrack || window.doNotTrack || n.msDoNotTrack;
+        if (dnt === '1' || dnt === 'yes' || n.globalPrivacyControl === true) return;
         var GA_ID = 'G-WLGHJ7KC2N';
         var s = document.createElement('script');
         s.async = true;
