@@ -179,6 +179,29 @@ export const COMMUNITY_EVENT_REACTION_PUBLIC_COLUMNS = [
   'event_type', 'event_id', 'reaction', 'created_date',
 ];
 
+// 20261016090000_followups.sql (section 6) took created_by (the author's
+// email) from signed-out visitors on seven more tables. Four of them
+// (breeding_projects, clutches, genetic_outcome_predictions,
+// question_votes) are never read signed out. The blog pages read the
+// other three, with these lists. The blog itself is switched off; the
+// lists keep its pages working if it comes back.
+
+export const BLOG_POST_PUBLIC_COLUMNS = [
+  'id', 'user_id', 'title', 'slug', 'excerpt', 'content_markdown', 'content_html',
+  'status', 'target_keyword', 'category_id', 'tag_ids', 'author_name', 'author_bio',
+  'author_avatar_url', 'featured_image_url', 'featured_image_alt', 'meta_title',
+  'meta_description', 'canonical_url', 'reading_time_minutes', 'word_count',
+  'scheduled_at', 'published_at', 'created_date', 'updated_date',
+];
+
+export const BLOG_CATEGORY_PUBLIC_COLUMNS = [
+  'id', 'user_id', 'name', 'slug', 'description', 'is_active', 'created_date', 'updated_date',
+];
+
+export const BLOG_TAG_PUBLIC_COLUMNS = [
+  'id', 'user_id', 'name', 'slug', 'description', 'is_active', 'created_date', 'updated_date',
+];
+
 /**
  * Tables signed-out visitors cannot read at all once
  * 20261008081043_anon_hide_email_columns_more.sql is applied. No signed-out
@@ -211,6 +234,9 @@ export const PUBLIC_READ_COLUMNS = {
   BreederProfile: BREEDER_PROFILE_PUBLIC_COLUMNS.join(','),
   BreederReview: BREEDER_REVIEW_PUBLIC_COLUMNS.join(','),
   MorphPriceEntry: MORPH_PRICE_ENTRY_PUBLIC_COLUMNS.join(','),
+  BlogPost: BLOG_POST_PUBLIC_COLUMNS.join(','),
+  BlogCategory: BLOG_CATEGORY_PUBLIC_COLUMNS.join(','),
+  BlogTag: BLOG_TAG_PUBLIC_COLUMNS.join(','),
 };
 
 /**

@@ -51,3 +51,15 @@ export async function markAllNotificationsRead(email) {
         .eq('is_read', false);
     if (error) throw error;
 }
+
+/**
+ * True when a notification insert came back with no row because the
+ * database dropped it as a repeat. guard_notification_insert returns
+ * nothing (instead of raising) for a hatch alert on an egg that was
+ * alerted in the last 20 hours, so `insert().select().single()` answers
+ * PGRST116 ("0 rows"). The alert already went out, so the caller should
+ * treat it as sent rather than retry on every poll.
+ */
+export function isDroppedRepeatNotification(error) {
+    return error?.code === 'PGRST116';
+}

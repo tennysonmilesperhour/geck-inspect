@@ -6,11 +6,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Mail, Send } from 'lucide-react';
 import { notifyNewMessage } from '@/components/notifications/NotificationService';
+import { useToast } from '@/components/ui/use-toast';
+import { messageSendErrorText } from '@/lib/memberActions';
 
 export default function MessageUserButton({ recipientEmail, recipientName, variant = "outline", size = "sm", className = "", context = null }) {
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
+    const { toast } = useToast();
 
     const sendMessage = async () => {
         if (!message.trim()) return;
@@ -36,6 +39,10 @@ export default function MessageUserButton({ recipientEmail, recipientName, varia
             setIsOpen(false);
         } catch (error) {
             console.error("Failed to send message:", error);
+            // The dialog used to close nothing and say nothing; the database
+            // can now refuse a message (new-contact rule, hourly cap), so the
+            // member is told why and the text stays in the box.
+            toast({ title: 'Message not sent', description: messageSendErrorText(error), variant: 'destructive' });
         }
         setIsSending(false);
     };

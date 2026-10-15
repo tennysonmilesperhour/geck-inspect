@@ -4,6 +4,7 @@ import { differenceInDays, differenceInCalendarDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
 import { startVisiblePolling } from '@/lib/pagePolling';
 import { getEstimatedHatchDates, getIncubationProfile } from '@/lib/incubationProfiles';
+import { isDroppedRepeatNotification } from '@/lib/notificationsApi';
 
 /**
  * HatchAlertSystem, silent producer for `hatch_alert` notifications.
@@ -132,7 +133,15 @@ export default function HatchAlertSystem({ user, enabled }) {
             });
             markNotified(egg.id);
           } catch (err) {
-            console.warn('hatch_alert notification failed:', err);
+            // The database drops a repeat alert for the same egg within 20
+            // hours (another tab or the nightly job got there first) and
+            // the insert comes back empty. That egg is already alerted:
+            // mark it, or this would retry every 15 minutes.
+            if (isDroppedRepeatNotification(err)) {
+              markNotified(egg.id);
+            } else {
+              console.warn('hatch_alert notification failed:', err);
+            }
           }
         }
       } catch (err) {

@@ -19,18 +19,43 @@ export function existingSeatFor(memberships, email) {
 }
 
 /**
- * What to do for an invitation: 'create' a new row, 'reopen' a declined
- * seat (with `seat`), or 'exists' when the person is already invited or
- * a member.
+ * True for a pending invitation whose link has run out (invitations last
+ * 30 days). The database refuses to accept it, so sending the same link
+ * again is useless: it needs a new token.
  */
-export function invitePlan(memberships, email) {
+export function isInviteExpired(seat, now = new Date()) {
+  if (!seat || seat.status !== 'pending' || !seat.expires_at) return false;
+  const expires = new Date(seat.expires_at);
+  return !Number.isNaN(expires.getTime()) && expires.getTime() < now.getTime();
+}
+
+/**
+ * What to do for an invitation: 'create' a new row, 'reopen' a declined
+ * or expired seat (with `seat`), or 'exists' when the person is already
+ * invited (and the link still works) or a member.
+ */
+export function invitePlan(memberships, email, now = new Date()) {
   const seat = existingSeatFor(memberships, email);
   if (!seat) return { action: 'create', seat: null };
-  if (seat.status === 'declined') return { action: 'reopen', seat };
+  if (seat.status === 'declined' || isInviteExpired(seat, now)) return { action: 'reopen', seat };
   return { action: 'exists', seat };
 }
 
-/** The fields that turn a declined seat back into a pending invitation. */
+/**
+ * The token to send when the owner presses Resend. A link that still
+ * works is sent again as it is. An expired one is replaced first: the
+ * seat gets a new token and 30 more days (`update(id, fields)` saves
+ * them), and the new token is returned. Before 16 Oct 2026 Resend sent
+ * the expired link, which the invited person could not use.
+ */
+export async function tokenForResend(seat, { update, invitedBy, makeToken, now = new Date() }) {
+  if (!isInviteExpired(seat, now)) return { token: seat.invite_token, renewed: false };
+  const token = makeToken();
+  await update(seat.id, reopenedInviteFields({ role: seat.role, token, invitedBy, now }));
+  return { token, renewed: true };
+}
+
+/** The fields that turn a declined or expired seat back into a pending invitation. */
 export function reopenedInviteFields({ role, token, invitedBy, now = new Date() }) {
   return {
     role,

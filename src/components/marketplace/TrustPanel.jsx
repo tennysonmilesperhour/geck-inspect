@@ -19,24 +19,42 @@ import {
   CalendarDays, ClipboardList, Scale, ArrowLeftRight, Star,
   ShieldCheck, Award,
 } from 'lucide-react';
-import { computeTrustSignals, deriveTrustTier, TRUST_TIER_META } from '@/lib/trustScore';
+import { breederPageTrustSignals, computeTrustSignals, deriveTrustTier, TRUST_TIER_META } from '@/lib/trustScore';
 
-// Session cache: one fetch per seller email, shared across every panel
-// on the page (a marketplace grid can show the same seller many times).
+// Session cache: one fetch per seller, shared across every panel on the
+// page (a marketplace grid can show the same seller many times).
 const signalsCache = new Map();
 
-function getTrustData(email) {
-  if (!signalsCache.has(email)) {
-    const promise = computeTrustSignals(email)
+/**
+ * The signals for a breeder page slug (works signed out, never sees the
+ * email) or a seller email. A slug falls back to the email when the
+ * database function is not there yet and the visitor can read the email.
+ */
+async function loadSignals({ breederSlug, email }) {
+  if (breederSlug) {
+    try {
+      const signals = await breederPageTrustSignals(breederSlug);
+      if (!signals) throw new Error('no visible owner for this breeder page');
+      return signals;
+    } catch (err) {
+      if (!email) throw err;
+    }
+  }
+  return computeTrustSignals(email);
+}
+
+function getTrustData(key, source) {
+  if (!signalsCache.has(key)) {
+    const promise = loadSignals(source)
       .then((signals) => ({ signals, tier: deriveTrustTier(signals) }))
       .catch((err) => {
         // Let the next mount retry instead of caching the failure forever.
-        signalsCache.delete(email);
+        signalsCache.delete(key);
         throw err;
       });
-    signalsCache.set(email, promise);
+    signalsCache.set(key, promise);
   }
-  return signalsCache.get(email);
+  return signalsCache.get(key);
 }
 
 const TIER_BADGE_CLASSES = {
@@ -103,19 +121,25 @@ function SignalRow({ icon: Icon, children }) {
   );
 }
 
-export default function TrustPanel({ email, variant = 'compact' }) {
+/**
+ * `breederSlug` (a curated breeder page) works for signed-out visitors;
+ * `email` is the seller's address, which only signed-in members can read.
+ * The breeder page passes both: the slug first, the email as a fallback.
+ */
+export default function TrustPanel({ email, breederSlug, variant = 'compact' }) {
   const [data, setData] = useState(null);
+  const key = breederSlug ? `slug:${breederSlug}` : email ? `email:${email}` : null;
 
   useEffect(() => {
-    if (!email) return undefined;
+    if (!key) return undefined;
     let cancelled = false;
-    getTrustData(email)
+    getTrustData(key, { breederSlug, email })
       .then((d) => { if (!cancelled) setData(d); })
       .catch(() => { if (!cancelled) setData(null); });
     return () => { cancelled = true; };
-  }, [email]);
+  }, [key, breederSlug, email]);
 
-  if (!email || !data) return null;
+  if (!key || !data) return null;
   const { signals, tier } = data;
 
   if (variant === 'compact') {

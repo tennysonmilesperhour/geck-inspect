@@ -24,6 +24,9 @@ import {
   BREEDER_REVIEW_PUBLIC_COLUMNS,
   MORPH_PRICE_ENTRY_PUBLIC_COLUMNS,
   COMMUNITY_EVENT_REACTION_PUBLIC_COLUMNS,
+  BLOG_POST_PUBLIC_COLUMNS,
+  BLOG_CATEGORY_PUBLIC_COLUMNS,
+  BLOG_TAG_PUBLIC_COLUMNS,
   NO_ANON_READ_TABLES,
   PUBLIC_READ_COLUMNS,
   EVERYONE_READ_COLUMNS,
@@ -49,6 +52,7 @@ const GECKO_ARTWORK_MIGRATION = migration('20261014173814_gecko_placeholder_styl
 const GECKO_DEFAULT_ARTWORK_MIGRATION = migration('20261014184837_collection_artwork_default.sql');
 const MORE_MIGRATION = migration('20261008081043_anon_hide_email_columns_more.sql');
 const COMMS_MIGRATION = migration('20261015130000_comms_and_exposure.sql');
+const FOLLOWUPS_MIGRATION = migration('20261016090000_followups.sql');
 const WEIGHT_MIGRATION = migration('20261003004122_passport_transfers_lineage.sql');
 const WELCOME_MIGRATION = migration('20261003022738_owner_profile_id_forum_store_welcome.sql');
 
@@ -147,7 +151,7 @@ describe('the other tables signed-out pages read', () => {
 
   it('every entity list belongs to a table the migrations grant', () => {
     const covered = new Set([...Object.keys(LISTS_BY_TABLE), 'geckos', 'gecko_images', 'weight_records',
-      ...Object.keys(COMMS_HIDDEN)]);
+      ...Object.keys(COMMS_HIDDEN), ...FOLLOWUPS_HIDDEN]);
     for (const entity of Object.keys(PUBLIC_READ_COLUMNS)) {
       expect(covered.has(TABLE_MAP[entity])).toBe(true);
     }
@@ -201,6 +205,31 @@ describe('member emails on the tables 20261015130000 narrows', () => {
     expect(await readColumns('BreederProfile')).toBe(BREEDER_PROFILE_PUBLIC_COLUMNS.join(','));
     expect(await readColumns('BreederReview')).toBe(BREEDER_REVIEW_PUBLIC_COLUMNS.join(','));
     expect(await readColumns('MorphPriceEntry')).toBe(MORPH_PRICE_ENTRY_PUBLIC_COLUMNS.join(','));
+  });
+});
+
+// Section 6 of 20261016090000: created_by taken from signed-out visitors
+// on seven more tables (the database test checks every other column is
+// still granted).
+const FOLLOWUPS_HIDDEN = [
+  'breeding_projects', 'clutches', 'genetic_outcome_predictions', 'question_votes',
+  'blog_categories', 'blog_posts', 'blog_tags',
+];
+
+describe('author emails on the tables 20261016090000 narrows', () => {
+  it.each(FOLLOWUPS_HIDDEN)('%s: the migration takes created_by from anon', (table) => {
+    expect(FOLLOWUPS_MIGRATION).toMatch(new RegExp(`\\('${table}',\\s+array\\['created_by'\\]\\)`));
+  });
+
+  it.each([
+    ['BlogPost', BLOG_POST_PUBLIC_COLUMNS],
+    ['BlogCategory', BLOG_CATEGORY_PUBLIC_COLUMNS],
+    ['BlogTag', BLOG_TAG_PUBLIC_COLUMNS],
+  ])('%s: the blog pages read a list without any email column', async (entity, list) => {
+    for (const col of EMAIL_COLUMNS) expect(list).not.toContain(col);
+    getSession.mockReset();
+    getSession.mockResolvedValue({ data: { session: null } });
+    expect(await readColumns(entity)).toBe(list.join(','));
   });
 });
 

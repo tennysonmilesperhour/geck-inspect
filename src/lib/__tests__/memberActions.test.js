@@ -4,6 +4,7 @@ vi.mock('@/lib/supabaseClient', () => ({ supabase: {} }));
 
 const {
   followedProfileIds, setFollow, blockProfile, sendMessageToProfile, breederSlugForProfile,
+  messageSendErrorText,
 } = await import('../memberActions');
 
 function fakeClient(result) {
@@ -61,5 +62,29 @@ describe('member actions go by profile id, never by email', () => {
     expect(await breederSlugForProfile(null, { client })).toBe(null);
     const none = fakeClient({ data: null, error: null });
     expect(await breederSlugForProfile('p1', { client: none })).toBe(null);
+  });
+});
+
+describe('why a message did not send', () => {
+  it('explains the new-contact rule instead of asking to try again', () => {
+    // What PostgREST returns when the direct_messages insert policy refuses.
+    const rls = { code: '42501', message: 'new row violates row-level security policy for table "direct_messages"' };
+    expect(messageSendErrorText(rls)).toMatch(/not taking messages from new contacts/);
+    expect(messageSendErrorText(rls)).not.toMatch(/try again/i);
+  });
+
+  it('explains the hourly cap on new conversations', () => {
+    expect(messageSendErrorText({ code: '54000', message: 'Too many new conversations in the last hour. Try again later.' }))
+      .toMatch(/new conversations in the last hour/);
+  });
+
+  it('says a blocked conversation is unavailable', () => {
+    expect(messageSendErrorText({ code: 'P0001', message: 'This conversation is unavailable' }))
+      .toBe('This conversation is unavailable.');
+  });
+
+  it('falls back to a retry message for anything else', () => {
+    expect(messageSendErrorText(new Error('Failed to fetch'))).toBe('Failed to send message. Please try again.');
+    expect(messageSendErrorText(null)).toBe('Failed to send message. Please try again.');
   });
 });
