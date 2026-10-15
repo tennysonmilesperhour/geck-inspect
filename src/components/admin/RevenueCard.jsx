@@ -50,8 +50,10 @@ export default function RevenueCard() {
         Revenue
       </CardTitle>
       <p className="text-xs text-slate-500">
-        Stripe payments recorded by the webhook. Monthly revenue counts each subscription still billing at its plan
-        price (yearly plans divided by twelve). App Store purchases are not included.
+        Stripe payments recorded by the webhook. Monthly recurring counts each subscription still billing at its plan
+        price (yearly plans divided by twelve), including payers who also hold a comp, so it should match Stripe and
+        it is the figure the cost tripwire uses. The weekly scoreboard leaves comped payers out, so its figure can be
+        lower. App Store purchases are not included.
       </p>
     </CardHeader>
   );

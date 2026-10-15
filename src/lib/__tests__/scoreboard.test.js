@@ -37,10 +37,12 @@ describe('summarizePaidPlans', () => {
     expect(s.lifetime).toBe(1);
     expect(s.compedPayers).toBe(1);
     expect(s.mrr).toBeCloseTo(2 * 5.99 + 30 / 12, 2);
+    // The comped payer's money is kept apart, not lost.
+    expect(s.compedMrr).toBeCloseTo(5.99, 2);
   });
 
   it('copes with nothing at all', () => {
-    expect(summarizePaidPlans(null)).toMatchObject({ payingBreeders: 0, mrr: 0 });
+    expect(summarizePaidPlans(null)).toMatchObject({ payingBreeders: 0, mrr: 0, compedMrr: 0 });
   });
 
   it('matches production on 15 October 2026: one keeper pays, the one breeder also holds a comp', () => {
@@ -51,6 +53,13 @@ describe('summarizePaidPlans', () => {
     expect(s.payingBreeders).toBe(0);
     expect(s.compedPayers).toBe(1);
     expect(s.mrr).toBeCloseTo(2.99);
+    // Together they are the $8.98 the Revenue card and Stripe show.
+    expect(s.compedMrr).toBeCloseTo(5.99);
+    expect(s.mrr + s.compedMrr).toBeCloseTo(8.98);
+  });
+
+  it('says the cost tripwire is judged on the Revenue card, not on this figure', () => {
+    expect(SCOREBOARD_TARGETS.mrr.day60.note).toContain("Revenue card's Monthly recurring");
   });
 });
 

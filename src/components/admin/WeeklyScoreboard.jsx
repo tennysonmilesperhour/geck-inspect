@@ -137,11 +137,16 @@ export default function WeeklyScoreboard() {
           next={next}
         />
         <Metric
-          label="Monthly recurring revenue"
+          label="Recurring revenue, comps left out"
           value={board ? formatUsd(money.mrr) : null}
           targetValue={board ? money.mrr : null}
-          detail={`From ${money.payingAll} paying member${money.payingAll === 1 ? '' : 's'} on any plan${money.lifetime ? `, ${money.lifetime} of them lifetime` : ''}`}
-          definition="Each paying, non-comped member's plan price per month at today's list prices. Annual plans count a twelfth of the year; lifetime plans count nothing, because they do not recur."
+          detail={[
+            `From ${money.payingAll} paying member${money.payingAll === 1 ? '' : 's'} on any plan${money.lifetime ? `, ${money.lifetime} of them lifetime` : ''}`,
+            money.compedPayers
+              ? `Plus ${formatUsd(money.compedMrr)} from ${money.compedPayers} comped payer${money.compedPayers === 1 ? '' : 's'}, which the Revenue card on Overview counts`
+              : null,
+          ].filter(Boolean).join('. ')}
+          definition="Each paying, non-comped member's plan price per month at today's list prices. Annual plans count a twelfth of the year; lifetime plans count nothing, because they do not recur. Lower than the Revenue card's Monthly recurring whenever a payer also holds a comp, because a comped account is not evidence of a paying breeder."
           targets={SCOREBOARD_TARGETS.mrr}
           next={next}
         />
@@ -229,7 +234,7 @@ export default function WeeklyScoreboard() {
 function ScoreboardHeading({ next, generatedAt }) {
   return (
     <div>
-      <h3 id="scoreboard-heading" className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+      <h3 id="scoreboard-heading" className="text-base font-semibold text-slate-100 flex items-center gap-2">
         <Target className="w-4 h-4 text-emerald-400" />
         Weekly scoreboard
       </h3>

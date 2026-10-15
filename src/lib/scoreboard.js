@@ -33,8 +33,11 @@ export const SCOREBOARD_TARGETS = {
     day60: { min: 6, note: 'Under 3 after 20 conversations and 10 imports means a record book, not a subscription business' },
     day90: { min: 10, note: 'Invest: 10 or more at $10 a month or more. Maintain: 3 to 9. Reference: under 3' },
   },
+  // The cost tripwire is about cash, and a comped payer's money is real
+  // money, so it is judged on the Revenue card's Monthly recurring (which
+  // counts them), not on this card's figure (which leaves them out).
   mrr: {
-    day60: { note: 'Tripwire: cost over $150 a month with revenue under $50' },
+    day60: { note: "Tripwire: cost over $150 a month with revenue under $50, judged on the Revenue card's Monthly recurring" },
   },
   passportsIssued: {
     day30: { min: 10 },
@@ -82,7 +85,9 @@ export function monthlyValue(tier, cycle) {
  * Turn the function's paid_plans rows ({ tier, cycle, source, comped, n })
  * into the card's money numbers. Members who also hold a current
  * complimentary grant are counted apart and left out of both "paying" and
- * revenue: E5 says a comped account is not evidence.
+ * mrr: E5 says a comped account is not evidence. What they pay is still
+ * real money, so it is kept in compedMrr, which is why the admin Revenue
+ * card (every subscription still billing) shows more than mrr here.
  */
 export function summarizePaidPlans(rows) {
   const out = {
@@ -92,12 +97,14 @@ export function summarizePaidPlans(rows) {
     lifetime: 0,
     compedPayers: 0,
     mrr: 0,
+    compedMrr: 0,
   };
   for (const r of Array.isArray(rows) ? rows : []) {
     const n = Number(r?.n) || 0;
     if (!n || !PAID_TIERS.has(r.tier)) continue;
     if (r.comped) {
       out.compedPayers += n;
+      out.compedMrr += monthlyValue(r.tier, r.cycle) * n;
       continue;
     }
     out.payingAll += n;
@@ -107,6 +114,7 @@ export function summarizePaidPlans(rows) {
     out.mrr += monthlyValue(r.tier, r.cycle) * n;
   }
   out.mrr = Math.round(out.mrr * 100) / 100;
+  out.compedMrr = Math.round(out.compedMrr * 100) / 100;
   return out;
 }
 

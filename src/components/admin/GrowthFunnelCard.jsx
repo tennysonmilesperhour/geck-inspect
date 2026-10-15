@@ -76,10 +76,10 @@ function isMissingFunction(error) {
  * accounts are left out. From public.admin_growth_funnel(), which only
  * answers admins (migration 20261005120000).
  *
- * The weekly scoreboard (comprehensive review, Part E5) sits at the top
- * of the same card, because the plan names this card as the one place
- * the scoreboard lives. It loads on its own, so a funnel error does not
- * hide it.
+ * The weekly scoreboard (comprehensive review, Part E5) comes with it,
+ * because the plan names the funnel as the one place the scoreboard lives.
+ * It is a card of its own just above the funnel, so each card's title is
+ * at its top, and it loads on its own, so a funnel error does not hide it.
  */
 export default function GrowthFunnelCard({ weeks = 12 }) {
   const [payload, setPayload] = useState(null);
@@ -119,50 +119,45 @@ export default function GrowthFunnelCard({ weeks = 12 }) {
     </CardHeader>
   );
 
+  let content;
   if (error) {
-    return (
-      <Card>
-        <CardContent className="pt-6 pb-4 mb-2 border-b border-slate-800">
-          <WeeklyScoreboard />
-        </CardContent>
-        {header}
-        <CardContent>
-          {isMissingFunction(error) ? (
-            <p className="text-sm text-amber-200/90">
-              The funnel needs the database function in migration 20261005150008_growth_funnel_admin.sql.
-              It has not been applied yet, so there is nothing to show.
-            </p>
-          ) : (
-            <p className="text-sm text-red-300">Could not load: {error.message}</p>
-          )}
-        </CardContent>
-      </Card>
+    content = isMissingFunction(error) ? (
+      <p className="text-sm text-amber-200/90">
+        The funnel needs the database function in migration 20261005150008_growth_funnel_admin.sql.
+        It has not been applied yet, so there is nothing to show.
+      </p>
+    ) : (
+      <p className="text-sm text-red-300">Could not load: {error.message}</p>
+    );
+  } else if (payload === null) {
+    content = <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-slate-400" /></div>;
+  } else if (rows.length === 0) {
+    content = <p className="text-sm text-slate-500 text-center py-6">No new accounts in this window.</p>;
+  } else {
+    content = (
+      <div className="space-y-5">
+        <FunnelTable title="By week" rows={byWeek} label={(k) => weekLabel(k)} />
+        <FunnelTable title="By first-touch source" rows={bySource} label={sourceLabel} />
+        <p className="text-[11px] text-slate-500">
+          Source comes from the first page a browser opened (referrer site, UTM tags, or a passport,
+          waitlist, store, invite or claim link). Accounts from before 5 October 2026 show as not recorded.
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6 pb-4 mb-2 border-b border-slate-800">
-        <WeeklyScoreboard />
-      </CardContent>
-      {header}
-      <CardContent>
-        {payload === null ? (
-          <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-slate-400" /></div>
-        ) : rows.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-6">No new accounts in this window.</p>
-        ) : (
-          <div className="space-y-5">
-            <FunnelTable title="By week" rows={byWeek} label={(k) => weekLabel(k)} />
-            <FunnelTable title="By first-touch source" rows={bySource} label={sourceLabel} />
-            <p className="text-[11px] text-slate-500">
-              Source comes from the first page a browser opened (referrer site, UTM tags, or a passport,
-              waitlist, store, invite or claim link). Accounts from before 5 October 2026 show as not recorded.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardContent className="pt-6">
+          <WeeklyScoreboard />
+        </CardContent>
+      </Card>
+      <Card>
+        {header}
+        <CardContent>{content}</CardContent>
+      </Card>
+    </>
   );
 }
 

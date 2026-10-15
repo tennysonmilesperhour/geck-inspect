@@ -30,6 +30,7 @@ vi.mock('@/lib/supabaseClient', () => {
 });
 
 import WeeklyScoreboard, { EntryForm } from '../../components/admin/WeeklyScoreboard';
+import GrowthFunnelCard from '../../components/admin/GrowthFunnelCard';
 
 const BOARD = {
   generated_at: '2026-10-15T15:00:00Z',
@@ -77,6 +78,15 @@ it('leaves the comped breeder out of paying and revenue and says so', async () =
   expect(t).toContain('more pay but also hold a comp, so are left out');
   expect(t).toContain('$2.99');
   expect(t).toContain('lifetime plan');
+});
+
+it('does not call its revenue figure by the Revenue card name, and says where the comped money went', async () => {
+  await act(async () => { tree = create(<WeeklyScoreboard />); });
+  const t = text();
+  expect(t).toContain('Recurring revenue, comps left out');
+  expect(t).not.toContain('Monthly recurring revenue');
+  expect(t).toContain('Plus $5.99 from 1 comped payer, which the Revenue card on Overview counts');
+  expect(t).toContain("Lower than the Revenue card's Monthly recurring whenever a payer also holds a comp");
 });
 
 it('shows the E5 targets with their dates', async () => {
@@ -153,4 +163,15 @@ it('does not mark the day 30 cost target met at $100 or with no cost recorded', 
   await act(async () => { tree = create(<WeeklyScoreboard />); });
   expect(text()).toContain('Not recorded');
   expect(costChip().props.title).not.toContain(': met');
+});
+
+it('gives the scoreboard a card of its own, so the Growth funnel title is at the top of its card', async () => {
+  await act(async () => { tree = create(<GrowthFunnelCard />); });
+  const cards = tree.toJSON();
+  expect(Array.isArray(cards)).toBe(true);
+  expect(cards).toHaveLength(2);
+  expect(JSON.stringify(cards[0])).toContain('Weekly scoreboard');
+  expect(JSON.stringify(cards[0])).not.toContain('Growth funnel');
+  expect(JSON.stringify(cards[1])).not.toContain('Weekly scoreboard');
+  expect(JSON.stringify(cards[1].children[0])).toContain('Growth funnel');
 });
