@@ -20,8 +20,9 @@
 -- invitations (pending start, owner cannot accept, pending sees nothing
 -- inside), collaborator and gecko caps per plan (including unarchive and
 -- claims), profile planting, email and "member since" changes, the
--- signup and onboarding profile paths, redeem_signup_grant, and helper
--- grants. Legitimate flows are checked next to each exploit.
+-- signup and onboarding profile paths, redeem_signup_grant, inviting
+-- someone again after they left, gecko deletes (owner only, not editors),
+-- deleting transfers (never a claimed one), and helper grants. Legitimate flows are checked next to each exploit.
 begin;
 
 create schema ownership_test;
@@ -623,6 +624,34 @@ begin
   r := ownership_test.try_as('own-v@example.com', format(
     $s$update public.collection_members set status = 'declined', declined_at = now() where collection_id = %L and member_email = 'own-v@example.com'$s$, cid_a));
   perform ownership_test.expect('invites (legit): a member leaves the collection', r = 'ok:1', r);
+
+  -- Inviting them again. A second row for the same person is refused by
+  -- collection_members_unique_invite, so the app reopens the declined
+  -- seat as a fresh pending invitation (CollectionsCard.sendInvite).
+  r := ownership_test.try_as('own-a@example.com', format(
+    $s$insert into public.collection_members (collection_id, member_email, role, status, invite_token, invited_by_email, expires_at)
+       values (%L, 'own-v@example.com', 'viewer', 'pending', 'own-test-invite-v-again01', 'own-a@example.com', now() + interval '30 days')$s$, cid_a));
+  perform ownership_test.expect('re-invite: a second row for someone who left is refused (the reason the app reopens the seat)',
+    r like 'error:%collection_members_unique_invite%', r);
+  r := ownership_test.try_as('own-v@example.com', format(
+    $s$update public.collection_members set status = 'pending' where collection_id = %L and member_email = 'own-v@example.com'$s$, cid_a));
+  perform ownership_test.expect('re-invite: the person who left cannot reopen their own seat',
+    (select status from public.collection_members where collection_id = cid_a and member_email = 'own-v@example.com') = 'declined', r);
+  r := ownership_test.try_as('own-a@example.com', format(
+    $s$update public.collection_members
+          set status = 'pending', role = 'editor', invite_token = 'own-test-invite-v-again01',
+              invited_by_email = 'own-a@example.com', invited_at = now(), expires_at = now() + interval '30 days',
+              declined_at = null, accepted_at = null
+        where collection_id = %L and member_email = 'own-v@example.com' and status = 'declined'$s$, cid_a));
+  perform ownership_test.expect('re-invite (legit): the owner reopens the declined seat as a pending invitation',
+    r = 'ok:1' and (select status from public.collection_members where collection_id = cid_a and member_email = 'own-v@example.com') = 'pending', r);
+  r := ownership_test.try_as('own-a@example.com', format(
+    $s$update public.collection_members set status = 'accepted' where collection_id = %L and member_email = 'own-v@example.com'$s$, cid_a));
+  perform ownership_test.expect('re-invite: the owner still cannot accept the reopened invitation',
+    (select status from public.collection_members where collection_id = cid_a and member_email = 'own-v@example.com') = 'pending', r);
+  r := ownership_test.try_as('own-v@example.com', $s$select public.accept_collection_invite('own-test-invite-v-again01')$s$);
+  perform ownership_test.expect('re-invite (legit): the person accepts again and sees the geckos',
+    r = 'ok:1' and ownership_test.count_as('own-v@example.com', format($s$select count(*) from public.geckos where id = %L$s$, gp)) = 1, r);
 end
 $m$;
 
@@ -780,6 +809,43 @@ begin
     coalesce(current_setting('geck.profile_privileged_write', true), '') <> 'on');
 end
 $p$;
+
+-- ---------------------------------------------------------------------------
+-- 6a. Deletes: geckos and transfers
+-- ---------------------------------------------------------------------------
+do $d$
+declare
+  r text;
+  g text;
+  cid_a uuid := ownership_test.fx('cid_a')::uuid;
+begin
+  -- An accepted editor of A's collection cannot delete A's gecko (and
+  -- with it all its care history), but can still edit it.
+  g := ownership_test.mk_gecko('own-a@example.com', 'Shared Lilly White to keep');
+  update public.geckos set collection_id = cid_a where id = g;
+  r := ownership_test.try_as('own-e@example.com', format($s$delete from public.geckos where id = %L$s$, g));
+  perform ownership_test.expect('deletes: a collection editor cannot delete the owner''s gecko',
+    exists (select 1 from public.geckos where id = g), r);
+  r := ownership_test.try_as('own-e@example.com', format($s$update public.geckos set notes = 'checked by editor' where id = %L$s$, g));
+  perform ownership_test.expect('deletes (legit): the editor can still edit it',
+    r = 'ok:1' and (select notes from public.geckos where id = g) = 'checked by editor', r);
+  r := ownership_test.try_as('own-a@example.com', format($s$delete from public.geckos where id = %L$s$, g));
+  perform ownership_test.expect('deletes (legit): the owner deletes their own gecko',
+    r = 'ok:1' and not exists (select 1 from public.geckos where id = g), r);
+
+  -- Transfers: a claimed transfer is history and stays; a pending or
+  -- cancelled one can be deleted by its sender.
+  r := ownership_test.try_as('own-a@example.com', $s$delete from public.transfer_requests where token = 'own-test-tok-a1'$s$);
+  perform ownership_test.expect('deletes: the sender cannot delete a claimed transfer',
+    exists (select 1 from public.transfer_requests where token = 'own-test-tok-a1' and status = 'claimed'), r);
+  r := ownership_test.try_as('own-a@example.com', $s$delete from public.transfer_requests where token = 'own-test-tok-a2'$s$);
+  perform ownership_test.expect('deletes (legit): the sender deletes a cancelled transfer',
+    r = 'ok:1' and not exists (select 1 from public.transfer_requests where token = 'own-test-tok-a2'), r);
+  r := ownership_test.try_as('own-a@example.com', $s$delete from public.transfer_requests where token = 'own-test-tok-a5'$s$);
+  perform ownership_test.expect('deletes (legit): the sender deletes a pending transfer',
+    r = 'ok:1' and not exists (select 1 from public.transfer_requests where token = 'own-test-tok-a5'), r);
+end
+$d$;
 
 -- ---------------------------------------------------------------------------
 -- 6. Helper grants

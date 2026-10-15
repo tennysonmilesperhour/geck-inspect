@@ -144,6 +144,41 @@ export const OWNERSHIP_RECORD_PUBLIC_COLUMNS = [
   'notes', 'created_date', 'updated_date',
 ];
 
+// Seven more tables lost their email columns for signed-out visitors in
+// 20261015130000_comms_and_exposure.sql (section 7): breeder_profiles,
+// breeder_reviews and morph_price_entries (created_by),
+// community_event_reactions (user_email), and morph_guide_comments,
+// user_badges and giveaways, which no signed-out page reads. The lists
+// below are what signed-out pages ask for on the first four.
+
+/** The breeder page (/Breeder/<slug>). The owner is found with breeder_page_owner(). */
+export const BREEDER_PROFILE_PUBLIC_COLUMNS = [
+  'id', 'user_id', 'display_name', 'custom_slug', 'bio', 'location',
+  'years_breeding', 'specialty_morphs', 'social_links', 'profile_photo',
+  'banner_photo', 'is_verified', 'accepts_inquiries', 'ships_to',
+  'created_date', 'updated_date', 'moderation_hidden', 'verified_at',
+  'verified_by_user_id', 'verification_checklist',
+];
+
+/** Breeder reviews: who wrote a review is never shown. */
+export const BREEDER_REVIEW_PUBLIC_COLUMNS = [
+  'id', 'reviewer_user_id', 'reviewed_user_id', 'animal_id', 'rating', 'title',
+  'body', 'transaction_type', 'is_verified', 'created_date', 'updated_date',
+  'transfer_id',
+];
+
+/** Sales members logged on Market Pricing. */
+export const MORPH_PRICE_ENTRY_PUBLIC_COLUMNS = [
+  'id', 'base_morph', 'morph_traits', 'pattern_grade', 'sex', 'age_category',
+  'sale_price', 'sale_date', 'source', 'submitted_by', 'is_anonymous',
+  'verified', 'notes', 'created_date', 'updated_date',
+];
+
+/** Live Feed reactions, counted for everyone; whose they are only when signed in. */
+export const COMMUNITY_EVENT_REACTION_PUBLIC_COLUMNS = [
+  'event_type', 'event_id', 'reaction', 'created_date',
+];
+
 /**
  * Tables signed-out visitors cannot read at all once
  * 20261008081043_anon_hide_email_columns_more.sql is applied. No signed-out
@@ -173,6 +208,9 @@ export const PUBLIC_READ_COLUMNS = {
   ShedRecord: SHED_RECORD_PUBLIC_COLUMNS.join(','),
   VetRecord: VET_RECORD_PUBLIC_COLUMNS.join(','),
   OwnershipRecord: OWNERSHIP_RECORD_PUBLIC_COLUMNS.join(','),
+  BreederProfile: BREEDER_PROFILE_PUBLIC_COLUMNS.join(','),
+  BreederReview: BREEDER_REVIEW_PUBLIC_COLUMNS.join(','),
+  MorphPriceEntry: MORPH_PRICE_ENTRY_PUBLIC_COLUMNS.join(','),
 };
 
 /**

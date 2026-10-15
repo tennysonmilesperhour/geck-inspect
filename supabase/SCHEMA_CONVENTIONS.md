@@ -102,6 +102,37 @@ Then confirm the table or function exists before assuming the feature works.
 Two Phase 3 calculator features sat inert for hours because the migrations
 had merged but never run.
 
+## 4a. Grants: every new function says who may run it
+
+From `20261015130000_comms_and_exposure.sql` (section 8) on, a function a
+migration creates gets **no EXECUTE for `anon`, `authenticated` or
+`PUBLIC`** by default. The default privileges for role `postgres` were
+changed so that nothing is callable from the API by accident. `service_role`
+and the owner still get it.
+
+So every migration that adds a function must grant it explicitly, for
+example:
+
+```sql
+revoke all on function public.my_fn(text) from public, anon;
+grant execute on function public.my_fn(text) to authenticated;
+```
+
+This includes small SQL helpers that a row security policy or a SECURITY
+INVOKER trigger calls: those run as the member, so the member's role needs
+EXECUTE too. Without the grant the app gets "permission denied for
+function".
+
+**DROP plus CREATE loses the grants.** `create or replace function` keeps
+an existing function's grants. Dropping a function and creating it again
+(for example to change its return type or its arguments) makes a new
+function with no API grants at all, so re-grant it in the same migration.
+Prefer `create or replace` whenever the signature allows it.
+
+Objects created as `supabase_admin` (the dashboard, some extensions) do not
+follow this rule: that role's default privileges still grant the API roles
+everything. Grant and revoke explicitly there too.
+
 ## 5. Historical artifacts
 
 Some files legitimately still name the original platform and should be

@@ -102,20 +102,9 @@ export async function notifyGeckoOfTheDay(ownerEmail, geckoName) {
     }
 }
 
-// Notify when a future breeding plan's target window opens
-export async function notifyFutureBreedingReady(userEmail, planName, sireName, damName) {
-    try {
-        await Notification.create({
-            user_email: userEmail,
-            type: 'future_breeding_ready',
-            content: `Your future breeding plan "${planName}" (${sireName} × ${damName}) is now in its target window!`,
-            link: '/ProjectManager',
-            metadata: { plan_name: planName, sire: sireName, dam: damName },
-        });
-    } catch (error) {
-        console.error('Failed to notify future breeding ready:', error);
-    }
-}
+// A future breeding plan's target window is announced by the server
+// (enqueue_season_planner_reminders). Since 15 Oct 2026 the database
+// refuses that type from the browser, so there is no helper for it here.
 
 // Notify when a user receives a direct message
 export async function notifyNewMessage(recipientEmail, senderEmail, senderName) {

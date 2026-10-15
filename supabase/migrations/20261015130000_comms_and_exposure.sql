@@ -15,15 +15,21 @@
 --
 --  1. Notifications: a member could email and push any other member from
 --     the official address with their own words and link.
---  2. Direct messages: the recipient could rewrite a message and its sender.
+--  2. Direct messages: the recipient could rewrite a message and its sender,
+--     and any member could send a message styled as the team's.
 --  3. Morph ID usage log: every member could read every other member's rows.
 --  4. Member emails: read_profiles, community_feed and the visual search
---     handed other members' emails to any signed-in caller.
---  5. Market Intelligence: the brief, the live feed and watchlists answered
---     any signed-in member, although the product is Enterprise only.
+--     handed other members' emails to any signed-in caller, read_profiles
+--     told signed-out visitors whether an address was a member, and any
+--     member could follow (and notify) any address.
+--  5. Market Intelligence: the brief, the live feed, watchlists and market
+--     analytics answered any signed-in member, and the morning brief and
+--     watch alerts went to any plan, although the product is Enterprise
+--     only.
 --  6. Account deletion: anyone could file a deletion request in another
 --     member's name and an admin could act on it.
---  7. Sold prices: signed-out visitors could read what a gecko sold for.
+--  7. Sold prices and member emails: signed-out visitors could read what
+--     a gecko sold for, and members' emails on seven more tables.
 --  8. Table and function privileges the API roles never need.
 --  9. Account erasure deleted the care history of geckos the member had sold.
 
@@ -55,12 +61,18 @@
 --
 -- After:
 --   * Every link is an in-app path: one leading "/" not followed by "/" or
---     "\". Anything else becomes "/". This applies to every writer.
+--     "\", with no spaces, quotes, angle brackets, backticks, backslashes
+--     or control characters. Anything else becomes "/". This applies to
+--     every writer.
 --   * The app's server code (reminder jobs, waitlists, the deletion alert,
 --     edge functions) is unchanged.
 --   * Admins keep writing announcements and replies in their own words.
---   * A member may write notifications to themselves (level up, hatch
---     alerts), at most 30 an hour.
+--   * A member may write notifications to themselves: a hatch alert for
+--     one of their own eggs (once per egg in 20 hours, no hourly limit,
+--     because the browser writes one per egg), and anything else (level
+--     up) at most 30 an hour. Types only the server writes (briefs,
+--     alerts, digests, reminders) are refused and never count toward that
+--     limit.
 --   * A member may notify someone else only for: a message they just sent,
 --     a forum comment or reply they just wrote, a follow, or (to their own
 --     followers) a new gecko or breeding plan. The database checks that the
@@ -70,13 +82,22 @@
 --     is sent at most once every 10 minutes (a follow once a day, and only
 --     a follow made in the last hour), and a member can reach at most 30
 --     different people an hour this way.
+--   * Times come from the database: created_date on a member's
+--     notification, message, forum comment or follow is set to now(), so
+--     neither a wrong browser clock nor a backdated row affects the checks.
+--   * Ids in template links must be plain ids (letters, digits, "_", "-",
+--     up to 64), otherwise the link is /Notifications.
 --   * Nothing goes between two members when either has blocked the other.
---   * A display name that reads as the team ("Geck Inspect ...") is
---     replaced by "A Geck Inspect member".
+--   * The sender's display name is used only when it is plainly a name
+--     (see _member_notification); otherwise "A Geck Inspect member".
 -- Follows now go through follow_profile() (section 4), which writes the
 -- follower notification itself.
 
 -- An in-app path, or "/" for anything else. Immutable so it is cheap.
+-- Besides the leading "/" rule, the link may not hold spaces, control
+-- characters, backslashes, quotes, backticks or angle brackets: the link
+-- ends up inside an HTML attribute in the notification email, and none
+-- of those belong in a real Geck Inspect path.
 create or replace function public.safe_internal_link(p_link text)
 returns text
 language sql
@@ -85,13 +106,13 @@ set search_path to ''
 as $function$
   select case
     when p_link is null then null
-    when btrim(p_link) ~ '^/([^/\\[:space:]][^[:space:]]*)?$' then btrim(p_link)
+    when btrim(p_link) ~ '^/([^/\\[:space:][:cntrl:]"''<>`][^\\[:space:][:cntrl:]"''<>`]*)?$' then btrim(p_link)
     else '/'
   end;
 $function$;
 
 comment on function public.safe_internal_link(text) is
-  'Returns the link when it is a path inside Geck Inspect (one leading slash, not followed by a slash or backslash, no spaces), otherwise "/". Used by the notification guard so a notification can never open another website.';
+  'Returns the link when it is a path inside Geck Inspect (one leading slash, not followed by a slash; no spaces, control characters, backslashes, quotes, backticks or angle brackets), otherwise "/". Used by the notification guard so a notification can never open another website or break out of an email link.';
 
 -- The fixed text, link and metadata of a member-to-member notification.
 -- Internal: only our own functions call it, never the API.
@@ -110,31 +131,56 @@ as $function$
 declare
   v_profile_id text;
   v_name text;
+  v_letters text;
   v_encoded text;
+  v_post_id text;
 begin
-  -- The sender's public name. Emails and anything that looks like a web
-  -- address are never used as a name, so the template cannot be turned
-  -- into "visit evil.example" through a display name.
+  -- The sender's public name. It is the one piece of member text that
+  -- reaches another member's email and push from the official sender, so
+  -- it is used only when it is plainly a name (an allowlist, not a list
+  -- of bad patterns):
+  --   * only ASCII or Latin-1 letters, digits, spaces, apostrophes
+  --     (straight or curly) and hyphens, so no dots, slashes, brackets,
+  --     "@", fullwidth punctuation or Cyrillic look-alikes, and therefore
+  --     no web address in any spelling;
+  --   * at most 40 characters;
+  --   * not reading as the team: with every non-letter removed (and the
+  --     usual digit and accent look-alikes folded), it does not contain
+  --     "geckinspect", and it does not use the words support, admin,
+  --     security, billing, official, staff or moderator.
+  -- Anything else becomes "A Geck Inspect member".
   select p.id,
          coalesce(nullif(btrim(p.business_name), ''), nullif(btrim(p.full_name), ''), nullif(btrim(p.breeder_name), ''))
     into v_profile_id, v_name
     from public.profiles p
    where p.email = p_sender_email
    limit 1;
-  v_name := btrim(regexp_replace(coalesce(v_name, ''), '[[:cntrl:]]+', ' ', 'g'));
-  if v_name = ''
-     or v_name ~* '(@|://|www\.|\.(com|net|org|io|co|app|xyz|info|link|me|shop|store)([^[:alnum:]]|$))'
-     -- Nor a name that would read as the team writing ("Geck Inspect Team").
-     or v_name ~* 'geck[^[:alnum:]]*inspect' then
+  v_name := regexp_replace(btrim(coalesce(v_name, '')), ' {2,}', ' ', 'g');
+  v_letters := translate(lower(v_name),
+                 'àáâãäåèéêëìíîïòóôõöøùúûüýÿñç013457l',
+                 'aaaaaaeeeeiiiioooooouuuuyyncoieasti');
+  v_letters := regexp_replace(v_letters, '[^a-z]', '', 'g');
+  if v_name !~ '^[A-Za-z0-9À-ÖØ-öø-ÿ ''’-]{1,40}$'
+     or v_name !~ '[A-Za-z0-9À-ÖØ-öø-ÿ]'
+     or v_letters like '%geckinspect%'
+     or regexp_replace(lower(v_name), '[^a-z]', '', 'g') like '%geckinspect%'
+     or v_name ~* '\m(support|admin|administrator|security|billing|official|staff|moderator)s?\M' then
     v_name := 'A Geck Inspect member';
   end if;
-  v_name := left(v_name, 60);
+
+  -- Ids in a link must be plain ids. forum_posts.id and profiles.id are
+  -- chosen by the client, so anything else (quotes, angle brackets, "&")
+  -- links to Notifications instead.
+  if v_profile_id !~ '^[A-Za-z0-9_-]{1,64}$' then
+    v_profile_id := null;
+  end if;
+  v_post_id := case when p_post_id ~ '^[A-Za-z0-9_-]{1,64}$' then p_post_id end;
 
   -- Messages opens a conversation from ?recipient=<email>. The recipient
   -- already sees the sender's address on the message itself.
-  v_encoded := replace(replace(replace(replace(replace(replace(replace(
+  v_encoded := replace(replace(replace(replace(replace(replace(replace(replace(
                  p_sender_email, '%', '%25'), '+', '%2B'), '&', '%26'), '#', '%23'),
-                 '?', '%3F'), '=', '%3D'), ' ', '%20');
+                 '?', '%3F'), '=', '%3D'), ' ', '%20'), '@', '%40');
 
   return jsonb_build_object(
     'content', case p_type
@@ -148,10 +194,13 @@ begin
     end,
     'link', case
       when p_type = 'new_message' then '/Messages?recipient=' || v_encoded
-      when p_type in ('new_comment', 'new_reply') and p_post_id is not null then '/ForumPost?id=' || p_post_id
+      when p_type in ('new_comment', 'new_reply') and v_post_id is not null then '/ForumPost?id=' || v_post_id
+      when p_type in ('new_comment', 'new_reply') then '/Notifications'
       when v_profile_id is not null then '/PublicProfile?userId=' || v_profile_id
       else '/Notifications'
     end,
+    -- post_id stays as given (data only, never part of a link): the
+    -- 10-minute repeat check in member_notification_template matches on it.
     'metadata', jsonb_strip_nulls(jsonb_build_object('from_profile_id', v_profile_id, 'post_id', p_post_id))
   );
 end;
@@ -267,6 +316,26 @@ begin
 end;
 $function$;
 
+-- Notification types that only our own server code writes (cron jobs,
+-- the Stripe webhook, the market jobs). They often carry created_by = the
+-- member, so the member's own hourly limit leaves them out, and a member
+-- may not write them. Add a type here when a new server job starts
+-- writing one.
+create or replace function public.server_notification_types()
+returns text[]
+language sql
+immutable
+set search_path to ''
+as $function$
+  select array[
+    'market_brief', 'market_alert', 'weekly_digest',
+    'referral_reward', 'referral_grant_ended',
+    'feeding_due', 'weighin_reminder', 'vet_followup', 'task_reminder',
+    'future_breeding_ready', 'cgd_reorder_reminder',
+    'waitlist_signup', 'account_deletion_request'
+  ]::text[];
+$function$;
+
 create or replace function public.guard_notification_insert()
 returns trigger
 language plpgsql
@@ -290,6 +359,9 @@ begin
     raise exception 'Sign in to create notifications' using errcode = '42501';
   end if;
   new.created_by := v_email;
+  -- The time is the database's, never the browser's: the rate limits
+  -- below count by created_date, and a backdated row would dodge them.
+  new.created_date := now();
   new.link := public.safe_internal_link(new.link);
   if new.content is not null and length(new.content) > 500 then
     new.content := left(new.content, 500);
@@ -300,11 +372,43 @@ begin
     return new;
   end if;
 
-  -- A member's note to themselves (level up, hatch alert).
+  -- A member's note to themselves.
   if new.user_email = v_email then
+    -- Types only our own server jobs write (briefs, alerts, digests,
+    -- reminders, referral notes). A member never writes these, and they
+    -- do not count toward the member's limit below, so a busy day of
+    -- server notes never blocks the member's own.
+    if new.type = any (public.server_notification_types()) then
+      raise exception 'Geck Inspect writes this kind of notification itself' using errcode = '42501';
+    end if;
+    -- Hatch alerts: the browser writes one per egg in the hatch window
+    -- (HatchAlertSystem), so a big season must not hit the hourly limit.
+    -- Each must name one of the member's own eggs, and the same egg is
+    -- announced at most once in 20 hours (the server's own hatch job
+    -- counts too), so the number is bounded by real eggs.
+    if new.type = 'hatch_alert' then
+      if not exists (
+           select 1 from public.eggs e
+            where e.id = new.metadata ->> 'egg_id'
+              and (lower(coalesce(e.created_by, '')) = lower(v_email)
+                   or public.can_edit_breeding_plan(e.breeding_plan_id))) then
+        raise exception 'A hatch alert must name one of your own eggs' using errcode = '42501';
+      end if;
+      if exists (select 1 from public.notifications n
+                  where n.user_email = v_email and n.type = 'hatch_alert'
+                    and n.metadata ->> 'egg_id' = new.metadata ->> 'egg_id'
+                    and n.created_date > now() - interval '20 hours') then
+        return null;
+      end if;
+      return new;
+    end if;
+    -- Anything else (level up): at most 30 an hour, counting only the
+    -- kinds a member writes.
     select count(*) into v_recent
       from public.notifications n
      where n.user_email = v_email and n.created_by = v_email
+       and n.type <> 'hatch_alert'
+       and n.type <> all (public.server_notification_types())
        and n.created_date > now() - interval '1 hour';
     if v_recent >= 30 then
       raise exception 'Too many notifications in the last hour. Try again later.' using errcode = '54000';
@@ -318,12 +422,50 @@ begin
     return null;
   end if;
   new.content := v_tpl ->> 'content';
-  new.link := v_tpl ->> 'link';
+  new.link := public.safe_internal_link(v_tpl ->> 'link');
   new.metadata := v_tpl -> 'metadata';
   new.is_read := false;
   return new;
 end;
 $function$;
+
+-- Message, comment and follow times come from the database too. The
+-- member-to-member checks above ask "a message or comment in the last
+-- hour", and the browser's clock (supabaseEntities sets created_date) can
+-- be hours off: a slow clock refused real notifications, and a backdated
+-- row could dodge the conversation limit. A member's insert gets now();
+-- an edit keeps the original time. Server code is unchanged.
+create or replace function public.stamp_member_created_date()
+returns trigger
+language plpgsql
+security invoker
+set search_path to ''
+as $function$
+begin
+  if current_user not in ('anon', 'authenticated') then
+    return new;
+  end if;
+  if tg_op = 'INSERT' then
+    new.created_date := now();
+  else
+    new.created_date := old.created_date;
+  end if;
+  return new;
+end;
+$function$;
+
+drop trigger if exists direct_messages_stamp_created_date on public.direct_messages;
+create trigger direct_messages_stamp_created_date
+  before insert on public.direct_messages
+  for each row execute function public.stamp_member_created_date();
+drop trigger if exists forum_comments_stamp_created_date on public.forum_comments;
+create trigger forum_comments_stamp_created_date
+  before insert or update on public.forum_comments
+  for each row execute function public.stamp_member_created_date();
+drop trigger if exists user_follows_stamp_created_date on public.user_follows;
+create trigger user_follows_stamp_created_date
+  before insert or update on public.user_follows
+  for each row execute function public.stamp_member_created_date();
 
 -- The rate limits above count a member's recent notifications.
 create index if not exists notifications_created_by_created_date_idx
@@ -372,6 +514,33 @@ create policy direct_messages_update_own on public.direct_messages
   using ((select auth.email()) = recipient_email)
   with check ((select auth.email()) = recipient_email);
 
+-- System messages (the grey Geck Inspect bubble in Messages) come from
+-- admins (Mass Messaging) and our own server code only. A member's insert
+-- with message_type 'system' is refused, so nobody can dress a message up
+-- as the team's. send_direct_message_to_profile already turns it into
+-- 'direct'; this covers a plain insert.
+create or replace function public.guard_direct_message_insert()
+returns trigger
+language plpgsql
+security invoker
+set search_path to ''
+as $function$
+begin
+  if current_user not in ('anon', 'authenticated') then
+    return new;
+  end if;
+  if lower(coalesce(new.message_type, '')) = 'system' and not public.is_admin() then
+    raise exception 'Only Geck Inspect sends system messages' using errcode = '42501';
+  end if;
+  return new;
+end;
+$function$;
+
+drop trigger if exists direct_messages_guard_insert on public.direct_messages;
+create trigger direct_messages_guard_insert
+  before insert on public.direct_messages
+  for each row execute function public.guard_direct_message_insert();
+
 -- =====================================================================
 -- 3. Morph ID usage log
 -- =====================================================================
@@ -398,12 +567,25 @@ revoke select on geck_data.model_invocations from anon;
 -- of them at once). community_feed() showed the part of the email before
 -- the @ as a name and returned actor_email. similar_gecko_images_by_url()
 -- returned each photo's owner email.
--- After: another member's email goes only to admins. A member still gets
--- their own, and a caller who already has an address (read_profiles with
--- p_emails, used to show names next to messages) still gets that address
--- back. Follows, blocks, new conversations and the store page redirect,
--- which used to look the email up from a profile id, now go through the
--- functions below, which take the profile id and never return the email.
+-- After: these three functions no longer hand out other members' emails.
+-- A member still gets their own, admins get everyone's, and a signed-in
+-- caller who already has an address (read_profiles with p_emails, used to
+-- show names next to messages) still gets that address back. The p_emails
+-- form now needs a signed-in caller: for a signed-out visitor it answered
+-- "is this address a member", which email_has_login keeps server-only for
+-- the same reason. Follows, blocks, new conversations and the store page
+-- redirect, which used to look the email up from a profile id, now go
+-- through the functions below, which take the profile id and never return
+-- the email. The signed-out breeder page finds its owner's profile through
+-- breeder_page_owner() instead of the owner's email.
+--
+-- This is not the whole story for emails: rows that members write keep
+-- their author's email in created_by (or user_email), and signed-in
+-- members can still read it on rows they can see (public geckos, forum
+-- posts and comments, photos, public breeding plans, likes), as before.
+-- Section 7 takes those columns away from signed-out visitors on the
+-- tables listed there. Moving members' own reads to profile ids is
+-- follow-up work.
 
 CREATE OR REPLACE FUNCTION public.read_profiles(p_emails text[] DEFAULT NULL::text[])
  RETURNS SETOF profiles
@@ -434,7 +616,9 @@ AS $function$
   ) r
   where (p.is_public_profile = true or p.email = auth.email() or public.is_admin())
     and (p.moderation_hidden = false or p.email = auth.email() or public.is_admin())
-    and (p_emails is null or p.email = any(p_emails));
+    and (p_emails is null or p.email = any(p_emails))
+    -- 15 Oct 2026: looking members up by address needs a signed-in caller.
+    and (p_emails is null or auth.email() is not null);
 $function$;
 
 CREATE OR REPLACE FUNCTION public.community_feed(p_limit integer DEFAULT 25)
@@ -647,11 +831,15 @@ begin
   if v_me is null then
     raise exception 'Sign in to follow members' using errcode = '42501';
   end if;
+  -- A new follow needs a public, visible profile. Unfollowing works
+  -- whatever the profile is now (someone you follow may have gone
+  -- private since).
   select p.email into v_target
     from public.profiles p
    where p.id = p_profile_id
-     and (p.is_public_profile = true or public.is_admin())
-     and (p.moderation_hidden = false or public.is_admin())
+     and (not coalesce(p_follow, true)
+          or ((p.is_public_profile = true or public.is_admin())
+              and (p.moderation_hidden = false or public.is_admin())))
    limit 1;
   if v_target is null then
     raise exception 'That member could not be found' using errcode = 'P0002';
@@ -694,6 +882,36 @@ begin
   return true;
 end;
 $function$;
+
+-- A direct insert into user_follows (the app uses follow_profile, but the
+-- table is reachable through the API) may only name an existing public,
+-- visible profile, the same targets follow_profile accepts. Before, any
+-- member could "follow" any address, including private members and
+-- people who never signed up, and then send them a "started following
+-- you" note. Admins are not limited. follow_profile runs as the table
+-- owner and is not affected by this policy.
+create or replace function public.is_followable_email(p_email text)
+returns boolean
+language sql
+stable
+security definer
+set search_path to ''
+as $function$
+  select auth.email() is not null
+     and (public.is_admin()
+          or exists (select 1 from public.profiles p
+                      where p.email = p_email
+                        and p.is_public_profile = true
+                        and p.moderation_hidden = false));
+$function$;
+
+drop policy if exists user_follows_write_own on public.user_follows;
+create policy user_follows_write_own on public.user_follows
+  for insert to authenticated
+  with check (
+    (select auth.email()) = follower_email
+    and public.is_followable_email(following_email)
+  );
 
 -- Block a member by profile id (Report or block).
 create or replace function public.block_profile(p_profile_id text)
@@ -806,6 +1024,30 @@ as $function$
    limit 1;
 $function$;
 
+-- The other way round, for the breeder page itself (/Breeder/<slug>): the
+-- owner's profile id and store policy, so the page can list the owner's
+-- geckos and store settings by profile id. Signed-out visitors can no
+-- longer read breeder_profiles.created_by (section 7) or look a member up
+-- by address (read_profiles), and never need the email. Only for a
+-- visible breeder page whose owner has a public, visible profile, the
+-- same rows read_profiles shows.
+create or replace function public.breeder_page_owner(p_slug text)
+returns table (profile_id text, store_policy text)
+language sql
+stable
+security definer
+set search_path to ''
+as $function$
+  select p.id, p.store_policy
+    from public.breeder_profiles b
+    join public.profiles p on p.email = b.created_by
+   where b.custom_slug = p_slug
+     and coalesce(b.moderation_hidden, false) = false
+     and p.is_public_profile = true
+     and p.moderation_hidden = false
+   limit 1;
+$function$;
+
 -- =====================================================================
 -- 5. Market Intelligence is Enterprise, on the server too
 -- =====================================================================
@@ -819,6 +1061,16 @@ $function$;
 -- unlock it, exactly as in the app. effective_tier_for_current_user() is the
 -- database copy of resolveTier. Removing a watch, or switching one off,
 -- stays open to everyone so a member who left Enterprise can stop alerts.
+-- Plan end: resolveTier reads membership_tier and does not look at
+-- membership_expires_at or subscription_status (apart from
+-- 'grandfathered', which grants Breeder). The Stripe webhook sets
+-- membership_tier back to 'free' when a subscription ends, and
+-- membership_expires_at is only the paid-through date shown to the
+-- member. The server functions read the same column the same way, so the
+-- app and the database always agree on who has Enterprise.
+-- Covered here: the brief, the live feed, watchlists, Business Tools
+-- market analytics (market_analytics_v2), the morning brief job and watch
+-- alerts.
 
 create or replace function public.require_market_intelligence()
 returns void
@@ -828,8 +1080,15 @@ security definer
 set search_path to ''
 as $function$
 begin
-  -- Server code (no token, or the service role) is not a member.
-  if auth.role() is null or auth.role() = 'service_role' then
+  -- Server code is not a member: a cron job or the SQL console (no API
+  -- role at all) or the service role. The API role is read from the
+  -- "role" setting PostgREST sets for the request, not from current_user:
+  -- inside a SECURITY DEFINER function (this one, and every function that
+  -- calls it) current_user is always the owner, postgres. A request from
+  -- the app always runs as anon or authenticated, so it never gets here
+  -- without being checked, whatever its token says.
+  if auth.uid() is null
+     and coalesce(current_setting('role', true), 'none') not in ('anon', 'authenticated') then
     return;
   end if;
   if auth.uid() is null then
@@ -996,6 +1255,232 @@ AS $function$
   limit least(greatest(coalesce(p_limit, 40), 1), 100);
 $function$;
 
+-- Market analytics on Business Tools (Pricing tab). The app shows it to
+-- Enterprise only (MarketPreviewGate, market_intelligence), and the same
+-- gate now holds here. Production definition, unchanged apart from the
+-- check at the top.
+CREATE OR REPLACE FUNCTION public.market_analytics_v2()
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+-- 15 Oct 2026: Enterprise or admin (decision 38), checked here too.
+select public.require_market_intelligence();
+with taxo as (
+  select m.norm_name,
+         array(select lower(s.s) from unnest(m.synonyms) s(s)) as syns
+  from geck_data.crested_morph_taxonomy m
+),
+names as (
+  select tx.norm_name as norm from taxo tx
+  union
+  select unnest(tx.syns) from taxo tx
+),
+scope as (
+  select l.listing_id,
+         l.price::float8 as price,
+         l.trait_array,
+         l.first_seen_at,
+         l.last_seen_at,
+         l.sold_at,
+         nullif(trim(coalesce(l.seller_slug, l.seller_name)), '') as seller,
+         geck_data._age_class(l.maturity) as age_raw
+  from geck_data.listings l
+  where coalesce(l.species, 'unknown') = any (array['crested', 'unknown'])
+    and l.currency = 'USD'
+    and l.price > 0
+    and l.first_seen_at is not null
+    and not geck_data._looks_like_group_lot(l.name, false)
+),
+base as (
+  select s.*,
+         case s.age_raw when 'hatchling' then 'baby' else coalesce(s.age_raw, 'unknown') end as age,
+         case when s.sold_at is not null and s.sold_at - s.first_seen_at > interval '1 hour'
+              then extract(epoch from (s.sold_at - s.first_seen_at)) / 86400.0 end as days_to_sell
+  from scope s
+  where s.price between 20 and 20000
+),
+bounds as (
+  select min(b.first_seen_at) as first_seen,
+         greatest(max(b.first_seen_at), max(b.last_seen_at)) as last_seen,
+         min(b.sold_at) as sold_from,
+         max(b.sold_at) as sold_to,
+         date_trunc('day', greatest(max(b.first_seen_at), max(b.last_seen_at))) - interval '28 days' as recent_from,
+         (select count(*) from scope s where s.price < 20 or s.price > 20000) as outliers
+  from base b
+),
+weeks as (
+  select w.wk,
+         coalesce(f.n, 0) as listings,
+         f.med,
+         coalesce(so.sold, 0) as sold
+  from (
+    select date_trunc('week', b.first_seen_at)::date as wk from base b
+    union
+    select date_trunc('week', b.sold_at)::date from base b where b.sold_at is not null
+  ) w
+  left join (
+    select date_trunc('week', b.first_seen_at)::date as wk, count(*) as n,
+           percentile_cont(0.5) within group (order by b.price) as med
+    from base b group by 1
+  ) f on f.wk = w.wk
+  left join (
+    select date_trunc('week', b.sold_at)::date as wk, count(*) as sold
+    from base b where b.sold_at is not null group by 1
+  ) so on so.wk = w.wk
+),
+lt as (
+  select distinct on (b.listing_id, lower(trim(t.trait)))
+         b.*,
+         lower(trim(t.trait)) as trait_key,
+         trim(t.trait) as trait_label
+  from base b,
+       lateral unnest(b.trait_array) t(trait)
+  where lower(trim(t.trait)) in (select names.norm from names)
+    and t.trait not ilike 'Diet:%'
+    and t.trait not ilike 'Proven breeder%'
+),
+ts as (
+  select lt.trait_key,
+         mode() within group (order by lt.trait_label) as name,
+         count(*) as n,
+         count(*) filter (where lt.sold_at is not null) as sold,
+         percentile_cont(0.5) within group (order by lt.price) as med,
+         percentile_cont(0.25) within group (order by lt.price) as p25,
+         percentile_cont(0.75) within group (order by lt.price) as p75,
+         avg(lt.days_to_sell) as days,
+         count(*) filter (where lt.sold_at is not null and lt.first_seen_at <= bd.sold_to)::float8
+           / nullif(count(*) filter (where lt.first_seen_at <= bd.sold_to), 0) as sell_through,
+         count(*) filter (where lt.first_seen_at < bd.recent_from) as earlier_n,
+         percentile_cont(0.5) within group (order by lt.price) filter (where lt.first_seen_at < bd.recent_from) as earlier_med,
+         count(*) filter (where lt.first_seen_at >= bd.recent_from) as recent_n,
+         percentile_cont(0.5) within group (order by lt.price) filter (where lt.first_seen_at >= bd.recent_from) as recent_med
+  from lt cross join bounds bd
+  group by lt.trait_key
+  having count(*) >= 60
+  order by count(*) desc
+  limit 32
+),
+tw as (
+  select lt.trait_key, date_trunc('week', lt.first_seen_at)::date as wk, count(*) as n,
+         percentile_cont(0.5) within group (order by lt.price) as med
+  from lt where lt.trait_key in (select ts.trait_key from ts)
+  group by 1, 2
+),
+ta as (
+  select lt.trait_key, lt.age, count(*) as n,
+         percentile_cont(0.5) within group (order by lt.price) as med
+  from lt where lt.age <> 'unknown' and lt.trait_key in (select ts.trait_key from ts)
+  group by 1, 2
+),
+ta_ok as (
+  select ta.trait_key from ta where ta.n >= 5 group by ta.trait_key having count(*) = 4
+),
+ages as (
+  select b.age, count(*) as n,
+         percentile_cont(0.5) within group (order by b.price) as med,
+         count(*) filter (where b.sold_at is not null) as sold,
+         avg(b.days_to_sell) as days
+  from base b group by b.age
+),
+sel as (
+  select b.seller, count(*) as n,
+         count(*) filter (where b.sold_at is not null) as sold,
+         coalesce(sum(b.price) filter (where b.sold_at is not null), 0) as rev,
+         percentile_cont(0.5) within group (order by b.price) as med
+  from base b where b.seller is not null group by b.seller
+),
+selrank as (
+  select sel.*,
+         row_number() over (order by sel.rev desc, sel.n desc) as rk,
+         sel.rev / nullif(sum(sel.rev) over (), 0) as sh
+  from sel
+)
+select jsonb_build_object(
+  'generated_at', now(),
+  'source', jsonb_build_object('id', 'external.morphmarket', 'label', 'MorphMarket listings, United States', 'collector', 'Geck Data'),
+  'coverage', (
+    select jsonb_build_object(
+      'first_seen', bd.first_seen::date,
+      'last_seen', bd.last_seen::date,
+      'sold_window', case when bd.sold_from is null then null
+                          else jsonb_build_object('from', bd.sold_from::date, 'to', bd.sold_to::date) end,
+      'excluded_outliers', bd.outliers,
+      'weeks', coalesce((
+        select jsonb_agg(jsonb_build_object(
+                 'week', w.wk, 'listings', w.listings,
+                 'median_ask', round(w.med::numeric), 'sold', w.sold) order by w.wk)
+        from weeks w), '[]'::jsonb)
+    ) from bounds bd
+  ),
+  'periods', (
+    select jsonb_build_object(
+      'earlier', jsonb_build_object('from', bd.first_seen::date, 'to', (bd.recent_from - interval '1 day')::date),
+      'recent', jsonb_build_object('from', bd.recent_from::date, 'to', bd.last_seen::date)
+    ) from bounds bd
+  ),
+  'kpis', (
+    select jsonb_build_object(
+      'listings', count(*),
+      'sold', count(*) filter (where b.sold_at is not null),
+      'median_ask', round((percentile_cont(0.5) within group (order by b.price))::numeric),
+      'sold_value', round(coalesce(sum(b.price) filter (where b.sold_at is not null), 0)::numeric),
+      'sell_through', round((count(*) filter (where b.sold_at is not null and b.first_seen_at <= bd.sold_to)::numeric
+                        / nullif(count(*) filter (where b.first_seen_at <= bd.sold_to), 0)), 3),
+      'avg_days_to_sell', round(avg(b.days_to_sell)::numeric),
+      'sellers', (select count(*) from sel)
+    ) from base b cross join bounds bd group by bd.sold_to
+  ),
+  'ages', coalesce((
+    select jsonb_agg(jsonb_build_object(
+             'code', a.age,
+             'n', a.n, 'median', round(a.med::numeric), 'sold', a.sold, 'days', round(a.days::numeric))
+           order by array_position(array['baby', 'juvenile', 'subadult', 'adult', 'unknown'], a.age))
+    from ages a), '[]'::jsonb),
+  'traits', coalesce((
+    select jsonb_agg(jsonb_build_object(
+             'name', ts.name,
+             'n', ts.n, 'sold', ts.sold,
+             'median', round(ts.med::numeric), 'p25', round(ts.p25::numeric), 'p75', round(ts.p75::numeric),
+             'days', round(ts.days::numeric),
+             'sell_through', round(ts.sell_through::numeric, 3),
+             'earlier', jsonb_build_array(ts.earlier_n, round(ts.earlier_med::numeric)),
+             'recent', jsonb_build_array(ts.recent_n, round(ts.recent_med::numeric)),
+             'weekly', (select jsonb_object_agg(tw.wk, jsonb_build_array(tw.n, round(tw.med::numeric)))
+                        from tw where tw.trait_key = ts.trait_key),
+             'by_age', case when ts.trait_key in (select ta_ok.trait_key from ta_ok) then
+                         (select jsonb_object_agg(ta.age, jsonb_build_array(ta.n, round(ta.med::numeric)))
+                          from ta where ta.trait_key = ts.trait_key)
+                       end
+           ) order by ts.n desc)
+    from ts), '[]'::jsonb),
+  'sellers', (
+    select jsonb_build_object(
+      'total', count(*),
+      'with_a_sale', count(*) filter (where sr.sold > 0),
+      'unattributed_listings', (select count(*) from base b where b.seller is null),
+      'attributed_sold_value', round(sum(sr.rev)::numeric),
+      'top10_share', round(coalesce(sum(sr.sh) filter (where sr.rk <= 10), 0)::numeric, 3),
+      'top50_share', round(coalesce(sum(sr.sh) filter (where sr.rk <= 50), 0)::numeric, 3),
+      'hhi', round(coalesce(sum(power(sr.sh * 100, 2)), 0)::numeric),
+      'size_buckets', jsonb_build_array(
+        jsonb_build_object('label', '1 listing', 'sellers', count(*) filter (where sr.n = 1)),
+        jsonb_build_object('label', '2 to 5', 'sellers', count(*) filter (where sr.n between 2 and 5)),
+        jsonb_build_object('label', '6 to 20', 'sellers', count(*) filter (where sr.n between 6 and 20)),
+        jsonb_build_object('label', '21 or more', 'sellers', count(*) filter (where sr.n > 20))
+      ),
+      'top', coalesce((
+        select jsonb_agg(jsonb_build_object(
+                 'rank', t.rk, 'listings', t.n, 'sold', t.sold,
+                 'sold_value', round(t.rev::numeric), 'median', round(t.med::numeric)) order by t.rk)
+        from selrank t where t.rk <= 10 and t.rev > 0), '[]'::jsonb)
+    ) from selrank sr
+  )
+)
+;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.market_watch_list()
  RETURNS TABLE(id uuid, name text, query jsonb, active boolean, created_at timestamp with time zone, matches_7d bigint, last_match_at timestamp with time zone)
  LANGUAGE sql
@@ -1124,6 +1609,326 @@ begin
 end;
 $function$;
 
+-- The morning brief (cron market-brief-morning) and watch alerts
+-- (match_alerts, after each market refresh) are Market Intelligence too,
+-- but they ran as server jobs with no plan check: any member could switch
+-- profiles.market_brief_enabled on in Settings and get the daily brief by
+-- email and push, and a member who left Enterprise kept getting watch
+-- alerts. Both now take the same rule. Production definitions, with only
+-- the lines marked "15 Oct 2026" added. effective_tier_for_email() is the
+-- server copy of the app's resolveTier (admins count as Enterprise).
+
+CREATE OR REPLACE FUNCTION public.enqueue_market_briefs()
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  r record;
+  b jsonb;
+  v_parts text[];
+  v_count integer := 0;
+  v_top jsonb;
+  v_rare jsonb;
+  v_value numeric;
+  v_week numeric;
+  v_matches integer;
+  v_word text;
+  v_meaningful boolean;
+begin
+  -- Only after MorphMarket was checked today, and not on a catch-up day.
+  if not exists (
+    select 1 from geck_data.market_daily d
+     where d.market = 'US' and d.trait = '' and d.checked > 0
+       and not d.after_gap
+       and d.day = (now() at time zone 'UTC')::date
+  ) then
+    return 0;
+  end if;
+
+  for r in
+    -- One row per account: legacy profile rows can share an email.
+    select distinct on (lower(p.email)) p.email, u.id as uid
+      from public.profiles p
+      join auth.users u on lower(u.email) = lower(p.email)
+     where p.market_brief_enabled
+       -- 15 Oct 2026: Enterprise or admin only (decision 38), the same
+       -- rule as the app. Anyone may have switched the column on.
+       and public.effective_tier_for_email(p.email) = 'enterprise'
+       and not exists (
+         select 1 from public.notifications n
+          where n.user_email = p.email
+            and n.type = 'market_brief'
+            and n.created_date >= (now() at time zone 'UTC')::date
+       )
+  loop
+    b := geck_data.market_brief_for(r.email, r.uid);
+    v_parts := '{}';
+    v_meaningful := false;
+
+    v_word := b #>> '{us,word}';
+    if (b #>> '{us,new_listings}') is not null then
+      v_parts := v_parts || format('%s new crested listings%s%s.',
+        b #>> '{us,new_listings}',
+        case when v_word in ('busy', 'slow') then format(' (a %s day)', v_word) else '' end,
+        case when (b #>> '{us,cuts}') is not null
+             then format(', %s price cuts', b #>> '{us,cuts}') else '' end);
+    end if;
+
+    select x into v_top
+      from jsonb_array_elements(b -> 'morphs') x
+     where coalesce((x ->> 'new_listings')::int, 0) > 0
+     order by (x ->> 'new_listings')::int desc
+     limit 1;
+    if v_top is not null then
+      v_meaningful := true;
+      v_parts := v_parts || format('Your morphs: %s new %s%s.',
+        v_top ->> 'new_listings', v_top ->> 'trait',
+        case when coalesce((v_top ->> 'new_low')::int, 0) > 0
+             then format(', %s priced low for their kind', v_top ->> 'new_low') else '' end);
+    end if;
+
+    v_rare := b -> 'rare' -> 0;
+    if v_rare is not null then
+      v_meaningful := true;
+      v_parts := v_parts || format('Rare today: %s at $%s.',
+        coalesce(v_rare ->> 'combo',
+                 (select string_agg(m, ' ') from jsonb_array_elements_text(v_rare -> 'morphs') m),
+                 'a crested gecko'),
+        to_char((v_rare ->> 'price')::numeric, 'FM999,999'));
+    end if;
+
+    v_value := (b #>> '{value,value}')::numeric;
+    v_week := (b #>> '{value,value_7d}')::numeric;
+    if v_value is not null and v_value > 0 then
+      v_parts := v_parts || format('Your crested geckos: about $%s to $%s%s.',
+        to_char((b #>> '{value,value_low}')::numeric, 'FM999,999'),
+        to_char((b #>> '{value,value_high}')::numeric, 'FM999,999'),
+        case when v_week > 0 and abs(v_value - v_week) / v_week >= 0.01
+             then format(', %s %s%% in a week',
+                         case when v_value > v_week then 'up' else 'down' end,
+                         round(abs(v_value - v_week) / v_week * 100, 1))
+             else '' end);
+      if v_week > 0 and abs(v_value - v_week) / v_week >= 0.02 then
+        v_meaningful := true;
+      end if;
+    end if;
+
+    v_matches := coalesce((b #>> '{watch,matches_24h}')::int, 0);
+    if v_matches > 0 then
+      v_meaningful := true;
+      v_parts := v_parts || format('%s new %s.', v_matches,
+        case when v_matches = 1 then 'watchlist match' else 'watchlist matches' end);
+    end if;
+
+    if b #>> '{fact,kind}' = 'cut_wave' then
+      v_meaningful := true;
+    end if;
+
+    if v_meaningful then
+      insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
+      values (r.email, 'market_brief', left(array_to_string(v_parts, ' '), 480), '/Market',
+              jsonb_build_object('source', 'cron', 'day', b #>> '{us,day}'), false, r.email);
+      v_count := v_count + 1;
+    end if;
+  end loop;
+  return v_count;
+end;
+$function$;
+
+CREATE OR REPLACE FUNCTION geck_data.match_alerts()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_state timestamptz;
+  -- Look back 6 hours past the last run and stop 5 minutes short of now:
+  -- a listing written while the market views were refreshing is caught
+  -- on the next run, and the unique index drops repeats.
+  v_from timestamptz;
+  v_to timestamptz := now() - interval '5 minutes';
+  v_catchup boolean;
+  v_matches integer := 0;
+  v_notified integer := 0;
+begin
+  select s.last_run_at into v_state
+    from geck_data.alert_matcher_state s where s.id = 1 for update;
+  if v_state is null then
+    -- First run: start from now instead of matching months of history.
+    insert into geck_data.alert_matcher_state (id, last_run_at) values (1, now())
+    on conflict (id) do update set last_run_at = excluded.last_run_at;
+    return jsonb_build_object('matches', 0, 'first_run', true);
+  end if;
+  v_from := v_state - interval '6 hours';
+
+  -- After an outage the first full walk finds weeks of listings at once.
+  -- Those are not news, so new-listing matches wait for a normal day.
+  select d.after_gap into v_catchup
+    from geck_data.market_daily d
+   where d.market = 'US' and d.trait = '' and d.day = (now() at time zone 'UTC')::date;
+
+  with new_listings as (
+    select l.listing_id, 'new'::text as trigger, l.price, null::numeric as was_price
+    from geck_data.listing_market_mv l
+    join geck_data.listing_facts_mv f using (listing_id)
+    where l.first_seen_at > v_from and l.first_seen_at <= v_to
+      and not coalesce(v_catchup, false)
+      and (f.first_listed_at is null or f.first_listed_at >= l.first_seen_at - interval '3 days')
+  ),
+  recent_ids as (
+    select distinct h.listing_id
+    from geck_data.price_history h
+    where h.observed_at > v_from and h.observed_at <= v_to and h.currency = 'USD'
+  ),
+  cuts as (
+    select regexp_replace(x.listing_id, '^mm_', '') as listing_id, 'cut'::text as trigger,
+           x.price, x.prev as was_price
+    from (
+      select h.listing_id, h.observed_at, h.price,
+             lag(h.price) over (partition by h.listing_id order by h.observed_at) as prev
+      from geck_data.price_history h
+      join recent_ids ri using (listing_id)
+      where h.currency = 'USD'
+    ) x
+    where x.observed_at > v_from and x.observed_at <= v_to
+      and x.prev is not null and x.price < x.prev
+  ),
+  events as (
+    select * from new_listings
+    union all
+    select * from cuts
+  ),
+  candidates as (
+    select e.listing_id, e.trigger, e.price, e.was_price,
+           l.name as title, l.seller_slug, l.sex_class, l.age_class, l.position,
+           f.morphs,
+           array(
+             select geck_data._trait_token(t)
+             from unnest(coalesce(l.trait_array, '{}'::text[]) || f.morphs) t
+           ) as tokens
+    from events e
+    join geck_data.listing_market_mv l using (listing_id)
+    join geck_data.listing_facts_mv f using (listing_id)
+    where l.for_sale and not l.is_lot and l.currency = 'USD'
+      and exists (select 1 from geck_data.market_listings ml where ml.id = 'mm_' || l.listing_id)
+  ),
+  -- 15 Oct 2026: only watches whose owner still has Enterprise (or is
+  -- an admin), the same rule as the app. A member who left Enterprise
+  -- keeps their watches, but they stop matching and alerting until the
+  -- member comes back.
+  live_alerts as (
+    select a.*
+    from geck_data.alerts a
+    join auth.users u on u.id = a.owner_id
+    where a.active
+      and u.email is not null
+      and public.effective_tier_for_email(u.email) = 'enterprise'
+  ),
+  hits as (
+    select a.id as alert_id, a.owner_id, a.name as alert_name, c.*
+    from live_alerts a
+    join candidates c on true
+    where a.active
+      and a.owner_id is not null
+      and coalesce(a.query ->> 'species', 'crested') in ('crested', 'unknown', 'any')
+      and (not coalesce((a.query ->> 'must_be_drop')::boolean, false) or c.trigger = 'cut')
+      and (jsonb_typeof(a.query -> 'trait_all') is distinct from 'array' or not exists (
+            select 1 from jsonb_array_elements_text(a.query -> 'trait_all') t(v)
+            where geck_data._trait_token(t.v) <> ''
+              and not (geck_data._trait_token(t.v) = any (c.tokens))))
+      and (jsonb_typeof(a.query -> 'trait_any') is distinct from 'array'
+           or jsonb_array_length(a.query -> 'trait_any') = 0
+           or exists (
+            select 1 from jsonb_array_elements_text(a.query -> 'trait_any') t(v)
+            where geck_data._trait_token(t.v) = any (c.tokens)))
+      and (geck_data._num(a.query ->> 'min_price') is null or c.price >= geck_data._num(a.query ->> 'min_price'))
+      and (geck_data._num(a.query ->> 'max_price') is null or c.price <= geck_data._num(a.query ->> 'max_price'))
+      and (jsonb_typeof(a.query -> 'seller_ids') is distinct from 'array'
+           or jsonb_array_length(a.query -> 'seller_ids') = 0
+           or c.seller_slug in (select jsonb_array_elements_text(a.query -> 'seller_ids')))
+      and (jsonb_typeof(a.query -> 'regions') is distinct from 'array'
+           or jsonb_array_length(a.query -> 'regions') = 0
+           or 'US' in (select jsonb_array_elements_text(a.query -> 'regions')))
+      and (coalesce(a.query ->> 'sex', '') = '' or c.sex_class = a.query ->> 'sex')
+  ),
+  -- Record each match once; only rows inserted now go on to a notification.
+  ins as (
+    insert into geck_data.alert_matches (alert_id, listing_id, matched_at, payload)
+    select h.alert_id, 'mm_' || h.listing_id, now(),
+           jsonb_build_object(
+             'trigger', h.trigger,
+             'price', h.price,
+             'was_price', h.was_price,
+             'position', h.position,
+             'source', 'after_scrape'
+           )
+    from hits h
+    on conflict do nothing
+    returning alert_id, listing_id, payload
+  ),
+  fresh as (
+    select h.*
+    from ins
+    join hits h
+      on h.alert_id = ins.alert_id
+     and 'mm_' || h.listing_id = ins.listing_id
+     and h.trigger = ins.payload ->> 'trigger'
+     and h.price = (ins.payload ->> 'price')::numeric
+  ),
+  per_member as (
+    select lower(u.email) as email,
+           count(*) as n,
+           jsonb_agg(jsonb_build_object(
+             'alert', f.alert_name,
+             'listing_id', f.listing_id,
+             'trigger', f.trigger,
+             'price', f.price,
+             'was_price', f.was_price,
+             'title', f.title,
+             'morphs', to_jsonb(f.morphs),
+             'position', f.position
+           ) order by (f.trigger = 'cut') desc, f.price) as items,
+           array_agg(
+             concat_ws(', ',
+               coalesce(nullif(array_to_string(f.morphs, ' '), ''), nullif(f.title, ''), 'Crested gecko'),
+               nullif(concat_ws(' ', initcap(nullif(f.sex_class, 'unsexed')), f.age_class), ''),
+               '$' || to_char(f.price, 'FM999,999') ||
+                 case when f.trigger = 'cut' and f.was_price is not null
+                      then ' (cut from $' || to_char(f.was_price, 'FM999,999') || ')' else '' end,
+               case when f.position = 'low' then 'low for its kind' end
+             )
+             order by (f.trigger = 'cut') desc, f.price
+           ) as lines
+    from fresh f
+    join auth.users u on u.id = f.owner_id
+    where u.email is not null
+    group by lower(u.email)
+  ),
+  notified as (
+    insert into public.notifications (user_email, type, content, link, metadata, is_read, created_by)
+    select pm.email, 'market_alert',
+           left(case
+             when pm.n = 1 then 'On your watchlist: ' || pm.lines[1] || '.'
+             when pm.n = 2 then '2 listings match your watchlist: ' || pm.lines[1] || '; ' || pm.lines[2] || '.'
+             else pm.n || ' listings match your watchlist, including ' || pm.lines[1] || '; ' || pm.lines[2] || '.'
+           end, 480),
+           '/Market?tab=watchlist',
+           jsonb_build_object('count', pm.n, 'matches', pm.items, 'source', 'after_scrape'),
+           false, pm.email
+    from per_member pm
+    returning 1
+  )
+  select (select count(*) from fresh), (select count(*) from notified)
+    into v_matches, v_notified;
+
+  update geck_data.alert_matcher_state set last_run_at = v_to where id = 1;
+  return jsonb_build_object('matches', v_matches, 'notified', v_notified, 'catchup', coalesce(v_catchup, false));
+end;
+$function$;
+
 -- Watches are written only through the functions above. The geck_data
 -- schema is reachable through the API, and the old policies let a member
 -- insert a watch, or switch one back on, straight into geck_data.alerts,
@@ -1225,7 +2030,7 @@ end;
 $function$;
 
 -- =====================================================================
--- 7. Sold prices are not public
+-- 7. Sold prices and member emails are not public
 -- =====================================================================
 --
 -- Before: 20261008081011 granted signed-out visitors select on
@@ -1234,6 +2039,60 @@ $function$;
 -- passport's lineage needs them.
 
 revoke select (sold_price) on public.geckos from anon;
+
+-- Members' emails on rows anyone could read. These tables have a
+-- "read all" policy and a full grant to anon, so a signed-out visitor
+-- could list members' addresses from them. The email columns are taken
+-- away from signed-out visitors, the same way 20261008081011 did for
+-- geckos and gecko_images: the table grant becomes a column grant of
+-- every other column. No signed-out page reads these columns: the breeder
+-- page uses breeder_page_owner() and src/lib/publicColumns.js lists,
+-- reviews use PUBLIC_REVIEW_COLUMNS, Market Pricing and the Live Feed
+-- reactions ask for named columns, and nothing signed out reads badges,
+-- giveaways or morph guide comments. Signed-in members are unchanged.
+--   breeder_profiles.created_by           breeder_reviews.created_by
+--   morph_guide_comments.user_email, .created_by
+--   user_badges.user_email, .created_by
+--   giveaways.winner_emails, .created_by
+--   community_event_reactions.user_email  morph_price_entries.created_by
+-- A column added to one of these tables later is not readable by
+-- signed-out visitors until it is granted (and listed in publicColumns.js
+-- if a signed-out page reads it).
+do $$
+declare
+  r record;
+  v_cols text;
+begin
+  for r in
+    select * from (values
+      ('breeder_profiles',          array['created_by']),
+      ('breeder_reviews',           array['created_by']),
+      ('morph_guide_comments',      array['user_email', 'created_by']),
+      ('user_badges',               array['user_email', 'created_by']),
+      ('giveaways',                 array['winner_emails', 'created_by']),
+      ('community_event_reactions', array['user_email']),
+      ('morph_price_entries',       array['created_by'])
+    ) t(tbl, hidden)
+  loop
+    if to_regclass('public.' || r.tbl) is null then
+      continue;
+    end if;
+    select string_agg(quote_ident(a.attname), ', ' order by a.attnum) into v_cols
+      from pg_attribute a
+     where a.attrelid = ('public.' || r.tbl)::regclass
+       and a.attnum > 0 and not a.attisdropped
+       and a.attname <> all (r.hidden);
+    -- Only the first time: once the table grant is gone, a second run
+    -- must not hand back a column added and deliberately left out since.
+    if has_table_privilege('anon', 'public.' || r.tbl, 'select') then
+      execute format('revoke select on public.%I from anon', r.tbl);
+      execute format('grant select (%s) on public.%I to anon', v_cols, r.tbl);
+    end if;
+    execute format('revoke select (%s) on public.%I from anon',
+                   (select string_agg(quote_ident(h), ', ') from unnest(r.hidden) h), r.tbl);
+  end loop;
+end
+$$;
 
 -- =====================================================================
 -- 8. Privileges the API roles never need
@@ -1876,6 +2735,18 @@ grant execute on function public.safe_internal_link(text) to authenticated, serv
 
 revoke all on function public._member_notification(text, text, text, text) from public, anon, authenticated;
 
+-- The notification guard runs as the member (SECURITY INVOKER), so it
+-- needs this list.
+revoke all on function public.server_notification_types() from public, anon;
+grant execute on function public.server_notification_types() to authenticated, service_role;
+revoke all on function public.stamp_member_created_date() from public, anon, authenticated;
+revoke all on function public.guard_direct_message_insert() from public, anon, authenticated;
+-- The user_follows insert policy calls it as the member.
+revoke all on function public.is_followable_email(text) from public, anon;
+grant execute on function public.is_followable_email(text) to authenticated;
+revoke all on function public.breeder_page_owner(text) from public;
+grant execute on function public.breeder_page_owner(text) to anon, authenticated;
+
 revoke all on function public.member_notification_template(text, text, jsonb) from public, anon;
 grant execute on function public.member_notification_template(text, text, jsonb) to authenticated;
 
@@ -1893,5 +2764,7 @@ grant execute on function public.send_direct_message_to_profile(text, text, text
 revoke all on function public.breeder_slug_for_profile(text) from public;
 grant execute on function public.breeder_slug_for_profile(text) to anon, authenticated;
 
-revoke all on function public.require_market_intelligence() from public, anon;
-grant execute on function public.require_market_intelligence() to authenticated, service_role;
+-- Only our own SECURITY DEFINER functions call it (they run as postgres),
+-- so the API roles need no grant.
+revoke all on function public.require_market_intelligence() from public, anon, authenticated;
+grant execute on function public.require_market_intelligence() to service_role;

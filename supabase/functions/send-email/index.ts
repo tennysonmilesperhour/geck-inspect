@@ -215,10 +215,34 @@ async function hasLogin(supabase: RpcClient, email: string): Promise<boolean | n
   }
 }
 
+// The button's address. Notification links are in-app paths (the
+// database's safe_internal_link makes sure of it); this checks again so a
+// bad row can never send a reader to another website: an in-app path or
+// a full Geck Inspect address is kept, anything else opens the home page.
+function absoluteLink(linkUrl: string): string {
+  const link = String(linkUrl || "/").trim();
+  if (/^\/(?![\/\\])/.test(link)) return `${SITE_URL}${link}`;
+  if (link.startsWith(`${SITE_URL}/`)) return link;
+  return `${SITE_URL}/`;
+}
+
+// The same address for the plain-text part: anything outside the usual
+// URL characters (quotes, angle brackets, spaces, backticks, backslashes,
+// control characters) is percent-encoded, so a mail app cannot read part
+// of it as text or markup.
+function textLink(url: string): string {
+  return url.replace(/[^A-Za-z0-9\-._~:/?#@!$&()*+,;=%]/g, (c) => {
+    const encoded = encodeURIComponent(c);
+    return encoded === c ? `%${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0")}` : encoded;
+  });
+}
+
 function renderHtml(title: string, body: string, linkUrl: string, unsubscribe: UnsubscribeLinks | null): string {
   const safeTitle = escapeHtml(title);
   const safeBody = escapeHtml(body).replace(/\n/g, "<br>");
-  const safeUrl = linkUrl.startsWith("http") ? linkUrl : `${SITE_URL}${linkUrl}`;
+  // Escaped for the href attribute: a quote or bracket in the link can
+  // never end the attribute and add markup to the email.
+  const safeUrl = escapeHtml(absoluteLink(linkUrl));
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#0d1f17;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d1f17;padding:24px 0;">
@@ -385,7 +409,7 @@ serve(async (req) => {
 
   const unsubscribe = unsubscribeLinks(await unsubscribeToken(supabase, profile?.id));
   const html = renderHtml(title, body, url, unsubscribe);
-  const text = `${body}\n\n${url.startsWith("http") ? url : `${SITE_URL}${url}`}` +
+  const text = `${body}\n\n${textLink(absoluteLink(url))}` +
     (unsubscribe ? `\n\nUnsubscribe from these emails: ${unsubscribe.page}` : "");
   const delivery = sendWithRetry(userEmail, title, text, html, unsubscribeHeaders(unsubscribe))
     .then((result) => ({ delivered: 1, id: result?.id }))

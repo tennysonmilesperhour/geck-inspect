@@ -17,7 +17,8 @@ import { createPageUrl } from '@/utils';
  * React 18 does not know the attribute, so it is set on the node.
  *
  * `serverGated`: the panel's database functions refuse other plans too
- * (the brief, the live feed and watchlists, since 15 Oct 2026), so the
+ * (the brief, the live feed, watchlists and Business Tools market
+ * analytics, since 15 Oct 2026), so the
  * real panel would only show its error state. Those surfaces get neutral
  * placeholder rows behind the upgrade card instead.
  */

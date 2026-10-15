@@ -20,6 +20,10 @@ import {
   SHED_RECORD_PUBLIC_COLUMNS,
   VET_RECORD_PUBLIC_COLUMNS,
   OWNERSHIP_RECORD_PUBLIC_COLUMNS,
+  BREEDER_PROFILE_PUBLIC_COLUMNS,
+  BREEDER_REVIEW_PUBLIC_COLUMNS,
+  MORPH_PRICE_ENTRY_PUBLIC_COLUMNS,
+  COMMUNITY_EVENT_REACTION_PUBLIC_COLUMNS,
   NO_ANON_READ_TABLES,
   PUBLIC_READ_COLUMNS,
   EVERYONE_READ_COLUMNS,
@@ -142,7 +146,8 @@ describe('the other tables signed-out pages read', () => {
   });
 
   it('every entity list belongs to a table the migrations grant', () => {
-    const covered = new Set([...Object.keys(LISTS_BY_TABLE), 'geckos', 'gecko_images', 'weight_records']);
+    const covered = new Set([...Object.keys(LISTS_BY_TABLE), 'geckos', 'gecko_images', 'weight_records',
+      ...Object.keys(COMMS_HIDDEN)]);
     for (const entity of Object.keys(PUBLIC_READ_COLUMNS)) {
       expect(covered.has(TABLE_MAP[entity])).toBe(true);
     }
@@ -158,6 +163,44 @@ describe('the other tables signed-out pages read', () => {
       const entity = Object.keys(TABLE_MAP).find((e) => TABLE_MAP[e] === table);
       expect(PUBLIC_READ_COLUMNS[entity]).toBeUndefined();
     }
+  });
+});
+
+// Section 7 of 20261015130000: the email columns signed-out visitors lost
+// on seven more tables (the database test checks every other column is
+// still granted).
+const COMMS_HIDDEN = {
+  breeder_profiles: ['created_by'],
+  breeder_reviews: ['created_by'],
+  morph_guide_comments: ['user_email', 'created_by'],
+  user_badges: ['user_email', 'created_by'],
+  giveaways: ['winner_emails', 'created_by'],
+  community_event_reactions: ['user_email'],
+  morph_price_entries: ['created_by'],
+};
+
+describe('member emails on the tables 20261015130000 narrows', () => {
+  it.each(Object.entries(COMMS_HIDDEN))('%s: the migration takes the email columns from anon', (table, hidden) => {
+    const quoted = hidden.map((c) => `'${c}'`).join(', ');
+    expect(COMMS_MIGRATION).toContain(`('${table}',`);
+    expect(COMMS_MIGRATION).toMatch(new RegExp(`\\('${table}',\\s+array\\[${quoted}\\]\\)`));
+  });
+
+  it.each([
+    ['breeder_profiles', BREEDER_PROFILE_PUBLIC_COLUMNS],
+    ['breeder_reviews', BREEDER_REVIEW_PUBLIC_COLUMNS],
+    ['morph_price_entries', MORPH_PRICE_ENTRY_PUBLIC_COLUMNS],
+    ['community_event_reactions', COMMUNITY_EVENT_REACTION_PUBLIC_COLUMNS],
+  ])('%s: the signed-out list leaves the hidden columns out', (table, list) => {
+    for (const col of [...COMMS_HIDDEN[table], ...EMAIL_COLUMNS]) expect(list).not.toContain(col);
+  });
+
+  it('signed-out entity reads use the narrowed lists', async () => {
+    getSession.mockReset();
+    getSession.mockResolvedValue({ data: { session: null } });
+    expect(await readColumns('BreederProfile')).toBe(BREEDER_PROFILE_PUBLIC_COLUMNS.join(','));
+    expect(await readColumns('BreederReview')).toBe(BREEDER_REVIEW_PUBLIC_COLUMNS.join(','));
+    expect(await readColumns('MorphPriceEntry')).toBe(MORPH_PRICE_ENTRY_PUBLIC_COLUMNS.join(','));
   });
 });
 

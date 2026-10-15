@@ -132,6 +132,10 @@ begin
   select * into r from public.notifications where user_email = pg_temp.who('alice') and type = 'new_message';
   if r.content <> 'Bob Breeder sent you a message.' then raise exception 'FAIL: member text reached the notification: %', r.content; end if;
   if r.link not like '/Messages?recipient=comms-bob-%' then raise exception 'FAIL: member link kept: %', r.link; end if;
+  -- The sender's address is percent-encoded in the link, "@" included.
+  if position('@' in r.link) > 0 or r.link not like '%\%40example.com' then
+    raise exception 'FAIL: the @ in the Messages link is not encoded: %', r.link;
+  end if;
   if r.metadata ? 'sender_email' then raise exception 'FAIL: member metadata kept'; end if;
 
   -- Links: a member's note to themselves keeps an in-app link, and any
@@ -141,7 +145,7 @@ begin
     (pg_temp.who('bob'), 'level_up', 'one', '//evil.example'),
     (pg_temp.who('bob'), 'level_up', 'two', '/\evil.example'),
     (pg_temp.who('bob'), 'level_up', 'three', 'https://evil.example'),
-    (pg_temp.who('bob'), 'hatch_alert', 'four', '/Breeding');
+    (pg_temp.who('bob'), 'level_up', 'four', '/Breeding');
   perform pg_temp.as_postgres();
   for r in select content, link from public.notifications where user_email = pg_temp.who('bob') loop
     if r.content in ('one', 'two', 'three') and r.link <> '/' then
@@ -574,6 +578,465 @@ begin
      or not has_function_privilege('authenticated', 'public.community_feed(integer)', 'execute') then
     raise exception 'FAIL: an existing function lost its grant';
   end if;
+end
+$t$;
+
+-- =====================================================================
+-- 1b. Links in notification emails cannot carry markup
+-- =====================================================================
+-- forum_posts.id and profiles.id are chosen by the client. A post id with
+-- a quote in it used to land in the template link and then, unescaped,
+-- in the email's href, so a member could put their own markup and links
+-- in an email from the official sender.
+do $t$
+declare v_cat text; v_post text := 'x"><img src=x>&next=https://evil.com'; r record; v_link text; v_bad text;
+begin
+  -- Links with quotes, brackets, backticks, backslashes or control
+  -- characters become "/".
+  foreach v_bad in array array['/Forum"onmouseover="x', '/Forum''x', '/Forum<b>', '/Forum>x', '/Forum`x',
+                               '/Forum\x', '/Forum' || chr(1) || 'x', '/Forum' || chr(10) || 'x', '/a b'] loop
+    if public.safe_internal_link(v_bad) <> '/' then
+      raise exception 'FAIL: safe_internal_link kept %', v_bad;
+    end if;
+  end loop;
+  if public.safe_internal_link('/ForumPost?id=abc_1-2&tab=x') <> '/ForumPost?id=abc_1-2&tab=x' then
+    raise exception 'FAIL: safe_internal_link changed a plain in-app link';
+  end if;
+
+  perform pg_temp.as_postgres();
+  insert into public.forum_categories (name, description) values ('Comms link test', 'Regression fixture') returning id into v_cat;
+  insert into public.forum_posts (id, title, content, category_id, author_name, created_by)
+  values (v_post, 'Pairing', 'Thoughts?', v_cat, 'Bob Breeder', pg_temp.who('bob'));
+  insert into public.forum_comments (post_id, content, author_name, created_by)
+  values (v_post, 'Lovely Harlequin', 'Alice Keeper', pg_temp.who('alice'));
+  -- Bob replies in his own thread and notifies Alice.
+  perform pg_temp.as_member('bob');
+  insert into public.forum_comments (post_id, content, author_name, created_by)
+  values (v_post, 'Thanks', 'Bob Breeder', pg_temp.who('bob'));
+  insert into public.notifications (user_email, type, content, metadata)
+  values (pg_temp.who('alice'), 'new_reply', 'x', jsonb_build_object('post_id', v_post));
+  perform pg_temp.as_postgres();
+  select * into r from public.notifications
+   where user_email = pg_temp.who('alice') and created_by = pg_temp.who('bob') and type = 'new_reply';
+  if r.id is null then raise exception 'FAIL: the reply notification was not written'; end if;
+  if r.link <> '/Notifications' then
+    raise exception 'FAIL: a quote-bearing post id reached the link: %', r.link;
+  end if;
+
+  -- A profile id with markup in it never reaches a follower link.
+  insert into public.profiles (id, email, full_name, is_public_profile)
+  values ('p"><a href=//evil.example>', 'comms-oddid@example.com', 'Odd Id', true);
+  v_link := public._member_notification('comms-oddid@example.com', pg_temp.who('alice'), 'new_follower') ->> 'link';
+  if v_link <> '/Notifications' then raise exception 'FAIL: a markup profile id reached the link: %', v_link; end if;
+  v_link := public._member_notification(pg_temp.who('bob'), pg_temp.who('alice'), 'new_follower') ->> 'link';
+  if v_link <> '/PublicProfile?userId=' || pg_temp.who('bob', 'profile') then
+    raise exception 'FAIL: a plain profile link changed: %', v_link;
+  end if;
+  delete from public.profiles where email = 'comms-oddid@example.com';
+end
+$t$;
+
+-- =====================================================================
+-- 1c. Display names: only plain names reach another member
+-- =====================================================================
+do $t$
+declare v_name text; v_got text;
+begin
+  perform pg_temp.as_postgres();
+  -- Each of these went out unchanged before: web addresses in any
+  -- spelling, and names that read as the team.
+  foreach v_name in array array[
+    'Security alert: verify at bit.ly/gi-verify',
+    'Verify at gi-help.ru',
+    'evil[.]com',
+    'evil' || chr(65294) || 'com',                  -- fullwidth full stop
+    'G e c k Inspect Support',
+    'Geck Insp' || chr(1077) || 'ct Team',          -- Cyrillic e
+    'G' || chr(1077) || 'ck Inspect Billing',
+    'GeckInspect',
+    'Geck-Inspect Crew',
+    'Geck 1nspect',
+    'G' || chr(232) || 'ck Inspect',                -- e with grave accent
+    'Official Breeder',
+    'Staff Picks',
+    'Admin',
+    'Moderators Desk',
+    'Support Team',
+    'billing',
+    'bob@example.com',
+    'https://evil.example',
+    'Lilly White Geckos of the Pacific Northwest 2',  -- 46 characters
+    '   ',
+    '-'
+  ] loop
+    update public.profiles set full_name = v_name, business_name = null, breeder_name = null
+     where email = pg_temp.who('carol');
+    v_got := public._member_notification(pg_temp.who('carol'), pg_temp.who('bob'), 'new_follower') ->> 'content';
+    if v_got <> 'A Geck Inspect member started following you.' then
+      raise exception 'FAIL: display name % reached the notification as: %', v_name, v_got;
+    end if;
+  end loop;
+
+  -- Ordinary names, including Latin-1 letters and apostrophes, still show.
+  foreach v_name in array array['Bob Breeder', 'Chlo' || chr(233) || ' O' || chr(8217) || 'Neil-Smith',
+                                'Tenny''s Cresties 2', chr(216) || 'lstad Geckos', 'Supportive Keeper'] loop
+    update public.profiles set full_name = v_name, business_name = null, breeder_name = null
+     where email = pg_temp.who('carol');
+    v_got := public._member_notification(pg_temp.who('carol'), pg_temp.who('bob'), 'new_follower') ->> 'content';
+    if v_got <> v_name || ' started following you.' then
+      raise exception 'FAIL: the plain name % became: %', v_name, v_got;
+    end if;
+  end loop;
+  update public.profiles set full_name = null where email = pg_temp.who('carol');
+end
+$t$;
+
+-- =====================================================================
+-- 1d. Notes to oneself: server notes and hatch alerts
+-- =====================================================================
+do $t$
+declare v_g1 text; v_g2 text; v_plan text; v_eggs text[] := '{}'; v_id text; i integer; n integer; v_other text;
+begin
+  perform pg_temp.as_postgres();
+  -- A busy day of server notes (briefs, digests, reminders) with
+  -- created_by = the member, as the cron jobs write them.
+  insert into public.notifications (user_email, type, content, link, created_by)
+  select pg_temp.who('alice'), t, 'server note ' || g, '/Dashboard', pg_temp.who('alice')
+    from unnest(array['market_brief', 'weekly_digest', 'feeding_due', 'weighin_reminder', 'referral_reward']) t,
+         generate_series(1, 8) g;
+  -- They do not block the member's own note.
+  perform pg_temp.as_member('alice');
+  insert into public.notifications (user_email, type, content, link)
+  values (pg_temp.who('alice'), 'level_up', 'Gecko Keeper', '/MyGeckos');
+  -- A member cannot write the server's kinds for themselves.
+  perform pg_temp.must_fail('member writes a market brief to themselves',
+    format($q$insert into public.notifications (user_email, type, content) values (%L, 'market_brief', 'x')$q$, pg_temp.who('alice')),
+    '%writes this kind%');
+
+  -- A breeder with 40 eggs due: one hatch alert per egg, all accepted.
+  perform pg_temp.as_postgres();
+  insert into public.geckos (name, created_by, sex) values ('Sire', pg_temp.who('alice'), 'Male') returning id into v_g1;
+  insert into public.geckos (name, created_by, sex) values ('Dam', pg_temp.who('alice'), 'Female') returning id into v_g2;
+  insert into public.breeding_plans (sire_id, dam_id, created_by) values (v_g1, v_g2, pg_temp.who('alice')) returning id into v_plan;
+  for i in 1..40 loop
+    insert into public.eggs (breeding_plan_id, lay_date, status, created_by)
+    values (v_plan, current_date - 60, 'Incubating', pg_temp.who('alice')) returning id into v_id;
+    v_eggs := v_eggs || v_id;
+  end loop;
+  perform pg_temp.as_member('alice');
+  for i in 1..40 loop
+    insert into public.notifications (user_email, type, content, link, metadata)
+    values (pg_temp.who('alice'), 'hatch_alert', 'An egg is due', '/Breeding', jsonb_build_object('egg_id', v_eggs[i]));
+  end loop;
+  -- The same egg again is dropped, not sent twice.
+  insert into public.notifications (user_email, type, content, link, metadata)
+  values (pg_temp.who('alice'), 'hatch_alert', 'An egg is due', '/Breeding', jsonb_build_object('egg_id', v_eggs[1]));
+  perform pg_temp.as_postgres();
+  select count(*) into n from public.notifications where user_email = pg_temp.who('alice') and type = 'hatch_alert';
+  if n <> 40 then raise exception 'FAIL: expected 40 hatch alerts, found %', n; end if;
+  -- And the hourly limit for other notes is not used up by them.
+  perform pg_temp.as_member('alice');
+  insert into public.notifications (user_email, type, content, link)
+  values (pg_temp.who('alice'), 'level_up', 'Hobbyist', '/MyGeckos');
+
+  -- A hatch alert must name one of the member's own eggs.
+  perform pg_temp.as_postgres();
+  insert into public.geckos (name, created_by, sex) values ('B sire', pg_temp.who('bob'), 'Male') returning id into v_g1;
+  insert into public.geckos (name, created_by, sex) values ('B dam', pg_temp.who('bob'), 'Female') returning id into v_g2;
+  insert into public.breeding_plans (sire_id, dam_id, created_by) values (v_g1, v_g2, pg_temp.who('bob')) returning id into v_plan;
+  insert into public.eggs (breeding_plan_id, lay_date, status, created_by)
+  values (v_plan, current_date - 60, 'Incubating', pg_temp.who('bob')) returning id into v_other;
+  perform pg_temp.as_member('alice');
+  perform pg_temp.must_fail('hatch alert for someone else''s egg',
+    format($q$insert into public.notifications (user_email, type, content, metadata) values (%L, 'hatch_alert', 'x', %L)$q$,
+           pg_temp.who('alice'), jsonb_build_object('egg_id', v_other)), '%own eggs%');
+  perform pg_temp.must_fail('hatch alert with no egg',
+    format($q$insert into public.notifications (user_email, type, content) values (%L, 'hatch_alert', 'x')$q$,
+           pg_temp.who('alice')), '%own eggs%');
+
+  perform pg_temp.as_postgres();
+  delete from public.notifications where user_email = pg_temp.who('alice');
+end
+$t$;
+
+-- =====================================================================
+-- 1e. Times come from the database, not the browser
+-- =====================================================================
+do $t$
+declare v_cat text; v_post text; r record; n integer;
+begin
+  perform pg_temp.as_postgres();
+  insert into public.forum_categories (name, description) values ('Comms clock test', 'Regression fixture') returning id into v_cat;
+  insert into public.forum_posts (title, content, category_id, author_name, created_by)
+  values ('Axanthic pairing', 'Thoughts?', v_cat, 'Alice Keeper', pg_temp.who('alice')) returning id into v_post;
+
+  -- Bob's browser clock is three hours slow.
+  perform pg_temp.as_member('bob');
+  insert into public.direct_messages (sender_email, recipient_email, content, created_by, created_date)
+  values (pg_temp.who('bob'), pg_temp.who('carol'), 'Hello', pg_temp.who('bob'), now() - interval '3 hours');
+  insert into public.notifications (user_email, type, content, created_date)
+  values (pg_temp.who('carol'), 'new_message', 'x', now() - interval '3 hours');
+  insert into public.forum_comments (post_id, content, author_name, created_by, created_date)
+  values (v_post, 'Nice Axanthic', 'Bob Breeder', pg_temp.who('bob'), now() - interval '3 hours');
+  insert into public.notifications (user_email, type, content, metadata)
+  values (pg_temp.who('alice'), 'new_comment', 'x', jsonb_build_object('post_id', v_post));
+  perform pg_temp.as_postgres();
+  select count(*) into n from public.notifications
+   where created_by = pg_temp.who('bob') and type in ('new_message', 'new_comment')
+     and user_email in (pg_temp.who('carol'), pg_temp.who('alice'))
+     and created_date > now() - interval '1 minute';
+  if n <> 2 then raise exception 'FAIL: a slow browser clock blocked or backdated notifications (% of 2)', n; end if;
+  if exists (select 1 from public.direct_messages where sender_email = pg_temp.who('bob') and created_date < now() - interval '1 minute')
+     or exists (select 1 from public.forum_comments where created_by = pg_temp.who('bob') and post_id = v_post
+                  and created_date < now() - interval '1 minute') then
+    raise exception 'FAIL: the browser''s created_date was kept';
+  end if;
+  -- An edit keeps the original time.
+  update public.forum_comments set created_date = now() - interval '1 day' where post_id = v_post;
+  perform pg_temp.as_member('bob');
+  update public.forum_comments set content = 'Nice Axanthic!', created_date = now() where post_id = v_post;
+  perform pg_temp.as_postgres();
+  select * into r from public.forum_comments where post_id = v_post;
+  if r.content <> 'Nice Axanthic!' or r.created_date > now() - interval '23 hours' then
+    raise exception 'FAIL: editing a comment moved its time';
+  end if;
+  delete from public.notifications where created_by = pg_temp.who('bob');
+end
+$t$;
+
+-- =====================================================================
+-- 2b. System messages come only from admins and the server
+-- =====================================================================
+do $t$
+declare n integer;
+begin
+  perform pg_temp.as_member('bob');
+  perform pg_temp.must_fail('member sends a system message',
+    format($q$insert into public.direct_messages (sender_email, recipient_email, content, message_type, created_by)
+              values (%L, %L, 'Your account is locked', 'system', %L)$q$,
+           pg_temp.who('bob'), pg_temp.who('alice'), pg_temp.who('bob')), '%system messages%');
+  perform pg_temp.must_fail('member sends a System message',
+    format($q$insert into public.direct_messages (sender_email, recipient_email, content, message_type, created_by)
+              values (%L, %L, 'Your account is locked', 'SYSTEM', %L)$q$,
+           pg_temp.who('bob'), pg_temp.who('alice'), pg_temp.who('bob')), '%system messages%');
+  insert into public.direct_messages (sender_email, recipient_email, content, message_type, created_by)
+  values (pg_temp.who('bob'), pg_temp.who('alice'), 'Hello', 'direct', pg_temp.who('bob'));
+  perform pg_temp.as_member('admin');
+  insert into public.direct_messages (sender_email, recipient_email, content, message_type, created_by)
+  values (pg_temp.who('admin'), pg_temp.who('alice'), 'Shipping week starts Monday', 'system', pg_temp.who('admin'));
+  perform pg_temp.as_postgres();
+  select count(*) into n from public.direct_messages where message_type = 'system' and recipient_email = pg_temp.who('alice');
+  if n <> 1 then raise exception 'FAIL: expected only the admin''s system message, found %', n; end if;
+end
+$t$;
+
+-- =====================================================================
+-- 4b. Follows, and looking members up by address
+-- =====================================================================
+do $t$
+declare n integer; r record;
+begin
+  -- A follow row only for an existing public member.
+  perform pg_temp.as_member('bob');
+  perform pg_temp.must_fail('follow an address that is not a member',
+    format($q$insert into public.user_follows (follower_email, following_email, created_by) values (%L, 'stranger@gmail.com', %L)$q$,
+           pg_temp.who('bob'), pg_temp.who('bob')), '%row-level security%');
+  perform pg_temp.as_postgres();
+  update public.profiles set is_public_profile = false where email = pg_temp.who('carol');
+  perform pg_temp.as_member('bob');
+  perform pg_temp.must_fail('follow a private member directly',
+    format($q$insert into public.user_follows (follower_email, following_email, created_by) values (%L, %L, %L)$q$,
+           pg_temp.who('bob'), pg_temp.who('carol'), pg_temp.who('bob')), '%row-level security%');
+  perform pg_temp.must_fail('follow a private member by profile id',
+    format('select public.follow_profile(%L, true)', pg_temp.who('carol', 'profile')), '%could not be found%');
+  -- A public member can still be followed directly.
+  insert into public.user_follows (follower_email, following_email, created_by)
+  values (pg_temp.who('bob'), pg_temp.who('alice'), pg_temp.who('bob'));
+
+  -- Unfollowing works after the member went private.
+  perform pg_temp.as_postgres();
+  update public.profiles set is_public_profile = true where email = pg_temp.who('carol');
+  perform pg_temp.as_member('bob');
+  perform public.follow_profile(pg_temp.who('carol', 'profile'), true);
+  perform pg_temp.as_postgres();
+  update public.profiles set is_public_profile = false where email = pg_temp.who('carol');
+  perform pg_temp.as_member('bob');
+  if public.follow_profile(pg_temp.who('carol', 'profile'), false) then raise exception 'FAIL: unfollow returned true'; end if;
+  perform pg_temp.as_postgres();
+  select count(*) into n from public.user_follows where follower_email = pg_temp.who('bob') and following_email = pg_temp.who('carol');
+  if n <> 0 then raise exception 'FAIL: could not unfollow a member who went private'; end if;
+  update public.profiles set is_public_profile = true where email = pg_temp.who('carol');
+  delete from public.user_follows where follower_email = pg_temp.who('bob');
+
+  -- read_profiles by address needs a signed-in caller.
+  perform pg_temp.as_anon();
+  select count(*) into n from public.read_profiles(array[pg_temp.who('alice')]);
+  if n <> 0 then raise exception 'FAIL: a signed-out visitor can look members up by address'; end if;
+  select count(*) into n from public.read_profiles() where id = pg_temp.who('alice', 'profile');
+  if n <> 1 then raise exception 'FAIL: signed-out visitors lost public profiles'; end if;
+  select * into r from public.read_profiles() where id = pg_temp.who('alice', 'profile');
+  if r.email is not null then raise exception 'FAIL: read_profiles gave a signed-out visitor an email'; end if;
+  perform pg_temp.as_member('bob');
+  select count(*) into n from public.read_profiles(array[pg_temp.who('alice')]);
+  if n <> 1 then raise exception 'FAIL: signed-in lookup by address broke'; end if;
+  perform pg_temp.as_postgres();
+end
+$t$;
+
+-- =====================================================================
+-- 5b. Market Intelligence on the server: analytics, brief and alerts
+-- =====================================================================
+do $t$
+declare v_ent_alert uuid; v_bob_alert uuid; n integer; v_res jsonb;
+begin
+  -- Section 5 above moved Ent to Free; Ent has Enterprise again here.
+  perform pg_temp.as_postgres();
+  update public.profiles set membership_tier = 'enterprise' where email = pg_temp.who('ent');
+  -- Business Tools market analytics: Enterprise and admins only.
+  perform pg_temp.as_member('bob');
+  perform pg_temp.must_fail('free member reads market analytics', 'select public.market_analytics_v2()', '%Enterprise%');
+  perform pg_temp.as_anon();
+  perform pg_temp.must_fail('signed-out market analytics', 'select public.market_analytics_v2()', '%permission denied%');
+  perform pg_temp.as_member('ent');
+  perform public.market_analytics_v2();
+  perform pg_temp.as_member('admin');
+  perform public.market_analytics_v2();
+  perform pg_temp.as_service();
+  perform public.market_analytics_v2();
+  perform pg_temp.as_postgres();
+  perform public.market_analytics_v2();
+
+  -- The gate is not callable from the API, and a token cannot switch it off.
+  if has_function_privilege('authenticated', 'public.require_market_intelligence()', 'execute')
+     or has_function_privilege('anon', 'public.require_market_intelligence()', 'execute') then
+    raise exception 'FAIL: the API roles can call require_market_intelligence directly';
+  end if;
+  perform set_config('request.jwt.claims', '{"email":"x@example.com"}', true);
+  perform set_config('role', 'authenticated', true);
+  perform pg_temp.must_fail('a token with no role or user skips the gate', 'select public.market_brief()', '%Sign in%');
+  perform pg_temp.as_postgres();
+
+  -- Fixtures: a fresh market day and one new listing.
+  insert into geck_data.market_daily (day, market, trait, checked, after_gap)
+  values ((now() at time zone 'UTC')::date, 'US', '', 100, false)
+  on conflict do nothing;
+  insert into geck_data.listings (listing_id, name, price, currency, is_active, first_seen_at, last_seen_at, species, trait_array)
+  values ('comms-test-listing-1', 'Lilly White female', 300, 'USD', true, now() - interval '1 hour', now(), 'crested', array['Lilly White']);
+  insert into geck_data.market_listings (id) values ('mm_comms-test-listing-1');
+  refresh materialized view geck_data.listing_market_mv;
+  refresh materialized view geck_data.listing_facts_mv;
+  insert into geck_data.alert_matcher_state (id, last_run_at) values (1, now() - interval '2 hours')
+  on conflict (id) do update set last_run_at = excluded.last_run_at;
+
+  -- Bob (Free) has a watch from before (or wrote one when he had
+  -- Enterprise); Ent has one too.
+  insert into geck_data.alerts (owner_id, name, query, active)
+  values (pg_temp.who('ent', 'uid')::uuid, 'Ent watch', '{"species":"crested","max_price":500}', true) returning id into v_ent_alert;
+  insert into geck_data.alerts (owner_id, name, query, active)
+  values (pg_temp.who('bob', 'uid')::uuid, 'Bob watch', '{"species":"crested","max_price":500}', true) returning id into v_bob_alert;
+
+  v_res := geck_data.match_alerts();
+  if (select count(*) from geck_data.alert_matches where alert_id = v_ent_alert) <> 1 then
+    raise exception 'FAIL: an Enterprise watch did not match (%)', v_res;
+  end if;
+  if exists (select 1 from geck_data.alert_matches where alert_id = v_bob_alert)
+     or exists (select 1 from public.notifications where user_email = pg_temp.who('bob') and type = 'market_alert') then
+    raise exception 'FAIL: a watch of a member without Enterprise still matched or alerted';
+  end if;
+  if not exists (select 1 from public.notifications where user_email = pg_temp.who('ent') and type = 'market_alert') then
+    raise exception 'FAIL: the Enterprise member got no watch alert';
+  end if;
+
+  -- The morning brief. Bob switched it on himself (any member can), and
+  -- has a watch match from before, so his brief would have content.
+  perform pg_temp.as_member('bob');
+  update public.profiles set market_brief_enabled = true where email = pg_temp.who('bob');
+  perform pg_temp.as_postgres();
+  update public.profiles set market_brief_enabled = true where email = pg_temp.who('ent');
+  insert into geck_data.alert_matches (alert_id, listing_id, matched_at, payload)
+  values (v_bob_alert, 'mm_comms-test-listing-1', now(), '{"trigger":"new","price":300}');
+  perform public.enqueue_market_briefs();
+  select count(*) into n from public.notifications where user_email = pg_temp.who('bob') and type = 'market_brief';
+  if n <> 0 then raise exception 'FAIL: a Free member got the Enterprise morning brief'; end if;
+  select count(*) into n from public.notifications where user_email = pg_temp.who('ent') and type = 'market_brief';
+  if n <> 1 then raise exception 'FAIL: the Enterprise member did not get the morning brief (%)', n; end if;
+
+  -- When a subscription ends the webhook sets the plan back to Free, and
+  -- the server agrees with the app at once.
+  update public.profiles set membership_tier = 'free' where email = pg_temp.who('ent');
+  delete from geck_data.alert_matches;
+  update geck_data.alert_matcher_state set last_run_at = now() - interval '2 hours' where id = 1;
+  perform geck_data.match_alerts();
+  if exists (select 1 from geck_data.alert_matches where alert_id = v_ent_alert) then
+    raise exception 'FAIL: watches keep matching after the member left Enterprise';
+  end if;
+  update public.profiles set membership_tier = 'enterprise', market_brief_enabled = false
+   where email = pg_temp.who('ent');
+  update public.profiles set market_brief_enabled = false where email = pg_temp.who('bob');
+  delete from public.notifications where type in ('market_alert', 'market_brief');
+end
+$t$;
+
+-- =====================================================================
+-- 7b. Signed-out visitors cannot read members' emails on these tables
+-- =====================================================================
+do $t$
+declare v_bad text; v_slug text := 'comms-test-breeder'; r record; n integer;
+begin
+  perform pg_temp.as_postgres();
+  select string_agg(t.tbl || '.' || t.col, ', ') into v_bad
+    from (values
+      ('breeder_profiles', 'created_by'), ('breeder_reviews', 'created_by'),
+      ('morph_guide_comments', 'user_email'), ('morph_guide_comments', 'created_by'),
+      ('user_badges', 'user_email'), ('user_badges', 'created_by'),
+      ('giveaways', 'winner_emails'), ('giveaways', 'created_by'),
+      ('community_event_reactions', 'user_email'), ('morph_price_entries', 'created_by')
+    ) t(tbl, col)
+   where has_column_privilege('anon', 'public.' || t.tbl, t.col, 'select')
+      or not has_column_privilege('authenticated', 'public.' || t.tbl, t.col, 'select');
+  if v_bad is not null then raise exception 'FAIL: email columns wrongly granted: %', v_bad; end if;
+  -- Every other column stays readable (src/lib/publicColumns.js lists them).
+  select string_agg(c.relname || '.' || a.attname, ', ') into v_bad
+    from pg_class c
+    join pg_attribute a on a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
+   where c.relnamespace = 'public'::regnamespace
+     and c.relname in ('breeder_profiles', 'breeder_reviews', 'morph_guide_comments', 'user_badges',
+                       'giveaways', 'community_event_reactions', 'morph_price_entries')
+     and a.attname not in ('created_by', 'user_email', 'winner_emails')
+     and not has_column_privilege('anon', c.oid, a.attnum, 'select');
+  if v_bad is not null then raise exception 'FAIL: signed-out visitors lost ordinary columns: %', v_bad; end if;
+
+  -- What signed-out pages read still works.
+  insert into public.breeder_profiles (display_name, custom_slug, created_by)
+  values ('Alice Keeper Geckos', v_slug, pg_temp.who('alice'));
+  insert into public.morph_price_entries (base_morph, sale_price, sale_date, source, created_by)
+  values ('Harlequin', 250, current_date, 'user_submitted', pg_temp.who('alice'));
+  perform pg_temp.as_anon();
+  select * into r from public.breeder_page_owner(v_slug);
+  if r.profile_id is distinct from pg_temp.who('alice', 'profile') then
+    raise exception 'FAIL: breeder_page_owner did not find the owner''s profile';
+  end if;
+  select count(*) into n from public.breeder_profiles where custom_slug = v_slug;
+  if n <> 1 then raise exception 'FAIL: signed-out breeder page lookup broke'; end if;
+  perform id, display_name, bio, user_id from public.breeder_profiles where custom_slug = v_slug;
+  perform id, rating, title, body, is_verified, created_date from public.breeder_reviews limit 1;
+  perform id, base_morph, sale_price, sale_date, source, is_anonymous from public.morph_price_entries limit 1;
+  perform event_type, event_id, reaction from public.community_event_reactions limit 1;
+  perform pg_temp.must_fail('signed-out read of breeder emails',
+    'select created_by from public.breeder_profiles', '%permission denied%');
+  perform pg_temp.must_fail('signed-out read of reaction emails',
+    'select user_email from public.community_event_reactions', '%permission denied%');
+  perform pg_temp.must_fail('signed-out read of giveaway winners',
+    'select winner_emails from public.giveaways', '%permission denied%');
+  -- A hidden breeder page, or an owner who went private, is not found.
+  perform pg_temp.as_postgres();
+  update public.profiles set is_public_profile = false where email = pg_temp.who('alice');
+  perform pg_temp.as_anon();
+  if exists (select 1 from public.breeder_page_owner(v_slug)) then
+    raise exception 'FAIL: breeder_page_owner answered for a private owner';
+  end if;
+  perform pg_temp.as_postgres();
+  update public.profiles set is_public_profile = true where email = pg_temp.who('alice');
 end
 $t$;
 

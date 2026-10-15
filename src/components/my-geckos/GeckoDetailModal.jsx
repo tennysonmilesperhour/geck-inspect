@@ -27,6 +27,7 @@ import FireStatePair from '@/components/shared/FireStatePair';
 import { FIRE_SLOTS, fireStatePhotos } from '@/lib/fireStatePhotos';
 import CollectionActivity from '@/components/settings/CollectionActivity';
 import { isGuestMode } from '@/lib/guestMode';
+import { canDeleteGecko } from '@/lib/geckoAccess';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -63,7 +64,7 @@ function resolvePrimaryMorphId(gecko) {
   return null;
 }
 
-// `canEdit` mirrors the geckos UPDATE/DELETE RLS policy on the client
+// `canEdit` mirrors the geckos UPDATE RLS policy on the client
 //, it's true for the gecko's original creator and for any accepted
 // owner/editor member of the gecko's collection. Defaults to true for
 // backwards compatibility with call sites that haven't been migrated
@@ -1218,7 +1219,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     )}
                   </Button>
 
-                  {gecko.archived && onDelete && (
+                  {/* Only the owner (or an admin) may delete: collection
+                      editors can edit a shared gecko but not remove it. */}
+                  {gecko.archived && onDelete && canDeleteGecko(gecko, currentUser) && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button

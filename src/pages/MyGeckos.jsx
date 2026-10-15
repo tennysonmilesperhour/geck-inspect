@@ -898,7 +898,7 @@ export default function MyGeckosPage() {
                 </div>
 
                 {!isLoading && activeTab === 'collection' && (
-                    <GeckoBulkActions records={filteredAndSortedGeckos.filter(g => canWriteGecko(g, user, memberships))} onComplete={loadGeckos} />
+                    <GeckoBulkActions records={filteredAndSortedGeckos.filter(g => canWriteGecko(g, user, memberships))} onComplete={loadGeckos} user={user} />
                 )}
 
                 {isLoading ? (

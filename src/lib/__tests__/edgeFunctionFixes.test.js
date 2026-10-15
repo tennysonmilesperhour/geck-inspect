@@ -170,6 +170,50 @@ describe('send-email skips people who cannot sign in', () => {
   });
 });
 
+describe('send-email keeps the notification link inside its href', () => {
+  function send(url) {
+    const db = fakeSupabase((call) => {
+      if (call.table === 'profiles') {
+        return {
+          data: { id: 'p1', role: 'user', email_notifications_enabled: true, email_notification_types: ['forum_replies', 'new_reply'] },
+          error: null,
+        };
+      }
+      if (call.rpc === 'email_has_login') return { data: true, error: null };
+      if (call.rpc === 'email_unsubscribe_token') return { data: 'tok', error: null };
+      return undefined;
+    });
+    const net = fakeFetch(() => ({ body: { id: 'email-1' } }));
+    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch } });
+    return fn.handle(postJson('https://x.test/', {
+      user_email: 'keeper@example.com', type: 'new_reply', title: 'New reply', body: 'Bob replied to your comment.', url,
+    }, { authorization: `Bearer ${ENV.SUPABASE_SERVICE_ROLE_KEY}` })).then(() => net.requests[0]?.body);
+  }
+
+  it('escapes a quote-bearing link so it cannot add markup', async () => {
+    const mail = await send('/ForumPost?id=x"><img src=x>&next=https://evil.com');
+    expect(mail.html).not.toContain('"><img');
+    expect(mail.html).toContain('href="https://geckinspect.com/ForumPost?id=x&quot;&gt;&lt;img src=x&gt;&amp;next=https://evil.com"');
+    expect(mail.text).not.toMatch(/["<> ]img/);
+    expect(mail.text).toContain('https://geckinspect.com/ForumPost?id=x%22%3E%3Cimg%20src=x%3E&next=https://evil.com');
+  });
+
+  it('never links to another website', async () => {
+    for (const url of ['https://evil.example/login', '//evil.example', '/\\evil.example', 'javascript:alert(1)']) {
+      const mail = await send(url);
+      expect(mail.html).toContain('href="https://geckinspect.com/"');
+      expect(mail.html).not.toContain('evil.example');
+      expect(mail.text).not.toContain('evil.example');
+    }
+  });
+
+  it('keeps an ordinary in-app link as it is', async () => {
+    const mail = await send('/Messages?recipient=bob%40example.com');
+    expect(mail.html).toContain('href="https://geckinspect.com/Messages?recipient=bob%40example.com"');
+    expect(mail.text).toContain('https://geckinspect.com/Messages?recipient=bob%40example.com');
+  });
+});
+
 describe('health-screen gives the credit back when a screen fails', () => {
   function run({ anthropicStatus = 500 } = {}) {
     const db = fakeSupabase((call) => {

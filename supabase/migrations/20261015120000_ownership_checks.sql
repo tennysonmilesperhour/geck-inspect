@@ -26,6 +26,10 @@
 --      not theirs, and backdate "member since";
 --   7. Separately, the profile guard silently undid the plan change that
 --      redeem_signup_grant (store signup codes) is meant to make.
+--   8. as a collection editor, delete the owner's geckos (and with them
+--      all their care history); as a transfer sender, delete a claimed
+--      transfer; and, as a collection owner, not invite someone again
+--      after they left (the old seat blocked a new invitation).
 --
 -- How the fixes work:
 --
@@ -357,6 +361,18 @@ begin
 end;
 $$;
 
+-- A sender may delete a transfer only while it is pending or after they
+-- cancelled it. A claimed (or expired) transfer is history: Transfer
+-- History, sales stats and breeder reviews hang off it, and the guard
+-- above already stops the sender relabelling it.
+drop policy if exists "transfer_requests_delete_own" on public.transfer_requests;
+create policy "transfer_requests_delete_own" on public.transfer_requests
+  for delete to authenticated
+  using (
+    created_by = (select auth.email())
+    and status in ('pending', 'cancelled')
+  );
+
 revoke all on function public.guard_transfer_request() from public, anon, authenticated;
 grant execute on function public.guard_transfer_request() to service_role;
 
@@ -621,6 +637,18 @@ create policy "geckos_update_own" on public.geckos
   with check (
     (select auth.email()) = created_by
     or public.is_collection_editor(collection_id, (select auth.email()))
+  );
+
+-- Deletes: only the gecko's owner or an admin. Collection editors used to
+-- be able to delete the owner's geckos, which also removes every weight,
+-- feeding, shed and vet record on them. Editors keep editing; deleting is
+-- the owner's call, like a transfer.
+drop policy if exists "geckos_delete_own" on public.geckos;
+create policy "geckos_delete_own" on public.geckos
+  for delete to authenticated
+  using (
+    (select auth.email()) = created_by
+    or (select public.is_admin())
   );
 
 -- Plan caps on active geckos. Production definition (20261002221052) with
@@ -919,6 +947,11 @@ create policy "collection_members_insert_owner" on public.collection_members
 -- the owner still manages invitations, but cannot accept one on another
 -- person's behalf, give someone the owner role, or point an accepted seat
 -- at a different person.
+-- Inviting someone again after they left: collection_members_unique_invite
+-- allows one row per person per collection, so a second insert fails. The
+-- app (CollectionsCard) instead reopens the declined row as a fresh
+-- pending invitation with a new token, which the owner branch below
+-- allows (only "accepted" is refused). The person still has to accept.
 create or replace function public.guard_collection_member_update()
 returns trigger
 language plpgsql

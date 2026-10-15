@@ -30,6 +30,9 @@ import {
   Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard, LogOut, TrendingUp
 } from 'lucide-react';
 import { resolveTier } from '@/lib/tierLimits';
+import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
@@ -580,6 +583,10 @@ export default function SettingsPage() {
     // app store subscriber is never shown Free here.
     const tier = resolveTier(user);
     const hasBreederPerks = tier === 'breeder' || tier === 'enterprise';
+    // The morning brief and watchlist alerts are Market Intelligence
+    // (Enterprise). The database only sends them on that plan, so the
+    // switch is only offered there.
+    const hasMarketIntelligence = canUseFeature(user, 'market_intelligence');
 
     const sectionNav = [
         { id: 'appearance', label: 'Appearance' },
@@ -1002,8 +1009,17 @@ export default function SettingsPage() {
                  <Card>
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><TrendingUp className="w-5 h-5"/>Market</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
-                          {renderSwitch('market-brief-enabled', 'Morning Market Brief', 'One short message each morning when there is fresh crested gecko market news: new listings and price cuts in your morphs, rare morphs listed, and how the market value of your geckos moved. Nothing is sent on quiet days.', formData.market_brief_enabled, (checked) => handleChange('market_brief_enabled', checked))}
-                          <p className="text-sm text-slate-400">Watchlist matches arrive whenever a listing fits one of your watches. Manage watches on the Market page. Both follow your email and push choices above.</p>
+                          {hasMarketIntelligence ? (
+                              <>
+                                  {renderSwitch('market-brief-enabled', 'Morning Market Brief', 'One short message each morning when there is fresh crested gecko market news: new listings and price cuts in your morphs, rare morphs listed, and how the market value of your geckos moved. Nothing is sent on quiet days.', formData.market_brief_enabled, (checked) => handleChange('market_brief_enabled', checked))}
+                                  <p className="text-sm text-slate-400">Watchlist matches arrive whenever a listing fits one of your watches. Manage watches on the Market page. Both follow your email and push choices above.</p>
+                              </>
+                          ) : (
+                              <p className="text-sm text-slate-400">
+                                  The Morning Market Brief and watchlist alerts are part of Market Intelligence on the Enterprise plan.{' '}
+                                  <Link to={createPageUrl('Membership')} className="text-emerald-400 hover:text-emerald-300">See plans</Link>
+                              </p>
+                          )}
                      </CardContent>
                  </Card>
                 </section>

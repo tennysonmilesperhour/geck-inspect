@@ -1654,7 +1654,9 @@ export default function MarketplaceSalesStats() {
                   <Globe className="w-4 h-4 text-emerald-400" /> Market analytics
                 </h3>
                 <Suspense fallback={<div className="h-64 rounded-xl bg-slate-900 border border-slate-700 animate-pulse" />}>
-                  <MarketPreviewGate user={user} surface="business_market_analytics" height={420}>
+                  {/* market_analytics_v2 answers Enterprise only (since 15 Oct
+                      2026), so other plans see placeholder rows, not an error. */}
+                  <MarketPreviewGate user={user} surface="business_market_analytics" height={420} serverGated>
                     <MarketAnalytics user={user} />
                   </MarketPreviewGate>
                 </Suspense>

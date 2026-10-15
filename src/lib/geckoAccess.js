@@ -92,8 +92,8 @@ export async function getBusinessGeckos(user) {
 }
 
 /**
- * Boolean: can this user write to (edit / delete) the given gecko?
- * Mirrors the geckos UPDATE/DELETE RLS policy on the server. UI
+ * Boolean: can this user edit the given gecko?
+ * Mirrors the geckos UPDATE RLS policy on the server. UI
  * affordances should call this to gray out edit buttons rather than
  * letting the user click and getting an RLS denial.
  */
@@ -109,6 +109,18 @@ export function canWriteGecko(gecko, user, memberships) {
       (cm.role === 'owner' || cm.role === 'editor'),
   );
   return !!m;
+}
+
+/**
+ * Boolean: can this user delete the given gecko? Only its owner or an
+ * admin (the geckos DELETE policy since 15 Oct 2026). Collection editors
+ * can edit a shared gecko but not delete it, because deleting also
+ * removes all its care records.
+ */
+export function canDeleteGecko(gecko, user) {
+  if (!gecko || !user?.email) return false;
+  if (user.role === 'admin') return true;
+  return Boolean(gecko.created_by) && gecko.created_by.toLowerCase() === user.email.toLowerCase();
 }
 
 /**

@@ -36,6 +36,17 @@ Read this before running any `supabase db ...` command against production.
    a different timestamp, and commit the file in the same change. Do not rename
    previously committed applied history.
 
+### Grants on new functions
+
+Since `20261015130000_comms_and_exposure.sql`, a new function gets no
+EXECUTE for `anon`, `authenticated` or `PUBLIC` unless the migration grants
+it. Every migration that adds a function must end with an explicit
+`revoke ... from public` and `grant execute ... to <roles>` for it,
+including helpers that policies or SECURITY INVOKER triggers call as the
+member. `create or replace` keeps existing grants; a DROP followed by a
+CREATE (for a new return type or arguments) does not, so re-grant in the
+same file. See `supabase/SCHEMA_CONVENTIONS.md` section 4a.
+
 ## Baseline layout
 
 | Path | Purpose |
