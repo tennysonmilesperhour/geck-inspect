@@ -467,6 +467,26 @@ export default function MembershipPage() {
           });
           return;
         }
+        // A plan bought through the App Store or Google Play can only be
+        // changed there; buying here too would bill the member twice.
+        if (parsed?.code === 'already_subscribed_store') {
+          setLoadingAction(null);
+          toast({
+            title: 'Your plan is through your phone\'s store',
+            description: 'Change or cancel it in your App Store or Google Play subscription settings. Buying here as well would charge you twice.',
+          });
+          return;
+        }
+        // Another checkout (a second tab, a double tap) was being paid at
+        // that moment. Only one can go through.
+        if (parsed?.code === 'checkout_in_progress') {
+          setLoadingAction(null);
+          toast({
+            title: 'A checkout is still finishing',
+            description: 'Wait a minute, then refresh this page. If the payment went through, your plan will show here.',
+          });
+          return;
+        }
         throw new Error(parsed?.error || parsed?.message || detail);
       }
       if (data?.url) {
