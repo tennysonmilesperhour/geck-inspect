@@ -566,7 +566,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         setIsSaving(false);
     };
 
-    // Certificate generation moved to GeckoDetailModal (view flow).
+    // Certificates are made from the gecko record (src/components/gecko/record).
 
     const getSaveButtonText = () => {
         if (isSaving) return 'Saving...';
@@ -1286,8 +1286,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         )}
                     </div>
 
-                    {/* Certificates now live on the gecko detail view rather
-                        than the edit form, see GeckoDetailModal. */}
+                    {/* Certificates live on the gecko record rather than the
+                        edit form, see src/components/gecko/record. */}
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-3 sm:p-4 flex flex-wrap justify-end items-center gap-2 sm:gap-3">

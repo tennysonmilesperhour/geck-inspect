@@ -33,8 +33,9 @@ const FOLLOW_UP_BADGE = {
 };
 
 /**
- * Vet visits for one gecko: list, add, edit and delete. Used in the gecko
- * record window (My Geckos) and on /GeckoDetail for the owner. A visit
+ * Vet visits for one gecko: list, add, edit and delete. Part of the one
+ * gecko record (src/components/gecko/record), which the My Geckos window
+ * and /GeckoDetail both show to the gecko's keepers. A visit
  * with a follow-up date gets a reminder on that day from the daily
  * enqueue_vet_followups() job, and every visit shows on the gecko's
  * public passport when it has one.
@@ -42,8 +43,9 @@ const FOLLOW_UP_BADGE = {
  * canEdit: whether the viewer may add visits. Editing and deleting are
  * limited to the member who logged the visit (the database allows no one
  * else), so a collaborator's visits show without those buttons.
+ * headingAs: the heading element, so the host keeps heading levels in order.
  */
-export default function VetRecordsSection({ gecko, canEdit = true, currentUserEmail = null, headingClassName, iconClassName = 'w-5 h-5' }) {
+export default function VetRecordsSection({ gecko, canEdit = true, currentUserEmail = null, headingAs: Heading = 'h3', headingClassName, iconClassName = 'w-5 h-5' }) {
   const [records, setRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [form, setForm] = useState(null);
@@ -159,10 +161,10 @@ export default function VetRecordsSection({ gecko, canEdit = true, currentUserEm
 
   return (
     <div>
-      <h3 className={headingClassName || 'text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2'}>
+      <Heading className={headingClassName || 'text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2'}>
         <Stethoscope className={iconClassName} />
         Vet Visits
-      </h3>
+      </Heading>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-6">

@@ -38,6 +38,7 @@ import FirstGeckoFlow from '../components/onboarding/FirstGeckoFlow';
 import { clearPendingGecko, flowEvent, markPhotoPath, readPendingGecko } from '@/lib/firstGeckoFlow';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
+import { handoffSteps } from '@/components/gecko/record/recordModel';
 import TransferHistory from '../components/my-geckos/TransferHistory';
 import GeckoFilters from '../components/my-geckos/GeckoFilters';
 import ArchiveReasonDialog from '../components/my-geckos/ArchiveReasonDialog';
@@ -458,9 +459,13 @@ export default function MyGeckosPage() {
         setIsImportModalOpen(true);
     }, [isLoading, user, location.search, location.pathname]);
 
-    // ?gecko=<id> (from /GeckoDetail's "Open record in My Geckos") opens
-    // that gecko's record window once the collection has loaded, then
-    // strips the param so a refresh doesn't reopen it.
+    // ?gecko=<id> opens that gecko's record window once the collection has
+    // loaded, then strips the params so a refresh doesn't reopen it. The
+    // /GeckoDetail page sends its Edit and Archive buttons here
+    // (myGeckosHandoff in src/components/gecko/record/recordModel.js), with
+    // &open=edit for the edit form, or &open=archive / &open=sold for the
+    // archive dialog. Each still needs a Save or a Confirm, so a link alone
+    // changes nothing, and only a member who may edit the gecko gets them.
     const geckoParamConsumedRef = React.useRef(false);
     useEffect(() => {
         if (isLoading || !user || geckoParamConsumedRef.current) return;
@@ -468,16 +473,27 @@ export default function MyGeckosPage() {
         const wanted = params.get('gecko');
         if (!wanted) return;
         geckoParamConsumedRef.current = true;
+        const open = params.get('open');
         params.delete('gecko');
+        params.delete('open');
         const rest = params.toString();
         window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
         const match = geckos.find((g) => g.id === wanted);
         if (!match) return;
         if (match.archived) setShowArchived(true);
+        const steps = handoffSteps(open, { archived: match.archived, mayEdit: canWriteGecko(match, user, memberships) });
+        if (steps.openForm) {
+            handleEdit(match);
+            return;
+        }
         setSelectedGecko(match);
         setIsFormOpen(false);
         setIsDetailModalOpen(true);
-    }, [isLoading, user, geckos, location.search, location.pathname]);
+        if (steps.archiveDialog) {
+            setArchiveDialogReason(steps.archiveDialog === 'sold' ? 'sold' : null);
+            setArchiveDialogGeckoId(match.id);
+        }
+    }, [isLoading, user, geckos, memberships, location.search, location.pathname]);
 
     // One entry point for "add a gecko": respects the plan limit, and gives
     // an empty collection the short photo-first quick add instead of the
