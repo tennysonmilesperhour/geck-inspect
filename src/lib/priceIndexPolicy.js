@@ -38,6 +38,8 @@ export const PRICE_INDEX_WHAT = 'an asking-price snapshot from public marketplac
 export const PRICE_DATA_LICENSE = 'Free to cite with a link';
 export const PRICE_DATA_TERMS =
   'Free to cite with a link: you may quote and cite these numbers, with a link to the page they came from.';
+/** The same terms as a sentence about the index, for text that lists several datasets. */
+export const PRICE_INDEX_TERMS_SENTENCE = `The Price Index is ${PRICE_DATA_TERMS.charAt(0).toLowerCase()}${PRICE_DATA_TERMS.slice(1)}`;
 
 /** Plain-language rule, for page footnotes and the dataset methodology. */
 export const PRICE_INDEX_SAMPLE_RULE =
