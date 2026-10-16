@@ -73,7 +73,7 @@ export const TOURS = [
         id: 'collection-list',
         path: '/MyGeckos',
         title: 'Every gecko on one screen',
-        body: 'Search, filter by sex, morph or status, and sort by age or weight. Tap any card for its full record.',
+        body: "Search, filter by sex, morph or status, and sort by age or weight. Tap any gecko's photo for its full record.",
         next: 'Open a record',
       },
       {
