@@ -33,11 +33,14 @@ import { runHealthScreen, firstPhotoUrl } from '@/lib/healthScreen';
  * already debits, and a client-side consume would double-charge.
  */
 
+// "Nothing visible in this photo", not "Looks typical": one photo cannot
+// show early metabolic bone disease or illness, so the label says what the
+// check saw rather than reading as an all-clear.
 const SEVERITY_STYLES = {
   looks_typical: {
     Icon: CheckCircle2,
     iconClass: 'text-emerald-400',
-    label: 'Looks typical',
+    label: 'Nothing visible in this photo',
     labelClass: 'text-emerald-300',
   },
   worth_watching: {
@@ -254,7 +257,7 @@ export default function HealthScreenCard({ gecko, user }) {
                 {result.overallNote}
               </p>
             )}
-            <p className="text-xs text-slate-500">{result.disclaimer}</p>
+            <p className="text-xs text-slate-300">{result.disclaimer}</p>
             <p className="text-xs text-slate-500">
               Based on the current main photo of {geckoName}. A photo check is a
               starting point for routine care, not a substitute for hands-on

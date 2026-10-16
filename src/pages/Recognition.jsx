@@ -590,6 +590,7 @@ export default function Recognition() {
             imageUrl={primaryUrl}
             imageUrls={imageUrls}
             ageStage={ageStage}
+            showPriceRange={meta?.value_estimate_included === true}
             onChange={handleCorrectionChange}
             onSaved={() => setSavedOnce(true)}
           />

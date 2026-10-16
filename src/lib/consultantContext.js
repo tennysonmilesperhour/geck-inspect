@@ -10,8 +10,15 @@
  *   - odds: predictGeckoPair (collection geckos, tags through
  *     tagTranslation.js) or the omnibox pairing parser plus
  *     predictWeighted for typed pairings like "lilly white x axanthic";
- *   - prices: the trait value table (MorphMarket asking prices), through
- *     eggValue for a pairing and valueFromTraitTable for one gecko.
+ *   - prices: the trait value table (asking prices on public crested
+ *     gecko listings), through eggValue for a pairing and
+ *     valueFromTraitTable for one gecko. The text never names the
+ *     marketplace, because the model repeats it to members and the Price
+ *     Index is labelled without marketplace names.
+ *
+ * The block goes to the invoke-llm function as `facts`; the server puts it
+ * in its own tag and tells the model these are the only odds and prices it
+ * may quote.
  */
 import { predictGeckoPair, eggValue } from '@/lib/pairingValue';
 import { predictWeighted } from '@/lib/genetics/predictWeighted';
@@ -122,7 +129,7 @@ function outcomeLines(prediction, priceIndex) {
     lines.push(`- plus ${valued.outcomes.length - MAX_OUTCOMES} smaller outcomes`);
   }
   if (priceIndex) {
-    lines.push(`Expected value per egg: ${money(valued.perEgg)} (odds times median MorphMarket hatchling asking prices).`);
+    lines.push(`Expected value per egg: ${money(valued.perEgg)} (odds times median hatchling asking prices on public listings).`);
   }
   if (valued.lethalShare > 0) {
     lines.push(`Eggs that will not survive: ${pct(valued.lethalShare)}.`);
@@ -177,11 +184,11 @@ function singleValueBlock(gecko, priceIndex) {
   if (!priceIndex) return null;
   const v = valueFromTraitTable(gecko, priceIndex, 'breeder');
   if (!v) {
-    return `Value table: no MorphMarket price data matches ${gecko.name}'s traits.`;
+    return `Value table: no asking-price data matches ${gecko.name}'s traits.`;
   }
   return [
     `Value table estimate for ${gecko.name}: about ${money(v.value)}`,
-    `(priced by ${v.trait}, ${v.levelLabel}; MorphMarket asking prices from ${v.band.n} listings,`,
+    `(priced by ${v.trait}, ${v.levelLabel}; asking prices on ${v.band.n} public listings,`,
     `middle half ${money(v.band.p25)} to ${money(v.band.p75)}. Structure and quality move the real price.)`,
   ].join(' ');
 }
