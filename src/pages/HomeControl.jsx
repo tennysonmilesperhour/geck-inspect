@@ -380,7 +380,7 @@ const LANDING_FAQS = [
   },
   {
     q: 'Does Geck Inspect support other reptiles besides crested geckos?',
-    a: 'Geck Inspect is built for crested geckos (Correlophus ciliatus). The AI morph ID, genetics calculator, and morph guide are all tuned for the species. If you keep a few other reptiles, you can log basic records for them alongside your crested geckos, but every tool is designed around cresties first.',
+    a: 'Geck Inspect is built for crested geckos (Correlophus ciliatus) only. The AI morph ID, genetics calculator, morph guide and collection records are all made for the species, so there is no section for other reptiles.',
   },
 ];
 
