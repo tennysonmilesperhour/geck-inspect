@@ -26,16 +26,23 @@
  * this file, not in vercel.json, or the next build will wipe them.
  */
 
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { writeKnownPaths } from './write-known-paths.mjs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MORPH_SLUG_ALIASES, emptyInheritanceIds, getAllSpaPathPatterns } from './seo-routes.mjs';
+import { MORPH_SLUG_ALIASES, emptyInheritanceIds } from './seo-routes.mjs';
 import { RETIRED_PAGES } from '../src/lib/retiredPages.js';
+import { inlineScriptSources } from './csp-inline.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const OUT_PATH = resolve(REPO_ROOT, 'vercel.json');
+
+// Every page Vite builds and scripts/prerender.mjs writes starts from
+// index.html, and neither changes its inline scripts, so the hashes of
+// index.html's inline scripts are the hashes of every page's.
+// scripts/check-csp-hashes.mjs confirms that against dist/ after a build.
+const INLINE_SCRIPT_SOURCES = inlineScriptSources(readFileSync(resolve(REPO_ROOT, 'index.html'), 'utf8'));
 
 // Pages kept out of search indexes via X-Robots-Tag. Sourced here (not
 // inferred from auth-gating) because the rule is "should Google index
@@ -228,16 +235,23 @@ function buildConfig() {
           // PostHog embedded dashboards on the admin analytics page, and the
           // Amazon affiliate widget frames on store product pages.
           // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Google
-          // Fonts, Supabase (API, storage, the Robauto pixel project),
-          // RevenueCat, Unsplash and Supabase images, inline theme scripts
-          // in index.html ('unsafe-inline' for script until they get nonces).
+          // Fonts, Supabase (API, storage), RevenueCat, Unsplash and
+          // Supabase images. Inline scripts in index.html are allowed by
+          // their SHA-256 hashes (scripts/csp-inline.mjs), not by
+          // 'unsafe-inline', since 16 Oct 2026 (review item E3 31), so an
+          // injected script cannot run. Styles keep 'unsafe-inline': the
+          // app sets inline styles everywhere and they cannot run code.
           // A new third-party script, frame or API origin must be added here
           // or browsers will block it.
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com",
+              [
+                "script-src 'self'",
+                ...INLINE_SCRIPT_SOURCES,
+                'https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com',
+              ].join(' '),
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https:",
@@ -302,6 +316,11 @@ function buildConfig() {
         headers: [
           { key: 'Content-Type', value: 'text/markdown; charset=utf-8' },
           { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
+          // The full-text copy is for AI agents. Kept out of search
+          // results so it never competes with the guide pages it copies
+          // (review item E3 27). This rule comes after the site-wide
+          // X-Robots-Tag above, so it is the one that applies.
+          { key: 'X-Robots-Tag', value: 'noindex' },
         ],
       },
       // Agent-facing files (scripts/build-agent-data.mjs). Topic files and

@@ -121,7 +121,7 @@ const PER_PATH = {
   // PrivacyPolicy.jsx), read from the page source at build time.
   '/Terms': { published: '2026-04-17', modified: declaredDate('src/pages/Terms.jsx', '2026-09-08') },
   '/MarketplaceVerification': { published: '2026-04-17', modified: contentDate('src/pages/MarketplaceVerification.jsx', '2026-04-17') },
-  '/PrivacyPolicy': { published: '2025-06-01', modified: declaredDate('src/pages/PrivacyPolicy.jsx', '2026-10-15') },
+  '/PrivacyPolicy': { published: '2025-06-01', modified: declaredDate('src/pages/PrivacyPolicy.jsx', '2026-10-16') },
   // Public landing pages that used to carry a hand-typed LAST_UPDATED.
   '/QualityScale': { published: '2026-05-09', modified: contentDate('src/pages/QualityScale.jsx', '2026-06-10') },
   '/pedigree-tracker': { published: '2026-08-18', modified: contentDate('src/pages/PedigreeTracker.jsx', '2026-08-18') },

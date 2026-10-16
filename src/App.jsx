@@ -14,6 +14,7 @@ const VisualEditAgent = import.meta.env.DEV ? lazy(() => import('@/lib/VisualEdi
 import NavigationTracker from '@/lib/NavigationTracker'
 import PostHogPageTracker from '@/lib/PostHogPageTracker'
 import GA4PageTracker from '@/lib/GA4PageTracker'
+import ConsentBanner from '@/components/shared/ConsentBanner'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { redirectFromSearch, takePostAuthRedirect } from '@/lib/postAuthRedirect';
@@ -575,6 +576,7 @@ function App() {
                 <NavigationTracker />
                 <PostHogPageTracker />
                 <GA4PageTracker />
+                <ConsentBanner />
                 <PostAuthRedirect />
                 <NativeCareSync />
                 <AuthenticatedApp />

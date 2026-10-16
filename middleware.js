@@ -20,8 +20,12 @@
  *    with that gecko's or breeder's own title, description and photo
  *    (api/_lib/share-cards.js). They cannot run the app, so they used to
  *    show the homepage card. People's browsers are never affected.
+ * 5. Pages that continue get the analytics region cookie (ask or open,
+ *    from Vercel's country header), so the app knows to ask EEA and UK
+ *    visitors before analytics load (api/_lib/analytics-region.js).
  */
 import { classifyAgent, logAgentHit } from './api/_lib/bots.js';
+import { continueWithRegionCookie } from './api/_lib/analytics-region.js';
 import { canonicalPathFor, isKnownAppPath } from './api/_lib/known-paths.js';
 import { isLinkPreviewBot, loadShareCard, renderShareCard, shareTargetFor } from './api/_lib/share-cards.js';
 import {
@@ -122,5 +126,5 @@ export default async function middleware(request, context, deps = {}) {
       }
     }
   }
-  return undefined;
+  return continueWithRegionCookie(request);
 }
