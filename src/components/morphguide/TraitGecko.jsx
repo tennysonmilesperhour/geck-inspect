@@ -7,13 +7,15 @@ export const clampTrait = v => Math.max(0, Math.min(1, Number(v) || 0));
 
 // Registered to crest scales. Pinning cannot recolor the broad dorsal field.
 export const CREST_PATHS = {
-  side: ['M220 193 Q265 201 299 208 Q337 216 379 204 Q441 186 501 204 Q554 216 590 238 Q619 253 652 262'],
+  side: ['M200 273 Q242 276 285 295 Q332 302 380 283 Q427 265 475 258 Q522 243 570 224 Q617 209 665 198 Q712 210 760 211'],
   top: ['M260 261 Q305 277 345 261 Q401 236 455 244 Q528 250 587 267 Q636 281 687 291', 'M260 351 Q298 341 342 359 Q399 388 453 375 Q525 366 584 351 Q638 337 686 330'],
 };
+export const UPPER_CREST_SIDE = 'M200 212 Q250 202 300 204 Q345 218 380 228 Q427 225 475 208 Q522 187 570 170 Q617 159 665 158 Q712 168 760 181';
+
 export const REGIONS = {
   side: {
-    dorsal: 'M80 173 Q172 140 269 204 Q335 221 398 204 Q474 183 561 220 L658 266 L642 288 Q554 242 451 246 Q342 268 263 245 L180 220 L83 213 Z',
-    lateral: 'M177 272 Q267 247 354 268 Q471 240 645 289 L676 491 L158 491 Z',
+    dorsal: 'M140 245 Q215 198 300 204 Q380 228 475 208 Q570 170 665 158 Q735 168 820 205 L780 225 Q712 210 665 198 Q570 224 475 258 Q380 283 332 302 Q265 292 200 273 Z',
+    lateral: 'M295 302 Q380 283 475 258 Q570 224 665 198 L770 215 L795 480 L300 560 Z',
   },
   top: {
     dorsal: 'M65 294 Q143 219 258 277 Q469 241 680 297 L680 329 Q472 379 258 335 Q145 386 65 335 Z',
@@ -25,8 +27,8 @@ export const REGIONS = {
 // head crown, tail, limbs, and upper flanks are never clipped off.
 export const CLIP_REGIONS = {
   side: {
-    dorsal: 'M65 120 L995 120 L995 555 L665 555 L645 288 Q554 242 451 246 Q342 265 263 245 L180 220 L65 213 Z',
-    lateral: 'M65 213 L180 220 L263 245 Q342 265 451 246 Q554 242 645 288 L665 555 L65 555 Z',
+    dorsal: 'M60 95 L985 95 L985 615 L775 615 L760 211 Q712 210 665 198 Q617 209 570 224 Q522 243 475 258 Q427 265 380 283 Q332 302 285 295 Q242 276 200 273 L115 280 L60 280 Z',
+    lateral: 'M60 280 L115 280 L200 273 Q242 276 285 295 Q332 302 380 283 Q427 265 475 258 Q522 243 570 224 Q617 209 665 198 Q712 210 760 211 L775 615 L60 615 Z',
   },
   top: {
     dorsal: 'M55 294 Q143 219 258 274 Q469 235 685 288 L760 260 L995 260 L995 560 L760 560 L685 335 Q472 385 258 342 Q145 386 55 335 Z',
@@ -37,9 +39,12 @@ export const CLIP_REGIONS = {
 export const BASE_TONES = {
   buckskin: { label: 'Buckskin', matrix: null },
   mahogany: { label: 'Dark Mahogany', matrix: [0.76, 0.04, 0, 0, -0.04, 0.02, 0.66, 0, 0, -0.04, 0, 0.02, 0.58, 0, -0.03, 0, 0, 0, 1, 0] },
-  red: { label: 'Red Base', matrix: [1.06, 0.06, 0, 0, 0.02, 0.02, 0.68, 0, 0, -0.03, 0, 0, 0.56, 0, -0.04, 0, 0, 0, 1, 0] },
-  yellow: { label: 'Golden Yellow', matrix: [1.06, 0.05, 0, 0, 0.02, 0.04, 1.02, 0, 0, 0.01, 0, 0, 0.72, 0, -0.03, 0, 0, 0, 1, 0] },
+  red: { label: 'Red Base', matrix: [1.04, 0.05, 0, 0, 0.01, 0.02, 0.69, 0, 0, -0.03, 0, 0, 0.58, 0, -0.03, 0, 0, 0, 1, 0] },
+  orange: { label: 'Tangerine', matrix: [1.06, 0.05, 0, 0, 0.02, 0.03, 0.86, 0, 0, -0.01, 0, 0, 0.62, 0, -0.03, 0, 0, 0, 1, 0] },
+  yellow: { label: 'Golden Yellow', matrix: [1.05, 0.05, 0, 0, 0.02, 0.04, 1.01, 0, 0, 0.01, 0, 0, 0.72, 0, -0.03, 0, 0, 0, 1, 0] },
+  olive: { label: 'Olive / Moss', matrix: [0.82, 0.08, 0, 0, -0.02, 0.05, 0.92, 0.02, 0, 0, 0, 0.04, 0.72, 0, -0.02, 0, 0, 0, 1, 0] },
   axanthic: { label: 'Axanthic Gray', matrix: [0.42, 0.44, 0.14, 0, -0.02, 0.40, 0.45, 0.15, 0, -0.02, 0.38, 0.44, 0.18, 0, -0.01, 0, 0, 0, 1, 0] },
+  albino: { label: 'Albino', matrix: [1.08, 0.08, 0, 0, 0.08, 0.06, 0.98, 0.04, 0, 0.06, 0.04, 0.06, 0.88, 0, 0.05, 0, 0, 0, 1, 0] },
 };
 
 function smoothstep(x) {
@@ -86,7 +91,7 @@ async function extractPigment(view, trait) {
     const after = (layer.data[i] + layer.data[i+1] + layer.data[i+2]) / 3;
     const delta = light ? after - before : before - after;
     const pigment = light ? after > 150 && before < 215 : after < (trait === 'spots' ? 92 : 125);
-    layer.data[i+3] = pigment && delta > 28 ? Math.min(255, (delta - 28) * 8) : 0;
+    layer.data[i+3] = pigment && delta > 24 ? Math.min(255, (delta - 24) * 7.5) : 0;
   }
   const regions = [];
   if (trait === 'spots') {
@@ -102,7 +107,7 @@ async function extractPigment(view, trait) {
           if (next >= 0 && next < count && !seen[next] && layer.data[next*4+3] >= 128 && (Math.abs(next-at) !== 1 || Math.floor(next/canvas.width) === y)) { seen[next] = 1; region.push(next); }
         }
       }
-      if (region.length < 40) region.forEach(at => { layer.data[at*4+3] = 0; });
+      if (region.length < 36) region.forEach(at => { layer.data[at*4+3] = 0; });
       else regions.push({ x: minX/canvas.width*1000, y: minY/canvas.height*667, width: (maxX-minX+2)/canvas.width*1000, height: (maxY-minY+2)/canvas.height*667, order: (pixel*2654435761)>>>0 });
     }
     regions.sort((a,b) => a.order-b.order);
@@ -147,7 +152,7 @@ function CoverageMask({ id, value, region, view }) {
             const u = i / 33;
             const wave = Math.sin(i * 1.7 + 0.4) * 0.5 + Math.cos(i * 0.65) * 0.5;
             if (lateral) {
-              const x = 115 + u * 625;
+              const x = 140 + u * 645;
               const startAt = Math.max(0, Math.min(0.42, 0.14 + wave * 0.14 + Math.abs(u - 0.48) * 0.18));
               const p = smoothstep((v - startAt * (1 - v)) / Math.max(0.18, 1 - startAt * 0.6));
               if (p <= 0) return null;
@@ -163,14 +168,14 @@ function CoverageMask({ id, value, region, view }) {
                   </g>
                 );
               }
-              const topY = 485 - p * (275 + wave * 34);
-              const rx = 20 + p * 30;
-              const ry = Math.max(16, (525 - topY) * 0.62);
+              const topY = 545 - p * (340 + wave * 34);
+              const rx = 22 + p * 32;
+              const ry = Math.max(18, (565 - topY) * 0.62);
               return (
                 <ellipse
                   key={i}
                   cx={x}
-                  cy={(topY + 515) * 0.5}
+                  cy={(topY + 555) * 0.5}
                   rx={rx}
                   ry={ry}
                   fillOpacity={alpha}
@@ -179,17 +184,17 @@ function CoverageMask({ id, value, region, view }) {
             }
             // Dorsal coverage: nucleates across the dorsal saddle first, then
             // expands smoothly to the head crown and down the tail.
-            const x = 75 + u * 900;
-            const distFromSaddle = Math.abs(u - 0.38);
+            const x = 95 + u * 860;
+            const distFromSaddle = Math.abs(u - 0.42);
             const startAt = Math.max(0, Math.min(0.48, distFromSaddle * 0.42 + wave * 0.08));
             const p = smoothstep((v - startAt * (1 - v)) / Math.max(0.18, 1 - startAt * 0.65));
             if (p <= 0) return null;
             const alpha = smoothstep(Math.min(1, p * 2.2));
             const cy = view === 'top'
               ? (x < 685 ? 308 + wave * 12 : 315 + (x - 685) * 0.42)
-              : (x < 645 ? 212 + (x - 320) * 0.11 + wave * 10 : 275 + (x - 645) * 0.52);
-            const rx = 22 + p * 42;
-            const ry = 14 + p * (x > 650 ? 135 : view === 'top' ? 88 : 68);
+              : (x < 710 ? 235 - (x - 320) * 0.14 + wave * 10 : 210 + (x - 710) * 1.15);
+            const rx = 24 + p * 44;
+            const ry = 16 + p * (x > 700 ? 155 : view === 'top' ? 88 : 78);
             return <ellipse key={i} cx={x} cy={cy} rx={rx} ry={ry} fillOpacity={alpha} />;
           })}
         </g>
@@ -200,12 +205,27 @@ function CoverageMask({ id, value, region, view }) {
 
 export function RegionAnnotation({ view, focus }) {
   const pinning = focus === 'pinstripe', dorsal = focus === 'dorsal' || focus === 'tiger';
-  const label = pinning ? 'Paired crest rows' : dorsal ? 'Dorsal field' : focus === 'spots' ? 'Discrete pigment spots' : 'Flanks and limbs';
-  return <g fill="none" stroke="#21544a" strokeWidth="2.5" opacity=".9">
-    {pinning ? CREST_PATHS[view].map(d => <path key={d} d={d} strokeWidth="22" opacity=".22" />) : <path d={REGIONS[view][dorsal ? 'dorsal' : 'lateral']} strokeDasharray="5 5" />}
-    <path d={view === 'top' ? (pinning || dorsal ? 'M500 87 L500 170 L450 242' : 'M500 87 L610 125 L628 200') : (pinning || dorsal ? 'M500 90 L500 145 L455 193' : 'M500 90 L645 142 L480 308')} />
-    <rect x="363" y="43" width="274" height="43" rx="8" fill="#f4efdf" strokeWidth="1" />
-    <text x="500" y="71" textAnchor="middle" fontFamily="Georgia, serif" fontSize="20" fill="#21544a" stroke="none">{label}</text>
+  const label = pinning
+    ? 'Paired crest rows'
+    : dorsal
+    ? 'Dorsal field'
+    : focus === 'spots'
+    ? 'Discrete pigment spots'
+    : focus === 'structural'
+    ? 'Dorsal & flank wall'
+    : 'Flanks and limbs';
+  return <g fill="none" stroke="#21544a" strokeWidth="2.5" opacity=".92">
+    {pinning ? (
+      <>
+        {CREST_PATHS[view].map(d => <path key={d} d={d} strokeWidth="20" opacity=".24" />)}
+        {view === 'side' && <path d={UPPER_CREST_SIDE} strokeWidth="16" opacity=".22" />}
+      </>
+    ) : (
+      <path d={REGIONS[view][dorsal ? 'dorsal' : 'lateral']} strokeDasharray="5 5" />
+    )}
+    <path d={view === 'top' ? (pinning || dorsal ? 'M500 87 L500 170 L450 242' : 'M500 87 L610 125 L628 200') : (pinning ? 'M500 84 L515 155 L522 243' : dorsal ? 'M500 84 L500 155 L520 212' : 'M500 84 L545 160 L505 328')} />
+    <rect x="355" y="40" width="290" height="44" rx="8" fill="#f4efdf" strokeWidth="1.2" />
+    <text x="500" y="69" textAnchor="middle" fontFamily="Georgia, serif" fontSize="20" fill="#21544a" stroke="none">{label}</text>
   </g>;
 }
 
@@ -228,6 +248,7 @@ export default function TraitGecko({
   const toneFilter = toneMatrix ? `url(#${uid}-tone)` : undefined;
   const image = (trait, extra = {}) => <image href={pigments[trait]?.src || traitAsset(selectedView,trait)} width="1000" height="667" {...extra} />;
   const spotRegions = pigments.spots?.regions || [];
+  const pinMaskPaths = selectedView === 'side' ? [...CREST_PATHS.side, UPPER_CREST_SIDE] : CREST_PATHS.top;
   return <div className={`relative overflow-hidden ${className}`} style={{ aspectRatio: '3/2', background: '#f4efdf' }} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : title} aria-hidden={decorative || undefined} data-trait-view={selectedView} data-ready={!!pigments.cream} aria-busy={!pigments.cream && !pigments.error}>
     <svg viewBox="0 0 1000 667" className="w-full h-full" aria-hidden="true">
       <defs>
@@ -241,7 +262,7 @@ export default function TraitGecko({
         <CoverageMask id={`${uid}-dorsal`} value={dorsal} view={selectedView} region="dorsal" />
         <CoverageMask id={`${uid}-flank`} value={lateral} view={selectedView} region="lateral" />
         <mask id={`${uid}-pin`} maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="667">
-          {CREST_PATHS[selectedView].flatMap((d,row) => pinSegments(pin,row).map((s,i) => <path key={`${row}-${i}`} d={d} fill="none" stroke="white" strokeLinecap="round" strokeWidth={15 + pin * 3} strokeOpacity={Math.min(1, pin * 5)} pathLength="100" strokeDasharray={`${s.length} ${100-s.length}`} strokeDashoffset={-s.start} />))}
+          {pinMaskPaths.flatMap((d,row) => pinSegments(pin,row).map((s,i) => <path key={`${row}-${i}`} d={d} fill="none" stroke="white" strokeLinecap="round" strokeWidth={18 + pin * 6} strokeOpacity={Math.min(1, pin * 5)} pathLength="100" strokeDasharray={`${s.length} ${100-s.length}`} strokeDashoffset={-s.start} />))}
         </mask>
         <mask id={`${uid}-spots`} maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="667">
           {spotRegions.map(({ order, x, y, width, height }, idx) => {
@@ -274,4 +295,3 @@ export default function TraitGecko({
     {pigments.error && !decorative && <p role="status" className="absolute inset-x-2 bottom-2 rounded bg-white/95 p-2 text-xs text-amber-950">Pattern artwork could not load. Use the specimen photographs for this study.</p>}
   </div>;
 }
-
