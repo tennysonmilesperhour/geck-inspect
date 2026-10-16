@@ -74,6 +74,23 @@ export function collectChecks({ manifest, budget, sizeOf, publicFiles }) {
   return checks.map((c) => ({ ...c, over: c.size > c.limit * 1000 }));
 }
 
+/**
+ * Pages (by file name in src/pages) that the manifest no longer lists
+ * under their own path, so they get no route check here and no preload
+ * links in the prerendered HTML. It happens when a part a page loads later
+ * (a lazy section, a quiz) imports one of our modules that only that page
+ * uses: the build then keeps the shared module in the page's file and
+ * lists the page only under a hashed name such as "_MorphGuide-abc.js".
+ * Keep such lazy parts to library code or code other pages share.
+ */
+export function pagesWithoutEntry(manifest, pageNames) {
+  const names = new Set(pageNames);
+  return Object.entries(manifest)
+    .filter(([key, chunk]) => chunk.isDynamicEntry && !key.startsWith('src/') && names.has(chunk.name))
+    .map(([, chunk]) => chunk.name)
+    .sort();
+}
+
 const MEDIA = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.svg', '.webm', '.mp4', '.ico']);
 function publicMedia(dir = join(ROOT, 'public'), out = []) {
   for (const name of readdirSync(dir)) {
@@ -111,6 +128,10 @@ function main() {
   for (const c of shown) {
     const note = budget.allowances?.[c.id] != null ? ' (allowance from 16 Oct 2026)' : '';
     console.log(`${c.over ? 'OVER ' : '     '}${c.label.slice(0, 70).padEnd(70)} ${String(kb(c.size)).padStart(8)} ${String(c.limit).padStart(7)}${note}`);
+  }
+  const pageNames = readdirSync(join(ROOT, 'src', 'pages')).filter((f) => /\.jsx?$/.test(f)).map((f) => f.replace(/\.jsx?$/, ''));
+  for (const name of pagesWithoutEntry(manifest, pageNames)) {
+    console.warn(`[size-budget] warning: src/pages/${name} has no manifest entry of its own, so its size is not checked (see pagesWithoutEntry in this script).`);
   }
   const failures = checks.filter((c) => c.over);
   if (failures.length) {
