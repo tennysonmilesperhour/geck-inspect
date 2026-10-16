@@ -104,6 +104,14 @@ describe('disabledPagesFrom', () => {
     expect(ALWAYS_ON_PAGES).toContain('Settings');
   });
 
+  // Today is the phone's home: the app opens on it and the first tab links
+  // to it. Switched off, every phone open would land on "This feature is
+  // currently unavailable".
+  it('never switches off Today, the phone home', () => {
+    expect(ALWAYS_ON_PAGES).toContain('Today');
+    expect(disabledPagesFrom([{ page_name: 'Today', is_enabled: false }]).has('Today')).toBe(false);
+  });
+
   it('copes with nothing loaded', () => {
     expect(disabledPagesFrom(undefined).size).toBe(0);
   });

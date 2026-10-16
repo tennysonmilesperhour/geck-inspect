@@ -6,6 +6,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import RecordCard from './RecordCard';
+import { REMOVED_WITH_GECKO } from './recordModel';
 
 const ARCHIVE_REASONS = [
   { value: 'death', label: 'Passed away' },
@@ -80,8 +81,8 @@ export default function RecordManage({ gecko, access, onArchive, onReason, onDel
             <AlertDialogHeader>
               <AlertDialogTitle className="text-slate-100">Delete {name} for good?</AlertDialogTitle>
               <AlertDialogDescription className="text-slate-400">
-                This <strong className="text-red-400">permanently removes</strong> {name} and every weigh-in,
-                feeding, shed and vet visit logged for it. It cannot be undone. Archiving keeps the history instead.
+                This <strong className="text-red-400">permanently removes</strong> {name} and {REMOVED_WITH_GECKO}.
+                It cannot be undone. Archiving keeps the history instead.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

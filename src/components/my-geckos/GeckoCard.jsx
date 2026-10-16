@@ -23,7 +23,12 @@ const hueForName = (name = '') => [...String(name)].reduce((sum, char) => (sum *
 // whether write affordances are rendered. Pre-Phase-B those were the
 // same thing, post-Phase-B a collection owner can edit a gecko whose
 // `created_by` is a different user, so the two diverge.
-export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit, isOwner = true, canEdit }) {
+// imageWidth: the widest the card's photo is drawn, in CSS pixels. 480 (the
+// default) suits My Geckos, two cards to a row on a phone and up to five on a
+// wide screen, so the 480 px thumbnail covers each at twice its size. Pages
+// that show one card to a row on a phone (a breeder's profile) pass more,
+// which loads the full photo instead of the thumbnail.
+export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit, isOwner = true, canEdit, imageWidth = 480 }) {
   const writable = canEdit !== undefined ? canEdit : isOwner;
   const feedingGroup = feedingGroups.find(g => g.id === gecko.feeding_group_id);
 
@@ -62,39 +67,53 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
   const readiness = React.useMemo(() => readinessFor(gecko, weightRecords), [gecko, weightRecords]);
   const showReadiness = showReadinessOnCard(gecko, readiness);
 
+  const photo = demoPhotoUnavailable ? (
+    <div
+      className="w-full h-40 sm:h-56 flex flex-col items-center justify-center text-white"
+      style={{ background: `radial-gradient(circle at 70% 25%, hsl(${hueForName(gecko.name)} 52% 38%), hsl(${hueForName(gecko.name)} 42% 16%))` }}
+      role="img"
+      aria-label={`${gecko.name}, no illustrative photo assigned`}
+    >
+      <span className="text-4xl font-semibold tracking-wide opacity-90">{initialsForName(gecko.name)}</span>
+      <span className="mt-2 rounded bg-slate-950/70 px-2 py-1 text-[10px] font-semibold">No photo</span>
+    </div>
+  ) : (
+    <SmartImage
+      gecko={gecko}
+      src={primaryImage}
+      alt={gecko.photo_is_illustrative ? `${gecko.name}, illustrative photo, not this demo animal` : gecko.name}
+      width={imageWidth}
+      aspect="auto"
+      containerClassName="w-full h-40 sm:h-56"
+      className="w-full h-full object-cover"
+      style={primaryStyle}
+      fallback={DEFAULT_GECKO_IMAGE}
+    />
+  );
+
   return (
     <Card className="gecko-card group flex flex-col h-full">
       {/* Image area. Corners are clipped by the parent .gecko-card's
           overflow:hidden + 9px radius, so no inner radius needed. */}
       <div className="relative">
-        {demoPhotoUnavailable ? (
-          <div
-            className="w-full h-40 sm:h-56 flex flex-col items-center justify-center text-white"
-            style={{ background: `radial-gradient(circle at 70% 25%, hsl(${hueForName(gecko.name)} 52% 38%), hsl(${hueForName(gecko.name)} 42% 16%))` }}
-            role="img"
-            aria-label={`${gecko.name}, no illustrative photo assigned`}
+        {/* Tapping the photo opens the full record (the guest tour says
+            "Tap any gecko's photo for its full record"). It is a button of
+            its own, with the badges and the View and Edit buttons beside it
+            rather than inside it, so those keep doing only their own job.
+            The labels that only show information let a tap through to it. */}
+        {onView ? (
+          <button
+            type="button"
+            onClick={handleViewClick}
+            aria-label={`Open ${gecko.name ? `${gecko.name}'s` : "this gecko's"} record`}
+            className="block w-full cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400"
           >
-            <span className="text-4xl font-semibold tracking-wide opacity-90">{initialsForName(gecko.name)}</span>
-            <span className="mt-2 rounded bg-slate-950/70 px-2 py-1 text-[10px] font-semibold">No photo</span>
-          </div>
-        ) : (
-          <SmartImage
-            gecko={gecko}
-            src={primaryImage}
-            alt={gecko.photo_is_illustrative ? `${gecko.name}, illustrative photo, not this demo animal` : gecko.name}
-            // Two cards to a row on a phone, up to five on a wide screen: the
-            // 480 px thumbnail covers each at twice its size.
-            width={480}
-            aspect="auto"
-            containerClassName="w-full h-40 sm:h-56"
-            className="w-full h-full object-cover"
-            style={primaryStyle}
-            fallback={DEFAULT_GECKO_IMAGE}
-          />
-        )}
+            {photo}
+          </button>
+        ) : photo}
 
         {/* Top-left: bare sex symbol + feeding group pill (aligned heights) */}
-        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+        <div className="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5">
           <span
             className={`inline-flex items-center justify-center h-6 text-lg font-bold leading-none ${getSexColor(gecko.sex)}`}
             style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7)' }}
@@ -104,7 +123,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           </span>
           {!gecko.archived && feedingGroup && (
             <span
-              className="inline-flex items-center justify-center h-6 w-6 rounded-full text-white text-[11px] font-bold shadow border border-white/30 leading-none"
+              className="pointer-events-auto inline-flex items-center justify-center h-6 w-6 rounded-full text-white text-[11px] font-bold shadow border border-white/30 leading-none"
               style={{ backgroundColor: feedingGroup.color || '#f97316' }}
               title={`Feeding Group ${feedingGroup.label || ''}${feedingGroup.name ? ': ' + feedingGroup.name : ''}${feedingGroup.diet_type ? ', ' + feedingGroup.diet_type : ''}`}
             >
@@ -114,7 +133,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
         </div>
 
         {gecko.photo_is_illustrative && !demoPhotoUnavailable && (
-          <span className="absolute bottom-2 left-2 rounded bg-slate-950/85 px-2 py-1 text-[10px] font-semibold text-white shadow">
+          <span className="pointer-events-none absolute bottom-2 left-2 rounded bg-slate-950/85 px-2 py-1 text-[10px] font-semibold text-white shadow">
             Illustrative photo
             <span className="block text-[9px] font-normal text-slate-200">Not the sample animal</span>
           </span>
@@ -122,15 +141,16 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
 
         {/* Top-right: archive reason or quality badge */}
         {archiveReason ? (
-          <ArchiveStatusChip reason={archiveReason} className="absolute top-2 right-2 shadow" />
+          <ArchiveStatusChip reason={archiveReason} className="pointer-events-none absolute top-2 right-2 shadow" />
         ) : gecko.quality_score != null ? (
           <div className="absolute top-2 right-2 drop-shadow-lg">
             <QualityBadge score={gecko.quality_score} size="sm" />
           </div>
         ) : null}
 
-        {/* Bottom-right: actions (always visible on touch, hover-only on desktop) */}
-        <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
+        {/* Bottom-right: actions (always visible on touch; on desktop they
+            show on hover, or while the keyboard is on the card) */}
+        <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-200">
           <Button
             size="sm"
             onClick={handleViewClick}

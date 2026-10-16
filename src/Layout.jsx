@@ -39,7 +39,8 @@ import {
   SidebarContent as SidebarBody,
   SidebarFooter,
   SidebarProvider,
-  useSidebar
+  useSidebar,
+  MOBILE_MENU_ID
 } from "@/components/ui/Sidebar";
 import { Button } from "@/components/ui/button";
 import UserBadge from "@/components/ui/UserBadge";
@@ -166,7 +167,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     });
   };
 
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, isMobileOpen } = useSidebar();
 
   // Phones open on Today, the first tab (review item E3 25). Only the bare
   // "/" a cold open, a sign-in or the phone app lands on is moved; the
@@ -1351,7 +1352,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             }
             const isLog = tab.action === 'log';
             // Each spoken name starts with the word on the tab ("Log",
-            // "More"), so voice control users can say what they see.
+            // "More"), so voice control users can say what they see. More
+            // opens the menu sheet (labelled "Menu" in Sidebar.jsx) and says
+            // whether it is open.
             return (
               <button
                 key={tab.id}
@@ -1360,6 +1363,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 className={`gecko-bottom-nav__item ${isLog && currentPageName === 'log' ? 'is-active' : ''}`}
                 aria-label={isLog ? 'Log a feeding, weigh-in or shed' : 'More: open the full menu'}
                 aria-haspopup="dialog"
+                aria-expanded={isLog ? logSheetOpen : isMobileOpen}
+                aria-controls={isLog ? undefined : MOBILE_MENU_ID}
               >
                 <Icon className="h-5 w-5" />
                 <span>{tab.label}</span>

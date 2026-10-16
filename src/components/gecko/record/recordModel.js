@@ -108,6 +108,15 @@ export function recordSections({ access, hasWeights = false, hasShedForecast = f
 /** The element id for a section, shared by the section and its jump link. */
 export const sectionId = (id) => `record-${id}`;
 
+/**
+ * What deleting a gecko removes with it, in the words the delete
+ * confirmation (RecordManage) and the toast afterwards (My Geckos) both
+ * use. In the database the gecko's weigh-ins go with it (a trigger), and
+ * so do its feeding, shed and vet records and its ownership history
+ * (foreign keys that cascade).
+ */
+export const REMOVED_WITH_GECKO = 'every weigh-in, feeding, shed, vet visit and ownership record logged for it';
+
 /** What My Geckos may open for a handed-off gecko (see myGeckosHandoff). */
 export const HANDOFF_ACTIONS = Object.freeze(['edit', 'archive', 'sold']);
 
