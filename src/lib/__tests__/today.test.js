@@ -325,4 +325,35 @@ describe('the demo collection', () => {
       vi.resetModules();
     }
   });
+
+  // Today counts days on the visitor's own calendar, so the demo's
+  // weigh-ins are dated on it too. Until 16 Oct 2026 they carried the UTC
+  // day, and the sample day moved with the time zone: in the morning east
+  // of UTC, or late at night in the Americas, Pixel was two days late and
+  // Nimbus was due yesterday, or on to "This week".
+  it.each([
+    ['Pacific/Kiritimati', '2026-10-16T12:00:00.000Z'], // 02:00 on 17 Oct there
+    ['Australia/Sydney', '2026-10-16T20:00:00.000Z'], // 07:00 on 17 Oct there
+    ['America/Los_Angeles', '2026-10-17T05:00:00.000Z'], // 22:00 on 16 Oct there
+    ['UTC', '2026-10-16T12:00:00.000Z'],
+  ])('in %s at %s, Pixel is due yesterday and Nimbus today', async (zone, instant) => {
+    const savedZone = process.env.TZ;
+    process.env.TZ = zone;
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(instant));
+    vi.resetModules();
+    try {
+      const { todayLocalISO } = await import('@/lib/dateUtils');
+      const fresh = await import('@/lib/today');
+      const today = todayLocalISO();
+      const { items } = await fresh.loadDemoToday(today);
+      const due = (name) => items.find((item) => item.kind === 'weigh_in' && item.name === name)?.due;
+      expect(due('Pixel')).toBe(addDays(today, -1));
+      expect(due('Nimbus')).toBe(today);
+    } finally {
+      vi.useRealTimers();
+      vi.resetModules();
+      process.env.TZ = savedZone;
+    }
+  });
 });

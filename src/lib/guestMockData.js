@@ -49,14 +49,18 @@ const demoProfile = (key) => {
 
 const nowMs = Date.now();
 const daysAgo = (n) => new Date(nowMs - n * 86400000).toISOString();
-// Date-only columns (egg and clutch lay and hatch dates) come back from
-// Supabase as YYYY-MM-DD, never a timestamp. A date input shows nothing
-// for a timestamp, so the demo uses the same shape as real rows.
-const dayAgo = (n) => {
-  const d = new Date(nowMs - n * 86400000);
+// Date-only columns (egg and clutch lay and hatch dates, weigh-in dates)
+// come back from Supabase as YYYY-MM-DD, never a timestamp. A date input
+// shows nothing for a timestamp, so the demo uses the same shape as real
+// rows. The day is the one on this device's calendar, as a keeper's own
+// log would be, and as Today counts days late (todayLocalISO).
+const localDayBefore = (ms, n) => {
+  const d = new Date(ms);
+  d.setDate(d.getDate() - n);
   const pad = (v) => String(v).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
+const dayAgo = (n) => localDayBefore(nowMs, n);
 
 // Hatch dates were written as fixed dates around June 2025, so the sample
 // geckos aged every day while their sample weights stayed put (a 7-month
@@ -487,9 +491,10 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
     : nowMs;
   const finalMid = bandMid(ageAt(soldAtMs) ?? 36);
   const scale = finalMid ? Math.min(1.3, Math.max(0.7, target / finalMid)) : 1;
-  const latestMs = soldAtMs - (LAST_WEIGHED_DAYS_AGO[g.id] ?? 8 + (gi % 12)) * 86400000;
+  const latestBack = LAST_WEIGHED_DAYS_AGO[g.id] ?? 8 + (gi % 12);
   return Array.from({ length: points }, (_, i) => {
-    const ms = latestMs - (points - 1 - i) * 45 * 86400000;
+    const back = latestBack + (points - 1 - i) * 45;
+    const ms = soldAtMs - back * 86400000;
     const age = ageAt(ms);
     const jitter = (((gi + i) % 3) - 1) * 0.5;
     const grams = age == null || age < 0 ? target : Math.min(target, bandMid(age) * scale);
@@ -497,7 +502,10 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
       id: `mock-wr-${g.id}-${i}`,
       gecko_id: g.id,
       weight_grams: Math.max(2, Math.round((grams + jitter) * 10) / 10),
-      record_date: new Date(ms).toISOString().slice(0, 10),
+      // Until 16 Oct 2026 this was the UTC day, so east of UTC in the
+      // morning (or in the Americas late at night) the demo's weigh-ins
+      // moved a day: Pixel two days late instead of one.
+      record_date: localDayBefore(soldAtMs, back),
       created_by: GUEST_EMAIL,
       created_date: new Date(ms).toISOString(),
     };
