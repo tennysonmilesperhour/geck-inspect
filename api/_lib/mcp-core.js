@@ -1,5 +1,5 @@
 import { config } from "zod";
-import { TRAITS, getComboMorph, WILD_TYPE, tagToGenotype, predict, LOCI, COMBO_MORPHS } from "crested-gecko-app";
+import { TRAITS, getComboMorph, WILD_TYPE as WILD_TYPE$1, tagToGenotype, predict, LOCI, COMBO_MORPHS } from "crested-gecko-app";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 const MORPH_CATEGORIES = [
@@ -2915,7 +2915,7 @@ function parseTag(raw) {
   }
   return { kind, chance, body: normalizeBody(text2) };
 }
-const countCopies = (pair) => pair.filter((a) => a !== WILD_TYPE).length;
+const countCopies = (pair) => pair.filter((a) => a !== WILD_TYPE$1).length;
 const pct = (p) => `${Math.round(p * 100)}%`;
 function hetTraitFor(body) {
   const mapped = APP_TAGS.get(body);
@@ -2948,8 +2948,8 @@ function mergeLocus(loci, locus, options) {
   const b = options[0].pair;
   if (a[0] === b[0] && a[1] === b[1]) return;
   if (countCopies(a) === 1 && countCopies(b) === 1) {
-    const alleleA = a.find((x) => x !== WILD_TYPE);
-    const alleleB = b.find((x) => x !== WILD_TYPE);
+    const alleleA = a.find((x) => x !== WILD_TYPE$1);
+    const alleleB = b.find((x) => x !== WILD_TYPE$1);
     if (alleleA !== alleleB) {
       loci[locus] = [{ pair: [alleleA, alleleB], weight: 1 }];
     }
@@ -2983,10 +2983,10 @@ function translateMorphTags(tags) {
         notUsed.push({ tag, reason: REASON.polygenicHet });
         continue;
       }
-      const carrier = [trait.id, WILD_TYPE];
+      const carrier = [trait.id, WILD_TYPE$1];
       const options = chance >= 1 ? [{ pair: carrier, weight: 1 }] : [
         { pair: carrier, weight: chance },
-        { pair: [WILD_TYPE, WILD_TYPE], weight: 1 - chance }
+        { pair: [WILD_TYPE$1, WILD_TYPE$1], weight: 1 - chance }
       ];
       mergeLocus(loci, trait.locus, options);
       used.push({ tag, chance });
@@ -3028,7 +3028,7 @@ function translateMorphTags(tags) {
     for (const result of parts) {
       for (const [locus, pair] of Object.entries(result.genotype || {})) {
         if (POLYGENIC_LOCI.has(locus)) {
-          if (pair.some((a) => a !== WILD_TYPE)) {
+          if (pair.some((a) => a !== WILD_TYPE$1)) {
             looks.push(LOOK_NAME_BY_LOCUS.get(locus) || tag);
             polygenicLoci.add(locus);
           }
@@ -3061,6 +3061,7 @@ function translateMorphTags(tags) {
 function displayReason(text2) {
   return String(text2).replace(/\s*[\u2014\u2013]\s*/g, ", ");
 }
+const WILD_TYPE = "wild_type";
 const COMPLEX_ID = "sable_complex";
 const SIMPLE_TRAITS = [
   {
@@ -3518,10 +3519,10 @@ function predictWeighted(sireSpec, damSpec) {
   for (const bucket of locusMap.values()) {
     const missing = totalWeight - bucket._seenWeight;
     if (missing > 1e-9) {
-      const key = `${WILD_TYPE}|${WILD_TYPE}::Wild-type`;
+      const key = `${WILD_TYPE$1}|${WILD_TYPE$1}::Wild-type`;
       const existing = bucket.outcomes.get(key);
       if (existing) existing.probability += missing;
-      else bucket.outcomes.set(key, { genotype: [WILD_TYPE, WILD_TYPE], phenotype_label: "Wild-type", probability: missing });
+      else bucket.outcomes.set(key, { genotype: [WILD_TYPE$1, WILD_TYPE$1], phenotype_label: "Wild-type", probability: missing });
     }
   }
   let offspring_phenotypes = dropUnjudgeableCombos(
@@ -3552,7 +3553,7 @@ function predictWeighted(sireSpec, damSpec) {
       }];
     }
     const allExtraLoci = /* @__PURE__ */ new Set([...Object.keys(sireExtra), ...Object.keys(damExtra)]);
-    const wildOption = [{ pair: [WILD_TYPE, WILD_TYPE], weight: 1 }];
+    const wildOption = [{ pair: [WILD_TYPE$1, WILD_TYPE$1], weight: 1 }];
     for (const locus of allExtraLoci) {
       const trait = extraTraitFor(locus);
       if (!trait) continue;
