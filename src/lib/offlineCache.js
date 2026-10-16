@@ -13,7 +13,9 @@
 import { dehydrate, hydrate } from '@tanstack/react-query';
 
 const KEY_PREFIX = 'geckinspect_query_cache:';
-export const PERSISTED_KEYS = new Set(['my-geckos', 'field-mode']);
+// 'today' is the Today screen's list (src/lib/today.js), kept so the
+// phone's first tab opens with no signal.
+export const PERSISTED_KEYS = new Set(['my-geckos', 'field-mode', 'today']);
 const MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 const SAVE_DELAY_MS = 1000;
 

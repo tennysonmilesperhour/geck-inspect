@@ -1,11 +1,11 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, create } from 'react-test-renderer';
-import { MemoryRouter } from 'react-router-dom';
+import { Link, MemoryRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
 const fixture = vi.hoisted(() => {
   vi.stubGlobal('window', { self: null, top: null });
-  return { builder: null, saved: null, fail: false, toast: vi.fn(), row: null };
+  return { builder: null, saved: null, fail: false, toast: vi.fn(), row: null, builderRetired: false };
 });
 afterAll(() => vi.unstubAllGlobals());
 vi.mock('@/lib/AuthContext', () => ({ useAuth: () => ({ user: { email: 'fixture@example.com', id: 'legacy-id', auth_user_id: 'auth-uuid', subscription_tier: 'breeder' } }) }));
@@ -15,6 +15,13 @@ vi.mock('@/components/bulk/GeckoBulkActions', () => ({ default: () => null }));
 vi.mock('@/components/shared/PageHeader', () => ({ default: () => null }));
 vi.mock('@/components/storefront/WebsiteBuilder', () => ({ default: props => { fixture.builder = props; return null; } }));
 vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: fixture.toast }) }));
+// The website builder is switched off in production (review item E3 23).
+// These tests turn it on to check it still works for when it comes back,
+// and the last one checks that switching it off loses no saved design.
+vi.mock('@/lib/retiredPages', async (importOriginal) => ({
+  ...(await importOriginal()),
+  isFeatureRetired: (name) => name === 'websiteBuilder' && fixture.builderRetired,
+}));
 vi.mock('@/lib/supabaseClient', () => ({ supabase: { from: table => {
   let payload;
   const result = () => ({ data: table === 'breeder_store_pages' ? fixture.row : table === 'breeder_profiles' ? { id: 'profile-1', display_name: 'Fixture' } : [], error: null });
@@ -44,7 +51,7 @@ async function save(tree) {
   await act(async () => { await button.props.onClick(); });
 }
 beforeEach(() => {
-  fixture.toast.mockClear(); fixture.saved = null; fixture.fail = false;
+  fixture.toast.mockClear(); fixture.saved = null; fixture.fail = false; fixture.builder = null; fixture.builderRetired = false;
   fixture.row = { id: 'store-1', slug: 'fixture', title: 'Fixture', is_published: true,
     external_links: applyStoreSettings([{ kind: 'instagram', label: 'Instagram', url: 'https://instagram.com/fixture' }], { theme: 'violet', website: { font: 'editorial' } }),
   };
@@ -73,6 +80,26 @@ describe('MyStore website save flow', () => {
     expect(fixture.saved).toBeNull();
     expect(fixture.builder.settings.website.announcement).toBe('Keep my changes');
     expect(fixture.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Could not save', variant: 'destructive' }));
+    await act(async () => tree.unmount());
+  });
+  it('with the builder switched off, hides it and saves the stored design back unchanged', async () => {
+    fixture.builderRetired = true;
+    const tree = await mount();
+    expect(fixture.builder).toBeNull();
+    await save(tree);
+    expect(fixture.saved.owner_email).toBe('fixture@example.com');
+    expect(readStoreSettings(fixture.saved.external_links).website.font).toBe('editorial');
+    expect(readStoreSettings(fixture.saved.external_links).theme).toBe('violet');
+    await act(async () => tree.unmount());
+  });
+  it('with no open waitlists, sends the member to Business Tools, not the retired Promote composer', async () => {
+    fixture.builderRetired = true;
+    const tree = await mount();
+    const text = JSON.stringify(tree.toJSON());
+    expect(text).toContain('No open waitlists yet.');
+    expect(text).not.toMatch(/Promote/);
+    const links = tree.root.findAllByType(Link).map(l => l.props.to);
+    expect(links).toContain('/MarketplaceSalesStats?tab=waitlists');
     await act(async () => tree.unmount());
   });
 });

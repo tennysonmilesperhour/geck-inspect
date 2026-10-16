@@ -34,6 +34,8 @@ const PublicPageShell = lazy(() => import('@/components/public/PublicPageShell')
 // page not found (both used to show a bare sign-in form).
 const SignedOutFallback = lazy(() => import('@/components/public/SignedOutFallback'));
 import ScrollToTop from '@/components/shared/ScrollToTop';
+import RetiredPageNotice from '@/components/shared/RetiredPageNotice';
+import { pwaLaunchTarget } from '@/lib/pwaLaunch';
 import NativeCareSync from '@/components/native/NativeCareSync';
 import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
@@ -156,6 +158,9 @@ const CrestedGeckoPrice     = lazy(() => import('./pages/CrestedGeckoPrice'));
 const OpenData              = lazy(() => import('./pages/OpenData'));
 // The one-tap log reminder links open (/log?type=...&gecko=...).
 const QuickLog              = lazy(() => import('./pages/QuickLog'));
+// Today, the phone's first tab. Signed-out visitors get the demo
+// collection's day; members get it inside the app shell (PAGES).
+const TodayPublic           = lazy(() => import('./pages/Today'));
 
 // P1, Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
@@ -178,10 +183,14 @@ const Store                 = lazy(() => import('./pages/Store'));
 const { Pages, Layout, mainPage } = pagesConfig;
 
 // Redirects for retired pages, shared by the signed-out and signed-in
-// route sets so an old link never ends on "Page not found".
-const retiredRoutes = RETIRED_PAGES.map(({ page, to }) => (
-  <Route key={`retired-${page}`} path={`/${page}`} element={<Navigate to={to} replace />} />
-));
+// route sets so an old link never ends on "Page not found". A `prefix`
+// entry also covers every address under it (/Store/stickers). Each set
+// lists these before the page routes, so for the same path the redirect
+// is the one React Router picks.
+const retiredRoutes = RETIRED_PAGES.flatMap(({ page, to, prefix }) => [
+  <Route key={`retired-${page}`} path={`/${page}`} element={<Navigate to={to} replace />} />,
+  ...(prefix ? [<Route key={`retired-${page}-all`} path={`/${page}/*`} element={<Navigate to={to} replace />} />] : []),
+]);
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
@@ -307,6 +316,7 @@ const AuthenticatedApp = () => {
     const prefetch = () => {
       import('./pages/FieldMode').catch(() => {});
       import('./pages/QuickLog').catch(() => {});
+      import('./pages/Today').catch(() => {});
       import('./pages/MyGeckos').catch(() => {});
     };
     if (window.requestIdleCallback) {
@@ -332,10 +342,11 @@ const AuthenticatedApp = () => {
       window.navigator.standalone === true;
     if (!isStandalone) return;
     sessionStorage.setItem('pwa_launch_handled', '1');
-    const path = window.location.pathname.replace(/\/+$/, '') || '/';
-    if (path === '/' || path === '/Messages') {
-      window.location.replace('/MyGeckos');
-    }
+    // Phones open on Today, the first tab (review item E3 25); desktop
+    // installs keep opening on My Geckos (src/lib/pwaLaunch.js).
+    const phone = Boolean(window.matchMedia?.('(max-width: 767px)').matches);
+    const target = pwaLaunchTarget(window.location.pathname, window.location.search, phone);
+    if (target) window.location.replace(target);
   }, []);
 
   // Show loading spinner while checking auth
@@ -410,6 +421,7 @@ const AuthenticatedApp = () => {
           <Route path="/breeding-records" element={<BreedingRecords />} />
           <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
           <Route path="/data" element={<OpenData />} />
+          <Route path="/Today" element={<PublicPageShell><TodayPublic /></PublicPageShell>} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           {/* Breeder is indexable under both /Breeder?slug= (legacy) and
               /Breeder/<slug> (clean, preferred); the page itself reads
@@ -559,6 +571,7 @@ function App() {
             <QueryClientProvider client={queryClientInstance}>
               <Router>
                 <ScrollToTop />
+                <RetiredPageNotice />
                 <NavigationTracker />
                 <PostHogPageTracker />
                 <GA4PageTracker />

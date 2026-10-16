@@ -57,6 +57,7 @@ export const KNOWN_PATH_PATTERNS = [
   "/ProjectManager",
   "/PublicProfile",
   "/Settings",
+  "/Today",
   "/Training",
   "/MarketPricing",
   "/BreedingROI",
@@ -280,5 +281,9 @@ export const KNOWN_PATH_PATTERNS = [
   "/morphvisualizer",
   "/BreedingPairs",
   "/breedingpairs",
-  "/marketplace"
+  "/marketplace",
+  "/promote",
+  "/breederconsultant",
+  "/otherreptiles",
+  "/store"
 ];

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
 import { BreedingPlan, Egg } from '@/entities/all';
@@ -523,6 +523,26 @@ export default function BreedingPage() {
                         New Breeding Plan
                     </Button>
                 </PageHeader>
+
+                {/* The planners left the sidebar on 16 Oct 2026 (review item
+                    E3 23, at most 12 sidebar destinations), so they open
+                    from here. */}
+                <nav aria-label="Breeding planners" className="-mt-3 mb-5 flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
+                    <span className="text-slate-400 mr-1">Plan ahead:</span>
+                    {[
+                        ['/PairingPlanner', 'Pairing Planner'],
+                        ['/ProjectManager', 'Season Planner'],
+                        ['/BreedingSeason', 'Season Timeline'],
+                    ].map(([to, label]) => (
+                        <Link
+                            key={to}
+                            to={to}
+                            className="inline-flex min-h-11 items-center rounded-md px-2 text-emerald-300 underline-offset-4 hover:underline hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+                        >
+                            {label}
+                        </Link>
+                    ))}
+                </nav>
 
                 {!isLoading && (
                     <BreedingValueStats
