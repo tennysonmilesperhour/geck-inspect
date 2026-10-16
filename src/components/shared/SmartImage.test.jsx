@@ -1,5 +1,6 @@
 import { act, create } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import GeckoImage from './GeckoImage';
 import SmartImage, { smartImageSources } from './SmartImage';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
@@ -18,6 +19,7 @@ const fail = (view) => act(async () => view.root.findByType('img').props.onError
 
 describe.each([
   ['SmartImage', SmartImage],
+  ['GeckoImage', GeckoImage],
 ])('%s thumbnails', (_name, Image) => {
   it('tries the thumbnail, then the photo, then the placeholder', async () => {
     const onError = vi.fn();

@@ -124,7 +124,7 @@ function TransferRow({ transfer, animal, direction, onChanged }) {
 
   return (
     <div className="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-700 bg-slate-900 hover:border-slate-600 transition-colors">
-      <GeckoImage gecko={animal} src={img} alt={animal?.name || "Animal"} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+      <GeckoImage gecko={animal} src={img} alt={animal?.name || "Animal"} className="w-12 h-12 rounded-lg object-cover shrink-0" width={96} />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">

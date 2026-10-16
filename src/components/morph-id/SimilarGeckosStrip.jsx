@@ -48,6 +48,7 @@ function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }
                   alt={`Visual comparison labeled ${labelFor(match.primary_morph)}`}
                   className="aspect-square w-full object-cover rounded-md border border-slate-700"
                   loading="lazy"
+                  width={480}
                 />
                 <p className="text-xs font-medium text-slate-200 truncate">
                   {labelFor(match.primary_morph)}

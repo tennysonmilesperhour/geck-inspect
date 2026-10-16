@@ -932,6 +932,7 @@ export default function FieldModePage() {
                       src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                       alt={gecko.name}
                       loading="lazy"
+                      width={128}
                       className="w-16 h-16 rounded-xl object-cover border border-slate-700 flex-shrink-0"
                     />
                     <div className="min-w-0">
@@ -959,6 +960,7 @@ export default function FieldModePage() {
                 gecko={selectedGecko}
                 src={selectedGecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                 alt={selectedGecko.name}
+                width={128}
                 className="w-14 h-14 rounded-xl object-cover border border-slate-700"
               />
               <div className="min-w-0 flex-1">

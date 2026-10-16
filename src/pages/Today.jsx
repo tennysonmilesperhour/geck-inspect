@@ -144,6 +144,7 @@ function GeckoStrip({ geckos, total, demo, linkable }) {
                 src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                 alt={demo ? `${gecko.name}, illustrative photo` : gecko.name}
                 loading="lazy"
+                width={240}
                 className="aspect-square w-full rounded-lg object-cover"
               />
               <span className="mt-1.5 block truncate text-sm font-medium text-slate-100">{gecko.name}</span>

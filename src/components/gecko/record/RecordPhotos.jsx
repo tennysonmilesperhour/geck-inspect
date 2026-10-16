@@ -211,6 +211,7 @@ export function PhotosSection({ gecko, onOpen, headingAs = 'h3', className = '' 
                   alt=""
                   className="w-full aspect-square object-cover hover:opacity-80 transition-opacity"
                   style={rotationStyle(gecko, url)}
+                  width={240}
                 />
               </button>
             ))}

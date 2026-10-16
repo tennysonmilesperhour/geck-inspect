@@ -136,6 +136,7 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
                         className="w-12 h-12 rounded object-cover"
                         loading="lazy"
                         decoding="async"
+                        width={96}
                       />
                     <div>
                       <p className="font-semibold text-slate-100">{gecko?.name}</p>
@@ -230,6 +231,7 @@ export default function GeckoSelectionModal({ mode, onClose, onAddGeckos, userEm
                     className="w-12 h-12 rounded object-cover flex-shrink-0"
                     loading="lazy"
                     decoding="async"
+                    width={96}
                   />
                 <div className="flex-1 min-w-0 text-left">
                   <p className="font-semibold text-slate-100">{gecko.name}</p>

@@ -511,7 +511,7 @@ export default function PairingPlannerPage() {
 }
 
 function Thumb({ gecko, ring }) {
-  return <GeckoImage src={gecko.image_urls?.[0]} alt={gecko.name} className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-lg object-cover border ${ring}`} />;
+  return <GeckoImage src={gecko.image_urls?.[0]} alt={gecko.name} width={96} className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-lg object-cover border ${ring}`} />;
 }
 
 function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceIndex, sellModel }) {

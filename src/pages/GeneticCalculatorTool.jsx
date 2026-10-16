@@ -503,7 +503,7 @@ export default function GeneticCalculatorTool({
                                 </Select>
                                 {collectionSire && (
                                   <div className="flex items-center gap-2 mt-1">
-                                    <GeckoImage src={collectionSire?.image_urls?.[0]} alt={collectionSire.name} className="w-10 h-10 rounded object-cover border border-blue-700" />
+                                    <GeckoImage src={collectionSire?.image_urls?.[0]} alt={collectionSire.name} width={96} className="w-10 h-10 rounded object-cover border border-blue-700" />
                                     <div>
                                       <p className="text-xs text-slate-300 font-medium">{collectionSire.name}</p>
                                       <p className="text-xs text-slate-500">{(collectionSire.morph_tags || []).length} morph tags</p>
@@ -539,7 +539,7 @@ export default function GeneticCalculatorTool({
                                 </Select>
                                 {collectionDam && (
                                   <div className="flex items-center gap-2 mt-1">
-                                    <GeckoImage src={collectionDam?.image_urls?.[0]} alt={collectionDam.name} className="w-10 h-10 rounded object-cover border border-pink-700" />
+                                    <GeckoImage src={collectionDam?.image_urls?.[0]} alt={collectionDam.name} width={96} className="w-10 h-10 rounded object-cover border border-pink-700" />
                                     <div>
                                       <p className="text-xs text-slate-300 font-medium">{collectionDam.name}</p>
                                       <p className="text-xs text-slate-500">{(collectionDam.morph_tags || []).length} morph tags</p>
