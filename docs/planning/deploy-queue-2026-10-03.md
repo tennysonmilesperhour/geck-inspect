@@ -87,6 +87,8 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 | `20261016090500_revenue_counts` | `admin_revenue_summary()` leaves $0 renewals out of monthly recurring revenue; `admin_scoreboard()` counts a lifetime payer only with a paid lifetime payment |
 | `20261016090600_retire_overage_billing` | Unschedules `monthly-overage-billing` (Promote is retired; the job never ran) |
 | `20261016090700_reptile_reminders_switch` | Feeding reminders for Other Reptiles wait on the new `app_settings` row `other_reptile_reminders_enabled` (false); gecko reminders unchanged |
+| `20261016090800_photo_thumbnails` | `admin_photos_without_thumbnail(p_after, p_limit)`, admin only: the list behind the Photo thumbnails admin tool (photos with no thumbnail, or with one somebody other than the owner or an admin made). Function only; until it runs, the tool says it is not installed yet |
+| `20261016090900_thumbnail_insert_rule` | One restrictive storage rule: only a photo's owner or an admin may add its thumbnail (`thumbs/<path>` in `geck-inspect-media`), so nobody can plant a picture on another member's cards. Other uploads are unaffected |
 
 **Edge functions.** Round 3 declares 15 functions that were deployed by hand, after a file-by-file comparison showed each repo copy matched production: `stripe-checkout`, `stripe-billing-portal`, `send-push`, `csp-report`, `market-value-snapshot`, `invoke-llm`, `recognize-import-data`, `iot-poll`, `publish-social-post`, `set-platform-connection`, `meta-oauth-start`, `meta-oauth-callback`, `reddit-oauth-start`, `reddit-oauth-callback` and `report-social-overage`. The merge deploys all 30 declared functions from the repo. What actually changes in production:
 
@@ -96,9 +98,10 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 - `recognize-gecko-morph`: the photo fingerprint model pinned to a version; no model-guessed price in the answer.
 - `stripe-billing-portal`, `iot-poll`, `send-push`, `csp-report`: moved to the shared helpers (`_shared/http.ts`, `_shared/caller.ts`, `_shared/supabase.ts`). `send-push`, `iot-poll` and `stripe-billing-portal` now accept only `Authorization: Bearer <token>`, which every production caller already sends.
 - `market-value-snapshot`: deployed by the integration for the first time, with its import of `src/lib/traitValuation.js`.
+- `delete-my-account` and `admin-delete-account`: also erase each photo's thumbnail (`_shared/erasure-files.ts`).
 - Still hand-deployed: `embed-gecko-image` and `export-training-corpus` (their repo copies are newer than production, so declaring them changes behaviour; Tennyson decides), and `rapid-api` and `admin-end-trial` (to delete).
 
-**Vercel:** Today and the new phone tabs, the one gecko record, the retired pages with temporary redirects, self-hosted fonts and the size budget, link-preview cards for passports, breeder pages, stores and waitlists (`middleware.js`), the EEA and UK consent banner, Content Security Policy hashes for inline scripts, the Membership page restructure, the Emerald default theme (held back from the homepage while its A/B test runs, `docs/planning/homepage-ab-test-2026-10.md`), the payment-problem banner, and the Price Index relabel.
+**Vercel:** Today and the new phone tabs, the one gecko record, the retired pages with temporary redirects, self-hosted fonts and the size budget, link-preview cards for passports, breeder pages, stores and waitlists (`middleware.js`), the EEA and UK consent banner, Content Security Policy hashes for inline scripts, the Membership page restructure, the Emerald default theme (held back from the homepage while its A/B test runs, `docs/planning/homepage-ab-test-2026-10.md`), the payment-problem banner, the Price Index relabel (an asking-price snapshot, free to cite with a link), and photo thumbnails: each new photo uploads a small copy that cards load first, and the Admin panel has a Photo thumbnails tool for older photos.
 
 **Safe in either order:** Today, My Geckos' recent weights, the scoreboard and the Revenue card fall back until their migration runs; the Price Index rule is applied by the build as well as the database; an old Morph ID page hides the price section when the server stops sending a guess; an old chat page uses the plain path, which now carries the rules.
 
@@ -109,6 +112,7 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 3. **PostHog:** delete the persons whose distinct id contains "@" (members identified by email before this change).
 4. **Two functions:** say whether to deploy the newer repo copies of `embed-gecko-image` and `export-training-corpus` (`docs/INFRASTRUCTURE.md`).
 5. **Link previews:** paste a passport link and a breeder page link into Messenger or iMessage: the preview shows that gecko's or breeder's own title and photo.
+6. **Photo thumbnails for older photos:** after the merge, open Admin panel, System, Photo thumbnails and press Make thumbnails, keeping the tab open (about 817 photos on 16 October, 10 to 20 minutes; each original is downloaded once through your browser, about 1.5 GB of Supabase data transfer; the thumbnails add 25 to 40 MB). It is safe to stop and start again. Run it again the next day, because copies of the app opened before the release keep uploading without thumbnails for a few hours. Until a photo has its thumbnail, its card loads the full photo as before.
 
 ## Done on 3 October
 

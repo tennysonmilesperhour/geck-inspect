@@ -27,7 +27,7 @@ What would change that, and the plan when it does:
 
 | Piece | Where | What it does |
 |---|---|---|
-| Geck Inspect Price Index | `public.open_price_index()`, `/data/price-index.json` and `.csv`, `/llms/prices.md` | Original data: median and middle half asking price by trait and market (US, KR, JP, EU) from the latest full check, plus monthly medians since May 2026. Refreshed on every deploy; the committed snapshot ships if the build cannot reach the database. |
+| Geck Inspect Price Index | `public.open_price_index()`, `/data/price-index.json` and `.csv`, `/llms/prices.md` | An asking-price snapshot from public marketplace listings: median and middle half asking price by trait and market (US, KR, JP, EU) from the latest full check, plus monthly medians since May 2026. Refreshed on every deploy; the committed snapshot ships if the build cannot reach the database. |
 | Live prices on pages | `src/components/public/PriceIndexTable.jsx` on `/crested-gecko-price` and `/data`; prerendered as a table for bots | The most-searched price page now carries current numbers, not only hand-written ranges. |
 | Open data page | `/data` (`src/pages/OpenData.jsx`, `src/data/open-datasets.js`) | Human page plus DataCatalog and Dataset markup in the server HTML for Google Dataset Search. Footer link "Open Data". |
 | Datasets | `/data/morphs.json`, `/data/genetics.json`, `/data/care.json`, `/data/index.json` | Every morph with identification, lookalikes and sources; the genetics engine's traits, combos and risky pairings; the care guide as structured blocks; a catalog. CORS open. |
@@ -41,12 +41,12 @@ What would change that, and the plan when it does:
 | AI traffic log | `public.agent_hits`, `public.log_agent_hit()`, `middleware.js`, `api/_lib/bots.js` | Every request from a known AI crawler, assistant, search engine or tool is logged (bot, kind, path, user agent). People are not logged. MCP tool calls log as `/mcp/<tool>`. Vercel's own logs expire too fast to answer "which bots read what". |
 | Build | `scripts/build-agent-data.mjs`, `scripts/lib/agent-content.mjs`, `package.json` | Generated on every build; generated files are gitignored except the price index snapshot. |
 
-Licensing as published: price, morph and genetics data CC BY 4.0 (free with attribution, which is what makes it citable). Care guide text: free to quote with a link, not to republish in full. Change in `src/data/open-datasets.js` and `scripts/build-agent-data.mjs` if Tennyson wants something else.
+Licensing as published (16 Oct 2026): morph and genetics data CC BY 4.0; Price Index numbers free to cite with a link (quote and cite them, with a link to the page they came from), not CC BY. Care guide text: free to quote with a link, not to republish in full. The price wording lives in `src/lib/priceIndexPolicy.js` (`PRICE_INDEX_WHAT`, `PRICE_DATA_TERMS`) and `src/lib/__tests__/priceDataTerms.test.js` holds every copy to it; the dataset list is `src/data/open-datasets.js` and `scripts/build-agent-data.mjs`.
 
 ## Decisions (Tennyson, 7 Oct)
 
 1. **The coarse price index stays public.** It is aggregate (counts and percentiles, never single listings or photos) and labelled as asking prices on public listings without naming the marketplaces. Enterprise Market Intelligence keeps age, sex and quality comps, time to sell, watchlists, alerts and the seller view. If a marketplace ever objects, turn it off: `revoke execute on function public.open_price_index() from anon, authenticated;` in the SQL editor, delete `public/data/price-index.json`, and remove the table from the two pages.
-2. **Licence: CC BY 4.0 for the price, morph and genetics data** (free with credit, so every reuse is a citation). Care guide text stays quote-with-a-link only.
+2. **Licence: CC BY 4.0 for the morph and genetics data** (free with credit, so every reuse is a citation). Care guide text stays quote-with-a-link only. Changed on 16 Oct 2026: the Price Index is an asking-price snapshot from public marketplace listings, free to cite with a link, not CC BY, and the source sites are not named until counsel says so (DECISIONS.md, decision 52).
 3. **Register the MCP server in public directories, approved.** Do it at the first review after 14 Oct (so 19 Oct), once a week of logs shows `/mcp` is stable. Official MCP Registry first: it can run from a GitHub Action with no stored secret (`mcp-publisher login github-oidc`, namespace `io.github.tennysonmilesperhour/geck-inspect`); check the registry docs for the current steps and `server.json` format. Directories that need an account sign-in (Smithery, mcp.so, PulseMCP) are listed for Tennyson with exact steps rather than done by the session.
 
 ## The weekly agent review

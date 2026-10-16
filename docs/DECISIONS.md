@@ -580,7 +580,7 @@ These entries capture the strategic decisions made during the initial landing pa
 **Context:** The Price Index called itself "original data" under CC BY 4.0. It is built from asking prices in public marketplace listings, and the adversarial review asked for honest labelling. Rows with as few as 5 listings were published.
 **Decision:** It is described everywhere as an asking-price snapshot from public marketplace listings. The price data may be quoted and cited with a link to the page it came from; morph and genetics data stay under CC BY 4.0. The source sites are not named until counsel advises. A row is published only with 30 or more listings, and rows under 100 are marked as a thin sample (`open_price_index()` and `src/lib/priceIndexPolicy.js` apply the same rule).
 **Reasoning:** Asking prices are not sale prices, and a licence should not claim more than Geck Inspect owns.
-**Consequences:** Fewer morphs show a price. Naming the sources waits on a legal opinion.
+**Consequences:** Fewer morphs show a price. Naming the sources waits on a legal opinion. The wording lives in `src/lib/priceIndexPolicy.js` (`PRICE_INDEX_WHAT`, `PRICE_DATA_TERMS`), and `src/lib/__tests__/priceDataTerms.test.js` holds every copy (agent files, the MCP server card, `/data`) to it. This replaces the price part of decision 42's "data is CC BY 4.0".
 
 ### 53. Emerald for new visitors, neutral text, one meaning of Verified breeder, licensed outside photos only
 
@@ -617,3 +617,12 @@ These entries capture the strategic decisions made during the initial landing pa
 **Decision:** ESLint covers `src`, `scripts` and `api` with the recommended sets. A Playwright member flow (sign up, first gecko, feeding, transfer) runs against a fake Supabase in the browser, and every migration is replayed on a fresh Postgres 16 with every `supabase/tests` file, both on every pull request. Tests must not read the real date; a CI step reruns them far ahead and behind. CI fails a build that passes the size budget (`scripts/check-bundle-size.mjs`, exceptions in `scripts/bundle-budget.json`). The Supabase client loads on demand for signed-out visitors, shared code is split so a page edit renames only that page, and fonts are self-hosted.
 **Reasoning:** Checks that run without secrets can run on every change.
 **Consequences:** A new test that reads today's date fails the clock-drift step, not a deploy months later.
+
+### 57. Photo thumbnails, the free route
+
+**Date:** 2026-10-16
+**Status:** Accepted (Tennyson chose it over paid Supabase image transformations on 16 October)
+**Context:** Gecko cards and lists loaded each member photo at full size (often 1 to 5 MB), and Supabase's own resizing is a paid add-on the project does not have.
+**Decision:** Every member photo gets a small copy (480 px on the long side, WebP, or JPEG where the browser cannot write WebP) at `thumbs/<the photo's path>` in `geck-inspect-media`, made in the member's browser at upload (`src/lib/photoThumbnails.js`). Cards and compact slots load it first and fall back to the photo, then the placeholder; full-size views, downloads and Morph ID keep the original. Photos from before 16 October get theirs from Admin panel, System, Photo thumbnails, which resizes in the admin's own browser (edge functions have about 2 seconds of processor time, too little to resize photos) and needs no server key. Only a photo's owner or an admin may add its thumbnail (`20261016090900_thumbnail_insert_rule.sql`), so nobody can plant a picture on someone else's cards, and deleting an account erases each photo's thumbnail with it (`_shared/erasure-files.ts`).
+**Reasoning:** Small copies cut what a phone downloads for a card from megabytes to tens of kilobytes at no monthly cost.
+**Consequences:** Revisit paid resizing past about 5,000 member photos. Copies of the app opened before a release upload without a thumbnail, so the admin tool is run the day after each release and whenever its count is not zero. The bucket's open listing rule (anyone can list every file name) and its duplicated policies are still to be tidied in a storage migration.

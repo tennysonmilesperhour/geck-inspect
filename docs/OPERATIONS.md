@@ -198,9 +198,10 @@ Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no
 7. **Email health.** Resend: bounce and complaint rates for the alerts sender, and any domain warnings. In the app: the email delivery table on the Weekly scoreboard card, and any new rows in `email_suppressions`.
 8. **Errors.** The newest rows in `error_logs`, grouped by message.
 9. **Support and moderation.** The support inbox and the in-app tickets are answered; the reports view is empty or handled.
-10. **Market feed.** Is the US feed running? If not, the Market page and value estimates are getting stale; note it on the scoreboard.
-11. **Dependabot.** Merge the grouped patch updates once CI is green; read anything major before merging.
-12. **Docs reconcile.** Spend ten minutes checking `docs/CONTEXT.md`, `ROADMAP.md` and this file against what changed this week (the review's A13 recommendation: one weekly step whose only job is to keep the docs true).
+10. **Photo thumbnails.** Admin panel, System, Photo thumbnails shows how many member photos have no thumbnail. If the count is not zero (always the day after a release), press Make thumbnails and keep the tab open; it is safe to stop and start again.
+11. **Market feed.** Is the US feed running? If not, the Market page and value estimates are getting stale; note it on the scoreboard.
+12. **Dependabot.** Merge the grouped patch updates once CI is green; read anything major before merging.
+13. **Docs reconcile.** Spend ten minutes checking `docs/CONTEXT.md`, `ROADMAP.md` and this file against what changed this week (the review's A13 recommendation: one weekly step whose only job is to keep the docs true).
 
 ## 7. Build and site checks (added 16 October 2026, round 3)
 
