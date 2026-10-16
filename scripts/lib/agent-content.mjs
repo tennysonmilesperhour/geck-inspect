@@ -12,6 +12,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { PRICE_INDEX_SAMPLE_RULE, applyPricePolicy } from '../../src/lib/priceIndexPolicy.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 export const REPO_ROOT = resolve(__dirname, '../..');
@@ -125,10 +126,16 @@ export function loadPriceIndex() {
   if (!existsSync(PRICE_INDEX)) return null;
   try {
     const data = JSON.parse(readFileSync(PRICE_INDEX, 'utf8'));
-    return Array.isArray(data?.latest) ? data : null;
+    // The minimum-sample rule again, in case the file predates it.
+    return Array.isArray(data?.latest) ? applyPricePolicy(data) : null;
   } catch {
     return null;
   }
+}
+
+/** "52 (thin sample)" for a row under the thin-sample line, else the count. */
+export function listingsCell(row) {
+  return row.thin ? `${row.listings} (thin sample)` : String(row.listings);
 }
 
 export const MARKET_NAMES = { US: 'United States', KR: 'South Korea', JP: 'Japan', EU: 'Europe' };
@@ -251,7 +258,7 @@ export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, n
         '',
         '| Market | Listings | 25th percentile | Median | 75th percentile |',
         '| --- | --- | --- | --- | --- |',
-        ...rows.map((r) => `| ${MARKET_NAMES[r.market] || r.market} | ${r.listings} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`),
+        ...rows.map((r) => `| ${MARKET_NAMES[r.market] || r.market} | ${listingsCell(r)} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`),
         '',
       );
     }
@@ -314,7 +321,7 @@ export function priceIndexToMarkdown(index) {
   const out = [
     '## Geck Inspect Price Index (crested gecko asking prices)',
     '',
-    `Generated ${String(index.generated_at || '').slice(0, 10)}. Original data compiled by Geck Inspect from public crested gecko listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe. These are **asking prices** on open listings, converted to USD at stored exchange rates, not sale prices. Only full catalog checks count, and a trait is shown only with at least 5 listings. Cite as "Geck Inspect Price Index" with a link to ${SITE_URL}/data. JSON: ${SITE_URL}/data/price-index.json. CSV: ${SITE_URL}/data/price-index.csv.`,
+    `Generated ${String(index.generated_at || '').slice(0, 10)}. Original data compiled by Geck Inspect from public crested gecko listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe. These are **asking prices** on open listings, converted to USD at stored exchange rates, not sale prices. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} Cite as "Geck Inspect Price Index" with a link to ${SITE_URL}/data. JSON: ${SITE_URL}/data/price-index.json. CSV: ${SITE_URL}/data/price-index.csv.`,
     '',
   ];
   const byMarket = new Map();
@@ -326,7 +333,7 @@ export function priceIndexToMarkdown(index) {
     out.push(`### ${MARKET_NAMES[market] || market} (checked ${rows[0].checked_on})`, '');
     out.push('| Trait | Listings | 25th percentile | Median | 75th percentile |', '| --- | --- | --- | --- | --- |');
     for (const r of rows) {
-      out.push(`| ${r.trait || 'All crested geckos'} | ${r.listings} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`);
+      out.push(`| ${r.trait || 'All crested geckos'} | ${listingsCell(r)} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`);
     }
     out.push('');
   }

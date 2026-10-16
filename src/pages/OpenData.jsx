@@ -5,6 +5,7 @@ import PublicPageShell from '@/components/public/PublicPageShell';
 import PriceIndexTable from '@/components/public/PriceIndexTable';
 import { breadcrumbSchema } from '@/lib/organization-schema';
 import { OPEN_DATASETS, MCP_URL, openDataJsonLd } from '@/data/open-datasets';
+import { PRICE_INDEX_SAMPLE_RULE } from '@/lib/priceIndexPolicy';
 
 const LAST_UPDATED = '2026-10-07';
 
@@ -114,7 +115,7 @@ export default function OpenData() {
           <ul className="text-slate-400 text-sm leading-relaxed space-y-2 list-disc pl-5">
             <li>Cite prices as &ldquo;Geck Inspect Price Index&rdquo; with a link to this page, and morphs or care topics with the page you used.</li>
             <li>Prices are asking prices on open listings, not what geckos sold for. Prices outside the US are converted to USD; shipping and import costs are not included.</li>
-            <li>Only full catalog checks count, and a trait needs at least 5 listings to be shown. Trait names are the sellers&apos; labels, which do not prove genotype.</li>
+            <li>Only full catalog checks count. {PRICE_INDEX_SAMPLE_RULE} Trait names are the sellers&apos; labels, which do not prove genotype.</li>
             <li>The price, morph and genetics data are licensed CC BY 4.0. The care guide text is free to quote with a link, but please do not republish it in full.</li>
             <li>Found a mistake? <Link to="/Contact" className={link}>Tell us</Link>; corrections are welcome.</li>
           </ul>

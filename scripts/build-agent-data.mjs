@@ -48,6 +48,7 @@ import {
   priceRowsForMorph,
   MORPH_LABELS,
 } from './lib/agent-content.mjs';
+import { PRICE_INDEX_MIN_LISTINGS, PRICE_INDEX_SAMPLE_RULE, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
 
 const PUBLIC = resolve(REPO_ROOT, 'public');
 const ENV = { ...loadEnv('production', REPO_ROOT, ''), ...process.env };
@@ -81,7 +82,8 @@ const PRICE_META = {
     'Asking prices on open listings, not sale prices.',
     'Prices outside the US are converted to USD at stored exchange rates; shipping and import costs are not included.',
     'Only full catalog checks count. A partial check or the catch-up after an outage is left out.',
-    'A trait is shown only when at least 5 listings carry it. trait null means all crested geckos in that market.',
+    `${PRICE_INDEX_SAMPLE_RULE} thin: true marks those rows. trait null means all crested geckos in that market.`,
+    `A day counts toward a monthly median only when it had at least ${PRICE_INDEX_MIN_LISTINGS} listings; avg_listings is the average listing count of those days.`,
     'p25, median and p75 are the 25th, 50th and 75th percentile asking price. monthly.median is the median of that month\'s daily medians.',
     'Trait labels are the marketplace labels as listed by sellers; a label does not prove genotype.',
   ],
@@ -113,12 +115,14 @@ function priceIndexCsv(index) {
     const s = v == null ? '' : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const rows = [['kind', 'market', 'period', 'trait', 'listings', 'p25_usd', 'median_usd', 'p75_usd', 'full_checks']];
+  // thin_sample is the last column so readers that index columns by
+  // position keep working.
+  const rows = [['kind', 'market', 'period', 'trait', 'listings', 'p25_usd', 'median_usd', 'p75_usd', 'full_checks', 'thin_sample']];
   for (const r of index.latest) {
-    rows.push(['latest', r.market, r.checked_on, r.trait || 'All crested geckos', r.listings, r.p25, r.median, r.p75, '']);
+    rows.push(['latest', r.market, r.checked_on, r.trait || 'All crested geckos', r.listings, r.p25, r.median, r.p75, '', r.thin ? 'yes' : 'no']);
   }
   for (const r of index.monthly || []) {
-    rows.push(['monthly', r.market, r.month, r.trait || 'All crested geckos', r.avg_listings, '', r.median, '', r.full_checks]);
+    rows.push(['monthly', r.market, r.month, r.trait || 'All crested geckos', r.avg_listings, '', r.median, '', r.full_checks, '']);
   }
   return `${rows.map((r) => r.map(esc).join(',')).join('\n')}\n`;
 }
@@ -201,14 +205,18 @@ function geneticsMarkdown(gen) {
 async function build() {
   const sizes = {};
 
-  // Price index: fresh from the database when possible.
+  // Price index: fresh from the database when possible. Either way the
+  // minimum-sample rule (src/lib/priceIndexPolicy.js) is applied before
+  // the file is written, so every copy built from it (CSV, pages, server
+  // HTML, llms-full.txt, MCP) leaves out small rows and marks thin ones,
+  // even while the database still runs an older open_price_index().
   const fresh = await fetchPriceIndex();
   if (fresh) {
-    writeFileSync(PRICE_INDEX, json({ ...PRICE_META, ...fresh }), 'utf8');
+    writeFileSync(PRICE_INDEX, json(applyPricePolicy({ ...PRICE_META, ...fresh })), 'utf8');
   } else if (existsSync(PRICE_INDEX)) {
     // Refresh the metadata on the snapshot so a methodology change ships.
     const old = JSON.parse(readFileSync(PRICE_INDEX, 'utf8'));
-    writeFileSync(PRICE_INDEX, json({ ...old, ...PRICE_META, latest: old.latest, monthly: old.monthly, generated_at: old.generated_at }), 'utf8');
+    writeFileSync(PRICE_INDEX, json(applyPricePolicy({ ...old, ...PRICE_META, latest: old.latest, monthly: old.monthly, generated_at: old.generated_at })), 'utf8');
   }
   const priceIndex = loadPriceIndex();
   if (priceIndex) sizes['data/price-index.csv'] = write('data/price-index.csv', priceIndexCsv(priceIndex));

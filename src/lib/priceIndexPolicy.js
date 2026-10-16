@@ -1,0 +1,90 @@
+/**
+ * How many listings a Geck Inspect Price Index row needs before it is
+ * published, and when a published row is marked as a thin sample.
+ *
+ * Why: the index published any trait with at least 5 listings. A median of
+ * 5 asking prices moves by hundreds of dollars when one seller relists, and
+ * small rows exposed label mix-ups (the South Korea row had Harlequin at 6
+ * listings next to Extreme Harlequin at 395). The adversarial review asked
+ * for at least 30 per row (section 11), which the comprehensive review
+ * adopted (item 27).
+ *
+ *   under 30 listings   left out of every published copy
+ *   30 to 99 listings   published and marked "thin sample"
+ *   100 or more         published as is
+ *
+ * One module so the JSON and CSV files (scripts/build-agent-data.mjs), the
+ * pages (PriceIndexTable, /data, /crested-gecko-price, their server HTML),
+ * llms-full.txt and the MCP server all apply and state the same rule. The
+ * database function open_price_index() applies the same minimum
+ * (supabase/migrations/20261015232300_seo.sql); a test keeps them equal.
+ *
+ * Dependency-free so Node scripts can import it.
+ */
+
+export const PRICE_INDEX_MIN_LISTINGS = 30;
+export const PRICE_INDEX_THIN_LISTINGS = 100;
+
+/** Plain-language rule, for page footnotes and the dataset methodology. */
+export const PRICE_INDEX_SAMPLE_RULE =
+  `A row needs at least ${PRICE_INDEX_MIN_LISTINGS} listings to be shown. ` +
+  `Rows with fewer than ${PRICE_INDEX_THIN_LISTINGS} are marked as a thin sample, because a few relisted geckos can move their median.`;
+
+/** True when a latest-check row has enough listings to publish. */
+export function isPublishableRow(row) {
+  return Number(row?.listings) >= PRICE_INDEX_MIN_LISTINGS;
+}
+
+/** True when a published row is a thin sample. */
+export function isThinRow(row) {
+  const n = Number(row?.listings);
+  return n >= PRICE_INDEX_MIN_LISTINGS && n < PRICE_INDEX_THIN_LISTINGS;
+}
+
+// Marketplace trait labels that name a Morph Guide page by another name.
+// "Reverse Pinstripe" has no page of its own; the Pinstripe page explains it.
+// A test checks every target is a real morph slug, since a wrong one is a 404.
+const TRAIT_SLUGS = {
+  'Tri-color': 'tricolor',
+  Phantom: 'phantom-pinstripe',
+  'Red Base': 'red-base',
+  'Yellow Base': 'yellow-base',
+  'Extreme Harlequin': 'extreme-harlequin',
+  'Super Dalmatian': 'super-dalmatian',
+  'Lilly White': 'lilly-white',
+  'Soft Scale': 'soft-scale',
+  'White Wall': 'white-wall',
+  'Reverse Pinstripe': 'pinstripe',
+};
+const SAME_NAME_TRAITS = new Set([
+  'Harlequin', 'Pinstripe', 'Dalmatian', 'Tiger', 'Brindle', 'Axanthic', 'Cappuccino', 'Sable',
+  'Patternless', 'Lavender', 'Olive', 'Cream', 'Buckskin', 'Hypo',
+]);
+
+/** The Morph Guide slug a market trait label links to, or null. */
+export function priceTraitMorphSlug(trait) {
+  if (!trait) return null;
+  if (Object.prototype.hasOwnProperty.call(TRAIT_SLUGS, trait)) return TRAIT_SLUGS[trait];
+  return SAME_NAME_TRAITS.has(trait) ? trait.toLowerCase() : null;
+}
+
+/** Every slug priceTraitMorphSlug can return (for the test). */
+export const PRICE_TRAIT_LINK_SLUGS = [...new Set([...Object.values(TRAIT_SLUGS), ...[...SAME_NAME_TRAITS].map((t) => t.toLowerCase())])];
+
+/**
+ * The index with only publishable rows, each latest row carrying
+ * `thin: true|false`. Monthly rows are kept when their average daily
+ * listing count meets the same minimum. That is a fallback for data from
+ * the older open_price_index(): the current one already drops each day
+ * under the minimum before taking a month's median, so its rows always
+ * pass. Works on an index already filtered (idempotent) and returns null
+ * for null.
+ */
+export function applyPricePolicy(index) {
+  if (!index || !Array.isArray(index.latest)) return index ?? null;
+  return {
+    ...index,
+    latest: index.latest.filter(isPublishableRow).map((row) => ({ ...row, thin: isThinRow(row) })),
+    monthly: (index.monthly || []).filter((row) => Number(row?.avg_listings) >= PRICE_INDEX_MIN_LISTINGS),
+  };
+}

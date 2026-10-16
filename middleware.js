@@ -10,9 +10,20 @@
  *    the SPA shell, a prerendered page, or a file. A public/404.html
  *    cannot do this: Vercel would serve that file before the rewrite
  *    and break refresh on /MyGeckos and /Dashboard.
+ *    Morph pages, taxonomy hubs, care topics and calculator pages are
+ *    listed one by one, so /MorphGuide/not-a-morph is a real 404 too.
+ * 3. A wrong-case address that matches exactly one real page
+ *    (/recognition, /Blog/<post>, /MorphGuide/Harlequin) gets a 301 to
+ *    the canonical spelling instead of a 404.
+ * 4. Link-preview fetchers (Facebook, iMessage, Discord, Slack) asking
+ *    for a passport, breeder, store or waitlist page get a small page
+ *    with that gecko's or breeder's own title, description and photo
+ *    (api/_lib/share-cards.js). They cannot run the app, so they used to
+ *    show the homepage card. People's browsers are never affected.
  */
 import { classifyAgent, logAgentHit } from './api/_lib/bots.js';
-import { isKnownAppPath } from './api/_lib/known-paths.js';
+import { canonicalPathFor, isKnownAppPath } from './api/_lib/known-paths.js';
+import { isLinkPreviewBot, loadShareCard, renderShareCard, shareTargetFor } from './api/_lib/share-cards.js';
 import {
   FOUNDER_NAME,
   FOUNDER_URL,
@@ -59,7 +70,12 @@ export const config = {
   ],
 };
 
-export default function middleware(request, context) {
+/**
+ * @param {Request} request
+ * @param {{ waitUntil?: (p: Promise<unknown>) => void }} [context]
+ * @param {{ loadCard?: typeof loadShareCard }} [deps] injectable for tests
+ */
+export default async function middleware(request, context, deps = {}) {
   const url = new URL(request.url);
   const ua = request.headers.get('user-agent') || '';
   const hit = classifyAgent(ua);
@@ -67,6 +83,16 @@ export default function middleware(request, context) {
     context?.waitUntil?.(logAgentHit({ ...hit, path: url.pathname, ua }));
   }
   if (!isKnownAppPath(url.pathname)) {
+    const canonical = canonicalPathFor(url.pathname);
+    if (canonical) {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          location: new URL(`${canonical}${url.search}`, url.origin).toString(),
+          'cache-control': 'public, max-age=3600',
+        },
+      });
+    }
     return new Response(NOT_FOUND_HTML, {
       status: 404,
       headers: {
@@ -76,6 +102,25 @@ export default function middleware(request, context) {
         'x-robots-tag': 'noindex, nofollow',
       },
     });
+  }
+  if (request.method === 'GET' && isLinkPreviewBot(ua)) {
+    const target = shareTargetFor(url.pathname);
+    if (target) {
+      const card = await (deps.loadCard || loadShareCard)(target);
+      if (card) {
+        return new Response(renderShareCard(card), {
+          status: 200,
+          headers: {
+            'content-type': 'text/html; charset=utf-8',
+            // Only preview fetchers get this page, so no shared cache may
+            // keep it and hand it to a person's browser.
+            'cache-control': 'private, max-age=300',
+            vary: 'user-agent',
+            'x-content-type-options': 'nosniff',
+          },
+        });
+      }
+    }
   }
   return undefined;
 }
