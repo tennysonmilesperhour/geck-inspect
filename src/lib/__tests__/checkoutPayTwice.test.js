@@ -14,10 +14,10 @@ const USER = { id: '11111111-1111-1111-1111-111111111111', email: 'keeper@exampl
 const KEEPER_MONTHLY = 'price_1TUxEsLBdc4xGjxqyPV4DOYb';
 const BREEDER_LIFETIME = 'price_1UQV94LBdc4xGjxqwzNWvXyI';
 
-function setup({ storeRows = [], storeError = null, openSessions = [], expireFails = false, listFails = false } = {}) {
+function setup({ storeRows = [], storeError = null, openSessions = [], expireFails = false, listFails = false, profile = {} } = {}) {
   const db = fakeSupabase((call) => {
     if (call.table === 'profiles') {
-      return { data: { stripe_customer_id: 'cus_test', subscription_status: null, membership_billing_cycle: null }, error: null };
+      return { data: { stripe_customer_id: 'cus_test', subscription_status: null, membership_billing_cycle: null, ...profile }, error: null };
     }
     if (call.table === 'revenuecat_entitlements') return { data: storeError ? null : storeRows, error: storeError };
     return undefined;
@@ -118,4 +118,15 @@ describe('stripe-checkout keeps only the newest Checkout page payable', () => {
     expect(res.status).toBe(502);
     expect(stripePaths()).not.toContain('POST /checkout/sessions');
   });
+
+  it('leaves an open page alone when it refuses a trial already used', async () => {
+    for (const [intent, profile] of [['trial', { free_trial_used: true }], ['keeper_trial', { keeper_trial_used: true }]]) {
+      const { fn, stripePaths } = setup({ openSessions: [{ id: 'cs_other_tab', status: 'open' }], profile });
+      const res = await buy(fn, { tier: 'keeper', billing_cycle: 'monthly', price_id: KEEPER_MONTHLY, intent });
+      expect(res.status).toBe(400);
+      expect((await res.json()).trial_already_used).toBe(true);
+      expect(stripePaths().some((p) => p.endsWith('/expire'))).toBe(false);
+    }
+  });
 });
+

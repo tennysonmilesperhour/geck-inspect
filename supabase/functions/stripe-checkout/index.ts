@@ -463,6 +463,41 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // Trial-period decision tree. Zero means no trial, which is the default:
+  // someone who clicks "Get Keeper" is buying a membership and expects the
+  // first charge today. Only an explicit trial intent adds free days.
+  // Decided before any open Checkout page is expired below, so a refused
+  // trial request never cancels a checkout the member has open in another
+  // tab. A lifetime purchase has no trial and ignores a trial intent.
+  let trialDays = 0;
+  let isKeeperPromoTrial = false;
+  let isStandardTrial = false;
+  if (cycle === "lifetime") {
+    // no trial on a one-time price
+  } else if (intent === "keeper_trial" && tier === "keeper") {
+    if (profile?.keeper_trial_used) {
+      return jsonResponse(
+        { error: "You have already used your one Keeper trial.", trial_already_used: true },
+        400,
+      );
+    }
+    trialDays = KEEPER_PROMO_TRIAL_DAYS;
+    isKeeperPromoTrial = true;
+  } else if (intent === "trial") {
+    if (profile?.free_trial_used) {
+      return jsonResponse(
+        {
+          error:
+            "You have already used your free trial. Starting this plan bills you today.",
+          trial_already_used: true,
+        },
+        400,
+      );
+    }
+    trialDays = STANDARD_TRIAL_DAYS;
+    isStandardTrial = true;
+  }
+
   try {
     await expireOpenCheckoutSessions(stripeKey, customerId!);
   } catch (err) {
@@ -503,36 +538,6 @@ Deno.serve(async (req: Request) => {
     } catch (err) {
       return jsonResponse({ error: (err as Error).message }, 502);
     }
-  }
-
-  // Trial-period decision tree. Zero means no trial, which is the default:
-  // someone who clicks "Get Keeper" is buying a membership and expects the
-  // first charge today. Only an explicit trial intent adds free days.
-  let trialDays = 0;
-  let isKeeperPromoTrial = false;
-  let isStandardTrial = false;
-  if (intent === "keeper_trial" && tier === "keeper") {
-    if (profile?.keeper_trial_used) {
-      return jsonResponse(
-        { error: "You have already used your one Keeper trial.", trial_already_used: true },
-        400,
-      );
-    }
-    trialDays = KEEPER_PROMO_TRIAL_DAYS;
-    isKeeperPromoTrial = true;
-  } else if (intent === "trial") {
-    if (profile?.free_trial_used) {
-      return jsonResponse(
-        {
-          error:
-            "You have already used your free trial. Starting this plan bills you today.",
-          trial_already_used: true,
-        },
-        400,
-      );
-    }
-    trialDays = STANDARD_TRIAL_DAYS;
-    isStandardTrial = true;
   }
 
   const sessionForm = new URLSearchParams();
