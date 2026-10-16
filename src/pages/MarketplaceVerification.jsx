@@ -1,11 +1,18 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Package, User, MessageSquare, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Package, User, MessageSquare, ArrowRight, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema, ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { createPageUrl } from '@/utils';
+import {
+  EVERY_SELLER_HAS,
+  VERIFIED_BREEDER_CHECKS,
+  VERIFIED_BREEDER_DEFINITION,
+  VERIFIED_BREEDER_LABEL,
+  VERIFIED_BREEDER_LIMITS,
+} from '@/lib/verifiedBreeder';
 
 const PATH = '/MarketplaceVerification';
 const URL = `${SITE_URL}${PATH}`;
@@ -52,7 +59,9 @@ const VERIFICATION_JSON_LD = [
         name: 'How does Geck Inspect verify breeders on the marketplace?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Sellers on the Geck Inspect marketplace operate from accounts tied to an email-verified identity and a visible profile history. Listings carry the gecko\'s tracked weight history, lineage, and photo timeline as stored on Geck Inspect, so the animal\'s ownership history is transparent rather than asserted in free text. We don\'t issue a single binary "verified" badge; instead we surface the on-platform data (account age, number of geckos tracked, listing history, lineage provenance) so buyers can evaluate sellers with real signal.',
+          // One definition of Verified breeder, shared with every badge
+          // (src/lib/verifiedBreeder.js).
+          text: `${EVERY_SELLER_HAS} ${VERIFIED_BREEDER_DEFINITION} ${VERIFIED_BREEDER_LIMITS} Listings also carry the gecko's tracked weight history, lineage and photo timeline as stored on Geck Inspect, so its history is on record rather than claimed in free text.`,
         },
       },
       {
@@ -91,9 +100,9 @@ const VERIFICATION_JSON_LD = [
   },
 ];
 
-function Section({ icon: Icon, title, children }) {
+function Section({ icon: Icon, title, children, id }) {
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900 p-6 md:p-8">
+    <section id={id} className="scroll-mt-6 rounded-xl border border-slate-700 bg-slate-900 p-6 md:p-8">
       <h2 className="text-xl md:text-2xl font-bold text-white mb-3 flex items-center gap-2">
         <Icon className="w-5 h-5 text-emerald-400" />
         {title}
@@ -147,10 +156,27 @@ export default function MarketplaceVerification() {
         <p className="text-xs text-slate-500 mb-10">{bylineText(PATH)}</p>
 
         <div className="space-y-6">
-          <Section icon={User} title="How we verify sellers">
+          <Section icon={User} title="How we check sellers">
             <p>
-              Every marketplace listing is posted by an account tied to a verified email and a visible profile history. We don't issue a binary "verified breeder" badge, instead, buyers see the on-platform data the seller has actually accumulated: account age, number of geckos tracked, lineage depth, previous listing history, and photo timeline for the specific animal being sold.
+              {EVERY_SELLER_HAS} Buyers also see what the seller has built up here: account age, number of geckos tracked, lineage depth, earlier listings, and the photo timeline of the animal being sold.
             </p>
+          </Section>
+
+          <Section id="verified-breeder" icon={ShieldCheck} title={`What ${VERIFIED_BREEDER_LABEL} means`}>
+            <p>{VERIFIED_BREEDER_DEFINITION}</p>
+            <ul className="list-disc pl-5 space-y-1">
+              {VERIFIED_BREEDER_CHECKS.map((check) => (
+                <li key={check.key}>
+                  <span className="text-white font-semibold">{check.label}.</span> {check.hint}
+                </li>
+              ))}
+            </ul>
+            <p>
+              Every check has to pass before the badge can be given. {VERIFIED_BREEDER_LIMITS}
+            </p>
+          </Section>
+
+          <Section icon={History} title="The animal's own history">
             <p>
               Geck Inspect stores every gecko's weight log, photo history, and parent attribution as part of normal collection management. When a seller lists that animal, that full history is inherited by the listing. Buyers get real provenance, not a claim in a free-text field.
             </p>

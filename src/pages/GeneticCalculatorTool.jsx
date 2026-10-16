@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import GeneticCalculator from '../components/breeding/GeneticCalculator';
 import BreedingSimulator from '../components/innovations/BreedingSimulator';
+import CalculatorResultSummary from '../components/breeding/CalculatorResultSummary';
 import ManualGenotypePicker, {
   buildParentFromState,
 } from '../components/breeding/ManualGenotypePicker';
@@ -376,6 +377,10 @@ export default function GeneticCalculatorTool({
                           </div>
                         )}
 
+                        {/* The parent pickers and the answer summary share one
+                            box, so the summary sticks while the pickers scroll
+                            past and lets go when the full results arrive. */}
+                        <div>
                         {/* Omnibox: type a pairing in breeder shorthand */}
                         <form onSubmit={handleOmnibox} className="mb-4">
                           <div className="flex gap-2">
@@ -395,6 +400,18 @@ export default function GeneticCalculatorTool({
                             <p className="text-xs text-amber-300 mt-1.5">{omniboxNote}</p>
                           )}
                         </form>
+
+                        {/* The answer, right under the button that asked for
+                            it (it used to start about 4,500 px further down on
+                            a phone). */}
+                        {hasParents && (
+                          <CalculatorResultSummary
+                            sire={sire}
+                            dam={dam}
+                            resultsId="calculator-results"
+                            className="sticky top-2 z-20 mb-4"
+                          />
+                        )}
 
                         {/* Reverse-mode and learn-mode cross-links */}
                         <div className="mb-4 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -424,6 +441,7 @@ export default function GeneticCalculatorTool({
                                   value={sireZygosity}
                                   onChange={setSireZygosity}
                                   accentClass="border-blue-700"
+                                  parentLabel="Sire"
                                 />
                               </div>
                               <div className="flex justify-center pt-8">
@@ -433,6 +451,7 @@ export default function GeneticCalculatorTool({
                                   onClick={handleSwap}
                                   className="border-slate-600 hover:bg-slate-700 rounded-full"
                                   title="Swap parents"
+                                  aria-label="Swap sire and dam"
                                 >
                                   <ArrowLeftRight className="w-4 h-4" />
                                 </Button>
@@ -443,6 +462,7 @@ export default function GeneticCalculatorTool({
                                   value={damZygosity}
                                   onChange={setDamZygosity}
                                   accentClass="border-pink-700"
+                                  parentLabel="Dam"
                                 />
                               </div>
                             </div>
@@ -468,9 +488,9 @@ export default function GeneticCalculatorTool({
                           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 mb-6">
                             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
                               <div className="space-y-2">
-                                <Label className="text-blue-400 font-semibold">♂ Parent A (Sire)</Label>
+                                <Label id="calc-sire-label" className="text-blue-400 font-semibold">♂ Parent A (Sire)</Label>
                                 <Select value={sireId} onValueChange={setSireId}>
-                                  <SelectTrigger className="bg-slate-800 border-blue-700 text-slate-100">
+                                  <SelectTrigger id="calc-sire-pick" aria-labelledby="calc-sire-label calc-sire-pick" className="bg-slate-800 border-blue-700 text-slate-100">
                                     <SelectValue placeholder="Select gecko..." />
                                   </SelectTrigger>
                                   <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
@@ -498,14 +518,15 @@ export default function GeneticCalculatorTool({
                                   onClick={handleSwap}
                                   className="border-slate-600 hover:bg-slate-700 rounded-full"
                                   title="Swap parents"
+                                  aria-label="Swap sire and dam"
                                 >
                                   <ArrowLeftRight className="w-4 h-4" />
                                 </Button>
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-pink-400 font-semibold">♀ Parent B (Dam)</Label>
+                                <Label id="calc-dam-label" className="text-pink-400 font-semibold">♀ Parent B (Dam)</Label>
                                 <Select value={damId} onValueChange={setDamId}>
-                                  <SelectTrigger className="bg-slate-800 border-pink-700 text-slate-100">
+                                  <SelectTrigger id="calc-dam-pick" aria-labelledby="calc-dam-label calc-dam-pick" className="bg-slate-800 border-pink-700 text-slate-100">
                                     <SelectValue placeholder="Select gecko..." />
                                   </SelectTrigger>
                                   <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
@@ -530,9 +551,11 @@ export default function GeneticCalculatorTool({
                           </div>
                         )}
 
+                        </div>
+
                         <div className="space-y-6">
                           {/* Calculator results, same engine for both modes */}
-                          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                          <div id="calculator-results" className="scroll-mt-4 bg-slate-900 border border-slate-700 rounded-xl p-5">
                             <GeneticCalculator sire={hasParents ? sire : null} dam={hasParents ? dam : null} />
                           </div>
 

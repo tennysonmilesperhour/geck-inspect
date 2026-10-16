@@ -17,7 +17,7 @@ const JSON_LD = [
 ];
 
 const card = 'bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-6';
-const link = 'text-emerald-400 hover:text-emerald-300';
+const link = 'text-emerald-400 hover:text-emerald-300 underline underline-offset-2';
 
 export default function OpenData() {
   return (

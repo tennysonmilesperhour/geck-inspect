@@ -1179,7 +1179,7 @@ export default function Lineage() {
                             )}
                         </div>
                         <Select value={generations.toString()} onValueChange={(v) => setGenerations(parseInt(v))}>
-                            <SelectTrigger className="w-28 h-10">
+                            <SelectTrigger aria-label="Generations to show" className="w-28 h-10">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -1451,11 +1451,11 @@ export default function Lineage() {
                 {/* Zoom controls, desktop only. Mobile users pinch-zoom with
                     two fingers (native touch-action handles it). */}
                 <div className="hidden md:flex absolute bottom-4 left-4 z-10 items-center gap-2">
-                    <Button size="icon" variant="outline" onClick={() => setScale(s => Math.max(0.3, s - 0.1))} className="bg-slate-800 border-slate-600">
+                    <Button size="icon" variant="outline" aria-label="Zoom out" onClick={() => setScale(s => Math.max(0.3, s - 0.1))} className="bg-slate-800 border-slate-600">
                         <ZoomOut className="w-4 h-4" />
                     </Button>
                     <span className="bg-slate-800 px-3 py-1 rounded-md text-sm font-mono border border-slate-600">{Math.round(scale * 100)}%</span>
-                    <Button size="icon" variant="outline" onClick={() => setScale(s => Math.min(2, s + 0.1))} className="bg-slate-800 border-slate-600">
+                    <Button size="icon" variant="outline" aria-label="Zoom in" onClick={() => setScale(s => Math.min(2, s + 0.1))} className="bg-slate-800 border-slate-600">
                         <ZoomIn className="w-4 h-4" />
                     </Button>
                 </div>

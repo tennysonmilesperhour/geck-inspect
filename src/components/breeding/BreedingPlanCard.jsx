@@ -435,7 +435,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 {eggCounts.hatched > 0 && (
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <div className="bg-green-600 text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-default">
+                                            <div className="bg-green-700 text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-default">
                                                 ✓ {eggCounts.hatched}
                                             </div>
                                         </TooltipTrigger>

@@ -599,7 +599,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 <p className="text-xs text-slate-400 mb-3">Archive reason:</p>
                                 <div className="flex gap-2 flex-wrap">
                                     {[
-                                        { value: 'death', label: 'Passed Away' },
+                                        { value: 'death', label: 'Passed away' },
                                         { value: 'sold', label: 'Sold' },
                                         { value: 'other', label: 'Other' },
                                     ].map(opt => (

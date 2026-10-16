@@ -838,6 +838,9 @@ const CLUTCHES = [
 // ---------------------------------------------------------------------------
 // Forum posts
 // ---------------------------------------------------------------------------
+// Sample posts for the demo. They carry no view counts: a made-up "903
+// views" next to a made-up name told guests the forum was busier than it
+// is (adversarial review, October 2026), so the demo shows none.
 const FORUM_POSTS = [
   {
     id: 'mock-post-1',
@@ -848,7 +851,6 @@ const FORUM_POSTS = [
     author_name: 'LumenReptiles',
     created_by: 'lumen@example.com',
     created_date: daysAgo(2),
-    view_count: 184,
     is_pinned: false,
   },
   {
@@ -860,7 +862,6 @@ const FORUM_POSTS = [
     author_name: 'NightCrest',
     created_by: 'night@example.com',
     created_date: daysAgo(5),
-    view_count: 903,
     is_pinned: true,
   },
   {
@@ -872,7 +873,6 @@ const FORUM_POSTS = [
     author_name: 'DeltaGeckos',
     created_by: 'delta@example.com',
     created_date: daysAgo(9),
-    view_count: 412,
     is_pinned: false,
   },
   {
@@ -884,7 +884,6 @@ const FORUM_POSTS = [
     author_name: 'MossyFootReptiles',
     created_by: 'mossy@example.com',
     created_date: daysAgo(14),
-    view_count: 267,
     is_pinned: false,
   },
   {
@@ -896,7 +895,6 @@ const FORUM_POSTS = [
     author_name: 'CedarAcres',
     created_by: 'cedar@example.com',
     created_date: daysAgo(18),
-    view_count: 89,
     is_pinned: false,
   },
 ];

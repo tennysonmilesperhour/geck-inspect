@@ -35,14 +35,14 @@ The six ids are shared by both settings. The ids are stored, so never rename one
 | `lavender` | Lavender | `#c084fc` | `#160d1c` |
 | `super-hypo` | Hypo | `#e0b308` | `#161109` |
 
-The default for a new visitor is `blizzard` for both (`DEFAULT_THEME` and `DEFAULT_SECONDARY` in `ThemeContext.jsx`, and the same default in the `index.html` script, which must be kept in sync). The script in `index.html` applies the saved choice before any CSS loads, so there is no flash of the wrong colours.
+The default for a new visitor is `normal` (Emerald) for both, since October 2026 (`DEFAULT_THEME` and `DEFAULT_SECONDARY` in `ThemeContext.jsx`, and the same default in the `index.html` script, which must be kept in sync). It was `blizzard` before. A member with a saved theme keeps it. A theme is only saved once the member picks one in Settings; the old code saved the default on first load, which is why 115 of 147 profiles held `blizzard` on 16 October without anyone choosing it. The script in `index.html` applies the saved choice before any CSS loads, so there is no flash of the wrong colours.
 
 ## 3. Colour tokens
 
 Every colour is an HSL triplet in a CSS variable, so Tailwind's opacity syntax works (`bg-slate-900/50`). Tokens come in five groups:
 
 1. **Semantic tokens** (shadcn names): `--background`, `--foreground`, `--card`, `--popover`, `--primary`, `--secondary`, `--muted`, `--muted-foreground`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--chart-1` to `--chart-5`, and the `--sidebar-*` set. Each theme redefines all of them. Use them through `bg-background`, `text-muted-foreground`, `border-border` and so on.
-2. **`slate-*` and `gray-*`** (50 lightest to 950 darkest, Tailwind's usual direction). Both are remapped to the same per-theme variables, so neutral greys carry the theme's hue. `slate-950` is the page, `slate-900` the card, `slate-700` the hairline border, `slate-100` to `slate-300` body text, `slate-400` and `slate-500` muted text.
+2. **`slate-*` and `gray-*`** (50 lightest to 950 darkest, Tailwind's usual direction). Both read the same variables. The dark end (600 to 950) is per theme, so surfaces carry the theme's hue: `slate-950` is the page, `slate-900` the card, `slate-700` the hairline border. The text end (50 to 500) is a neutral grey in every theme (a block after the theme blocks in `index.css`), so text never re-tints with the theme or accent: `slate-100` to `slate-300` body text, `slate-400` and `slate-500` muted text, with `slate-500` at 62% lightness so it passes 4.5 to 1 on every dark surface. Links inside a paragraph are underlined by a base rule in `index.css`.
 3. **`sage-*`** (the brand scale, inverted: 50 is the darkest, 900 the lightest), redefined per theme.
 4. **`emerald-*`** (50 to 950), driven by the accent setting. With the `normal` accent it equals Tailwind's stock emerald. About 1,900 class names use it, so changing the accent re-tints them all without touching components.
 5. **Fixed colours**: `earth-*` stays orange in every theme (alerts, breeder perks, hatchling badges), and Tailwind's own `green-*`, `red-*` and `amber-*` keep their meaning (success, error, warning) whatever the accent.
@@ -70,7 +70,7 @@ All three load from Google Fonts in `index.html` with a non-blocking swap. One c
 ## 6. Components to reuse
 
 - **Page header:** `src/components/shared/PageHeader.jsx` (icon, title, one-line description, settings gear, actions with the primary action last). Used by 33 app pages. New app pages use it.
-- **Buttons:** `src/components/ui/button.jsx`. `default` is flat accent (`bg-emerald-600`, white text); `outline` is a dark accent-tinted outline; also `secondary`, `ghost`, `destructive` and `link`.
+- **Buttons:** `src/components/ui/button.jsx`. `default` is flat accent (`bg-emerald-700`, darker on hover, white text); `outline` is a dark accent-tinted outline; also `secondary`, `ghost`, `destructive` and `link`.
 - **Tabs:** `src/components/ui/tabs.jsx`, the house tab bar (dark strip, hairline border, scrolls sideways on phones instead of clipping).
 - **Empty states:** `src/components/shared/EmptyState.jsx`. One primary action, an optional second (for example "Import a spreadsheet" beside "Add your first gecko"), an optional hint line.
 - **Dialogs:** use the Radix dialog in `src/components/ui/dialog.jsx`. A hand-built full-screen overlay must spread `useModalOverlay(onClose)` (`src/hooks/useModalOverlay.js`) for Escape, focus and `role="dialog"`, so floating notices hide behind it.
@@ -91,7 +91,7 @@ These carried over from the old document. They are the standard for new work; th
 
 Recorded here so nobody mistakes them for the intended design. Fixes are proposed in the review; none is part of this document change.
 
-- **Contrast on the default theme.** Because `slate-*` re-tints with the theme, muted paragraphs on Blizzard render mid-blue on near-black, and in-text links can sit at about 1.3 to 1.6 to 1 against surrounding text. The review recommends Emerald as the default, a neutral body-text token that does not re-tint, `slate-500` one step lighter on dark surfaces and underlined in-text links.
+- **Contrast (fixed 16 October 2026).** Text used to re-tint with the theme, so on the old Blizzard default muted paragraphs rendered mid-blue on near-black. Emerald is now the default, the text greys are neutral, `slate-500` is a step lighter, in-text links are underlined, the default button is `emerald-700`, and the Emerald accent's `emerald-600` is 26% lightness so white text on it passes. An axe pass on 20 main pages at phone and laptop size (40 loads) went from 402 failing contrast nodes on 32 loads to 4 on 2; what is left is the rose "New" badge in the Morph Guide index components.
 - **Colours that ignore the theme.** The header and sidebar tint stay emerald, the logo is copper, and some pages add their own accent (a purple calculator button, an amber Enterprise card, a green gradient on the Dashboard stat tiles), so one screen can show four accent colours.
 - **No solid fallback for the glass bars** where `backdrop-filter` is not supported (older Android web views). A `@supports` fallback is recommended.
 - **Placeholder letters instead of drawings** for 28 of 36 morphs on the Morph Guide index.

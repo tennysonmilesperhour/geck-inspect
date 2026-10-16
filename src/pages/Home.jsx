@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { startDemoAtRecord } from '@/lib/guestTour';
 import PublicMobileMenu from '@/components/public/PublicMobileMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
@@ -460,10 +461,12 @@ export default function Home() {
   const { enterGuestMode, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // The demo opens on one gecko's record (value, parents, weigh-ins), the
+  // screen that shows what this page promises, not the Dashboard.
   const handleContinueAsGuest = (cta = 'hero') => {
     captureEvent('landing_cta_clicked', { cta, target: 'guest' });
     enterGuestMode();
-    navigate(createPageUrl('Dashboard'));
+    navigate(startDemoAtRecord());
   };
 
   // Hide the guest entry for already-signed-in users who just happen
@@ -608,28 +611,29 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center lg:justify-start items-center">
             {showGuestCta ? (
               <>
+                {/* One primary action, solid like the rest of the public
+                    site; the demo is a quieter text link so the two never
+                    look like the same choice. */}
                 <Button
                   asChild
                   size="lg"
-                  variant="ghost"
-                  className="home-glass-button home-glass-button--primary w-full sm:w-auto text-base px-8 py-3"
+                  className="w-full sm:w-auto min-h-12 rounded-full text-base px-8 py-3 bg-emerald-700 hover:bg-emerald-800"
                 >
                   <Link
                     to="/AuthPortal?mode=signup"
                     onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'signup' })}
                   >
-                    Create free account
+                    Start free, no card needed
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button>
-                <Button
-                  size="lg"
-                  variant="ghost"
+                <button
+                  type="button"
                   onClick={() => handleContinueAsGuest('hero')}
-                  className="home-glass-button w-full sm:w-auto text-base px-6 py-3"
+                  className="min-h-11 px-2 text-base font-medium text-slate-100 underline underline-offset-4 decoration-slate-400 hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white rounded"
                 >
-                  Or look around the demo collection
-                </Button>
+                  Or see a sample gecko record
+                </button>
               </>
             ) : (
               <Button
@@ -1057,28 +1061,29 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-3">
             {showGuestCta ? (
               <>
+                {/* One primary action, solid like the rest of the public
+                    site; the demo is a quieter text link so the two never
+                    look like the same choice. */}
                 <Button
                   asChild
                   size="lg"
-                  variant="ghost"
-                  className="home-glass-button home-glass-button--primary w-full sm:w-auto text-base px-8 py-3"
+                  className="w-full sm:w-auto min-h-12 rounded-full text-base px-8 py-3 bg-emerald-700 hover:bg-emerald-800"
                 >
                   <Link
                     to="/AuthPortal?mode=signup"
                     onClick={() => captureEvent('landing_cta_clicked', { cta: 'bottom', target: 'signup' })}
                   >
-                    Create free account
+                    Start free, no card needed
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button>
-                <Button
-                  size="lg"
-                  variant="ghost"
+                <button
+                  type="button"
                   onClick={() => handleContinueAsGuest('bottom')}
-                  className="home-glass-button w-full sm:w-auto text-base px-6 py-3"
+                  className="min-h-11 px-2 text-base font-medium text-slate-100 underline underline-offset-4 decoration-slate-400 hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white rounded"
                 >
-                  Or look around the demo collection
-                </Button>
+                  Or see a sample gecko record
+                </button>
               </>
             ) : (
               <Button

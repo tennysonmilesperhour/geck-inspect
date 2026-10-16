@@ -14,6 +14,18 @@ html, body {
   overscroll-behavior: none;
 }
 
+/* overflow-x: hidden on body made body a scroll container that never
+   scrolls, so position: sticky never engaged on public pages (the
+   calculator's answer summary, the Morph Guide filter bar, the Care Guide
+   topic list; MorphSectionNav carries a workaround for it). clip hides
+   sideways overflow exactly the same way without creating a scroll
+   container. Browsers without clip keep hidden. */
+@supports (overflow: clip) {
+  html body {
+    overflow-x: clip;
+  }
+}
+
 /* Scroll containment for every scroll surface in the app.
    Tailwind's overflow utilities create the scroll containers, but by
    default reaching the end of one lets the gesture chain to the page
@@ -247,7 +259,10 @@ button:focus-visible {
     --emerald-300: 156 72% 67%;
     --emerald-400: 158 64% 52%;
     --emerald-500: 160 84% 39%;
-    --emerald-600: 161 94% 30%;
+    /* 26% rather than stock emerald's 30%: about 15 buttons and badges set
+       bg-emerald-600 with white text by hand, which measured 3.86 to 1
+       (4.5 needed). At 26% it is 4.9 to 1. October 2026. */
+    --emerald-600: 161 94% 26%;
     --emerald-700: 163 94% 24%;
     --emerald-800: 163 88% 20%;
     --emerald-900: 164 86% 16%;
@@ -710,6 +725,43 @@ button:focus-visible {
   }
 
   /* ------------------------------------------------------------------
+     Body text is a neutral light grey in every theme (October 2026).
+
+     The light end of the slate scale (50 to 500) is what the app uses
+     for text: about 1,050 text-slate-500 and hundreds of text-slate-300
+     and -400. Each theme above tinted it with its own hue, so on the
+     old default theme (Blizzard) every paragraph rendered mid-blue on
+     near-black, and the comprehensive review's axe pass counted 622
+     contrast failures on 33 of 44 pages (B4, B6). Text now stays a
+     neutral grey whatever theme or accent a member picks; the dark end
+     (600 to 950: page, card and border surfaces) still carries the
+     theme. slate-500 sits one step lighter than before (62% instead of
+     about 48%), so muted captions pass 4.5 to 1 on every dark surface.
+     This block comes after the theme blocks with the same specificity,
+     so it wins for all six themes; gray-* reads the same variables.
+     ------------------------------------------------------------------ */
+  :root[data-theme] {
+    --slate-50:  0 0% 98%;
+    --slate-100: 0 0% 94%;
+    --slate-200: 0 0% 88%;
+    --slate-300: 0 0% 81%;
+    --slate-400: 0 0% 71%;
+    --slate-500: 0 0% 62%;
+  }
+
+  /* A link inside a sentence is underlined, so it is never told apart
+     from the words around it by colour alone (axe link-in-text-block:
+     calculator, price, data and Terms links measured 1.3 to 1.6 to 1
+     against the text beside them). Zero-specificity :where() keeps any
+     link that styles itself (a no-underline or button-like link) in
+     charge of its own look. */
+  p a:where(:not([class*="bg-"]):not([role="button"])) {
+    text-decoration-line: underline;
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: from-font;
+  }
+
+  /* ------------------------------------------------------------------
      Secondary "Accent color" palettes. Independent from the primary
      theme above, users pick one via the Settings → Accent picker
      which writes data-secondary on <html>.
@@ -757,7 +809,10 @@ button:focus-visible {
     --emerald-300: 156 72% 67%;
     --emerald-400: 158 64% 52%;
     --emerald-500: 160 84% 39%;
-    --emerald-600: 161 94% 30%;
+    /* 26% rather than stock emerald's 30%: about 15 buttons and badges set
+       bg-emerald-600 with white text by hand, which measured 3.86 to 1
+       (4.5 needed). At 26% it is 4.9 to 1. October 2026. */
+    --emerald-600: 161 94% 26%;
     --emerald-700: 163 94% 24%;
     --emerald-800: 163 88% 20%;
     --emerald-900: 164 86% 16%;

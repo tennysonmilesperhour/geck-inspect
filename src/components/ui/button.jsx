@@ -15,8 +15,11 @@ const buttonVariants = cva(
         // so on every non-emerald accent the primary button rendered as
         // a two-color smear. Flat emerald-600 is also what ~130 call
         // sites were already overriding to by hand.
+        // October 2026: one step darker (700, darker again on hover).
+        // White on emerald-600 measured 3.86 to 1, under the 4.5 to 1
+        // that button text needs; on 700 it is 5.5 to 1.
         default:
-          "bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-black/20",
+          "bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-md shadow-black/20",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         // Themed to match the dark-emerald shell (shadcn's stock

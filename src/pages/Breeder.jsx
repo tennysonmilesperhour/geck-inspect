@@ -19,6 +19,7 @@ import { useInAppShell } from '@/lib/appShell';
 import TrustPanel from '@/components/marketplace/TrustPanel';
 import ReportContent from '@/components/support/ReportContent';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
+import { VERIFIED_BREEDER_LABEL } from '@/lib/verifiedBreeder';
 import {
   DEFAULT_STORE_SETTINGS, readStoreSettings, BuiltOnGeckInspect,
 } from '@/components/storefront/StorefrontSections';
@@ -362,7 +363,9 @@ export default function Breeder() {
           name: siteName,
           alternateName: slug,
           url: breederUrl,
-          description: siteDescription || `${displayName}, ${profile.is_verified ? 'a verified' : 'a'} crested gecko breeder on Geck Inspect.`,
+          description: siteDescription || (profile.is_verified
+            ? `${displayName}, a ${VERIFIED_BREEDER_LABEL} of crested geckos on Geck Inspect.`
+            : `${displayName}, a crested gecko breeder on Geck Inspect.`),
           logo: storeSettings.website?.logoUrl || profile.profile_photo || LOGO_URL,
           image: storePage?.header_image_url || profile.banner_photo || profile.profile_photo || LOGO_URL,
           ...(profile.location ? { address: { '@type': 'PostalAddress', addressLocality: profile.location } } : {}),
