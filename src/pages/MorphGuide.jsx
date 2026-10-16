@@ -33,7 +33,6 @@ import MorphIndexAppHooks from '@/components/morphguide/MorphIndexAppHooks';
 import { useMorphGuideData, sanitizeImage, normMorph } from '@/components/morphguide/MorphIndexData';
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import MorphQuiz from '@/components/morphguide/MorphQuiz';
-import MorphFamilyMap from '@/components/morphguide/MorphFamilyMap';
 import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
 
 // The pattern studio and the eye colour section sit far down the page,
@@ -928,9 +927,6 @@ export default function MorphGuidePage() {
               <PatternSpectrum className="mt-12" />
               <MorphEyeGuide className="mt-12" />
             </Suspense>
-
-            <MorphFamilyMap morphs={allMorphs} />
-
 
             <MorphIndexCompareTable />
 

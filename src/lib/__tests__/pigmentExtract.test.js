@@ -36,11 +36,11 @@ describe('pigment extraction (precomputed Morph Guide layers)', () => {
     const w = 4, h = 1;
     const base = flat(w, h, 100);
     const edited = flat(w, h, 100);
-    paint(edited, w, 0, 0, 1, 1, 80); // 20 darker: drift, ignored
+    paint(edited, w, 0, 0, 1, 1, 76); // 24 darker: drift, ignored
     paint(edited, w, 1, 0, 2, 1, 70); // 30 darker: just over, faint
     const layer = pigmentAlpha(base, edited, 'tiger');
     expect(alphaAt(layer, w, 0, 0)).toBe(0);
-    expect(alphaAt(layer, w, 1, 0)).toBe(16);
+    expect(alphaAt(layer, w, 1, 0)).toBe(45);
   });
 
   it('turns painted spots into boxes in study coordinates and drops specks', () => {

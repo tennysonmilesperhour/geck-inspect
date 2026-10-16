@@ -22,7 +22,8 @@
  * browsers holding the old files fetch the new ones.
  *
  * The pigment arithmetic lives in src/components/morphguide/pigmentExtract.js
- * (unchanged from the old in-browser version, and unit tested). Decoding
+ * (the old in-browser arithmetic with the thresholds retuned for the
+ * 16 October 2026 drawings, and unit tested). Decoding
  * and resizing use sharp, which is already installed as a dependency of
  * @vercel/og.
  */

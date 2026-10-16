@@ -9,8 +9,9 @@
 // 1536 x 1024 drawings per trait, every pixel read twice, about 3 seconds
 // of a frozen phone). The drawings never change, so
 // scripts/precompute-trait-layers.mjs now runs it once and the page loads
-// the finished layers. The arithmetic is unchanged from the browser
-// version, so the layers look the same.
+// the finished layers. The arithmetic matches the browser version, with
+// the thresholds Tennyson retuned for the October 2026 drawings (drift
+// under 24 levels ignored, specks under 36 pixels dropped).
 //
 // Pure functions on RGBA byte arrays: no DOM, no canvas, so Node and the
 // tests can run them.
@@ -20,6 +21,11 @@ export const PIGMENT_TRAITS = ['cream', 'pin', 'tiger', 'spots'];
 // The drawings' coordinate box (TraitGecko's SVG viewBox).
 export const STUDY_WIDTH = 1000;
 export const STUDY_HEIGHT = 667;
+
+// Differences up to this many grey levels are redraw drift, not paint.
+export const DRIFT = 24;
+// A painted patch smaller than this many pixels is a speck, not a spot.
+export const MIN_SPOT = 36;
 
 /**
  * Returns a new RGBA array: the edited drawing's colours, with alpha set
@@ -34,14 +40,14 @@ export function pigmentAlpha(base, edited, trait) {
     const after = (layer[i] + layer[i + 1] + layer[i + 2]) / 3;
     const delta = light ? after - before : before - after;
     const pigment = light ? after > 150 && before < 215 : after < (trait === 'spots' ? 92 : 125);
-    layer[i + 3] = pigment && delta > 28 ? Math.min(255, (delta - 28) * 8) : 0;
+    layer[i + 3] = pigment && delta > DRIFT ? Math.min(255, (delta - DRIFT) * 7.5) : 0;
   }
   return layer;
 }
 
 /**
  * Spots only: finds each painted spot (4-connected pixels at least half
- * opaque), clears specks under 40 pixels from the layer in place, and
+ * opaque), clears specks under MIN_SPOT pixels from the layer in place, and
  * returns one box per spot in study coordinates. The boxes come back in a
  * fixed pseudo-random order so the spots slider reveals them scattered
  * across the body rather than front to back.
@@ -65,7 +71,7 @@ export function spotRegions(layer, width, height) {
         }
       }
     }
-    if (region.length < 40) region.forEach((at) => { layer[at * 4 + 3] = 0; });
+    if (region.length < MIN_SPOT) region.forEach((at) => { layer[at * 4 + 3] = 0; });
     else regions.push({
       x: minX / width * STUDY_WIDTH,
       y: minY / height * STUDY_HEIGHT,

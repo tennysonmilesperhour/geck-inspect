@@ -3,13 +3,13 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
-import TraitGecko, { traitAsset, CREST_PATHS } from '@/components/morphguide/TraitGecko';
+import TraitGecko, { traitAsset, CREST_PATHS, BASE_TONES } from '@/components/morphguide/TraitGecko';
 import IllustratedGecko, { STUDY_MORPHS, fieldGuidePlate, hasIllustration } from '@/components/morphguide/IllustratedGecko';
 import MorphEyeGuide, { EYE_COLOR_STUDIES, MorphEyeStudyPanel, eyeStudyForMorph } from '@/components/morphguide/MorphEyeGuide';
 import { eyeStudyIdForMorph } from '@/components/morphguide/eyeStudyIndex';
 import { pinSegments } from '@/components/morphguide/traitStudyMath';
-import { SPECIMENS, STUDY_LESSONS, STUDY_QUESTIONS, normalizedStudy, traitDescription } from '@/components/morphguide/patternStudy';
-import PatternSpectrum, { spectrumPositionFor } from '@/components/morphguide/PatternSpectrum';
+import { SPECIMENS, STUDY_LESSONS, STUDY_QUESTIONS, MORPH_PROGRESSION_TRACKS, normalizedStudy, traitDescription } from '@/components/morphguide/patternStudy';
+import PatternSpectrum, { spectrumPositionFor, MorphProgressionPlayer, CustomMorphComparator } from '@/components/morphguide/PatternSpectrum';
 import { SpecimenPhoto } from '@/components/morphguide/SpecimenStudy';
 import { MORPHS } from '@/data/morph-guide';
 import { PROJECT_LINES, projectLinePlate } from '@/data/project-lines';
@@ -17,7 +17,9 @@ vi.mock('@/lib/posthog', () => ({ captureEvent: vi.fn() }));
 const slugs = new Set(MORPHS.map(m => m.slug));
 
 describe('specimen-based lessons', () => {
-  it('connects every lesson and practice question to credited specimen records', () => {
+  it('connects every lesson and practice question to credited specimen records and local approved assets', () => {
+    expect(STUDY_LESSONS.length).toBeGreaterThanOrEqual(6);
+    expect(STUDY_QUESTIONS.length).toBeGreaterThanOrEqual(8);
     for (const lesson of STUDY_LESSONS) {
       expect(slugs.has(lesson.guide)).toBe(true);
       expect(lesson.examples.length).toBeGreaterThan(1);
@@ -26,9 +28,13 @@ describe('specimen-based lessons', () => {
     for (const question of STUDY_QUESTIONS) {
       expect(SPECIMENS[question.specimen]).toBeTruthy();
       expect(question.answers[question.correct]).toBeTruthy();
+      if (question.plateSlug) expect(slugs.has(question.plateSlug)).toBe(true);
     }
     for (const photo of Object.values(SPECIMENS)) {
       expect(photo.source).toMatch(/^https:\/\//);
+      if (photo.reuseApproved) {
+        expect(existsSync(`public${photo.src}`)).toBe(true);
+      }
       for (const point of photo.points) { expect(point.x).toBeGreaterThanOrEqual(0); expect(point.x).toBeLessThanOrEqual(100); expect(point.y).toBeGreaterThanOrEqual(0); expect(point.y).toBeLessThanOrEqual(100); }
     }
   });
@@ -41,6 +47,10 @@ describe('specimen-based lessons', () => {
   it('opens appropriate studies without treating Phantom as a pin-continuity setting', () => {
     expect(spectrumPositionFor('pinstripe')).toEqual({ track:'pinning', pos:2 });
     expect(spectrumPositionFor('dalmatian')).toEqual({ track:'features', pos:0 });
+    expect(spectrumPositionFor('harlequin')).toEqual({ track:'coverage', pos:2 });
+    expect(spectrumPositionFor('lilly-white')).toEqual({ track:'coverage', pos:2 });
+    expect(spectrumPositionFor('brindle')).toEqual({ track:'features', pos:0 });
+    expect(spectrumPositionFor('cappuccino')).toEqual({ track:'pigment', pos:0 });
     expect(spectrumPositionFor('phantom-pinstripe')).toBeNull();
     expect(spectrumPositionFor('patternless')).toBeNull();
   });
@@ -53,6 +63,53 @@ describe('specimen-based lessons', () => {
     const cleared = renderToStaticMarkup(<SpecimenPhoto specimen={{ ...SPECIMENS.flame, reuseApproved: true }} previewPhotos={false} />);
     expect(cleared).toContain('<img');
     expect(cleared).toContain(SPECIMENS.flame.src);
+  });
+});
+
+describe('animated morph progression tracks', () => {
+  it('validates all 5 morph progression tracks, stage plates, and anatomical callouts', () => {
+    expect(MORPH_PROGRESSION_TRACKS).toHaveLength(5);
+    for (const track of MORPH_PROGRESSION_TRACKS) {
+      expect(track.steps.length).toBeGreaterThanOrEqual(4);
+      for (const step of track.steps) {
+        expect(slugs.has(step.slug)).toBe(true);
+        expect(existsSync(`public${fieldGuidePlate(step.slug)}`)).toBe(true);
+        expect(step.traits).toBeTruthy();
+        expect(step.pins.length).toBeGreaterThan(0);
+        for (const pt of step.pins) {
+          expect(pt.x).toBeGreaterThanOrEqual(0);
+          expect(pt.x).toBeLessThanOrEqual(100);
+          expect(pt.y).toBeGreaterThanOrEqual(0);
+          expect(pt.y).toBeLessThanOrEqual(100);
+        }
+      }
+    }
+  });
+  it('renders MorphProgressionPlayer and CustomMorphComparator cleanly', () => {
+    const playerHtml = renderToStaticMarkup(
+      <MemoryRouter>
+        <MorphProgressionPlayer trackId="coverage" initialStep={3} />
+      </MemoryRouter>
+    );
+    expect(playerHtml).toContain('Field guide progression');
+    expect(playerHtml).toContain('Animate transition');
+    expect(playerHtml).toContain('/morph-guide/field-guide-v1/harlequin.webp');
+
+    const compHtml = renderToStaticMarkup(
+      <MemoryRouter>
+        <CustomMorphComparator initialA="flame" initialB="harlequin" />
+      </MemoryRouter>
+    );
+    expect(compHtml).toContain('Crossfade any two morphs in the field guide');
+    expect(compHtml).toContain('/morph-guide/field-guide-v1/flame.webp');
+    expect(compHtml).toContain('/morph-guide/field-guide-v1/harlequin.webp');
+    // Only morphs with a plate on disk can be picked, so the crossfade never
+    // shows a broken image (Phantom and Whiteout have no plate yet).
+    const offered = [...compHtml.matchAll(/<option value="([^"]+)"/g)].map(m => m[1]);
+    expect(offered.length).toBeGreaterThan(0);
+    for (const slug of offered) expect(existsSync(`public${fieldGuidePlate(slug)}`), slug).toBe(true);
+    expect(offered).not.toContain('phantom');
+    expect(offered).not.toContain('whiteout');
   });
 });
 
@@ -125,13 +182,18 @@ describe('illustrated examples', () => {
     }
     expect(projectLinePlate('unknown-line')).toBeNull();
   });
-  it('draws the base and each requested layer straight from the precomputed pigment-only files, and interpolates masks smoothly without NaN', () => {
+  it('draws the base and each requested layer straight from the precomputed pigment-only files, and interpolates masks smoothly without NaN across every base tone', () => {
     const html=renderToStaticMarkup(<TraitGecko traits={{ dorsal:1,lateral:1,pinstripe:1,spots:1 }} />);
     expect(html).toContain('role="img"'); expect(html).toContain(traitAsset('side'));
     for (const layer of ['dorsal','lateral','pinstripe','spots']) expect(html).toContain(`data-layer="${layer}"`);
     // Never the full edited drawings (a whole second animal), and no in-page pixel work.
     expect(html).not.toContain('ink-studies'); expect(html).not.toContain('data:image');
     expect(html).not.toContain('NaN');
+    for (const toneKey of Object.keys(BASE_TONES)) {
+      const toneHtml = renderToStaticMarkup(<TraitGecko view="side" tone={toneKey} fired={0.75} traits={{ dorsal: 0.6, lateral: 0.5, pinstripe: 0.7, tiger: 0.4, spots: 0.3 }} />);
+      expect(toneHtml).not.toContain('NaN');
+      expect(toneHtml).toContain('feColorMatrix');
+    }
     for (const v of [0.05, 0.25, 0.5, 0.85, 1]) {
       const midHtml = renderToStaticMarkup(<TraitGecko view="top" tone="mahogany" fired={0.6} traits={{ dorsal: v, lateral: v, pinstripe: v, tiger: v, spots: v }} />);
       expect(midHtml).not.toContain('NaN');
@@ -158,10 +220,14 @@ describe('illustrated examples', () => {
       expect(statSync(`public${traitAsset(view,layer)}`).size).toBeLessThan(60 * 1024);
     }
   });
-  it('starts with real specimens and offers studio and recognition practice', () => {
+  it('starts with real specimens and offers studio, animated transitions, and recognition practice', () => {
     const html=renderToStaticMarkup(<MemoryRouter><PatternSpectrum focusSlug="pinstripe" /></MemoryRouter>);
-    expect(html).toContain('Guided observations'); expect(html).toContain('Pattern studio'); expect(html).toContain('Test your eye');
-    expect(html).toContain('data-trait-view="top"'); expect(html).toContain(SPECIMENS.pin.src);
+    expect(html).toContain('Guided observations');
+    expect(html).toContain('Pattern studio');
+    expect(html).toContain('Test your eye');
+    expect(html).toContain('Animated transitions');
+    expect(html).toContain('data-trait-view="top"');
+    expect(html).toContain(SPECIMENS.pin.src);
     expect(html).toContain('/MorphGuide/pinstripe');
   });
 });
