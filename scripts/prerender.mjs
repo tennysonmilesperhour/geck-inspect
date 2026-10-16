@@ -73,7 +73,7 @@ import {
 } from '../src/data/public-links.js';
 import { loadAppModule } from './lib/load-app-module.mjs';
 import { morphBreedingFact, morphGeneralLinks } from './lib/morph-page-links.mjs';
-import { PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_DATA_TERMS, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
+import { PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_INDEX_TERMS_SENTENCE, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
 import { GUIDE_CALCULATOR_ALIASES } from '../src/lib/genetics/calculatorCatalog.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -1113,7 +1113,7 @@ function openDataMeta(route) {
     bodyParagraphs: [
       ...priceSummary(),
       `AI assistants and developers can query the same data through the MCP server at ${MCP_URL} (no key needed), read the markdown version of any morph or care page by adding .md to its address, or start at ${SITE_URL}/llms.txt.`,
-      `Prices are asking prices on open listings, not sale prices. Prices outside the US are converted to USD. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} The morph and genetics data are licensed CC BY 4.0. Price Index: ${PRICE_DATA_TERMS} The care guide text is free to quote with a link.`,
+      `Prices are asking prices on open listings, not sale prices. Prices outside the US are converted to USD. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} The morph and genetics data are licensed CC BY 4.0. ${PRICE_INDEX_TERMS_SENTENCE} The care guide text is free to quote with a link.`,
     ],
     table: priceTable(25),
     linkSections: OPEN_DATASETS.map((d) => ({

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OPEN_DATASETS, openDataJsonLd, DATA_LICENSE } from '../../data/open-datasets.js';
-import { PRICE_DATA_LICENSE, PRICE_DATA_TERMS, PRICE_INDEX_WHAT } from '../priceIndexPolicy.js';
+import { PRICE_DATA_LICENSE, PRICE_DATA_TERMS, PRICE_INDEX_TERMS_SENTENCE, PRICE_INDEX_WHAT } from '../priceIndexPolicy.js';
 import { loadPriceIndex, priceIndexToMarkdown, morphMarkdown, normalizeMorph } from '../../../scripts/lib/agent-content.mjs';
 import { MORPHS } from '../../data/morph-guide.js';
 
@@ -33,7 +33,9 @@ describe('Price Index terms', () => {
   it('keep the Dataset markup for prices off CC BY, and the morph and genetics data on it', () => {
     const nodes = Object.fromEntries(openDataJsonLd('2026-10-16').filter((n) => n['@type'] === 'Dataset').map((n) => [n['@id'].split('#')[1], n]));
     expect(nodes['price-index'].license).toBeUndefined();
-    expect(nodes['price-index'].usageInfo).toBe(PRICE_DATA_TERMS);
+    // usageInfo must be a URL or a CreativeWork in schema.org, never bare text.
+    expect(nodes['price-index'].usageInfo).toEqual({ '@type': 'CreativeWork', name: 'Terms of use', text: PRICE_DATA_TERMS });
+    for (const node of Object.values(nodes)) if (node.usageInfo !== undefined) expect(typeof node.usageInfo, node['@id']).toBe('object');
     expect(nodes['price-index'].description).toMatch(/^An asking-price snapshot from public marketplace listings/);
     expect(nodes.morphs.license).toBe(DATA_LICENSE);
     expect(nodes.genetics.license).toBe(DATA_LICENSE);
@@ -90,6 +92,13 @@ describe('Price Index terms', () => {
     expect(read('public/llms-full.txt')).toContain(PRICE_DATA_TERMS);
     expect(read('api/_lib/mcp-core.js')).toContain(PRICE_DATA_TERMS);
     expect(read('src/pages/OpenData.jsx')).toContain('The Price Index is free to cite with a link');
+  });
+
+  it('read as one sentence in the /data server HTML, not "Price Index: Free to cite with a link: ..."', () => {
+    expect(PRICE_INDEX_TERMS_SENTENCE).toBe('The Price Index is free to cite with a link: you may quote and cite these numbers, with a link to the page they came from.');
+    const prerender = read('scripts/prerender.mjs');
+    expect(prerender).not.toContain('Price Index: ${PRICE_DATA_TERMS}');
+    expect(prerender).toContain('${PRICE_INDEX_TERMS_SENTENCE}');
   });
 });
 

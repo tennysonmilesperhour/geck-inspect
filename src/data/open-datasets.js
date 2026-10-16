@@ -96,7 +96,9 @@ export function openDataJsonLd(dateModified) {
       creator: org,
       publisher: org,
       isAccessibleForFree: true,
-      ...(d.license ? { license: d.license } : { usageInfo: d.licenseNote }),
+      // schema.org wants a URL or a CreativeWork for usageInfo, not bare
+      // text, so the terms sentence goes in a CreativeWork's text.
+      ...(d.license ? { license: d.license } : { usageInfo: { '@type': 'CreativeWork', name: 'Terms of use', text: d.licenseNote } }),
       ...(dateModified ? { dateModified } : {}),
       ...(d.temporalStart && dateModified ? { temporalCoverage: `${d.temporalStart}/${dateModified.slice(0, 7)}` } : {}),
       ...(d.spatialCoverage ? { spatialCoverage: d.spatialCoverage } : {}),

@@ -87,9 +87,13 @@ describe('the genetics and facts check', () => {
 
 describe('Morph Guide privacy', () => {
   it('names no private breeder or home town (Albino entry, 16 Oct 2026 review)', () => {
-    const text = JSON.stringify(MORPHS);
-    expect(text).not.toMatch(/Nicole Cullen|Newberry/);
+    // This test names no one, since the repo is public. It checks that the
+    // business is credited with no person or place in brackets after it and
+    // no home state. The next test catches any "(Firstname Lastname," mention.
     const albino = MORPHS.find((m) => m.slug === 'albino');
+    const albinoText = JSON.stringify(albino);
+    expect(albinoText).not.toMatch(/Eureka Exotics \(/);
+    expect(albinoText).not.toMatch(/Florida/);
     expect(albino.description).toContain('Eureka Exotics announced');
   });
 
