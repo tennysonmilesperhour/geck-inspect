@@ -36,7 +36,7 @@ const PublicPageShell = lazy(() => import('@/components/public/PublicPageShell')
 const SignedOutFallback = lazy(() => import('@/components/public/SignedOutFallback'));
 import ScrollToTop from '@/components/shared/ScrollToTop';
 import RetiredPageNotice from '@/components/shared/RetiredPageNotice';
-import { pwaLaunchTarget } from '@/lib/pwaLaunch';
+import { firstScreenPage, handlePwaLaunch, isPhoneScreen, pendingPwaLaunch } from '@/lib/pwaLaunch';
 import NativeCareSync from '@/components/native/NativeCareSync';
 import { captureReferralFromUrl } from '@/lib/referral';
 import { captureFirstTouch } from '@/lib/attribution';
@@ -74,8 +74,11 @@ const Home = lazy(loadHome);
 
 // Start downloading the code the first screen needs while the auth check
 // runs, instead of after it. Signed-in members and demo guests land in
-// the app shell (Layout + Dashboard); signed-out visitors on "/" land on
-// the landing page.
+// the app shell (Layout) on their home: Today on a phone, the Dashboard
+// on wider screens (firstScreenPage in src/lib/pwaLaunch.js, which uses
+// the same phone test as the launch handler below). The installed app's
+// first open of a session is warmed for where the launch handler is about
+// to send it. Signed-out visitors on "/" land on the landing page.
 function warmFirstScreen() {
   if (typeof window === 'undefined') return;
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -87,7 +90,10 @@ function warmFirstScreen() {
   } catch { /* storage blocked: fall through to the signed-out guess */ }
   if (hasSession) {
     import('./Layout.jsx').catch(() => {});
-    if (path === '/' || path === '/Dashboard') import('./pages/Dashboard').catch(() => {});
+    const page = firstScreenPage(pendingPwaLaunch(window) || path, isPhoneScreen(window));
+    if (page === 'Today') import('./pages/Today').catch(() => {});
+    else if (page === 'Dashboard') import('./pages/Dashboard').catch(() => {});
+    else if (page === 'MyGeckos') import('./pages/MyGeckos').catch(() => {});
   } else if (path === '/' || path === '/Home') {
     loadHome().catch(() => {});
   }
@@ -308,26 +314,19 @@ const AuthenticatedApp = () => {
     return () => clearTimeout(t);
   }, [isAuthenticated]);
 
-  // PWA launch redirect: existing home-screen icons may have been saved
-  // when start_url was "/" (or while the user was on /Messages), and iOS
-  // caches the manifest aggressively, so a manifest-only fix doesn't
-  // reach already-installed icons. Once per session, if the app was
-  // launched as a standalone PWA and lands on / or /Messages, bounce to
-  // /MyGeckos. The sessionStorage flag means subsequent in-app
-  // navigation to Messages still works normally.
+  // Installed app launch: existing home-screen icons may have been saved
+  // with an older start address ("/", /MyGeckos, or while the member was
+  // on /Messages), and iOS caches the manifest aggressively, so a
+  // manifest-only change doesn't reach already-installed icons. Once per
+  // session, the installed app goes to its home: Today on a phone (review
+  // item E3 25), My Geckos on a laptop or desktop, where desktop installs
+  // have always opened (src/lib/pwaLaunch.js). A session flag means later
+  // in-app navigation to those pages works normally. The move reloads the
+  // page at the new address, so a signed-out launch on "/" does not carry
+  // the homepage experiment's theme hold (index.html) to another page.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (sessionStorage.getItem('pwa_launch_handled')) return;
-    const isStandalone =
-      window.matchMedia?.('(display-mode: standalone)').matches ||
-      window.navigator.standalone === true;
-    if (!isStandalone) return;
-    sessionStorage.setItem('pwa_launch_handled', '1');
-    // Phones open on Today, the first tab (review item E3 25); desktop
-    // installs keep opening on My Geckos (src/lib/pwaLaunch.js).
-    const phone = Boolean(window.matchMedia?.('(max-width: 767px)').matches);
-    const target = pwaLaunchTarget(window.location.pathname, window.location.search, phone);
-    if (target) window.location.replace(target);
+    handlePwaLaunch(window, (target) => window.location.replace(target));
   }, []);
 
   // Show loading spinner while checking auth
