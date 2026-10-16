@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
   geckosById: {},
   owner: null,
   publicRows: [],
+  publicSheds: [],
   toasts: [],
   created: [],
   updates: [],
@@ -97,7 +98,10 @@ vi.mock('@/lib/supabaseClient', () => ({
       const chain = {
         select: () => chain,
         eq: () => chain,
-        order: async () => ({ data: table === 'weight_records' ? state.publicRows : [], error: null }),
+        order: async () => ({
+          data: table === 'weight_records' ? state.publicRows : table === 'shed_records' ? state.publicSheds : [],
+          error: null,
+        }),
       };
       return chain;
     },
@@ -215,6 +219,7 @@ beforeEach(() => {
   state.geckosById = { 'mate-1': { id: 'mate-1', name: 'Mango' } };
   state.owner = { id: 'u1', full_name: 'Tess Keeper', email: 'keeper@example.com' };
   state.publicRows = [];
+  state.publicSheds = [];
   state.toasts.length = 0;
   state.created.length = 0;
   state.updates.length = 0;
@@ -413,6 +418,20 @@ describe('who sees which actions', () => {
     expect(tree.root.findAll((n) => n.type === 'button' && n.props['aria-label'] === 'Edit Nimbus')).toHaveLength(0);
   });
 
+  it('a visitor\'s shed estimate reads the record\'s weight when there are no weigh-ins', async () => {
+    // An adult with a weight on its record, no hatch date and no weigh-ins
+    // used to get the juvenile 2 to 3 week cycle.
+    state.publicSheds = [{ date: '2026-10-10' }];
+    state.geckosById = { 'sire-1': SPUD, 'dam-1': HARLEY };
+    const adult = { ...NIMBUS, created_by: undefined, owner_profile_id: 'u1', hatch_date: null, weight_grams: 48 };
+    const tree = await mount({ gecko: adult, currentUser: null, canEdit: false, isMember: false, allGeckos: [] });
+    await vi.waitFor(async () => {
+      await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+      expect(textOf(tree)).toContain('recorded shed');
+    }, { timeout: 4000 });
+    expect(textOf(tree)).toContain('typical adult cycle (every 4 to 6 weeks)');
+  });
+
   it('every jump link lands on a section, whoever is looking', async () => {
     state.weights = [];
     state.geckosById = { 'sire-1': SPUD, 'dam-1': HARLEY };
@@ -454,5 +473,18 @@ describe('who sees which actions', () => {
     expect(tree.root.findAll((n) => n.type === 'button' && n.props['aria-label'] === 'Edit Nimbus')).toHaveLength(0);
     expect(hasButton(tree, 'Unarchive')).toBe(false);
     expect(hasButton(tree, 'Delete for good')).toBe(false);
+  });
+});
+
+describe('the empty weight panel', () => {
+  it('suggests the same weigh-in rhythm as the reminders and the care guide', async () => {
+    // It said "every two to four weeks", against the care guide's every 1
+    // to 2 weeks while growing and the 14-day reminder.
+    state.weights = [];
+    let tree = await mount({ gecko: { ...NIMBUS, hatch_date: null, weight_grams: null } });
+    expect(textOf(tree)).toContain('No weigh-ins yet. Weigh Nimbus every 2 weeks while growing to keep track of its weight.');
+    tree = await mount({ gecko: { ...NIMBUS, hatch_date: null, weight_grams: 48 } });
+    expect(textOf(tree)).toContain('Weigh Nimbus once a month as an adult');
+    expect(textOf(tree)).not.toMatch(/two to four weeks/);
   });
 });

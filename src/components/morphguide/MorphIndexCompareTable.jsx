@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { MORPHS, MORPH_CATEGORIES, INHERITANCE, RARITY } from '@/data/morph-guide';
+import { MORPHS, MORPH_CATEGORIES, INHERITANCE, RARITY, noGuidePriceLabel } from '@/data/morph-guide';
 
 /**
  * Every morph in one real <table>: name (linked), category, inheritance,
@@ -120,7 +120,7 @@ export default function MorphIndexCompareTable({ morphs = MORPHS }) {
                     )}
                   </td>
                   <td className="px-3 py-2 text-slate-300 whitespace-nowrap">
-                    {price || <span className="text-slate-500">No market price yet</span>}
+                    {price || <span className="text-slate-500">{noGuidePriceLabel(m)}</span>}
                   </td>
                 </tr>
               );

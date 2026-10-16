@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE_URL } from '@/lib/constants';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 // Loaded on first use, not with the page (src/lib/supabaseLazy.js).
@@ -41,7 +41,7 @@ import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
 import { licenseLabel } from '@/lib/imageLicenses';
 import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
-import ReportContent from '@/components/support/ReportContent';
+import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import ContentSignupPrompt, { possessive } from '@/components/public/ContentSignupPrompt';
@@ -51,6 +51,11 @@ import RelatedMorphs, { MorphPrevNext } from '@/components/morphguide/RelatedMor
 import MorphSectionNav from '@/components/morphguide/MorphSectionNav';
 import Reveal from '@/components/morphguide/Reveal';
 import { calculatorHref, trackMorphCta } from '@/components/morphguide/morphCta';
+import {
+  CALCULATOR_PAGES_BY_SLUG,
+  COMPLEX_OPTIONS_BY_VALUE,
+  SIMPLE_TRAITS,
+} from '@/lib/genetics/calculatorCatalog';
 import MorphText from '@/components/morphguide/MorphText';
 import { MorphImageContext, morphInitials } from '@/components/morphguide/MorphPreviewCard';
 import MorphGeneticsDemo, { geneticsDemoFor } from '@/components/morphguide/MorphGeneticsDemo';
@@ -58,6 +63,32 @@ import MorphProgressBar from '@/components/morphguide/MorphProgressBar';
 import MorphSwipeNav from '@/components/morphguide/MorphSwipeNav';
 import PatternSpectrum, { spectrumPositionFor } from '@/components/morphguide/PatternSpectrum';
 import IllustratedGecko, { hasIllustration } from '@/components/morphguide/IllustratedGecko';
+
+// The report button on member photos loads with the first photo, not with
+// the page: it renders nothing for signed-out visitors, and its dialog,
+// select and moderation code were about 12 kB of every visit's download.
+// lazyOptional, not React.lazy: a tab open across a release asks for a
+// file name that no longer exists, and a phone can drop one request. The
+// download is retried twice and then the button is left out, instead of
+// the whole page falling through to the app's "Something went wrong"
+// screen (for signed-out visitors too, who never see the button).
+const ReportContent = lazyOptional(() => import('@/components/support/ReportContent'));
+
+/**
+ * The badge the genetics calculator gives the gene behind a morph page:
+ * 'proven', 'emerging', or null when the calculator does not model it.
+ * Reads the one-copy pages (/calculator/<slug>), the Cappuccino group's
+ * combos and supers (Luwak, Super Sable) and the supers of the other genes
+ * (Super Empty Back takes Empty Back's badge).
+ */
+export function calculatorBadge(slug) {
+  const page = CALCULATOR_PAGES_BY_SLUG[slug];
+  if (page) return page.confidence;
+  const option = COMPLEX_OPTIONS_BY_VALUE[String(slug).replace(/-/g, '_')];
+  if (option?.confidence) return option.confidence;
+  const gene = SIMPLE_TRAITS.find((t) => t.super_label?.toLowerCase().replace(/\s+/g, '-') === slug);
+  return gene?.confidence || null;
+}
 
 const RARITY_LABELS = {
   common: 'Common',
@@ -531,7 +562,7 @@ export default function MorphDetail() {
       ? { label: 'Breeding', value: notBred.fact, to: '#genetics' }
       : {
           label: 'Typical price',
-          value: localMorph?.priceRange || (localMorph ? 'No market yet' : 'Varies'),
+          value: localMorph?.priceRange || (localMorph ? 'No guide price yet' : 'Varies'),
           to: '#price',
         },
   ];
@@ -770,9 +801,17 @@ export default function MorphDetail() {
                 </div>
               ) : (
                 <div className="rounded-xl border border-neutral-800 bg-neutral-900/60 p-5">
+                  {/* No priceRange is a gap in this guide, not proof there
+                      is no market: the Price Index has hundreds of Phantom
+                      and Empty Back listings. "Until the trait is proven"
+                      unless the calculator badges the gene Proven: Emerging
+                      genes, and Albino, which the calculator does not model
+                      because its inheritance is not shown yet. */}
                   <p className="leading-relaxed">
-                    There is no established market price for {morphName} crested geckos yet.
-                    Treat any listing with caution until the trait is proven and animals sell openly.
+                    Geck Inspect does not give a typical price for {morphName} yet. See the{' '}
+                    <Link to="/crested-gecko-price" className="text-emerald-300 underline">Price Index</Link>{' '}
+                    for current asking prices.
+                    {calculatorBadge(slug) !== 'proven' && ' Treat any listing with caution until the trait is proven and animals sell openly.'}
                   </p>
                 </div>
               )}
@@ -876,14 +915,16 @@ export default function MorphDetail() {
                               Photo by {img.credit}
                             </figcaption>
                           ) : <span />}
-                          <ReportContent
-                            targetType={img.submission_id ? 'morph_photo' : 'gecko_image'}
-                            targetId={img.submission_id || img.id}
-                            authorProfileId={img.owner_profile_id}
-                            excerpt={img.image_url}
-                            compact
-                            className="h-7 px-2 shrink-0"
-                          />
+                          <Suspense fallback={null}>
+                            <ReportContent
+                              targetType={img.submission_id ? 'morph_photo' : 'gecko_image'}
+                              targetId={img.submission_id || img.id}
+                              authorProfileId={img.owner_profile_id}
+                              excerpt={img.image_url}
+                              compact
+                              className="h-7 px-2 shrink-0"
+                            />
+                          </Suspense>
                         </div>
                       </figure>
                     ))}

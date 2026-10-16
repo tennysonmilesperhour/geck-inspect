@@ -8,13 +8,14 @@
  * prices on public crested gecko listings (the trait value table behind
  * the Price Index and the gecko value estimate) and how many listings that
  * rests on. A look with too few listings shows nothing rather than a
- * number that would move with one sale.
+ * number that would move with one sale, and so does a look the index has
+ * no trait of its own for, rather than another trait's listings.
  *
  * Pure functions: the panel loads the index (loadTraitValueIndex) and
  * passes it in.
  */
 import { labelFor } from '../components/morph-id/morphTaxonomy.js';
-import { matchTraitsInText } from './traitValuation.js';
+import { toWords } from './traitValuation.js';
 
 /** Fewer listings than this and the range is not shown. */
 export const MIN_LISTINGS = 10;
@@ -26,9 +27,10 @@ const AGE_WORDS = {
   adult: 'adults',
 };
 
-// Taxonomy labels sometimes carry a number ("Full Pinstripe (100%)").
+// Taxonomy labels sometimes carry a note in brackets ("Full Pinstripe
+// (100%)", "Axanthic (VCA)"); the look is the name before it.
 function plainLabel(id) {
-  return labelFor(id, '').replace(/\s*\(\d+%\)/g, '').trim();
+  return labelFor(id, '').replace(/\s*\([^)]*\)/g, '').trim();
 }
 
 /** The listings band to use: this age class when there are enough, else every age. */
@@ -64,9 +66,13 @@ export function morphIdPriceRows(looks, index, ageStage = 'unknown', { max = 3 }
   for (const { id, gene } of wanted) {
     const look = plainLabel(id);
     if (!look) continue;
-    // Only a trait the label itself names: "Lilly White" prices as Lilly
-    // White, never as something that merely shares a word with it.
-    const key = matchTraitsInText(look, index)[0];
+    // Only a trait whose name or alias is the whole look: "Lilly White"
+    // prices as Lilly White. A look the index has no listings of shows
+    // nothing rather than a trait that shares a word with it: Super
+    // Harlequin is not priced from Harlequin listings, Extreme Brindle from
+    // Brindle or Red Dalmatian from every listing that says "red" (October
+    // 2026 review).
+    const key = index.aliases.get(toWords(look).join(' '));
     if (!key || used.has(key)) continue;
     const trait = index.traits.get(key);
     const band = trait && bandFor(trait, ageStage);

@@ -12,6 +12,8 @@
  *                (YYYY-MM-DD). Order does not matter, we sort internally.
  *   - weights:   WeightRecord rows (weight_records table), each with
  *                `record_date` and `weight_grams`.
+ *   - weightGrams: the gecko record's own weight (geckos.weight_grams),
+ *                used for the life stage when no weigh-in is logged.
  *   - hatchDate: the gecko's hatch_date string, if known.
  *   - today:     injectable "now" for tests, defaults to the real today.
  *
@@ -24,6 +26,9 @@
  *     2 weeks, juveniles every 2 to 3, sub-adults every 3 to 4 and adults
  *     every 4 to 6. The stage comes from the latest weight and the hatch
  *     date, the same rule as the weigh-in reminders (src/lib/lifeStage.js).
+ *     The latest weight is the newest weigh-in, else the record's own
+ *     weight: many geckos have a weight on the record and no weigh-ins,
+ *     and without it an adult got the juvenile 2 to 3 week cycle.
  *
  * Adjustment
  *   - Recent weight gain above ~5% over roughly 30 days shortens the window
@@ -127,6 +132,7 @@ function latestWeightGrams(weights) {
 export function predictNextShed({
   sheds = [],
   weights = [],
+  weightGrams = null,
   hatchDate = null,
   today = new Date(),
 } = {}) {
@@ -144,10 +150,11 @@ export function predictNextShed({
   const lastShed = shedCount > 0 ? shedDates[shedDates.length - 1] : null;
 
   // Life stage, used only when the animal lacks its own shed rhythm. With
-  // sheds logged but no weight or hatch date, the juvenile rhythm is the
-  // middle guess.
+  // sheds logged but no weight anywhere and no hatch date, the juvenile
+  // rhythm is the middle guess.
+  const recordGrams = Number(weightGrams);
   const stage = stageShedWindow(careStage({
-    weightGrams: latestWeightGrams(weights),
+    weightGrams: latestWeightGrams(weights) ?? (weightGrams != null && recordGrams > 0 ? recordGrams : null),
     hatchDate: hatched ? format(hatched, 'yyyy-MM-dd') : null,
     today: now,
   }));

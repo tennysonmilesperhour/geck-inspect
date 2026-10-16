@@ -11,6 +11,7 @@ import {
 import WeightChart from '@/components/shared/WeightChart';
 import WeighInReminderSwitch from '@/components/gecko/WeighInReminderSwitch';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { weighInCadenceLabel, weighInIntervalDays } from '@/lib/lifeStage';
 import RecordCard from './RecordCard';
 
 const day = (iso) => {
@@ -78,7 +79,10 @@ export default function RecordWeights({ gecko, weights, latest, loading, canEdit
       ) : weights.length > 0 ? (
         <WeightChart records={weights} gecko={gecko} height={180} />
       ) : (
-        <p className="text-slate-400 text-sm">No weigh-ins yet. A weigh-in every two to four weeks shows how {gecko.name || 'your gecko'} is growing.</p>
+        // The same rhythm as the weigh-in reminders and the care guide
+        // (src/data/husbandry-facts.js): every 2 weeks while growing, every
+        // 3 as a sub-adult, monthly as an adult.
+        <p className="text-slate-400 text-sm">No weigh-ins yet. Weigh {gecko.name || 'your gecko'} {weighInCadenceLabel(weighInIntervalDays(gecko))} to keep track of its weight.</p>
       )}
 
       {canEdit && (

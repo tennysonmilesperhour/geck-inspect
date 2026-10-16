@@ -311,19 +311,29 @@ export const SETUP_GUIDE = {
             { title: 'Log weight with date', text: 'This is your baseline.' },
           ],
         },
-        { type: 'heading', text: 'Healthy weight benchmarks' },
+        { type: 'heading', text: 'Typical weight by age' },
         {
           type: 'kv',
-          // The typical range the app's weight chart shades at each age
-          // (src/lib/growthBand.js). A test keeps these rows equal to it.
+          // The life-stage pace in src/data/husbandry-facts.js: hatch
+          // weight, the end of each stage (3 g at 3 months, 15 g at 12, 35 g
+          // at 18) with 6 months on the juvenile pace between, and the adult
+          // range. A test keeps these rows equal to that file. They are what
+          // a typical gecko weighs, not the edges of healthy: until October
+          // 2026 this table showed the weight chart's band, whose low edge
+          // (3 g at 6 months) is provisional and read as "healthy".
           rows: [
-            { label: 'At hatch', value: '1.5-3g' },
-            { label: '3 months', value: '2-9g' },
-            { label: '6 months', value: '3-15g' },
-            { label: '12 months', value: '11-35g' },
-            { label: '18 months', value: '25-48g' },
-            { label: 'Full adult (2+ yrs)', value: '35-60g' },
+            { label: 'At hatch', value: '1.5 to 3 g' },
+            { label: '3 months', value: 'about 3 g' },
+            { label: '6 months', value: 'about 7 g' },
+            { label: '12 months', value: 'about 15 g' },
+            { label: '18 months', value: 'about 35 g' },
+            { label: 'Full adult (2+ yrs)', value: '35 to 60 g' },
           ],
+        },
+        {
+          type: 'callout',
+          tone: 'info',
+          text: 'Real geckos run ahead of or behind this pace. Expect about 0.5 to 1.5 g a month as a hatchling and 1 to 4 g a month as a juvenile, and watch the trend over several weigh-ins, not one.',
         },
       ],
     },

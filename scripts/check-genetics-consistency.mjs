@@ -22,8 +22,9 @@
  *   7. the genetics glossary (src/data/genetics-glossary.js)
  *   8. project lines (src/data/project-lines.js)
  *   9. the Morph Visualizer trait data (src/components/morph-visualizer/data/traits.js)
+ *   and the AI keeper assistant's server rules (supabase/functions/invoke-llm/consultant.ts)
  *
- * Prose surfaces (6 to 9) follow the dual-model policy below: text may
+ * Prose surfaces (6 to 9, and the assistant's rules) follow the dual-model policy below: text may
  * call an engine-modeled gene polygenic or unproven only if the same
  * passage also names the engine's model or credits Foundation Genetics.
  *
@@ -328,6 +329,17 @@ for (const file of GUIDE_FILES) {
     checkPassage('genetics-guide', `${file}:${line}`, text);
   }
 }
+// The AI keeper assistant's rules, which live on the server since October
+// 2026 (they used to be in src/pages/BreederConsultant.jsx). They told the
+// model Harlequin, Pinstripe and Dalmatian "are line-bred, not single
+// genes" with no word of the Foundation Genetics models.
+const PROMPT_PROSE_FILES = ['supabase/functions/invoke-llm/consultant.ts'];
+for (const file of PROMPT_PROSE_FILES) {
+  const source = readSource(file);
+  for (const { text, line } of stringLiterals(source)) {
+    checkPassage('ai-prompt', `${file}:${line}`, text);
+  }
+}
 // Each guide subsection titled after a gene must state its model.
 {
   const source = readSource('src/data/genetics-sections.jsx');
@@ -450,6 +462,7 @@ const FACT_FILES = [
   ['ai-prompt', 'supabase/functions/generate-social-post/index.ts', GENETICS_FACTS],
   ['ai-prompt', 'supabase/functions/health-screen/index.ts', GENETICS_FACTS],
   ['ai-prompt', 'src/pages/BreederConsultant.jsx', GENETICS_FACTS],
+  ['ai-prompt', 'supabase/functions/invoke-llm/consultant.ts', GENETICS_FACTS],
   ['ai-prompt', 'src/lib/assistantActions.js', GENETICS_FACTS],
 ];
 for (const [surface, file, only] of FACT_FILES) {

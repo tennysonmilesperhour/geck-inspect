@@ -15,8 +15,11 @@ vi.mock('@/components/public/ContentSignupPrompt', async (importOriginal) => {
 });
 vi.mock('@/hooks/useBlockedAuthors', () => ({ useBlockedMembers: () => ({ isBlocked: () => false }) }));
 
-import MorphDetail from '@/pages/MorphDetail';
-import { MORPHS, getMorph } from '@/data/morph-guide';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import MorphDetail, { calculatorBadge } from '@/pages/MorphDetail';
+import MorphIndexCompareTable from '@/components/morphguide/MorphIndexCompareTable';
+import { MORPHS, getMorph, noGuidePriceLabel } from '@/data/morph-guide';
 import { morphSeo } from '@/lib/morphMeta';
 import { morphFaq } from '@/lib/morphFaq';
 import { isLivingMorph, notBredStatus } from '@/lib/morphNotBred';
@@ -61,6 +64,7 @@ const BREED_OR_PRICE_PROMPTS = [
   /Identify it from a photo with Morph ID/,
   /Upload a photo to Morph ID/,
   /No market yet/,
+  /No guide price yet/,
 ];
 
 describe('super forms breeders avoid making', () => {
@@ -112,6 +116,90 @@ describe('super forms breeders avoid making', () => {
     expect(lethal).not.toContain('Add the first photo');
     // A Super Cappuccino does hatch, so a keeper can still add a photo.
     expect(pageText('super-cappuccino').text).toContain('Add the first photo');
+  });
+});
+
+describe('morph pages with no guide price', () => {
+  // Phantom, Empty Back and the other October 2026 entries have no
+  // priceRange. Their pages said "No market yet" and "until the trait is
+  // proven" while the Price Index had hundreds of listings of them and the
+  // calculator badges Phantom proven.
+  const NO_PRICE = MORPHS.filter((m) => !m.priceRange && !m.doNotBreed).map((m) => m.slug);
+
+  it('are the entries this test expects', () => {
+    expect(NO_PRICE).toEqual(['highway', 'albino', 'phantom', 'empty-back', 'super-empty-back', 'whiteout', 'super-whiteout', 'luwak', 'super-sable']);
+  });
+
+  it.each(NO_PRICE)('%s says Geck Inspect gives no price yet and points to the Price Index', (slug) => {
+    const { html, text } = pageText(slug);
+    const name = getMorph(slug).name;
+    expect(text).not.toContain('No market yet');
+    expect(text).toContain('No guide price yet');
+    expect(text).toContain(`Geck Inspect does not give a typical price for ${name} yet.`);
+    expect(text).toContain('Price Index');
+    expect(html).toContain('href="/crested-gecko-price"');
+  });
+
+  it('says "until the trait is proven" unless the calculator badges the trait Proven', () => {
+    const unproven = /until the trait is proven/;
+    for (const slug of ['empty-back', 'super-empty-back', 'whiteout', 'super-whiteout', 'luwak', 'super-sable', 'highway']) {
+      expect(calculatorBadge(slug), slug).toBe('emerging');
+      expect(pageText(slug).text, slug).toMatch(unproven);
+    }
+    expect(calculatorBadge('phantom')).toBe('proven');
+    expect(pageText('phantom').text).not.toMatch(unproven);
+    // Albino is not in the calculator (its inheritance is not shown yet),
+    // so it has no badge, and its price section keeps the caution.
+    expect(calculatorBadge('albino')).toBeNull();
+    expect(pageText('albino').text).toMatch(unproven);
+  });
+
+  it('reads the badge the calculator shows', () => {
+    expect(calculatorBadge('lilly-white')).toBe('proven');
+    expect(calculatorBadge('super-lilly-white')).toBe('proven');
+    expect(calculatorBadge('cappuccino')).toBe('proven');
+    expect(calculatorBadge('super-cappuccino')).toBe('proven');
+    expect(calculatorBadge('sable')).toBe('emerging');
+    expect(calculatorBadge('soft-scale')).toBe('emerging');
+    expect(calculatorBadge('super-soft-scale')).toBe('emerging');
+    expect(calculatorBadge('harlequin')).toBeNull();
+  });
+});
+
+describe('Morph Guide hub tables', () => {
+  // The compare table on /MorphGuide and the server HTML of the hubs said
+  // "No market price yet" for Phantom, Empty Back and the other entries
+  // with no priceRange, beside a Price Index with hundreds of their
+  // listings.
+  function tableRows() {
+    const html = renderToStaticMarkup(h(MemoryRouter, null, h(MorphIndexCompareTable)));
+    const rows = html.match(/<tr[^>]*>.*?<\/tr>/g).slice(1);
+    return rows.map((row) => row.replace(/<[^>]+>/g, '|').replace(/\|+/g, '|').replace(/^\||\|$/g, '').split('|'));
+  }
+
+  it('never say "no market", and name the gap in this guide instead', () => {
+    const rows = tableRows();
+    expect(rows).toHaveLength(MORPHS.length);
+    for (const cells of rows) expect(cells.join(' '), cells[0]).not.toMatch(/no market/i);
+    const priceOf = (name) => rows.find((cells) => cells[0] === name).at(-1);
+    for (const slug of ['phantom', 'empty-back', 'whiteout', 'luwak', 'highway', 'super-sable', 'albino']) {
+      expect(priceOf(getMorph(slug).name), slug).toBe('No guide price yet');
+    }
+    expect(priceOf('Harlequin')).toMatch(/^\$[\d,]+ to \$[\d,]+/);
+  });
+
+  it('do not price a super that breeders avoid making', () => {
+    expect(noGuidePriceLabel(getMorph('super-lilly-white'))).toBe('Not bred on purpose');
+    const rows = tableRows();
+    for (const m of MORPHS.filter((x) => x.doNotBreed)) {
+      expect(rows.find((cells) => cells[0] === m.name).at(-1), m.slug).toBe('Not bred on purpose');
+    }
+  });
+
+  it('read the same in the server HTML of the hubs', () => {
+    const prerender = readFileSync(resolve(__dirname, '../../../scripts/prerender.mjs'), 'utf8');
+    expect(prerender).not.toMatch(/no market/i);
+    expect(prerender).toContain("m.priceRange || noGuidePriceLabel(m)");
   });
 });
 
