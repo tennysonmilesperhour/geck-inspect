@@ -132,6 +132,11 @@ function useToast() {
 
   React.useEffect(() => {
     listeners.push(setState);
+    // A toast sent between this hook's first render and now (for example
+    // the retired-page note, sent from an effect that runs before the
+    // Toaster's on a fresh page load) is already in the store but was
+    // never broadcast to this listener, so catch up once.
+    setState(memoryState);
     return () => {
       const idx = listeners.indexOf(setState);
       if (idx > -1) listeners.splice(idx, 1);
