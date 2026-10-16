@@ -119,15 +119,20 @@ const MORPH_ALIAS_REDIRECTS = Object.entries(MORPH_SLUG_ALIASES).map(([from, to]
 const GONE_REDIRECTS = [
   { from: '/Morphs', to: '/MorphGuide' },
   { from: '/morphs', to: '/MorphGuide' },
-  // Retired pages (src/lib/retiredPages.js): unfinished surfaces next to
-  // paid ones cost trust. Each old URL, in its PascalCase and lowercase
-  // spelling, goes to the closest live page.
-  ...RETIRED_PAGES.flatMap(({ page, to }) => {
-    const spellings = [...new Set([`/${page}`, `/${page.toLowerCase()}`])];
-    return spellings.map((from) => ({ from, to }));
-  }),
   { from: '/morph-visualizer', to: '/MorphGuide' },
 ];
+
+// Retired pages (src/lib/retiredPages.js): unfinished surfaces next to
+// paid ones cost trust. Each old URL, in its PascalCase and lowercase
+// spelling, goes to the closest live page. These redirects are temporary
+// (307), not permanent: Tennyson keeps every retired feature to release
+// again later (16 Oct 2026), and browsers remember a permanent redirect
+// for good, so a returning feature would stay hidden from anyone who
+// had visited its old address.
+const RETIRED_REDIRECTS = RETIRED_PAGES.flatMap(({ page, to }) => {
+  const spellings = [...new Set([`/${page}`, `/${page.toLowerCase()}`])];
+  return spellings.map((from) => ({ from, to }));
+});
 
 /*
  * Narrative for the generated vercel.json (Vercel's schema rejects
@@ -234,9 +239,10 @@ function buildConfig() {
           // www.google.com/g/collect, www.googletagmanager.com/td), the
           // PostHog embedded dashboards on the admin analytics page, and the
           // Amazon affiliate widget frames on store product pages.
-          // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Google
-          // Fonts, Supabase (API, storage), RevenueCat, Unsplash and
-          // Supabase images. Inline scripts in index.html are allowed by
+          // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Supabase
+          // (API, storage), RevenueCat, Unsplash and Supabase images. Fonts
+          // are self-hosted under /fonts since 16 Oct 2026, so Google
+          // Fonts is no longer allowed. Inline scripts in index.html are allowed by
           // their SHA-256 hashes (scripts/csp-inline.mjs), not by
           // 'unsafe-inline', since 16 Oct 2026 (review item E3 31), so an
           // injected script cannot run. Styles keep 'unsafe-inline': the
@@ -252,8 +258,8 @@ function buildConfig() {
                 ...INLINE_SCRIPT_SOURCES,
                 'https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com',
               ].join(' '),
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com data:",
+              "style-src 'self' 'unsafe-inline'",
+              "font-src 'self' data:",
               "img-src 'self' data: blob: https:",
               "media-src 'self' blob: https:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://www.google.com https://www.googletagmanager.com https://images.unsplash.com",
@@ -288,6 +294,13 @@ function buildConfig() {
       },
       {
         source: '/assets/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      // Self-hosted fonts (src/styles/fonts.css). Each file name carries its
+      // font version (inter-latin-v20.woff2), so a new version is a new name
+      // and the old one can be cached for a year.
+      {
+        source: '/fonts/(.*)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
@@ -398,6 +411,11 @@ function buildConfig() {
         source: from,
         destination: to,
         permanent: true,
+      })),
+      ...RETIRED_REDIRECTS.map(({ from, to }) => ({
+        source: from,
+        destination: to,
+        permanent: false,
       })),
       ...CASE_REDIRECTS.map(({ from, to }) => ({
         source: from,
