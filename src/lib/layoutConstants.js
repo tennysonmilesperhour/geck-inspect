@@ -1,60 +1,12 @@
 /**
- * Navigation items and gamification level thresholds used by Layout.jsx.
- * Extracted from src/Layout.jsx as part of the hairball cleanup.
+ * Gamification level thresholds used by Layout.jsx. Extracted from
+ * src/Layout.jsx as part of the hairball cleanup.
  *
- * Exports factories instead of prebuilt arrays so createPageUrl() can be
- * called at call-site time (keeps this module free of circular imports).
+ * The old hand-kept navigation lists that lived here (publicNavItems,
+ * userSpecificNavItems, adminOnlyNavItems) were not read anywhere and still
+ * named retired pages, so they were removed on 16 Oct 2026. Navigation is
+ * described once, in src/lib/navItems.js.
  */
-
-import {
-  BarChart3,
-  Search,
-  FlaskConical,
-  BookOpen,
-  Heart,
-  MessageSquare,
-  Database,
-  TrendingUp,
-  Users,
-  GitBranch,
-  Upload,
-  Shield,
-  DollarSign,
-  Utensils,
-  Printer,
-  Store,
-} from 'lucide-react';
-import { createPageUrl } from '@/utils';
-
-// Always-visible primary navigation (shown to authed + anon).
-export const publicNavItems = [
-  { title: 'Dashboard',         url: createPageUrl('Dashboard'),         icon: BarChart3 },
-  { title: 'Morph ID',          url: createPageUrl('Recognition'),       icon: Search },
-  { title: 'AI Consultant',     url: createPageUrl('BreederConsultant'), icon: FlaskConical },
-  { title: 'Morph Guide',       url: createPageUrl('MorphGuide'),        icon: BookOpen },
-  { title: 'Care Guide',        url: createPageUrl('CareGuide'),         icon: Heart },
-  { title: 'Forum',             url: createPageUrl('Forum'),             icon: MessageSquare },
-  { title: 'Image Gallery',     url: createPageUrl('Gallery'),           icon: Database },
-  { title: 'Market Intelligence', url: createPageUrl('Market'),          icon: TrendingUp },
-];
-
-// User-only navigation, shown to signed-in users.
-export const userSpecificNavItems = [
-  { title: 'My Geckos',       url: createPageUrl('MyGeckos'),              icon: Users,       requiresAuth: true },
-  { title: 'Breeding',        url: createPageUrl('Breeding'),              icon: GitBranch,   requiresAuth: true },
-  { title: 'Lineage',         url: createPageUrl('Lineage'),               icon: GitBranch,   requiresAuth: true },
-  { title: 'Market Pricing',  url: createPageUrl('MarketPricing'),         icon: DollarSign,  requiresAuth: true },
-  { title: 'Sales Stats',     url: createPageUrl('MarketplaceSalesStats'), icon: BarChart3,   requiresAuth: true },
-  { title: 'Batch Husbandry', url: createPageUrl('BatchHusbandry'),        icon: Utensils,    requiresAuth: true },
-  { title: 'Worksheets',      url: createPageUrl('PrintableWorksheets'),   icon: Printer,     requiresAuth: true },
-  { title: 'My Profile',      url: createPageUrl('MyProfile'),             icon: Users,       requiresAuth: true },
-  { title: 'Train Model',     url: createPageUrl('Training'),              icon: Upload,      requiresAuth: true },
-];
-
-// Admin-only navigation.
-export const adminOnlyNavItems = [
-  { title: 'Admin Panel', url: createPageUrl('AdminPanel'), icon: Shield },
-];
 
 // Training milestone thresholds used by the sidebar progress widget.
 export const MILESTONES = [

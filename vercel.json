@@ -465,6 +465,46 @@
       "permanent": true
     },
     {
+      "source": "/Promote",
+      "destination": "/MyGeckos?retired=Promote",
+      "permanent": true
+    },
+    {
+      "source": "/promote",
+      "destination": "/MyGeckos?retired=Promote",
+      "permanent": true
+    },
+    {
+      "source": "/BreederConsultant",
+      "destination": "/CareGuide?retired=BreederConsultant",
+      "permanent": true
+    },
+    {
+      "source": "/breederconsultant",
+      "destination": "/CareGuide?retired=BreederConsultant",
+      "permanent": true
+    },
+    {
+      "source": "/OtherReptiles",
+      "destination": "/MyGeckos?retired=OtherReptiles",
+      "permanent": true
+    },
+    {
+      "source": "/otherreptiles",
+      "destination": "/MyGeckos?retired=OtherReptiles",
+      "permanent": true
+    },
+    {
+      "source": "/Store",
+      "destination": "/CareGuide?retired=Store",
+      "permanent": true
+    },
+    {
+      "source": "/store",
+      "destination": "/CareGuide?retired=Store",
+      "permanent": true
+    },
+    {
       "source": "/morph-visualizer",
       "destination": "/MorphGuide",
       "permanent": true

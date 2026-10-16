@@ -1032,7 +1032,7 @@ export default function SettingsPage() {
                             Hatchery Preferences
                         </CardTitle>
                         <CardDescription className="text-slate-400">
-                            How the Hatchery tab on the Breeding page opens. My Geckos, Other Reptiles, the Gallery and your breeding plans each remember their own sort from the settings button at the top of that page.
+                            How the Hatchery tab on the Breeding page opens. My Geckos, the Gallery and your breeding plans each remember their own sort from the settings button at the top of that page.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">

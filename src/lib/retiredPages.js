@@ -1,14 +1,24 @@
 // Pages that were retired (taken out of the app) and where their old
-// links now go. One list, read in three places:
+// links now go. One list, read in four places:
 //   * App.jsx adds a client-side redirect for each path, signed in or not,
-//     so a stale bookmark or an in-app link lands somewhere useful.
-//   * Layout.jsx drops any page_config row for these pages, so an old
-//     "enabled" row in the database cannot put them back in the sidebar.
+//     so a stale bookmark or an in-app link lands somewhere useful. An
+//     entry with `prefix: true` also redirects every address under it
+//     (/Store/stickers, /Store/cart).
+//   * pages.config.js leaves the page out of the routes (LIVE_PAGES), and
+//     Layout.jsx drops any page_config row for it, so an old "enabled" row
+//     in the database cannot put it back in the sidebar.
 //   * scripts/build-vercel-json.mjs turns each one into a permanent (301)
 //     redirect at the edge, so search engines drop the old URL.
+//   * src/components/shared/RetiredPageNotice.jsx shows the entry's
+//     `title` and `note` once, when a redirect's address carries
+//     ?retired=<page>, so a member who followed an old link knows why
+//     they landed somewhere else.
 //
-// Retiring means the route is gone; the database tables stay untouched.
-// See docs/planning/feature-completeness-audit-2026-09-29.md, step 5.
+// Retiring means the route is gone; the database tables stay untouched,
+// and so does the page's code until it has been retired for a month.
+// Switching one back on: delete its entry here (the page keeps its line
+// in pages.config.js). The full list, with what each one did and why it
+// was retired, is docs/planning/retired-features-2026-10.md.
 //
 // Plain data with no imports, so the Node build scripts can read it too.
 
@@ -35,6 +45,64 @@ export const RETIRED_PAGES = [
   // In-app listings and Your listings tabs. /MarketplaceBuy and
   // /MarketplaceSell still work on their own.
   { page: 'Marketplace', to: '/Market?tab=browse' },
+
+  // 16 Oct 2026, review item E3 23 (retire breadth). No member other than
+  // the admin used any of these in the 30 days before (production, read
+  // only); the counts are in docs/planning/retired-features-2026-10.md.
+  {
+    page: 'Promote',
+    to: '/MyGeckos?retired=Promote',
+    retired: '2026-10-16',
+    title: 'Promote is switched off',
+    note: 'Social post drafts are no longer made in Geck Inspect. Posts you made before are kept.',
+  },
+  {
+    page: 'BreederConsultant',
+    to: '/CareGuide?retired=BreederConsultant',
+    retired: '2026-10-16',
+    title: 'The AI Consultant is switched off',
+    note: 'The Care Guide, Genetics Guide and Morph Guide answer most crested gecko questions, and the Forum takes the rest.',
+  },
+  {
+    page: 'OtherReptiles',
+    to: '/MyGeckos?retired=OtherReptiles',
+    retired: '2026-10-16',
+    title: 'Other Reptiles is switched off',
+    note: 'Geck Inspect is for crested geckos. Records you added for other reptiles are kept; ask support for a copy.',
+  },
+  // The supplies store and both sticker builders live under /Store.
+  {
+    page: 'Store',
+    prefix: true,
+    to: '/CareGuide?retired=Store',
+    retired: '2026-10-16',
+    title: 'The supplies store is switched off',
+    note: "The store and the sticker designer are closed. The Care Guide covers what an enclosure needs, and each gecko's passport has a printable QR card.",
+  },
 ];
 
 export const RETIRED_PAGE_NAMES = new Set(RETIRED_PAGES.map((r) => r.page));
+
+/** True when the page is retired (its route redirects). */
+export function isPageRetired(page) {
+  return RETIRED_PAGE_NAMES.has(page);
+}
+
+/** The retired page's entry, or null. */
+export function retiredPageEntry(page) {
+  return RETIRED_PAGES.find((r) => r.page === page) || null;
+}
+
+// Parts of a live page that are switched off, with the same rule: delete
+// the line to switch it back on. The code and the stored data stay.
+export const RETIRED_FEATURES = {
+  // The visual website editor on My Store (13 Oct 2026). The only store
+  // page is the admin's, and it has no website design saved. The store
+  // page itself, and any design saved before, still show as they did.
+  websiteBuilder: { retired: '2026-10-16', where: 'My Store (src/pages/MyStore.jsx)' },
+};
+
+/** True when a feature inside a live page is switched off. */
+export function isFeatureRetired(name) {
+  return Object.prototype.hasOwnProperty.call(RETIRED_FEATURES, name);
+}

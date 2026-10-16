@@ -8,6 +8,7 @@
 // fetch failures + stale deploys), a drop-in for React's lazy. See
 // src/lib/lazyWithRetry.js.
 import { lazy } from '@/lib/lazyWithRetry';
+import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
 // The signed-in shell (Layout) and its first pages are lazy too. Until
 // October 2026 they were eager, so every visitor to the landing page, the
 // Morph Guide or the Care Guide downloaded the sidebar, Dashboard and
@@ -19,6 +20,8 @@ const __Layout              = lazy(() => import('./Layout.jsx'));
 const Home                  = lazy(() => import('./pages/Home'));
 const MyProfile             = lazy(() => import('./pages/MyProfile'));
 const Dashboard             = lazy(() => import('./pages/Dashboard'));
+// Today: what is due, the first tab on phones (review item E3 25).
+const Today                 = lazy(() => import('./pages/Today'));
 
 // Everything else is split into its own chunk and only downloaded
 // when the user navigates to that route. Cuts ~MB off first paint.
@@ -120,6 +123,7 @@ export const PAGES = {
     "PublicProfile": PublicProfile,
     "Recognition": Recognition,
     "Settings": Settings,
+    "Today": Today,
     "Training": Training,
     // P2 to P8 feature pages
     "MarketPricing": MarketPricing,
@@ -132,8 +136,17 @@ export const PAGES = {
     "Promote": Promote,
 }
 
+// Retired pages (src/lib/retiredPages.js) keep their line above, so
+// switching one back on is deleting its line in retiredPages.js. They are
+// left out of the routes here: a page route would win over the retired
+// page's redirect, since React Router picks the first of two routes with
+// the same path.
+export const LIVE_PAGES = Object.fromEntries(
+    Object.entries(PAGES).filter(([name]) => !RETIRED_PAGE_NAMES.has(name)),
+);
+
 export const pagesConfig = {
     mainPage: "Dashboard",
-    Pages: PAGES,
+    Pages: LIVE_PAGES,
     Layout: __Layout,
 };

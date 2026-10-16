@@ -23,4 +23,10 @@ describe('AI Consultant allowance lines', () => {
     expect(pageIsLive([])).toBe(false);
     expect(pageIsLive(null)).toBe(false);
   });
+
+  it('never treats a retired page as live, whatever its rows say', () => {
+    // The AI Consultant was retired on 16 Oct 2026 (review item E3 23).
+    expect(pageIsLive([{ page_name: 'BreederConsultant', is_enabled: true }])).toBe(false);
+    expect(pageIsLive([{ page_name: 'Recognition', is_enabled: true }])).toBe(true);
+  });
 });

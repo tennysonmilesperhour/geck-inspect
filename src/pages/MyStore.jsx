@@ -1,5 +1,6 @@
 import WebsiteBuilder from '@/components/storefront/WebsiteBuilder';
 import { normalizeContactUrl } from '@/lib/storeWebsite';
+import { isFeatureRetired } from '@/lib/retiredPages';
 import GeckoImage from '@/components/shared/GeckoImage';
 import GeckoBulkActions from '@/components/bulk/GeckoBulkActions';
 import { Gecko } from '@/entities/all';
@@ -475,9 +476,16 @@ export default function MyStore() {
                     </div>
                 ) : (
                     <>
-                        <WebsiteBuilder settings={siteSettings} onChange={setSite} form={form} onFormChange={set}
-                            profile={profileForm} geckos={geckos} plans={plans}
-                            waitlist={waitlists.find(w => w.id === siteSettings.waitlistId)} />
+                        {/* The visual website editor is switched off (review
+                            item E3 23, src/lib/retiredPages.js). A design
+                            saved before still loads into siteSettings and is
+                            written back unchanged by Save store, so nothing
+                            is lost while it is off. */}
+                        {!isFeatureRetired('websiteBuilder') && (
+                            <WebsiteBuilder settings={siteSettings} onChange={setSite} form={form} onFormChange={set}
+                                profile={profileForm} geckos={geckos} plans={plans}
+                                waitlist={waitlists.find(w => w.id === siteSettings.waitlistId)} />
+                        )}
                         {/* Identity */}
                         <Card>
                             <CardHeader>
@@ -725,9 +733,19 @@ export default function MyStore() {
                                         </SelectContent>
                                     </Select>
                                     <p className="text-xs text-slate-500">
+                                        {/* Waitlists are made in Business Tools (the Promote composer
+                                            that used to make them is retired, src/lib/retiredPages.js). */}
                                         {waitlists.length > 0
                                             ? 'Featuring an open waitlist adds a signup call to action to your public page.'
-                                            : 'No open waitlists yet. Create one from the Promote composer on any gecko, then attach it here.'}
+                                            : (
+                                                <>
+                                                    No open waitlists yet. Create one in{' '}
+                                                    <Link to={`${createPageUrl('MarketplaceSalesStats')}?tab=waitlists`} className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300">
+                                                        Business Tools, under Waitlists
+                                                    </Link>
+                                                    , then attach it here.
+                                                </>
+                                            )}
                                     </p>
                                 </div>
                             </CardContent>

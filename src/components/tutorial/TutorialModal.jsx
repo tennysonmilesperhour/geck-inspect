@@ -92,6 +92,12 @@ export default function TutorialModal({ isOpen, onClose }) {
         }
         // Same groups, same order as the sidebar.
         const groups = groupNavItems(flat);
+        // Named from the groups this member's sidebar really has (Keeper
+        // mode has no Breeding group), so the count is never wrong.
+        const names = groups.map((g) => g.label);
+        const groupList = names.length > 1
+            ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+            : names.join('');
 
         const welcomeStep = {
             pageName: '__welcome',
@@ -99,7 +105,7 @@ export default function TutorialModal({ isOpen, onClose }) {
             sectionId: null,
             blurb: {
                 title: 'Welcome to Geck Inspect',
-                body: 'Everything lives in the sidebar, in five groups: Collection, Breeding, Tools, Learn and Community. We\'ll walk through them one tile at a time. Use the arrows, or hit Esc to skip.',
+                body: `Everything lives in the sidebar, in ${names.length} groups: ${groupList}. We'll walk through them one tile at a time. Use the arrows, or hit Esc to skip.`,
             },
         };
         const doneStep = {

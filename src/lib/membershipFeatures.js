@@ -9,6 +9,7 @@
  * would break the rule that every Membership line is true (D11).
  */
 import { TIER_LIMITS } from '@/lib/tierLimits';
+import { isPageRetired } from '@/lib/retiredPages';
 
 export function consultantAllowanceLine(tierKey) {
   const n = TIER_LIMITS[tierKey]?.monthlyAssistantMessages;
@@ -26,8 +27,13 @@ export function featuresWithConsultant(tierKey, features, consultantLive) {
   return list;
 }
 
-/** True unless every page_config row for the page is switched off. */
+/**
+ * True unless every page_config row for the page is switched off, or the
+ * page is retired (src/lib/retiredPages.js), whatever its rows say: the AI
+ * Consultant was retired on 16 Oct 2026, and Membership must not list
+ * messages for a page that redirects.
+ */
 export function pageIsLive(rows) {
   if (!Array.isArray(rows) || rows.length === 0) return false;
-  return rows.some((r) => r?.is_enabled !== false);
+  return rows.some((r) => r?.is_enabled !== false && !isPageRetired(r?.page_name));
 }
