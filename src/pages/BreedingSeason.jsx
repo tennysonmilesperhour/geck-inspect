@@ -250,12 +250,14 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
                         alt={sire?.name || 'Sire'}
                         className="w-9 h-9 rounded-full object-cover border-2 border-slate-700"
                         loading="lazy"
+                        width={96}
                     />
                     <GeckoImage
                         src={dam?.image_urls?.[0] || FALLBACK_PHOTO}
                         alt={dam?.name || 'Dam'}
                         className="w-9 h-9 rounded-full object-cover border-2 border-slate-700 -ml-3"
                         loading="lazy"
+                        width={96}
                     />
                 </div>
                 <div className="min-w-0">

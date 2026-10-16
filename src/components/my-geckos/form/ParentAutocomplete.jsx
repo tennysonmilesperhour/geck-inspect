@@ -85,6 +85,7 @@ export default function ParentAutocomplete({
                 gecko={g}
                 src={g.image_urls?.[0] || DEFAULT_THUMB}
                 alt={g.name}
+                width={64}
                 className="w-6 h-6 rounded object-cover flex-shrink-0"
               />
               <span className="truncate">{g.name}</span>

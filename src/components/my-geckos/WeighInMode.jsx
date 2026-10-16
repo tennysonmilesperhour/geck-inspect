@@ -183,6 +183,7 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
                       alt={gecko.name}
                       className="w-10 h-10 rounded object-cover flex-shrink-0 border border-slate-700"
                       loading="lazy"
+                      width={96}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-100 truncate">{gecko.name}</p>

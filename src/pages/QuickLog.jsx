@@ -425,6 +425,7 @@ export default function QuickLog() {
             src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
             alt={gecko.name}
             loading="lazy"
+            width={128}
             className="w-14 h-14 rounded-xl object-cover border border-slate-700 flex-shrink-0"
           />
           <div className="min-w-0 flex-1">

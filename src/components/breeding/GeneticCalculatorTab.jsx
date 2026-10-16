@@ -91,7 +91,7 @@ function ParentPicker({ label, accent, geckos, selectedId, onSelect, excludeId }
                       }}
                       className="aria-selected:bg-slate-700 aria-selected:text-slate-50 cursor-pointer"
                     >
-                      <GeckoImage src={g.image_urls?.[0]} alt="" className="w-7 h-7 rounded object-cover mr-2 shrink-0" />
+                      <GeckoImage src={g.image_urls?.[0]} alt="" width={64} className="w-7 h-7 rounded object-cover mr-2 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-slate-100 truncate">
                           {g.name}
@@ -112,7 +112,7 @@ function ParentPicker({ label, accent, geckos, selectedId, onSelect, excludeId }
       </Popover>
       {selected && (
         <div className="flex items-center gap-2">
-          <GeckoImage src={selected.image_urls?.[0]} alt={selected.name} className={`w-8 h-8 rounded object-cover border ${thumbBorder}`} />
+          <GeckoImage src={selected.image_urls?.[0]} alt={selected.name} width={64} className={`w-8 h-8 rounded object-cover border ${thumbBorder}`} />
           <span className="text-xs text-slate-400">
             {(selected.morph_tags || []).length} morph tags
           </span>
