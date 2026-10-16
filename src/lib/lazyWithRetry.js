@@ -22,7 +22,9 @@
  *      error (not a real bug inside the module), forces a ONE-TIME hard
  *      reload. A stale deploy is fixed by reloading, because the fresh
  *      index.html (served must-revalidate) references the new chunk
- *      hashes. A sessionStorage guard makes sure we never reload-loop.
+ *      hashes. A sessionStorage guard allows at most one such reload per
+ *      tab every few minutes, so a chunk that keeps failing can never
+ *      reload-loop.
  *
  * On the rare case where even a fresh load can't fetch the chunk, the
  * error still reaches the ErrorBoundary so the user isn't stuck on a
@@ -31,9 +33,14 @@
 
 import { lazy as reactLazy } from 'react';
 
-// Per-tab guard so a stale-deploy reload happens at most once. Cleared on
-// any successful chunk load so a LATER stale deploy can self-heal again.
-const RELOAD_FLAG = 'gi:chunk-reload';
+// Per-tab guard: when this tab last reloaded to recover a chunk. Another
+// reload is allowed only after RELOAD_COOLDOWN_MS, so a later stale deploy
+// can still heal itself while a chunk that keeps failing cannot loop. (Until
+// October 2026 the guard was a flag cleared by any successful chunk load,
+// and the page's own chunk loads after every reload, so one chunk that kept
+// failing reloaded the calculator about once a second for good.)
+export const RELOAD_KEY = 'gi:chunk-reload-at';
+export const RELOAD_COOLDOWN_MS = 5 * 60 * 1000;
 
 // Match the various ways browsers phrase a failed dynamic import. We only
 // auto-recover from these. A genuine error thrown while the module
@@ -57,20 +64,24 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function readFlag() {
+// True when this tab may reload now. With no session storage there is no
+// way to remember a reload, so none is made (no loop is possible).
+function mayReload(now = Date.now()) {
   try {
-    return window.sessionStorage?.getItem(RELOAD_FLAG) === '1';
+    const store = window.sessionStorage;
+    if (!store) return false;
+    const last = Number(store.getItem(RELOAD_KEY));
+    return !(last > 0 && now - last < RELOAD_COOLDOWN_MS);
   } catch {
     return false;
   }
 }
 
-function writeFlag(value) {
+function rememberReload(now = Date.now()) {
   try {
-    if (value) window.sessionStorage?.setItem(RELOAD_FLAG, '1');
-    else window.sessionStorage?.removeItem(RELOAD_FLAG);
+    window.sessionStorage?.setItem(RELOAD_KEY, String(now));
   } catch {
-    /* sessionStorage can throw in private mode; the reload still works */
+    /* mayReload already returned false if storage is unusable */
   }
 }
 
@@ -88,11 +99,7 @@ export async function importWithRetry(factory, { retries = 2, baseDelayMs = 350 
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const mod = await factory();
-      // A clean load means whatever blipped is gone; let a future stale
-      // deploy trigger its own one-time reload.
-      writeFlag(false);
-      return mod;
+      return await factory();
     } catch (err) {
       lastErr = err;
       // Real error inside the module, not a fetch failure, surface it.
@@ -104,8 +111,8 @@ export async function importWithRetry(factory, { retries = 2, baseDelayMs = 350 
   // Retries exhausted. Almost always a stale deploy: this bundle is
   // asking for a chunk hash the CDN no longer has. Hard reload once to
   // pull the new index.html and its fresh hashes.
-  if (typeof window !== 'undefined' && !readFlag()) {
-    writeFlag(true);
+  if (typeof window !== 'undefined' && mayReload()) {
+    rememberReload();
     window.location.reload();
     // Keep Suspense showing its fallback (a spinner) during the blink
     // before the reload takes effect, instead of flashing the error
@@ -113,8 +120,8 @@ export async function importWithRetry(factory, { retries = 2, baseDelayMs = 350 
     await new Promise(() => {});
   }
 
-  // Already reloaded once and still failing, or no window. Let the
-  // ErrorBoundary show the message rather than loop.
+  // Reloaded within the last few minutes and still failing, or no window.
+  // Let the ErrorBoundary show the message rather than loop.
   throw lastErr;
 }
 
