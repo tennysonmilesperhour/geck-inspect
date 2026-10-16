@@ -89,16 +89,19 @@ export default function SmartImage({
   ...rest
 }) {
   const sources = smartImageSources(src, width);
-  // How many of this photo's sources have failed. Keyed by src, so a new
-  // photo starts again at its first source on the very first render
-  // (no stale request for the old stage).
-  const [failures, setFailures] = useState({ src, count: 0 });
-  const failed = failures.src === src ? failures.count : 0;
+  // Which of this photo's addresses have failed. Kept per src, so a new
+  // photo starts again at its first source on the very first render (no
+  // stale request for the old one). Remembering addresses rather than a
+  // count means a slot that grows (thumbnail, then full photo only) still
+  // shows the photo after its thumbnail was missing.
+  const [failures, setFailures] = useState({ src, urls: [] });
+  const failedUrls = failures.src === src ? failures.urls : [];
+  const remaining = sources.filter((url) => !failedUrls.includes(url));
   // The address that last finished (loaded, or failed for good), so the
   // shimmer stays up while a fallback source is still loading.
   const [settled, setSettled] = useState(null);
 
-  const resolvedSrc = failed < sources.length ? sources[failed] : fallback;
+  const resolvedSrc = remaining.length ? remaining[0] : fallback;
   const loaded = settled === resolvedSrc;
   const aspectRatio = ASPECT_PRESETS[aspect] || aspect;
 
@@ -137,17 +140,16 @@ export default function SmartImage({
         onError={(event) => {
           // Step through the sources, then the placeholder. Stop there so a
           // broken placeholder never loops.
-          const stage = failed;
-          if (stage < sources.length) {
-            setFailures({ src, count: stage + 1 });
-            if (stage + 1 >= sources.length) setSettled(fallback);
+          if (remaining.length) {
+            setFailures({ src, urls: [...failedUrls, resolvedSrc] });
+            if (remaining.length === 1) setSettled(fallback);
           } else {
             setSettled(resolvedSrc);
           }
           // A missing thumbnail is expected (older photos, an upload from a
           // browser that could not make one), so callers hear only about the
           // photo itself failing.
-          const missedThumbnail = stage < sources.length - 1 && !IMAGE_TRANSFORMS_ENABLED;
+          const missedThumbnail = remaining.length > 1 && !IMAGE_TRANSFORMS_ENABLED;
           if (!missedThumbnail) onError?.(event);
         }}
         style={isPlaceholder ? geckoPlaceholderStyle(resolvedSrc, style) : style}

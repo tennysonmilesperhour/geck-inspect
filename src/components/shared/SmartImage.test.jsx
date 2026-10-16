@@ -103,3 +103,21 @@ describe('smartImageSources', () => {
     expect(smartImageSources('', 240, { transforms: false })).toEqual([]);
   });
 });
+
+// A slot that grows after its thumbnail failed (Marketplace Buy switched to
+// large cards) still shows the photo, not the placeholder.
+describe('a wider slot after a missing thumbnail', () => {
+  for (const [name, Component] of [['SmartImage', SmartImage], ['GeckoImage', GeckoImage]]) {
+    it(`${name} shows the photo`, () => {
+      let tree;
+      act(() => { tree = create(<Component src={PHOTO} width={480} alt="x" />); });
+      expect(tree.root.findByType('img').props.src).toBe(THUMB);
+      act(() => { tree.root.findByType('img').props.onError({}); });
+      expect(tree.root.findByType('img').props.src).toBe(PHOTO);
+      act(() => { tree.update(<Component src={PHOTO} width={800} alt="x" />); });
+      expect(tree.root.findByType('img').props.src).toBe(PHOTO);
+      act(() => tree.unmount());
+    });
+  }
+});
+

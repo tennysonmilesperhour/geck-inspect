@@ -84,4 +84,18 @@ describe('the gecko card', () => {
     await userEvent.click(screen.getByRole('button', { name: "Open Nimbus's record" }));
     expect(onView).toHaveBeenCalledTimes(1);
   });
+
+  it('loads the thumbnail in My Geckos and the full photo where a page shows one card to a row', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://proj.supabase.co');
+    const photoUrl = 'https://proj.supabase.co/storage/v1/object/public/geck-inspect-media/uploads/u1/nimbus.webp';
+    const gecko = { ...NIMBUS, image_urls: [photoUrl] };
+    const { unmount } = render(<GeckoCard gecko={gecko} onView={() => {}} canEdit />);
+    expect(screen.getByAltText('Nimbus').getAttribute('src')).toBe(
+      'https://proj.supabase.co/storage/v1/object/public/geck-inspect-media/thumbs/uploads/u1/nimbus.webp',
+    );
+    unmount();
+    render(<GeckoCard gecko={gecko} onView={() => {}} canEdit imageWidth={800} />);
+    expect(screen.getByAltText('Nimbus').getAttribute('src')).toBe(photoUrl);
+    vi.unstubAllEnvs();
+  });
 });

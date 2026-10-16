@@ -8,6 +8,7 @@ import { markGroupFed } from '@/lib/husbandryLog';
 import { startVisiblePolling } from '@/lib/pagePolling';
 import { isGuestMode } from '@/lib/guestMode';
 import { TOUR_CHANGED_EVENT, tourOnScreen } from '@/lib/guestTour';
+import { loadUnlessRetired } from '@/lib/retiredPages';
 import PushAskCard from '@/components/notifications/PushAskCard';
 
 // This component only drives the in-app banner. The feeding_due push and
@@ -77,7 +78,9 @@ export default function FeedingAlertSystem({ user, enabled }) {
       try {
         const [feedingGroups, otherReptiles] = await Promise.all([
           FeedingGroup.filter({ created_by: user.email }),
-          OtherReptile.filter({ created_by: user.email, archived: false }),
+          // Other Reptiles is retired; its alerts come back with the page.
+          // (The emailed reminders have their own switch on the server.)
+          loadUnlessRetired('OtherReptiles', () => OtherReptile.filter({ created_by: user.email, archived: false })),
         ]);
 
         const newAlerts = [];

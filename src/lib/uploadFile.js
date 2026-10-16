@@ -34,7 +34,7 @@ const BUCKET = MEDIA_BUCKET;
 // past it the thumbnail upload carries on in the background and the photo
 // is ready to use (small displays load the photo until the thumbnail
 // lands).
-export const THUMBNAIL_WAIT_MS = 10000;
+export const THUMBNAIL_WAIT_MS = 4000;
 
 /**
  * Upload the thumbnail for a photo that has just been stored. Never

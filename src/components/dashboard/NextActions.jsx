@@ -9,6 +9,7 @@ import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
 import { markGroupFed } from '@/lib/husbandryLog';
 import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
 import MarketTodayStrip from '@/components/dashboard/MarketTodayStrip';
+import { loadUnlessRetired } from '@/lib/retiredPages';
 
 /**
  * "Your Next Actions" widget, a personal todo-shaped list of things
@@ -170,7 +171,8 @@ export default function NextActions({ currentUserEmail }) {
                     loadRecentWeights(currentUserEmail, { perGecko: 1 }).catch(() => []),
                     FutureBreedingPlan.filter({ created_by: currentUserEmail }).catch(() => []),
                     FeedingGroup.filter({ created_by: currentUserEmail }).catch(() => []),
-                    OtherReptile.filter({ created_by: currentUserEmail, archived: false }).catch(() => []),
+                    // Other Reptiles is retired; its feedings come back with the page.
+                    loadUnlessRetired('OtherReptiles', () => OtherReptile.filter({ created_by: currentUserEmail, archived: false })).catch(() => []),
                 ]);
                 setData({ geckos, eggs, plans, weights, futurePlans, feedingGroups, reptiles });
             } catch (err) {

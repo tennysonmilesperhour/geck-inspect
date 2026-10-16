@@ -16,14 +16,17 @@ import GeckoPlaceholder from './GeckoPlaceholder';
  * never changes the layout.
  */
 export default function GeckoImage({ src, gecko, alt = '', className = '', style, onError, fallback = DEFAULT_GECKO_IMAGE, width, ...props }) {
-  // How many of this photo's sources have failed, keyed by src so a new
-  // photo starts again at its first source.
-  const [failures, setFailures] = useState({ src: null, count: 0 });
+  // Which of this photo's addresses have failed, kept per src so a new photo
+  // starts again at its first source. Remembering addresses rather than a
+  // count means a slot that grows (thumbnail, then full photo only) still
+  // shows the photo after its thumbnail was missing.
+  const [failures, setFailures] = useState({ src: null, urls: [] });
   const hasSource = typeof src === 'string' && src.trim().length > 0;
   const sources = hasSource && !isGeckoPlaceholder(src) ? thumbnailFirst(src, width) : [];
-  const failed = failures.src === src ? failures.count : 0;
-  const placeholder = failed >= sources.length;
-  const shown = placeholder ? (isGeckoPlaceholder(src) ? src : fallback) : sources[failed];
+  const failedUrls = failures.src === src ? failures.urls : [];
+  const remaining = sources.filter((url) => !failedUrls.includes(url));
+  const placeholder = remaining.length === 0;
+  const shown = placeholder ? (isGeckoPlaceholder(src) ? src : fallback) : remaining[0];
   if (gecko && placeholder && isGeckoPlaceholder(shown)) {
     return <GeckoPlaceholder {...props} gecko={gecko} alt={alt} className={className} style={style} onError={onError} />;
   }
@@ -40,8 +43,8 @@ export default function GeckoImage({ src, gecko, alt = '', className = '', style
         if (placeholder) return;
         // A missing thumbnail is expected; callers hear only about the
         // photo itself failing.
-        if (failed === sources.length - 1) onError?.(event);
-        setFailures({ src, count: failed + 1 });
+        if (remaining.length === 1) onError?.(event);
+        setFailures({ src, urls: [...failedUrls, shown] });
       }}
     />
   );

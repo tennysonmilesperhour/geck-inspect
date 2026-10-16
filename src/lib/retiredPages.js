@@ -96,6 +96,16 @@ export function isPageRetired(page) {
   return RETIRED_PAGE_NAMES.has(page);
 }
 
+/**
+ * Runs `load` only while `page` is live; while it is retired, resolves to
+ * `empty` without asking the database. For screens elsewhere in the app that
+ * show a retired feature's records (the Dashboard's next actions and the
+ * feeding pop-ups read Other Reptiles), so they come back with the page.
+ */
+export function loadUnlessRetired(page, load, empty = []) {
+  return isPageRetired(page) ? Promise.resolve(empty) : load();
+}
+
 /** The retired page's entry, or null. */
 export function retiredPageEntry(page) {
   return RETIRED_PAGES.find((r) => r.page === page) || null;
