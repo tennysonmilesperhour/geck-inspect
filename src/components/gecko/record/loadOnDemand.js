@@ -45,15 +45,16 @@ export async function importWithRetry(factory, { retries = 2, baseDelayMs = 350 
 }
 
 /**
- * React.lazy for a part of the record that the record can live without.
- * If the part cannot be loaded, `Fallback` shows in its place (nothing by
- * default) and the error goes to the console, instead of the whole record
- * falling through to the page's error screen.
+ * React.lazy for a part a page can live without (a section of the gecko
+ * record, the report button on Morph Guide photos). If the part cannot be
+ * loaded, `Fallback` shows in its place (nothing by default) and the error
+ * goes to the console, instead of the whole page falling through to its
+ * error screen.
  */
 export function lazyOptional(factory, Fallback = () => null, options) {
   return lazy(() =>
     importWithRetry(factory, options).catch((err) => {
-      console.error('A part of the gecko record could not be loaded:', err);
+      console.error('An optional part of the page could not be loaded:', err);
       return { default: Fallback };
     }),
   );
