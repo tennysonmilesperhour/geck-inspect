@@ -4,7 +4,7 @@ The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file r
 
 **Status 15 October: the SQL queue is cleared, and deploys go through merges.** Everything that was waiting on the SQL Editor run reached production on 8 October (details in "Cleared on 8 October" below). Merging to `main` does three things at once, through Vercel and the Supabase GitHub integration: Vercel deploys the site, Supabase applies every new file in `supabase/migrations/`, and Supabase deploys the edge functions declared in `supabase/config.toml`. The integration already did this before 15 October, alongside changes applied by hand; round 1 of the review fixes went out with nothing run by hand (below), and that is the rule now. How to write a migration for this is in `docs/MIGRATIONS.md`.
 
-What is still open in this file: the dashboard steps for rounds 2 and 3 (each round's "what still needs Tennyson"), the leftover functions under "Also for Tennyson", and the real-device checks. Round 3 is written and merges next.
+What is still open in this file: the dashboard steps for rounds 2 and 3 (each round's "what still needs Tennyson"), the leftover functions under "Also for Tennyson", and the real-device checks. Round 3 went live on 16 October.
 
 Project: `mmuglfphhwlaluyfyxsp`.
 
@@ -71,7 +71,9 @@ Plan items E2 15 to 22 and E5 of `docs/planning/comprehensive-review-2026-10-14.
    - Airplane mode: log a feeding in Field Mode or on `/log`, go back online, and the feeding is saved once (not zero times, not twice).
    - Share a Morph ID result and paste the card link into Messenger or a Facebook thread: the preview shows the photo and the title.
 
-## Round 3: written, merges next
+## Round 3: applied 16 October (PR 139)
+
+**Live 16 October about 22:00 UTC** (merge commit `aabc313`). Checked after the merge: all ten migrations below are applied; the `privacy-retention-daily` job is scheduled and `monthly-overage-billing` is gone; `other_reptile_reminders_enabled` is `false`; both thumbnail rules are in place; `admin_photos_without_thumbnail` is closed to signed-out callers; every function this round changed redeployed (the rest import nothing that changed); Vercel production is READY with no runtime errors in the first hour. Merged with it: Tennyson's same-day Morph Guide work (field guide plates, eye studies, project line plates, the Field Notebook rewrite with new drawings, Pied). Codex raised one follow-up on the merged code, a rare race that could leave two payable checkout pages; it is item 7 below.
 
 Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, plus the round 2 review's money fixes and the engineering clean-up. Merging to `main` ships it the same way: nothing is run by hand. The migrations were first dated 15 October 23:10 to 23:32 UTC. The signup hotfix shipped first with the version `20261015233100`, which falls in between, so they were renamed to sort after it (`docs/MIGRATIONS.md`); otherwise the integration would see files older than one it has already applied.
 
@@ -113,6 +115,7 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 4. **Two functions:** say whether to deploy the newer repo copies of `embed-gecko-image` and `export-training-corpus` (`docs/INFRASTRUCTURE.md`).
 5. **Link previews:** paste a passport link and a breeder page link into Messenger or iMessage: the preview shows that gecko's or breeder's own title and photo.
 6. **Photo thumbnails for older photos:** after the merge, open Admin panel, System, Photo thumbnails and press Make thumbnails, keeping the tab open (about 817 photos on 16 October, 10 to 20 minutes; each original is downloaded once through your browser, about 1.5 GB of Supabase data transfer; the thumbnails add 25 to 40 MB). It is safe to stop and start again. Run it again the next day, because copies of the app opened before the release keep uploading without thumbnails for a few hours. Until a photo has its thumbnail, the app asks for the missing thumbnail once per visit (one failed request), then loads the full photo as before, so run the backfill soon after the merge.
+7. **Checkout race (decide):** if one member starts checkout in two tabs or on two devices within about a second, both requests can clear old checkout pages before either creates a new one, leaving two payable Stripe pages (one tap on one page cannot cause it; the button locks). Paying on both would charge twice. The sound fix is a per-member lock around the cleanup and create in `stripe-checkout`; say if you want it now or only if it ever happens (the thread is on PR 139).
 
 ## Done on 3 October
 
