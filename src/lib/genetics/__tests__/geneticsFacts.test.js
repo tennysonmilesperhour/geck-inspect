@@ -61,7 +61,7 @@ describe('super-form welfare statements agree with the calculator', () => {
 
 describe('landing claims', () => {
   it('the landing FAQ and product tour no longer promise co-dominant percentages or photos for every morph', () => {
-    const home = read('src/pages/Home.jsx');
+    const home = read('src/pages/HomeControl.jsx');
     expect(home).not.toMatch(/models co-dominant, recessive, and polygenic/);
     expect(home).not.toMatch(/photo-led references for every major morph/);
     expect(read('src/data/product-tour.js')).not.toMatch(/Photo-led references for every major morph/);

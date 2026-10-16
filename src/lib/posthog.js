@@ -1,6 +1,7 @@
 import { trackEvent, withAnalyticsContext } from '@/lib/telemetry';
 import { isGuestMode } from '@/lib/guestMode';
 import { sanitizeUrl } from '@/lib/ga';
+import { homepageExperimentProperties, isHomepagePreview } from '@/lib/homepageExperiment';
 
 /**
  * PostHog client wrapper.
@@ -54,22 +55,23 @@ function afterFirstPaint(fn) {
   else window.addEventListener('load', schedule, { once: true });
 }
 
+// Experiments opt in to eager loading; every other page keeps idle loading.
+export function ensurePostHog() {
+  if (initialized) return Promise.resolve(posthog);
+  if (loading) return loading;
+  if (!API_KEY || typeof window === 'undefined' || isGuestMode() || isHomepagePreview()) return Promise.resolve(null);
+  loading = import('posthog-js').then(({ default: ph }) => {
+    initClient(ph);
+    return posthog;
+  }).catch(() => null);
+  return loading;
+}
+
+let scheduled = false;
 export function initPostHog() {
-  if (initialized || loading) return;
-  if (isGuestMode()) return;
-  if (!API_KEY || typeof window === 'undefined') {
-    // Intentionally quiet, noisy warnings in local dev are annoying.
-    return;
-  }
-  afterFirstPaint(() => {
-    loading = import('posthog-js')
-      .then(({ default: ph }) => {
-        initClient(ph);
-      })
-      .catch((err) => {
-        console.warn('[posthog] failed to load', err);
-      });
-  });
+  if (initialized || loading || scheduled || !API_KEY || typeof window === 'undefined' || isGuestMode() || isHomepagePreview()) return;
+  scheduled = true;
+  afterFirstPaint(() => { scheduled = false; void ensurePostHog(); });
 }
 
 function initClient(ph) {
@@ -94,6 +96,7 @@ function initClient(ph) {
       // Clean every event's page address before it leaves the browser:
       // sign-in tokens can sit after "#" or in ?code= for a moment.
       before_send: (event) => {
+        if (isHomepagePreview()) return null;
         if (event?.properties?.$current_url) {
           event.properties.$current_url = sanitizeUrl(event.properties.$current_url);
         }
@@ -133,11 +136,12 @@ export function identifyUser(user) {
 }
 
 export function resetUser() {
-  withClient((ph) => ph.reset());
+  // An anonymous INITIAL_SESSION must not erase the ID from a previous visit.
+  withClient((ph) => { if (ph.get_property('$user_id')) ph.reset(); });
 }
 
 export function capturePageview(path) {
-  if (isGuestMode()) return;
+  if (isGuestMode() || isHomepagePreview()) return;
   const url = typeof window !== 'undefined' ? sanitizeUrl(window.location.href) : null;
   withClient((ph) => ph.capture('$pageview', { $current_url: url, path }));
 }
@@ -158,10 +162,10 @@ export function capturePageview(path) {
  * $pageview would double-count.
  */
 export function captureEvent(name, properties = {}) {
-  if (isGuestMode()) return;
+  if (isGuestMode() || isHomepagePreview()) return;
   // Fire-and-forget; trackEvent swallows its own errors.
-  trackEvent(name, properties);
-  const props = withAnalyticsContext(properties);
+  const props = withAnalyticsContext({ ...homepageExperimentProperties(), ...properties });
+  trackEvent(name, props);
   withClient((ph) => ph.capture(name, props));
 }
 

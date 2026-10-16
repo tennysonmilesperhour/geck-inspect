@@ -94,7 +94,8 @@ describe('public credits', () => {
 
   it('is wired into the marketing footers and the noscript shell', () => {
     for (const file of [
-      'src/pages/Home.jsx',
+      'src/pages/HomeControl.jsx',
+      'src/components/landing/business/BusinessHome.jsx',
       'src/components/public/PublicPageShell.jsx',
     ]) {
       const src = readFileSync(resolve(ROOT, file), 'utf8');

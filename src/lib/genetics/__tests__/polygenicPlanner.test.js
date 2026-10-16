@@ -106,7 +106,7 @@ describe('Patternless combo with polygenic looks kept out of the math', () => {
 });
 
 describe('landing page pairing card', () => {
-  const home = readFileSync(resolve(__dirname, '../../../pages/Home.jsx'), 'utf8');
+  const home = readFileSync(resolve(__dirname, '../../../pages/HomeControl.jsx'), 'utf8');
 
   it('shows no polygenic percentage', () => {
     expect(home).not.toMatch(/'[\d.]+%',\s*'(Harlequin|Pinstripe|Dalmatian|Extreme Harlequin)'/);
