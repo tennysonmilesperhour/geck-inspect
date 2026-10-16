@@ -1,15 +1,13 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, Camera, Dna, Search, X } from 'lucide-react';
 import { captureEvent } from '@/lib/posthog';
-import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
-import { MorphIndexArt, morphImages } from '@/components/morphguide/MorphIndexCard';
+import { MorphIndexArt } from '@/components/morphguide/MorphIndexCard';
 
 // The morphs a visitor is most likely to recognize by name, in mosaic order.
 // The first one gets the large tile on desktop.
 const MOSAIC_SLUGS = ['harlequin', 'lilly-white', 'axanthic', 'pinstripe', 'dalmatian', 'cappuccino'];
 
 function MosaicTile({ morph, large = false, index }) {
-  const images = morphImages(morph);
   return (
     <Link
       to={`/MorphGuide/${morph.slug}`}
@@ -19,15 +17,6 @@ function MosaicTile({ morph, large = false, index }) {
       } ${index >= 3 ? 'hidden lg:block' : ''}`}
     >
       <MorphIndexArt morph={morph} />
-      {images.length > 0 && (
-        <RotatingMorphImage
-          images={images}
-          alt={`${morph.name} crested gecko`}
-          eager={index < 3}
-          interval={large ? 4500 : 5500}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-      )}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/10 to-transparent pointer-events-none" />
       <span
         className={`absolute left-2 right-2 bottom-1.5 truncate font-semibold text-white drop-shadow ${

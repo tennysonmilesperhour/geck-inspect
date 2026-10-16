@@ -130,11 +130,24 @@ export function useMorphGuideRows() {
 export function useMorphGuideData() {
   const { dbRecords, communityImages, heroAnchors, loaded } = useMorphGuideRows();
 
+  const aliasToSlug = useMemo(() => {
+    const map = {};
+    for (const m of MORPHS) {
+      map[m.slug] = m.slug;
+      for (const alias of m.aliases || []) {
+        const s = morphSlug(alias);
+        if (s && !map[s]) map[s] = m.slug;
+      }
+    }
+    return map;
+  }, []);
+
   const dbBySlug = useMemo(() => {
     const bySlug = {};
     for (const r of dbRecords) {
-      const slug = morphSlug(r.morph_name);
-      if (!slug) continue;
+      const rawSlug = morphSlug(r.morph_name);
+      if (!rawSlug) continue;
+      const slug = aliasToSlug[rawSlug] || rawSlug;
       (bySlug[slug] ||= []).push(r);
     }
     const out = {};
@@ -142,7 +155,7 @@ export function useMorphGuideData() {
       out[slug] = pickBestMorphRecord(records);
     }
     return out;
-  }, [dbRecords]);
+  }, [dbRecords, aliasToSlug]);
 
   // Bucket community photos by normalized morph tag and individual words
   // (for single-word morph names) so multi-word morphs like Extreme Brindle
@@ -180,7 +193,6 @@ export function useMorphGuideData() {
       const wordMatches = communityByKeyword[`word:${norm}`] || [];
       return [...exact, ...wordMatches].slice(0, 6);
     };
-    const localSlugs = new Set(MORPHS.map((m) => m.slug));
     const merged = MORPHS.map((m) => {
       const dbMatch = dbBySlug[m.slug];
       const dbImg = sanitizeImage(dbMatch?.example_image_url);
@@ -199,25 +211,6 @@ export function useMorphGuideData() {
         keyFeaturesDb: dbMatch?.key_features,
       };
     });
-    for (const [slug, rec] of Object.entries(dbBySlug)) {
-      if (localSlugs.has(slug)) continue;
-      const dbImg = sanitizeImage(rec.example_image_url);
-      const heroImages = [dbImg, ...community(rec.morph_name)].filter(Boolean);
-      merged.push({
-        slug,
-        name: rec.morph_name,
-        category: 'combo',
-        inheritance: 'line-bred',
-        rarity: rec.rarity || 'uncommon',
-        summary: rec.description?.slice(0, 180),
-        description: rec.description,
-        keyFeatures: rec.key_features || [],
-        heroImage: heroImages[0] || null,
-        heroImages,
-        priceTier: null,
-        priceRange: null,
-      });
-    }
     return merged;
   }, [dbBySlug, communityByKeyword, heroByNorm]);
 

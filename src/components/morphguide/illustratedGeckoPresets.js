@@ -264,6 +264,46 @@ export const ILLUSTRATED_GECKO_PRESETS = {
     label: 'Cream',
     phenotype: { palette: { ...ORANGE, pattern: '#fbf6e6' }, dorsal: 1, flameTongues: 1, lateral: 0.45 },
   },
+  phantom: {
+    label: 'Phantom',
+    phenotype: { palette: { base: '#4a3d36', dark: '#241d19', pattern: '#9a8c7e', outline: '#1a1411' }, dorsal: 0.15, pinstripe: 0.25, phantom: true },
+  },
+  'empty-back': {
+    label: 'Empty Back',
+    phenotype: { palette: RED, dorsal: 0, lateral: 0.7, pinstripe: 0.2 },
+  },
+  'super-empty-back': {
+    label: 'Super Empty Back',
+    phenotype: { palette: { ...RED, base: '#3d2419' }, dorsal: 0, lateral: 0.9, pinstripe: 0.85 },
+  },
+  whiteout: {
+    label: 'Whiteout',
+    phenotype: { palette: { ...RED, pattern: '#faf6ec' }, dorsal: 0.65, flameTongues: 0.6, lateral: 0.65 },
+  },
+  'super-whiteout': {
+    label: 'Super Whiteout',
+    phenotype: { palette: { base: '#4a2a1c', dark: '#24130c', pattern: '#fcfaf4', outline: '#1a0e09' }, dorsal: 1, flameTongues: 1, lateral: 0.9, pinstripe: 0.9, lillyWhite: 0.85 },
+  },
+  luwak: {
+    label: 'Luwak',
+    phenotype: { palette: { base: '#2c211d', dark: '#17110f', pattern: '#d4c6b0', outline: '#120d0b' }, dorsal: 0.35, pinstripe: 0.45 },
+  },
+  'super-lilly-white': {
+    label: 'Super Lilly White',
+    phenotype: { palette: { base: '#f7f4ec', dark: '#e8e0d2', pattern: '#fcfbf7', belly: '#fcfbf7', eye: '#1f1b1a', outline: '#5c5044' }, dorsal: 1, lateral: 1, pinstripe: 1, lillyWhite: 1 },
+  },
+  'super-cappuccino': {
+    label: 'Super Cappuccino',
+    phenotype: { palette: { base: '#1f1a18', dark: '#120f0e', pattern: '#7a6666', eye: '#181311', outline: '#0e0b0a' }, dorsal: 0 },
+  },
+  'super-sable': {
+    label: 'Super Sable',
+    phenotype: { palette: { base: '#241a16', dark: '#140e0c', pattern: '#4a3830', eye: '#261a14', outline: '#100b09' }, dorsal: 0.05 },
+  },
+  'super-highway': {
+    label: 'Super Highway',
+    phenotype: { palette: { base: '#36261e', dark: '#1d1410', pattern: '#f7efe0', outline: '#1a110d' }, dorsal: 1, pinstripe: 0.85 },
+  },
 };
 
 /** True when the Morph Guide slug has an illustration preset. */

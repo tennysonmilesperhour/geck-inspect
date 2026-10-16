@@ -23,7 +23,6 @@ import {
   RARITY,
 } from '@/data/morph-guide';
 import { PROJECT_LINES, LINE_CONFIDENCE, lineImageKeywords, projectLinePlate } from '@/data/project-lines';
-import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 import MorphIndexCard from '@/components/morphguide/MorphIndexCard';
 import MorphIndexHero from '@/components/morphguide/MorphIndexHero';
 import MorphIndexSpotlight from '@/components/morphguide/MorphIndexSpotlight';
@@ -282,21 +281,14 @@ function MorphGridItem({ morph, withPrompt }) {
 function LineCard({ line }) {
   const confidence = LINE_CONFIDENCE[line.confidence] || LINE_CONFIDENCE['community-attributed'];
   const rarity = RARITY[line.rarity] || RARITY.uncommon;
-  const hasImages = Array.isArray(line.heroImages) && line.heroImages.length > 0;
   const plate = projectLinePlate(line.slug);
   return (
     <Link
       to={`/MorphGuide/lines/${line.slug}`}
       className="group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-violet-500/50 hover:bg-slate-900 transition-all duration-200 flex flex-col"
     >
-      <div className={`aspect-[4/3] relative overflow-hidden flex items-center justify-center ${hasImages ? 'bg-gradient-to-br from-violet-950/40 via-slate-900 to-slate-950' : plate ? 'bg-[#f4efdf]' : 'bg-gradient-to-br from-violet-950/40 via-slate-900 to-slate-950'}`}>
-        {hasImages ? (
-          <RotatingMorphImage
-            images={line.heroImages}
-            alt={`${line.name} crested gecko line reference`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : plate ? (
+      <div className={`aspect-[4/3] relative overflow-hidden flex items-center justify-center ${plate ? 'bg-[#f4efdf]' : 'bg-gradient-to-br from-violet-950/40 via-slate-900 to-slate-950'}`}>
+        {plate ? (
           <img
             src={plate}
             alt={`${line.name} field guide phenotype illustration`}
@@ -314,10 +306,7 @@ function LineCard({ line }) {
             <GitBranch className="w-16 h-16 text-violet-500/40 group-hover:text-violet-400/60 transition-colors" />
           </>
         )}
-        {hasImages && (
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent pointer-events-none" />
-        )}
-        {!hasImages && plate && (
+        {plate && (
           <span className="absolute bottom-2 right-2 rounded-full bg-slate-950/80 px-2.5 py-0.5 text-[10px] font-medium text-slate-200">
             Field guide study
           </span>

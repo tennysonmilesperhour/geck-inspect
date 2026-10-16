@@ -1,17 +1,15 @@
 import { Link } from 'react-router-dom';
 import { INHERITANCE, RARITY } from '@/data/morph-guide';
-import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 import IllustratedGecko, { hasIllustration } from '@/components/morphguide/IllustratedGecko';
 
 /**
- * Photo card for one morph, shared by the Morph Guide index and the
+ * Illustrated card for one morph, shared by the Morph Guide index and the
  * category and inheritance hubs. Two columns on a phone, so it stays short:
- * photo, name, then small rarity and genetics badges. The one-line summary
- * only shows from the `sm` breakpoint up.
+ * field-guide illustration, name, then small rarity and genetics badges.
+ * The one-line summary only shows from the `sm` breakpoint up.
  */
 
-// Tinted backdrop drawn under every photo. It is what the visitor sees
-// while photos load, when a morph has no photo yet, or when a photo fails.
+// Tinted backdrop drawn behind every field-guide plate.
 const CATEGORY_ART = {
   pattern: 'from-amber-600/45 via-orange-900/40 to-slate-900',
   base: 'from-rose-600/40 via-red-950/50 to-slate-900',
@@ -44,7 +42,7 @@ function initials(name) {
   return words.slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 }
 
-/** Fallback art: category tint plus the morph's initials, watermark style. */
+/** Field-guide illustration art with category tint backdrop. */
 export function MorphIndexArt({ morph, className = '' }) {
   return (
     <div
@@ -53,7 +51,7 @@ export function MorphIndexArt({ morph, className = '' }) {
     >
       <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_55%)]" />
       {hasIllustration(morph?.slug) ? (
-        <IllustratedGecko morph={morph.slug} decorative className="relative w-[94%] h-auto max-h-[88%]" />
+        <IllustratedGecko morph={morph.slug} decorative className="relative w-[94%] h-auto max-h-[88%] group-hover:scale-105 transition-transform duration-300" />
       ) : (
         <span className="relative font-black tracking-tight text-white/15 text-5xl sm:text-6xl select-none">
           {initials(morph?.name)}
@@ -71,7 +69,6 @@ export function morphImages(morph) {
 export default function MorphIndexCard({ morph, onClick }) {
   const rarity = RARITY[morph.rarity] || RARITY.common;
   const inh = INHERITANCE[morph.inheritance];
-  const images = morphImages(morph);
   const isNew = NEW_MORPH_SLUGS.has(morph.slug);
   return (
     <Link
@@ -81,13 +78,6 @@ export default function MorphIndexCard({ morph, onClick }) {
     >
       <div className="aspect-[4/3] relative overflow-hidden bg-slate-800">
         <MorphIndexArt morph={morph} />
-        {images.length > 0 && (
-          <RotatingMorphImage
-            images={images}
-            alt={`${morph.name} crested gecko`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
           <span
@@ -95,29 +85,12 @@ export default function MorphIndexCard({ morph, onClick }) {
           >
             {rarity.label}
           </span>
-          {isNew ? (
+          {isNew && (
             <span className="inline-flex items-center rounded-full bg-rose-700 px-2 py-0.5 text-xs font-bold text-white shadow">
               New
             </span>
-          ) : morph.isHeroAnchor ? (
-            <span
-              className="hidden sm:inline-flex items-center gap-1 rounded-full border border-emerald-500/60 bg-emerald-950/80 backdrop-blur-sm px-2 py-0.5 text-xs font-semibold text-emerald-200"
-              title={morph.heroAward || 'Competition-winning reference photo'}
-            >
-              <span aria-hidden>★</span>
-              Show winner
-            </span>
-          ) : null}
+          )}
         </div>
-        {(morph.heroPhotoCredit || morph.heroGeckoName) && (
-          <div className="hidden sm:block absolute inset-x-0 bottom-0 px-2 py-1.5 text-xs leading-tight text-white/90">
-            <div className="rounded-md bg-black/60 backdrop-blur-sm border border-white/10 px-2 py-0.5 truncate">
-              {morph.heroGeckoName && <span className="font-medium">&ldquo;{morph.heroGeckoName}&rdquo;</span>}
-              {morph.heroGeckoName && morph.heroPhotoCredit && <span className="text-white/50"> · </span>}
-              {morph.heroPhotoCredit && <span className="text-white/80">{morph.heroPhotoCredit}</span>}
-            </div>
-          </div>
-        )}
       </div>
       <div className="flex-1 p-3 sm:p-4 flex flex-col">
         <h3 className="text-sm sm:text-base font-bold text-white leading-snug group-hover:text-emerald-300 transition-colors">

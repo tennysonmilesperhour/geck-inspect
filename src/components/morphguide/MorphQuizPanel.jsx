@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Camera, RotateCcw, X } from 'lucide-react';
 import { captureEvent } from '@/lib/posthog';
 import { QUIZ_STEPS, scoreMorphs } from '@/lib/morphQuiz';
-import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
-import { MorphIndexArt, morphImages } from '@/components/morphguide/MorphIndexCard';
+import { MorphIndexArt } from '@/components/morphguide/MorphIndexCard';
 import MorphQuizGlyph, { QUIZ_GLYPHS } from '@/components/morphguide/MorphQuizGlyph';
 
 /**
@@ -80,7 +79,6 @@ function OptionCard({ stepId, option, selected, onPick }) {
 }
 
 function ResultCard({ result, morph, rank }) {
-  const images = morphImages(morph);
   return (
     <Link
       to={`/MorphGuide/${result.slug}`}
@@ -89,9 +87,6 @@ function ResultCard({ result, morph, rank }) {
     >
       <div className="relative w-20 h-20 shrink-0 overflow-hidden rounded-lg bg-slate-800">
         <MorphIndexArt morph={morph} />
-        {images.length > 0 && (
-          <RotatingMorphImage images={images} alt={`${morph.name} crested gecko`} className="w-full h-full object-cover" />
-        )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-xs font-semibold uppercase tracking-wider text-emerald-300/90">

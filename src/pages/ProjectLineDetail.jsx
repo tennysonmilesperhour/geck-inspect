@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { fetchProjectLinePhotos } from '@/lib/publicGeckoPhotos';
 import { PROJECT_LINES, LINE_CONFIDENCE, getProjectLine, lineImageKeywords, projectLinePlate } from '@/data/project-lines';
 import { getMorph } from '@/data/morph-guide';
+import { isLivingMorph } from '@/lib/morphNotBred';
 import { fieldGuidePlate, hasIllustration } from '@/components/morphguide/IllustratedGecko';
 
 
@@ -155,7 +156,7 @@ export default function ProjectLineDetailPage() {
     .map((s) => getMorph(s))
     .filter(Boolean);
   const relatedTiles = relatedMorphs
-    .filter((rm) => hasIllustration(rm.slug) || relatedMorphImages.some((item) => item.slug === rm.slug))
+    .filter((rm) => isLivingMorph(rm) && (hasIllustration(rm.slug) || relatedMorphImages.some((item) => item.slug === rm.slug)))
     .slice(0, 4);
 
   const otherLines = PROJECT_LINES.filter((l) => l.slug !== line.slug).slice(0, 4);
@@ -384,24 +385,25 @@ export default function ProjectLineDetailPage() {
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {relatedTiles.map((rm) => {
+                  const plate = hasIllustration(rm.slug) ? fieldGuidePlate(rm.slug) : null;
                   const dbPhoto = relatedMorphImages.find((item) => item.slug === rm.slug);
-                  const src = dbPhoto?.url || fieldGuidePlate(rm.slug);
+                  const src = plate || dbPhoto?.url;
                   return (
                     <Link
                       key={rm.slug}
                       to={`/MorphGuide/${rm.slug}`}
                       className="group block"
                     >
-                      <div className={`aspect-square rounded-xl overflow-hidden border border-slate-700 relative ${dbPhoto?.url ? 'bg-slate-900' : 'bg-[#f4efdf]'}`}>
+                      <div className={`aspect-square rounded-xl overflow-hidden border border-slate-700 relative ${plate ? 'bg-[#f4efdf]' : 'bg-slate-900'}`}>
                         <img
                           src={src}
                           alt={`${rm.name} morph example`}
-                          className={`w-full h-full ${dbPhoto?.url ? 'object-cover' : 'object-contain'} group-hover:scale-105 transition-transform`}
+                          className={`w-full h-full ${plate ? 'object-contain' : 'object-cover'} group-hover:scale-105 transition-transform`}
                           loading="lazy"
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-2">
                           <div className="text-[11px] font-semibold text-white">{rm.name}</div>
-                          <div className="text-[10px] text-slate-300">{dbPhoto?.url ? 'View morph' : 'Field guide study'}</div>
+                          <div className="text-[10px] text-slate-300">{plate ? 'Field guide study' : 'View morph'}</div>
                         </div>
                       </div>
                     </Link>

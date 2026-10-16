@@ -41,6 +41,8 @@ import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
 import { licenseLabel } from '@/lib/imageLicenses';
 import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
+import { fetchHeroAnchorPhotos } from '@/lib/publicGeckoPhotos';
+import { normMorph } from '@/components/morphguide/MorphIndexData';
 import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import PublicPageShell from '@/components/public/PublicPageShell';
@@ -147,7 +149,7 @@ function rememberGuideReturn(slug) {
  * With no photo (or a broken one) the box shows a styled placeholder and
  * an invitation to add a photo, instead of collapsing to nothing.
  */
-function HeroImage({ src, name, slug, category, invitePhoto = true }) {
+function HeroImage({ src, name, slug, category, invitePhoto = true, heroAnchor = null }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
   const showPhoto = src && !failed;
@@ -155,19 +157,43 @@ function HeroImage({ src, name, slug, category, invitePhoto = true }) {
     <figure className="m-0">
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
         {showPhoto ? (
-          <img
-            src={src}
-            alt={`${name} crested gecko`}
-            width="800"
-            height="600"
-            className="absolute inset-0 h-full w-full object-cover"
-            loading="eager"
-            decoding="async"
-            onError={() => setFailed(true)}
-            // React 18 drops the camelCase fetchPriority prop, so pass the
-            // lowercase attribute straight through (same as Home.jsx).
-            {...{ fetchpriority: 'high' }}
-          />
+          <>
+            <img
+              src={src}
+              alt={`${name} crested gecko`}
+              width="800"
+              height="600"
+              className="absolute inset-0 h-full w-full object-cover"
+              loading="eager"
+              decoding="async"
+              onError={() => setFailed(true)}
+              // React 18 drops the camelCase fetchPriority prop, so pass the
+              // lowercase attribute straight through (same as Home.jsx).
+              {...{ fetchpriority: 'high' }}
+            />
+            {heroAnchor && src === heroAnchor.image_url && (
+              <>
+                <div className="absolute top-2.5 right-2.5">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full border border-emerald-500/60 bg-emerald-950/80 backdrop-blur-sm px-2.5 py-0.5 text-xs font-semibold text-emerald-200"
+                    title={heroAnchor.award || 'Competition-winning reference photo'}
+                  >
+                    <span aria-hidden>★</span>
+                    Show winner
+                  </span>
+                </div>
+                {(heroAnchor.photo_credit || heroAnchor.gecko_name) && (
+                  <div className="absolute inset-x-0 bottom-0 px-2.5 py-2 text-xs leading-tight text-white/90">
+                    <div className="rounded-md bg-black/60 backdrop-blur-sm border border-white/10 px-2.5 py-1 truncate">
+                      {heroAnchor.gecko_name && <span className="font-medium">&ldquo;{heroAnchor.gecko_name}&rdquo;</span>}
+                      {heroAnchor.gecko_name && heroAnchor.photo_credit && <span className="text-white/50"> · </span>}
+                      {heroAnchor.photo_credit && <span className="text-white/80">{heroAnchor.photo_credit}</span>}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </>
         ) : (
           <div
             className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br ${
@@ -295,6 +321,7 @@ export default function MorphDetail() {
   // Approved Morph Guide photo submissions, credited by display name.
   const [submittedPhotos, setSubmittedPhotos] = useState([]);
   const [referenceImages, setReferenceImages] = useState([]);
+  const [heroAnchor, setHeroAnchor] = useState(null);
   // Best photo per morph from the morph_guides rows, for link previews
   // and the lookalike comparison tiles.
   const [imageBySlug, setImageBySlug] = useState({});
@@ -331,6 +358,7 @@ export default function MorphDetail() {
     const localRecord = localRecordFor(slug);
     setCommunityImages([]);
     setReferenceImages([]);
+    setHeroAnchor(null);
     (async () => {
       setNotFound(false);
       if (localRecord) {
@@ -375,6 +403,18 @@ export default function MorphDetail() {
         }
 
         setRecord(best || localRecord);
+
+        // Show-winner photo for this morph, if available.
+        try {
+          const anchors = await fetchHeroAnchorPhotos(supabase, 200);
+          const targetNorm = normMorph(best?.morph_name || displayName);
+          const match = (anchors || []).find((a) => normMorph(a.primary_morph) === targetNorm && sanitizeImage(a.image_url));
+          if (!cancelled && match) {
+            setHeroAnchor({ ...match, image_url: sanitizeImage(match.image_url) });
+          }
+        } catch {
+          /* show-winner anchor is optional */
+        }
 
         // Community photos of this morph from the gallery; nice touch if we have them.
         try {
@@ -462,7 +502,9 @@ export default function MorphDetail() {
   const memberPhotos = isLivingMorph(localMorph)
     ? [...submittedPhotos, ...communityImages].filter((img) => !blocked.isBlocked(img))
     : [];
-  const heroImage = sanitizeImage(record.example_image_url) || memberPhotos[0]?.image_url || null;
+  const heroImage = isLivingMorph(localMorph)
+    ? (heroAnchor?.image_url || sanitizeImage(record.example_image_url) || memberPhotos[0]?.image_url || null)
+    : null;
   const rarityLabel = RARITY_LABELS[record.rarity] || record.rarity || 'Unknown';
   // Prefer local dataset's key features over DB field so the
   // authoritative reference wins even if DB has sparse data.
@@ -652,7 +694,7 @@ export default function MorphDetail() {
             <p className="mt-3 text-xs text-neutral-400">{bylineText(path)}</p>
           </div>
 
-          <HeroImage src={heroImage} name={morphName} slug={slug} category={localMorph?.category} invitePhoto={isLivingMorph(localMorph)} />
+          <HeroImage src={heroImage} name={morphName} slug={slug} category={localMorph?.category} invitePhoto={isLivingMorph(localMorph)} heroAnchor={heroAnchor} />
         </header>
 
         <div className="mt-6">

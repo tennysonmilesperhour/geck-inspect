@@ -13,6 +13,7 @@ import PatternSpectrum, { spectrumPositionFor, MorphProgressionPlayer, CustomMor
 import { SpecimenPhoto } from '@/components/morphguide/SpecimenStudy';
 import { MORPHS } from '@/data/morph-guide';
 import { PROJECT_LINES, projectLinePlate } from '@/data/project-lines';
+import MorphIndexCard from '@/components/morphguide/MorphIndexCard';
 vi.mock('@/lib/posthog', () => ({ captureEvent: vi.fn() }));
 const slugs = new Set(MORPHS.map(m => m.slug));
 
@@ -115,13 +116,11 @@ describe('animated morph progression tracks', () => {
     expect(compHtml).toContain('Crossfade any two morphs in the field guide');
     expect(compHtml).toContain('/morph-guide/field-guide-v1/flame.webp');
     expect(compHtml).toContain('/morph-guide/field-guide-v1/harlequin.webp');
-    // Only morphs with a plate on disk can be picked, so the crossfade never
-    // shows a broken image (Phantom and Whiteout have no plate yet).
     const offered = [...compHtml.matchAll(/<option value="([^"]+)"/g)].map(m => m[1]);
     expect(offered.length).toBeGreaterThan(0);
     for (const slug of offered) expect(existsSync(`public${fieldGuidePlate(slug)}`), slug).toBe(true);
-    expect(offered).not.toContain('phantom');
-    expect(offered).not.toContain('whiteout');
+    expect(offered).toContain('phantom');
+    expect(offered).toContain('whiteout');
   });
 });
 
@@ -149,23 +148,28 @@ describe('illustrated examples', () => {
   it('has local artwork for both views and every independent pigment layer', () => {
     for (const view of ['side','top']) for (const layer of ['base','cream','pin','tiger','spots']) expect(existsSync(`public${traitAsset(view,layer)}`)).toBe(true);
   });
-  // Guide entries added in October 2026 that have no field guide plate yet.
-  // They show the "use documented specimen photographs" panel instead. Paint
-  // a plate (public/morph-guide/field-guide-v1/<slug>.webp), add a preset in
-  // illustratedGeckoPresets.js and take the slug off this list.
-  const AWAITING_PLATE = ['phantom','empty-back','super-empty-back','whiteout','super-whiteout','luwak','super-lilly-white','super-cappuccino','super-sable','super-highway'];
-  it('provides a field guide plate for every morph in the guide that has one, and rejects unknown slugs', () => {
+  const AWAITING_PLATE = [];
+  it('provides a field guide plate for 100% of morphs in the guide, and renders drawings rather than real photos on MorphIndexCard', () => {
     for (const slug of STUDY_MORPHS) expect(slugs.has(slug)).toBe(true);
-    expect(MORPHS.filter(m => !hasIllustration(m.slug)).map(m => m.slug).sort()).toEqual([...AWAITING_PLATE].sort());
-    for (const morph of MORPHS.filter(m => hasIllustration(m.slug))) {
-      expect(existsSync(`public${fieldGuidePlate(morph.slug)}`)).toBe(true);
+    expect(MORPHS.filter(m => !hasIllustration(m.slug)).map(m => m.slug)).toEqual(AWAITING_PLATE);
+    for (const morph of MORPHS) {
+      expect(hasIllustration(morph.slug), morph.slug).toBe(true);
+      expect(existsSync(`public${fieldGuidePlate(morph.slug)}`), morph.slug).toBe(true);
       const html = renderToStaticMarkup(<IllustratedGecko morph={morph.slug} />);
       expect(html).toContain(fieldGuidePlate(morph.slug));
-    }
-    for (const slug of AWAITING_PLATE) {
-      const html = renderToStaticMarkup(<IllustratedGecko morph={slug} />);
-      expect(html).toContain('Use documented specimen photographs');
-      expect(html).not.toContain('<img');
+      const cardHtml = renderToStaticMarkup(
+        <MemoryRouter>
+          <MorphIndexCard
+            morph={{
+              ...morph,
+              heroImage: 'https://example.com/real-gecko-photo.jpg',
+              heroImages: ['https://example.com/real-gecko-photo.jpg'],
+            }}
+          />
+        </MemoryRouter>
+      );
+      expect(cardHtml).toContain(fieldGuidePlate(morph.slug));
+      expect(cardHtml).not.toContain('real-gecko-photo.jpg');
     }
     for (const slug of ['unknown-morph', 'toString', '']) {
       expect(hasIllustration(slug)).toBe(false);

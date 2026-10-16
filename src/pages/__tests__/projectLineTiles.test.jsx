@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 // Each project line page shows up to four "Related morph traits" tiles.
 // A tile with no member photo falls back to the morph's painted field
 // guide plate, so a morph with no plate (Super Lilly White, related to the
@@ -11,6 +10,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { PROJECT_LINES } from '@/data/project-lines';
 
+vi.hoisted(() => vi.stubGlobal('window', { self: null, top: null, addEventListener() {}, removeEventListener() {} }));
 vi.mock('@/lib/supabaseClient', () => ({ supabase: {} }));
 vi.mock('@/lib/posthog', () => ({ captureEvent: () => {} }));
 

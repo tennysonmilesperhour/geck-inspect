@@ -73,15 +73,7 @@ export function MorphThumb({ slug, name, src: srcProp, className = '', textClass
         <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center p-2">
           <IllustratedGecko morph={morph.slug} decorative className="w-full h-auto max-h-full" />
         </span>
-      ) : (
-        <span
-          aria-hidden="true"
-          className={`absolute inset-0 flex items-center justify-center font-bold tracking-tight text-white/75 ${textClass}`}
-        >
-          {morphInitials(label)}
-        </span>
-      )}
-      {src && !failed && (
+      ) : src && !failed ? (
         <img
           src={src}
           alt={`${label} crested gecko`}
@@ -90,6 +82,13 @@ export function MorphThumb({ slug, name, src: srcProp, className = '', textClass
           decoding="async"
           onError={() => setFailed(true)}
         />
+      ) : (
+        <span
+          aria-hidden="true"
+          className={`absolute inset-0 flex items-center justify-center font-bold tracking-tight text-white/75 ${textClass}`}
+        >
+          {morphInitials(label)}
+        </span>
       )}
     </div>
   );

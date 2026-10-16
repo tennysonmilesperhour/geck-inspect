@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { captureEvent } from '@/lib/posthog';
-import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
-import { MorphIndexArt, morphImages } from '@/components/morphguide/MorphIndexCard';
+import { MorphIndexArt } from '@/components/morphguide/MorphIndexCard';
 
 /**
  * "New in 2026" banner above the morph grid: Albino (the newest entry in the
@@ -43,7 +42,6 @@ export default function MorphIndexSpotlight({ morphs }) {
       </h2>
       <div className="grid gap-3 sm:grid-cols-2">
         {items.map(({ slug, badge, title, body, morph }) => {
-          const images = morphImages(morph);
           return (
             <Link
               key={slug}
@@ -53,13 +51,6 @@ export default function MorphIndexSpotlight({ morphs }) {
             >
               <div className="relative w-16 h-16 sm:w-24 sm:h-24 shrink-0 overflow-hidden rounded-lg">
                 <MorphIndexArt morph={morph} />
-                {images.length > 0 && (
-                  <RotatingMorphImage
-                    images={images}
-                    alt={`${morph.name} crested gecko`}
-                    className="w-full h-full object-cover"
-                  />
-                )}
               </div>
               <div className="min-w-0 flex-1 py-0.5">
                 <div className="flex items-center gap-2 mb-1">
