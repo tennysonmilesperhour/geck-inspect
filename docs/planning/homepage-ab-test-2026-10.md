@@ -1,6 +1,6 @@
 # Homepage business assistant A/B test
 
-Status: implemented, PostHog draft, production allocation OFF.
+Status: production enable switch set to `1` on 16 October 2026 UTC. Launch experiment 487198 after the enabled build is ready; the PostHog link below is the authority for current running/paused status.
 
 - Experiment: https://us.posthog.com/project/376510/experiments/487198
 - Flag: https://us.posthog.com/project/376510/feature_flags/965230
@@ -54,6 +54,7 @@ These overrides work while the experiment is off. The browser tab remains a prev
 
 1. Verify the deployed commit and both preview URLs, including mobile signup navigation.
 2. Set `VITE_HOMEPAGE_EXPERIMENT_ENABLED=1` for the production Vercel build, then redeploy. The remote flag remains inactive, so visitors still receive control.
+   The build-ignore rule allows rebuilding the currently deployed commit so environment changes take effect. Documentation-only pushes still skip the build.
 3. Launch experiment 487198 in PostHog. This activates its already-configured 50/50 flag. Do not separately randomize in React or create another flag.
 4. Check real rendered exposure events for both variants and a completed signup/first-gecko journey. Preview mode intentionally cannot validate ingestion. Use a disposable test identity marked internal, then verify internal traffic is excluded from the result.
 5. Confirm the current traffic rate and agree a minimum meaningful effect/sample target before interpreting a winner. Do not promise a fixed statistical deadline from the historical 1.03% figure.

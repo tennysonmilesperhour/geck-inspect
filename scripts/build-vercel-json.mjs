@@ -196,10 +196,11 @@ function buildConfig() {
     // ledgers to docs/ several times a week and each used to rebuild and
     // redeploy the whole site. The comparison is against the last deployed
     // commit (VERCEL_GIT_PREVIOUS_SHA), so a push that also carries code
-    // always builds; if git cannot compare (shallow clone, first deploy),
+    // always builds. Rebuilding the deployed commit must also run so
+    // environment changes take effect. If git cannot compare (first deploy),
     // the command exits 1 and the build runs.
     ignoreCommand:
-      'if git diff --quiet "${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}" HEAD -- . \':(exclude)docs\' \':(exclude,glob)*.md\'; then exit 0; else exit 1; fi',
+      'if [ -n "$VERCEL_GIT_PREVIOUS_SHA" ] && [ "$VERCEL_GIT_PREVIOUS_SHA" = "$(git rev-parse HEAD)" ]; then exit 1; fi; if git diff --quiet "${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}" HEAD -- . \':(exclude)docs\' \':(exclude,glob)*.md\'; then exit 0; else exit 1; fi',
     rewrites,
     headers: [
       {
