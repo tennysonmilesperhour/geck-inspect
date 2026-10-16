@@ -225,13 +225,16 @@ export default function Today() {
     .slice(0, GECKOS_SHOWN);
   // While the collection is being asked for again with no gecko in the
   // copy (a first gecko just added), say nothing about it yet rather than
-  // "Add your first gecko" or "Nothing due today".
-  const geckosSettling = signedIn && geckoQuery.isFetching && allGeckos.length === 0;
+  // "Add your first gecko" or "Nothing due today". Not with no signal,
+  // when that load cannot answer: in the app opened without a signal it
+  // still retries for several seconds, because the query client counts
+  // itself online until an 'offline' event, which then never fires.
+  const geckosSettling = signedIn && online && geckoQuery.isFetching && allGeckos.length === 0;
   const noGeckos = signedIn && geckoQuery.isSuccess && !geckosSettling && (geckoQuery.data || []).length === 0;
 
   const unavailable = listQuery.isError && isTodayUnavailable(listQuery.error);
   const listFailed = listQuery.isError && !data;
-  const offlineNoCopy = !data && listQuery.fetchStatus === 'paused';
+  const offlineNoCopy = !data && (listQuery.fetchStatus === 'paused' || (signedIn && !online));
   const showingOldCopy = Boolean(data) && (listQuery.isError || !online) && data.today !== today;
 
   const dateLine = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });

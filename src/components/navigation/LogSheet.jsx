@@ -13,6 +13,12 @@ import { captureEvent } from '@/lib/posthog';
 // the copy the phone already has.
 const LOG_SHEET_WAIT_MS = 6000;
 
+// True when there is no signal. The query client's own check is not
+// enough: it starts out online and only changes on an 'offline' event,
+// which never fires when the app is opened with no signal (the installed
+// app's shell still loads). The phone's own report covers that case.
+const noSignal = () => !onlineManager.isOnline() || (typeof navigator !== 'undefined' && navigator.onLine === false);
+
 /**
  * The phone's Log tab (review item E3 25): what to log, then the one-tap
  * log page (/log) for the collection, or Field Mode for everything else
@@ -22,8 +28,10 @@ const LOG_SHEET_WAIT_MS = 6000;
  * The links name the geckos, so they are only as good as that copy. When
  * the phone has no copy yet, or a gecko was added since it was made, a
  * tap waits (up to LOG_SHEET_WAIT_MS) for the collection to load before
- * the log opens. Until 16 Oct 2026 such a tap opened a log with the new
- * gecko missing, or an empty one that said the gecko may have been sold.
+ * the log opens, unless there is no signal, when it opens at once with
+ * the copy the phone has. Until 16 Oct 2026 such a tap opened a log with
+ * the new gecko missing, or an empty one that said the gecko may have
+ * been sold.
  */
 export default function LogSheet({ open, onOpenChange }) {
   const { user, isGuest } = useAuth();
@@ -47,7 +55,7 @@ export default function LogSheet({ open, onOpenChange }) {
     staleTime: 0,
     queryFn: () => loadWritableGeckos(user),
   });
-  const loadingList = Boolean(email) && geckoQuery.data === undefined && geckoQuery.fetchStatus === 'fetching';
+  const loadingList = Boolean(email) && geckoQuery.data === undefined && geckoQuery.fetchStatus === 'fetching' && !noSignal();
 
   // Come back to the page the tab was tapped on, except the log itself.
   const here = `${location.pathname}${location.search}`;
@@ -79,7 +87,7 @@ export default function LogSheet({ open, onOpenChange }) {
     let to = '/FieldMode';
     if (pick) {
       let geckos = geckoQuery.data;
-      if (email && copyOutdated() && onlineManager.isOnline()) {
+      if (email && copyOutdated() && !noSignal()) {
         setWaiting(kind);
         try {
           geckos = await loadGeckos();

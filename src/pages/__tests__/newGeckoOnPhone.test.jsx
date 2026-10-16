@@ -27,6 +27,8 @@ const fx = vi.hoisted(() => ({
   // When set, the next collection load waits for this promise.
   gate: null,
   loads: 0,
+  // When set, loading Today's list waits for this promise.
+  todayGate: null,
 }));
 
 vi.mock('@/lib/AuthContext', () => ({
@@ -46,10 +48,14 @@ vi.mock('@/lib/fieldModeData', () => ({
 }));
 vi.mock('@/lib/today', async (importOriginal) => ({
   ...(await importOriginal()),
-  loadMemberToday: async (today) => ({ today, feedingReminders: true, weighInReminders: true, items: [] }),
+  loadMemberToday: async (today) => {
+    if (fx.todayGate) await fx.todayGate;
+    return { today, feedingReminders: true, weighInReminders: true, items: [] };
+  },
 }));
 vi.mock('@/lib/offlineSync', () => ({
-  useOfflineQueue: () => ({ pending: 0, online: true, refused: [] }),
+  // As the real hook: the device's own report of a connection.
+  useOfflineQueue: () => ({ pending: 0, online: navigator.onLine !== false, refused: [] }),
   saveFieldLog: vi.fn(),
   takeBackQueued: vi.fn(),
   hasLeftQueue: () => false,
@@ -78,6 +84,7 @@ vi.mock('@/components/seo/Seo', () => ({ default: () => null }));
 vi.mock('@/components/shared/GeckoImage', () => ({ default: () => null }));
 
 import { queryClientInstance } from '@/lib/query-client';
+import { saveFieldLog } from '@/lib/offlineSync';
 import LogSheet from '@/components/navigation/LogSheet';
 import QuickLog from '@/pages/QuickLog';
 import Today from '@/pages/Today';
@@ -129,11 +136,21 @@ beforeEach(() => {
   fx.geckos = [];
   fx.gate = null;
   fx.loads = 0;
+  fx.todayGate = null;
 });
 afterEach(() => {
   queryClientInstance.clear();
   onlineManager.setOnline(true);
+  vi.restoreAllMocks();
 });
+
+// The installed app opened with no signal: the phone reports no
+// connection from the start, so no 'offline' event ever fires and the
+// query client still counts itself online. Every load waits forever.
+function openedWithNoSignal() {
+  vi.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(false);
+  fx.gate = new Promise(() => {});
+}
 
 describe('a gecko added on the phone', () => {
   it('shows on Today right away, with no "Add your first gecko"', async () => {
@@ -220,6 +237,75 @@ describe('the Log tab before the collection has loaded', () => {
     await userEvent.click(screen.getByRole('button', { name: /Feeding/ }));
     await waitFor(() => expect(where().startsWith('/log?type=feeding')).toBe(true));
     expect(logIds()).toEqual(['g-mango']);
+  });
+});
+
+describe('the app opened with no signal', () => {
+  it('Log tab: a tap opens the log at once with the copy the phone has', async () => {
+    fx.geckos = [MANGO];
+    await loadCopy();
+    addGecko(NIMBUS);
+    openedWithNoSignal();
+    expect(onlineManager.isOnline()).toBe(true);
+    show('/Today', <LogSheet open onOpenChange={() => {}} />);
+    await userEvent.click(screen.getByRole('button', { name: /Feeding/ }));
+    await waitFor(() => expect(where().startsWith('/log?type=feeding')).toBe(true), { timeout: 1000 });
+    expect(logIds()).toEqual(['g-mango']);
+  });
+
+  it('Log tab: with no copy at all, the options do not spin and a tap opens the log', async () => {
+    openedWithNoSignal();
+    show('/Settings', <LogSheet open onOpenChange={() => {}} />);
+    await waitFor(() => expect(fx.loads).toBe(1));
+    expect(screen.queryByText('Loading your geckos')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: /Weigh-in/ }));
+    await waitFor(() => expect(where().startsWith('/log?type=weight')).toBe(true), { timeout: 1000 });
+  });
+
+  it('/log: a gecko the copy lacks is named as missing, not loading', async () => {
+    fx.geckos = [MANGO];
+    await loadCopy();
+    addGecko(NIMBUS);
+    openedWithNoSignal();
+    show('/log?type=feeding&gecko=g-mango,g-nimbus', <QuickLog />);
+    expect(await screen.findByText('Mango')).toBeTruthy();
+    expect(screen.getByText(/One gecko from this reminder is not in this collection/)).toBeTruthy();
+    expect(screen.queryByText('Loading your geckos')).toBeNull();
+  });
+
+  it('/log: with no copy at all, says so at once', async () => {
+    openedWithNoSignal();
+    show('/log?type=feeding', <QuickLog />);
+    expect(await screen.findByText(/No signal, and this phone has no saved copy of your collection yet/)).toBeTruthy();
+  });
+
+  it('Today: says what is due without waiting for the collection', async () => {
+    openedWithNoSignal();
+    show('/Today', <Today />);
+    expect(await screen.findByText('Nothing due today')).toBeTruthy();
+    expect(fx.loads).toBe(1);
+  });
+
+  it('Today: with no copy of the list, says so at once', async () => {
+    openedWithNoSignal();
+    fx.todayGate = new Promise(() => {});
+    show('/Today', <Today />);
+    expect(await screen.findByText(/No signal, and this phone has no copy of today's list yet/)).toBeTruthy();
+  });
+});
+
+describe('a log saved on /log', () => {
+  it('reads the collection once, not twice', async () => {
+    fx.geckos = [MANGO];
+    vi.mocked(saveFieldLog).mockResolvedValue({ result: { id: 'f-1' }, queued: null, data: { requestId: 'r-1' } });
+    show('/log?type=feeding&gecko=g-mango', <QuickLog />);
+    await screen.findByText('Mango');
+    await waitFor(() => expect(queryClientInstance.isFetching()).toBe(0));
+    const before = fx.loads;
+    await userEvent.click(screen.getByRole('button', { name: 'Fed' }));
+    expect(await screen.findByText('Fed, saved')).toBeTruthy();
+    await waitFor(() => expect(queryClientInstance.isFetching()).toBe(0));
+    expect(fx.loads - before).toBe(1);
   });
 });
 

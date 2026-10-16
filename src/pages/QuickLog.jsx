@@ -196,9 +196,11 @@ export default function QuickLog() {
     setLog(gecko.id, undefined);
   };
 
+  // 'geckos_changed' also marks the collection copy this page shows out of
+  // date (src/lib/query-client.js), so it is not marked here as well: that
+  // read the whole collection twice for every save.
   const refreshCollection = () => {
     queryClient.invalidateQueries({ queryKey: ['my-geckos'] });
-    queryClient.invalidateQueries({ queryKey: ['field-mode'] });
     window.dispatchEvent(new Event('geckos_changed'));
   };
 
@@ -414,14 +416,17 @@ export default function QuickLog() {
   const hasList = Boolean(geckoQuery.data);
   // The collection is being asked for again. Until it answers, a gecko the
   // link names but the kept copy lacks (added a moment ago) is shown as
-  // loading, not as archived, sold or in another account.
-  const checking = hasList && geckoQuery.isFetching;
+  // loading, not as archived, sold or in another account. Not with no
+  // signal: when the app is opened without one, the phone says so, but the
+  // query client counts itself online until an 'offline' event (which then
+  // never fires) and keeps retrying for several seconds.
+  const checking = hasList && geckoQuery.isFetching && online;
   const checkingNote = (
     <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
       <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> Loading your geckos
     </p>
   );
-  const offlineNoCopy = Boolean(user) && !hasList && geckoQuery.fetchStatus === 'paused';
+  const offlineNoCopy = Boolean(user) && !hasList && (geckoQuery.fetchStatus === 'paused' || !online);
   const loading = !authChecked || (Boolean(user) && !guest && !hasList && !offlineNoCopy && !geckoQuery.isError && !sessionExpired);
   const Icon = params.type === 'weight' ? Scale : params.type === 'shed' ? Sparkles : Utensils;
 
