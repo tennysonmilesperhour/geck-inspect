@@ -23,10 +23,12 @@ import { retryApiCall } from '@/lib/layoutCache';
 // Pages a page_config row can never switch off: essential navigation, and
 // pages that live screens link to (the passport quick log opens Field
 // Mode, the Dashboard opens the Gallery, admins send expert reviewers to
-// Training). Hiding them in the admin Pages tool only takes them out of
-// the sidebar.
+// Training). Today is the phone's home (the app opens on it and the first
+// tab links to it), so switching it off would greet every phone with
+// "This feature is currently unavailable". Hiding any of these in the
+// admin Pages tool only takes them out of the sidebar.
 export const ALWAYS_ON_PAGES = Object.freeze([
-  'Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages', 'FieldMode', 'Gallery', 'Training',
+  'Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages', 'FieldMode', 'Gallery', 'Training', 'Today',
 ]);
 
 export const PAGE_CONFIGS_CHANGED = 'page_configs_changed';
