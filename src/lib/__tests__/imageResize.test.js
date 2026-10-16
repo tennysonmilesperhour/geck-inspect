@@ -1,10 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import {
   convertHeicForUpload,
   downscaleImage,
   isHeicFile,
+  makeThumbnail,
   RESIZE_DEFAULTS,
   targetDimensions,
+  THUMBNAIL,
 } from '../imageResize';
 
 vi.mock('heic-to/csp', () => ({
@@ -132,5 +134,116 @@ describe('downscaleImage format safety (browser canvas mocked)', () => {
     const jpg = small('image/jpeg', 2000);
     expect(await downscaleImage(jpg)).toBe(jpg);
     vi.unstubAllGlobals();
+  });
+});
+
+// A canvas whose toBlob ignores the requested type for WebP and returns a
+// PNG, the way Safari does, and records every type asked for.
+function stubCanvasWith({ width = 4000, height = 3000, webp = true, bytes = 30_000, failDecode = false } = {}) {
+  const asked = [];
+  const drawn = [];
+  vi.stubGlobal('HTMLCanvasElement', function HTMLCanvasElement() {});
+  vi.stubGlobal('createImageBitmap', vi.fn(async () => {
+    if (failDecode) throw new Error('cannot decode');
+    return { width, height, close() {} };
+  }));
+  vi.stubGlobal('document', {
+    createElement: () => {
+      const canvas = {
+        width: 0,
+        height: 0,
+        getContext: () => ({ drawImage: () => drawn.push([canvas.width, canvas.height]) }),
+        toBlob: (cb, type) => {
+          asked.push(type);
+          const out = type === 'image/webp' && !webp ? 'image/png' : type;
+          const size = out === 'image/png' ? bytes * 8 : bytes;
+          cb(new Blob([new Uint8Array(size)], { type: out }));
+        },
+      };
+      return canvas;
+    },
+  });
+  return { asked, drawn };
+}
+const photo = (type, size, name = 'IMG_7140.jpg') => new File([new Uint8Array(size)], name, { type });
+
+describe('browsers that cannot write WebP (Safari)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('stores a JPEG photo as JPEG instead of a mislabelled PNG', async () => {
+    const { asked } = stubCanvasWith({ webp: false });
+    const out = await downscaleImage(photo('image/jpeg', 3_000_000));
+    expect(asked).toEqual(['image/webp', 'image/jpeg']);
+    expect(out.type).toBe('image/jpeg');
+    expect(out.name).toBe('IMG_7140.jpg');
+  });
+
+  it('labels a PNG source honestly when it stays PNG', async () => {
+    stubCanvasWith({ webp: false });
+    const out = await downscaleImage(photo('image/png', 9_000_000, 'shot.png'));
+    expect(out.type).toBe('image/png');
+    expect(out.name).toBe('shot.png');
+  });
+
+  it('keeps WebP where the browser can write it', async () => {
+    const { asked } = stubCanvasWith({ webp: true });
+    const out = await downscaleImage(photo('image/jpeg', 3_000_000));
+    expect(asked).toEqual(['image/webp']);
+    expect(out.type).toBe('image/webp');
+    expect(out.name).toBe('IMG_7140.webp');
+  });
+});
+
+describe('makeThumbnail', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('draws the long edge at the thumbnail size and encodes WebP at the thumbnail quality', async () => {
+    const { drawn } = stubCanvasWith({ width: 1600, height: 1200 });
+    const out = await makeThumbnail(photo('image/webp', 300_000, 'p.webp'));
+    expect(drawn).toEqual([[THUMBNAIL.maxEdge, 360]]);
+    expect(out).toBeInstanceOf(File);
+    expect(out.type).toBe('image/webp');
+    expect(out.size).toBeLessThan(300_000);
+  });
+
+  it('passes the thumbnail quality to the encoder', async () => {
+    stubCanvasWith();
+    const qualities = [];
+    const canvasFactory = document.createElement;
+    vi.stubGlobal('document', {
+      createElement: () => {
+        const canvas = canvasFactory();
+        const toBlob = canvas.toBlob;
+        canvas.toBlob = (cb, type, quality) => { qualities.push(quality); toBlob(cb, type, quality); };
+        return canvas;
+      },
+    });
+    await makeThumbnail(photo('image/jpeg', 300_000));
+    expect(qualities).toEqual([THUMBNAIL.quality]);
+  });
+
+  it('still makes a thumbnail for a photo already smaller than the thumbnail size', async () => {
+    const { drawn } = stubCanvasWith({ width: 300, height: 200 });
+    const out = await makeThumbnail(photo('image/png', 40_000, 'tiny.png'));
+    expect(drawn).toEqual([[300, 200]]);
+    expect(out.type).toBe('image/webp');
+  });
+
+  it('falls back to JPEG where WebP cannot be written, whatever the source', async () => {
+    stubCanvasWith({ webp: false });
+    const out = await makeThumbnail(photo('image/png', 400_000, 'shot.png'));
+    expect(out.type).toBe('image/jpeg');
+    expect(out.name).toBe('shot.jpg');
+  });
+
+  it('makes no thumbnail for GIFs, non-images, undecodable photos or without a canvas', async () => {
+    expect(await makeThumbnail(photo('image/jpeg', 1000))).toBeNull(); // node: no canvas
+    stubCanvasWith();
+    expect(await makeThumbnail(photo('image/gif', 1000, 'dance.gif'))).toBeNull();
+    expect(await makeThumbnail(photo('application/pdf', 1000, 'a.pdf'))).toBeNull();
+    expect(await makeThumbnail(null)).toBeNull();
+    vi.unstubAllGlobals();
+    stubCanvasWith({ failDecode: true });
+    expect(await makeThumbnail(photo('image/jpeg', 1000))).toBeNull();
   });
 });

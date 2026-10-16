@@ -8,6 +8,8 @@
  *   - which bucket we write to
  *   - how we name the key
  *   - what the returned object looks like
+ *   - the small thumbnail stored beside each photo for cards and lists
+ *     (src/lib/photoThumbnails.js)
  *
  * Public API intentionally matches the original contract so no
  * caller has to change:
@@ -19,12 +21,45 @@
  */
 import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits, formatBytes } from '@/lib/tierLimits';
-import { convertHeicForUpload, downscaleImage, isHeicFile } from '@/lib/imageResize';
+import { convertHeicForUpload, downscaleImage, isHeicFile, makeThumbnail } from '@/lib/imageResize';
 import { imageStoragePath } from '@/lib/imageStoragePath';
+import { MEDIA_BUCKET, thumbnailStoragePath } from '@/lib/photoThumbnails';
 import { loadUserProfile } from '@/lib/userProfile';
 import { blockIfGuest } from '@/lib/guestMode';
 
-const BUCKET = 'geck-inspect-media';
+const BUCKET = MEDIA_BUCKET;
+
+// How long an upload waits for its thumbnail before returning. The
+// thumbnail is about 30 KB, so this only matters on a stalled connection;
+// past it the thumbnail upload carries on in the background and the photo
+// is ready to use (small displays load the photo until the thumbnail
+// lands).
+export const THUMBNAIL_WAIT_MS = 10000;
+
+/**
+ * Upload the thumbnail for a photo that has just been stored. Never
+ * throws: a missing thumbnail only means small displays load the photo
+ * itself, so a failure is logged and the upload carries on.
+ */
+async function uploadThumbnail(path, thumbnail) {
+  const thumbPath = thumbnail ? thumbnailStoragePath(path) : null;
+  if (!thumbPath) return false;
+  try {
+    const { error } = await supabase.storage.from(BUCKET).upload(thumbPath, thumbnail, {
+      contentType: thumbnail.type || undefined,
+      cacheControl: '3600',
+      upsert: false,
+    });
+    if (error) {
+      console.warn('[uploadFile] thumbnail upload failed; small displays will load the photo', error.message || error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.warn('[uploadFile] thumbnail upload failed; small displays will load the photo', error?.message || error);
+    return false;
+  }
+}
 
 /**
  * Best-effort fetch of the current user's total storage bytes. Returns
@@ -125,9 +160,18 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   const { data: { user } } = await supabase.auth.getUser();
   const path = imageStoragePath(user?.id, upload.type, folder);
 
+  // The small copy for cards and lists (src/lib/photoThumbnails.js), made
+  // from the already-resized photo so the full original is decoded only
+  // once. Null (a GIF, or a photo this browser cannot draw) just means no
+  // thumbnail.
+  const thumbnail = await makeThumbnail(upload);
+
   // Tier-based storage quota. Best effort, if either query fails we
   // fall through to the upload rather than block the user (the
   // migration may not yet be applied, or the network may be flaky).
+  // The thumbnail counts too: it is stored under the member's own folder
+  // (thumbs/<folder>/<member id>/...), so get_user_storage_bytes() adds it
+  // to their total, and this check includes it up front.
   if (user) {
     const [profile, usedBytes] = await Promise.all([
       fetchCurrentUserProfile(user),
@@ -135,9 +179,10 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     ]);
     const limits = getTierLimits(profile);
     const limit = limits.maxStorageBytes;
-    if (limit != null && usedBytes != null && usedBytes + upload.size > limit) {
+    const adding = upload.size + (thumbnail?.size || 0);
+    if (limit != null && usedBytes != null && usedBytes + adding > limit) {
       throw new Error(
-        `Storage quota reached: this upload would put you at ${formatBytes(usedBytes + upload.size)} of your ${formatBytes(limit)} (${limits.label}) limit. Upgrade your plan or delete some photos to continue.`,
+        `Storage quota reached: this upload would put you at ${formatBytes(usedBytes + adding)} of your ${formatBytes(limit)} (${limits.label}) limit. Upgrade your plan or delete some photos to continue.`,
       );
     }
   }
@@ -156,6 +201,18 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     );
   }
 
+  // The photo is stored; now its thumbnail. A failure here never fails
+  // the upload, and a stalled one stops holding it up after
+  // THUMBNAIL_WAIT_MS.
+  if (thumbnail) {
+    let timer;
+    await Promise.race([
+      uploadThumbnail(path, thumbnail),
+      new Promise((resolve) => { timer = setTimeout(resolve, THUMBNAIL_WAIT_MS); }),
+    ]);
+    clearTimeout(timer);
+  }
+
   const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(path);
   const file_url = publicData?.publicUrl;
   if (!file_url) {
@@ -165,31 +222,11 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   return { file_url, path };
 }
 
-/**
- * Rewrite a stored public image URL to a width-constrained thumbnail via
- * Supabase Storage image transformations, for use in grids and feeds
- * that don't need the full-resolution original.
- *
- * Gated behind VITE_SUPABASE_IMAGE_TRANSFORM because image
- * transformations are a paid Supabase feature: if it isn't enabled on
- * the project, the /render/image/ URL 404s. With the flag unset (the
- * default) this returns the original URL unchanged, so it is safe to
- * adopt in components now and switch on later by flipping the env var.
- *
- * @param {string} url - a public URL previously returned by uploadFile
- * @param {{ width?: number, quality?: number }} [opts]
- * @returns {string} the (possibly transformed) URL
- */
-export function transformImageUrl(url, { width, quality = 75 } = {}) {
-  if (!url || typeof url !== 'string') return url;
-  const enabled = import.meta?.env?.VITE_SUPABASE_IMAGE_TRANSFORM === 'true';
-  if (!enabled || !width || !url.includes('/storage/v1/object/public/')) {
-    return url;
-  }
-  const rendered = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-  const sep = rendered.includes('?') ? '&' : '?';
-  return `${rendered}${sep}width=${Math.round(width)}&quality=${quality}&resize=contain`;
-}
+// The unused transformImageUrl() helper that lived here (paid Supabase
+// image transformations behind VITE_SUPABASE_IMAGE_TRANSFORM) was removed
+// in October 2026: small displays use the stored thumbnails instead
+// (src/lib/photoThumbnails.js). SmartImage keeps its own transform path
+// behind VITE_IMAGE_TRANSFORMS for the day paid resizing is revisited.
 
 // Default export too, in case someone does `import uploadFile from ...`
 export default uploadFile;

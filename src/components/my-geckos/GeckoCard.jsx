@@ -82,7 +82,9 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             gecko={gecko}
             src={primaryImage}
             alt={gecko.photo_is_illustrative ? `${gecko.name}, illustrative photo, not this demo animal` : gecko.name}
-            width={500}
+            // Two cards to a row on a phone, up to five on a wide screen: the
+            // 480 px thumbnail covers each at twice its size.
+            width={480}
             aspect="auto"
             containerClassName="w-full h-40 sm:h-56"
             className="w-full h-full object-cover"

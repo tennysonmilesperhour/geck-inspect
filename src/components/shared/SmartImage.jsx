@@ -6,18 +6,23 @@
  *   - Fixed aspect-ratio container prevents CLS (pass aspect="auto" to opt out
  *     when the parent already sets a height)
  *   - Shimmer placeholder while loading
- *   - Supabase Storage transform: serves a width-sized variant from the
- *     /render/image/ endpoint when the user is on a Pro+ plan
- *   - Three-tier error fallback: transform fails → try original URL →
- *     show the customizable fallback placeholder
+ *   - Small slots load the photo's stored thumbnail (src/lib/photoThumbnails.js)
+ *     when `width` is at most the thumbnail size, 480
+ *   - Staged fallback: thumbnail (or the paid Supabase transform, when it is
+ *     switched on) → the original photo → the customizable placeholder
+ *
+ * `width` is how many image pixels the slot needs across, about twice its
+ * CSS width. Leave it out (or pass more than 480) wherever the full photo
+ * must show: lightboxes, record heroes, anything printed or downloaded.
  *
  * Usage:
  *   <SmartImage src={gecko.image_url} alt={gecko.name} aspect="square" width={400} />
- *   <SmartImage src={url} alt="Gallery" aspect="auto" containerClassName="h-40" width={500} />
+ *   <SmartImage src={url} alt="Gallery" aspect="auto" containerClassName="h-40" width={800} />
  */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { DEFAULT_GECKO_CARD, DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { geckoPlaceholderStyle, isGeckoPlaceholder } from '@/lib/geckoPlaceholder';
+import { thumbnailFirst } from '@/lib/photoThumbnails';
 import GeckoPlaceholder from './GeckoPlaceholder';
 
 const ASPECT_PRESETS = {
@@ -30,12 +35,12 @@ const ASPECT_PRESETS = {
 };
 
 // Supabase image transformations are a paid add-on that this project does
-// not have. With the flag off every image loads its original URL directly
-// instead of first requesting /render/image/, getting a 403, and falling
-// back (two requests and a delayed paint per photo). Flip the flag once
-// the plan supports transforms.
+// not have (Tennyson chose stored thumbnails instead in October 2026). With
+// the flag off, small slots try the stored thumbnail and everything else
+// loads the original directly, instead of first requesting /render/image/,
+// getting a 403, and falling back (two requests and a delayed paint per
+// photo).
 const IMAGE_TRANSFORMS_ENABLED = import.meta.env.VITE_IMAGE_TRANSFORMS === '1';
-const INITIAL_STAGE = IMAGE_TRANSFORMS_ENABLED ? 0 : 1;
 
 function transformUrl(src, width) {
   if (!src || !width) return src;
@@ -56,6 +61,19 @@ function transformUrl(src, width) {
   return src;
 }
 
+/**
+ * The addresses SmartImage tries for a photo, in order, before its
+ * placeholder. Exported for tests.
+ */
+export function smartImageSources(src, width, { transforms = IMAGE_TRANSFORMS_ENABLED } = {}) {
+  if (typeof src !== 'string' || !src.trim()) return [];
+  if (transforms && width) {
+    const transformed = transformUrl(src, width);
+    return transformed && transformed !== src ? [transformed, src] : [src];
+  }
+  return thumbnailFirst(src, width);
+}
+
 export default function SmartImage({
   src,
   alt,
@@ -70,29 +88,20 @@ export default function SmartImage({
   onError,
   ...rest
 }) {
-  // failStage: 0 = trying transformed URL, 1 = trying original URL,
-  // 2 = trying fallback placeholder. Each onError advances the stage.
-  const [failStage, setFailStage] = useState(INITIAL_STAGE);
-  const [loaded, setLoaded] = useState(false);
+  const sources = smartImageSources(src, width);
+  // How many of this photo's sources have failed. Keyed by src, so a new
+  // photo starts again at its first source on the very first render
+  // (no stale request for the old stage).
+  const [failures, setFailures] = useState({ src, count: 0 });
+  const failed = failures.src === src ? failures.count : 0;
+  // The address that last finished (loaded, or failed for good), so the
+  // shimmer stays up while a fallback source is still loading.
+  const [settled, setSettled] = useState(null);
 
-  // Reset on src change so a new gecko's image actually rerenders.
-  useEffect(() => {
-    setFailStage(INITIAL_STAGE);
-    setLoaded(false);
-  }, [src]);
-
+  const resolvedSrc = failed < sources.length ? sources[failed] : fallback;
+  const loaded = settled === resolvedSrc;
   const aspectRatio = ASPECT_PRESETS[aspect] || aspect;
 
-  let resolvedSrc;
-  if (failStage === 0) {
-    resolvedSrc = (width ? transformUrl(src, width) : src) || fallback;
-  } else if (failStage === 1) {
-    resolvedSrc = src || fallback;
-  } else {
-    resolvedSrc = fallback;
-  }
-
-  if (typeof src !== 'string' || !src.trim()) resolvedSrc = fallback;
   const isPlaceholder = isGeckoPlaceholder(resolvedSrc);
   const personalized = isPlaceholder && gecko;
   // Give auto-height detail views a definite box before their max-height
@@ -117,20 +126,29 @@ export default function SmartImage({
         width={width}
         className={`w-full h-full ${className}`}
         style={style}
-        onLoad={(event) => { setLoaded(true); onLoad?.(event); }}
+        onLoad={(event) => { setSettled(resolvedSrc); onLoad?.(event); }}
         onError={onError}
       /> : <img
         src={resolvedSrc}
         alt={alt || ''}
         loading="lazy"
         decoding="async"
-        onLoad={(event) => { setLoaded(true); onLoad?.(event); }}
+        onLoad={(event) => { setSettled(resolvedSrc); onLoad?.(event); }}
         onError={(event) => {
-          // Step through: transform → original → fallback. Stop at 2 so we
-          // don't loop on a broken fallback URL.
-          setFailStage((stage) => (stage < 2 ? stage + 1 : stage));
-          setLoaded(true);
-          onError?.(event);
+          // Step through the sources, then the placeholder. Stop there so a
+          // broken placeholder never loops.
+          const stage = failed;
+          if (stage < sources.length) {
+            setFailures({ src, count: stage + 1 });
+            if (stage + 1 >= sources.length) setSettled(fallback);
+          } else {
+            setSettled(resolvedSrc);
+          }
+          // A missing thumbnail is expected (older photos, an upload from a
+          // browser that could not make one), so callers hear only about the
+          // photo itself failing.
+          const missedThumbnail = stage < sources.length - 1 && !IMAGE_TRANSFORMS_ENABLED;
+          if (!missedThumbnail) onError?.(event);
         }}
         style={isPlaceholder ? geckoPlaceholderStyle(resolvedSrc, style) : style}
         className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
