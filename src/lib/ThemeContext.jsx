@@ -106,7 +106,11 @@ function readStored(key, validSet, fallback) {
 const LANDING_HOLD_DEFAULT = 'blizzard';
 function defaultFor(fallback) {
   if (typeof document === 'undefined') return fallback;
-  return document.documentElement.hasAttribute('data-landing-hold') ? LANDING_HOLD_DEFAULT : fallback;
+  try {
+    return document.documentElement?.hasAttribute?.('data-landing-hold') ? LANDING_HOLD_DEFAULT : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function applyAttribute(name, value) {

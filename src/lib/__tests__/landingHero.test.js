@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { guestMockFilter } from '@/lib/guestMockData';
 import { DEMO_ENTRY_STEP_ID, TOUR_BY_ID, getTourState, isOnStep, startDemoAtRecord, backTour, advanceTour } from '../guestTour';
@@ -9,8 +8,6 @@ globalThis.sessionStorage = {
   setItem: (k, v) => store.set(k, String(v)),
   removeItem: (k) => store.delete(k),
 };
-
-const home = readFileSync(new URL('../../pages/Home.jsx', import.meta.url), 'utf8');
 
 describe('the demo opens where it shows the product best', () => {
   beforeEach(() => store.clear());
@@ -44,27 +41,7 @@ describe('the demo opens where it shows the product best', () => {
   });
 });
 
-describe('landing hero: one primary action and a distinct secondary', () => {
-  it('the landing demo button no longer opens the Dashboard', () => {
-    const handler = home.match(/const handleContinueAsGuest = [\s\S]*?\n {2}};/)[0];
-    expect(handler).toContain('startDemoAtRecord()');
-    expect(handler).not.toMatch(/createPageUrl\('Dashboard'\)/);
-  });
-
-  it('the demo is a text link, not a second button styled like the primary', () => {
-    expect(home).not.toMatch(/Or look around the demo collection/);
-    const demoLinks = home.match(/<button[^>]*onClick=\{\(\) => handleContinueAsGuest\('(hero|bottom)'\)\}[^>]*>/g) || [];
-    expect(demoLinks).toHaveLength(2);
-    for (const tag of demoLinks) {
-      expect(tag).toContain('underline');
-      expect(tag).not.toContain('home-glass-button');
-    }
-  });
-
-  it('the primary is a solid button, so the two choices never look alike', () => {
-    const primaries = home.match(/<Button\s+asChild\s+size="lg"\s+className="[^"]*"\s*>\s*<Link\s+to="\/AuthPortal\?mode=signup"/g) || [];
-    expect(primaries).toHaveLength(2);
-    for (const tag of primaries) expect(tag).not.toContain('home-glass-button');
-    expect(home).toContain('Start free, no card needed');
-  });
-});
+// The hero button change itself (one solid primary, the demo as a text link
+// that calls startDemoAtRecord) waits for the homepage A/B test to end, with
+// its tests: docs/planning/homepage-ab-test-2026-10.md, "Queued until the
+// test ends", item 2.
