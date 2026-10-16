@@ -88,16 +88,35 @@
          matching DEFAULT_THEME / DEFAULT_SECONDARY in ThemeContext.jsx;
          keep the two in sync. The script also sets theme-color (the iPhone
          status bar) to the theme's page background, from the same table
-         as statusBar in THEMES (ThemeContext.jsx). -->
+         as statusBar in THEMES (ThemeContext.jsx).
+
+         Homepage experiment hold (docs/planning/homepage-ab-test-2026-10.md):
+         while the A/B test runs, signed-out visitors who open "/" keep the
+         look both designs launched with, so the comparison is not changed
+         mid-run. They get the old Blizzard defaults (unless they saved a
+         theme) and the data-landing-hold attribute, which turns off the
+         October text-colour and link-underline rules in src/index.css.
+         Remove this with the experiment. -->
     <meta name="theme-color" content="#0a1913" />
     <script>
       (function () {
         var allowed = ['normal','tangerine','halloween-mask','blizzard','lavender','super-hypo'];
+        var p = location.pathname;
+        var hold = p === '/' || p === '/Home';
+        try {
+          if (sessionStorage.getItem('geck_inspect_guest_mode') === '1') hold = false;
+          for (var i = 0; hold && i < localStorage.length; i++) {
+            var k = localStorage.key(i) || '';
+            if (k.indexOf('sb-') === 0 && k.slice(-11) === '-auth-token') hold = false;
+          }
+        } catch (e) { /* storage blocked: treat as a visitor */ }
+        if (hold) document.documentElement.setAttribute('data-landing-hold', '');
+        var fallback = hold ? 'blizzard' : 'normal';
         function pick(key) {
           try {
             var v = localStorage.getItem(key);
-            return allowed.indexOf(v) !== -1 ? v : 'normal';
-          } catch (e) { return 'normal'; }
+            return allowed.indexOf(v) !== -1 ? v : fallback;
+          } catch (e) { return fallback; }
         }
         var theme = pick('geckinspect.theme');
         document.documentElement.setAttribute('data-theme', theme);

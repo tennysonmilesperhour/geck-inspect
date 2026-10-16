@@ -737,10 +737,13 @@ button:focus-visible {
      (600 to 950: page, card and border surfaces) still carries the
      theme. slate-500 sits one step lighter than before (62% instead of
      about 48%), so muted captions pass 4.5 to 1 on every dark surface.
-     This block comes after the theme blocks with the same specificity,
-     so it wins for all six themes; gray-* reads the same variables.
+     This block comes after the theme blocks and is more specific, so it
+     wins for all six themes; gray-* reads the same variables.
+     data-landing-hold (a signed-out visit that opened on "/") keeps the
+     old tinted text while the homepage A/B test runs, so neither design
+     changes mid-run (docs/planning/homepage-ab-test-2026-10.md).
      ------------------------------------------------------------------ */
-  :root[data-theme] {
+  :root[data-theme]:not([data-landing-hold]) {
     --slate-50:  0 0% 98%;
     --slate-100: 0 0% 94%;
     --slate-200: 0 0% 88%;
@@ -755,7 +758,7 @@ button:focus-visible {
      against the text beside them). Zero-specificity :where() keeps any
      link that styles itself (a no-underline or button-like link) in
      charge of its own look. */
-  p a:where(:not([class*="bg-"]):not([role="button"])) {
+  :where(:root:not([data-landing-hold])) p a:where(:not([class*="bg-"]):not([role="button"])) {
     text-decoration-line: underline;
     text-underline-offset: 0.18em;
     text-decoration-thickness: from-font;

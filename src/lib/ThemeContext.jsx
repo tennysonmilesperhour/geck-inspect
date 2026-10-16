@@ -98,6 +98,17 @@ function readStored(key, validSet, fallback) {
   return readStoredValue(key, validSet) || fallback;
 }
 
+// Homepage experiment hold (docs/planning/homepage-ab-test-2026-10.md):
+// index.html marks a signed-out visit that opened on "/" with
+// data-landing-hold, and such a visit keeps the Blizzard defaults both
+// homepage designs launched with until the page reloads. Nothing is
+// saved, so it ends by itself. Remove this with the experiment.
+const LANDING_HOLD_DEFAULT = 'blizzard';
+function defaultFor(fallback) {
+  if (typeof document === 'undefined') return fallback;
+  return document.documentElement.hasAttribute('data-landing-hold') ? LANDING_HOLD_DEFAULT : fallback;
+}
+
 function applyAttribute(name, value) {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute(name, value);
@@ -169,10 +180,10 @@ async function saveCloudPref(column, value) {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setThemeState] = useState(() =>
-    readStored(STORAGE_KEY, VALID_IDS, DEFAULT_THEME)
+    readStored(STORAGE_KEY, VALID_IDS, defaultFor(DEFAULT_THEME))
   );
   const [secondary, setSecondaryState] = useState(() =>
-    readStored(SECONDARY_STORAGE_KEY, VALID_IDS, DEFAULT_SECONDARY)
+    readStored(SECONDARY_STORAGE_KEY, VALID_IDS, defaultFor(DEFAULT_SECONDARY))
   );
   // Whether each value is the member's own (saved earlier, synced from
   // their profile, or picked now) rather than the default. Only their own
