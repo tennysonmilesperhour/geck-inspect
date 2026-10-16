@@ -35,7 +35,7 @@ describe('where an installed app opens', () => {
 });
 
 // A stand-in window: the installed app or a browser tab, phone or desktop.
-function fakeWindow({ path = '/', search = '', installed = true, phone = false, iosStandalone = false, handled = false, storageThrows = false } = {}) {
+function fakeWindow({ path = '/', search = '', hash = '', installed = true, phone = false, iosStandalone = false, handled = false, storageThrows = false } = {}) {
   const store = new Map(handled ? [[LAUNCH_HANDLED_KEY, '1']] : []);
   const storage = {
     getItem: (k) => { if (storageThrows) throw new Error('blocked'); return store.has(k) ? store.get(k) : null; },
@@ -43,7 +43,7 @@ function fakeWindow({ path = '/', search = '', installed = true, phone = false, 
   };
   return {
     store,
-    location: { pathname: path, search },
+    location: { pathname: path, search, hash },
     navigator: { standalone: iosStandalone },
     sessionStorage: storage,
     matchMedia: (query) => ({
@@ -150,4 +150,14 @@ describe('App.jsx uses these helpers', () => {
     expect(app).toContain('handlePwaLaunch(window,');
     expect(app).not.toContain("matchMedia?.('(max-width: 767px)')");
   });
+
+  it('leaves a sign-in return alone, so its tokens are saved before anything moves', () => {
+    const go = vi.fn();
+    const win = fakeWindow({ path: '/MyGeckos', hash: '#access_token=abc&refresh_token=def&type=signup', phone: true });
+    expect(handlePwaLaunch(win, go)).toBeNull();
+    expect(go).not.toHaveBeenCalled();
+    expect(pwaLaunchTarget('/', '', true, '#access_token=abc')).toBeNull();
+    expect(pwaLaunchTarget('/MyGeckos', '', true, '#')).toBe('/Today');
+  });
 });
+

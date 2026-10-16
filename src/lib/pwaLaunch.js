@@ -31,8 +31,14 @@ export const LAUNCH_HANDLED_KEY = 'pwa_launch_handled';
 
 const normalisePath = (pathname) => String(pathname || '/').replace(/\/+$/, '') || '/';
 
-/** Path to go to when an installed app opens at pathname + search, or null to stay. */
-export function pwaLaunchTarget(pathname, search, phone) {
+/**
+ * Path to go to when an installed app opens at pathname + search + hash, or
+ * null to stay. An address with a fragment stays put: a sign-up
+ * confirmation or sign-in link returns with its tokens after '#', and moving
+ * the page before the session is saved from them would lose the sign-in.
+ */
+export function pwaLaunchTarget(pathname, search, phone, hash = '') {
+  if (hash && hash !== '#') return null;
   const path = normalisePath(pathname);
   if (path === '/' || path === '/Messages') return phone ? '/Today' : '/MyGeckos';
   if (search) return null;
@@ -76,7 +82,7 @@ function launchAlreadyHandled(win) {
  */
 export function pendingPwaLaunch(win = globalThis.window) {
   if (!win || launchAlreadyHandled(win) || !isInstalledApp(win)) return null;
-  return pwaLaunchTarget(win.location?.pathname, win.location?.search, isPhoneScreen(win));
+  return pwaLaunchTarget(win.location?.pathname, win.location?.search, isPhoneScreen(win), win.location?.hash);
 }
 
 /**
@@ -91,7 +97,7 @@ export function handlePwaLaunch(win, go) {
   } catch {
     return null;
   }
-  const target = pwaLaunchTarget(win.location?.pathname, win.location?.search, isPhoneScreen(win));
+  const target = pwaLaunchTarget(win.location?.pathname, win.location?.search, isPhoneScreen(win), win.location?.hash);
   if (target) go(target);
   return target;
 }
