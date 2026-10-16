@@ -79,4 +79,30 @@ describe('Morph Guide quiz', () => {
     expect(screen.getByRole('link', { name: /Compare a photo with Morph ID/ })).toBeTruthy();
     vi.doUnmock('@/components/morphguide/quizMotion');
   }, TEST_TIMEOUT);
+
+  it('starts the download when the teaser comes near the screen, and says it is opening', async () => {
+    vi.resetModules();
+    let downloaded = false;
+    vi.doMock('@/components/morphguide/quizMotion', async () => {
+      downloaded = true;
+      return vi.importActual('@/components/morphguide/quizMotion');
+    });
+    const seen = [];
+    const original = globalThis.IntersectionObserver;
+    globalThis.IntersectionObserver = class {
+      constructor(callback) { this.callback = callback; }
+      observe(el) { seen.push(() => this.callback([{ isIntersecting: true, target: el }])); }
+      disconnect() {}
+    };
+    try {
+      await renderQuiz();
+      expect(downloaded).toBe(false);
+      seen.forEach((fire) => fire());
+      await vi.waitFor(() => expect(downloaded).toBe(true), SLOW);
+    } finally {
+      globalThis.IntersectionObserver = original;
+      vi.doUnmock('@/components/morphguide/quizMotion');
+    }
+  }, TEST_TIMEOUT);
 });
+

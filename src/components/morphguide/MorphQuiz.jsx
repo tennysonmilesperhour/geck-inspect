@@ -10,7 +10,8 @@ import MorphQuizPanel, { STILL_MOTION } from '@/components/morphguide/MorphQuizP
  *
  * The open quiz slides between questions with framer-motion (about 38 kB
  * compressed), which nothing else on the Morph Guide uses. It downloads
- * when a visitor points at, focuses or presses Start, not with the page.
+ * when the teaser scrolls near the screen, or when a visitor points at,
+ * focuses or presses Start, not with the page.
  * The teaser stays on screen (and keeps keyboard focus) until it is here,
  * then the quiz replaces it exactly as before. If the download fails, the
  * quiz opens without the slide animation instead of not opening.
@@ -44,9 +45,27 @@ function preloadQuizMotion() {
   loadQuizMotion().catch(() => {});
 }
 
-function QuizTeaser({ onStart }) {
+function QuizTeaser({ onStart, opening }) {
+  const ref = useRef(null);
+  // Start the download as the teaser comes near the screen, so on a phone
+  // (no pointer to hover) the quiz is usually ready by the time Start is
+  // pressed.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        preloadQuizMotion();
+        observer.disconnect();
+      }
+    }, { rootMargin: '300px 0px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
+      ref={ref}
       aria-labelledby="morph-quiz-teaser"
       className="relative overflow-hidden rounded-2xl border border-emerald-500/25 bg-gradient-to-r from-emerald-950/50 via-slate-900/80 to-slate-900/60 p-3 sm:p-4"
     >
@@ -68,11 +87,12 @@ function QuizTeaser({ onStart }) {
           onPointerEnter={preloadQuizMotion}
           onFocus={preloadQuizMotion}
           onTouchStart={preloadQuizMotion}
-          aria-label="Start the quiz"
+          aria-label={opening ? 'Opening the quiz' : 'Start the quiz'}
+          aria-busy={opening || undefined}
           className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm px-3 sm:px-4 h-10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
         >
-          <span className="hidden sm:inline">Start the quiz</span>
-          <span className="sm:hidden">Start</span>
+          <span className="hidden sm:inline">{opening ? 'Opening…' : 'Start the quiz'}</span>
+          <span className="sm:hidden">{opening ? 'Opening…' : 'Start'}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
@@ -83,6 +103,7 @@ function QuizTeaser({ onStart }) {
 export default function MorphQuiz({ morphs = [] }) {
   // The motion parts the open quiz uses; null while the teaser shows.
   const [kit, setKit] = useState(null);
+  const [opening, setOpening] = useState(false);
   const starting = useRef(false);
   const mounted = useRef(true);
 
@@ -96,15 +117,18 @@ export default function MorphQuiz({ morphs = [] }) {
   const start = () => {
     if (kit || starting.current) return;
     starting.current = true;
+    setOpening(true);
     captureEvent('morph_quiz_step', { step: 'start' });
     loadQuizMotion()
       .catch(() => STILL_MOTION)
       .then((loaded) => {
         starting.current = false;
-        if (mounted.current) setKit(loaded);
+        if (!mounted.current) return;
+        setOpening(false);
+        setKit(loaded);
       });
   };
 
-  if (!kit) return <QuizTeaser onStart={start} />;
+  if (!kit) return <QuizTeaser onStart={start} opening={opening} />;
   return <MorphQuizPanel morphs={morphs} kit={kit} onClose={() => setKit(null)} />;
 }
