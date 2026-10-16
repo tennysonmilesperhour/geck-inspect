@@ -15,12 +15,11 @@
  */
 import { labelFor } from '../components/morph-id/morphTaxonomy.js';
 import { morphHeadline } from '../components/morph-id/morphHeadline.js';
+import { SHARE_ID_PATTERN, SHARE_REF_PARAM, isShareId } from './morphShareIds.js';
 
+export { SHARE_ID_PATTERN, SHARE_REF_PARAM, isShareId };
 export const SHARE_DISCLAIMER = 'Visual traits, not proven genes';
-export const SHARE_ID_PATTERN = /^[0-9a-f]{16}$/;
 export const SHARE_PATH_PREFIX = '/morph-id/r/';
-// The query parameter a share link carries to the sign-up form.
-export const SHARE_REF_PARAM = 'ms';
 export const SHARE_UTM = {
   utm_source: 'morph_id_card',
   utm_medium: 'share',
@@ -192,10 +191,6 @@ export function shareErrorMessage(error) {
   const text = `${error?.message || ''} ${error?.details || ''}`;
   const code = Object.keys(SHARE_ERRORS).find((key) => text.includes(key));
   return code ? SHARE_ERRORS[code] : 'Sharing did not work just now. Please try again in a minute.';
-}
-
-export function isShareId(value) {
-  return typeof value === 'string' && SHARE_ID_PATTERN.test(value);
 }
 
 /** The public address of a card. */

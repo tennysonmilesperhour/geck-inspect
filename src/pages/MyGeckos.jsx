@@ -5,7 +5,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
-import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
+import { Gecko, FeedingGroup, CollectionMember } from '@/entities/all';
+import { loadRecentWeights } from '@/lib/recentWeights';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { bredInHouseIds, saleCategoryFor } from '@/lib/businessLedger';
 import { api } from '@/api/appClient';
@@ -28,6 +29,7 @@ import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import GeckoCard from '../components/my-geckos/GeckoCard';
+import ArchiveStatusChip from '@/components/my-geckos/ArchiveStatusChip';
 import GeckoForm from '../components/my-geckos/GeckoForm';
 import WeighInMode from '../components/my-geckos/WeighInMode';
 import QuickAddGecko from '../components/my-geckos/QuickAddGecko';
@@ -38,6 +40,7 @@ import FirstGeckoFlow from '../components/onboarding/FirstGeckoFlow';
 import { clearPendingGecko, flowEvent, markPhotoPath, readPendingGecko } from '@/lib/firstGeckoFlow';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
+import { handoffSteps, REMOVED_WITH_GECKO } from '@/components/gecko/record/recordModel';
 import TransferHistory from '../components/my-geckos/TransferHistory';
 import GeckoFilters from '../components/my-geckos/GeckoFilters';
 import ArchiveReasonDialog from '../components/my-geckos/ArchiveReasonDialog';
@@ -156,7 +159,10 @@ export default function MyGeckosPage() {
                     // Pull every gecko visible to the user, own collection plus
                     // any collections shared with them via collection_members.
                     getVisibleGeckos(user, {}, '-created_date', GECKO_FETCH_LIMIT),
-                    WeightRecord.filter({ created_by: user.email }, '-record_date'),
+                    // The newest weigh-ins of each gecko, not every record
+                    // ever saved (that read stopped at 1,000 rows and lost
+                    // older geckos' weights). See src/lib/recentWeights.js.
+                    loadRecentWeights(user.email),
                     // Accepted memberships drive per-card edit gating. RLS
                     // already scopes this to the current user, so the empty
                     // filter is intentional.
@@ -262,6 +268,7 @@ export default function MyGeckosPage() {
     };
 
     const handleDelete = async (geckoId) => {
+        const name = geckos.find(g => g.id === geckoId)?.name?.trim() || 'The gecko';
         try {
             await retryApiCall(async () => {
                 return await Gecko.delete(geckoId);
@@ -273,10 +280,12 @@ export default function MyGeckosPage() {
             setIsDetailModalOpen(false);
 
             toast({
-                title: "Gecko Deleted",
-                // Revenue is computed from gecko rows, so a deleted sold gecko's
-                // sale leaves Business Tools too; the old text promised otherwise.
-                description: "The gecko and its weigh-ins have been permanently removed.",
+                title: "Gecko deleted",
+                // Says what the database removed with the gecko (its feeding,
+                // shed and vet records went too, not only the weigh-ins). Revenue
+                // is computed from gecko rows, so a deleted sold gecko's sale
+                // leaves Business Tools as well.
+                description: `${name} and ${REMOVED_WITH_GECKO} were permanently removed.`,
             });
         } catch (error) {
             console.error("Failed to delete gecko:", error);
@@ -458,9 +467,13 @@ export default function MyGeckosPage() {
         setIsImportModalOpen(true);
     }, [isLoading, user, location.search, location.pathname]);
 
-    // ?gecko=<id> (from /GeckoDetail's "Open record in My Geckos") opens
-    // that gecko's record window once the collection has loaded, then
-    // strips the param so a refresh doesn't reopen it.
+    // ?gecko=<id> opens that gecko's record window once the collection has
+    // loaded, then strips the params so a refresh doesn't reopen it. The
+    // /GeckoDetail page sends its Edit and Archive buttons here
+    // (myGeckosHandoff in src/components/gecko/record/recordModel.js), with
+    // &open=edit for the edit form, or &open=archive / &open=sold for the
+    // archive dialog. Each still needs a Save or a Confirm, so a link alone
+    // changes nothing, and only a member who may edit the gecko gets them.
     const geckoParamConsumedRef = React.useRef(false);
     useEffect(() => {
         if (isLoading || !user || geckoParamConsumedRef.current) return;
@@ -468,16 +481,27 @@ export default function MyGeckosPage() {
         const wanted = params.get('gecko');
         if (!wanted) return;
         geckoParamConsumedRef.current = true;
+        const open = params.get('open');
         params.delete('gecko');
+        params.delete('open');
         const rest = params.toString();
         window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
         const match = geckos.find((g) => g.id === wanted);
         if (!match) return;
         if (match.archived) setShowArchived(true);
+        const steps = handoffSteps(open, { archived: match.archived, mayEdit: canWriteGecko(match, user, memberships) });
+        if (steps.openForm) {
+            handleEdit(match);
+            return;
+        }
         setSelectedGecko(match);
         setIsFormOpen(false);
         setIsDetailModalOpen(true);
-    }, [isLoading, user, geckos, location.search, location.pathname]);
+        if (steps.archiveDialog) {
+            setArchiveDialogReason(steps.archiveDialog === 'sold' ? 'sold' : null);
+            setArchiveDialogGeckoId(match.id);
+        }
+    }, [isLoading, user, geckos, memberships, location.search, location.pathname]);
 
     // One entry point for "add a gecko": respects the plan limit, and gives
     // an empty collection the short photo-first quick add instead of the
@@ -633,7 +657,7 @@ export default function MyGeckosPage() {
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
                                 <Select value={collectionPrefs.defaultSort} onValueChange={(v) => { setCollectionPrefs({ defaultSort: v }); setSortBy(v); }}>
-                                    <SelectTrigger className="w-full h-8 text-xs">
+                                    <SelectTrigger aria-label="Default sort" className="w-full h-8 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -845,7 +869,7 @@ export default function MyGeckosPage() {
                         </div>
                         <div className="flex items-center gap-2 md:shrink-0">
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="flex-1 min-w-0 md:flex-none md:w-44 !h-8 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
+                                <SelectTrigger aria-label="Sort geckos" className="flex-1 min-w-0 md:flex-none md:w-44 !h-8 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                         <SelectValue placeholder="Sort" />
@@ -1025,7 +1049,7 @@ export default function MyGeckosPage() {
                                                         <div className="space-y-2">
                                                             {speciesGeckos.map(gecko => (
                                                                 <div key={gecko.id} className="bg-slate-900 border border-slate-700 rounded-xl p-2 md:p-4 hover:border-emerald-600 transition-colors cursor-pointer flex items-center gap-3" onClick={() => handleOpenDetailModal(gecko)}>
-                                                                    <GeckoImage gecko={gecko} src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" decoding="async" />
+                                                                    <GeckoImage gecko={gecko} src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" decoding="async" width={96} />
                                                                     <div className="flex-1 min-w-0">
                                                                         <h3 className="font-bold text-slate-100 truncate">{gecko.name}</h3>
                                                                         <div className="flex flex-wrap gap-1 mt-1">
@@ -1092,6 +1116,7 @@ export default function MyGeckosPage() {
                                                                     className="w-12 h-12 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"
                                                                     loading="lazy"
                                                                     decoding="async"
+                                                                    width={160}
                                                                     onError={(e) => swapToFallback(e, DEFAULT_GECKO_IMAGE)}
                                                                 />
                                                         <div className="flex-1 min-w-0">
@@ -1139,13 +1164,7 @@ export default function MyGeckosPage() {
                                                                        <span className="text-xs bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-0.5 rounded-full">{gecko.species}</span>
                                                                     )}
                                                                     {showArchived && gecko.archive_reason && (
-                                                                        <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                                                                            gecko.archive_reason === 'death' ? 'border-red-700 text-red-400 bg-red-900/20' :
-                                                                            gecko.archive_reason === 'sold' ? 'border-blue-700 text-blue-400 bg-blue-900/20' :
-                                                                            'border-slate-600 text-slate-400 bg-slate-800'
-                                                                        }`}>
-                                                                            {gecko.archive_reason === 'death' ? 'Passed Away' : gecko.archive_reason === 'sold' ? 'Sold' : 'Other'}
-                                                                        </span>
+                                                                        <ArchiveStatusChip reason={gecko.archive_reason} />
                                                                     )}
                                                                 </div>
                                                                 {gecko.morphs_traits && (

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, CloudOff, Loader2, LogIn, Scale, Sparkles, Undo2, Utensils } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CheckCircle2, CloudOff, Loader2, LogIn, RotateCcw, Scale, Sparkles, Undo2, Utensils } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import GeckoImage from '@/components/shared/GeckoImage';
+import { refusedLogReason } from '@/components/shared/RefusedLogsNotice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,6 +16,7 @@ import { fieldModeQueryKey, loadWritableGeckos } from '@/lib/fieldModeData';
 import { isGuestMode } from '@/lib/guestMode';
 import { careLogErrorText, isAuthFailure, markGroupFed, undoFeedings } from '@/lib/husbandryLog';
 import {
+  dismissRefusedLogs,
   hasLeftQueue,
   saveFieldLog,
   takeBackQueued,
@@ -73,6 +75,17 @@ function canUndo(entry) {
   return Boolean(entry.requestId) && !(entry.kind === 'fed' && entry.accepted && entry.groupId);
 }
 
+// A kept log that has left the queue was either saved or refused by the
+// server. Returns the card's next state, or null while it still waits.
+// Until 16 Oct 2026 a refused log was shown as saved.
+function settledQueuedEntry(entry, refusedList) {
+  if (entry?.status !== 'queued') return null;
+  const refusal = refusedList.find((r) => r.id === entry.queuedId);
+  if (refusal) return { ...entry, status: 'refused', reason: refusedLogReason(refusal) };
+  if (hasLeftQueue(entry.queuedId)) return { ...entry, status: 'saved', synced: true };
+  return null;
+}
+
 // A feeding saved on this page that counts as feeding its group (D21).
 function isAcceptedFeeding(entry) {
   return entry?.status === 'saved' && entry.kind === 'fed' && entry.accepted === true;
@@ -92,7 +105,10 @@ export default function QuickLog() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const params = useMemo(() => parseQuickLogParams(location.search), [location.search]);
-  const { pending, online } = useOfflineQueue();
+  const { pending, online, refused } = useOfflineQueue();
+  // Logs the server refused when the queue sent them. "No longer waiting"
+  // alone is not "saved", so a kept log is checked against this first.
+  const refusedList = useMemo(() => (Array.isArray(refused) ? refused : []), [refused]);
   const guest = isGuestMode();
   const today = todayLocalISO();
 
@@ -115,6 +131,10 @@ export default function QuickLog() {
   const geckoQuery = useQuery({
     queryKey: fieldModeQueryKey(user?.email),
     enabled: Boolean(user?.email) && !guest,
+    // Asked for again every time the page opens: the link can name a gecko
+    // added a moment ago, which the copy kept on the phone does not have.
+    // That copy still shows at once, and on its own with no signal.
+    staleTime: 0,
     retry: (count, error) => !isAuthFailure(error) && count < 2,
     queryFn: () => loadWritableGeckos(user),
   });
@@ -159,24 +179,37 @@ export default function QuickLog() {
     setLogs((prev) => ({ ...prev, [id]: value }));
   };
 
-  // A log kept on the phone stops saying so once the queue has sent it.
+  // A log kept on the phone stops saying so once the queue has sent it,
+  // and says "not saved" when the server refused it.
   useEffect(() => {
     for (const [id, entry] of Object.entries(logs)) {
-      if (entry?.status === 'queued' && hasLeftQueue(entry.queuedId)) {
-        setLog(id, { ...entry, status: 'saved', synced: true });
-      }
+      const next = settledQueuedEntry(entry, refusedList);
+      if (next) setLog(id, next);
     }
-  }, [pending, logs]);
+  }, [pending, logs, refusedList]);
 
+  // "Log again" after a refusal: the refusal has been seen, and the gecko
+  // gets its buttons back.
+  const logAgain = (gecko) => {
+    const entry = logs[gecko.id];
+    if (entry?.queuedId) dismissRefusedLogs([entry.queuedId]);
+    setLog(gecko.id, undefined);
+  };
+
+  // 'geckos_changed' also marks the collection copy this page shows out of
+  // date (src/lib/query-client.js), so it is not marked here as well: that
+  // read the whole collection twice for every save.
   const refreshCollection = () => {
     queryClient.invalidateQueries({ queryKey: ['my-geckos'] });
-    queryClient.invalidateQueries({ queryKey: ['field-mode'] });
     window.dispatchEvent(new Event('geckos_changed'));
   };
 
   const save = async (gecko, { accepted = true, grams = null } = {}) => {
     // Already saving, saved or kept for this gecko: never a second record.
     if (['saving', 'saved', 'queued'].includes(statusRef.current[gecko.id])) return true;
+    // Logging again after a refusal: the old refusal has been answered.
+    const prior = logs[gecko.id];
+    if (prior?.status === 'refused' && prior.queuedId) dismissRefusedLogs([prior.queuedId]);
     const kind = params.type === 'weight' ? 'weight' : params.type === 'shed' ? 'shed' : 'fed';
     const data = kind === 'weight'
       ? { kind, geckoId: gecko.id, grams, date: today, mirror: true }
@@ -273,6 +306,8 @@ export default function QuickLog() {
       if (entry.status === 'queued') {
         const outcome = takeBackQueued(entry.queuedId);
         if (outcome === 'syncing') throw plainError(UNDO_SYNCING_MESSAGE);
+        // Refused by the server: nothing was saved, so nothing to undo.
+        if (outcome === 'refused') dismissRefusedLogs([entry.queuedId]);
         // Sent while the card still said "kept on this phone": undo the
         // saved row instead, or say plainly that it stays.
         if (outcome === 'sent') await undoSynced(gecko, entry);
@@ -291,10 +326,10 @@ export default function QuickLog() {
       captureEvent('quick_log', { type: params.type, action: 'undone' });
     } catch (error) {
       if (!error?.plain) console.warn('Quick log undo failed:', error);
-      // It may have synced in the meantime; the card says so from now on.
-      if (entry.status === 'queued' && hasLeftQueue(entry.queuedId)) {
-        setLog(gecko.id, { ...entry, status: 'saved', synced: true });
-      }
+      // It may have synced (or been refused) in the meantime; the card
+      // says so from now on.
+      const next = settledQueuedEntry(entry, refusedList);
+      if (next) setLog(gecko.id, next);
       toast({
         title: 'Undo failed',
         description: error?.plain ? error.message : "Remove it from the gecko's record instead.",
@@ -379,7 +414,19 @@ export default function QuickLog() {
   const doneCount = allGeckos.filter((g) => ['saved', 'queued'].includes(logs[g.id]?.status)).length;
   const allDone = allGeckos.length > 0 && doneCount === allGeckos.length;
   const hasList = Boolean(geckoQuery.data);
-  const offlineNoCopy = Boolean(user) && !hasList && geckoQuery.fetchStatus === 'paused';
+  // The collection is being asked for again. Until it answers, a gecko the
+  // link names but the kept copy lacks (added a moment ago) is shown as
+  // loading, not as archived, sold or in another account. Not with no
+  // signal: when the app is opened without one, the phone says so, but the
+  // query client counts itself online until an 'offline' event (which then
+  // never fires) and keeps retrying for several seconds.
+  const checking = hasList && geckoQuery.isFetching && online;
+  const checkingNote = (
+    <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
+      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> Loading your geckos
+    </p>
+  );
+  const offlineNoCopy = Boolean(user) && !hasList && (geckoQuery.fetchStatus === 'paused' || !online);
   const loading = !authChecked || (Boolean(user) && !guest && !hasList && !offlineNoCopy && !geckoQuery.isError && !sessionExpired);
   const Icon = params.type === 'weight' ? Scale : params.type === 'shed' ? Sparkles : Utensils;
 
@@ -387,6 +434,7 @@ export default function QuickLog() {
     const entry = logs[gecko.id];
     const done = entry?.status === 'saved' || entry?.status === 'queued';
     const saving = entry?.status === 'saving';
+    const notSaved = entry?.status === 'refused';
     return (
       <li key={gecko.id} className="rounded-2xl border border-slate-700 bg-slate-900 p-3">
         <div className="flex items-center gap-3">
@@ -395,6 +443,7 @@ export default function QuickLog() {
             src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
             alt={gecko.name}
             loading="lazy"
+            width={128}
             className="w-14 h-14 rounded-xl object-cover border border-slate-700 flex-shrink-0"
           />
           <div className="min-w-0 flex-1">
@@ -405,7 +454,20 @@ export default function QuickLog() {
           </div>
         </div>
 
-        {done ? (
+        {notSaved ? (
+          <div role="alert" className="mt-3 rounded-xl bg-red-950/50 border border-red-700/60 px-3 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-red-100 text-base">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                {`${entry.label}, not saved`}
+              </span>
+              <Button type="button" variant="ghost" disabled={markingAll} onClick={() => logAgain(gecko)} className="min-h-11 text-slate-100">
+                <RotateCcw className="w-4 h-4 mr-1" /> Log again
+              </Button>
+            </div>
+            <p className="mt-1 text-sm text-red-100/90">{entry.reason}</p>
+          </div>
+        ) : done ? (
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-emerald-950/50 border border-emerald-700/60 px-3 py-2">
             <span className="flex items-center gap-2 text-emerald-200 text-base">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
@@ -516,7 +578,11 @@ export default function QuickLog() {
     );
   } else {
     const canMarkAll = params.type !== 'weight';
-    const notDone = (list) => list.filter((g) => !['saved', 'queued'].includes(logs[g.id]?.status));
+    // What "Mark all" still has to log. A gecko whose kept log the server
+    // refused is left out too: its card asks the keeper to "Log again" on
+    // purpose, and a refusal (the gecko deleted, or moved to another
+    // account) would usually come back and stop Mark all at that gecko.
+    const notDone = (list) => list.filter((g) => !['saved', 'queued', 'refused'].includes(logs[g.id]?.status));
     const pendingListed = notDone(picked.listed);
     const markAllButton = (list) => (
       <Button
@@ -534,6 +600,7 @@ export default function QuickLog() {
     // allows it); its geckos show as plain cards. Only a feeding can mark
     // a group that has no geckos.
     const shownGroups = picked.groups.filter((group) => params.type === 'feeding' || group.geckos.length > 0);
+    const nothingHere = allGeckos.length === 0 && shownGroups.length === 0;
     body = (
       <>
         {canMarkAll && picked.listed.length > 1 && pendingListed.length > 1 && markAllButton(pendingListed)}
@@ -579,12 +646,13 @@ export default function QuickLog() {
             <Link to="/FieldMode" className="underline text-emerald-300">Log the rest in Field Mode</Link>.
           </p>
         )}
-        {picked.missing > 0 && (
+        {checking && (picked.missing > 0 || nothingHere) && checkingNote}
+        {picked.missing > 0 && !checking && (
           <p className="mt-4 text-sm text-slate-400">
             {picked.missing === 1 ? 'One gecko from this reminder is' : `${picked.missing} geckos from this reminder are`} not in this collection. It may have been archived or sold, or you may be signed in to a different account.
           </p>
         )}
-        {allGeckos.length === 0 && shownGroups.length === 0 && (
+        {nothingHere && !checking && (
           <div className="rounded-2xl border border-slate-700 bg-slate-900 p-4 text-slate-300">
             <p className="mb-3">Nothing to log here. The gecko may have been archived, sold or moved, or you may be signed in to a different account.</p>
             <Link to="/MyGeckos" className="underline">Open My Geckos</Link>

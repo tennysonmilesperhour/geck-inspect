@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
 import { BreedingPlan, Egg } from '@/entities/all';
@@ -484,7 +484,7 @@ export default function BreedingPage() {
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
                                 <Select value={breedingPrefs.defaultTab} onValueChange={v => { setBreedingPrefs({ defaultTab: v }); setActiveTab(v); }}>
-                                    <SelectTrigger className="w-full h-8 text-xs">
+                                    <SelectTrigger aria-label="Default tab" className="w-full h-8 text-xs">
                                         <SelectValue>{TAB_LABELS[breedingPrefs.defaultTab]}</SelectValue>
                                     </SelectTrigger>
                                     <SelectContent className="z-[99999]">
@@ -497,7 +497,7 @@ export default function BreedingPage() {
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
                                 <Select value={breedingPrefs.defaultSort} onValueChange={v => { setBreedingPrefs({ defaultSort: v }); setSortBy(v); }}>
-                                    <SelectTrigger className="w-full h-8 text-xs">
+                                    <SelectTrigger aria-label="Default sort" className="w-full h-8 text-xs">
                                         <SelectValue>{SORT_LABELS[breedingPrefs.defaultSort]}</SelectValue>
                                     </SelectTrigger>
                                     <SelectContent className="z-[99999]">
@@ -523,6 +523,26 @@ export default function BreedingPage() {
                         New Breeding Plan
                     </Button>
                 </PageHeader>
+
+                {/* The planners left the sidebar on 16 Oct 2026 (review item
+                    E3 23, at most 12 sidebar destinations), so they open
+                    from here. */}
+                <nav aria-label="Breeding planners" className="-mt-3 mb-5 flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
+                    <span className="text-slate-400 mr-1">Plan ahead:</span>
+                    {[
+                        ['/PairingPlanner', 'Pairing Planner'],
+                        ['/ProjectManager', 'Season Planner'],
+                        ['/BreedingSeason', 'Season Timeline'],
+                    ].map(([to, label]) => (
+                        <Link
+                            key={to}
+                            to={to}
+                            className="inline-flex min-h-11 items-center rounded-md px-2 text-emerald-300 underline-offset-4 hover:underline hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+                        >
+                            {label}
+                        </Link>
+                    ))}
+                </nav>
 
                 {!isLoading && (
                     <BreedingValueStats
@@ -584,7 +604,7 @@ export default function BreedingPage() {
                                 </div>
                                 <div className="flex gap-3">
                                     <Select value={sortBy} onValueChange={v => { setSortBy(v); setBreedingPrefs({ defaultSort: v }); }}>
-                                        <SelectTrigger className="flex-1 sm:flex-none sm:w-64 bg-slate-900 border-slate-700">
+                                        <SelectTrigger aria-label="Sort pairings" className="flex-1 sm:flex-none sm:w-64 bg-slate-900 border-slate-700">
                                             <SelectValue placeholder="Sort by...">{SORT_LABELS[sortBy]}</SelectValue>
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
@@ -731,7 +751,7 @@ export default function BreedingPage() {
                                 </div>
                                 <div className="flex gap-3">
                                     <Select value={sortBy} onValueChange={v => { setSortBy(v); setBreedingPrefs({ defaultSort: v }); }}>
-                                        <SelectTrigger className="flex-1 sm:flex-none sm:w-64 bg-slate-900 border-slate-700">
+                                        <SelectTrigger aria-label="Sort pairings" className="flex-1 sm:flex-none sm:w-64 bg-slate-900 border-slate-700">
                                             <SelectValue placeholder="Sort by...">{SORT_LABELS[sortBy]}</SelectValue>
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">

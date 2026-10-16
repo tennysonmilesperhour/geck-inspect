@@ -8,6 +8,8 @@ import { markGroupFed } from '@/lib/husbandryLog';
 import { startVisiblePolling } from '@/lib/pagePolling';
 import { isGuestMode } from '@/lib/guestMode';
 import { TOUR_CHANGED_EVENT, tourOnScreen } from '@/lib/guestTour';
+import { loadUnlessRetired } from '@/lib/retiredPages';
+import PushAskCard from '@/components/notifications/PushAskCard';
 
 // This component only drives the in-app banner. The feeding_due push and
 // email notifications come from the server (enqueue_feeding_reminders, a
@@ -76,7 +78,9 @@ export default function FeedingAlertSystem({ user, enabled }) {
       try {
         const [feedingGroups, otherReptiles] = await Promise.all([
           FeedingGroup.filter({ created_by: user.email }),
-          OtherReptile.filter({ created_by: user.email, archived: false }),
+          // Other Reptiles is retired; its alerts come back with the page.
+          // (The emailed reminders have their own switch on the server.)
+          loadUnlessRetired('OtherReptiles', () => OtherReptile.filter({ created_by: user.email, archived: false })),
         ]);
 
         const newAlerts = [];
@@ -265,6 +269,10 @@ export default function FeedingAlertSystem({ user, enabled }) {
           {hiddenCount} more feeding {hiddenCount === 1 ? 'reminder' : 'reminders'} after these
         </p>
       )}
+      {/* A feeding reminder on screen is the moment a phone notification
+          makes sense, so the push ask lives here rather than on every page.
+          It hides itself for guests, after "Not now" and once subscribed. */}
+      <PushAskCard user={user} hasReminder compact subject="feeding reminders" source="feeding_alert" />
     </div>
   );
 }

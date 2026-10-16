@@ -14,7 +14,9 @@
  *   'portal_unavailable'  Stripe refused (portal not activated, etc.)
  */
 import { isNativePlatform, fetchCustomerInfo } from '@/lib/revenuecat';
-import { supabase } from '@/lib/supabaseClient';
+// The Supabase client loads on the click, not with the pages that import
+// this (Membership is public; see src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 
 export async function openBillingPortal({ returnPath = '/Membership' } = {}) {
   if (isNativePlatform()) {
@@ -24,6 +26,7 @@ export async function openBillingPortal({ returnPath = '/Membership' } = {}) {
     return info.managementURL;
   }
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://geckinspect.com';
+  const supabase = await getSupabase();
   const { data, error } = await supabase.functions.invoke('stripe-billing-portal', {
     body: { returnUrl: `${origin}${returnPath}` },
   });

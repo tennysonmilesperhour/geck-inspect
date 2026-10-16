@@ -75,7 +75,7 @@ export default function ChangeLogModal({ isOpen, onClose }) {
                 'Genetics Guide, learn crested gecko genetics with interactive diagrams and a glossary',
                 'Season Planner, plan your breeding seasons with a calendar view and future pairing tools',
                 'Marketplace improvements, toggle between card sizes, better morph filters',
-                'Community Connect, follow breeders and see what they\'re working on',
+                'Community Connect, follow breeders and see what they\'re working on (since retired: breeder pages and the Forum cover it)',
                 'Dashboard redesign, personalized greeting, community stats, and Gecko of the Day',
             ],
         },

@@ -101,7 +101,7 @@ export const GENETIC_TRAITS = [
   { id: 'sable',            label: 'Sable',             inheritance: 'incomplete_dominant',  canonical_trait_id: 'sable',
     notes: 'Foundation Genetics: incomplete dominant. Founded in the Rialto line (Gecko Haven). Darker, saturated chocolate tones with reduced pattern that stay dark even fired down. Super form = Super Sable. Allelic with Cappuccino and Highway, so Cappuccino x Sable makes Luwak, never a super. Lighting and fired state can make any gecko look dark; lineage confirms it.' },
   { id: 'highway',          label: 'Highway',           inheritance: 'incomplete_dominant',  canonical_trait_id: 'highway',
-    notes: 'Foundation Genetics: incomplete dominant, provisionally the third allele in the Cappuccino/Sable complex (still badged Emerging). Continuous, clean dorsal stripe with clean lateral regions. Super Highway has reported nostril and health issues. A clean back can also come from Empty Back, Phantom or line-bred patternless animals, so lineage confirms it.' },
+    notes: 'Foundation Genetics: incomplete dominant, provisionally the third allele in the Cappuccino/Sable complex (still badged Emerging). Continuous, clean dorsal stripe with clean lateral regions. Some breeders report nostril and health problems in Super Highway (not established). A clean back can also come from Empty Back, Phantom or line-bred patternless animals, so lineage confirms it.' },
   { id: 'luwak',            label: 'Luwak',             inheritance: 'combo phenotype',
     notes: 'Combo morph: one Cappuccino allele plus one Sable allele at the same locus (compound heterozygote). Not a super form. Needs lineage to confirm.' },
   { id: 'frappuccino',      label: 'Frappuccino',       inheritance: 'combo phenotype',

@@ -34,7 +34,7 @@
 //     reminder every 3 days, stored (when the member changes it) as
 //       care_reminders.feeding.geckos["<gecko id>"] = { on, every_days }
 //   * "on": false on either one switches it off for that gecko.
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabase } from '@/lib/supabaseLazy';
 import { weighInIntervalDays } from '@/lib/lifeStage';
 
 // The day the defaults start is stored once, when the release's migration
@@ -200,12 +200,14 @@ export function withMemberWeighIn(extra, enabled) {
 }
 
 async function readExtra(email) {
+  const supabase = await getSupabase();
   const { data, error } = await supabase.from('profiles').select('extra_data').eq('email', email).maybeSingle();
   if (error) throw error;
   return asObject(data?.extra_data);
 }
 
 async function writeExtra(email, extra) {
+  const supabase = await getSupabase();
   const { error } = await supabase.from('profiles').update({ extra_data: extra }).eq('email', email);
   if (error) throw error;
   return extra;
@@ -239,6 +241,7 @@ export async function loadCareDefaultsFrom({ refresh = false } = {}) {
   if (storedDefaultsFrom && !refresh) return storedDefaultsFrom;
   storedDefaultsFrom = null;
   try {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('app_settings')
       .select('value')

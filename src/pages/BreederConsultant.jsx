@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Send, Bot, User as UserIcon, Loader2, Sparkles, Crown, LogIn, Check, X, Undo2, CheckCircle2, History, Plus, Trash2 } from 'lucide-react';
-import { InvokeLLMDetailed } from '@/lib/invokeLlm';
+import { askConsultant } from '@/lib/invokeLlm';
 import { isGuestMode } from '@/lib/guestMode';
 import ReactMarkdown from 'react-markdown';
 import { User } from '@/entities/all';
@@ -12,7 +12,7 @@ import { getVisibleGeckos } from '@/lib/geckoAccess';
 import { getFeatureUsage } from '@/lib/usageMeter';
 import { getTierLimits } from '@/lib/tierLimits';
 import { createPageUrl } from '@/utils';
-import { ACTIONS, buildActionProtocolPrompt, parseAssistantAction } from '@/lib/assistantActions';
+import { ACTIONS, parseAssistantAction } from '@/lib/assistantActions';
 import { buildConsultantFacts, isPairingQuestion, isValueQuestion } from '@/lib/consultantContext';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { listConversations, loadConversation, saveConversation, deleteConversation } from '@/lib/consultantConversations';
@@ -31,9 +31,14 @@ import { listConversations, loadConversation, saveConversation, deleteConversati
  * as-is) or with a single JSON action block. Write actions render a
  * confirmation card and only execute on Confirm, with a one-tap Undo
  * after. Read actions run immediately since they change nothing.
+ *
+ * Who GeckoGenius is, its care, genetics and price rules, and the record
+ * actions it may propose all live on the server
+ * (supabase/functions/invoke-llm/consultant.ts) since 16 Oct 2026. This
+ * page sends only data: the question, the recent turns, the member's gecko
+ * names and the facts block. Before that the whole persona was written
+ * here, so anyone could send the model any prompt with no care rules.
  */
-
-const BASE_SYSTEM_PROMPT = `You are a world-class expert on crested gecko (Correlophus ciliatus) genetics, breeding, and market trends. Your name is "GeckoGenius AI". Provide detailed, accurate, and helpful advice. When discussing genetics, use clear terms. When asked about potential pairings, list the likely visual outcomes and their approximate probabilities. If asked about value, provide a realistic price range in USD and explain the factors that influence it (e.g., structure, lineage, specific trait expression). When the prompt includes a FACTS FROM GECK INSPECT block, those odds and prices come from the app's genetics calculator and value table: use them exactly and do not contradict them. Without that block, say that odds and prices are rough and suggest the Genetics Calculator for exact odds. Always be encouraging and supportive. Format your answers clearly using markdown. Never use em dashes.`;
 
 const GREETING = { id: 0, role: 'assistant', content: "Hello! I'm your AI Breeder Consultant. Ask me anything about crested gecko genetics, breeding strategies, morph combinations, or market values. I can also keep your records: tell me to \"log 14.5g for Luna\" or ask \"what eggs are due this week?\" and I'll take care of it. How can I help you today?" };
 
@@ -189,12 +194,15 @@ export default function BreederConsultantPage() {
             .catch(() => {});
     };
 
-    const historyLine = (m) => {
-        if (m.role === 'user') return `**User**: ${m.content}`;
+    // One chat turn as the server takes it. A proposed action is sent as
+    // what the assistant said plus what happened to it, so the model knows
+    // whether the member confirmed it.
+    const toTurn = (m) => {
+        if (m.role === 'user') return { role: 'user', content: m.content };
         if (m.role === 'action') {
-            return `**GeckoGenius AI**: ${m.say} [proposed action: ${m.describe}, status: ${m.status}]`;
+            return { role: 'assistant', content: `${m.say} [proposed action: ${m.describe}, status: ${m.status}]` };
         }
-        return `**GeckoGenius AI**: ${m.content}`;
+        return { role: 'assistant', content: m.content };
     };
 
     const handleParsedAction = async (parsed) => {
@@ -246,16 +254,14 @@ export default function BreederConsultantPage() {
         setIsLoading(true);
 
         try {
-            const systemPrompt = `${BASE_SYSTEM_PROMPT}\n\n${buildActionProtocolPrompt(geckos)}`;
             // Only the recent turns: the whole conversation went out every
             // time, and past the function's 40,000-character cap every
             // message failed until the page was reloaded.
-            const conversationHistory = priorMessages.slice(-12).map(historyLine).join('\n\n');
+            const history = priorMessages.slice(-12).map(toTurn);
+            const geckoNames = geckos.filter((g) => !g.archived && g.name).map((g) => g.name);
             const facts = await factsFor(text);
-            const factsBlock = facts ? `\n\n${facts}` : '';
-            const fullPrompt = `${systemPrompt}\n\nHere is the conversation so far:\n${conversationHistory}${factsBlock}\n\n**User**: ${text}\n\n**GeckoGenius AI**:`;
 
-            const { text: response, credits } = await InvokeLLMDetailed({ prompt: fullPrompt });
+            const { text: response, credits } = await askConsultant({ question: text, history, geckoNames, facts });
             if (credits?.remaining != null) setRemaining(credits.remaining);
 
             const parsed = parseAssistantAction(response);
@@ -273,12 +279,13 @@ export default function BreederConsultantPage() {
             }
             console.error("Error calling LLM:", error);
             if (error?.credits?.remaining != null) setRemaining(error.credits.remaining);
-            appendMessage({
-                role: 'assistant',
-                content: error?.refunded
-                    ? "I couldn't get an answer just now. That message was not counted, so please try again."
-                    : "I'm sorry, I'm having trouble connecting right now. Please try again later.",
-            });
+            let content = "I'm sorry, I'm having trouble connecting right now. Please try again later.";
+            if (error?.code === 'refused') {
+                content = "I can't help with that one. That message was not counted.";
+            } else if (error?.refunded) {
+                content = "I couldn't get an answer just now. That message was not counted, so please try again.";
+            }
+            appendMessage({ role: 'assistant', content });
         } finally {
             setIsLoading(false);
         }
@@ -510,6 +517,9 @@ export default function BreederConsultantPage() {
                             {remaining} assistant message{remaining === 1 ? '' : 's'} left this month
                         </p>
                     )}
+                    <p className="text-xs text-slate-400 mt-2">
+                        GeckoGenius is an AI and can be wrong. It is not a vet: if your gecko stops eating, loses weight, or has a kinked tail or spine, see an exotics vet.
+                    </p>
                 </div>
             </Card>
         </div>

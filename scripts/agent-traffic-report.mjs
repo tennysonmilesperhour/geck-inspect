@@ -11,7 +11,12 @@
  *     traffic      public.agent_traffic_summary() for 7 and 28 days
  *     priceIndex   generated_at and row counts of the live price index
  *     mcp          whether https://geckinspect.com/mcp answers tools/list
- *     pruned       how many agent_hits rows older than 180 days were removed
+ *     pruned       how many agent_hits rows older than 90 days were removed
+ *
+ * agent_hits are kept 90 days (the privacy policy says so). The daily
+ * cron job privacy-retention-daily (apply_privacy_retention, migration
+ * 20261016090000_privacy.sql) does the deleting; this weekly prune uses
+ * the same cutoff as a backup, so it normally removes nothing.
  *
  * Needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (repo secrets).
  */
@@ -42,7 +47,7 @@ async function summary(days) {
 }
 
 async function prune() {
-  const cutoff = new Date(Date.now() - 180 * 864e5).toISOString();
+  const cutoff = new Date(Date.now() - 90 * 864e5).toISOString();
   const res = await fetch(`${URL_}/rest/v1/agent_hits?at=lt.${encodeURIComponent(cutoff)}`, {
     method: 'DELETE',
     headers: { ...headers, Prefer: 'count=exact,return=minimal' },

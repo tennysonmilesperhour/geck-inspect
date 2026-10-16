@@ -46,7 +46,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://www.google.com https://www.googletagmanager.com https://images.unsplash.com; frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com https://hooks.stripe.com https://m.stripe.network https://us.posthog.com https://rcm-na.amazon-adsystem.com https://ws-na.amazon-adsystem.com https://z-na.amazon-adsystem.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; report-uri https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/csp-report; report-to csp-endpoint"
+          "value": "default-src 'self'; script-src 'self' 'sha256-GnnHB3Q8xIB78SO6amonj3aUWbgM3+4dTHkEqfNe2fk=' 'sha256-PisJnGv/fw7i9QFSPh0mrF+sH+WjPd8cfA9f7IWRQqs=' 'sha256-s+Dl4mjhzRSk7J2LrHGi2mCFhNmrdao1W9fe4XqyoeI=' https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://www.google.com https://www.googletagmanager.com https://images.unsplash.com; frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com https://hooks.stripe.com https://m.stripe.network https://us.posthog.com https://rcm-na.amazon-adsystem.com https://ws-na.amazon-adsystem.com https://z-na.amazon-adsystem.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; report-uri https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/csp-report; report-to csp-endpoint"
         },
         {
           "key": "Reporting-Endpoints",
@@ -78,6 +78,15 @@
     },
     {
       "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/fonts/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -134,6 +143,10 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
         }
       ]
     },
@@ -335,16 +348,6 @@
       "permanent": true
     },
     {
-      "source": "/MorphGuide/super-lilly-white",
-      "destination": "/MorphGuide/lilly-white",
-      "permanent": true
-    },
-    {
-      "source": "/MorphGuide/phantom",
-      "destination": "/MorphGuide/phantom-pinstripe",
-      "permanent": true
-    },
-    {
       "source": "/MorphGuide/harley",
       "destination": "/MorphGuide/harlequin",
       "permanent": true
@@ -361,6 +364,11 @@
     },
     {
       "source": "/morphs",
+      "destination": "/MorphGuide",
+      "permanent": true
+    },
+    {
+      "source": "/morph-visualizer",
       "destination": "/MorphGuide",
       "permanent": true
     },
@@ -437,12 +445,12 @@
     {
       "source": "/MorphVisualizer",
       "destination": "/MorphGuide",
-      "permanent": true
+      "permanent": false
     },
     {
       "source": "/morphvisualizer",
       "destination": "/MorphGuide",
-      "permanent": true
+      "permanent": false
     },
     {
       "source": "/BreedingPairs",
@@ -465,9 +473,44 @@
       "permanent": true
     },
     {
-      "source": "/morph-visualizer",
-      "destination": "/MorphGuide",
-      "permanent": true
+      "source": "/Promote",
+      "destination": "/MyGeckos?retired=Promote",
+      "permanent": false
+    },
+    {
+      "source": "/promote",
+      "destination": "/MyGeckos?retired=Promote",
+      "permanent": false
+    },
+    {
+      "source": "/BreederConsultant",
+      "destination": "/CareGuide?retired=BreederConsultant",
+      "permanent": false
+    },
+    {
+      "source": "/breederconsultant",
+      "destination": "/CareGuide?retired=BreederConsultant",
+      "permanent": false
+    },
+    {
+      "source": "/OtherReptiles",
+      "destination": "/MyGeckos?retired=OtherReptiles",
+      "permanent": false
+    },
+    {
+      "source": "/otherreptiles",
+      "destination": "/MyGeckos?retired=OtherReptiles",
+      "permanent": false
+    },
+    {
+      "source": "/Store",
+      "destination": "/CareGuide?retired=Store",
+      "permanent": false
+    },
+    {
+      "source": "/store",
+      "destination": "/CareGuide?retired=Store",
+      "permanent": false
     },
     {
       "source": "/morph-guide",

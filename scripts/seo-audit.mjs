@@ -39,7 +39,7 @@
  */
 
 import { readFileSync, writeFileSync, readdirSync, lstatSync, mkdirSync, existsSync } from 'node:fs';
-import { resolve, join, dirname, relative } from 'node:path';
+import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
@@ -222,15 +222,20 @@ function loadEditorialDates() {
   }
   // Guides whose modified date follows a data file's commit date:
   // `modified: contentDate('src/data/x.js', 'fallback')`.
+  // Legal pages use `declaredDate(...)`, the date the page itself shows.
   let contentDates = {};
+  let declaredDates = {};
   try {
-    contentDates = JSON.parse(readFileSync(resolve(REPO_ROOT, 'scripts/content-dates.json'), 'utf8')).files || {};
+    const parsed = JSON.parse(readFileSync(resolve(REPO_ROOT, 'scripts/content-dates.json'), 'utf8'));
+    contentDates = parsed.files || {};
+    declaredDates = parsed.declared || {};
   } catch {
     // no content-dates.json, the fallback dates apply
   }
-  const dyn = /'([^']+)':\s*\{\s*published:\s*'([^']+)',\s*modified:\s*contentDate\('([^']+)',\s*'([^']+)'\)/g;
+  const dyn = /'([^']+)':\s*\{\s*published:\s*'([^']+)',\s*modified:\s*(contentDate|declaredDate)\('([^']+)',\s*'([^']+)'\)/g;
   while ((hit = dyn.exec(m[1])) !== null) {
-    out[hit[1]] = { published: hit[2], modified: contentDates[hit[3]] || hit[4] };
+    const source = hit[3] === 'declaredDate' ? declaredDates : contentDates;
+    out[hit[1]] = { published: hit[2], modified: source[hit[4]] || hit[5] };
   }
   return out;
 }

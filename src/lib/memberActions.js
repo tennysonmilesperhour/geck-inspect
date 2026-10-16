@@ -9,16 +9,18 @@
  * (supabase/migrations/20261015130000_comms_and_exposure.sql). A new follow
  * also notifies the member from the database, with fixed wording.
  */
-import { supabase } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 
-async function rpc(name, args, client = supabase) {
-  const { data, error } = await client.rpc(name, args);
+async function rpc(name, args, client) {
+  const db = client || await getSupabase();
+  const { data, error } = await db.rpc(name, args);
   if (error) throw error;
   return data;
 }
 
 /** The subset of these profile ids the signed-in member follows, as a Set of strings. */
-export async function followedProfileIds(profileIds, { client = supabase } = {}) {
+export async function followedProfileIds(profileIds, { client } = {}) {
   const ids = [...new Set((profileIds || []).filter(Boolean).map(String))];
   if (ids.length === 0) return new Set();
   const rows = await rpc('follow_state', { p_profile_ids: ids }, client);
@@ -27,13 +29,13 @@ export async function followedProfileIds(profileIds, { client = supabase } = {})
 }
 
 /** Follow (true) or unfollow (false). Resolves with the new state. */
-export async function setFollow(profileId, follow, { client = supabase } = {}) {
+export async function setFollow(profileId, follow, { client } = {}) {
   const state = await rpc('follow_profile', { p_profile_id: String(profileId), p_follow: Boolean(follow) }, client);
   return state === true;
 }
 
 /** Block a member: their posts, photos and listings are hidden and they cannot message you. */
-export async function blockProfile(profileId, { client = supabase } = {}) {
+export async function blockProfile(profileId, { client } = {}) {
   await rpc('block_profile', { p_profile_id: String(profileId) }, client);
 }
 
@@ -42,7 +44,7 @@ export async function blockProfile(profileId, { client = supabase } = {}) {
  * the saved message row (it carries both addresses, as any message you
  * send does).
  */
-export async function sendMessageToProfile(profileId, content, messageType = 'direct', { client = supabase } = {}) {
+export async function sendMessageToProfile(profileId, content, messageType = 'direct', { client } = {}) {
   return rpc('send_direct_message_to_profile', {
     p_profile_id: String(profileId),
     p_content: content,
@@ -51,7 +53,7 @@ export async function sendMessageToProfile(profileId, content, messageType = 'di
 }
 
 /** The breeder page slug for a profile, or null. */
-export async function breederSlugForProfile(profileId, { client = supabase } = {}) {
+export async function breederSlugForProfile(profileId, { client } = {}) {
   if (!profileId) return null;
   const slug = await rpc('breeder_slug_for_profile', { p_profile_id: String(profileId) }, client);
   return typeof slug === 'string' && slug.trim() ? slug.trim() : null;

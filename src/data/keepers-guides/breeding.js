@@ -21,7 +21,7 @@ export const BREEDING_GUIDE = {
       kicker: "The Keeper's Guide Series",
       title: 'So you want to breed.',
       lead:
-        "Everything from \"should I even do this\" through hatchling placement. The full arc - including the parts first-time breeders don't see coming until it's too late.",
+        "Everything from \"should I even do this\" through hatchling placement. The full arc, including the parts first-time breeders don't see coming until it's too late.",
       tags: ['Decide', 'Prep', 'Intro', 'Lay', 'Incubate', 'Hatch', 'Real'],
     },
 
@@ -30,7 +30,7 @@ export const BREEDING_GUIDE = {
       kicker: 'Step Zero',
       title: 'Should you actually breed?',
       lead:
-        'Before any of the rest matters, an honest gut check. Breeding cresties is rewarding - and also expensive, emotionally draining, and creates lives you\'re responsible for placing. Not everyone should do it.',
+        'Before any of the rest matters, an honest gut check. Breeding cresties is rewarding. It is also expensive and emotionally draining, and it creates lives you\'re responsible for placing. Not everyone should do it.',
       blocks: [
         {
           type: 'compare',
@@ -130,9 +130,9 @@ export const BREEDING_GUIDE = {
             },
             {
               tone: 'fern',
-              title: 'MALE WEIGHT ≥ 35g AND AGE ≥ 12 MONTHS',
+              title: 'MALE WEIGHT ≥ 25-30g AND AGE ≥ 12 MONTHS',
               text:
-                'Males mature faster but breeding too early produces infertile clutches. Wait.',
+                'Males mature faster, but many breeders wait for 35g. Breeders report more infertile clutches from males used too young.',
             },
             {
               tone: 'moss',
@@ -180,12 +180,12 @@ export const BREEDING_GUIDE = {
             {
               title: 'Final health check',
               text:
-                'Vet fecal float. Check her calcium sacs (back of mouth - should be plump and pink). Any concerns = skip this season.',
+                'Vet fecal float. Check her calcium sacs (back of mouth): they should be plump and pink. Any concerns = skip this season.',
             },
             {
               title: 'Stabilize husbandry',
               text:
-                "Lock in temps, humidity, photoperiod. Don't change the enclosure during breeding - familiar environment matters.",
+                "Lock in temps, humidity, photoperiod. Don't change the enclosure during breeding: a familiar environment matters.",
             },
             {
               title: 'Prep your infrastructure',
@@ -207,7 +207,7 @@ export const BREEDING_GUIDE = {
       kicker: 'The Introduction',
       title: 'Pairing the male and female.',
       lead:
-        "You can pair for a season or year-round - both work. The year-round approach is simpler. Here's the protocol for introducing for the first time.",
+        "You can pair for a season or year-round. Both work. The year-round approach is simpler. Here's the protocol for introducing for the first time.",
       blocks: [
         {
           type: 'steps',
@@ -235,7 +235,7 @@ export const BREEDING_GUIDE = {
             {
               title: 'Decide: leave together or separate.',
               text:
-                'Year-round cohab simplifies things but can stress the female. Most breeders rotate - male with each female for 2-3 weeks.',
+                'Year-round cohab simplifies things but can stress the female. Most breeders rotate: the male with each female for 2-3 weeks.',
             },
           ],
         },
@@ -246,7 +246,7 @@ export const BREEDING_GUIDE = {
     {
       kicker: 'The Cooling Debate',
       title: 'Do you need a winter rest period?',
-      lead: 'Not required - but a rest period helps.',
+      lead: 'Not required, but a rest period helps.',
       blocks: [
         {
           type: 'compare',
@@ -281,7 +281,7 @@ export const BREEDING_GUIDE = {
       kicker: 'Gravid Female',
       title: 'Reading the signs of an incoming clutch.',
       lead:
-        "Cresties produce clutches of 2 eggs every 25-40 days during the active season. Here's how to know what stage she's in.",
+        "Cresties produce clutches of 2 eggs every 4-6 weeks during the active season. Here's how to know what stage she's in.",
       blocks: [
         {
           type: 'timeline',
@@ -296,7 +296,7 @@ export const BREEDING_GUIDE = {
               when: '10-20 days',
               label: 'Visible eggs through belly',
               text:
-                'Shine a flashlight against her side - two whitish ovals visible. Appetite still healthy.',
+                'Shine a flashlight against her side: two whitish ovals visible. Appetite still healthy.',
             },
             {
               when: '20-30 days',
@@ -314,7 +314,7 @@ export const BREEDING_GUIDE = {
               when: 'Laying',
               label: 'Usually overnight',
               text:
-                "She'll lay 2 eggs and bury them. Usually completes overnight. Morning after - fresh eggs found.",
+                "She'll lay 2 eggs and bury them. Usually completes overnight. Morning after: fresh eggs found.",
             },
           ],
         },
@@ -350,7 +350,7 @@ export const BREEDING_GUIDE = {
             {
               title: 'Maintenance',
               text:
-                'Re-moisten every 3-4 days. Replace substrate after every laid clutch - prevents mold buildup.',
+                'Re-moisten every 3-4 days. Replace substrate after every laid clutch to prevent mold buildup.',
             },
             {
               title: 'Alternative: Repti Shelter',
@@ -372,7 +372,7 @@ export const BREEDING_GUIDE = {
       kicker: 'Egg Handling',
       title: 'Moving fresh eggs to the incubator.',
       lead:
-        'The single most common mistake: rotating eggs during transfer. Cresties are sensitive to orientation - a flipped egg can be a dead egg.',
+        'The single most common mistake: rotating eggs during transfer. Cresties are sensitive to orientation: a flipped egg can be a dead egg.',
       blocks: [
         {
           type: 'steps',
@@ -400,7 +400,7 @@ export const BREEDING_GUIDE = {
             {
               title: 'Bad eggs: when to toss',
               text:
-                'Yellow, soft, mushy, or moldy = infertile or dead. Remove quickly - mold spreads to other eggs in the container.',
+                'Yellow, soft, mushy, or moldy = infertile or dead. Remove quickly: mold spreads to other eggs in the container.',
             },
             {
               title: 'Label everything',
@@ -439,13 +439,13 @@ export const BREEDING_GUIDE = {
               meta: 'Humidity',
               title: '80-90%',
               text:
-                'Medium should hold shape when squeezed, no dripping. Check every 2 weeks - re-mist if drying. Too wet drowns the egg.',
+                'Medium should hold shape when squeezed, no dripping. Check every 2 weeks and re-mist if drying. Too wet drowns the egg.',
             },
             {
               meta: 'Hatch time',
               title: '60-120 days',
               text:
-                'Wide range based on temperature. At 70°F expect ~90 days. At 75°F, ~70 days. At 68°F, 100+.',
+                'Wide range based on temperature. At 68-71°F expect 90-120 days. At 72-75°F, 70-90 days. At 76-78°F, 60-75 days. These are the windows the app uses for hatch estimates.',
             },
             {
               meta: 'Check frequency',
@@ -469,7 +469,7 @@ export const BREEDING_GUIDE = {
       kicker: 'Hatching',
       title: 'The first 72 hours after emergence.',
       lead:
-        "Hatchlings emerge unannounced, usually overnight. Here's what happens - and what NOT to do.",
+        "Hatchlings emerge unannounced, usually overnight. Here's what happens, and what NOT to do.",
       blocks: [
         {
           type: 'timeline',
@@ -530,19 +530,19 @@ export const BREEDING_GUIDE = {
               meta: 'Environment',
               title: '72-76°F / 70-80%',
               text:
-                'Mist twice daily - morning lighter, evening thorough. Let surfaces dry between.',
+                'Mist twice daily: morning lighter, evening thorough. Let surfaces dry between.',
             },
             {
               meta: 'Food',
               title: 'Fresh CGD every night',
               text:
-                'Thin consistency - more water than adult mix. Remove uneaten food within 24 hours. Skip feeder insects for first 4-6 weeks.',
+                'Thin consistency: more water than adult mix. Remove uneaten food within 24 hours. Skip feeder insects for first 4-6 weeks.',
             },
             {
               meta: 'Weigh weekly',
-              title: 'Goal: 2-3g gain per month',
+              title: 'Goal: 0.5-1.5g gain per month',
               text:
-                "Under 1g/month = investigate. Hatchlings that don't gain in month 1 usually don't thrive.",
+                "No gain over a month = investigate. Hatchlings that don't gain in month 1 usually don't thrive.",
             },
             {
               meta: 'Watch for stuck shed',
@@ -552,7 +552,7 @@ export const BREEDING_GUIDE = {
             },
             {
               meta: 'Minimal handling',
-              title: 'First 6 weeks - none',
+              title: 'First 6 weeks: none',
               text:
                 "After: 2-3 minutes max, once a week. They're fragile and jumpy at this age.",
             },
@@ -577,14 +577,14 @@ export const BREEDING_GUIDE = {
               tone: 'ruby',
               title: 'DYSTOCIA (egg binding)',
               text:
-                'Female carries eggs past lay window. Firm distended belly, lethargy, refusing food 5+ days. Emergency vet - possible surgery. Calcium injection sometimes helps early.',
+                'Female carries eggs past lay window. Firm distended belly, lethargy, refusing food 5+ days. Emergency vet: possible surgery. Calcium injection sometimes helps early.',
             },
             {
               meta: 'CRITICAL',
               tone: 'ruby',
               title: 'UTERINE PROLAPSE',
               text:
-                'Tissue protrudes from vent after laying. Keep it moist with saline. Vet IMMEDIATELY - reduction within hours has much better outcomes.',
+                'Tissue protrudes from vent after laying. Keep it moist with saline. Vet IMMEDIATELY: reduction within hours has much better outcomes.',
             },
             {
               meta: 'URGENT',
@@ -598,7 +598,7 @@ export const BREEDING_GUIDE = {
               tone: 'moss',
               title: 'INFERTILE FIRST CLUTCHES',
               text:
-                "Totally normal for first-year females. 30-50% of first clutches are infertile. Don't assume the male is bad - just give it time.",
+                "Totally normal for first-year females. 30-50% of first clutches are infertile. Don't assume the male is bad. Just give it time.",
             },
             {
               meta: 'COMMON',
@@ -692,7 +692,7 @@ export const BREEDING_GUIDE = {
               meta: 'Varies',
               title: 'Friends of friends',
               text:
-                'Emotional placements. Easy but sometimes uncertain long-term care. Vet buyers - keepers, not impulse-buyers.',
+                'Emotional placements. Easy but sometimes uncertain long-term care. Vet buyers: keepers, not impulse-buyers.',
             },
             {
               meta: 'Case-by-case',
@@ -710,7 +710,7 @@ export const BREEDING_GUIDE = {
       kicker: 'The Long Game',
       title: 'Legal, tax, and the year-two wall.',
       blocks: [
-        { type: 'heading', text: 'Legal - check your jurisdiction' },
+        { type: 'heading', text: 'Legal: check your jurisdiction' },
         {
           type: 'callout',
           tone: 'info',
@@ -728,7 +728,7 @@ export const BREEDING_GUIDE = {
                 "If you sell >$X/year in most states, sales tax applies. MorphMarket handles this in some states; expos usually don't. Know your thresholds.",
             },
             {
-              title: 'Income tax - hobby vs business',
+              title: 'Income tax: hobby vs business',
               text:
                 "The IRS distinguishes hobby (can't deduct losses) from business (can). If you're buying a $2,000 incubator, you probably want business classification. Consult a CPA.",
             },
@@ -799,7 +799,7 @@ export const BREEDING_GUIDE = {
       kicker: 'My Contribution',
       title: 'The three failure modes.',
       lead:
-        'Most hobbyist breeding programs fail in year one or two. The failures cluster into three patterns. Recognize which one is happening to you - early - and you can save the program.',
+        'Most hobbyist breeding programs fail in year one or two. The failures cluster into three patterns. Recognize which one is happening to you early, and you can save the program.',
       blocks: [
         {
           type: 'cards',
@@ -858,7 +858,7 @@ export const BREEDING_GUIDE = {
               when: 'May-Aug',
               label: 'Active season',
               text:
-                'Clutches every 25-40 days. Daily lay box checks. Incubator cycling. Hatches begin.',
+                'Clutches every 4-6 weeks. Daily lay box checks. Incubator cycling. Hatches begin.',
             },
             {
               when: 'Sep-Oct',
@@ -923,7 +923,7 @@ export const BREEDING_GUIDE = {
       kicker: 'The Principle',
       title: 'Breed less, better, longer.',
       lead:
-        'Every new breeder thinks volume is the goal. The breeders who are still around in year five have almost always done the opposite - fewer pairs, more selective pairings, better record-keeping, patient placement. The hobby compounds.',
+        'Every new breeder thinks volume is the goal. The breeders who are still around in year five have almost always done the opposite: fewer pairs, more selective pairings, better record-keeping, patient placement. The hobby compounds.',
       blocks: [
         {
           type: 'callout',

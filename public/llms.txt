@@ -1,8 +1,8 @@
 # Geck Inspect
 
-> Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (original asking-price data by trait and market). Everything listed here is free to read and cite.
+> Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (an asking-price snapshot from public marketplace listings, by trait and market). Everything listed here is free to read and cite.
 >
-> Last updated: 2026-10-14.
+> Last updated: 2026-10-16.
 
 ## How to use and cite this site
 
@@ -10,14 +10,14 @@
 - Every morph and care page has a markdown twin: append `.md` to the URL, for example https://geckinspect.com/MorphGuide/lilly-white.md.
 - Prices on this site are **asking prices** on public listings, not sale prices. Say so when you quote them.
 - For live lookups (morphs, care topics, prices, pairing odds) use the MCP server below instead of scraping.
-- Data files are CC BY 4.0. Guide text is free to quote with a link; please do not republish it in full.
+- The morph and genetics data files are CC BY 4.0. Price Index numbers are free to cite with a link: you may quote and cite them, with a link to the page they came from. Guide text is free to quote with a link; please do not republish it in full.
 
 ## Topic files (each small enough to read whole)
 
-- [Morphs](https://geckinspect.com/llms/morphs.md): every crested gecko morph with definition, identification, lookalikes, competing genetics models, sources and current asking prices
+- [Morphs](https://geckinspect.com/llms/morphs.md): every crested gecko morph with definition, identification, lookalikes, competing genetics models and sources, and a link to its asking prices in the Price Index where it has them
 - [Care](https://geckinspect.com/llms/care.md): housing, temperature, humidity, diet, handling, health and breeding
 - [Genetics](https://geckinspect.com/llms/genetics.md): modeled traits with inheritance and loci, super form health risks, named combos, pairings to avoid, glossary
-- [Prices](https://geckinspect.com/llms/prices.md): the Geck Inspect Price Index, current asking prices by trait in the US, South Korea, Japan and Europe
+- [Prices](https://geckinspect.com/llms/prices.md): the Geck Inspect Price Index, an asking-price snapshot from public marketplace listings by trait in the US, South Korea, Japan and Europe
 - [Everything in one file](https://geckinspect.com/llms-full.txt): all of the above plus long-form articles (large; prefer the topic files)
 
 ## Data and API
@@ -33,13 +33,16 @@
 
 - Scientific name *Correlophus ciliatus* (formerly *Rhacodactylus ciliatus*), family Diplodactylidae, native to southern New Caledonia and the Isle of Pines. Thought extinct until rediscovered in 1994.
 - Adults weigh about 35 to 60 g and live 15 to 20 years or more.
+- Life stages (a stage ends at its weight or its age, whichever comes later): hatchling under 3 g and up to 3 months, juvenile 3 to 15 g and 3 to 12 months, sub-adult 15 to 35 g and 12 to 18 months, adult 35 g and up from 18 months.
+- Shedding follows growth: about every 1 to 2 weeks as a hatchling, every 2 to 3 weeks as a juvenile, every 3 to 4 weeks as a sub-adult and every 4 to 6 weeks as an adult.
 - Room temperature husbandry: 72 to 78°F (22 to 26°C) by day, a drop at night is fine, above 82°F (28°C) is dangerous.
 - Humidity 50 to 70% by day with a nightly misting spike; let the enclosure dry out between mistings.
 - Main diet is a complete powdered Crested Gecko Diet (CGD) mixed with water; insects are optional extras.
 - Minimum adult enclosure 18 x 18 x 24 inches, vertical.
 - They do not regrow a dropped tail. Tailless adults are common and healthy.
-- Do not breed a female under about 35 to 40 g and 18 months old.
-- Most morphs (Harlequin, Pinstripe, Dalmatian, Flame, base colors) are polygenic or line-bred. Single-gene traits: Lilly White, Cappuccino, Soft Scale and White Wall (incomplete dominant) and Axanthic (recessive). Albino (first healthy hatchlings announced March 2026) is expected to be recessive but is not yet proven.
+- Do not breed a female until she is at least 40 g and 18 months old, both (many breeders wait for 45 g). Males from about 25 to 30 g and 12 months.
+- Eggs hatch in about 70 to 90 days at 72 to 75°F (22 to 24°C); 90 to 120 days at 68 to 71°F; 60 to 75 days at 76 to 78°F. Keep incubation below about 80°F (27°C).
+- Most of the hobby treats pattern morphs (Harlequin, Pinstripe, Dalmatian, Flame) and base colors as polygenic or line-bred; Foundation Genetics proposes single-gene models for Harlequin (incomplete dominant), Pinstripe and Dalmatian (dominant). Proven single-gene traits: Lilly White and Cappuccino (incomplete dominant), Axanthic and Phantom (recessive). Reported as single genes but not independently proven, so Geck Inspect badges them Emerging: Soft Scale, Whiteout (often sold as White Wall), Empty Back, Sable and Highway. Sable is widely reported as a second version of the Cappuccino gene and Highway provisionally as a third; neither placement is settled. Albino (first healthy hatchlings announced March 2026) is expected to be recessive but is not yet proven.
 - Never pair Lilly White to Lilly White: 25% of eggs are Super Lilly White, which is lethal. Super Cappuccino has documented health problems too.
 - Lilly White traces to Lilly Exotics (Nick Lumb, United Kingdom), starting with an unusual hatchling in late 2010.
 
@@ -59,7 +62,7 @@ Geck Inspect is a free-to-start web and mobile app for crested gecko keepers and
 
 ## Per-morph guide pages (public, crawlable)
 
-Each of the 37 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
+Each of the 47 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, lookalikes and, where index data supports it, a typical price, plus Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
 
 - Harlequin: https://geckinspect.com/MorphGuide/harlequin
 - Extreme Harlequin: https://geckinspect.com/MorphGuide/extreme-harlequin
@@ -98,6 +101,16 @@ Each of the 37 crested gecko morphs in the guide has its own page with a definit
 - Cream: https://geckinspect.com/MorphGuide/cream
 - Tricolor: https://geckinspect.com/MorphGuide/tricolor
 - Bicolor: https://geckinspect.com/MorphGuide/bicolor
+- Phantom: https://geckinspect.com/MorphGuide/phantom
+- Empty Back: https://geckinspect.com/MorphGuide/empty-back
+- Super Empty Back: https://geckinspect.com/MorphGuide/super-empty-back
+- Whiteout: https://geckinspect.com/MorphGuide/whiteout
+- Super Whiteout: https://geckinspect.com/MorphGuide/super-whiteout
+- Luwak: https://geckinspect.com/MorphGuide/luwak
+- Super Lilly White: https://geckinspect.com/MorphGuide/super-lilly-white
+- Super Cappuccino: https://geckinspect.com/MorphGuide/super-cappuccino
+- Super Sable: https://geckinspect.com/MorphGuide/super-sable
+- Super Highway: https://geckinspect.com/MorphGuide/super-highway
 
 ## Contact
 

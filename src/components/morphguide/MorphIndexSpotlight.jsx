@@ -65,7 +65,7 @@ export default function MorphIndexSpotlight({ morphs }) {
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
-                      badge === 'New' ? 'bg-rose-500 text-white' : 'bg-slate-700 text-slate-100'
+                      badge === 'New' ? 'bg-rose-700 text-white' : 'bg-slate-700 text-slate-100'
                     }`}
                   >
                     {badge}

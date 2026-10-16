@@ -17,8 +17,9 @@ const CONFIDENCE_STYLES = {
 
 /**
  * Feeding history, shed history and the next shed window for one gecko.
- * Shown in the gecko record window (My Geckos) and on /GeckoDetail for
- * the owner. Reads the shared feeding and shed log (feeding_records and
+ * Part of the one gecko record (src/components/gecko/record), shown to the
+ * gecko's keepers in the My Geckos window and on /GeckoDetail. Reads the
+ * shared feeding and shed log (feeding_records and
  * shed_records), which every logging surface writes to: Field Mode,
  * Batch Husbandry, the Dashboard's Mark fed, Project Manager and the
  * record window's "+ Event".
@@ -69,7 +70,9 @@ export default function HusbandryHistory({
 
   const merged = mergeLegacyEvents({ feedings: feedingRows, sheds: shedRows, events: legacyEvents });
   const { feedings, sheds } = merged;
-  const prediction = predictNextShed({ sheds, weights, hatchDate: gecko.hatch_date });
+  // The record's own weight stands in when no weigh-in is logged, so an
+  // adult with a weight but no weigh-ins gets the adult shed cycle.
+  const prediction = predictNextShed({ sheds, weights, weightGrams: gecko.weight_grams, hatchDate: gecko.hatch_date });
   const lastAte = feedings.find((r) => r.accepted !== false);
   const recentFeedings = feedings.slice(0, 12);
   const refusedRecent = feedings.slice(0, 5).filter((r) => r.accepted === false).length;

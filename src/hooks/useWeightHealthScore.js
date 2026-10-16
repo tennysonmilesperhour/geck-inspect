@@ -34,8 +34,11 @@ export function useWeightHealthScore(weightRecords) {
       };
     }
 
-    // Sort by date ascending
+    // Weight records store weight_grams and record_date; older callers
+    // passed weight and date. Read either, so the badge works with the
+    // rows the database actually returns.
     const sorted = [...weightRecords]
+      .map(r => ({ ...r, weight: Number(r.weight_grams ?? r.weight), date: r.record_date ?? r.date }))
       .filter(r => r.weight > 0 && r.date)
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Flag } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { blockProfile } from '@/lib/memberActions';
  */
 async function blockAuthor(user, authorEmail, authorProfileId) {
   if (authorEmail) {
+    const supabase = await getSupabase();
     const { error } = await supabase.from('user_blocks').upsert(
       { blocker_email: user.email, blocked_email: authorEmail },
       { onConflict: 'blocker_email,blocked_email', ignoreDuplicates: true },

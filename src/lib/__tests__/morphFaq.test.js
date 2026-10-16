@@ -31,6 +31,30 @@ describe('morphFaq', () => {
     expect(faq.some((q) => q.question.startsWith('How much'))).toBe(albino.priceRange ? true : false);
   });
 
+  it('never gives a super form or a mix of genes the one-copy inheritance text', () => {
+    // The generic incomplete-dominant text ("Single copy produces a visible
+    // form; two copies produce a distinct super form") was said about the
+    // two-copy forms themselves and about Luwak, "never a super", in the
+    // same answer that then said otherwise. Search engines quote it.
+    const forms = MORPHS.filter((m) => m.inheritance === 'incomplete-dominant' && (/^super-/.test(m.slug) || ['luwak', 'frappuccino'].includes(m.slug)));
+    expect(forms.map((m) => m.slug).sort()).toEqual([
+      'frappuccino', 'luwak', 'super-cappuccino', 'super-empty-back', 'super-highway',
+      'super-lilly-white', 'super-sable', 'super-soft-scale', 'super-whiteout',
+    ]);
+    for (const m of forms) {
+      const answer = morphFaq(m).find((q) => q.question === `How is ${m.name} inherited?`).answer;
+      expect(answer, m.slug).not.toMatch(/Single copy produces a visible form/);
+      expect(answer, m.slug).not.toMatch(/classified as/);
+      expect(answer.startsWith(m.name), m.slug).toBe(true);
+    }
+    const luwak = morphFaq(MORPHS.find((m) => m.slug === 'luwak')).find((q) => q.question === 'How is Luwak inherited?').answer;
+    expect(luwak).toContain('never a super');
+    // A gene's own page keeps the generic text and its note.
+    const lilly = morphFaq(MORPHS.find((m) => m.slug === 'lilly-white')).find((q) => q.question === 'How is Lilly White inherited?').answer;
+    expect(lilly).toMatch(/^Lilly White is classified as incomplete dominant\. Single copy produces a visible form/);
+    expect(lilly).toContain('lethal super form');
+  });
+
   it('adds a difference question for the first lookalike when the data has one', () => {
     const pin = MORPHS.find((m) => m.slug === 'pinstripe');
     const withLookalike = {

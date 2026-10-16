@@ -1,11 +1,12 @@
 import React from 'react';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import TraitGecko, { traitAsset, CREST_PATHS, BASE_TONES } from '@/components/morphguide/TraitGecko';
 import IllustratedGecko, { STUDY_MORPHS, fieldGuidePlate, hasIllustration } from '@/components/morphguide/IllustratedGecko';
-import MorphEyeGuide, { EYE_COLOR_STUDIES, eyeStudyForMorph } from '@/components/morphguide/MorphEyeGuide';
+import MorphEyeGuide, { EYE_COLOR_STUDIES, MorphEyeStudyPanel, eyeStudyForMorph } from '@/components/morphguide/MorphEyeGuide';
+import { eyeStudyIdForMorph } from '@/components/morphguide/eyeStudyIndex';
 import { pinSegments } from '@/components/morphguide/traitStudyMath';
 import { SPECIMENS, STUDY_LESSONS, STUDY_QUESTIONS, MORPH_PROGRESSION_TRACKS, normalizedStudy, traitDescription } from '@/components/morphguide/patternStudy';
 import PatternSpectrum, { spectrumPositionFor, MorphProgressionPlayer, CustomMorphComparator } from '@/components/morphguide/PatternSpectrum';
@@ -84,6 +85,18 @@ describe('animated morph progression tracks', () => {
       }
     }
   });
+  it('keeps progression copy within what the guide can show', () => {
+    const text = (slug) => MORPH_PROGRESSION_TRACKS.flatMap(t => t.steps).filter(st => st.slug === slug)
+      .map(st => [st.stage, st.note, ...st.pins.map(pt => `${pt.title} ${pt.detail}`)].join(' ')).join(' ');
+    // Albino's inheritance is not proven yet (src/data/morph-guide.js).
+    expect(text('albino')).not.toMatch(/\bTYR\b|\brecessive\b/i);
+    // Phantom Pinstripe is a historical look, not proof of the Phantom gene.
+    expect(text('phantom-pinstripe')).not.toMatch(/Phantom suppresses|melanin suppression/i);
+    // One-copy Cappuccino is not "Melanistic" (that name belongs to Super Cappuccino).
+    expect(text('cappuccino')).not.toMatch(/^\S*\s*Melanistic|Melanistic incomplete/i);
+    // Spot counts are not a standard for Dalmatian or Super Dalmatian.
+    expect(`${text('dalmatian')} ${text('super-dalmatian')}`).not.toMatch(/\d+\s*(to|-)\s*\d+\s*.*spots|\d+\+/i);
+  });
   it('renders MorphProgressionPlayer and CustomMorphComparator cleanly', () => {
     const playerHtml = renderToStaticMarkup(
       <MemoryRouter>
@@ -102,6 +115,13 @@ describe('animated morph progression tracks', () => {
     expect(compHtml).toContain('Crossfade any two morphs in the field guide');
     expect(compHtml).toContain('/morph-guide/field-guide-v1/flame.webp');
     expect(compHtml).toContain('/morph-guide/field-guide-v1/harlequin.webp');
+    // Only morphs with a plate on disk can be picked, so the crossfade never
+    // shows a broken image (Phantom and Whiteout have no plate yet).
+    const offered = [...compHtml.matchAll(/<option value="([^"]+)"/g)].map(m => m[1]);
+    expect(offered.length).toBeGreaterThan(0);
+    for (const slug of offered) expect(existsSync(`public${fieldGuidePlate(slug)}`), slug).toBe(true);
+    expect(offered).not.toContain('phantom');
+    expect(offered).not.toContain('whiteout');
   });
 });
 
@@ -129,13 +149,23 @@ describe('illustrated examples', () => {
   it('has local artwork for both views and every independent pigment layer', () => {
     for (const view of ['side','top']) for (const layer of ['base','cream','pin','tiger','spots']) expect(existsSync(`public${traitAsset(view,layer)}`)).toBe(true);
   });
-  it('provides a field guide plate for every morph in the guide and rejects unknown slugs', () => {
-    expect(STUDY_MORPHS).toHaveLength(MORPHS.length);
-    for (const morph of MORPHS) {
-      expect(hasIllustration(morph.slug)).toBe(true);
+  // Guide entries added in October 2026 that have no field guide plate yet.
+  // They show the "use documented specimen photographs" panel instead. Paint
+  // a plate (public/morph-guide/field-guide-v1/<slug>.webp), add a preset in
+  // illustratedGeckoPresets.js and take the slug off this list.
+  const AWAITING_PLATE = ['phantom','empty-back','super-empty-back','whiteout','super-whiteout','luwak','super-lilly-white','super-cappuccino','super-sable','super-highway'];
+  it('provides a field guide plate for every morph in the guide that has one, and rejects unknown slugs', () => {
+    for (const slug of STUDY_MORPHS) expect(slugs.has(slug)).toBe(true);
+    expect(MORPHS.filter(m => !hasIllustration(m.slug)).map(m => m.slug).sort()).toEqual([...AWAITING_PLATE].sort());
+    for (const morph of MORPHS.filter(m => hasIllustration(m.slug))) {
       expect(existsSync(`public${fieldGuidePlate(morph.slug)}`)).toBe(true);
       const html = renderToStaticMarkup(<IllustratedGecko morph={morph.slug} />);
       expect(html).toContain(fieldGuidePlate(morph.slug));
+    }
+    for (const slug of AWAITING_PLATE) {
+      const html = renderToStaticMarkup(<IllustratedGecko morph={slug} />);
+      expect(html).toContain('Use documented specimen photographs');
+      expect(html).not.toContain('<img');
     }
     for (const slug of ['unknown-morph', 'toString', '']) {
       expect(hasIllustration(slug)).toBe(false);
@@ -164,10 +194,12 @@ describe('illustrated examples', () => {
     }
     expect(projectLinePlate('unknown-line')).toBeNull();
   });
-  it('keeps an accessible base until pigment extraction is ready and interpolates masks smoothly without NaN across all 8 base tones', () => {
+  it('draws the base and each requested layer straight from the precomputed pigment-only files, and interpolates masks smoothly without NaN across every base tone', () => {
     const html=renderToStaticMarkup(<TraitGecko traits={{ dorsal:1,lateral:1,pinstripe:1,spots:1 }} />);
     expect(html).toContain('role="img"'); expect(html).toContain(traitAsset('side'));
-    expect(html).not.toContain('data-layer="pinstripe"');
+    for (const layer of ['dorsal','lateral','pinstripe','spots']) expect(html).toContain(`data-layer="${layer}"`);
+    // Never the full edited drawings (a whole second animal), and no in-page pixel work.
+    expect(html).not.toContain('ink-studies'); expect(html).not.toContain('data:image');
     expect(html).not.toContain('NaN');
     for (const toneKey of Object.keys(BASE_TONES)) {
       const toneHtml = renderToStaticMarkup(<TraitGecko view="side" tone={toneKey} fired={0.75} traits={{ dorsal: 0.6, lateral: 0.5, pinstripe: 0.7, tiger: 0.4, spots: 0.3 }} />);
@@ -178,6 +210,26 @@ describe('illustrated examples', () => {
       const midHtml = renderToStaticMarkup(<TraitGecko view="top" tone="mahogany" fired={0.6} traits={{ dorsal: v, lateral: v, pinstripe: v, tiger: v, spots: v }} />);
       expect(midHtml).not.toContain('NaN');
       expect(midHtml).toContain('feColorMatrix');
+    }
+  });
+  it('loads the eye studies only when a page shows them, from a lookup that agrees with the studies', () => {
+    for (const morph of MORPHS) expect(eyeStudyIdForMorph(morph.slug)).toBe(eyeStudyForMorph(morph.slug)?.id ?? null);
+    for (const slug of ['toString', 'constructor', '', undefined]) expect(eyeStudyIdForMorph(slug)).toBeNull();
+    // Neither page imports the eye studies or the Field Notebook with the
+    // page itself (about 23 kB together); both load when the page shows them.
+    for (const page of ['src/pages/MorphGuide.jsx', 'src/pages/MorphDetail.jsx']) {
+      const src = readFileSync(page, 'utf8');
+      for (const mod of ['MorphEyeGuide', 'PatternSpectrum']) {
+        expect(src, `${page} ${mod}`).not.toMatch(new RegExp(`^\\s*import\\s[^;]*from\\s+['"]@/components/morphguide/${mod}['"]`, 'm'));
+      }
+    }
+    const albino = renderToStaticMarkup(<MorphEyeStudyPanel slug="albino" />);
+    expect(albino).toContain(eyeStudyForMorph('albino').plate);
+    expect(renderToStaticMarkup(<MorphEyeStudyPanel slug="harlequin" />)).toBe('');
+  });
+  it('keeps every shipped study file small enough for a phone on the Morph Guide', () => {
+    for (const view of ['side','top']) for (const layer of ['base','cream','pin','tiger','spots']) {
+      expect(statSync(`public${traitAsset(view,layer)}`).size).toBeLessThan(120 * 1024);
     }
   });
   it('starts with real specimens and offers studio, animated transitions, and recognition practice', () => {

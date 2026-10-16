@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabase } from '@/lib/supabaseLazy';
 import { mirroredMembershipTier } from '@/lib/nativeMembership';
 import {
   configureRevenueCat,
@@ -15,6 +15,8 @@ const RevenueCatContext = createContext(null);
 /** Only the server-written mirror grants access, across web and native clients. */
 async function fetchMirroredTier(appUserId) {
   if (!appUserId) return 'free';
+  // Only signed-in members get here, so the client is already loaded.
+  const supabase = await getSupabase();
   const { data, error } = await supabase.from('revenuecat_entitlements')
     .select('entitlement_identifier, is_active, expires_at').eq('app_user_id', appUserId);
   if (error) {
@@ -94,6 +96,7 @@ export function RevenueCatProvider({ children }) {
   const sync = useCallback(async () => {
     if (!appUserId) throw new Error('Sign in to refresh store access.');
     const generation = generationRef.current;
+    const supabase = await getSupabase();
     const { data, error } = await supabase.functions.invoke('revenuecat-sync', { body: {} });
     if (generation !== generationRef.current) return null;
     if (error) throw new Error('Your purchase is saved by the store. Access could not refresh yet; use Refresh store access in a few seconds.');

@@ -2,7 +2,9 @@
  * Entity exports, all backed by Supabase.
  */
 import * as sb from '@/api/supabaseEntities';
-import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
+// Loaded on first use rather than with the app (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
+import { normalizeSupabaseUser } from '@/lib/normalizeSupabaseUser';
 import { reportError } from '@/lib/telemetry';
 import { loadUserProfile, currentAuthUser } from '@/lib/userProfile';
 
@@ -20,10 +22,11 @@ export const User = new Proxy({}, {
       return () => { window.location.href = '/AuthPortal'; };
     }
     if (prop === 'logout') {
-      return async () => { await supabase.auth.signOut(); };
+      return async () => { await (await getSupabase()).auth.signOut(); };
     }
     if (prop === 'updateMyUserData') {
       return async (data) => {
+        const supabase = await getSupabase();
         const { data: { user }, error } = await supabase.auth.updateUser({ data });
         if (error) throw error;
         try {

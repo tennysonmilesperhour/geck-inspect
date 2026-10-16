@@ -78,6 +78,7 @@ import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
 import { RETRYABLE_UPSTREAM_STATUS, requestShape, upstreamErrorCode, upstreamFailureResponse } from "../_shared/morph-upstream.ts";
 import { refundMorphIdCreditOnce } from "../_shared/morph-refund.ts";
 import { clientIp } from "../_shared/client-ip.ts";
+import { costCentsFromUsage } from "../_shared/model-cost.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
@@ -176,26 +177,12 @@ async function countTodaysCallsForIp(ipHash: string): Promise<number> {
   }
 }
 
-// USD per million tokens. Used to compute est_cost_cents at write time.
-// Frozen here so historic rows don't drift if Anthropic re-prices.
-const PRICE_PER_MTOK_USD: Record<string, { input: number; output: number }> = {
-  "claude-haiku-4-5":  { input: 1,  output: 5 },
-  "claude-sonnet-4-6": { input: 3,  output: 15 },
-  "claude-opus-4-7":   { input: 15, output: 75 },
-  "claude-sonnet-5-5": { input: 2,  output: 10 },
-  "claude-opus-5-5":   { input: 4,  output: 20 },
-};
-
-function computeCostCents(
-  model: string,
-  inputTokens: number,
-  outputTokens: number,
-): number {
-  const price = PRICE_PER_MTOK_USD[model];
-  if (!price) return 0;
-  const dollars = (inputTokens * price.input + outputTokens * price.output) / 1_000_000;
-  return Math.round(dollars * 10000) / 100;
-}
+// est_cost_cents is worked out when the row is written (so a later price
+// change does not rewrite history) by costCentsFromUsage, which counts the
+// cache writes and cache reads as well as plain input and output. Before
+// 16 Oct 2026 this file counted input and output only, so older rows read
+// about 15 percent low (production: 75.84 cents logged against 89.53 real
+// over 25 calls), and it listed Opus at three times the real price.
 
 const ALLOWED_SURFACES = new Set([
   "morph_id_production",
@@ -1237,11 +1224,17 @@ serve(async (req) => {
   const tier = resolveTier(profile);
   const creditsIncluded = TIER_MORPH_ID_CREDITS[tier] ?? TIER_MORPH_ID_CREDITS.free;
 
-  // Paid tiers only get the value estimate, and only when the profile
-  // toggle is on. Admins inherit Breeder-or-better, so we read the
-  // toggle as-is for them.
+  // Paid members who turn on the Settings toggle see asking prices for the
+  // looks Morph ID found. The app works those out from the Price Index,
+  // with the number of listings behind them (src/lib/morphIdPriceRange.js);
+  // this flag only tells it to. The model is no longer asked to guess a
+  // dollar band from the photo: that number had no source behind it and
+  // contradicted "value estimates from real listings", so it stays off
+  // (the prompt and schema plumbing for it is kept but never switched on).
+  // Admins inherit Breeder-or-better, so the toggle is read as-is for them.
   const isPaidTier = tier === "keeper" || tier === "breeder" || tier === "enterprise";
-  const includeValueEstimate = !!profile.morph_id_show_value_estimate && (isPaidTier || isAdmin);
+  const showPriceRange = !!profile.morph_id_show_value_estimate && (isPaidTier || isAdmin);
+  const includeValueEstimate = false;
 
   const requestStartedAt = Date.now();
   // Set once this run owns its request key; settled in both exits below.
@@ -1435,11 +1428,7 @@ serve(async (req) => {
       output_tokens: result.usage.output_tokens ?? 0,
       cache_read_tokens: result.usage.cache_read_input_tokens ?? null,
       cache_creation_tokens: result.usage.cache_creation_input_tokens ?? null,
-      est_cost_cents: computeCostCents(
-        model,
-        result.usage.input_tokens ?? 0,
-        result.usage.output_tokens ?? 0,
-      ),
+      est_cost_cents: costCentsFromUsage(model, result.usage),
       user_id: profile.auth_user_id,
       tier,
       is_admin: isAdmin,
@@ -1463,7 +1452,7 @@ serve(async (req) => {
       credits_consumed: creditsConsumed,
       credits_remaining: creditsRemaining,
       credit_refunded: creditRefunded,
-      value_estimate_included: includeValueEstimate,
+      value_estimate_included: showPriceRange,
       // The photos this answer read, exactly as sent. A share card may only
       // show one of these (create_morph_id_share compares the strings), so
       // a strong answer cannot be paired with a different photo.

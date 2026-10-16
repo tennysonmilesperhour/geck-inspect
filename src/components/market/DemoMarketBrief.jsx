@@ -57,7 +57,7 @@ export default function DemoMarketBrief() {
         <Info className="w-4 h-4 text-yellow-200 shrink-0 mt-0.5" />
         <p className="text-sm text-yellow-50/90">
           Sample brief for the demo collection, priced from real listing data as of {asOf}. Members get the live version
-          every morning: new listings and price cuts in their morphs, rare sightings, watchlists and Guess the Price.
+          every morning: new listings and price cuts in their morphs, rare sightings and watchlists.
         </p>
       </div>
 

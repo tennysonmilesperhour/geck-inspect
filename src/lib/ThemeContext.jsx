@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabase, getSupabaseWhenIdle } from '@/lib/supabaseLazy';
 
 // Each theme sets CSS custom properties via :root[data-theme="..."] in
 // src/index.css.
@@ -57,16 +57,23 @@ export const THEMES = [
   },
 ];
 
-// New profiles default to Blizzard for both primary theme and accent.
-// Existing users keep whatever they already saved in localStorage; the
-// default only applies when nothing is stored yet.
-export const DEFAULT_THEME = 'blizzard';
+// New visitors start on Emerald (comprehensive review B4, October 2026:
+// the old Blizzard default painted every page blue and put four accent
+// colours on one screen). Anyone with a theme already saved, on this
+// device or on their profile, keeps it.
+//
+// Until October 2026 the default itself was saved the first time the app
+// loaded, so a stored value did not mean a member chose it (115 of 147
+// profiles held blizzard/blizzard on 16 Oct). From now on a value is only
+// saved once the member picks one in Settings, so people who never pick
+// follow the default.
+export const DEFAULT_THEME = 'normal';
 const STORAGE_KEY = 'geckinspect.theme';
 const VALID_IDS = new Set(THEMES.map((t) => t.id));
 
 // Secondary "Accent color" is independent of the primary theme.
 // Reuses the same six morph IDs since each maps cleanly to a hue.
-export const DEFAULT_SECONDARY = 'blizzard';
+export const DEFAULT_SECONDARY = 'normal';
 const SECONDARY_STORAGE_KEY = 'geckinspect.secondary';
 
 export const SECONDARY_COLORS = [
@@ -78,13 +85,37 @@ export const SECONDARY_COLORS = [
   { id: 'super-hypo',     label: 'Hypo',      swatch: '#eab308', description: 'Golden yellow accents' },
 ];
 
-function readStored(key, validSet, fallback) {
-  if (typeof window === 'undefined') return fallback;
+function readStoredValue(key, validSet) {
+  if (typeof window === 'undefined') return null;
   try {
     const stored = window.localStorage.getItem(key);
     if (stored && validSet.has(stored)) return stored;
   } catch {}
-  return fallback;
+  return null;
+}
+
+function readStored(key, validSet, fallback) {
+  return readStoredValue(key, validSet) || fallback;
+}
+
+// Homepage experiment hold (docs/planning/homepage-ab-test-2026-10.md):
+// a signed-out visitor on the homepage is marked with data-landing-hold
+// and keeps the Blizzard defaults both homepage designs launched with.
+// index.html marks a visit that opens on "/" (it lasts until the page
+// reloads); src/lib/useLandingThemeHold.js marks one that reaches the
+// homepage inside the app, and lifts it when they leave. While the mark
+// is on, a theme or accent the visitor never picked shows as the hold's
+// default, so the effects below cannot repaint the homepage in Emerald
+// when they run again (once the sign-in check finishes, for example).
+// Nothing is saved, so it ends by itself. Remove this with the experiment.
+const LANDING_HOLD_DEFAULT = 'blizzard';
+function defaultFor(fallback) {
+  if (typeof document === 'undefined') return fallback;
+  try {
+    return document.documentElement?.hasAttribute?.('data-landing-hold') ? LANDING_HOLD_DEFAULT : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function applyAttribute(name, value) {
@@ -122,6 +153,7 @@ const ThemeContext = createContext({
 // applies and re-syncs the next time the user changes the theme.
 async function fetchCloudPrefs() {
   try {
+    const supabase = await getSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return null;
     // Resolve the profile row by EMAIL, the app-wide convention.
@@ -143,6 +175,7 @@ async function fetchCloudPrefs() {
 
 async function saveCloudPref(column, value) {
   try {
+    const supabase = await getSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
     await supabase
@@ -156,11 +189,16 @@ async function saveCloudPref(column, value) {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setThemeState] = useState(() =>
-    readStored(STORAGE_KEY, VALID_IDS, DEFAULT_THEME)
+    readStored(STORAGE_KEY, VALID_IDS, defaultFor(DEFAULT_THEME))
   );
   const [secondary, setSecondaryState] = useState(() =>
-    readStored(SECONDARY_STORAGE_KEY, VALID_IDS, DEFAULT_SECONDARY)
+    readStored(SECONDARY_STORAGE_KEY, VALID_IDS, defaultFor(DEFAULT_SECONDARY))
   );
+  // Whether each value is the member's own (saved earlier, synced from
+  // their profile, or picked now) rather than the default. Only their own
+  // values are written back, so the default is never saved as a choice.
+  const themeIsOwn = useRef(readStoredValue(STORAGE_KEY, VALID_IDS) != null);
+  const secondaryIsOwn = useRef(readStoredValue(SECONDARY_STORAGE_KEY, VALID_IDS) != null);
 
   // Cloud writes are gated until we've confirmed the auth state. On cold
   // page loads the save effect would otherwise fire before
@@ -187,28 +225,39 @@ export const ThemeProvider = ({ children }) => {
       if (cancelled || !cloud) return;
       skipCloudWrite.current = true;
       if (cloud.ui_theme && VALID_IDS.has(cloud.ui_theme)) {
+        themeIsOwn.current = true;
         setThemeState(cloud.ui_theme);
       }
       if (cloud.ui_secondary && VALID_IDS.has(cloud.ui_secondary)) {
+        secondaryIsOwn.current = true;
         setSecondaryState(cloud.ui_secondary);
       }
       // Allow the upcoming state-effect ticks to write to localStorage
       // without echoing back to the cloud, then resume normal writes.
       setTimeout(() => { skipCloudWrite.current = false; }, 0);
     };
+    let sub = null;
+    // Waits for the client instead of loading it: for a signed-out
+    // visitor there is no saved theme to fetch (src/lib/supabaseLazy.js).
+    // A member's sign-in state loads it straight away, so this is
+    // immediate for them.
     const init = async () => {
       try {
+        const supabase = await getSupabaseWhenIdle();
+        if (cancelled) return;
+        ({ data: sub } = supabase.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_IN') hydrate();
+        }));
         const { data } = await supabase.auth.getSession();
         if (cancelled) return;
         if (data?.session?.user) await hydrate();
+      } catch {
+        // No client (no signal): keep the theme stored on this device.
       } finally {
         if (!cancelled) setAuthReady(true);
       }
     };
     init();
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') hydrate();
-    });
     return () => {
       cancelled = true;
       sub?.subscription?.unsubscribe();
@@ -216,25 +265,31 @@ export const ThemeProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    applyAttribute('data-theme', theme);
-    applyStatusBar(theme);
+    const shown = themeIsOwn.current ? theme : defaultFor(theme);
+    applyAttribute('data-theme', shown);
+    applyStatusBar(shown);
+    if (!themeIsOwn.current) return;
     try { window.localStorage.setItem(STORAGE_KEY, theme); } catch {}
     if (authReady && !skipCloudWrite.current) saveCloudPref('ui_theme', theme);
   }, [theme, authReady]);
 
   useEffect(() => {
-    applyAttribute('data-secondary', secondary);
+    applyAttribute('data-secondary', secondaryIsOwn.current ? secondary : defaultFor(secondary));
+    if (!secondaryIsOwn.current) return;
     try { window.localStorage.setItem(SECONDARY_STORAGE_KEY, secondary); } catch {}
     if (authReady && !skipCloudWrite.current) saveCloudPref('ui_secondary', secondary);
   }, [secondary, authReady]);
 
+  // Called from the Settings pickers: the member's own choice, saved.
   const setTheme = useCallback((nextId) => {
     if (!VALID_IDS.has(nextId)) return;
+    themeIsOwn.current = true;
     setThemeState(nextId);
   }, []);
 
   const setSecondary = useCallback((nextId) => {
     if (!VALID_IDS.has(nextId)) return;
+    secondaryIsOwn.current = true;
     setSecondaryState(nextId);
   }, []);
 

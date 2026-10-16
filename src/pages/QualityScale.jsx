@@ -13,8 +13,12 @@ import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import ScorecardForm from '@/components/quality/ScorecardForm';
 import { breadcrumbSchema, SITE_URL } from '@/lib/organization-schema';
+import { editorialFor } from '@/lib/editorial';
 
-const LAST_UPDATED = '2026-06-10';
+// The last commit to this page (scripts/content-dates.json, refreshed at
+// the start of every build), so the dateModified search engines read never
+// goes stale.
+const LAST_UPDATED = editorialFor('/QualityScale').modified;
 
 const RUBRIC = [
   {

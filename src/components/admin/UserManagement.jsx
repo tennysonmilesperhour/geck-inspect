@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
-import { User, Notification, DirectMessage, Gecko, GeckoImage, ForumPost, UserActivity } from '@/entities/all';
+import { User, Notification, DirectMessage, Gecko, GeckoImage, ForumPost, UserEvent } from '@/entities/all';
+import { activityLabel } from '@/lib/adminData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -175,7 +176,9 @@ export default function UserManagement() {
                 Gecko.filter({ created_by: user.email }),
                 GeckoImage.filter({ created_by: user.email }),
                 ForumPost.filter({ created_by: user.email }),
-                UserActivity.filter({ user_email: user.email }, '-created_date', 10)
+                // The member's latest product events (page views left out).
+                // The old user_activity table only ever held "added a gecko".
+                UserEvent.filter({ user_email: user.email, event_name: { $ne: 'page_view' } }, '-created_date', 10)
             ]);
             
             setUserDetails({
@@ -535,10 +538,7 @@ export default function UserManagement() {
                                         {userDetails.recentActivity.map((activity) => (
                                             <div key={activity.id} className="bg-slate-800 p-3 rounded-lg text-sm">
                                                 <p className="text-slate-300">
-                                                    {activity.activity_type === 'new_gecko' && '🦎 Added a new gecko'}
-                                                    {activity.activity_type === 'new_post' && '📝 Created a forum post'}
-                                                    {activity.activity_type === 'new_comment' && '💬 Commented on a post'}
-                                                    {activity.activity_type === 'ai_training' && '🤖 Contributed to AI training'}
+                                                    {activityLabel(activity.event_name)}
                                                 </p>
                                                 {activity.created_date && (
                                                     <p className="text-xs text-slate-500 mt-1">

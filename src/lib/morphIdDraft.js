@@ -14,6 +14,7 @@
  */
 import { labelFor } from '@/components/morph-id/morphTaxonomy';
 import { morphHeadline } from '@/components/morph-id/morphHeadline';
+import { fitWord } from '@/components/morph-id/modelSignal';
 import { ALL_MORPHS } from '@/components/my-geckos/morphTagCatalog';
 
 // Case-insensitive lookup from a display label to the canonical tag string.
@@ -107,7 +108,8 @@ export function buildGeckoDraftFromAnalysis(analysis, imageUrls = []) {
   const { name } = morphHeadline(analysis.primary_morph, analysis.genetic_traits || analysis.genetics || []);
   const listed = labels.length ? labels.join(', ') : 'see the analysis';
   const summary = name && labels.length ? `${name} (${listed})` : listed;
-  const confText = conf ? ` (model signal ${Math.round(conf)}/100)` : '';
+  // A word, not "73/100": the score is the model's rating of itself.
+  const confText = conf ? ` (the AI's own estimate: ${fitWord(conf)})` : '';
   const notes =
     `Unverified Morph ID suggestion from Geck Inspect${confText}: ${summary}. ` +
     'Review and edit before saving.';

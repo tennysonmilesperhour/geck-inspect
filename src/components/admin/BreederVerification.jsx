@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
+import { VERIFIED_BREEDER_CHECKS } from '@/lib/verifiedBreeder';
 
 /**
  * Breeder verification (decision D9). An admin opens a breeder page,
@@ -12,13 +13,9 @@ import { useToast } from '@/components/ui/use-toast';
  * The database refuses to verify unless every item is ticked
  * (admin_set_breeder_verified), and only admins can call it.
  */
-export const VERIFICATION_CHECKLIST = [
-  { key: 'identity', label: 'Identity', hint: 'Name or business matches their MorphMarket store, social accounts or website.' },
-  { key: 'own_animals', label: 'Their own crested geckos', hint: 'Tracks crested geckos of their own here, with photos (see the gecko count).' },
-  { key: 'sales_record', label: 'Sales record', hint: 'At least one claimed transfer, or a sales history we can check elsewhere.' },
-  { key: 'policies', label: 'Store policies', hint: 'Published policies for shipping, live arrival and payment.' },
-  { key: 'clean_record', label: 'No open complaints', hint: 'No unresolved reports or support tickets about this breeder.' },
-];
+// The same five checks the public pages describe (src/lib/verifiedBreeder.js),
+// so what an admin ticks is exactly what the badge tells buyers.
+export const VERIFICATION_CHECKLIST = VERIFIED_BREEDER_CHECKS;
 
 export function checklistComplete(checklist) {
   return VERIFICATION_CHECKLIST.every((item) => checklist?.[item.key] === true);

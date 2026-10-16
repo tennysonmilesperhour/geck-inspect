@@ -14,6 +14,9 @@ import { User } from '@/entities/all';
 import { useToast } from '@/components/ui/use-toast';
 import { saveGeckoImageWithMeta } from './persistence';
 import { morphHeadline } from './morphHeadline';
+import { ESTIMATE_PREFIX, evidenceWord, fitWord } from './modelSignal';
+import { loadTraitValueIndex } from '@/lib/traitValueTable';
+import { dollars, morphIdPriceRows } from '@/lib/morphIdPriceRange';
 
 import MorphPicker from './MorphPicker';
 import TraitPicker from './TraitPicker';
@@ -69,7 +72,67 @@ function candidatesFrom(result, state) {
     : [];
 }
 
-export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageStage, onSaved, onChange }) {
+/**
+ * Asking prices for the looks on screen, from the Price Index, with how
+ * many listings each range rests on. Replaces the model's own guessed
+ * "Estimated retail range", which had no source. Shown only to members who
+ * turned on asking prices in Settings (showPriceRange).
+ */
+function PriceIndexRanges({ looks, ageStage }) {
+  const [index, setIndex] = useState(null);
+  const [status, setStatus] = useState('loading'); // loading | ready | failed
+
+  useEffect(() => {
+    let cancelled = false;
+    loadTraitValueIndex()
+      .then((loaded) => {
+        if (cancelled) return;
+        setIndex(loaded);
+        setStatus('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setStatus('failed');
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const rows = useMemo(() => morphIdPriceRows(looks, index, ageStage), [looks, index, ageStage]);
+  if (status === 'loading') return null;
+
+  return (
+    <section className="rounded-lg border border-slate-700 bg-slate-800/40 p-4">
+      <p className="text-xs uppercase tracking-wide text-amber-300/80">Asking prices in the Price Index</p>
+      {status === 'failed' && (
+        <p className="text-sm text-slate-400 mt-1">Asking prices could not load just now.</p>
+      )}
+      {status === 'ready' && rows.length === 0 && (
+        <p className="text-sm text-slate-400 mt-1">Not enough listings of these looks to show a price range yet.</p>
+      )}
+      {rows.length > 0 && (
+        <>
+          <ul className="mt-2 space-y-2">
+            {rows.map((row) => (
+              <li key={row.trait} className="text-sm text-slate-200">
+                <span className="font-medium text-slate-100">{row.look}</span>
+                {row.gene && <span className="text-slate-400"> (only if breeding records confirm it)</span>}
+                {': '}
+                {dollars(row.low)} to {dollars(row.high)}
+                <span className="block text-xs text-slate-400">
+                  Middle half of {row.listings.toLocaleString('en-US')} listings, {row.slice}. Median {dollars(row.median)}.
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-slate-400 mt-3">
+            Asking prices on public crested gecko listings, not sale prices and not an appraisal. Quality, lineage, sex and proven genes move a real price a lot.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
+export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageStage, showPriceRange = false, onSaved, onChange }) {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [state, setState] = useState(() => normalizeFromAI(result));
@@ -269,7 +332,9 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
           <section>
             <div className="mb-3">
               <h3 className="font-semibold text-slate-100">Candidate comparison</h3>
-              <p className="text-xs text-slate-500">Signals rank visual fit. They are not accuracy percentages.</p>
+              <p className="text-xs text-slate-500">
+                The words are the AI&apos;s own estimate of how well each look fits these photos, not a measured accuracy. Morph ID has not yet been tested on an independent set of photos, so treat them as a rough guide.
+              </p>
             </div>
             <div className="space-y-2">
               {candidates.map((candidate, index) => (
@@ -282,7 +347,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                       <p className="font-medium text-slate-100 truncate">{labelFor(candidate.morph)}</p>
                     </div>
                     <span className="text-xs text-slate-400 shrink-0">
-                      {candidate.source === 'photo_lookup' ? 'reference photos' : `signal ${Math.round(candidate.score || 0)}/100`}
+                      {candidate.source === 'photo_lookup' ? 'reference photos' : `${ESTIMATE_PREFIX}: ${fitWord(candidate.score)}`}
                     </span>
                   </div>
                   {candidate.why && <p className="text-xs text-slate-400 mt-2 ml-8">{candidate.why}</p>}
@@ -299,7 +364,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                 <Images className="w-4 h-4 text-emerald-400" /> Photo-by-photo evidence
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Each image is checked separately before the evidence is combined. Signals rank evidence strength, not accuracy.
+                Each image is checked separately before the evidence is combined. The evidence words are the AI&apos;s own estimate, not a measured accuracy.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -328,7 +393,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                           </Badge>
                         </div>
                         <p className="text-xs text-slate-400 mt-1 capitalize">
-                          {String(observation.view || 'unclear').replace(/_/g, ' ')} · {observation.quality_grade || 'poor'} · signal {Math.round(observation.evidence_signal || 0)}/100
+                          {String(observation.view || 'unclear').replace(/_/g, ' ')} · {observation.quality_grade || 'poor'} · {ESTIMATE_PREFIX.toLowerCase()}: {evidenceWord(observation.evidence_signal)}
                         </p>
                       </div>
                     </div>
@@ -434,14 +499,11 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
           </section>
         )}
 
-        {result.value_estimate && Number.isFinite(result.value_estimate.usd_low) && (
-          <section className="rounded-lg border border-slate-700 bg-slate-800/40 p-4">
-            <p className="text-xs uppercase tracking-wide text-amber-300/80">Estimated retail range</p>
-            <p className="text-lg text-slate-100 mt-1">
-              ${result.value_estimate.usd_low} to ${result.value_estimate.usd_high} USD
-            </p>
-            {result.value_estimate.notes && <p className="text-xs text-slate-400 mt-1">{result.value_estimate.notes}</p>}
-          </section>
+        {/* The model's own dollar guess (result.value_estimate, still sent by
+            servers before 16 Oct 2026 and kept in stored answers) is never
+            shown: it had no source. */}
+        {showPriceRange && !withholdIdentification && (
+          <PriceIndexRanges looks={state} ageStage={ageStage || result?.age_stage || 'unknown'} />
         )}
 
         <section className="pt-5 border-t border-slate-700">

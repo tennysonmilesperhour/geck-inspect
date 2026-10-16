@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Gecko, UserActivity, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
+import { Gecko, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
@@ -546,9 +546,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             // WeightRecord entity, so it is counted here.
             if (recordWeight) captureEvent('weight_logged', { via: 'gecko_form', at_add: isNew });
             // Optional community activity must never turn a successful save into a failed form.
+            // (No user_activity row any more: the animal_created event above
+            // records the same thing, and the admin view reads that.)
             if (isNew && currentUser) {
-                UserActivity.create({ user_email: currentUser.email, activity_type: 'new_gecko',
-                    points: 5, related_entity_id: savedGecko.id }).catch(console.error);
                 if (savedGecko.is_public === true) {
                     notifyFollowersNewGecko(savedGecko, currentUser.email, currentUser.full_name).catch(console.error);
                 }
@@ -566,7 +566,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         setIsSaving(false);
     };
 
-    // Certificate generation moved to GeckoDetailModal (view flow).
+    // Certificates are made from the gecko record (src/components/gecko/record).
 
     const getSaveButtonText = () => {
         if (isSaving) return 'Saving...';
@@ -599,7 +599,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 <p className="text-xs text-slate-400 mb-3">Archive reason:</p>
                                 <div className="flex gap-2 flex-wrap">
                                     {[
-                                        { value: 'death', label: 'Passed Away' },
+                                        { value: 'death', label: 'Passed away' },
                                         { value: 'sold', label: 'Sold' },
                                         { value: 'other', label: 'Other' },
                                     ].map(opt => (
@@ -1286,8 +1286,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         )}
                     </div>
 
-                    {/* Certificates now live on the gecko detail view rather
-                        than the edit form, see GeckoDetailModal. */}
+                    {/* Certificates live on the gecko record rather than the
+                        edit form, see src/components/gecko/record. */}
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-3 sm:p-4 flex flex-wrap justify-end items-center gap-2 sm:gap-3">

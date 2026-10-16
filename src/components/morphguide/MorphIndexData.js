@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MorphGuide } from '@/entities/MorphGuide';
-import { supabase } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 import { fetchHeroAnchorPhotos } from '@/lib/publicGeckoPhotos';
 import { morphSlug, pickBestMorphRecord } from '@/lib/morphUtils';
 import { MORPHS } from '@/data/morph-guide';
@@ -28,20 +29,20 @@ async function fetchMorphGuideData() {
     MorphGuide.list(),
     // Reviewed member photos tagged with a morph; see MorphDetail for why
     // only verified photos with an owner are used.
-    supabase
+    getSupabase().then((supabase) => supabase
       .from('gecko_images')
       .select('image_url, primary_morph')
       .not('primary_morph', 'is', null)
       .not('image_url', 'is', null)
       .eq('verified', true)
       .not('owner_profile_id', 'is', null)
-      .limit(500),
+      .limit(500)),
     // Show-winner photos. The public function returns the image and
     // caption only. It does not select the JSON column that can hold
     // a reviewer email. If that function is not applied yet, this
     // resolves to an empty list and the curated image plus the
     // community pool still fill the card.
-    fetchHeroAnchorPhotos(supabase, 200),
+    getSupabase().then((supabase) => fetchHeroAnchorPhotos(supabase, 200)),
   ]);
 
   const rows = (r) => {

@@ -174,7 +174,7 @@ const APP_TAGS = new Map(Object.entries({
   'super sable': { genotype: { SABLE_COMPLEX: ['sable', 'sable'] } },
   'super highway': {
     genotype: { SABLE_COMPLEX: ['highway', 'highway'] },
-    note: 'Super Highway hatchlings have reported nostril and health issues.',
+    note: 'Some breeders report nostril and health problems in Super Highway hatchlings (not established).',
   },
   'cappuccino highway': { engine: ['Cappuccino', 'Highway'] },
   'sable highway': { engine: ['Sable', 'Highway'] },

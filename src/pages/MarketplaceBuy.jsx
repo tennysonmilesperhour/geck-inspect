@@ -130,7 +130,10 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                     gecko={gecko}
                     src={gecko.image_urls?.[0]}
                     alt={gecko.name}
-                    width={500}
+                    // Regular cards are two to a row on a phone: the thumbnail
+                    // is sharp there. Large cards fill a phone's width, so they
+                    // load the photo itself.
+                    width={size === 'large' ? 800 : 480}
                     aspect="square"
                     fallback={DEFAULT_GECKO_IMAGE}
                 />

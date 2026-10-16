@@ -81,10 +81,20 @@ const DEFAULT_PUBLISHED = '2025-06-01';
 const DEFAULT_MODIFIED = new Date().toISOString().slice(0, 10);
 
 const CONTENT_DATES = CONTENT_DATES_FILE?.files || {};
+const DECLARED_DATES = CONTENT_DATES_FILE?.declared || {};
 
 /** Content date of a data file, or the fallback when it was never recorded. */
 function contentDate(file, fallback) {
   return CONTENT_DATES[file] || fallback;
+}
+
+/**
+ * The date a legal page shows its readers (its LAST_UPDATED constant,
+ * copied into content-dates.json by scripts/build-content-dates.mjs), so
+ * the structured data never contradicts the page.
+ */
+function declaredDate(file, fallback) {
+  return DECLARED_DATES[file] || fallback;
 }
 
 // Newest recorded date across several source files, the same rule the
@@ -99,15 +109,24 @@ function latestContentDate(files, fallback) {
 // time, every path we don't list falls back to the defaults above.
 // Paths are stored without a trailing slash to match the canonical
 // form used throughout the app.
+// Every modified date below comes from scripts/content-dates.json, which
+// `pnpm build` refreshes first, so none of them can go stale the way the
+// hand-typed ones did. Keep the `contentDate('file', 'fallback')` form:
+// scripts/seo-audit.mjs reads this table with a regular expression.
 const PER_PATH = {
-  '/': { published: '2025-06-01', modified: '2026-09-29' },
-  '/About': { published: '2026-04-17', modified: '2026-09-29' },
-  '/Contact': { published: '2026-04-17', modified: '2026-09-29' },
-  // Legal pages: keep in step with LAST_UPDATED in Terms.jsx and
-  // PrivacyPolicy.jsx, which is the date shown to readers.
-  '/Terms': { published: '2026-04-17', modified: '2026-09-08' },
-  '/MarketplaceVerification': { published: '2026-04-17', modified: '2026-04-17' },
-  '/PrivacyPolicy': { published: '2025-06-01', modified: '2026-10-15' },
+  '/': { published: '2025-06-01', modified: contentDate('src/pages/Home.jsx', '2026-09-29') },
+  '/About': { published: '2026-04-17', modified: contentDate('src/pages/About.jsx', '2026-09-29') },
+  '/Contact': { published: '2026-04-17', modified: contentDate('src/pages/Contact.jsx', '2026-09-29') },
+  // Legal pages: the date shown to readers (LAST_UPDATED in Terms.jsx and
+  // PrivacyPolicy.jsx), read from the page source at build time.
+  '/Terms': { published: '2026-04-17', modified: declaredDate('src/pages/Terms.jsx', '2026-09-08') },
+  '/MarketplaceVerification': { published: '2026-04-17', modified: contentDate('src/pages/MarketplaceVerification.jsx', '2026-04-17') },
+  '/PrivacyPolicy': { published: '2025-06-01', modified: declaredDate('src/pages/PrivacyPolicy.jsx', '2026-10-16') },
+  // Public landing pages that used to carry a hand-typed LAST_UPDATED.
+  '/QualityScale': { published: '2026-05-09', modified: contentDate('src/pages/QualityScale.jsx', '2026-06-10') },
+  '/pedigree-tracker': { published: '2026-08-18', modified: contentDate('src/pages/PedigreeTracker.jsx', '2026-08-18') },
+  '/breeding-records': { published: '2026-08-18', modified: contentDate('src/pages/BreedingRecords.jsx', '2026-08-18') },
+  '/crested-gecko-price': { published: '2026-04-17', modified: contentDate('src/pages/CrestedGeckoPrice.jsx', '2026-10-07') },
   // The guides follow their data file: the Care Guide changes when
   // care-guide.js changes, the Morph Guide (and every morph page) when
   // morph-guide.js changes. Mirrored by EDITORIAL_DATES in prerender.mjs.
@@ -116,13 +135,16 @@ const PER_PATH = {
   '/GeneticsGuide': {
     published: '2025-07-15',
     modified: latestContentDate(
-      ['src/pages/GeneticsGuide.jsx', 'src/data/genetics-sections.jsx', 'src/data/genetics-glossary.js'],
+      ['src/pages/GeneticsGuide.jsx', 'src/data/genetics-sections.jsx', 'src/data/genetics-glossary.js', 'src/data/genetics-jsonld.js'],
       '2026-04-17',
     ),
   },
   '/calculator': {
     published: '2025-08-01',
-    modified: latestContentDate(['src/pages/GeneticCalculator.jsx', 'src/lib/genetics/calculatorCatalog.js'], '2026-04-17'),
+    modified: latestContentDate(
+      ['src/pages/GeneticCalculatorTool.jsx', 'src/components/breeding/GeneticCalculator.jsx', 'src/lib/genetics/calculatorCatalog.js'],
+      '2026-04-17',
+    ),
   },
   // Blog index, bumped whenever a new post ships. Per-post pages
   // resolve their dates from src/data/blog-posts.js (datePublished /

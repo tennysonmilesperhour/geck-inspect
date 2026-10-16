@@ -8,6 +8,7 @@ import { queryClientInstance } from '@/lib/query-client';
 import { logFeedings, logShed } from '@/lib/husbandryLog';
 import { createCareRecordOnce, isClientRequestId, newClientRequestId } from '@/lib/careLogOnce';
 import {
+  dismissRefused,
   enqueue,
   flushQueue,
   getQueueOwner,
@@ -15,8 +16,11 @@ import {
   isNetworkError,
   pendingCount,
   readQueue,
+  readRefused,
+  refusalFor,
   removeQueued,
   subscribeQueue,
+  subscribeRefused,
 } from '@/lib/offlineQueue';
 
 // Only the writes Field Mode makes. Anything else is refused by name so a
@@ -174,7 +178,8 @@ export async function syncNow() {
     if (result.saved > 0) {
       // Pages showing the collection pick up the synced logs.
       queryClientInstance.invalidateQueries({ queryKey: ['my-geckos'] });
-      queryClientInstance.invalidateQueries({ queryKey: ['field-mode'] });
+      // geckos_changed also marks the ['field-mode'] collection copy out of
+      // date (src/lib/query-client.js), so it is read once per sync, not twice.
       if (typeof window !== 'undefined') window.dispatchEvent(new Event('geckos_changed'));
     }
     return result;
@@ -190,14 +195,17 @@ export function isSyncing() {
 /**
  * Take a log made with no signal back out of the queue, for an Undo.
  * Returns 'removed' when it was still waiting, 'syncing' when the queue is
- * being sent right now (the log may be saving at this moment), or 'sent'
- * when it already left the queue (saved, or refused by the server).
- * Removing it is only an undo in the first case, so the caller must not
- * say "undone" for the other two.
+ * being sent right now (the log may be saving at this moment), 'refused'
+ * when the server would not save it (so nothing was saved), or 'sent' when
+ * it already left the queue and was saved. Removing it is only an undo in
+ * the first case, so the caller must not say "undone" for 'syncing' or
+ * 'sent'.
  */
 export function takeBackQueued(id) {
   if (syncing) return 'syncing';
-  return removeQueued(id) ? 'removed' : 'sent';
+  if (removeQueued(id)) return 'removed';
+  // Left the queue because the server refused it: nothing was saved.
+  return refusalFor(id) ? 'refused' : 'sent';
 }
 
 export const UNDO_SYNCING_MESSAGE = 'It is being sent right now, so it was not undone. Try Undo again in a moment.';
@@ -208,6 +216,9 @@ export async function undoQueuedLog(id) {
   const outcome = takeBackQueued(id);
   if (outcome === 'syncing') throw new Error(UNDO_SYNCING_MESSAGE);
   if (outcome === 'sent') throw new Error(UNDO_SENT_MESSAGE);
+  // A refused log was never saved, so there is nothing left to take back,
+  // and the refusal no longer needs showing.
+  if (outcome === 'refused') dismissRefused([id]);
 }
 
 /**
@@ -220,22 +231,55 @@ export function hasLeftQueue(id) {
   return !readQueue().some((i) => i.id === id);
 }
 
-/** Live { pending, online } for the offline status display. */
+/**
+ * The refusal for a queued log that the server would not save, or null.
+ * "Left the queue" alone does not mean "saved": check this first.
+ * Shape: { id, kind, geckoId, date, grams, accepted, refusedAt,
+ * error: { code, status, message } }.
+ */
+export function refusedLog(id) {
+  if (!id || !getQueueOwner()) return null;
+  return refusalFor(id);
+}
+
+/** Stop showing these refusals (the member dismissed them or logged again). */
+export function dismissRefusedLogs(ids = null) {
+  dismissRefused(ids);
+}
+
+/**
+ * Live { pending, online, refused } for the offline status display.
+ * `refused` lists the logs the server would not save when the queue sent
+ * them (see refusedLog), so a page never shows one of those as saved.
+ */
 export function useOfflineQueue() {
   const [pending, setPending] = useState(() => pendingCount());
   const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine !== false);
+  const [refused, setRefused] = useState(() => readRefused());
   useEffect(() => {
     setPending(pendingCount());
+    setRefused(readRefused());
     const unsub = subscribeQueue(setPending);
+    const unsubRefused = subscribeRefused(() => setRefused(readRefused()));
     const up = () => setOnline(true);
     const down = () => setOnline(false);
+    // Another tab may be the one that sent (or refused) the logs. Browser
+    // storage tells the other tabs when it changes.
+    const fromOtherTab = (event) => {
+      if (event?.key && !event.key.startsWith('geckinspect_offline_')) return;
+      setPending(pendingCount());
+      setRefused(readRefused());
+    };
     window.addEventListener('online', up);
     window.addEventListener('offline', down);
+    window.addEventListener('storage', fromOtherTab);
     return () => {
       unsub();
+      unsubRefused();
       window.removeEventListener('online', up);
       window.removeEventListener('offline', down);
+      window.removeEventListener('storage', fromOtherTab);
     };
   }, []);
-  return { pending, online };
+  return { pending, online, refused };
 }

@@ -23,7 +23,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(__dirname, '..', '..');
 export const STATE_PATH = path.join(REPO_ROOT, 'docs', 'error-triage-state.json');
 
-export const MODEL = 'claude-sonnet-4-6';
+// Claude Sonnet 5.5, the current Sonnet ($2 / $10 per million tokens, down
+// from Sonnet 4.6 at $3 / $15). Reading code and proposing a patch is real
+// coding work, so this stays a Sonnet rather than dropping to Haiku. It
+// thinks before answering by default; see runToolLoop for the effort level
+// and token room that needs.
+export const MODEL = 'claude-sonnet-5-5';
+// Medium effort, the starting point Anthropic suggests for multistep tool
+// use on this model; the default (high) spends more for little gain here.
+export const EFFORT = 'medium';
 
 /**
  * Dedupe windows, once a signature is in one of these states, skip it until
@@ -240,7 +248,10 @@ export async function runToolLoop({
   handlers,
   terminalTools,
   maxTurns = 20,
-  maxTokens = 8000,
+  // Room for the model's thinking as well as the tool call: thinking is
+  // paid out of max_tokens, and a turn cut off before its tool call ends
+  // the run.
+  maxTokens = 16000,
   onTurn = () => {},
 }) {
   const messages = [{ role: 'user', content: userMessage }];
@@ -255,6 +266,7 @@ export async function runToolLoop({
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: maxTokens,
+      output_config: { effort: EFFORT },
       system,
       tools,
       messages,

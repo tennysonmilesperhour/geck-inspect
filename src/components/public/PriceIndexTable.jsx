@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  PRICE_INDEX_MIN_LISTINGS,
+  PRICE_INDEX_THIN_LISTINGS,
+  applyPricePolicy,
+  priceTraitMorphSlug,
+} from '@/lib/priceIndexPolicy';
 
 // The Geck Inspect Price Index table: current asking prices by trait for
 // one market, read from the static /data/price-index.json that
 // scripts/build-agent-data.mjs writes on every deploy. Shown on /data and
-// /crested-gecko-price.
+// /crested-gecko-price. Rows under the minimum sample are left out and thin
+// rows are marked (src/lib/priceIndexPolicy.js).
 
 const MARKETS = [
   { id: 'US', label: 'United States' },
@@ -12,25 +19,6 @@ const MARKETS = [
   { id: 'JP', label: 'Japan' },
   { id: 'EU', label: 'Europe' },
 ];
-
-// Market trait labels that name a different Morph Guide page.
-const TRAIT_SLUGS = {
-  'Tri-color': 'tricolor',
-  Phantom: 'phantom-pinstripe',
-  'Red Base': 'red-base',
-  'Yellow Base': 'yellow-base',
-  'Extreme Harlequin': 'extreme-harlequin',
-  'Super Dalmatian': 'super-dalmatian',
-  'Lilly White': 'lilly-white',
-  'Soft Scale': 'soft-scale',
-  'White Wall': 'white-wall',
-  'Reverse Pinstripe': 'reverse-pinstripe',
-};
-const GUIDE_TRAITS = new Set([
-  'Harlequin', 'Pinstripe', 'Dalmatian', 'Tiger', 'Brindle', 'Axanthic', 'Cappuccino', 'Sable',
-  'Patternless', 'Lavender', 'Olive', 'Cream', 'Buckskin', 'Hypo',
-]);
-const slugFor = (trait) => TRAIT_SLUGS[trait] || (GUIDE_TRAITS.has(trait) ? trait.toLowerCase() : null);
 
 const usd = (n) => (n == null ? 'n/a' : `$${Math.round(Number(n)).toLocaleString('en-US')}`);
 
@@ -43,7 +31,8 @@ export default function PriceIndexTable({ limit = null }) {
     let live = true;
     fetch('/data/price-index.json')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((data) => live && setIndex(data))
+      // The rule again here: a browser can hold an older copy of the file.
+      .then((data) => live && setIndex(applyPricePolicy(data)))
       .catch(() => live && setFailed(true));
     return () => {
       live = false;
@@ -99,7 +88,7 @@ export default function PriceIndexTable({ limit = null }) {
           </thead>
           <tbody>
             {shown.map((r) => {
-              const slug = slugFor(r.trait);
+              const slug = priceTraitMorphSlug(r.trait);
               return (
                 <tr key={r.trait} className="border-b border-slate-800">
                   <th scope="row" className="py-2 px-1 text-left font-normal text-slate-200">
@@ -107,7 +96,17 @@ export default function PriceIndexTable({ limit = null }) {
                       <Link to={`/MorphGuide/${slug}`} className="text-emerald-400 hover:text-emerald-300">{r.trait}</Link>
                     ) : r.trait}
                   </th>
-                  <td className="py-2 px-1 text-right text-slate-400">{r.listings.toLocaleString('en-US')}</td>
+                  <td className="py-2 px-1 text-right text-slate-400">
+                    {r.listings.toLocaleString('en-US')}
+                    {r.thin && (
+                      <span
+                        className="block text-[11px] text-amber-300/90 whitespace-nowrap"
+                        title={`Fewer than ${PRICE_INDEX_THIN_LISTINGS} listings: a few relisted geckos can move this median.`}
+                      >
+                        thin sample
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2 px-1 text-right text-slate-100 font-medium">
                     {usd(r.median)}
                     <span className="block sm:hidden text-xs font-normal text-slate-500 whitespace-nowrap">{usd(r.p25)} to {usd(r.p75)}</span>
@@ -121,7 +120,9 @@ export default function PriceIndexTable({ limit = null }) {
       </div>
       <p className="text-slate-500 text-xs mt-3 leading-relaxed">
         Geck Inspect Price Index. Asking prices on public crested gecko listings, converted to USD, not sale prices.
-        A trait label is the seller&apos;s and does not prove genotype. Traits with fewer than 5 listings are left out.{' '}
+        A trait label is the seller&apos;s and does not prove genotype. A row needs at least {PRICE_INDEX_MIN_LISTINGS} listings
+        to be shown, and rows with fewer than {PRICE_INDEX_THIN_LISTINGS} are marked thin sample, because a few relisted
+        geckos can move their median.{' '}
         <Link to="/data" className="text-emerald-400 hover:text-emerald-300">Download the data</Link>.
       </p>
     </div>

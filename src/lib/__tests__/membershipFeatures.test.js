@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { consultantAllowanceLine, featuresWithConsultant, pageIsLive } from '../membershipFeatures';
+import { consultantAllowanceLine, featuresWithConsultant, pageIsLive, withoutRetiredLines } from '../membershipFeatures';
 
 describe('AI Consultant allowance lines', () => {
   it('match the server allotments (feature_credit_allotments, Oct 2026)', () => {
@@ -23,4 +23,18 @@ describe('AI Consultant allowance lines', () => {
     expect(pageIsLive([])).toBe(false);
     expect(pageIsLive(null)).toBe(false);
   });
+
+  it('never treats a retired page as live, whatever its rows say', () => {
+    // The AI Consultant was retired on 16 Oct 2026 (review item E3 23).
+    expect(pageIsLive([{ page_name: 'BreederConsultant', is_enabled: true }])).toBe(false);
+    expect(pageIsLive([{ page_name: 'Recognition', is_enabled: true }])).toBe(true);
+  });
 });
+
+describe('plan lines for retired pages', () => {
+  it('leaves Other Reptiles off the plan cards while it is retired', () => {
+    expect(withoutRetiredLines(['Up to 50 geckos', 'Up to 10 additional reptiles tracked', '10 GB of photo storage']))
+      .toEqual(['Up to 50 geckos', '10 GB of photo storage']);
+  });
+});
+

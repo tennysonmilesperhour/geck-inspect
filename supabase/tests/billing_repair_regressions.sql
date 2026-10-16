@@ -1,4 +1,12 @@
 begin;
+-- A fresh copy of the schema (scripts/sql-harness) has no accounts, so
+-- add one for this run; the auth.users insert fires on_auth_user_created,
+-- which adds the profile. Where members exist nothing is added, and
+-- everything rolls back either way.
+insert into auth.users (instance_id, id, aud, role, email, email_confirmed_at, created_at, updated_at)
+select '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+       'sql-fixture@example.invalid', now(), now(), now()
+where not exists (select 1 from auth.users);
 do $test$
 declare u uuid := (select id from auth.users limit 1); e text := 'audit-'||gen_random_uuid()::text; newer jsonb; older jsonb; applied boolean;
 begin

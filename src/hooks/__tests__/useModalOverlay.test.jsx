@@ -103,7 +103,8 @@ describe('hand-built overlays announce themselves as open dialogs', () => {
       'components/marketplace/GeckoSelectionModal.jsx',
       'components/other-reptiles/ReptileDetailModal.jsx',
       'components/project-manager/ProjectCalendar.jsx',
-      'pages/GeckoDetail.jsx',
+      // The gecko record's photo viewer (used by the window and the page).
+      'components/gecko/record/RecordPhotos.jsx',
       'pages/MarketplaceSalesStats.jsx',
       'pages/StorePage.jsx',
     ];

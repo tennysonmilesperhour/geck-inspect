@@ -71,6 +71,12 @@ import {
   GECK_INTELLECT_LABEL,
   GECK_INTELLECT_URL,
 } from '../src/data/public-links.js';
+import { loadAppModule } from './lib/load-app-module.mjs';
+import { morphBreedingFact, morphGeneralLinks } from './lib/morph-page-links.mjs';
+import { PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_INDEX_TERMS_SENTENCE, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
+import { GUIDE_CALCULATOR_ALIASES } from '../src/lib/genetics/calculatorCatalog.js';
+import { spectrumPositionFor } from '../src/components/morphguide/spectrumPosition.js';
+import { eyeStudyIdForMorph } from '../src/components/morphguide/eyeStudyIndex.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -168,6 +174,9 @@ const MORPHS = Object.fromEntries(MORPH_LIST.map((m) => [m.slug, m]));
 const INHERITANCE = morphModule.INHERITANCE || {};
 const RARITY = morphModule.RARITY || {};
 const MORPH_CATEGORIES = morphModule.MORPH_CATEGORIES || [];
+// The price cell the live compare table shows for a morph with no guide
+// price, so the server HTML of the hubs says the same.
+const { noGuidePriceLabel } = morphModule;
 if (Object.keys(MORPHS).length === 0) throw new Error('prerender: MORPHS is empty');
 
 // The live morph page builds its title, description, H1, opening sentence
@@ -177,6 +186,26 @@ if (Object.keys(MORPHS).length === 0) throw new Error('prerender: MORPHS is empt
 const { morphSeo, categoryHubSeo, inheritanceHubSeo } = await importData('src/lib/morphMeta.js');
 const { morphFaq } = await importData('src/lib/morphFaq.js');
 
+// The calculator pairing pages' odds and warnings, computed by the same
+// code the live calculator runs. It imports through the "@/" alias, so it
+// is built with Vite first (scripts/lib/load-app-module.mjs). Until 16 Oct
+// 2026 these pages sent non-JS crawlers about 110 words, mostly navigation.
+const pairingModule = await loadAppModule('src/lib/genetics/pairingPageSummary.js', 'pairing-summary.mjs');
+const PAIRING_SUMMARIES = pairingModule.allPairingPageSummaries();
+const { pairingMetaDescription } = pairingModule;
+if (Object.keys(PAIRING_SUMMARIES).length === 0) throw new Error('prerender: no calculator pairing summaries');
+
+// The Genetics Guide's FAQ and glossary, from the same JSON-LD file the
+// live page renders, so the server HTML is a real page for non-JS crawlers.
+const geneticsJsonLdModule = await importData('src/data/genetics-jsonld.js');
+const {
+  GENETICS_GUIDE_TITLE,
+  GENETICS_GUIDE_DESCRIPTION,
+  GENETICS_GUIDE_LEAD,
+  SINGLE_GENE_INHERITANCE,
+  geneticsGuideMorphGroups,
+} = await importData('src/lib/geneticsGuideSeo.js');
+
 const linesModule = await importData('src/data/project-lines.js');
 const PROJECT_LINES = Object.fromEntries((linesModule.PROJECT_LINES || []).map((l) => [l.slug, l]));
 
@@ -185,12 +214,12 @@ function morphFor(slug) {
   return MORPHS[slug] || MORPHS[MORPH_SLUG_ALIASES[slug]] || null;
 }
 
-// Per-morph calculator pages (/calculator/<slug>). Decision D13: White
-// Wall is the engine's Whiteout and Phantom Pinstripe is how the
-// recessive Phantom reads, so those two morph pages point at the
-// calculator under the engine's name. Mirrored in CalculatorMorph.jsx.
+// Per-morph calculator pages (/calculator/<slug>). Decision D13: a White
+// Wall tag is read as the engine's Whiteout, so the White Wall page points
+// at the Whiteout calculator. The aliases are the ones the live page's
+// calculator button uses (src/components/morphguide/morphCta.js).
 const CALCULATOR_SLUGS = new Set(getCalculatorMorphRoutes().map((r) => r.path.split('/').pop()));
-const CALCULATOR_FOR_MORPH = { 'white-wall': 'whiteout', 'phantom-pinstripe': 'phantom' };
+const CALCULATOR_FOR_MORPH = GUIDE_CALCULATOR_ALIASES;
 function calculatorSlugFor(slug) {
   const calc = CALCULATOR_FOR_MORPH[slug] || slug;
   return CALCULATOR_SLUGS.has(calc) ? calc : null;
@@ -292,7 +321,7 @@ function morphTable(morphs, columns = ['category', 'inheritance', 'rarity', 'pri
     category: ['Category', (m) => MORPH_CATEGORIES.find((c) => c.id === m.category)?.label || ''],
     inheritance: ['Inheritance', (m) => INHERITANCE[m.inheritance]?.label || ''],
     rarity: ['Rarity', (m) => RARITY[m.rarity]?.label || ''],
-    price: ['Typical adult price', (m) => m.priceRange || 'No market price yet'],
+    price: ['Typical adult price', (m) => m.priceRange || noGuidePriceLabel(m)],
   };
   return {
     headers: ['Morph', ...columns.map((c) => COLS[c][0])],
@@ -333,10 +362,14 @@ function morphMeta(slug) {
   const paragraphs = [m.description, m.foundationGenetics, m.history, m.notes]
     .filter((p) => typeof p === 'string' && p.trim())
     .slice(0, 3);
+  const breedingFact = morphBreedingFact(m);
   const facts = [
     inheritance ? `Inheritance: ${inheritance.label}.` : null,
     category ? `Category: ${category.label || category.id}.` : null,
-    rarity ? `Rarity: ${rarity}.` : null,
+    // A lethal super never lives long enough to be "very rare" (the live
+    // page says the same).
+    m.doNotBreed === 'lethal' ? 'Rarity: never survives.' : rarity ? `Rarity: ${rarity}.` : null,
+    breedingFact,
     m.priceRange ? `Typical adult price: ${m.priceRange}.` : null,
     m.aliases?.length ? `Also called: ${m.aliases.join(', ')}.` : null,
   ].filter(Boolean);
@@ -365,9 +398,10 @@ function morphMeta(slug) {
     inheritance && INHERITANCE_HUB_IDS.has(inheritance.id)
       ? { name: `All ${inheritance.label.toLowerCase()} crested gecko morphs`, href: `/MorphGuide/inheritance/${inheritance.id}` }
       : null,
-    { name: 'Crested gecko price guide', href: '/crested-gecko-price', note: 'what each morph and quality grade sells for' },
-    { name: 'Quality Scale', href: '/QualityScale', note: 'grade your gecko from 0 to 10' },
-    { name: 'Morph ID', href: '/Recognition', note: 'identify your gecko from a top and a side photo' },
+    // Genetics guide, price guide, Quality Scale and Morph ID; a super
+    // breeders avoid making gets the safer pairing instead of the price
+    // guide and Morph ID (scripts/lib/morph-page-links.mjs).
+    ...morphGeneralLinks(m),
   ].filter(Boolean);
   const linkSections = [
     lookalikes.length ? { title: 'How to tell it apart', items: lookalikes } : null,
@@ -436,8 +470,7 @@ function morphMeta(slug) {
 /** Questions the Morph Guide index answers, computed from the data. */
 function morphGuideFaq() {
   const byCategory = morphCategoryHubs().map((h) => `${h.morphs.length} ${h.morphs.length === 1 ? h.noun.replace(/s$/, '') : h.noun}`);
-  const SINGLE_GENE = ['incomplete-dominant', 'co-dominant', 'dominant', 'recessive'];
-  const genetic = morphInheritanceHubs().filter((h) => SINGLE_GENE.includes(h.id));
+  const genetic = morphInheritanceHubs().filter((h) => SINGLE_GENE_INHERITANCE.includes(h.id));
   const geneticCount = genetic.reduce((n, h) => n + h.morphs.length, 0);
   const veryRare = MORPH_LIST.filter((m) => m.rarity === 'very_rare').map((m) => m.name);
   const albino = MORPHS.albino;
@@ -861,7 +894,12 @@ function genericMeta(route) {
 /** /calculator/<slug>: the generic page plus a link to the morph's own page. */
 function calculatorMorphMeta(calc, route) {
   const meta = genericMeta(route);
-  const morphSlug = Object.keys(CALCULATOR_FOR_MORPH).find((s) => CALCULATOR_FOR_MORPH[s] === calc) || calc;
+  // The gene's own page when it has one (/calculator/whiteout links to
+  // /MorphGuide/whiteout, /calculator/phantom to /MorphGuide/phantom);
+  // otherwise the page whose look the calculator reads as this gene.
+  const morphSlug = MORPHS[calc]
+    ? calc
+    : Object.keys(CALCULATOR_FOR_MORPH).find((s) => CALCULATOR_FOR_MORPH[s] === calc) || calc;
   const morph = MORPHS[morphSlug];
   if (!morph) return meta;
   return {
@@ -869,7 +907,164 @@ function calculatorMorphMeta(calc, route) {
     linkSections: [
       {
         title: 'About this morph',
-        items: [{ name: `${morph.name} morph guide`, href: `/MorphGuide/${morph.slug}`, note: 'how to identify it, genetics and price' }],
+        items: [{
+          name: `${morph.name} morph guide`,
+          href: `/MorphGuide/${morph.slug}`,
+          note: morph.priceRange ? 'how to identify it, genetics and price' : 'how to identify it and its genetics',
+        }],
+      },
+    ],
+  };
+}
+
+const HEALTH_NOTE = {
+  lethal: 'Dies in the egg or soon after hatching',
+  severe: 'Documented health problems',
+  moderate: 'Possible health problems',
+};
+
+/**
+ * /calculator/pairing/<slug>: the real per-egg odds and every warning in
+ * the server HTML, from src/lib/genetics/pairingPageSummary.js (the same
+ * steps the live calculator runs). Single-gene outcomes get percentages;
+ * pattern and base color get the polygenic note instead, never a number.
+ */
+function calculatorPairingMeta(slug, route) {
+  const meta = genericMeta(route);
+  const s = PAIRING_SUMMARIES[slug];
+  if (!s) return meta;
+  const description = pairingMetaDescription(s);
+  const url = `${SITE_URL}${route.path}`;
+  const warnings = s.warnings.map((w) => `Warning (${w.severity}): ${w.message}`);
+  const lethalLine = s.nonViable > 0
+    ? `About ${Math.round(s.nonViable * s.eggsPerSeason * 10) / 10} of ${s.eggsPerSeason} eggs in a typical season (8 clutches of 2) are expected to be non-viable from this pairing.`
+    : null;
+  const morphLinks = s.guideSlugs
+    .map((g) => morphFor(g))
+    .filter(Boolean)
+    .map((m) => ({ name: `${m.name} morph guide`, href: `/MorphGuide/${m.slug}`, note: 'how to identify it, genetics and price' }));
+  const otherPairings = Object.values(PAIRING_SUMMARIES)
+    .filter((p) => p.slug !== slug)
+    .map((p) => ({ name: `${p.label} odds`, href: `/calculator/pairing/${p.slug}` }));
+  return {
+    ...meta,
+    description,
+    crumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Genetics calculator', path: '/calculator' },
+    ],
+    bodyHeading: `${s.label}: crested gecko odds`,
+    bodyLead: s.blurb || description,
+    bodyParagraphs: [
+      `Sire: ${s.sire}. Dam: ${s.dam}. These are per-egg odds from exact Punnett math on the proven single-gene traits. Each egg is independent, so a real clutch can differ.`,
+      ...warnings,
+      ...(lethalLine ? [lethalLine] : []),
+      s.polygenicNote,
+    ],
+    table: {
+      title: 'Per-egg odds',
+      headers: ['Outcome', 'Chance per egg', `Expected in ${s.eggsPerSeason} eggs`, 'Health'],
+      rows: s.outcomes.map((o) => [
+        o.label,
+        o.fraction ? `${o.percent} (${o.fraction})` : o.percent,
+        String(o.perSeason),
+        HEALTH_NOTE[o.healthRisk] || (o.healthRisk ? 'Health risk' : 'No known health risk'),
+      ]),
+    },
+    linkSections: [
+      morphLinks.length ? { title: 'The genes in this pairing', items: morphLinks } : null,
+      {
+        title: 'Keep exploring',
+        items: [
+          { name: 'Crested gecko genetics calculator', href: '/calculator', note: 'change either parent and see the odds' },
+          { name: 'Crested gecko genetics guide', href: '/GeneticsGuide', note: 'Punnett squares, recessive and incomplete dominant genes, and polygenic looks' },
+          { name: 'Reverse calculator', href: '/calculator/reverse', note: 'pick the gecko you want and see the pairings that make it' },
+        ],
+      },
+      { title: 'Other pairings', items: otherPairings },
+    ].filter(Boolean),
+    jsonLd: [
+      {
+        '@type': 'WebPage',
+        '@id': `${url}#webpage`,
+        url,
+        name: meta.title,
+        description,
+        isPartOf: { '@id': WEBSITE_ID },
+        about: ABOUT_CRESTED_GECKO,
+        publisher: { '@id': ORG_ID },
+        dateModified: route.lastmod,
+      },
+      breadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Genetic Calculator', path: '/calculator' },
+        { name: s.label, path: route.path },
+      ]),
+    ],
+  };
+}
+
+/**
+ * /GeneticsGuide: the lead paragraph, the FAQ and the core glossary from
+ * the guide's own JSON-LD file, so non-JS crawlers get a real page and the
+ * guide, not the homepage, answers "crested gecko genetics".
+ */
+function geneticsGuideMeta(route) {
+  const meta = genericMeta(route);
+  const graph = geneticsJsonLdModule.GENETICS_GUIDE_JSON_LD || [];
+  const dates = { published: '2025-07-15', modified: route.lastmod };
+  // The shell already defines the Organization, and the author defines the
+  // editorial entity, so the Article only points at them by @id (one
+  // definition of each per page).
+  const nodes = graph.map((node) => (node['@type'] === 'Article'
+    ? {
+        ...node,
+        datePublished: dates.published,
+        dateModified: dates.modified,
+        reviewedBy: { '@id': EDITORIAL_AUTHOR['@id'] },
+        publisher: { '@id': ORG_ID },
+      }
+    : node));
+  const faqNode = graph.find((n) => n['@type'] === 'FAQPage');
+  const faq = (faqNode?.mainEntity || []).map((q) => ({ question: q.name, answer: q.acceptedAnswer?.text || '' })).filter((q) => q.answer);
+  const terms = graph.find((n) => n['@type'] === 'DefinedTermSet')?.hasDefinedTerm || [];
+  // Read from each morph's inheritance, never typed by hand: a polygenic
+  // look must not appear under "Punnett squares work".
+  const { singleGene: proven, polygenic } = geneticsGuideMorphGroups(MORPH_LIST, INHERITANCE);
+  return {
+    ...meta,
+    title: GENETICS_GUIDE_TITLE,
+    description: GENETICS_GUIDE_DESCRIPTION,
+    bodyHeading: 'Crested gecko genetics guide',
+    bodyLead: GENETICS_GUIDE_LEAD,
+    bodyParagraphs: [],
+    bodyList: terms.length
+      ? { title: 'Key terms', items: terms.slice(0, 16).map((t) => `${t.name}: ${t.description}`) }
+      : null,
+    faq,
+    linkSections: [
+      proven.length ? { title: 'Single-gene morphs (Punnett squares work)', items: proven } : null,
+      polygenic.length ? { title: 'Polygenic looks (bred toward, not calculated)', items: polygenic } : null,
+    ].filter(Boolean),
+    jsonLd: [...nodes, ...meta.jsonLd.filter((n) => n['@type'] === 'BreadcrumbList')],
+  };
+}
+
+/** "/": the homepage shell links the guides by the searches they answer. */
+function homeMeta(route) {
+  const meta = genericMeta(route);
+  return {
+    ...meta,
+    linkSections: [
+      {
+        title: 'Free crested gecko guides',
+        items: [
+          { name: 'Crested gecko genetics guide', href: '/GeneticsGuide', note: 'which morphs follow a Punnett square and which are polygenic' },
+          { name: 'Crested gecko morphs', href: '/MorphGuide', note: `all ${MORPH_COUNT} morphs with photos, genetics and prices` },
+          { name: 'Crested gecko care guide', href: '/CareGuide', note: 'temperature, humidity, diet and housing' },
+          { name: 'Crested gecko genetics calculator', href: '/calculator', note: 'per-egg odds for any pairing' },
+          { name: 'Crested gecko breeding records', href: '/breeding-records', note: 'pairings, clutches and hatch dates in one log' },
+        ],
       },
     ],
   };
@@ -883,7 +1078,8 @@ let PRICE_INDEX_CACHE;
 function priceIndex() {
   if (PRICE_INDEX_CACHE === undefined) {
     try {
-      PRICE_INDEX_CACHE = JSON.parse(readFileSync(resolve(REPO_ROOT, 'public/data/price-index.json'), 'utf8'));
+      // The minimum-sample rule, again, in case the file predates it.
+      PRICE_INDEX_CACHE = applyPricePolicy(JSON.parse(readFileSync(resolve(REPO_ROOT, 'public/data/price-index.json'), 'utf8')));
     } catch {
       PRICE_INDEX_CACHE = null;
     }
@@ -900,7 +1096,7 @@ function priceTable(limit) {
   return {
     title: `Geck Inspect Price Index: United States asking prices (${day})`,
     headers: ['Trait', 'Listings', 'Median asking price', 'Middle half'],
-    rows: rows.slice(0, limit).map((r) => [r.trait, String(r.listings), usd(r.median), `${usd(r.p25)} to ${usd(r.p75)}`]),
+    rows: rows.slice(0, limit).map((r) => [r.trait, r.thin ? `${r.listings} (thin sample)` : String(r.listings), usd(r.median), `${usd(r.p25)} to ${usd(r.p75)}`]),
   };
 }
 
@@ -918,11 +1114,11 @@ function openDataMeta(route) {
     ...meta,
     bodyHeading: 'Crested gecko open data',
     bodyLead:
-      'Geck Inspect publishes what it knows about crested geckos as free data: current asking prices by trait and market (the Geck Inspect Price Index), every morph in the Morph Guide, the genetics behind the calculator, and the care guide. Please credit Geck Inspect and link to the page you used.',
+      `Geck Inspect publishes what it knows about crested geckos as free data: current asking prices by trait and market (the Geck Inspect Price Index, ${PRICE_INDEX_WHAT}), every morph in the Morph Guide, the genetics behind the calculator, and the care guide. Please credit Geck Inspect and link to the page you used.`,
     bodyParagraphs: [
       ...priceSummary(),
       `AI assistants and developers can query the same data through the MCP server at ${MCP_URL} (no key needed), read the markdown version of any morph or care page by adding .md to its address, or start at ${SITE_URL}/llms.txt.`,
-      'Prices are asking prices on open listings, not sale prices. Prices outside the US are converted to USD. Only full catalog checks count, and a trait needs at least 5 listings. The price, morph and genetics data are licensed CC BY 4.0; the care guide text is free to quote with a link.',
+      `Prices are asking prices on open listings, not sale prices. Prices outside the US are converted to USD. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} The morph and genetics data are licensed CC BY 4.0. ${PRICE_INDEX_TERMS_SENTENCE} The care guide text is free to quote with a link.`,
     ],
     table: priceTable(25),
     linkSections: OPEN_DATASETS.map((d) => ({
@@ -979,6 +1175,10 @@ function priceGuideMeta(route) {
 }
 
 function routeMeta(route) {
+  if (route.path === '/') return homeMeta(route);
+  if (route.path === '/GeneticsGuide') return geneticsGuideMeta(route);
+  const pairingMatch = route.path.match(/^\/calculator\/pairing\/([a-z0-9-]+)$/);
+  if (pairingMatch) return calculatorPairingMeta(pairingMatch[1], route);
   if (route.path === '/Membership') return membershipMeta(route);
   if (route.path === '/MorphGuide') return morphGuideIndexMeta(route);
   if (route.path === '/data') return openDataMeta(route);
@@ -1341,6 +1541,15 @@ function pageChunkFiles(path) {
     for (const c of chunk.css || []) if (!css.includes(c)) css.push(c);
   };
   visit(key);
+  // A morph page loads its Field Notebook and eye study after it draws
+  // (src/pages/MorphDetail.jsx). On the morphs that show them, start those
+  // downloads with the page's own, so the section is in place before a
+  // visitor taps a link further down (Typical price, the section bar).
+  if (mod === 'MorphDetail') {
+    const slug = decodeURIComponent(path.split('/')[2] || '');
+    if (spectrumPositionFor(slug)) visit('src/components/morphguide/PatternSpectrum.jsx');
+    if (eyeStudyIdForMorph(slug)) visit('src/components/morphguide/MorphEyeGuide.jsx');
+  }
   return { files, css };
 }
 

@@ -56,6 +56,9 @@ export function useSidebar() {
   return context;
 }
 
+/** The id of the phone menu sheet, so the More tab can say it controls it. */
+export const MOBILE_MENU_ID = 'app-menu-sheet';
+
 /**
  * Main sidebar container. Handles responsive visibility.
  * It's always present on desktop and slides in as an overlay on mobile.
@@ -90,6 +93,7 @@ export function Sidebar({ children, className }) {
                 readers (they used to be 33 invisible Tab stops). */}
             <div
                 ref={drawerRef}
+                id={MOBILE_MENU_ID}
                 role={isMobileOpen ? 'dialog' : undefined}
                 aria-modal={isMobileOpen ? 'true' : undefined}
                 aria-label="Menu"

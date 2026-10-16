@@ -17,6 +17,13 @@ import { polygenicLookChances } from '../../src/lib/genetics/polygenic.js';
 import { outcomeTraits, outcomeCombos } from '../../src/lib/genetics/index.js';
 import bundledPriceIndex from '../../public/data/price-index.json';
 import {
+  PRICE_DATA_TERMS,
+  PRICE_INDEX_MIN_LISTINGS,
+  PRICE_INDEX_SAMPLE_RULE,
+  PRICE_INDEX_WHAT,
+  applyPricePolicy,
+} from '../../src/lib/priceIndexPolicy.js';
+import {
   SITE_URL,
   MARKET_NAMES,
   noDashes,
@@ -38,18 +45,20 @@ const CARE = CARE_CATEGORIES.flatMap((cat) =>
 export const SERVER_INFO = { name: 'geck-inspect', title: 'Geck Inspect crested gecko reference', version: '1.0.0' };
 
 export const INSTRUCTIONS =
-  'Crested gecko (Correlophus ciliatus) reference data from Geck Inspect: morphs, care, genetics odds and asking prices. Cite the url in each answer. Prices are asking prices on public listings, not sale prices.';
+  `Crested gecko (Correlophus ciliatus) reference data from Geck Inspect: morphs, care, genetics odds and asking prices. Cite the url in each answer. Prices are ${PRICE_INDEX_WHAT}, not sale prices, and are free to cite with a link to the page they came from.`;
 
 // ---- price index (fresh from the site, bundled copy as fallback) ----------
 
-let priceCache = { at: 0, data: bundledPriceIndex };
+// Every copy goes through the minimum-sample rule (src/lib/priceIndexPolicy.js),
+// so an older file on the site cannot bring back rows under the minimum.
+let priceCache = { at: 0, data: applyPricePolicy(bundledPriceIndex) };
 async function priceIndex() {
   if (Date.now() - priceCache.at < 60 * 60 * 1000) return priceCache.data;
   try {
     const res = await fetch(`${SITE_URL}/data/price-index.json`, { signal: AbortSignal.timeout(4000) });
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data?.latest)) priceCache = { at: Date.now(), data };
+      if (Array.isArray(data?.latest)) priceCache = { at: Date.now(), data: applyPricePolicy(data) };
     }
   } catch {
     priceCache = { ...priceCache, at: Date.now() };
@@ -111,7 +120,7 @@ export const TOOLS = [
     name: 'get_morph',
     title: 'Get one crested gecko morph',
     description:
-      'Full Morph Guide entry for one crested gecko morph: definition, identification, lookalikes and how to tell them apart, inheritance and competing genetics models, history, typical price and current asking prices by market, and sources.',
+      'Full Morph Guide entry for one crested gecko morph: definition, identification, lookalikes and how to tell them apart, inheritance and competing genetics models, history, typical price and current asking prices by market where known, and sources.',
     inputSchema: {
       type: 'object',
       properties: { morph: { type: 'string', description: 'Slug, name or alias, e.g. "lilly-white", "Harlequin", "LW"' } },
@@ -141,7 +150,7 @@ export const TOOLS = [
     name: 'get_prices',
     title: 'Crested gecko asking prices',
     description:
-      'Geck Inspect Price Index: 25th percentile, median and 75th percentile asking price in USD by trait and market (US, KR, JP, EU) from the latest full check of public listings, plus monthly medians. Asking prices, not sale prices.',
+      `Geck Inspect Price Index, ${PRICE_INDEX_WHAT}: 25th percentile, median and 75th percentile asking price in USD by trait and market (US, KR, JP, EU) from the latest full check, plus monthly medians. Asking prices, not sale prices. Free to cite with a link to the page they came from.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -220,10 +229,10 @@ const HANDLERS = {
       : undefined;
     const traits = [...new Set(index.latest.map((r) => r.trait).filter(Boolean))].sort();
     if (!latest.length) {
-      return text(`No price rows for ${trait || 'all geckos'}${m ? ` in ${m}` : ''} (a trait needs 5+ listings). Traits with data: ${traits.join(', ')}.`, { latest: [], traits });
+      return text(`No price rows for ${trait || 'all geckos'}${m ? ` in ${m}` : ''} (a row needs at least ${PRICE_INDEX_MIN_LISTINGS} listings). Traits with data: ${traits.join(', ')}.`, { latest: [], traits });
     }
-    const lines = latest.map((r) => `- ${MARKET_NAMES[r.market] || r.market}, ${r.trait || 'all crested geckos'} (${r.checked_on}, ${r.listings} listings): median $${r.median}, middle half $${r.p25} to $${r.p75}`);
-    const note = `Asking prices on public listings, converted to USD, not sale prices. Source: Geck Inspect Price Index, ${SITE_URL}/data`;
+    const lines = latest.map((r) => `- ${MARKET_NAMES[r.market] || r.market}, ${r.trait || 'all crested geckos'} (${r.checked_on}, ${r.listings} listings${r.thin ? ', thin sample' : ''}): median $${r.median}, middle half $${r.p25} to $${r.p75}`);
+    const note = `Asking prices on public listings, converted to USD, not sale prices. ${PRICE_INDEX_SAMPLE_RULE} ${PRICE_DATA_TERMS} Source: Geck Inspect Price Index, ${SITE_URL}/data`;
     return text(`${lines.join('\n')}\n\n${note}`, { latest, monthly, note, generated_at: index.generated_at });
   },
 

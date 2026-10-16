@@ -25,7 +25,14 @@
  * them would be fake precision. They arrive in a later phase as
  * expression bands, per docs/planning/MORPH_CALCULATOR_PLAN.md.
  */
-import { getTrait, WILD_TYPE } from '@/lib/genetics';
+// This file does not import the engine (./index.js). Pages that only need
+// the catalog, such as a Morph Guide page linking to its calculator
+// (morphguide/morphCta.js), would otherwise download the whole engine and
+// its schema library before they can draw. The engine's name for the
+// wild-type allele is copied here instead; calculator.test.js checks that
+// it still matches the engine's WILD_TYPE. Trait sources (engineTrait)
+// live in ./index.js, next to the engine.
+const WILD_TYPE = 'wild_type';
 
 export const COMPLEX_LOCUS = 'SABLE_COMPLEX';
 export const COMPLEX_ID = 'sable_complex';
@@ -45,7 +52,7 @@ export const SIMPLE_TRAITS = [
     super_label: 'Super Lilly White',
     super_lethal: true,
     blurb:
-      'Incomplete dominant, the first proven crested gecko gene (2012). One copy is the Lilly White look; the homozygous Super form is lethal in the egg.',
+      'Incomplete dominant, the first proven crested gecko gene (2012). One copy is the Lilly White look; the homozygous Super form is lethal (it dies in the egg or within days of hatching).',
   },
   {
     id: 'axanthic',
@@ -73,10 +80,13 @@ export const SIMPLE_TRAITS = [
     label: 'Empty Back',
     locus: 'EB',
     dominance: 'incomplete_dominant',
-    confidence: 'proven',
+    // Emerging, not proven: the engine's only source is Foundation
+    // Genetics, and this blurb used to credit "AC Reptiles breeding
+    // trials" with no source behind it (October 2026 review).
+    confidence: 'emerging',
     super_label: 'Super Empty Back',
     blurb:
-      'Incomplete dominant. Reduces dorsal pattern; the Super form strips nearly all dorsal markings. Proven through AC Reptiles breeding trials.',
+      'Incomplete dominant in the Foundation Genetics model, its main published source, so it is badged Emerging. Reduces dorsal pattern; the Super form is described as clearing it further and as healthy.',
   },
   {
     id: 'softscale',
@@ -182,7 +192,7 @@ export const COMPLEX_OPTIONS = [
     label: 'Super Highway (health reports)',
     pair: ['highway', 'highway'],
     confidence: 'emerging',
-    caution: 'Super Highway hatchlings have reported nostril and health issues, which is itself the evidence that Highway sits in this complex.',
+    caution: 'Some breeders report nostril and health problems in Super Highway hatchlings. That is not established, and those reports are also the main reason Highway is placed in this complex.',
   },
 ];
 
@@ -356,6 +366,28 @@ export function stateHasSelection(state) {
   return Object.entries(state || {}).some(([, v]) => v && v !== 'none');
 }
 
+/**
+ * Build the animal-shaped object the calculator and simulator consume.
+ * `genotype_spec` carries the weighted-locus spec (the precise path);
+ * `morph_tags` carries display chips so parent summaries render the
+ * same way for manual and collection parents. It lives here, not in
+ * ManualGenotypePicker.jsx (which re-exports it), so the calculator page
+ * can build parents before the picker and the engine have loaded.
+ */
+export function buildParentFromState(id, name, state) {
+  return {
+    id,
+    name,
+    sex: 'Unsexed',
+    image_urls: [],
+    morph_tags: stateToChips(state),
+    genotype_spec: stateToSpec(state),
+    // Chips are labels only; the spec is the source of truth, so the
+    // calculator does not re-read these as collection tags.
+    source: 'manual',
+  };
+}
+
 // ---------- URL state codec --------------------------------------------
 // Permalinks encode each parent as "traitId:state" pairs joined by
 // commas, e.g. ?sire=lilly_white:het,axanthic:ph66&dam=sable_complex:luwak
@@ -475,10 +507,10 @@ export const CALCULATOR_PAGES = [
     slug: 'highway',
     label: 'Highway',
     blurb:
-      'Provisionally a third allele in the Cappuccino complex: Super Highway health reports are the main evidence. Treated as allelic here, badged Emerging until the community settles it.',
+      'Provisionally a third allele in the Cappuccino complex: breeder reports of Super Highway health problems are the main evidence, and those reports are not established either. Treated as allelic here, badged Emerging until the community settles it.',
     confidence: 'emerging',
     super_lethal: false,
-    super_warning: 'Super Highway hatchlings have reported nostril and health issues.',
+    super_warning: 'Some breeders report nostril and health problems in Super Highway hatchlings (not established).',
     defaultState: { [COMPLEX_ID]: 'highway' },
   },
 ];
@@ -581,17 +613,25 @@ export const PAIRING_PAGES_BY_SLUG = Object.fromEntries(
 );
 
 // ---------- Morph Guide outcome links ----------------------------------
-// Maps engine trait/combo ids to Morph Guide slugs where an entry
-// exists today. Missing entries (sable, phantom, empty-back, luwak) are
-// a content follow-up; the UI simply renders no link for those.
+// Maps engine trait/combo ids to the Morph Guide page about that gene or
+// combo, for "read more" links on calculator outcomes, the pairing pages
+// and the calculator's gene rows. Every slug must be a real page (a test
+// checks them against MORPHS), and each gene links to its own page:
+// Whiteout to /MorphGuide/whiteout, Sable to /MorphGuide/sable. Until
+// 16 Oct 2026 whiteout pointed at White Wall and sable had no entry, so
+// those outcome links never reached the new pages.
 
 export const MORPH_GUIDE_SLUGS = {
   lilly_white: 'lilly-white',
   cappuccino: 'cappuccino',
+  sable: 'sable',
   axanthic: 'axanthic',
   hypo: 'hypo',
   softscale: 'soft-scale',
-  whiteout: 'white-wall',
+  whiteout: 'whiteout',
+  phantom: 'phantom',
+  empty_back: 'empty-back',
+  highway: 'highway',
   harlequin: 'harlequin',
   pinstripe: 'pinstripe',
   dalmatian: 'dalmatian',
@@ -599,15 +639,27 @@ export const MORPH_GUIDE_SLUGS = {
   flame: 'flame',
   // combos
   frappuccino: 'frappuccino',
+  luwak: 'luwak',
   tricolor: 'tricolor',
   patternless: 'patternless',
 };
 
-/** Engine trait metadata (sources, proven-by) for a catalog entry. */
-export function engineTrait(idOrAllele) {
-  try {
-    return getTrait(idOrAllele) || null;
-  } catch {
-    return null;
-  }
-}
+// The Morph Guide entry whose price range values an outcome
+// (outcomeValue.js). Kept apart from the links above so fixing a link
+// cannot quietly change a season estimate: Whiteout has no guide price and
+// is still valued as White Wall, the label it sells under, and Sable is
+// still left out, so Sable outcomes stay unpriced until that is decided.
+export const MORPH_PRICE_SLUGS = {
+  ...Object.fromEntries(Object.entries(MORPH_GUIDE_SLUGS).filter(([id]) => id !== 'sable')),
+  whiteout: 'white-wall',
+};
+
+// Morph Guide pages with no calculator page of their own whose look the
+// calculator reads as another gene: a White Wall tag counts as Whiteout
+// (decision D13), so the White Wall page keeps its /calculator/whiteout
+// button. Phantom Pinstripe is left out: its page says the label does not
+// prove the Phantom gene. Used by morphguide/morphCta.js and the server
+// HTML (scripts/prerender.mjs).
+export const GUIDE_CALCULATOR_ALIASES = {
+  'white-wall': 'whiteout',
+};

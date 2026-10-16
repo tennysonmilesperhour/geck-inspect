@@ -146,6 +146,7 @@ export default function VisualSiblings({ gecko, user }) {
                     alt={labelFor(m.primary_morph, 'Similar gecko')}
                     className="aspect-square w-full object-cover rounded-md border border-slate-700"
                     loading="lazy"
+                    width={240}
                   />
                 </a>
                 <Badge variant="secondary" className="text-[10px] bg-slate-800 text-slate-300">

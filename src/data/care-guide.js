@@ -6,8 +6,19 @@
  * `type` discriminator so a renderer (or an LLM pipeline) can walk
  * the tree without touching React.
  *
- * Keep this file dependency-free (no JSX, no imports). The UI layer
- * is in src/pages/CareGuide.jsx and src/components/careguide/*.
+ * Keep this file free of JSX and of imports other than
+ * ./husbandry-facts.js (itself dependency-free), so Node build scripts
+ * can import it. The UI layer is in src/pages/CareGuide.jsx and
+ * src/components/careguide/*.
+ *
+ * Every life-stage weight, weigh-in cadence, shed interval, breeding
+ * minimum and incubation window below is read from husbandry-facts.js,
+ * the same values the app's reminders, weight chart, shed forecast,
+ * readiness badge and hatch estimates use. Write the number there, not
+ * here, or the guide and the app will disagree again.
+ *
+ * Section ids and titles stay plain single-quoted strings: the sitemap
+ * script (scripts/seo-routes.mjs) reads them from this file's text.
  *
  * Content contributions welcome, see CONTRIBUTING notes in the repo
  * README. Facts should be sourced from reputable keepers, published
@@ -15,6 +26,32 @@
  * Note uncertain claims as "hobby consensus" rather than stating
  * them as fact.
  */
+
+import {
+  ADULT_MONTHLY_SWING_G,
+  ADULT_WEIGHT_G,
+  BREEDING,
+  INCUBATION_BY_ID,
+  INCUBATION_MAX_SAFE_C,
+  INCUBATION_MAX_SAFE_F,
+  INCUBATION_PROFILES,
+  LIFESPAN_YEARS,
+  LIFE_STAGES,
+  SENIOR_YEARS,
+  WEIGH_IN_DAYS,
+  femaleMinimumWords,
+  maleMinimumWords,
+  shedRhythmSentence,
+  stageGainWords,
+  stageGrams,
+  stageMonths,
+  stageWithGrams,
+} from './husbandry-facts.js';
+
+const BALANCED = INCUBATION_BY_ID.balanced;
+const ADULT_WEIGHT = `${ADULT_WEIGHT_G.min} to ${ADULT_WEIGHT_G.max} g`;
+const LIFESPAN = `${LIFESPAN_YEARS.min} to ${LIFESPAN_YEARS.max} years`;
+const weeks = (days) => days / 7;
 
 // Block types used throughout `body` arrays:
 //   { type: 'p', text }
@@ -34,9 +71,9 @@ export const CARE_CATEGORIES = [
     quickFacts: [
       { label: 'Species', value: 'Correlophus ciliatus' },
       { label: 'Origin', value: 'Southern New Caledonia' },
-      { label: 'Lifespan', value: '15–20 years' },
-      { label: 'Adult weight', value: '35–60 g' },
-      { label: 'Adult length', value: '7–10 in (SVL+tail)' },
+      { label: 'Lifespan', value: LIFESPAN },
+      { label: 'Adult weight', value: ADULT_WEIGHT },
+      { label: 'Adult length', value: '7 to 10 in (SVL+tail)' },
       { label: 'Activity', value: 'Nocturnal, arboreal' },
       { label: 'Difficulty', value: 'Beginner-friendly' },
     ],
@@ -52,7 +89,7 @@ export const CARE_CATEGORIES = [
           },
           {
             type: 'p',
-            text: 'They are beginner-friendly because they tolerate room temperatures, eat a shelf-stable powdered diet, do not require UVB for long-term survival, and breed reliably in captivity. Adults top out around 35–60 grams and live 15–20 years with good husbandry.',
+            text: `They are beginner-friendly because they tolerate room temperatures, eat a shelf-stable powdered diet, do not require UVB for long-term survival, and breed reliably in captivity. Adults top out around ${ADULT_WEIGHT_G.min} to ${ADULT_WEIGHT_G.max} grams and live ${LIFESPAN} with good husbandry.`,
           },
           {
             type: 'callout',
@@ -72,7 +109,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'A healthy crested gecko is a 15–20 year commitment. Before purchasing, confirm your setup works and that you can realistically provide daily misting, food replacement every 2–3 days, and travel coverage when you are away.',
+            text: 'A healthy crested gecko is a 15 to 20 year commitment. Before purchasing, confirm your setup works and that you can realistically provide daily misting, food replacement every 2 to 3 days, and travel coverage when you are away.',
           },
           {
             type: 'ul',
@@ -103,7 +140,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos can usually be sexed at 15–25 grams of healthy weight, well before breeding size. Males develop a visible hemipenal bulge at the vent and preanal pores; females do neither.',
+            text: 'Crested geckos can usually be sexed at 15 to 25 grams of healthy weight, well before breeding size. Males develop a visible hemipenal bulge at the vent and preanal pores; females do neither.',
           },
           {
             type: 'ul',
@@ -131,9 +168,9 @@ export const CARE_CATEGORIES = [
     tagline: 'Enclosure size, substrate, plants, lighting, climate',
     quickFacts: [
       { label: 'Adult enclosure', value: '18×18×24 in minimum (vertical)' },
-      { label: 'Temperature', value: '72–78°F (22–25°C)' },
-      { label: 'Night temp', value: '65–72°F (18–22°C)' },
-      { label: 'Humidity', value: '60–80% (spike to 100% at night)' },
+      { label: 'Temperature', value: '72 to 78°F (22 to 25°C)' },
+      { label: 'Night temp', value: '65 to 72°F (18 to 22°C)' },
+      { label: 'Humidity', value: '60 to 80% (spike to 100% at night)' },
       { label: 'Lighting', value: 'Low UVB optional, 12h photoperiod' },
       { label: 'Ventilation', value: 'Front + top cross-flow' },
     ],
@@ -151,10 +188,10 @@ export const CARE_CATEGORIES = [
             type: 'table',
             headers: ['Life stage', 'Weight', 'Enclosure', 'Notes'],
             rows: [
-              ['Hatchling', '0–8 g', '6-qt tub or small Kritter Keeper', 'Deli cup of CGD + moss + small branches. Easy to monitor feeding.'],
-              ['Juvenile', '8–20 g', '12×12×18 in glass terrarium', 'Introduce height. Fake or live plants for cover.'],
-              ['Sub-adult', '20–35 g', '18×18×18 in', 'Optional intermediate step, or skip straight to adult sizing.'],
-              ['Adult', '35 g+', '18×18×24 in minimum', 'Larger (24×18×36 in) is always better. Do not house adults together.'],
+              ['Hatchling', stageGrams('hatchling'), '6-qt tub or small Kritter Keeper', 'Deli cup of CGD + moss + small branches. Easy to monitor feeding.'],
+              ['Juvenile', stageGrams('juvenile'), 'Tub until about 10 g, then a 12×12×18 in glass terrarium', 'Introduce height. Fake or live plants for cover.'],
+              ['Sub-adult', stageGrams('subadult'), '18×18×18 in, or the adult enclosure from about 25 g', 'Optional intermediate step, or skip straight to adult sizing.'],
+              ['Adult', stageGrams('adult'), '18×18×24 in minimum', 'Larger (24×18×36 in) is always better. Do not house adults together.'],
             ],
           },
           {
@@ -206,7 +243,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos thrive at room temperature. Ambient in the 72–78°F (22–25°C) range is ideal, with a slight nighttime drop to 65–72°F (18–22°C). Most homes never need supplemental heat; in fact, overheating is a far more common killer than cold.',
+            text: 'Crested geckos thrive at room temperature. Ambient in the 72 to 78°F (22 to 25°C) range is ideal, with a slight nighttime drop to 65 to 72°F (18 to 22°C). Most homes never need supplemental heat; in fact, overheating is a far more common killer than cold.',
           },
           {
             type: 'ul',
@@ -235,13 +272,13 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos need a humidity cycle: high at night (80–100%) when they are active, dropping back to 50–70% during the day. A flatline at 90% breeds mold and respiratory infections; a flatline at 40% causes stuck sheds.',
+            text: 'Crested geckos need a humidity cycle: high at night (80 to 100%) when they are active, dropping back to 50 to 70% during the day. A flatline at 90% breeds mold and respiratory infections; a flatline at 40% causes stuck sheds.',
           },
           {
             type: 'ol',
             items: [
               'Heavy mist 30 minutes before lights-out. The cage should be visibly wet and fogged.',
-              'Allow humidity to drop back to 50–70% within a few hours. Cross-ventilation matters here.',
+              'Allow humidity to drop back to 50 to 70% within a few hours. Cross-ventilation matters here.',
               'Light mist or none in the morning if the cage is still damp. Over-misting is a common mistake.',
               'Provide a shallow water dish, not because they drink from it often, but because it buffers humidity and some animals do use it.',
             ],
@@ -249,7 +286,7 @@ export const CARE_CATEGORIES = [
           {
             type: 'dl',
             items: [
-              { term: 'Hand sprayer', def: 'Works fine for 1–2 animals. Cheap, reliable, and forces daily eyes-on inspection.' },
+              { term: 'Hand sprayer', def: 'Works fine for 1 to 2 animals. Cheap, reliable, and forces daily eyes-on inspection.' },
               { term: 'Automatic mister (MistKing, Exo-Terra Monsoon)', def: 'Best for collections of 3+ or for keepers who travel. Must be combined with a hygrometer and a dry-down period.' },
               { term: 'Cool-mist fogger', def: 'Used supplementally in very dry climates. Do not replace misting, fog wets surfaces differently than droplets.' },
             ],
@@ -269,7 +306,7 @@ export const CARE_CATEGORIES = [
             type: 'ul',
             items: [
               'Photoperiod: 12 hours on, 12 hours off. A timer removes the daily chore.',
-              'UVB: Arcadia ShadeDweller 7% or Zoo Med 5.0 T5, mounted above the mesh top, 10–14 inches from the highest basking spot the animal can reach.',
+              'UVB: Arcadia ShadeDweller 7% or Zoo Med 5.0 T5, mounted above the mesh top, 10 to 14 inches from the highest basking spot the animal can reach.',
               'Replace UVB bulbs every 12 months, output drops long before the bulb visibly fails.',
               'Plant lights (LED full-spectrum) are great for live-plant vivariums but produce no useful UVB. Keep them separate from husbandry lighting.',
             ],
@@ -316,9 +353,9 @@ export const CARE_CATEGORIES = [
     quickFacts: [
       { label: 'Primary diet', value: 'Commercial CGD (powdered)' },
       { label: 'Mix ratio', value: '1 part powder : 2 parts water' },
-      { label: 'Adult schedule', value: '3×/week, replace every 24–36 h' },
-      { label: 'Juvenile schedule', value: 'Fresh food daily' },
-      { label: 'Insects', value: 'Optional, 1–2×/week, dusted' },
+      { label: 'Adult schedule', value: '3×/week, replace every 24 to 36 h' },
+      { label: 'Juvenile schedule', value: 'Fresh food daily or every other day' },
+      { label: 'Insects', value: 'Optional, 1 to 2×/week, dusted' },
       { label: 'Fresh fruit', value: 'Rare treat only (sugar load)' },
     ],
     sections: [
@@ -329,7 +366,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'CGD is a nutritionally complete powdered diet designed to be the sole food source for crested geckos. It contains fruit, insect protein, vitamins, minerals, and calcium with D3. Mix 1 part powder to 2 parts water into a ketchup-like consistency, serve in a shallow dish, and discard after 24–36 hours.',
+            text: 'CGD is a nutritionally complete powdered diet designed to be the sole food source for crested geckos. It contains fruit, insect protein, vitamins, minerals, and calcium with D3. Mix 1 part powder to 2 parts water into a ketchup-like consistency, serve in a shallow dish, and discard after 24 to 36 hours.',
           },
           {
             type: 'ul',
@@ -337,7 +374,7 @@ export const CARE_CATEGORIES = [
               'Always use dechlorinated or bottled water. Tap water is fine in most municipalities but avoid heavily chlorinated supplies.',
               'Mix fresh each feeding. Pre-mixed CGD kept in the fridge degrades within 48 hours and separates.',
               'Use a flat, shallow dish, magnetic ledge cups are popular because geckos forage upside-down.',
-              'Replace the dish after 24–36 hours even if untouched. Old CGD breeds yeast and fruit flies.',
+              'Replace the dish after 24 to 36 hours even if untouched. Old CGD breeds yeast and fruit flies.',
               'Rotate at least two brands over the animal\'s life. Each brand balances ingredients differently and rotation hedges against formulation changes.',
             ],
           },
@@ -369,7 +406,7 @@ export const CARE_CATEGORIES = [
             title: 'Buying tip',
             items: [
               'Check the manufacture date on the pouch. CGD loses vitamin potency after roughly 12 months. Buy small pouches often rather than one giant bag.',
-              'Freeze unopened pouches if you buy in bulk, sealed and frozen, shelf life extends to 18–24 months.',
+              'Freeze unopened pouches if you buy in bulk, sealed and frozen, shelf life extends to 18 to 24 months.',
             ],
           },
         ],
@@ -383,11 +420,11 @@ export const CARE_CATEGORIES = [
             type: 'table',
             headers: ['Life stage', 'CGD frequency', 'Insect frequency', 'Notes'],
             rows: [
-              ['Hatchling (0–8 g)', 'Fresh daily', 'Optional, 1–2 pinheads 1×/week', 'Target 0.2–0.5 g gain per week.'],
-              ['Juvenile (8–20 g)', 'Fresh daily or every other day', '3–5 feeders 1–2×/week', 'Growth phase, never ration CGD.'],
-              ['Sub-adult (20–35 g)', '3–4×/week', '4–6 feeders 1×/week', 'Start tracking monthly weight trend.'],
-              ['Adult (35 g+)', '3×/week', '4–6 feeders 1×/2 weeks (optional)', 'Overfeeding adults causes obesity and fatty liver.'],
-              ['Breeding female', '3–4×/week + extra calcium', '6–8 feeders 1–2×/week', 'Protein and calcium demand spikes during laying season.'],
+              [stageWithGrams('hatchling'), 'Fresh daily', 'Optional, 1 to 2 pinheads 1×/week', `Expect about ${stageGainWords('hatchling')}.`],
+              [stageWithGrams('juvenile'), 'Fresh daily or every other day', '3 to 5 feeders 1 to 2×/week', `Growth phase, never ration CGD. Expect about ${stageGainWords('juvenile')}.`],
+              [stageWithGrams('subadult'), '3 to 4×/week', '4 to 6 feeders 1×/week', `Expect about ${stageGainWords('subadult')}, levelling off near adult size.`],
+              [stageWithGrams('adult'), '3×/week', '4 to 6 feeders 1×/2 weeks (optional)', 'Overfeeding adults causes obesity and fatty liver.'],
+              ['Breeding female', '3 to 4×/week + extra calcium', '6 to 8 feeders 1 to 2×/week', 'Protein and calcium demand spikes during laying season.'],
             ],
           },
           {
@@ -407,7 +444,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Insects are not required on a complete CGD diet, but they add enrichment, satisfy natural hunting instinct, and provide extra protein for growing juveniles and breeding females. Offer insects 1–2 times per week at most.',
+            text: 'Insects are not required on a complete CGD diet, but they add enrichment, satisfy natural hunting instinct, and provide extra protein for growing juveniles and breeding females. Offer insects 1 to 2 times per week at most.',
           },
           {
             type: 'dl',
@@ -424,7 +461,7 @@ export const CARE_CATEGORIES = [
             type: 'ul',
             items: [
               'Dust every insect meal with calcium+D3 (Repashy Calcium Plus, Arcadia EarthPro-A, Miner-All). Miss no more than one dusting in four.',
-              'Gutload feeders with leafy greens or a commercial gutload for 24–48 hours before feeding out. What your insects ate is what your gecko eats.',
+              'Gutload feeders with leafy greens or a commercial gutload for 24 to 48 hours before feeding out. What your insects ate is what your gecko eats.',
               'Offer feeders in a smooth-sided dish or tong-feed. Loose crickets and large roaches can bite a sleeping gecko.',
             ],
           },
@@ -462,12 +499,12 @@ export const CARE_CATEGORIES = [
           {
             type: 'ol',
             items: [
-              'Give a new arrival 7–10 days of no handling before evaluating appetite. It is normal to refuse CGD in the first week.',
+              'Give a new arrival 7 to 10 days of no handling before evaluating appetite. It is normal to refuse CGD in the first week.',
               'Verify temperature is not above 80°F and not below 68°F. Misting schedule is regular.',
               'Rotate CGD flavor. A gecko refusing "watermelon mix" may eat "banana cream" from the same brand.',
               'Try insects. Even a non-insect eater will sometimes take a BSFL or hornworm when refusing CGD.',
               'Weigh weekly. A non-eater that holds weight is fine; one that drops more than 5% needs vet eyes.',
-              'After 2–3 weeks of refusal + weight loss, schedule a reptile vet. Fecal float rules out parasites. Dehydration can be addressed with a diluted Pedialyte soak.',
+              'After 2 to 3 weeks of refusal + weight loss, schedule a reptile vet. Fecal float rules out parasites. Dehydration can be addressed with a diluted Pedialyte soak.',
             ],
           },
         ],
@@ -480,9 +517,9 @@ export const CARE_CATEGORIES = [
     icon: 'hand',
     tagline: 'Safe interaction, stress signals, firing up',
     quickFacts: [
-      { label: 'First handling', value: 'After 2–3 weeks acclimation' },
-      { label: 'Session length', value: '5–15 min max' },
-      { label: 'Frequency', value: '2–4×/week at most' },
+      { label: 'First handling', value: 'After 2 to 3 weeks acclimation' },
+      { label: 'Session length', value: '5 to 15 min max' },
+      { label: 'Frequency', value: '2 to 4×/week at most' },
       { label: 'Hatchlings', value: 'Observe only, no handling' },
     ],
     sections: [
@@ -498,10 +535,10 @@ export const CARE_CATEGORIES = [
           {
             type: 'ol',
             items: [
-              'Days 1–7: no handling. Do misting and food changes quickly and quietly. Observe only.',
-              'Days 8–14: short in-cage interactions, change the water, adjust decor, let the gecko see your hand without grabbing.',
+              'Days 1 to 7: no handling. Do misting and food changes quickly and quietly. Observe only.',
+              'Days 8 to 14: short in-cage interactions, change the water, adjust decor, let the gecko see your hand without grabbing.',
               'After day 14 and after the first confirmed meal: begin brief handling sessions as described below.',
-              'For breeder stock, extend the window to 3–4 weeks and skip casual handling altogether.',
+              'For breeder stock, extend the window to 3 to 4 weeks and skip casual handling altogether.',
             ],
           },
         ],
@@ -560,7 +597,7 @@ export const CARE_CATEGORIES = [
     icon: 'heart',
     tagline: 'Shedding, tail loss, MBD, common issues, vet care',
     quickFacts: [
-      { label: 'Weigh', value: 'Weekly (juveniles) · monthly (adults)' },
+      { label: 'Weigh', value: `Every 1 to ${weeks(WEIGH_IN_DAYS.growing)} weeks (growing) · monthly (adults)` },
       { label: 'Annual vet', value: 'Fecal float + wellness exam' },
       { label: 'Red flags', value: 'Appetite loss, kink tail, lethargy' },
       { label: 'Tail regrowth', value: 'Never, dropped tails do not regrow' },
@@ -579,8 +616,10 @@ export const CARE_CATEGORIES = [
             type: 'ul',
             items: [
               'Weigh with a 0.1 g kitchen scale. A deli cup with a lid makes weighing easy and calm.',
-              'Juveniles: weekly weigh-ins. Expect steady gains (0.3–1.0 g/week depending on age).',
-              'Adults: monthly weigh-ins. Healthy adults hold ±2 g month to month. Breeding females can swing 10–15 g pre- and post-lay.',
+              `Hatchlings and juveniles: weigh every 1 to ${weeks(WEIGH_IN_DAYS.growing)} weeks (weekly for a new or struggling hatchling). Expect steady gains: about ${stageGainWords('hatchling')} as a hatchling and ${stageGainWords('juvenile')} as a juvenile.`,
+              `Sub-adults: weigh every ${weeks(WEIGH_IN_DAYS.subadult)} weeks. Expect about ${stageGainWords('subadult')}, levelling off near adult size.`,
+              `Adults: monthly weigh-ins. Healthy adults hold ±${ADULT_MONTHLY_SWING_G} g month to month. Breeding females can swing 10 to 15 g pre- and post-lay.`,
+              `Geck Inspect's weigh-in reminders follow the same rhythm: every ${weeks(WEIGH_IN_DAYS.growing)} weeks while growing, every ${weeks(WEIGH_IN_DAYS.subadult)} weeks as a sub-adult and every ${WEIGH_IN_DAYS.adult} days as an adult.`,
               'Flag any 5 %+ drop over a month for investigation. Consistent drops across two months warrants a vet visit.',
             ],
           },
@@ -593,13 +632,13 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos shed every 1–4 weeks depending on age and growth rate. The shed itself takes about 10–20 minutes and usually happens overnight. You often will not see it, the animal eats its own shed immediately. The tell is a duller, chalkier-looking gecko one night, then a clean bright one the next morning.',
+            text: `Growth drives shedding, so how often a crested gecko sheds depends on its life stage: about ${shedRhythmSentence()}. A fast-growing gecko sheds at the short end. The shed itself takes about 10 to 20 minutes and usually happens overnight. You often will not see it, the animal eats its own shed immediately. The tell is a duller, chalkier-looking gecko one night, then a clean bright one the next morning.`,
           },
           {
             type: 'ul',
             items: [
               'Stuck shed on toes, tail tip, and around eyes is the most common husbandry problem. Root cause is almost always low humidity.',
-              'Fix: increase misting, raise ambient humidity to 80–100% for 2–3 nights, and provide a humid hide (plastic tub with damp moss).',
+              'Fix: increase misting, raise ambient humidity to 80 to 100% for 2 to 3 nights, and provide a humid hide (plastic tub with damp moss).',
               'Stuck shed on a toe cuts off circulation. Remove within 48 hours or the toe can be lost. Soak the gecko on damp paper towel for 15 minutes and peel gently with a damp cotton swab.',
               'Never pull, if it does not come off easily, soak longer.',
             ],
@@ -619,7 +658,7 @@ export const CARE_CATEGORIES = [
             type: 'ul',
             items: [
               'A dropped tail will bleed briefly, then clot on its own. No veterinary intervention is usually needed.',
-              'Keep the enclosure clean for 3–5 days post-drop to avoid infection of the stump.',
+              'Keep the enclosure clean for 3 to 5 days post-drop to avoid infection of the stump.',
               'Tail drops are triggered by stress: being grabbed, fighting another gecko, being startled, or sudden temperature change. Solo-house, handle gently, and minimize surprises.',
               'A tailless ("frogbutt") gecko is not worth less to a keeper, many hobbyists find them charming. Show breeders do pay a premium for intact tails.',
             ],
@@ -645,7 +684,7 @@ export const CARE_CATEGORIES = [
               ['Metabolic Bone Disease (MBD)', 'Kinked spine, wavy tail, soft jaw, hemipenile prolapse, leg tremors', 'Chronic low calcium / D3, underfeeding', 'Vet ASAP. Early MBD is reversible with calcium and UVB; advanced cases are not.'],
               ['Floppy Tail Syndrome (FTS)', 'Tail arches over the back when hanging upside-down, pelvic deformity in adults', 'Prolonged upside-down perching on glass tops, lack of horizontal resting spots', 'Provide broad leaf perches and cork bark at the top. Prevention only, established FTS is permanent.'],
               ['Respiratory infection', 'Open-mouth breathing, mucus bubbles, wheezing, lethargy', 'Chronic humidity too high + poor ventilation, or cold draft', 'Dry out the cage, fix ventilation, vet for antibiotics if it persists >48 h.'],
-              ['Impaction', 'Not defecating for 7+ days, visible bulge, loss of appetite', 'Substrate ingestion, dehydration, cold', 'Warm soak (84°F water, 10–15 min). Persistent: vet.'],
+              ['Impaction', 'Not defecating for 7+ days, visible bulge, loss of appetite', 'Substrate ingestion, dehydration, cold', 'Warm soak (84°F water, 10 to 15 min). Persistent: vet.'],
               ['Parasites (pinworms, coccidia, crypto)', 'Watery or bloody stool, weight loss despite eating, lethargy', 'Often present at import, spread via shared tools', 'Fecal float at vet. Crypto is the serious one, ask the vet to test specifically if weight loss is persistent.'],
               ['Mouth rot (stomatitis)', 'Cheesy white or yellow material at the gum line, swollen jaw, food refusal', 'Trauma + bacteria, low humidity, immune stress', 'Vet. Topical antiseptics and sometimes antibiotics.'],
               ['Dystocia (egg-binding)', 'Swollen abdomen, straining without laying, lethargy in a gravid female', 'Underweight female, calcium deficiency, no lay box, too-hot or too-cold cage', 'Emergency vet. Provide a warm humid lay box with damp substrate at least a week before expected lay date.'],
@@ -690,16 +729,16 @@ export const CARE_CATEGORIES = [
     icon: 'scale',
     tagline: 'Hatchling, juvenile, sub-adult, adult, senior',
     quickFacts: [
-      { label: 'Hatchling', value: '0–3 g · 0–3 months' },
-      { label: 'Juvenile', value: '3–15 g · 3–12 months' },
-      { label: 'Sub-adult', value: '15–35 g · 12–18 months' },
-      { label: 'Adult', value: '35 g+ · 18+ months' },
-      { label: 'Senior', value: '10 years+' },
+      // Built from husbandry-facts.js, the same stages the weigh-in
+      // reminders and the weight chart use. A stage ends at its weight or
+      // its age, whichever comes later.
+      ...LIFE_STAGES.map((stage) => ({ label: stage.label, value: `${stageGrams(stage.id)} · ${stageMonths(stage.id)}` })),
+      { label: 'Senior', value: `${SENIOR_YEARS} years+` },
     ],
     sections: [
       {
         id: 'hatchling-care',
-        title: 'Hatchlings (0–3 g)',
+        title: 'Hatchlings (under 3 g)',
         level: 'beginner',
         body: [
           {
@@ -710,50 +749,50 @@ export const CARE_CATEGORIES = [
             type: 'ul',
             items: [
               'Enclosure: 6-quart tub or small critter keeper with paper towel, a small branch, and a handful of fake leaves or sphagnum.',
-              'First meal: offer CGD 24–48 hours after hatching. Some hatchlings do not eat for the first 3–5 days, that is normal if they are holding weight.',
-              'Humidity: mist 1–2 times daily. Let the sides of the tub dry between mists.',
+              'First meal: offer CGD about 48 hours after hatching, once the yolk is absorbed. Some hatchlings do not eat for the first 3 to 5 days, that is normal if they are holding weight.',
+              'Humidity: mist 1 to 2 times daily. Let the sides of the tub dry between mists.',
               'Do not handle. Observe only for the first month.',
-              'Weigh every 4–7 days. A hatchling that drops below hatching weight for more than a week needs attention.',
+              `Weigh weekly. Expect about ${stageGainWords('hatchling')}. A hatchling that drops below hatching weight for more than a week needs attention.`,
             ],
           },
         ],
       },
       {
         id: 'juvenile-care',
-        title: 'Juveniles (3–15 g)',
+        title: 'Juveniles (3 to 15 g)',
         level: 'beginner',
         body: [
           {
             type: 'p',
-            text: 'The juvenile phase is the fastest growth window. Feed consistently, monitor weight weekly, and move up an enclosure size when the animal reaches ~10 g.',
+            text: `The juvenile phase is the fastest growth window for its size. Feed consistently, weigh every 1 to ${weeks(WEIGH_IN_DAYS.growing)} weeks, and move up from the hatchling tub when the animal reaches about 10 g.`,
           },
           {
             type: 'ul',
             items: [
               'Feed fresh CGD daily or every other day. Never ration at this age.',
-              'Insects (optional) 1–2 times per week, always dusted.',
-              'Expect 0.5–1.5 g weight gain per week under good husbandry.',
-              'Sexing becomes possible around 15–25 g. Do not stress-handle to check sex, a confirmed-male juvenile can still be housed safely solo.',
+              'Insects (optional) 1 to 2 times per week, always dusted.',
+              `Expect about ${stageGainWords('juvenile')} under good husbandry. Temperature, diet and genetics all change the pace, so watch the trend, not one weigh-in.`,
+              'Sexing becomes possible around 15 to 25 g. Do not stress-handle to check sex, a confirmed-male juvenile can still be housed safely solo.',
             ],
           },
         ],
       },
       {
         id: 'subadult-care',
-        title: 'Sub-adults (15–35 g)',
+        title: 'Sub-adults (15 to 35 g)',
         level: 'intermediate',
         body: [
           {
             type: 'p',
-            text: 'Growth slows in the sub-adult phase. This is also the age when morph identity locks in and the final enclosure upgrade happens.',
+            text: 'Growth levels off toward the end of the sub-adult phase. This is also the age when morph identity locks in and the final enclosure upgrade happens.',
           },
           {
             type: 'ul',
             items: [
-              'Feed CGD 3–4 times per week. Expect 1–3 g weight gain per month.',
-              'Adult enclosure (18×18×24 in) is appropriate by ~25 g.',
-              'This is a good time to socialize handling if you intend to, calm 10-minute sessions 1–2 times per week.',
-              'Morph evaluation at 25–30 g is more accurate than at hatch. Pattern "fade" and base color clarify as the animal approaches adulthood.',
+              `Feed CGD 3 to 4 times per week. Expect about ${stageGainWords('subadult')}, and weigh every ${weeks(WEIGH_IN_DAYS.subadult)} weeks.`,
+              'Adult enclosure (18×18×24 in) is appropriate from about 25 g.',
+              'This is a good time to socialize handling if you intend to, calm 10-minute sessions 1 to 2 times per week.',
+              'Morph evaluation at 25 to 30 g is more accurate than at hatch. Pattern "fade" and base color clarify as the animal approaches adulthood.',
             ],
           },
         ],
@@ -773,7 +812,7 @@ export const CARE_CATEGORIES = [
               'Do not overfeed. Three CGD feedings per week keeps a non-breeder at ideal weight.',
               'Monthly weigh-ins and a brief visual check replace weekly handling.',
               'Annual reptile-vet wellness visit + fecal float is a reasonable baseline for a single adult.',
-              'Plan for a potential 15–20 year relationship. Designate an emergency caretaker in case you travel, move, or have an accident.',
+              `Plan for a potential ${LIFESPAN_YEARS.min} to ${LIFESPAN_YEARS.max} year relationship. Designate an emergency caretaker in case you travel, move, or have an accident.`,
             ],
           },
         ],
@@ -792,7 +831,7 @@ export const CARE_CATEGORIES = [
             items: [
               'Retire breeding females after 8 years of age, or sooner if clutch counts decline or body condition softens.',
               'Reduce climbing height if arthritis-like stiffness appears. Lower perches + easier access to food and water.',
-              'Warm up the cool side of the cage slightly (76–78°F days) if the animal is clearly slower in cold weather.',
+              'Warm up the cool side of the cage slightly (76 to 78°F days) if the animal is clearly slower in cold weather.',
               'A senior gecko that sleeps more, eats less, and moves less is usually fine. One that loses more than 10% of its peak adult weight within a year is not, vet visit warranted.',
             ],
           },
@@ -806,12 +845,15 @@ export const CARE_CATEGORIES = [
     icon: 'users',
     tagline: 'Readiness, pairing, egg care, incubation',
     quickFacts: [
-      { label: 'Female minimum', value: '40 g + 18 months old' },
-      { label: 'Male minimum', value: '25–30 g + 12 months' },
-      { label: 'Season', value: 'March–October (hobby norm)' },
-      { label: 'Clutch size', value: '2 eggs · every 4–6 weeks' },
-      { label: 'Incubation', value: '60–90 days at 72–76°F' },
-      { label: 'Cooling period', value: 'Nov–Feb rest required' },
+      // From husbandry-facts.js: the app's readiness badge enforces the
+      // same female minimum, and hatch estimates use the same incubation
+      // windows.
+      { label: 'Female minimum', value: `${BREEDING.femaleMinGrams} g + ${BREEDING.femaleMinMonths} months old` },
+      { label: 'Male minimum', value: `${BREEDING.maleMinGrams[0]} to ${BREEDING.maleMinGrams[1]} g + ${BREEDING.maleMinMonths} months` },
+      { label: 'Season', value: 'March to October (hobby norm)' },
+      { label: 'Clutch size', value: `${BREEDING.clutchEggs} eggs · every ${BREEDING.clutchEveryWeeks[0]} to ${BREEDING.clutchEveryWeeks[1]} weeks` },
+      { label: 'Incubation', value: `${BALANCED.minDays} to ${BALANCED.maxDays} days at ${BALANCED.fahrenheit}` },
+      { label: 'Cooling period', value: 'Nov to Feb rest (cooling optional)' },
     ],
     sections: [
       {
@@ -827,9 +869,13 @@ export const CARE_CATEGORIES = [
             type: 'table',
             headers: ['Sex', 'Minimum weight', 'Minimum age', 'Ideal window'],
             rows: [
-              ['Female', '40 g (strict)', '18 months', '45–55 g, 24+ months, proven feeder'],
-              ['Male', '25–30 g', '12 months', '35 g+, 18+ months, handles calmly'],
+              ['Female', `${BREEDING.femaleMinGrams} g (strict)`, `${BREEDING.femaleMinMonths} months`, `${BREEDING.femaleIdealGrams[0]} to ${BREEDING.femaleIdealGrams[1]} g, ${BREEDING.femaleIdealMonths}+ months, proven feeder`],
+              ['Male', `${BREEDING.maleMinGrams[0]} to ${BREEDING.maleMinGrams[1]} g`, `${BREEDING.maleMinMonths} months`, `${BREEDING.maleIdealGrams} g+, ${BREEDING.maleIdealMonths}+ months, handles calmly`],
             ],
+          },
+          {
+            type: 'p',
+            text: `In short: a female needs at least ${femaleMinimumWords()}, both, before her first season (Geck Inspect's readiness badge uses the same numbers), and a male at least ${maleMinimumWords()}. Many breeders wait for ${BREEDING.maleIdealGrams} g in males too.`,
           },
           {
             type: 'callout',
@@ -837,7 +883,7 @@ export const CARE_CATEGORIES = [
             title: 'Do not breed underweight or underage females',
             items: [
               'Calcium depletion and egg-binding are the two most common causes of keeper-inflicted female mortality.',
-              'A female bred at 35 g can produce for one season, then die from secondary MBD the next.',
+              `Breeders report that a female paired below ${BREEDING.femaleMinGrams} g often lays for one season and then declines: calcium loss, egg-binding, or worse the following season.`,
               'Males can breed earlier safely, but the female is the limiting factor.',
             ],
           },
@@ -850,12 +896,12 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Breeding-age females need a genuine off-season to recover calcium and fat reserves. The hobby standard is a cooling/resting period from roughly November through February, during which males and females are housed separately and no breeding occurs.',
+            text: 'Breeding-age females need a genuine off-season to recover calcium and fat reserves. The hobby standard is a resting period from roughly November through February, during which males and females are housed separately and no breeding occurs. The rest is the part that matters. A deliberate temperature drop is common but debated: many established breeders keep temperatures steady all year and still see good fertility.',
           },
           {
             type: 'ul',
             items: [
-              'Drop ambient temperature to 68–72°F during the day and 62–66°F at night for 2–3 months.',
+              'If you do cool: drop ambient temperature to 68 to 72°F during the day and 62 to 66°F at night for 2 to 3 months.',
               'Reduce photoperiod to 10 hours.',
               'Continue feeding on a normal adult schedule (3×/week CGD). Reduce or stop insects.',
               'Separate males and females. Never leave a pair together year-round.',
@@ -876,7 +922,7 @@ export const CARE_CATEGORIES = [
           {
             type: 'ul',
             items: [
-              'Pair for 1–4 weeks, then separate. Some breeders run 2–3 weeks on, 2 weeks off through the season.',
+              'Pair for 1 to 4 weeks, then separate. Some breeders run 2 to 3 weeks on, 2 weeks off through the season.',
               'Watch for excessive neck bites on the female. Small bite marks are normal; open wounds mean separate immediately.',
               'Keep detailed records: pair-up date, separation date, morph of both parents, project goals. A breeding log is the backbone of any serious project.',
               'Never pair full siblings unless you understand the genetic risks and have a specific project justification.',
@@ -891,15 +937,15 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'A female produces a clutch of 2 eggs every 4–6 weeks during the breeding season. She needs a dedicated lay box, without one, she will lay in the substrate or hold the eggs, risking dystocia.',
+            text: `A female produces a clutch of ${BREEDING.clutchEggs} eggs every ${BREEDING.clutchEveryWeeks[0]} to ${BREEDING.clutchEveryWeeks[1]} weeks during the breeding season. She needs a dedicated lay box, without one, she will lay in the substrate or hold the eggs, risking dystocia.`,
           },
           {
             type: 'ul',
             items: [
-              'Lay box: deli cup or Tupperware with a hole cut in the lid, filled with 3–4 inches of moist (not wet) coco fiber or sphagnum.',
+              'Lay box: deli cup or Tupperware with a hole cut in the lid, filled with 3 to 4 inches of moist (not wet) coco fiber or sphagnum.',
               'Place in the enclosure at all times for breeding females, not just during lay periods.',
               'Collect eggs within 24 hours. Mark the top with a dot so orientation stays consistent, rotating a developing egg can kill the embryo.',
-              'Expect a gravid female to lose 5–15 grams in a single lay. This is normal and why extra calcium/protein matters during the season.',
+              'Expect a gravid female to lose 5 to 15 grams in a single lay. This is normal and why extra calcium/protein matters during the season.',
             ],
           },
         ],
@@ -911,16 +957,19 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Room-temperature incubation (72–76°F, 22–24°C) produces strong, slow-hatching clutches. Higher temperatures shorten incubation and can produce male-biased clutches but also raise deformity rates. Hobby standard has moved toward slightly cool, slow incubation.',
+            text: `Most breeders incubate at room temperature, ${BALANCED.fahrenheit} (${BALANCED.celsius}), where eggs hatch in about ${BALANCED.minDays} to ${BALANCED.maxDays} days. Cooler eggs take longer and warmer eggs hatch sooner. Keep incubation below about ${INCUBATION_MAX_SAFE_F}°F (${INCUBATION_MAX_SAFE_C}°C): breeders report more deformed and weak hatchlings from hot incubation. Some breeders also report more males from warm incubation and more females from cool incubation, but that has not been shown in controlled studies of crested geckos, so do not count on temperature to choose the sex.`,
           },
           {
             type: 'table',
+            // The same three ranges Geck Inspect uses for hatch estimates
+            // and hatch alerts (husbandry-facts.js INCUBATION_PROFILES).
             headers: ['Temperature', 'Incubation time', 'Notes'],
-            rows: [
-              ['68–72°F (20–22°C)', '90–120 days', 'Cool. Strong, vigorous hatchlings. Slight female bias.'],
-              ['72–76°F (22–24°C)', '60–90 days', 'Hobby sweet spot. Balanced sex ratio and low deformity rate.'],
-              ['78–82°F (25–28°C)', '45–60 days', 'Warm. Higher deformity risk and possible neurological issues.'],
-            ],
+            rows: INCUBATION_PROFILES.map((profile) => [
+              `${profile.fahrenheit} (${profile.celsius})`,
+              `${profile.minDays} to ${profile.maxDays} days`,
+              profile.guideNote,
+            ]),
+            caption: 'Days are counted from the lay date. Geck Inspect uses these same windows for hatch estimates and hatch alerts.',
           },
           {
             type: 'ul',
@@ -947,8 +996,8 @@ export const CARE_CATEGORIES = [
             items: [
               'Move the hatchling to its own 6-qt tub within 24 hours of emerging. Do not feed for 48 hours, it is still absorbing yolk.',
               'Log everything: hatch date, hatch weight, clutch number, parents, incubation temperature. Good records are the currency of serious breeding.',
-              'Do not evaluate morph at hatch. Many traits (extreme harlequin, true pinstripe, etc.) do not express until the first major shed and some not until 3–6 months.',
-              'Sell or trade only after the hatchling is 3+ grams, eating reliably, and has had a successful shed. Hobby ethics put this floor around 8–10 grams for most breeders.',
+              'Do not evaluate morph at hatch. Many traits (extreme harlequin, true pinstripe, etc.) do not express until the first major shed and some not until 3 to 6 months.',
+              'Sell or trade only after the hatchling is 3+ grams, eating reliably, and has had a successful shed. Hobby ethics put this floor around 8 to 10 grams for most breeders.',
             ],
           },
         ],
@@ -959,7 +1008,9 @@ export const CARE_CATEGORIES = [
 
 export const CGD_BRANDS = [];
 export const COMMON_HEALTH_ISSUES = [];
-export const LIFE_STAGES = [];
+// The life stages themselves, from husbandry-facts.js (this export used to
+// be an empty placeholder).
+export { LIFE_STAGES };
 
 // Finds a category by id
 export function getCategory(id) {

@@ -1,24 +1,18 @@
-import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import { api } from '@/api/appClient';
 import { Dna, Loader2, ArrowLeftRight, ArrowRight, Users, Pencil, Link2, Check } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import GeneticCalculator from '../components/breeding/GeneticCalculator';
-import BreedingSimulator from '../components/innovations/BreedingSimulator';
-import ManualGenotypePicker, {
-  buildParentFromState,
-} from '../components/breeding/ManualGenotypePicker';
+import { loadCalculatorEngine, loadedCalculatorEngine } from '../components/breeding/calculatorEngine';
 import {
+  buildParentFromState,
   encodeParentState,
   decodeParentState,
   stateHasSelection,
 } from '@/lib/genetics/calculatorCatalog';
 import { parsePairing } from '@/lib/genetics/pairingParser';
-import { specWithInferredHets } from '@/lib/genetics/collectionSpec';
 import { loadTraitOverrides } from '@/lib/genetics/traitOverrides';
 import { Gecko } from '@/entities/all';
 import Seo from '@/components/seo/Seo';
@@ -87,6 +81,21 @@ export default function GeneticCalculatorTool({
 }) {
     const [geckos, setGeckos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // The genetics engine and the parts that use it (gene pickers, results,
+    // simulator) download while the spinner below shows, so the header and
+    // text draw first. See src/components/breeding/calculatorEngine.js.
+    const [engine, setEngine] = useState(loadedCalculatorEngine);
+    const [engineError, setEngineError] = useState(null);
+    useEffect(() => {
+        if (engine) return undefined;
+        let cancelled = false;
+        loadCalculatorEngine().then(
+            (parts) => { if (!cancelled) setEngine(parts); },
+            (err) => { if (!cancelled) setEngineError(err); },
+        );
+        return () => { cancelled = true; };
+    }, [engine]);
     const [isAuthed, setIsAuthed] = useState(false);
     const [copied, setCopied] = useState(false);
 
@@ -178,20 +187,20 @@ export default function GeneticCalculatorTool({
     // Enrich selected collection parents with lineage-inferred possible
     // hets so pairing odds reflect the pedigree, not just visible tags.
     useEffect(() => {
-        if (mode !== 'collection') return;
+        if (mode !== 'collection' || !engine) return;
         let cancelled = false;
         for (const id of [sireId, damId]) {
             if (!id || collectionSpecs[id]) continue;
             const gecko = geckos.find((g) => g.id === id);
             if (!gecko) continue;
-            specWithInferredHets(gecko, { GeckoEntity: Gecko }).then((result) => {
+            engine.specWithInferredHets(gecko, { GeckoEntity: Gecko }).then((result) => {
                 if (!cancelled) {
                     setCollectionSpecs((prev) => ({ ...prev, [id]: result }));
                 }
             });
         }
         return () => { cancelled = true; };
-    }, [mode, sireId, damId, geckos, collectionSpecs]);
+    }, [mode, sireId, damId, geckos, collectionSpecs, engine]);
 
     useEffect(() => {
         const load = async () => {
@@ -290,6 +299,12 @@ export default function GeneticCalculatorTool({
       ? (stateHasSelection(sireZygosity) || stateHasSelection(damZygosity))
       : (sire && dam);
 
+    // A download that still fails after its retries goes to the error
+    // screen, the same as when the page itself cannot load.
+    if (engineError) throw engineError;
+    // Set once the engine has loaded; only used below the spinner.
+    const { GeneticCalculator, CalculatorResultSummary, ManualGenotypePicker, BreedingSimulator, CollectionParentPicker } = engine || {};
+
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo
@@ -337,7 +352,7 @@ export default function GeneticCalculatorTool({
 
                 {introSlot}
 
-                {isLoading ? (
+                {isLoading || !engine ? (
                     <div className="text-center py-20">
                         <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto" />
                     </div>
@@ -376,6 +391,10 @@ export default function GeneticCalculatorTool({
                           </div>
                         )}
 
+                        {/* The parent pickers and the answer summary share one
+                            box, so the summary sticks while the pickers scroll
+                            past and lets go when the full results arrive. */}
+                        <div>
                         {/* Omnibox: type a pairing in breeder shorthand */}
                         <form onSubmit={handleOmnibox} className="mb-4">
                           <div className="flex gap-2">
@@ -395,6 +414,18 @@ export default function GeneticCalculatorTool({
                             <p className="text-xs text-amber-300 mt-1.5">{omniboxNote}</p>
                           )}
                         </form>
+
+                        {/* The answer, right under the button that asked for
+                            it (it used to start about 4,500 px further down on
+                            a phone). */}
+                        {hasParents && (
+                          <CalculatorResultSummary
+                            sire={sire}
+                            dam={dam}
+                            resultsId="calculator-results"
+                            className="sticky top-2 z-20 mb-4"
+                          />
+                        )}
 
                         {/* Reverse-mode and learn-mode cross-links */}
                         <div className="mb-4 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -424,6 +455,7 @@ export default function GeneticCalculatorTool({
                                   value={sireZygosity}
                                   onChange={setSireZygosity}
                                   accentClass="border-blue-700"
+                                  parentLabel="Sire"
                                 />
                               </div>
                               <div className="flex justify-center pt-8">
@@ -433,6 +465,7 @@ export default function GeneticCalculatorTool({
                                   onClick={handleSwap}
                                   className="border-slate-600 hover:bg-slate-700 rounded-full"
                                   title="Swap parents"
+                                  aria-label="Swap sire and dam"
                                 >
                                   <ArrowLeftRight className="w-4 h-4" />
                                 </Button>
@@ -443,6 +476,7 @@ export default function GeneticCalculatorTool({
                                   value={damZygosity}
                                   onChange={setDamZygosity}
                                   accentClass="border-pink-700"
+                                  parentLabel="Dam"
                                 />
                               </div>
                             </div>
@@ -465,74 +499,24 @@ export default function GeneticCalculatorTool({
                           </div>
                         ) : (
                           /* Collection mode, authed users picking saved geckos */
-                          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 mb-6">
-                            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
-                              <div className="space-y-2">
-                                <Label className="text-blue-400 font-semibold">♂ Parent A (Sire)</Label>
-                                <Select value={sireId} onValueChange={setSireId}>
-                                  <SelectTrigger className="bg-slate-800 border-blue-700 text-slate-100">
-                                    <SelectValue placeholder="Select gecko..." />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                                    {allForSire.map(g => (
-                                      <SelectItem key={g.id} value={g.id}>
-                                        {g.name}{g.gecko_id_code ? ` (${g.gecko_id_code})` : ''}, {g.sex}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                {collectionSire && (
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <GeckoImage src={collectionSire?.image_urls?.[0]} alt={collectionSire.name} className="w-10 h-10 rounded object-cover border border-blue-700" />
-                                    <div>
-                                      <p className="text-xs text-slate-300 font-medium">{collectionSire.name}</p>
-                                      <p className="text-xs text-slate-500">{(collectionSire.morph_tags || []).length} morph tags</p>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex justify-center pb-1">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={handleSwap}
-                                  className="border-slate-600 hover:bg-slate-700 rounded-full"
-                                  title="Swap parents"
-                                >
-                                  <ArrowLeftRight className="w-4 h-4" />
-                                </Button>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-pink-400 font-semibold">♀ Parent B (Dam)</Label>
-                                <Select value={damId} onValueChange={setDamId}>
-                                  <SelectTrigger className="bg-slate-800 border-pink-700 text-slate-100">
-                                    <SelectValue placeholder="Select gecko..." />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                                    {allForDam.map(g => (
-                                      <SelectItem key={g.id} value={g.id}>
-                                        {g.name}{g.gecko_id_code ? ` (${g.gecko_id_code})` : ''}, {g.sex}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                {collectionDam && (
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <GeckoImage src={collectionDam?.image_urls?.[0]} alt={collectionDam.name} className="w-10 h-10 rounded object-cover border border-pink-700" />
-                                    <div>
-                                      <p className="text-xs text-slate-300 font-medium">{collectionDam.name}</p>
-                                      <p className="text-xs text-slate-500">{(collectionDam.morph_tags || []).length} morph tags</p>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                          <CollectionParentPicker
+                            sireId={sireId}
+                            damId={damId}
+                            onSireChange={setSireId}
+                            onDamChange={setDamId}
+                            sireOptions={allForSire}
+                            damOptions={allForDam}
+                            sire={collectionSire}
+                            dam={collectionDam}
+                            onSwap={handleSwap}
+                          />
                         )}
+
+                        </div>
 
                         <div className="space-y-6">
                           {/* Calculator results, same engine for both modes */}
-                          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                          <div id="calculator-results" className="scroll-mt-4 bg-slate-900 border border-slate-700 rounded-xl p-5">
                             <GeneticCalculator sire={hasParents ? sire : null} dam={hasParents ? dam : null} />
                           </div>
 
@@ -568,7 +552,7 @@ export default function GeneticCalculatorTool({
                         <h2 className="text-sm font-semibold text-slate-100">Built crested-gecko-first</h2>
                       </div>
                       <p className="text-xs text-slate-400 leading-relaxed">
-                        The inheritance rules here are tuned for crested geckos (Correlophus ciliatus), not adapted from a general reptile calculator. Lilly White is modeled as incomplete-dominant with a lethal super, Cappuccino and Axanthic as recessives, and Soft Scale as dominant, so the outcomes match how these traits actually pass in the hobby. Learn the underlying rules in the{' '}
+                        The inheritance rules here are tuned for crested geckos (Correlophus ciliatus), not adapted from a general reptile calculator. Lilly White, Cappuccino and Soft Scale are modeled as incomplete dominant (Super Lilly White is lethal, Super Cappuccino has serious health problems) and Axanthic as recessive, so the outcomes match how these traits actually pass in the hobby. Learn the underlying rules in the{' '}
                         <Link to="/GeneticsGuide" className="text-purple-300 hover:text-purple-200">genetics guide</Link>.
                       </p>
                     </div>

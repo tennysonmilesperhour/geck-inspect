@@ -33,8 +33,8 @@ describe('affiliate shopping links', () => {
     expect(html).toContain('Find on Amazon');
   });
 
-  it.each([null, 'javascript:alert(1)', 'https://user:password@example.com'])
-    ('does not render an unsafe or missing destination: %s', (url) => {
+  it.each([null, 'javascript:alert(1)', 'https://user:password@example.com'])(
+    'does not render an unsafe or missing destination: %s', (url) => {
       const html = renderToStaticMarkup(<AddToCartButton product={{ ...product, vendor_product_url: url }} />);
       expect(html).not.toContain('href=');
       expect(html).toContain(' disabled=');

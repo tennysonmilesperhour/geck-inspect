@@ -311,13 +311,13 @@ const SECTIONS = [
           <>
             <BulletList items={[
               'Inheritance: INCOMPLETE DOMINANT. Single copy = Highway (a continuous, clean dorsal stripe with clean sides). Two copies = Super Highway.',
-              'Same gene, provisionally: Highway is treated as the third version of the Cappuccino and Sable gene. The main evidence is that Super Highway hatchlings show nostril and health issues like Super Cappuccino. The community has not fully settled it, so Geck Inspect badges it Emerging.',
-              'Super form health: Super Highway has reported nostril and health issues. Avoid Highway × Highway.',
+              'Same gene, provisionally: Highway is treated as the third version of the Cappuccino and Sable gene. That rests mainly on breeder reports of nostril and health problems in Super Highway hatchlings, like Super Cappuccino\'s. Those reports are not established and the community has not settled the placement, so Geck Inspect badges it Emerging.',
+              'Super form health: some breeders report nostril and health problems in Super Highway hatchlings. That is not established, but avoid Highway × Highway until it is understood.',
               'Look-alikes: Empty Back (incomplete dominant), Phantom (recessive) and line-bred patternless animals can all show a clean back. Lineage, not a photo, tells them apart.',
             ]} />
             <Callout items={[
               'Highway × Normal → 50% visual Highway, 50% normal (SAFEST)',
-              'Highway × Highway → 25% Super Highway (health concerns), 50% Highway, 25% normal',
+              'Highway × Highway → 25% Super Highway (reported health concerns), 50% Highway, 25% normal',
               'Highway × Cappuccino or Sable → 25% compound (one of each), 25% each single, 25% normal. Never a super.',
             ]} />
           </>
@@ -504,7 +504,7 @@ const SECTIONS = [
           <BulletList items={[
             'A lethal allele is an allele that prevents normal development when both copies are inherited. Heterozygous carriers are healthy; homozygous carriers don\'t survive (or have severely reduced fitness).',
             'In crested geckos, the textbook example is Super Lilly White: fertilized eggs develop partially, then fail to hatch. The breeder just lost eggs that looked viable at first.',
-            'Lethal alleles are common in incomplete-dominant morphs across reptile hobbies, Super Cinnamon ball pythons, Super Mojave ball pythons, Spider Spider corn snakes, Super Cappuccino crested geckos.',
+            'Not every super form is lethal. In crested geckos, Super Lilly White is lethal, while Super Cappuccino usually hatches but has documented health problems (narrowed nostrils, breathing difficulty), and Super Soft Scale hatches and lives normally, though some breeders report reduced fertility.',
             'The ethical breeder\'s job is to KNOW which pairings produce lethal supers and AVOID them unless there\'s a compelling research reason.',
           ]} />
         )

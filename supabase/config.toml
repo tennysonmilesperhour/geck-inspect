@@ -84,3 +84,81 @@ verify_jwt = false
 # against RESEND_WEBHOOK_SECRET and refuses everything else.
 [functions.resend-webhook]
 verify_jwt = false
+
+# Declared on 16 October 2026 after comparing each function's deployed
+# code with the repo copy (read from production, file by file). Each one
+# below matched what runs, or differed only in comments, so the first
+# deploy from main changes no behaviour. verify_jwt is the value production
+# had that day. Two hand-deployed functions are left out on purpose:
+# embed-gecko-image and export-training-corpus, whose repo copies are newer
+# than what runs (see docs/INFRASTRUCTURE.md); rapid-api and
+# admin-end-trial are being deleted.
+
+# Membership page checkout. A signed-in member; the handler checks the
+# tier, cycle, price id and return address itself.
+[functions.stripe-checkout]
+verify_jwt = true
+
+# "Manage billing" on the Membership page. A signed-in member; the handler
+# opens Stripe's portal for the caller's own customer only.
+[functions.stripe-billing-portal]
+verify_jwt = true
+
+# Web push for every new notification. Called by the notifications
+# database trigger with the dispatch secret (or by server code with the
+# service-role key); the handler checks the bearer itself.
+[functions.send-push]
+verify_jwt = false
+
+# Browsers post Content-Security-Policy reports here with no session. The
+# handler only accepts reports for geckinspect.com pages and throttles.
+[functions.csp-report]
+verify_jwt = false
+
+# Daily collection value. pg_cron calls it through
+# request_market_value_snapshot() with the dispatch secret; the handler
+# checks it. It also bundles src/lib/traitValuation.js and quality.js.
+[functions.market-value-snapshot]
+verify_jwt = false
+
+# Admin tools and the GeckoGenius assistant. A signed-in member; the
+# handler meters members through consume_feature_credit.
+[functions.invoke-llm]
+verify_jwt = true
+
+# AI image import (notecards, screenshots). A signed-in Breeder or
+# Enterprise member; the handler meters each scan.
+[functions.recognize-import-data]
+verify_jwt = true
+
+# Enclosure sensor reads (switched off in the app). A signed-in member; the
+# handler meters each read.
+[functions.iot-poll]
+verify_jwt = true
+
+# Promote (retired in the app, kept for existing drafts). Publishing,
+# saving a platform connection and starting a Meta or Reddit sign-in need
+# a signed-in member. The two callbacks are opened by Meta's and Reddit's
+# redirect, which carries no session, so the handler checks the signed
+# state instead. The overage report is the monthly job (or an admin) with
+# the dispatch secret, checked by the handler.
+[functions.publish-social-post]
+verify_jwt = true
+
+[functions.set-platform-connection]
+verify_jwt = true
+
+[functions.meta-oauth-start]
+verify_jwt = true
+
+[functions.meta-oauth-callback]
+verify_jwt = false
+
+[functions.reddit-oauth-start]
+verify_jwt = true
+
+[functions.reddit-oauth-callback]
+verify_jwt = false
+
+[functions.report-social-overage]
+verify_jwt = false

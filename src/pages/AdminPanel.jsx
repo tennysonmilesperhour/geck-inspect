@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { Navigate } from 'react-router-dom';
 import {
@@ -23,6 +23,7 @@ import {
   ListChecks,
   Scale,
   Flag,
+  ImageDown,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import PageHeader from '@/components/shared/PageHeader';
@@ -30,24 +31,39 @@ import PageHeader from '@/components/shared/PageHeader';
 import AdminOverview from '@/components/admin/AdminOverview';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import ProductAnalytics from '@/components/admin/ProductAnalytics';
-import StoreAdmin from '@/components/admin/StoreAdmin';
-import AdminTasks from '@/components/admin/AdminTasks';
 import UserManagement from '@/components/admin/UserManagement';
-import MorphGuideEditor from '@/components/admin/MorphGuideEditor';
-import ContentModeration from '@/components/admin/ContentModeration';
-import ReportsQueue from '@/components/admin/ReportsQueue';
 import MassMessaging from '@/components/admin/MassMessaging';
 import ChangeLogManager from '@/components/admin/ChangeLogManager';
-import ScrapedDataReview from '@/components/admin/ScrapedDataReview';
 import PageManagement from '@/components/admin/PageManagement';
-import MorphSubmissionReview from '@/components/admin/MorphSubmissionReview';
 import SystemHealth from '@/components/admin/SystemHealth';
-import SupportInbox from '@/components/admin/SupportInbox';
 import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
-import BlogManager from '@/components/admin/blog/BlogManager';
-import TestimonialsAdmin from '@/components/admin/TestimonialsAdmin';
-import BreederVerification from '@/components/admin/BreederVerification';
-import AIFeedbackQueue from '@/components/morph-id/AIFeedbackQueue';
+import { lazy } from '@/lib/lazyWithRetry';
+
+// The other sections load when they open, so the panel downloads less up
+// front (the Photo thumbnails section, for one, carries image resizing
+// code). The sections above stay with the panel: they share code or icons
+// with it (the admin data helpers, the Megaphone, Layout and AlertOctagon
+// icons), and a lazy section that needs something only the panel's own
+// file holds makes the build drop the panel's entry from its manifest,
+// which hides the panel from the size check. SectionFallback shows while
+// a lazy section loads.
+const AdminTasks = lazy(() => import('@/components/admin/AdminTasks'));
+const StoreAdmin = lazy(() => import('@/components/admin/StoreAdmin'));
+const MorphGuideEditor = lazy(() => import('@/components/admin/MorphGuideEditor'));
+const ContentModeration = lazy(() => import('@/components/admin/ContentModeration'));
+const ReportsQueue = lazy(() => import('@/components/admin/ReportsQueue'));
+const ScrapedDataReview = lazy(() => import('@/components/admin/ScrapedDataReview'));
+const MorphSubmissionReview = lazy(() => import('@/components/admin/MorphSubmissionReview'));
+const SupportInbox = lazy(() => import('@/components/admin/SupportInbox'));
+const BlogManager = lazy(() => import('@/components/admin/blog/BlogManager'));
+const TestimonialsAdmin = lazy(() => import('@/components/admin/TestimonialsAdmin'));
+const BreederVerification = lazy(() => import('@/components/admin/BreederVerification'));
+const PhotoThumbnails = lazy(() => import('@/components/admin/PhotoThumbnails'));
+const AIFeedbackQueue = lazy(() => import('@/components/morph-id/AIFeedbackQueue'));
+
+function SectionFallback() {
+  return <p className="text-sm text-slate-400">Loading…</p>;
+}
 
 /**
  * Admin Panel, sidebar layout grouped by responsibility.
@@ -66,6 +82,7 @@ import AIFeedbackQueue from '@/components/morph-id/AIFeedbackQueue';
  *   Analytics          , charts + cohort breakdowns
  *   Messaging          , broadcast messages to users
  *   Changelog          , publish app changelog entries
+ *   Photo thumbnails   , make the small card copies for older member photos
  *   System             , env / supabase / build health checks
  *
  * Each section is self-contained, picking one renders just that component
@@ -122,6 +139,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'scraped_data', label: 'Scraped data', icon: Database },
       { id: 'errors', label: 'Error logs', icon: AlertOctagon },
+      { id: 'photo_thumbnails', label: 'Photo thumbnails', icon: ImageDown },
       { id: 'system', label: 'Health & build', icon: Activity },
     ],
   },
@@ -148,6 +166,7 @@ const SECTION_TITLES = {
   store: 'Store',
   scraped_data: 'Scraped data review',
   errors: 'Error logs',
+  photo_thumbnails: 'Photo thumbnails',
   system: 'System health',
 };
 
@@ -274,6 +293,8 @@ export default function AdminPanel() {
         return <ScrapedDataReview />;
       case 'errors':
         return <ErrorLogsViewer />;
+      case 'photo_thumbnails':
+        return <PhotoThumbnails />;
       case 'system':
         return <SystemHealth />;
       default:
@@ -363,7 +384,9 @@ export default function AdminPanel() {
                 pane so switching from a long section to a short one
                 doesn't bounce the inner scrollbar back to top. */}
             <div className="min-h-full pb-12">
-              {renderSection()}
+              <Suspense fallback={<SectionFallback />}>
+                {renderSection()}
+              </Suspense>
             </div>
           </main>
         </div>

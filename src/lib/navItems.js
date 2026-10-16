@@ -56,7 +56,11 @@ import {
   Bell,
   Trophy,
   Mail,
+  CalendarCheck,
+  PlusCircle,
+  Menu,
 } from 'lucide-react';
+import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
 
 // Icon string -> component. Both the sidebar (via string keys stored on
 // page_config rows) and the palette resolve icons through this map, so it
@@ -68,7 +72,7 @@ export const NAV_ICON_MAP = {
   Egg, LayoutGrid, LayoutDashboard, CircleUser, UsersRound, Images, Tag,
   CalendarDays, CalendarRange, Sparkles, Truck, Wrench, Store: StoreIcon,
   DollarSign, TrendingUp, Handshake, HelpCircle, Utensils, Printer,
-  Bell, Trophy, Mail,
+  Bell, Trophy, Mail, CalendarCheck, PlusCircle, Menu,
 };
 
 // Top-level section tabs. Rendered as a desktop header bar and a mobile
@@ -81,22 +85,38 @@ export const SECTIONS = [
   { id: 'discover', label: 'Discover', icon: 'Search',     defaultPage: 'Recognition' },
 ];
 
-// Sidebar groups (6 Oct 2026). One sidebar replaces the Manage and
-// Discover tabs; these headings keep it scannable. A page not listed here
-// (an admin-added one, say) lands in "More" at the bottom.
+// Sidebar groups. One sidebar replaced the Manage and Discover tabs on 6
+// Oct 2026; on 16 Oct (review item E3 23) it was cut to the pages members
+// use, under these headings. The list is the whole sidebar: a page that
+// is not listed here does not show in it, even when its page_config row
+// says enabled (the admin Pages tool can still hide a listed page). Pages
+// that left the sidebar still open from the command palette and from the
+// pages that link to them (Breeding links its planners, Market and each
+// gecko's value card link Portfolio, the Log tab and Today open Field
+// Mode).
+//
+// Counted with the Dashboard link above the groups: 12 destinations, and
+// 8 in Keeper mode (navItems.derived.test.js holds both limits).
 export const NAV_GROUPS = [
-  { id: 'collection', label: 'Collection', pages: ['MyGeckos', 'OtherReptiles', 'FieldMode', 'Portfolio'] },
-  { id: 'breeding', label: 'Breeding', pages: ['Breeding', 'Lineage', 'PairingPlanner', 'ProjectManager', 'BreedingSeason', 'MarketplaceSalesStats', 'Promote'] },
-  { id: 'tools', label: 'Tools', pages: ['Recognition', 'Market', 'BreederConsultant'] },
-  { id: 'learn', label: 'Learn', pages: ['MorphGuide', 'GeneticsGuide', 'CareGuide'] },
-  { id: 'community', label: 'Community', pages: ['Gallery', 'Forum'] },
+  { id: 'collection', label: 'Collection', pages: ['Today', 'MyGeckos'] },
+  { id: 'breeding', label: 'Breeding', pages: ['Breeding', 'Lineage', 'MarketplaceSalesStats'] },
+  { id: 'tools', label: 'Tools', pages: ['Recognition', 'Market'] },
+  { id: 'learn', label: 'Learn', pages: ['MorphGuide', 'CareGuide', 'GeneticsGuide'] },
+  { id: 'community', label: 'Community', pages: ['Forum'] },
 ];
 
-// Pages pinned to the phone's bottom bar, after Home and before Menu.
-export const BOTTOM_BAR_PAGES = [
-  { page: 'MyGeckos', label: 'My Geckos', icon: 'Users' },
-  { page: 'Recognition', label: 'Morph ID', icon: 'Search' },
-  { page: 'Market', label: 'Market', icon: 'TrendingUp' },
+// The most the sidebar may hold, Dashboard included (E3 23's target).
+export const SIDEBAR_MAX = 12;
+export const KEEPER_SIDEBAR_MAX = 8;
+
+// The phone's bottom bar (review item E3 25): Today, Geckos, Log, More.
+// Log opens a short sheet (feeding, weigh-in, shed, Field Mode) and More
+// opens the full menu.
+export const PHONE_TABS = [
+  { id: 'today', page: 'Today', label: 'Today', icon: 'CalendarCheck' },
+  { id: 'geckos', page: 'MyGeckos', label: 'Geckos', icon: 'LayoutGrid' },
+  { id: 'log', action: 'log', label: 'Log', icon: 'PlusCircle' },
+  { id: 'more', action: 'menu', label: 'More', icon: 'Menu' },
 ];
 
 /** Splits a flat sidebar list into NAV_GROUPS order, dropping empty groups. */
@@ -115,7 +135,7 @@ export function groupNavItems(items, skip = new Set(['Dashboard'])) {
     }
     return { id: g.id, label: g.label, items: list };
   });
-  if (byPage.size) groups.push({ id: 'more', label: 'More', items: [...byPage.values()] });
+  // Anything left over is not in the sidebar's list, so it is not shown.
   return groups.filter((g) => g.items.length > 0);
 }
 
@@ -143,18 +163,22 @@ export const NAV_REGISTRY = [
     palette: { group: 'Your Collection', label: 'Dashboard', icon: 'LayoutDashboard', keywords: ['home', 'overview', 'stats'] },
   },
   {
+    page: 'Today', section: 'manage',
+    sidebar: { category: 'collection', order: 0.5, label: 'Today', icon: 'CalendarCheck', requiresAuth: false },
+    palette: { group: 'Your Collection', label: 'Today', icon: 'CalendarCheck', keywords: ['due', 'to do', 'reminders', 'feeding', 'weigh-in', 'hatch'] },
+  },
+  {
     page: 'MyGeckos', section: 'manage',
     sidebar: { category: 'collection', order: 1, label: 'My Geckos', icon: 'LayoutGrid', requiresAuth: true },
     palette: { group: 'Your Collection', label: 'My Geckos', icon: 'Users', keywords: ['collection', 'animals', 'list'] },
   },
   {
-    page: 'MyProfile',
-    palette: { group: 'Your Collection', label: 'My Profile', icon: 'Users', keywords: ['account', 'public profile'] },
+    page: 'FieldMode', section: 'manage',
+    palette: { group: 'Your Collection', label: 'Field Mode', icon: 'Wrench', keywords: ['log', 'quick log', 'weigh', 'feed', 'shed', 'offline'] },
   },
   {
-    page: 'OtherReptiles', section: 'manage',
-    sidebar: { category: 'collection', order: 2, label: 'Other Reptiles', icon: 'UsersRound', requiresAuth: true },
-    palette: { group: 'Your Collection', label: 'Other Reptiles', icon: 'Users', keywords: ['leopard gecko', 'other animals'] },
+    page: 'MyProfile',
+    palette: { group: 'Your Collection', label: 'My Profile', icon: 'Users', keywords: ['account', 'public profile'] },
   },
   {
     page: 'BatchHusbandry', section: 'manage', breederOnly: true,
@@ -173,12 +197,12 @@ export const NAV_REGISTRY = [
   {
     page: 'Breeding', section: 'manage', breederOnly: true,
     sidebar: { category: 'collection', order: 3, label: 'Breeding', icon: 'Egg', requiresAuth: true },
-    palette: { group: 'Breeding', label: 'Breeding Plans', icon: 'GitBranch', keywords: ['pairings', 'projects', 'season', 'breeding pairs', 'sire dam', 'pair', 'eggs', 'hatch'] },
+    palette: { group: 'Breeding', label: 'Breeding', icon: 'GitBranch', keywords: ['breeding plans', 'pairings', 'projects', 'season', 'breeding pairs', 'sire dam', 'pair', 'eggs', 'hatch', 'hatchery'] },
   },
   {
     page: 'Lineage', section: 'manage', breederOnly: true,
     sidebar: { category: 'collection', order: 4, label: 'Lineage', icon: 'GitBranch', requiresAuth: true },
-    palette: { group: 'Breeding', label: 'Lineage Tree', icon: 'GitBranch', keywords: ['family tree', 'ancestry'] },
+    palette: { group: 'Breeding', label: 'Lineage', icon: 'GitBranch', keywords: ['lineage tree', 'family tree', 'ancestry'] },
   },
   {
     page: 'Pedigree', section: 'manage', breederOnly: true,
@@ -194,8 +218,19 @@ export const NAV_REGISTRY = [
   },
   {
     page: 'ProjectManager', section: 'manage', breederOnly: true,
-    sidebar: { category: 'tools', order: 7, label: 'Season Planner', icon: 'CalendarDays', requiresAuth: true },
-    palette: { group: 'Breeding', label: 'Project Manager', icon: 'FolderKanban', keywords: ['tasks', 'goals'] },
+    palette: { group: 'Breeding', label: 'Season Planner', icon: 'CalendarDays', keywords: ['project manager', 'tasks', 'goals', 'feeding groups', 'future pairings'] },
+  },
+  {
+    page: 'BreedingSeason', section: 'manage', breederOnly: true,
+    palette: { group: 'Breeding', label: 'Season Timeline', icon: 'CalendarRange', keywords: ['timeline', 'clutches', 'incubation'] },
+  },
+  {
+    page: 'PairingPlanner', section: 'manage', breederOnly: true,
+    palette: { group: 'Breeding', label: 'Pairing Planner', icon: 'Dna', keywords: ['pairing', 'goal', 'compare pairs'] },
+  },
+  {
+    page: 'Portfolio', section: 'manage', breederOnly: true,
+    palette: { group: 'Breeding', label: 'Portfolio', icon: 'BarChart3', keywords: ['collection value', 'worth', 'estimate'] },
   },
   {
     page: 'GeneticCalculatorTool', section: 'discover',
@@ -204,8 +239,7 @@ export const NAV_REGISTRY = [
   // ----- Community (palette) -----
   {
     page: 'Gallery', section: 'discover',
-    sidebar: { category: 'tools', order: 5, label: 'Image Gallery', icon: 'Images', requiresAuth: false },
-    palette: { group: 'Community', label: 'Community Gallery', icon: 'Images', keywords: ['photos', 'feed', 'browse'] },
+    palette: { group: 'Community', label: 'Community Gallery', icon: 'Images', keywords: ['image gallery', 'photos', 'feed', 'browse'] },
   },
   {
     page: 'LikedGeckos', section: 'manage',
@@ -229,7 +263,7 @@ export const NAV_REGISTRY = [
   // Market Intelligence: daily brief, live listings, watchlist, in-app
   // listings (the old Marketplace page) and your listings. 6 Oct 2026.
   {
-    page: 'Market', section: 'discover',
+    page: 'Market', section: 'discover', breederOnly: true,
     sidebar: { category: 'public', order: 1.5, label: 'Market Intelligence', icon: 'TrendingUp', requiresAuth: true },
     palette: { group: 'Marketplace', label: 'Market Intelligence', icon: 'TrendingUp', keywords: ['market', 'prices', 'brief', 'watchlist', 'alerts', 'new listings', 'price cuts', 'value', 'marketplace', 'buy', 'sell', 'shop'] },
   },
@@ -265,7 +299,7 @@ export const NAV_REGISTRY = [
   {
     page: 'Recognition', section: 'discover',
     sidebar: { category: 'tools', order: 1, label: 'Morph ID', icon: 'Search', requiresAuth: false },
-    palette: { group: 'Reference', label: 'AI Morph Recognition', icon: 'Sparkles', keywords: ['identify', 'classify', 'scan'] },
+    palette: { group: 'Reference', label: 'Morph ID', icon: 'Sparkles', keywords: ['ai morph recognition', 'identify', 'classify', 'scan', 'photo'] },
   },
   {
     page: 'Training', section: 'discover',
@@ -285,22 +319,6 @@ export const NAV_REGISTRY = [
     palette: { group: 'Account', label: 'Membership', icon: 'Trophy', keywords: ['membership', 'billing', 'subscription', 'upgrade'] },
   },
 
-  // ----- Sidebar-only fallback pages (not in the palette) -----
-  { page: 'BreedingSeason', section: 'manage', breederOnly: true,
-    sidebar: { category: 'collection', order: 3.5, label: 'Season Timeline', icon: 'CalendarRange', requiresAuth: true } },
-  { page: 'PairingPlanner', section: 'manage', breederOnly: true,
-    sidebar: { category: 'collection', order: 3.7, label: 'Pairing Planner', icon: 'Dna', requiresAuth: true } },
-  { page: 'FieldMode', section: 'manage',
-    sidebar: { category: 'collection', order: 1.5, label: 'Field Mode', icon: 'Wrench', requiresAuth: true } },
-  { page: 'Portfolio', section: 'manage', breederOnly: true,
-    sidebar: { category: 'collection', order: 4.5, label: 'Portfolio', icon: 'BarChart3', requiresAuth: true } },
-  { page: 'Promote', section: 'manage', breederOnly: true,
-    sidebar: { category: 'collection', order: 5, label: 'Promote', icon: 'Sparkles', requiresAuth: true } },
-  // Supplies is off the sidebar (27 Sep 2026 focus pass: 3 signed-in
-  // visitors in 90 days, checkout unavailable). The route still works.
-  { page: 'Store', section: 'manage' },
-  { page: 'BreederConsultant', section: 'discover',
-    sidebar: { category: 'tools', order: 6, label: 'AI Consultant', icon: 'FlaskConical', requiresAuth: false } },
 
   // ----- Section-only pages (routed, section-assigned, no sidebar/palette) -----
   { page: 'GeckoDetail', section: 'manage' },
@@ -320,7 +338,9 @@ export const NAV_REGISTRY = [
 //
 // Retired 2 Oct 2026 (feature completeness audit, step 5): Breeding Loans,
 // Community Connect, the AI Training Center (/TrainModel) and the Morph
-// Visualizer. Their old URLs redirect; see src/lib/retiredPages.js.
+// Visualizer. Retired 16 Oct 2026 (review item E3 23): Promote, Other
+// Reptiles, the AI Consultant and the supplies store with its sticker
+// builders. Their old URLs redirect; see src/lib/retiredPages.js.
 
 // ---- Derived: SECTION_FOR_PAGE ----------------------------------------
 // Fallback section assignment for every known page. Used when the DB has
@@ -396,4 +416,95 @@ export function flattenNavItems(navItems) {
     ...(navItems.tools || []),
     ...(navItems.public || []),
   ];
+}
+
+// ---- The sidebar from page_config rows ---------------------------------
+// Moved here from Layout.jsx (16 Oct 2026) so the sidebar's size can be
+// tested against the rows production really has.
+
+/**
+ * The sidebar's items by category ({ collection, tools, public }).
+ *
+ * The page_config table decides what is switched on and the order inside
+ * a category; FALLBACK_NAV_ITEMS fills in a page that has no row yet (a
+ * new page on its first deploy) and gives every page its current name
+ * and icon. A row that switches a page off keeps it off. Retired pages
+ * are left out whatever their row says. NAV_GROUPS then decides which of
+ * these the sidebar shows (groupNavItems).
+ */
+export function buildNavItems(pageConfigs, retired = RETIRED_PAGE_NAMES) {
+  if (!Array.isArray(pageConfigs) || pageConfigs.length === 0) {
+    return FALLBACK_NAV_ITEMS;
+  }
+
+  // One row per page_name. Admins can end up with several rows for a
+  // page (an old seeding bug). Preference: an enabled row, then the most
+  // recently updated.
+  const byName = new Map();
+  for (const p of pageConfigs) {
+    if (!p?.page_name) continue;
+    const prev = byName.get(p.page_name);
+    if (!prev) {
+      byName.set(p.page_name, p);
+      continue;
+    }
+    const prevEnabled = prev.is_enabled !== false;
+    const pEnabled = p.is_enabled !== false;
+    if (pEnabled && !prevEnabled) {
+      byName.set(p.page_name, p);
+    } else if (pEnabled === prevEnabled) {
+      const prevDate = new Date(prev.updated_date || prev.created_date || 0).getTime();
+      const pDate = new Date(p.updated_date || p.created_date || 0).getTime();
+      if (pDate > prevDate) byName.set(p.page_name, p);
+    }
+  }
+  const rows = Array.from(byName.values());
+
+  const fallbackByName = {};
+  for (const category of ['collection', 'tools', 'public']) {
+    for (const f of (FALLBACK_NAV_ITEMS[category] || [])) fallbackByName[f.page_name] = f;
+  }
+
+  const enabled = rows
+    .filter((p) => p.is_enabled !== false && !retired.has(p.page_name))
+    .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
+
+  const nav = {};
+  for (const category of ['collection', 'tools', 'public']) {
+    // Current names and icons win over the ones stored on old rows.
+    nav[category] = enabled.filter((p) => p.category === category).map((p) => {
+      const fb = fallbackByName[p.page_name];
+      return fb && (fb.display_name !== p.display_name || fb.icon !== p.icon)
+        ? { ...p, display_name: fb.display_name, icon: fb.icon }
+        : p;
+    });
+  }
+
+  // A page with no row at all yet shows from the fallback. A row that
+  // switches a page off is never overridden by the fallback.
+  for (const category of ['collection', 'tools', 'public']) {
+    for (const fallback of (FALLBACK_NAV_ITEMS[category] || [])) {
+      if (!byName.has(fallback.page_name)) nav[category].push(fallback);
+    }
+  }
+  return nav;
+}
+
+/**
+ * Keeper mode: the same items less the breeding and selling pages. Only
+ * the menu is trimmed; the pages still open from a link.
+ */
+export function keeperNavItems(nav, keeperMode) {
+  if (!keeperMode) return nav;
+  return {
+    collection: (nav.collection || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
+    tools: (nav.tools || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
+    public: (nav.public || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
+  };
+}
+
+/** Every page the sidebar links to: the Dashboard link, then the groups. */
+export function sidebarDestinations(nav) {
+  const groups = groupNavItems(flattenNavItems(nav));
+  return ['Dashboard', ...groups.flatMap((g) => g.items.map((i) => i.page_name))];
 }

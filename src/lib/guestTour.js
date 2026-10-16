@@ -73,7 +73,7 @@ export const TOURS = [
         id: 'collection-list',
         path: '/MyGeckos',
         title: 'Every gecko on one screen',
-        body: 'Search, filter by sex, morph or status, and sort by age or weight. Tap any card for its full record.',
+        body: "Search, filter by sex, morph or status, and sort by age or weight. Tap any gecko's photo for its full record.",
         next: 'Open a record',
       },
       {
@@ -298,6 +298,23 @@ export function getTour(state = getTourState()) {
 
 export const startTour = (tourId = 'quick') =>
   write({ ...getTourState(), status: 'active', tour: TOUR_BY_ID[tourId] ? tourId : 'quick', step: 0 });
+
+/**
+ * Where the demo opens from the landing page. The landing promises a value
+ * from real listings, parents and weigh-ins; until October 2026 the demo
+ * opened on the Dashboard, which leads with community stats and shows none
+ * of them. It now opens on Nimbus's record (all three on one screen) with
+ * the quick tour already at that stop, so the card explains what is on
+ * screen, Next goes on to his parents' clutch odds and Back shows the
+ * whole collection. Returns the path to open.
+ */
+export const DEMO_ENTRY_STEP_ID = 'record';
+export function startDemoAtRecord() {
+  const quick = TOUR_BY_ID.quick;
+  const step = Math.max(0, quick.steps.findIndex((s) => s.id === DEMO_ENTRY_STEP_ID));
+  write({ ...getTourState(), status: 'active', tour: 'quick', step });
+  return quick.steps[step].path;
+}
 export function openHub() {
   const state = getTourState();
   if (state.status === 'hub') return state;

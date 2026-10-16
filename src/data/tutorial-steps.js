@@ -4,23 +4,25 @@ export const STEP_BLURBS = {
         title: 'Market Intelligence',
         body: 'Review current crested gecko asking prices and changes in the market, watch for morphs within your budget, browse geckos listed in the app, and manage your own listings. Asking prices are not confirmed sale prices.',
     },
-    Store: {"title": "Supplies", "body": "Browse reptile food, enclosures, lighting and care equipment. Affiliate products open the seller\u2019s listing, where you buy them at current prices. Items Geck Inspect will sell itself are marked Not available yet until its checkout opens."},
-    Promote: {"title": "Promote", "body": "Choose a gecko from your collection and draft a social post tailored to your selected platform. Review its photos, morph details and generated wording before copying or sharing the post."},
+    Today: {
+        title: 'Today',
+        body: 'What your geckos need today: feedings, weigh-ins, eggs close to hatching and vet follow-ups, each with one button to log it. On a phone it is the first tab, and it opens with no signal.',
+    },
     Portfolio: {"title": "Collection Portfolio", "body": "See estimated values for individual geckos and your collection total, based on comparable listings. Follow changes over time and review which traits contribute to the estimates; these are guides, not guaranteed sale prices."},
     PairingPlanner: {"title": "Pairing Planner", "body": "Choose a breeding goal and compare possible sire-and-dam combinations in your collection. Review predicted traits, estimated offspring values and pairing warnings before deciding which animals to pair."},
     BreedingSeason: {"title": "Season Timeline", "body": "See every pairing, recorded lock, clutch and hatch on one timeline. Compare incubation windows across pairs to plan checks and prepare space for upcoming hatchlings."},
     FieldMode: {"title": "Field Mode", "body": "Log a weight, feeding, shed or note while handling an animal. Large controls make one-handed entry easier, recent animals are quick to find, and a short undo window lets you correct an accidental log."},
     __group_collection: {
         title: 'Collection',
-        body: 'Everything about the geckos you keep: your collection, other reptiles, quick logging in Field Mode, and what your geckos are worth.',
+        body: 'The geckos you keep: what is due today, and every gecko\'s record. The Log tab on a phone, and Field Mode, log a feeding or weigh-in in a tap.',
     },
     __group_breeding: {
         title: 'Breeding',
-        body: 'Planning and running a breeding operation: pairings, lineage, the season planner and timeline, sales numbers and promotion. Keeper mode hides this group.',
+        body: 'Running a breeding operation: pairings, eggs and lineage, and your sales numbers. The Pairing Planner, Season Planner and Season Timeline open from the Breeding page. Keeper mode hides this group.',
     },
     __group_tools: {
         title: 'Tools',
-        body: 'Morph ID from a photo, Market Intelligence for prices and listings, and the AI Consultant for breeding and care questions.',
+        body: 'Morph ID from a photo, and Market Intelligence for prices and listings.',
     },
     __group_learn: {
         title: 'Learn',
@@ -28,7 +30,7 @@ export const STEP_BLURBS = {
     },
     __group_community: {
         title: 'Community',
-        body: 'The photo gallery and the forum, where keepers and breeders trade photos, questions and answers.',
+        body: 'The forum, where crested gecko keepers and breeders trade questions and answers.',
     },
     Dashboard: {
         title: 'Dashboard',
@@ -54,17 +56,9 @@ export const STEP_BLURBS = {
         title: 'Business Tools',
         body: 'Record sales and expenses, review revenue and profit, and manage buyer waitlists. Use these records to compare seasons and understand the costs behind your breeding business.',
     },
-    OtherReptiles: {
-        title: 'Other Reptiles',
-        body: 'Track non-gecko reptiles you keep (leopard geckos, ball pythons, blue tongue skinks) with the same feeding reminders and weight logs as the main collection.',
-    },
     Recognition: {
         title: 'Morph ID',
         body: 'Compare up to five photos and get a ranked visual shortlist, evidence markers, and a clear request when better photos are needed. Great for narrowing an unboxing-day or hatchling call.',
-    },
-    BreederConsultant: {
-        title: 'AI Consultant',
-        body: 'Ask anything about crested gecko care, breeding, genetics, or pricing. Trained on real keeper knowledge and our morph guide, no generic chatbot answers.',
     },
     ProjectManager: {
         title: 'Season Planner',

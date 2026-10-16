@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { Suspense, useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,8 +33,15 @@ import MorphIndexAppHooks from '@/components/morphguide/MorphIndexAppHooks';
 import { useMorphGuideData, sanitizeImage, normMorph } from '@/components/morphguide/MorphIndexData';
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import MorphQuiz from '@/components/morphguide/MorphQuiz';
-import PatternSpectrum from '@/components/morphguide/PatternSpectrum';
-import MorphEyeGuide from '@/components/morphguide/MorphEyeGuide';
+import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
+import NearScreen from '@/components/morphguide/NearScreen';
+
+// The Field Notebook (about 18 kB) and the eye colour section (about
+// 5 kB) sit far down the page, under the morph grid. They download only
+// when a visitor scrolls near them (NearScreen), and if one cannot
+// download, the page goes on without it.
+const PatternSpectrum = lazyOptional(() => import('@/components/morphguide/PatternSpectrum'));
+const MorphEyeGuide = lazyOptional(() => import('@/components/morphguide/MorphEyeGuide'));
 
 
 const MORPH_COUNT = MORPHS.length;
@@ -642,7 +649,7 @@ export default function MorphGuidePage() {
           >
             <Dna className="w-4 h-4" />
             Morphs
-            <span className="text-xs opacity-70">{MORPHS.length}</span>
+            <span className="text-xs opacity-90">{MORPHS.length}</span>
           </button>
           <button
             role="tab"
@@ -657,7 +664,7 @@ export default function MorphGuidePage() {
           >
             <GitBranch className="w-4 h-4" />
             Project Lines
-            <span className="text-xs opacity-70">{PROJECT_LINES.length}</span>
+            <span className="text-xs opacity-90">{PROJECT_LINES.length}</span>
           </button>
         </div>
 
@@ -917,9 +924,12 @@ export default function MorphGuidePage() {
               )}
             </div>
 
-            <PatternSpectrum className="mt-12" />
-
-            <MorphEyeGuide className="mt-12" />
+            <NearScreen>
+              <Suspense fallback={null}>
+                <PatternSpectrum className="mt-12" />
+                <MorphEyeGuide className="mt-12" />
+              </Suspense>
+            </NearScreen>
 
             <MorphIndexCompareTable />
 

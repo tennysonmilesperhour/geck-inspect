@@ -105,6 +105,17 @@ purchase or App Store review acceptance.
   the purchase remains with the store; the user can use Refresh store access or
   Restore purchases. Do not tell them to buy again.
 
+Paying twice is refused on both sides. Web checkout (`stripe-checkout`) refuses a
+member with a live App Store or Google Play subscription (code
+`already_subscribed_store`; Test Store and promotional rows do not count), and the
+phone app's purchase buttons are disabled for a member whose plan comes from
+Stripe. Web checkout also expires any Checkout page the member still has open
+before it makes a new one, so a second tab or a double tap cannot start a second
+subscription or a second lifetime purchase; if an open page is being paid at that
+moment the request is refused (`checkout_in_progress`). A member whose Stripe
+payment failed (`subscription_status` past_due) sees a banner across the app that
+opens the billing portal to update the card.
+
 For a missing membership, compare the signed-in Auth UUID with the RevenueCat
 customer ID, then inspect the customer's entitlements and delivery history. Check
 `revenuecat_entitlements` and `revenuecat_webhook_events` for that UUID/event ID.

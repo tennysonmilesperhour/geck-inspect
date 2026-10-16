@@ -9,7 +9,10 @@
  *                          otherwise the committed snapshot ships as is.
  *   data/price-index.csv   The same, flat.
  *   data/morphs.json       Every morph with definition, identification,
- *                          lookalikes, genetics models and sources.
+ *                          lookalikes, genetics models and sources, and
+ *                          where the Price Index has asking prices for
+ *                          it, a link to them (not the numbers: the
+ *                          catalog is CC BY 4.0, the index is not).
  *   data/genetics.json     The genetics engine's traits, combos and risky
  *                          pairings (the same facts the calculator uses).
  *   data/care.json         The care guide as structured blocks.
@@ -19,7 +22,7 @@
  *   llms/*.md              Topic files linked from /llms.txt, each small
  *                          enough for an agent to read whole.
  *
- * Why: AI search and agents cite sources with original data, clean text
+ * Why: AI search and agents cite sources with their own data, clean text
  * and stable URLs. The HTML pages stay the main surface; these give an
  * agent the same facts without parsing a JavaScript app. See
  * docs/planning/agent-access-2026-10.md.
@@ -42,18 +45,31 @@ import {
   loadPriceIndex,
   careSectionMarkdown,
   careToMarkdown,
-  morphMarkdown,
-  morphsToMarkdown,
+  morphCatalogMarkdown,
+  morphCatalogRecord,
   priceIndexToMarkdown,
-  priceRowsForMorph,
-  MORPH_LABELS,
+  withGeckInspectStatus,
 } from './lib/agent-content.mjs';
+import {
+  PRICE_DATA_LICENSE,
+  PRICE_DATA_TERMS,
+  PRICE_INDEX_MIN_LISTINGS,
+  PRICE_INDEX_SAMPLE_RULE,
+  PRICE_INDEX_WHAT,
+  applyPricePolicy,
+} from '../src/lib/priceIndexPolicy.js';
 
 const PUBLIC = resolve(REPO_ROOT, 'public');
 const ENV = { ...loadEnv('production', REPO_ROOT, ''), ...process.env };
 const TODAY = new Date().toISOString().slice(0, 10);
 
+// CC BY 4.0 covers the morph and genetics data. The Price Index is not CC
+// BY: its numbers are free to cite with a link (src/lib/priceIndexPolicy.js).
+// So the morph catalog (data/morphs.json, llms/morphs.md, the morph .md
+// twins) carries no Price Index numbers, only a link to each morph's rows,
+// and its license is true for everything in it.
 export const LICENSE_DATA = 'https://creativecommons.org/licenses/by/4.0/';
+export const LICENSE_PRICE_NOTE = PRICE_DATA_TERMS;
 export const LICENSE_TEXT_NOTE =
   'Guide text: free to quote and cite with a link to the page; not licensed for republishing in full.';
 
@@ -72,16 +88,20 @@ const json = (v) => `${JSON.stringify(v, null, 2)}\n`;
 const PRICE_META = {
   name: 'Geck Inspect Price Index',
   description:
-    'Asking prices for crested geckos (Correlophus ciliatus) by trait and market, compiled by Geck Inspect from public listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe.',
+    `${PRICE_INDEX_WHAT.replace(/^an/, 'An')} of crested geckos (Correlophus ciliatus) in the United States, South Korea, Japan and Europe, by trait and market, compiled by Geck Inspect.`,
   url: `${SITE_URL}/data`,
-  license: LICENSE_DATA,
+  // Not CC BY (decision of 16 Oct 2026): the numbers may be quoted and
+  // cited with a link. licenseName is the short form for tables.
+  license: LICENSE_PRICE_NOTE,
+  licenseName: PRICE_DATA_LICENSE,
   creator: 'Geck Inspect',
   attribution: `Geck Inspect Price Index, ${SITE_URL}/data`,
   methodology: [
     'Asking prices on open listings, not sale prices.',
     'Prices outside the US are converted to USD at stored exchange rates; shipping and import costs are not included.',
     'Only full catalog checks count. A partial check or the catch-up after an outage is left out.',
-    'A trait is shown only when at least 5 listings carry it. trait null means all crested geckos in that market.',
+    `${PRICE_INDEX_SAMPLE_RULE} thin: true marks those rows. trait null means all crested geckos in that market.`,
+    `A day counts toward a monthly median only when it had at least ${PRICE_INDEX_MIN_LISTINGS} listings; avg_listings is the average listing count of those days.`,
     'p25, median and p75 are the 25th, 50th and 75th percentile asking price. monthly.median is the median of that month\'s daily medians.',
     'Trait labels are the marketplace labels as listed by sellers; a label does not prove genotype.',
   ],
@@ -113,12 +133,14 @@ function priceIndexCsv(index) {
     const s = v == null ? '' : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const rows = [['kind', 'market', 'period', 'trait', 'listings', 'p25_usd', 'median_usd', 'p75_usd', 'full_checks']];
+  // thin_sample is the last column so readers that index columns by
+  // position keep working.
+  const rows = [['kind', 'market', 'period', 'trait', 'listings', 'p25_usd', 'median_usd', 'p75_usd', 'full_checks', 'thin_sample']];
   for (const r of index.latest) {
-    rows.push(['latest', r.market, r.checked_on, r.trait || 'All crested geckos', r.listings, r.p25, r.median, r.p75, '']);
+    rows.push(['latest', r.market, r.checked_on, r.trait || 'All crested geckos', r.listings, r.p25, r.median, r.p75, '', r.thin ? 'yes' : 'no']);
   }
   for (const r of index.monthly || []) {
-    rows.push(['monthly', r.market, r.month, r.trait || 'All crested geckos', r.avg_listings, '', r.median, '', r.full_checks]);
+    rows.push(['monthly', r.market, r.month, r.trait || 'All crested geckos', r.avg_listings, '', r.median, '', r.full_checks, '']);
   }
   return `${rows.map((r) => r.map(esc).join(',')).join('\n')}\n`;
 }
@@ -130,7 +152,7 @@ async function loadGenetics() {
   const clean = (v) => JSON.parse(JSON.stringify(v), (_k, val) => noDashes(val));
   const glossary = await import(pathToFileURL(resolve(REPO_ROOT, 'src/data/genetics-glossary.js')).href);
   return {
-    traits: clean(g.TRAITS),
+    traits: clean(g.TRAITS).map(withGeckInspectStatus),
     combos: clean(g.COMBO_MORPHS),
     riskPairings: clean(g.RISK_PAIRINGS),
     loci: g.LOCI,
@@ -147,13 +169,18 @@ const DOMINANCE_LABEL = {
   polygenic: 'Polygenic',
 };
 
+const STATUS_LABEL = {
+  proven: 'Proven',
+  emerging: 'Emerging (reported, not yet independently proven)',
+};
+
 function geneticsMarkdown(gen) {
   const out = [
     '# Crested gecko genetics: traits, inheritance and risky pairings',
     '',
     `> From the Geck Inspect genetics engine, the same facts the genetics calculator at ${SITE_URL}/calculator uses. Updated ${TODAY}. JSON: ${SITE_URL}/data/genetics.json. Guide: ${SITE_URL}/GeneticsGuide.`,
     '',
-    'Most crested gecko looks are polygenic or line-bred and cannot be Punnett-squared. The traits below are the ones the engine models with a locus. "Confirmed" means the inheritance is proven by breeding records; unconfirmed traits are hobby models.',
+    'Most crested gecko looks are polygenic or line-bred and cannot be Punnett-squared. The traits below are the ones the engine models with a locus. "Confirmed" means the inheritance is proven by breeding records. A gene with Geck Inspect status Emerging is reported by one or a few breeders and not yet independently proven; other unconfirmed traits are hobby models.',
     '',
     '## Pairings to avoid or plan carefully',
     '',
@@ -169,6 +196,7 @@ function geneticsMarkdown(gen) {
       t.locus ? `**Locus:** ${t.locus}` : null,
       `**Super form:** ${t.has_super_form ? `yes (health risk: ${t.super_health_risk || 'unknown'})` : 'no'}`,
       `**Confirmed by breeding:** ${t.confirmed ? 'yes' : 'no'}`,
+      t.status ? `**Geck Inspect status:** ${STATUS_LABEL[t.status] || t.status}` : null,
       t.last_reviewed ? `**Last reviewed:** ${t.last_reviewed}` : null,
     ].filter(Boolean);
     out.push(facts.join('  \n'), '');
@@ -201,14 +229,18 @@ function geneticsMarkdown(gen) {
 async function build() {
   const sizes = {};
 
-  // Price index: fresh from the database when possible.
+  // Price index: fresh from the database when possible. Either way the
+  // minimum-sample rule (src/lib/priceIndexPolicy.js) is applied before
+  // the file is written, so every copy built from it (CSV, pages, server
+  // HTML, llms-full.txt, MCP) leaves out small rows and marks thin ones,
+  // even while the database still runs an older open_price_index().
   const fresh = await fetchPriceIndex();
   if (fresh) {
-    writeFileSync(PRICE_INDEX, json({ ...PRICE_META, ...fresh }), 'utf8');
+    writeFileSync(PRICE_INDEX, json(applyPricePolicy({ ...PRICE_META, ...fresh })), 'utf8');
   } else if (existsSync(PRICE_INDEX)) {
     // Refresh the metadata on the snapshot so a methodology change ships.
     const old = JSON.parse(readFileSync(PRICE_INDEX, 'utf8'));
-    writeFileSync(PRICE_INDEX, json({ ...old, ...PRICE_META, latest: old.latest, monthly: old.monthly, generated_at: old.generated_at }), 'utf8');
+    writeFileSync(PRICE_INDEX, json(applyPricePolicy({ ...old, ...PRICE_META, latest: old.latest, monthly: old.monthly, generated_at: old.generated_at })), 'utf8');
   }
   const priceIndex = loadPriceIndex();
   if (priceIndex) sizes['data/price-index.csv'] = write('data/price-index.csv', priceIndexCsv(priceIndex));
@@ -225,17 +257,10 @@ async function build() {
     url: `${SITE_URL}/MorphGuide`,
     license: LICENSE_DATA,
     attribution: `Geck Inspect Morph Guide, ${SITE_URL}/MorphGuide`,
+    priceIndexNote: `Asking prices are not part of this catalog or its license. Each morph's priceIndex field (null when there are no rows) names its trait labels in the Geck Inspect Price Index (${SITE_URL}/data/price-index.json), ${PRICE_INDEX_WHAT}. ${LICENSE_PRICE_NOTE}`,
     updated: TODAY,
     count: morphs.length,
-    morphs: morphs.map((m) => ({
-      ...m,
-      url: `${SITE_URL}/MorphGuide/${m.slug}`,
-      markdown: `${SITE_URL}/MorphGuide/${m.slug}.md`,
-      categoryLabel: MORPH_LABELS.category[m.category] || m.category,
-      inheritanceLabel: MORPH_LABELS.inheritance[m.inheritance] || m.inheritance,
-      rarityLabel: MORPH_LABELS.rarity[m.rarity] || m.rarity,
-      askingPrices: priceRowsForMorph(priceIndex, m),
-    })),
+    morphs: morphs.map((m) => morphCatalogRecord(m, priceIndex)),
   }));
   sizes['data/genetics.json'] = write('data/genetics.json', json({
     name: 'Geck Inspect crested gecko genetics engine data',
@@ -262,7 +287,7 @@ async function build() {
 
   // Per-page markdown twins of the HTML pages.
   for (const m of morphs) {
-    write(`MorphGuide/${m.slug}.md`, `${morphMarkdown(m, { level: 1, full: true, priceIndex, nameOf })}\n_Source: Geck Inspect Morph Guide. Updated ${TODAY}. Cite ${SITE_URL}/MorphGuide/${m.slug}_\n`);
+    write(`MorphGuide/${m.slug}.md`, `${morphCatalogMarkdown(m, { level: 1, priceIndex, nameOf })}\n_Source: Geck Inspect Morph Guide. Updated ${TODAY}. Cite ${SITE_URL}/MorphGuide/${m.slug}_\n`);
   }
   for (const s of care) {
     write(`CareGuide/${s.id}.md`, `${careSectionMarkdown(s, 1)}\n_Source: Geck Inspect Care Guide. Updated ${TODAY}. Cite ${SITE_URL}/CareGuide/${s.id}_\n`);
@@ -272,8 +297,8 @@ async function build() {
   const header = (title, blurb) => `# ${title}\n\n> ${blurb} Updated ${TODAY}. Index: ${SITE_URL}/llms.txt\n\n`;
   sizes['llms/morphs.md'] = write('llms/morphs.md', header(
     'Crested gecko morphs (Geck Inspect Morph Guide)',
-    `All ${morphs.length} morphs with definitions, identification, lookalikes and live asking prices.`,
-  ) + morphs.map((m) => morphMarkdown(m, { level: 2, full: true, priceIndex, nameOf })).join('\n'));
+    `All ${morphs.length} morphs with definitions, identification and lookalikes, and a link to each morph's asking prices in the Price Index where it has them.`,
+  ) + morphs.map((m) => morphCatalogMarkdown(m, { level: 2, priceIndex, nameOf })).join('\n'));
   sizes['llms/care.md'] = write('llms/care.md', header(
     'Crested gecko care (Geck Inspect Care Guide)',
     `All ${care.length} care topics: housing, temperature, humidity, diet, handling, health and breeding.`,
@@ -282,7 +307,7 @@ async function build() {
   if (priceIndex) {
     sizes['llms/prices.md'] = write('llms/prices.md', header(
       'Crested gecko prices (Geck Inspect Price Index)',
-      'Current asking prices by trait and market, original data.',
+      `Current asking prices by trait and market: ${PRICE_INDEX_WHAT}, free to cite with a link.`,
     ) + priceIndexToMarkdown(priceIndex).replace(/^## .*\n\n/, ''));
   }
 
@@ -292,7 +317,7 @@ async function build() {
       id: 'price-index',
       name: PRICE_META.name,
       description: PRICE_META.description,
-      license: LICENSE_DATA,
+      license: LICENSE_PRICE_NOTE,
       temporalCoverage: priceIndex?.monthly?.length
         ? `${priceIndex.monthly.map((r) => r.month).sort()[0]}/${TODAY.slice(0, 7)}`
         : undefined,
@@ -306,7 +331,7 @@ async function build() {
     {
       id: 'morphs',
       name: 'Crested gecko morph catalog',
-      description: `Every documented crested gecko morph (${morphs.length}) with definition, inheritance, rarity, identification markers, lookalikes, competing genetics models, typical price range and sources.`,
+      description: `Every documented crested gecko morph (${morphs.length}) with definition, inheritance, rarity, identification markers, lookalikes, competing genetics models, typical price range where one is known, and sources. Asking prices are in the Price Index, linked from each morph, not in this dataset.`,
       license: LICENSE_DATA,
       updated: TODAY,
       distribution: [
@@ -340,7 +365,7 @@ async function build() {
   ];
   sizes['data/index.json'] = write('data/index.json', json({
     publisher: { name: 'Geck Inspect', url: SITE_URL },
-    description: 'Open crested gecko data from Geck Inspect. Free to use with attribution. Query it live through the MCP server at https://geckinspect.com/mcp.',
+    description: 'Open crested gecko data from Geck Inspect. Free to use with attribution; each dataset gives its own license (the morph and genetics data are CC BY 4.0, the Price Index is free to cite with a link). Query it live through the MCP server at https://geckinspect.com/mcp.',
     contact: `${SITE_URL}/Contact`,
     updated: TODAY,
     mcp: `${SITE_URL}/mcp`,

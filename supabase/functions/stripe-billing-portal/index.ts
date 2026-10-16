@@ -26,13 +26,9 @@
 // Response:   { url: string } or { error: string, message?: string }
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { createClient } from "../_shared/supabase.ts";
+import { CORS_HEADERS, json, preflight } from "../_shared/http.ts";
+import { signedInCaller } from "../_shared/caller.ts";
 
 const DEFAULT_RETURN_URL = "https://geckinspect.com/Membership";
 
@@ -45,10 +41,7 @@ const ALLOWED_RETURN_PREFIXES = [
 ];
 
 function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-  });
+  return json(body, status, CORS_HEADERS);
 }
 
 function safeReturnUrl(candidate: unknown): string {
@@ -80,9 +73,8 @@ async function stripeRequest(
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS_HEADERS });
-  }
+  const early = preflight(req);
+  if (early) return early;
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
@@ -99,25 +91,16 @@ Deno.serve(async (req: Request) => {
     body = {};
   }
 
-  const authHeader = req.headers.get("Authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) {
-    return jsonResponse({ error: "unauthenticated" }, 401);
-  }
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  // userClient identifies the caller; admin reads the profile as the
-  // service role so RLS on profiles can never hide the billing columns.
-  const userClient = createClient(supabaseUrl, serviceKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const admin = createClient(supabaseUrl, serviceKey);
-  const {
-    data: { user },
-    error: userErr,
-  } = await userClient.auth.getUser();
-  if (userErr || !user?.email) {
+  // The caller's session says who is asking; admin reads the profile as
+  // the service role so RLS on profiles can never hide the billing columns.
+  const caller = await signedInCaller(req, { supabaseUrl, apiKey: serviceKey });
+  const user = caller?.user;
+  if (!user?.email) {
     return jsonResponse({ error: "unauthenticated" }, 401);
   }
+  const admin = createClient(supabaseUrl, serviceKey);
 
   const { data: profile } = await admin
     .from("profiles")

@@ -37,6 +37,14 @@
  *   history: 'discovery / proven-by line',
  *   combinesWith: ['cream','dalmatian'],  // slugs of morphs it commonly combines with
  *   notes: 'extra caveats / judging notes',
+ *   doNotBreed: 'lethal',                 // optional, super forms breeders avoid making on
+ *                                         // purpose: 'lethal' or 'health'. The page then shows
+ *                                         // no breed, price or value prompts (src/lib/morphNotBred.js)
+ *   safePairing: {                        // with doNotBreed: the pairing to use instead
+ *     label: 'Lilly White x Normal',
+ *     text: 'one sentence on why it is safe',
+ *     pairing: 'lilly-white-x-normal',    // a /calculator/pairing page, or null
+ *   },
  * }
  */
 
@@ -314,6 +322,10 @@ export const MORPHS = [
       {
         "slug": "pinstripe",
         "difference": "Visible pinstripe highlights the raised rows; cream continuity alone cannot establish Phantom status."
+      },
+      {
+        "slug": "phantom",
+        "difference": "Phantom is the recessive gene; Phantom Pinstripe is an appearance label and does not prove the animal carries it."
       }
     ],
     aliases: [
@@ -709,6 +721,10 @@ export const MORPHS = [
       {
         "slug": "white-wall-white-spot",
         "difference": "White-spot terminology concerns discrete pale lateral areas and varies by model."
+      },
+      {
+        "slug": "whiteout",
+        "difference": "Whiteout is the gene AC Reptiles reports behind this look; Geck Inspect reads a White Wall tag as Whiteout, but the look alone does not prove it."
       }
     ],
     aliases: ['WW'],
@@ -793,7 +809,7 @@ export const MORPHS = [
     summary:
       "A genetic trait with variable appearance across ages and combinations.",
     description:
-      "Cappuccino appearance varies with age, base color and other traits. Breeders often inspect the pale marking at the tail base in young animals together with the overall pattern and documented lineage. There is no universal coffee-brown body or clean-edged saddle that identifies every Cappuccino.",
+      "Cappuccino appearance varies with age, base color and other traits. Breeders often inspect the pale marking at the tail base in young animals together with the overall pattern and documented lineage. There is no universal coffee-brown body or clean-edged saddle that identifies every Cappuccino. Two copies make a Super Cappuccino, which usually hatches but has documented health problems, including narrowed nostrils, so breeders pair a Cappuccino to a normal or a Sable instead of another Cappuccino.",
     keyFeatures: [
       "Variable pigmentation and pattern",
       "A pale tail-base marking can be a clue in juveniles",
@@ -826,7 +842,7 @@ export const MORPHS = [
         "difference": "Chocolate is a base color description; Sable is a proven gene and stays notably dark even when fired down."
       }
     ],
-    aliases: ['Super Sable'],
+    aliases: [],
     category: 'color',
     inheritance: 'incomplete-dominant',
     rarity: 'uncommon',
@@ -873,14 +889,14 @@ export const MORPHS = [
         "difference": "A Phantom Pinstripe also reads as a quiet, unbroken back; Phantom is recessive and only lineage separates the two."
       }
     ],
-    aliases: ['Super Highway'],
+    aliases: [],
     category: 'pattern',
     inheritance: 'incomplete-dominant',
     rarity: 'rare',
     summary:
       "Incomplete-dominant trait with a continuous, clean dorsal stripe. Provisionally the third version of the Cappuccino and Sable gene.",
     description:
-      "One copy makes a visual Highway and two copies make a Super Highway. Highway is treated as the third version of the Cappuccino and Sable gene, mainly because Super Highway hatchlings show nostril and health issues like Super Cappuccino; the community has not fully settled this, so it is still badged Emerging. A gecko holds two versions of the gene at most, so it can be Cappuccino plus Highway or Sable plus Highway. A clean, unbroken back also comes from Empty Back, Phantom and line-bred patternless animals, so a photo alone does not prove Highway.",
+      "One copy makes a visual Highway and two copies make a Super Highway. Highway is treated, provisionally, as the third version of the Cappuccino and Sable gene. That rests mainly on breeder reports of nostril and health problems in Super Highway hatchlings like Super Cappuccino's; those reports are not established, and the community has not settled the placement, so it is still badged Emerging. A gecko holds two versions of the gene at most, so it can be Cappuccino plus Highway or Sable plus Highway. A clean, unbroken back also comes from Empty Back, Phantom and line-bred patternless animals, so a photo alone does not prove Highway.",
     keyFeatures: [
       "Continuous, unbroken dorsal stripe",
       "Clean sides",
@@ -891,7 +907,7 @@ export const MORPHS = [
       "Confirm with documented lineage, since several genes and line-bred looks give a clean back"
     ],
     combinesWith: ['cappuccino', 'sable', 'lilly-white', 'axanthic'],
-    notes: "Avoid Highway x Highway: Super Highway hatchlings have reported nostril and health issues. Pair Highway to a normal, or to a Cappuccino or Sable for a compound with no super.",
+    notes: "Avoid Highway x Highway: some breeders report nostril and health problems in Super Highway hatchlings. That is not established, but it is reason enough to pair Highway to a normal, or to a Cappuccino or Sable for a compound with no super.",
   },
   {
     slug: 'frappuccino',
@@ -956,7 +972,7 @@ export const MORPHS = [
     summary:
       'Proven incomplete-dominant trait producing bold white markings, the super form is lethal.',
     description:
-      "Lilly White produces variable white or cream pattern that often becomes more extensive with age. Breeders assess multiple features, including tail, flank and ventral coloration, alongside lineage. High white coverage alone is insufficient: other traits may resemble it, and low-expression or Phantom combinations can look quite different.",
+      "Lilly White produces variable white or cream pattern that often becomes more extensive with age. Breeders assess multiple features, including tail, flank and ventral coloration, alongside lineage. High white coverage alone is insufficient: other traits may resemble it, and low-expression or Phantom combinations can look quite different. Two copies make a Super Lilly White, which is lethal: embryos die in the egg or within days of hatching, so breeders pair a Lilly White to a gecko without Lilly White.",
     keyFeatures: [
       "Variable white or cream coverage",
       "Tail, flank and ventral features help guide comparison",
@@ -1036,7 +1052,7 @@ export const MORPHS = [
     summary:
       'The newest crested gecko color gene: no black pigment and red eyes. The first healthy albino hatchlings were announced by Eureka Exotics in March 2026.',
     description:
-      'An albino crested gecko lacks melanin, the black and brown pigment, so the animal shows only its yellow, orange, red and cream pigments, and its eyes are red or pink instead of dark. For years albino crested geckos were treated as a myth: the albino-looking hatchlings reported before 2026 were weak, deformed or did not survive, and most "albino" sales were pale animals or edited photos. That changed on 5 March 2026, when Eureka Exotics (Nicole Cullen, Newberry, Florida) announced the hatching of what appear to be the first viable albino crested geckos: babies with no visible melanin, red pupils and normal, robust health. Albinism is recessive in essentially every reptile where it has been worked out, so the crested gecko version is expected to be recessive too, but that still has to be shown by breeding the first albinos and their siblings. Until then, treat any "het albino" offer with caution.',
+      'An albino crested gecko lacks melanin, the black and brown pigment, so the animal shows only its yellow, orange, red and cream pigments, and its eyes are red or pink instead of dark. For years albino crested geckos were treated as a myth: the albino-looking hatchlings reported before 2026 were weak, deformed or did not survive, and most "albino" sales were pale animals or edited photos. That changed on 5 March 2026, when Eureka Exotics announced the hatching of what appear to be the first viable albino crested geckos: babies with no visible melanin, red pupils and normal, robust health. Albinism is recessive in essentially every reptile where it has been worked out, so the crested gecko version is expected to be recessive too, but that still has to be shown by breeding the first albinos and their siblings. Until then, treat any "het albino" offer with caution.',
     keyFeatures: [
       'No black or brown pigment (melanin)',
       'Red or pink eyes instead of dark eyes',
@@ -1083,7 +1099,7 @@ export const MORPHS = [
     summary:
       'Rare piebald phenotype showing sharply demarcated patches of unpigmented white and translucent pinkish-ivory scales alongside normally pigmented areas.',
     description:
-      'A Pied (or Piebald) crested gecko displays localized, sharply bordered areas where skin and scale pigment are completely absent, leaving pure chalk-white or translucent pale pinkish-ivory patches that abruptly cut across the animal\'s normal base color and pattern. Expression ranges from low-expression "pinktoe" or pied-toe animals (unpigmented white toes and distal feet) to high-expression specimens with bold piebald saddles, limb bands and tail rings alongside normal dark-veined eyes. While isolated piebald-like anomalies (such as Pangea Reptile\'s historical "Patient Zero") failed to reproduce predictably, dedicated multi-generation projects led by breeders such as Eureka Exotics (Nicole Cullen) have established heritable Pied and Pinktoe lines. Because minor random white toe tips can also appear as non-heritable developmental flukes, always verify documented multi-generation lineage before treating a specimen or "het Pied" claim as proven.',
+      'A Pied (or Piebald) crested gecko displays localized, sharply bordered areas where skin and scale pigment are completely absent, leaving pure chalk-white or translucent pale pinkish-ivory patches that abruptly cut across the animal\'s normal base color and pattern. Expression ranges from low-expression "pinktoe" or pied-toe animals (unpigmented white toes and distal feet) to high-expression specimens with bold piebald saddles, limb bands and tail rings alongside normal dark-veined eyes. While isolated piebald-like anomalies (such as Pangea Reptile\'s historical "Patient Zero") failed to reproduce predictably, dedicated multi-generation projects led by breeders such as Eureka Exotics have established heritable Pied and Pinktoe lines. Because minor random white toe tips can also appear as non-heritable developmental flukes, always verify documented multi-generation lineage before treating a specimen or "het Pied" claim as proven.',
     keyFeatures: [
       'Sharply demarcated patches of unpigmented pure white and translucent pinkish-ivory skin',
       'Abruptly interrupts normal dorsal, lateral, limb or tail pattern rather than following standard Harlequin or Lilly White zones',
@@ -1097,7 +1113,7 @@ export const MORPHS = [
       'Confirm documented parent-to-offspring lineage from an established Pied breeding line',
     ],
     history:
-      'Early one-off piebald anomalies such as Pangea Reptile\'s "Patient Zero" drew intense hobby interest but did not establish a reproducible line. Subsequent multi-generation breeding by Eureka Exotics (Nicole Cullen) and collaborating keepers isolated reproducible Pied and Pinktoe lines.',
+      'Early one-off piebald anomalies such as Pangea Reptile\'s "Patient Zero" drew intense hobby interest but did not establish a reproducible line. Subsequent multi-generation breeding by Eureka Exotics and collaborating keepers isolated reproducible Pied and Pinktoe lines.',
     combinesWith: ['lilly-white', 'axanthic', 'harlequin', 'pinstripe', 'phantom-pinstripe'],
     notes:
       'Distinguish true heritable Pied lines from isolated white toe scales or paradox blotches, which can occur sporadically without passing to offspring. Always request multi-generation pairing records when evaluating Pied or het Pied offerings.',
@@ -1492,9 +1508,382 @@ export const MORPHS = [
     ],
     combinesWith: ['harlequin', 'flame', 'pinstripe', 'dalmatian'],
   },
+
+  // ---------- GENES AND SUPER FORMS (added October 2026) ----------
+  // The calculator already modeled these, but the guide had no page for
+  // them (comprehensive review, B7 finding 5). Each states how sure the
+  // hobby is: proven, reported by one main source (badged Emerging in the
+  // calculator), or reported but not established. Facts come from the
+  // genetics engine's trait data and the sources listed; no breeder
+  // history is added that a source does not give. Prices are left out:
+  // there is no index data behind them, and the lethal and health-risk
+  // supers should not carry a price at all.
+  {
+    slug: 'phantom',
+    name: 'Phantom',
+    definition:
+      'A Phantom crested gecko has two copies of the recessive Phantom gene, which mutes pattern color and darkens the animal; a gecko with one copy (a het) looks normal.',
+    lookalikes: [
+      { slug: 'phantom-pinstripe', difference: 'Phantom Pinstripe is an older visual label for crest rows without cream; the label alone does not prove the Phantom gene.' },
+      { slug: 'highway', difference: 'Highway also leaves a clean back, but one copy shows; Phantom needs two, so lineage separates them.' },
+      { slug: 'patternless', difference: 'Line-bred patternless animals can look the same without carrying Phantom at all.' },
+    ],
+    aliases: ['Phantom gene', 'Visual Phantom'],
+    category: 'color',
+    inheritance: 'recessive',
+    rarity: 'uncommon',
+    summary:
+      'Recessive gene that mutes pattern color and darkens the animal. Hets look normal. Treated as proven within documented lines.',
+    description:
+      'Phantom is recessive: a gecko needs two copies to show it, and a het Phantom looks like any other gecko. Foundation Genetics (LM Reptiles) and AC Reptiles both describe it as a simple recessive, and the Geck Inspect calculator treats it as proven. In the Foundation Genetics description it adds dark pigment and suppresses pattern, but its hold weakens near the tail base and on the sides, which is why pinstripes and lateral white can still show through. What a Phantom looks like depends on everything else it carries, so Phantoms can read as bicolor, patternless, buckskin, charcoal or cream animals. Because it hides in hets, Phantom explains many surprise quiet-backed hatchlings from two normal-looking parents.',
+    keyFeatures: [
+      'Recessive: two copies to show, and hets look normal',
+      'Mutes pattern color and darkens the base',
+      'Pinstripe and lateral white can still show near the tail base and on the sides',
+    ],
+    visualIdentifiers: [
+      'Look for muted pattern with base color showing through on the head and neck',
+      'Confirm with lineage: two visual Phantom parents, or parents proven het by earlier clutches',
+      'Do not read het status from a darker back or a head pattern; both are unreliable',
+    ],
+    history:
+      'The name began as part of the visual label Phantom Pinstripe. AC Reptiles and Foundation Genetics later described Phantom as a recessive gene, and the two uses are not interchangeable.',
+    combinesWith: ['phantom-pinstripe', 'lilly-white', 'frappuccino', 'axanthic', 'harlequin'],
+    notes:
+      'Recessive math: Phantom x Phantom gives all Phantoms; Phantom x het gives 50% Phantom and 50% het; het x het gives 25% Phantom, 50% het and 25% normal, and a normal-looking baby from that pairing has a 66% chance of being het. In Geck Inspect a bare Phantom tag means a visual Phantom.',
+    sources: [
+      'https://lmreptiles.com/fg-findingphantom/',
+      'https://lmreptiles.com/fg-pt2-1/',
+      'https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=54',
+    ],
+  },
+  {
+    slug: 'empty-back',
+    name: 'Empty Back',
+    definition:
+      'An Empty Back crested gecko has a clean, unpatterned back with its pattern on the sides; Foundation Genetics models Empty Back as an incomplete-dominant gene.',
+    lookalikes: [
+      { slug: 'highway', difference: 'Highway gives a continuous clean stripe and is provisionally a version of the Cappuccino gene; lineage separates the two.' },
+      { slug: 'phantom', difference: 'Phantom is recessive and mutes pattern color all over; Empty Back clears the back and leaves the sides patterned.' },
+      { slug: 'patternless', difference: 'Line-bred patternless animals can have a clean back with no Empty Back gene.' },
+    ],
+    aliases: [],
+    category: 'pattern',
+    inheritance: 'incomplete-dominant',
+    rarity: 'rare',
+    summary:
+      'Clean back, pattern kept on the sides. Reported as incomplete dominant by Foundation Genetics; not yet independently proven.',
+    description:
+      'Empty Back describes a gecko whose back is clear of pattern while the sides keep theirs, often with stronger contrast on the flanks. Foundation Genetics models it as an incomplete-dominant gene: one copy clears the back and two copies (Super Empty Back) clear it further, and the super form is described as healthy. That model is the main published source, and few breeders publish their own Empty Back breeding results, so Geck Inspect badges it Emerging: reported, not yet independently proven. A clean back also comes from Highway, Phantom and line-bred patternless animals, so a photo alone does not prove Empty Back.',
+    keyFeatures: [
+      'Clean, unpatterned back',
+      'Pattern concentrated on the sides',
+      'One copy is visible in the Foundation Genetics model, so there is no hidden het',
+    ],
+    visualIdentifiers: [
+      'Compare the back with the sides: Empty Back clears the back, not the whole animal',
+      'Confirm with lineage, since Highway, Phantom and line-bred animals can look the same',
+    ],
+    combinesWith: ['lilly-white', 'dalmatian', 'axanthic'],
+    notes:
+      'Foundation Genetics lists Harlequin as working against the clear back. In that model Empty Back x Empty Back gives about 25% Super Empty Back, 50% Empty Back and 25% normal.',
+    sources: [
+      'https://lmreptiles.com/fg-pt2-1/',
+    ],
+  },
+  {
+    slug: 'super-empty-back',
+    name: 'Super Empty Back',
+    definition:
+      'Super Empty Back is the two-copy form of Empty Back in the Foundation Genetics model, with the back cleared further than in a single-copy Empty Back.',
+    lookalikes: [
+      { slug: 'empty-back', difference: 'A single copy also clears the back; telling one copy from two by eye is unreliable, so use the parents.' },
+    ],
+    aliases: [],
+    category: 'pattern',
+    inheritance: 'incomplete-dominant',
+    rarity: 'very_rare',
+    summary:
+      'Two copies of Empty Back. Described as healthy in the Foundation Genetics model; thinly documented.',
+    description:
+      'In the Foundation Genetics model, two copies of Empty Back suppress the back pattern further and often sharpen the contrast on the sides. The model describes the super form as healthy and freely breedable, unlike Super Lilly White or Super Cappuccino. Published breeding records are still thin, so treat a Super Empty Back label as a lineage claim: it needs two Empty Back parents and, ideally, test breeding.',
+    keyFeatures: [
+      'Two copies of Empty Back',
+      'Back cleared further, sides often higher contrast',
+      'Described as healthy, with no reported super-form problems',
+    ],
+    visualIdentifiers: [
+      'Needs two Empty Back parents',
+      'Bred to a normal, every baby should be an Empty Back, which is the cleanest proof',
+    ],
+    combinesWith: ['lilly-white', 'dalmatian'],
+    sources: [
+      'https://lmreptiles.com/fg-pt2-1/',
+    ],
+  },
+  {
+    slug: 'whiteout',
+    name: 'Whiteout',
+    definition:
+      'A Whiteout crested gecko carries the Whiteout trait documented by AC Reptiles, reported as incomplete dominant, which adds white along the sides and back.',
+    lookalikes: [
+      { slug: 'white-wall', difference: 'White Wall is the visual label for this kind of lateral white; Geck Inspect reads a White Wall tag as Whiteout, but a photo alone does not prove the gene.' },
+      { slug: 'lilly-white', difference: 'Lilly White is a different gene with a lethal super form; white on the sides alone does not tell them apart.' },
+    ],
+    aliases: [],
+    category: 'structure',
+    inheritance: 'incomplete-dominant',
+    rarity: 'rare',
+    summary:
+      'White gene reported as incomplete dominant by AC Reptiles, whose records are the main documentation. Not yet independently proven.',
+    description:
+      'Whiteout adds white expression along the flanks and back. AC Reptiles reports it as incomplete dominant, on a different gene from Lilly White, with a Super Whiteout that is healthy and freely breedable. That would make Whiteout a way to stack white without risking Lilly White\'s lethal two-copy form. AC Reptiles\' own breeding records are the main documentation, and much of the hobby still treats white walling as line-bred, so Geck Inspect badges Whiteout Emerging: reported, not independently proven. When the genetics calculator reads a collection, a White Wall tag counts as Whiteout.',
+    keyFeatures: [
+      'White expression on the sides and back',
+      'Reported incomplete dominant, so one copy is visible',
+      'A separate gene from Lilly White',
+    ],
+    visualIdentifiers: [
+      'Check both flanks and the back',
+      'Ask for the AC Reptiles lineage behind a Whiteout label; lateral white alone is not proof',
+    ],
+    history:
+      'Documented by AC Reptiles (Anthony Caponetto), whose Whiteout page is the main source.',
+    combinesWith: ['lilly-white', 'soft-scale', 'axanthic'],
+    notes:
+      'Whiteout x Lilly White cannot make a lethal super, because they are separate genes in this model. A Lilly White Whiteout still carries one Lilly White copy, so never pair it to another Lilly White.',
+    sources: [
+      'https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=44',
+    ],
+  },
+  {
+    slug: 'super-whiteout',
+    name: 'Super Whiteout',
+    definition:
+      'Super Whiteout is the two-copy form of the Whiteout trait documented by AC Reptiles, described as healthy, with more white than a single-copy Whiteout.',
+    lookalikes: [
+      { slug: 'whiteout', difference: 'One copy also shows white; telling one copy from two by eye is unreliable.' },
+      { slug: 'super-lilly-white', difference: 'Super Lilly White is lethal and never reaches adulthood; Super Whiteout is described as healthy and is a different gene.' },
+    ],
+    aliases: ['Super White Wall'],
+    category: 'structure',
+    inheritance: 'incomplete-dominant',
+    rarity: 'very_rare',
+    summary:
+      'Two copies of Whiteout. AC Reptiles describes it as healthy and breedable; independent records are thin.',
+    description:
+      'Two copies of Whiteout give a Super Whiteout. AC Reptiles describes the super form as healthy and freely breedable, unlike Super Lilly White, which is why breeders use Whiteout to stack white. That rests on AC Reptiles\' own records, so treat a Super Whiteout label as a lineage claim that needs two Whiteout parents.',
+    keyFeatures: [
+      'Two copies of Whiteout',
+      'Described as healthy and breedable',
+      'More white than a single-copy Whiteout in AC Reptiles\' description',
+    ],
+    visualIdentifiers: [
+      'Needs two Whiteout parents',
+      'Bred to a normal, every baby should be a Whiteout',
+    ],
+    combinesWith: ['lilly-white', 'soft-scale'],
+    sources: [
+      'https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=44',
+    ],
+  },
+  {
+    slug: 'luwak',
+    name: 'Luwak',
+    definition:
+      'A Luwak crested gecko carries one Cappuccino copy and one Sable copy, which sit on the same gene in the widely reported model, so a Luwak is never a super.',
+    lookalikes: [
+      { slug: 'cappuccino', difference: 'A Cappuccino has one Cappuccino copy and no Sable; dark color alone cannot tell them apart.' },
+      { slug: 'sable', difference: 'A Sable has one Sable copy and no Cappuccino; the parents say which.' },
+    ],
+    aliases: [],
+    category: 'combo',
+    inheritance: 'incomplete-dominant',
+    rarity: 'rare',
+    summary:
+      'Cappuccino plus Sable on the same gene. Widely reported, not settled; never a super itself.',
+    description:
+      'Luwak is the name for a gecko with one Cappuccino copy and one Sable copy. Under the widely reported one-gene model, Cappuccino and Sable are two versions of the same gene, so a gecko holds at most two copies between them: a Luwak has one of each and is never a Super Cappuccino or a Super Sable. Cappuccino x Sable gives about 25% Luwak and can never make a super, which is why it is the safer way to combine the two. Luwak x Luwak is different: about 25% Super Cappuccino, 25% Super Sable and 50% Luwak. MorphMarket\'s Morphpedia still lists Sable\'s place on the Cappuccino gene as suspected, so Geck Inspect badges Luwak Emerging. Looks vary, and dark color alone does not identify one; the parents do.',
+    keyFeatures: [
+      'One Cappuccino copy plus one Sable copy',
+      'Never a super itself',
+      'Appearance varies, so lineage identifies it',
+    ],
+    visualIdentifiers: [
+      'Needs one Cappuccino-carrying parent and one Sable-carrying parent',
+      'Dark or coffee tones alone do not prove it',
+    ],
+    combinesWith: ['lilly-white', 'axanthic'],
+    notes:
+      'Do not pair a Luwak to another Luwak or to a Cappuccino: both can make Super Cappuccinos. A Luwak bred to a normal gives Cappuccinos and Sables, about half each, under the one-gene model.',
+    sources: [
+      'https://www.morphmarket.com/morphpedia/crested-geckos/sable/',
+      'https://reptidex.com/genetics/crested-gecko',
+    ],
+  },
+  {
+    slug: 'super-lilly-white',
+    name: 'Super Lilly White',
+    definition:
+      'Super Lilly White is the two-copy form of Lilly White, and it is lethal: embryos die in the egg or within days of hatching.',
+    lookalikes: [
+      { slug: 'lilly-white', difference: 'A Lilly White has one copy and is healthy; two copies are lethal, so no living adult is a Super Lilly White.' },
+      { slug: 'super-whiteout', difference: 'Super Whiteout is a different gene and is described as healthy.' },
+    ],
+    aliases: ['Super LW'],
+    category: 'structure',
+    inheritance: 'incomplete-dominant',
+    rarity: 'very_rare',
+    summary:
+      'The two-copy form of Lilly White. Lethal, so never pair Lilly White to Lilly White.',
+    description:
+      'Pairing two Lilly Whites gives about 25% Super Lilly White eggs. Those embryos die in the egg or within days of hatching, which is why Lilly White cannot be bred true and why Lilly White x Lilly White is the pairing every breeder warns against. The same applies to any two geckos that each carry Lilly White, including Frappuccinos. The Lilly White trait itself traces to Lilly Exotics (Nick Lumb) in the United Kingdom, starting with an unusual hatchling in late 2010. A seller offering a living Super Lilly White is mislabeling the animal.',
+    keyFeatures: [
+      'Two copies of Lilly White',
+      'Lethal: dies in the egg or within days of hatching',
+      'About 25% of eggs from Lilly White x Lilly White',
+    ],
+    visualIdentifiers: [
+      'There is no living adult to identify',
+      'A pale, high-white adult is a Lilly White, a Whiteout or line-bred white, never a Super Lilly White',
+    ],
+    notes:
+      'Lilly White to a gecko without Lilly White gives about 50% Lilly White and never a Super Lilly White.',
+    doNotBreed: 'lethal',
+    safePairing: {
+      label: 'Lilly White x Normal',
+      text: 'Pair a Lilly White to a gecko without Lilly White instead. About half the babies are Lilly Whites, the same share Lilly White x Lilly White gives, and no egg is lost to the lethal super.',
+      pairing: 'lilly-white-x-normal',
+    },
+    sources: [
+      'https://www.corchgeckos.com/lillywhite.html',
+      'https://www.morphmarket.com/morphpedia/crested-geckos/lilly-white/',
+    ],
+  },
+  {
+    slug: 'super-cappuccino',
+    name: 'Super Cappuccino',
+    definition:
+      'Super Cappuccino, also called Melanistic, is the two-copy form of Cappuccino; it hatches but has documented health problems, including narrowed nostrils and breathing difficulty.',
+    lookalikes: [
+      { slug: 'cappuccino', difference: 'A Cappuccino has one copy and none of the super form\'s documented health problems.' },
+      { slug: 'luwak', difference: 'A Luwak has one Cappuccino copy and one Sable copy, so it is never a Super Cappuccino.' },
+    ],
+    aliases: ['Melanistic', 'Super Capp'],
+    category: 'structure',
+    inheritance: 'incomplete-dominant',
+    rarity: 'rare',
+    summary:
+      'Two copies of Cappuccino. Hatches, but has documented health problems; breeders advise against producing it.',
+    description:
+      'Pairing two Cappuccinos gives about 25% Super Cappuccino. Unlike Super Lilly White, Super Cappuccinos usually hatch, but breeders document serious health problems: narrowed (stenosed) nostrils, breathing difficulty and poor thriving. Some breeders report that cooler incubation reduces the structural problems without removing them. For these reasons most breeders avoid Cappuccino x Cappuccino and the other pairings that can make one: Luwak x Luwak, Luwak x Cappuccino and Frappuccino x Cappuccino. Cappuccino to a normal, or to a Sable, never makes a Super Cappuccino.',
+    keyFeatures: [
+      'Two copies of Cappuccino',
+      'Documented narrowed nostrils and breathing difficulty',
+      'Usually hatches, unlike Super Lilly White',
+    ],
+    visualIdentifiers: [
+      'Check nostril openings at hatch on any baby from a pairing that can make one',
+      'Lineage tells you whether both parents carried Cappuccino',
+    ],
+    notes:
+      'Cappuccino x Cappuccino gives about 25% Super Cappuccino, 50% Cappuccino and 25% normal.',
+    doNotBreed: 'health',
+    safePairing: {
+      label: 'Cappuccino x Sable',
+      text: 'Pair a Cappuccino to a normal (about half Cappuccino) or to a Sable (about a quarter Luwak) instead. Neither pairing can make a Super Cappuccino.',
+      pairing: 'cappuccino-x-sable',
+    },
+    sources: [
+      'https://www.pangeareptile.com/blogs/blog/cappuccino-frappuccino-melanistic',
+      'https://lmreptiles.com/fg-pt2-capps/',
+    ],
+  },
+  {
+    slug: 'super-sable',
+    name: 'Super Sable',
+    definition:
+      'Super Sable is the two-copy form of Sable; it appears viable but is thinly documented, so breeders check nostril openings at hatch.',
+    lookalikes: [
+      { slug: 'sable', difference: 'One copy also gives dark, reduced-pattern tones; one copy versus two is hard to see, so use the parents.' },
+      { slug: 'luwak', difference: 'A Luwak has one Sable copy and one Cappuccino copy.' },
+    ],
+    aliases: [],
+    category: 'color',
+    inheritance: 'incomplete-dominant',
+    rarity: 'rare',
+    summary:
+      'Two copies of Sable. Appears viable but thinly documented.',
+    description:
+      'Pairing two Sables gives about 25% Super Sable, and so does Luwak x Luwak. Super Sables appear viable, unlike Super Lilly White, and no pattern of health problems has been documented, but published records are few. Because Sable is widely reported to share a gene with Cappuccino, whose super form has serious nostril problems, the community norm is to check nostril openings at hatch on any super in this group. A Super Sable bred to a normal gives only Sable babies, which is how a breeder can prove one.',
+    keyFeatures: [
+      'Two copies of Sable',
+      'Appears viable, but thinly documented',
+      'Bred to a normal, every baby is a Sable',
+    ],
+    visualIdentifiers: [
+      'Needs two Sable-carrying parents (Sable or Luwak)',
+      'Dark color alone does not prove it',
+    ],
+    notes:
+      'Super Sable x Cappuccino gives Luwaks and Sables, about half each, and never a super, under the one-gene model.',
+    sources: [
+      'https://www.morphmarket.com/morphpedia/crested-geckos/sable/',
+    ],
+  },
+  {
+    slug: 'super-highway',
+    name: 'Super Highway',
+    definition:
+      'Super Highway is the two-copy form of Highway; some breeders report nostril and health problems in these hatchlings, but that is not established.',
+    lookalikes: [
+      { slug: 'highway', difference: 'One copy also gives a clean stripe; telling one copy from two by eye is unreliable.' },
+      { slug: 'super-cappuccino', difference: 'Super Cappuccino\'s health problems are documented; Super Highway\'s are only reported.' },
+    ],
+    aliases: [],
+    category: 'pattern',
+    inheritance: 'incomplete-dominant',
+    rarity: 'very_rare',
+    summary:
+      'Two copies of Highway. Health problems reported, not established; avoid Highway x Highway.',
+    description:
+      'Pairing two Highways gives about 25% Super Highway. Some breeders report nostril and health problems in Super Highway hatchlings similar to Super Cappuccino\'s, and those reports are the main reason Highway is placed, provisionally, on the Cappuccino and Sable gene. Neither the health problems nor the placement is established in published breeding records, so Geck Inspect badges it Emerging and advises against Highway x Highway until more is known.',
+    keyFeatures: [
+      'Two copies of Highway',
+      'Health problems reported, not established',
+      'About 25% of babies from Highway x Highway',
+    ],
+    visualIdentifiers: [
+      'Needs two Highway parents',
+      'Check nostril openings at hatch',
+    ],
+    notes:
+      'Pair Highway to a normal (about 50% Highway), or to a Cappuccino or Sable for a compound with no super.',
+    doNotBreed: 'health',
+    safePairing: {
+      label: 'Highway x Normal',
+      text: 'Pair a Highway to a gecko without Highway instead. About half the babies are Highways and none is a Super Highway.',
+      pairing: null,
+    },
+    sources: [
+      'https://reptidex.com/genetics/crested-gecko',
+    ],
+  },
 ];
 
 /* ---------- helpers ---------- */
+
+/**
+ * What a morph table's price cell says when this guide gives no typical
+ * price (the Morph Guide's compare table and the server HTML of its hubs).
+ * A missing priceRange is a gap in this guide, not proof that nobody
+ * sells the morph: the Price Index has hundreds of Phantom and Empty Back
+ * listings. So it never says "no market". A super that breeders avoid
+ * making is not priced at all.
+ */
+export function noGuidePriceLabel(morph) {
+  return morph?.doNotBreed ? 'Not bred on purpose' : 'No guide price yet';
+}
 
 export function getMorph(slug) {
   return MORPHS.find((m) => m.slug === slug) || null;

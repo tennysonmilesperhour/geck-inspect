@@ -1,0 +1,38 @@
+/* Self-hosted fonts (public/fonts/, see the README there).
+
+   Until October 2026 these came from Google Fonts: a stylesheet from
+   fonts.googleapis.com declaring 13 faces, then the files from
+   fonts.gstatic.com, two extra servers a phone had to connect to before
+   any text could switch to the real font. Each family here is one
+   variable file that covers every weight the app uses (400, 500, 600
+   and 700; Inter is the app and the guides, Montserrat the landing page,
+   Righteous the wordmark), latin characters only. Characters outside
+   that range fall back to the system font for just those letters.
+
+   font-display: swap draws text at once in the fallback font and swaps
+   when the file arrives, so a slow connection never shows blank text.
+   index.html preloads the one file the page draws first. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-latin-v20.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/montserrat-latin-v31.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Righteous';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/righteous-latin-v18.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

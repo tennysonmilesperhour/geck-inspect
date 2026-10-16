@@ -1,5 +1,6 @@
 import WebsiteBuilder from '@/components/storefront/WebsiteBuilder';
 import { normalizeContactUrl } from '@/lib/storeWebsite';
+import { isFeatureRetired } from '@/lib/retiredPages';
 import GeckoImage from '@/components/shared/GeckoImage';
 import GeckoBulkActions from '@/components/bulk/GeckoBulkActions';
 import { Gecko } from '@/entities/all';
@@ -34,6 +35,7 @@ import {
 } from '@/components/storefront/StorefrontSections';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import PageHeader from '@/components/shared/PageHeader';
+import { VERIFIED_BREEDER_DEFINITION } from '@/lib/verifiedBreeder';
 
 const MIN_BANNER_WIDTH = 1280;
 const MIN_BANNER_HEIGHT = 320;
@@ -475,9 +477,16 @@ export default function MyStore() {
                     </div>
                 ) : (
                     <>
-                        <WebsiteBuilder settings={siteSettings} onChange={setSite} form={form} onFormChange={set}
-                            profile={profileForm} geckos={geckos} plans={plans}
-                            waitlist={waitlists.find(w => w.id === siteSettings.waitlistId)} />
+                        {/* The visual website editor is switched off (review
+                            item E3 23, src/lib/retiredPages.js). A design
+                            saved before still loads into siteSettings and is
+                            written back unchanged by Save store, so nothing
+                            is lost while it is off. */}
+                        {!isFeatureRetired('websiteBuilder') && (
+                            <WebsiteBuilder settings={siteSettings} onChange={setSite} form={form} onFormChange={set}
+                                profile={profileForm} geckos={geckos} plans={plans}
+                                waitlist={waitlists.find(w => w.id === siteSettings.waitlistId)} />
+                        )}
                         {/* Identity */}
                         <Card>
                             <CardHeader>
@@ -680,8 +689,7 @@ export default function MyStore() {
                                         <span>Your page shows the <span className="text-emerald-300 font-semibold">Verified breeder</span> badge.</span>
                                     ) : (
                                         <span>
-                                            The Verified breeder badge is given after a check by the Geck Inspect team: who you are, your own crested geckos tracked here,
-                                            a sales record (such as completed transfers), published store policies, and no open complaints. Ask through Contact once your page is set up.
+                                            {VERIFIED_BREEDER_DEFINITION} Ask through Contact once your page is set up.
                                         </span>
                                     )}
                                 </div>
@@ -725,9 +733,19 @@ export default function MyStore() {
                                         </SelectContent>
                                     </Select>
                                     <p className="text-xs text-slate-500">
+                                        {/* Waitlists are made in Business Tools (the Promote composer
+                                            that used to make them is retired, src/lib/retiredPages.js). */}
                                         {waitlists.length > 0
                                             ? 'Featuring an open waitlist adds a signup call to action to your public page.'
-                                            : 'No open waitlists yet. Create one from the Promote composer on any gecko, then attach it here.'}
+                                            : (
+                                                <>
+                                                    No open waitlists yet. Create one in{' '}
+                                                    <Link to={`${createPageUrl('MarketplaceSalesStats')}?tab=waitlists`} className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300">
+                                                        Business Tools, under Waitlists
+                                                    </Link>
+                                                    , then attach it here.
+                                                </>
+                                            )}
                                     </p>
                                 </div>
                             </CardContent>

@@ -1032,7 +1032,7 @@ export default function SettingsPage() {
                             Hatchery Preferences
                         </CardTitle>
                         <CardDescription className="text-slate-400">
-                            How the Hatchery tab on the Breeding page opens. My Geckos, Other Reptiles, the Gallery and your breeding plans each remember their own sort from the settings button at the top of that page.
+                            How the Hatchery tab on the Breeding page opens. My Geckos, the Gallery and your breeding plans each remember their own sort from the settings button at the top of that page.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -1174,8 +1174,8 @@ export default function SettingsPage() {
                                     {isPaid ? (
                                         renderSwitch(
                                             'morph_id_show_value_estimate',
-                                            'Show estimated retail value',
-                                            'Adds a conservative USD price band to the AI reasoning. Off by default. The estimate is a ballpark for an unrelated, unproven specimen, not an appraisal.',
+                                            'Show asking prices',
+                                            'Adds the middle half of asking prices from the Price Index for the looks Morph ID finds, with how many listings each range rests on. Off by default. Asking prices on public listings, not an appraisal.',
                                             formData.morph_id_show_value_estimate,
                                             (checked) => handleChange('morph_id_show_value_estimate', checked),
                                         )
@@ -1183,10 +1183,10 @@ export default function SettingsPage() {
                                         <div className="flex items-start justify-between gap-4 p-4 border border-slate-700 rounded-lg bg-slate-800/50">
                                             <div>
                                                 <Label className="font-medium text-slate-200">
-                                                    Show estimated retail value
+                                                    Show asking prices
                                                 </Label>
                                                 <p className="text-sm text-slate-400 mt-1">
-                                                    Available on Keeper and up. Upgrade to add a conservative price band to your MorphID results.
+                                                    Available on Keeper and up. Upgrade to see Price Index asking prices next to your Morph ID results.
                                                 </p>
                                             </div>
                                             <Button

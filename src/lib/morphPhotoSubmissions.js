@@ -12,15 +12,20 @@
  * needed for that.
  */
 import { MORPHS, getMorph } from '@/data/morph-guide';
-import { supabase } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 
 export const CONTRIBUTOR_FALLBACK = 'a Geck Inspect member';
 
-/** The built-in morphs, sorted by name, for the submission form. */
+/**
+ * The built-in morphs, sorted by name, for the submission form. A lethal
+ * super (Super Lilly White) is left out: no living gecko can be one (the
+ * isLivingMorph rule in src/lib/morphNotBred.js, written out here).
+ */
 export function submissionMorphOptions() {
-  return MORPHS.map((m) => ({ slug: m.slug, name: m.name })).sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
+  return MORPHS.filter((m) => m.doNotBreed !== 'lethal')
+    .map((m) => ({ slug: m.slug, name: m.name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
@@ -69,9 +74,10 @@ export function contributorCredit(name) {
  * emails). Until that function exists, or on any error, this returns an
  * empty list so the page simply shows no member photos.
  */
-export async function fetchMorphCommunityPhotos(slug, { limit = 12, client = supabase } = {}) {
-  if (!slug || !client) return [];
+export async function fetchMorphCommunityPhotos(slug, { limit = 12, client: given } = {}) {
+  if (!slug) return [];
   try {
+    const client = given || await getSupabase();
     const { data, error } = await client.rpc('morph_community_photos', {
       p_slug: slug,
       p_limit: limit,

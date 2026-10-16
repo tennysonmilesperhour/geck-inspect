@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/select';
 import { AlertTriangle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { displayText } from '@/lib/genetics';
+import { displayText, engineTrait } from '@/lib/genetics';
 import {
   getSimpleTraits,
   COMPLEX_ENTRY,
@@ -17,10 +17,12 @@ import {
   COMPLEX_OPTIONS,
   COMPLEX_OPTIONS_BY_VALUE,
   zygosityOptions,
-  stateToSpec,
   stateToChips,
-  engineTrait,
 } from '@/lib/genetics/calculatorCatalog';
+
+// Moved to the catalog so the calculator page can use it without loading
+// this picker (and the engine) first; kept here for existing imports.
+export { buildParentFromState } from '@/lib/genetics/calculatorCatalog';
 
 /**
  * Manual genotype picker over the full calculator catalog
@@ -100,35 +102,28 @@ function ConfidenceBadge({ confidence, traitId }) {
   );
 }
 
-/**
- * Build the animal-shaped object the calculator and simulator consume.
- * `genotype_spec` carries the weighted-locus spec (the precise path);
- * `morph_tags` carries display chips so parent summaries render the
- * same way for manual and collection parents.
- */
-export function buildParentFromState(id, name, state) {
-  return {
-    id,
-    name,
-    sex: 'Unsexed',
-    image_urls: [],
-    morph_tags: stateToChips(state),
-    genotype_spec: stateToSpec(state),
-    // Chips are labels only; the spec is the source of truth, so the
-    // calculator does not re-read these as collection tags.
-    source: 'manual',
-  };
-}
-
-function TraitRow({ trait, value, onSelect, accentClass }) {
+// Every gene select gets a name that says which parent and which gene,
+// then its current value ("Sire Lilly White Het"). The 18 selects had no
+// accessible name at all, so a screen reader heard "combobox" 18 times.
+// The name is built from the parent label, the gene's own text (not the
+// Proven badge button beside it) and the trigger itself, which carries
+// the chosen value.
+function TraitRow({ trait, value, onSelect, accentClass, parentId }) {
+  const uid = useId();
+  const nameId = `${uid}-name`;
+  const triggerId = `${uid}-trigger`;
   return (
     <div className="space-y-1">
       <Label className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
-        {trait.label}
+        <span id={nameId}>{trait.label}</span>
         <ConfidenceBadge confidence={trait.confidence} traitId={trait.id} />
       </Label>
       <Select value={value || 'none'} onValueChange={onSelect}>
-        <SelectTrigger className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}>
+        <SelectTrigger
+          id={triggerId}
+          aria-labelledby={`${parentId} ${nameId} ${triggerId}`}
+          className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
@@ -143,8 +138,12 @@ function TraitRow({ trait, value, onSelect, accentClass }) {
   );
 }
 
-export default function ManualGenotypePicker({ value, onChange, accentClass = 'border-emerald-700' }) {
+export default function ManualGenotypePicker({ value, onChange, accentClass = 'border-emerald-700', parentLabel = 'Parent' }) {
   const chips = useMemo(() => stateToChips(value || {}), [value]);
+  const uid = useId();
+  const parentId = `${uid}-parent`;
+  const complexNameId = `${uid}-complex-name`;
+  const complexTriggerId = `${uid}-complex-trigger`;
 
   const setState = (traitId, v) => {
     const next = { ...(value || {}) };
@@ -163,6 +162,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
 
   return (
     <div className="space-y-4">
+      <span id={parentId} className="sr-only">{parentLabel}</span>
       {/* Proven Mendelian genes */}
       <div className="space-y-2">
         <p className="text-[10px] uppercase tracking-widest text-slate-500">Proven genes</p>
@@ -174,6 +174,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
               value={value?.[trait.id]}
               onSelect={(v) => setState(trait.id, v)}
               accentClass={accentClass}
+              parentId={parentId}
             />
           ))}
         </div>
@@ -185,11 +186,15 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
           Cappuccino complex (one gene, allelic)
         </p>
         <Label className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
-          {COMPLEX_ENTRY.label}
+          <span id={complexNameId}>{COMPLEX_ENTRY.label}</span>
           <ConfidenceBadge confidence="proven" traitId="cappuccino" />
         </Label>
         <Select value={complexValue} onValueChange={(v) => setState(COMPLEX_ID, v)}>
-          <SelectTrigger className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}>
+          <SelectTrigger
+            id={complexTriggerId}
+            aria-labelledby={`${parentId} ${complexNameId} ${complexTriggerId}`}
+            className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
@@ -223,6 +228,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
               value={value?.[trait.id]}
               onSelect={(v) => setState(trait.id, v)}
               accentClass={accentClass}
+              parentId={parentId}
             />
           ))}
         </div>

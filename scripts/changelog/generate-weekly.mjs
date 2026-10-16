@@ -34,7 +34,13 @@
 import { execSync } from 'node:child_process';
 import Anthropic from '@anthropic-ai/sdk';
 
-const MODEL = 'claude-sonnet-4-6';
+// Claude Haiku 5.5, the current Haiku ($0.10 / $0.50 per million tokens,
+// against $3 / $15 for Sonnet 4.6 before). Grouping a week of commit
+// subjects into a few friendly bullets is summarizing, which Haiku does
+// well, and the dash scrub below still guards the copy rule. Haiku 5.5
+// accepts the forced tool call this script uses (the 5.5 Sonnet and Opus
+// models do not), and a forced call skips thinking, so max_tokens holds.
+const MODEL = 'claude-haiku-5-5';
 
 function shellOut(cmd) {
   return execSync(cmd, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
@@ -163,10 +169,10 @@ function stripDashes(text) {
   // double-hyphen pair to comma. Hyphens in words are untouched because
   // they're not surrounded by spaces.
   return text
-    .replace(/\s*—\s*/g, ', ')
+    .replace(/\s*\u2014\s*/g, ', ')
     .replace(/\s*--\s+/g, ', ')
     .replace(/\s+--\s*/g, ', ')
-    .replace(/–/g, '-');
+    .replace(/\u2013/g, '-');
 }
 
 async function recentEntryExists() {

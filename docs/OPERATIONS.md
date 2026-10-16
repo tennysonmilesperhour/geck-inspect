@@ -19,11 +19,10 @@ Keep it true: when a service, secret, job or price changes, change this file in 
 | **Resend** | All email: reminders, digests, lifecycle emails, invites, inquiries, guide downloads, waitlist, the weekly reports. Senders seen in code: alerts@, invites@, hi@, system@, admin@ geckinspect.com. Resend reports each email's delivery, opens, clicks, bounces and spam complaints back to the `resend-webhook` function, which records them in `email_deliveries` and stops mail to addresses that hard bounced or complained (`email_suppressions`). That needs the webhook set up in Resend (section 2) | **Unknown** | **Unknown** |
 | **Anthropic** (Claude API) | Morph ID, health screen, AI Consultant, Promote drafting, spreadsheet and photo import, the weekly changelog, the error-triage agent, Morph ID evaluation | Pay as you go (prepaid credit; it has run out once) | Usage based. Recorded: Morph ID about 3 cents a call; a full evaluation run about $6; the daily canary about 6 cents a day. Evaluation runs cost $23.84 in the 30 days before 14 October against $0.59 of member Morph ID use |
 | **Replicate** | Photo fingerprints (embeddings) that Morph ID uses to find similar reference photos | Pay as you go | Usage based, small. Under $5 of credit, Replicate allows one request at a time, which slows evaluation runs |
-| **PostHog** | Product analytics (the production build requires its key) | **Unknown** | **Unknown** |
+| **PostHog** | Product analytics (the production build requires its key). Members are identified by account id, never email; EEA and UK visitors are asked first (section 7) | **Unknown** | **Unknown** |
 | **Google Analytics 4** and **Search Console** | Traffic and search data for the weekly growth report | Free | $0 |
 | **Google PageSpeed API** | The twice-monthly SEO audit | Free | $0 |
 | **GitHub** (Actions, Dependabot) | Code, CI, the scheduled bots in section 5 | Free for a public repository | $0 today. If the repository is made private (plan item E1 6), Actions minutes become limited on the Free plan; check usage after the switch |
-| **Robauto.ai** | A pixel in `index.html` that counts visits from AI assistants | **Unknown** | **Unknown** |
 | **Govee API** | Enclosure sensor readings for members who connect a device (`iot-poll`) | Free API | $0 |
 | **Meta and Reddit apps** | Promote's social posting connections | Free | $0 |
 | **Domain** (geckinspect.com) | The site and email sender domain | **Unknown registrar** | **Unknown** |
@@ -49,8 +48,8 @@ These are shared by every function in the project.
 | `RESEND_API_KEY`, `EMAIL_FROM`, `SITE_URL` | `send-email`, `send-collection-invite`, `send-breeder-inquiry`, `subscribe-and-send-guides`, `waitlist-signup` (and `SITE_URL` also in `email-unsubscribe`, `store-checkout`) |
 | `RESEND_WEBHOOK_SECRET` | `resend-webhook`. The signing secret Resend shows for the webhook endpoint (it starts with `whsec_`). Without it the function refuses every call, so no delivery events are recorded |
 | `EMAIL_POSTAL_ADDRESS`, `UNSUBSCRIBE_MAILTO` | `send-email`, both optional. The postal address goes in the email footer (US law expects one in commercial email). The mailto address goes in the List-Unsubscribe header only when a signed unsubscribe link could not be made |
-| `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `HEALTH_SCREEN_MODEL` | `recognize-gecko-morph`, `health-screen`, `invoke-llm`, `generate-social-post`, `recognize-import-data` |
-| `REPLICATE_API_TOKEN`, `SIGLIP_MODEL` | `recognize-gecko-morph`, `embed-gecko-image` |
+| `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `HEALTH_SCREEN_MODEL`, `INVOKE_LLM_MODEL` | `recognize-gecko-morph`, `health-screen`, `invoke-llm`, `generate-social-post`, `recognize-import-data`. The three model names are optional overrides; which model each feature uses by default is in section 8 |
+| `REPLICATE_API_TOKEN`, `SIGLIP_MODEL` | `recognize-gecko-morph`, `embed-gecko-image`. `SIGLIP_MODEL` overrides the pinned photo fingerprint model version (`_shared/visual-embedding.ts`); leave it unset unless every stored photo is being fingerprinted again |
 | `IP_HASH_SALT`, `EVAL_SHARED_SECRET`, `MORPH_VISUAL_RETRIEVAL`, `MORPH_RETRIEVAL_MIN_SIMILARITY`, `MORPH_RETRIEVAL_MAX_PHOTOS`, `FEW_SHOT_PER_MORPH`, `FEW_SHOT_MAX_TOTAL`, `FEW_SHOT_FILLER_URL_PREFIX` | `recognize-gecko-morph` |
 | `MORPH_EMBED_BACKFILL_KEY` | `embed-gecko-image` |
 | `REVENUECAT_API_KEY`, `REVENUECAT_WEBHOOK_AUTHORIZATION` | `revenuecat-sync`, `revenuecat-webhook` (the second must match the header set in the RevenueCat dashboard exactly) |
@@ -103,6 +102,7 @@ Almost all are `VITE_` variables, which Vite builds into the public JavaScript. 
 | Edge function secrets, Vault, dashboard settings | No copy. Section 2 lists the names so they can be recreated |
 | A member's own data | Members can export their collection from the app; it is a collection archive, not a full account backup (`docs/launch-repairs-2026-09-06.md`, A13) |
 | Scheduled job history | `purge-cron-run-details` keeps about 7 days, so a job that fails for longer than a week leaves no trace |
+| Error reports, crawler hits, webhook payloads | Kept 90 days on purpose (`privacy-retention-daily`, section 5): older error reports and AI crawler hits are deleted, and old Stripe, payment ledger and RevenueCat webhook payloads are emptied while their rows stay. The weekly agent-traffic export also prunes `agent_hits` at 90 days. `public.user_events` (the first-party page and feature count) has no time limit; deleting an account removes that member's rows |
 
 Plan item E1 11 asks for: the backup tier confirmed and written into `docs/MIGRATIONS.md`, a weekly copy of the storage buckets off the platform, one restore of one bucket tried, spend alerts in the Anthropic and Replicate consoles, and a free uptime check on `/`, `/AuthPortal`, `/Membership` and `/mcp`. All of these need Tennyson's accounts.
 
@@ -145,9 +145,10 @@ Times are UTC. "Last 7 days" is the run history the database keeps (section 3).
 | `clear-lapsed-featured-breeders` | 04:50 | Removes expired featured breeder slots | 8 ok |
 | `prune-stale-push-subscriptions` | 03:17 | Drops dead web push subscriptions | 7 ok |
 | `purge-cron-run-details` | 03:47 | Deletes job history older than about 7 days | 8 ok |
-| `monthly-overage-billing` | 02:00 on the 1st | Social post overage billing (overage is paused) | not due |
+| `monthly-overage-billing` | 02:00 on the 1st | Social post overage billing. **Unscheduled by round 3** (`20261016090600_retire_overage_billing.sql`) with Promote retired; it never ran | removed |
 | `process-scheduled-blog-posts` | every 5 minutes | **Inactive** (blog shelved) | |
 | `promote_drain_scheduled` | every 5 minutes | **Inactive** (scheduled social posts) | |
+| `privacy-retention-daily` | 04:05 | `apply_privacy_retention(90)`: deletes `error_logs`, `geck_data.error_logs` and `agent_hits` rows older than 90 days; empties old Stripe, payment ledger and RevenueCat webhook payloads but keeps the rows. **Added by round 3** (`20261016090000_privacy.sql`) | new |
 | `lifecycle-emails-hourly` | :35 past each hour (`35 * * * *`) | The getting-started emails (day 0 to day 14). **Added by round 2.** It sends nothing until `app_settings` `lifecycle_emails_enabled` is true, which waits on Tennyson approving the copy in `docs/planning/lifecycle-emails-2026-10.md` | new |
 
 Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no time zone (review C15 item 3). Round 2 also changes what the reminder and digest jobs send (defaults by life stage, `/log` links, nothing for addresses that cannot sign in) without changing their schedules. Re-run the query in section 6 rather than trusting this table.
@@ -156,7 +157,8 @@ Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no
 
 | Workflow | When (UTC) | What it does |
 |---|---|---|
-| `ci` | Every push to `main` and every pull request | Lint, typecheck, tests, genetics drift check, full build |
+| `ci` | Every push to `main` and every pull request | Lint, typecheck, tests, the same tests at other dates, genetics drift check, full build, size budget (section 7) |
+| `integration` | Every pull request | The Playwright member flow against a fake Supabase in the browser (`member-flow`), and every migration replayed on a fresh Postgres 16 followed by every `supabase/tests/*.sql` (`database`, `scripts/sql-harness/README.md`) |
 | `deploy-watch` | When Vercel reports a failed production deploy | Opens or updates a `ci-failure` issue that emails Tennyson |
 | `daily-canary` | Daily 14:07 | Signs in as the evaluation account, checks the value estimates, runs two real Morph IDs; a failure emails the repo owner |
 | `growth-report` | Monday 11:00 | GA4 and Search Console report, committed to `docs/growth-reports/` |
@@ -196,6 +198,37 @@ Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no
 7. **Email health.** Resend: bounce and complaint rates for the alerts sender, and any domain warnings. In the app: the email delivery table on the Weekly scoreboard card, and any new rows in `email_suppressions`.
 8. **Errors.** The newest rows in `error_logs`, grouped by message.
 9. **Support and moderation.** The support inbox and the in-app tickets are answered; the reports view is empty or handled.
-10. **Market feed.** Is the US feed running? If not, the Market page and value estimates are getting stale; note it on the scoreboard.
-11. **Dependabot.** Merge the grouped patch updates once CI is green; read anything major before merging.
-12. **Docs reconcile.** Spend ten minutes checking `docs/CONTEXT.md`, `ROADMAP.md` and this file against what changed this week (the review's A13 recommendation: one weekly step whose only job is to keep the docs true).
+10. **Photo thumbnails.** Admin panel, System, Photo thumbnails shows how many member photos have no thumbnail. If the count is not zero (always the day after a release), press Make thumbnails and keep the tab open; it is safe to stop and start again.
+11. **Market feed.** Is the US feed running? If not, the Market page and value estimates are getting stale; note it on the scoreboard.
+12. **Dependabot.** Merge the grouped patch updates once CI is green; read anything major before merging.
+13. **Docs reconcile.** Spend ten minutes checking `docs/CONTEXT.md`, `ROADMAP.md` and this file against what changed this week (the review's A13 recommendation: one weekly step whose only job is to keep the docs true).
+
+## 7. Build and site checks (added 16 October 2026, round 3)
+
+- **Tests and the clock.** `pnpm test` pins the time zone to UTC. `pnpm test:clock-drift` reruns the unit tests 400 days ahead and 400 days back (the CI step "Unit tests at other dates"). A failure there means a test reads today's date: freeze it with `vi.useFakeTimers({ toFake: ['Date'] })` and `vi.setSystemTime(...)`. `pnpm build` runs the tests too, so a test that reads the real date would break every deploy on the day it starts failing.
+- **Member flow.** `pnpm test:e2e` runs the Playwright flow (sign up, first gecko, feeding, transfer) against a fake Supabase in the browser. The `integration` workflow runs it on every pull request.
+- **Database.** `scripts/sql-harness/build.sh` replays every migration on a fresh Postgres 16 and `run-tests.sh` runs every `supabase/tests/*.sql`; the `integration` workflow does both on every pull request.
+- **Size budget.** CI runs `node scripts/check-bundle-size.mjs` after `pnpm build`: the main script plus files loaded up front 150 kB gzipped, any page 60 kB, public pages 200 kB, public images 200 kB. Agreed exceptions are in `scripts/bundle-budget.json`, each with its reason. When splitting a page so part of it loads later, check the page still has its own entry in `dist/.vite/manifest.json`: if the lazy part imports modules only that page uses, Rollup can fold the page into a shared file, and the size check then warns that the page has no entry of its own (it cannot measure it). To make a page smaller, load the part that is not on its first screen when it is needed (the calculator's engine, the Morph Guide quiz's animation library, the Care Guide's other Keeper's Guides and most Admin sections work this way). Such a lazy part may import library code or our modules other pages share, but not a module only that page uses: then the build lists the page only under a hashed name, its size goes unchecked, and the prerendered page loses its preload links. The check prints a warning when that happens (the retired Store page has it today).
+- **Fonts** are self-hosted in `public/fonts/` (Inter, Montserrat and Righteous; rules in `src/styles/fonts.css`). Google Fonts is no longer used or allowed by the Content Security Policy.
+- **Morph Guide pigment layers** are built by `node scripts/precompute-trait-layers.mjs` from `art/morph-guide/ink-studies-v3`.
+- **Content dates.** `pnpm build` runs `scripts/build-content-dates.mjs` first, which dates each page from git. In a shallow checkout (Vercel's) it keeps the committed date for files last touched in the oldest fetched commit, so run `pnpm build:content-dates` in a full clone now and then and commit `scripts/content-dates.json`.
+- **Link previews.** `middleware.js` serves small preview pages for `/passport`, `/Breeder`, `/store` and `/waitlist` to link-preview fetchers only (Facebook, iMessage, Discord, Slack; `api/_lib/share-cards.js`), so a shared link shows that gecko's or breeder's own title and photo. It needs `VITE_SUPABASE_ANON_KEY` in the Vercel environment, which agent-hit logging already uses.
+- **New morphs** go in `src/data/morph-guide.js`, then `node scripts/build-vercel-json.mjs` regenerates `api/_lib/known-path-patterns.js`. A morph added only as a `morph_guides` database row gets a 404 at the edge.
+- **Analytics consent.** For visitors in the EEA and UK (Vercel's country header, kept in the `gi_analytics_region` cookie by `middleware.js`, or a European browser time zone), Google Analytics and PostHog load only after Accept on the consent banner. Do Not Track and Global Privacy Control still mean off for everyone. Inline scripts in `index.html` are allowed by hash in the Content Security Policy: after editing one, run `node scripts/build-vercel-json.mjs` (the build does it too).
+
+## 8. Analytics and logs: what records what, and who reads it (16 October 2026)
+
+| Record | What it holds | Where | Read by |
+|---|---|---|---|
+| Google Analytics 4 | Page views (`src/lib/GA4PageTracker.jsx`, `src/lib/ga.js`, loaded by the app behind the consent gate) | Google | The weekly growth report (`scripts/growth/ga4.mjs`, `growth-report` workflow) and Search Console |
+| PostHog | Page views and product events (`src/lib/posthog.js`, `PostHogPageTracker`), identified by account id; the homepage A/B test (`docs/planning/homepage-ab-test-2026-10.md`) | PostHog cloud | Tennyson in PostHog; no script reads it |
+| `user_events` | Every product event mirrored by `captureEvent`, plus a `page_view` row per navigation (`src/lib/telemetry.js`) | `public.user_events` | Admin Analytics and Product Analytics (read in pages through `src/lib/adminData.js`; a table that fails to load is named on the screen), the Funnel card, the scoreboard, the member card in User Management |
+| `user_activity` | Legacy `new_gecko` rows (243). Not written since 16 October 2026; it duplicated the `animal_created` event | `public.user_activity` | Nothing. Kept for account erasure and old app copies; drop it, with the `UserActivity` entity, after a month |
+| `error_logs` | Browser errors (`reportError`) and CSP reports (`csp-report`) | `public.error_logs` | Admin Error Logs and System Health, the `error-triage` workflow, weekly checklist item 8 |
+| `geck_data.error_logs` | The market scraper's errors | `geck_data` | The geck-data repository |
+| `agent_hits` | AI crawlers, assistants and MCP tool calls (`middleware.js`, `log_agent_hit()`) | `public.agent_hits` | `scripts/agent-traffic-report.mjs` and the weekly agent review |
+| `geck_data.model_invocations` | Every Morph ID, AI Consultant and health screen call with its cost (`supabase/functions/_shared/model-cost.ts`, cache reads and writes counted) | `geck_data` | Admin AI screens |
+
+A new gecko fires two event names (`gecko_added` and `animal_created`); pick one before comparing those counts. The Robauto.ai pixel was removed on 16 October 2026.
+
+**AI models (16 October 2026).** Morph ID: the model set in `recognize-gecko-morph` (unchanged until a seller-disjoint gold set can grade a newer one, `docs/morph-id-eval/README.md`), about 3.6 cents an identification with the cache counted. AI Consultant (`invoke-llm`, retired for members but kept): a small Haiku-class model, about 0.1 cents a message; `INVOKE_LLM_MODEL` rolls it back. Health screen: a Sonnet-class model, about 1 to 2 cents a screen; `HEALTH_SCREEN_MODEL` overrides it. The weekly changelog and error triage use the models named in their workflows.

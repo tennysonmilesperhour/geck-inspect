@@ -3,10 +3,14 @@
  * GeckoGenius assistant (BreederConsultant page).
  *
  * How it works (v1, no server-side tool use):
- * 1. The page appends buildActionProtocolPrompt() to the system prompt.
- *    It tells the model that when the user asks it to DO something it
- *    must answer with a single JSON block:
+ * 1. The server tells the model the action protocol (ACTION_PROTOCOL in
+ *    supabase/functions/invoke-llm/consultant.ts, moved there with the
+ *    rest of the assistant's instructions on 16 Oct 2026). When the user
+ *    asks it to DO something it must answer with a single JSON block:
  *      {"action": "log_weight", "args": {...}, "say": "..."}
+ *    The page sends the member's gecko names so the model can echo real
+ *    names back. A test keeps the server's action list and ACTIONS below
+ *    the same.
  * 2. The page runs parseAssistantAction() over the raw LLM reply. If a
  *    registered action comes back, it calls validate(args, ctx) here.
  *    Validation resolves gecko_name against the user's collection with
@@ -39,6 +43,7 @@ import {
 } from '@/entities/all';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { logFeedings, undoFeedings } from '@/lib/husbandryLog';
+import { LIFE_STAGES } from '@/data/husbandry-facts';
 import { addDays, differenceInCalendarDays } from 'date-fns';
 
 // ---------------------------------------------------------------------------
@@ -168,6 +173,20 @@ function normalizeShedQuality(quality) {
 
 const SHED_STALE_DAYS = 45;
 
+/**
+ * "about every 1 to 4 weeks while growing and every 4 to 6 weeks as
+ * adults", from the life stages in src/data/husbandry-facts.js. Until
+ * 16 Oct 2026 this said "roughly every 2 to 4 weeks", which matched no
+ * stage: hatchlings shed far more often and adults less often.
+ */
+export function shedRhythmShort() {
+  const growing = LIFE_STAGES.filter((s) => s.maxGrams !== null);
+  const adult = LIFE_STAGES.find((s) => s.maxGrams === null);
+  const lo = Math.min(...growing.map((s) => s.shedWeeks[0]));
+  const hi = Math.max(...growing.map((s) => s.shedWeeks[1]));
+  return `about every ${lo} to ${hi} weeks while growing and every ${adult.shedWeeks[0]} to ${adult.shedWeeks[1]} weeks as adults`;
+}
+
 async function listDueEggs(ctx) {
   const [eggs, plans] = await Promise.all([
     Egg.filter({ status: 'Incubating' }).catch(() => []),
@@ -282,7 +301,7 @@ async function listDueSheds(ctx) {
       : `- **${g.name}**: no shed ever logged`
   ));
   const more = stale.length > 15 ? `\n\n...and ${stale.length - 15} more.` : '';
-  return `${stale.length} gecko${stale.length === 1 ? ' has' : 's have'} no shed logged in the last ${SHED_STALE_DAYS} days:\n\n${lines.join('\n')}${more}\n\nCresties shed roughly every 2 to 4 weeks, so a long gap usually just means it was not logged.`;
+  return `${stale.length} gecko${stale.length === 1 ? ' has' : 's have'} no shed logged in the last ${SHED_STALE_DAYS} days:\n\n${lines.join('\n')}${more}\n\nCresties shed ${shedRhythmShort()}, so a long gap usually just means it was not logged.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -486,45 +505,8 @@ export const ACTIONS = {
 };
 
 // ---------------------------------------------------------------------------
-// Prompt protocol + response parsing
+// Response parsing (the protocol itself is on the server)
 // ---------------------------------------------------------------------------
-
-/**
- * System prompt addition that teaches the model the JSON action protocol.
- * Includes a roster of the user's gecko names so the model can echo real
- * names back (the fuzzy matcher still has the final say).
- */
-export function buildActionProtocolPrompt(geckos) {
-  const names = (geckos || [])
-    .filter((g) => !g.archived && g.name)
-    .map((g) => g.name)
-    .slice(0, 80);
-  const roster = names.length
-    ? `The user's collection includes these geckos: ${names.join(', ')}.`
-    : 'The user has no geckos in their collection yet.';
-
-  return `You can also take actions on the user's own collection. ONLY these five actions exist:
-1. log_weight, args {"gecko_name": string, "grams": number}. Records today's weight in grams.
-2. log_shed, args {"gecko_name": string, "quality": "complete" | "partial" | "retained_toes" | "retained_eye_caps"}. quality is optional and defaults to "complete".
-3. log_feeding, args {"gecko_name": string, "accepted": boolean}. accepted is optional and defaults to true; use false when the gecko refused.
-4. list_due, args {"what": "eggs" | "feeding" | "sheds"}. eggs = expected hatches in the next 14 days, feeding = overdue feeding groups, sheds = geckos with no recent shed logged.
-5. find_geckos, args {"query": string}. Searches the user's collection by name or morph.
-
-When the user asks you to DO one of these things (log something, check what is due, search their collection), respond with ONLY a single JSON code block in exactly this shape and nothing else:
-
-\`\`\`json
-{"action": "log_weight", "args": {"gecko_name": "Luna", "grams": 14.5}, "say": "14.5g for Luna, nice steady growth. Confirm below and it goes in the book."}
-\`\`\`
-
-Rules for actions:
-- "say" is one short, friendly sentence in your usual voice. The app shows it next to a confirmation card, so never ask the user to type yes or no.
-- Use the gecko's name as the user gave it; the app resolves it against their collection.
-- Never invent actions outside the five above, and never wrap a normal answer in JSON.
-- If a required value is missing (for example a weight with no number), ask for it in plain language instead of emitting JSON.
-- For anything else (genetics, pairings, care, market values), answer normally in markdown with no JSON block.
-
-${roster}`;
-}
 
 /**
  * Pull an action JSON block out of a raw LLM reply.

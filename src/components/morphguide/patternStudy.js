@@ -89,7 +89,7 @@ export const SPECIMENS = {
   cheeto: collectionPhoto('cheeto', 'Cheeto: dark spots over a warm red-orange base', '/demo-geckos/cheeto.webp', 1000, 680, [
     { x: 58, y: 55, label: 'Distinct round dark spots stand out clearly against a fired red-orange ground color.' },
     { x: 37, y: 32, label: 'Individual spot outlines remain separate rather than merging into transverse tiger bars.' },
-  ], 'super-dalmatian'),
+  ], 'dalmatian'),
   moonlight: collectionPhoto('moonlight', 'Moonlight: low-contrast pale flank pattern', '/demo-geckos/moonlight.webp', 750, 1000, [
     { x: 34, y: 61, label: 'Pale cream flank markings remain visible even when the ground color is fired down or low contrast.' },
   ], 'axanthic'),
@@ -105,7 +105,7 @@ export const MORPH_PROGRESSION_TRACKS = [
   {
     id: 'coverage',
     title: 'Dorsal & Lateral Coverage',
-    subtitle: 'From Patternless to Extreme Harlequin & Lilly White',
+    subtitle: 'From Patternless to Extreme Harlequin, with Lilly White for comparison',
     summary: 'Watch how pale cream and orange pigment first occupies the dorsal saddle between the crest rows, then climbs the lateral flanks and wraps the limbs.',
     steps: [
       {
@@ -171,10 +171,10 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'lilly-white',
         label: 'Lilly White',
-        stage: 'Stage 6 · Dense white incomplete dominant',
+        stage: 'For comparison · Lilly White, a separate gene',
         traits: { dorsal: 1, lateral: 1, pinstripe: 1, tiger: 0, spots: 0 },
         tone: 'mahogany',
-        note: 'Dense chalk-white and ivory coverage coats the entire dorsal saddle, both crest rows, the tail through its tip, and high upward-sweeping lateral walls.',
+        note: 'Lilly White is its own incomplete-dominant gene, not a further grade of Harlequin. This plate shows a high-expression animal, with white across the back, crests and tail and high lateral walls; expression varies, so confirm with lineage. Two copies are lethal: never pair Lilly White to Lilly White.',
         pins: [
           { x: 52, y: 26, title: 'Solid White Dorsal & Crests', detail: 'Dense white pigment blankets the entire back, crest scales, and tail base.' },
           { x: 48, y: 47, title: 'Sweeping White Lateral Wall', detail: 'Thick white lower-flank walls rise smoothly against the dark upper-flank channel.' },
@@ -186,7 +186,7 @@ export const MORPH_PROGRESSION_TRACKS = [
     id: 'pinning',
     title: 'Crest Pinning & Structural White',
     subtitle: 'From Buckskin to Full Pinstripe, Quad-Stripe & Phantom',
-    summary: 'Follow the two raised dorsolateral scale rows from behind the supraocular head crests to the tail base, and see how lateral stripes or recessive Phantom modify them.',
+    summary: 'Follow the two raised dorsolateral scale rows from behind the supraocular head crests to the tail base, and see how lateral stripes or pins without cream change them.',
     steps: [
       {
         slug: 'buckskin',
@@ -202,10 +202,10 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'highway',
         label: 'Highway',
-        stage: 'Stage 2 · Pale dorsal stripe between dark borders',
+        stage: 'For comparison · Highway, a separate gene',
         traits: { dorsal: 0.72, lateral: 0.1, pinstripe: 0.55, tiger: 0, spots: 0 },
         tone: 'mahogany',
-        note: 'A clean, continuous pale cream band runs down the dorsal midline, framed by dark ground borders and developing dorsolateral pin scales.',
+        note: 'A clean, continuous pale band runs down the back between darker sides. Highway is its own incomplete-dominant gene, not a grade of pinning; it sits here because the two are often confused.',
         pins: [
           { x: 48, y: 28, title: 'Continuous Dorsal Highway', detail: 'Smooth longitudinal cream band running straight down the vertebral midline.' },
           { x: 46, y: 38, title: 'Framing Dorsolateral Ridges', detail: 'Raised crest rows frame the outer margins of the dorsal stripe.' },
@@ -214,7 +214,7 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'pinstripe',
         label: 'Full Pinstripe',
-        stage: 'Stage 3 · Continuous twin crest lines',
+        stage: 'Stage 2 · Continuous twin crest lines',
         traits: { dorsal: 0.3, lateral: 0.15, pinstripe: 1, tiger: 0, spots: 0 },
         tone: 'mahogany',
         note: 'Both left and right raised dorsolateral crest rows are continuously highlighted in bright ivory-cream from the head crown to the tail base.',
@@ -226,7 +226,7 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'white-wall-white-spot',
         label: 'White Spot / Porthole',
-        stage: 'Stage 4 · Lateral white portholes below pin row',
+        stage: 'Stage 3 · Lateral white portholes below pin row',
         traits: { dorsal: 0.35, lateral: 0.62, pinstripe: 0.9, tiger: 0, spots: 0 },
         tone: 'mahogany',
         note: 'Bright structural white portholes and lateral bars form along the mid-flank below the raised dorsolateral crest row.',
@@ -238,7 +238,7 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'white-wall',
         label: 'White Wall',
-        stage: 'Stage 5 · Raised thick lateral wall',
+        stage: 'Stage 4 · Raised thick lateral wall',
         traits: { dorsal: 0.45, lateral: 0.88, pinstripe: 1, tiger: 0, spots: 0 },
         tone: 'mahogany',
         note: 'The lower lateral stripe expands into a solid, thick, continuous rectangular wall of bright white-cream plating the lower half of the flank.',
@@ -249,13 +249,13 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'phantom-pinstripe',
         label: 'Phantom Pinstripe',
-        stage: 'Stage 6 · Recessive melanin suppression of white',
+        stage: 'Stage 5 · Pins without cream',
         traits: { dorsal: 0.15, lateral: 0.05, pinstripe: 0.85, tiger: 0.25, spots: 0 },
         tone: 'olive',
-        note: 'Structurally complete pinstripe rows where recessive Phantom suppresses bright white pigment, leaving muted taupe pins edged by a dark reverse-pin shadow.',
+        note: 'Complete pinstripe rows whose raised scales lack the usual cream, a look historically sold as Phantom Pinstripe. The label alone does not prove the recessive Phantom gene, and a dark line under the row (reverse pinning) is a separate feature.',
         pins: [
-          { x: 46, y: 38, title: 'Muted Taupe Crest Scales', detail: 'Full structural pin scales lacking bright white or yellow xanthophore highlight.' },
-          { x: 46, y: 42, title: 'Dark Reverse-Pin Shadow', detail: 'Continuous dark espresso line running immediately beneath the raised crest row.' },
+          { x: 46, y: 38, title: 'Muted Taupe Crest Scales', detail: 'Full pin scales without a cream or yellow highlight.' },
+          { x: 46, y: 42, title: 'Reverse pinning (a separate feature)', detail: 'A dark line running just beneath the raised crest row.' },
         ],
       },
     ],
@@ -359,7 +359,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         stage: 'Stage 3 · Scattered discrete spots',
         traits: { dorsal: 0.1, lateral: 0, pinstripe: 0, tiger: 0, spots: 0.48 },
         tone: 'yellow',
-        note: 'Around 25 to 50 sharply defined round and oval ink-black spots (plus occasional red or olive oil spots) scattered across the body and limbs.',
+        note: 'Scattered, sharply defined round and oval black spots, with occasional red ones, over the body, head and limbs. The number varies widely between animals.',
         pins: [
           { x: 45, y: 43, title: 'Discrete Black Spots', detail: 'Individual spots have crisp borders and ample clean base color between them.' },
           { x: 35, y: 62, title: 'Limb & Head Speckling', detail: 'Spots appear on the head crown, legs, and tail as well as the trunk.' },
@@ -371,7 +371,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         stage: 'Stage 4 · Heavy density & macro ink-blots',
         traits: { dorsal: 0.25, lateral: 0.1, pinstripe: 0.15, tiger: 0, spots: 1 },
         tone: 'yellow',
-        note: 'Over 100+ dense, high-contrast spots including oversized ink-black macro-spots and ruby-red spots that cluster across both base color and pale dorsal pattern.',
+        note: 'Heavy, dense spotting, often with large ink-blot spots and red spots over both base color and pale dorsal pattern. There is no fixed spot count.',
         pins: [
           { x: 47, y: 41, title: 'Macro Ink-Blot Spots', detail: 'Large, irregular ink-black blotches alongside medium and ruby-red spots.' },
           { x: 52, y: 28, title: 'Spots Over Pale Dorsum', detail: 'Dalmatian spots overlay pale dorsal cream as well as the ground color.' },
@@ -388,13 +388,13 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'cappuccino',
         label: 'Cappuccino',
-        stage: 'Melanistic incomplete dominant',
+        stage: 'Incomplete dominant · one copy (two make Super Cappuccino)',
         traits: { dorsal: 0.25, lateral: 0.1, pinstripe: 0.15, tiger: 0.35, spots: 0 },
         tone: 'mahogany',
-        note: 'Deep espresso-brown velvety body with reduced pattern, dark obsidian eyes, a crisp white tail-base V mark, and a translucent white tail tip.',
+        note: 'Often darker with reduced pattern, and young animals can show a pale marking at the tail base. Appearance varies a lot, so lineage confirms it.',
         pins: [
-          { x: 22, y: 46, title: 'Dark Obsidian Eye', detail: 'Heavy iris melanin gives Cappuccino and Sable geckos a deep espresso-black eye.' },
-          { x: 64, y: 24, title: 'Sacral V & Tail Tip', detail: 'Concentrated white sacral marker and translucent-white tail tip.' },
+          { x: 22, y: 46, title: 'Eye color', detail: 'Some Cappuccino and Sable geckos show a dark iris, but eye color alone does not identify either.' },
+          { x: 64, y: 24, title: 'Tail-base marking', detail: 'A pale marking at the tail base can be a clue in juveniles.' },
         ],
       },
       {
@@ -447,7 +447,7 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'albino',
         label: 'Albino',
-        stage: 'Recessive TYR amelanistic',
+        stage: 'Amelanistic · inheritance not yet proven',
         traits: { dorsal: 0.88, lateral: 0.55, pinstripe: 0.65, tiger: 0, spots: 0 },
         tone: 'albino',
         note: 'Complete absence of dark melanin produces a translucent buttery-cream and soft peach-pink body with a pale silvery-pearl iris and ruby-crimson vertical slit pupil.',
@@ -541,7 +541,7 @@ export const STUDY_LESSONS = [
     defaultStep: 3,
     examples: ['moonlight', 'bliss', 'extreme'],
     traits: { dorsal: 1, lateral: 0.92, pinstripe: 0.9 },
-    look: 'Observe how single-gene traits transform whole-body pigment: Lilly White floods the dorsum, tail tip, and flanks with chalk-white; Axanthic removes yellow and red; Albino removes dark melanin.',
+    look: 'Observe how pigment traits transform the whole body: Lilly White floods the dorsum, tail tip, and flanks with chalk-white; Axanthic removes yellow and red; Albino removes dark melanin (its inheritance is still being proven).',
     distinction: 'A pale fired-down gecko can mimic hypomelanistic or axanthic tones in a single photo. Always check firing range, eye pigment, and documented lineage.',
     guide: 'lilly-white',
   },

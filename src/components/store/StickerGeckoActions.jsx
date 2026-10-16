@@ -2,9 +2,15 @@ import { Link } from 'react-router-dom';
 import { Sticker, PanelTop } from 'lucide-react';
 import { stickerGeckoLocation } from '@/lib/store/stickerGecko';
 import { captureEvent } from '@/lib/posthog';
+import { isPageRetired } from '@/lib/retiredPages';
 
 export default function StickerGeckoActions({ gecko }) {
   if (!gecko) return null;
+  // The sticker builders live in the supplies store, which is switched off
+  // (review item E3 23, src/lib/retiredPages.js). Both links would only
+  // land on the store's redirect, so the card shows nothing until the
+  // store comes back.
+  if (isPageRetired('Store')) return null;
   return <div className="rounded-xl border border-emerald-800/50 bg-emerald-950/20 p-4 space-y-3">
     <div><h3 className="text-sm font-semibold text-emerald-100">Made for {gecko.name || 'your gecko'}</h3><p className="text-xs text-slate-400 mt-1">Start with the name, species, and photo already on this record.</p></div>
     <div className="grid grid-cols-1 gap-2">

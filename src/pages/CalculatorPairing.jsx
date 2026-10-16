@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import GeneticCalculatorTool from './GeneticCalculatorTool';
 import { PAIRING_PAGES_BY_SLUG } from '@/lib/genetics/calculatorCatalog';
+import { pairingMetaDescription, pairingPageSummary } from '@/lib/genetics/pairingPageSummary';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
 import PageNotFound from '@/lib/PageNotFound';
 
@@ -25,7 +26,10 @@ export default function CalculatorPairing() {
   }
 
   const title = `${page.label}: Crested Gecko Odds`;
-  const description = `What does ${page.label} produce? ${page.blurb} Free Punnett-square calculator, no signup required.`;
+  // The snippet carries the real per-egg odds, from the same summary the
+  // server HTML is built from (scripts/prerender.mjs), so the two match.
+  // It used to restate the blurb and ran to about 300 characters.
+  const description = pairingMetaDescription(pairingPageSummary(page));
   const path = `/calculator/pairing/${page.slug}`;
 
   const jsonLd = [

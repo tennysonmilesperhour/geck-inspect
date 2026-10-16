@@ -375,16 +375,25 @@ begin
    where has_column_privilege('anon', 'public.' || t.tbl, 'created_by', 'select')
       or not has_column_privilege('authenticated', 'public.' || t.tbl, 'created_by', 'select');
   if v_bad is not null then raise exception 'FAIL: created_by wrongly granted on: %', v_bad; end if;
-  -- Every other column stays readable.
+  -- Every other column stays readable on the tables signed-out pages use.
   select string_agg(c.relname || '.' || a.attname, ', ') into v_bad
     from pg_class c
     join pg_attribute a on a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
    where c.relnamespace = 'public'::regnamespace
-     and c.relname in ('breeding_projects', 'clutches', 'genetic_outcome_predictions', 'question_votes',
-                       'blog_categories', 'blog_posts', 'blog_tags')
+     and c.relname in ('question_votes', 'blog_categories', 'blog_posts', 'blog_tags')
      and a.attname <> 'created_by'
      and not has_column_privilege('anon', c.oid, a.attnum, 'select');
   if v_bad is not null then raise exception 'FAIL: signed-out visitors lost ordinary columns: %', v_bad; end if;
+  -- The breeding project tables are owner-only since
+  -- 20261016090000_privacy.sql: signed-out visitors keep no column at all
+  -- (supabase/tests/privacy_regressions.sql checks the rest).
+  select string_agg(c.relname || '.' || a.attname, ', ') into v_bad
+    from pg_class c
+    join pg_attribute a on a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
+   where c.relnamespace = 'public'::regnamespace
+     and c.relname in ('breeding_projects', 'clutches', 'genetic_outcome_predictions')
+     and has_column_privilege('anon', c.oid, a.attnum, 'select');
+  if v_bad is not null then raise exception 'FAIL: signed-out visitors can still read: %', v_bad; end if;
 
   perform pg_temp.as_anon();
   perform pg_temp.must_fail('signed-out read of breeding project authors',

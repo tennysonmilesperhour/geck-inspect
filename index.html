@@ -5,28 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <!-- Fonts: preconnect + async CSS swap so the stylesheet doesn't
-         block first paint (CWV / LCP win). The `media="print"` trick
-         flips the media query back to `all` as soon as the CSS
-         download finishes; until then the font falls back to
-         system-ui, which matches Inter's metrics closely enough that
-         CLS stays near zero. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap" />
-    </noscript>
+    <!-- Fonts are self-hosted (public/fonts/, rules in src/styles/fonts.css).
+         The page's text only exists once the app has run, so without a
+         hint the browser would ask for the font after the scripts, and
+         text would draw in the fallback font and then jump. This starts
+         the one file the page draws first, alongside the scripts: the
+         landing page's Montserrat on "/" for visitors, Inter everywhere
+         else (members and the demo see the Dashboard on "/"). -->
+    <script>
+      (function () {
+        var p = location.pathname;
+        var landing = p === '/' || p === '/Home';
+        try {
+          if (sessionStorage.getItem('geck_inspect_guest_mode') === '1') landing = false;
+          for (var i = 0; landing && i < localStorage.length; i++) {
+            var k = localStorage.key(i) || '';
+            if (k.indexOf('sb-') === 0 && k.slice(-11) === '-auth-token') landing = false;
+          }
+        } catch (e) { /* storage blocked: treat as a visitor */ }
+        var link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'font';
+        link.type = 'font/woff2';
+        link.crossOrigin = 'anonymous';
+        link.href = landing ? '/fonts/montserrat-latin-v31.woff2' : '/fonts/inter-latin-v20.woff2';
+        document.head.appendChild(link);
+      })();
+    </script>
 
     <!-- Primary SEO -->
     <title>Geck Inspect: Crested Gecko Breeding App for Pricing, Pairings and Sales</title>
@@ -71,52 +76,49 @@
       })();
     </script>
 
-    <!-- Google Analytics 4: prod hostnames only. Staging and preview
-         builds skip the script entirely so they don't pollute the GA
-         stream. `send_page_view: false` prevents a double pageview on
-         initial load; GA4PageTracker.jsx fires one explicit page_view
-         per React-Router navigation (including the first render). -->
-    <script>
-      (function () {
-        var h = location.hostname;
-        var isProd = h === 'geckinspect.com' || h === 'www.geckinspect.com';
-        if (!isProd) return;
-        // The privacy policy promises that analytics honour the browser's
-        // Do Not Track setting. PostHog does that through respect_dnt;
-        // Google Analytics does not on its own, so it is not loaded at all
-        // when Do Not Track or Global Privacy Control is on.
-        var n = window.navigator || {};
-        var dnt = n.doNotTrack || window.doNotTrack || n.msDoNotTrack;
-        if (dnt === '1' || dnt === 'yes' || n.globalPrivacyControl === true) return;
-        var GA_ID = 'G-WLGHJ7KC2N';
-        var s = document.createElement('script');
-        s.async = true;
-        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
-        document.head.appendChild(s);
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () { window.dataLayer.push(arguments); };
-        window.gtag('js', new Date());
-        window.gtag('config', GA_ID, { send_page_view: false });
-      })();
-    </script>
+    <!-- Google Analytics is started by the app (loadGoogleAnalytics in
+         src/lib/ga.js), not here, so EEA and UK visitors can be asked
+         first (src/lib/analyticsConsent.js) and the Content Security
+         Policy has one inline script fewer to allow. -->
 
     <!-- Theme + accent: apply persisted choices synchronously before
          CSS/JS loads so users don't see a flash of the default palette.
          data-theme drives backgrounds/surfaces/sage/slate; data-secondary
-         drives the accent palette. Both default to 'blizzard' (blue),
+         drives the accent palette. Both default to 'normal' (Emerald),
          matching DEFAULT_THEME / DEFAULT_SECONDARY in ThemeContext.jsx;
          keep the two in sync. The script also sets theme-color (the iPhone
          status bar) to the theme's page background, from the same table
-         as statusBar in THEMES (ThemeContext.jsx). -->
-    <meta name="theme-color" content="#0a0f19" />
+         as statusBar in THEMES (ThemeContext.jsx).
+
+         Homepage experiment hold (docs/planning/homepage-ab-test-2026-10.md):
+         while the A/B test runs, signed-out visitors who open "/" keep the
+         look both designs launched with, so the comparison is not changed
+         mid-run. They get the old Blizzard defaults (unless they saved a
+         theme) and the data-landing-hold attribute, which turns off the
+         October text-colour and link-underline rules in src/index.css.
+         A visitor who reaches "/" inside the app (from a guide page, say)
+         gets the same hold from src/lib/useLandingThemeHold.js, which the
+         homepage calls. Remove both with the experiment. -->
+    <meta name="theme-color" content="#0a1913" />
     <script>
       (function () {
         var allowed = ['normal','tangerine','halloween-mask','blizzard','lavender','super-hypo'];
+        var p = location.pathname;
+        var hold = p === '/' || p === '/Home';
+        try {
+          if (sessionStorage.getItem('geck_inspect_guest_mode') === '1') hold = false;
+          for (var i = 0; hold && i < localStorage.length; i++) {
+            var k = localStorage.key(i) || '';
+            if (k.indexOf('sb-') === 0 && k.slice(-11) === '-auth-token') hold = false;
+          }
+        } catch (e) { /* storage blocked: treat as a visitor */ }
+        if (hold) document.documentElement.setAttribute('data-landing-hold', '');
+        var fallback = hold ? 'blizzard' : 'normal';
         function pick(key) {
           try {
             var v = localStorage.getItem(key);
-            return allowed.indexOf(v) !== -1 ? v : 'blizzard';
-          } catch (e) { return 'blizzard'; }
+            return allowed.indexOf(v) !== -1 ? v : fallback;
+          } catch (e) { return fallback; }
         }
         var theme = pick('geckinspect.theme');
         document.documentElement.setAttribute('data-theme', theme);
@@ -166,31 +168,6 @@
     <meta name="twitter:title" content="Geck Inspect: Crested Gecko Breeding App for Pricing, Pairings and Sales" />
     <meta name="twitter:description" content="The crested gecko app for the business side of breeding. See what every gecko is worth, what a pairing's eggs should bring, and your profit by season. Free to start." />
     <meta name="twitter:image" content="https://geckinspect.com/og-image.png" />
-
-    <!-- Robauto.ai A.I. Growth Engine Pixel. Detects LLM bot traffic
-         and AI referrals (ChatGPT, Claude, Perplexity, etc.) so we can
-         attribute organic AI-driven visits. Fires once per page load via
-         sendBeacon (XHR fallback) and is non-blocking.
-
-         Only origin + path are sent. Never location.href: the URL
-         fragment carries Supabase auth tokens after OAuth and email
-         confirmation, and query strings can carry referral and signup
-         grant tokens. None of that may leave the site. -->
-    <script>
-    (function(){
-      try {
-        if (sessionStorage.getItem("geck_inspect_guest_mode") === "1") return;
-      } catch (_) {
-        // Session storage may be unavailable in restricted browser contexts.
-      }
-      var pid="94be07bb-a48d-44fa-b1d0-c9d88d2fc975";
-      var ep="https://hkeytqaukllckucnhzey.supabase.co/functions/v1/track";
-      var safeUrl=location.origin+location.pathname;
-      var d=JSON.stringify({path:location.pathname,url:safeUrl,referer:document.referrer});
-      if(navigator.sendBeacon){navigator.sendBeacon(ep+"?pid="+pid,d)}
-      else{var x=new XMLHttpRequest();x.open("POST",ep+"?pid="+pid);x.setRequestHeader("Content-Type","application/json");x.send(d)}
-    })();
-    </script>
 
     <!-- Site-level structured data (Organization + WebSite). Page-specific
          schema (Article, FAQPage, HowTo, Product, BreadcrumbList) is emitted

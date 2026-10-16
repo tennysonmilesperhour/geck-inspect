@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import { swapToFallback } from '@/lib/imgFallback';
 import {
-  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home, TrendingUp
+  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
@@ -27,7 +27,7 @@ import CommandPalette from "@/components/command-palette/CommandPalette";
 const FeedingAlertSystem = lazy(() => import("@/components/feeding/FeedingAlertSystem"));
 import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
-import PushEnableBanner from "@/components/notifications/PushEnableBanner";
+import PaymentIssueBanner from "@/components/subscription/PaymentIssueBanner";
 import GuestDemoGuide from "@/components/auth/GuestDemoGuide";
 import FloatingNoticeStack from "@/components/shared/FloatingNoticeStack";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
@@ -39,7 +39,8 @@ import {
   SidebarContent as SidebarBody,
   SidebarFooter,
   SidebarProvider,
-  useSidebar
+  useSidebar,
+  MOBILE_MENU_ID
 } from "@/components/ui/Sidebar";
 import { Button } from "@/components/ui/button";
 import UserBadge from "@/components/ui/UserBadge";
@@ -50,6 +51,7 @@ import TierBadge, { tierRingClass, tierKeyFor } from "@/components/ui/TierBadge"
 // cleanup, pure JS cache + rate-limit helpers, and the static
 // navigation / level-progression constants.
 import { dataCache, retryApiCall } from '@/lib/layoutCache';
+import { loadPageConfigs } from '@/lib/pageConfigs';
 import {
   MILESTONES,
   USER_LEVELS,
@@ -60,16 +62,19 @@ import { startVisiblePolling } from '@/lib/pagePolling';
 import { AppShellContext } from '@/lib/appShell';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import {
-  FALLBACK_NAV_ITEMS,
   NAV_ICON_MAP,
   FAVORITES_MAX,
   flattenNavItems,
   groupNavItems,
-  BOTTOM_BAR_PAGES,
-  BREEDER_ONLY_PAGES,
+  buildNavItems,
+  keeperNavItems,
+  PHONE_TABS,
   KEEPER_MODE_STORAGE_KEY,
 } from '@/lib/navItems';
-import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
+// The Log tab's sheet. Loaded with the shell, not lazily, so the tab
+// works with no signal (the dialog code is already here for the command
+// palette).
+import LogSheet from '@/components/navigation/LogSheet';
 import { NOT_QUIET_FILTER, isQuietNotification, markAllNotificationsRead } from '@/lib/notificationsApi';
 import { listenForPushRotation, syncPushSubscription } from '@/lib/webPush';
 
@@ -162,7 +167,20 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     });
   };
 
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, isMobileOpen } = useSidebar();
+
+  // Phones open on Today, the first tab (review item E3 25). Only the bare
+  // "/" a cold open, a sign-in or the phone app lands on is moved; the
+  // Dashboard stays one tap away in the menu, and wider screens keep it as
+  // home.
+  useEffect(() => {
+    if (location.pathname !== '/') return;
+    if (!window.matchMedia?.('(max-width: 767px)').matches) return;
+    navigate(`/Today${location.search}`, { replace: true });
+  }, []);
+
+  // The Log tab's sheet (feeding, weigh-in, shed or Field Mode).
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
 
   // The phone header is glass that floats over the page, so the page pads
   // its top by the header's height (--top-bar-h, read in index.css). It is
@@ -451,22 +469,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     const fetchData = async () => {
       try {
 
-        // Load page configs
-        let configs = dataCache.get('page_configs');
-        if (!configs && dataCache.canMakeRequest('page_configs')) {
-          try {
-            dataCache.markRequestMade('page_configs');
-            configs = await retryApiCall(() => api.entities.PageConfig.list());
-            if (Array.isArray(configs)) {
-              dataCache.set('page_configs', configs);
-              setPageConfigs(configs);
-            }
-          } catch (error) {
-            console.log("Could not load page configs:", error);
-            setPageConfigs([]);
-          }
-        } else if (Array.isArray(configs)) {
-          setPageConfigs(configs);
+        // Load page configs: one request shared with the router
+        // (src/lib/pageConfigs.js), not a second one of its own.
+        try {
+          setPageConfigs(await loadPageConfigs());
+        } catch (error) {
+          console.log("Could not load page configs:", error);
+          setPageConfigs([]);
         }
 
         // Load user-specific data with very heavy caching
@@ -552,18 +561,15 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   }, [user]);
 
   // Live sidebar updates when an admin toggles a page in PageManagement.
-  // PageManagement clears `page_configs` in dataCache and fires
-  // `page_configs_changed` after every successful write; we re-fetch
+  // PageManagement drops the shared copy (src/lib/pageConfigs.js) and
+  // fires `page_configs_changed` after every successful write; we re-fetch
   // the list here so the sidebar reflects the new state without a
-  // browser reload.
+  // browser reload. The router refetches on the same event, and the two
+  // share one request.
   useEffect(() => {
     const refresh = async () => {
       try {
-        const configs = await retryApiCall(() => api.entities.PageConfig.list());
-        if (Array.isArray(configs)) {
-          dataCache.set('page_configs', configs);
-          setPageConfigs(configs);
-        }
+        setPageConfigs(await loadPageConfigs());
       } catch (error) {
         console.log('Could not refresh page configs after change:', error);
       }
@@ -700,111 +706,12 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   const sidebarBadge = getSidebarBadge();
 
-  // Build navigation from PageConfig.
-  //
-  // The DB is the source of truth for ordering and visibility. Fallback
-  // items are ONLY used to populate the sidebar when a brand-new page
-  // hasn't been seeded into page_config yet. If page_config explicitly
-  // marks a page as disabled (is_enabled=false), it stays hidden, even
-  // for admins. The previous version re-merged fallback items back in,
-  // which is why disabled pages still appeared in the admin sidebar.
-  const getNavItems = () => {
-    if (!Array.isArray(pageConfigs) || pageConfigs.length === 0) {
-      return FALLBACK_NAV_ITEMS;
-    }
-
-    // Dedupe page_config rows by page_name. Admins can end up with
-    // multiple rows sharing the same page_name (historical seeding bug);
-    // without this collapse the sidebar would render each copy as its
-    // own item. Preference: enabled row, then most recently updated.
-    const byName = new Map();
-    for (const p of pageConfigs) {
-      if (!p?.page_name) continue;
-      const prev = byName.get(p.page_name);
-      if (!prev) {
-        byName.set(p.page_name, p);
-        continue;
-      }
-      const prevEnabled = prev.is_enabled !== false;
-      const pEnabled = p.is_enabled !== false;
-      if (pEnabled && !prevEnabled) {
-        byName.set(p.page_name, p);
-      } else if (pEnabled === prevEnabled) {
-        const prevDate = new Date(prev.updated_date || prev.created_date || 0).getTime();
-        const pDate = new Date(p.updated_date || p.created_date || 0).getTime();
-        if (pDate > prevDate) byName.set(p.page_name, p);
-      }
-    }
-    const dedupedConfigs = Array.from(byName.values());
-
-    // Index DB rows by page_name so we can detect what's NOT seeded yet.
-    const dbByName = {};
-    for (const p of dedupedConfigs) {
-      if (p?.page_name) dbByName[p.page_name] = p;
-    }
-
-    // Index fallback items by page_name so we can preserve the
-    // canonical display_name / icon across renames.
-    const fallbackByName = {};
-    for (const category of ['collection', 'tools', 'public']) {
-      for (const f of (FALLBACK_NAV_ITEMS[category] || [])) {
-        fallbackByName[f.page_name] = { ...f, _category: category };
-      }
-    }
-
-    // Start with the DB rows that are explicitly enabled. Retired pages
-    // are skipped even if an old page_config row still says enabled.
-    const enabled = dedupedConfigs
-      .filter(p => p.is_enabled !== false && !RETIRED_PAGE_NAMES.has(p.page_name))
-      .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
-
-    const dbNav = {
-      collection: enabled.filter(p => p.category === 'collection'),
-      tools: enabled.filter(p => p.category === 'tools'),
-      public: enabled.filter(p => p.category === 'public'),
-    };
-
-    // Update display_name / icon from the fallback (canonical labels).
-    for (const category of ['collection', 'tools', 'public']) {
-      dbNav[category] = dbNav[category].map(p => {
-        const fb = fallbackByName[p.page_name];
-        if (fb && (fb.display_name !== p.display_name || fb.icon !== p.icon)) {
-          return { ...p, display_name: fb.display_name, icon: fb.icon };
-        }
-        return p;
-      });
-    }
-
-    // Seed: if a fallback item has NEVER been written to page_config
-    // (brand-new page that an admin hasn't touched yet), surface it so
-    // the sidebar isn't missing entries on a first deploy. Fallbacks
-    // are NOT used to override an existing DB row, meaning a disabled
-    // page stays disabled.
-    for (const category of ['collection', 'tools', 'public']) {
-      for (const fallback of (FALLBACK_NAV_ITEMS[category] || [])) {
-        if (!dbByName[fallback.page_name]) {
-          dbNav[category].push(fallback);
-        }
-      }
-    }
-
-    return dbNav;
-  };
-
-  // Keeper mode filter. Applied to the built nav (DB rows or fallback)
-  // so breeder-business pages disappear from every category, including
-  // the Favorites grid, which resolves against this filtered list. This
-  // only trims the sidebar; direct URLs to those pages still load.
-  const stripBreederPages = (nav) => {
-    if (!keeperMode) return nav;
-    return {
-      collection: (nav.collection || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
-      tools: (nav.tools || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
-      public: (nav.public || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
-    };
-  };
-
-  const rawNavItems = stripBreederPages(getNavItems());
+  // The sidebar's items from the page_config rows, less the breeder pages
+  // in Keeper mode (src/lib/navItems.js, buildNavItems and keeperNavItems;
+  // the rules are described there). Keeper mode also trims the Favorites
+  // grid, which resolves against this list. Only the menu is trimmed;
+  // direct URLs to those pages still load.
+  const rawNavItems = keeperNavItems(buildNavItems(pageConfigs), keeperMode);
 
   // Favorite pages, user picks up to FAVORITES_MAX pages in Settings.
   // Those get a prominent 2x2 grid at the top of the sidebar and are
@@ -1409,7 +1316,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           {/* Bottom padding leaves room for the tab bar (phones) and for
               the floating notices, so the end of a page can scroll clear. */}
           <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(var(--bottom-bar-h)+0.5rem+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
-            <PushEnableBanner user={user} />
+            <PaymentIssueBanner user={user} />
             <AppShellContext.Provider value={true}>
               {/* Keyed by path so moving to another page clears a crashed one. */}
               <ErrorBoundary inline scope="page" key={location.pathname}>
@@ -1421,35 +1328,51 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           </main>
 
-        {/* Phone bottom bar: the most used pages, plus Menu for the rest. */}
+        {/* Phone bottom bar (review item E3 25): Today, Geckos, Log, More.
+            Log opens a short sheet; More opens the full menu. */}
         <nav
           className="gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
           aria-label="Main"
         >
-          {[{ page: 'Dashboard', label: 'Home', Icon: Home }, ...BOTTOM_BAR_PAGES.map((b) => ({ ...b, Icon: NAV_ICON_MAP[b.icon] || TrendingUp }))].map(({ page, label, Icon }) => {
-            const isActive = currentPageName === page || (page === 'Dashboard' && currentPageName === '');
+          {PHONE_TABS.map((tab) => {
+            const Icon = NAV_ICON_MAP[tab.icon] || Menu;
+            if (tab.page) {
+              const isActive = currentPageName === tab.page;
+              return (
+                <Link
+                  key={tab.id}
+                  to={createPageUrl(tab.page)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`gecko-bottom-nav__item ${isActive ? 'is-active' : ''}`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{tab.label}</span>
+                </Link>
+              );
+            }
+            const isLog = tab.action === 'log';
+            // Each spoken name starts with the word on the tab ("Log",
+            // "More"), so voice control users can say what they see. More
+            // opens the menu sheet (labelled "Menu" in Sidebar.jsx) and says
+            // whether it is open.
             return (
-              <Link
-                key={page}
-                to={createPageUrl(page)}
-                aria-current={isActive ? 'page' : undefined}
-                className={`gecko-bottom-nav__item ${isActive ? 'is-active' : ''}`}
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => (isLog ? setLogSheetOpen(true) : toggleSidebar())}
+                className={`gecko-bottom-nav__item ${isLog && currentPageName === 'log' ? 'is-active' : ''}`}
+                aria-label={isLog ? 'Log a feeding, weigh-in or shed' : 'More: open the full menu'}
+                aria-haspopup="dialog"
+                aria-expanded={isLog ? logSheetOpen : isMobileOpen}
+                aria-controls={isLog ? undefined : MOBILE_MENU_ID}
               >
                 <Icon className="h-5 w-5" />
-                <span>{label}</span>
-              </Link>
+                <span>{tab.label}</span>
+              </button>
             );
           })}
-          <button
-            type="button"
-            onClick={() => toggleSidebar()}
-            className="gecko-bottom-nav__item"
-            aria-label="Open the full menu"
-          >
-            <Menu className="h-5 w-5" />
-            <span>Menu</span>
-          </button>
         </nav>
+        <LogSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} />
       </div>
       <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} onDismiss={handleRoleDismissed} />
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />

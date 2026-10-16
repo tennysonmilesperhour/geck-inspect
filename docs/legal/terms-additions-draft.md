@@ -24,7 +24,7 @@ How to read it:
 | 8 | Sales tax and VAT | Turn on Stripe Tax and show prices "plus tax where applicable", or keep tax-inclusive prices and absorb it | A one-hour conversation with an accountant; Stripe Tax is not turned on in checkout today |
 | 9 | Buyers in the EU and UK | Ask for consent at checkout to start immediately (which ends the 14-day withdrawal right for digital services once used), or honour 14 days for everyone | Honouring 14 days for everyone is simplest and is covered if decision 2 is (b) or (c) |
 | 10 | Whether lifetime plans stay on sale | Keep, pause, or limit to a number of seats | The adversarial review recommended deleting the lifetime rows; Part E says no price changes before five breeders have answered the Founding Breeder offer. Whatever is chosen, the Terms below must match |
-| 11 | The Price Index licence | Keep CC BY 4.0 for the numbers, or narrow it | Wait for the hour of counsel on the scraped-data position (E2 item 22) before publishing any licence wording |
+| 11 | The Price Index licence | Keep CC BY 4.0 for the numbers, or narrow it | **Decided 16 Oct 2026:** the numbers are free to cite with a link, not CC BY, and the index is described as an asking-price snapshot from public marketplace listings (DECISIONS.md, decision 52). Counsel is still needed before the source sites are named or the Terms say anything about the data |
 
 ## 1. Plans and payment (new section)
 

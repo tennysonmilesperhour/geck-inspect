@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, Info, AlertTriangle } from 'lucide-react';
+import { eyeStudyIdForMorph } from './eyeStudyIndex';
 
 export const EYE_COLOR_STUDIES = [
   {
@@ -121,20 +122,52 @@ export const EYE_COLOR_STUDIES = [
 ];
 
 export function eyeStudyForMorph(slug) {
-  if (slug === 'albino') return EYE_COLOR_STUDIES.find((e) => e.id === 'ruby-albino');
-  if (slug === 'axanthic' || slug === 'moonglow' || slug === 'lavender') {
-    return EYE_COLOR_STUDIES.find((e) => e.id === 'silver-gray');
-  }
-  if (slug === 'cappuccino' || slug === 'sable' || slug === 'frappuccino') {
-    return EYE_COLOR_STUDIES.find((e) => e.id === 'melanistic-dark');
-  }
-  if (slug === 'olive' || slug === 'phantom-pinstripe') {
-    return EYE_COLOR_STUDIES.find((e) => e.id === 'olive-green');
-  }
-  if (slug === 'red-base' || slug === 'orange-base') {
-    return EYE_COLOR_STUDIES.find((e) => e.id === 'copper-amber');
-  }
-  return null;
+  const id = eyeStudyIdForMorph(slug);
+  return id ? EYE_COLOR_STUDIES.find((e) => e.id === id) || null : null;
+}
+
+/**
+ * The eye study panel on a Morph Guide page (src/pages/MorphDetail.jsx),
+ * which loads this file only for a morph that has a study.
+ */
+export function MorphEyeStudyPanel({ slug }) {
+  const eyeStudy = eyeStudyForMorph(slug);
+  if (!eyeStudy) return null;
+  return (
+    <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 sm:p-5">
+      <div className="grid sm:grid-cols-[220px_1fr] gap-4 items-center">
+        <figure className="m-0 overflow-hidden rounded-xl border border-neutral-800 bg-[#f4efdf] p-2">
+          <img
+            src={eyeStudy.plate}
+            alt={`${eyeStudy.name} close-up eye study`}
+            width="900"
+            height="600"
+            loading="lazy"
+            decoding="async"
+            className="w-full h-auto rounded-lg block"
+          />
+        </figure>
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+              Ocular &amp; eye pigment study
+            </span>
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+              {eyeStudy.badge}
+            </span>
+          </div>
+          <h3 className="text-base font-bold text-white mt-1">{eyeStudy.name}</h3>
+          <p className="mt-1.5 text-sm text-neutral-300 leading-relaxed">{eyeStudy.summary}</p>
+          <p className="mt-1.5 text-xs text-neutral-400 leading-relaxed">{eyeStudy.genetics}</p>
+          {eyeStudy.welfareNote && (
+            <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-950/20 p-2.5 text-xs text-amber-200/90 leading-relaxed">
+              {eyeStudy.welfareNote}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function MorphEyeGuide({ className = '' }) {
@@ -156,7 +189,7 @@ export default function MorphEyeGuide({ className = '' }) {
             Crested Gecko Eye Colors &amp; Structure
           </h2>
           <p className="mt-2 text-sm text-slate-300 max-w-3xl leading-relaxed">
-            Unlike leopard geckos, where eye traits are tightly bound to specific recessive morphs, most crested gecko iris colors are polygenic and inherit independently of body pattern. Only mutations that alter melanin or xanthophore pathways across the whole animal directly reshape eye pigment.
+            Most crested gecko iris colors are polygenic and inherit independently of body pattern. Only mutations that alter melanin or xanthophore pathways across the whole animal directly reshape eye pigment.
           </p>
         </div>
       </div>

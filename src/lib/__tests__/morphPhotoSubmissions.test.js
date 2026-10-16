@@ -14,10 +14,15 @@ import {
 } from '../morphPhotoSubmissions';
 
 describe('submission form morph list', () => {
-  it('lists every built-in morph once, sorted by name', () => {
+  it('lists every built-in morph a living gecko can be once, sorted by name', () => {
     const options = submissionMorphOptions();
-    expect(options).toHaveLength(MORPHS.length);
-    expect(new Set(options.map((o) => o.slug)).size).toBe(MORPHS.length);
+    const living = MORPHS.filter((m) => m.doNotBreed !== 'lethal');
+    expect(options).toHaveLength(living.length);
+    expect(new Set(options.map((o) => o.slug)).size).toBe(living.length);
+    // A Super Lilly White dies within days of hatching, so a photo
+    // labelled one is always a mislabel. Super Cappuccinos do live.
+    expect(options.map((o) => o.slug)).not.toContain('super-lilly-white');
+    expect(options.map((o) => o.slug)).toContain('super-cappuccino');
     const names = options.map((o) => o.name);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
     expect(options).toContainEqual({ slug: 'lilly-white', name: 'Lilly White' });

@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { FeedingGroup, Gecko, WeightRecord } from '@/entities/all';
 import MarketValueCard from '@/components/gecko/MarketValueCard';
+import PushAskCard from '@/components/notifications/PushAskCard';
 import { todayLocalISO } from '@/lib/dateUtils';
 import {
   DEFAULT_FEEDING_INTERVAL_DAYS,
@@ -364,6 +365,16 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
                   onChange={toggleFeeding}
                 />
               </div>
+
+              {/* The one place a new member is asked for phone
+                  notifications: right beside the reminders they just
+                  got, and only while at least one is on. */}
+              <PushAskCard
+                user={user}
+                hasReminder={(weighIn.on && weighIn.memberEnabled) || (feedingOn && !feedingAccountOff)}
+                subject={`${name}'s reminders`}
+                source="first_gecko_payoff"
+              />
             </section>
 
             {/* Value */}

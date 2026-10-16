@@ -59,6 +59,29 @@ describe('super-form welfare statements agree with the calculator', () => {
   });
 });
 
+describe('llms.txt single-gene list follows the calculator badges', () => {
+  // llms.txt, which asks agents to cite it, listed Soft Scale and White
+  // Wall as settled single-gene traits while the calculator and the guide
+  // badge Soft Scale and Whiteout Emerging (October 2026 review).
+  it('names as proven only the genes the calculator badges proven', () => {
+    const line = read('public/llms.txt').split('\n').find((l) => l.includes('Proven single-gene traits:'));
+    const proven = line.match(/Proven single-gene traits: ([^.]*)\./)[1];
+    const emerging = line.match(/badges them Emerging: ([^.]*)\./)[1];
+    for (const [slug, name] of [['lilly-white', 'Lilly White'], ['cappuccino', 'Cappuccino'], ['axanthic', 'Axanthic'], ['phantom', 'Phantom']]) {
+      expect(CALCULATOR_PAGES_BY_SLUG[slug].confidence, slug).toBe('proven');
+      expect(proven, name).toContain(name);
+    }
+    for (const [slug, name] of [['soft-scale', 'Soft Scale'], ['whiteout', 'Whiteout'], ['empty-back', 'Empty Back'], ['sable', 'Sable'], ['highway', 'Highway']]) {
+      expect(CALCULATOR_PAGES_BY_SLUG[slug].confidence, slug).toBe('emerging');
+      expect(emerging, name).toContain(name);
+      expect(proven, name).not.toContain(name);
+    }
+    expect(proven).not.toContain('White Wall');
+    // The pattern morphs get both views, as the Morph Guide gives them.
+    expect(line).toContain('Foundation Genetics proposes single-gene models for Harlequin (incomplete dominant), Pinstripe and Dalmatian (dominant)');
+  });
+});
+
 describe('landing claims', () => {
   it('the landing FAQ and product tour no longer promise co-dominant percentages or photos for every morph', () => {
     const home = read('src/pages/HomeControl.jsx');

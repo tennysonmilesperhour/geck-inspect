@@ -5,6 +5,7 @@ import { linkKindMeta } from '@/lib/storeLinks';
 import { normalizeWebsite, WEBSITE_FONTS, websitePalette, safeWebsiteUrl } from '@/lib/storeWebsite';
 import { publicExternalLinks, themeFor, geckoDetailHref } from './StorefrontSections';
 import './storefrontWebsite.css';
+import { VERIFIED_BREEDER_DEFINITION, VERIFIED_BREEDER_LABEL } from '@/lib/verifiedBreeder';
 
 export default function StorefrontWebsite({ page = {}, profile = {}, settings = {}, geckos = [], plans = [], waitlist,
   reviews, trust, onInquire, onOpenGecko, preview = false, onSectionSelect }) {
@@ -46,7 +47,7 @@ export default function StorefrontWebsite({ page = {}, profile = {}, settings = 
           <h1>{title}</h1>
           {page.tagline && <p className="sw-tagline">{page.tagline}</p>}
           {profile.years_breeding > 0 && <p className="sw-verified">{profile.years_breeding} {profile.years_breeding === 1 ? 'year' : 'years'} breeding</p>}
-          {profile.is_verified && <p className="sw-verified">✓ Verified breeder</p>}
+          {profile.is_verified && <p className="sw-verified" title={VERIFIED_BREEDER_DEFINITION}>✓ {VERIFIED_BREEDER_LABEL}</p>}
           {primary && <div className="sw-hero-action">{primary}</div>}
         </div>
       </header>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { reportError } from '@/lib/telemetry';
+import { RELOAD_KEY } from '@/lib/lazyWithRetry';
 
 export default class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -56,11 +57,12 @@ export default class ErrorBoundary extends React.Component {
                         )}
                         <button
                             onClick={() => {
-                                // Clear the lazyWithRetry one-time-reload
-                                // guard so a manual retry re-runs the
-                                // self-heal flow (retry + reload) from
-                                // scratch instead of being short-circuited.
-                                try { window.sessionStorage?.removeItem('gi:chunk-reload'); } catch {}
+                                // Clear the lazyWithRetry reload guard so a
+                                // manual retry re-runs the self-heal flow
+                                // (retry + reload) from scratch instead of
+                                // being short-circuited. A person clicking
+                                // cannot loop, so this is safe.
+                                try { window.sessionStorage?.removeItem(RELOAD_KEY); } catch {}
                                 window.location.reload();
                             }}
                             className="mt-4 px-6 py-2 touch:min-h-11 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"

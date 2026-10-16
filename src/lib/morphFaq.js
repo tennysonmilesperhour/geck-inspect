@@ -35,12 +35,43 @@ const PROPER_STARTS = [
   'Gold Standard',
 ].sort((a, b) => b.length - a.length);
 
-// Notes that the generic inheritance text cannot carry.
+// Notes that the generic inheritance text cannot carry, added after it.
 const INHERITANCE_NOTES = {
   'lilly-white':
-    'Lilly White has a lethal super form: pairing two Lilly Whites gives 25% Super Lilly White embryos that die in the egg, so the morph cannot be bred true.',
+    'Lilly White has a lethal super form: pairing two Lilly Whites gives 25% Super Lilly White embryos that die in the egg or within days of hatching, so the morph cannot be bred true.',
   albino:
     'This is expected rather than proven. The first healthy albino hatchlings were announced in March 2026, and breeding has not yet confirmed how the gene is passed on.',
+  'empty-back':
+    'This is the Foundation Genetics model, the main published source; independent breeding records are still thin.',
+  whiteout:
+    'This rests mainly on AC Reptiles\' breeding records; much of the hobby still treats white walling as line-bred.',
+};
+
+// Whole answers for pages about one form of a gene (a super) or a mix of
+// genes (Luwak, Frappuccino). These replace the generic text instead of
+// following it: "single copy produces a visible form; two copies produce
+// a distinct super form" said about the two-copy form itself, or about a
+// Luwak that is never a super, contradicted the note after it (October
+// 2026 review). The answer is also the FAQPage text search engines quote.
+const INHERITANCE_ANSWERS = {
+  'super-lilly-white':
+    'Super Lilly White is the two-copy form of Lilly White, an incomplete-dominant gene. It is lethal: embryos die in the egg or within days of hatching.',
+  'super-cappuccino':
+    'Super Cappuccino is the two-copy form of Cappuccino, an incomplete-dominant gene. It usually hatches but has documented health problems, so breeders avoid pairings that can make one.',
+  'super-sable':
+    'Super Sable is the two-copy form of Sable, an incomplete-dominant gene. It appears viable but is thinly documented.',
+  'super-highway':
+    'Super Highway is the two-copy form of Highway, an incomplete-dominant gene. Some breeders report health problems in it; that is not established.',
+  'super-whiteout':
+    'Super Whiteout is the two-copy form of Whiteout, which AC Reptiles reports as incomplete dominant; the super is described as healthy.',
+  'super-empty-back':
+    'Super Empty Back is the two-copy form of Empty Back, an incomplete-dominant gene in the Foundation Genetics model, where the super is described as healthy.',
+  'super-soft-scale':
+    'Super Soft Scale is the two-copy form of Soft Scale, which the AC Reptiles Soft Scale project describes as incomplete dominant; the super shows the more pronounced texture.',
+  luwak:
+    'Luwak is one Cappuccino copy plus one Sable copy. In the widely reported model they are two versions of the same incomplete-dominant gene, so a Luwak is never a super. That model is not yet settled.',
+  frappuccino:
+    'Frappuccino is one Lilly White copy plus one Cappuccino copy: two different incomplete-dominant genes, so it is not a super of either. Pairing it to a Lilly White or another Frappuccino can make the lethal Super Lilly White.',
 };
 
 /** Capitalize, trim and end with a full stop. */
@@ -97,6 +128,7 @@ function differenceQuestion(morph) {
 function inheritanceAnswer(morph) {
   const inh = INHERITANCE[morph.inheritance];
   if (!inh) return null;
+  if (INHERITANCE_ANSWERS[morph.slug]) return INHERITANCE_ANSWERS[morph.slug];
   const note = INHERITANCE_NOTES[morph.slug];
   return [
     `${morph.name} is classified as ${inh.label.toLowerCase()}.`,

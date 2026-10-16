@@ -23,16 +23,17 @@ import PageNotFound from '@/lib/PageNotFound';
  * and shouldn't 200.
  */
 
-// Calculator slugs whose Morph Guide page goes by another name (decision
-// D13: the engine's Whiteout is White Wall, its Phantom is Phantom
-// Pinstripe). Every other calculator slug is also the morph slug, when
-// that morph has a page. Mirrored in scripts/prerender.mjs.
+// Calculator slugs whose Morph Guide page went by another name before the
+// gene had its own page (decision D13: the engine's Whiteout was White Wall,
+// its Phantom was Phantom Pinstripe). The gene's own page wins when it
+// exists, as Whiteout and Phantom do since 16 Oct 2026; this map is only
+// the fallback. Mirrored in scripts/prerender.mjs (calculatorMorphMeta).
 const MORPH_PAGE_FOR_CALCULATOR = { whiteout: 'white-wall', phantom: 'phantom-pinstripe' };
 
 export default function CalculatorMorph() {
   const { morph } = useParams();
   const page = CALCULATOR_PAGES_BY_SLUG[morph];
-  const morphPage = page ? getMorph(MORPH_PAGE_FOR_CALCULATOR[page.slug] || page.slug) : null;
+  const morphPage = page ? getMorph(page.slug) || getMorph(MORPH_PAGE_FOR_CALCULATOR[page.slug]) : null;
 
   if (!page) {
     return <PageNotFound />;
@@ -82,7 +83,7 @@ export default function CalculatorMorph() {
             to={`/MorphGuide/${morphPage.slug}`}
             className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline"
           >
-            {morphPage.name} morph guide: how to identify it, genetics and price
+            {morphPage.name} morph guide: {morphPage.priceRange ? 'how to identify it, genetics and price' : 'how to identify it and its genetics'}
           </Link>
         </p>
       )}

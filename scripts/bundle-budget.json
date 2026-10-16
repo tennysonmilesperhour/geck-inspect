@@ -1,0 +1,43 @@
+{
+  "_readme": "Size limits checked by scripts/check-bundle-size.mjs after pnpm build. Sizes are kB (1,000 bytes) gzipped at level 9. 'allowances' lets something that was already over its limit on 16 Oct 2026 stay at that size without failing CI, so the check still catches growth. To tighten: make the page smaller, run pnpm build and node scripts/check-bundle-size.mjs, then lower its allowance to the new size it prints (or delete the line once it is under the limit). Never raise an allowance to make a check pass; find what grew instead.",
+  "limits": {
+    "entryKb": 150,
+    "routeKb": 60,
+    "publicPageKb": 200,
+    "publicImageKb": 200
+  },
+  "publicPages": {
+    "/": "src/pages/Home.jsx",
+    "/MorphGuide": "src/pages/MorphGuide.jsx",
+    "/MorphGuide/lilly-white": "src/pages/MorphDetail.jsx",
+    "/CareGuide": "src/pages/CareGuide.jsx",
+    "/calculator": "src/pages/GeneticCalculatorTool.jsx"
+  },
+  "allowances": {
+    "image:public/store/custom-stickers/sticker-demo.webm": 1292,
+    "image:public/store/custom-stickers/sticker-social.png": 599,
+    "image:public/gecko-tarot-card-v2.webp": 386,
+    "image:public/gecko-tarot-square-v2.jpg": 323,
+    "image:public/gecko-tarot-square-v2.webp": 310,
+    "page:/MorphGuide": 260,
+    "page:/MorphGuide/lilly-white": 238,
+    "image:public/gecko-placeholders/celestial-adult-1024.webp": 280,
+    "image:public/gecko-placeholders/nouveau-adult-1024.webp": 270,
+    "image:public/gecko-placeholders/woodcut-adult-1024.webp": 267,
+    "image:public/gecko-placeholders/celestial-hatchling-1024.webp": 253,
+    "image:public/gecko-placeholders/celestial-juvenile-1024.webp": 253,
+    "image:public/gecko-placeholders/engraving-adult-1024.webp": 248,
+    "image:public/gecko-placeholders/woodcut-juvenile-1024.webp": 246,
+    "image:public/gecko-placeholders/terracotta-adult-1024.webp": 237,
+    "image:public/gecko-placeholders/nouveau-juvenile-1024.webp": 235,
+    "image:public/gecko-placeholders/woodcut-hatchling-1024.webp": 233,
+    "image:public/gecko-placeholders/nouveau-hatchling-1024.webp": 229,
+    "image:public/hero/crested-gecko-hero-2400.webp": 229,
+    "image:public/gecko-placeholders/engraving-hatchling-1024.webp": 225,
+    "image:public/gecko-placeholders/terracotta-juvenile-1024.webp": 220,
+    "image:public/gecko-placeholders/engraving-juvenile-1024.webp": 207,
+    "image:public/store/products/magnetic-gecko-feeding-ledge.jpg": 203,
+    "image:public/store/custom-stickers/collector-classic-art-v4.webp": 202,
+    "image:public/gecko-placeholders/terracotta-hatchling-1024.webp": 201
+  }
+}

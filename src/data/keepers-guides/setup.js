@@ -51,13 +51,13 @@ export const SETUP_GUIDE = {
                 'Digital thermometer + hygrometer installed',
                 'Monitor temp & humidity for 5+ days',
                 'Verify gradient (warm side / cool side)',
-                'Test misting routine - AM & PM cycle',
+                'Test misting routine: AM & PM cycle',
               ],
             },
             {
               title: 'Stock it',
               items: [
-                'CGD (Pangea/Repashy) - 2+ flavors',
+                'CGD (Pangea/Repashy): 2+ flavors',
                 'Spray bottle or misting system',
                 'Paper towels (always)',
                 'Digital scale (0.1g precision)',
@@ -161,7 +161,7 @@ export const SETUP_GUIDE = {
             },
             {
               title: 'Has this gecko had a fecal done?',
-              text: "Top breeders parasite-screen. Many don't - ask anyway.",
+              text: "Top breeders parasite-screen. Many don't. Ask anyway.",
             },
           ],
         },
@@ -173,7 +173,7 @@ export const SETUP_GUIDE = {
       kicker: 'Day 1',
       title: 'The first 24 hours: the critical window.',
       lead:
-        'Your gecko just survived a stressful trip. What you do in the first 24 hours sets the acclimation clock. The goal is zero stress - not photography, not handling, not introductions.',
+        'Your gecko just survived a stressful trip. What you do in the first 24 hours sets the acclimation clock. The goal is zero stress: not photography, not handling, not introductions.',
       blocks: [
         {
           type: 'timeline',
@@ -188,7 +188,7 @@ export const SETUP_GUIDE = {
               when: '0:05',
               label: 'Transfer',
               text:
-                "Gently transfer to the pre-dialed enclosure. No handling - tip the deli cup at the substrate. If they run, let them. Cresties are fast. Close the lid.",
+                "Gently transfer to the pre-dialed enclosure. No handling: tip the deli cup at the substrate. If they run, let them. Cresties are fast. Close the lid.",
             },
             {
               when: '0:15',
@@ -218,7 +218,7 @@ export const SETUP_GUIDE = {
       kicker: 'Week 1',
       title: "Days 2-7: observe, don't interact.",
       lead:
-        "Week 1 is not for bonding. It's for stabilizing. Keep a log - this becomes invaluable if problems emerge later.",
+        "Week 1 is not for bonding. It's for stabilizing. Keep a log. It becomes invaluable if problems emerge later.",
       blocks: [
         {
           type: 'compare',
@@ -240,11 +240,11 @@ export const SETUP_GUIDE = {
               heading: "WHAT'S NORMAL THIS WEEK",
               tone: 'moss',
               items: [
-                "Hiding constantly - expected. They're crepuscular and scared.",
-                "Not eating - first 1-2 weeks is normal. Don't panic.",
-                'Glass surfing at night - exploring. Checking boundaries.',
-                'Dark / muted colors - fire-down mode = calm or stressed.',
-                'Staying in one spot all day - normal daytime behavior.',
+                "Hiding constantly: expected. They're crepuscular and scared.",
+                "Not eating: first 1-2 weeks is normal. Don't panic.",
+                'Glass surfing at night: exploring. Checking boundaries.',
+                'Dark / muted colors: fire-down mode = calm or stressed.',
+                'Staying in one spot all day: normal daytime behavior.',
               ],
             },
           ],
@@ -266,7 +266,7 @@ export const SETUP_GUIDE = {
             {
               title: '"It hasn\'t eaten in 5 days."',
               text:
-                "Normal for week 1. Weigh at end of week 2 - if stable, they're fine. See Feeding Guide.",
+                "Normal for week 1. Weigh at end of week 2. If stable, they're fine. See Feeding Guide.",
             },
             {
               title: '"I haven\'t seen it in 2 days."',
@@ -275,7 +275,7 @@ export const SETUP_GUIDE = {
             {
               title: '"Its tail fell off!"',
               text:
-                "Usually from mishandling or a fright. It won't regrow. Not a medical emergency - they live fine without it.",
+                "Usually from mishandling or a fright. It won't regrow. Not a medical emergency: they live fine without it.",
             },
             {
               title: '"It\'s running at the glass all night!"',
@@ -285,7 +285,7 @@ export const SETUP_GUIDE = {
             {
               title: '"It opened its mouth at me!"',
               text:
-                "Check if it's licking its eyes (normal) or truly gaping (stress signal - back off).",
+                "Check if it's licking its eyes (normal) or truly gaping (stress signal, back off).",
             },
           ],
         },
@@ -311,17 +311,29 @@ export const SETUP_GUIDE = {
             { title: 'Log weight with date', text: 'This is your baseline.' },
           ],
         },
-        { type: 'heading', text: 'Healthy weight benchmarks' },
+        { type: 'heading', text: 'Typical weight by age' },
         {
           type: 'kv',
+          // The life-stage pace in src/data/husbandry-facts.js: hatch
+          // weight, the end of each stage (3 g at 3 months, 15 g at 12, 35 g
+          // at 18) with 6 months on the juvenile pace between, and the adult
+          // range. A test keeps these rows equal to that file. They are what
+          // a typical gecko weighs, not the edges of healthy: until October
+          // 2026 this table showed the weight chart's band, whose low edge
+          // (3 g at 6 months) is provisional and read as "healthy".
           rows: [
-            { label: 'At hatch', value: '1.5-3g' },
-            { label: '3 months', value: '4-8g' },
-            { label: '6 months', value: '10-16g' },
-            { label: '12 months', value: '18-30g' },
-            { label: '18 months', value: '25-40g' },
-            { label: 'Full adult (2+ yrs)', value: '30-55g' },
+            { label: 'At hatch', value: '1.5 to 3 g' },
+            { label: '3 months', value: 'about 3 g' },
+            { label: '6 months', value: 'about 7 g' },
+            { label: '12 months', value: 'about 15 g' },
+            { label: '18 months', value: 'about 35 g' },
+            { label: 'Full adult (2+ yrs)', value: '35 to 60 g' },
           ],
+        },
+        {
+          type: 'callout',
+          tone: 'info',
+          text: 'Real geckos run ahead of or behind this pace. Expect about 0.5 to 1.5 g a month as a hatchling and 1 to 4 g a month as a juvenile, and watch the trend over several weigh-ins, not one.',
         },
       ],
     },
@@ -344,17 +356,17 @@ export const SETUP_GUIDE = {
             {
               title: 'Let them climb on',
               text:
-                "Slide your hand under, palm up. Let the gecko step ONTO you. If they don't, try tomorrow. Never scoop from above - that's what predators do.",
+                "Slide your hand under, palm up. Let the gecko step ONTO you. If they don't, try tomorrow. Never scoop from above. That's what predators do.",
             },
             {
               title: 'The hand-walking method',
               text:
-                "Once on your hand, they'll walk. Place your other hand in front - they walk onto it. Repeat. This tires them out safely and keeps them low.",
+                "Once on your hand, they'll walk. Place your other hand in front and they walk onto it. Repeat. This tires them out safely and keeps them low.",
             },
             {
               title: 'Session length',
               text:
-                'Start with 3-5 minutes. Over weeks, build to 10-15 max. Always over a soft, low surface - a bed, couch, or table with towel.',
+                'Start with 3-5 minutes. Over weeks, build to 10-15 max. Always over a soft, low surface: a bed, couch, or table with towel.',
             },
           ],
         },
@@ -408,7 +420,7 @@ export const SETUP_GUIDE = {
             {
               title: 'The tail twitches.',
               text:
-                'For up to 30 minutes. This is normal - it evolved to distract predators. Remove it when still.',
+                'For up to 30 minutes. This is normal: it evolved to distract predators. Remove it when still.',
             },
             {
               title: 'Keep the stump clean.',
@@ -494,7 +506,7 @@ export const SETUP_GUIDE = {
             {
               tone: 'amber',
               meta: 'From a pet store / expo / unknown',
-              title: 'Yes - within 30 days',
+              title: 'Yes, within 30 days',
               text:
                 'These geckos arrive with unknown parasite load and husbandry history. A fecal float and basic exam catches issues before they cascade. Non-negotiable.',
             },
@@ -564,7 +576,7 @@ export const SETUP_GUIDE = {
             'Handling in the first 2 weeks',
             'Setting up the tank the same day the gecko arrives',
             "Using a heat lamp (they don't need it at room temp)",
-            'Buying a 12×12×18 for a hatchling (too big - they get lost)',
+            'Buying a 12×12×18 for a hatchling (too big, they get lost)',
             'Skipping the thermometer and hygrometer',
             'Using loose substrate for a hatchling (impaction risk)',
             'Feeding insects before establishing CGD',
@@ -589,7 +601,7 @@ export const SETUP_GUIDE = {
                 'Age 8+ for independent handling. Younger kids can assist with misting and feeding, supervised.',
                 'Always over a low, soft surface. Bed, couch, or floor. Never standing up over tile or concrete.',
                 'One person handles at a time. Passing hand-to-hand invites drops. Finish one session before the next.',
-                'No squeezing, ever. Cresties are fragile. Kids instinctively grip when startled - coach them through it.',
+                'No squeezing, ever. Cresties are fragile. Kids instinctively grip when startled, so coach them through it.',
                 'Wash hands before AND after. Protects the gecko from soap residue; protects the kid from salmonella.',
               ],
             },
@@ -628,7 +640,7 @@ export const SETUP_GUIDE = {
               when: '4-7 days',
               label: 'Minimal prep',
               text:
-                'Have someone stop in once every 2-3 days to mist and swap CGD. No handling - just observation and fresh food.',
+                'Have someone stop in once every 2-3 days to mist and swap CGD. No handling, just observation and fresh food.',
             },
             {
               when: '1-2 weeks',
@@ -652,7 +664,7 @@ export const SETUP_GUIDE = {
       kicker: 'Honest Talk',
       title: 'What owning a crested gecko actually feels like.',
       lead:
-        'Pet store marketing sells a cuddly pocket-lizard. The reality is more nuanced - and mostly better, if you know what to expect.',
+        'Pet store marketing sells a cuddly pocket-lizard. The reality is more nuanced, and mostly better, if you know what to expect.',
       blocks: [
         {
           type: 'compare',
@@ -675,7 +687,7 @@ export const SETUP_GUIDE = {
               items: [
                 'Low-maintenance compared to almost any other pet.',
                 'Genuinely interesting to watch at dusk.',
-                'Individually distinct - they have personalities.',
+                'Individually distinct: they have personalities.',
                 'A 15-year commitment in a 4-inch body.',
                 'Incredible display animals in a planted enclosure.',
                 'Beginner-friendly IF you respect their needs.',
@@ -708,7 +720,7 @@ export const SETUP_GUIDE = {
           type: 'callout',
           tone: 'info',
           text:
-            "Failed one? That's fine. Identify which, address it, reset the clock. The goal is honest - not fast.",
+            "Failed one? That's fine. Identify which, address it, reset the clock. The goal is honest, not fast.",
         },
       ],
     },
@@ -718,7 +730,7 @@ export const SETUP_GUIDE = {
       kicker: 'The Next 15 Years',
       title: 'Where to go from here.',
       lead:
-        "You're not done learning - but you're past the hardest part. Here's the rest of the Keeper's Guide series, organized by when you'll actually need each one.",
+        "You're not done learning, but you're past the hardest part. Here's the rest of the Keeper's Guide series, organized by when you'll actually need each one.",
       blocks: [
         {
           type: 'cards',
@@ -734,7 +746,7 @@ export const SETUP_GUIDE = {
               meta: "For every question you'll ever have",
               title: "The Handbook: Everything They Don't Tell You",
               text:
-                'Handling, UVB, cohabitation, behavior decoded, bioactive setups, pet store misinformation - the FAQ killer.',
+                'Handling, UVB, cohabitation, behavior decoded, bioactive setups, pet store misinformation: the FAQ killer.',
             },
             {
               meta: 'When you start looking at new geckos',
@@ -746,7 +758,7 @@ export const SETUP_GUIDE = {
               meta: "When you're ready to produce",
               title: 'The Complete Breeding Guide',
               text:
-                'Year 2+ territory. From pair selection through hatchling placement - including what first-time breeders never see coming.',
+                'Year 2+ territory. From pair selection through hatchling placement, including what first-time breeders never see coming.',
             },
           ],
         },
@@ -764,7 +776,7 @@ export const SETUP_GUIDE = {
         {
           type: 'callout',
           tone: 'success',
-          text: 'If your gecko has become boring by day 30 - you did it right.',
+          text: 'If your gecko has become boring by day 30, you did it right.',
         },
       ],
     },

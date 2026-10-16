@@ -32,6 +32,7 @@ import {
   flattenNavItems,
 } from '@/lib/navItems';
 import { dataCache } from '@/lib/layoutCache';
+import { invalidatePageConfigs } from '@/lib/pageConfigs';
 import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
 
 // Tell the rest of the app (sidebar in Layout.jsx, route gating in
@@ -40,6 +41,9 @@ import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
 // without a full browser reload.
 function notifyPageConfigsChanged() {
   dataCache.clear('page_configs');
+  // The router and the sidebar share one cached copy; drop it first so
+  // their refetch on the event below asks the database again.
+  invalidatePageConfigs();
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('page_configs_changed'));
   }

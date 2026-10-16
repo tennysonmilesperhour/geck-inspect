@@ -153,7 +153,7 @@ export function detectWarnings(selections) {
       severity: 'info',
       traitId: 'highway',
       title: 'Super Highway',
-      body: 'Homozygous Highway. Hatchlings have reported nostril and health issues, so Highway x Highway is not recommended.',
+      body: 'Homozygous Highway. Some breeders report nostril and health problems in these hatchlings. That is not established, but Highway x Highway is not recommended until it is understood.',
     });
   }
 

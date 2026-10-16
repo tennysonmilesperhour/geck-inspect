@@ -43,6 +43,19 @@ export {
   LOCI,
 };
 
+/**
+ * Engine trait metadata (sources, proven-by) for a calculator catalog
+ * entry, or null. It used to live in calculatorCatalog.js, which no
+ * longer imports the engine.
+ */
+export function engineTrait(idOrAllele) {
+  try {
+    return getTrait(idOrAllele) || null;
+  } catch {
+    return null;
+  }
+}
+
 // ---------- display sanitation ----------------------------------------
 // Engine strings (risk notes, needs_review messages) may contain em
 // dashes; the project bans them in anything rendered to users. Run any

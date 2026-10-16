@@ -12,8 +12,12 @@ import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import PriceIndexTable from '@/components/public/PriceIndexTable';
 import { breadcrumbSchema, faqPageSchema, SITE_URL } from '@/lib/organization-schema';
+import { editorialFor } from '@/lib/editorial';
 
-const LAST_UPDATED = '2026-10-07';
+// The last commit to this page (scripts/content-dates.json, refreshed at
+// the start of every build), so the dateModified search engines read never
+// goes stale.
+const LAST_UPDATED = editorialFor('/crested-gecko-price').modified;
 
 // Each example morph is [label, Morph Guide slug] so it links to its own
 // page; a plain string is a description with no page.

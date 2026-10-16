@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 import { isBlockedContent } from '@/lib/moderation';
 
 /** Personal feed filtering. The database separately prevents blocked messages. */
@@ -11,6 +12,7 @@ export function useBlockedAuthors() {
     let current = true;
     if (!user?.email || isGuest) { setBlocked(new Set()); return; }
     const load = async () => {
+      const supabase = await getSupabase();
       const { data, error } = await supabase.from('user_blocks').select('blocked_email').eq('blocker_email', user.email);
       if (!current) return;
       if (error) { console.warn('Blocked-author preferences unavailable:', error.message); return; }
@@ -38,6 +40,7 @@ export function useBlockedMembers() {
     if (!list.length) { setProfileIds(new Set()); return undefined; }
     (async () => {
       try {
+        const supabase = await getSupabase();
         const { data, error } = await supabase
           .rpc('read_profiles', { p_emails: list })
           .select('id, email');

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Egg, BreedingPlan, WeightRecord, FutureBreedingPlan, FeedingGroup, OtherReptile } from '@/entities/all';
+import { Egg, BreedingPlan, FutureBreedingPlan, FeedingGroup, OtherReptile } from '@/entities/all';
+import { loadRecentWeights } from '@/lib/recentWeights';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Scale, EggIcon, Calendar, Target, ChevronRight, CheckCircle2, Sparkles, Utensils, Loader2 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
@@ -8,6 +9,7 @@ import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
 import { markGroupFed } from '@/lib/husbandryLog';
 import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
 import MarketTodayStrip from '@/components/dashboard/MarketTodayStrip';
+import { loadUnlessRetired } from '@/lib/retiredPages';
 
 /**
  * "Your Next Actions" widget, a personal todo-shaped list of things
@@ -164,10 +166,13 @@ export default function NextActions({ currentUserEmail }) {
                     getVisibleGeckos({ email: currentUserEmail }).catch(() => []),
                     Egg.filter({ created_by: currentUserEmail }).catch(() => []),
                     BreedingPlan.filter({ created_by: currentUserEmail }).catch(() => []),
-                    WeightRecord.filter({ created_by: currentUserEmail }).catch(() => []),
+                    // Only each gecko's latest weigh-in is needed here; the
+                    // full history read stopped at 1,000 rows.
+                    loadRecentWeights(currentUserEmail, { perGecko: 1 }).catch(() => []),
                     FutureBreedingPlan.filter({ created_by: currentUserEmail }).catch(() => []),
                     FeedingGroup.filter({ created_by: currentUserEmail }).catch(() => []),
-                    OtherReptile.filter({ created_by: currentUserEmail, archived: false }).catch(() => []),
+                    // Other Reptiles is retired; its feedings come back with the page.
+                    loadUnlessRetired('OtherReptiles', () => OtherReptile.filter({ created_by: currentUserEmail, archived: false })).catch(() => []),
                 ]);
                 setData({ geckos, eggs, plans, weights, futurePlans, feedingGroups, reptiles });
             } catch (err) {

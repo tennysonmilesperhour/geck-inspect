@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { isNativePlatform } from '@/lib/revenuecat';
-import { syncNativeCareReminders } from '@/lib/nativeCareReminders';
 
 // Keeps on-device feeding and weigh-in reminders in step with the account
 // when the app opens or comes back to the foreground. No permission prompt
@@ -14,8 +13,13 @@ export default function NativeCareSync() {
   useEffect(() => {
     if (!isNativePlatform() || !isAuthenticated || !email || guest) return undefined;
     let stopped = false;
+    // Only the phone apps schedule reminders, so the scheduling code
+    // loads here rather than with every web page.
     const run = () => {
-      if (!stopped) syncNativeCareReminders({ email }).catch(() => {});
+      if (stopped) return;
+      import('@/lib/nativeCareReminders')
+        .then(({ syncNativeCareReminders }) => syncNativeCareReminders({ email }))
+        .catch(() => {});
     };
     run();
     let listener;

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
+import { getSupabase, getSupabaseWhenIdle, hasSessionHint, peekSupabase } from '@/lib/supabaseLazy';
+import { normalizeSupabaseUser } from '@/lib/normalizeSupabaseUser';
 import { identifyUser, resetUser, captureEvent, setGuestAnalyticsMode } from '@/lib/posthog';
 import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
@@ -16,10 +17,16 @@ import { setQueueOwner } from '@/lib/offlineQueue';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // A browser with no stored sign-in, no sign-in link in the address and
+  // no native app is signed out; asking Supabase would only confirm it.
+  // Such a visitor sees the page at once (no "checking sign-in" spinner)
+  // and the Supabase client downloads after the page has drawn
+  // (src/lib/supabaseLazy.js). Everyone else waits for the check as before.
+  const [signedOutStart] = useState(() => !hasSessionHint());
+  const [user, setUser] = useState(() => (signedOutStart && isGuestMode() ? GUEST_USER : null));
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(() => isGuestMode());
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(() => !signedOutStart);
   // Invalidates pending profile reads on account changes, sign-out and unmount.
   const revisionRef = useRef(0);
   const sessionOwnerRef = useRef(null);
@@ -27,6 +34,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let initialHandled = false;
     let mounted = true;
+    let subscription = null;
+    let retryTimer = null;
     const reconcile = (event, incoming) => {
       if (!mounted || (event === 'INITIAL_SESSION' && initialHandled)) return;
       initialHandled = true;
@@ -36,7 +45,7 @@ export const AuthProvider = ({ children }) => {
       // sending the member to the sign-in page; Supabase checks it again
       // when the connection returns (src/lib/offlineSession.js).
       if (!session?.user && event === 'INITIAL_SESSION' && isOffline()) {
-        session = readStoredSession(supabase.auth.storageKey);
+        session = readStoredSession(peekSupabase()?.auth.storageKey);
       }
       const owner = session?.user?.id || null;
       if (owner !== sessionOwnerRef.current) {
@@ -83,12 +92,37 @@ export const AuthProvider = ({ children }) => {
         applyPendingSignupGrant();
       });
     };
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(reconcile);
-    // Fallback for SDKs that have not emitted INITIAL_SESSION yet. A newer auth
-    // event takes precedence over a slow initial getSession response.
-    supabase.auth.getSession().then(({ data: { session } }) => reconcile('INITIAL_SESSION', session))
-      .catch(() => { if (!initialHandled) reconcile('INITIAL_SESSION', null); });
-    return () => { mounted = false; revisionRef.current++; subscription.unsubscribe(); };
+    const start = (supabase) => {
+      if (!mounted) return;
+      ({ data: { subscription } } = supabase.auth.onAuthStateChange(reconcile));
+      // Fallback for SDKs that have not emitted INITIAL_SESSION yet. A newer auth
+      // event takes precedence over a slow initial getSession response.
+      supabase.auth.getSession().then(({ data: { session } }) => reconcile('INITIAL_SESSION', session))
+        .catch(() => { if (!initialHandled) reconcile('INITIAL_SESSION', null); });
+    };
+    if (signedOutStart) {
+      // Pause demo click capture now rather than when the client arrives.
+      setGuestAnalyticsMode(isGuestMode());
+      // Still listen, a moment later: a sign-in in another tab, or on the
+      // sign-in form, reaches this page through the client's events.
+      getSupabaseWhenIdle().then(start).catch(() => {
+        // The download failed (no signal). The visitor is signed out
+        // either way; the next data call tries again.
+      });
+    } else {
+      let retries = 0;
+      const connect = () => getSupabase().then(start).catch(() => {
+        // The client's code could not be downloaded (no signal, and not
+        // in the offline cache yet). Treat it like being offline: keep a
+        // stored session rather than signing the member out, and try
+        // again shortly so sign-in changes are heard once it arrives.
+        if (!mounted) return;
+        if (!initialHandled) reconcile('INITIAL_SESSION', readStoredSession());
+        if (retries++ < 6) retryTimer = setTimeout(connect, 10000);
+      });
+      connect();
+    }
+    return () => { mounted = false; clearTimeout(retryTimer); revisionRef.current++; subscription?.unsubscribe(); };
   }, []);
 
   // Ephemeral session: if the user chose not to stay signed in, clear
@@ -121,7 +155,7 @@ export const AuthProvider = ({ children }) => {
       // scope 'local': end this browser's session only. The default
       // (global) also signed the member out on their phone and every other
       // device whenever they closed a "don't stay signed in" tab.
-      supabase.auth.signOut({ scope: 'local' });
+      getSupabase().then((supabase) => supabase.auth.signOut({ scope: 'local' })).catch(() => {});
     }
 
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -131,6 +165,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState !== 'visible') return;
+      // Not downloaded yet means no sign-in on this page to refresh.
+      const supabase = peekSupabase();
+      if (!supabase) return;
       const revision = revisionRef.current;
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user || revision !== revisionRef.current) return;
@@ -145,6 +182,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async (shouldRedirect = true) => {
     revisionRef.current++;
+    const supabase = await getSupabase();
     const { error } = await supabase.auth.signOut();
     // Supabase can end the local session even when remote revocation fails.
     // Only report a failure if its auth listener still has an account.

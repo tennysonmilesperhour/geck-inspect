@@ -45,6 +45,9 @@ User-agent: Bytespider
 User-agent: cohere-ai
 User-agent: DuckDuckBot
 Allow: /
+# Repeated from the "*" group for the same reason as the Disallow lines:
+# these crawlers never read that group.
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Disallow: /AdminPanel
 Disallow: /Settings
 Disallow: /Messages

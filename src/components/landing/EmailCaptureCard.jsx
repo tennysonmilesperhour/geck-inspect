@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 import { Send, CheckCircle, Loader2, BookOpen, Dna, Mail } from 'lucide-react';
 
 /**
@@ -30,6 +31,7 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
     }
     setSubmitting(true);
     try {
+      const supabase = await getSupabase();
       const { data, error: fnErr } = await supabase.functions.invoke('subscribe-and-send-guides', {
         body: { email: email.trim(), source, website },
       });

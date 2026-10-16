@@ -2,8 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { captureEvent } from '@/lib/posthog';
 import { MORPHS } from '@/data/morph-guide';
-import TraitGecko, { traitAsset, BASE_TONES } from './TraitGecko';
-import { fieldGuidePlate } from './IllustratedGecko';
+import TraitGecko, { BASE_TONES } from './TraitGecko';
+import { fieldGuidePlate, hasIllustration } from './IllustratedGecko';
 import { SpecimenPhoto, RecognitionPractice } from './SpecimenStudy';
 import {
   SPECIMENS,
@@ -14,37 +14,9 @@ import {
   traitDescription,
 } from './patternStudy';
 
-/** Connect detail pages to an existing, relevant specimen and progression lesson. */
-export function spectrumPositionFor(slug) {
-  const coverage = ['flame', 'harlequin', 'extreme-harlequin'].indexOf(slug);
-  if (coverage >= 0) return { track: 'coverage', pos: coverage + 1 };
-  if (['bicolor', 'lilly-white', 'white-wall', 'creamsicle', 'tricolor'].includes(slug)) {
-    return { track: 'coverage', pos: 2 };
-  }
-  if (slug === 'pinstripe') return { track: 'pinning', pos: 2 };
-  if (['partial-pinstripe', 'quad-stripe', 'super-stripe'].includes(slug)) {
-    return { track: 'pinning', pos: 1 };
-  }
-  if (
-    [
-      'tiger',
-      'brindle',
-      'extreme-brindle',
-      'tiger-brindle',
-      'dalmatian',
-      'super-dalmatian',
-      'mardi-gras',
-      'confetti',
-      'halloween',
-    ].includes(slug)
-  ) {
-    return { track: 'features', pos: 0 };
-  }
-  if (['cappuccino', 'frappuccino', 'sable', 'axanthic', 'hypo', 'albino', 'pied', 'moonglow', 'lavender'].includes(slug)) {
-    return { track: 'pigment', pos: 0 };
-  }
-  return null;
-}
+// Lives in its own small file so a morph page can check it without
+// downloading the studio; re-exported here for existing callers.
+export { spectrumPositionFor } from './spectrumPosition';
 
 const CONTROLS = [
   ['dorsal', 'Dorsal pattern', 'The field between the crest rows.'],
@@ -420,8 +392,13 @@ export function MorphProgressionPlayer({
   );
 }
 
+// Only morphs with a painted field guide plate can be compared; entries
+// still waiting for one (Phantom, Whiteout, the supers) would show a
+// broken image.
+const PLATE_MORPHS = MORPHS.filter(m => hasIllustration(m.slug));
+
 /**
- * Any-to-Any Morph Crossfade Comparator (compares any 2 of all 36 morph plates).
+ * Any-to-Any Morph Crossfade Comparator (compares any 2 of the morph plates).
  */
 export function CustomMorphComparator({ initialA = 'flame', initialB = 'extreme-harlequin' }) {
   const [morphA, setMorphA] = useState(initialA);
@@ -459,8 +436,8 @@ export function CustomMorphComparator({ initialA = 'flame', initialB = 'extreme-
     };
   }, [playing]);
 
-  const recordA = MORPHS.find(m => m.slug === morphA) || MORPHS[0];
-  const recordB = MORPHS.find(m => m.slug === morphB) || MORPHS[1];
+  const recordA = PLATE_MORPHS.find(m => m.slug === morphA) || PLATE_MORPHS[0];
+  const recordB = PLATE_MORPHS.find(m => m.slug === morphB) || PLATE_MORPHS[1];
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-4">
@@ -498,7 +475,7 @@ export function CustomMorphComparator({ initialA = 'flame', initialB = 'extreme-
             onChange={e => setMorphA(e.target.value)}
             className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
-            {MORPHS.map(m => (
+            {PLATE_MORPHS.map(m => (
               <option key={m.slug} value={m.slug}>
                 {m.name}
               </option>
@@ -515,7 +492,7 @@ export function CustomMorphComparator({ initialA = 'flame', initialB = 'extreme-
             onChange={e => setMorphB(e.target.value)}
             className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
-            {MORPHS.map(m => (
+            {PLATE_MORPHS.map(m => (
               <option key={m.slug} value={m.slug}>
                 {m.name}
               </option>
@@ -1125,11 +1102,9 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
           </a>
         </p>
       </details>
-      <div hidden>
-        {['side', 'top'].flatMap(v =>
-          ['base', 'cream', 'pin', 'tiger', 'spots'].map(t => <img key={v + t} src={traitAsset(v, t)} alt="" />)
-        )}
-      </div>
+      {/* No hidden preload of every layer here: it fetched all ten
+          drawings on page load. The layers are small now and each loads
+          when a study needs it. */}
     </section>
   );
 }

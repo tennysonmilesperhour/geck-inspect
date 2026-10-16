@@ -12,6 +12,13 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+  PRICE_DATA_TERMS,
+  PRICE_INDEX_SAMPLE_RULE,
+  PRICE_INDEX_WHAT,
+  applyPricePolicy,
+} from '../../src/lib/priceIndexPolicy.js';
+import { COMPLEX_OPTIONS, SIMPLE_TRAITS } from '../../src/lib/genetics/calculatorCatalog.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 export const REPO_ROOT = resolve(__dirname, '../..');
@@ -120,15 +127,48 @@ export async function loadBlogPosts() {
   }));
 }
 
+// ---- genetics status --------------------------------------------------
+
+// The calculator's badge for each gene it offers ('proven' or 'emerging',
+// src/lib/genetics/calculatorCatalog.js), by engine trait id. The Cappuccino
+// gene's single versions (Cappuccino, Sable, Highway) carry their own.
+export const CALCULATOR_STATUS = {
+  ...Object.fromEntries(SIMPLE_TRAITS.map((t) => [t.id, t.confidence])),
+  ...Object.fromEntries(
+    COMPLEX_OPTIONS.filter((o) => o.confidence && o.pair?.[0] === o.value).map((o) => [o.value, o.confidence]),
+  ),
+};
+
+/**
+ * One engine trait as published in /data/genetics.json and
+ * /llms/genetics.md. The engine marks Empty Back, Whiteout, Sable and
+ * other newer genes `confirmed`, but Geck Inspect badges them Emerging:
+ * reported by one or a few breeders, not yet independently proven
+ * (Tennyson's decision of 16 Oct 2026 keeps Empty Back Emerging). The
+ * published data follows the badge, so no file calls an Emerging gene
+ * proven.
+ */
+export function withGeckInspectStatus(trait) {
+  const status = CALCULATOR_STATUS[trait?.id];
+  if (!status) return trait;
+  return { ...trait, confirmed: Boolean(trait.confirmed) && status === 'proven', status };
+}
+
 /** The committed or freshly fetched price index, or null. */
 export function loadPriceIndex() {
   if (!existsSync(PRICE_INDEX)) return null;
   try {
     const data = JSON.parse(readFileSync(PRICE_INDEX, 'utf8'));
-    return Array.isArray(data?.latest) ? data : null;
+    // The minimum-sample rule again, in case the file predates it.
+    return Array.isArray(data?.latest) ? applyPricePolicy(data) : null;
   } catch {
     return null;
   }
+}
+
+/** "52 (thin sample)" for a row under the thin-sample line, else the count. */
+export function listingsCell(row) {
+  return row.thin ? `${row.listings} (thin sample)` : String(row.listings);
 }
 
 export const MARKET_NAMES = { US: 'United States', KR: 'South Korea', JP: 'Japan', EU: 'Europe' };
@@ -136,9 +176,11 @@ const MARKET_ORDER = Object.keys(MARKET_NAMES);
 const byMarketOrder = (a, b) => MARKET_ORDER.indexOf(a.market) - MARKET_ORDER.indexOf(b.market);
 
 // Market trait names that differ from the morph guide's name or aliases.
+// "Phantom" needs no entry: it matches the Phantom (gene) page by name, the
+// same page src/lib/priceIndexPolicy.js links it to. It used to point at
+// Phantom Pinstripe, which put the gene's asking prices on that page too.
 const MARKET_TRAIT_TO_SLUG = {
   'tri-color': 'tricolor',
-  phantom: 'phantom-pinstripe',
 };
 
 /** Latest asking-price rows for one morph, keyed by market. */
@@ -152,6 +194,25 @@ export function priceRowsForMorph(index, morph) {
   }).sort(byMarketOrder);
 }
 
+/**
+ * Where a morph's asking prices are, for the morph catalog (data/morphs.json,
+ * llms/morphs.md and the MorphGuide/<slug>.md twins), or null when the Price
+ * Index has no rows for it. The catalog is CC BY 4.0 and the Price Index is
+ * not (it is free to cite with a link), so the catalog names the morph's
+ * trait labels in the index and links the index files instead of copying
+ * its numbers.
+ */
+export function priceIndexPointer(index, morph) {
+  const traits = [...new Set(priceRowsForMorph(index, morph).map((r) => r.trait))];
+  if (!traits.length) return null;
+  return {
+    name: 'Geck Inspect Price Index',
+    traits,
+    json: `${SITE_URL}/data/price-index.json`,
+    csv: `${SITE_URL}/data/price-index.csv`,
+    terms: PRICE_DATA_TERMS,
+  };
+}
 
 export const usd = (n) => (n == null ? 'n/a' : `$${Math.round(Number(n)).toLocaleString('en-US')}`);
 
@@ -208,8 +269,12 @@ export function careToMarkdown(sections) {
   return out.join('\n');
 }
 
-/** One morph as markdown. `full` adds lookalikes, identification, sources and live prices. */
-export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, nameOf = (s) => s } = {}) {
+/**
+ * One morph as markdown. `full` adds lookalikes, identification, sources and
+ * live prices: the Price Index table, or with `priceTable: false` (the morph
+ * catalog files, which are CC BY 4.0) a link to the morph's rows instead.
+ */
+export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, priceTable = true, nameOf = (s) => s } = {}) {
   const h = '#'.repeat(level);
   const out = [`${h} ${m.name}`, '', `_Permalink: ${SITE_URL}/MorphGuide/${m.slug}_`, ''];
   const facts = [];
@@ -243,15 +308,22 @@ export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, n
   if (full && m.combinesWith?.length) {
     out.push(`**Often combined with:** ${m.combinesWith.map(nameOf).join(', ')}`, '');
   }
-  if (full && priceIndex) {
+  const pointer = full && !priceTable ? priceIndexPointer(priceIndex, m) : null;
+  if (pointer) {
+    out.push(
+      `**Asking prices.** Not part of this morph catalog. The ${pointer.name} lists current asking prices for this morph under the trait label${pointer.traits.length > 1 ? 's' : ''} ${pointer.traits.map((t) => `"${t}"`).join(' and ')}: ${pointer.json} (CSV: ${pointer.csv}). ${pointer.terms}`,
+      '',
+    );
+  }
+  if (full && priceIndex && priceTable) {
     const rows = priceRowsForMorph(priceIndex, m);
     if (rows.length) {
       out.push(
-        `**Current asking prices (Geck Inspect Price Index, ${rows[0].checked_on}).** Asking prices on public crested gecko listings, converted to USD, not sale prices. Full dataset: ${SITE_URL}/data/price-index.json`,
+        `**Current asking prices (Geck Inspect Price Index, ${rows[0].checked_on}).** Asking prices on public crested gecko listings, converted to USD, not sale prices. ${PRICE_DATA_TERMS} Full dataset: ${SITE_URL}/data/price-index.json`,
         '',
         '| Market | Listings | 25th percentile | Median | 75th percentile |',
         '| --- | --- | --- | --- | --- |',
-        ...rows.map((r) => `| ${MARKET_NAMES[r.market] || r.market} | ${r.listings} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`),
+        ...rows.map((r) => `| ${MARKET_NAMES[r.market] || r.market} | ${listingsCell(r)} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`),
         '',
       );
     }
@@ -261,6 +333,28 @@ export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, n
     out.push('**Sources:**', m.sources.map((s) => `- ${s}`).join('\n'), '');
   }
   return out.join('\n');
+}
+
+/**
+ * One morph as the morph catalog publishes it in data/morphs.json. The
+ * catalog is CC BY 4.0, so it carries no Price Index numbers: priceIndex
+ * points at the morph's rows in the index instead (priceIndexPointer).
+ */
+export function morphCatalogRecord(m, priceIndex) {
+  return {
+    ...m,
+    url: `${SITE_URL}/MorphGuide/${m.slug}`,
+    markdown: `${SITE_URL}/MorphGuide/${m.slug}.md`,
+    categoryLabel: MORPH_LABELS.category[m.category] || m.category,
+    inheritanceLabel: MORPH_LABELS.inheritance[m.inheritance] || m.inheritance,
+    rarityLabel: MORPH_LABELS.rarity[m.rarity] || m.rarity,
+    priceIndex: priceIndexPointer(priceIndex, m),
+  };
+}
+
+/** One morph as the catalog's markdown files have it (llms/morphs.md, MorphGuide/<slug>.md): no price table, a link to it. */
+export function morphCatalogMarkdown(m, { level = 1, priceIndex = null, nameOf = (s) => s } = {}) {
+  return morphMarkdown(m, { level, full: true, priceIndex, priceTable: false, nameOf });
 }
 
 export function morphsToMarkdown(morphs, opts = {}) {
@@ -314,7 +408,7 @@ export function priceIndexToMarkdown(index) {
   const out = [
     '## Geck Inspect Price Index (crested gecko asking prices)',
     '',
-    `Generated ${String(index.generated_at || '').slice(0, 10)}. Original data compiled by Geck Inspect from public crested gecko listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe. These are **asking prices** on open listings, converted to USD at stored exchange rates, not sale prices. Only full catalog checks count, and a trait is shown only with at least 5 listings. Cite as "Geck Inspect Price Index" with a link to ${SITE_URL}/data. JSON: ${SITE_URL}/data/price-index.json. CSV: ${SITE_URL}/data/price-index.csv.`,
+    `Generated ${String(index.generated_at || '').slice(0, 10)}. ${PRICE_INDEX_WHAT.replace(/^an/, 'An')} of crested geckos in the United States, South Korea, Japan and Europe, compiled by Geck Inspect. These are **asking prices** on open listings, converted to USD at stored exchange rates, not sale prices. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} ${PRICE_DATA_TERMS} Cite as "Geck Inspect Price Index" with a link to ${SITE_URL}/data. JSON: ${SITE_URL}/data/price-index.json. CSV: ${SITE_URL}/data/price-index.csv.`,
     '',
   ];
   const byMarket = new Map();
@@ -326,7 +420,7 @@ export function priceIndexToMarkdown(index) {
     out.push(`### ${MARKET_NAMES[market] || market} (checked ${rows[0].checked_on})`, '');
     out.push('| Trait | Listings | 25th percentile | Median | 75th percentile |', '| --- | --- | --- | --- | --- |');
     for (const r of rows) {
-      out.push(`| ${r.trait || 'All crested geckos'} | ${r.listings} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`);
+      out.push(`| ${r.trait || 'All crested geckos'} | ${listingsCell(r)} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`);
     }
     out.push('');
   }

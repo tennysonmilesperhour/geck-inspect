@@ -10,8 +10,12 @@ import {
 import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema, faqPageSchema, SITE_URL } from '@/lib/organization-schema';
+import { editorialFor } from '@/lib/editorial';
 
-const LAST_UPDATED = '2026-08-18';
+// The last commit to this page (scripts/content-dates.json, refreshed at
+// the start of every build), so the dateModified search engines read never
+// goes stale.
+const LAST_UPDATED = editorialFor('/breeding-records').modified;
 
 const FEATURES = [
   {

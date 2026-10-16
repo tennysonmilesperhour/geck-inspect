@@ -1,5 +1,5 @@
 import { config } from "zod";
-import { TRAITS, getComboMorph, WILD_TYPE, tagToGenotype, predict, LOCI, COMBO_MORPHS } from "crested-gecko-app";
+import { TRAITS, getComboMorph, WILD_TYPE as WILD_TYPE$1, tagToGenotype, predict, LOCI, COMBO_MORPHS } from "crested-gecko-app";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 const MORPH_CATEGORIES = [
@@ -239,6 +239,10 @@ const MORPHS$1 = [
       {
         "slug": "pinstripe",
         "difference": "Visible pinstripe highlights the raised rows; cream continuity alone cannot establish Phantom status."
+      },
+      {
+        "slug": "phantom",
+        "difference": "Phantom is the recessive gene; Phantom Pinstripe is an appearance label and does not prove the animal carries it."
       }
     ],
     aliases: [
@@ -590,6 +594,10 @@ const MORPHS$1 = [
       {
         "slug": "white-wall-white-spot",
         "difference": "White-spot terminology concerns discrete pale lateral areas and varies by model."
+      },
+      {
+        "slug": "whiteout",
+        "difference": "Whiteout is the gene AC Reptiles reports behind this look; Geck Inspect reads a White Wall tag as Whiteout, but the look alone does not prove it."
       }
     ],
     aliases: ["WW"],
@@ -665,7 +673,7 @@ const MORPHS$1 = [
     priceTier: "$$$",
     priceRange: "$400 to $1,200",
     summary: "A genetic trait with variable appearance across ages and combinations.",
-    description: "Cappuccino appearance varies with age, base color and other traits. Breeders often inspect the pale marking at the tail base in young animals together with the overall pattern and documented lineage. There is no universal coffee-brown body or clean-edged saddle that identifies every Cappuccino.",
+    description: "Cappuccino appearance varies with age, base color and other traits. Breeders often inspect the pale marking at the tail base in young animals together with the overall pattern and documented lineage. There is no universal coffee-brown body or clean-edged saddle that identifies every Cappuccino. Two copies make a Super Cappuccino, which usually hatches but has documented health problems, including narrowed nostrils, so breeders pair a Cappuccino to a normal or a Sable instead of another Cappuccino.",
     keyFeatures: [
       "Variable pigmentation and pattern",
       "A pale tail-base marking can be a clue in juveniles",
@@ -696,7 +704,7 @@ const MORPHS$1 = [
         "difference": "Chocolate is a base color description; Sable is a proven gene and stays notably dark even when fired down."
       }
     ],
-    aliases: ["Super Sable"],
+    aliases: [],
     category: "color",
     inheritance: "incomplete-dominant",
     rarity: "uncommon",
@@ -739,12 +747,12 @@ const MORPHS$1 = [
         "difference": "A Phantom Pinstripe also reads as a quiet, unbroken back; Phantom is recessive and only lineage separates the two."
       }
     ],
-    aliases: ["Super Highway"],
+    aliases: [],
     category: "pattern",
     inheritance: "incomplete-dominant",
     rarity: "rare",
     summary: "Incomplete-dominant trait with a continuous, clean dorsal stripe. Provisionally the third version of the Cappuccino and Sable gene.",
-    description: "One copy makes a visual Highway and two copies make a Super Highway. Highway is treated as the third version of the Cappuccino and Sable gene, mainly because Super Highway hatchlings show nostril and health issues like Super Cappuccino; the community has not fully settled this, so it is still badged Emerging. A gecko holds two versions of the gene at most, so it can be Cappuccino plus Highway or Sable plus Highway. A clean, unbroken back also comes from Empty Back, Phantom and line-bred patternless animals, so a photo alone does not prove Highway.",
+    description: "One copy makes a visual Highway and two copies make a Super Highway. Highway is treated, provisionally, as the third version of the Cappuccino and Sable gene. That rests mainly on breeder reports of nostril and health problems in Super Highway hatchlings like Super Cappuccino's; those reports are not established, and the community has not settled the placement, so it is still badged Emerging. A gecko holds two versions of the gene at most, so it can be Cappuccino plus Highway or Sable plus Highway. A clean, unbroken back also comes from Empty Back, Phantom and line-bred patternless animals, so a photo alone does not prove Highway.",
     keyFeatures: [
       "Continuous, unbroken dorsal stripe",
       "Clean sides",
@@ -755,7 +763,7 @@ const MORPHS$1 = [
       "Confirm with documented lineage, since several genes and line-bred looks give a clean back"
     ],
     combinesWith: ["cappuccino", "sable", "lilly-white", "axanthic"],
-    notes: "Avoid Highway x Highway: Super Highway hatchlings have reported nostril and health issues. Pair Highway to a normal, or to a Cappuccino or Sable for a compound with no super."
+    notes: "Avoid Highway x Highway: some breeders report nostril and health problems in Super Highway hatchlings. That is not established, but it is reason enough to pair Highway to a normal, or to a Cappuccino or Sable for a compound with no super."
   },
   {
     slug: "frappuccino",
@@ -814,7 +822,7 @@ const MORPHS$1 = [
     priceTier: "$$$",
     priceRange: "$300 to $900",
     summary: "Proven incomplete-dominant trait producing bold white markings, the super form is lethal.",
-    description: "Lilly White produces variable white or cream pattern that often becomes more extensive with age. Breeders assess multiple features, including tail, flank and ventral coloration, alongside lineage. High white coverage alone is insufficient: other traits may resemble it, and low-expression or Phantom combinations can look quite different.",
+    description: "Lilly White produces variable white or cream pattern that often becomes more extensive with age. Breeders assess multiple features, including tail, flank and ventral coloration, alongside lineage. High white coverage alone is insufficient: other traits may resemble it, and low-expression or Phantom combinations can look quite different. Two copies make a Super Lilly White, which is lethal: embryos die in the egg or within days of hatching, so breeders pair a Lilly White to a gecko without Lilly White.",
     keyFeatures: [
       "Variable white or cream coverage",
       "Tail, flank and ventral features help guide comparison",
@@ -884,7 +892,7 @@ const MORPHS$1 = [
     inheritance: "recessive",
     rarity: "very_rare",
     summary: "The newest crested gecko color gene: no black pigment and red eyes. The first healthy albino hatchlings were announced by Eureka Exotics in March 2026.",
-    description: 'An albino crested gecko lacks melanin, the black and brown pigment, so the animal shows only its yellow, orange, red and cream pigments, and its eyes are red or pink instead of dark. For years albino crested geckos were treated as a myth: the albino-looking hatchlings reported before 2026 were weak, deformed or did not survive, and most "albino" sales were pale animals or edited photos. That changed on 5 March 2026, when Eureka Exotics (Nicole Cullen, Newberry, Florida) announced the hatching of what appear to be the first viable albino crested geckos: babies with no visible melanin, red pupils and normal, robust health. Albinism is recessive in essentially every reptile where it has been worked out, so the crested gecko version is expected to be recessive too, but that still has to be shown by breeding the first albinos and their siblings. Until then, treat any "het albino" offer with caution.',
+    description: 'An albino crested gecko lacks melanin, the black and brown pigment, so the animal shows only its yellow, orange, red and cream pigments, and its eyes are red or pink instead of dark. For years albino crested geckos were treated as a myth: the albino-looking hatchlings reported before 2026 were weak, deformed or did not survive, and most "albino" sales were pale animals or edited photos. That changed on 5 March 2026, when Eureka Exotics announced the hatching of what appear to be the first viable albino crested geckos: babies with no visible melanin, red pupils and normal, robust health. Albinism is recessive in essentially every reptile where it has been worked out, so the crested gecko version is expected to be recessive too, but that still has to be shown by breeding the first albinos and their siblings. Until then, treat any "het albino" offer with caution.',
     keyFeatures: [
       "No black or brown pigment (melanin)",
       "Red or pink eyes instead of dark eyes",
@@ -926,7 +934,7 @@ const MORPHS$1 = [
     priceTier: "$$$$",
     priceRange: "$2,000 to $6,000",
     summary: "Rare piebald phenotype showing sharply demarcated patches of unpigmented white and translucent pinkish-ivory scales alongside normally pigmented areas.",
-    description: `A Pied (or Piebald) crested gecko displays localized, sharply bordered areas where skin and scale pigment are completely absent, leaving pure chalk-white or translucent pale pinkish-ivory patches that abruptly cut across the animal's normal base color and pattern. Expression ranges from low-expression "pinktoe" or pied-toe animals (unpigmented white toes and distal feet) to high-expression specimens with bold piebald saddles, limb bands and tail rings alongside normal dark-veined eyes. While isolated piebald-like anomalies (such as Pangea Reptile's historical "Patient Zero") failed to reproduce predictably, dedicated multi-generation projects led by breeders such as Eureka Exotics (Nicole Cullen) have established heritable Pied and Pinktoe lines. Because minor random white toe tips can also appear as non-heritable developmental flukes, always verify documented multi-generation lineage before treating a specimen or "het Pied" claim as proven.`,
+    description: `A Pied (or Piebald) crested gecko displays localized, sharply bordered areas where skin and scale pigment are completely absent, leaving pure chalk-white or translucent pale pinkish-ivory patches that abruptly cut across the animal's normal base color and pattern. Expression ranges from low-expression "pinktoe" or pied-toe animals (unpigmented white toes and distal feet) to high-expression specimens with bold piebald saddles, limb bands and tail rings alongside normal dark-veined eyes. While isolated piebald-like anomalies (such as Pangea Reptile's historical "Patient Zero") failed to reproduce predictably, dedicated multi-generation projects led by breeders such as Eureka Exotics have established heritable Pied and Pinktoe lines. Because minor random white toe tips can also appear as non-heritable developmental flukes, always verify documented multi-generation lineage before treating a specimen or "het Pied" claim as proven.`,
     keyFeatures: [
       "Sharply demarcated patches of unpigmented pure white and translucent pinkish-ivory skin",
       "Abruptly interrupts normal dorsal, lateral, limb or tail pattern rather than following standard Harlequin or Lilly White zones",
@@ -939,7 +947,7 @@ const MORPHS$1 = [
       "Inspect the toes, feet and tail for translucent pinkish-white depigmented segments",
       "Confirm documented parent-to-offspring lineage from an established Pied breeding line"
     ],
-    history: `Early one-off piebald anomalies such as Pangea Reptile's "Patient Zero" drew intense hobby interest but did not establish a reproducible line. Subsequent multi-generation breeding by Eureka Exotics (Nicole Cullen) and collaborating keepers isolated reproducible Pied and Pinktoe lines.`,
+    history: `Early one-off piebald anomalies such as Pangea Reptile's "Patient Zero" drew intense hobby interest but did not establish a reproducible line. Subsequent multi-generation breeding by Eureka Exotics and collaborating keepers isolated reproducible Pied and Pinktoe lines.`,
     combinesWith: ["lilly-white", "axanthic", "harlequin", "pinstripe", "phantom-pinstripe"],
     notes: "Distinguish true heritable Pied lines from isolated white toe scales or paradox blotches, which can occur sporadically without passing to offspring. Always request multi-generation pairing records when evaluating Pied or het Pied offerings."
   },
@@ -1284,6 +1292,326 @@ const MORPHS$1 = [
       "Common and often marketed as a classic look"
     ],
     combinesWith: ["harlequin", "flame", "pinstripe", "dalmatian"]
+  },
+  // ---------- GENES AND SUPER FORMS (added October 2026) ----------
+  // The calculator already modeled these, but the guide had no page for
+  // them (comprehensive review, B7 finding 5). Each states how sure the
+  // hobby is: proven, reported by one main source (badged Emerging in the
+  // calculator), or reported but not established. Facts come from the
+  // genetics engine's trait data and the sources listed; no breeder
+  // history is added that a source does not give. Prices are left out:
+  // there is no index data behind them, and the lethal and health-risk
+  // supers should not carry a price at all.
+  {
+    slug: "phantom",
+    name: "Phantom",
+    definition: "A Phantom crested gecko has two copies of the recessive Phantom gene, which mutes pattern color and darkens the animal; a gecko with one copy (a het) looks normal.",
+    lookalikes: [
+      { slug: "phantom-pinstripe", difference: "Phantom Pinstripe is an older visual label for crest rows without cream; the label alone does not prove the Phantom gene." },
+      { slug: "highway", difference: "Highway also leaves a clean back, but one copy shows; Phantom needs two, so lineage separates them." },
+      { slug: "patternless", difference: "Line-bred patternless animals can look the same without carrying Phantom at all." }
+    ],
+    aliases: ["Phantom gene", "Visual Phantom"],
+    category: "color",
+    inheritance: "recessive",
+    rarity: "uncommon",
+    summary: "Recessive gene that mutes pattern color and darkens the animal. Hets look normal. Treated as proven within documented lines.",
+    description: "Phantom is recessive: a gecko needs two copies to show it, and a het Phantom looks like any other gecko. Foundation Genetics (LM Reptiles) and AC Reptiles both describe it as a simple recessive, and the Geck Inspect calculator treats it as proven. In the Foundation Genetics description it adds dark pigment and suppresses pattern, but its hold weakens near the tail base and on the sides, which is why pinstripes and lateral white can still show through. What a Phantom looks like depends on everything else it carries, so Phantoms can read as bicolor, patternless, buckskin, charcoal or cream animals. Because it hides in hets, Phantom explains many surprise quiet-backed hatchlings from two normal-looking parents.",
+    keyFeatures: [
+      "Recessive: two copies to show, and hets look normal",
+      "Mutes pattern color and darkens the base",
+      "Pinstripe and lateral white can still show near the tail base and on the sides"
+    ],
+    visualIdentifiers: [
+      "Look for muted pattern with base color showing through on the head and neck",
+      "Confirm with lineage: two visual Phantom parents, or parents proven het by earlier clutches",
+      "Do not read het status from a darker back or a head pattern; both are unreliable"
+    ],
+    history: "The name began as part of the visual label Phantom Pinstripe. AC Reptiles and Foundation Genetics later described Phantom as a recessive gene, and the two uses are not interchangeable.",
+    combinesWith: ["phantom-pinstripe", "lilly-white", "frappuccino", "axanthic", "harlequin"],
+    notes: "Recessive math: Phantom x Phantom gives all Phantoms; Phantom x het gives 50% Phantom and 50% het; het x het gives 25% Phantom, 50% het and 25% normal, and a normal-looking baby from that pairing has a 66% chance of being het. In Geck Inspect a bare Phantom tag means a visual Phantom.",
+    sources: [
+      "https://lmreptiles.com/fg-findingphantom/",
+      "https://lmreptiles.com/fg-pt2-1/",
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=54"
+    ]
+  },
+  {
+    slug: "empty-back",
+    name: "Empty Back",
+    definition: "An Empty Back crested gecko has a clean, unpatterned back with its pattern on the sides; Foundation Genetics models Empty Back as an incomplete-dominant gene.",
+    lookalikes: [
+      { slug: "highway", difference: "Highway gives a continuous clean stripe and is provisionally a version of the Cappuccino gene; lineage separates the two." },
+      { slug: "phantom", difference: "Phantom is recessive and mutes pattern color all over; Empty Back clears the back and leaves the sides patterned." },
+      { slug: "patternless", difference: "Line-bred patternless animals can have a clean back with no Empty Back gene." }
+    ],
+    aliases: [],
+    category: "pattern",
+    inheritance: "incomplete-dominant",
+    rarity: "rare",
+    summary: "Clean back, pattern kept on the sides. Reported as incomplete dominant by Foundation Genetics; not yet independently proven.",
+    description: "Empty Back describes a gecko whose back is clear of pattern while the sides keep theirs, often with stronger contrast on the flanks. Foundation Genetics models it as an incomplete-dominant gene: one copy clears the back and two copies (Super Empty Back) clear it further, and the super form is described as healthy. That model is the main published source, and few breeders publish their own Empty Back breeding results, so Geck Inspect badges it Emerging: reported, not yet independently proven. A clean back also comes from Highway, Phantom and line-bred patternless animals, so a photo alone does not prove Empty Back.",
+    keyFeatures: [
+      "Clean, unpatterned back",
+      "Pattern concentrated on the sides",
+      "One copy is visible in the Foundation Genetics model, so there is no hidden het"
+    ],
+    visualIdentifiers: [
+      "Compare the back with the sides: Empty Back clears the back, not the whole animal",
+      "Confirm with lineage, since Highway, Phantom and line-bred animals can look the same"
+    ],
+    combinesWith: ["lilly-white", "dalmatian", "axanthic"],
+    notes: "Foundation Genetics lists Harlequin as working against the clear back. In that model Empty Back x Empty Back gives about 25% Super Empty Back, 50% Empty Back and 25% normal.",
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ]
+  },
+  {
+    slug: "super-empty-back",
+    name: "Super Empty Back",
+    definition: "Super Empty Back is the two-copy form of Empty Back in the Foundation Genetics model, with the back cleared further than in a single-copy Empty Back.",
+    lookalikes: [
+      { slug: "empty-back", difference: "A single copy also clears the back; telling one copy from two by eye is unreliable, so use the parents." }
+    ],
+    aliases: [],
+    category: "pattern",
+    inheritance: "incomplete-dominant",
+    rarity: "very_rare",
+    summary: "Two copies of Empty Back. Described as healthy in the Foundation Genetics model; thinly documented.",
+    description: "In the Foundation Genetics model, two copies of Empty Back suppress the back pattern further and often sharpen the contrast on the sides. The model describes the super form as healthy and freely breedable, unlike Super Lilly White or Super Cappuccino. Published breeding records are still thin, so treat a Super Empty Back label as a lineage claim: it needs two Empty Back parents and, ideally, test breeding.",
+    keyFeatures: [
+      "Two copies of Empty Back",
+      "Back cleared further, sides often higher contrast",
+      "Described as healthy, with no reported super-form problems"
+    ],
+    visualIdentifiers: [
+      "Needs two Empty Back parents",
+      "Bred to a normal, every baby should be an Empty Back, which is the cleanest proof"
+    ],
+    combinesWith: ["lilly-white", "dalmatian"],
+    sources: [
+      "https://lmreptiles.com/fg-pt2-1/"
+    ]
+  },
+  {
+    slug: "whiteout",
+    name: "Whiteout",
+    definition: "A Whiteout crested gecko carries the Whiteout trait documented by AC Reptiles, reported as incomplete dominant, which adds white along the sides and back.",
+    lookalikes: [
+      { slug: "white-wall", difference: "White Wall is the visual label for this kind of lateral white; Geck Inspect reads a White Wall tag as Whiteout, but a photo alone does not prove the gene." },
+      { slug: "lilly-white", difference: "Lilly White is a different gene with a lethal super form; white on the sides alone does not tell them apart." }
+    ],
+    aliases: [],
+    category: "structure",
+    inheritance: "incomplete-dominant",
+    rarity: "rare",
+    summary: "White gene reported as incomplete dominant by AC Reptiles, whose records are the main documentation. Not yet independently proven.",
+    description: "Whiteout adds white expression along the flanks and back. AC Reptiles reports it as incomplete dominant, on a different gene from Lilly White, with a Super Whiteout that is healthy and freely breedable. That would make Whiteout a way to stack white without risking Lilly White's lethal two-copy form. AC Reptiles' own breeding records are the main documentation, and much of the hobby still treats white walling as line-bred, so Geck Inspect badges Whiteout Emerging: reported, not independently proven. When the genetics calculator reads a collection, a White Wall tag counts as Whiteout.",
+    keyFeatures: [
+      "White expression on the sides and back",
+      "Reported incomplete dominant, so one copy is visible",
+      "A separate gene from Lilly White"
+    ],
+    visualIdentifiers: [
+      "Check both flanks and the back",
+      "Ask for the AC Reptiles lineage behind a Whiteout label; lateral white alone is not proof"
+    ],
+    history: "Documented by AC Reptiles (Anthony Caponetto), whose Whiteout page is the main source.",
+    combinesWith: ["lilly-white", "soft-scale", "axanthic"],
+    notes: "Whiteout x Lilly White cannot make a lethal super, because they are separate genes in this model. A Lilly White Whiteout still carries one Lilly White copy, so never pair it to another Lilly White.",
+    sources: [
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=44"
+    ]
+  },
+  {
+    slug: "super-whiteout",
+    name: "Super Whiteout",
+    definition: "Super Whiteout is the two-copy form of the Whiteout trait documented by AC Reptiles, described as healthy, with more white than a single-copy Whiteout.",
+    lookalikes: [
+      { slug: "whiteout", difference: "One copy also shows white; telling one copy from two by eye is unreliable." },
+      { slug: "super-lilly-white", difference: "Super Lilly White is lethal and never reaches adulthood; Super Whiteout is described as healthy and is a different gene." }
+    ],
+    aliases: ["Super White Wall"],
+    category: "structure",
+    inheritance: "incomplete-dominant",
+    rarity: "very_rare",
+    summary: "Two copies of Whiteout. AC Reptiles describes it as healthy and breedable; independent records are thin.",
+    description: "Two copies of Whiteout give a Super Whiteout. AC Reptiles describes the super form as healthy and freely breedable, unlike Super Lilly White, which is why breeders use Whiteout to stack white. That rests on AC Reptiles' own records, so treat a Super Whiteout label as a lineage claim that needs two Whiteout parents.",
+    keyFeatures: [
+      "Two copies of Whiteout",
+      "Described as healthy and breedable",
+      "More white than a single-copy Whiteout in AC Reptiles' description"
+    ],
+    visualIdentifiers: [
+      "Needs two Whiteout parents",
+      "Bred to a normal, every baby should be a Whiteout"
+    ],
+    combinesWith: ["lilly-white", "soft-scale"],
+    sources: [
+      "https://acreptiles.com/new_store/index.php?dispatch=pages.view&page_id=44"
+    ]
+  },
+  {
+    slug: "luwak",
+    name: "Luwak",
+    definition: "A Luwak crested gecko carries one Cappuccino copy and one Sable copy, which sit on the same gene in the widely reported model, so a Luwak is never a super.",
+    lookalikes: [
+      { slug: "cappuccino", difference: "A Cappuccino has one Cappuccino copy and no Sable; dark color alone cannot tell them apart." },
+      { slug: "sable", difference: "A Sable has one Sable copy and no Cappuccino; the parents say which." }
+    ],
+    aliases: [],
+    category: "combo",
+    inheritance: "incomplete-dominant",
+    rarity: "rare",
+    summary: "Cappuccino plus Sable on the same gene. Widely reported, not settled; never a super itself.",
+    description: "Luwak is the name for a gecko with one Cappuccino copy and one Sable copy. Under the widely reported one-gene model, Cappuccino and Sable are two versions of the same gene, so a gecko holds at most two copies between them: a Luwak has one of each and is never a Super Cappuccino or a Super Sable. Cappuccino x Sable gives about 25% Luwak and can never make a super, which is why it is the safer way to combine the two. Luwak x Luwak is different: about 25% Super Cappuccino, 25% Super Sable and 50% Luwak. MorphMarket's Morphpedia still lists Sable's place on the Cappuccino gene as suspected, so Geck Inspect badges Luwak Emerging. Looks vary, and dark color alone does not identify one; the parents do.",
+    keyFeatures: [
+      "One Cappuccino copy plus one Sable copy",
+      "Never a super itself",
+      "Appearance varies, so lineage identifies it"
+    ],
+    visualIdentifiers: [
+      "Needs one Cappuccino-carrying parent and one Sable-carrying parent",
+      "Dark or coffee tones alone do not prove it"
+    ],
+    combinesWith: ["lilly-white", "axanthic"],
+    notes: "Do not pair a Luwak to another Luwak or to a Cappuccino: both can make Super Cappuccinos. A Luwak bred to a normal gives Cappuccinos and Sables, about half each, under the one-gene model.",
+    sources: [
+      "https://www.morphmarket.com/morphpedia/crested-geckos/sable/",
+      "https://reptidex.com/genetics/crested-gecko"
+    ]
+  },
+  {
+    slug: "super-lilly-white",
+    name: "Super Lilly White",
+    definition: "Super Lilly White is the two-copy form of Lilly White, and it is lethal: embryos die in the egg or within days of hatching.",
+    lookalikes: [
+      { slug: "lilly-white", difference: "A Lilly White has one copy and is healthy; two copies are lethal, so no living adult is a Super Lilly White." },
+      { slug: "super-whiteout", difference: "Super Whiteout is a different gene and is described as healthy." }
+    ],
+    aliases: ["Super LW"],
+    category: "structure",
+    inheritance: "incomplete-dominant",
+    rarity: "very_rare",
+    summary: "The two-copy form of Lilly White. Lethal, so never pair Lilly White to Lilly White.",
+    description: "Pairing two Lilly Whites gives about 25% Super Lilly White eggs. Those embryos die in the egg or within days of hatching, which is why Lilly White cannot be bred true and why Lilly White x Lilly White is the pairing every breeder warns against. The same applies to any two geckos that each carry Lilly White, including Frappuccinos. The Lilly White trait itself traces to Lilly Exotics (Nick Lumb) in the United Kingdom, starting with an unusual hatchling in late 2010. A seller offering a living Super Lilly White is mislabeling the animal.",
+    keyFeatures: [
+      "Two copies of Lilly White",
+      "Lethal: dies in the egg or within days of hatching",
+      "About 25% of eggs from Lilly White x Lilly White"
+    ],
+    visualIdentifiers: [
+      "There is no living adult to identify",
+      "A pale, high-white adult is a Lilly White, a Whiteout or line-bred white, never a Super Lilly White"
+    ],
+    notes: "Lilly White to a gecko without Lilly White gives about 50% Lilly White and never a Super Lilly White.",
+    doNotBreed: "lethal",
+    safePairing: {
+      label: "Lilly White x Normal",
+      text: "Pair a Lilly White to a gecko without Lilly White instead. About half the babies are Lilly Whites, the same share Lilly White x Lilly White gives, and no egg is lost to the lethal super.",
+      pairing: "lilly-white-x-normal"
+    },
+    sources: [
+      "https://www.corchgeckos.com/lillywhite.html",
+      "https://www.morphmarket.com/morphpedia/crested-geckos/lilly-white/"
+    ]
+  },
+  {
+    slug: "super-cappuccino",
+    name: "Super Cappuccino",
+    definition: "Super Cappuccino, also called Melanistic, is the two-copy form of Cappuccino; it hatches but has documented health problems, including narrowed nostrils and breathing difficulty.",
+    lookalikes: [
+      { slug: "cappuccino", difference: "A Cappuccino has one copy and none of the super form's documented health problems." },
+      { slug: "luwak", difference: "A Luwak has one Cappuccino copy and one Sable copy, so it is never a Super Cappuccino." }
+    ],
+    aliases: ["Melanistic", "Super Capp"],
+    category: "structure",
+    inheritance: "incomplete-dominant",
+    rarity: "rare",
+    summary: "Two copies of Cappuccino. Hatches, but has documented health problems; breeders advise against producing it.",
+    description: "Pairing two Cappuccinos gives about 25% Super Cappuccino. Unlike Super Lilly White, Super Cappuccinos usually hatch, but breeders document serious health problems: narrowed (stenosed) nostrils, breathing difficulty and poor thriving. Some breeders report that cooler incubation reduces the structural problems without removing them. For these reasons most breeders avoid Cappuccino x Cappuccino and the other pairings that can make one: Luwak x Luwak, Luwak x Cappuccino and Frappuccino x Cappuccino. Cappuccino to a normal, or to a Sable, never makes a Super Cappuccino.",
+    keyFeatures: [
+      "Two copies of Cappuccino",
+      "Documented narrowed nostrils and breathing difficulty",
+      "Usually hatches, unlike Super Lilly White"
+    ],
+    visualIdentifiers: [
+      "Check nostril openings at hatch on any baby from a pairing that can make one",
+      "Lineage tells you whether both parents carried Cappuccino"
+    ],
+    notes: "Cappuccino x Cappuccino gives about 25% Super Cappuccino, 50% Cappuccino and 25% normal.",
+    doNotBreed: "health",
+    safePairing: {
+      label: "Cappuccino x Sable",
+      text: "Pair a Cappuccino to a normal (about half Cappuccino) or to a Sable (about a quarter Luwak) instead. Neither pairing can make a Super Cappuccino.",
+      pairing: "cappuccino-x-sable"
+    },
+    sources: [
+      "https://www.pangeareptile.com/blogs/blog/cappuccino-frappuccino-melanistic",
+      "https://lmreptiles.com/fg-pt2-capps/"
+    ]
+  },
+  {
+    slug: "super-sable",
+    name: "Super Sable",
+    definition: "Super Sable is the two-copy form of Sable; it appears viable but is thinly documented, so breeders check nostril openings at hatch.",
+    lookalikes: [
+      { slug: "sable", difference: "One copy also gives dark, reduced-pattern tones; one copy versus two is hard to see, so use the parents." },
+      { slug: "luwak", difference: "A Luwak has one Sable copy and one Cappuccino copy." }
+    ],
+    aliases: [],
+    category: "color",
+    inheritance: "incomplete-dominant",
+    rarity: "rare",
+    summary: "Two copies of Sable. Appears viable but thinly documented.",
+    description: "Pairing two Sables gives about 25% Super Sable, and so does Luwak x Luwak. Super Sables appear viable, unlike Super Lilly White, and no pattern of health problems has been documented, but published records are few. Because Sable is widely reported to share a gene with Cappuccino, whose super form has serious nostril problems, the community norm is to check nostril openings at hatch on any super in this group. A Super Sable bred to a normal gives only Sable babies, which is how a breeder can prove one.",
+    keyFeatures: [
+      "Two copies of Sable",
+      "Appears viable, but thinly documented",
+      "Bred to a normal, every baby is a Sable"
+    ],
+    visualIdentifiers: [
+      "Needs two Sable-carrying parents (Sable or Luwak)",
+      "Dark color alone does not prove it"
+    ],
+    notes: "Super Sable x Cappuccino gives Luwaks and Sables, about half each, and never a super, under the one-gene model.",
+    sources: [
+      "https://www.morphmarket.com/morphpedia/crested-geckos/sable/"
+    ]
+  },
+  {
+    slug: "super-highway",
+    name: "Super Highway",
+    definition: "Super Highway is the two-copy form of Highway; some breeders report nostril and health problems in these hatchlings, but that is not established.",
+    lookalikes: [
+      { slug: "highway", difference: "One copy also gives a clean stripe; telling one copy from two by eye is unreliable." },
+      { slug: "super-cappuccino", difference: "Super Cappuccino's health problems are documented; Super Highway's are only reported." }
+    ],
+    aliases: [],
+    category: "pattern",
+    inheritance: "incomplete-dominant",
+    rarity: "very_rare",
+    summary: "Two copies of Highway. Health problems reported, not established; avoid Highway x Highway.",
+    description: "Pairing two Highways gives about 25% Super Highway. Some breeders report nostril and health problems in Super Highway hatchlings similar to Super Cappuccino's, and those reports are the main reason Highway is placed, provisionally, on the Cappuccino and Sable gene. Neither the health problems nor the placement is established in published breeding records, so Geck Inspect badges it Emerging and advises against Highway x Highway until more is known.",
+    keyFeatures: [
+      "Two copies of Highway",
+      "Health problems reported, not established",
+      "About 25% of babies from Highway x Highway"
+    ],
+    visualIdentifiers: [
+      "Needs two Highway parents",
+      "Check nostril openings at hatch"
+    ],
+    notes: "Pair Highway to a normal (about 50% Highway), or to a Cappuccino or Sable for a compound with no super.",
+    doNotBreed: "health",
+    safePairing: {
+      label: "Highway x Normal",
+      text: "Pair a Highway to a gecko without Highway instead. About half the babies are Highways and none is a Super Highway.",
+      pairing: null
+    },
+    sources: [
+      "https://reptidex.com/genetics/crested-gecko"
+    ]
   }
 ];
 const MorphGuide = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
@@ -1293,6 +1621,126 @@ const MorphGuide = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePr
   MORPH_CATEGORIES,
   RARITY
 }, Symbol.toStringTag, { value: "Module" }));
+const LIFE_STAGES = [
+  { id: "hatchling", label: "Hatchling", plural: "Hatchlings", maxGrams: 3, maxMonths: 3, shedWeeks: [1, 2], gainPerMonth: [0.5, 1.5] },
+  { id: "juvenile", label: "Juvenile", plural: "Juveniles", maxGrams: 15, maxMonths: 12, shedWeeks: [2, 3], gainPerMonth: [1, 4] },
+  { id: "subadult", label: "Sub-adult", plural: "Sub-adults", maxGrams: 35, maxMonths: 18, shedWeeks: [3, 4], gainPerMonth: [1, 4] },
+  { id: "adult", label: "Adult", plural: "Adults", maxGrams: null, maxMonths: null, shedWeeks: [4, 6], gainPerMonth: null }
+];
+const ADULT_MONTHLY_SWING_G = 2;
+const LIFE_STAGE_BY_ID = Object.fromEntries(LIFE_STAGES.map((s) => [s.id, s]));
+const SENIOR_YEARS = 10;
+const ADULT_WEIGHT_G = { min: 35, max: 60 };
+const LIFESPAN_YEARS = { min: 15, max: 20 };
+const WEIGH_IN_DAYS = { growing: 14, subadult: 21, adult: 30 };
+const BREEDING = {
+  femaleMinGrams: 40,
+  femaleMinMonths: 18,
+  femaleIdealGrams: [45, 55],
+  femaleIdealMonths: 24,
+  maleMinGrams: [25, 30],
+  maleMinMonths: 12,
+  maleIdealGrams: 35,
+  maleIdealMonths: 18,
+  clutchEggs: 2,
+  clutchEveryWeeks: [4, 6]
+};
+const INCUBATION_MAX_SAFE_F = 80;
+const INCUBATION_MAX_SAFE_C = 27;
+const INCUBATION_PROFILES = [
+  {
+    id: "cool",
+    label: "Cool and steady",
+    fahrenheit: "68 to 71°F",
+    celsius: "20 to 22°C",
+    minDays: 90,
+    maxDays: 120,
+    estimatedDays: 105,
+    alertDay: 85,
+    summary: "A slower incubation timeline with more time for development.",
+    breederNote: "Breeders often choose this range when they prefer a slower incubation. Hatchlings may emerge later, so steady conditions and patience matter.",
+    guideNote: "Slow. Many breeders report strong, vigorous hatchlings."
+  },
+  {
+    id: "balanced",
+    label: "Balanced room temperature",
+    fahrenheit: "72 to 75°F",
+    celsius: "22 to 24°C",
+    minDays: 70,
+    maxDays: 90,
+    estimatedDays: 80,
+    alertDay: 65,
+    summary: "A common middle range that balances development time and predictability.",
+    breederNote: "Many crested gecko breeders use this range because it avoids pushing development while keeping the hatch window manageable.",
+    guideNote: "The hobby default. A predictable hatch window."
+  },
+  {
+    id: "warm",
+    label: "Warm",
+    fahrenheit: "76 to 78°F",
+    celsius: "24 to 26°C",
+    minDays: 60,
+    maxDays: 75,
+    estimatedDays: 68,
+    alertDay: 55,
+    summary: "A faster timeline that calls for closer temperature monitoring.",
+    breederNote: "Warmer incubation can shorten development time. Stable control is especially important, and eggs should never be allowed to overheat.",
+    guideNote: "Faster. Hold it steady; a spike past 80°F (27°C) is the risk."
+  }
+];
+const INCUBATION_BY_ID = Object.fromEntries(INCUBATION_PROFILES.map((p) => [p.id, p]));
+({
+  min: Math.min(...INCUBATION_PROFILES.map((p) => p.minDays)),
+  max: Math.max(...INCUBATION_PROFILES.map((p) => p.maxDays))
+});
+function stageGrams(id) {
+  const index = LIFE_STAGES.findIndex((s) => s.id === id);
+  const stage = LIFE_STAGES[index];
+  if (!stage) return "";
+  const from = index > 0 ? LIFE_STAGES[index - 1].maxGrams : 0;
+  if (stage.maxGrams === null) return `${from} g+`;
+  if (from === 0) return `under ${stage.maxGrams} g`;
+  return `${from} to ${stage.maxGrams} g`;
+}
+function stageWithGrams(id) {
+  const stage = LIFE_STAGE_BY_ID[id];
+  return stage ? `${stage.label} (${stageGrams(id)})` : "";
+}
+function stageGainWords(id) {
+  const stage = LIFE_STAGE_BY_ID[id];
+  if (!stage?.gainPerMonth) return "";
+  const [lo, hi] = stage.gainPerMonth;
+  return `${lo} to ${hi} g a month`;
+}
+function stageMonths(id) {
+  const index = LIFE_STAGES.findIndex((s) => s.id === id);
+  const stage = LIFE_STAGES[index];
+  if (!stage) return "";
+  const from = index > 0 ? LIFE_STAGES[index - 1].maxMonths : 0;
+  if (stage.maxMonths === null) return `${from}+ months`;
+  return `${from} to ${stage.maxMonths} months`;
+}
+function stageShedWords(id) {
+  const stage = LIFE_STAGE_BY_ID[id];
+  if (!stage) return "";
+  const [lo, hi] = stage.shedWeeks;
+  return `every ${lo} to ${hi} weeks`;
+}
+function shedRhythmSentence() {
+  const parts = LIFE_STAGES.map((s) => `${stageShedWords(s.id)} as ${s.id === "adult" ? "an adult" : `a ${s.label.toLowerCase()}`}`);
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
+function femaleMinimumWords() {
+  return `${BREEDING.femaleMinGrams} g and ${BREEDING.femaleMinMonths} months`;
+}
+function maleMinimumWords() {
+  const [lo, hi] = BREEDING.maleMinGrams;
+  return `${lo} to ${hi} g and ${BREEDING.maleMinMonths} months`;
+}
+const BALANCED = INCUBATION_BY_ID.balanced;
+const ADULT_WEIGHT = `${ADULT_WEIGHT_G.min} to ${ADULT_WEIGHT_G.max} g`;
+const LIFESPAN = `${LIFESPAN_YEARS.min} to ${LIFESPAN_YEARS.max} years`;
+const weeks = (days) => days / 7;
 const CARE_CATEGORIES = [
   {
     id: "overview",
@@ -1302,9 +1750,9 @@ const CARE_CATEGORIES = [
     quickFacts: [
       { label: "Species", value: "Correlophus ciliatus" },
       { label: "Origin", value: "Southern New Caledonia" },
-      { label: "Lifespan", value: "15–20 years" },
-      { label: "Adult weight", value: "35–60 g" },
-      { label: "Adult length", value: "7–10 in (SVL+tail)" },
+      { label: "Lifespan", value: LIFESPAN },
+      { label: "Adult weight", value: ADULT_WEIGHT },
+      { label: "Adult length", value: "7 to 10 in (SVL+tail)" },
       { label: "Activity", value: "Nocturnal, arboreal" },
       { label: "Difficulty", value: "Beginner-friendly" }
     ],
@@ -1320,7 +1768,7 @@ const CARE_CATEGORIES = [
           },
           {
             type: "p",
-            text: "They are beginner-friendly because they tolerate room temperatures, eat a shelf-stable powdered diet, do not require UVB for long-term survival, and breed reliably in captivity. Adults top out around 35–60 grams and live 15–20 years with good husbandry."
+            text: `They are beginner-friendly because they tolerate room temperatures, eat a shelf-stable powdered diet, do not require UVB for long-term survival, and breed reliably in captivity. Adults top out around ${ADULT_WEIGHT_G.min} to ${ADULT_WEIGHT_G.max} grams and live ${LIFESPAN} with good husbandry.`
           },
           {
             type: "callout",
@@ -1340,7 +1788,7 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "A healthy crested gecko is a 15–20 year commitment. Before purchasing, confirm your setup works and that you can realistically provide daily misting, food replacement every 2–3 days, and travel coverage when you are away."
+            text: "A healthy crested gecko is a 15 to 20 year commitment. Before purchasing, confirm your setup works and that you can realistically provide daily misting, food replacement every 2 to 3 days, and travel coverage when you are away."
           },
           {
             type: "ul",
@@ -1371,7 +1819,7 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "Crested geckos can usually be sexed at 15–25 grams of healthy weight, well before breeding size. Males develop a visible hemipenal bulge at the vent and preanal pores; females do neither."
+            text: "Crested geckos can usually be sexed at 15 to 25 grams of healthy weight, well before breeding size. Males develop a visible hemipenal bulge at the vent and preanal pores; females do neither."
           },
           {
             type: "ul",
@@ -1399,9 +1847,9 @@ const CARE_CATEGORIES = [
     tagline: "Enclosure size, substrate, plants, lighting, climate",
     quickFacts: [
       { label: "Adult enclosure", value: "18×18×24 in minimum (vertical)" },
-      { label: "Temperature", value: "72–78°F (22–25°C)" },
-      { label: "Night temp", value: "65–72°F (18–22°C)" },
-      { label: "Humidity", value: "60–80% (spike to 100% at night)" },
+      { label: "Temperature", value: "72 to 78°F (22 to 25°C)" },
+      { label: "Night temp", value: "65 to 72°F (18 to 22°C)" },
+      { label: "Humidity", value: "60 to 80% (spike to 100% at night)" },
       { label: "Lighting", value: "Low UVB optional, 12h photoperiod" },
       { label: "Ventilation", value: "Front + top cross-flow" }
     ],
@@ -1419,10 +1867,10 @@ const CARE_CATEGORIES = [
             type: "table",
             headers: ["Life stage", "Weight", "Enclosure", "Notes"],
             rows: [
-              ["Hatchling", "0–8 g", "6-qt tub or small Kritter Keeper", "Deli cup of CGD + moss + small branches. Easy to monitor feeding."],
-              ["Juvenile", "8–20 g", "12×12×18 in glass terrarium", "Introduce height. Fake or live plants for cover."],
-              ["Sub-adult", "20–35 g", "18×18×18 in", "Optional intermediate step, or skip straight to adult sizing."],
-              ["Adult", "35 g+", "18×18×24 in minimum", "Larger (24×18×36 in) is always better. Do not house adults together."]
+              ["Hatchling", stageGrams("hatchling"), "6-qt tub or small Kritter Keeper", "Deli cup of CGD + moss + small branches. Easy to monitor feeding."],
+              ["Juvenile", stageGrams("juvenile"), "Tub until about 10 g, then a 12×12×18 in glass terrarium", "Introduce height. Fake or live plants for cover."],
+              ["Sub-adult", stageGrams("subadult"), "18×18×18 in, or the adult enclosure from about 25 g", "Optional intermediate step, or skip straight to adult sizing."],
+              ["Adult", stageGrams("adult"), "18×18×24 in minimum", "Larger (24×18×36 in) is always better. Do not house adults together."]
             ]
           },
           {
@@ -1474,7 +1922,7 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "Crested geckos thrive at room temperature. Ambient in the 72–78°F (22–25°C) range is ideal, with a slight nighttime drop to 65–72°F (18–22°C). Most homes never need supplemental heat; in fact, overheating is a far more common killer than cold."
+            text: "Crested geckos thrive at room temperature. Ambient in the 72 to 78°F (22 to 25°C) range is ideal, with a slight nighttime drop to 65 to 72°F (18 to 22°C). Most homes never need supplemental heat; in fact, overheating is a far more common killer than cold."
           },
           {
             type: "ul",
@@ -1503,13 +1951,13 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "Crested geckos need a humidity cycle: high at night (80–100%) when they are active, dropping back to 50–70% during the day. A flatline at 90% breeds mold and respiratory infections; a flatline at 40% causes stuck sheds."
+            text: "Crested geckos need a humidity cycle: high at night (80 to 100%) when they are active, dropping back to 50 to 70% during the day. A flatline at 90% breeds mold and respiratory infections; a flatline at 40% causes stuck sheds."
           },
           {
             type: "ol",
             items: [
               "Heavy mist 30 minutes before lights-out. The cage should be visibly wet and fogged.",
-              "Allow humidity to drop back to 50–70% within a few hours. Cross-ventilation matters here.",
+              "Allow humidity to drop back to 50 to 70% within a few hours. Cross-ventilation matters here.",
               "Light mist or none in the morning if the cage is still damp. Over-misting is a common mistake.",
               "Provide a shallow water dish, not because they drink from it often, but because it buffers humidity and some animals do use it."
             ]
@@ -1517,7 +1965,7 @@ const CARE_CATEGORIES = [
           {
             type: "dl",
             items: [
-              { term: "Hand sprayer", def: "Works fine for 1–2 animals. Cheap, reliable, and forces daily eyes-on inspection." },
+              { term: "Hand sprayer", def: "Works fine for 1 to 2 animals. Cheap, reliable, and forces daily eyes-on inspection." },
               { term: "Automatic mister (MistKing, Exo-Terra Monsoon)", def: "Best for collections of 3+ or for keepers who travel. Must be combined with a hygrometer and a dry-down period." },
               { term: "Cool-mist fogger", def: "Used supplementally in very dry climates. Do not replace misting, fog wets surfaces differently than droplets." }
             ]
@@ -1537,7 +1985,7 @@ const CARE_CATEGORIES = [
             type: "ul",
             items: [
               "Photoperiod: 12 hours on, 12 hours off. A timer removes the daily chore.",
-              "UVB: Arcadia ShadeDweller 7% or Zoo Med 5.0 T5, mounted above the mesh top, 10–14 inches from the highest basking spot the animal can reach.",
+              "UVB: Arcadia ShadeDweller 7% or Zoo Med 5.0 T5, mounted above the mesh top, 10 to 14 inches from the highest basking spot the animal can reach.",
               "Replace UVB bulbs every 12 months, output drops long before the bulb visibly fails.",
               "Plant lights (LED full-spectrum) are great for live-plant vivariums but produce no useful UVB. Keep them separate from husbandry lighting."
             ]
@@ -1584,9 +2032,9 @@ const CARE_CATEGORIES = [
     quickFacts: [
       { label: "Primary diet", value: "Commercial CGD (powdered)" },
       { label: "Mix ratio", value: "1 part powder : 2 parts water" },
-      { label: "Adult schedule", value: "3×/week, replace every 24–36 h" },
-      { label: "Juvenile schedule", value: "Fresh food daily" },
-      { label: "Insects", value: "Optional, 1–2×/week, dusted" },
+      { label: "Adult schedule", value: "3×/week, replace every 24 to 36 h" },
+      { label: "Juvenile schedule", value: "Fresh food daily or every other day" },
+      { label: "Insects", value: "Optional, 1 to 2×/week, dusted" },
       { label: "Fresh fruit", value: "Rare treat only (sugar load)" }
     ],
     sections: [
@@ -1597,7 +2045,7 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "CGD is a nutritionally complete powdered diet designed to be the sole food source for crested geckos. It contains fruit, insect protein, vitamins, minerals, and calcium with D3. Mix 1 part powder to 2 parts water into a ketchup-like consistency, serve in a shallow dish, and discard after 24–36 hours."
+            text: "CGD is a nutritionally complete powdered diet designed to be the sole food source for crested geckos. It contains fruit, insect protein, vitamins, minerals, and calcium with D3. Mix 1 part powder to 2 parts water into a ketchup-like consistency, serve in a shallow dish, and discard after 24 to 36 hours."
           },
           {
             type: "ul",
@@ -1605,7 +2053,7 @@ const CARE_CATEGORIES = [
               "Always use dechlorinated or bottled water. Tap water is fine in most municipalities but avoid heavily chlorinated supplies.",
               "Mix fresh each feeding. Pre-mixed CGD kept in the fridge degrades within 48 hours and separates.",
               "Use a flat, shallow dish, magnetic ledge cups are popular because geckos forage upside-down.",
-              "Replace the dish after 24–36 hours even if untouched. Old CGD breeds yeast and fruit flies.",
+              "Replace the dish after 24 to 36 hours even if untouched. Old CGD breeds yeast and fruit flies.",
               "Rotate at least two brands over the animal's life. Each brand balances ingredients differently and rotation hedges against formulation changes."
             ]
           }
@@ -1637,7 +2085,7 @@ const CARE_CATEGORIES = [
             title: "Buying tip",
             items: [
               "Check the manufacture date on the pouch. CGD loses vitamin potency after roughly 12 months. Buy small pouches often rather than one giant bag.",
-              "Freeze unopened pouches if you buy in bulk, sealed and frozen, shelf life extends to 18–24 months."
+              "Freeze unopened pouches if you buy in bulk, sealed and frozen, shelf life extends to 18 to 24 months."
             ]
           }
         ]
@@ -1651,11 +2099,11 @@ const CARE_CATEGORIES = [
             type: "table",
             headers: ["Life stage", "CGD frequency", "Insect frequency", "Notes"],
             rows: [
-              ["Hatchling (0–8 g)", "Fresh daily", "Optional, 1–2 pinheads 1×/week", "Target 0.2–0.5 g gain per week."],
-              ["Juvenile (8–20 g)", "Fresh daily or every other day", "3–5 feeders 1–2×/week", "Growth phase, never ration CGD."],
-              ["Sub-adult (20–35 g)", "3–4×/week", "4–6 feeders 1×/week", "Start tracking monthly weight trend."],
-              ["Adult (35 g+)", "3×/week", "4–6 feeders 1×/2 weeks (optional)", "Overfeeding adults causes obesity and fatty liver."],
-              ["Breeding female", "3–4×/week + extra calcium", "6–8 feeders 1–2×/week", "Protein and calcium demand spikes during laying season."]
+              [stageWithGrams("hatchling"), "Fresh daily", "Optional, 1 to 2 pinheads 1×/week", `Expect about ${stageGainWords("hatchling")}.`],
+              [stageWithGrams("juvenile"), "Fresh daily or every other day", "3 to 5 feeders 1 to 2×/week", `Growth phase, never ration CGD. Expect about ${stageGainWords("juvenile")}.`],
+              [stageWithGrams("subadult"), "3 to 4×/week", "4 to 6 feeders 1×/week", `Expect about ${stageGainWords("subadult")}, levelling off near adult size.`],
+              [stageWithGrams("adult"), "3×/week", "4 to 6 feeders 1×/2 weeks (optional)", "Overfeeding adults causes obesity and fatty liver."],
+              ["Breeding female", "3 to 4×/week + extra calcium", "6 to 8 feeders 1 to 2×/week", "Protein and calcium demand spikes during laying season."]
             ]
           },
           {
@@ -1675,7 +2123,7 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "Insects are not required on a complete CGD diet, but they add enrichment, satisfy natural hunting instinct, and provide extra protein for growing juveniles and breeding females. Offer insects 1–2 times per week at most."
+            text: "Insects are not required on a complete CGD diet, but they add enrichment, satisfy natural hunting instinct, and provide extra protein for growing juveniles and breeding females. Offer insects 1 to 2 times per week at most."
           },
           {
             type: "dl",
@@ -1692,7 +2140,7 @@ const CARE_CATEGORIES = [
             type: "ul",
             items: [
               "Dust every insect meal with calcium+D3 (Repashy Calcium Plus, Arcadia EarthPro-A, Miner-All). Miss no more than one dusting in four.",
-              "Gutload feeders with leafy greens or a commercial gutload for 24–48 hours before feeding out. What your insects ate is what your gecko eats.",
+              "Gutload feeders with leafy greens or a commercial gutload for 24 to 48 hours before feeding out. What your insects ate is what your gecko eats.",
               "Offer feeders in a smooth-sided dish or tong-feed. Loose crickets and large roaches can bite a sleeping gecko."
             ]
           }
@@ -1730,12 +2178,12 @@ const CARE_CATEGORIES = [
           {
             type: "ol",
             items: [
-              "Give a new arrival 7–10 days of no handling before evaluating appetite. It is normal to refuse CGD in the first week.",
+              "Give a new arrival 7 to 10 days of no handling before evaluating appetite. It is normal to refuse CGD in the first week.",
               "Verify temperature is not above 80°F and not below 68°F. Misting schedule is regular.",
               'Rotate CGD flavor. A gecko refusing "watermelon mix" may eat "banana cream" from the same brand.',
               "Try insects. Even a non-insect eater will sometimes take a BSFL or hornworm when refusing CGD.",
               "Weigh weekly. A non-eater that holds weight is fine; one that drops more than 5% needs vet eyes.",
-              "After 2–3 weeks of refusal + weight loss, schedule a reptile vet. Fecal float rules out parasites. Dehydration can be addressed with a diluted Pedialyte soak."
+              "After 2 to 3 weeks of refusal + weight loss, schedule a reptile vet. Fecal float rules out parasites. Dehydration can be addressed with a diluted Pedialyte soak."
             ]
           }
         ]
@@ -1748,9 +2196,9 @@ const CARE_CATEGORIES = [
     icon: "hand",
     tagline: "Safe interaction, stress signals, firing up",
     quickFacts: [
-      { label: "First handling", value: "After 2–3 weeks acclimation" },
-      { label: "Session length", value: "5–15 min max" },
-      { label: "Frequency", value: "2–4×/week at most" },
+      { label: "First handling", value: "After 2 to 3 weeks acclimation" },
+      { label: "Session length", value: "5 to 15 min max" },
+      { label: "Frequency", value: "2 to 4×/week at most" },
       { label: "Hatchlings", value: "Observe only, no handling" }
     ],
     sections: [
@@ -1766,10 +2214,10 @@ const CARE_CATEGORIES = [
           {
             type: "ol",
             items: [
-              "Days 1–7: no handling. Do misting and food changes quickly and quietly. Observe only.",
-              "Days 8–14: short in-cage interactions, change the water, adjust decor, let the gecko see your hand without grabbing.",
+              "Days 1 to 7: no handling. Do misting and food changes quickly and quietly. Observe only.",
+              "Days 8 to 14: short in-cage interactions, change the water, adjust decor, let the gecko see your hand without grabbing.",
               "After day 14 and after the first confirmed meal: begin brief handling sessions as described below.",
-              "For breeder stock, extend the window to 3–4 weeks and skip casual handling altogether."
+              "For breeder stock, extend the window to 3 to 4 weeks and skip casual handling altogether."
             ]
           }
         ]
@@ -1828,7 +2276,7 @@ const CARE_CATEGORIES = [
     icon: "heart",
     tagline: "Shedding, tail loss, MBD, common issues, vet care",
     quickFacts: [
-      { label: "Weigh", value: "Weekly (juveniles) · monthly (adults)" },
+      { label: "Weigh", value: `Every 1 to ${weeks(WEIGH_IN_DAYS.growing)} weeks (growing) · monthly (adults)` },
       { label: "Annual vet", value: "Fecal float + wellness exam" },
       { label: "Red flags", value: "Appetite loss, kink tail, lethargy" },
       { label: "Tail regrowth", value: "Never, dropped tails do not regrow" }
@@ -1847,8 +2295,10 @@ const CARE_CATEGORIES = [
             type: "ul",
             items: [
               "Weigh with a 0.1 g kitchen scale. A deli cup with a lid makes weighing easy and calm.",
-              "Juveniles: weekly weigh-ins. Expect steady gains (0.3–1.0 g/week depending on age).",
-              "Adults: monthly weigh-ins. Healthy adults hold ±2 g month to month. Breeding females can swing 10–15 g pre- and post-lay.",
+              `Hatchlings and juveniles: weigh every 1 to ${weeks(WEIGH_IN_DAYS.growing)} weeks (weekly for a new or struggling hatchling). Expect steady gains: about ${stageGainWords("hatchling")} as a hatchling and ${stageGainWords("juvenile")} as a juvenile.`,
+              `Sub-adults: weigh every ${weeks(WEIGH_IN_DAYS.subadult)} weeks. Expect about ${stageGainWords("subadult")}, levelling off near adult size.`,
+              `Adults: monthly weigh-ins. Healthy adults hold ±${ADULT_MONTHLY_SWING_G} g month to month. Breeding females can swing 10 to 15 g pre- and post-lay.`,
+              `Geck Inspect's weigh-in reminders follow the same rhythm: every ${weeks(WEIGH_IN_DAYS.growing)} weeks while growing, every ${weeks(WEIGH_IN_DAYS.subadult)} weeks as a sub-adult and every ${WEIGH_IN_DAYS.adult} days as an adult.`,
               "Flag any 5 %+ drop over a month for investigation. Consistent drops across two months warrants a vet visit."
             ]
           }
@@ -1861,13 +2311,13 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "Crested geckos shed every 1–4 weeks depending on age and growth rate. The shed itself takes about 10–20 minutes and usually happens overnight. You often will not see it, the animal eats its own shed immediately. The tell is a duller, chalkier-looking gecko one night, then a clean bright one the next morning."
+            text: `Growth drives shedding, so how often a crested gecko sheds depends on its life stage: about ${shedRhythmSentence()}. A fast-growing gecko sheds at the short end. The shed itself takes about 10 to 20 minutes and usually happens overnight. You often will not see it, the animal eats its own shed immediately. The tell is a duller, chalkier-looking gecko one night, then a clean bright one the next morning.`
           },
           {
             type: "ul",
             items: [
               "Stuck shed on toes, tail tip, and around eyes is the most common husbandry problem. Root cause is almost always low humidity.",
-              "Fix: increase misting, raise ambient humidity to 80–100% for 2–3 nights, and provide a humid hide (plastic tub with damp moss).",
+              "Fix: increase misting, raise ambient humidity to 80 to 100% for 2 to 3 nights, and provide a humid hide (plastic tub with damp moss).",
               "Stuck shed on a toe cuts off circulation. Remove within 48 hours or the toe can be lost. Soak the gecko on damp paper towel for 15 minutes and peel gently with a damp cotton swab.",
               "Never pull, if it does not come off easily, soak longer."
             ]
@@ -1887,7 +2337,7 @@ const CARE_CATEGORIES = [
             type: "ul",
             items: [
               "A dropped tail will bleed briefly, then clot on its own. No veterinary intervention is usually needed.",
-              "Keep the enclosure clean for 3–5 days post-drop to avoid infection of the stump.",
+              "Keep the enclosure clean for 3 to 5 days post-drop to avoid infection of the stump.",
               "Tail drops are triggered by stress: being grabbed, fighting another gecko, being startled, or sudden temperature change. Solo-house, handle gently, and minimize surprises.",
               'A tailless ("frogbutt") gecko is not worth less to a keeper, many hobbyists find them charming. Show breeders do pay a premium for intact tails.'
             ]
@@ -1913,7 +2363,7 @@ const CARE_CATEGORIES = [
               ["Metabolic Bone Disease (MBD)", "Kinked spine, wavy tail, soft jaw, hemipenile prolapse, leg tremors", "Chronic low calcium / D3, underfeeding", "Vet ASAP. Early MBD is reversible with calcium and UVB; advanced cases are not."],
               ["Floppy Tail Syndrome (FTS)", "Tail arches over the back when hanging upside-down, pelvic deformity in adults", "Prolonged upside-down perching on glass tops, lack of horizontal resting spots", "Provide broad leaf perches and cork bark at the top. Prevention only, established FTS is permanent."],
               ["Respiratory infection", "Open-mouth breathing, mucus bubbles, wheezing, lethargy", "Chronic humidity too high + poor ventilation, or cold draft", "Dry out the cage, fix ventilation, vet for antibiotics if it persists >48 h."],
-              ["Impaction", "Not defecating for 7+ days, visible bulge, loss of appetite", "Substrate ingestion, dehydration, cold", "Warm soak (84°F water, 10–15 min). Persistent: vet."],
+              ["Impaction", "Not defecating for 7+ days, visible bulge, loss of appetite", "Substrate ingestion, dehydration, cold", "Warm soak (84°F water, 10 to 15 min). Persistent: vet."],
               ["Parasites (pinworms, coccidia, crypto)", "Watery or bloody stool, weight loss despite eating, lethargy", "Often present at import, spread via shared tools", "Fecal float at vet. Crypto is the serious one, ask the vet to test specifically if weight loss is persistent."],
               ["Mouth rot (stomatitis)", "Cheesy white or yellow material at the gum line, swollen jaw, food refusal", "Trauma + bacteria, low humidity, immune stress", "Vet. Topical antiseptics and sometimes antibiotics."],
               ["Dystocia (egg-binding)", "Swollen abdomen, straining without laying, lethargy in a gravid female", "Underweight female, calcium deficiency, no lay box, too-hot or too-cold cage", "Emergency vet. Provide a warm humid lay box with damp substrate at least a week before expected lay date."]
@@ -1958,16 +2408,16 @@ const CARE_CATEGORIES = [
     icon: "scale",
     tagline: "Hatchling, juvenile, sub-adult, adult, senior",
     quickFacts: [
-      { label: "Hatchling", value: "0–3 g · 0–3 months" },
-      { label: "Juvenile", value: "3–15 g · 3–12 months" },
-      { label: "Sub-adult", value: "15–35 g · 12–18 months" },
-      { label: "Adult", value: "35 g+ · 18+ months" },
-      { label: "Senior", value: "10 years+" }
+      // Built from husbandry-facts.js, the same stages the weigh-in
+      // reminders and the weight chart use. A stage ends at its weight or
+      // its age, whichever comes later.
+      ...LIFE_STAGES.map((stage) => ({ label: stage.label, value: `${stageGrams(stage.id)} · ${stageMonths(stage.id)}` })),
+      { label: "Senior", value: `${SENIOR_YEARS} years+` }
     ],
     sections: [
       {
         id: "hatchling-care",
-        title: "Hatchlings (0–3 g)",
+        title: "Hatchlings (under 3 g)",
         level: "beginner",
         body: [
           {
@@ -1978,50 +2428,50 @@ const CARE_CATEGORIES = [
             type: "ul",
             items: [
               "Enclosure: 6-quart tub or small critter keeper with paper towel, a small branch, and a handful of fake leaves or sphagnum.",
-              "First meal: offer CGD 24–48 hours after hatching. Some hatchlings do not eat for the first 3–5 days, that is normal if they are holding weight.",
-              "Humidity: mist 1–2 times daily. Let the sides of the tub dry between mists.",
+              "First meal: offer CGD about 48 hours after hatching, once the yolk is absorbed. Some hatchlings do not eat for the first 3 to 5 days, that is normal if they are holding weight.",
+              "Humidity: mist 1 to 2 times daily. Let the sides of the tub dry between mists.",
               "Do not handle. Observe only for the first month.",
-              "Weigh every 4–7 days. A hatchling that drops below hatching weight for more than a week needs attention."
+              `Weigh weekly. Expect about ${stageGainWords("hatchling")}. A hatchling that drops below hatching weight for more than a week needs attention.`
             ]
           }
         ]
       },
       {
         id: "juvenile-care",
-        title: "Juveniles (3–15 g)",
+        title: "Juveniles (3 to 15 g)",
         level: "beginner",
         body: [
           {
             type: "p",
-            text: "The juvenile phase is the fastest growth window. Feed consistently, monitor weight weekly, and move up an enclosure size when the animal reaches ~10 g."
+            text: `The juvenile phase is the fastest growth window for its size. Feed consistently, weigh every 1 to ${weeks(WEIGH_IN_DAYS.growing)} weeks, and move up from the hatchling tub when the animal reaches about 10 g.`
           },
           {
             type: "ul",
             items: [
               "Feed fresh CGD daily or every other day. Never ration at this age.",
-              "Insects (optional) 1–2 times per week, always dusted.",
-              "Expect 0.5–1.5 g weight gain per week under good husbandry.",
-              "Sexing becomes possible around 15–25 g. Do not stress-handle to check sex, a confirmed-male juvenile can still be housed safely solo."
+              "Insects (optional) 1 to 2 times per week, always dusted.",
+              `Expect about ${stageGainWords("juvenile")} under good husbandry. Temperature, diet and genetics all change the pace, so watch the trend, not one weigh-in.`,
+              "Sexing becomes possible around 15 to 25 g. Do not stress-handle to check sex, a confirmed-male juvenile can still be housed safely solo."
             ]
           }
         ]
       },
       {
         id: "subadult-care",
-        title: "Sub-adults (15–35 g)",
+        title: "Sub-adults (15 to 35 g)",
         level: "intermediate",
         body: [
           {
             type: "p",
-            text: "Growth slows in the sub-adult phase. This is also the age when morph identity locks in and the final enclosure upgrade happens."
+            text: "Growth levels off toward the end of the sub-adult phase. This is also the age when morph identity locks in and the final enclosure upgrade happens."
           },
           {
             type: "ul",
             items: [
-              "Feed CGD 3–4 times per week. Expect 1–3 g weight gain per month.",
-              "Adult enclosure (18×18×24 in) is appropriate by ~25 g.",
-              "This is a good time to socialize handling if you intend to, calm 10-minute sessions 1–2 times per week.",
-              'Morph evaluation at 25–30 g is more accurate than at hatch. Pattern "fade" and base color clarify as the animal approaches adulthood.'
+              `Feed CGD 3 to 4 times per week. Expect about ${stageGainWords("subadult")}, and weigh every ${weeks(WEIGH_IN_DAYS.subadult)} weeks.`,
+              "Adult enclosure (18×18×24 in) is appropriate from about 25 g.",
+              "This is a good time to socialize handling if you intend to, calm 10-minute sessions 1 to 2 times per week.",
+              'Morph evaluation at 25 to 30 g is more accurate than at hatch. Pattern "fade" and base color clarify as the animal approaches adulthood.'
             ]
           }
         ]
@@ -2041,7 +2491,7 @@ const CARE_CATEGORIES = [
               "Do not overfeed. Three CGD feedings per week keeps a non-breeder at ideal weight.",
               "Monthly weigh-ins and a brief visual check replace weekly handling.",
               "Annual reptile-vet wellness visit + fecal float is a reasonable baseline for a single adult.",
-              "Plan for a potential 15–20 year relationship. Designate an emergency caretaker in case you travel, move, or have an accident."
+              `Plan for a potential ${LIFESPAN_YEARS.min} to ${LIFESPAN_YEARS.max} year relationship. Designate an emergency caretaker in case you travel, move, or have an accident.`
             ]
           }
         ]
@@ -2060,7 +2510,7 @@ const CARE_CATEGORIES = [
             items: [
               "Retire breeding females after 8 years of age, or sooner if clutch counts decline or body condition softens.",
               "Reduce climbing height if arthritis-like stiffness appears. Lower perches + easier access to food and water.",
-              "Warm up the cool side of the cage slightly (76–78°F days) if the animal is clearly slower in cold weather.",
+              "Warm up the cool side of the cage slightly (76 to 78°F days) if the animal is clearly slower in cold weather.",
               "A senior gecko that sleeps more, eats less, and moves less is usually fine. One that loses more than 10% of its peak adult weight within a year is not, vet visit warranted."
             ]
           }
@@ -2074,12 +2524,15 @@ const CARE_CATEGORIES = [
     icon: "users",
     tagline: "Readiness, pairing, egg care, incubation",
     quickFacts: [
-      { label: "Female minimum", value: "40 g + 18 months old" },
-      { label: "Male minimum", value: "25–30 g + 12 months" },
-      { label: "Season", value: "March–October (hobby norm)" },
-      { label: "Clutch size", value: "2 eggs · every 4–6 weeks" },
-      { label: "Incubation", value: "60–90 days at 72–76°F" },
-      { label: "Cooling period", value: "Nov–Feb rest required" }
+      // From husbandry-facts.js: the app's readiness badge enforces the
+      // same female minimum, and hatch estimates use the same incubation
+      // windows.
+      { label: "Female minimum", value: `${BREEDING.femaleMinGrams} g + ${BREEDING.femaleMinMonths} months old` },
+      { label: "Male minimum", value: `${BREEDING.maleMinGrams[0]} to ${BREEDING.maleMinGrams[1]} g + ${BREEDING.maleMinMonths} months` },
+      { label: "Season", value: "March to October (hobby norm)" },
+      { label: "Clutch size", value: `${BREEDING.clutchEggs} eggs · every ${BREEDING.clutchEveryWeeks[0]} to ${BREEDING.clutchEveryWeeks[1]} weeks` },
+      { label: "Incubation", value: `${BALANCED.minDays} to ${BALANCED.maxDays} days at ${BALANCED.fahrenheit}` },
+      { label: "Cooling period", value: "Nov to Feb rest (cooling optional)" }
     ],
     sections: [
       {
@@ -2095,9 +2548,13 @@ const CARE_CATEGORIES = [
             type: "table",
             headers: ["Sex", "Minimum weight", "Minimum age", "Ideal window"],
             rows: [
-              ["Female", "40 g (strict)", "18 months", "45–55 g, 24+ months, proven feeder"],
-              ["Male", "25–30 g", "12 months", "35 g+, 18+ months, handles calmly"]
+              ["Female", `${BREEDING.femaleMinGrams} g (strict)`, `${BREEDING.femaleMinMonths} months`, `${BREEDING.femaleIdealGrams[0]} to ${BREEDING.femaleIdealGrams[1]} g, ${BREEDING.femaleIdealMonths}+ months, proven feeder`],
+              ["Male", `${BREEDING.maleMinGrams[0]} to ${BREEDING.maleMinGrams[1]} g`, `${BREEDING.maleMinMonths} months`, `${BREEDING.maleIdealGrams} g+, ${BREEDING.maleIdealMonths}+ months, handles calmly`]
             ]
+          },
+          {
+            type: "p",
+            text: `In short: a female needs at least ${femaleMinimumWords()}, both, before her first season (Geck Inspect's readiness badge uses the same numbers), and a male at least ${maleMinimumWords()}. Many breeders wait for ${BREEDING.maleIdealGrams} g in males too.`
           },
           {
             type: "callout",
@@ -2105,7 +2562,7 @@ const CARE_CATEGORIES = [
             title: "Do not breed underweight or underage females",
             items: [
               "Calcium depletion and egg-binding are the two most common causes of keeper-inflicted female mortality.",
-              "A female bred at 35 g can produce for one season, then die from secondary MBD the next.",
+              `Breeders report that a female paired below ${BREEDING.femaleMinGrams} g often lays for one season and then declines: calcium loss, egg-binding, or worse the following season.`,
               "Males can breed earlier safely, but the female is the limiting factor."
             ]
           }
@@ -2118,12 +2575,12 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "Breeding-age females need a genuine off-season to recover calcium and fat reserves. The hobby standard is a cooling/resting period from roughly November through February, during which males and females are housed separately and no breeding occurs."
+            text: "Breeding-age females need a genuine off-season to recover calcium and fat reserves. The hobby standard is a resting period from roughly November through February, during which males and females are housed separately and no breeding occurs. The rest is the part that matters. A deliberate temperature drop is common but debated: many established breeders keep temperatures steady all year and still see good fertility."
           },
           {
             type: "ul",
             items: [
-              "Drop ambient temperature to 68–72°F during the day and 62–66°F at night for 2–3 months.",
+              "If you do cool: drop ambient temperature to 68 to 72°F during the day and 62 to 66°F at night for 2 to 3 months.",
               "Reduce photoperiod to 10 hours.",
               "Continue feeding on a normal adult schedule (3×/week CGD). Reduce or stop insects.",
               "Separate males and females. Never leave a pair together year-round.",
@@ -2144,7 +2601,7 @@ const CARE_CATEGORIES = [
           {
             type: "ul",
             items: [
-              "Pair for 1–4 weeks, then separate. Some breeders run 2–3 weeks on, 2 weeks off through the season.",
+              "Pair for 1 to 4 weeks, then separate. Some breeders run 2 to 3 weeks on, 2 weeks off through the season.",
               "Watch for excessive neck bites on the female. Small bite marks are normal; open wounds mean separate immediately.",
               "Keep detailed records: pair-up date, separation date, morph of both parents, project goals. A breeding log is the backbone of any serious project.",
               "Never pair full siblings unless you understand the genetic risks and have a specific project justification."
@@ -2159,15 +2616,15 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "A female produces a clutch of 2 eggs every 4–6 weeks during the breeding season. She needs a dedicated lay box, without one, she will lay in the substrate or hold the eggs, risking dystocia."
+            text: `A female produces a clutch of ${BREEDING.clutchEggs} eggs every ${BREEDING.clutchEveryWeeks[0]} to ${BREEDING.clutchEveryWeeks[1]} weeks during the breeding season. She needs a dedicated lay box, without one, she will lay in the substrate or hold the eggs, risking dystocia.`
           },
           {
             type: "ul",
             items: [
-              "Lay box: deli cup or Tupperware with a hole cut in the lid, filled with 3–4 inches of moist (not wet) coco fiber or sphagnum.",
+              "Lay box: deli cup or Tupperware with a hole cut in the lid, filled with 3 to 4 inches of moist (not wet) coco fiber or sphagnum.",
               "Place in the enclosure at all times for breeding females, not just during lay periods.",
               "Collect eggs within 24 hours. Mark the top with a dot so orientation stays consistent, rotating a developing egg can kill the embryo.",
-              "Expect a gravid female to lose 5–15 grams in a single lay. This is normal and why extra calcium/protein matters during the season."
+              "Expect a gravid female to lose 5 to 15 grams in a single lay. This is normal and why extra calcium/protein matters during the season."
             ]
           }
         ]
@@ -2179,16 +2636,19 @@ const CARE_CATEGORIES = [
         body: [
           {
             type: "p",
-            text: "Room-temperature incubation (72–76°F, 22–24°C) produces strong, slow-hatching clutches. Higher temperatures shorten incubation and can produce male-biased clutches but also raise deformity rates. Hobby standard has moved toward slightly cool, slow incubation."
+            text: `Most breeders incubate at room temperature, ${BALANCED.fahrenheit} (${BALANCED.celsius}), where eggs hatch in about ${BALANCED.minDays} to ${BALANCED.maxDays} days. Cooler eggs take longer and warmer eggs hatch sooner. Keep incubation below about ${INCUBATION_MAX_SAFE_F}°F (${INCUBATION_MAX_SAFE_C}°C): breeders report more deformed and weak hatchlings from hot incubation. Some breeders also report more males from warm incubation and more females from cool incubation, but that has not been shown in controlled studies of crested geckos, so do not count on temperature to choose the sex.`
           },
           {
             type: "table",
+            // The same three ranges Geck Inspect uses for hatch estimates
+            // and hatch alerts (husbandry-facts.js INCUBATION_PROFILES).
             headers: ["Temperature", "Incubation time", "Notes"],
-            rows: [
-              ["68–72°F (20–22°C)", "90–120 days", "Cool. Strong, vigorous hatchlings. Slight female bias."],
-              ["72–76°F (22–24°C)", "60–90 days", "Hobby sweet spot. Balanced sex ratio and low deformity rate."],
-              ["78–82°F (25–28°C)", "45–60 days", "Warm. Higher deformity risk and possible neurological issues."]
-            ]
+            rows: INCUBATION_PROFILES.map((profile) => [
+              `${profile.fahrenheit} (${profile.celsius})`,
+              `${profile.minDays} to ${profile.maxDays} days`,
+              profile.guideNote
+            ]),
+            caption: "Days are counted from the lay date. Geck Inspect uses these same windows for hatch estimates and hatch alerts."
           },
           {
             type: "ul",
@@ -2215,8 +2675,8 @@ const CARE_CATEGORIES = [
             items: [
               "Move the hatchling to its own 6-qt tub within 24 hours of emerging. Do not feed for 48 hours, it is still absorbing yolk.",
               "Log everything: hatch date, hatch weight, clutch number, parents, incubation temperature. Good records are the currency of serious breeding.",
-              "Do not evaluate morph at hatch. Many traits (extreme harlequin, true pinstripe, etc.) do not express until the first major shed and some not until 3–6 months.",
-              "Sell or trade only after the hatchling is 3+ grams, eating reliably, and has had a successful shed. Hobby ethics put this floor around 8–10 grams for most breeders."
+              "Do not evaluate morph at hatch. Many traits (extreme harlequin, true pinstripe, etc.) do not express until the first major shed and some not until 3 to 6 months.",
+              "Sell or trade only after the hatchling is 3+ grams, eating reliably, and has had a successful shed. Hobby ethics put this floor around 8 to 10 grams for most breeders."
             ]
           }
         ]
@@ -2375,7 +2835,7 @@ const APP_TAGS = new Map(Object.entries({
   "super sable": { genotype: { SABLE_COMPLEX: ["sable", "sable"] } },
   "super highway": {
     genotype: { SABLE_COMPLEX: ["highway", "highway"] },
-    note: "Super Highway hatchlings have reported nostril and health issues."
+    note: "Some breeders report nostril and health problems in Super Highway hatchlings (not established)."
   },
   "cappuccino highway": { engine: ["Cappuccino", "Highway"] },
   "sable highway": { engine: ["Sable", "Highway"] },
@@ -2499,7 +2959,7 @@ function parseTag(raw) {
   }
   return { kind, chance, body: normalizeBody(text2) };
 }
-const countCopies = (pair) => pair.filter((a) => a !== WILD_TYPE).length;
+const countCopies = (pair) => pair.filter((a) => a !== WILD_TYPE$1).length;
 const pct = (p) => `${Math.round(p * 100)}%`;
 function hetTraitFor(body) {
   const mapped = APP_TAGS.get(body);
@@ -2532,8 +2992,8 @@ function mergeLocus(loci, locus, options) {
   const b = options[0].pair;
   if (a[0] === b[0] && a[1] === b[1]) return;
   if (countCopies(a) === 1 && countCopies(b) === 1) {
-    const alleleA = a.find((x) => x !== WILD_TYPE);
-    const alleleB = b.find((x) => x !== WILD_TYPE);
+    const alleleA = a.find((x) => x !== WILD_TYPE$1);
+    const alleleB = b.find((x) => x !== WILD_TYPE$1);
     if (alleleA !== alleleB) {
       loci[locus] = [{ pair: [alleleA, alleleB], weight: 1 }];
     }
@@ -2567,10 +3027,10 @@ function translateMorphTags(tags) {
         notUsed.push({ tag, reason: REASON.polygenicHet });
         continue;
       }
-      const carrier = [trait.id, WILD_TYPE];
+      const carrier = [trait.id, WILD_TYPE$1];
       const options = chance >= 1 ? [{ pair: carrier, weight: 1 }] : [
         { pair: carrier, weight: chance },
-        { pair: [WILD_TYPE, WILD_TYPE], weight: 1 - chance }
+        { pair: [WILD_TYPE$1, WILD_TYPE$1], weight: 1 - chance }
       ];
       mergeLocus(loci, trait.locus, options);
       used.push({ tag, chance });
@@ -2612,7 +3072,7 @@ function translateMorphTags(tags) {
     for (const result of parts) {
       for (const [locus, pair] of Object.entries(result.genotype || {})) {
         if (POLYGENIC_LOCI.has(locus)) {
-          if (pair.some((a) => a !== WILD_TYPE)) {
+          if (pair.some((a) => a !== WILD_TYPE$1)) {
             looks.push(LOOK_NAME_BY_LOCUS.get(locus) || tag);
             polygenicLoci.add(locus);
           }
@@ -2645,6 +3105,7 @@ function translateMorphTags(tags) {
 function displayReason(text2) {
   return String(text2).replace(/\s*[\u2014\u2013]\s*/g, ", ");
 }
+const WILD_TYPE = "wild_type";
 const COMPLEX_ID = "sable_complex";
 const SIMPLE_TRAITS = [
   {
@@ -2656,7 +3117,7 @@ const SIMPLE_TRAITS = [
     confidence: "proven",
     super_label: "Super Lilly White",
     super_lethal: true,
-    blurb: "Incomplete dominant, the first proven crested gecko gene (2012). One copy is the Lilly White look; the homozygous Super form is lethal in the egg."
+    blurb: "Incomplete dominant, the first proven crested gecko gene (2012). One copy is the Lilly White look; the homozygous Super form is lethal (it dies in the egg or within days of hatching)."
   },
   {
     id: "axanthic",
@@ -2682,9 +3143,12 @@ const SIMPLE_TRAITS = [
     label: "Empty Back",
     locus: "EB",
     dominance: "incomplete_dominant",
-    confidence: "proven",
+    // Emerging, not proven: the engine's only source is Foundation
+    // Genetics, and this blurb used to credit "AC Reptiles breeding
+    // trials" with no source behind it (October 2026 review).
+    confidence: "emerging",
     super_label: "Super Empty Back",
-    blurb: "Incomplete dominant. Reduces dorsal pattern; the Super form strips nearly all dorsal markings. Proven through AC Reptiles breeding trials."
+    blurb: "Incomplete dominant in the Foundation Genetics model, its main published source, so it is badged Emerging. Reduces dorsal pattern; the Super form is described as clearing it further and as healthy."
   },
   {
     id: "softscale",
@@ -2774,7 +3238,7 @@ const COMPLEX_OPTIONS = [
     label: "Super Highway (health reports)",
     pair: ["highway", "highway"],
     confidence: "emerging",
-    caution: "Super Highway hatchlings have reported nostril and health issues, which is itself the evidence that Highway sits in this complex."
+    caution: "Some breeders report nostril and health problems in Super Highway hatchlings. That is not established, and those reports are also the main reason Highway is placed in this complex."
   }
 ];
 Object.fromEntries(
@@ -2819,10 +3283,10 @@ const CALCULATOR_PAGES = [
   {
     slug: "highway",
     label: "Highway",
-    blurb: "Provisionally a third allele in the Cappuccino complex: Super Highway health reports are the main evidence. Treated as allelic here, badged Emerging until the community settles it.",
+    blurb: "Provisionally a third allele in the Cappuccino complex: breeder reports of Super Highway health problems are the main evidence, and those reports are not established either. Treated as allelic here, badged Emerging until the community settles it.",
     confidence: "emerging",
     super_lethal: false,
-    super_warning: "Super Highway hatchlings have reported nostril and health issues.",
+    super_warning: "Some breeders report nostril and health problems in Super Highway hatchlings (not established).",
     defaultState: { [COMPLEX_ID]: "highway" }
   }
 ];
@@ -2904,6 +3368,31 @@ const PAIRING_PAGES = [
 Object.fromEntries(
   PAIRING_PAGES.map((p) => [p.slug, p])
 );
+const MORPH_GUIDE_SLUGS = {
+  lilly_white: "lilly-white",
+  cappuccino: "cappuccino",
+  sable: "sable",
+  axanthic: "axanthic",
+  hypo: "hypo",
+  softscale: "soft-scale",
+  whiteout: "whiteout",
+  phantom: "phantom",
+  empty_back: "empty-back",
+  highway: "highway",
+  harlequin: "harlequin",
+  pinstripe: "pinstripe",
+  dalmatian: "dalmatian",
+  tiger: "tiger",
+  flame: "flame",
+  // combos
+  frappuccino: "frappuccino",
+  luwak: "luwak",
+  tricolor: "tricolor",
+  patternless: "patternless"
+};
+({
+  ...Object.fromEntries(Object.entries(MORPH_GUIDE_SLUGS).filter(([id]) => id !== "sable"))
+});
 const MAX_SCENARIOS = 256;
 function splitExtraLoci(spec) {
   const engineLoci = {};
@@ -3074,10 +3563,10 @@ function predictWeighted(sireSpec, damSpec) {
   for (const bucket of locusMap.values()) {
     const missing = totalWeight - bucket._seenWeight;
     if (missing > 1e-9) {
-      const key = `${WILD_TYPE}|${WILD_TYPE}::Wild-type`;
+      const key = `${WILD_TYPE$1}|${WILD_TYPE$1}::Wild-type`;
       const existing = bucket.outcomes.get(key);
       if (existing) existing.probability += missing;
-      else bucket.outcomes.set(key, { genotype: [WILD_TYPE, WILD_TYPE], phenotype_label: "Wild-type", probability: missing });
+      else bucket.outcomes.set(key, { genotype: [WILD_TYPE$1, WILD_TYPE$1], phenotype_label: "Wild-type", probability: missing });
     }
   }
   let offspring_phenotypes = dropUnjudgeableCombos(
@@ -3108,7 +3597,7 @@ function predictWeighted(sireSpec, damSpec) {
       }];
     }
     const allExtraLoci = /* @__PURE__ */ new Set([...Object.keys(sireExtra), ...Object.keys(damExtra)]);
-    const wildOption = [{ pair: [WILD_TYPE, WILD_TYPE], weight: 1 }];
+    const wildOption = [{ pair: [WILD_TYPE$1, WILD_TYPE$1], weight: 1 }];
     for (const locus of allExtraLoci) {
       const trait = extraTraitFor(locus);
       if (!trait) continue;
@@ -3174,16 +3663,17 @@ function polygenicLookChances(sireLooks, damLooks) {
     return a.look.localeCompare(b.look);
   });
 }
-const latest = /* @__PURE__ */ JSON.parse('[{"p25":113,"p75":211,"trait":null,"market":"EU","median":135,"listings":183,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":761,"p75":1380,"trait":"Axanthic","market":"EU","median":1071,"listings":5,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":113,"p75":127,"trait":"Lilly White","market":"EU","median":113,"listings":11,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":114,"p75":237,"trait":null,"market":"JP","median":158,"listings":119,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":122,"p75":212,"trait":"Dalmatian","market":"JP","median":164,"listings":8,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":101,"p75":259,"trait":"Dark","market":"JP","median":171,"listings":6,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":114,"p75":158,"trait":"Extreme Harlequin","market":"JP","median":139,"listings":15,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":101,"p75":158,"trait":"Harlequin","market":"JP","median":120,"listings":15,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":237,"p75":493,"trait":"Lilly White","market":"JP","median":304,"listings":22,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":129,"p75":192,"trait":"Pinstripe","market":"JP","median":146,"listings":6,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":177,"p75":247,"trait":"Red","market":"JP","median":202,"listings":7,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":101,"p75":114,"trait":"Tiger","market":"JP","median":101,"listings":5,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":142,"p75":190,"trait":"Tri-color","market":"JP","median":164,"listings":11,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":149,"p75":896,"trait":null,"market":"KR","median":336,"listings":2957,"checked_on":"2026-10-06","price_cuts":15,"new_listings":33},{"p25":336,"p75":2166,"trait":"Axanthic","market":"KR","median":747,"listings":345,"checked_on":"2026-10-06","price_cuts":2,"new_listings":16},{"p25":112,"p75":598,"trait":"Cappuccino","market":"KR","median":243,"listings":140,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":112,"p75":299,"trait":"Cream","market":"KR","median":224,"listings":61,"checked_on":"2026-10-06","price_cuts":1,"new_listings":3},{"p25":90,"p75":224,"trait":"Dark","market":"KR","median":187,"listings":17,"checked_on":"2026-10-06","price_cuts":2,"new_listings":0},{"p25":224,"p75":1120,"trait":"Drippy","market":"KR","median":448,"listings":344,"checked_on":"2026-10-06","price_cuts":3,"new_listings":2},{"p25":224,"p75":1195,"trait":"Empty Back","market":"KR","median":373,"listings":53,"checked_on":"2026-10-06","price_cuts":1,"new_listings":2},{"p25":149,"p75":1120,"trait":"Extreme Harlequin","market":"KR","median":373,"listings":395,"checked_on":"2026-10-06","price_cuts":0,"new_listings":1},{"p25":149,"p75":448,"trait":"Frappuccino","market":"KR","median":224,"listings":59,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":187,"p75":1120,"trait":"Full Pinstripe","market":"KR","median":336,"listings":196,"checked_on":"2026-10-06","price_cuts":2,"new_listings":4},{"p25":159,"p75":289,"trait":"Harlequin","market":"KR","median":224,"listings":6,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":187,"p75":1120,"trait":"Het Axanthic","market":"KR","median":336,"listings":263,"checked_on":"2026-10-06","price_cuts":6,"new_listings":1},{"p25":373,"p75":1494,"trait":"Hypo","market":"KR","median":598,"listings":83,"checked_on":"2026-10-06","price_cuts":0,"new_listings":1},{"p25":149,"p75":672,"trait":"Lilly White","market":"KR","median":299,"listings":562,"checked_on":"2026-10-06","price_cuts":1,"new_listings":9},{"p25":168,"p75":598,"trait":"Phantom","market":"KR","median":486,"listings":38,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":224,"p75":1120,"trait":"Pinstripe","market":"KR","median":448,"listings":93,"checked_on":"2026-10-06","price_cuts":1,"new_listings":1},{"p25":149,"p75":1120,"trait":"Portholes","market":"KR","median":243,"listings":58,"checked_on":"2026-10-06","price_cuts":0,"new_listings":1},{"p25":187,"p75":1195,"trait":"Quad-stripe","market":"KR","median":373,"listings":197,"checked_on":"2026-10-06","price_cuts":2,"new_listings":2},{"p25":112,"p75":261,"trait":"Red","market":"KR","median":149,"listings":51,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":149,"p75":822,"trait":"Sable","market":"KR","median":299,"listings":386,"checked_on":"2026-10-06","price_cuts":0,"new_listings":2},{"p25":187,"p75":1083,"trait":"Super Dalmatian","market":"KR","median":429,"listings":38,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":149,"p75":747,"trait":"Tangerine","market":"KR","median":336,"listings":180,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":149,"p75":896,"trait":"Tri-color","market":"KR","median":355,"listings":850,"checked_on":"2026-10-06","price_cuts":2,"new_listings":4},{"p25":75,"p75":411,"trait":"Yellow","market":"KR","median":224,"listings":37,"checked_on":"2026-10-06","price_cuts":1,"new_listings":3},{"p25":150,"p75":450,"trait":null,"market":"US","median":250,"listings":6985,"checked_on":"2026-10-06","price_cuts":183,"new_listings":53},{"p25":600,"p75":1200,"trait":"Axanthic","market":"US","median":800,"listings":144,"checked_on":"2026-10-06","price_cuts":4,"new_listings":0},{"p25":100,"p75":300,"trait":"Brindle","market":"US","median":150,"listings":213,"checked_on":"2026-10-06","price_cuts":6,"new_listings":0},{"p25":100,"p75":200,"trait":"Buckskin","market":"US","median":150,"listings":15,"checked_on":"2026-10-06","price_cuts":0,"new_listings":0},{"p25":244,"p75":596,"trait":"Cappuccino","market":"US","median":350,"listings":384,"checked_on":"2026-10-06","price_cuts":8,"new_listings":4},{"p25":150,"p75":350,"trait":"Cream","market":"US","median":250,"listings":415,"checked_on":"2026-10-06","price_cuts":20,"new_listings":5},{"p25":100,"p75":300,"trait":"Dalmatian","market":"US","median":175,"listings":680,"checked_on":"2026-10-06","price_cuts":22,"new_listings":6},{"p25":150,"p75":450,"trait":"Dark","market":"US","median":262,"listings":794,"checked_on":"2026-10-06","price_cuts":35,"new_listings":7},{"p25":250,"p75":600,"trait":"Drippy","market":"US","median":400,"listings":462,"checked_on":"2026-10-06","price_cuts":16,"new_listings":3},{"p25":160,"p75":400,"trait":"Empty Back","market":"US","median":250,"listings":313,"checked_on":"2026-10-06","price_cuts":13,"new_listings":1},{"p25":200,"p75":434,"trait":"Extreme Harlequin","market":"US","median":300,"listings":1106,"checked_on":"2026-10-06","price_cuts":25,"new_listings":6},{"p25":110,"p75":280,"trait":"Harlequin","market":"US","median":175,"listings":1277,"checked_on":"2026-10-06","price_cuts":31,"new_listings":9},{"p25":250,"p75":600,"trait":"Het Axanthic","market":"US","median":450,"listings":135,"checked_on":"2026-10-06","price_cuts":2,"new_listings":0},{"p25":203,"p75":500,"trait":"Hypo","market":"US","median":315,"listings":122,"checked_on":"2026-10-06","price_cuts":4,"new_listings":1},{"p25":160,"p75":450,"trait":"Lavender","market":"US","median":300,"listings":243,"checked_on":"2026-10-06","price_cuts":6,"new_listings":1},{"p25":250,"p75":600,"trait":"Lilly White","market":"US","median":400,"listings":1191,"checked_on":"2026-10-06","price_cuts":29,"new_listings":13},{"p25":200,"p75":450,"trait":"Olive","market":"US","median":250,"listings":17,"checked_on":"2026-10-06","price_cuts":1,"new_listings":0},{"p25":175,"p75":425,"trait":"Orange","market":"US","median":285,"listings":322,"checked_on":"2026-10-06","price_cuts":7,"new_listings":1},{"p25":120,"p75":300,"trait":"Partial Pinstripe","market":"US","median":175,"listings":386,"checked_on":"2026-10-06","price_cuts":17,"new_listings":0},{"p25":125,"p75":275,"trait":"Patternless","market":"US","median":150,"listings":27,"checked_on":"2026-10-06","price_cuts":2,"new_listings":0},{"p25":150,"p75":400,"trait":"Phantom","market":"US","median":250,"listings":589,"checked_on":"2026-10-06","price_cuts":15,"new_listings":9},{"p25":150,"p75":350,"trait":"Pinstripe","market":"US","median":249,"listings":949,"checked_on":"2026-10-06","price_cuts":25,"new_listings":3},{"p25":125,"p75":350,"trait":"Portholes","market":"US","median":200,"listings":388,"checked_on":"2026-10-06","price_cuts":17,"new_listings":1},{"p25":175,"p75":400,"trait":"Quad-stripe","market":"US","median":280,"listings":179,"checked_on":"2026-10-06","price_cuts":8,"new_listings":0},{"p25":150,"p75":400,"trait":"Red","market":"US","median":250,"listings":509,"checked_on":"2026-10-06","price_cuts":17,"new_listings":3},{"p25":175,"p75":467,"trait":"Red Base","market":"US","median":300,"listings":403,"checked_on":"2026-10-06","price_cuts":12,"new_listings":4},{"p25":100,"p75":337,"trait":"Reverse Pinstripe","market":"US","median":150,"listings":50,"checked_on":"2026-10-06","price_cuts":2,"new_listings":0},{"p25":490,"p75":863,"trait":"Sable","market":"US","median":610,"listings":112,"checked_on":"2026-10-06","price_cuts":3,"new_listings":0},{"p25":219,"p75":500,"trait":"Soft Scale","market":"US","median":340,"listings":168,"checked_on":"2026-10-06","price_cuts":5,"new_listings":0},{"p25":200,"p75":500,"trait":"Super Dalmatian","market":"US","median":360,"listings":390,"checked_on":"2026-10-06","price_cuts":12,"new_listings":4},{"p25":200,"p75":400,"trait":"Tangerine","market":"US","median":300,"listings":262,"checked_on":"2026-10-06","price_cuts":6,"new_listings":1},{"p25":150,"p75":400,"trait":"Tiger","market":"US","median":275,"listings":232,"checked_on":"2026-10-06","price_cuts":4,"new_listings":0},{"p25":200,"p75":450,"trait":"Tri-color","market":"US","median":300,"listings":1348,"checked_on":"2026-10-06","price_cuts":40,"new_listings":10},{"p25":200,"p75":550,"trait":"White Wall","market":"US","median":349,"listings":501,"checked_on":"2026-10-06","price_cuts":9,"new_listings":4},{"p25":150,"p75":350,"trait":"Yellow","market":"US","median":200,"listings":410,"checked_on":"2026-10-06","price_cuts":18,"new_listings":2},{"p25":156,"p75":425,"trait":"Yellow Base","market":"US","median":292,"listings":182,"checked_on":"2026-10-06","price_cuts":9,"new_listings":2}]');
-const monthly = /* @__PURE__ */ JSON.parse('[{"month":"2026-09","trait":null,"market":"EU","median":136,"full_checks":4,"avg_listings":184},{"month":"2026-09","trait":"Axanthic","market":"EU","median":1135,"full_checks":4,"avg_listings":5},{"month":"2026-09","trait":"Lilly White","market":"EU","median":114,"full_checks":4,"avg_listings":11},{"month":"2026-10","trait":null,"market":"EU","median":135,"full_checks":4,"avg_listings":184},{"month":"2026-10","trait":"Axanthic","market":"EU","median":1097,"full_checks":4,"avg_listings":5},{"month":"2026-10","trait":"Lilly White","market":"EU","median":113,"full_checks":4,"avg_listings":11},{"month":"2026-09","trait":null,"market":"JP","median":159,"full_checks":3,"avg_listings":119},{"month":"2026-09","trait":"Dalmatian","market":"JP","median":165,"full_checks":3,"avg_listings":8},{"month":"2026-09","trait":"Dark","market":"JP","median":172,"full_checks":3,"avg_listings":6},{"month":"2026-09","trait":"Extreme Harlequin","market":"JP","median":140,"full_checks":3,"avg_listings":15},{"month":"2026-09","trait":"Harlequin","market":"JP","median":121,"full_checks":3,"avg_listings":15},{"month":"2026-09","trait":"Lilly White","market":"JP","median":305,"full_checks":3,"avg_listings":22},{"month":"2026-09","trait":"Pinstripe","market":"JP","median":147,"full_checks":3,"avg_listings":6},{"month":"2026-09","trait":"Red","market":"JP","median":204,"full_checks":3,"avg_listings":7},{"month":"2026-09","trait":"Tiger","market":"JP","median":102,"full_checks":3,"avg_listings":5},{"month":"2026-09","trait":"Tri-color","market":"JP","median":165,"full_checks":3,"avg_listings":11},{"month":"2026-10","trait":null,"market":"JP","median":158,"full_checks":4,"avg_listings":119},{"month":"2026-10","trait":"Dalmatian","market":"JP","median":164,"full_checks":4,"avg_listings":8},{"month":"2026-10","trait":"Dark","market":"JP","median":171,"full_checks":4,"avg_listings":6},{"month":"2026-10","trait":"Extreme Harlequin","market":"JP","median":139,"full_checks":4,"avg_listings":15},{"month":"2026-10","trait":"Harlequin","market":"JP","median":120,"full_checks":4,"avg_listings":15},{"month":"2026-10","trait":"Lilly White","market":"JP","median":304,"full_checks":4,"avg_listings":22},{"month":"2026-10","trait":"Pinstripe","market":"JP","median":146,"full_checks":4,"avg_listings":6},{"month":"2026-10","trait":"Red","market":"JP","median":203,"full_checks":4,"avg_listings":7},{"month":"2026-10","trait":"Tiger","market":"JP","median":101,"full_checks":4,"avg_listings":5},{"month":"2026-10","trait":"Tri-color","market":"JP","median":165,"full_checks":4,"avg_listings":11},{"month":"2026-08","trait":null,"market":"KR","median":702,"full_checks":1,"avg_listings":38},{"month":"2026-08","trait":"Drippy","market":"KR","median":1330,"full_checks":1,"avg_listings":11},{"month":"2026-08","trait":"Empty Back","market":"KR","median":333,"full_checks":1,"avg_listings":5},{"month":"2026-08","trait":"Full Pinstripe","market":"KR","median":1108,"full_checks":1,"avg_listings":9},{"month":"2026-08","trait":"Het Axanthic","market":"KR","median":1330,"full_checks":1,"avg_listings":20},{"month":"2026-08","trait":"Quad-stripe","market":"KR","median":1108,"full_checks":1,"avg_listings":9},{"month":"2026-08","trait":"Tri-color","market":"KR","median":148,"full_checks":1,"avg_listings":7},{"month":"2026-09","trait":null,"market":"KR","median":351,"full_checks":6,"avg_listings":1817},{"month":"2026-09","trait":"Axanthic","market":"KR","median":887,"full_checks":4,"avg_listings":279},{"month":"2026-09","trait":"Buckskin","market":"KR","median":296,"full_checks":4,"avg_listings":6},{"month":"2026-09","trait":"Cappuccino","market":"KR","median":203,"full_checks":4,"avg_listings":138},{"month":"2026-09","trait":"Cream","market":"KR","median":185,"full_checks":4,"avg_listings":53},{"month":"2026-09","trait":"Dark","market":"KR","median":148,"full_checks":4,"avg_listings":19},{"month":"2026-09","trait":"Drippy","market":"KR","median":406,"full_checks":6,"avg_listings":239},{"month":"2026-09","trait":"Empty Back","market":"KR","median":369,"full_checks":4,"avg_listings":47},{"month":"2026-09","trait":"Extreme Harlequin","market":"KR","median":369,"full_checks":5,"avg_listings":310},{"month":"2026-09","trait":"Frappuccino","market":"KR","median":222,"full_checks":4,"avg_listings":64},{"month":"2026-09","trait":"Full Pinstripe","market":"KR","median":323,"full_checks":4,"avg_listings":199},{"month":"2026-09","trait":"Harlequin","market":"KR","median":185,"full_checks":4,"avg_listings":5},{"month":"2026-09","trait":"Het Axanthic","market":"KR","median":369,"full_checks":4,"avg_listings":257},{"month":"2026-09","trait":"Hypo","market":"KR","median":591,"full_checks":4,"avg_listings":56},{"month":"2026-09","trait":"Lilly White","market":"KR","median":277,"full_checks":4,"avg_listings":503},{"month":"2026-09","trait":"Phantom","market":"KR","median":517,"full_checks":4,"avg_listings":41},{"month":"2026-09","trait":"Pinstripe","market":"KR","median":443,"full_checks":4,"avg_listings":85},{"month":"2026-09","trait":"Portholes","market":"KR","median":296,"full_checks":4,"avg_listings":49},{"month":"2026-09","trait":"Quad-stripe","market":"KR","median":369,"full_checks":4,"avg_listings":188},{"month":"2026-09","trait":"Red","market":"KR","median":148,"full_checks":4,"avg_listings":49},{"month":"2026-09","trait":"Sable","market":"KR","median":333,"full_checks":5,"avg_listings":258},{"month":"2026-09","trait":"Super Dalmatian","market":"KR","median":406,"full_checks":4,"avg_listings":39},{"month":"2026-09","trait":"Tangerine","market":"KR","median":342,"full_checks":4,"avg_listings":158},{"month":"2026-09","trait":"Tiger","market":"KR","median":185,"full_checks":3,"avg_listings":5},{"month":"2026-09","trait":"Tri-color","market":"KR","median":351,"full_checks":6,"avg_listings":553},{"month":"2026-09","trait":"Yellow","market":"KR","median":185,"full_checks":4,"avg_listings":29},{"month":"2026-10","trait":null,"market":"KR","median":298,"full_checks":4,"avg_listings":2949},{"month":"2026-10","trait":"Axanthic","market":"KR","median":832,"full_checks":4,"avg_listings":323},{"month":"2026-10","trait":"Buckskin","market":"KR","median":296,"full_checks":2,"avg_listings":5},{"month":"2026-10","trait":"Cappuccino","market":"KR","median":223,"full_checks":4,"avg_listings":141},{"month":"2026-10","trait":"Cream","market":"KR","median":223,"full_checks":4,"avg_listings":56},{"month":"2026-10","trait":"Dark","market":"KR","median":186,"full_checks":4,"avg_listings":17},{"month":"2026-10","trait":"Drippy","market":"KR","median":390,"full_checks":4,"avg_listings":362},{"month":"2026-10","trait":"Empty Back","market":"KR","median":372,"full_checks":4,"avg_listings":51},{"month":"2026-10","trait":"Extreme Harlequin","market":"KR","median":372,"full_checks":4,"avg_listings":402},{"month":"2026-10","trait":"Frappuccino","market":"KR","median":223,"full_checks":4,"avg_listings":61},{"month":"2026-10","trait":"Full Pinstripe","market":"KR","median":335,"full_checks":4,"avg_listings":202},{"month":"2026-10","trait":"Harlequin","market":"KR","median":204,"full_checks":4,"avg_listings":6},{"month":"2026-10","trait":"Het Axanthic","market":"KR","median":352,"full_checks":4,"avg_listings":269},{"month":"2026-10","trait":"Hypo","market":"KR","median":594,"full_checks":4,"avg_listings":82},{"month":"2026-10","trait":"Lilly White","market":"KR","median":296,"full_checks":4,"avg_listings":551},{"month":"2026-10","trait":"Phantom","market":"KR","median":500,"full_checks":4,"avg_listings":38},{"month":"2026-10","trait":"Pinstripe","market":"KR","median":446,"full_checks":4,"avg_listings":92},{"month":"2026-10","trait":"Portholes","market":"KR","median":277,"full_checks":4,"avg_listings":57},{"month":"2026-10","trait":"Quad-stripe","market":"KR","median":372,"full_checks":4,"avg_listings":200},{"month":"2026-10","trait":"Red","market":"KR","median":149,"full_checks":4,"avg_listings":52},{"month":"2026-10","trait":"Sable","market":"KR","median":298,"full_checks":4,"avg_listings":380},{"month":"2026-10","trait":"Super Dalmatian","market":"KR","median":409,"full_checks":4,"avg_listings":40},{"month":"2026-10","trait":"Tangerine","market":"KR","median":343,"full_checks":4,"avg_listings":175},{"month":"2026-10","trait":"Tri-color","market":"KR","median":335,"full_checks":4,"avg_listings":860},{"month":"2026-10","trait":"Yellow","market":"KR","median":250,"full_checks":4,"avg_listings":33},{"month":"2026-05","trait":null,"market":"US","median":300,"full_checks":4,"avg_listings":6020},{"month":"2026-05","trait":"Axanthic","market":"US","median":1050,"full_checks":4,"avg_listings":39},{"month":"2026-05","trait":"Brindle","market":"US","median":163,"full_checks":4,"avg_listings":61},{"month":"2026-05","trait":"Cappuccino","market":"US","median":350,"full_checks":4,"avg_listings":161},{"month":"2026-05","trait":"Cream","market":"US","median":271,"full_checks":4,"avg_listings":77},{"month":"2026-05","trait":"Dalmatian","market":"US","median":175,"full_checks":4,"avg_listings":249},{"month":"2026-05","trait":"Dark","market":"US","median":250,"full_checks":4,"avg_listings":212},{"month":"2026-05","trait":"Drippy","market":"US","median":500,"full_checks":4,"avg_listings":121},{"month":"2026-05","trait":"Empty Back","market":"US","median":250,"full_checks":4,"avg_listings":116},{"month":"2026-05","trait":"Extreme Harlequin","market":"US","median":300,"full_checks":4,"avg_listings":360},{"month":"2026-05","trait":"Harlequin","market":"US","median":150,"full_checks":4,"avg_listings":451},{"month":"2026-05","trait":"Het Axanthic","market":"US","median":400,"full_checks":4,"avg_listings":56},{"month":"2026-05","trait":"Hypo","market":"US","median":300,"full_checks":4,"avg_listings":36},{"month":"2026-05","trait":"Lavender","market":"US","median":300,"full_checks":4,"avg_listings":98},{"month":"2026-05","trait":"Lilly White","market":"US","median":391,"full_checks":4,"avg_listings":385},{"month":"2026-05","trait":"Olive","market":"US","median":200,"full_checks":1,"avg_listings":5},{"month":"2026-05","trait":"Orange","market":"US","median":259,"full_checks":4,"avg_listings":89},{"month":"2026-05","trait":"Partial Pinstripe","market":"US","median":175,"full_checks":4,"avg_listings":102},{"month":"2026-05","trait":"Patternless","market":"US","median":150,"full_checks":2,"avg_listings":5},{"month":"2026-05","trait":"Phantom","market":"US","median":275,"full_checks":4,"avg_listings":163},{"month":"2026-05","trait":"Pinstripe","market":"US","median":200,"full_checks":4,"avg_listings":273},{"month":"2026-05","trait":"Portholes","market":"US","median":190,"full_checks":4,"avg_listings":125},{"month":"2026-05","trait":"Quad-stripe","market":"US","median":300,"full_checks":4,"avg_listings":81},{"month":"2026-05","trait":"Red","market":"US","median":275,"full_checks":4,"avg_listings":163},{"month":"2026-05","trait":"Red Base","market":"US","median":294,"full_checks":4,"avg_listings":116},{"month":"2026-05","trait":"Reverse Pinstripe","market":"US","median":170,"full_checks":4,"avg_listings":13},{"month":"2026-05","trait":"Sable","market":"US","median":925,"full_checks":4,"avg_listings":33},{"month":"2026-05","trait":"Soft Scale","market":"US","median":300,"full_checks":4,"avg_listings":88},{"month":"2026-05","trait":"Super Dalmatian","market":"US","median":380,"full_checks":4,"avg_listings":96},{"month":"2026-05","trait":"Tangerine","market":"US","median":300,"full_checks":4,"avg_listings":108},{"month":"2026-05","trait":"Tiger","market":"US","median":284,"full_checks":4,"avg_listings":73},{"month":"2026-05","trait":"Tri-color","market":"US","median":300,"full_checks":4,"avg_listings":418},{"month":"2026-05","trait":"White Wall","market":"US","median":350,"full_checks":4,"avg_listings":116},{"month":"2026-05","trait":"Yellow","market":"US","median":250,"full_checks":4,"avg_listings":125},{"month":"2026-05","trait":"Yellow Base","market":"US","median":325,"full_checks":4,"avg_listings":52},{"month":"2026-06","trait":null,"market":"US","median":300,"full_checks":1,"avg_listings":5994},{"month":"2026-06","trait":"Axanthic","market":"US","median":1100,"full_checks":1,"avg_listings":28},{"month":"2026-06","trait":"Brindle","market":"US","median":155,"full_checks":1,"avg_listings":54},{"month":"2026-06","trait":"Cappuccino","market":"US","median":375,"full_checks":1,"avg_listings":127},{"month":"2026-06","trait":"Cream","market":"US","median":300,"full_checks":1,"avg_listings":62},{"month":"2026-06","trait":"Dalmatian","market":"US","median":175,"full_checks":1,"avg_listings":208},{"month":"2026-06","trait":"Dark","market":"US","median":275,"full_checks":1,"avg_listings":173},{"month":"2026-06","trait":"Drippy","market":"US","median":500,"full_checks":1,"avg_listings":104},{"month":"2026-06","trait":"Empty Back","market":"US","median":300,"full_checks":1,"avg_listings":94},{"month":"2026-06","trait":"Extreme Harlequin","market":"US","median":300,"full_checks":1,"avg_listings":302},{"month":"2026-06","trait":"Harlequin","market":"US","median":160,"full_checks":1,"avg_listings":350},{"month":"2026-06","trait":"Het Axanthic","market":"US","median":450,"full_checks":1,"avg_listings":41},{"month":"2026-06","trait":"Hypo","market":"US","median":350,"full_checks":1,"avg_listings":30},{"month":"2026-06","trait":"Lavender","market":"US","median":300,"full_checks":1,"avg_listings":79},{"month":"2026-06","trait":"Lilly White","market":"US","median":400,"full_checks":1,"avg_listings":322},{"month":"2026-06","trait":"Orange","market":"US","median":290,"full_checks":1,"avg_listings":70},{"month":"2026-06","trait":"Partial Pinstripe","market":"US","median":175,"full_checks":1,"avg_listings":85},{"month":"2026-06","trait":"Phantom","market":"US","median":275,"full_checks":1,"avg_listings":136},{"month":"2026-06","trait":"Pinstripe","market":"US","median":200,"full_checks":1,"avg_listings":211},{"month":"2026-06","trait":"Portholes","market":"US","median":200,"full_checks":1,"avg_listings":95},{"month":"2026-06","trait":"Quad-stripe","market":"US","median":300,"full_checks":1,"avg_listings":67},{"month":"2026-06","trait":"Red","market":"US","median":300,"full_checks":1,"avg_listings":128},{"month":"2026-06","trait":"Red Base","market":"US","median":300,"full_checks":1,"avg_listings":96},{"month":"2026-06","trait":"Reverse Pinstripe","market":"US","median":170,"full_checks":1,"avg_listings":9},{"month":"2026-06","trait":"Sable","market":"US","median":1200,"full_checks":1,"avg_listings":27},{"month":"2026-06","trait":"Soft Scale","market":"US","median":325,"full_checks":1,"avg_listings":75},{"month":"2026-06","trait":"Super Dalmatian","market":"US","median":400,"full_checks":1,"avg_listings":70},{"month":"2026-06","trait":"Tangerine","market":"US","median":300,"full_checks":1,"avg_listings":93},{"month":"2026-06","trait":"Tiger","market":"US","median":300,"full_checks":1,"avg_listings":60},{"month":"2026-06","trait":"Tri-color","market":"US","median":300,"full_checks":1,"avg_listings":354},{"month":"2026-06","trait":"White Wall","market":"US","median":350,"full_checks":1,"avg_listings":90},{"month":"2026-06","trait":"Yellow","market":"US","median":250,"full_checks":1,"avg_listings":99},{"month":"2026-06","trait":"Yellow Base","market":"US","median":325,"full_checks":1,"avg_listings":40},{"month":"2026-09","trait":null,"market":"US","median":260,"full_checks":1,"avg_listings":2478},{"month":"2026-09","trait":"Axanthic","market":"US","median":695,"full_checks":1,"avg_listings":31},{"month":"2026-09","trait":"Brindle","market":"US","median":150,"full_checks":1,"avg_listings":91},{"month":"2026-09","trait":"Cappuccino","market":"US","median":361,"full_checks":1,"avg_listings":92},{"month":"2026-09","trait":"Cream","market":"US","median":287,"full_checks":1,"avg_listings":150},{"month":"2026-09","trait":"Dalmatian","market":"US","median":193,"full_checks":1,"avg_listings":274},{"month":"2026-09","trait":"Dark","market":"US","median":250,"full_checks":1,"avg_listings":309},{"month":"2026-09","trait":"Drippy","market":"US","median":375,"full_checks":1,"avg_listings":151},{"month":"2026-09","trait":"Empty Back","market":"US","median":250,"full_checks":1,"avg_listings":110},{"month":"2026-09","trait":"Extreme Harlequin","market":"US","median":300,"full_checks":1,"avg_listings":414},{"month":"2026-09","trait":"Harlequin","market":"US","median":175,"full_checks":1,"avg_listings":488},{"month":"2026-09","trait":"Het Axanthic","market":"US","median":425,"full_checks":1,"avg_listings":36},{"month":"2026-09","trait":"Hypo","market":"US","median":399,"full_checks":1,"avg_listings":43},{"month":"2026-09","trait":"Lavender","market":"US","median":300,"full_checks":1,"avg_listings":121},{"month":"2026-09","trait":"Lilly White","market":"US","median":400,"full_checks":1,"avg_listings":359},{"month":"2026-09","trait":"Orange","market":"US","median":250,"full_checks":1,"avg_listings":111},{"month":"2026-09","trait":"Partial Pinstripe","market":"US","median":180,"full_checks":1,"avg_listings":166},{"month":"2026-09","trait":"Patternless","market":"US","median":150,"full_checks":1,"avg_listings":10},{"month":"2026-09","trait":"Phantom","market":"US","median":253,"full_checks":1,"avg_listings":196},{"month":"2026-09","trait":"Pinstripe","market":"US","median":225,"full_checks":1,"avg_listings":315},{"month":"2026-09","trait":"Portholes","market":"US","median":199,"full_checks":1,"avg_listings":143},{"month":"2026-09","trait":"Quad-stripe","market":"US","median":275,"full_checks":1,"avg_listings":82},{"month":"2026-09","trait":"Red","market":"US","median":275,"full_checks":1,"avg_listings":188},{"month":"2026-09","trait":"Red Base","market":"US","median":300,"full_checks":1,"avg_listings":156},{"month":"2026-09","trait":"Reverse Pinstripe","market":"US","median":150,"full_checks":1,"avg_listings":19},{"month":"2026-09","trait":"Sable","market":"US","median":680,"full_checks":1,"avg_listings":31},{"month":"2026-09","trait":"Soft Scale","market":"US","median":300,"full_checks":1,"avg_listings":85},{"month":"2026-09","trait":"Super Dalmatian","market":"US","median":375,"full_checks":1,"avg_listings":127},{"month":"2026-09","trait":"Tangerine","market":"US","median":299,"full_checks":1,"avg_listings":110},{"month":"2026-09","trait":"Tiger","market":"US","median":250,"full_checks":1,"avg_listings":81},{"month":"2026-09","trait":"Tri-color","market":"US","median":300,"full_checks":1,"avg_listings":464},{"month":"2026-09","trait":"White Wall","market":"US","median":300,"full_checks":1,"avg_listings":160},{"month":"2026-09","trait":"Yellow","market":"US","median":250,"full_checks":1,"avg_listings":140},{"month":"2026-09","trait":"Yellow Base","market":"US","median":299,"full_checks":1,"avg_listings":71},{"month":"2026-10","trait":null,"market":"US","median":250,"full_checks":2,"avg_listings":6215},{"month":"2026-10","trait":"Axanthic","market":"US","median":775,"full_checks":2,"avg_listings":140},{"month":"2026-10","trait":"Brindle","market":"US","median":155,"full_checks":2,"avg_listings":188},{"month":"2026-10","trait":"Buckskin","market":"US","median":142,"full_checks":2,"avg_listings":14},{"month":"2026-10","trait":"Cappuccino","market":"US","median":350,"full_checks":2,"avg_listings":348},{"month":"2026-10","trait":"Cream","market":"US","median":250,"full_checks":2,"avg_listings":349},{"month":"2026-10","trait":"Dalmatian","market":"US","median":175,"full_checks":2,"avg_listings":606},{"month":"2026-10","trait":"Dark","market":"US","median":269,"full_checks":2,"avg_listings":690},{"month":"2026-10","trait":"Drippy","market":"US","median":400,"full_checks":2,"avg_listings":412},{"month":"2026-10","trait":"Empty Back","market":"US","median":250,"full_checks":2,"avg_listings":282},{"month":"2026-10","trait":"Extreme Harlequin","market":"US","median":300,"full_checks":2,"avg_listings":961},{"month":"2026-10","trait":"Harlequin","market":"US","median":168,"full_checks":2,"avg_listings":1127},{"month":"2026-10","trait":"Het Axanthic","market":"US","median":450,"full_checks":2,"avg_listings":121},{"month":"2026-10","trait":"Hypo","market":"US","median":308,"full_checks":2,"avg_listings":108},{"month":"2026-10","trait":"Lavender","market":"US","median":288,"full_checks":2,"avg_listings":206},{"month":"2026-10","trait":"Lilly White","market":"US","median":400,"full_checks":2,"avg_listings":1072},{"month":"2026-10","trait":"Olive","market":"US","median":250,"full_checks":2,"avg_listings":15},{"month":"2026-10","trait":"Orange","market":"US","median":280,"full_checks":2,"avg_listings":281},{"month":"2026-10","trait":"Partial Pinstripe","market":"US","median":175,"full_checks":2,"avg_listings":336},{"month":"2026-10","trait":"Patternless","market":"US","median":163,"full_checks":2,"avg_listings":23},{"month":"2026-10","trait":"Phantom","market":"US","median":250,"full_checks":2,"avg_listings":536},{"month":"2026-10","trait":"Pinstripe","market":"US","median":237,"full_checks":2,"avg_listings":845},{"month":"2026-10","trait":"Portholes","market":"US","median":200,"full_checks":2,"avg_listings":343},{"month":"2026-10","trait":"Quad-stripe","market":"US","median":290,"full_checks":2,"avg_listings":156},{"month":"2026-10","trait":"Red","market":"US","median":250,"full_checks":2,"avg_listings":449},{"month":"2026-10","trait":"Red Base","market":"US","median":294,"full_checks":2,"avg_listings":354},{"month":"2026-10","trait":"Reverse Pinstripe","market":"US","median":175,"full_checks":2,"avg_listings":41},{"month":"2026-10","trait":"Sable","market":"US","median":605,"full_checks":2,"avg_listings":106},{"month":"2026-10","trait":"Soft Scale","market":"US","median":345,"full_checks":2,"avg_listings":143},{"month":"2026-10","trait":"Super Dalmatian","market":"US","median":355,"full_checks":2,"avg_listings":355},{"month":"2026-10","trait":"Tangerine","market":"US","median":300,"full_checks":2,"avg_listings":231},{"month":"2026-10","trait":"Tiger","market":"US","median":288,"full_checks":2,"avg_listings":203},{"month":"2026-10","trait":"Tri-color","market":"US","median":298,"full_checks":2,"avg_listings":1184},{"month":"2026-10","trait":"White Wall","market":"US","median":337,"full_checks":2,"avg_listings":440},{"month":"2026-10","trait":"Yellow","market":"US","median":200,"full_checks":2,"avg_listings":354},{"month":"2026-10","trait":"Yellow Base","market":"US","median":296,"full_checks":2,"avg_listings":158}]');
+const latest = [{ "p25": 113, "p75": 211, "trait": null, "market": "EU", "median": 135, "listings": 183, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 0, "thin": false }, { "p25": 114, "p75": 237, "trait": null, "market": "JP", "median": 158, "listings": 119, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 0, "thin": false }, { "p25": 149, "p75": 896, "trait": null, "market": "KR", "median": 336, "listings": 2957, "checked_on": "2026-10-06", "price_cuts": 15, "new_listings": 33, "thin": false }, { "p25": 336, "p75": 2166, "trait": "Axanthic", "market": "KR", "median": 747, "listings": 345, "checked_on": "2026-10-06", "price_cuts": 2, "new_listings": 16, "thin": false }, { "p25": 112, "p75": 598, "trait": "Cappuccino", "market": "KR", "median": 243, "listings": 140, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 0, "thin": false }, { "p25": 112, "p75": 299, "trait": "Cream", "market": "KR", "median": 224, "listings": 61, "checked_on": "2026-10-06", "price_cuts": 1, "new_listings": 3, "thin": true }, { "p25": 224, "p75": 1120, "trait": "Drippy", "market": "KR", "median": 448, "listings": 344, "checked_on": "2026-10-06", "price_cuts": 3, "new_listings": 2, "thin": false }, { "p25": 224, "p75": 1195, "trait": "Empty Back", "market": "KR", "median": 373, "listings": 53, "checked_on": "2026-10-06", "price_cuts": 1, "new_listings": 2, "thin": true }, { "p25": 149, "p75": 1120, "trait": "Extreme Harlequin", "market": "KR", "median": 373, "listings": 395, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 1, "thin": false }, { "p25": 149, "p75": 448, "trait": "Frappuccino", "market": "KR", "median": 224, "listings": 59, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 0, "thin": true }, { "p25": 187, "p75": 1120, "trait": "Full Pinstripe", "market": "KR", "median": 336, "listings": 196, "checked_on": "2026-10-06", "price_cuts": 2, "new_listings": 4, "thin": false }, { "p25": 187, "p75": 1120, "trait": "Het Axanthic", "market": "KR", "median": 336, "listings": 263, "checked_on": "2026-10-06", "price_cuts": 6, "new_listings": 1, "thin": false }, { "p25": 373, "p75": 1494, "trait": "Hypo", "market": "KR", "median": 598, "listings": 83, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 1, "thin": true }, { "p25": 149, "p75": 672, "trait": "Lilly White", "market": "KR", "median": 299, "listings": 562, "checked_on": "2026-10-06", "price_cuts": 1, "new_listings": 9, "thin": false }, { "p25": 168, "p75": 598, "trait": "Phantom", "market": "KR", "median": 486, "listings": 38, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 0, "thin": true }, { "p25": 224, "p75": 1120, "trait": "Pinstripe", "market": "KR", "median": 448, "listings": 93, "checked_on": "2026-10-06", "price_cuts": 1, "new_listings": 1, "thin": true }, { "p25": 149, "p75": 1120, "trait": "Portholes", "market": "KR", "median": 243, "listings": 58, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 1, "thin": true }, { "p25": 187, "p75": 1195, "trait": "Quad-stripe", "market": "KR", "median": 373, "listings": 197, "checked_on": "2026-10-06", "price_cuts": 2, "new_listings": 2, "thin": false }, { "p25": 112, "p75": 261, "trait": "Red", "market": "KR", "median": 149, "listings": 51, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 0, "thin": true }, { "p25": 149, "p75": 822, "trait": "Sable", "market": "KR", "median": 299, "listings": 386, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 2, "thin": false }, { "p25": 187, "p75": 1083, "trait": "Super Dalmatian", "market": "KR", "median": 429, "listings": 38, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 0, "thin": true }, { "p25": 149, "p75": 747, "trait": "Tangerine", "market": "KR", "median": 336, "listings": 180, "checked_on": "2026-10-06", "price_cuts": 0, "new_listings": 0, "thin": false }, { "p25": 149, "p75": 896, "trait": "Tri-color", "market": "KR", "median": 355, "listings": 850, "checked_on": "2026-10-06", "price_cuts": 2, "new_listings": 4, "thin": false }, { "p25": 75, "p75": 411, "trait": "Yellow", "market": "KR", "median": 224, "listings": 37, "checked_on": "2026-10-06", "price_cuts": 1, "new_listings": 3, "thin": true }, { "p25": 150, "p75": 450, "trait": null, "market": "US", "median": 250, "listings": 6985, "checked_on": "2026-10-06", "price_cuts": 183, "new_listings": 53, "thin": false }, { "p25": 600, "p75": 1200, "trait": "Axanthic", "market": "US", "median": 800, "listings": 144, "checked_on": "2026-10-06", "price_cuts": 4, "new_listings": 0, "thin": false }, { "p25": 100, "p75": 300, "trait": "Brindle", "market": "US", "median": 150, "listings": 213, "checked_on": "2026-10-06", "price_cuts": 6, "new_listings": 0, "thin": false }, { "p25": 244, "p75": 596, "trait": "Cappuccino", "market": "US", "median": 350, "listings": 384, "checked_on": "2026-10-06", "price_cuts": 8, "new_listings": 4, "thin": false }, { "p25": 150, "p75": 350, "trait": "Cream", "market": "US", "median": 250, "listings": 415, "checked_on": "2026-10-06", "price_cuts": 20, "new_listings": 5, "thin": false }, { "p25": 100, "p75": 300, "trait": "Dalmatian", "market": "US", "median": 175, "listings": 680, "checked_on": "2026-10-06", "price_cuts": 22, "new_listings": 6, "thin": false }, { "p25": 150, "p75": 450, "trait": "Dark", "market": "US", "median": 262, "listings": 794, "checked_on": "2026-10-06", "price_cuts": 35, "new_listings": 7, "thin": false }, { "p25": 250, "p75": 600, "trait": "Drippy", "market": "US", "median": 400, "listings": 462, "checked_on": "2026-10-06", "price_cuts": 16, "new_listings": 3, "thin": false }, { "p25": 160, "p75": 400, "trait": "Empty Back", "market": "US", "median": 250, "listings": 313, "checked_on": "2026-10-06", "price_cuts": 13, "new_listings": 1, "thin": false }, { "p25": 200, "p75": 434, "trait": "Extreme Harlequin", "market": "US", "median": 300, "listings": 1106, "checked_on": "2026-10-06", "price_cuts": 25, "new_listings": 6, "thin": false }, { "p25": 110, "p75": 280, "trait": "Harlequin", "market": "US", "median": 175, "listings": 1277, "checked_on": "2026-10-06", "price_cuts": 31, "new_listings": 9, "thin": false }, { "p25": 250, "p75": 600, "trait": "Het Axanthic", "market": "US", "median": 450, "listings": 135, "checked_on": "2026-10-06", "price_cuts": 2, "new_listings": 0, "thin": false }, { "p25": 203, "p75": 500, "trait": "Hypo", "market": "US", "median": 315, "listings": 122, "checked_on": "2026-10-06", "price_cuts": 4, "new_listings": 1, "thin": false }, { "p25": 160, "p75": 450, "trait": "Lavender", "market": "US", "median": 300, "listings": 243, "checked_on": "2026-10-06", "price_cuts": 6, "new_listings": 1, "thin": false }, { "p25": 250, "p75": 600, "trait": "Lilly White", "market": "US", "median": 400, "listings": 1191, "checked_on": "2026-10-06", "price_cuts": 29, "new_listings": 13, "thin": false }, { "p25": 175, "p75": 425, "trait": "Orange", "market": "US", "median": 285, "listings": 322, "checked_on": "2026-10-06", "price_cuts": 7, "new_listings": 1, "thin": false }, { "p25": 120, "p75": 300, "trait": "Partial Pinstripe", "market": "US", "median": 175, "listings": 386, "checked_on": "2026-10-06", "price_cuts": 17, "new_listings": 0, "thin": false }, { "p25": 150, "p75": 400, "trait": "Phantom", "market": "US", "median": 250, "listings": 589, "checked_on": "2026-10-06", "price_cuts": 15, "new_listings": 9, "thin": false }, { "p25": 150, "p75": 350, "trait": "Pinstripe", "market": "US", "median": 249, "listings": 949, "checked_on": "2026-10-06", "price_cuts": 25, "new_listings": 3, "thin": false }, { "p25": 125, "p75": 350, "trait": "Portholes", "market": "US", "median": 200, "listings": 388, "checked_on": "2026-10-06", "price_cuts": 17, "new_listings": 1, "thin": false }, { "p25": 175, "p75": 400, "trait": "Quad-stripe", "market": "US", "median": 280, "listings": 179, "checked_on": "2026-10-06", "price_cuts": 8, "new_listings": 0, "thin": false }, { "p25": 150, "p75": 400, "trait": "Red", "market": "US", "median": 250, "listings": 509, "checked_on": "2026-10-06", "price_cuts": 17, "new_listings": 3, "thin": false }, { "p25": 175, "p75": 467, "trait": "Red Base", "market": "US", "median": 300, "listings": 403, "checked_on": "2026-10-06", "price_cuts": 12, "new_listings": 4, "thin": false }, { "p25": 100, "p75": 337, "trait": "Reverse Pinstripe", "market": "US", "median": 150, "listings": 50, "checked_on": "2026-10-06", "price_cuts": 2, "new_listings": 0, "thin": true }, { "p25": 490, "p75": 863, "trait": "Sable", "market": "US", "median": 610, "listings": 112, "checked_on": "2026-10-06", "price_cuts": 3, "new_listings": 0, "thin": false }, { "p25": 219, "p75": 500, "trait": "Soft Scale", "market": "US", "median": 340, "listings": 168, "checked_on": "2026-10-06", "price_cuts": 5, "new_listings": 0, "thin": false }, { "p25": 200, "p75": 500, "trait": "Super Dalmatian", "market": "US", "median": 360, "listings": 390, "checked_on": "2026-10-06", "price_cuts": 12, "new_listings": 4, "thin": false }, { "p25": 200, "p75": 400, "trait": "Tangerine", "market": "US", "median": 300, "listings": 262, "checked_on": "2026-10-06", "price_cuts": 6, "new_listings": 1, "thin": false }, { "p25": 150, "p75": 400, "trait": "Tiger", "market": "US", "median": 275, "listings": 232, "checked_on": "2026-10-06", "price_cuts": 4, "new_listings": 0, "thin": false }, { "p25": 200, "p75": 450, "trait": "Tri-color", "market": "US", "median": 300, "listings": 1348, "checked_on": "2026-10-06", "price_cuts": 40, "new_listings": 10, "thin": false }, { "p25": 200, "p75": 550, "trait": "White Wall", "market": "US", "median": 349, "listings": 501, "checked_on": "2026-10-06", "price_cuts": 9, "new_listings": 4, "thin": false }, { "p25": 150, "p75": 350, "trait": "Yellow", "market": "US", "median": 200, "listings": 410, "checked_on": "2026-10-06", "price_cuts": 18, "new_listings": 2, "thin": false }, { "p25": 156, "p75": 425, "trait": "Yellow Base", "market": "US", "median": 292, "listings": 182, "checked_on": "2026-10-06", "price_cuts": 9, "new_listings": 2, "thin": false }];
+const monthly = /* @__PURE__ */ JSON.parse('[{"month":"2026-09","trait":null,"market":"EU","median":136,"full_checks":4,"avg_listings":184},{"month":"2026-10","trait":null,"market":"EU","median":135,"full_checks":4,"avg_listings":184},{"month":"2026-09","trait":null,"market":"JP","median":159,"full_checks":3,"avg_listings":119},{"month":"2026-10","trait":null,"market":"JP","median":158,"full_checks":4,"avg_listings":119},{"month":"2026-08","trait":null,"market":"KR","median":702,"full_checks":1,"avg_listings":38},{"month":"2026-09","trait":null,"market":"KR","median":351,"full_checks":6,"avg_listings":1817},{"month":"2026-09","trait":"Axanthic","market":"KR","median":887,"full_checks":4,"avg_listings":279},{"month":"2026-09","trait":"Cappuccino","market":"KR","median":203,"full_checks":4,"avg_listings":138},{"month":"2026-09","trait":"Cream","market":"KR","median":185,"full_checks":4,"avg_listings":53},{"month":"2026-09","trait":"Drippy","market":"KR","median":406,"full_checks":6,"avg_listings":239},{"month":"2026-09","trait":"Empty Back","market":"KR","median":369,"full_checks":4,"avg_listings":47},{"month":"2026-09","trait":"Extreme Harlequin","market":"KR","median":369,"full_checks":5,"avg_listings":310},{"month":"2026-09","trait":"Frappuccino","market":"KR","median":222,"full_checks":4,"avg_listings":64},{"month":"2026-09","trait":"Full Pinstripe","market":"KR","median":323,"full_checks":4,"avg_listings":199},{"month":"2026-09","trait":"Het Axanthic","market":"KR","median":369,"full_checks":4,"avg_listings":257},{"month":"2026-09","trait":"Hypo","market":"KR","median":591,"full_checks":4,"avg_listings":56},{"month":"2026-09","trait":"Lilly White","market":"KR","median":277,"full_checks":4,"avg_listings":503},{"month":"2026-09","trait":"Phantom","market":"KR","median":517,"full_checks":4,"avg_listings":41},{"month":"2026-09","trait":"Pinstripe","market":"KR","median":443,"full_checks":4,"avg_listings":85},{"month":"2026-09","trait":"Portholes","market":"KR","median":296,"full_checks":4,"avg_listings":49},{"month":"2026-09","trait":"Quad-stripe","market":"KR","median":369,"full_checks":4,"avg_listings":188},{"month":"2026-09","trait":"Red","market":"KR","median":148,"full_checks":4,"avg_listings":49},{"month":"2026-09","trait":"Sable","market":"KR","median":333,"full_checks":5,"avg_listings":258},{"month":"2026-09","trait":"Super Dalmatian","market":"KR","median":406,"full_checks":4,"avg_listings":39},{"month":"2026-09","trait":"Tangerine","market":"KR","median":342,"full_checks":4,"avg_listings":158},{"month":"2026-09","trait":"Tri-color","market":"KR","median":351,"full_checks":6,"avg_listings":553},{"month":"2026-10","trait":null,"market":"KR","median":298,"full_checks":4,"avg_listings":2949},{"month":"2026-10","trait":"Axanthic","market":"KR","median":832,"full_checks":4,"avg_listings":323},{"month":"2026-10","trait":"Cappuccino","market":"KR","median":223,"full_checks":4,"avg_listings":141},{"month":"2026-10","trait":"Cream","market":"KR","median":223,"full_checks":4,"avg_listings":56},{"month":"2026-10","trait":"Drippy","market":"KR","median":390,"full_checks":4,"avg_listings":362},{"month":"2026-10","trait":"Empty Back","market":"KR","median":372,"full_checks":4,"avg_listings":51},{"month":"2026-10","trait":"Extreme Harlequin","market":"KR","median":372,"full_checks":4,"avg_listings":402},{"month":"2026-10","trait":"Frappuccino","market":"KR","median":223,"full_checks":4,"avg_listings":61},{"month":"2026-10","trait":"Full Pinstripe","market":"KR","median":335,"full_checks":4,"avg_listings":202},{"month":"2026-10","trait":"Het Axanthic","market":"KR","median":352,"full_checks":4,"avg_listings":269},{"month":"2026-10","trait":"Hypo","market":"KR","median":594,"full_checks":4,"avg_listings":82},{"month":"2026-10","trait":"Lilly White","market":"KR","median":296,"full_checks":4,"avg_listings":551},{"month":"2026-10","trait":"Phantom","market":"KR","median":500,"full_checks":4,"avg_listings":38},{"month":"2026-10","trait":"Pinstripe","market":"KR","median":446,"full_checks":4,"avg_listings":92},{"month":"2026-10","trait":"Portholes","market":"KR","median":277,"full_checks":4,"avg_listings":57},{"month":"2026-10","trait":"Quad-stripe","market":"KR","median":372,"full_checks":4,"avg_listings":200},{"month":"2026-10","trait":"Red","market":"KR","median":149,"full_checks":4,"avg_listings":52},{"month":"2026-10","trait":"Sable","market":"KR","median":298,"full_checks":4,"avg_listings":380},{"month":"2026-10","trait":"Super Dalmatian","market":"KR","median":409,"full_checks":4,"avg_listings":40},{"month":"2026-10","trait":"Tangerine","market":"KR","median":343,"full_checks":4,"avg_listings":175},{"month":"2026-10","trait":"Tri-color","market":"KR","median":335,"full_checks":4,"avg_listings":860},{"month":"2026-10","trait":"Yellow","market":"KR","median":250,"full_checks":4,"avg_listings":33},{"month":"2026-05","trait":null,"market":"US","median":300,"full_checks":4,"avg_listings":6020},{"month":"2026-05","trait":"Axanthic","market":"US","median":1050,"full_checks":4,"avg_listings":39},{"month":"2026-05","trait":"Brindle","market":"US","median":163,"full_checks":4,"avg_listings":61},{"month":"2026-05","trait":"Cappuccino","market":"US","median":350,"full_checks":4,"avg_listings":161},{"month":"2026-05","trait":"Cream","market":"US","median":271,"full_checks":4,"avg_listings":77},{"month":"2026-05","trait":"Dalmatian","market":"US","median":175,"full_checks":4,"avg_listings":249},{"month":"2026-05","trait":"Dark","market":"US","median":250,"full_checks":4,"avg_listings":212},{"month":"2026-05","trait":"Drippy","market":"US","median":500,"full_checks":4,"avg_listings":121},{"month":"2026-05","trait":"Empty Back","market":"US","median":250,"full_checks":4,"avg_listings":116},{"month":"2026-05","trait":"Extreme Harlequin","market":"US","median":300,"full_checks":4,"avg_listings":360},{"month":"2026-05","trait":"Harlequin","market":"US","median":150,"full_checks":4,"avg_listings":451},{"month":"2026-05","trait":"Het Axanthic","market":"US","median":400,"full_checks":4,"avg_listings":56},{"month":"2026-05","trait":"Hypo","market":"US","median":300,"full_checks":4,"avg_listings":36},{"month":"2026-05","trait":"Lavender","market":"US","median":300,"full_checks":4,"avg_listings":98},{"month":"2026-05","trait":"Lilly White","market":"US","median":391,"full_checks":4,"avg_listings":385},{"month":"2026-05","trait":"Orange","market":"US","median":259,"full_checks":4,"avg_listings":89},{"month":"2026-05","trait":"Partial Pinstripe","market":"US","median":175,"full_checks":4,"avg_listings":102},{"month":"2026-05","trait":"Phantom","market":"US","median":275,"full_checks":4,"avg_listings":163},{"month":"2026-05","trait":"Pinstripe","market":"US","median":200,"full_checks":4,"avg_listings":273},{"month":"2026-05","trait":"Portholes","market":"US","median":190,"full_checks":4,"avg_listings":125},{"month":"2026-05","trait":"Quad-stripe","market":"US","median":300,"full_checks":4,"avg_listings":81},{"month":"2026-05","trait":"Red","market":"US","median":275,"full_checks":4,"avg_listings":163},{"month":"2026-05","trait":"Red Base","market":"US","median":294,"full_checks":4,"avg_listings":116},{"month":"2026-05","trait":"Sable","market":"US","median":925,"full_checks":4,"avg_listings":33},{"month":"2026-05","trait":"Soft Scale","market":"US","median":300,"full_checks":4,"avg_listings":88},{"month":"2026-05","trait":"Super Dalmatian","market":"US","median":380,"full_checks":4,"avg_listings":96},{"month":"2026-05","trait":"Tangerine","market":"US","median":300,"full_checks":4,"avg_listings":108},{"month":"2026-05","trait":"Tiger","market":"US","median":284,"full_checks":4,"avg_listings":73},{"month":"2026-05","trait":"Tri-color","market":"US","median":300,"full_checks":4,"avg_listings":418},{"month":"2026-05","trait":"White Wall","market":"US","median":350,"full_checks":4,"avg_listings":116},{"month":"2026-05","trait":"Yellow","market":"US","median":250,"full_checks":4,"avg_listings":125},{"month":"2026-05","trait":"Yellow Base","market":"US","median":325,"full_checks":4,"avg_listings":52},{"month":"2026-06","trait":null,"market":"US","median":300,"full_checks":1,"avg_listings":5994},{"month":"2026-06","trait":"Brindle","market":"US","median":155,"full_checks":1,"avg_listings":54},{"month":"2026-06","trait":"Cappuccino","market":"US","median":375,"full_checks":1,"avg_listings":127},{"month":"2026-06","trait":"Cream","market":"US","median":300,"full_checks":1,"avg_listings":62},{"month":"2026-06","trait":"Dalmatian","market":"US","median":175,"full_checks":1,"avg_listings":208},{"month":"2026-06","trait":"Dark","market":"US","median":275,"full_checks":1,"avg_listings":173},{"month":"2026-06","trait":"Drippy","market":"US","median":500,"full_checks":1,"avg_listings":104},{"month":"2026-06","trait":"Empty Back","market":"US","median":300,"full_checks":1,"avg_listings":94},{"month":"2026-06","trait":"Extreme Harlequin","market":"US","median":300,"full_checks":1,"avg_listings":302},{"month":"2026-06","trait":"Harlequin","market":"US","median":160,"full_checks":1,"avg_listings":350},{"month":"2026-06","trait":"Het Axanthic","market":"US","median":450,"full_checks":1,"avg_listings":41},{"month":"2026-06","trait":"Hypo","market":"US","median":350,"full_checks":1,"avg_listings":30},{"month":"2026-06","trait":"Lavender","market":"US","median":300,"full_checks":1,"avg_listings":79},{"month":"2026-06","trait":"Lilly White","market":"US","median":400,"full_checks":1,"avg_listings":322},{"month":"2026-06","trait":"Orange","market":"US","median":290,"full_checks":1,"avg_listings":70},{"month":"2026-06","trait":"Partial Pinstripe","market":"US","median":175,"full_checks":1,"avg_listings":85},{"month":"2026-06","trait":"Phantom","market":"US","median":275,"full_checks":1,"avg_listings":136},{"month":"2026-06","trait":"Pinstripe","market":"US","median":200,"full_checks":1,"avg_listings":211},{"month":"2026-06","trait":"Portholes","market":"US","median":200,"full_checks":1,"avg_listings":95},{"month":"2026-06","trait":"Quad-stripe","market":"US","median":300,"full_checks":1,"avg_listings":67},{"month":"2026-06","trait":"Red","market":"US","median":300,"full_checks":1,"avg_listings":128},{"month":"2026-06","trait":"Red Base","market":"US","median":300,"full_checks":1,"avg_listings":96},{"month":"2026-06","trait":"Soft Scale","market":"US","median":325,"full_checks":1,"avg_listings":75},{"month":"2026-06","trait":"Super Dalmatian","market":"US","median":400,"full_checks":1,"avg_listings":70},{"month":"2026-06","trait":"Tangerine","market":"US","median":300,"full_checks":1,"avg_listings":93},{"month":"2026-06","trait":"Tiger","market":"US","median":300,"full_checks":1,"avg_listings":60},{"month":"2026-06","trait":"Tri-color","market":"US","median":300,"full_checks":1,"avg_listings":354},{"month":"2026-06","trait":"White Wall","market":"US","median":350,"full_checks":1,"avg_listings":90},{"month":"2026-06","trait":"Yellow","market":"US","median":250,"full_checks":1,"avg_listings":99},{"month":"2026-06","trait":"Yellow Base","market":"US","median":325,"full_checks":1,"avg_listings":40},{"month":"2026-09","trait":null,"market":"US","median":260,"full_checks":1,"avg_listings":2478},{"month":"2026-09","trait":"Axanthic","market":"US","median":695,"full_checks":1,"avg_listings":31},{"month":"2026-09","trait":"Brindle","market":"US","median":150,"full_checks":1,"avg_listings":91},{"month":"2026-09","trait":"Cappuccino","market":"US","median":361,"full_checks":1,"avg_listings":92},{"month":"2026-09","trait":"Cream","market":"US","median":287,"full_checks":1,"avg_listings":150},{"month":"2026-09","trait":"Dalmatian","market":"US","median":193,"full_checks":1,"avg_listings":274},{"month":"2026-09","trait":"Dark","market":"US","median":250,"full_checks":1,"avg_listings":309},{"month":"2026-09","trait":"Drippy","market":"US","median":375,"full_checks":1,"avg_listings":151},{"month":"2026-09","trait":"Empty Back","market":"US","median":250,"full_checks":1,"avg_listings":110},{"month":"2026-09","trait":"Extreme Harlequin","market":"US","median":300,"full_checks":1,"avg_listings":414},{"month":"2026-09","trait":"Harlequin","market":"US","median":175,"full_checks":1,"avg_listings":488},{"month":"2026-09","trait":"Het Axanthic","market":"US","median":425,"full_checks":1,"avg_listings":36},{"month":"2026-09","trait":"Hypo","market":"US","median":399,"full_checks":1,"avg_listings":43},{"month":"2026-09","trait":"Lavender","market":"US","median":300,"full_checks":1,"avg_listings":121},{"month":"2026-09","trait":"Lilly White","market":"US","median":400,"full_checks":1,"avg_listings":359},{"month":"2026-09","trait":"Orange","market":"US","median":250,"full_checks":1,"avg_listings":111},{"month":"2026-09","trait":"Partial Pinstripe","market":"US","median":180,"full_checks":1,"avg_listings":166},{"month":"2026-09","trait":"Phantom","market":"US","median":253,"full_checks":1,"avg_listings":196},{"month":"2026-09","trait":"Pinstripe","market":"US","median":225,"full_checks":1,"avg_listings":315},{"month":"2026-09","trait":"Portholes","market":"US","median":199,"full_checks":1,"avg_listings":143},{"month":"2026-09","trait":"Quad-stripe","market":"US","median":275,"full_checks":1,"avg_listings":82},{"month":"2026-09","trait":"Red","market":"US","median":275,"full_checks":1,"avg_listings":188},{"month":"2026-09","trait":"Red Base","market":"US","median":300,"full_checks":1,"avg_listings":156},{"month":"2026-09","trait":"Sable","market":"US","median":680,"full_checks":1,"avg_listings":31},{"month":"2026-09","trait":"Soft Scale","market":"US","median":300,"full_checks":1,"avg_listings":85},{"month":"2026-09","trait":"Super Dalmatian","market":"US","median":375,"full_checks":1,"avg_listings":127},{"month":"2026-09","trait":"Tangerine","market":"US","median":299,"full_checks":1,"avg_listings":110},{"month":"2026-09","trait":"Tiger","market":"US","median":250,"full_checks":1,"avg_listings":81},{"month":"2026-09","trait":"Tri-color","market":"US","median":300,"full_checks":1,"avg_listings":464},{"month":"2026-09","trait":"White Wall","market":"US","median":300,"full_checks":1,"avg_listings":160},{"month":"2026-09","trait":"Yellow","market":"US","median":250,"full_checks":1,"avg_listings":140},{"month":"2026-09","trait":"Yellow Base","market":"US","median":299,"full_checks":1,"avg_listings":71},{"month":"2026-10","trait":null,"market":"US","median":250,"full_checks":2,"avg_listings":6215},{"month":"2026-10","trait":"Axanthic","market":"US","median":775,"full_checks":2,"avg_listings":140},{"month":"2026-10","trait":"Brindle","market":"US","median":155,"full_checks":2,"avg_listings":188},{"month":"2026-10","trait":"Cappuccino","market":"US","median":350,"full_checks":2,"avg_listings":348},{"month":"2026-10","trait":"Cream","market":"US","median":250,"full_checks":2,"avg_listings":349},{"month":"2026-10","trait":"Dalmatian","market":"US","median":175,"full_checks":2,"avg_listings":606},{"month":"2026-10","trait":"Dark","market":"US","median":269,"full_checks":2,"avg_listings":690},{"month":"2026-10","trait":"Drippy","market":"US","median":400,"full_checks":2,"avg_listings":412},{"month":"2026-10","trait":"Empty Back","market":"US","median":250,"full_checks":2,"avg_listings":282},{"month":"2026-10","trait":"Extreme Harlequin","market":"US","median":300,"full_checks":2,"avg_listings":961},{"month":"2026-10","trait":"Harlequin","market":"US","median":168,"full_checks":2,"avg_listings":1127},{"month":"2026-10","trait":"Het Axanthic","market":"US","median":450,"full_checks":2,"avg_listings":121},{"month":"2026-10","trait":"Hypo","market":"US","median":308,"full_checks":2,"avg_listings":108},{"month":"2026-10","trait":"Lavender","market":"US","median":288,"full_checks":2,"avg_listings":206},{"month":"2026-10","trait":"Lilly White","market":"US","median":400,"full_checks":2,"avg_listings":1072},{"month":"2026-10","trait":"Orange","market":"US","median":280,"full_checks":2,"avg_listings":281},{"month":"2026-10","trait":"Partial Pinstripe","market":"US","median":175,"full_checks":2,"avg_listings":336},{"month":"2026-10","trait":"Phantom","market":"US","median":250,"full_checks":2,"avg_listings":536},{"month":"2026-10","trait":"Pinstripe","market":"US","median":237,"full_checks":2,"avg_listings":845},{"month":"2026-10","trait":"Portholes","market":"US","median":200,"full_checks":2,"avg_listings":343},{"month":"2026-10","trait":"Quad-stripe","market":"US","median":290,"full_checks":2,"avg_listings":156},{"month":"2026-10","trait":"Red","market":"US","median":250,"full_checks":2,"avg_listings":449},{"month":"2026-10","trait":"Red Base","market":"US","median":294,"full_checks":2,"avg_listings":354},{"month":"2026-10","trait":"Reverse Pinstripe","market":"US","median":175,"full_checks":2,"avg_listings":41},{"month":"2026-10","trait":"Sable","market":"US","median":605,"full_checks":2,"avg_listings":106},{"month":"2026-10","trait":"Soft Scale","market":"US","median":345,"full_checks":2,"avg_listings":143},{"month":"2026-10","trait":"Super Dalmatian","market":"US","median":355,"full_checks":2,"avg_listings":355},{"month":"2026-10","trait":"Tangerine","market":"US","median":300,"full_checks":2,"avg_listings":231},{"month":"2026-10","trait":"Tiger","market":"US","median":288,"full_checks":2,"avg_listings":203},{"month":"2026-10","trait":"Tri-color","market":"US","median":298,"full_checks":2,"avg_listings":1184},{"month":"2026-10","trait":"White Wall","market":"US","median":337,"full_checks":2,"avg_listings":440},{"month":"2026-10","trait":"Yellow","market":"US","median":200,"full_checks":2,"avg_listings":354},{"month":"2026-10","trait":"Yellow Base","market":"US","median":296,"full_checks":2,"avg_listings":158}]');
 const generated_at = "2026-10-07T06:00:32.202164+00:00";
 const name = "Geck Inspect Price Index";
-const description = "Asking prices for crested geckos (Correlophus ciliatus) by trait and market, compiled by Geck Inspect from public listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe.";
+const description = "An asking-price snapshot from public marketplace listings of crested geckos (Correlophus ciliatus) in the United States, South Korea, Japan and Europe, by trait and market, compiled by Geck Inspect.";
 const url = "https://geckinspect.com/data";
-const license = "https://creativecommons.org/licenses/by/4.0/";
+const license = "Free to cite with a link: you may quote and cite these numbers, with a link to the page they came from.";
 const creator = "Geck Inspect";
 const attribution = "Geck Inspect Price Index, https://geckinspect.com/data";
-const methodology = ["Asking prices on open listings, not sale prices.", "Prices outside the US are converted to USD at stored exchange rates; shipping and import costs are not included.", "Only full catalog checks count. A partial check or the catch-up after an outage is left out.", "A trait is shown only when at least 5 listings carry it. trait null means all crested geckos in that market.", "p25, median and p75 are the 25th, 50th and 75th percentile asking price. monthly.median is the median of that month's daily medians.", "Trait labels are the marketplace labels as listed by sellers; a label does not prove genotype."];
+const methodology = ["Asking prices on open listings, not sale prices.", "Prices outside the US are converted to USD at stored exchange rates; shipping and import costs are not included.", "Only full catalog checks count. A partial check or the catch-up after an outage is left out.", "A row needs at least 30 listings to be shown. Rows with fewer than 100 are marked as a thin sample, because a few relisted geckos can move their median. thin: true marks those rows. trait null means all crested geckos in that market.", "A day counts toward a monthly median only when it had at least 30 listings; avg_listings is the average listing count of those days.", "p25, median and p75 are the 25th, 50th and 75th percentile asking price. monthly.median is the median of that month's daily medians.", "Trait labels are the marketplace labels as listed by sellers; a label does not prove genotype."];
+const licenseName = "Free to cite with a link";
 const bundledPriceIndex = {
   latest,
   monthly,
@@ -3194,8 +3684,60 @@ const bundledPriceIndex = {
   license,
   creator,
   attribution,
-  methodology
+  methodology,
+  licenseName
 };
+const PRICE_INDEX_MIN_LISTINGS = 30;
+const PRICE_INDEX_THIN_LISTINGS = 100;
+const PRICE_INDEX_WHAT = "an asking-price snapshot from public marketplace listings";
+const PRICE_DATA_TERMS = "Free to cite with a link: you may quote and cite these numbers, with a link to the page they came from.";
+const PRICE_INDEX_SAMPLE_RULE = `A row needs at least ${PRICE_INDEX_MIN_LISTINGS} listings to be shown. Rows with fewer than ${PRICE_INDEX_THIN_LISTINGS} are marked as a thin sample, because a few relisted geckos can move their median.`;
+function isPublishableRow(row) {
+  return Number(row?.listings) >= PRICE_INDEX_MIN_LISTINGS;
+}
+function isThinRow(row) {
+  const n = Number(row?.listings);
+  return n >= PRICE_INDEX_MIN_LISTINGS && n < PRICE_INDEX_THIN_LISTINGS;
+}
+const TRAIT_SLUGS = {
+  "Tri-color": "tricolor",
+  "Red Base": "red-base",
+  "Yellow Base": "yellow-base",
+  "Extreme Harlequin": "extreme-harlequin",
+  "Super Dalmatian": "super-dalmatian",
+  "Lilly White": "lilly-white",
+  "Soft Scale": "soft-scale",
+  "White Wall": "white-wall",
+  "Empty Back": "empty-back",
+  "Reverse Pinstripe": "pinstripe"
+};
+const SAME_NAME_TRAITS = /* @__PURE__ */ new Set([
+  "Harlequin",
+  "Pinstripe",
+  "Dalmatian",
+  "Tiger",
+  "Brindle",
+  "Axanthic",
+  "Cappuccino",
+  "Sable",
+  "Patternless",
+  "Lavender",
+  "Olive",
+  "Cream",
+  "Buckskin",
+  "Hypo",
+  "Phantom",
+  "Frappuccino"
+]);
+[.../* @__PURE__ */ new Set([...Object.values(TRAIT_SLUGS), ...[...SAME_NAME_TRAITS].map((t) => t.toLowerCase())])];
+function applyPricePolicy(index) {
+  if (!index || !Array.isArray(index.latest)) return index ?? null;
+  return {
+    ...index,
+    latest: index.latest.filter(isPublishableRow).map((row) => ({ ...row, thin: isThinRow(row) })),
+    monthly: (index.monthly || []).filter((row) => Number(row?.avg_listings) >= PRICE_INDEX_MIN_LISTINGS)
+  };
+}
 const __dirname$1 = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname$1, "../..");
 const SITE_URL = "https://geckinspect.com";
@@ -3238,12 +3780,20 @@ function normalizeMorph(m) {
     sources: m.sources || []
   };
 }
+({
+  ...Object.fromEntries(SIMPLE_TRAITS.map((t) => [t.id, t.confidence])),
+  ...Object.fromEntries(
+    COMPLEX_OPTIONS.filter((o) => o.confidence && o.pair?.[0] === o.value).map((o) => [o.value, o.confidence])
+  )
+});
+function listingsCell(row) {
+  return row.thin ? `${row.listings} (thin sample)` : String(row.listings);
+}
 const MARKET_NAMES = { US: "United States", KR: "South Korea", JP: "Japan", EU: "Europe" };
 const MARKET_ORDER = Object.keys(MARKET_NAMES);
 const byMarketOrder = (a, b) => MARKET_ORDER.indexOf(a.market) - MARKET_ORDER.indexOf(b.market);
 const MARKET_TRAIT_TO_SLUG = {
-  "tri-color": "tricolor",
-  phantom: "phantom-pinstripe"
+  "tri-color": "tricolor"
 };
 function priceRowsForMorph(index, morph) {
   if (!index) return [];
@@ -3253,6 +3803,17 @@ function priceRowsForMorph(index, morph) {
     const t = row.trait.toLowerCase();
     return names.has(t) || MARKET_TRAIT_TO_SLUG[t] === morph.slug;
   }).sort(byMarketOrder);
+}
+function priceIndexPointer(index, morph) {
+  const traits = [...new Set(priceRowsForMorph(index, morph).map((r) => r.trait))];
+  if (!traits.length) return null;
+  return {
+    name: "Geck Inspect Price Index",
+    traits,
+    json: `${SITE_URL}/data/price-index.json`,
+    csv: `${SITE_URL}/data/price-index.csv`,
+    terms: PRICE_DATA_TERMS
+  };
 }
 const usd = (n) => n == null ? "n/a" : `$${Math.round(Number(n)).toLocaleString("en-US")}`;
 function blockToMarkdown(block) {
@@ -3297,7 +3858,7 @@ function careSectionMarkdown(s, level = 3) {
   }
   return out.join("\n");
 }
-function morphMarkdown(m, { level = 3, full = false, priceIndex: priceIndex2 = null, nameOf: nameOf2 = (s) => s } = {}) {
+function morphMarkdown(m, { level = 3, full = false, priceIndex: priceIndex2 = null, priceTable = true, nameOf: nameOf2 = (s) => s } = {}) {
   const h = "#".repeat(level);
   const out = [`${h} ${m.name}`, "", `_Permalink: ${SITE_URL}/MorphGuide/${m.slug}_`, ""];
   const facts = [];
@@ -3328,15 +3889,22 @@ function morphMarkdown(m, { level = 3, full = false, priceIndex: priceIndex2 = n
   if (full && m.combinesWith?.length) {
     out.push(`**Often combined with:** ${m.combinesWith.map(nameOf2).join(", ")}`, "");
   }
-  if (full && priceIndex2) {
+  const pointer = full && !priceTable ? priceIndexPointer(priceIndex2, m) : null;
+  if (pointer) {
+    out.push(
+      `**Asking prices.** Not part of this morph catalog. The ${pointer.name} lists current asking prices for this morph under the trait label${pointer.traits.length > 1 ? "s" : ""} ${pointer.traits.map((t) => `"${t}"`).join(" and ")}: ${pointer.json} (CSV: ${pointer.csv}). ${pointer.terms}`,
+      ""
+    );
+  }
+  if (full && priceIndex2 && priceTable) {
     const rows = priceRowsForMorph(priceIndex2, m);
     if (rows.length) {
       out.push(
-        `**Current asking prices (Geck Inspect Price Index, ${rows[0].checked_on}).** Asking prices on public crested gecko listings, converted to USD, not sale prices. Full dataset: ${SITE_URL}/data/price-index.json`,
+        `**Current asking prices (Geck Inspect Price Index, ${rows[0].checked_on}).** Asking prices on public crested gecko listings, converted to USD, not sale prices. ${PRICE_DATA_TERMS} Full dataset: ${SITE_URL}/data/price-index.json`,
         "",
         "| Market | Listings | 25th percentile | Median | 75th percentile |",
         "| --- | --- | --- | --- | --- |",
-        ...rows.map((r) => `| ${MARKET_NAMES[r.market] || r.market} | ${r.listings} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`),
+        ...rows.map((r) => `| ${MARKET_NAMES[r.market] || r.market} | ${listingsCell(r)} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`),
         ""
       );
     }
@@ -3355,15 +3923,15 @@ const CARE = CARE_CATEGORIES.flatMap(
   (cat) => (cat.sections || []).map((s) => ({ id: s.id, title: s.title, category: cat.id, blocks: s.body || [] }))
 );
 const SERVER_INFO = { name: "geck-inspect", title: "Geck Inspect crested gecko reference", version: "1.0.0" };
-const INSTRUCTIONS = "Crested gecko (Correlophus ciliatus) reference data from Geck Inspect: morphs, care, genetics odds and asking prices. Cite the url in each answer. Prices are asking prices on public listings, not sale prices.";
-let priceCache = { at: 0, data: bundledPriceIndex };
+const INSTRUCTIONS = `Crested gecko (Correlophus ciliatus) reference data from Geck Inspect: morphs, care, genetics odds and asking prices. Cite the url in each answer. Prices are ${PRICE_INDEX_WHAT}, not sale prices, and are free to cite with a link to the page they came from.`;
+let priceCache = { at: 0, data: applyPricePolicy(bundledPriceIndex) };
 async function priceIndex() {
   if (Date.now() - priceCache.at < 60 * 60 * 1e3) return priceCache.data;
   try {
     const res = await fetch(`${SITE_URL}/data/price-index.json`, { signal: AbortSignal.timeout(4e3) });
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data?.latest)) priceCache = { at: Date.now(), data };
+      if (Array.isArray(data?.latest)) priceCache = { at: Date.now(), data: applyPricePolicy(data) };
     }
   } catch {
     priceCache = { ...priceCache, at: Date.now() };
@@ -3405,7 +3973,7 @@ const TOOLS = [
   {
     name: "get_morph",
     title: "Get one crested gecko morph",
-    description: "Full Morph Guide entry for one crested gecko morph: definition, identification, lookalikes and how to tell them apart, inheritance and competing genetics models, history, typical price and current asking prices by market, and sources.",
+    description: "Full Morph Guide entry for one crested gecko morph: definition, identification, lookalikes and how to tell them apart, inheritance and competing genetics models, history, typical price and current asking prices by market where known, and sources.",
     inputSchema: {
       type: "object",
       properties: { morph: { type: "string", description: 'Slug, name or alias, e.g. "lilly-white", "Harlequin", "LW"' } },
@@ -3434,7 +4002,7 @@ const TOOLS = [
   {
     name: "get_prices",
     title: "Crested gecko asking prices",
-    description: "Geck Inspect Price Index: 25th percentile, median and 75th percentile asking price in USD by trait and market (US, KR, JP, EU) from the latest full check of public listings, plus monthly medians. Asking prices, not sale prices.",
+    description: `Geck Inspect Price Index, ${PRICE_INDEX_WHAT}: 25th percentile, median and 75th percentile asking price in USD by trait and market (US, KR, JP, EU) from the latest full check, plus monthly medians. Asking prices, not sale prices. Free to cite with a link to the page they came from.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -3509,10 +4077,10 @@ const HANDLERS = {
     const monthly2 = include_monthly ? (index.monthly || []).filter((r) => (!m || r.market === m) && (t ? (r.trait || "").toLowerCase() === t : !r.trait)) : void 0;
     const traits = [...new Set(index.latest.map((r) => r.trait).filter(Boolean))].sort();
     if (!latest2.length) {
-      return text(`No price rows for ${trait || "all geckos"}${m ? ` in ${m}` : ""} (a trait needs 5+ listings). Traits with data: ${traits.join(", ")}.`, { latest: [], traits });
+      return text(`No price rows for ${trait || "all geckos"}${m ? ` in ${m}` : ""} (a row needs at least ${PRICE_INDEX_MIN_LISTINGS} listings). Traits with data: ${traits.join(", ")}.`, { latest: [], traits });
     }
-    const lines = latest2.map((r) => `- ${MARKET_NAMES[r.market] || r.market}, ${r.trait || "all crested geckos"} (${r.checked_on}, ${r.listings} listings): median $${r.median}, middle half $${r.p25} to $${r.p75}`);
-    const note = `Asking prices on public listings, converted to USD, not sale prices. Source: Geck Inspect Price Index, ${SITE_URL}/data`;
+    const lines = latest2.map((r) => `- ${MARKET_NAMES[r.market] || r.market}, ${r.trait || "all crested geckos"} (${r.checked_on}, ${r.listings} listings${r.thin ? ", thin sample" : ""}): median $${r.median}, middle half $${r.p25} to $${r.p75}`);
+    const note = `Asking prices on public listings, converted to USD, not sale prices. ${PRICE_INDEX_SAMPLE_RULE} ${PRICE_DATA_TERMS} Source: Geck Inspect Price Index, ${SITE_URL}/data`;
     return text(`${lines.join("\n")}
 
 ${note}`, { latest: latest2, monthly: monthly2, note, generated_at: index.generated_at });

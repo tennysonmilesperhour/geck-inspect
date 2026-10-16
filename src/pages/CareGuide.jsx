@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { lazy } from '@/lib/lazyWithRetry';
 // Markdown is only needed for community-written sections, which arrive
 // from the database after the page has rendered, so the parser (about
@@ -27,6 +27,7 @@ import Seo from '@/components/seo/Seo';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import ContentBlock from '@/components/careguide/ContentBlock';
 import KeepersGuideTabs from '@/components/careguide/KeepersGuideTabs';
+import { GUIDE_WAIT_MS, cachedGuideFor, hasKeepersGuide, loadGuideFor, preloadKeepersGuides } from '@/components/careguide/keepersGuides';
 import ContentSignupPrompt, { careSignupCopy } from '@/components/public/ContentSignupPrompt';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 
@@ -308,6 +309,40 @@ export default function CareGuidePage() {
   const [activeId, setActiveId] = useState(CARE_CATEGORIES[0].id);
   const [dbSections, setDbSections] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const requestedId = useRef(activeId);
+
+  // The Keeper's Guides for the other topics download once the page has
+  // drawn (src/components/careguide/keepersGuides.js), so a later topic
+  // switch finds its guide already here.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    if (window.requestIdleCallback) {
+      const handle = window.requestIdleCallback(preloadKeepersGuides, { timeout: 4000 });
+      return () => window.cancelIdleCallback?.(handle);
+    }
+    const timer = setTimeout(preloadKeepersGuides, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // A topic shows together with its Keeper's Guide: when the guide is not
+  // here yet (it is normally preloaded), the switch waits for it, but for
+  // GUIDE_WAIT_MS at most, so a tap on a slow connection still answers.
+  // After that the topic opens with the guide's space held, and the guide
+  // fills it when it arrives (KeepersGuideTabs.jsx), so nothing jumps.
+  const selectCategory = (id) => {
+    requestedId.current = id;
+    let shown = false;
+    const show = () => {
+      if (shown || requestedId.current !== id) return;
+      shown = true;
+      setActiveId(id);
+      setSearchTerm('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    if (cachedGuideFor(id) || !hasKeepersGuide(id)) return show();
+    setTimeout(show, GUIDE_WAIT_MS);
+    loadGuideFor(id).then(show);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -468,15 +503,16 @@ export default function CareGuidePage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
             {/* Nav */}
-            <aside className="lg:block">
+            <aside
+              className="lg:block"
+              onPointerEnter={preloadKeepersGuides}
+              onFocus={preloadKeepersGuides}
+              onTouchStart={preloadKeepersGuides}
+            >
               <CategoryNav
                 categories={CARE_CATEGORIES}
                 activeId={activeId}
-                onSelect={(id) => {
-                  setActiveId(id);
-                  setSearchTerm('');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+                onSelect={selectCategory}
                 sectionCounts={sectionCounts}
               />
             </aside>

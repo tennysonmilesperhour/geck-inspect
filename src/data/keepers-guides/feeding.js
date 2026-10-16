@@ -22,16 +22,16 @@ export const FEEDING_GUIDE = {
       kicker: 'The Definitive Guide',
       title: "My gecko isn't eating.",
       lead:
-        'A complete troubleshooting framework for keepers of every level - from first-time owners to breeders managing full collections.',
+        'A complete troubleshooting framework for keepers of every level, from first-time owners to breeders managing full collections.',
       tags: ['Diagnose', 'Husbandry', 'Life stage', 'Reproduction', 'Red flags', 'Vet'],
     },
 
     // 2 - Step zero
     {
       kicker: 'Step Zero',
-      title: "First - is your gecko actually not eating?",
+      title: "First: is your gecko actually not eating?",
       lead:
-        'Cresties are crepuscular and lick - not gulp. Most "non-eaters" are eating. Before troubleshooting anything, rule out the illusion of food refusal.',
+        'Cresties are crepuscular and lick, not gulp. Most "non-eaters" are eating. Before troubleshooting anything, rule out the illusion of food refusal.',
       blocks: [
         {
           type: 'cards',
@@ -63,7 +63,7 @@ export const FEEDING_GUIDE = {
       kicker: 'Diagnostic',
       title: 'The 6-point rapid check',
       lead:
-        'Before anything else - run this list. 9 out of 10 feeding issues resolve here.',
+        'Before anything else, run this list. 9 out of 10 feeding issues resolve here.',
       blocks: [
         {
           type: 'cards',
@@ -121,7 +121,7 @@ export const FEEDING_GUIDE = {
               meta: 'Temperature',
               title: 'Target: 72-78°F day / 65-72°F night',
               items: [
-                'Above 85°F causes heat stress - potentially fatal.',
+                'Above 82°F (28°C) causes heat stress, which can be fatal.',
                 'Below 65°F during the day triggers slowed metabolism and appetite collapse.',
                 "Too-small tanks have no gradient; gecko can't self-regulate.",
                 'Use a digital probe thermometer, not stick-ons.',
@@ -131,7 +131,7 @@ export const FEEDING_GUIDE = {
               meta: 'Humidity',
               title: 'Target: 80%+ post-mist → 40-50% daytime',
               items: [
-                'Constant 80%+ is just as deadly as too dry - oversaturation kills.',
+                'Constant 80%+ is just as deadly as too dry. Oversaturation kills.',
                 'Let the enclosure dry out between mistings.',
                 'Dry air all day = dehydration → no interest in solid food.',
                 'Keep a digital hygrometer visible at all times.',
@@ -141,9 +141,9 @@ export const FEEDING_GUIDE = {
               meta: 'Enclosure',
               title: 'Size to the gecko, not the goal',
               items: [
-                'Hatchlings <12g: small critter keeper or 6qt tub.',
-                'Juveniles 12-25g: medium keeper or 12×12×18.',
-                'Adults 25g+: 18×18×24 minimum; 20-gal tall works.',
+                'Hatchlings and juveniles under about 10g: small critter keeper or 6qt tub.',
+                'Juveniles from about 10g: medium keeper or 12×12×18.',
+                'Sub-adults from about 25g, and adults: 18×18×24 minimum; 20-gal tall works.',
                 'Oversized enclosures stress small geckos and hide food.',
               ],
             },
@@ -171,7 +171,7 @@ export const FEEDING_GUIDE = {
             {
               title: 'Brand rotation',
               text:
-                'Pangea, Repashy, Lugarti, Black Panther Zoological - rotate flavors every 1-2 feedings. Bored palates refuse food.',
+                'Pangea, Repashy, Lugarti, Black Panther Zoological: rotate flavors every 1-2 feedings. Bored palates refuse food.',
             },
             {
               title: 'Consistency',
@@ -203,9 +203,9 @@ export const FEEDING_GUIDE = {
               heading: 'DO',
               tone: 'fern',
               items: [
-                'Shallow, silicone or bottle cap - they walk INTO it, not climb up',
+                'Shallow, silicone or bottle cap: they walk INTO it, not climb up',
                 'Elevated on a feeding ledge near a hide',
-                "Small portion, thin layer - don't waste CGD on day-old slop",
+                "Small portion, thin layer. Don't waste CGD on day-old slop",
                 'One ground-level dish + one elevated for insecure eaters',
               ],
             },
@@ -215,7 +215,7 @@ export const FEEDING_GUIDE = {
               items: [
                 'Deep plastic cups with slick lips',
                 'Floor-only placement in a tall enclosure',
-                'Hand-feeding as a first resort - creates dependence',
+                'Hand-feeding as a first resort, which creates dependence',
                 "Leaving old food to 'maybe get eaten eventually'",
               ],
             },
@@ -234,16 +234,16 @@ export const FEEDING_GUIDE = {
       kicker: 'Stress',
       title: 'The acclimation window & what to do inside it',
       lead:
-        'The rule most new keepers miss: 2-4 weeks of reduced eating after a move is normal. Any major change - new home, new enclosure, redecoration, new room, new people in the household, a visit to a petsitter - resets the clock.',
+        'The rule most new keepers miss: 2-4 weeks of reduced eating after a move is normal. Any major change (new home, new enclosure, redecoration, new room, new people in the household, a visit to a petsitter) resets the clock.',
       blocks: [
         { type: 'heading', text: 'Do nothing except:' },
         {
           type: 'checklist',
           items: [
             'Offer fresh CGD every feeding night, remove by morning',
-            'Mist normally - hydration matters more than food short-term',
+            'Mist normally: hydration matters more than food short-term',
             'No handling for 7-14 days minimum',
-            'Keep lighting and traffic low - let them observe you from safety',
+            'Keep lighting and traffic low, and let them observe you from safety',
             'Weigh once a week (quick, <30 seconds)',
           ],
         },
@@ -269,8 +269,8 @@ export const FEEDING_GUIDE = {
         {
           type: 'stats',
           items: [
-            { value: '2-4g', label: 'Typical hatchling weight' },
-            { value: '~1g/mo', label: 'Growth', note: 'expected pace' },
+            { value: '1.5-3g', label: 'Typical hatch weight' },
+            { value: '0.5-1.5g/mo', label: 'Growth', note: 'expected pace' },
             { value: '5/wk', label: 'CGD available', note: 'nights per week' },
             { value: '1-2 wk', label: 'Shedding cadence' },
           ],
@@ -288,7 +288,7 @@ export const FEEDING_GUIDE = {
             {
               title: "Expect 'invisible' eating for weeks",
               text:
-                "Breeders report this constantly - the gecko looks like it's never eaten, then suddenly it's 6g. Trust poop and weight, not direct observation.",
+                "Breeders report this constantly: the gecko looks like it's never eaten, then suddenly it's 6g. Trust poop and weight, not direct observation.",
             },
             {
               title: "A 'nose dab' of CGD is fair game",
@@ -309,7 +309,7 @@ export const FEEDING_GUIDE = {
               title: 'Weakest hatchling of a clutch often fails',
               tone: 'amber',
               text:
-                'Sad but real - not every hatchling thrives, even in perfect conditions. Focus on supportive care; consult a vet if weight loss is rapid.',
+                'Sad but real: not every hatchling thrives, even in perfect conditions. Focus on supportive care; consult a vet if weight loss is rapid.',
             },
           ],
         },
@@ -321,7 +321,7 @@ export const FEEDING_GUIDE = {
       kicker: 'Life Stage · 3-12 months',
       title: 'Juveniles: growth phase + first appetite shift',
       lead:
-        "Juveniles are hungry - usually. When they're not, it's almost always one of three things:",
+        "Juveniles are hungry, usually. When they're not, it's almost always one of three things:",
       blocks: [
         {
           type: 'steps',
@@ -329,12 +329,12 @@ export const FEEDING_GUIDE = {
             {
               title: 'The 6-to-8 month slowdown',
               text:
-                'A natural appetite taper as they transition to adult metabolism. What was 5×/week becomes 3-4×/week. NOT a problem - adjust expectations and feeding frequency downward.',
+                'A natural appetite taper as they transition to adult metabolism. What was 5×/week becomes 3-4×/week. NOT a problem. Adjust expectations and feeding frequency downward.',
             },
             {
               title: 'Outgrew the enclosure too fast',
               text:
-                "Owners often upgrade to an adult tank at 15g 'because they're growing.' Too much space = lost food, stress, and weight stalls. Wait until 20g+ for full-size adult enclosures.",
+                "Owners often upgrade to an adult tank at 15g 'because they're growing.' Too much space = lost food, stress, and weight stalls. Wait until about 25g for full-size adult enclosures.",
             },
             {
               title: 'Shedding cycle dominates',
@@ -347,17 +347,17 @@ export const FEEDING_GUIDE = {
           type: 'callout',
           tone: 'info',
           text:
-            'Expected adult weight by 12 months: 15-20g (sexual maturity). By 18 months: 25-40g. Track it.',
+            'A typical pace: about 15g by 12 months (the end of the juvenile stage) and about 35g by 18 months (adult). Healthy geckos often run a few months ahead or behind. Track the trend.',
         },
       ],
     },
 
     // 9 - Adults
     {
-      kicker: 'Life Stage · 1-5 years',
+      kicker: 'Life Stage · 18 months to 10 years',
       title: 'Adults: when sudden loss of appetite means something',
       lead:
-        'Healthy adults eat 2-3× per week. A sudden change from that baseline is the signal worth investigating.',
+        'Healthy adults eat about 3× per week. A sudden change from that baseline is the signal worth investigating.',
       blocks: [
         { type: 'heading', text: 'Usual suspects (in order)' },
         {
@@ -374,7 +374,7 @@ export const FEEDING_GUIDE = {
             },
             {
               title: 'Shedding (less obvious in adults)',
-              text: 'Adults shed every 4-8 weeks - easy to miss if colors are dark.',
+              text: 'Adults shed every 4-6 weeks, which is easy to miss if colors are dark.',
             },
             {
               title: 'Breeding season behavior (Mar-Oct)',
@@ -391,10 +391,10 @@ export const FEEDING_GUIDE = {
         {
           type: 'kv',
           rows: [
-            { label: 'Weight range', value: '30-55g (obese above ~65g)' },
-            { label: 'Feeding frequency', value: 'CGD 2-3× per week' },
+            { label: 'Weight range', value: '35-60g (obese above ~65g)' },
+            { label: 'Feeding frequency', value: 'CGD about 3× per week' },
             { label: 'Insects', value: 'Optional, 1× per week if at all' },
-            { label: 'Shed cycle', value: 'Every 4-8 weeks' },
+            { label: 'Shed cycle', value: 'Every 4-6 weeks' },
             { label: 'Expected poop', value: 'Pellet + white urates, regular cadence' },
             { label: 'Weight fluctuation', value: '±2-3g is normal across a year' },
           ],
@@ -404,10 +404,10 @@ export const FEEDING_GUIDE = {
 
     // 10 - Seniors
     {
-      kicker: 'Life Stage · 5+ years',
+      kicker: 'Life Stage · 10+ years',
       title: 'Senior geckos: less appetite is the norm, not the alarm',
       lead:
-        'Cresties live 15-20 years with good care. Appetite tapers naturally from age ~5 onward. The goal shifts from growth to maintenance.',
+        'Cresties live 15-20 years with good care. Appetite tapers naturally from about age 10 onward. The goal shifts from growth to maintenance.',
       blocks: [
         {
           type: 'compare',
@@ -440,7 +440,7 @@ export const FEEDING_GUIDE = {
               items: [
                 'Vet visit with fecal screen',
                 'Offer easier-to-consume CGD (thinner)',
-                'Reduce enclosure complexity - fewer obstacles',
+                'Reduce enclosure complexity: fewer obstacles',
                 'Hand-present food on a spoon if advised',
                 'Consider heated hide during cold months',
               ],
@@ -463,7 +463,7 @@ export const FEEDING_GUIDE = {
               meta: 'Pre-lay (final days)',
               title: 'May reject food entirely 2-5 days before laying',
               text:
-                "Eggs press on stomach; no room. Syringe-regurgitation is common - don't force-feed here. Offer water and a proper lay box.",
+                "Eggs press on stomach; no room. Syringe-regurgitation is common, so don't force-feed here. Offer water and a proper lay box.",
             },
             {
               meta: 'Post-lay recovery',
@@ -475,11 +475,11 @@ export const FEEDING_GUIDE = {
               meta: 'Between clutches',
               title: 'Should be voracious',
               text:
-                'A mature female lays every 25-40 days in season. Between clutches she must rebuild calcium. Check her calcium sacs (back of mouth) - pale or shrunken = rest her from breeding.',
+                'A mature female lays every 4-6 weeks in season. Between clutches she must rebuild calcium. Check her calcium sacs (back of mouth): if they are pale or shrunken, rest her from breeding.',
             },
             {
               meta: 'Infertile clutches (solo females)',
-              title: 'Same cycle - even without a male',
+              title: 'Same cycle, even without a male',
               text:
                 'Females store sperm and can lay infertile eggs regardless. If your lone female stopped eating and gained weight? Could be gravid. Provide a lay box.',
             },
@@ -500,7 +500,7 @@ export const FEEDING_GUIDE = {
       kicker: 'Reproduction · Males & Season',
       title: 'Males, breeding season, and cohab dynamics',
       lead:
-        "Breeding season in the Northern Hemisphere runs late March to late October. Both sexes show appetite changes - here's how to read them.",
+        "Breeding season in the Northern Hemisphere runs late March to late October. Both sexes show appetite changes. Here's how to read them.",
       blocks: [
         {
           type: 'compare',
@@ -510,19 +510,19 @@ export const FEEDING_GUIDE = {
               tone: 'fern',
               items: [
                 'Early-season appetite drop: 1-2 weeks of reduced eating as hormones spike.',
-                'Searching behavior: pacing, glass-running, scent marking - calories burned elsewhere.',
+                'Searching behavior: pacing, glass-running, scent marking. Calories burned elsewhere.',
                 'Returns to normal: usually self-resolves within a few weeks once paired or season settles.',
-                'No intervention needed - unless weight drops >10% of baseline.',
+                'No intervention needed, unless weight drops >10% of baseline.',
               ],
             },
             {
               heading: 'FEMALE-IN-PAIR STRESS',
               tone: 'amber',
               items: [
-                'Male harassment: persistent male can stress a female into stopping eating - even without obvious aggression.',
+                'Male harassment: persistent male can stress a female into stopping eating, even without obvious aggression.',
                 'Signs: female hides constantly, avoids the ground, loses weight despite lay cycle being normal.',
                 "Fix: separate. Full stop. No 'wait and see.' Females can die from chronic breeding stress.",
-                'Rest rule: never more than 7-8 clutches per year - calcium reserves get depleted.',
+                'Rest rule: never more than 7-8 clutches per year, or calcium reserves get depleted.',
               ],
             },
           ],
@@ -533,9 +533,9 @@ export const FEEDING_GUIDE = {
     // 13 - Shedding
     {
       kicker: 'Natural Cycles',
-      title: 'Shedding: appetite loss is expected - track the dates',
+      title: 'Shedding: appetite loss is expected, so track the dates',
       lead:
-        "A healthy crestie can go off food for 2-3 days BEFORE and 1-2 days AFTER each shed. That's up to 5 days of 'not eating' per shed event - completely normal.",
+        "A healthy crestie can go off food for 2-3 days BEFORE and 1-2 days AFTER each shed. That's up to 5 days of 'not eating' per shed event, which is completely normal.",
       blocks: [
         {
           type: 'steps',
@@ -550,7 +550,7 @@ export const FEEDING_GUIDE = {
           type: 'callout',
           tone: 'warn',
           text:
-            'Stuck shed - especially on toes or tail tip - can cause appetite loss AND limb loss. Check every shed.',
+            'Stuck shed (especially on toes or tail tip) can cause appetite loss AND limb loss. Check every shed.',
         },
       ],
     },
@@ -560,7 +560,7 @@ export const FEEDING_GUIDE = {
       kicker: 'Seasonal',
       title: 'Winter slowdown & partial brumation',
       lead:
-        "Cresties don't 'brumate' like bearded dragons do - but they DO slow down in winter. Even in a temperature-controlled home, internal cues reduce appetite seasonally.",
+        "Cresties don't 'brumate' like bearded dragons do, but they DO slow down in winter. Even in a temperature-controlled home, internal cues reduce appetite seasonally.",
       blocks: [
         { type: 'heading', text: "What's normal in winter" },
         {
@@ -568,7 +568,7 @@ export const FEEDING_GUIDE = {
           items: [
             'Appetite drops 30-50% from summer baseline',
             'Activity reduces; more time in hides',
-            'Still drink water - hydration persists',
+            'Still drink water: hydration persists',
             'Weight should remain stable (within 5-10%)',
             'Returns to normal in spring with rising temps',
           ],
@@ -578,14 +578,14 @@ export const FEEDING_GUIDE = {
           tone: 'warn',
           title: "When it's NOT seasonal",
           text:
-            "If weight loss exceeds 10% of baseline - it's not brumation, it's illness. Seasonal slowdown does not produce visible weight loss.",
+            "If weight loss exceeds 10% of baseline, it's not brumation, it's illness. Seasonal slowdown does not produce visible weight loss.",
         },
         {
           type: 'callout',
           tone: 'info',
           title: 'For breeders',
           text:
-            "Intentional cooling is controversial. Most modern breeders (ACR, NEHERP) keep stable temps year-round and report excellent fertility. Cooling isn't required to trigger breeding in this species. It CAN help females rest and rebuild calcium - but only healthy, mature adults should experience any cooling period, and drops should never go below 65°F.",
+            "Intentional cooling is controversial. Most modern breeders (ACR, NEHERP) keep stable temps year-round and report excellent fertility. Cooling isn't required to trigger breeding in this species. It CAN help females rest and rebuild calcium, but only healthy, mature adults should experience any cooling period, and drops should never go below 65°F.",
         },
       ],
     },
@@ -628,7 +628,7 @@ export const FEEDING_GUIDE = {
     // 16 - Vet
     {
       kicker: 'Veterinary',
-      title: "When to see the vet - and what they'll actually do",
+      title: "When to see the vet, and what they'll actually do",
       lead:
         'An experienced reptile vet is not optional equipment for serious keepers. Find one BEFORE you need one.',
       blocks: [
@@ -643,7 +643,7 @@ export const FEEDING_GUIDE = {
                 'Any weight loss >10% of baseline',
                 'Any symptom on the red-flag list',
                 'Egg-laying female lethargic + distended',
-                'New gecko - routine fecal screen within first 60 days',
+                'New gecko: routine fecal screen within first 60 days',
                 'Every 12 months for routine wellness (adults)',
               ],
             },
@@ -657,7 +657,7 @@ export const FEEDING_GUIDE = {
                 'X-ray if egg-binding or impaction suspected',
                 'Panacur (fenbendazole) for most common parasites',
                 'Fluid therapy for severe dehydration',
-                'Husbandry review - bring photos of your setup',
+                'Husbandry review: bring photos of your setup',
               ],
             },
           ],
@@ -686,7 +686,7 @@ export const FEEDING_GUIDE = {
             'Vet has instructed you to do so, OR',
             'Weight loss is >15% and getting worse',
             'Visible skinny tail / bone prominence',
-            "Gecko is still alert (NOT comatose - that's vet only)",
+            "Gecko is still alert (NOT comatose, which is vet only)",
             'You have proper materials on hand',
           ],
         },
@@ -694,10 +694,10 @@ export const FEEDING_GUIDE = {
         {
           type: 'steps',
           items: [
-            { title: 'Thin the CGD', text: 'Mix extra-watery - pourable smoothie consistency.' },
+            { title: 'Thin the CGD', text: 'Mix extra-watery: pourable smoothie consistency.' },
             { title: 'Use a plastic syringe or spoon', text: '1-3cc plastic, no needle. Or small plastic spoon.' },
             {
-              title: "Touch the snout - don't force",
+              title: "Touch the snout, don't force",
               text: 'Place a drop on the nose. Let them lick it off. Repeat. Never pry open.',
             },
             { title: 'Stop at 0.2-0.5ml', text: 'Tiny amounts. Wait for swallowing. Never squirt in volume.' },
@@ -754,7 +754,7 @@ export const FEEDING_GUIDE = {
               tone: 'ruby',
               title: 'Medical  ·  Immediate',
               text:
-                'Weight loss >10%, red flags, prolonged refusal. Vet - not more troubleshooting.',
+                'Weight loss >10%, red flags, prolonged refusal. Vet, not more troubleshooting.',
             },
           ],
         },
@@ -770,7 +770,7 @@ export const FEEDING_GUIDE = {
     // 19 - Decision tree
     {
       kicker: 'Quick Reference',
-      title: 'The decision tree - laminate this',
+      title: 'The decision tree: laminate this',
       blocks: [
         {
           type: 'tree',
@@ -839,13 +839,13 @@ export const FEEDING_GUIDE = {
       kicker: 'Closing Principle',
       title: 'A healthy crested gecko will not starve itself.',
       lead:
-        'If your husbandry is right, your gecko is past acclimation, and there are no red flags - patience is the answer 90% of the time. Weigh weekly. Trust the poop. Rotate flavors. Let them settle.',
+        'If your husbandry is right, your gecko is past acclimation, and there are no red flags, patience is the answer 90% of the time. Weigh weekly. Trust the poop. Rotate flavors. Let them settle.',
       blocks: [
         {
           type: 'callout',
           tone: 'warn',
           text:
-            'For the other 10% - move fast. Weight loss compounds. A gecko at 5% deficit today is at 10% in a week. Early vet visits save lives that late ones cannot.',
+            'For the other 10%, move fast. Weight loss compounds. A gecko at 5% deficit today is at 10% in a week. Early vet visits save lives that late ones cannot.',
         },
       ],
     },

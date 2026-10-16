@@ -5,13 +5,17 @@
  * full camera resolution (up to the 10 MB cap) and served as-is, which
  * is the biggest storage + egress cost driver and a mobile LCP hazard.
  * This module downscales an image to a sane ceiling and re-encodes it to
- * WebP in the browser before it is ever uploaded.
+ * WebP in the browser before it is ever uploaded. It also makes the
+ * small thumbnail stored beside each photo (makeThumbnail, below).
  *
  * It is deliberately fail-safe: animated GIFs, already-small files,
  * non-DOM contexts (SSR/prerender), and any decode/encode error all fall
  * back to returning the original File untouched. Resizing must never
  * block an upload.
  */
+import { THUMBNAIL } from '@/lib/photoThumbnails';
+
+export { THUMBNAIL };
 
 export const RESIZE_DEFAULTS = {
   maxEdge: 1600, // longest side, in CSS pixels
@@ -85,19 +89,86 @@ export function targetDimensions(width, height, maxEdge) {
   };
 }
 
+// Formats every consumer of an uploaded photo can read, including the
+// Morph ID analyzer. Anything else is converted to WebP on upload.
+const WIDELY_READ_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+const EXTENSION_FOR = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' };
+
+function canvasAvailable() {
+  return (
+    typeof document !== 'undefined' &&
+    typeof createImageBitmap !== 'undefined' &&
+    typeof HTMLCanvasElement !== 'undefined'
+  );
+}
+
+// What shows through transparent areas when an image has to be written as
+// JPEG (which has no transparency): the dark card colour, so a cut-out
+// gecko on a clear PNG background sits on the card instead of on black.
+export const JPEG_BACKGROUND = '#0f172a';
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+}
+
+/**
+ * Draw a decoded image at width x height and encode it, WebP first.
+ *
+ * Safari cannot write WebP from a canvas: asked for WebP, it quietly
+ * returns a PNG, which for a photo is five to ten times larger. That is
+ * where the 1 to 5 MB ".webp" photos in the bucket came from (77 of 167
+ * in October 2026). When the browser ignores the WebP request, the image
+ * is written as JPEG instead if `jpegFallback` allows it (a JPEG source
+ * has no transparency to lose, and a thumbnail always sits on a solid
+ * card). Returns null when nothing could be encoded.
+ */
+async function drawAndEncode(bitmap, width, height, quality, { jpegFallback }) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  // The default smoothing is 'low', which turns fine patterns (a
+  // Harlequin's pattern, a Dalmatian's spots) into jagged noise when a
+  // 12 MP photo is drawn down to a thumbnail in one step.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(bitmap, 0, 0, width, height);
+
+  const webp = await canvasToBlob(canvas, 'image/webp', quality);
+  // An empty type means the browser did not say; take it as the WebP asked for.
+  if (webp && (webp.type === 'image/webp' || !webp.type)) return webp;
+  if (jpegFallback) {
+    const flat = document.createElement('canvas');
+    flat.width = width;
+    flat.height = height;
+    const flatCtx = flat.getContext('2d');
+    if (flatCtx) {
+      flatCtx.fillStyle = JPEG_BACKGROUND;
+      flatCtx.fillRect(0, 0, width, height);
+      flatCtx.drawImage(canvas, 0, 0);
+      const jpeg = await canvasToBlob(flat, 'image/jpeg', quality);
+      if (jpeg && jpeg.type === 'image/jpeg') return jpeg;
+    }
+  }
+  return webp || null;
+}
+
+function renamed(name, type) {
+  const base = String(name || 'image').replace(/\.[a-zA-Z0-9]+$/, '') || 'image';
+  return `${base}.${EXTENSION_FOR[type] || 'webp'}`;
+}
+
 /**
  * Downscale + WebP-encode a File/Blob for upload. Returns a new File on
  * success, or the original file unchanged when resizing is skipped or
  * fails.
  *
  * @param {File|Blob} file
- * @param {object} [opts] - overrides for RESIZE_DEFAULTS
+ * @param {object} [opts]: overrides for RESIZE_DEFAULTS
  * @returns {Promise<File|Blob>}
  */
-// Formats every consumer of an uploaded photo can read, including the
-// Morph ID analyzer. Anything else is converted to WebP on upload.
-const WIDELY_READ_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-
 export async function downscaleImage(file, opts = {}) {
   const { maxEdge, quality, skipUnderBytes } = { ...RESIZE_DEFAULTS, ...opts };
 
@@ -109,13 +180,7 @@ export async function downscaleImage(file, opts = {}) {
 
   // Browser-only. In prerender/SSR or any environment without the canvas
   // and bitmap APIs, return the original untouched.
-  if (
-    typeof document === 'undefined' ||
-    typeof createImageBitmap === 'undefined' ||
-    typeof HTMLCanvasElement === 'undefined'
-  ) {
-    return file;
-  }
+  if (!canvasAvailable()) return file;
 
   try {
     // `imageOrientation: 'from-image'` bakes in EXIF rotation so portrait
@@ -134,33 +199,65 @@ export async function downscaleImage(file, opts = {}) {
       return file;
     }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      bitmap.close?.();
-      return file;
-    }
-    ctx.drawImage(bitmap, 0, 0, width, height);
+    const blob = await drawAndEncode(bitmap, width, height, quality, {
+      jpegFallback: file.type === 'image/jpeg',
+    });
     bitmap.close?.();
-
-    const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, 'image/webp', quality),
-    );
     if (!blob) return file;
 
     // If the re-encode didn't actually shrink an unscaled image, keep the
     // original (avoids bloating tiny PNGs into larger WebPs).
     if (!scaled && !mustReencode && blob.size >= file.size) return file;
 
-    const newName = `${(file.name || 'image').replace(/\.[a-zA-Z0-9]+$/, '')}.webp`;
-    return new File([blob], newName, {
-      type: 'image/webp',
+    const type = blob.type || 'image/webp';
+    return new File([blob], renamed(file.name, type), {
+      type,
       lastModified: file.lastModified || Date.now(),
     });
   } catch {
     // Any decode/encode failure: upload the original rather than fail.
     return file;
+  }
+}
+
+/**
+ * Make the small copy stored beside a photo (src/lib/photoThumbnails.js
+ * has the size and the reasons). Returns a File, WebP where the browser
+ * can write it and JPEG where it cannot, or null when no thumbnail can
+ * be made: not an image, an animated GIF, no canvas (prerender, tests),
+ * or a photo the browser cannot decode. Callers treat null as "no
+ * thumbnail" and carry on; it never stops an upload.
+ *
+ * Unlike downscaleImage, a photo already within the size is still
+ * re-encoded, so every photo that can have a thumbnail gets one and
+ * small displays never ask for a missing file.
+ *
+ * @param {File|Blob} file: a browser-readable image (after HEIC conversion)
+ * @param {{ maxEdge?: number, quality?: number }} [opts]
+ * @returns {Promise<File|null>}
+ */
+export async function makeThumbnail(file, opts = {}) {
+  const { maxEdge, quality } = { ...THUMBNAIL, ...opts };
+  if (!file || !file.type || !file.type.startsWith('image/') || file.type === 'image/gif') {
+    return null;
+  }
+  if (!canvasAvailable()) return null;
+
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const { width, height } = targetDimensions(bitmap.width, bitmap.height, maxEdge);
+    if (!width || !height) return null;
+    const blob = await drawAndEncode(bitmap, width, height, quality, { jpegFallback: true });
+    if (!blob || !blob.size) return null;
+    const type = blob.type || 'image/webp';
+    return new File([blob], renamed(file.name, type), {
+      type,
+      lastModified: file.lastModified || Date.now(),
+    });
+  } catch {
+    return null;
+  } finally {
+    bitmap?.close?.();
   }
 }

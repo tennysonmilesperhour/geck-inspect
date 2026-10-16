@@ -26,16 +26,23 @@
  * this file, not in vercel.json, or the next build will wipe them.
  */
 
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { writeKnownPaths } from './write-known-paths.mjs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MORPH_SLUG_ALIASES, emptyInheritanceIds, getAllSpaPathPatterns } from './seo-routes.mjs';
+import { MORPH_SLUG_ALIASES, emptyInheritanceIds } from './seo-routes.mjs';
 import { RETIRED_PAGES } from '../src/lib/retiredPages.js';
+import { inlineScriptSources } from './csp-inline.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const OUT_PATH = resolve(REPO_ROOT, 'vercel.json');
+
+// Every page Vite builds and scripts/prerender.mjs writes starts from
+// index.html, and neither changes its inline scripts, so the hashes of
+// index.html's inline scripts are the hashes of every page's.
+// scripts/check-csp-hashes.mjs confirms that against dist/ after a build.
+const INLINE_SCRIPT_SOURCES = inlineScriptSources(readFileSync(resolve(REPO_ROOT, 'index.html'), 'utf8'));
 
 // Pages kept out of search indexes via X-Robots-Tag. Sourced here (not
 // inferred from auth-gating) because the rule is "should Google index
@@ -112,15 +119,20 @@ const MORPH_ALIAS_REDIRECTS = Object.entries(MORPH_SLUG_ALIASES).map(([from, to]
 const GONE_REDIRECTS = [
   { from: '/Morphs', to: '/MorphGuide' },
   { from: '/morphs', to: '/MorphGuide' },
-  // Retired pages (src/lib/retiredPages.js): unfinished surfaces next to
-  // paid ones cost trust. Each old URL, in its PascalCase and lowercase
-  // spelling, goes to the closest live page.
-  ...RETIRED_PAGES.flatMap(({ page, to }) => {
-    const spellings = [...new Set([`/${page}`, `/${page.toLowerCase()}`])];
-    return spellings.map((from) => ({ from, to }));
-  }),
   { from: '/morph-visualizer', to: '/MorphGuide' },
 ];
+
+// Retired pages (src/lib/retiredPages.js): unfinished surfaces next to
+// paid ones cost trust. Each old URL, in its PascalCase and lowercase
+// spelling, goes to the closest live page. A page marked `keep` (one
+// Tennyson keeps to release again later, 16 Oct 2026) gets a temporary
+// redirect (307): browsers remember a permanent one for good, so the
+// returning feature would stay hidden from anyone who had visited its
+// old address. The rest are gone for good and stay permanent.
+const RETIRED_REDIRECTS = RETIRED_PAGES.flatMap(({ page, to, keep }) => {
+  const spellings = [...new Set([`/${page}`, `/${page.toLowerCase()}`])];
+  return spellings.map((from) => ({ from, to, permanent: !keep }));
+});
 
 /*
  * Narrative for the generated vercel.json (Vercel's schema rejects
@@ -227,19 +239,27 @@ function buildConfig() {
           // www.google.com/g/collect, www.googletagmanager.com/td), the
           // PostHog embedded dashboards on the admin analytics page, and the
           // Amazon affiliate widget frames on store product pages.
-          // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Google
-          // Fonts, Supabase (API, storage, the Robauto pixel project),
-          // RevenueCat, Unsplash and Supabase images, inline theme scripts
-          // in index.html ('unsafe-inline' for script until they get nonces).
+          // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Supabase
+          // (API, storage), RevenueCat, Unsplash and Supabase images. Fonts
+          // are self-hosted under /fonts since 16 Oct 2026, so Google
+          // Fonts is no longer allowed. Inline scripts in index.html are allowed by
+          // their SHA-256 hashes (scripts/csp-inline.mjs), not by
+          // 'unsafe-inline', since 16 Oct 2026 (review item E3 31), so an
+          // injected script cannot run. Styles keep 'unsafe-inline': the
+          // app sets inline styles everywhere and they cannot run code.
           // A new third-party script, frame or API origin must be added here
           // or browsers will block it.
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com data:",
+              [
+                "script-src 'self'",
+                ...INLINE_SCRIPT_SOURCES,
+                'https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com',
+              ].join(' '),
+              "style-src 'self' 'unsafe-inline'",
+              "font-src 'self' data:",
               "img-src 'self' data: blob: https:",
               "media-src 'self' blob: https:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://www.google.com https://www.googletagmanager.com https://images.unsplash.com",
@@ -276,6 +296,13 @@ function buildConfig() {
         source: '/assets/(.*)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
+      // Self-hosted fonts (src/styles/fonts.css). Each file name carries its
+      // font version (inter-latin-v20.woff2), so a new version is a new name
+      // and the old one can be cached for a year.
+      {
+        source: '/fonts/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       {
         source: '/sitemap.xml',
         headers: [
@@ -302,6 +329,11 @@ function buildConfig() {
         headers: [
           { key: 'Content-Type', value: 'text/markdown; charset=utf-8' },
           { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
+          // The full-text copy is for AI agents. Kept out of search
+          // results so it never competes with the guide pages it copies
+          // (review item E3 27). This rule comes after the site-wide
+          // X-Robots-Tag above, so it is the one that applies.
+          { key: 'X-Robots-Tag', value: 'noindex' },
         ],
       },
       // Agent-facing files (scripts/build-agent-data.mjs). Topic files and
@@ -379,6 +411,11 @@ function buildConfig() {
         source: from,
         destination: to,
         permanent: true,
+      })),
+      ...RETIRED_REDIRECTS.map(({ from, to, permanent }) => ({
+        source: from,
+        destination: to,
+        permanent,
       })),
       ...CASE_REDIRECTS.map(({ from, to }) => ({
         source: from,
