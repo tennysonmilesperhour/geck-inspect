@@ -4,7 +4,7 @@ The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file r
 
 **Status 15 October: the SQL queue is cleared, and deploys go through merges.** Everything that was waiting on the SQL Editor run reached production on 8 October (details in "Cleared on 8 October" below). Merging to `main` does three things at once, through Vercel and the Supabase GitHub integration: Vercel deploys the site, Supabase applies every new file in `supabase/migrations/`, and Supabase deploys the edge functions declared in `supabase/config.toml`. The integration already did this before 15 October, alongside changes applied by hand; round 1 of the review fixes went out with nothing run by hand (below), and that is the rule now. How to write a migration for this is in `docs/MIGRATIONS.md`.
 
-What is still open in this file: round 2 (written, not merged yet, with its steps for Tennyson), the two leftover functions under "Also for Tennyson", and the real-device checks.
+What is still open in this file: the dashboard steps for rounds 2 and 3 (each round's "what still needs Tennyson"), the leftover functions under "Also for Tennyson", and the real-device checks. Round 3 is written and merges next.
 
 Project: `mmuglfphhwlaluyfyxsp`.
 
@@ -12,8 +12,8 @@ Project: `mmuglfphhwlaluyfyxsp`.
 
 - **Three deploys, no fixed order.** Vercel builds the site, the integration applies new migration files in filename order, and it deploys declared functions. Any of the three can finish first, and members keep old copies of the app open for hours, so every change has to work with the old app and the new one, before and after its migration.
 - **Migrations are recorded under the file's own version.** Production's history shows round 1 as `20261015120000_ownership_checks` and so on, with no author, which is how the integration records them (the 8 October files, applied by hand, carry a new timestamp and an author instead).
-- **Declared functions deploy from `main`.** 15 are declared in `supabase/config.toml` (14 live today plus `resend-webhook`, new in round 2). A declared function's repo copy is what goes live, so it must always be the version you want in production.
-- **18 production functions are still deployed by hand, on purpose.** They are live and have a copy in the repo but are not declared, so a merge never touches them: `invoke-llm`, `stripe-checkout`, `stripe-billing-portal`, `send-push`, `embed-gecko-image`, `export-training-corpus`, `recognize-import-data`, `publish-social-post`, `set-platform-connection`, `report-social-overage`, `meta-oauth-start`, `meta-oauth-callback`, `reddit-oauth-start`, `reddit-oauth-callback`, `iot-poll`, `csp-report`, `market-value-snapshot` and `admin-end-trial`. Each one gets declared only after its live code has been compared with the repo copy, because declaring it would deploy the repo copy on the next merge. (`rapid-api` is also live and has no repo copy; see "Also for Tennyson". `store-checkout` and `store-stripe-webhook` are in the repo but not deployed, and the store's own checkout is switched off in `src/lib/store/checkoutFlags.js`.)
+- **Declared functions deploy from `main`.** 15 were declared in `supabase/config.toml` after round 2; round 3 declares 15 more, so 30 deploy on merge. A declared function's repo copy is what goes live, so it must always be the version you want in production. `docs/INFRASTRUCTURE.md`, section 2, lists every production function and whether it is declared.
+- **Before round 3, 18 production functions were deployed by hand, on purpose** (round 3 declares 15 of them after comparing each with production; see "Round 3" below). They were live and had a copy in the repo but were not declared, so a merge never touched them: `invoke-llm`, `stripe-checkout`, `stripe-billing-portal`, `send-push`, `embed-gecko-image`, `export-training-corpus`, `recognize-import-data`, `publish-social-post`, `set-platform-connection`, `report-social-overage`, `meta-oauth-start`, `meta-oauth-callback`, `reddit-oauth-start`, `reddit-oauth-callback`, `iot-poll`, `csp-report`, `market-value-snapshot` and `admin-end-trial`. Each one gets declared only after its live code has been compared with the repo copy, because declaring it would deploy the repo copy on the next merge. (`rapid-api` is also live and has no repo copy; see "Also for Tennyson". `store-checkout` and `store-stripe-webhook` are in the repo but not deployed, and the store's own checkout is switched off in `src/lib/store/checkoutFlags.js`.)
 
 ## Round 1: applied 15 October (PRs 128 and 129)
 
@@ -31,9 +31,11 @@ Checked read-only on 15 October 2026 against production's migration history and 
 - PR 129 (merged 14:59 UTC) declared the eight round 1 functions that had only ever been deployed by hand, each with the gateway setting production already had. The integration then deployed them from the repo at 15:00 UTC: `stripe-webhook` v40, `generate-social-post` v23, `health-screen` v11, `send-email` v26, `send-collection-invite` v22, `subscribe-and-send-guides` v21, `send-breeder-inquiry` v21 and `recognize-gecko-morph` v71. It redeployed `revenuecat-webhook` (v121) and `revenuecat-sync` (v110) at the same time, unchanged.
 - `recognize-gecko-morph` v71 includes the 14 October `taxonomy.ts`, so the Sable and Highway redeploy at the end of this file is done.
 
-## Round 2: written, merges next
+## Round 2: applied 15 October (PR 137), and the signup hotfix (PR 138)
 
-Plan items E2 15 to 22 and E5 of `docs/planning/comprehensive-review-2026-10-14.md`. Merging to `main` ships all of it the same way as round 1: no SQL and no function deploy is run by hand. A few dashboard settings wait on Tennyson (the list at the end of this section); until then the parts that need them stay quiet rather than break.
+**Applied:** PR 137 merged at 23:50 UTC on 15 October; the integration applied the seven migrations below and deployed the functions, and a read-only check afterwards found every function body, grant and policy matching the repo, `lifecycle-emails-hourly` scheduled, `lifecycle_emails_enabled` false and `care_reminder_defaults_from` set to 2026-10-16. PR 138 (01:59 UTC on 16 October) shipped `20261015233100_guard_switches`: from about 18:48 UTC on 14 October every new signup had been refused, because two guards added that day did not trust Supabase's own sign-up login; the migration lets it through and makes `apply_referral_code` switch its bypass off after use (regression file `supabase/tests/guard_switch_regressions.sql`).
+
+Plan items E2 15 to 22 and E5 of `docs/planning/comprehensive-review-2026-10-14.md`. Merging to `main` shipped all of it the same way as round 1: no SQL and no function deploy was run by hand. A few dashboard settings wait on Tennyson (the list at the end of this section); until then the parts that need them stay quiet rather than break.
 
 **Migrations** (applied in this order; each one is safe to run twice):
 
@@ -68,6 +70,45 @@ Plan items E2 15 to 22 and E5 of `docs/planning/comprehensive-review-2026-10-14.
    - Add a gecko with no weight on or after 16 October UTC (6 pm on 15 October, Denver time), and not before the release day: the next day (the job runs at 14:20 UTC, 8:20 am Denver time) a weigh-in reminder arrives, and its link opens `/log` with that gecko. Do not test sooner. A gecko added before then gets a reminder only if its own reminder switch is on, and on the first day the defaults apply, reminders still link to the older pages, so a sooner test can look broken when nothing is wrong.
    - Airplane mode: log a feeding in Field Mode or on `/log`, go back online, and the feeding is saved once (not zero times, not twice).
    - Share a Morph ID result and paste the card link into Messenger or a Facebook thread: the preview shows the photo and the title.
+
+## Round 3: written, merges next
+
+Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, plus the round 2 review's money fixes and the engineering clean-up. Merging to `main` ships it the same way: nothing is run by hand. The migrations were first dated 15 October 23:10 to 23:32 UTC. The signup hotfix shipped first with the version `20261015233100`, which falls in between, so they were renamed to sort after it (`docs/MIGRATIONS.md`); otherwise the integration would see files older than one it has already applied.
+
+**Migrations** (applied in this order; each one is safe to run twice):
+
+| File | What it does |
+|---|---|
+| `20261016090000_privacy` | `apply_privacy_retention()` and the daily job `privacy-retention-daily` (04:05 UTC): error reports and AI crawler hits older than 90 days are deleted (the first run removes about 56 app and 574 Geck Intellect error reports), old Stripe, payment ledger and RevenueCat webhook payloads are emptied and the rows kept. `breeding_projects`, `clutches` and `genetic_outcome_predictions` become readable only by their owner or an admin, and signed-out visitors lose their grants |
+| `20261016090100_nav` | `public.my_care_today(date)` for the Today screen: read only, the caller's own rows, using the reminder jobs' rules. Until it runs, Today says its list is being updated and still shows the collection and the Log tab |
+| `20261016090200_perf` | `public.recent_weight_records(integer)` and the index `weight_records_owner_gecko_date_idx`, so My Geckos reads recent weights without loading every weigh-in. The app falls back to the old read until it exists |
+| `20261016090300_seo` | `public.open_price_index()`: a row needs 30 listings (was 5), monthly medians count only days with 30 or more, rows under 100 are marked thin. Same signature and grants; the build applies the same rule (`src/lib/priceIndexPolicy.js`) |
+| `20261016090400_ux` | `geck_data.external_reference_images` shows only photos under public domain, CC0, CC BY or CC BY-SA (rows kept). Undo: restore the read policy with `USING (true)` |
+| `20261016090500_revenue_counts` | `admin_revenue_summary()` leaves $0 renewals out of monthly recurring revenue; `admin_scoreboard()` counts a lifetime payer only with a paid lifetime payment |
+| `20261016090600_retire_overage_billing` | Unschedules `monthly-overage-billing` (Promote is retired; the job never ran) |
+| `20261016090700_reptile_reminders_switch` | Feeding reminders for Other Reptiles wait on the new `app_settings` row `other_reptile_reminders_enabled` (false); gecko reminders unchanged |
+
+**Edge functions.** Round 3 declares 15 functions that were deployed by hand, after a file-by-file comparison showed each repo copy matched production: `stripe-checkout`, `stripe-billing-portal`, `send-push`, `csp-report`, `market-value-snapshot`, `invoke-llm`, `recognize-import-data`, `iot-poll`, `publish-social-post`, `set-platform-connection`, `meta-oauth-start`, `meta-oauth-callback`, `reddit-oauth-start`, `reddit-oauth-callback` and `report-social-overage`. The merge deploys all 30 declared functions from the repo. What actually changes in production:
+
+- `stripe-checkout`: refuses a second subscription for a member who already pays through the App Store (`already_subscribed_store`), and expires an open Checkout session before starting another, so a second tab cannot charge twice (`checkout_in_progress` if Stripe will not expire it).
+- `invoke-llm`: the AI Consultant's rules live on the server and every call is logged with its cost; a smaller model by default (`INVOKE_LLM_MODEL` rolls it back). The Consultant is retired for members, so this mostly affects admin tools.
+- `health-screen`: a newer model (`HEALTH_SCREEN_MODEL` overrides), cost logged.
+- `recognize-gecko-morph`: the photo fingerprint model pinned to a version; no model-guessed price in the answer.
+- `stripe-billing-portal`, `iot-poll`, `send-push`, `csp-report`: moved to the shared helpers (`_shared/http.ts`, `_shared/caller.ts`, `_shared/supabase.ts`). `send-push`, `iot-poll` and `stripe-billing-portal` now accept only `Authorization: Bearer <token>`, which every production caller already sends.
+- `market-value-snapshot`: deployed by the integration for the first time, with its import of `src/lib/traitValuation.js`.
+- Still hand-deployed: `embed-gecko-image` and `export-training-corpus` (their repo copies are newer than production, so declaring them changes behaviour; Tennyson decides), and `rapid-api` and `admin-end-trial` (to delete).
+
+**Vercel:** Today and the new phone tabs, the one gecko record, the retired pages with temporary redirects, self-hosted fonts and the size budget, link-preview cards for passports, breeder pages, stores and waitlists (`middleware.js`), the EEA and UK consent banner, Content Security Policy hashes for inline scripts, the Membership page restructure, the Emerald default theme (held back from the homepage while its A/B test runs, `docs/planning/homepage-ab-test-2026-10.md`), the payment-problem banner, and the Price Index relabel.
+
+**Safe in either order:** Today, My Geckos' recent weights, the scoreboard and the Revenue card fall back until their migration runs; the Price Index rule is applied by the build as well as the database; an old Morph ID page hides the price section when the server stops sending a guess; an old chat page uses the plain path, which now carries the rules.
+
+### Round 3: what still needs Tennyson
+
+1. **Phone checks:** open geckinspect.com cold on a phone: it opens on Today; log a feeding in two taps; open Today in airplane mode after one online visit; on a laptop install, it still opens where it used to. Open a gecko record on an iPhone: it fills the screen below the notch, the parents and value show without scrolling, a weigh-in saves, and Close and swipe-back work.
+2. **Sign-in links (PKCE):** in Supabase, Authentication, Email Templates, change each link to the `token_hash` form (Confirm signup: `{{ .SiteURL }}/AuthPortal?token_hash={{ .TokenHash }}&type=email&next={{ .RedirectTo }}`; Reset password the same with `type=recovery`; Magic link `type=magiclink`; Invite user `type=invite` with no `next`; Change email `type=email_change` with no `next`). Check the Site URL is `https://geckinspect.com`, send yourself a reset from the iPhone home screen app and open it from Mail. A day later a session flips `WEB_AUTH_FLOW` to `'pkce'` in `src/lib/emailLinkAuth.js`.
+3. **PostHog:** delete the persons whose distinct id contains "@" (members identified by email before this change).
+4. **Two functions:** say whether to deploy the newer repo copies of `embed-gecko-image` and `export-training-corpus` (`docs/INFRASTRUCTURE.md`).
+5. **Link previews:** paste a passport link and a breeder page link into Messenger or iMessage: the preview shows that gecko's or breeder's own title and photo.
 
 ## Done on 3 October
 
@@ -110,8 +151,8 @@ The signed-out page checks that were meant to follow the run (landing page, a pa
 ## Also for Tennyson
 
 - Undeploy `rapid-api` (hello-world template, no caller, no copy in the repo). `admin-end-trial` is a disabled stub and can go too (also delete its folder in `supabase/functions/`). Both were still deployed on 15 October (`rapid-api` v19, `admin-end-trial` v9).
-- Round 2's dashboard steps are listed under "Round 2: what still needs Tennyson" above.
-- Promote and the AI Consultant are off for members in the admin Pages tool. Turn them on when ready.
+- Round 2's and round 3's dashboard steps are listed under each round's "what still needs Tennyson" above.
+- Promote, the AI Consultant, Other Reptiles and the store are retired (round 3); `docs/planning/retired-features-2026-10.md` says how to switch each back on.
 
 ## Real-device and real-email checks
 
