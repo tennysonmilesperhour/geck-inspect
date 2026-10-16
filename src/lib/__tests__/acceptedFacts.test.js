@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { checkAcceptedFacts } from '../../../scripts/lib/accepted-facts.mjs';
 
@@ -91,4 +92,14 @@ describe('the consistency check runs inside pnpm build', () => {
     }
     expect(output).toContain('all curated surfaces agree');
   }, 60000);
+
+  it('reads the AI assistant\'s rules where they live now, on the server', () => {
+    // The rules moved from src/pages/BreederConsultant.jsx to the
+    // invoke-llm function in October 2026 and the check kept reading the
+    // old file, so the rules' "Harlequin, Pinstripe and Dalmatian are
+    // line-bred, not single genes" went unseen by the dual-model rule.
+    const source = readFileSync(new URL('../../../scripts/check-genetics-consistency.mjs', import.meta.url), 'utf8');
+    expect(source).toMatch(/PROMPT_PROSE_FILES = \[[^\]]*'supabase\/functions\/invoke-llm\/consultant\.ts'/);
+    expect(source).toContain("['ai-prompt', 'supabase/functions/invoke-llm/consultant.ts', GENETICS_FACTS]");
+  });
 });
