@@ -131,10 +131,10 @@ export default function WeeklyScoreboard() {
             `${money.payingKeepers} paying keeper${money.payingKeepers === 1 ? '' : 's'} not included`,
             money.compedPayers ? `${money.compedPayers} more pay but also hold a comp, so are left out` : null,
             n(board?.unverified_lifetime)
-              ? `${n(board.unverified_lifetime)} lifetime plan${n(board.unverified_lifetime) === 1 ? '' : 's'} with no payment on record, left out`
+              ? `${n(board.unverified_lifetime)} lifetime plan${n(board.unverified_lifetime) === 1 ? '' : 's'} with no lifetime payment on record, left out`
               : null,
           ].filter(Boolean).join('. ')}
-          definition="Members on Breeder or Enterprise who pay: a live Stripe subscription (active or past due, not a trial, not grandfathered), a lifetime plan with a payment on record, or an App Store subscription. Anyone with a current comp, and the admin, are left out."
+          definition="Members on Breeder or Enterprise who pay: a live Stripe subscription (active or past due, not a trial, not grandfathered), a lifetime plan with a lifetime payment on record (an older monthly payment does not count), or an App Store subscription. Anyone with a current comp, and the admin, are left out."
           targets={SCOREBOARD_TARGETS.payingBreeders}
           next={next}
         />

@@ -5,7 +5,8 @@ import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
 
 export default [
-  { ignores: ["dist/**", "android/**", "ios/**"] },
+  // .claude/** holds agent worktrees, which are full copies of the repo.
+  { ignores: ["dist/**", "android/**", "ios/**", ".claude/**"] },
   {
     files: [
       "src/components/**/*.{js,mjs,cjs,jsx}",

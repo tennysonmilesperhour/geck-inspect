@@ -47,6 +47,15 @@
 // it. After that payment succeeds, stripe-webhook cancels the old
 // subscription immediately with no credit and no proration. A member
 // who already has lifetime access is refused (409, code already_lifetime).
+//
+// Paying twice. A member with a live App Store or Google Play subscription
+// is refused (409, code already_subscribed_store): Stripe cannot cancel a
+// store plan for them, so the two would bill side by side. And only the
+// newest Checkout page can be paid: any page this member still has open
+// (another tab, a double tap) is expired before a new one is made. If an
+// open page cannot be expired because it is finishing at that moment, the
+// request is refused (409, code checkout_in_progress) rather than risk a
+// second charge.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -162,6 +171,45 @@ async function findOrCreateCustomer(stripeKey: string, email: string): Promise<s
   return customer.id;
 }
 
+// A live App Store or Google Play subscription, from the rows the
+// RevenueCat webhook keeps. Test Store and promotional grants are not
+// money, so they do not block a Stripe checkout.
+function hasLiveStoreSubscription(
+  rows: Array<{ is_active?: boolean; expires_at?: string | null; store?: string | null }> | null | undefined,
+  now: number,
+): boolean {
+  return (rows || []).some((row) =>
+    row?.is_active === true &&
+    (!row.expires_at || Date.parse(row.expires_at) > now) &&
+    !["test_store", "promotional"].includes(String(row.store || "").toLowerCase())
+  );
+}
+
+// Expires every Checkout page this customer still has open, so only the
+// page made next can be paid. Throws { stage: "list" } when Stripe cannot
+// be asked, and { stage: "expire" } when an open page could not be
+// expired (usually because it was being paid at that moment).
+async function expireOpenCheckoutSessions(stripeKey: string, customerId: string): Promise<number> {
+  let open: { data?: Array<{ id?: string }> };
+  try {
+    const q = new URLSearchParams({ customer: customerId, status: "open", limit: "20" });
+    open = await stripeRequest(`/checkout/sessions?${q}`, "GET", stripeKey);
+  } catch (err) {
+    throw Object.assign(new Error((err as Error).message), { stage: "list" });
+  }
+  let expired = 0;
+  for (const session of open?.data || []) {
+    if (!session?.id) continue;
+    try {
+      await stripeRequest(`/checkout/sessions/${encodeURIComponent(session.id)}/expire`, "POST", stripeKey);
+      expired += 1;
+    } catch (err) {
+      throw Object.assign(new Error((err as Error).message), { stage: "expire" });
+    }
+  }
+  return expired;
+}
+
 // Why checkout is refused before a session is created. Lifetime does not
 // use the already_subscribed refusal: a paying member may buy it, and the
 // webhook cancels the old subscription after the payment succeeds.
@@ -170,6 +218,7 @@ function checkoutRefusal(input: {
   billingCycle?: string | null;
   cycle: string;
   hasLiveSubscription?: boolean;
+  hasStoreSubscription?: boolean;
 }): { status: number; error: string; code?: string } | null {
   if (input.grandfathered) {
     return {
@@ -182,6 +231,13 @@ function checkoutRefusal(input: {
       status: 409,
       code: "already_lifetime",
       error: "You already have lifetime access.",
+    };
+  }
+  if (input.hasStoreSubscription) {
+    return {
+      status: 409,
+      code: "already_subscribed_store",
+      error: "You already have a membership through the App Store or Google Play. Change or cancel it in your phone's subscription settings, so you are never charged twice.",
     };
   }
   if (input.cycle !== "lifetime" && input.hasLiveSubscription) {
@@ -325,11 +381,27 @@ Deno.serve(async (req: Request) => {
     .eq("email", user.email)
     .maybeSingle();
 
+  // Store subscriptions live in revenuecat_entitlements, keyed by the auth
+  // user id. Fails closed, like the Stripe check below.
+  const { data: storeRows, error: storeErr } = await admin
+    .from("revenuecat_entitlements")
+    .select("is_active, expires_at, store")
+    .eq("app_user_id", user.id)
+    .eq("is_active", true);
+  if (storeErr) {
+    console.error("store subscription check failed:", storeErr.message);
+    return jsonResponse(
+      { error: "Could not check your current membership. Try again in a minute." },
+      502,
+    );
+  }
+
   const earlyBlock = checkoutRefusal({
     grandfathered: profile?.subscription_status === "grandfathered",
     billingCycle: profile?.membership_billing_cycle,
     cycle,
     hasLiveSubscription: false,
+    hasStoreSubscription: hasLiveStoreSubscription(storeRows, Date.now()),
   });
   if (earlyBlock) {
     return jsonResponse(
@@ -389,6 +461,26 @@ Deno.serve(async (req: Request) => {
         502,
       );
     }
+  }
+
+  try {
+    await expireOpenCheckoutSessions(stripeKey, customerId!);
+  } catch (err) {
+    const stage = (err as { stage?: string }).stage;
+    console.error(`open checkout cleanup failed (${stage}):`, (err as Error).message);
+    if (stage === "expire") {
+      return jsonResponse(
+        {
+          code: "checkout_in_progress",
+          error: "A checkout you started a moment ago is still finishing. Wait a minute, then refresh this page before trying again.",
+        },
+        409,
+      );
+    }
+    return jsonResponse(
+      { error: "Could not check your current membership. Try again in a minute." },
+      502,
+    );
   }
 
   const returnUrl = safeReturnUrl(body.returnUrl);

@@ -115,8 +115,9 @@ update public.profiles set membership_tier = 'breeder', subscription_status = 'g
 update public.profiles set membership_tier = 'breeder', membership_billing_cycle = 'lifetime',
        subscription_status = 'active'
  where email in (pg_temp.who('lifepaid'), pg_temp.who('lifefree'));
-insert into public.payment_events (id, stripe_event_id, user_email, event_type, amount_cents, status)
-values ('pe_score_life', 'evt_score_life', pg_temp.who('lifepaid'), 'checkout.session.completed', 34900, 'paid');
+-- A lifetime purchase as the Stripe ledger records it (billed as lifetime).
+insert into public.payment_events (id, stripe_event_id, user_email, event_type, amount_cents, status, billing_cycle)
+values ('pe_score_life', 'evt_score_life', pg_temp.who('lifepaid'), 'checkout.session.completed', 34900, 'paid', 'lifetime');
 -- The admin on a paid plan must still not show up as a paying member.
 update public.profiles set membership_tier = 'breeder', membership_billing_cycle = 'monthly',
        subscription_status = 'active', stripe_subscription_id = 'sub_admin'
