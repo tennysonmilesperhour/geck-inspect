@@ -527,3 +527,93 @@ These entries capture the strategic decisions made during the initial landing pa
 **Decision:** Free gets one identification each calendar month, in place of the one lifetime try. Keeper (3), Breeder (6) and Enterprise (15) are unchanged. The month turns at midnight UTC on the 1st (the evening before in the US), as for every other allowance. Extra scans in `morph_id_bonus_credits` sit on top and are used after the month's plan scan, and a failed run or a "better photos needed" answer gives the scan back, as before. The server is the truth: `consume_morph_id_credit` (migration `20261015151300_morph_id_share_card.sql`) uses 1 for Free whatever the edge function passes, and `TIER_LIMITS.free.monthlyMorphIDCredits` in `src/lib/tierLimits.js` is 1 (`lifetimeFreeMorphIDs` is gone). App copy says "one free a month".
 **Reasoning:** A typical identification costs 3 to 5 cents, so a month of free scans for every active Free member is a few dollars at today's numbers, and it is the cheapest steady source of shareable cards. One lifetime try gave a new member nothing to come back for and gave the card nothing to carry.
 **Consequences:** Morph ID spend now grows with active Free members, so the Anthropic spend alert (plan item E1 11) matters more. Each new account is a new free scan. The only guard against one person opening many accounts is the per-network daily cap in `recognize-gecko-morph` (`morph_id_per_ip_daily` in `geck_data.runtime_config`, 50 calls a day on 15 October, and only when `IP_HASH_SALT` is set), which is loose; tighten it if free scans start to cost real money. To change the allowance again, change `tierLimits.js`, the map in `recognize-gecko-morph` and `consume_morph_id_credit` together, and the "one free a month" copy on the landing page, the Morph Guide and the first gecko flow.
+
+### 47. Analytics wait for consent in the EEA and UK; PostHog identifies by account id
+
+**Date:** 2026-10-16
+**Status:** Accepted (plan item E3 31 of the comprehensive review, which Tennyson asked to be implemented in full)
+**Context:** Google Analytics and PostHog loaded for every visitor, PostHog identified members by email address, an outside pixel (Robauto) counted AI visits, and the Content Security Policy allowed any inline script.
+**Decision:** For visitors in the EEA and UK, Google Analytics and PostHog load only after Accept on the consent banner. A visitor counts as EEA or UK when Vercel's country header says so (kept in the `gi_analytics_region` cookie by `middleware.js`) or the browser's time zone is European; either signal is enough. Everyone else is unchanged, and Do Not Track and Global Privacy Control still mean off. The banner and the privacy switch promise only that Google Analytics and PostHog stay off; the first-party `user_events` count runs regardless, and section 5 of the Privacy Policy says so. PostHog identifies members by account id with no email or name, and deletes its own cookie when a visitor opts out. Analytics addresses are cleaned of claim, invite, sign-in, unsubscribe and waitlist tokens, plain or percent-encoded. The Robauto pixel is removed. Inline scripts are allowed by their hashes, not `unsafe-inline`. Error reports and AI crawler hits are kept 90 days (`privacy-retention-daily`). The website stays on Supabase's implicit sign-in flow until the email templates send `token_hash` links; then one line (`WEB_AUTH_FLOW` in `src/lib/emailLinkAuth.js`) moves it to PKCE.
+**Reasoning:** Consent before analytics is what EEA and UK rules expect, and an email address is more than PostHog needs to join a member's events.
+**Consequences:** Fewer EEA and UK visitors appear in Google Analytics and PostHog, and they are not enrolled in the homepage A/B test (`docs/planning/homepage-ab-test-2026-10.md`). Whether the first-party count should also wait for consent in the EEA and UK is open for Tennyson. PostHog persons keyed by email from before this change are deleted by hand in PostHog.
+
+### 48. Retire breadth, and keep every retired feature for a later release
+
+**Date:** 2026-10-16
+**Status:** Accepted (plan item E3 23; Tennyson approved the list on 16 October and asked to keep the retired features "in the back pocket to release later")
+**Context:** Unfinished surfaces next to paid ones cost trust, and the sidebar had grown to 17 to 20 destinations. Promote, the AI Consultant, Other Reptiles, the supplies store with its sticker builders and the My Store website builder had no member use in the 30 days before.
+**Decision:** They are retired behind `src/lib/retiredPages.js`: each old address redirects to the closest live page with a one-line note, and every table is kept. Their code is kept too, with no deletion date, because Tennyson may release them again; the Morph Visualizer (retired 2 October) is kept the same way. Their edge redirects are temporary (307) so a feature switched back on is reachable at its old address at once. Jobs that would act on them are switched off, not removed: the monthly overage billing job is unscheduled, and feeding reminders for Other Reptiles wait on the `app_settings` row `other_reptile_reminders_enabled`. The sidebar is a fixed list of 12 (8 in Keeper mode), tested against production's `page_config`. The sticker offer on gecko records is hidden while the store is retired. Full list and how to switch each back: `docs/planning/retired-features-2026-10.md`.
+**Reasoning:** Retiring is one line to undo, so the cost of being wrong is small, and a smaller app is easier to trust and to learn.
+**Consequences:** Do not delete retired code or its tables without Tennyson's say. Before releasing one again, check it against what changed since (the gecko record, Today, the design system).
+
+### 49. Phones open on Today
+
+**Date:** 2026-10-16
+**Status:** Accepted (plan item E3 25)
+**Context:** A keeper's most common job on a phone is logging a feeding or a weigh-in, which took several taps from the Dashboard.
+**Decision:** On a phone the app opens on Today (what is due and overdue, then the week, then the collection), and the bottom bar is Today, Geckos, Log, More. A feeding takes two taps from a cold open. Today's list comes from `public.my_care_today`, which uses the reminder jobs' own rules, and the last copy is kept on the phone so Today opens with no signal. Laptops keep the Dashboard; desktop installs keep their old start screen. Today is always on (the admin Pages tool cannot switch it off).
+**Reasoning:** The phone home should be the day's work, not a summary.
+**Consequences:** Reminders and Today must keep agreeing; a regression file checks `my_care_today` against the feeding and weigh-in jobs.
+
+### 50. One gecko record
+
+**Date:** 2026-10-16
+**Status:** Accepted (plan item E3 24)
+**Context:** The My Geckos window and the `/GeckoDetail` page were two copies of the gecko record that had drifted apart.
+**Decision:** Both render `src/components/gecko/record/GeckoRecord.jsx`. The window stays the card's target because it is fastest on a phone; the page is the same record for links from outside My Geckos. Its Edit and Archive open My Geckos with `?gecko=<id>&open=edit|archive|sold`, which still needs a Save or Confirm. Who may do what lives in `recordModel.recordAccess()`. A new section is added once, in the record.
+**Reasoning:** One copy cannot drift, and every link opens the same thing.
+**Consequences:** The record's first phone screen holds the parents and value; the sticker offer is last; PDFs load on demand.
+
+### 51. Husbandry numbers live in one file; supers breeders avoid are marked
+
+**Date:** 2026-10-16
+**Status:** Accepted (plan item E3 28); Empty Back and the growth band confirmed by Tennyson on 16 October
+**Context:** Life stages, weigh-in days, shed intervals and the breeding minimum were written in several places that disagreed, and the Morph Guide offered breeding, price and Morph ID prompts on super forms that are lethal or carry health problems.
+**Decision:** `src/data/husbandry-facts.js` is the only place life stages (hatchling under 3 g, juvenile 3 to 15 g, sub-adult 15 to 35 g, adult 35 g and up; a stage ends at its weight or age, whichever is later), weigh-in days, shed intervals, the 40 g and 18 month breeding minimum and the incubation windows are written. The care guide, reminders, weight chart, shed forecast, readiness badge and hatch estimates read it, and `pnpm check:genetics` (inside `pnpm build`) checks the guides, emails, llms.txt and AI prompts against it. Super forms breeders avoid making carry `doNotBreed` in `src/data/morph-guide.js` (Super Lilly White is lethal; Super Cappuccino and Super Highway have health problems); their pages show no breed, price, value or Morph ID prompts and point to the safe pairing instead. A morph slug alias may never share a name with a real morph page. Empty Back is Emerging, not Proven: its only cited source is Foundation Genetics, and the "breeding trials" claim had no source; restore Proven only with a citation. The weight chart's growth band was re-fitted on about 16 geckos with logged weights, mostly from one account; it stays, marked provisional, and is re-checked once 50 or more geckos have weights from at least 5 keepers.
+**Reasoning:** One file cannot disagree with itself, and a checked build stops the guides drifting from it.
+**Consequences:** Fire and ChoCho still have no Morph Guide entries. Super Highway and Luwak cite ReptiDex, the closest competitor's product; whether to keep that citation is open for Tennyson.
+
+### 52. The Price Index is an asking-price snapshot, free to cite with a link
+
+**Date:** 2026-10-16
+**Status:** Accepted (plan item E3 27; wording decided by Tennyson on 16 October)
+**Context:** The Price Index called itself "original data" under CC BY 4.0. It is built from asking prices in public marketplace listings, and the adversarial review asked for honest labelling. Rows with as few as 5 listings were published.
+**Decision:** It is described everywhere as an asking-price snapshot from public marketplace listings. The price data may be quoted and cited with a link to the page it came from; morph and genetics data stay under CC BY 4.0. The source sites are not named until counsel advises. A row is published only with 30 or more listings, and rows under 100 are marked as a thin sample (`open_price_index()` and `src/lib/priceIndexPolicy.js` apply the same rule).
+**Reasoning:** Asking prices are not sale prices, and a licence should not claim more than Geck Inspect owns.
+**Consequences:** Fewer morphs show a price. Naming the sources waits on a legal opinion.
+
+### 53. Emerald for new visitors, neutral text, one meaning of Verified breeder, licensed outside photos only
+
+**Date:** 2026-10-16
+**Status:** Accepted (round 3 UX fixes, from review sections B4 and B6)
+**Context:** The Blizzard default painted every page blue and tinted body text, and an accessibility pass counted 622 contrast failures on 33 of 44 pages. The default theme was saved the first time the app loaded, so a stored theme did not mean a member chose it (115 of 147 profiles held Blizzard). "Verified breeder" meant different things on different pages, and the Morph Guide showed outside photos under non-commercial licences.
+**Decision:** New visitors start on Emerald; a theme is saved only when a member picks one. Body text is neutral grey in every theme and links inside sentences are underlined. Verified breeder has one meaning: the five hand checks in `src/lib/verifiedBreeder.js`, which the database requires before the badge. Outside photos are shown only under public domain, CC0, CC BY or CC BY-SA, with credit under each, enforced in the app and by the read policy on `geck_data.external_reference_images`.
+**Reasoning:** Readable text and honest badges are part of trust; a paid product cannot show non-commercial photos.
+**Consequences:** While the homepage A/B test runs, a signed-out visit that opens on the homepage keeps the launch look (`docs/planning/homepage-ab-test-2026-10.md`).
+
+### 54. The AI Consultant's rules live on the server; Morph ID shows Price Index prices, not a model's guess
+
+**Date:** 2026-10-16
+**Status:** Accepted (plan item E3 29)
+**Context:** The AI Consultant's instructions were sent from the browser, so a caller could replace them. Morph ID showed a retail range the model guessed. Model choices and costs were not recorded per call.
+**Decision:** The consultant's rules live in `invoke-llm` (`consultant.ts`); the browser sends only data, and every member call gets the rules. The consultant moved to a smaller, cheaper model and the health screen to a newer one; Morph ID keeps its current model until a seller-disjoint gold set can grade a replacement (`docs/morph-id-eval/README.md`). Morph ID no longer shows a model-guessed price; members who opt in see Price Index asking prices with the listing count. Every Morph ID, consultant and health screen call is logged with its cost in `geck_data.model_invocations`.
+**Reasoning:** Rules a caller can change are not rules, and a price should come from listings, not a guess.
+**Consequences:** Grading Morph ID on newer models costs about $12 and waits on Tennyson. The AI Consultant is retired for members (decision 48) but kept working.
+
+### 55. Edge functions deploy from the repo once compared; one pinned supabase-js; a pinned photo model
+
+**Date:** 2026-10-16
+**Status:** Accepted (round 3 engineering fixes, from Part C of the review)
+**Context:** 18 production functions were deployed by hand, so a merge never updated them and their repo copies could drift.
+**Decision:** A function is declared in `supabase/config.toml` only after its live code has been compared with the repo copy. On 16 October 15 matched and were declared (30 of 34 deployed functions). `embed-gecko-image` and `export-training-corpus` stay hand-deployed until Tennyson agrees to deploy their newer repo copies; `rapid-api` and `admin-end-trial` are to be deleted. Functions import supabase-js from `_shared/supabase.ts` at one pinned version and use `_shared/http.ts` and `_shared/caller.ts`. The Replicate photo fingerprint model is pinned to a version in `_shared/visual-embedding.ts`; only a refused version moves an instance to the latest one. Changing the pin changes the fingerprints, so a new pin needs every stored photo fingerprinted again. What production runs that the repo cannot rebuild (buckets, policies, jobs, Vault names) is written down in `docs/INFRASTRUCTURE.md`.
+**Reasoning:** What is in the repo should be what runs.
+**Consequences:** Storage buckets, their policies and four older scheduled jobs are documented but not yet migrations.
+
+### 56. Testing gates and the size budget
+
+**Date:** 2026-10-16
+**Status:** Accepted (plan items E3 30 and E3 26)
+**Context:** Lint covered a few folders with five rules, nothing tested a member's path through the app or the database migrations, some tests read today's date, and nothing stopped the bundle growing.
+**Decision:** ESLint covers `src`, `scripts` and `api` with the recommended sets. A Playwright member flow (sign up, first gecko, feeding, transfer) runs against a fake Supabase in the browser, and every migration is replayed on a fresh Postgres 16 with every `supabase/tests` file, both on every pull request. Tests must not read the real date; a CI step reruns them far ahead and behind. CI fails a build that passes the size budget (`scripts/check-bundle-size.mjs`, exceptions in `scripts/bundle-budget.json`). The Supabase client loads on demand for signed-out visitors, shared code is split so a page edit renames only that page, and fonts are self-hosted.
+**Reasoning:** Checks that run without secrets can run on every change.
+**Consequences:** A new test that reads today's date fails the clock-drift step, not a deploy months later.
