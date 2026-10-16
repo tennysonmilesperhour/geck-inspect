@@ -6,7 +6,7 @@
 // redraw drift between the two pictures never replaces the animal.
 //
 // This used to run in every visitor's browser on the Morph Guide (two
-// 1536 x 1024 drawings per trait, every pixel read twice, about 3 seconds
+// full-size drawings per trait, every pixel read twice, about 3 seconds
 // of a frozen phone). The drawings never change, so
 // scripts/precompute-trait-layers.mjs now runs it once and the page loads
 // the finished layers. The arithmetic matches the browser version, with
@@ -26,6 +26,8 @@ export const STUDY_HEIGHT = 667;
 export const DRIFT = 24;
 // A painted patch smaller than this many pixels is a speck, not a spot.
 export const MIN_SPOT = 36;
+// How fast a pixel goes opaque past the drift threshold (alpha per level).
+export const SLOPE = 7.5;
 
 /**
  * Returns a new RGBA array: the edited drawing's colours, with alpha set
@@ -40,7 +42,7 @@ export function pigmentAlpha(base, edited, trait) {
     const after = (layer[i] + layer[i + 1] + layer[i + 2]) / 3;
     const delta = light ? after - before : before - after;
     const pigment = light ? after > 150 && before < 215 : after < (trait === 'spots' ? 92 : 125);
-    layer[i + 3] = pigment && delta > DRIFT ? Math.min(255, (delta - DRIFT) * 7.5) : 0;
+    layer[i + 3] = pigment && delta > DRIFT ? Math.min(255, (delta - DRIFT) * SLOPE) : 0;
   }
   return layer;
 }

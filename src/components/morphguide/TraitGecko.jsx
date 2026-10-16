@@ -96,9 +96,9 @@ function pigmentsFor(view) {
 export function usePigments(view) {
   return pigmentsFor(view === 'top' ? 'top' : 'side');
 }
-// The Morph Guide index draws about ten studies, most of them below the
-// fold on a phone. Each one fetches its pictures only when it comes within
-// 200 px of view (a full screen ahead fetched a second study, 116 KB, that
+// A page can draw several studies (the Field Notebook, the quiz), most of
+// them below the fold on a phone. Each one fetches its pictures only when
+// it comes within 200 px of view (a full screen ahead fetched a second study, 116 KB, that
 // most phone visitors never scroll to). Without IntersectionObserver
 // (server render, tests, old browsers) everything draws straight away.
 function useNearViewport() {

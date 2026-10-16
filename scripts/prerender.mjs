@@ -75,6 +75,8 @@ import { loadAppModule } from './lib/load-app-module.mjs';
 import { morphBreedingFact, morphGeneralLinks } from './lib/morph-page-links.mjs';
 import { PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_INDEX_TERMS_SENTENCE, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
 import { GUIDE_CALCULATOR_ALIASES } from '../src/lib/genetics/calculatorCatalog.js';
+import { spectrumPositionFor } from '../src/components/morphguide/spectrumPosition.js';
+import { eyeStudyIdForMorph } from '../src/components/morphguide/eyeStudyIndex.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -1539,6 +1541,15 @@ function pageChunkFiles(path) {
     for (const c of chunk.css || []) if (!css.includes(c)) css.push(c);
   };
   visit(key);
+  // A morph page loads its Field Notebook and eye study after it draws
+  // (src/pages/MorphDetail.jsx). On the morphs that show them, start those
+  // downloads with the page's own, so the section is in place before a
+  // visitor taps a link further down (Typical price, the section bar).
+  if (mod === 'MorphDetail') {
+    const slug = decodeURIComponent(path.split('/')[2] || '');
+    if (spectrumPositionFor(slug)) visit('src/components/morphguide/PatternSpectrum.jsx');
+    if (eyeStudyIdForMorph(slug)) visit('src/components/morphguide/MorphEyeGuide.jsx');
+  }
   return { files, css };
 }
 

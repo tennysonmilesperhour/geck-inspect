@@ -189,7 +189,7 @@ export default function MorphEyeGuide({ className = '' }) {
             Crested Gecko Eye Colors &amp; Structure
           </h2>
           <p className="mt-2 text-sm text-slate-300 max-w-3xl leading-relaxed">
-            Unlike leopard geckos, where eye traits are tightly bound to specific recessive morphs, most crested gecko iris colors are polygenic and inherit independently of body pattern. Only mutations that alter melanin or xanthophore pathways across the whole animal directly reshape eye pigment.
+            Most crested gecko iris colors are polygenic and inherit independently of body pattern. Only mutations that alter melanin or xanthophore pathways across the whole animal directly reshape eye pigment.
           </p>
         </div>
       </div>

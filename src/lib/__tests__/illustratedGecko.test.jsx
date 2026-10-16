@@ -85,6 +85,18 @@ describe('animated morph progression tracks', () => {
       }
     }
   });
+  it('keeps progression copy within what the guide can show', () => {
+    const text = (slug) => MORPH_PROGRESSION_TRACKS.flatMap(t => t.steps).filter(st => st.slug === slug)
+      .map(st => [st.stage, st.note, ...st.pins.map(pt => `${pt.title} ${pt.detail}`)].join(' ')).join(' ');
+    // Albino's inheritance is not proven yet (src/data/morph-guide.js).
+    expect(text('albino')).not.toMatch(/\bTYR\b|\brecessive\b/i);
+    // Phantom Pinstripe is a historical look, not proof of the Phantom gene.
+    expect(text('phantom-pinstripe')).not.toMatch(/Phantom suppresses|melanin suppression/i);
+    // One-copy Cappuccino is not "Melanistic" (that name belongs to Super Cappuccino).
+    expect(text('cappuccino')).not.toMatch(/^\S*\s*Melanistic|Melanistic incomplete/i);
+    // Spot counts are not a standard for Dalmatian or Super Dalmatian.
+    expect(`${text('dalmatian')} ${text('super-dalmatian')}`).not.toMatch(/\d+\s*(to|-)\s*\d+\s*.*spots|\d+\+/i);
+  });
   it('renders MorphProgressionPlayer and CustomMorphComparator cleanly', () => {
     const playerHtml = renderToStaticMarkup(
       <MemoryRouter>
@@ -203,8 +215,8 @@ describe('illustrated examples', () => {
   it('loads the eye studies only when a page shows them, from a lookup that agrees with the studies', () => {
     for (const morph of MORPHS) expect(eyeStudyIdForMorph(morph.slug)).toBe(eyeStudyForMorph(morph.slug)?.id ?? null);
     for (const slug of ['toString', 'constructor', '', undefined]) expect(eyeStudyIdForMorph(slug)).toBeNull();
-    // Neither page imports the studies or the pattern studio with the page
-    // itself (about 12 kB together); both load when the page shows them.
+    // Neither page imports the eye studies or the Field Notebook with the
+    // page itself (about 23 kB together); both load when the page shows them.
     for (const page of ['src/pages/MorphGuide.jsx', 'src/pages/MorphDetail.jsx']) {
       const src = readFileSync(page, 'utf8');
       for (const mod of ['MorphEyeGuide', 'PatternSpectrum']) {
@@ -217,7 +229,7 @@ describe('illustrated examples', () => {
   });
   it('keeps every shipped study file small enough for a phone on the Morph Guide', () => {
     for (const view of ['side','top']) for (const layer of ['base','cream','pin','tiger','spots']) {
-      expect(statSync(`public${traitAsset(view,layer)}`).size).toBeLessThan(60 * 1024);
+      expect(statSync(`public${traitAsset(view,layer)}`).size).toBeLessThan(120 * 1024);
     }
   });
   it('starts with real specimens and offers studio, animated transitions, and recognition practice', () => {

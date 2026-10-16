@@ -146,5 +146,6 @@ docs/morph-id-eval/README.md - how Morph ID is graded, why today's accuracy figu
 docs/OPERATIONS.md - the services the app runs on, what each costs, the scheduled jobs and secrets by name, and the production checks.
 docs/planning/lifecycle-emails-2026-10.md - the getting-started emails (day 0 to day 14): the copy waiting for Tennyson's approval and the switch that turns them on.
 docs/legal/terms-additions-draft.md - draft additions to the Terms (subscriptions, renewals, trials, refunds, lifetime plans, AI output). Not published; the decisions in it are Tennyson's.
+art/README.md - source artwork that is not deployed. The Morph Guide's pattern-study drawings live in art/morph-guide/ink-studies-v3, not public/; after changing one, run node scripts/precompute-trait-layers.mjs and commit the layers it writes (a test fails until you do).
 docs/specs/morph-id.md - the Morph ID product brief (users, what a result must show, voice). docs/specs/DESIGN-SYSTEM.md - the one design document, written from the code; the code wins if they disagree.
 IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md, docs/specs/DESIGN-SYSTEM.md and this file; do not invent those documents' contents.

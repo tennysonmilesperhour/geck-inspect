@@ -34,11 +34,12 @@ import { useMorphGuideData, sanitizeImage, normMorph } from '@/components/morphg
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import MorphQuiz from '@/components/morphguide/MorphQuiz';
 import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
+import NearScreen from '@/components/morphguide/NearScreen';
 
-// The pattern studio and the eye colour section sit far down the page,
-// under the morph grid, so they download after the page draws instead of
-// with it (about 12 kB together). If one cannot download, the page goes on
-// without it.
+// The Field Notebook (about 18 kB) and the eye colour section (about
+// 5 kB) sit far down the page, under the morph grid. They download only
+// when a visitor scrolls near them (NearScreen), and if one cannot
+// download, the page goes on without it.
 const PatternSpectrum = lazyOptional(() => import('@/components/morphguide/PatternSpectrum'));
 const MorphEyeGuide = lazyOptional(() => import('@/components/morphguide/MorphEyeGuide'));
 
@@ -923,10 +924,12 @@ export default function MorphGuidePage() {
               )}
             </div>
 
-            <Suspense fallback={null}>
-              <PatternSpectrum className="mt-12" />
-              <MorphEyeGuide className="mt-12" />
-            </Suspense>
+            <NearScreen>
+              <Suspense fallback={null}>
+                <PatternSpectrum className="mt-12" />
+                <MorphEyeGuide className="mt-12" />
+              </Suspense>
+            </NearScreen>
 
             <MorphIndexCompareTable />
 

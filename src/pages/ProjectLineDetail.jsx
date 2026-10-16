@@ -18,7 +18,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { fetchProjectLinePhotos } from '@/lib/publicGeckoPhotos';
 import { PROJECT_LINES, LINE_CONFIDENCE, getProjectLine, lineImageKeywords, projectLinePlate } from '@/data/project-lines';
 import { getMorph } from '@/data/morph-guide';
-import { fieldGuidePlate } from '@/components/morphguide/IllustratedGecko';
+import { fieldGuidePlate, hasIllustration } from '@/components/morphguide/IllustratedGecko';
 
 
 const RARITY_LABELS = {
@@ -154,6 +154,9 @@ export default function ProjectLineDetailPage() {
   const relatedMorphs = (line.relatedMorphs || [])
     .map((s) => getMorph(s))
     .filter(Boolean);
+  const relatedTiles = relatedMorphs
+    .filter((rm) => hasIllustration(rm.slug) || relatedMorphImages.some((item) => item.slug === rm.slug))
+    .slice(0, 4);
 
   const otherLines = PROJECT_LINES.filter((l) => l.slug !== line.slug).slice(0, 4);
 
@@ -368,8 +371,10 @@ export default function ProjectLineDetailPage() {
             </div>
           )}
 
-          {/* Related morph examples (clearly NOT line-specific) */}
-          {relatedMorphs.length > 0 && (
+          {/* Related morph examples (clearly NOT line-specific). A tile needs a
+              member photo or a painted plate; a morph with neither (Super
+              Lilly White, for one) keeps its link in the list below. */}
+          {relatedTiles.length > 0 && (
             <div className="space-y-3">
               <div className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
                 Related morph traits
@@ -378,7 +383,7 @@ export default function ProjectLineDetailPage() {
                 These are examples of the morph traits this line builds on, sourced from the morph guide. They are NOT verified {line.name} specimens, just visual references for the underlying morph type.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {relatedMorphs.slice(0, 4).map((rm) => {
+                {relatedTiles.map((rm) => {
                   const dbPhoto = relatedMorphImages.find((item) => item.slug === rm.slug);
                   const src = dbPhoto?.url || fieldGuidePlate(rm.slug);
                   return (

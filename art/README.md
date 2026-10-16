@@ -8,4 +8,4 @@ Full-size drawings that the site does not serve directly. Files in `public/` are
 node scripts/precompute-trait-layers.mjs
 ```
 
-It writes the small layers the Morph Guide shows to `public/morph-guide/trait-layers-v1/` and the spot boxes to `src/components/morphguide/traitLayers.generated.js`. Commit both. If the pictures change, bump the folder name in the script (`trait-layers-v2`) so browsers do not keep the old ones.
+It writes the layers the Morph Guide shows to `public/morph-guide/trait-layers-v1/` (1200 px wide) and the spot boxes and a fingerprint of each drawing to `src/components/morphguide/traitLayers.generated.js`. Commit both. `src/lib/__tests__/pigmentExtract.test.js` fails when a drawing here changes without a rebuild, or when drawings are put back in `public/morph-guide/ink-studies-v3/` (they would be deployed and never used). Once the site has served a set of layers, bump the folder name in the script (`trait-layers-v2`) when the pictures change, so browsers do not keep the old ones.

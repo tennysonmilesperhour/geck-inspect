@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { extractPigment, pigmentAlpha, spotRegions, STUDY_WIDTH, STUDY_HEIGHT } from '@/components/morphguide/pigmentExtract';
-import { SPOT_REGIONS, TRAIT_LAYER_ROOT } from '@/components/morphguide/traitLayers.generated';
+import { existsSync } from 'node:fs';
+import { LAYER_SOURCE, SPOT_REGIONS, TRAIT_LAYER_ROOT } from '@/components/morphguide/traitLayers.generated';
+import { layerSource } from '../../../scripts/precompute-trait-layers.mjs';
 
 // A w x h RGBA image filled with one grey level.
 const flat = (w, h, level) => {
@@ -70,5 +72,17 @@ describe('pigment extraction (precomputed Morph Guide layers)', () => {
         expect(x + width).toBeLessThanOrEqual(STUDY_WIDTH + 2); expect(y + height).toBeLessThanOrEqual(STUDY_HEIGHT + 2);
       }
     }
+  });
+
+  // The drawings live in art/morph-guide/ink-studies-v3 and are not
+  // deployed; the page shows layers built from them. A new drawing that
+  // is committed without rebuilding the layers would never reach the site.
+  it('ships layers built from the current drawings and settings', () => {
+    expect(LAYER_SOURCE, 'Rebuild the layers: node scripts/precompute-trait-layers.mjs, then commit public/morph-guide/trait-layers-v1 and traitLayers.generated.js').toEqual(layerSource());
+    expect(Object.keys(LAYER_SOURCE.drawings)).toHaveLength(10);
+  });
+
+  it('keeps the full-size drawings out of the deployed site', () => {
+    expect(existsSync('public/morph-guide/ink-studies-v3'), 'New pattern-study drawings go in art/morph-guide/ink-studies-v3 (see art/README.md)').toBe(false);
   });
 });

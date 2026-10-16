@@ -27,24 +27,36 @@
  * and resizing use sharp, which is already installed as a dependency of
  * @vercel/og.
  */
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { extractPigment, PIGMENT_TRAITS } from '../src/components/morphguide/pigmentExtract.js';
+import { DRIFT, extractPigment, MIN_SPOT, PIGMENT_TRAITS, SLOPE } from '../src/components/morphguide/pigmentExtract.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_DIR = join(ROOT, 'art/morph-guide/ink-studies-v3');
 export const LAYER_DIR = 'morph-guide/trait-layers-v1';
 const OUT_DIR = join(ROOT, 'public', LAYER_DIR);
 const DATA_FILE = join(ROOT, 'src/components/morphguide/traitLayers.generated.js');
-// 640 px wide, compared by eye against the full-size drawings: the
-// stipple and pigment edges hold up in the phone cards and the desktop
-// studio, at about a fifteenth of the drawings' bytes. The pigment
-// layers cost more than the bases because their transparency is stored
-// losslessly; alphaQuality 50 is where that stopped looking different.
-const OUT_WIDTH = 640;
+// 1200 px wide: the side drawings' own width, so phones and retina
+// screens (where the studio is 900 to 1,200 device pixels wide) see the
+// stipple and crest scales as drawn. 640 px looked soft on them once the
+// 16 October 2026 drawings arrived. The top drawings (1536 px) come down
+// to 1200; nothing is ever enlarged. The pigment layers cost more than the
+// bases because their transparency is stored losslessly; alphaQuality 50
+// is where that stopped looking different.
+const OUT_WIDTH = 1200;
 const VIEWS = ['side', 'top'];
+
+/** The drawings' fingerprints and the settings the layers were made with. */
+export function layerSource() {
+  const drawings = {};
+  for (const file of readdirSync(SOURCE_DIR).filter((f) => f.endsWith('.webp')).sort()) {
+    drawings[file] = createHash('sha256').update(readFileSync(join(SOURCE_DIR, file))).digest('hex');
+  }
+  return { drawings, settings: { drift: DRIFT, minSpot: MIN_SPOT, slope: SLOPE, outWidth: OUT_WIDTH } };
+}
 
 async function loadSharp() {
   try {
@@ -68,7 +80,7 @@ async function main() {
   for (const view of VIEWS) {
     const base = await raw(`${view}-base.webp`);
     const baseOut = join(OUT_DIR, `${view}-base.webp`);
-    await sharp(join(SOURCE_DIR, `${view}-base.webp`)).resize({ width: OUT_WIDTH }).webp({ quality: 72, effort: 6 }).toFile(baseOut);
+    await sharp(join(SOURCE_DIR, `${view}-base.webp`)).resize({ width: OUT_WIDTH, withoutEnlargement: true }).webp({ quality: 72, effort: 6 }).toFile(baseOut);
     sizes.push(baseOut);
     for (const trait of PIGMENT_TRAITS) {
       const edited = await raw(`${view}-${trait}.webp`);
@@ -76,7 +88,7 @@ async function main() {
       const { layer, regions } = extractPigment(base.data, edited.data, base.width, base.height, trait);
       const out = join(OUT_DIR, `${view}-${trait}.webp`);
       await sharp(Buffer.from(layer.buffer), { raw: { width: base.width, height: base.height, channels: 4 } })
-        .resize({ width: OUT_WIDTH })
+        .resize({ width: OUT_WIDTH, withoutEnlargement: true })
         .webp({ quality: 70, alphaQuality: 50, effort: 6 })
         .toFile(out);
       sizes.push(out);
@@ -90,6 +102,9 @@ async function main() {
 // 1000 x 667 coordinates, already in the order the spots slider reveals them.
 export const TRAIT_LAYER_ROOT = '/${LAYER_DIR}';
 export const SPOT_REGIONS = ${JSON.stringify(spots)};
+// What these layers were built from. src/lib/__tests__/pigmentExtract.test.js
+// fails when a drawing or a setting changes without a rebuild.
+export const LAYER_SOURCE = ${JSON.stringify(layerSource())};
 `;
   writeFileSync(DATA_FILE, body);
   const { statSync } = await import('node:fs');
@@ -97,8 +112,10 @@ export const SPOT_REGIONS = ${JSON.stringify(spots)};
   console.log(`spot boxes: side ${spots.side.length}, top ${spots.top.length}`);
 }
 
-if (!existsSync(SOURCE_DIR)) {
-  console.error(`[trait-layers] ${SOURCE_DIR} is missing.`);
-  process.exit(1);
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (!existsSync(SOURCE_DIR)) {
+    console.error(`[trait-layers] ${SOURCE_DIR} is missing.`);
+    process.exit(1);
+  }
+  main().catch((err) => { console.error(err); process.exit(1); });
 }
-main().catch((err) => { console.error(err); process.exit(1); });

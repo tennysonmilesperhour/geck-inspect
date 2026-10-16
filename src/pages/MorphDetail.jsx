@@ -75,8 +75,9 @@ import { eyeStudyIdForMorph } from '@/components/morphguide/eyeStudyIndex';
 // the whole page falling through to the app's "Something went wrong"
 // screen (for signed-out visitors too, who never see the button).
 const ReportContent = lazyOptional(() => import('@/components/support/ReportContent'));
-// The pattern studio (about 8 kB) and the close-up eye study (about 4 kB
-// with its five siblings' text) load only on the morphs that show them.
+// The Field Notebook (about 18 kB) and the close-up eye study (about 5 kB
+// with its five siblings' text) load only on the morphs that show them,
+// and scripts/prerender.mjs starts those downloads with the page's own.
 const PatternSpectrum = lazyOptional(() => import('@/components/morphguide/PatternSpectrum'));
 const MorphEyeStudyPanel = lazyOptional(() =>
   import('@/components/morphguide/MorphEyeGuide').then((m) => ({ default: m.MorphEyeStudyPanel })),
