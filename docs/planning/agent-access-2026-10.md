@@ -67,7 +67,7 @@ How much is a Lilly White crested gecko worth? Can you breed two Lilly Whites? W
 ## Backlog (for the weekly review)
 
 - Reconcile the Lilly White origin across the blog post (`src/data/blog-posts.js`, says ACR 2014), `src/data/project-lines.js` (says ACR still produces Super Lilly Whites, which are lethal) and the morph guide (Lilly Exotics, Nick Lumb, 2010). Fixed in llms.txt on 7 Oct.
-- Put each morph's current asking prices on its HTML Morph Guide page (now only in the `.md` twin, the JSON and the MCP answer).
+- Put each morph's current asking prices on its HTML Morph Guide page (now only in the MCP answer and the Price Index files; the morph `.md` twin and `/data/morphs.json` link the index instead of copying it, because the catalog is CC BY 4.0 and the index is not).
 - Price index by age class and sex once there is enough data, and a monthly "state of the crested gecko market" stats page (numbers only, no blog post).
 - Original stats from member data, aggregated and anonymous, once there are enough records: hatch rates, incubation days by temperature, weight by age. At least 50 records per number before publishing.
 - An OpenAPI description for the `/data` files.
