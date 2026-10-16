@@ -75,43 +75,55 @@ function writeFlag(value) {
 }
 
 /**
+ * The same retries and one-time reload as lazyWithRetry, for a module a
+ * page loads itself (for example the genetics engine, fetched while the
+ * calculator shows its spinner) instead of through React.lazy.
+ *
+ * @template T
+ * @param {() => Promise<T>} factory
+ * @param {{ retries?: number, baseDelayMs?: number }} [opts]
+ * @returns {Promise<T>}
+ */
+export async function importWithRetry(factory, { retries = 2, baseDelayMs = 350 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const mod = await factory();
+      // A clean load means whatever blipped is gone; let a future stale
+      // deploy trigger its own one-time reload.
+      writeFlag(false);
+      return mod;
+    } catch (err) {
+      lastErr = err;
+      // Real error inside the module, not a fetch failure, surface it.
+      if (!isChunkLoadError(err)) throw err;
+      if (attempt < retries) await wait(baseDelayMs * (attempt + 1));
+    }
+  }
+
+  // Retries exhausted. Almost always a stale deploy: this bundle is
+  // asking for a chunk hash the CDN no longer has. Hard reload once to
+  // pull the new index.html and its fresh hashes.
+  if (typeof window !== 'undefined' && !readFlag()) {
+    writeFlag(true);
+    window.location.reload();
+    // Keep Suspense showing its fallback (a spinner) during the blink
+    // before the reload takes effect, instead of flashing the error
+    // card. This promise never resolves; the reload replaces the page.
+    await new Promise(() => {});
+  }
+
+  // Already reloaded once and still failing, or no window. Let the
+  // ErrorBoundary show the message rather than loop.
+  throw lastErr;
+}
+
+/**
  * @param {() => Promise<{ default: React.ComponentType<any> }>} factory
  * @param {{ retries?: number, baseDelayMs?: number }} [opts]
  */
-export function lazyWithRetry(factory, { retries = 2, baseDelayMs = 350 } = {}) {
-  return reactLazy(async () => {
-    let lastErr;
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const mod = await factory();
-        // A clean load means whatever blipped is gone; let a future stale
-        // deploy trigger its own one-time reload.
-        writeFlag(false);
-        return mod;
-      } catch (err) {
-        lastErr = err;
-        // Real error inside the module, not a fetch failure, surface it.
-        if (!isChunkLoadError(err)) throw err;
-        if (attempt < retries) await wait(baseDelayMs * (attempt + 1));
-      }
-    }
-
-    // Retries exhausted. Almost always a stale deploy: this bundle is
-    // asking for a chunk hash the CDN no longer has. Hard reload once to
-    // pull the new index.html and its fresh hashes.
-    if (typeof window !== 'undefined' && !readFlag()) {
-      writeFlag(true);
-      window.location.reload();
-      // Keep Suspense showing its fallback (a spinner) during the blink
-      // before the reload takes effect, instead of flashing the error
-      // card. This promise never resolves; the reload replaces the page.
-      await new Promise(() => {});
-    }
-
-    // Already reloaded once and still failing, or no window. Let the
-    // ErrorBoundary show the message rather than loop.
-    throw lastErr;
-  });
+export function lazyWithRetry(factory, opts) {
+  return reactLazy(() => importWithRetry(factory, opts));
 }
 
 // Drop-in replacement for React's `lazy` so call sites only swap their

@@ -15,8 +15,10 @@ import {
   decodeParentState,
   CALCULATOR_PAGES,
   COMPLEX_ID,
+  COMPLEX_OPTIONS_BY_VALUE,
 } from '../calculatorCatalog';
 import { predictWeighted, expandScenarios, tagsToSpec } from '../predictWeighted';
+import { WILD_TYPE } from '../index.js';
 
 describe('clutchMath', () => {
   it('computes at-least-one probability', () => {
@@ -80,6 +82,23 @@ describe('calculatorCatalog', () => {
     expect(decodeParentState('nonsense:val,axanthic:visual')).toEqual({ axanthic: 'visual' });
     // A recessive-only state on an incomplete dominant is rejected
     expect(decodeParentState('lilly_white:ph66')).toEqual({});
+  });
+
+  // The catalog does not import the engine (so a Morph Guide page can link
+  // to its calculator without downloading the engine) and keeps its own
+  // copy of the engine's name for the wild-type allele. They must agree.
+  it("uses the engine's wild-type allele name", () => {
+    expect(COMPLEX_OPTIONS_BY_VALUE.none.pair).toEqual([WILD_TYPE, WILD_TYPE]);
+    expect(stateToSpec({ lilly_white: 'het' }).loci.L[0].pair).toEqual(['lilly_white', WILD_TYPE]);
+    const [possibleHet, wildType] = stateToSpec({ axanthic: 'ph66' }).loci.AX;
+    expect(possibleHet.pair).toEqual(['axanthic', WILD_TYPE]);
+    expect(wildType.pair).toEqual([WILD_TYPE, WILD_TYPE]);
+  });
+
+  it('does not import the genetics engine', () => {
+    const src = readFileSync(resolve(__dirname, '../calculatorCatalog.js'), 'utf8');
+    const imports = [...src.matchAll(/^\s*import\s[^;]*?from\s+['"]([^'"]+)['"]/gm)].map((m) => m[1]);
+    expect(imports.filter((p) => /^(\.\/index(\.js)?|@\/lib\/genetics)$/.test(p))).toEqual([]);
   });
 
   it('keeps SEO calculator slugs in sync with scripts/seo-routes.mjs', () => {

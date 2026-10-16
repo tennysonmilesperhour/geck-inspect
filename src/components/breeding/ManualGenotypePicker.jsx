@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/select';
 import { AlertTriangle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { displayText } from '@/lib/genetics';
+import { displayText, engineTrait } from '@/lib/genetics';
 import {
   getSimpleTraits,
   COMPLEX_ENTRY,
@@ -17,10 +17,12 @@ import {
   COMPLEX_OPTIONS,
   COMPLEX_OPTIONS_BY_VALUE,
   zygosityOptions,
-  stateToSpec,
   stateToChips,
-  engineTrait,
 } from '@/lib/genetics/calculatorCatalog';
+
+// Moved to the catalog so the calculator page can use it without loading
+// this picker (and the engine) first; kept here for existing imports.
+export { buildParentFromState } from '@/lib/genetics/calculatorCatalog';
 
 /**
  * Manual genotype picker over the full calculator catalog
@@ -98,26 +100,6 @@ function ConfidenceBadge({ confidence, traitId }) {
       </PopoverContent>
     </Popover>
   );
-}
-
-/**
- * Build the animal-shaped object the calculator and simulator consume.
- * `genotype_spec` carries the weighted-locus spec (the precise path);
- * `morph_tags` carries display chips so parent summaries render the
- * same way for manual and collection parents.
- */
-export function buildParentFromState(id, name, state) {
-  return {
-    id,
-    name,
-    sex: 'Unsexed',
-    image_urls: [],
-    morph_tags: stateToChips(state),
-    genotype_spec: stateToSpec(state),
-    // Chips are labels only; the spec is the source of truth, so the
-    // calculator does not re-read these as collection tags.
-    source: 'manual',
-  };
 }
 
 // Every gene select gets a name that says which parent and which gene,
