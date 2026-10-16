@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE_URL } from '@/lib/constants';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 // Loaded on first use, not with the page (src/lib/supabaseLazy.js).
@@ -41,6 +41,7 @@ import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
 import { licenseLabel } from '@/lib/imageLicenses';
 import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
+import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import ContentSignupPrompt, { possessive } from '@/components/public/ContentSignupPrompt';
@@ -66,7 +67,12 @@ import IllustratedGecko, { hasIllustration } from '@/components/morphguide/Illus
 // The report button on member photos loads with the first photo, not with
 // the page: it renders nothing for signed-out visitors, and its dialog,
 // select and moderation code were about 12 kB of every visit's download.
-const ReportContent = lazy(() => import('@/components/support/ReportContent'));
+// lazyOptional, not React.lazy: a tab open across a release asks for a
+// file name that no longer exists, and a phone can drop one request. The
+// download is retried twice and then the button is left out, instead of
+// the whole page falling through to the app's "Something went wrong"
+// screen (for signed-out visitors too, who never see the button).
+const ReportContent = lazyOptional(() => import('@/components/support/ReportContent'));
 
 /**
  * The badge the genetics calculator gives the gene behind a morph page:
