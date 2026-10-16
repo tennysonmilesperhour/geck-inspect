@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabaseWhenIdle } from '@/lib/supabaseLazy';
 import { isGuestMode } from '@/lib/guestMode';
 
 /**
@@ -10,6 +10,11 @@ import { isGuestMode } from '@/lib/guestMode';
  *
  * Both functions are best-effort, they swallow all errors. A telemetry
  * failure must never break a user flow.
+ *
+ * They wait for the Supabase client rather than load it early: a page
+ * view on the landing page is written a moment after the page has drawn,
+ * instead of making every visitor download the client before anything
+ * appears (src/lib/supabaseLazy.js).
  */
 
 let sessionId = null;
@@ -30,7 +35,7 @@ function getSessionId() {
   }
 }
 
-async function getCurrentEmail() {
+async function getCurrentEmail(supabase) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     return user?.email || null;
@@ -73,7 +78,8 @@ export async function trackEvent(name, properties = {}) {
     if (now - last < 2000) return;
     lastSent.set(key, now);
 
-    const email = await getCurrentEmail();
+    const supabase = await getSupabaseWhenIdle();
+    const email = await getCurrentEmail(supabase);
     await supabase.from('user_events').insert({
       event_name: name,
       user_email: email,
@@ -123,7 +129,8 @@ export async function reportError(error, info = {}) {
   try {
     const message = error?.message || String(error);
     if (!shouldReportError(message, info.component)) return;
-    const email = await getCurrentEmail();
+    const supabase = await getSupabaseWhenIdle();
+    const email = await getCurrentEmail(supabase);
     const stack = error?.stack || null;
     await supabase.from('error_logs').insert({
       level: info.level || 'error',

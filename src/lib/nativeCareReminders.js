@@ -2,7 +2,7 @@
 // The website never calls the plugin. Permission is requested only from
 // the Settings card, not on launch.
 import { isNativePlatform } from '@/lib/revenuecat';
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabase } from '@/lib/supabaseLazy';
 import { effectiveWeighInMap, loadCareDefaultsFrom, memberWeighInEnabled } from '@/lib/careReminders';
 import { CARE_REMINDER_CHANNEL, buildCareNotifications } from '@/lib/nativeCareSchedule';
 
@@ -26,6 +26,7 @@ function writeIds(ids) {
 }
 
 async function loadScheduleInput(email, feedingAlertsEnabled) {
+  const supabase = await getSupabase();
   const [profileRes, geckoRes, groupRes, defaultsFrom] = await Promise.all([
     supabase.from('profiles').select('extra_data, feeding_alerts_enabled').eq('email', email).maybeSingle(),
     supabase.from('geckos').select('id,name,archived,created_date,hatch_date,weight_grams').eq('created_by', email),

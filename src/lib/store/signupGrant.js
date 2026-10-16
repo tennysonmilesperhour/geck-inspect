@@ -11,7 +11,7 @@
  * match, single-use) and applies the membership extension server-side.
  */
 
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabase } from '@/lib/supabaseLazy';
 import { captureEvent } from '@/lib/posthog';
 
 const STORAGE_KEY = 'gi_pending_signup_grant';
@@ -46,6 +46,7 @@ export async function applyPendingSignupGrant() {
   const token = readPendingSignupGrant();
   if (!token) return null;
   try {
+    const supabase = await getSupabase();
     const { data, error } = await supabase.rpc('redeem_signup_grant', { p_token: token });
     if (error) {
       console.warn('[signup-grant] rpc error', error);

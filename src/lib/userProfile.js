@@ -1,4 +1,5 @@
-import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
+import { getSupabase } from '@/lib/supabaseLazy';
+import { normalizeSupabaseUser } from '@/lib/normalizeSupabaseUser';
 import { mirroredMembershipTier } from '@/lib/nativeMembership';
 import { readCachedProfile, saveCachedProfile, isOffline, readStoredSession } from '@/lib/offlineSession';
 import { isNetworkError } from '@/lib/offlineQueue';
@@ -11,7 +12,9 @@ import { isNetworkError } from '@/lib/offlineQueue';
  */
 export async function currentAuthUser() {
   let result;
+  let supabase = null;
   try {
+    supabase = await getSupabase();
     result = await supabase.auth.getUser();
   } catch (error) {
     if (!isOffline() && !isNetworkError(error)) throw error;
@@ -20,7 +23,7 @@ export async function currentAuthUser() {
   const user = result?.data?.user;
   if (user) return user;
   if (isOffline() || isNetworkError(result?.error)) {
-    return readStoredSession(supabase.auth.storageKey)?.user || null;
+    return readStoredSession(supabase?.auth.storageKey)?.user || null;
   }
   return null;
 }
@@ -45,7 +48,7 @@ export function activeComp(rows, now = Date.now()) {
 export async function loadUserProfile(authUser) {
   const basic = normalizeSupabaseUser(authUser);
   if (!basic) return null;
-  const [profileResult, storeResult, compResult] = await Promise.all([
+  const [profileResult, storeResult, compResult] = await getSupabase().then((supabase) => Promise.all([
     supabase.from('profiles').select('*').eq('email', authUser.email).maybeSingle(),
     supabase.from('revenuecat_entitlements').select('entitlement_identifier, is_active, expires_at').eq('app_user_id', authUser.id),
     // Complimentary plans (membership_comps). Read-only for members; a
@@ -54,7 +57,7 @@ export async function loadUserProfile(authUser) {
     Promise.resolve()
       .then(() => supabase.from('membership_comps').select('tier, starts_at, ends_at').eq('email', authUser.email.toLowerCase()))
       .catch(error => ({ data: null, error })),
-  ]).catch(error => {
+  ])).catch(error => {
     console.warn('User enrichment failed:', error.message);
     return [{ data: null, error }, { data: null, error }, { data: null, error }];
   });

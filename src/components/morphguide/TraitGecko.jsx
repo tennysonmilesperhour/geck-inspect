@@ -1,7 +1,15 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { pinSegments } from './traitStudyMath';
+import { SPOT_REGIONS, TRAIT_LAYER_ROOT } from './traitLayers.generated';
 
-export const INK_ROOT = '/morph-guide/ink-studies-v3';
+// The drawings and their pigment layers are made once, ahead of time, by
+// scripts/precompute-trait-layers.mjs from the ink studies in
+// art/morph-guide/ink-studies-v3/. Each trait file holds only the paint
+// that trait adds (transparent everywhere else), so it sits on the base
+// animal directly. Until October 2026 every visitor's browser downloaded
+// the ten full drawings (2.26 MB) and worked the layers out pixel by
+// pixel, which froze a phone for about 3 seconds.
+export const INK_ROOT = TRAIT_LAYER_ROOT;
 export const traitAsset = (view, trait = 'base') => `${INK_ROOT}/${view}-${trait}.webp`;
 export const clampTrait = v => Math.max(0, Math.min(1, Number(v) || 0));
 
@@ -20,65 +28,42 @@ export const REGIONS = {
     lateral: 'M165 80 L746 80 L746 277 Q478 221 265 274 L165 260 Z M165 365 L267 346 Q478 395 746 343 L746 550 L165 550 Z',
   },
 };
-const extractedLayers = new Map();
-function loadDrawing(src) {
-  return new Promise((resolve, reject) => {
-    const image = new Image(); image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('Drawing unavailable')); image.src = src;
-  });
-}
-// Extract added pigment so redraw drift never replaces the base animal.
-async function extractPigment(view, trait) {
-  const [base, edited] = await Promise.all([loadDrawing(traitAsset(view)), loadDrawing(traitAsset(view, trait))]);
-  const canvas = document.createElement('canvas'); canvas.width = base.naturalWidth; canvas.height = base.naturalHeight;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(base, 0, 0); const original = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(edited, 0, 0, canvas.width, canvas.height);
-  const layer = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const light = trait === 'cream' || trait === 'pin';
-  for (let i = 0; i < layer.data.length; i += 4) {
-    const before = (original.data[i] + original.data[i+1] + original.data[i+2]) / 3;
-    const after = (layer.data[i] + layer.data[i+1] + layer.data[i+2]) / 3;
-    const delta = light ? after - before : before - after;
-    const pigment = light ? after > 150 && before < 215 : after < (trait === 'spots' ? 92 : 125);
-    layer.data[i+3] = pigment && delta > 28 ? Math.min(255, (delta - 28) * 8) : 0;
-  }
-  const regions = [];
-  if (trait === 'spots') {
-    const count = canvas.width * canvas.height; const seen = new Uint8Array(count);
-    for (let pixel = 0; pixel < count; pixel++) {
-      if (seen[pixel] || layer.data[pixel*4+3] < 128) continue;
-      const region = [pixel]; seen[pixel] = 1;
-      let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
-      for (let cursor = 0; cursor < region.length; cursor++) {
-        const at = region[cursor], x = at % canvas.width, y = Math.floor(at / canvas.width);
-        minX = Math.min(minX,x); maxX = Math.max(maxX,x); minY = Math.min(minY,y); maxY = Math.max(maxY,y);
-        for (const next of [at-1, at+1, at-canvas.width, at+canvas.width]) {
-          if (next >= 0 && next < count && !seen[next] && layer.data[next*4+3] >= 128 && (Math.abs(next-at) !== 1 || Math.floor(next/canvas.width) === y)) { seen[next] = 1; region.push(next); }
-        }
-      }
-      if (region.length < 40) region.forEach(at => { layer.data[at*4+3] = 0; });
-      else regions.push({ x: minX/canvas.width*1000, y: minY/canvas.height*667, width: (maxX-minX+2)/canvas.width*1000, height: (maxY-minY+2)/canvas.height*667, order: (pixel*2654435761)>>>0 });
-    }
-    regions.sort((a,b) => a.order-b.order);
-  }
-  ctx.putImageData(layer, 0, 0);
-  return { src: canvas.toDataURL('image/png'), regions };
-}
+const layersByView = new Map();
 function pigmentsFor(view) {
-  if (!extractedLayers.has(view)) extractedLayers.set(view, Promise.all(['cream','pin','tiger','spots'].map(async trait => [trait, await extractPigment(view,trait)]))
-    .then(entries => ({ ...Object.fromEntries(entries), view })));
-  return extractedLayers.get(view);
+  if (!layersByView.has(view)) {
+    const regions = (SPOT_REGIONS[view] || []).map(([x, y, width, height], order) => ({ x, y, width, height, order }));
+    layersByView.set(view, {
+      view,
+      cream: { src: traitAsset(view, 'cream') },
+      pin: { src: traitAsset(view, 'pin') },
+      tiger: { src: traitAsset(view, 'tiger') },
+      spots: { src: traitAsset(view, 'spots'), regions },
+    });
+  }
+  return layersByView.get(view);
 }
+// Same shape as before ({ view, cream: { src }, ..., spots: { src, regions } }),
+// so the study preview keeps working, but ready at once: nothing to compute.
 export function usePigments(view) {
-  const [layers, setLayers] = useState({});
+  return pigmentsFor(view === 'top' ? 'top' : 'side');
+}
+// The Morph Guide index draws about ten studies, most of them below the
+// fold on a phone. Each one fetches its pictures only when it comes within
+// 200 px of view (a full screen ahead fetched a second study, 116 KB, that
+// most phone visitors never scroll to). Without IntersectionObserver
+// (server render, tests, old browsers) everything draws straight away.
+function useNearViewport() {
+  const ref = useRef(null);
+  const [near, setNear] = useState(() => typeof window === 'undefined' || typeof window.IntersectionObserver !== 'function');
   useEffect(() => {
-    let active = true;
-    pigmentsFor(view).then(result => { if (active) setLayers(result); })
-      .catch(() => { if (active) setLayers({ view, error: true }); extractedLayers.delete(view); });
-    return () => { active = false; };
-  }, [view]);
-  return layers.view === view ? layers : {};
+    if (near || !ref.current) return undefined;
+    const observer = new window.IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { setNear(true); observer.disconnect(); }
+    }, { rootMargin: '200px 0px' });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [near]);
+  return [ref, near];
 }
 // Reveal painted islands at full pigment strength instead of fading a wash.
 function CoverageMask({ id, value, region, view }) {
@@ -111,10 +96,23 @@ export default function TraitGecko({ view = 'side', traits = {}, className = '',
   const uid = useId().replace(/:/g,'');
   const selectedView = view === 'top' ? 'top' : 'side';
   const pigments = usePigments(selectedView);
+  const [frameRef, near] = useNearViewport();
+  const [error, setError] = useState(false);
+  // SVG <image> has no error event React can listen to, so check the base
+  // drawing with a plain Image (the browser reuses the same download).
+  useEffect(() => {
+    if (!near || typeof window === 'undefined' || typeof window.Image !== 'function') return undefined;
+    let active = true;
+    const probe = new window.Image();
+    probe.onload = () => { if (active) setError(false); };
+    probe.onerror = () => { if (active) setError(true); };
+    probe.src = traitAsset(selectedView);
+    return () => { active = false; };
+  }, [near, selectedView]);
   const dorsal = clampTrait(traits.dorsal), lateral = clampTrait(traits.lateral), pin = clampTrait(traits.pinstripe), tiger = clampTrait(traits.tiger), spots = clampTrait(traits.spots);
-  const image = (trait, extra = {}) => <image href={pigments[trait]?.src || traitAsset(selectedView,trait)} width="1000" height="667" {...extra} />;
-  return <div className={`relative overflow-hidden ${className}`} style={{ aspectRatio: '3/2', background: '#f4efdf' }} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : title} aria-hidden={decorative || undefined} data-trait-view={selectedView} data-ready={!!pigments.cream} aria-busy={!pigments.cream && !pigments.error}>
-    <svg viewBox="0 0 1000 667" className="w-full h-full" aria-hidden="true">
+  const image = (trait, extra = {}) => <image href={traitAsset(selectedView,trait)} width="1000" height="667" {...extra} />;
+  return <div ref={frameRef} className={`relative overflow-hidden ${className}`} style={{ aspectRatio: '3/2', background: '#f4efdf' }} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : title} aria-hidden={decorative || undefined} data-trait-view={selectedView} data-ready={near}>
+    {near && <svg viewBox="0 0 1000 667" className="w-full h-full" aria-hidden="true">
       <defs>
         <clipPath id={`${uid}-dorsal-region`}><path d={REGIONS[selectedView].dorsal} /></clipPath>
         <clipPath id={`${uid}-flank-region`}><path d={REGIONS[selectedView].lateral} /></clipPath>
@@ -124,17 +122,17 @@ export default function TraitGecko({ view = 'side', traits = {}, className = '',
           {CREST_PATHS[selectedView].flatMap((d,row) => pinSegments(pin,row).map((s,i) => <path key={`${row}-${i}`} d={d} fill="none" stroke="white" strokeWidth="16" pathLength="100" strokeDasharray={`${s.length} ${100-s.length}`} strokeDashoffset={-s.start} />))}
         </mask>
         <mask id={`${uid}-spots`} maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="667">
-          {pigments.spots?.regions.slice(0,Math.round(pigments.spots.regions.length*spots)).map(({ order,...r }) => <rect key={order} {...r} fill="white" />)}
+          {pigments.spots.regions.slice(0,Math.round(pigments.spots.regions.length*spots)).map(({ order,...r }) => <rect key={order} {...r} fill="white" />)}
         </mask>
       </defs>
       {image('base',{ 'data-layer':'base' })}
-      {dorsal > 0 && pigments.cream && <g clipPath={`url(#${uid}-dorsal-region)`}>{image('cream',{ mask:`url(#${uid}-dorsal)`, 'data-layer':'dorsal' })}</g>}
-      {lateral > 0 && pigments.cream && <g clipPath={`url(#${uid}-flank-region)`}>{image('cream',{ mask:`url(#${uid}-flank)`, 'data-layer':'lateral' })}</g>}
-      {tiger > 0 && pigments.tiger && image('tiger',{ opacity:tiger, 'data-layer':'tiger' })}
-      {spots > 0 && pigments.spots && image('spots',{ mask:`url(#${uid}-spots)`, 'data-layer':'spots' })}
-      {pin > 0 && pigments.pin && image('pin',{ mask:`url(#${uid}-pin)`, 'data-layer':'pinstripe' })}
+      {dorsal > 0 && <g clipPath={`url(#${uid}-dorsal-region)`}>{image('cream',{ mask:`url(#${uid}-dorsal)`, 'data-layer':'dorsal' })}</g>}
+      {lateral > 0 && <g clipPath={`url(#${uid}-flank-region)`}>{image('cream',{ mask:`url(#${uid}-flank)`, 'data-layer':'lateral' })}</g>}
+      {tiger > 0 && image('tiger',{ opacity:tiger, 'data-layer':'tiger' })}
+      {spots > 0 && image('spots',{ mask:`url(#${uid}-spots)`, 'data-layer':'spots' })}
+      {pin > 0 && image('pin',{ mask:`url(#${uid}-pin)`, 'data-layer':'pinstripe' })}
       {annotate && <RegionAnnotation view={selectedView} focus={focus} />}
-    </svg>
-    {pigments.error && !decorative && <p role="status" className="absolute inset-x-2 bottom-2 rounded bg-white/95 p-2 text-xs text-amber-950">Pattern artwork could not load. Use the specimen photographs for this study.</p>}
+    </svg>}
+    {error && !decorative && <p role="status" className="absolute inset-x-2 bottom-2 rounded bg-white/95 p-2 text-xs text-amber-950">Pattern artwork could not load. Use the specimen photographs for this study.</p>}
   </div>;
 }

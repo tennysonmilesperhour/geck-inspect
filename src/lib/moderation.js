@@ -8,7 +8,8 @@
  * dismiss the report. See
  * supabase/migrations/20261003024242_content_reports_and_moderation.sql.
  */
-import { supabase as defaultClient } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 
 /** Every kind of item a member can report, with how the admin view names it. */
 export const REPORT_TARGETS = {
@@ -70,7 +71,8 @@ export function buildReport({ targetType, targetId, category = 'other', reason, 
  * while the first is still open counts as already reported, not an error.
  * Returns { alreadyReported }.
  */
-export async function submitReport(input, { client = defaultClient } = {}) {
+export async function submitReport(input, { client: given } = {}) {
+  const client = given || await getSupabase();
   const row = buildReport(input);
   const { error } = await client.from('content_reports').insert(row);
   if (!error) return { alreadyReported: false };
@@ -84,7 +86,8 @@ export async function submitReport(input, { client = defaultClient } = {}) {
  * the row here first (a forum post takes its comments with it), then the
  * database function closes the reports.
  */
-export async function moderateContent(targetType, targetId, action, { client = defaultClient } = {}) {
+export async function moderateContent(targetType, targetId, action, { client: given } = {}) {
+  const client = given || await getSupabase();
   if (!isReportTarget(targetType)) throw new Error('Unknown content type.');
   if (!['hide', 'unhide', 'remove', 'dismiss'].includes(action)) throw new Error('Unknown action.');
   if (action === 'remove' && ERASED_ON_REMOVE[targetType]) {

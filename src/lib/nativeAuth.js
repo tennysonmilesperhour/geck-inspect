@@ -1,5 +1,5 @@
 import { isNativePlatform } from './revenuecat';
-import { supabase } from './supabaseClient';
+import { getSupabase } from './supabaseLazy';
 
 export const NATIVE_AUTH_CALLBACK = 'com.geckinspect.app://auth/callback';
 export function authRedirect(path = '/MyGeckos') {
@@ -27,6 +27,7 @@ export async function installNativeAuth() {
       if (callback.failed || !callback.code) throw new Error('Invalid sign-in callback');
       if (handledCodes.has(callback.code)) return;
       handledCodes.add(callback.code);
+      const supabase = await getSupabase();
       const { error } = await supabase.auth.exchangeCodeForSession(callback.code);
       if (error) { handledCodes.delete(callback.code); throw error; }
       await Browser.close().catch(() => {});

@@ -3,6 +3,8 @@ import { installNativeShell } from '@/lib/nativeShell';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
+// Self-hosted fonts (replaces the Google Fonts stylesheet in index.html).
+import '@/styles/fonts.css'
 import '@/index.css'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { initPostHog } from '@/lib/posthog'

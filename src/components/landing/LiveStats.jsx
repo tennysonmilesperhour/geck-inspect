@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 import { Users, BookOpen, GitBranch } from 'lucide-react';
 
 /**
@@ -26,8 +27,8 @@ export default function LiveStats() {
 
   useEffect(() => {
     let cancelled = false;
-    supabase
-      .rpc('landing_stats')
+    getSupabase()
+      .then((supabase) => supabase.rpc('landing_stats'))
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error || !data) {

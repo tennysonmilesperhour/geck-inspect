@@ -23,7 +23,7 @@ html, body, #root {
             font-family: 'Inter', system-ui, sans-serif;
           }
 
-          /* Font loaded via <link> in index.html, duplicate @import removed. */
+          /* Fonts are self-hosted: @font-face rules in src/styles/fonts.css. */
 
           /* Landing-page font override. The rest of the app uses Inter
              (declared on .app-container-outline above). The public

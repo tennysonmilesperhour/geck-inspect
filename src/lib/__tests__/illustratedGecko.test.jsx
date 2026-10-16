@@ -1,5 +1,5 @@
 import React from 'react';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -85,11 +85,18 @@ describe('illustrated examples', () => {
       expect(html).not.toContain('<img'); expect(html).not.toContain('<image');
     }
   });
-  it('keeps an accessible base until pigment extraction is ready rather than showing a wrong full edited plate', () => {
+  it('draws the base and each requested layer straight from the precomputed pigment-only files', () => {
     const html=renderToStaticMarkup(<TraitGecko traits={{ dorsal:1,lateral:1,pinstripe:1,spots:1 }} />);
     expect(html).toContain('role="img"'); expect(html).toContain(traitAsset('side'));
-    expect(html).not.toContain('data-layer="pinstripe"');
+    for (const layer of ['dorsal','lateral','pinstripe','spots']) expect(html).toContain(`data-layer="${layer}"`);
+    // Never the full edited drawings (a whole second animal), and no in-page pixel work.
+    expect(html).not.toContain('ink-studies'); expect(html).not.toContain('data:image');
     expect(html).not.toContain('NaN');
+  });
+  it('keeps every shipped study file small enough for a phone on the Morph Guide', () => {
+    for (const view of ['side','top']) for (const layer of ['base','cream','pin','tiger','spots']) {
+      expect(statSync(`public${traitAsset(view,layer)}`).size).toBeLessThan(60 * 1024);
+    }
   });
   it('starts with real specimens and offers studio and recognition practice', () => {
     const html=renderToStaticMarkup(<MemoryRouter><PatternSpectrum focusSlug="pinstripe" /></MemoryRouter>);
