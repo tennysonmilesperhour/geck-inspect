@@ -121,7 +121,7 @@ export const FEEDING_GUIDE = {
               meta: 'Temperature',
               title: 'Target: 72-78°F day / 65-72°F night',
               items: [
-                'Above 85°F causes heat stress, which can be fatal.',
+                'Above 82°F (28°C) causes heat stress, which can be fatal.',
                 'Below 65°F during the day triggers slowed metabolism and appetite collapse.',
                 "Too-small tanks have no gradient; gecko can't self-regulate.",
                 'Use a digital probe thermometer, not stick-ons.',

@@ -3,11 +3,16 @@ import { readFileSync } from 'node:fs';
 import { format } from 'date-fns';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import {
+  ADULT_WEIGHT_G,
   BREEDING,
+  HATCH_WEIGHT_G,
+  HEAT_DANGER_C,
+  HEAT_DANGER_F,
   INCUBATION_PROFILES as FACT_PROFILES,
   LIFE_STAGES,
   WEIGH_IN_DAYS,
   shedRhythmSentence,
+  stageGainWords,
   stageGrams,
   stageMonths,
   stageWithGrams,
@@ -17,6 +22,10 @@ import { careStage, lifeStage } from '@/lib/lifeStage';
 import { predictNextShed, stageShedWindow } from '@/lib/shedPrediction';
 import { growthBandAt } from '@/lib/growthBand';
 import { SETUP_GUIDE } from '@/data/keepers-guides/setup';
+import { FEEDING_GUIDE } from '@/data/keepers-guides/feeding';
+import { HANDBOOK_GUIDE } from '@/data/keepers-guides/handbook';
+import { MORPH_GUIDE } from '@/data/keepers-guides/morph';
+import { BREEDING_GUIDE } from '@/data/keepers-guides/breeding';
 import { BLOG_POSTS } from '@/data/blog-posts';
 
 const category = (id) => CARE_CATEGORIES.find((c) => c.id === id);
@@ -65,17 +74,29 @@ describe('one life-stage scale', () => {
     expect(lifeStage({ today: on })).toBe('growing');
   });
 
-  it('the weight chart benchmarks in the Keeper\'s Guide are the chart\'s own band', () => {
-    const rows = SETUP_GUIDE.slides
-      .flatMap((slide) => slide.blocks || [])
-      .find((block) => block.type === 'kv' && block.rows?.some((r) => r.label === '12 months')).rows;
-    const months = { '3 months': 3, '6 months': 6, '12 months': 12, '18 months': 18, 'Full adult (2+ yrs)': 24 };
-    for (const row of rows) {
-      if (!(row.label in months)) continue;
-      const [lo, hi] = row.value.replace('g', '').split('-').map(Number);
-      const band = growthBandAt(months[row.label]);
-      expect([lo, hi], row.label).toEqual([Math.floor(band.low), Math.round(band.high)]);
-    }
+  it('the Keeper\'s Guide weight table is the life-stage pace, not the chart band\'s edges', () => {
+    // Until October 2026 the Setup guide showed the weight chart's band
+    // under "Healthy weight benchmarks", so 3 g at 6 months, the band's
+    // provisional low edge, read as healthy. The table now gives what a
+    // typical gecko weighs on the stage pace in husbandry-facts.js.
+    const blocks = SETUP_GUIDE.slides.flatMap((slide) => slide.blocks || []);
+    const table = blocks.findIndex((block) => block.type === 'kv' && block.rows?.some((r) => r.label === '12 months'));
+    expect(blocks[table - 1]).toEqual({ type: 'heading', text: 'Typical weight by age' });
+    expect(blocks.some((b) => b.type === 'heading' && /healthy weight/i.test(b.text))).toBe(false);
+    const pace = [[0, HATCH_WEIGHT_G.min], ...LIFE_STAGES.filter((s) => s.maxGrams !== null).map((s) => [s.maxMonths, s.maxGrams])];
+    const paceAt = (months) => {
+      const i = pace.findIndex(([m]) => m >= months);
+      const [[m0, g0], [m1, g1]] = [pace[i - 1], pace[i]];
+      return g0 + ((g1 - g0) * (months - m0)) / (m1 - m0);
+    };
+    expect(blocks[table].rows).toEqual([
+      { label: 'At hatch', value: `${HATCH_WEIGHT_G.min} to ${HATCH_WEIGHT_G.max} g` },
+      ...[3, 6, 12, 18].map((m) => ({ label: `${m} months`, value: `about ${Math.round(paceAt(m))} g` })),
+      { label: 'Full adult (2+ yrs)', value: `${ADULT_WEIGHT_G.min} to ${ADULT_WEIGHT_G.max} g` },
+    ]);
+    expect(blocks[table].rows[2].value).toBe('about 7 g');
+    // The pace sentence under it says the facts file's monthly gains.
+    expect(blocks[table + 1].text).toContain(`Expect about ${stageGainWords('hatchling')} as a hatchling and ${stageGainWords('juvenile')} as a juvenile`);
   });
 
   it('every row of the weight-chart blog post sits inside the chart band', () => {
@@ -167,6 +188,53 @@ describe('one shed rhythm', () => {
     expect(subadult.basis).toContain('every 3 to 4 weeks');
     const hatchling = predictNextShed({ hatchDate: '2026-09-01', today });
     expect(hatchling.basis).toContain('every 1 to 2 weeks');
+  });
+
+  it('reads the record\'s own weight when no weigh-in is logged', () => {
+    // 115 of 368 production geckos had no hatch date in October 2026, some
+    // with an adult weight on the record and no weigh-ins. Those adults got
+    // the juvenile 2 to 3 week cycle and a shed "due" weeks early.
+    const today = new Date(2026, 9, 16);
+    const sheds = [{ date: '2026-10-10' }];
+    const adult = predictNextShed({ sheds, weights: [], weightGrams: 48, hatchDate: null, today });
+    expect(adult.basis).toContain('typical adult cycle (every 4 to 6 weeks)');
+    expect(format(adult.windowStart, 'yyyy-MM-dd')).toBe('2026-11-07');
+    expect(format(adult.windowEnd, 'yyyy-MM-dd')).toBe('2026-11-21');
+    // A logged weigh-in is newer information than the record, so it wins.
+    const juvenile = predictNextShed({
+      sheds, weights: [{ record_date: '2026-10-12', weight_grams: 9 }], weightGrams: 48, today,
+    });
+    expect(juvenile.basis).toContain('typical juvenile cycle');
+    // No weight anywhere and no hatch date: the juvenile middle guess.
+    expect(predictNextShed({ sheds, weightGrams: null, today }).basis).toContain('typical juvenile cycle');
+    expect(predictNextShed({ sheds, weightGrams: '', today }).basis).toContain('typical juvenile cycle');
+  });
+});
+
+describe('one heat danger line', () => {
+  // The Feeding guide said "Above 85°F causes heat stress, which can be
+  // fatal" while the care guide's "82°F rule", the Handbook and the keeper
+  // assistant all said 82°F, so a keeper could read 83 to 84°F as safe.
+  const strings = (value) => (typeof value === 'string' ? [value]
+    : Array.isArray(value) ? value.flatMap(strings)
+      : value && typeof value === 'object' ? Object.values(value).flatMap(strings) : []);
+  const HEAT = /heat stress|fatal|dangerous|death/i;
+
+  it('every guide gives the same temperature for heat danger', () => {
+    const text = strings([CARE_CATEGORIES, FEEDING_GUIDE, SETUP_GUIDE, HANDBOOK_GUIDE, MORPH_GUIDE, BREEDING_GUIDE]);
+    const lines = text.filter((t) => HEAT.test(t) && /(above|past|over) (about )?\d+\s*°F/i.test(t));
+    expect(lines.length).toBeGreaterThanOrEqual(3);
+    for (const line of lines) {
+      for (const [, n] of line.matchAll(/(?:above|past|over) (?:about )?(\d+)\s*°F/gi)) {
+        expect(Number(n), line).toBe(HEAT_DANGER_F);
+      }
+    }
+    expect(text).toContain(`Above ${HEAT_DANGER_F}°F (${HEAT_DANGER_C}°C) causes heat stress, which can be fatal.`);
+  });
+
+  it('llms.txt says the same', () => {
+    const llms = readFileSync(new URL('../../../public/llms.txt', import.meta.url), 'utf8');
+    expect(llms).toContain(`above ${HEAT_DANGER_F}°F (${HEAT_DANGER_C}°C) is dangerous`);
   });
 });
 

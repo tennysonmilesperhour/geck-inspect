@@ -28,6 +28,14 @@
  * re-check AHEAD_WINDOW_MONTHS against members' logged weights once 50 or
  * more geckos with a hatch date have weights from at least 5 keepers.
  *
+ * OPEN QUESTION (for Tennyson): the lower edge at 6 months is 3 g, barely
+ * above hatch weight, so a 6-month-old at 3 to 5 g reads "within" and gets
+ * no warning. The facts file's slowest usual pace (0.5 g a month as a
+ * hatchling, 1 g a month as a juvenile, from a 1.5 g hatchling) reaches
+ * about 6 g at 6 months. Raising the early lower edge to that floor is
+ * undecided, so the Setup Keeper's Guide no longer shows this band as
+ * "healthy weight benchmarks": it shows the life-stage pace instead.
+ *
  * Hatch weight is about 1.5 to 3 g. Reading the stages from the facts file
  * means the chart can never disagree with the care guide.
  */

@@ -70,7 +70,9 @@ export default function HusbandryHistory({
 
   const merged = mergeLegacyEvents({ feedings: feedingRows, sheds: shedRows, events: legacyEvents });
   const { feedings, sheds } = merged;
-  const prediction = predictNextShed({ sheds, weights, hatchDate: gecko.hatch_date });
+  // The record's own weight stands in when no weigh-in is logged, so an
+  // adult with a weight but no weigh-ins gets the adult shed cycle.
+  const prediction = predictNextShed({ sheds, weights, weightGrams: gecko.weight_grams, hatchDate: gecko.hatch_date });
   const lastAte = feedings.find((r) => r.accepted !== false);
   const recentFeedings = feedings.slice(0, 12);
   const refusedRecent = feedings.slice(0, 5).filter((r) => r.accepted === false).length;

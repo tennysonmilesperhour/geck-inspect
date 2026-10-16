@@ -65,6 +65,15 @@ export const ADULT_WEIGHT_G = { min: 35, max: 60 };
 /** Lifespan with good care, in years. */
 export const LIFESPAN_YEARS = { min: 15, max: 20 };
 
+// ---------- temperature --------------------------------------------------
+// Above this an enclosure is dangerous: heat stress, and one of the most
+// common keeper-caused deaths in this species. The care guide's "82°F
+// rule", the Handbook, the keeper assistant's rules and llms.txt all say
+// 82°F; the Feeding guide said 85°F until October 2026, and a test now
+// holds every Keeper's Guide and care guide heat line to this number.
+export const HEAT_DANGER_F = 82;
+export const HEAT_DANGER_C = 28;
+
 // ---------- weigh-ins ----------------------------------------------------
 // Days between the app's weigh-in reminders for each reminder stage.
 // Hatchlings and juveniles share "growing". These are the reminder

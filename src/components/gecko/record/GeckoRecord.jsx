@@ -107,7 +107,7 @@ export default function GeckoRecord({
   const latest = latestWeighIn(record.weights, view);
   const shedForecast = access.keeper
     ? null
-    : predictNextShed({ sheds: record.publicSheds, weights: record.weights, hatchDate: view.hatch_date });
+    : predictNextShed({ sheds: record.publicSheds, weights: record.weights, weightGrams: view.weight_grams, hatchDate: view.hatch_date });
   const morePhotos = hasMorePhotos(view);
   const sections = recordSections({
     access,
