@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Mail, Lock, User as UserIcon, Check, ArrowLeft } from 'lucide-react';
 import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { isGuestMode } from '@/lib/guestMode';
+import { isPkceLinkFromAnotherBrowser, readEmailLink } from '@/lib/emailLinkAuth';
 
 // Supabase refuses a password sign-in for an unconfirmed address with
 // code email_not_confirmed (older versions only say so in the message).
@@ -83,13 +84,33 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   // exists (My Geckos picks it up), and the way back to the demo.
   const [pendingGeckoName] = useState(() => readPendingGecko()?.name || null);
   const [fromDemo] = useState(() => isGuestMode());
+  // An email token link is being checked (src/lib/emailLinkAuth.js); the
+  // page moves on by itself in a moment, so no form is shown meanwhile.
+  const [checkingLink] = useState(() => Boolean(readEmailLink(window.location.search)));
   const { toast } = useToast();
 
   useEffect(() => {
     if (initialMode === 'signup') setIsSignUp(true);
     if (initialMode === 'forgot') setIsForgot(true);
-    if (new URLSearchParams(window.location.search).get('authError') === 'callback') {
+    const authError = new URLSearchParams(window.location.search).get('authError');
+    if (authError === 'callback') {
       toast({ title: 'Sign-in link could not be completed', description: 'Request a fresh link and open it on the device where you started sign-in.', variant: 'destructive' });
+    }
+    if (authError === 'link') {
+      toast({ title: 'That email link has expired or was already used', description: 'Request a fresh one below.', variant: 'destructive' });
+      if (initialMode === 'reset') setIsForgot(true);
+    }
+    // A sign-in link opened in a different browser from the one that asked
+    // for it (the PKCE flow keeps its key in the asking browser). A
+    // confirmation has still confirmed the email; a reset has to be asked
+    // for again here.
+    if (isPkceLinkFromAnotherBrowser()) {
+      if (initialMode === 'reset') {
+        toast({ title: 'Open the reset link where you asked for it', description: 'This browser did not ask for it. Request a new link here and open it in this browser.', variant: 'destructive' });
+        setIsForgot(true);
+      } else {
+        toast({ title: 'Your email is confirmed', description: 'Sign in below to continue.' });
+      }
     }
     // An expired or already-used confirmation or reset link comes back with
     // error_description in the URL hash; it used to land on a plain sign-in
@@ -214,6 +235,17 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     }
     setIsLoading(false);
   };
+
+  if (checkingLink) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
+        <div className="flex items-center gap-3 text-slate-300" role="status">
+          <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+          Checking your link
+        </div>
+      </div>
+    );
+  }
 
   if (signUpSent || resetSent) {
     const isReset = resetSent;

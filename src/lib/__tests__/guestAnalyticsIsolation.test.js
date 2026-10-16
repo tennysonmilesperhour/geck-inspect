@@ -46,10 +46,10 @@ describe('guest demo analytics isolation', () => {
     expect(analytics.trackEvent).not.toHaveBeenCalled();
   });
 
-  it('skips the static visitor beacon when a page reloads in guest mode', () => {
-    const guestGuard = indexHtml.indexOf('sessionStorage.getItem("geck_inspect_guest_mode")');
-    const beaconEndpoint = indexHtml.indexOf('/functions/v1/track');
-    expect(guestGuard).toBeGreaterThan(-1);
-    expect(beaconEndpoint).toBeGreaterThan(guestGuard);
+  it('has no third-party beacon or analytics loader inline in the page', () => {
+    // The Robauto pixel was removed (review item E3 31) and Google
+    // Analytics is started by the app after the consent check, so nothing
+    // in index.html calls out before the app has decided.
+    expect(indexHtml).not.toMatch(/functions\/v1\/track|sendBeacon|googletagmanager\.com\/gtag/);
   });
 });

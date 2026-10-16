@@ -46,7 +46,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://www.google.com https://www.googletagmanager.com https://images.unsplash.com; frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com https://hooks.stripe.com https://m.stripe.network https://us.posthog.com https://rcm-na.amazon-adsystem.com https://ws-na.amazon-adsystem.com https://z-na.amazon-adsystem.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; report-uri https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/csp-report; report-to csp-endpoint"
+          "value": "default-src 'self'; script-src 'self' 'sha256-PisJnGv/fw7i9QFSPh0mrF+sH+WjPd8cfA9f7IWRQqs=' 'sha256-DCHz+JQnnOTcQPY2cRm1MeBnFfGDxiDLC+4Em9LAbBE=' 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc=' https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://www.google.com https://www.googletagmanager.com https://images.unsplash.com; frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com https://hooks.stripe.com https://m.stripe.network https://us.posthog.com https://rcm-na.amazon-adsystem.com https://ws-na.amazon-adsystem.com https://z-na.amazon-adsystem.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; report-uri https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/csp-report; report-to csp-endpoint"
         },
         {
           "key": "Reporting-Endpoints",
@@ -134,6 +134,10 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
         }
       ]
     },

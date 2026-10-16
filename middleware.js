@@ -10,8 +10,12 @@
  *    the SPA shell, a prerendered page, or a file. A public/404.html
  *    cannot do this: Vercel would serve that file before the rewrite
  *    and break refresh on /MyGeckos and /Dashboard.
+ * 3. Pages that continue get the analytics region cookie (ask or open,
+ *    from Vercel's country header), so the app knows to ask EEA and UK
+ *    visitors before analytics load (api/_lib/analytics-region.js).
  */
 import { classifyAgent, logAgentHit } from './api/_lib/bots.js';
+import { continueWithRegionCookie } from './api/_lib/analytics-region.js';
 import { isKnownAppPath } from './api/_lib/known-paths.js';
 import {
   FOUNDER_NAME,
@@ -77,5 +81,5 @@ export default function middleware(request, context) {
       },
     });
   }
-  return undefined;
+  return continueWithRegionCookie(request);
 }

@@ -71,34 +71,10 @@
       })();
     </script>
 
-    <!-- Google Analytics 4: prod hostnames only. Staging and preview
-         builds skip the script entirely so they don't pollute the GA
-         stream. `send_page_view: false` prevents a double pageview on
-         initial load; GA4PageTracker.jsx fires one explicit page_view
-         per React-Router navigation (including the first render). -->
-    <script>
-      (function () {
-        var h = location.hostname;
-        var isProd = h === 'geckinspect.com' || h === 'www.geckinspect.com';
-        if (!isProd) return;
-        // The privacy policy promises that analytics honour the browser's
-        // Do Not Track setting. PostHog does that through respect_dnt;
-        // Google Analytics does not on its own, so it is not loaded at all
-        // when Do Not Track or Global Privacy Control is on.
-        var n = window.navigator || {};
-        var dnt = n.doNotTrack || window.doNotTrack || n.msDoNotTrack;
-        if (dnt === '1' || dnt === 'yes' || n.globalPrivacyControl === true) return;
-        var GA_ID = 'G-WLGHJ7KC2N';
-        var s = document.createElement('script');
-        s.async = true;
-        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
-        document.head.appendChild(s);
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () { window.dataLayer.push(arguments); };
-        window.gtag('js', new Date());
-        window.gtag('config', GA_ID, { send_page_view: false });
-      })();
-    </script>
+    <!-- Google Analytics is started by the app (loadGoogleAnalytics in
+         src/lib/ga.js), not here, so EEA and UK visitors can be asked
+         first (src/lib/analyticsConsent.js) and the Content Security
+         Policy has one inline script fewer to allow. -->
 
     <!-- Theme + accent: apply persisted choices synchronously before
          CSS/JS loads so users don't see a flash of the default palette.
@@ -166,31 +142,6 @@
     <meta name="twitter:title" content="Geck Inspect: Crested Gecko Breeding App for Pricing, Pairings and Sales" />
     <meta name="twitter:description" content="The crested gecko app for the business side of breeding. See what every gecko is worth, what a pairing's eggs should bring, and your profit by season. Free to start." />
     <meta name="twitter:image" content="https://geckinspect.com/og-image.png" />
-
-    <!-- Robauto.ai A.I. Growth Engine Pixel. Detects LLM bot traffic
-         and AI referrals (ChatGPT, Claude, Perplexity, etc.) so we can
-         attribute organic AI-driven visits. Fires once per page load via
-         sendBeacon (XHR fallback) and is non-blocking.
-
-         Only origin + path are sent. Never location.href: the URL
-         fragment carries Supabase auth tokens after OAuth and email
-         confirmation, and query strings can carry referral and signup
-         grant tokens. None of that may leave the site. -->
-    <script>
-    (function(){
-      try {
-        if (sessionStorage.getItem("geck_inspect_guest_mode") === "1") return;
-      } catch (_) {
-        // Session storage may be unavailable in restricted browser contexts.
-      }
-      var pid="94be07bb-a48d-44fa-b1d0-c9d88d2fc975";
-      var ep="https://hkeytqaukllckucnhzey.supabase.co/functions/v1/track";
-      var safeUrl=location.origin+location.pathname;
-      var d=JSON.stringify({path:location.pathname,url:safeUrl,referer:document.referrer});
-      if(navigator.sendBeacon){navigator.sendBeacon(ep+"?pid="+pid,d)}
-      else{var x=new XMLHttpRequest();x.open("POST",ep+"?pid="+pid);x.setRequestHeader("Content-Type","application/json");x.send(d)}
-    })();
-    </script>
 
     <!-- Site-level structured data (Organization + WebSite). Page-specific
          schema (Article, FAQPage, HowTo, Product, BreadcrumbList) is emitted
