@@ -3,19 +3,14 @@
  * in gecko_images (an ilike match on primary_morph, which holds values
  * such as 'harlequin', 'lilly_white' or 'super_dalmatian').
  *
- * The page matches on the first word of the morph name, so 'Lilly White'
- * also finds photos tagged plain 'lilly'. "Super" and "Extreme" are too
- * general on their own: on 16 Oct 2026, 8 reviewed member photos tagged
- * super_dalmatian would have shown (one as the hero) on every new super
- * page, Super Lilly White included, and 3 tagged extreme_harlequin
- * already showed on Extreme Brindle. Those names match in full, with "_"
- * between the words, which ilike reads as any one character (a space or
- * an underscore).
+ * The page matches the whole morph name (Tennyson, 16 Oct 2026), so a
+ * Red Base page no longer shows every photo whose tag starts with "red",
+ * and a super page shows only that super's photos. The words are joined
+ * with "_", which ilike reads as any one character, so the term matches
+ * a tag written with a space or with an underscore: 'Lilly White' finds
+ * both 'lilly_white' and 'Lilly White Harlequin'. A plain space would
+ * not match the underscored tags, and the gallery would come up empty.
  */
-const GENERIC_FIRST_WORDS = new Set(['super', 'extreme']);
-
 export function galleryMorphTerm(morphName) {
-  const words = String(morphName || '').toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.length) return '';
-  return GENERIC_FIRST_WORDS.has(words[0]) ? words.join('_') : words[0];
+  return String(morphName || '').toLowerCase().split(/\s+/).filter(Boolean).join('_');
 }

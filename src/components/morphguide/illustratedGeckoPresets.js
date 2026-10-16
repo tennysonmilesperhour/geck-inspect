@@ -150,6 +150,28 @@ export const ILLUSTRATED_GECKO_PRESETS = {
     label: 'White Wall',
     phenotype: { palette: { base: '#a35a2a', pattern: '#fbf9f2' }, lateral: 1, dorsal: 0.3 },
   },
+  'white-wall-white-spot': {
+    label: 'White Wall / White Spot',
+    phenotype: { palette: { base: '#9e4422', dark: '#3a1c10', pattern: '#fbf9f2' }, dorsal: 0.7, lateral: 0.65 },
+  },
+  'soft-scale': {
+    label: 'Soft Scale',
+    phenotype: {
+      palette: { base: '#d95338', dark: '#3e262c', pattern: '#f7edd4', eye: '#b8bec6' },
+      dorsal: 1,
+      flameTongues: 1,
+      lateral: 0.55,
+    },
+  },
+  'super-soft-scale': {
+    label: 'Super Soft Scale',
+    phenotype: {
+      palette: { base: '#ee5d32', dark: '#2e2228', pattern: '#faf0da', eye: '#c8d0d8' },
+      dorsal: 1,
+      flameTongues: 1,
+      lateral: 0.85,
+    },
+  },
   frappuccino: {
     label: 'Frappuccino',
     phenotype: { palette: { base: '#4a2e1c', pattern: '#f1e2c4', outline: '#160d07' }, dorsal: 1, dorsalStyle: 'saddle', lillyWhite: 1 },
@@ -194,6 +216,13 @@ export const ILLUSTRATED_GECKO_PRESETS = {
     goal: true,
     phenotype: { palette: { base: '#f3efe4', pattern: '#ffffff', outline: '#a49c8a', eye: '#3a3632', crest: '#ffffff' } },
   },
+  translucent: {
+    label: 'Translucent',
+    phenotype: {
+      palette: { base: '#d8be98', dark: '#8c6d58', pattern: '#f5ebd6', eye: '#4a4e58' },
+      dorsal: 0.3,
+    },
+  },
   'red-base': {
     label: 'Red Base',
     phenotype: { palette: { ...RED, pattern: '#b23a2c' }, dorsal: 0.6, flameTongues: 0.5 },
@@ -230,7 +259,7 @@ export const ILLUSTRATED_GECKO_PRESETS = {
 
 /** True when the Morph Guide slug has an illustration preset. */
 export function hasIllustration(slug) {
-  return Object.prototype.hasOwnProperty.call(ILLUSTRATED_GECKO_PRESETS, slug);
+  return Boolean(slug && Object.prototype.hasOwnProperty.call(ILLUSTRATED_GECKO_PRESETS, slug));
 }
 
 // ---------------------------------------------------------------------------

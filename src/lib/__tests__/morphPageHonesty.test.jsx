@@ -286,8 +286,11 @@ describe('gallery photo match', () => {
     expect(ilike('extreme_harlequin', galleryMorphTerm('Extreme Brindle'))).toBe(false);
   });
 
-  it('still matches on the first word for every other morph', () => {
-    expect(galleryMorphTerm('Lilly White')).toBe('lilly');
-    expect(galleryMorphTerm('Harlequin')).toBe('harlequin');
+  it('matches the whole name, whether the tag uses a space or an underscore', () => {
+    expect(galleryMorphTerm('Lilly White')).toBe('lilly_white');
+    expect(galleryMorphTerm(' Harlequin ')).toBe('harlequin');
+    expect(ilike('lilly_white', galleryMorphTerm('Lilly White'))).toBe(true);
+    expect(ilike('Lilly White Harlequin', galleryMorphTerm('Lilly White'))).toBe(true);
+    expect(ilike('red_harlequin', galleryMorphTerm('Red Base'))).toBe(false);
   });
 });

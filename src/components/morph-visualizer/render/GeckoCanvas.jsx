@@ -11,8 +11,14 @@ import GeckoCanvasSide from './GeckoCanvasSide';
 import GeckoCanvasTop from './GeckoCanvasTop';
 
 export default function GeckoCanvas({ phenotype, selections, view = 'side' }) {
-  if (view === 'top') {
-    return <GeckoCanvasTop phenotype={phenotype} selections={selections} />;
-  }
-  return <GeckoCanvasSide phenotype={phenotype} selections={selections} />;
+  return (
+    <div className="w-full h-full [&_path]:transition-[fill,stroke,opacity] [&_path]:duration-200 [&_ellipse]:transition-[fill,stroke,opacity,rx,ry] [&_ellipse]:duration-200 [&_circle]:transition-[fill,stroke,opacity,r] [&_circle]:duration-200 [&_stop]:transition-[stop-color,stop-opacity] [&_stop]:duration-200">
+      {view === 'top' ? (
+        <GeckoCanvasTop phenotype={phenotype} selections={selections} />
+      ) : (
+        <GeckoCanvasSide phenotype={phenotype} selections={selections} />
+      )}
+    </div>
+  );
 }
+

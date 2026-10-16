@@ -61,8 +61,10 @@ import { MorphImageContext, morphInitials } from '@/components/morphguide/MorphP
 import MorphGeneticsDemo, { geneticsDemoFor } from '@/components/morphguide/MorphGeneticsDemo';
 import MorphProgressBar from '@/components/morphguide/MorphProgressBar';
 import MorphSwipeNav from '@/components/morphguide/MorphSwipeNav';
-import PatternSpectrum, { spectrumPositionFor } from '@/components/morphguide/PatternSpectrum';
+import { spectrumPositionFor } from '@/components/morphguide/spectrumPosition';
 import IllustratedGecko, { hasIllustration } from '@/components/morphguide/IllustratedGecko';
+import { eyeStudyIdForMorph } from '@/components/morphguide/eyeStudyIndex';
+
 
 // The report button on member photos loads with the first photo, not with
 // the page: it renders nothing for signed-out visitors, and its dialog,
@@ -73,6 +75,12 @@ import IllustratedGecko, { hasIllustration } from '@/components/morphguide/Illus
 // the whole page falling through to the app's "Something went wrong"
 // screen (for signed-out visitors too, who never see the button).
 const ReportContent = lazyOptional(() => import('@/components/support/ReportContent'));
+// The pattern studio (about 8 kB) and the close-up eye study (about 4 kB
+// with its five siblings' text) load only on the morphs that show them.
+const PatternSpectrum = lazyOptional(() => import('@/components/morphguide/PatternSpectrum'));
+const MorphEyeStudyPanel = lazyOptional(() =>
+  import('@/components/morphguide/MorphEyeGuide').then((m) => ({ default: m.MorphEyeStudyPanel })),
+);
 
 /**
  * The badge the genetics calculator gives the gene behind a morph page:
@@ -369,9 +377,9 @@ export default function MorphDetail() {
 
         // Community photos of this morph from the gallery; nice touch if we have them.
         try {
-          // First word of the name, or the whole name for "Super ..." and
-          // "Extreme ..." (src/lib/morphGallery.js).
-          const firstWord = galleryMorphTerm(best?.morph_name || displayName);
+          // The whole morph name, written to match a tag with a space or an
+          // underscore (src/lib/morphGallery.js).
+          const term = galleryMorphTerm(best?.morph_name || displayName);
           // Reviewed photos from members only. gecko_images also holds about
           // 3,800 scraped marketplace listing photos (created_by is null),
           // which the caption below would otherwise call keeper uploads.
@@ -380,7 +388,7 @@ export default function MorphDetail() {
           const { data: imgs } = await supabase
             .from('gecko_images')
             .select('id, image_url, primary_morph, owner_profile_id')
-            .ilike('primary_morph', `%${firstWord}%`)
+            .ilike('primary_morph', `%${term}%`)
             .eq('verified', true)
             .not('owner_profile_id', 'is', null)
             .limit(8);
@@ -681,6 +689,14 @@ export default function MorphDetail() {
           {(keyFeatures.length > 0 || visualIdentifiers.length > 0) && (
             <Reveal as="section" id="identify" className="scroll-mt-20">
               <SectionHeading icon={Eye}>How to identify {article(morphName)} {morphName}</SectionHeading>
+              {heroImage && hasIllustration(slug) && (
+                <figure className="mb-6 overflow-hidden rounded-2xl border border-neutral-800 bg-[#f4efdf] p-3 sm:p-4">
+                  <IllustratedGecko morph={slug} className="w-full rounded-xl" />
+                  <figcaption className="mt-2 text-center text-xs font-medium text-[#564c3d]">
+                    Field guide plate: {morphName} diagnostic pattern and pigment study
+                  </figcaption>
+                </figure>
+              )}
               {keyFeatures.length > 0 && (
                 <>
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-400 mb-3">Key features</h3>
@@ -694,9 +710,16 @@ export default function MorphDetail() {
                 </>
               )}
               <p className="mt-5 text-sm text-neutral-400">Visible features can suggest comparisons, but a photograph or illustration does not establish genotype. Use several views, natural firing states and documented lineage when assessing an animal.</p>
+              {eyeStudyIdForMorph(slug) && (
+                <Suspense fallback={null}>
+                  <MorphEyeStudyPanel slug={slug} />
+                </Suspense>
+              )}
               {localMorph?.sources?.length > 0 && <div className="mt-4 rounded-xl border border-neutral-800 p-4"><h3 className="text-sm font-semibold text-white">Specimens and breeder references</h3><ul className="mt-2 space-y-2 text-sm">{morphSourceLinks(localMorph.sources).map(({ url, label }) => <li key={url}><a href={url} target="_blank" rel="noreferrer" className="text-emerald-300 underline">{label}</a></li>)}</ul></div>}
               {spectrumPositionFor(slug) !== null && (
-                <PatternSpectrum key={slug} focusSlug={slug} className="mt-8" />
+                <Suspense fallback={null}>
+                  <PatternSpectrum key={slug} focusSlug={slug} className="mt-8" />
+                </Suspense>
               )}
               {/* No "is your gecko one?" check on a super breeders avoid
                   making: lineage, not a photo, says whether one hatched. */}
