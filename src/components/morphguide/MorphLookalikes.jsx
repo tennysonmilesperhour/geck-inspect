@@ -36,8 +36,13 @@ function Tile({ slug, name, label, to, onClick }) {
  * parts of the gecko to check (worked out from the sentence and both
  * morphs' visual identifiers). Data comes from the `lookalikes` field in
  * src/data/morph-guide.js.
+ *
+ * `showIdLink` adds "Still not sure? Identify your gecko from a photo"
+ * under each pair. The morph page turns it off for supers breeders avoid
+ * making (doNotBreed): no living gecko is a Super Lilly White, and the
+ * page should not invite anyone to identify one.
  */
-export default function MorphLookalikes({ slug, name, lookalikes = [] }) {
+export default function MorphLookalikes({ slug, name, lookalikes = [], showIdLink = true }) {
   const self = getMorph(slug);
   const items = lookalikes
     .map((l) => ({ ...l, morph: getMorph(l.slug) }))
@@ -95,14 +100,16 @@ export default function MorphLookalikes({ slug, name, lookalikes = [] }) {
               </div>
             )}
 
-            <Link
-              to="/Recognition"
-              onClick={() => trackMorphCta(slug, '/Recognition', 'lookalike_compare')}
-              className="mt-3 inline-flex min-h-9 touch:min-h-11 items-center gap-1.5 text-xs text-neutral-400 hover:text-emerald-200 transition-colors"
-            >
-              <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-              Still not sure? Identify your gecko from a photo
-            </Link>
+            {showIdLink && (
+              <Link
+                to="/Recognition"
+                onClick={() => trackMorphCta(slug, '/Recognition', 'lookalike_compare')}
+                className="mt-3 inline-flex min-h-9 touch:min-h-11 items-center gap-1.5 text-xs text-neutral-400 hover:text-emerald-200 transition-colors"
+              >
+                <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                Still not sure? Identify your gecko from a photo
+              </Link>
+            )}
           </div>
         );
       })}

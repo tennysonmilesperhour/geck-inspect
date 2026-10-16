@@ -43,6 +43,7 @@ import {
 } from '@/entities/all';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { logFeedings, undoFeedings } from '@/lib/husbandryLog';
+import { LIFE_STAGES } from '@/data/husbandry-facts';
 import { addDays, differenceInCalendarDays } from 'date-fns';
 
 // ---------------------------------------------------------------------------
@@ -172,6 +173,20 @@ function normalizeShedQuality(quality) {
 
 const SHED_STALE_DAYS = 45;
 
+/**
+ * "about every 1 to 4 weeks while growing and every 4 to 6 weeks as
+ * adults", from the life stages in src/data/husbandry-facts.js. Until
+ * 16 Oct 2026 this said "roughly every 2 to 4 weeks", which matched no
+ * stage: hatchlings shed far more often and adults less often.
+ */
+export function shedRhythmShort() {
+  const growing = LIFE_STAGES.filter((s) => s.maxGrams !== null);
+  const adult = LIFE_STAGES.find((s) => s.maxGrams === null);
+  const lo = Math.min(...growing.map((s) => s.shedWeeks[0]));
+  const hi = Math.max(...growing.map((s) => s.shedWeeks[1]));
+  return `about every ${lo} to ${hi} weeks while growing and every ${adult.shedWeeks[0]} to ${adult.shedWeeks[1]} weeks as adults`;
+}
+
 async function listDueEggs(ctx) {
   const [eggs, plans] = await Promise.all([
     Egg.filter({ status: 'Incubating' }).catch(() => []),
@@ -286,7 +301,7 @@ async function listDueSheds(ctx) {
       : `- **${g.name}**: no shed ever logged`
   ));
   const more = stale.length > 15 ? `\n\n...and ${stale.length - 15} more.` : '';
-  return `${stale.length} gecko${stale.length === 1 ? ' has' : 's have'} no shed logged in the last ${SHED_STALE_DAYS} days:\n\n${lines.join('\n')}${more}\n\nCresties shed roughly every 2 to 4 weeks, so a long gap usually just means it was not logged.`;
+  return `${stale.length} gecko${stale.length === 1 ? ' has' : 's have'} no shed logged in the last ${SHED_STALE_DAYS} days:\n\n${lines.join('\n')}${more}\n\nCresties shed ${shedRhythmShort()}, so a long gap usually just means it was not logged.`;
 }
 
 // ---------------------------------------------------------------------------

@@ -8,17 +8,24 @@
  */
 
 const SITE_URL = 'https://geckinspect.com';
+// CC BY 4.0, for the morph and genetics data. The Price Index is not CC BY:
+// its numbers are free to cite with a link (src/lib/priceIndexPolicy.js).
 export const DATA_LICENSE = 'https://creativecommons.org/licenses/by/4.0/';
 export const MCP_URL = `${SITE_URL}/mcp`;
+
+// Copied from PRICE_DATA_TERMS in src/lib/priceIndexPolicy.js, because this
+// module stays dependency-free; a test keeps the two the same.
+const PRICE_TERMS = 'Free to cite with a link: you may quote and cite these numbers, with a link to the page they came from.';
 
 export const OPEN_DATASETS = [
   {
     id: 'price-index',
     name: 'Geck Inspect Price Index: crested gecko asking prices',
     description:
-      'Asking prices for crested geckos (Correlophus ciliatus) by trait and market, compiled by Geck Inspect from public listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe. Each row gives the number of listings and the 25th percentile, median and 75th percentile asking price in USD from the latest full check, plus monthly medians since May 2026. Asking prices, not sale prices.',
+      'An asking-price snapshot from public marketplace listings of crested geckos (Correlophus ciliatus) in the United States, South Korea, Japan and Europe, by trait and market. Each row gives the number of listings and the 25th percentile, median and 75th percentile asking price in USD from the latest full check, plus monthly medians since May 2026. Asking prices, not sale prices.',
     keywords: ['crested gecko price', 'crested gecko value', 'reptile market', 'Lilly White price', 'Axanthic price'],
-    license: DATA_LICENSE,
+    license: null,
+    licenseNote: PRICE_TERMS,
     temporalStart: '2026-05',
     spatialCoverage: ['United States', 'South Korea', 'Japan', 'Europe'],
     files: [
@@ -31,7 +38,7 @@ export const OPEN_DATASETS = [
     id: 'morphs',
     name: 'Crested gecko morph catalog',
     description:
-      'Every documented crested gecko morph in the Geck Inspect Morph Guide with its definition, category, inheritance (polygenic, incomplete dominant, recessive), rarity, identification markers, lookalikes and how to tell them apart, competing genetics models, history, typical adult price range and sources.',
+      'Every documented crested gecko morph in the Geck Inspect Morph Guide with its definition, category, inheritance (polygenic, incomplete dominant, recessive), rarity, identification markers, lookalikes and how to tell them apart, competing genetics models, history, typical adult price range where one is known, and sources.',
     keywords: ['crested gecko morphs', 'Harlequin', 'Lilly White', 'Phantom', 'Cappuccino', 'Axanthic'],
     license: DATA_LICENSE,
     files: [

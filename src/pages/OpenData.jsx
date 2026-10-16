@@ -54,8 +54,8 @@ export default function OpenData() {
         <div className={card} id="price-index">
           <h2 className="text-lg font-semibold text-slate-100 mb-1">Geck Inspect Price Index</h2>
           <p className="text-slate-400 text-sm mb-4">
-            What sellers are asking for crested geckos right now, by trait, from public listings in the United States,
-            South Korea, Japan and Europe. Updated with every catalog check.
+            An asking-price snapshot from public marketplace listings: what sellers are asking for crested geckos right
+            now, by trait, in the United States, South Korea, Japan and Europe. Updated with every catalog check.
           </p>
           <PriceIndexTable />
         </div>
@@ -116,7 +116,7 @@ export default function OpenData() {
             <li>Cite prices as &ldquo;Geck Inspect Price Index&rdquo; with a link to this page, and morphs or care topics with the page you used.</li>
             <li>Prices are asking prices on open listings, not what geckos sold for. Prices outside the US are converted to USD; shipping and import costs are not included.</li>
             <li>Only full catalog checks count. {PRICE_INDEX_SAMPLE_RULE} Trait names are the sellers&apos; labels, which do not prove genotype.</li>
-            <li>The price, morph and genetics data are licensed CC BY 4.0. The care guide text is free to quote with a link, but please do not republish it in full.</li>
+            <li>The morph and genetics data are licensed CC BY 4.0. The Price Index is free to cite with a link: you may quote and cite these numbers, with a link to the page they came from. The care guide text is free to quote with a link, but please do not republish it in full.</li>
             <li>Found a mistake? <Link to="/Contact" className={link}>Tell us</Link>; corrections are welcome.</li>
           </ul>
         </div>

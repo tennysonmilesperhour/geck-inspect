@@ -58,7 +58,9 @@ function withMorphList(intro, morphs) {
   const section = [
     heading,
     '',
-    `Each of the ${morphs.length} crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.`,
+    // Not every page has a price: lethal and health-risk supers, and genes
+    // with no index data behind a range, have none.
+    `Each of the ${morphs.length} crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, lookalikes and, where index data supports it, a typical price, plus Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.`,
     '',
     ...morphs.map((m) => `- ${m.name}: https://geckinspect.com/MorphGuide/${m.slug}`),
     '',

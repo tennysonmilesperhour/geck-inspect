@@ -25,7 +25,9 @@
  * them would be fake precision. They arrive in a later phase as
  * expression bands, per docs/planning/MORPH_CALCULATOR_PLAN.md.
  */
-import { getTrait, WILD_TYPE } from '@/lib/genetics';
+// Relative, not '@/lib/genetics', so Node scripts (build-agent-data.mjs,
+// prerender.mjs) can import this catalog without Vite.
+import { getTrait, WILD_TYPE } from './index.js';
 
 export const COMPLEX_LOCUS = 'SABLE_COMPLEX';
 export const COMPLEX_ID = 'sable_complex';
@@ -584,22 +586,22 @@ export const PAIRING_PAGES_BY_SLUG = Object.fromEntries(
 );
 
 // ---------- Morph Guide outcome links ----------------------------------
-// Maps engine trait/combo ids to Morph Guide slugs where an entry
-// exists today. outcomeValue.js also prices outcomes through this map,
-// so two ids stay as they were when the Phantom, Empty Back, Whiteout and
-// Luwak pages were added (16 Oct 2026): whiteout still points at White
-// Wall, whose price and /calculator/whiteout link the market uses, and
-// sable is left out, since mapping it would start pricing Sable outcomes.
-// Phantom, Empty Back, Highway and Luwak have no guide price, so linking
-// them changes no estimate.
+// Maps engine trait/combo ids to the Morph Guide page about that gene or
+// combo, for "read more" links on calculator outcomes, the pairing pages
+// and the calculator's gene rows. Every slug must be a real page (a test
+// checks them against MORPHS), and each gene links to its own page:
+// Whiteout to /MorphGuide/whiteout, Sable to /MorphGuide/sable. Until
+// 16 Oct 2026 whiteout pointed at White Wall and sable had no entry, so
+// those outcome links never reached the new pages.
 
 export const MORPH_GUIDE_SLUGS = {
   lilly_white: 'lilly-white',
   cappuccino: 'cappuccino',
+  sable: 'sable',
   axanthic: 'axanthic',
   hypo: 'hypo',
   softscale: 'soft-scale',
-  whiteout: 'white-wall',
+  whiteout: 'whiteout',
   phantom: 'phantom',
   empty_back: 'empty-back',
   highway: 'highway',
@@ -613,6 +615,26 @@ export const MORPH_GUIDE_SLUGS = {
   luwak: 'luwak',
   tricolor: 'tricolor',
   patternless: 'patternless',
+};
+
+// The Morph Guide entry whose price range values an outcome
+// (outcomeValue.js). Kept apart from the links above so fixing a link
+// cannot quietly change a season estimate: Whiteout has no guide price and
+// is still valued as White Wall, the label it sells under, and Sable is
+// still left out, so Sable outcomes stay unpriced until that is decided.
+export const MORPH_PRICE_SLUGS = {
+  ...Object.fromEntries(Object.entries(MORPH_GUIDE_SLUGS).filter(([id]) => id !== 'sable')),
+  whiteout: 'white-wall',
+};
+
+// Morph Guide pages with no calculator page of their own whose look the
+// calculator reads as another gene: a White Wall tag counts as Whiteout
+// (decision D13), so the White Wall page keeps its /calculator/whiteout
+// button. Phantom Pinstripe is left out: its page says the label does not
+// prove the Phantom gene. Used by morphguide/morphCta.js and the server
+// HTML (scripts/prerender.mjs).
+export const GUIDE_CALCULATOR_ALIASES = {
+  'white-wall': 'whiteout',
 };
 
 /** Engine trait metadata (sources, proven-by) for a catalog entry. */

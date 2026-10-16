@@ -12,7 +12,13 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { PRICE_INDEX_SAMPLE_RULE, applyPricePolicy } from '../../src/lib/priceIndexPolicy.js';
+import {
+  PRICE_DATA_TERMS,
+  PRICE_INDEX_SAMPLE_RULE,
+  PRICE_INDEX_WHAT,
+  applyPricePolicy,
+} from '../../src/lib/priceIndexPolicy.js';
+import { COMPLEX_OPTIONS, SIMPLE_TRAITS } from '../../src/lib/genetics/calculatorCatalog.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 export const REPO_ROOT = resolve(__dirname, '../..');
@@ -121,6 +127,33 @@ export async function loadBlogPosts() {
   }));
 }
 
+// ---- genetics status --------------------------------------------------
+
+// The calculator's badge for each gene it offers ('proven' or 'emerging',
+// src/lib/genetics/calculatorCatalog.js), by engine trait id. The Cappuccino
+// gene's single versions (Cappuccino, Sable, Highway) carry their own.
+export const CALCULATOR_STATUS = {
+  ...Object.fromEntries(SIMPLE_TRAITS.map((t) => [t.id, t.confidence])),
+  ...Object.fromEntries(
+    COMPLEX_OPTIONS.filter((o) => o.confidence && o.pair?.[0] === o.value).map((o) => [o.value, o.confidence]),
+  ),
+};
+
+/**
+ * One engine trait as published in /data/genetics.json and
+ * /llms/genetics.md. The engine marks Empty Back, Whiteout, Sable and
+ * other newer genes `confirmed`, but Geck Inspect badges them Emerging:
+ * reported by one or a few breeders, not yet independently proven
+ * (Tennyson's decision of 16 Oct 2026 keeps Empty Back Emerging). The
+ * published data follows the badge, so no file calls an Emerging gene
+ * proven.
+ */
+export function withGeckInspectStatus(trait) {
+  const status = CALCULATOR_STATUS[trait?.id];
+  if (!status) return trait;
+  return { ...trait, confirmed: Boolean(trait.confirmed) && status === 'proven', status };
+}
+
 /** The committed or freshly fetched price index, or null. */
 export function loadPriceIndex() {
   if (!existsSync(PRICE_INDEX)) return null;
@@ -143,9 +176,11 @@ const MARKET_ORDER = Object.keys(MARKET_NAMES);
 const byMarketOrder = (a, b) => MARKET_ORDER.indexOf(a.market) - MARKET_ORDER.indexOf(b.market);
 
 // Market trait names that differ from the morph guide's name or aliases.
+// "Phantom" needs no entry: it matches the Phantom (gene) page by name, the
+// same page src/lib/priceIndexPolicy.js links it to. It used to point at
+// Phantom Pinstripe, which put the gene's asking prices on that page too.
 const MARKET_TRAIT_TO_SLUG = {
   'tri-color': 'tricolor',
-  phantom: 'phantom-pinstripe',
 };
 
 /** Latest asking-price rows for one morph, keyed by market. */
@@ -254,7 +289,7 @@ export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, n
     const rows = priceRowsForMorph(priceIndex, m);
     if (rows.length) {
       out.push(
-        `**Current asking prices (Geck Inspect Price Index, ${rows[0].checked_on}).** Asking prices on public crested gecko listings, converted to USD, not sale prices. Full dataset: ${SITE_URL}/data/price-index.json`,
+        `**Current asking prices (Geck Inspect Price Index, ${rows[0].checked_on}).** Asking prices on public crested gecko listings, converted to USD, not sale prices. ${PRICE_DATA_TERMS} Full dataset: ${SITE_URL}/data/price-index.json`,
         '',
         '| Market | Listings | 25th percentile | Median | 75th percentile |',
         '| --- | --- | --- | --- | --- |',
@@ -321,7 +356,7 @@ export function priceIndexToMarkdown(index) {
   const out = [
     '## Geck Inspect Price Index (crested gecko asking prices)',
     '',
-    `Generated ${String(index.generated_at || '').slice(0, 10)}. Original data compiled by Geck Inspect from public crested gecko listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe. These are **asking prices** on open listings, converted to USD at stored exchange rates, not sale prices. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} Cite as "Geck Inspect Price Index" with a link to ${SITE_URL}/data. JSON: ${SITE_URL}/data/price-index.json. CSV: ${SITE_URL}/data/price-index.csv.`,
+    `Generated ${String(index.generated_at || '').slice(0, 10)}. ${PRICE_INDEX_WHAT.replace(/^an/, 'An')} of crested geckos in the United States, South Korea, Japan and Europe, compiled by Geck Inspect. These are **asking prices** on open listings, converted to USD at stored exchange rates, not sale prices. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} ${PRICE_DATA_TERMS} Cite as "Geck Inspect Price Index" with a link to ${SITE_URL}/data. JSON: ${SITE_URL}/data/price-index.json. CSV: ${SITE_URL}/data/price-index.csv.`,
     '',
   ];
   const byMarket = new Map();

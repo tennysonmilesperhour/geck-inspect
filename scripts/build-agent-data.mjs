@@ -19,7 +19,7 @@
  *   llms/*.md              Topic files linked from /llms.txt, each small
  *                          enough for an agent to read whole.
  *
- * Why: AI search and agents cite sources with original data, clean text
+ * Why: AI search and agents cite sources with their own data, clean text
  * and stable URLs. The HTML pages stay the main surface; these give an
  * agent the same facts without parsing a JavaScript app. See
  * docs/planning/agent-access-2026-10.md.
@@ -43,18 +43,28 @@ import {
   careSectionMarkdown,
   careToMarkdown,
   morphMarkdown,
-  morphsToMarkdown,
   priceIndexToMarkdown,
   priceRowsForMorph,
+  withGeckInspectStatus,
   MORPH_LABELS,
 } from './lib/agent-content.mjs';
-import { PRICE_INDEX_MIN_LISTINGS, PRICE_INDEX_SAMPLE_RULE, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
+import {
+  PRICE_DATA_LICENSE,
+  PRICE_DATA_TERMS,
+  PRICE_INDEX_MIN_LISTINGS,
+  PRICE_INDEX_SAMPLE_RULE,
+  PRICE_INDEX_WHAT,
+  applyPricePolicy,
+} from '../src/lib/priceIndexPolicy.js';
 
 const PUBLIC = resolve(REPO_ROOT, 'public');
 const ENV = { ...loadEnv('production', REPO_ROOT, ''), ...process.env };
 const TODAY = new Date().toISOString().slice(0, 10);
 
+// CC BY 4.0 covers the morph and genetics data. The Price Index is not CC
+// BY: its numbers are free to cite with a link (src/lib/priceIndexPolicy.js).
 export const LICENSE_DATA = 'https://creativecommons.org/licenses/by/4.0/';
+export const LICENSE_PRICE_NOTE = PRICE_DATA_TERMS;
 export const LICENSE_TEXT_NOTE =
   'Guide text: free to quote and cite with a link to the page; not licensed for republishing in full.';
 
@@ -73,9 +83,12 @@ const json = (v) => `${JSON.stringify(v, null, 2)}\n`;
 const PRICE_META = {
   name: 'Geck Inspect Price Index',
   description:
-    'Asking prices for crested geckos (Correlophus ciliatus) by trait and market, compiled by Geck Inspect from public listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe.',
+    `${PRICE_INDEX_WHAT.replace(/^an/, 'An')} of crested geckos (Correlophus ciliatus) in the United States, South Korea, Japan and Europe, by trait and market, compiled by Geck Inspect.`,
   url: `${SITE_URL}/data`,
-  license: LICENSE_DATA,
+  // Not CC BY (decision of 16 Oct 2026): the numbers may be quoted and
+  // cited with a link. licenseName is the short form for tables.
+  license: LICENSE_PRICE_NOTE,
+  licenseName: PRICE_DATA_LICENSE,
   creator: 'Geck Inspect',
   attribution: `Geck Inspect Price Index, ${SITE_URL}/data`,
   methodology: [
@@ -134,7 +147,7 @@ async function loadGenetics() {
   const clean = (v) => JSON.parse(JSON.stringify(v), (_k, val) => noDashes(val));
   const glossary = await import(pathToFileURL(resolve(REPO_ROOT, 'src/data/genetics-glossary.js')).href);
   return {
-    traits: clean(g.TRAITS),
+    traits: clean(g.TRAITS).map(withGeckInspectStatus),
     combos: clean(g.COMBO_MORPHS),
     riskPairings: clean(g.RISK_PAIRINGS),
     loci: g.LOCI,
@@ -151,13 +164,18 @@ const DOMINANCE_LABEL = {
   polygenic: 'Polygenic',
 };
 
+const STATUS_LABEL = {
+  proven: 'Proven',
+  emerging: 'Emerging (reported, not yet independently proven)',
+};
+
 function geneticsMarkdown(gen) {
   const out = [
     '# Crested gecko genetics: traits, inheritance and risky pairings',
     '',
     `> From the Geck Inspect genetics engine, the same facts the genetics calculator at ${SITE_URL}/calculator uses. Updated ${TODAY}. JSON: ${SITE_URL}/data/genetics.json. Guide: ${SITE_URL}/GeneticsGuide.`,
     '',
-    'Most crested gecko looks are polygenic or line-bred and cannot be Punnett-squared. The traits below are the ones the engine models with a locus. "Confirmed" means the inheritance is proven by breeding records; unconfirmed traits are hobby models.',
+    'Most crested gecko looks are polygenic or line-bred and cannot be Punnett-squared. The traits below are the ones the engine models with a locus. "Confirmed" means the inheritance is proven by breeding records. A gene with Geck Inspect status Emerging is reported by one or a few breeders and not yet independently proven; other unconfirmed traits are hobby models.',
     '',
     '## Pairings to avoid or plan carefully',
     '',
@@ -173,6 +191,7 @@ function geneticsMarkdown(gen) {
       t.locus ? `**Locus:** ${t.locus}` : null,
       `**Super form:** ${t.has_super_form ? `yes (health risk: ${t.super_health_risk || 'unknown'})` : 'no'}`,
       `**Confirmed by breeding:** ${t.confirmed ? 'yes' : 'no'}`,
+      t.status ? `**Geck Inspect status:** ${STATUS_LABEL[t.status] || t.status}` : null,
       t.last_reviewed ? `**Last reviewed:** ${t.last_reviewed}` : null,
     ].filter(Boolean);
     out.push(facts.join('  \n'), '');
@@ -233,6 +252,8 @@ async function build() {
     url: `${SITE_URL}/MorphGuide`,
     license: LICENSE_DATA,
     attribution: `Geck Inspect Morph Guide, ${SITE_URL}/MorphGuide`,
+    // The askingPrices rows are Price Index data, which CC BY does not cover.
+    askingPricesLicense: `askingPrices rows come from the Geck Inspect Price Index (${SITE_URL}/data), ${PRICE_INDEX_WHAT}. ${LICENSE_PRICE_NOTE}`,
     updated: TODAY,
     count: morphs.length,
     morphs: morphs.map((m) => ({
@@ -280,7 +301,7 @@ async function build() {
   const header = (title, blurb) => `# ${title}\n\n> ${blurb} Updated ${TODAY}. Index: ${SITE_URL}/llms.txt\n\n`;
   sizes['llms/morphs.md'] = write('llms/morphs.md', header(
     'Crested gecko morphs (Geck Inspect Morph Guide)',
-    `All ${morphs.length} morphs with definitions, identification, lookalikes and live asking prices.`,
+    `All ${morphs.length} morphs with definitions, identification, lookalikes and, where the Price Index has them, current asking prices (free to cite with a link).`,
   ) + morphs.map((m) => morphMarkdown(m, { level: 2, full: true, priceIndex, nameOf })).join('\n'));
   sizes['llms/care.md'] = write('llms/care.md', header(
     'Crested gecko care (Geck Inspect Care Guide)',
@@ -290,7 +311,7 @@ async function build() {
   if (priceIndex) {
     sizes['llms/prices.md'] = write('llms/prices.md', header(
       'Crested gecko prices (Geck Inspect Price Index)',
-      'Current asking prices by trait and market, original data.',
+      `Current asking prices by trait and market: ${PRICE_INDEX_WHAT}, free to cite with a link.`,
     ) + priceIndexToMarkdown(priceIndex).replace(/^## .*\n\n/, ''));
   }
 
@@ -300,7 +321,7 @@ async function build() {
       id: 'price-index',
       name: PRICE_META.name,
       description: PRICE_META.description,
-      license: LICENSE_DATA,
+      license: LICENSE_PRICE_NOTE,
       temporalCoverage: priceIndex?.monthly?.length
         ? `${priceIndex.monthly.map((r) => r.month).sort()[0]}/${TODAY.slice(0, 7)}`
         : undefined,
@@ -314,7 +335,7 @@ async function build() {
     {
       id: 'morphs',
       name: 'Crested gecko morph catalog',
-      description: `Every documented crested gecko morph (${morphs.length}) with definition, inheritance, rarity, identification markers, lookalikes, competing genetics models, typical price range and sources.`,
+      description: `Every documented crested gecko morph (${morphs.length}) with definition, inheritance, rarity, identification markers, lookalikes, competing genetics models, typical price range where one is known, and sources.`,
       license: LICENSE_DATA,
       updated: TODAY,
       distribution: [
@@ -348,7 +369,7 @@ async function build() {
   ];
   sizes['data/index.json'] = write('data/index.json', json({
     publisher: { name: 'Geck Inspect', url: SITE_URL },
-    description: 'Open crested gecko data from Geck Inspect. Free to use with attribution. Query it live through the MCP server at https://geckinspect.com/mcp.',
+    description: 'Open crested gecko data from Geck Inspect. Free to use with attribution; each dataset gives its own license (the morph and genetics data are CC BY 4.0, the Price Index is free to cite with a link). Query it live through the MCP server at https://geckinspect.com/mcp.',
     contact: `${SITE_URL}/Contact`,
     updated: TODAY,
     mcp: `${SITE_URL}/mcp`,

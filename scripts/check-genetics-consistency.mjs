@@ -15,7 +15,10 @@
  *   4. src/components/morph-id/morphTaxonomy.js     (ML training labels)
  *   5. every tag in the tag picker, run through lib/genetics/tagTranslation.js
  *   6. the Genetics Guide (src/data/genetics-sections.jsx, genetics-jsonld.js,
- *      src/pages/GeneticsGuide.jsx)
+ *      src/pages/GeneticsGuide.jsx) and the search and server-HTML text
+ *      built from the same facts (src/lib/geneticsGuideSeo.js, the morph
+ *      snippets in src/data/morph-seo-descriptions.js, the pairing page
+ *      summaries in src/lib/genetics/pairingPageSummary.js)
  *   7. the genetics glossary (src/data/genetics-glossary.js)
  *   8. project lines (src/data/project-lines.js)
  *   9. the Morph Visualizer trait data (src/components/morph-visualizer/data/traits.js)
@@ -30,8 +33,9 @@
  *      Cappuccino not lethal but unhealthy, Super Highway only reported)
  *      and the husbandry numbers in src/data/husbandry-facts.js (life
  *      stages, adult weight, breeding minimum, incubation, sheds). Checked
- *      on the blog, the care guide, the Keeper's Guides, the morph guide,
- *      project lines, the genetics guide and glossary, the calculator,
+ *      on the blog, the care guide, the Keeper's Guides, the morph guide
+ *      and its search snippets, project lines, the genetics guide, its
+ *      search text and glossary, the calculator and its pairing pages,
  *      llms.txt, the getting-started emails and the AI prompts (Morph ID,
  *      the Promote writer, the consultant, the health screen; genetics and
  *      origin facts only for prompts).
@@ -307,7 +311,17 @@ function stringLiterals(source) {
 }
 
 // ---------- 6. Genetics Guide -----------------------------------------
-const GUIDE_FILES = ['src/data/genetics-sections.jsx', 'src/data/genetics-jsonld.js', 'src/pages/GeneticsGuide.jsx'];
+// Plus the text built for search results and server HTML from the same
+// facts: the Genetics Guide's title and groups, the hand-written morph
+// snippets, and the calculator pairing pages' summaries.
+const GUIDE_FILES = [
+  'src/data/genetics-sections.jsx',
+  'src/data/genetics-jsonld.js',
+  'src/pages/GeneticsGuide.jsx',
+  'src/lib/geneticsGuideSeo.js',
+  'src/data/morph-seo-descriptions.js',
+  'src/lib/genetics/pairingPageSummary.js',
+];
 for (const file of GUIDE_FILES) {
   const source = readSource(file);
   for (const { text, line } of stringLiterals(source)) {
@@ -423,6 +437,9 @@ const FACT_FILES = [
   ['calculator', 'src/pages/GeneticCalculatorTool.jsx'],
   ['calculator', 'src/lib/genetics/calculatorCatalog.js'],
   ['calculator', 'src/lib/genetics/tagTranslation.js'],
+  ['calculator', 'src/lib/genetics/pairingPageSummary.js'],
+  ['genetics-guide', 'src/lib/geneticsGuideSeo.js'],
+  ['morph-seo', 'src/data/morph-seo-descriptions.js'],
   ['morph-faq', 'src/lib/morphFaq.js'],
   ['visualizer', 'src/components/morph-visualizer/data/traits.js'],
   ['visualizer', 'src/components/morph-visualizer/data/genetics.js'],

@@ -28,7 +28,7 @@ export const MORPH_GUIDE = {
     // 2 - Why this matters
     {
       kicker: 'Why This Matters',
-      title: "Morphs aren't decoration - they're shorthand.",
+      title: "Morphs aren't decoration. They're shorthand.",
       lead:
         'Every crestie listing uses morph terminology. If you don\'t know what "66% het axanthic cappuccino pinstripe" means, you\'re buying blind. This guide fixes that.',
       blocks: [
@@ -49,7 +49,7 @@ export const MORPH_GUIDE = {
             {
               title: 'TO PAIR',
               text:
-                "If you'll ever breed - even accidentally - understanding inheritance prevents disaster pairings (lethal combos) and sets realistic expectations.",
+                "If you'll ever breed (even accidentally), understanding inheritance prevents disaster pairings (lethal combos) and sets realistic expectations.",
             },
             {
               title: 'TO INVEST',
@@ -73,7 +73,7 @@ export const MORPH_GUIDE = {
             {
               title: 'Morph',
               text:
-                'A visually distinct type. A combination of traits that passes to offspring. Not just color - includes pattern and structure.',
+                'A visually distinct type. A combination of traits that passes to offspring. Not just color: includes pattern and structure.',
             },
             {
               title: 'Trait',
@@ -143,7 +143,7 @@ export const MORPH_GUIDE = {
             {
               meta: 'Polygenic',
               title: 'Tiger',
-              text: 'Strong horizontal banding. Rarely pure - usually combined with harlequin/flame.',
+              text: 'Strong horizontal banding. Rarely pure: usually combined with harlequin/flame.',
             },
             {
               meta: 'Polygenic',
@@ -232,7 +232,7 @@ export const MORPH_GUIDE = {
             {
               title: 'POLYGENIC',
               text:
-                'Multiple genes contribute. No simple inheritance math. Most patterns (harlequin, pinstripe, flame) - good parents produce better-than-average offspring but nothing is guaranteed.',
+                'Multiple genes contribute. No simple inheritance math. Most patterns (harlequin, pinstripe, flame): good parents produce better-than-average offspring but nothing is guaranteed.',
             },
           ],
         },
@@ -275,7 +275,7 @@ export const MORPH_GUIDE = {
               tone: 'coral',
               title: 'Educated guess',
               text:
-                '"Possible het" - usually unproven. Priced lower. Often a marketing stretch. Treat with skepticism.',
+                '"Possible het": usually unproven. Priced lower. Often a marketing stretch. Treat with skepticism.',
             },
             {
               badge: 'Proven',
@@ -333,7 +333,7 @@ export const MORPH_GUIDE = {
               { text: 'll', kind: 'normal' },
             ],
           ],
-          outcome: '50% visual Lilly White (Ll) · 50% normal (ll). Incomplete dominant - one copy shows.',
+          outcome: '50% visual Lilly White (Ll) · 50% normal (ll). Incomplete dominant: one copy shows.',
         },
       ],
     },
@@ -343,7 +343,7 @@ export const MORPH_GUIDE = {
       kicker: '⚠  The Rule Every Breeder Knows',
       title: 'Never pair two Lilly Whites.',
       lead:
-        'Lilly White is an incomplete dominant gene with a lethal super form. Two visual Lilly Whites bred together produce 25% offspring that carry two copies - and none survive.',
+        'Lilly White is an incomplete dominant gene with a lethal super form. Two visual Lilly Whites bred together produce 25% offspring that carry two copies, and none survive.',
       blocks: [
         {
           type: 'punnett',
@@ -362,14 +362,14 @@ export const MORPH_GUIDE = {
               { text: 'll', kind: 'normal' },
             ],
           ],
-          outcome: '25% super (LL - lethal) · 50% LW · 25% normal',
+          outcome: '25% super (LL, lethal) · 50% LW · 25% normal',
         },
         {
           type: 'callout',
           tone: 'danger',
           title: 'What happens',
           text:
-            '25% of eggs from this pairing hatch as "super Lilly Whites." Most die in the egg. Some hatch, take a few breaths, then die. None survive past hatching. Decades of attempts - zero viable supers.',
+            '25% of eggs from this pairing hatch as "super Lilly Whites." Most die in the egg. Some hatch, take a few breaths, then die. None survive past hatching. Years of attempts: zero viable supers.',
         },
         {
           type: 'callout',
@@ -543,7 +543,7 @@ export const MORPH_GUIDE = {
               title: 'Weight history',
               text: 'Early indicator of health issues AND breeding readiness.',
             },
-            { title: 'Shed / feeding log', text: "Baseline for what's normal - spot abnormalities fast." },
+            { title: 'Shed / feeding log', text: "Baseline for what's normal, so you spot abnormalities fast." },
             { title: 'Breeder / source', text: 'Where to route follow-up questions, original pedigree info.' },
           ],
         },
@@ -551,7 +551,7 @@ export const MORPH_GUIDE = {
           type: 'callout',
           tone: 'success',
           text:
-            "We built Geck Inspect for exactly this - purpose-built record-keeping for breeders. Spreadsheets work too, until they don't.",
+            "We built Geck Inspect for exactly this: purpose-built record-keeping for breeders. Spreadsheets work too, until they don't.",
         },
       ],
     },
@@ -568,11 +568,11 @@ export const MORPH_GUIDE = {
           headers: ['What to ask', 'Green flag', 'Red flag'],
           rows: [
             ['Hatch date', 'Specific date given', 'Vague or refused'],
-            ['Current weight in grams', 'Regularly tracked', '"I don\'t know" - skip'],
+            ['Current weight in grams', 'Regularly tracked', '"I don\'t know": skip'],
             [
               'Photo of both parents',
               'Provided freely',
-              '"Parents sold" - okay; "Trade secret" - not okay',
+              '"Parents sold": okay; "Trade secret": not okay',
             ],
             [
               'Multiple recent photos (fired up AND down)',
@@ -639,7 +639,7 @@ export const MORPH_GUIDE = {
       kicker: 'The Market Angle',
       title: 'For those with an interest in value.',
       lead:
-        'A section for readers who want to understand pricing dynamics. This is secondary to keeping well - but if you\'re spending real money, understanding the market prevents bad decisions.',
+        'A section for readers who want to understand pricing dynamics. This is secondary to keeping well, but if you\'re spending real money, understanding the market prevents bad decisions.',
       blocks: [
         {
           type: 'ladder',
@@ -680,7 +680,7 @@ export const MORPH_GUIDE = {
     // 17 - Appreciation
     {
       kicker: 'Appreciation',
-      title: "What holds or gains value - and what doesn't.",
+      title: "What holds or gains value, and what doesn't.",
       lead:
         "Most crested geckos are not investments. They're pets. But if you're buying with resale in mind, here's the honest picture.",
       blocks: [
@@ -733,7 +733,7 @@ export const MORPH_GUIDE = {
               tone: 'moss',
               title: 'THE MORPH',
               text:
-                'A label - "Lilly White Extreme Harlequin Pinstripe." Useful for genetics predictions and market positioning. Not sufficient for judging the animal itself.',
+                'A label, such as "Lilly White Extreme Harlequin Pinstripe." Useful for genetics predictions and market positioning. Not sufficient for judging the animal itself.',
             },
             {
               meta: 'What you see',
@@ -747,7 +747,7 @@ export const MORPH_GUIDE = {
               tone: 'amber',
               title: 'THE DIFFERENCE',
               text:
-                "Two geckos with identical morph descriptions can differ by 5x in price based on expression quality. Learn to judge individuals - not labels - and you'll outperform the market.",
+                "Two geckos with identical morph descriptions can differ by 5x in price based on expression quality. Learn to judge individuals, not labels, and you'll outperform the market.",
             },
           ],
         },
@@ -799,7 +799,7 @@ export const MORPH_GUIDE = {
           type: 'callout',
           tone: 'info',
           text:
-            'Learn the rules - but respect the variance. That humility is what separates keepers from collectors, and collectors from breeders.',
+            'Learn the rules, but respect the variance. That humility is what separates keepers from collectors, and collectors from breeders.',
         },
       ],
     },

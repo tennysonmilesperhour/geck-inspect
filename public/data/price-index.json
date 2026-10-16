@@ -2089,9 +2089,9 @@
   ],
   "generated_at": "2026-10-07T06:00:32.202164+00:00",
   "name": "Geck Inspect Price Index",
-  "description": "Asking prices for crested geckos (Correlophus ciliatus) by trait and market, compiled by Geck Inspect from public listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe.",
+  "description": "An asking-price snapshot from public marketplace listings of crested geckos (Correlophus ciliatus) in the United States, South Korea, Japan and Europe, by trait and market, compiled by Geck Inspect.",
   "url": "https://geckinspect.com/data",
-  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "license": "Free to cite with a link: you may quote and cite these numbers, with a link to the page they came from.",
   "creator": "Geck Inspect",
   "attribution": "Geck Inspect Price Index, https://geckinspect.com/data",
   "methodology": [
@@ -2102,5 +2102,6 @@
     "A day counts toward a monthly median only when it had at least 30 listings; avg_listings is the average listing count of those days.",
     "p25, median and p75 are the 25th, 50th and 75th percentile asking price. monthly.median is the median of that month's daily medians.",
     "Trait labels are the marketplace labels as listed by sellers; a label does not prove genotype."
-  ]
+  ],
+  "licenseName": "Free to cite with a link"
 }
