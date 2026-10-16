@@ -103,6 +103,11 @@ function canvasAvailable() {
   );
 }
 
+// What shows through transparent areas when an image has to be written as
+// JPEG (which has no transparency): the dark card colour, so a cut-out
+// gecko on a clear PNG background sits on the card instead of on black.
+export const JPEG_BACKGROUND = '#0f172a';
+
 function canvasToBlob(canvas, type, quality) {
   return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 }
@@ -124,14 +129,28 @@ async function drawAndEncode(bitmap, width, height, quality, { jpegFallback }) {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
+  // The default smoothing is 'low', which turns fine patterns (a
+  // Harlequin's pattern, a Dalmatian's spots) into jagged noise when a
+  // 12 MP photo is drawn down to a thumbnail in one step.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(bitmap, 0, 0, width, height);
 
   const webp = await canvasToBlob(canvas, 'image/webp', quality);
   // An empty type means the browser did not say; take it as the WebP asked for.
   if (webp && (webp.type === 'image/webp' || !webp.type)) return webp;
   if (jpegFallback) {
-    const jpeg = await canvasToBlob(canvas, 'image/jpeg', quality);
-    if (jpeg && jpeg.type === 'image/jpeg') return jpeg;
+    const flat = document.createElement('canvas');
+    flat.width = width;
+    flat.height = height;
+    const flatCtx = flat.getContext('2d');
+    if (flatCtx) {
+      flatCtx.fillStyle = JPEG_BACKGROUND;
+      flatCtx.fillRect(0, 0, width, height);
+      flatCtx.drawImage(canvas, 0, 0);
+      const jpeg = await canvasToBlob(flat, 'image/jpeg', quality);
+      if (jpeg && jpeg.type === 'image/jpeg') return jpeg;
+    }
   }
   return webp || null;
 }

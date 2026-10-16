@@ -3,6 +3,7 @@ import {
   convertHeicForUpload,
   downscaleImage,
   isHeicFile,
+  JPEG_BACKGROUND,
   makeThumbnail,
   RESIZE_DEFAULTS,
   targetDimensions,
@@ -142,6 +143,7 @@ describe('downscaleImage format safety (browser canvas mocked)', () => {
 function stubCanvasWith({ width = 4000, height = 3000, webp = true, bytes = 30_000, failDecode = false } = {}) {
   const asked = [];
   const drawn = [];
+  const contexts = [];
   vi.stubGlobal('HTMLCanvasElement', function HTMLCanvasElement() {});
   vi.stubGlobal('createImageBitmap', vi.fn(async () => {
     if (failDecode) throw new Error('cannot decode');
@@ -152,7 +154,15 @@ function stubCanvasWith({ width = 4000, height = 3000, webp = true, bytes = 30_0
       const canvas = {
         width: 0,
         height: 0,
-        getContext: () => ({ drawImage: () => drawn.push([canvas.width, canvas.height]) }),
+        getContext: () => {
+          const ctx = {
+            fills: [],
+            drawImage: () => drawn.push([canvas.width, canvas.height]),
+            fillRect() { ctx.fills.push(ctx.fillStyle); },
+          };
+          contexts.push(ctx);
+          return ctx;
+        },
         toBlob: (cb, type) => {
           asked.push(type);
           const out = type === 'image/webp' && !webp ? 'image/png' : type;
@@ -163,7 +173,7 @@ function stubCanvasWith({ width = 4000, height = 3000, webp = true, bytes = 30_0
       return canvas;
     },
   });
-  return { asked, drawn };
+  return { asked, drawn, contexts };
 }
 const photo = (type, size, name = 'IMG_7140.jpg') => new File([new Uint8Array(size)], name, { type });
 
@@ -234,6 +244,19 @@ describe('makeThumbnail', () => {
     const out = await makeThumbnail(photo('image/png', 400_000, 'shot.png'));
     expect(out.type).toBe('image/jpeg');
     expect(out.name).toBe('shot.jpg');
+  });
+
+  it('draws with high-quality smoothing', async () => {
+    const { contexts } = stubCanvasWith({ webp: true });
+    await makeThumbnail(photo('image/jpeg', 300_000));
+    expect(contexts[0].imageSmoothingEnabled).toBe(true);
+    expect(contexts[0].imageSmoothingQuality).toBe('high');
+  });
+
+  it('puts transparent areas on the card colour, not black, when it has to write JPEG', async () => {
+    const { contexts } = stubCanvasWith({ webp: false });
+    await makeThumbnail(photo('image/png', 400_000, 'cutout.png'));
+    expect(contexts.some((ctx) => ctx.fills.includes(JPEG_BACKGROUND))).toBe(true);
   });
 
   it('makes no thumbnail for GIFs, non-images, undecodable photos or without a canvas', async () => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,13 +28,32 @@ async function fetchPage(after, limit) {
   return data || [];
 }
 
+// One run per tab. A run keeps going when the admin leaves this section,
+// so its state lives here, outside the component: coming back shows the
+// same run (with its Stop button) instead of letting a second loop start
+// over the same photos.
+const run = { active: false, stop: false, progress: null, error: null, listeners: new Set() };
+function publish(patch) {
+  Object.assign(run, patch);
+  for (const listener of run.listeners) listener();
+}
+export function __resetThumbnailRun() {
+  Object.assign(run, { active: false, stop: false, progress: null, error: null });
+}
+
 export default function PhotoThumbnails() {
   const [remaining, setRemaining] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState(null);
-  const [runError, setRunError] = useState(null);
-  const stopRef = useRef(false);
+  const [, setTick] = useState(0);
+  const running = run.active;
+  const progress = run.progress;
+  const runError = run.error;
+
+  useEffect(() => {
+    const listener = () => setTick((n) => n + 1);
+    run.listeners.add(listener);
+    return () => { run.listeners.delete(listener); };
+  }, []);
 
   const countRemaining = useCallback(async () => {
     setLoadError(null);
@@ -52,10 +71,8 @@ export default function PhotoThumbnails() {
   useEffect(() => { countRemaining(); }, [countRemaining]);
 
   const start = async () => {
-    stopRef.current = false;
-    setRunning(true);
-    setRunError(null);
-    setProgress(null);
+    if (run.active) return;
+    publish({ active: true, stop: false, progress: null, error: null });
     try {
       const result = await runBackfill({
         fetchPage,
@@ -64,16 +81,16 @@ export default function PhotoThumbnails() {
           makeThumbnail,
           convertHeic: convertHeicForUpload,
         }),
-        shouldStop: () => stopRef.current,
-        onProgress: setProgress,
+        shouldStop: () => run.stop,
+        onProgress: (p) => publish({ progress: p }),
       });
-      setProgress(result);
+      publish({ progress: result });
     } catch (error) {
       // Only the page fetch can end a run early; each photo's own failure
       // is counted and the run carries on.
-      setRunError(`The run stopped: ${error?.message || 'unknown error'}. Start again to carry on.`);
+      publish({ error: `The run stopped: ${error?.message || 'unknown error'}. Start again to carry on.` });
     } finally {
-      setRunning(false);
+      publish({ active: false });
       countRemaining();
     }
   };
@@ -95,7 +112,8 @@ export default function PhotoThumbnails() {
           automatically. This makes them for older photos, here in your browser, using your admin login.
         </p>
         <p className="max-w-3xl text-slate-400">
-          Keep this tab open while it runs. You can stop at any time and start again later: photos that
+          Run it on a computer, not a phone (it opens two full-size photos at a time), and keep this tab
+          open while it runs. You can stop at any time and start again later: photos that
           already have a thumbnail are skipped. A photo that fails is counted and left for the next run.
           A thumbnail someone other than the photo&apos;s owner uploaded is replaced.
         </p>
@@ -125,7 +143,7 @@ export default function PhotoThumbnails() {
 
         <div className="flex flex-wrap gap-2">
           {running ? (
-            <Button variant="outline" onClick={() => { stopRef.current = true; }}>
+            <Button variant="outline" onClick={() => publish({ stop: true })}>
               <Square className="w-4 h-4 mr-2" /> Stop after the current photos
             </Button>
           ) : (

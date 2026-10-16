@@ -9,7 +9,7 @@ vi.hoisted(() => {
 });
 afterAll(() => vi.unstubAllGlobals());
 
-const db = vi.hoisted(() => ({ rows: [], error: null, rpcCalls: [], made: [] }));
+const db = vi.hoisted(() => ({ rows: [], error: null, rpcCalls: [], made: [], gate: null, calls: 0 }));
 
 vi.mock('@/lib/supabaseClient', () => ({
   supabase: {
@@ -28,6 +28,8 @@ vi.mock('./photoThumbnailBackfill', async () => {
   return {
     ...actual,
     makeOneThumbnail: vi.fn(async (row) => {
+      db.calls += 1;
+      if (db.gate) await db.gate;
       if (row.name.includes('broken')) throw new Error('could not draw');
       db.made.push(row.name);
       return 'made';
@@ -35,7 +37,7 @@ vi.mock('./photoThumbnailBackfill', async () => {
   };
 });
 
-import PhotoThumbnails from './PhotoThumbnails';
+import PhotoThumbnails, { __resetThumbnailRun } from './PhotoThumbnails';
 
 const textOf = (node) => (typeof node === 'string' ? node : (node.children || []).map(textOf).join(''));
 const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 0)); });
@@ -45,6 +47,9 @@ beforeEach(() => {
   db.error = null;
   db.rpcCalls = [];
   db.made = [];
+  db.gate = null;
+  db.calls = 0;
+  __resetThumbnailRun();
 });
 
 describe('PhotoThumbnails admin tool', () => {
@@ -77,5 +82,33 @@ describe('PhotoThumbnails admin tool', () => {
     // The recount after the run shows the one that failed is still left.
     expect(text).toContain('1 photo needs a thumbnail');
     act(() => tree.unmount());
+  });
+
+  it('keeps one run per tab: leaving and coming back shows the same run and cannot start a second', async () => {
+    db.rows = ['a.jpg', 'c.jpg'];
+    let release;
+    db.gate = new Promise((r) => { release = r; });
+    let tree;
+    await act(async () => { tree = create(<PhotoThumbnails />); });
+    await settle();
+    const button = tree.root.findAllByType('button').find((b) => textOf(b).includes('Make thumbnails'));
+    let firstRun;
+    await act(async () => { firstRun = button.props.onClick(); });
+    act(() => tree.unmount());
+
+    // Back to the section while the first run is still working.
+    let again;
+    await act(async () => { again = create(<PhotoThumbnails />); });
+    await settle();
+    const buttons = again.root.findAllByType('button');
+    expect(buttons.some((b) => textOf(b).includes('Make thumbnails'))).toBe(false);
+    expect(buttons.some((b) => textOf(b).includes('Stop after the current photos'))).toBe(true);
+    release();
+    await act(async () => { await firstRun; });
+    await settle();
+    expect(textOf(again.toJSON())).toContain('Done: made 2 of 2.');
+    // Each photo was worked on once: no second loop started.
+    expect(db.calls).toBe(2);
+    act(() => again.unmount());
   });
 });
