@@ -59,14 +59,14 @@ function loadMorphSlugs() {
 /** Number of morphs in the guide, for titles and copy that state the count. */
 export const MORPH_COUNT = MORPHS.length;
 
-// Misspellings, nicknames and super forms that have no page of their own,
-// mapped to the morph page that covers them. build-vercel-json.mjs turns
-// each into a 301, and prerender.mjs uses it to resolve related-morph
-// slugs (a project line lists 'super-lilly-white', for instance).
+// Misspellings and nicknames that have no page of their own, mapped to
+// the morph page that covers them. build-vercel-json.mjs turns each into
+// a 301, and prerender.mjs uses it to resolve related-morph slugs. A key
+// must never be a real morph slug, or the 301 hides that page on a direct
+// load: 'phantom' and 'super-lilly-white' were aliases until they got
+// their own pages on 16 Oct 2026 (src/lib/__tests__/morphSlugAliases.test.js).
 export const MORPH_SLUG_ALIASES = {
   'lily-white': 'lilly-white',
-  'super-lilly-white': 'lilly-white',
-  phantom: 'phantom-pinstripe',
   harley: 'harlequin',
   albinos: 'albino',
 };

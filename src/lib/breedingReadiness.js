@@ -2,11 +2,11 @@
  * Breeding readiness for crested gecko females, from her latest weight and
  * her age.
  *
- * The numbers are the care guide's (src/data/care-guide.js, Breeding >
- * Breeding readiness): a first season needs at least 40 g and 18 months,
- * and the ideal window is 45 to 55 g at 24 months or more. A test keeps
- * these constants and the guide in step, so the badge can never give
- * different advice than the guide.
+ * The numbers live in src/data/husbandry-facts.js, which the care guide's
+ * Breeding readiness table is built from too: a first season needs at
+ * least 40 g and 18 months, and the ideal window is 45 to 55 g at 24
+ * months or more. One source means the badge can never give different
+ * advice than the guide (llms.txt used to say "about 35 to 40 g").
  *
  * The female is the limiting factor, so only females get a verdict. Breeding
  * one too early is the most common way keepers lose a female (egg-binding,
@@ -14,11 +14,12 @@
  */
 import { differenceInCalendarDays, differenceInMonths } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
+import { BREEDING } from '@/data/husbandry-facts';
 
-export const FEMALE_MIN_WEIGHT_G = 40;
-export const FEMALE_MIN_AGE_MONTHS = 18;
-export const FEMALE_IDEAL_WEIGHT_G = 45;
-export const FEMALE_IDEAL_AGE_MONTHS = 24;
+export const FEMALE_MIN_WEIGHT_G = BREEDING.femaleMinGrams;
+export const FEMALE_MIN_AGE_MONTHS = BREEDING.femaleMinMonths;
+export const FEMALE_IDEAL_WEIGHT_G = BREEDING.femaleIdealGrams[0];
+export const FEMALE_IDEAL_AGE_MONTHS = BREEDING.femaleIdealMonths;
 
 // "Nearly" means within about one season's growth of both minimums.
 const NEAR_WEIGHT_G = 35;
@@ -93,7 +94,7 @@ export function femaleReadiness(gecko, weight, now = new Date()) {
     if (weightGrams >= FEMALE_IDEAL_WEIGHT_G && ageMonths >= FEMALE_IDEAL_AGE_MONTHS) {
       return result('ideal', `${current}, in the ideal window (${FEMALE_IDEAL_WEIGHT_G} g or more at ${FEMALE_IDEAL_AGE_MONTHS} months or more).`);
     }
-    return result('ready', `${current}, past the ${FEMALE_MIN_WEIGHT_G} g and ${FEMALE_MIN_AGE_MONTHS} month minimum. Ideal is ${FEMALE_IDEAL_WEIGHT_G} to 55 g at ${FEMALE_IDEAL_AGE_MONTHS} months or more.`);
+    return result('ready', `${current}, past the ${FEMALE_MIN_WEIGHT_G} g and ${FEMALE_MIN_AGE_MONTHS} month minimum. Ideal is ${FEMALE_IDEAL_WEIGHT_G} to ${BREEDING.femaleIdealGrams[1]} g at ${FEMALE_IDEAL_AGE_MONTHS} months or more.`);
   }
 
   const missing = [

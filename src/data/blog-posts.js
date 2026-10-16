@@ -194,13 +194,13 @@ export const BLOG_POSTS = [
     category: 'breeding',
     tags: ['breeding', 'first-season', 'beginner', 'eggs', 'incubation', 'hatchlings'],
     datePublished: '2026-07-08',
-    dateModified: '2026-07-08',
+    dateModified: '2026-10-16',
     heroEyebrow: 'Breeding basics',
     tldr: [
       'Only breed a female that is at least 18 months old and holding a stable 40 grams or more. Age and weight matter more than the calendar.',
       'Crested geckos breed through the warm months and rest over winter. A cooldown from roughly November to January resets the cycle.',
-      'A proven female can lay two eggs about every four to five weeks across the season, so plan for many clutches, not one.',
-      'Incubate at cool room temperature (about 70 to 74 F). Eggs hatch in roughly 60 to 90 days. Never chase heat to speed it up.',
+      'A proven female can lay two eggs about every four to six weeks across the season, so plan for many clutches, not one.',
+      'Incubate at room temperature (about 72 to 75 F). Eggs hatch in roughly 70 to 90 days, longer if the room is cooler. Never chase heat to speed it up.',
       'Track every pairing, lay date, and hatch so next season is driven by data instead of memory.',
     ],
     body: [
@@ -230,8 +230,8 @@ export const BLOG_POSTS = [
           ['Nov to Jan', 'Cooldown / rest', 'Drop night temps to the low 60s F, shorten the light cycle, and let animals rest. No pairing. This rest improves fertility later.'],
           ['Late Jan to Feb', 'Warm back up', 'Return to normal temps and day length. Boost feeding with a calcium-rich diet. Confirm the female is at weight.'],
           ['Feb to Mar', 'Introductions', 'Introduce the pair for short supervised sessions. Separate them between sessions. Watch for stress or aggression.'],
-          ['Mar to Sep', 'Laying season', 'Provide a moist lay box. Expect two eggs roughly every four to five weeks. Weigh the female often.'],
-          ['Apr to Dec', 'Incubation and hatching', 'Each clutch hatches about 60 to 90 days after laying. Late clutches hatch into winter.'],
+          ['Mar to Sep', 'Laying season', 'Provide a moist lay box. Expect two eggs roughly every four to six weeks. Weigh the female often.'],
+          ['Apr to Dec', 'Incubation and hatching', 'At room temperature each clutch hatches about 70 to 90 days after laying (up to about 120 days in a cool room). Late clutches hatch into winter.'],
           ['Sep to Oct', 'Wind down', 'Fertility naturally tapers. Stop introductions and let the female rebuild condition before the next cooldown.'],
         ],
       },
@@ -255,7 +255,7 @@ export const BLOG_POSTS = [
       },
       {
         type: 'p',
-        text: 'Incubation is where beginners are tempted to intervene and should not. Crested gecko eggs incubate well at cool room temperature, roughly 70 to 74 F, in a lightly moist medium like perlite or vermiculite. Warmer temperatures shorten incubation but raise the risk of deformities and poor hatchlings, and sustained heat above the high 70s can cook a clutch. Cooler is slower and safer. At room temperature, expect roughly 60 to 90 days.',
+        text: 'Incubation is where beginners are tempted to intervene and should not. Crested gecko eggs incubate well at room temperature, roughly 72 to 75 F, in a lightly moist medium like perlite or vermiculite. Warmer temperatures shorten incubation but raise the risk of deformities and poor hatchlings, and sustained heat above about 80 F can cook a clutch. Cooler is slower and safer. At 72 to 75 F, expect roughly 70 to 90 days; at 68 to 71 F, 90 to 120 days.',
       },
       {
         type: 'callout',
@@ -289,12 +289,12 @@ export const BLOG_POSTS = [
       {
         question: 'How many eggs do crested geckos lay?',
         answer:
-          'A proven female lays two eggs per clutch and can produce a clutch roughly every four to five weeks across the season, so a healthy female may lay many clutches in a year. This is why keeping her at weight and well supplemented with calcium is critical.',
+          'A proven female lays two eggs per clutch and can produce a clutch roughly every four to six weeks across the season, so a healthy female may lay many clutches in a year. This is why keeping her at weight and well supplemented with calcium is critical.',
       },
       {
         question: 'How long do crested gecko eggs take to hatch?',
         answer:
-          'At cool room temperature (about 70 to 74 F), crested gecko eggs hatch in roughly 60 to 90 days. Warmer incubation is faster but increases the risk of deformities and weak hatchlings, so cooler and slower is the safer choice.',
+          'At room temperature (about 72 to 75 F), crested gecko eggs hatch in roughly 70 to 90 days, and at 68 to 71 F in about 90 to 120 days. Warmer incubation is faster but increases the risk of deformities and weak hatchlings, so cooler and slower is the safer choice.',
       },
       {
         question: 'Do I need an incubator for crested gecko eggs?',
@@ -435,12 +435,12 @@ export const BLOG_POSTS = [
     category: 'genetics',
     tags: ['cappuccino', 'incomplete-dominant', 'super-cappuccino', 'melanistic', 'sable', 'foundation-genetics'],
     datePublished: '2026-04-18',
-    dateModified: '2026-04-18',
+    dateModified: '2026-10-16',
     heroEyebrow: 'Genetics deep-dive',
     tldr: [
       'Cappuccino is incomplete dominant, one copy gives the visible trait, two copies produce the Super Cappuccino (Melanistic).',
       'Super Cappuccinos have documented health issues including reduced nostril size and breathing difficulty. Breeding for supers is not recommended.',
-      'Cappuccino is allelic with Sable and Highway, they share the same gene location but produce distinct compound heterozygotes (Luwak, etc.) instead of supers.',
+      'Sable is widely reported to be a second version of the Cappuccino gene, so Cappuccino x Sable gives Luwak rather than a super. Highway is placed on the same gene provisionally; that is not settled.',
       'Hobby sources commonly call Cappuccino "codominant." This is incorrect, true codominance is extremely rare in any animal species.',
     ],
     body: [
@@ -450,7 +450,7 @@ export const BLOG_POSTS = [
       },
       {
         type: 'p',
-        text: 'This guide covers what Cappuccino actually is genetically, how to identify a heterozygous Cappuccino at a glance, why Super Cappuccinos should not be the goal of a pairing, and how the trait interacts with its allelic partners Sable and Highway.',
+        text: 'This guide covers what Cappuccino actually is genetically, how to identify a heterozygous Cappuccino at a glance, why Super Cappuccinos should not be the goal of a pairing, and how the trait interacts with Sable and Highway, which are thought to be other versions of the same gene.',
       },
       {
         type: 'callout',
@@ -458,7 +458,7 @@ export const BLOG_POSTS = [
         title: 'Critical breeding warning',
         items: [
           'Super Cappuccinos (homozygous CAPP/CAPP, also called Melanistic) have documented health concerns including reduced nostril size, breathing difficulty, and poor thriving.',
-          'Breeding specifically to produce Super Cappuccinos is not recommended. Pair Cappuccino × non-Cappuccino instead, you still produce ~50% Cappuccino offspring without risking the lethal homozygous expression.',
+          'Breeding specifically to produce Super Cappuccinos is not recommended. Pair Cappuccino × non-Cappuccino instead, you still produce ~50% Cappuccino offspring without producing any Super Cappuccinos.',
         ],
       },
       {
@@ -488,13 +488,13 @@ export const BLOG_POSTS = [
         title: 'Recommended pairing',
         items: [
           'Cappuccino × non-Cappuccino → ~50% heterozygous Cappuccino, ~50% non-Cappuccino. No Supers produced. This is the standard responsible pairing.',
-          'Cappuccino × Sable → Luwak (compound heterozygote at the same locus, NOT a Super). Visually distinct phenotype, no documented health issues from this pairing.',
-          'Cappuccino × Highway → Compound heterozygote at the same locus. Phenotype distinct from both Cappuccino and Sable.',
+          'Cappuccino × Sable → about 25% Luwak (one copy of each, NOT a Super), plus Cappuccinos, Sables and normals. No documented health issues from this pairing.',
+          'Cappuccino × Highway → under the one-gene model, some babies carry one copy of each. Their health is not documented yet, so check nostril openings at hatch.',
         ],
       },
       {
         type: 'p',
-        text: 'The fact that Cappuccino × Sable produces a Luwak (and NOT a Super Cappuccino) is the key evidence that proves Cappuccino, Sable, and Highway are three distinct alleles at the same gene locus rather than three separate genes. If they were on different loci, the Cappuccino × Sable cross would produce some offspring carrying one copy each of Cappuccino and Sable on independent chromosomes, expressing both traits weakly, instead, what you actually see is a single distinct intermediate phenotype, which is the textbook signature of two alleles competing for the same gene slot.',
+        text: 'Be careful with what counts as evidence here. Cappuccino × Sable never making a Super Cappuccino does not by itself show they share a gene: a Super Cappuccino needs two Cappuccino copies, and that pairing only has one either way. The deciding test is breeding a Luwak to a normal. If Cappuccino and Sable are two versions of one gene, every baby inherits exactly one of them, so you see Cappuccinos and Sables but never a normal and never another Luwak. That is why the one-gene model is widely reported but still treated as unsettled (MorphMarket\'s Morphpedia lists it as suspected), and Highway\'s place on the same gene is more provisional still.',
       },
       {
         type: 'table',
@@ -571,13 +571,13 @@ export const BLOG_POSTS = [
         'super cappuccino viability debate',
       ],
       datePublished: '2026-05-05',
-      dateModified: '2026-06-02',
+      dateModified: '2026-10-16',
       heroEyebrow: 'Breeding Ethics',
       tldr: [
         'Super Cappuccino is the homozygous form of the incomplete-dominant Cappuccino morph, genetically real, not a scam.',
         'Cappuccino × Cappuccino pairings produce ~25% Super Cappuccinos, ~50% Cappuccinos, and ~25% normals, per standard incomplete-dominant math.',
         'Community concern centers on reported clutch failures and health issues in Cappuccino × Cappuccino pairings, not on whether the morph exists.',
-        'The safest breeding approach remains Cappuccino × non-carrier: 50% Cappuccino offspring, zero lethal-super risk.',
+        'The safest breeding approach remains Cappuccino × non-carrier: 50% Cappuccino offspring, zero Super Cappuccino risk.',
         'Calling Super Cappuccino \'a scam\' conflates the genetics with the ethics of chasing homozygous animals when viability data is still thin.',
       ],
       body: [
@@ -1280,13 +1280,13 @@ export const BLOG_POSTS = [
     category: 'care',
     tags: ['crested gecko weight chart', 'crested gecko growth rate', 'crested gecko weight by age', 'growth milestones'],
     datePublished: '2026-05-05',
-    dateModified: '2026-05-05',
+    dateModified: '2026-10-16',
     heroEyebrow: 'Growth reference',
     tldr: [
-      'A healthy crested gecko hatchling weighs 1.5-2 grams. Adults reach 35-55 grams at 18-24 months.',
-      'Juveniles (3-12 months) grow fastest, gaining 2-4 grams per month with proper diet and husbandry.',
+      'A healthy crested gecko hatchling weighs 1.5-3 grams. Adults reach 35-60 grams from about 18-24 months.',
+      'Juveniles (3-12 months) grow fastest, gaining about 1-4 grams per month with proper diet and husbandry.',
       'Males tend to max out around 35-45 grams. Females, especially breeding females, often reach 45-55 grams.',
-      'Weigh monthly on a digital kitchen scale (0.1g precision). Consistent weight loss over 2+ weigh-ins is a red flag.',
+      'Weigh every 1-2 weeks while growing and monthly as an adult, on a digital kitchen scale (0.1g precision). Consistent weight loss over 2+ weigh-ins is a red flag.',
       'Slow growth usually comes from low temperatures, inadequate diet, or stress, not genetics. Fix husbandry before assuming a gecko is "just small."',
     ],
     body: [
@@ -1303,9 +1303,9 @@ export const BLOG_POSTS = [
         caption: 'Crested gecko weight chart by age',
         headers: ['Age', 'Weight range', 'Life stage', 'Notes'],
         rows: [
-          ['Hatchling', '1.5-2g', 'Baby', 'Do not handle for first 2 weeks. First meal after first shed.'],
-          ['1 month', '2-3g', 'Baby', 'Should be eating CGD consistently. Tiny portions, changed daily.'],
-          ['2 months', '3-4g', 'Baby', 'Starting to explore enclosure actively at dusk.'],
+          ['At hatch', '1.5-3g', 'Hatchling', 'Do not handle for first 2 weeks. First meal after first shed.'],
+          ['1 month', '2-3g', 'Hatchling', 'Should be eating CGD consistently. Tiny portions, changed daily.'],
+          ['2 months', '3-4g', 'Hatchling', 'Starting to explore enclosure actively at dusk.'],
           ['3 months', '4-6g', 'Juvenile', 'Growth accelerating. Can start offering tiny insects.'],
           ['4 months', '5-8g', 'Juvenile', 'Should be visibly larger than hatchling. Eating well.'],
           ['5 months', '7-10g', 'Juvenile', 'Can begin gentle, brief handling sessions.'],
@@ -1314,7 +1314,7 @@ export const BLOG_POSTS = [
           ['10 months', '18-25g', 'Juvenile', 'Growth rate may slow slightly.'],
           ['12 months', '22-32g', 'Sub-adult', 'Many geckos are sexually mature but should not breed yet.'],
           ['15 months', '28-38g', 'Sub-adult', 'Growth continues but slowing.'],
-          ['18 months', '32-45g', 'Adult', 'Males may plateau here. Females continue growing.'],
+          ['18 months', '32-45g', 'Sub-adult to adult', 'Adult once past 35g. Males may plateau here. Females continue growing.'],
           ['24 months', '35-55g', 'Adult', 'Full adult size. Breeding weight for females: 40g minimum.'],
         ],
       },
@@ -1324,10 +1324,10 @@ export const BLOG_POSTS = [
         title: 'How to weigh your crested gecko',
         items: [
           'Use a digital kitchen scale with 0.1 gram precision. They cost $10-15 and are essential.',
-          'Weigh at the same time of day each month (before feeding is ideal).',
+          'Weigh at the same time of day each time (before feeding is ideal).',
           'Place a small container or deli cup on the scale, tare it to zero, then gently place the gecko inside.',
           'Record the weight in a log. Geck Inspect has built-in weight tracking that generates growth charts automatically.',
-          'Weigh monthly for routine tracking. Weigh weekly if you suspect a problem.',
+          'Weigh every 1-2 weeks while your gecko is growing, every 3 weeks as a sub-adult and monthly as an adult. Weigh weekly if you suspect a problem.',
         ],
       },
       {
@@ -1362,12 +1362,12 @@ export const BLOG_POSTS = [
       {
         question: 'How much should my crested gecko weigh?',
         answer:
-          'A healthy adult crested gecko weighs 35-55 grams at 18-24 months old. Males typically max out at 35-45 grams, while females often reach 45-55 grams. Hatchlings start at 1.5-2 grams.',
+          'A healthy adult crested gecko weighs 35-60 grams from about 18-24 months old. Males typically max out at 35-45 grams, while females often reach 45-55 grams. Hatchlings start at 1.5-3 grams.',
       },
       {
         question: 'How fast do crested geckos grow?',
         answer:
-          'Crested geckos grow fastest as juveniles (3-12 months), gaining 2-4 grams per month with proper husbandry. Growth slows after 12 months and most geckos reach full adult size by 18-24 months.',
+          'Crested geckos grow fastest as juveniles (3-12 months), gaining about 1-4 grams per month with proper husbandry. Growth slows after 12 months and most geckos reach full adult size by 18-24 months.',
       },
       {
         question: 'Why is my crested gecko not growing?',
@@ -1377,12 +1377,12 @@ export const BLOG_POSTS = [
       {
         question: 'How often should I weigh my crested gecko?',
         answer:
-          'Monthly weigh-ins are ideal for routine health tracking. Use a digital scale with 0.1g precision. Weigh weekly if you suspect a health problem or during breeding season for females.',
+          'Weigh every 1-2 weeks while your gecko is growing, every 3 weeks as a sub-adult and monthly as an adult. Use a digital scale with 0.1g precision. Weigh weekly if you suspect a health problem or during breeding season for females.',
       },
       {
         question: 'When can I breed my crested gecko?',
         answer:
-          'Males are physically capable of breeding around 9-12 months but should wait until they are 35+ grams and 12+ months old. Females should not be bred until they weigh at least 40 grams and are 18+ months old to avoid egg-binding and calcium depletion.',
+          'Males are physically capable of breeding around 9-12 months but should wait until they are at least 25-30 grams and 12 months old, and many breeders wait for 35 grams. Females should not be bred until they weigh at least 40 grams and are 18+ months old to avoid egg-binding and calcium depletion.',
       },
       {
         question: 'Do crested geckos lose weight in winter?',

@@ -33,13 +33,16 @@
 
 - Scientific name *Correlophus ciliatus* (formerly *Rhacodactylus ciliatus*), family Diplodactylidae, native to southern New Caledonia and the Isle of Pines. Thought extinct until rediscovered in 1994.
 - Adults weigh about 35 to 60 g and live 15 to 20 years or more.
+- Life stages (a stage ends at its weight or its age, whichever comes later): hatchling under 3 g and up to 3 months, juvenile 3 to 15 g and 3 to 12 months, sub-adult 15 to 35 g and 12 to 18 months, adult 35 g and up from 18 months.
+- Shedding follows growth: about every 1 to 2 weeks as a hatchling, every 2 to 3 weeks as a juvenile, every 3 to 4 weeks as a sub-adult and every 4 to 6 weeks as an adult.
 - Room temperature husbandry: 72 to 78°F (22 to 26°C) by day, a drop at night is fine, above 82°F (28°C) is dangerous.
 - Humidity 50 to 70% by day with a nightly misting spike; let the enclosure dry out between mistings.
 - Main diet is a complete powdered Crested Gecko Diet (CGD) mixed with water; insects are optional extras.
 - Minimum adult enclosure 18 x 18 x 24 inches, vertical.
 - They do not regrow a dropped tail. Tailless adults are common and healthy.
-- Do not breed a female under about 35 to 40 g and 18 months old.
-- Most morphs (Harlequin, Pinstripe, Dalmatian, Flame, base colors) are polygenic or line-bred. Single-gene traits: Lilly White, Cappuccino, Soft Scale and White Wall (incomplete dominant) and Axanthic (recessive). Albino (first healthy hatchlings announced March 2026) is expected to be recessive but is not yet proven.
+- Do not breed a female until she is at least 40 g and 18 months old, both (many breeders wait for 45 g). Males from about 25 to 30 g and 12 months.
+- Eggs hatch in about 70 to 90 days at 72 to 75°F (22 to 24°C); 90 to 120 days at 68 to 71°F; 60 to 75 days at 76 to 78°F. Keep incubation below about 80°F (27°C).
+- Most morphs (Harlequin, Pinstripe, Dalmatian, Flame, base colors) are polygenic or line-bred. Single-gene traits: Lilly White, Cappuccino, Soft Scale and White Wall (incomplete dominant) and Axanthic and Phantom (recessive). Sable is widely reported as a second version of the Cappuccino gene and Highway provisionally as a third; neither placement is settled. Albino (first healthy hatchlings announced March 2026) is expected to be recessive but is not yet proven.
 - Never pair Lilly White to Lilly White: 25% of eggs are Super Lilly White, which is lethal. Super Cappuccino has documented health problems too.
 - Lilly White traces to Lilly Exotics (Nick Lumb, United Kingdom), starting with an unusual hatchling in late 2010.
 

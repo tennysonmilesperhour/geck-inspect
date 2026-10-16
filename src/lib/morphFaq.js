@@ -38,9 +38,29 @@ const PROPER_STARTS = [
 // Notes that the generic inheritance text cannot carry.
 const INHERITANCE_NOTES = {
   'lilly-white':
-    'Lilly White has a lethal super form: pairing two Lilly Whites gives 25% Super Lilly White embryos that die in the egg, so the morph cannot be bred true.',
+    'Lilly White has a lethal super form: pairing two Lilly Whites gives 25% Super Lilly White embryos that die in the egg or within days of hatching, so the morph cannot be bred true.',
   albino:
     'This is expected rather than proven. The first healthy albino hatchlings were announced in March 2026, and breeding has not yet confirmed how the gene is passed on.',
+  // The super forms and Luwak are one form of a gene, not a gene of their
+  // own, so the generic "incomplete dominant" text needs the specifics.
+  'super-lilly-white':
+    'Super Lilly White is the two-copy form of Lilly White. It is lethal: embryos die in the egg or within days of hatching.',
+  'super-cappuccino':
+    'Super Cappuccino is the two-copy form of Cappuccino. It usually hatches but has documented health problems, so breeders avoid pairings that can make one.',
+  'super-sable':
+    'Super Sable is the two-copy form of Sable. It appears viable but is thinly documented.',
+  'super-highway':
+    'Super Highway is the two-copy form of Highway. Some breeders report health problems in it; that is not established.',
+  'super-whiteout':
+    'Super Whiteout is the two-copy form of Whiteout, which AC Reptiles reports as incomplete dominant; the super is described as healthy.',
+  'super-empty-back':
+    'Super Empty Back is the two-copy form of Empty Back in the Foundation Genetics model, where the super is described as healthy.',
+  luwak:
+    'Luwak is one Cappuccino copy plus one Sable copy, two versions of the same gene in the widely reported model, so a Luwak is never a super. That model is not yet settled.',
+  'empty-back':
+    'This is the Foundation Genetics model, the main published source; independent breeding records are still thin.',
+  whiteout:
+    'This rests mainly on AC Reptiles\' breeding records; much of the hobby still treats white walling as line-bred.',
 };
 
 /** Capitalize, trim and end with a full stop. */

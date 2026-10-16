@@ -477,19 +477,19 @@ export const HANDBOOK_GUIDE = {
             {
               badge: '6qt tub',
               tone: 'neutral',
-              title: '1-8g · Hatchling',
+              title: 'Under 3g · Hatchling',
               text: 'Paper towel, fake leaves, food within inches. Monitor eating and pooping closely.',
             },
             {
               badge: 'Med KK',
               tone: 'moss',
-              title: '5-15g · Young juvenile',
+              title: '3-10g · Young juvenile',
               text: 'Slightly more space, same simplicity. Still paper towel substrate.',
             },
             {
               badge: '12×12×18',
               tone: 'moss',
-              title: '12-25g · Juvenile',
+              title: '10-25g · Juvenile to young sub-adult',
               text: 'First "real" enclosure. Can introduce live plants if they\'re confident eaters.',
             },
             {
@@ -501,7 +501,7 @@ export const HANDBOOK_GUIDE = {
             {
               badge: '24×18×24+',
               tone: 'fern',
-              title: '35g+ · Premium adult',
+              title: '35g+ · Adult, roomier option',
               text: 'Overkill for ONE gecko, but beautiful display. Some geckos prefer smaller; watch behavior.',
             },
           ],
@@ -692,11 +692,13 @@ export const HANDBOOK_GUIDE = {
         {
           type: 'kv',
           rows: [
-            { label: 'Hatchlings', value: 'Every 7-14 days' },
-            { label: 'Juveniles (3-12 mo)', value: 'Every 2-3 weeks' },
-            { label: 'Young adults (1-2 yr)', value: 'Every 3-4 weeks' },
-            { label: 'Adults (2+ yr)', value: 'Every 4-8 weeks' },
-            { label: 'Seniors (5+ yr)', value: 'Every 6-10 weeks' },
+            // Same rhythm as the care guide and the app's shed forecast
+            // (src/data/husbandry-facts.js).
+            { label: 'Hatchlings (under 3g)', value: 'Every 1-2 weeks' },
+            { label: 'Juveniles (3-15g)', value: 'Every 2-3 weeks' },
+            { label: 'Sub-adults (15-35g)', value: 'Every 3-4 weeks' },
+            { label: 'Adults (35g+)', value: 'Every 4-6 weeks' },
+            { label: 'Seniors (10+ yr)', value: 'Gaps can stretch past 6 weeks' },
           ],
         },
         { type: 'heading', text: 'Stuck shed - watch for' },

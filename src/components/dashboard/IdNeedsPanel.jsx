@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import { Eye, ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight, ScanSearch, Check, Tags, X } from 'lucide-react';
 import { MORPHS } from '@/data/morph-guide';
+import { isLivingMorph } from '@/lib/morphNotBred';
 import { createPageUrl } from '@/utils';
 
 /**
@@ -22,7 +23,8 @@ const BATCH_SIZE = 20;
 // Classifications a member can put on an image when the AI's card is
 // missing them. Primary morph is any documented morph; traits are the
 // pattern, structure, colour and combo morphs that stack on a primary.
-const MORPH_OPTIONS = [...MORPHS]
+// A lethal super (Super Lilly White) is left out: no living gecko is one.
+const MORPH_OPTIONS = MORPHS.filter(isLivingMorph)
     .map((m) => ({ slug: m.slug, name: m.name, category: m.category }))
     .sort((a, b) => a.name.localeCompare(b.name));
 const TRAIT_CATEGORIES = new Set(['pattern', 'structure', 'color', 'combo']);

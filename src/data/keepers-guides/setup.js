@@ -314,13 +314,15 @@ export const SETUP_GUIDE = {
         { type: 'heading', text: 'Healthy weight benchmarks' },
         {
           type: 'kv',
+          // The typical range the app's weight chart shades at each age
+          // (src/lib/growthBand.js). A test keeps these rows equal to it.
           rows: [
             { label: 'At hatch', value: '1.5-3g' },
-            { label: '3 months', value: '4-8g' },
-            { label: '6 months', value: '10-16g' },
-            { label: '12 months', value: '18-30g' },
-            { label: '18 months', value: '25-40g' },
-            { label: 'Full adult (2+ yrs)', value: '30-55g' },
+            { label: '3 months', value: '2-9g' },
+            { label: '6 months', value: '3-15g' },
+            { label: '12 months', value: '11-35g' },
+            { label: '18 months', value: '25-48g' },
+            { label: 'Full adult (2+ yrs)', value: '35-60g' },
           ],
         },
       ],

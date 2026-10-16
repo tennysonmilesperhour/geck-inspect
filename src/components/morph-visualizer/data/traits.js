@@ -145,7 +145,7 @@ export const MENDELIAN_MORPHS = [
       superForm: 'Super Highway',
       superLethal: false,
       summary:
-        'Incomplete dominant. One copy = visual Highway with a continuous, clean dorsal stripe and clean sides. Two copies = Super Highway, which has reported nostril and health issues. Provisionally the third version of the Cappuccino and Sable gene.',
+        'Incomplete dominant. One copy = visual Highway with a continuous, clean dorsal stripe and clean sides. Two copies = Super Highway; some breeders report nostril and health problems in it (not established). Provisionally the third version of the Cappuccino and Sable gene.',
     },
     epistasis: { suppressesDorsalPattern: true },
     visual: {

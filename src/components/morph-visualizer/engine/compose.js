@@ -232,7 +232,7 @@ export function composePhenotype(selections) {
         : expressed.sable
           ? 'Sable + Highway, clean stripe over a darker Sable body. One copy of each, never a super.'
           : highwaySuper
-            ? 'Super Highway, clean stripe and very clean sides. Reported nostril and health issues.'
+            ? 'Super Highway, clean stripe and very clean sides. Some breeders report nostril and health problems (not established).'
             : 'Highway, continuous clean dorsal stripe with clean sides.',
     });
   }

@@ -130,9 +130,9 @@ export const BREEDING_GUIDE = {
             },
             {
               tone: 'fern',
-              title: 'MALE WEIGHT ≥ 35g AND AGE ≥ 12 MONTHS',
+              title: 'MALE WEIGHT ≥ 25-30g AND AGE ≥ 12 MONTHS',
               text:
-                'Males mature faster but breeding too early produces infertile clutches. Wait.',
+                'Males mature faster, but many breeders wait for 35g. Breeders report more infertile clutches from males used too young.',
             },
             {
               tone: 'moss',
@@ -281,7 +281,7 @@ export const BREEDING_GUIDE = {
       kicker: 'Gravid Female',
       title: 'Reading the signs of an incoming clutch.',
       lead:
-        "Cresties produce clutches of 2 eggs every 25-40 days during the active season. Here's how to know what stage she's in.",
+        "Cresties produce clutches of 2 eggs every 4-6 weeks during the active season. Here's how to know what stage she's in.",
       blocks: [
         {
           type: 'timeline',
@@ -445,7 +445,7 @@ export const BREEDING_GUIDE = {
               meta: 'Hatch time',
               title: '60-120 days',
               text:
-                'Wide range based on temperature. At 70°F expect ~90 days. At 75°F, ~70 days. At 68°F, 100+.',
+                'Wide range based on temperature. At 68-71°F expect 90-120 days. At 72-75°F, 70-90 days. At 76-78°F, 60-75 days. These are the windows the app uses for hatch estimates.',
             },
             {
               meta: 'Check frequency',
@@ -540,9 +540,9 @@ export const BREEDING_GUIDE = {
             },
             {
               meta: 'Weigh weekly',
-              title: 'Goal: 2-3g gain per month',
+              title: 'Goal: 0.5-1.5g gain per month',
               text:
-                "Under 1g/month = investigate. Hatchlings that don't gain in month 1 usually don't thrive.",
+                "No gain over a month = investigate. Hatchlings that don't gain in month 1 usually don't thrive.",
             },
             {
               meta: 'Watch for stuck shed',
@@ -858,7 +858,7 @@ export const BREEDING_GUIDE = {
               when: 'May-Aug',
               label: 'Active season',
               text:
-                'Clutches every 25-40 days. Daily lay box checks. Incubator cycling. Hatches begin.',
+                'Clutches every 4-6 weeks. Daily lay box checks. Incubator cycling. Hatches begin.',
             },
             {
               when: 'Sep-Oct',

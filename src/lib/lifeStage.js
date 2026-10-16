@@ -1,26 +1,32 @@
-// How often to weigh a crested gecko, from its life stage.
+// A crested gecko's life stage, and how often to weigh it.
 //
-// The stages are the care guide's own (src/data/care-guide.js, "Life
-// Stages"): hatchling 0 to 3 g, juvenile 3 to 15 g or up to 12 months,
-// sub-adult 15 to 35 g or 12 to 18 months, adult 35 g and up and 18
-// months and up. A test checks these numbers against the guide's text, so
-// the two cannot drift apart.
+// The stages live in src/data/husbandry-facts.js, the one place the
+// husbandry numbers are written down; the care guide's Life Stages tables
+// are built from the same values. Hatchling under 3 g or up to 3 months,
+// juvenile 3 to 15 g or up to 12 months, sub-adult 15 to 35 g or 12 to 18
+// months, adult 35 g and up and 18 months and up. A stage ends at its
+// weight or its age, whichever comes later.
 //
 // The weigh-in reminder job uses the same rule
 // (public.weighin_interval_days in
 // supabase/migrations/20261015151100_reminders_and_offline_logging.sql),
 // with the same test cases in supabase/tests/logging_regressions.sql and
-// src/lib/__tests__/lifeStage.test.js. Change all three together.
+// src/lib/__tests__/lifeStage.test.js. The SQL cannot import this file,
+// so that test reads the migration and compares the numbers: change the
+// facts file and the SQL together.
+import { LIFE_STAGE_BY_ID, WEIGH_IN_DAYS as FACT_WEIGH_IN_DAYS } from '@/data/husbandry-facts';
 
-export const JUVENILE_MAX_GRAMS = 15;
-export const JUVENILE_MAX_MONTHS = 12;
-export const SUBADULT_MAX_GRAMS = 35;
-export const SUBADULT_MAX_MONTHS = 18;
+export const HATCHLING_MAX_GRAMS = LIFE_STAGE_BY_ID.hatchling.maxGrams;
+export const HATCHLING_MAX_MONTHS = LIFE_STAGE_BY_ID.hatchling.maxMonths;
+export const JUVENILE_MAX_GRAMS = LIFE_STAGE_BY_ID.juvenile.maxGrams;
+export const JUVENILE_MAX_MONTHS = LIFE_STAGE_BY_ID.juvenile.maxMonths;
+export const SUBADULT_MAX_GRAMS = LIFE_STAGE_BY_ID.subadult.maxGrams;
+export const SUBADULT_MAX_MONTHS = LIFE_STAGE_BY_ID.subadult.maxMonths;
 
 // Days between weigh-ins for each stage. Growing animals change fast, so
 // every two weeks; sub-adults every three; adults hold their weight, so
 // once a month is enough.
-export const WEIGH_IN_DAYS = { growing: 14, subadult: 21, adult: 30 };
+export const WEIGH_IN_DAYS = FACT_WEIGH_IN_DAYS;
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -53,22 +59,37 @@ export function monthsBefore(day, months) {
 }
 
 /**
- * 'growing' (hatchling or juvenile), 'subadult' or 'adult'.
+ * The care guide's four stages: 'hatchling', 'juvenile', 'subadult' or
+ * 'adult', or null when neither a weight nor a hatch date is known.
  *   weightGrams: the latest weight, or null
  *   hatchDate:   YYYY-MM-DD, or null
  *   today:       YYYY-MM-DD or a Date (defaults to now)
- * Nothing known counts as growing: most first geckos are bought young.
+ * A gecko stays in a stage while it is lighter than the stage's end weight
+ * OR younger than its end age.
  */
-export function lifeStage({ weightGrams = null, hatchDate = null, today = new Date() } = {}) {
+export function careStage({ weightGrams = null, hatchDate = null, today = new Date() } = {}) {
   const grams = weightGrams === null || weightGrams === undefined || weightGrams === '' ? null : Number(weightGrams);
   const weight = Number.isFinite(grams) ? grams : null;
   const hatched = parseDay(hatchDate);
   const on = today instanceof Date ? localDay(today) : parseDay(today) || localDay(new Date());
-  if (weight === null && !hatched) return 'growing';
+  if (weight === null && !hatched) return null;
   const hatchedAfter = (months) => hatched && dayKey(hatched) > dayKey(monthsBefore(on, months));
-  if ((weight !== null && weight < JUVENILE_MAX_GRAMS) || hatchedAfter(JUVENILE_MAX_MONTHS)) return 'growing';
-  if ((weight !== null && weight < SUBADULT_MAX_GRAMS) || hatchedAfter(SUBADULT_MAX_MONTHS)) return 'subadult';
+  const within = (maxGrams, maxMonths) => (weight !== null && weight < maxGrams) || hatchedAfter(maxMonths);
+  if (within(HATCHLING_MAX_GRAMS, HATCHLING_MAX_MONTHS)) return 'hatchling';
+  if (within(JUVENILE_MAX_GRAMS, JUVENILE_MAX_MONTHS)) return 'juvenile';
+  if (within(SUBADULT_MAX_GRAMS, SUBADULT_MAX_MONTHS)) return 'subadult';
   return 'adult';
+}
+
+/**
+ * 'growing' (hatchling or juvenile), 'subadult' or 'adult': the three
+ * stages the weigh-in reminders use. Same inputs as careStage().
+ * Nothing known counts as growing: most first geckos are bought young.
+ */
+export function lifeStage(input = {}) {
+  const stage = careStage(input);
+  if (stage === null || stage === 'hatchling' || stage === 'juvenile') return 'growing';
+  return stage;
 }
 
 /**

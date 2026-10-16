@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getSupabase } from '@/lib/supabaseLazy';
 import { Button } from '@/components/ui/button';
 import {
+  AlertTriangle,
   ArrowLeft,
   BookOpen,
   Camera,
@@ -32,6 +33,9 @@ import {
   PRICE_TIERS,
 } from '@/data/morph-guide';
 import { article, morphSeo } from '@/lib/morphMeta';
+import { isLivingMorph, notBredStatus } from '@/lib/morphNotBred';
+import { morphSourceLinks } from '@/lib/morphSourceLabel';
+import { galleryMorphTerm } from '@/lib/morphGallery';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
@@ -102,7 +106,7 @@ function rememberGuideReturn(slug) {
  * With no photo (or a broken one) the box shows a styled placeholder and
  * an invitation to add a photo, instead of collapsing to nothing.
  */
-function HeroImage({ src, name, slug, category }) {
+function HeroImage({ src, name, slug, category, invitePhoto = true }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
   const showPhoto = src && !failed;
@@ -143,19 +147,65 @@ function HeroImage({ src, name, slug, category }) {
                 {morphInitials(name)}
               </span>
             )}
-            <span className="relative mt-2 text-sm text-neutral-300">{hasIllustration(slug) ? `${name} · illustrative feature study` : `${name} · documented photo needed`}</span>
-            <Link
-              to={`/MorphGuideSubmission?morph=${slug}`}
-              onClick={() => trackMorphCta(slug, '/MorphGuideSubmission', 'hero_add_photo')}
-              className="relative mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-black/50 hover:text-white transition-colors"
-            >
-              <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-              Have one? Add the first photo
-            </Link>
+            {invitePhoto ? (
+              <>
+                <span className="relative mt-2 text-sm text-neutral-300">{hasIllustration(slug) ? `${name} · illustrative feature study` : `${name} · documented photo needed`}</span>
+                <Link
+                  to={`/MorphGuideSubmission?morph=${slug}`}
+                  onClick={() => trackMorphCta(slug, '/MorphGuideSubmission', 'hero_add_photo')}
+                  className="relative mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-black/50 hover:text-white transition-colors"
+                >
+                  <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                  Have one? Add the first photo
+                </Link>
+              </>
+            ) : (
+              <span className="relative mt-2 text-sm text-neutral-300">{`${name} · no living animal to photograph`}</span>
+            )}
           </div>
         )}
       </div>
     </figure>
+  );
+}
+
+/**
+ * Shown instead of the "identify it, price it, breed it" strip on a super
+ * form breeders avoid making (src/lib/morphNotBred.js): what the page is
+ * about, and the pairing to use instead.
+ */
+function NotBredNote({ slug, status }) {
+  const lethal = status.reason === 'lethal';
+  const pairingTo = status.pairingHref || (status.parent ? calculatorHref(status.parent.slug) : '/calculator');
+  return (
+    <aside
+      aria-label={status.title}
+      className={`rounded-xl border p-4 sm:p-5 ${lethal ? 'border-rose-500/30 bg-rose-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}
+    >
+      <div className={`flex items-center gap-2 text-sm font-semibold ${lethal ? 'text-rose-200' : 'text-amber-200'}`}>
+        <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {status.title}
+      </div>
+      {status.safeText && <p className="mt-2 leading-relaxed text-neutral-200">{status.safeText}</p>}
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm font-medium">
+        <Link
+          to={pairingTo}
+          onClick={() => trackMorphCta(slug, pairingTo, 'not_bred_safe_pairing')}
+          className="inline-flex items-center min-h-11 text-emerald-300 hover:text-emerald-200 underline-offset-2 hover:underline"
+        >
+          {status.safeLabel ? `See ${status.safeLabel} in the calculator` : 'Check a pairing in the calculator'}
+        </Link>
+        {status.parent && (
+          <Link
+            to={`/MorphGuide/${status.parent.slug}`}
+            onClick={() => trackMorphCta(slug, `/MorphGuide/${status.parent.slug}`, 'not_bred_parent')}
+            className="inline-flex items-center min-h-11 text-emerald-300 hover:text-emerald-200 underline-offset-2 hover:underline"
+          >
+            Read the {status.parent.name} guide
+          </Link>
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -183,9 +233,23 @@ function BulletList({ items, linkSlug }) {
   );
 }
 
+function localRecordFor(slug) {
+  const localMorph = getMorph(slug);
+  return localMorph && {
+    morph_name: localMorph.name,
+    description: localMorph.description,
+    key_features: localMorph.keyFeatures,
+    rarity: localMorph.rarity,
+    example_image_url: null,
+    breeding_info: null,
+  };
+}
+
 export default function MorphDetail() {
   const { slug } = useParams();
-  const [record, setRecord] = useState(null);
+  // The built-in guide is there at once, so the first render already shows
+  // the page instead of a spinner for one frame.
+  const [record, setRecord] = useState(() => localRecordFor(slug) || null);
   const [communityImages, setCommunityImages] = useState([]);
   // Approved Morph Guide photo submissions, credited by display name.
   const [submittedPhotos, setSubmittedPhotos] = useState([]);
@@ -195,7 +259,7 @@ export default function MorphDetail() {
   const [imageBySlug, setImageBySlug] = useState({});
   const articleRef = useRef(null);
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !getMorph(slug));
   const [notFound, setNotFound] = useState(false);
   const blocked = useBlockedMembers();
 
@@ -223,15 +287,7 @@ export default function MorphDetail() {
     // so show it at once and let the database add photos.
     // Before 29 Sep 2026 the page waited on the database first and, if that
     // request failed, said "Morph not found" even for Harlequin.
-    const localMorph = getMorph(slug);
-    const localRecord = localMorph && {
-      morph_name: localMorph.name,
-      description: localMorph.description,
-      key_features: localMorph.keyFeatures,
-      rarity: localMorph.rarity,
-      example_image_url: null,
-      breeding_info: null,
-    };
+    const localRecord = localRecordFor(slug);
     setCommunityImages([]);
     setReferenceImages([]);
     (async () => {
@@ -281,8 +337,9 @@ export default function MorphDetail() {
 
         // Community photos of this morph from the gallery; nice touch if we have them.
         try {
-          const normalized = (best?.morph_name || displayName).toLowerCase();
-          const firstWord = normalized.split(/\s+/)[0];
+          // First word of the name, or the whole name for "Super ..." and
+          // "Extreme ..." (src/lib/morphGallery.js).
+          const firstWord = galleryMorphTerm(best?.morph_name || displayName);
           // Reviewed photos from members only. gecko_images also holds about
           // 3,800 scraped marketplace listing photos (created_by is null),
           // which the caption below would otherwise call keeper uploads.
@@ -359,8 +416,11 @@ export default function MorphDetail() {
   const morphName = localMorph?.name || record.morph_name;
   const seoMorph = localMorph || { slug, name: morphName, summary: record.description, rarity: record.rarity };
   const seo = morphSeo(seoMorph);
-  // Photos from members the viewer blocked are left out.
-  const memberPhotos = [...submittedPhotos, ...communityImages].filter((img) => !blocked.isBlocked(img));
+  // Photos from members the viewer blocked are left out, and a lethal
+  // super shows none: a photo tagged with it is always a mislabel.
+  const memberPhotos = isLivingMorph(localMorph)
+    ? [...submittedPhotos, ...communityImages].filter((img) => !blocked.isBlocked(img))
+    : [];
   const heroImage = sanitizeImage(record.example_image_url) || memberPhotos[0]?.image_url || null;
   const rarityLabel = RARITY_LABELS[record.rarity] || record.rarity || 'Unknown';
   // Prefer local dataset's key features over DB field so the
@@ -380,6 +440,9 @@ export default function MorphDetail() {
   const lookalikes = localMorph?.lookalikes || [];
   const faqs = morphFaq(localMorph || { slug, name: morphName, summary: record.description });
   const calcHref = calculatorHref(slug);
+  // Set only on a super form breeders avoid making (Super Lilly White,
+  // Super Cappuccino, Super Highway): no breed, price or value prompts.
+  const notBred = notBredStatus(localMorph);
   const hasDemo = Boolean(geneticsDemoFor(localMorph));
   // Photo source for previews and comparison tiles: this page's hero for
   // its own morph, the best morph_guides photo for any other.
@@ -394,7 +457,7 @@ export default function MorphDetail() {
   const path = `/MorphGuide/${slug}`;
 
   const hasGenetics = Boolean(inheritance || localMorph?.foundationGenetics || localMorph?.notes || record.breeding_info);
-  const hasPrice = Boolean(localMorph);
+  const hasPrice = Boolean(localMorph) && !notBred;
   const sections = [
     description && { id: 'about', label: 'About' },
     (keyFeatures.length > 0 || visualIdentifiers.length > 0) && { id: 'identify', label: 'Identify' },
@@ -462,12 +525,14 @@ export default function MorphDetail() {
       value: inheritance?.label || 'Not recorded',
       to: inheritance ? `/MorphGuide/inheritance/${inheritance.id}` : null,
     },
-    { label: 'Rarity', value: rarityLabel },
-    {
-      label: 'Typical price',
-      value: localMorph?.priceRange || (localMorph ? 'No market yet' : 'Varies'),
-      to: '#price',
-    },
+    { label: 'Rarity', value: notBred?.reason === 'lethal' ? 'Never survives' : rarityLabel },
+    notBred
+      ? { label: 'Breeding', value: notBred.fact, to: '#genetics' }
+      : {
+          label: 'Typical price',
+          value: localMorph?.priceRange || (localMorph ? 'No market yet' : 'Varies'),
+          to: '#price',
+        },
   ];
 
   return (
@@ -544,11 +609,15 @@ export default function MorphDetail() {
             <p className="mt-3 text-xs text-neutral-500">{bylineText(path)}</p>
           </div>
 
-          <HeroImage src={heroImage} name={morphName} slug={slug} category={localMorph?.category} />
+          <HeroImage src={heroImage} name={morphName} slug={slug} category={localMorph?.category} invitePhoto={isLivingMorph(localMorph)} />
         </header>
 
         <div className="mt-6">
-          <MorphActions slug={slug} name={morphName} priceRange={localMorph?.priceRange} />
+          {notBred ? (
+            <NotBredNote slug={slug} status={notBred} />
+          ) : (
+            <MorphActions slug={slug} name={morphName} priceRange={localMorph?.priceRange} />
+          )}
         </div>
 
         {/* Not wrapped in its own div: a sticky element only sticks
@@ -591,13 +660,17 @@ export default function MorphDetail() {
                 </>
               )}
               <p className="mt-5 text-sm text-neutral-400">Visible features can suggest comparisons, but a photograph or illustration does not establish genotype. Use several views, natural firing states and documented lineage when assessing an animal.</p>
-              {localMorph?.sources?.length > 0 && <div className="mt-4 rounded-xl border border-neutral-800 p-4"><h3 className="text-sm font-semibold text-white">Specimens and breeder references</h3><ul className="mt-2 space-y-2 text-sm">{localMorph.sources.map(url => <li key={url}><a href={url} target="_blank" rel="noreferrer" className="text-emerald-300 underline">{url.includes('pangea') ? 'Pangea Reptile' : url.includes('acreptiles') ? 'AC Reptiles · project observations' : url.includes('corch') ? 'Corch Geckos · Lilly White project' : 'LIL MONSTERS · specimens and breeder model'}</a></li>)}</ul></div>}
+              {localMorph?.sources?.length > 0 && <div className="mt-4 rounded-xl border border-neutral-800 p-4"><h3 className="text-sm font-semibold text-white">Specimens and breeder references</h3><ul className="mt-2 space-y-2 text-sm">{morphSourceLinks(localMorph.sources).map(({ url, label }) => <li key={url}><a href={url} target="_blank" rel="noreferrer" className="text-emerald-300 underline">{label}</a></li>)}</ul></div>}
               {spectrumPositionFor(slug) !== null && (
                 <PatternSpectrum key={slug} focusSlug={slug} className="mt-8" />
               )}
-              <InlineMorphCta slug={slug} to="/Recognition" placement="after_identify" icon={Camera}>
-                Not sure? Upload a photo to Morph ID and get a second opinion in seconds.
-              </InlineMorphCta>
+              {/* No "is your gecko one?" check on a super breeders avoid
+                  making: lineage, not a photo, says whether one hatched. */}
+              {!notBred && (
+                <InlineMorphCta slug={slug} to="/Recognition" placement="after_identify" icon={Camera}>
+                  Not sure? Upload a photo to Morph ID and get a second opinion in seconds.
+                </InlineMorphCta>
+              )}
             </Reveal>
           )}
 
@@ -654,7 +727,19 @@ export default function MorphDetail() {
               )}
 
               {/* The demo above ends in its own calculator button. */}
-              {!hasDemo && (
+              {notBred && (
+                <InlineMorphCta
+                  slug={slug}
+                  to={notBred.pairingHref || (notBred.parent ? calculatorHref(notBred.parent.slug) : '/calculator')}
+                  placement="genetics_safe_pairing"
+                  icon={Shuffle}
+                >
+                  {notBred.safeLabel
+                    ? `Plan ${notBred.safeLabel} in the calculator instead and see the odds for every egg.`
+                    : 'Check a pairing in the calculator before you pair two carriers.'}
+                </InlineMorphCta>
+              )}
+              {!hasDemo && !notBred && (
                 <InlineMorphCta slug={slug} to={calcHref} placement="genetics" icon={Shuffle}>
                   {calcHref === '/calculator'
                     ? 'Run this pairing in the calculator and see the odds for every egg.'
@@ -860,7 +945,11 @@ export default function MorphDetail() {
           pageType="morph"
           ctaId="morph_end"
           className="mt-12"
-          headline={`Keep your ${morphName} geckos in one place`}
+          headline={
+            notBred?.parent
+              ? `Keep your ${notBred.parent.name} geckos and their pairings in one place`
+              : `Keep your ${morphName} geckos in one place`
+          }
           body="Weights, parents, photos and a pedigree buyers can check, in one record per gecko. Plan pairings with the genetics calculator built for crested geckos."
         />
       </article>

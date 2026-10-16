@@ -69,8 +69,12 @@ export function morphDefinition(morph) {
  */
 export function morphSeo(morph) {
   const name = morph?.name || 'Crested gecko morph';
-  const long = `${name} Crested Gecko: Identification, Genetics and Price`;
-  const mid = `${name} Crested Gecko: ID, Genetics and Price`;
+  // "and Price" only when the entry has a price to show. Super Lilly White
+  // (lethal) and unproven traits have none, and their titles promised one.
+  const long = morph?.priceRange
+    ? `${name} Crested Gecko: Identification, Genetics and Price`
+    : `${name} Crested Gecko: Identification and Genetics`;
+  const mid = morph?.priceRange ? `${name} Crested Gecko: ID, Genetics and Price` : `${name} Crested Gecko: ID and Genetics`;
   const title = long.length <= TITLE_MAX ? long : mid.length <= TITLE_MAX ? mid : `${name} Crested Gecko Guide`;
   const definition = morphDefinition(morph);
   const price = morph?.priceRange ? ` Typical adult price: ${morph.priceRange}.` : '';
