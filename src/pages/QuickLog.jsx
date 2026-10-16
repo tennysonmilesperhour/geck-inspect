@@ -131,6 +131,10 @@ export default function QuickLog() {
   const geckoQuery = useQuery({
     queryKey: fieldModeQueryKey(user?.email),
     enabled: Boolean(user?.email) && !guest,
+    // Asked for again every time the page opens: the link can name a gecko
+    // added a moment ago, which the copy kept on the phone does not have.
+    // That copy still shows at once, and on its own with no signal.
+    staleTime: 0,
     retry: (count, error) => !isAuthFailure(error) && count < 2,
     queryFn: () => loadWritableGeckos(user),
   });
@@ -408,6 +412,15 @@ export default function QuickLog() {
   const doneCount = allGeckos.filter((g) => ['saved', 'queued'].includes(logs[g.id]?.status)).length;
   const allDone = allGeckos.length > 0 && doneCount === allGeckos.length;
   const hasList = Boolean(geckoQuery.data);
+  // The collection is being asked for again. Until it answers, a gecko the
+  // link names but the kept copy lacks (added a moment ago) is shown as
+  // loading, not as archived, sold or in another account.
+  const checking = hasList && geckoQuery.isFetching;
+  const checkingNote = (
+    <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
+      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> Loading your geckos
+    </p>
+  );
   const offlineNoCopy = Boolean(user) && !hasList && geckoQuery.fetchStatus === 'paused';
   const loading = !authChecked || (Boolean(user) && !guest && !hasList && !offlineNoCopy && !geckoQuery.isError && !sessionExpired);
   const Icon = params.type === 'weight' ? Scale : params.type === 'shed' ? Sparkles : Utensils;
@@ -582,6 +595,7 @@ export default function QuickLog() {
     // allows it); its geckos show as plain cards. Only a feeding can mark
     // a group that has no geckos.
     const shownGroups = picked.groups.filter((group) => params.type === 'feeding' || group.geckos.length > 0);
+    const nothingHere = allGeckos.length === 0 && shownGroups.length === 0;
     body = (
       <>
         {canMarkAll && picked.listed.length > 1 && pendingListed.length > 1 && markAllButton(pendingListed)}
@@ -627,12 +641,13 @@ export default function QuickLog() {
             <Link to="/FieldMode" className="underline text-emerald-300">Log the rest in Field Mode</Link>.
           </p>
         )}
-        {picked.missing > 0 && (
+        {checking && (picked.missing > 0 || nothingHere) && checkingNote}
+        {picked.missing > 0 && !checking && (
           <p className="mt-4 text-sm text-slate-400">
             {picked.missing === 1 ? 'One gecko from this reminder is' : `${picked.missing} geckos from this reminder are`} not in this collection. It may have been archived or sold, or you may be signed in to a different account.
           </p>
         )}
-        {allGeckos.length === 0 && shownGroups.length === 0 && (
+        {nothingHere && !checking && (
           <div className="rounded-2xl border border-slate-700 bg-slate-900 p-4 text-slate-300">
             <p className="mb-3">Nothing to log here. The gecko may have been archived, sold or moved, or you may be signed in to a different account.</p>
             <Link to="/MyGeckos" className="underline">Open My Geckos</Link>

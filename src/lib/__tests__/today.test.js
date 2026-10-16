@@ -297,4 +297,32 @@ describe('the demo collection', () => {
       vi.useRealTimers();
     }
   });
+
+  // Until 16 Oct 2026 the sample day was one amber card: all 19 demo
+  // geckos 15 days late for a weigh-in, and no feeding to log. And as the
+  // weeks passed, more demo geckos counted as added after the defaults
+  // started and fell further behind. The day must look the same whenever
+  // it is opened, so it is checked on release day and months later.
+  it.each(['2026-10-16', '2027-06-01'])('on %s opens on a feeding to log, with only a few weigh-ins due', async (today) => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(`${today}T12:00:00.000Z`));
+    vi.resetModules();
+    try {
+      const fresh = await import('@/lib/today');
+      const view = fresh.todayView(await fresh.loadDemoToday(today), { today });
+      const [first] = view.cards;
+      expect(first.kind).toBe('feeding');
+      expect(first.action.label).toBe('Log feeding');
+      expect(first.action.to.startsWith('/log?type=feeding')).toBe(true);
+      const weighIns = view.cards.find((card) => card.kind === 'weigh_in');
+      const lines = weighIns?.lines || [];
+      expect(lines.length).toBeGreaterThan(0);
+      expect(lines.length).toBeLessThanOrEqual(3);
+      expect(lines.every((line) => !/\d+ days ago/.test(line.note))).toBe(true);
+      expect(view.comingUp.length).toBeGreaterThan(0);
+    } finally {
+      vi.useRealTimers();
+      vi.resetModules();
+    }
+  });
 });

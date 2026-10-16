@@ -22,7 +22,7 @@
 import { useState } from 'react';
 import { DEFAULT_GECKO_CARD, DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { geckoPlaceholderStyle, isGeckoPlaceholder } from '@/lib/geckoPlaceholder';
-import { thumbnailFirst } from '@/lib/photoThumbnails';
+import { noteMissingThumbnail, thumbnailFirst } from '@/lib/photoThumbnails';
 import GeckoPlaceholder from './GeckoPlaceholder';
 
 const ASPECT_PRESETS = {
@@ -139,8 +139,11 @@ export default function SmartImage({
         onLoad={(event) => { setSettled(resolvedSrc); onLoad?.(event); }}
         onError={(event) => {
           // Step through the sources, then the placeholder. Stop there so a
-          // broken placeholder never loops.
+          // broken placeholder never loops. A missing thumbnail is also
+          // remembered for the whole visit, so other cards showing this
+          // photo go straight to the photo itself.
           if (remaining.length) {
+            if (resolvedSrc !== src) noteMissingThumbnail(resolvedSrc);
             setFailures({ src, urls: [...failedUrls, resolvedSrc] });
             if (remaining.length === 1) setSettled(fallback);
           } else {

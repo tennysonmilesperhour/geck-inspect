@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import GeckoImage from './GeckoImage';
 import SmartImage, { smartImageSources } from './SmartImage';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { forgetMissingThumbnails } from '@/lib/photoThumbnails';
 
 const PROJECT = 'https://abcdefghijklmnop.supabase.co';
 const MEDIA = `${PROJECT}/storage/v1/object/public/geck-inspect-media`;
@@ -12,7 +13,11 @@ const OTHER = `${MEDIA}/uploads/u1/p2.webp`;
 const OTHER_THUMB = `${MEDIA}/thumbs/uploads/u1/p2.webp`;
 
 beforeEach(() => vi.stubEnv('VITE_SUPABASE_URL', PROJECT));
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => {
+  vi.unstubAllEnvs();
+  // A missing thumbnail is remembered for the visit; each test is a new one.
+  forgetMissingThumbnails();
+});
 
 const imgSrc = (view) => view.root.findByType('img').props.src;
 const fail = (view) => act(async () => view.root.findByType('img').props.onError({}));
@@ -121,3 +126,44 @@ describe('a wider slot after a missing thumbnail', () => {
   }
 });
 
+
+// The next card to show a photo whose thumbnail is missing goes straight to
+// the photo: one failed request per visit, not one per card (review of 16
+// Oct 2026: Today, /log and My Geckos each asked again).
+describe('a thumbnail that failed on another card', () => {
+  for (const [name, Component] of [['SmartImage', SmartImage], ['GeckoImage', GeckoImage]]) {
+    it(`${name} is not asked for again, and the photo still shows`, async () => {
+      let first;
+      await act(async () => { first = create(<Component src={PHOTO} width={240} alt="Mango" />); });
+      expect(imgSrc(first)).toBe(THUMB);
+      await fail(first);
+      expect(imgSrc(first)).toBe(PHOTO);
+      await act(async () => first.unmount());
+
+      for (const Next of [SmartImage, GeckoImage]) {
+        let next;
+        await act(async () => { next = create(<Next src={PHOTO} width={96} alt="Mango" />); });
+        expect(imgSrc(next)).toBe(PHOTO);
+        await act(async () => next.unmount());
+      }
+      // A photo that has a thumbnail is unaffected.
+      let other;
+      await act(async () => { other = create(<Component src={OTHER} width={96} alt="Spud" />); });
+      expect(imgSrc(other)).toBe(OTHER_THUMB);
+      await act(async () => other.unmount());
+    });
+
+    it(`${name} never skips the photo itself after it failed`, async () => {
+      let first;
+      await act(async () => { first = create(<Component src={PHOTO} width={240} alt="Mango" />); });
+      await fail(first);
+      await fail(first);
+      expect(imgSrc(first)).toBe(DEFAULT_GECKO_IMAGE);
+      await act(async () => first.unmount());
+      let next;
+      await act(async () => { next = create(<Component src={PHOTO} width={240} alt="Mango" />); });
+      expect(imgSrc(next)).toBe(PHOTO);
+      await act(async () => next.unmount());
+    });
+  }
+});

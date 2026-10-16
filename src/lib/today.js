@@ -126,7 +126,12 @@ export function isTodayUnavailable(error) {
 
 // ---- The same rules in JavaScript, for the demo --------------------------
 
-const isActive = (g) => g && !g.archived && String(g.status || '') !== 'Sold';
+/**
+ * A gecko the lists count: not archived and not marked Sold. Today's due
+ * list, its "Your geckos" strip and the Log tab all use this one rule.
+ */
+export const isActiveGecko = (g) => Boolean(g) && !g.archived && String(g.status || '') !== 'Sold';
+const isActive = isActiveGecko;
 const nameOf = (value, fallback) => String(value ?? '').trim() || fallback;
 
 /**
@@ -581,6 +586,11 @@ export async function loadDemoToday(today) {
     guestMockFilter('Egg', {}),
     guestMockFilter('BreedingPlan', {}),
   ]);
-  const data = buildTodayFromRecords({ today, geckos, feedingGroups, weightRecords, eggs, breedingPlans });
+  // The demo's records are dated from the clock, but TODAY_DEFAULTS_FROM is
+  // a fixed day, so each week more demo geckos would count as added after
+  // the life-stage defaults started and fall overdue at once. The demo
+  // starts its defaults on the day it is shown, so its day looks the same
+  // whenever it is opened.
+  const data = buildTodayFromRecords({ today, defaultsFrom: today, geckos, feedingGroups, weightRecords, eggs, breedingPlans });
   return { ...data, geckos: geckos.filter(isActive) };
 }
