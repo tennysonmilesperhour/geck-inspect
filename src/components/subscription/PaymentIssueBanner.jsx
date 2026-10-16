@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { CreditCard, X } from 'lucide-react';
-import { openBillingPortal } from '@/lib/billingPortal';
 import { TIER_LIMITS } from '@/lib/tierLimits';
 import { SUPPORT_EMAIL } from '@/lib/supportContact';
 
@@ -31,6 +30,9 @@ export default function PaymentIssueBanner({ user }) {
     setFailed(false);
     try {
       const here = typeof window !== 'undefined' ? window.location.pathname : '';
+      // Loaded on tap: the banner sits in the app shell, and the billing
+      // helper pulls in the Supabase client, which public pages defer.
+      const { openBillingPortal } = await import('@/lib/billingPortal');
       await openBillingPortal({ returnPath: here || '/Membership' });
     } catch {
       setFailed(true);
