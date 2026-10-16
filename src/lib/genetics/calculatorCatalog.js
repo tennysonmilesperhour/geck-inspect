@@ -25,9 +25,14 @@
  * them would be fake precision. They arrive in a later phase as
  * expression bands, per docs/planning/MORPH_CALCULATOR_PLAN.md.
  */
-// Relative, not '@/lib/genetics', so Node scripts (build-agent-data.mjs,
-// prerender.mjs) can import this catalog without Vite.
-import { getTrait, WILD_TYPE } from './index.js';
+// This file does not import the engine (./index.js). Pages that only need
+// the catalog, such as a Morph Guide page linking to its calculator
+// (morphguide/morphCta.js), would otherwise download the whole engine and
+// its schema library before they can draw. The engine's name for the
+// wild-type allele is copied here instead; calculator.test.js checks that
+// it still matches the engine's WILD_TYPE. Trait sources (engineTrait)
+// live in ./index.js, next to the engine.
+const WILD_TYPE = 'wild_type';
 
 export const COMPLEX_LOCUS = 'SABLE_COMPLEX';
 export const COMPLEX_ID = 'sable_complex';
@@ -361,6 +366,28 @@ export function stateHasSelection(state) {
   return Object.entries(state || {}).some(([, v]) => v && v !== 'none');
 }
 
+/**
+ * Build the animal-shaped object the calculator and simulator consume.
+ * `genotype_spec` carries the weighted-locus spec (the precise path);
+ * `morph_tags` carries display chips so parent summaries render the
+ * same way for manual and collection parents. It lives here, not in
+ * ManualGenotypePicker.jsx (which re-exports it), so the calculator page
+ * can build parents before the picker and the engine have loaded.
+ */
+export function buildParentFromState(id, name, state) {
+  return {
+    id,
+    name,
+    sex: 'Unsexed',
+    image_urls: [],
+    morph_tags: stateToChips(state),
+    genotype_spec: stateToSpec(state),
+    // Chips are labels only; the spec is the source of truth, so the
+    // calculator does not re-read these as collection tags.
+    source: 'manual',
+  };
+}
+
 // ---------- URL state codec --------------------------------------------
 // Permalinks encode each parent as "traitId:state" pairs joined by
 // commas, e.g. ?sire=lilly_white:het,axanthic:ph66&dam=sable_complex:luwak
@@ -636,12 +663,3 @@ export const MORPH_PRICE_SLUGS = {
 export const GUIDE_CALCULATOR_ALIASES = {
   'white-wall': 'whiteout',
 };
-
-/** Engine trait metadata (sources, proven-by) for a catalog entry. */
-export function engineTrait(idOrAllele) {
-  try {
-    return getTrait(idOrAllele) || null;
-  } catch {
-    return null;
-  }
-}

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { closure, collectChecks } from '../../../scripts/check-bundle-size.mjs';
+import { closure, collectChecks, pagesWithoutEntry } from '../../../scripts/check-bundle-size.mjs';
 
 const manifest = {
   'index.html': { file: 'assets/index-a.js', isEntry: true, imports: ['_vendor.js', '_core.js'] },
@@ -40,6 +40,17 @@ describe('size budget', () => {
   it('checks public images by their size on disk', () => {
     const [img] = run({}, [['public/big.jpg', 250_000]]).filter((c) => c.id.startsWith('image:'));
     expect(img.over).toBe(true);
+  });
+
+  it('names a page the manifest lists only under a hashed name, since it then has no check', () => {
+    const lost = {
+      ...manifest,
+      // A lazy part imports something only the page holds: no 'src/pages/MorphGuide.jsx' key.
+      '_MorphGuide-g.js': { file: 'assets/MorphGuide-g.js', name: 'MorphGuide', isDynamicEntry: true },
+      '_Layout-h.js': { file: 'assets/Layout-h.js', name: 'Layout', isDynamicEntry: true },
+    };
+    expect(pagesWithoutEntry(lost, ['Home', 'Big', 'MorphGuide'])).toEqual(['MorphGuide']);
+    expect(pagesWithoutEntry(manifest, ['Home', 'Big'])).toEqual([]);
   });
 
   it('ships allowances only for things that are over their limit', () => {

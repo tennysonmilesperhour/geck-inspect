@@ -8,6 +8,7 @@ vi.hoisted(() => vi.stubGlobal('window', { self: null, top: null }));
 afterAll(() => vi.unstubAllGlobals());
 
 import ManualGenotypePicker, { buildParentFromState } from '@/components/breeding/ManualGenotypePicker';
+import CollectionParentPicker from '@/components/breeding/CollectionParentPicker';
 import { summariseParents } from '@/lib/genetics/resultSummary';
 import { parsePairing } from '@/lib/genetics/pairingParser';
 
@@ -82,7 +83,25 @@ describe('calculator page: the answer sits under Fill parents', () => {
   it('names both parents on the gene pickers and the collection selects', () => {
     expect(page).toContain('parentLabel="Sire"');
     expect(page).toContain('parentLabel="Dam"');
-    expect(page).toContain('aria-labelledby="calc-sire-label calc-sire-pick"');
-    expect(page).toContain('aria-labelledby="calc-dam-label calc-dam-pick"');
+    // The "From my collection" selects live in CollectionParentPicker.jsx,
+    // which loads with the calculator's engine.
+    const html = renderToStaticMarkup(
+      <CollectionParentPicker
+        sireId=""
+        damId=""
+        onSireChange={() => {}}
+        onDamChange={() => {}}
+        sireOptions={[]}
+        damOptions={[]}
+        sire={null}
+        dam={null}
+        onSwap={() => {}}
+      />,
+    );
+    for (const parent of ['sire', 'dam']) {
+      expect(html).toContain(`aria-labelledby="calc-${parent}-label calc-${parent}-pick"`);
+      expect(html).toContain(`id="calc-${parent}-label"`);
+      expect(html).toContain(`id="calc-${parent}-pick"`);
+    }
   });
 });

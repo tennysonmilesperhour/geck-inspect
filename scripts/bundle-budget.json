@@ -19,9 +19,8 @@
     "image:public/gecko-tarot-card-v2.webp": 386,
     "image:public/gecko-tarot-square-v2.jpg": 323,
     "image:public/gecko-tarot-square-v2.webp": 310,
-    "page:/MorphGuide": 289,
-    "page:/MorphGuide/lilly-white": 285,
-    "page:/calculator": 283,
+    "page:/MorphGuide": 260,
+    "page:/MorphGuide/lilly-white": 260,
     "image:public/gecko-placeholders/celestial-adult-1024.webp": 280,
     "image:public/gecko-placeholders/nouveau-adult-1024.webp": 270,
     "image:public/gecko-placeholders/woodcut-adult-1024.webp": 267,
@@ -35,13 +34,10 @@
     "image:public/gecko-placeholders/nouveau-hatchling-1024.webp": 229,
     "image:public/hero/crested-gecko-hero-2400.webp": 229,
     "image:public/gecko-placeholders/engraving-hatchling-1024.webp": 225,
-    "page:/CareGuide": 220,
     "image:public/gecko-placeholders/terracotta-juvenile-1024.webp": 220,
     "image:public/gecko-placeholders/engraving-juvenile-1024.webp": 207,
     "image:public/store/products/magnetic-gecko-feeding-ledge.jpg": 203,
     "image:public/store/custom-stickers/collector-classic-art-v4.webp": 202,
-    "image:public/gecko-placeholders/terracotta-hatchling-1024.webp": 201,
-    "route:src/pages/AdminPanel.jsx": 81,
-    "route:src/pages/MyGeckos.jsx": 62
+    "image:public/gecko-placeholders/terracotta-hatchling-1024.webp": 201
   }
 }
