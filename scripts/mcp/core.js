@@ -16,6 +16,7 @@ import { predictWeighted } from '../../src/lib/genetics/predictWeighted.js';
 import { polygenicLookChances } from '../../src/lib/genetics/polygenic.js';
 import { outcomeTraits, outcomeCombos } from '../../src/lib/genetics/index.js';
 import bundledPriceIndex from '../../public/data/price-index.json';
+import { PRICE_INDEX_MIN_LISTINGS, PRICE_INDEX_SAMPLE_RULE, applyPricePolicy } from '../../src/lib/priceIndexPolicy.js';
 import {
   SITE_URL,
   MARKET_NAMES,
@@ -42,14 +43,16 @@ export const INSTRUCTIONS =
 
 // ---- price index (fresh from the site, bundled copy as fallback) ----------
 
-let priceCache = { at: 0, data: bundledPriceIndex };
+// Every copy goes through the minimum-sample rule (src/lib/priceIndexPolicy.js),
+// so an older file on the site cannot bring back rows under the minimum.
+let priceCache = { at: 0, data: applyPricePolicy(bundledPriceIndex) };
 async function priceIndex() {
   if (Date.now() - priceCache.at < 60 * 60 * 1000) return priceCache.data;
   try {
     const res = await fetch(`${SITE_URL}/data/price-index.json`, { signal: AbortSignal.timeout(4000) });
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data?.latest)) priceCache = { at: Date.now(), data };
+      if (Array.isArray(data?.latest)) priceCache = { at: Date.now(), data: applyPricePolicy(data) };
     }
   } catch {
     priceCache = { ...priceCache, at: Date.now() };
@@ -220,10 +223,10 @@ const HANDLERS = {
       : undefined;
     const traits = [...new Set(index.latest.map((r) => r.trait).filter(Boolean))].sort();
     if (!latest.length) {
-      return text(`No price rows for ${trait || 'all geckos'}${m ? ` in ${m}` : ''} (a trait needs 5+ listings). Traits with data: ${traits.join(', ')}.`, { latest: [], traits });
+      return text(`No price rows for ${trait || 'all geckos'}${m ? ` in ${m}` : ''} (a row needs at least ${PRICE_INDEX_MIN_LISTINGS} listings). Traits with data: ${traits.join(', ')}.`, { latest: [], traits });
     }
-    const lines = latest.map((r) => `- ${MARKET_NAMES[r.market] || r.market}, ${r.trait || 'all crested geckos'} (${r.checked_on}, ${r.listings} listings): median $${r.median}, middle half $${r.p25} to $${r.p75}`);
-    const note = `Asking prices on public listings, converted to USD, not sale prices. Source: Geck Inspect Price Index, ${SITE_URL}/data`;
+    const lines = latest.map((r) => `- ${MARKET_NAMES[r.market] || r.market}, ${r.trait || 'all crested geckos'} (${r.checked_on}, ${r.listings} listings${r.thin ? ', thin sample' : ''}): median $${r.median}, middle half $${r.p25} to $${r.p75}`);
+    const note = `Asking prices on public listings, converted to USD, not sale prices. ${PRICE_INDEX_SAMPLE_RULE} Source: Geck Inspect Price Index, ${SITE_URL}/data`;
     return text(`${lines.join('\n')}\n\n${note}`, { latest, monthly, note, generated_at: index.generated_at });
   },
 

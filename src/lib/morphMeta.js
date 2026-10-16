@@ -7,6 +7,7 @@
  * Dependency-free so the prerender script can import it from Node.
  */
 import { INHERITANCE, MORPH_CATEGORIES, MORPHS } from '../data/morph-guide.js';
+import { morphMetaDescription } from '../data/morph-seo-descriptions.js';
 
 const RARITY_WORD = {
   common: 'common',
@@ -73,7 +74,10 @@ export function morphSeo(morph) {
   const title = long.length <= TITLE_MAX ? long : mid.length <= TITLE_MAX ? mid : `${name} Crested Gecko Guide`;
   const definition = morphDefinition(morph);
   const price = morph?.priceRange ? ` Typical adult price: ${morph.priceRange}.` : '';
-  const description = clip(`${definition}${price} How to identify it, genetics and lookalikes.`, 158);
+  // The highest-impression pages have a hand-written snippet
+  // (src/data/morph-seo-descriptions.js); the rest keep the generated one.
+  const description =
+    morphMetaDescription(morph) || clip(`${definition}${price} How to identify it, genetics and lookalikes.`, 158);
   const category = MORPH_CATEGORIES.find((c) => c.id === morph?.category);
   return {
     title,

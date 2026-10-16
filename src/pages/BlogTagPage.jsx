@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema } from '@/lib/organization-schema';
+import { tagCanonicalTarget } from '@/lib/blogTagCanonical';
 import {
   useBlogContent,
   postsForTagSlug,
@@ -22,6 +23,9 @@ export default function BlogTagPage() {
 
   const blogEnabled = settings ? settings.blog_enabled !== false : true;
   const path = `/blog/tag/${slug || ''}`;
+  // Some tags rank for a search a product page answers better; their
+  // canonical points there (src/lib/blogTagCanonical.js).
+  const canonicalTarget = tagCanonicalTarget(slug);
 
   if (loading && !tag) {
     return (
@@ -75,7 +79,7 @@ export default function BlogTagPage() {
       <Seo
         title={`#${tagName} · Crested Gecko Blog`}
         description={`Posts tagged ${tagName}.`}
-        path={path}
+        path={canonicalTarget ? canonicalTarget.path : path}
         type="website"
         jsonLd={jsonLd}
       />
@@ -97,6 +101,19 @@ export default function BlogTagPage() {
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-[1.1] mb-8 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent">
           #{tagName}
         </h1>
+
+        {canonicalTarget && (
+          <Link
+            to={canonicalTarget.path}
+            className="mb-8 block rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5 hover:bg-emerald-500/10 transition-colors"
+          >
+            <span className="block text-lg font-semibold text-emerald-200">{canonicalTarget.title}</span>
+            <span className="mt-1 block text-sm text-slate-300">{canonicalTarget.blurb}</span>
+            <span className="mt-3 inline-flex items-center gap-1 text-sm text-emerald-300">
+              {canonicalTarget.cta} <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </Link>
+        )}
 
         {visible.length === 0 ? (
           <p className="text-slate-500 italic">No posts with this tag yet.</p>

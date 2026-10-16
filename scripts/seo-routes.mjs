@@ -36,6 +36,7 @@ import { membershipMetaDescription } from '../src/lib/membershipSeo.js';
 // it directly. Hub titles, counts and the morph route list come from it.
 import { MORPHS, INHERITANCE, MORPH_CATEGORIES } from '../src/data/morph-guide.js';
 import { CATEGORY_NOUNS, HIGH_VALUE_MORPH_SLUGS, categoryHubSeo, inheritanceHubSeo } from '../src/lib/morphMeta.js';
+import { GENETICS_GUIDE_DESCRIPTION, GENETICS_GUIDE_TITLE } from '../src/lib/geneticsGuideSeo.js';
 
 export { CATEGORY_NOUNS };
 
@@ -196,9 +197,13 @@ const TODAY = new Date().toISOString().slice(0, 10);
 // Real content dates (last commit touching each source file), written by
 // scripts/build-content-dates.mjs. <lastmod> used to be the build date on
 // every route, which told crawlers the whole site changed every deploy.
+// `pnpm build` refreshes the file first (scripts/build-content-dates.mjs).
 let CONTENT_DATES = {};
+let DECLARED_DATES = {};
 try {
-  CONTENT_DATES = JSON.parse(readFileSync(resolve(__dirname, 'content-dates.json'), 'utf8')).files || {};
+  const parsed = JSON.parse(readFileSync(resolve(__dirname, 'content-dates.json'), 'utf8'));
+  CONTENT_DATES = parsed.files || {};
+  DECLARED_DATES = parsed.declared || {};
 } catch {
   console.warn('[seo-routes] scripts/content-dates.json missing, falling back to the build date. Run pnpm build:content-dates.');
 }
@@ -208,6 +213,13 @@ try {
 export function dateOf(...files) {
   const dates = files.map((f) => CONTENT_DATES[f]).filter(Boolean).sort();
   return dates.length ? dates[dates.length - 1] : TODAY;
+}
+
+// The date a legal page shows its readers (its LAST_UPDATED constant),
+// recorded in content-dates.json under `declared`. The sitemap and the
+// structured data use it so they never contradict the page.
+export function declaredDateOf(file, fallback) {
+  return DECLARED_DATES[file] || fallback;
 }
 
 export const MORPH_DATA = 'src/data/morph-guide.js';
@@ -255,7 +267,7 @@ export const STATIC_ROUTES = [
     path: '/Terms',
     priority: 0.2,
     changefreq: 'yearly',
-    lastmod: '2026-04-17',
+    lastmod: declaredDateOf('src/pages/Terms.jsx', '2026-09-08'),
     meta: {
       title: 'Terms of Service',
       description:
@@ -266,7 +278,7 @@ export const STATIC_ROUTES = [
     path: '/MarketplaceVerification',
     priority: 0.6,
     changefreq: 'yearly',
-    lastmod: '2026-04-17',
+    lastmod: dateOf('src/pages/MarketplaceVerification.jsx'),
     meta: {
       title: 'Marketplace Verification & Trust, Geck Inspect',
       description:
@@ -277,7 +289,7 @@ export const STATIC_ROUTES = [
     path: '/PrivacyPolicy',
     priority: 0.2,
     changefreq: 'yearly',
-    lastmod: '2026-04-05',
+    lastmod: declaredDateOf('src/pages/PrivacyPolicy.jsx', '2026-10-15'),
     meta: {
       title: 'Privacy Policy',
       description:
@@ -322,11 +334,11 @@ export const STATIC_ROUTES = [
     path: '/GeneticsGuide',
     priority: 0.9,
     changefreq: 'monthly',
-    lastmod: dateOf('src/pages/GeneticsGuide.jsx', 'src/data/genetics-sections.jsx', 'src/data/genetics-glossary.js'),
+    lastmod: dateOf('src/pages/GeneticsGuide.jsx', 'src/data/genetics-sections.jsx', 'src/data/genetics-glossary.js', 'src/data/genetics-jsonld.js'),
     meta: {
-      title: 'Crested Gecko Genetics Guide',
-      description:
-        'From Punnett squares to proving recessives, the crested gecko genetics guide. Why Lilly White, Cappuccino and Soft Scale are incomplete dominant, why Axanthic is recessive, and why most morphs are polygenic.',
+      // Shared with the live page so the two cannot drift.
+      title: GENETICS_GUIDE_TITLE,
+      description: GENETICS_GUIDE_DESCRIPTION,
     },
   },
   {
@@ -336,7 +348,7 @@ export const STATIC_ROUTES = [
     path: '/calculator',
     priority: 0.85,
     changefreq: 'monthly',
-    lastmod: dateOf('src/pages/GeneticCalculator.jsx', CALC_DATA),
+    lastmod: dateOf('src/pages/GeneticCalculatorTool.jsx', 'src/components/breeding/GeneticCalculator.jsx', CALC_DATA),
     meta: {
       title: 'Crested Gecko Morph & Breeding Calculator (Genetics)',
       description:
@@ -659,7 +671,7 @@ export function getCalculatorPairingRoutes() {
     path: `/calculator/pairing/${slug}`,
     priority: 0.7,
     changefreq: 'monthly',
-    lastmod: dateOf(CALC_DATA, 'src/pages/CalculatorPairing.jsx'),
+    lastmod: dateOf(CALC_DATA, 'src/pages/CalculatorPairing.jsx', 'src/lib/genetics/pairingPageSummary.js'),
     meta: {
       title: `${label}: Crested Gecko Odds`,
       description: `What does ${label} produce? Free Punnett-square calculator with both parents pre-filled, per-egg odds, and clutch math. No signup required.`,
@@ -734,13 +746,16 @@ const AUTH_EXTRA_STATIC_PATHS = ['/Home', '/log'];
 // first-match order doesn't accidentally send `/MorphGuide/category/x`
 // into the `/MorphGuide/:slug` rewrite. Vercel matches rewrites in
 // order, so keep the ordering hierarchical.
+//
+// Only "open" families are listed as patterns: the ones whose ids live in
+// the database (a breeder slug, a passport code, a blog post published from
+// the admin). Families whose every valid value is known at build time
+// (morph pages, taxonomy hubs, care topics, calculator pages) are listed
+// one path at a time instead, so an unknown slug such as
+// /MorphGuide/not-a-morph gets a real 404 from middleware.js. Until
+// 16 Oct 2026 '/MorphGuide/:slug' let any slug through to a 200 "Morph not
+// found" page, which search engines count as a soft 404.
 const DYNAMIC_ROUTE_PATTERNS = [
-  '/MorphGuide/category/:categoryId',
-  '/MorphGuide/inheritance/:inheritanceId',
-  '/MorphGuide/:slug',
-  '/calculator/pairing/:pairing',
-  '/calculator/:morph',
-  '/CareGuide/:topic',
   '/Breeder/:slug',
   '/passport/:passportCode/qr',
   '/passport/:passportCode',
@@ -748,6 +763,15 @@ const DYNAMIC_ROUTE_PATTERNS = [
   '/collection-invite/:token',
   '/blog/:slug',
 ];
+
+// Every value of the closed families that has no sitemap entry: taxonomy
+// hubs with no morph yet (still rendered, sent noindex by vercel.json).
+function closedFamilyExtras() {
+  return [
+    ...MORPH_CATEGORIES.map((c) => `/MorphGuide/category/${c.id}`),
+    ...Object.keys(INHERITANCE).map((id) => `/MorphGuide/inheritance/${id}`),
+  ];
+}
 
 function loadAuthenticatedPagePaths() {
   const src = readFileSync(resolve(REPO_ROOT, 'src/pages.config.js'), 'utf8');
@@ -795,6 +819,8 @@ export function getAllSpaPathPatterns() {
   for (const r of getMorphRoutes()) push(r.path);
   for (const r of getProjectLineRoutes()) push(r.path);
   for (const r of getCalculatorMorphRoutes()) push(r.path);
+  for (const r of getCalculatorPairingRoutes()) push(r.path);
+  for (const p of closedFamilyExtras()) push(p);
   for (const r of getBlogRoutes()) push(r.path);
   for (const p of DYNAMIC_ROUTE_PATTERNS) push(p);
 
@@ -806,7 +832,9 @@ export function getAllSpaPathPatterns() {
 // reach the redirect to become a 301), plus dynamic shapes that are not
 // in the sitemap because the id lives in the database (a breeder slug,
 // a passport code, a blog post published from the admin).
-const EDGE_EXTRA_PATTERNS = [
+// Real pages outside the sitemap (the id lives in the database, or the
+// page is a store or checkout step).
+const EDGE_REAL_PATTERNS = [
   // A shared Morph ID result card, served by api/morph-share.js.
   '/morph-id/r/:id',
   '/store/:slug',
@@ -824,6 +852,13 @@ const EDGE_EXTRA_PATTERNS = [
   '/Store/orders/:orderNumber',
   '/data/*',
   '/llms/*',
+];
+
+// Old or alternative spellings that only exist to redirect somewhere
+// (vercel.json redirects, or a <Navigate> in App.jsx). They must reach
+// Vercel to become a 301, but middleware.js never case-folds a request
+// onto one of them.
+const EDGE_REDIRECT_SOURCES = [
   '/Subscription',
   '/GeckAnswers',
   '/BreederStorefront',
@@ -859,21 +894,40 @@ const EDGE_EXTRA_PATTERNS = [
   '/morph-visualizer',
 ];
 
-export function getEdgeAllowPatterns() {
+function redirectSources() {
+  return [
+    ...EDGE_REDIRECT_SOURCES,
+    ...Object.keys(MORPH_SLUG_ALIASES).map((from) => `/MorphGuide/${from}`),
+    ...RETIRED_PAGES.flatMap(({ page }) => [`/${page}`, `/${page.toLowerCase()}`]),
+  ];
+}
+
+function uniquePaths(...lists) {
   const seen = new Set();
   const out = [];
-  const push = (path) => {
-    if (path && !seen.has(path)) {
-      seen.add(path);
-      out.push(path);
+  for (const list of lists) {
+    for (const path of list) {
+      if (path && !seen.has(path)) {
+        seen.add(path);
+        out.push(path);
+      }
     }
-  };
-  for (const path of getAllSpaPathPatterns()) push(path);
-  for (const path of EDGE_EXTRA_PATTERNS) push(path);
-  for (const from of Object.keys(MORPH_SLUG_ALIASES)) push(`/MorphGuide/${from}`);
-  for (const { page } of RETIRED_PAGES) {
-    push(`/${page}`);
-    push(`/${page.toLowerCase()}`);
   }
   return out;
+}
+
+/** Every path middleware.js lets through: real pages plus redirect sources. */
+export function getEdgeAllowPatterns() {
+  return uniquePaths(getAllSpaPathPatterns(), EDGE_REAL_PATTERNS, redirectSources());
+}
+
+/**
+ * The real pages only, in their canonical spelling. middleware.js answers
+ * a wrong-case address (/recognition, /Blog/x, /MorphGuide/Harlequin) with
+ * a 301 to the one canonical path it matches ignoring case. Redirect
+ * sources are left out so a request is never folded onto an alias.
+ */
+export function getCanonicalPathPatterns() {
+  const sources = new Set(redirectSources());
+  return uniquePaths(getAllSpaPathPatterns(), EDGE_REAL_PATTERNS).filter((p) => !sources.has(p));
 }

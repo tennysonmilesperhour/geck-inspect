@@ -8,10 +8,31 @@ import { Dna, ArrowUp, Search, Download } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import { Subsection } from '@/components/genetics/GeneticsHelpers';
-import { GENETICS_GUIDE_JSON_LD, GENETICS_GUIDE_PUBLISHED, GENETICS_GUIDE_MODIFIED } from "@/data/genetics-jsonld";
-import { bylineText } from '@/lib/editorial';
+import { GENETICS_GUIDE_JSON_LD } from "@/data/genetics-jsonld";
+import { bylineText, editorialFor } from '@/lib/editorial';
+import { GENETICS_GUIDE_DESCRIPTION, GENETICS_GUIDE_PATH, GENETICS_GUIDE_TITLE } from '@/lib/geneticsGuideSeo';
 import { SECTIONS } from "@/data/genetics-sections.jsx";
 import { GLOSSARY_GROUPS, GLOSSARY } from "@/data/genetics-glossary";
+
+// One set of dates for the byline, the meta tags and the Article JSON-LD:
+// the last commit to the guide's files (scripts/content-dates.json). The
+// JSON-LD used to carry a hand-typed 2 October date while the guide kept
+// changing, and a published date that disagreed with the byline.
+const GUIDE_DATES = editorialFor(GENETICS_GUIDE_PATH);
+// reviewedBy and publisher point at entities defined once elsewhere on the
+// page: the Article's own author (the #editorial entity, in
+// src/data/genetics-jsonld.js) and the site Organization in index.html.
+const GUIDE_JSON_LD = GENETICS_GUIDE_JSON_LD.map((node) =>
+  node['@type'] === 'Article'
+    ? {
+        ...node,
+        datePublished: GUIDE_DATES.published,
+        dateModified: GUIDE_DATES.modified,
+        reviewedBy: { '@id': 'https://geckinspect.com/#editorial' },
+        publisher: { '@id': 'https://geckinspect.com/#organization' },
+      }
+    : node,
+);
 
 // ── Content data ──────────────────────────────────────────────────────────────
 //
@@ -137,13 +158,13 @@ export default function GeneticsGuide() {
   return (
     <>
       <Seo
-        title="Crested Gecko Genetics Guide"
-        description="Interactive crested gecko (Correlophus ciliatus) genetics reference: dominant, recessive, and incomplete-dominant inheritance explained with Punnett squares and diagrams. Covers proven morphs (Lilly White, Axanthic, Cappuccino, Soft Scale, White Wall, Phantom), pattern genes and polygenic traits (Harlequin, Pinstripe, Dalmatian, Flame) with both the hobby and Foundation Genetics views, lethal alleles, pigment biology, selective breeding strategy, and 80+ glossary terms."
-        path="/GeneticsGuide"
+        title={GENETICS_GUIDE_TITLE}
+        description={GENETICS_GUIDE_DESCRIPTION}
+        path={GENETICS_GUIDE_PATH}
         type="article"
         author="Geck Inspect"
-        publishedTime={GENETICS_GUIDE_PUBLISHED}
-        modifiedTime={GENETICS_GUIDE_MODIFIED}
+        publishedTime={GUIDE_DATES.published}
+        modifiedTime={GUIDE_DATES.modified}
         imageAlt="Crested gecko DNA double helix illustration"
         keywords={[
           'crested gecko genetics',
@@ -172,7 +193,7 @@ export default function GeneticsGuide() {
           'crested gecko chromatophore',
           'super lilly white lethal',
         ]}
-        jsonLd={GENETICS_GUIDE_JSON_LD}
+        jsonLd={GUIDE_JSON_LD}
       />
       <div className="min-h-screen bg-slate-950">
         {/* Hero with DNA helix */}
