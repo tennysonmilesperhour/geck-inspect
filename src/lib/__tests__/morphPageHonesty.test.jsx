@@ -15,7 +15,7 @@ vi.mock('@/components/public/ContentSignupPrompt', async (importOriginal) => {
 });
 vi.mock('@/hooks/useBlockedAuthors', () => ({ useBlockedMembers: () => ({ isBlocked: () => false }) }));
 
-import MorphDetail from '@/pages/MorphDetail';
+import MorphDetail, { calculatorBadge } from '@/pages/MorphDetail';
 import { MORPHS, getMorph } from '@/data/morph-guide';
 import { morphSeo } from '@/lib/morphMeta';
 import { morphFaq } from '@/lib/morphFaq';
@@ -61,6 +61,7 @@ const BREED_OR_PRICE_PROMPTS = [
   /Identify it from a photo with Morph ID/,
   /Upload a photo to Morph ID/,
   /No market yet/,
+  /No guide price yet/,
 ];
 
 describe('super forms breeders avoid making', () => {
@@ -112,6 +113,52 @@ describe('super forms breeders avoid making', () => {
     expect(lethal).not.toContain('Add the first photo');
     // A Super Cappuccino does hatch, so a keeper can still add a photo.
     expect(pageText('super-cappuccino').text).toContain('Add the first photo');
+  });
+});
+
+describe('morph pages with no guide price', () => {
+  // Phantom, Empty Back and the other October 2026 entries have no
+  // priceRange. Their pages said "No market yet" and "until the trait is
+  // proven" while the Price Index had hundreds of listings of them and the
+  // calculator badges Phantom proven.
+  const NO_PRICE = MORPHS.filter((m) => !m.priceRange && !m.doNotBreed).map((m) => m.slug);
+
+  it('are the entries this test expects', () => {
+    expect(NO_PRICE).toEqual(['highway', 'albino', 'phantom', 'empty-back', 'super-empty-back', 'whiteout', 'super-whiteout', 'luwak', 'super-sable']);
+  });
+
+  it.each(NO_PRICE)('%s says Geck Inspect gives no price yet and points to the Price Index', (slug) => {
+    const { html, text } = pageText(slug);
+    const name = getMorph(slug).name;
+    expect(text).not.toContain('No market yet');
+    expect(text).toContain('No guide price yet');
+    expect(text).toContain(`Geck Inspect does not give a typical price for ${name} yet.`);
+    expect(text).toContain('Price Index');
+    expect(html).toContain('href="/crested-gecko-price"');
+  });
+
+  it('says "until the trait is proven" only where the calculator badges the trait Emerging', () => {
+    const unproven = /until the trait is proven/;
+    for (const slug of ['empty-back', 'super-empty-back', 'whiteout', 'super-whiteout', 'luwak', 'super-sable', 'highway']) {
+      expect(calculatorBadge(slug), slug).toBe('emerging');
+      expect(pageText(slug).text, slug).toMatch(unproven);
+    }
+    expect(calculatorBadge('phantom')).toBe('proven');
+    expect(pageText('phantom').text).not.toMatch(unproven);
+    // Albino is not in the calculator, so it gets no badge either way.
+    expect(calculatorBadge('albino')).toBeNull();
+    expect(pageText('albino').text).not.toMatch(unproven);
+  });
+
+  it('reads the badge the calculator shows', () => {
+    expect(calculatorBadge('lilly-white')).toBe('proven');
+    expect(calculatorBadge('super-lilly-white')).toBe('proven');
+    expect(calculatorBadge('cappuccino')).toBe('proven');
+    expect(calculatorBadge('super-cappuccino')).toBe('proven');
+    expect(calculatorBadge('sable')).toBe('emerging');
+    expect(calculatorBadge('soft-scale')).toBe('emerging');
+    expect(calculatorBadge('super-soft-scale')).toBe('emerging');
+    expect(calculatorBadge('harlequin')).toBeNull();
   });
 });
 
