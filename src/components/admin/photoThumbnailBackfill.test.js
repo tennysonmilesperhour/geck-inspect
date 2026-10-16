@@ -149,28 +149,39 @@ describe('runBackfill', () => {
 describe('makeOneThumbnail', () => {
   const jpegBlob = () => new Blob([bytes(0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 5, 6, 7, 8)], { type: 'application/octet-stream' });
 
-  function fakeStorage({ blob = jpegBlob(), downloadError = null, uploadError = null } = {}) {
+  const PUBLIC = 'https://proj.supabase.co/storage/v1/object/public/geck-inspect-media';
+
+  // Storage that serves public addresses and records uploads, plus a fetch
+  // that answers those addresses (status 404 for `missing`, a thrown
+  // network error for `offline`).
+  function fakeStorage({ blob = jpegBlob(), status = 200, offline = false, uploadError = null } = {}) {
     const uploads = [];
-    const from = vi.fn(() => ({
-      download: vi.fn(async () => ({ data: downloadError ? null : blob, error: downloadError })),
+    const from = vi.fn((bucket) => ({
+      getPublicUrl: (path) => ({ data: { publicUrl: `https://proj.supabase.co/storage/v1/object/public/${bucket}/${path}` } }),
       upload: vi.fn(async (path, body, options) => {
         uploads.push({ path, body, options });
         return { data: uploadError ? null : { path }, error: uploadError };
       }),
     }));
-    return { storage: { from }, uploads, from };
+    const fetchImpl = vi.fn(async () => {
+      if (offline) throw new Error('Failed to fetch');
+      return { ok: status === 200, status, blob: async () => blob };
+    });
+    return { storage: { from }, uploads, from, fetchImpl };
   }
 
   it('reads a photo stored as octet-stream as a JPEG and uploads its thumbnail over any planted one', async () => {
-    const { storage, uploads, from } = fakeStorage();
+    const { storage, uploads, from, fetchImpl } = fakeStorage();
     const thumb = new File([bytes(1, 2, 3)], 'f.webp', { type: 'image/webp' });
     const makeThumbnail = vi.fn(async () => thumb);
     const outcome = await makeOneThumbnail(
       { name: 'base44.app/api/apps/a/files/public/a/f_IMG_1.jpeg' },
-      { storage, makeThumbnail, convertHeic: vi.fn() },
+      { storage, makeThumbnail, convertHeic: vi.fn(), fetchImpl },
     );
     expect(outcome).toBe('made');
     expect(from).toHaveBeenCalledWith('geck-inspect-media');
+    // Downloaded from the public address members' browsers use.
+    expect(fetchImpl).toHaveBeenCalledWith(`${PUBLIC}/base44.app/api/apps/a/files/public/a/f_IMG_1.jpeg`);
     expect(makeThumbnail.mock.calls[0][0].type).toBe('image/jpeg');
     expect(uploads).toEqual([{
       path: 'thumbs/base44.app/api/apps/a/files/public/a/f_IMG_1.jpeg',
@@ -181,31 +192,33 @@ describe('makeOneThumbnail', () => {
 
   it('converts HEIC before drawing', async () => {
     const heic = new Blob([ascii('\0\0\0\x18ftypheic', 4)]);
-    const { storage } = fakeStorage({ blob: heic });
+    const { storage, fetchImpl } = fakeStorage({ blob: heic });
     const jpeg = new File([bytes(1)], 'x.jpg', { type: 'image/jpeg' });
     const convertHeic = vi.fn(async () => jpeg);
     const makeThumbnail = vi.fn(async () => new File([bytes(1)], 'x.webp', { type: 'image/webp' }));
-    await makeOneThumbnail({ name: 'uploads/u/x.jpg' }, { storage, makeThumbnail, convertHeic });
+    await makeOneThumbnail({ name: 'uploads/u/x.jpg' }, { storage, makeThumbnail, convertHeic, fetchImpl });
     expect(convertHeic).toHaveBeenCalled();
     expect(makeThumbnail).toHaveBeenCalledWith(jpeg);
   });
 
   it('skips a GIF found by its bytes', async () => {
-    const { storage, uploads } = fakeStorage({ blob: new Blob([ascii('GIF89a', 10)]) });
-    const outcome = await makeOneThumbnail({ name: 'uploads/u/x.jpg' }, { storage, makeThumbnail: vi.fn(), convertHeic: vi.fn() });
+    const { storage, uploads, fetchImpl } = fakeStorage({ blob: new Blob([ascii('GIF89a', 10)]) });
+    const outcome = await makeOneThumbnail({ name: 'uploads/u/x.jpg' }, { storage, makeThumbnail: vi.fn(), convertHeic: vi.fn(), fetchImpl });
     expect(outcome).toBe('skipped');
     expect(uploads).toHaveLength(0);
   });
 
   it('throws (so the run counts a failure) when a step fails', async () => {
     const deps = { makeThumbnail: vi.fn(async () => new File([bytes(1)], 'x.webp', { type: 'image/webp' })), convertHeic: vi.fn() };
-    await expect(makeOneThumbnail({ name: 'a.jpg' }, { ...deps, storage: fakeStorage({ downloadError: { message: 'Object not found' } }).storage }))
-      .rejects.toThrow('Could not download the photo: Object not found');
-    await expect(makeOneThumbnail({ name: 'a.jpg' }, { ...deps, storage: fakeStorage({ blob: new Blob([ascii('%PDF-1.7', 8)]) }).storage }))
-      .rejects.toThrow('Not an image');
-    await expect(makeOneThumbnail({ name: 'a.jpg' }, { ...deps, makeThumbnail: vi.fn(async () => null), storage: fakeStorage().storage }))
-      .rejects.toThrow('could not draw');
-    await expect(makeOneThumbnail({ name: 'a.jpg' }, { ...deps, storage: fakeStorage({ uploadError: { message: 'new row violates row-level security policy' } }).storage }))
+    const run = (storageOpts, extra = {}) => {
+      const fake = fakeStorage(storageOpts);
+      return makeOneThumbnail({ name: 'a.jpg' }, { ...deps, storage: fake.storage, fetchImpl: fake.fetchImpl, ...extra });
+    };
+    await expect(run({ status: 404 })).rejects.toThrow('Could not download the photo (HTTP 404)');
+    await expect(run({ offline: true })).rejects.toThrow('Could not download the photo: Failed to fetch');
+    await expect(run({ blob: new Blob([ascii('%PDF-1.7', 8)]) })).rejects.toThrow('Not an image');
+    await expect(run({}, { makeThumbnail: vi.fn(async () => null) })).rejects.toThrow('could not draw');
+    await expect(run({ uploadError: { message: 'new row violates row-level security policy' } }))
       .rejects.toThrow('Upload failed: new row violates row-level security policy');
   });
 });

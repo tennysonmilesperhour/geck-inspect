@@ -156,20 +156,32 @@ export async function runBackfill({
 /**
  * Make and upload one photo's thumbnail. `storage` is the Supabase
  * client's storage API; `makeThumbnail` and `convertHeic` are the upload
- * code's own (src/lib/imageResize.js). The admin's session uploads with
+ * code's own (src/lib/imageResize.js); `fetchImpl` is the browser's fetch
+ * (tests pass their own). The admin's session uploads with
  * upsert, so a thumbnail someone else planted is replaced (the bucket's
  * rules let admins overwrite any file).
  *
  * @returns {Promise<'made'|'skipped'>}
  */
-export async function makeOneThumbnail(row, { storage, makeThumbnail, convertHeic }) {
+export async function makeOneThumbnail(row, { storage, makeThumbnail, convertHeic, fetchImpl = globalThis.fetch }) {
   const thumbPath = thumbnailStoragePath(row.name);
   if (!thumbPath) return 'skipped';
 
-  const { data: blob, error: downloadError } = await storage.from(MEDIA_BUCKET).download(row.name);
-  if (downloadError || !blob) {
-    throw new Error(`Could not download the photo: ${downloadError?.message || 'no data'}`);
+  // The public address, the same one members' browsers load. It needs no
+  // read permission on the file list, so it keeps working if the bucket's
+  // listing is ever narrowed to stop anyone listing every member's files.
+  const publicUrl = storage.from(MEDIA_BUCKET).getPublicUrl(row.name)?.data?.publicUrl;
+  if (!publicUrl) throw new Error('Could not work out the photo address');
+  let response;
+  try {
+    response = await fetchImpl(publicUrl);
+  } catch (error) {
+    throw new Error(`Could not download the photo: ${error?.message || 'network error'}`);
   }
+  if (!response?.ok) {
+    throw new Error(`Could not download the photo (HTTP ${response?.status ?? 'error'})`);
+  }
+  const blob = await response.blob();
 
   const head = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
   const type = sniffImageType(head);
