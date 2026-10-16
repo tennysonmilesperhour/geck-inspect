@@ -172,6 +172,9 @@ const MORPHS = Object.fromEntries(MORPH_LIST.map((m) => [m.slug, m]));
 const INHERITANCE = morphModule.INHERITANCE || {};
 const RARITY = morphModule.RARITY || {};
 const MORPH_CATEGORIES = morphModule.MORPH_CATEGORIES || [];
+// The price cell the live compare table shows for a morph with no guide
+// price, so the server HTML of the hubs says the same.
+const { noGuidePriceLabel } = morphModule;
 if (Object.keys(MORPHS).length === 0) throw new Error('prerender: MORPHS is empty');
 
 // The live morph page builds its title, description, H1, opening sentence
@@ -316,7 +319,7 @@ function morphTable(morphs, columns = ['category', 'inheritance', 'rarity', 'pri
     category: ['Category', (m) => MORPH_CATEGORIES.find((c) => c.id === m.category)?.label || ''],
     inheritance: ['Inheritance', (m) => INHERITANCE[m.inheritance]?.label || ''],
     rarity: ['Rarity', (m) => RARITY[m.rarity]?.label || ''],
-    price: ['Typical adult price', (m) => m.priceRange || 'No market price yet'],
+    price: ['Typical adult price', (m) => m.priceRange || noGuidePriceLabel(m)],
   };
   return {
     headers: ['Morph', ...columns.map((c) => COLS[c][0])],

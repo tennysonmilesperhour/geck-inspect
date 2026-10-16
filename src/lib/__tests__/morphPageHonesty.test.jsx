@@ -15,8 +15,11 @@ vi.mock('@/components/public/ContentSignupPrompt', async (importOriginal) => {
 });
 vi.mock('@/hooks/useBlockedAuthors', () => ({ useBlockedMembers: () => ({ isBlocked: () => false }) }));
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import MorphDetail, { calculatorBadge } from '@/pages/MorphDetail';
-import { MORPHS, getMorph } from '@/data/morph-guide';
+import MorphIndexCompareTable from '@/components/morphguide/MorphIndexCompareTable';
+import { MORPHS, getMorph, noGuidePriceLabel } from '@/data/morph-guide';
 import { morphSeo } from '@/lib/morphMeta';
 import { morphFaq } from '@/lib/morphFaq';
 import { isLivingMorph, notBredStatus } from '@/lib/morphNotBred';
@@ -159,6 +162,43 @@ describe('morph pages with no guide price', () => {
     expect(calculatorBadge('soft-scale')).toBe('emerging');
     expect(calculatorBadge('super-soft-scale')).toBe('emerging');
     expect(calculatorBadge('harlequin')).toBeNull();
+  });
+});
+
+describe('Morph Guide hub tables', () => {
+  // The compare table on /MorphGuide and the server HTML of the hubs said
+  // "No market price yet" for Phantom, Empty Back and the other entries
+  // with no priceRange, beside a Price Index with hundreds of their
+  // listings.
+  function tableRows() {
+    const html = renderToStaticMarkup(h(MemoryRouter, null, h(MorphIndexCompareTable)));
+    const rows = html.match(/<tr[^>]*>.*?<\/tr>/g).slice(1);
+    return rows.map((row) => row.replace(/<[^>]+>/g, '|').replace(/\|+/g, '|').replace(/^\||\|$/g, '').split('|'));
+  }
+
+  it('never say "no market", and name the gap in this guide instead', () => {
+    const rows = tableRows();
+    expect(rows).toHaveLength(MORPHS.length);
+    for (const cells of rows) expect(cells.join(' '), cells[0]).not.toMatch(/no market/i);
+    const priceOf = (name) => rows.find((cells) => cells[0] === name).at(-1);
+    for (const slug of ['phantom', 'empty-back', 'whiteout', 'luwak', 'highway', 'super-sable', 'albino']) {
+      expect(priceOf(getMorph(slug).name), slug).toBe('No guide price yet');
+    }
+    expect(priceOf('Harlequin')).toMatch(/^\$[\d,]+ to \$[\d,]+/);
+  });
+
+  it('do not price a super that breeders avoid making', () => {
+    expect(noGuidePriceLabel(getMorph('super-lilly-white'))).toBe('Not bred on purpose');
+    const rows = tableRows();
+    for (const m of MORPHS.filter((x) => x.doNotBreed)) {
+      expect(rows.find((cells) => cells[0] === m.name).at(-1), m.slug).toBe('Not bred on purpose');
+    }
+  });
+
+  it('read the same in the server HTML of the hubs', () => {
+    const prerender = readFileSync(resolve(__dirname, '../../../scripts/prerender.mjs'), 'utf8');
+    expect(prerender).not.toMatch(/no market/i);
+    expect(prerender).toContain("m.priceRange || noGuidePriceLabel(m)");
   });
 });
 

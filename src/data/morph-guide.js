@@ -1826,6 +1826,18 @@ export const MORPHS = [
 
 /* ---------- helpers ---------- */
 
+/**
+ * What a morph table's price cell says when this guide gives no typical
+ * price (the Morph Guide's compare table and the server HTML of its hubs).
+ * A missing priceRange is a gap in this guide, not proof that nobody
+ * sells the morph: the Price Index has hundreds of Phantom and Empty Back
+ * listings. So it never says "no market". A super that breeders avoid
+ * making is not priced at all.
+ */
+export function noGuidePriceLabel(morph) {
+  return morph?.doNotBreed ? 'Not bred on purpose' : 'No guide price yet';
+}
+
 export function getMorph(slug) {
   return MORPHS.find((m) => m.slug === slug) || null;
 }
