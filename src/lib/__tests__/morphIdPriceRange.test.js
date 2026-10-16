@@ -41,6 +41,34 @@ describe('morphIdPriceRows', () => {
     expect(rows.map((r) => r.trait)).toEqual(['Lilly White']);
   });
 
+  it('never prices a look from a broader or different trait that shares a word with it', () => {
+    // The Price Index has Harlequin, Brindle, Tiger, Red and Cream, and
+    // none of these looks. Super Harlequin used to show Harlequin's
+    // listings as its own, and Red Dalmatian every listing that said "red".
+    const broad = buildTraitValueIndex([
+      { trait: 'Harlequin', aliases: ['harlequin', 'harley'], age_class: 'any', sex_class: 'any', n: 1122, p25: 120, p50: 180, p75: 300 },
+      { trait: 'Brindle', aliases: ['brindle'], age_class: 'any', sex_class: 'any', n: 304, p25: 100, p50: 150, p75: 220 },
+      { trait: 'Tiger', aliases: ['tiger'], age_class: 'any', sex_class: 'any', n: 389, p25: 90, p50: 130, p75: 200 },
+      { trait: 'Red', aliases: ['red'], age_class: 'any', sex_class: 'any', n: 476, p25: 169, p50: 250, p75: 425 },
+      { trait: 'Cream', aliases: ['cream'], age_class: 'any', sex_class: 'any', n: 548, p25: 100, p50: 160, p75: 260 },
+      { trait: 'Phantom', aliases: ['phantom'], age_class: 'any', sex_class: 'any', n: 892, p25: 150, p50: 250, p75: 400 },
+      { trait: 'Pinstripe', aliases: ['pin', 'pinstripe'], age_class: 'any', sex_class: 'any', n: 1482, p25: 120, p50: 200, p75: 320 },
+      { trait: 'Axanthic', aliases: ['axan', 'axanthic'], age_class: 'any', sex_class: 'any', n: 241, p25: 400, p50: 600, p75: 900 },
+    ]);
+    for (const id of ['super_harlequin', 'extreme_brindle', 'super_tiger', 'red_dalmatian', 'phantom_pinstripe', 'full_pinstripe']) {
+      expect(morphIdPriceRows({ primary_morph: id }, broad, 'adult'), id).toEqual([]);
+    }
+    expect(morphIdPriceRows({ primary_morph: 'not_in_index', genetics: ['cream_on_cream'] }, broad, 'adult')).toEqual([]);
+    // The look itself still prices, and a line qualifier in brackets does
+    // not hide it: Axanthic (VCA) is priced, and shown, as Axanthic.
+    expect(morphIdPriceRows({ primary_morph: 'tiger', genetics: ['phantom_expression', 'axanthic_vca'] }, broad, 'adult'))
+      .toEqual([
+        expect.objectContaining({ look: 'Tiger', trait: 'Tiger', listings: 389 }),
+        expect.objectContaining({ look: 'Phantom', trait: 'Phantom', listings: 892 }),
+        expect.objectContaining({ look: 'Axanthic', trait: 'Axanthic', listings: 241 }),
+      ]);
+  });
+
   it('formats dollars with separators', () => {
     expect(dollars(1250)).toBe('$1,250');
   });
