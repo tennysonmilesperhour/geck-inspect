@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CreditCard, X } from 'lucide-react';
 import { TIER_LIMITS } from '@/lib/tierLimits';
 import { SUPPORT_EMAIL } from '@/lib/supportContact';
+import { isNativePlatform } from '@/lib/revenuecat';
 
 const DISMISS_KEY = 'geck_payment_issue_dismissed';
 
@@ -15,13 +16,19 @@ function dismissedThisSession() {
  * while it does, but without this the member would only find out when the
  * plan ends. Dismissing hides it for this browser session only, so it comes
  * back until the card is fixed.
+ *
+ * Not shown in the iPhone and Android apps: a past_due status comes only
+ * from Stripe (website billing), the apps cannot open the Stripe billing
+ * page (they manage billing through the app stores), and the stores'
+ * rules on pointing people to outside payment are strict. Stripe's own
+ * failed-payment emails cover those members.
  */
 export default function PaymentIssueBanner({ user }) {
   const [hidden, setHidden] = useState(dismissedThisSession);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  if (!user || user.is_guest || user.subscription_status !== 'past_due' || hidden) return null;
+  if (!user || user.is_guest || user.subscription_status !== 'past_due' || hidden || isNativePlatform()) return null;
 
   const label = TIER_LIMITS[user.membership_tier]?.label || 'membership';
 

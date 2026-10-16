@@ -2,7 +2,8 @@ import { act, create } from 'react-test-renderer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The banner a member sees when Stripe could not take their last payment.
-const state = vi.hoisted(() => ({ portalCalls: [], portalError: null }));
+const state = vi.hoisted(() => ({ portalCalls: [], portalError: null, native: false }));
+vi.mock('@/lib/revenuecat', () => ({ isNativePlatform: () => state.native }));
 vi.mock('@/lib/billingPortal', () => ({
   openBillingPortal: async (opts) => {
     state.portalCalls.push(opts);
@@ -23,6 +24,7 @@ const buttons = (renderer) => renderer.root.findAllByType('button');
 beforeEach(() => {
   state.portalCalls = [];
   state.portalError = null;
+  state.native = false;
   try { sessionStorage.clear(); } catch { /* no storage in this runner */ }
 });
 
@@ -45,6 +47,13 @@ describe('PaymentIssueBanner', () => {
       act(() => { r = create(<PaymentIssueBanner user={user} />); });
       expect(r.toJSON()).toBeNull();
     }
+  });
+
+  it('stays hidden in the phone apps, which cannot open website billing', () => {
+    state.native = true;
+    let r;
+    act(() => { r = create(<PaymentIssueBanner user={{ email: 'a@b.c', membership_tier: 'breeder', subscription_status: 'past_due' }} />); });
+    expect(r.toJSON()).toBeNull();
   });
 
   it('opens the billing portal from Update payment', async () => {
