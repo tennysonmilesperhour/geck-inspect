@@ -6,7 +6,7 @@ import Seo from '@/components/seo/Seo';
 import { claimStaleRouteReload } from '@/lib/staleRouteReload';
 
 
-export default function PageNotFound({}) {
+export default function PageNotFound() {
     const location = useLocation();
     const pageName = location.pathname.substring(1);
 

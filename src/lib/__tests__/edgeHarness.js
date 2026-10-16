@@ -82,6 +82,10 @@ export function loadFunction(name, { env = {}, globals = {} } = {}) {
     URL,
     URLSearchParams,
     crypto,
+    // The test's own Date, so a clock frozen with vi.setSystemTime (or
+    // moved by scripts/test-clock-drift.mjs) is the function's clock too.
+    // A fresh vm context would otherwise bring its own, real Date.
+    Date,
     console: { log() {}, warn() {}, error() {}, info() {} },
     // Waits (the email burst spreading, retries) run at once in tests.
     setTimeout: (fn) => {

@@ -44,6 +44,12 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      # The same tests with the clock 400 days ahead and 400 days back.
+      # A test that only passes today would otherwise fail weeks later,
+      # on its own, and take every production build down with it.
+      - name: Unit tests at other dates
+        run: pnpm test:clock-drift
+
       - name: Genetics drift check
         run: node scripts/check-genetics-consistency.mjs
 

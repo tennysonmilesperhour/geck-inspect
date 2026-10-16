@@ -1016,6 +1016,9 @@ export default function MessagesPage() {
                                                 <Button
                                                     onClick={sendMessage}
                                                     disabled={!newMessage.trim() || isSending}
+                                                    // Icon-only button: without a label a screen
+                                                    // reader announces just "button".
+                                                    aria-label="Send message"
                                                     className="bg-emerald-600 hover:bg-emerald-500 text-white shrink-0"
                                                 >
                                                     <Send className="w-4 h-4" />

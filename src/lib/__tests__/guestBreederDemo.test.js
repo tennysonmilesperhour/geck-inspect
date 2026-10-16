@@ -1,4 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// guestMockData dates some sample records relative to the moment it loads
+// (Sunny's retired-breeder sale is 320 days ago). Without a fixed clock the
+// season totals below drift: from 17 November 2026 that sale falls in 2026
+// and this test, and so `pnpm build`, would fail. vi.hoisted runs before
+// the imports, so the module reads the frozen date. Only Date is faked;
+// timers stay real so the async guest reads still resolve.
+vi.hoisted(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-16T12:00:00.000Z'));
+});
+
 import {
   DEMO_BREEDER_CLUTCHES,
   DEMO_BREEDER_COSTS,

@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Home, GitBranch } from 'lucide-react';
 import { KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
@@ -32,14 +32,17 @@ export default function OnboardingRolePrompt({ isOpen, onChoose, onDismiss }) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onDismiss?.(); }}>
       <DialogContent className="bg-slate-900 border-slate-700 max-w-lg">
+        {/* DialogTitle and DialogDescription name the dialog for screen
+            readers; a plain heading left it unnamed, and Radix logged a
+            console error on every new member's first screen. */}
         <div className="text-center space-y-2 pt-2">
-          <h2 className="text-2xl font-bold text-slate-100">
+          <DialogTitle className="text-2xl font-bold tracking-normal text-slate-100">
             Welcome to Geck Inspect
-          </h2>
-          <p className="text-slate-400">
+          </DialogTitle>
+          <DialogDescription className="text-base text-slate-400">
             One quick question so we can set things up for you. How do you keep
             your crested geckos?
-          </p>
+          </DialogDescription>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">

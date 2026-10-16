@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const db = { geckos: [], eggs: [], logs: [] };
 let failGeckoCreate = null;
@@ -54,6 +54,15 @@ function seedEggs() {
 }
 
 describe('hatchEgg: one hatch path', () => {
+  // The hatch dates below are fixed (August 2026) and hatchEgg refuses a
+  // date after today, so the clock is frozen after them. Without this the
+  // tests fail on any machine whose clock reads before 10 August 2026.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-16T12:00:00.000Z'));
+  });
+  afterEach(() => vi.useRealTimers());
+
   beforeEach(() => {
     db.geckos = [];
     db.logs = [];

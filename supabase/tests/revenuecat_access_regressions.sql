@@ -1,5 +1,16 @@
 -- Safe on production: every entitlement/profile/rate-limit change rolls back.
 begin;
+-- A fresh copy of the schema (scripts/sql-harness) has no accounts, so
+-- add a member for this run; the auth.users insert fires
+-- on_auth_user_created, which adds the profile. Where a non-admin member
+-- exists nothing is added.
+insert into auth.users (instance_id, id, aud, role, email, email_confirmed_at, created_at, updated_at)
+select '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+       'sql-fixture@example.invalid', now(), now(), now()
+where not exists (
+  select 1 from auth.users a join public.profiles p on p.email = a.email
+  where p.role is distinct from 'admin'
+);
 do $test$
 declare
   u uuid;
