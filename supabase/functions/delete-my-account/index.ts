@@ -24,6 +24,7 @@
 // verify_jwt = true (supabase/config.toml).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { filesToRemove } from "../_shared/erasure-files.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -179,12 +180,8 @@ Deno.serve(async (req) => {
   }
   const result = erased as ErasureResult;
 
-  const byBucket = new Map<string, string[]>();
-  for (const file of result.files || []) {
-    if (!file?.bucket || !file?.path) continue;
-    if (!byBucket.has(file.bucket)) byBucket.set(file.bucket, []);
-    byBucket.get(file.bucket)!.push(file.path);
-  }
+  // The member's files plus each photo's thumbnail (_shared/erasure-files.ts).
+  const byBucket = filesToRemove(result.files);
   let filesRemoved = 0;
   const filesFailed: string[] = [];
   for (const [bucket, paths] of byBucket) {

@@ -51,6 +51,7 @@
 // admin, so the gateway can reject anonymous calls before they get here.)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { filesToRemove } from "../_shared/erasure-files.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -231,12 +232,8 @@ Deno.serve(async (req) => {
   const result = erased as ErasureResult;
 
   // 4. Storage files, in batches per bucket.
-  const byBucket = new Map<string, string[]>();
-  for (const f of result.files || []) {
-    if (!f?.bucket || !f?.path) continue;
-    if (!byBucket.has(f.bucket)) byBucket.set(f.bucket, []);
-    byBucket.get(f.bucket)!.push(f.path);
-  }
+  // The member's files plus each photo's thumbnail (_shared/erasure-files.ts).
+  const byBucket = filesToRemove(result.files);
   let filesRemoved = 0;
   const filesFailed: string[] = [];
   for (const [bucket, paths] of byBucket) {
