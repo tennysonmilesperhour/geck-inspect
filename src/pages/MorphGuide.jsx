@@ -33,7 +33,6 @@ import MorphIndexAppHooks from '@/components/morphguide/MorphIndexAppHooks';
 import { useMorphGuideData, sanitizeImage, normMorph } from '@/components/morphguide/MorphIndexData';
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import MorphQuiz from '@/components/morphguide/MorphQuiz';
-import MorphFamilyMap from '@/components/morphguide/MorphFamilyMap';
 import PatternSpectrum from '@/components/morphguide/PatternSpectrum';
 import MorphEyeGuide from '@/components/morphguide/MorphEyeGuide';
 
@@ -921,9 +920,6 @@ export default function MorphGuidePage() {
             <PatternSpectrum className="mt-12" />
 
             <MorphEyeGuide className="mt-12" />
-
-            <MorphFamilyMap morphs={allMorphs} />
-
 
             <MorphIndexCompareTable />
 

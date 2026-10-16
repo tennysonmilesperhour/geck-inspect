@@ -1,6 +1,6 @@
 # ROADMAP.md - Geck Inspect
 
-Last updated: 15 October 2026
+Last updated: 16 October 2026
 
 ## The plan
 
@@ -22,6 +22,7 @@ The earlier plan, `docs/planning/feature-completeness-audit-2026-09-29.md`, is k
 ## Shelved until Tennyson says otherwise
 
 - **Blog posts and articles (shelved 30 Sep).** Don't write, draft, publish or suggest articles or blog posts, and don't turn the blog pipeline back on (paused since 15 July in `.github/workflows/blog-pipeline.yml`). The blog stays live as it is. The comparison draft stays in `docs/drafts/` untouched. The weekly growth report still lists search queries with no matching page as blog topics; treat those as data, not tasks. The blog half of plan step 33 waits with this.
+- **Morph relationship explorer (shelved 16 Oct).** The former “Morph family map” is removed from the public Morph Guide but its component is retained in `src/components/morphguide/MorphFamilyMap.jsx`. Do not restore the current all-at-once network: “family” wrongly implies taxonomy or inheritance, while its edges only represent hand-authored common pairings and visual lookalikes. A future replacement should focus on one selected morph, clearly separate appearance, genetics and breeding relationships, use only individually reviewed example images, explain every connection, and ship only after the relationship data and the complete image set have been independently validated. The existing Patternless illustration is not an approved reference image.
 
 ## Retired 30 Sep
 
