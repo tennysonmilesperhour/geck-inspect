@@ -1,6 +1,6 @@
 # Homepage business assistant A/B test
 
-Status: production enable switch set to `1` on 16 October 2026 UTC. Launch experiment 487198 after the enabled build is ready; the PostHog link below is the authority for current running/paused status.
+Status: RUNNING since 16 October 2026 at 06:21:23 UTC (00:21 MDT). Production allocation is enabled, with 50% control and 50% business. The PostHog link below is the authority for subsequent running/paused status.
 
 - Experiment: https://us.posthog.com/project/376510/experiments/487198
 - Flag: https://us.posthog.com/project/376510/feature_flags/965230
@@ -67,6 +67,9 @@ Once the decision is made, remove the losing page, wrapper, special analytics co
 
 ## Verification
 
+- Launch: production deployment `dpl_EfeerdkHAgr6ouri2FHCXUcF2H9m`, commit `1e1fe78ab3306d81c9843b3055c1718b60d75c34`, is ready on both production domains with `VITE_HOMEPAGE_EXPERIMENT_ENABLED=1`. GitHub CI run `38860596404` passed. PostHog confirms experiment `running` and flag `active` with the original 50/50 split.
+- The live browser-facing flags endpoint returns both `control` and `business` for synthetic device IDs, with no evaluation errors. These dry runs do not send exposure/conversion events. The admin test-evaluation tool returned `flag_not_found` for this client-runtime flag, so the actual client endpoint was checked instead.
+- The production homepage rendered control consistently across reloads, with no browser errors. Both forced-preview designs were verified before launch. Real exposure ingestion and a full conversion journey remain to be confirmed from eligible traffic; a running configuration is not evidence of collected results.
 - Automated tests cover audience exclusions, fresh/disabled/error flag results, timeout and late responses, unmount, preview suppression, identity reset, and conversion attribution.
 - Full test suite, lint, typecheck, genetics consistency, production build, prerender and SEO audit.
 - Browser checks cover current-page isolation after visiting the alternative, same-tab signup routing, screenshot dialogs, keyboard-capable tabs, sample ledger/pairing behavior and responsive layouts.
