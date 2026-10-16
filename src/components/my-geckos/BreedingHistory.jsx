@@ -13,19 +13,23 @@ function formatPct(value) {
 function formatWeight(min, max) {
   if (min == null || max == null) return '-';
   if (min === max) return `${min}g`;
-  return `${min}–${max}g`;
+  return `${min} to ${max}g`;
 }
 
 /**
  * Per-season breeding summary for a female gecko: eggs laid, infertile/failed,
  * hatched, her age that season, and the weight range she held during the
  * laying window. Renders a friendly empty state when there's nothing yet.
+ * Shown inside the Breeding section of the gecko record, which passes
+ * headingAs and headingClassName so the heading fits under its own.
  */
 export default function BreedingHistory({
   eggs = [],
   breedingPlans = [],
   weightRecords = [],
   hatchDate = null,
+  headingAs: Heading = 'h3',
+  headingClassName = 'text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2',
 }) {
   const rows = useMemo(
     () =>
@@ -42,10 +46,10 @@ export default function BreedingHistory({
   if (rows.length === 0) {
     return (
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-          <History className="w-5 h-5" />
-          Breeding History
-        </h3>
+        <Heading className={headingClassName}>
+          <History className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+          Seasons
+        </Heading>
         <p className="text-slate-400 text-center py-4 text-sm">
           No breeding history yet, once she lays her first clutch, each season will show up here.
         </p>
@@ -58,10 +62,10 @@ export default function BreedingHistory({
 
   return (
     <div>
-      <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-        <History className="w-5 h-5" />
-        Breeding History
-      </h3>
+      <Heading className={headingClassName}>
+        <History className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+        Seasons
+      </Heading>
 
       {/* Lifetime totals */}
       <div className="grid grid-cols-4 gap-2 mb-4 text-center">

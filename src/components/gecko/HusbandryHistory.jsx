@@ -17,8 +17,9 @@ const CONFIDENCE_STYLES = {
 
 /**
  * Feeding history, shed history and the next shed window for one gecko.
- * Shown in the gecko record window (My Geckos) and on /GeckoDetail for
- * the owner. Reads the shared feeding and shed log (feeding_records and
+ * Part of the one gecko record (src/components/gecko/record), shown to the
+ * gecko's keepers in the My Geckos window and on /GeckoDetail. Reads the
+ * shared feeding and shed log (feeding_records and
  * shed_records), which every logging surface writes to: Field Mode,
  * Batch Husbandry, the Dashboard's Mark fed, Project Manager and the
  * record window's "+ Event".
