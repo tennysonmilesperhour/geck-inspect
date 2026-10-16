@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import {
   ADULT_MAX_G,
@@ -9,6 +12,8 @@ import {
   growthVerdict,
   withGrowthBand,
 } from '../growthBand';
+
+const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');
 
 const fact = (categoryId, label) =>
   CARE_CATEGORIES.find((c) => c.id === categoryId).quickFacts.find((f) => f.label === label).value;
@@ -79,6 +84,33 @@ describe('growth verdict', () => {
     expect(verdict.text).not.toMatch(/fat pads|for an adult/);
     expect(verdict.text).toMatch(/ahead of the typical/);
     expect(growthVerdict(young, 66, on).text).toMatch(/for an adult. Watch for fat pads/);
+  });
+
+  it('reads plainly from 18 to 23 months, when a gecko is an adult but the band is still below 60 g', () => {
+    for (const months of [18, 19, 20, 21, 22, 23]) {
+      const hatch = new Date(on);
+      hatch.setMonth(hatch.getMonth() - months);
+      const adultAge = { species: 'Crested Gecko', hatch_date: hatch.toISOString().slice(0, 10) };
+      const band = growthBandAt(ageInMonths(adultAge.hatch_date, on));
+      expect(band.high, `${months} months`).toBeLessThan(ADULT_MAX_G);
+      // Inside the adult range but above the band: no "fast growth", no
+      // adult warning, and the adult range is named.
+      const heavy = growthVerdict(adultAge, 58, on).text;
+      expect(heavy, `${months} months`).toMatch(new RegExp(`ahead of the typical .* for ${months} months, but inside the ${ADULT_MIN_G} to ${ADULT_MAX_G} g adult range, which is fine\\.$`));
+      expect(heavy).not.toMatch(/Fast growth|fat pads|above the typical/);
+      // Past the adult ceiling it is the adult warning, with the adult range.
+      expect(growthVerdict(adultAge, 62, on).text).toBe(`62 g is above the typical ${ADULT_MIN_G} to ${ADULT_MAX_G} g for an adult. Watch for fat pads and feed CGD three times a week.`);
+      expect(growthVerdict(adultAge, 40, on).text).toMatch(new RegExp(`^40 g is within the typical [\\d.]+ to [\\d.]+ g for ${months} months\\.$`));
+    }
+    // A juvenile ahead of the band still reads as fast growth.
+    expect(growthVerdict(gecko, 25, on).text).toMatch(/Fast growth is usually fine/);
+  });
+
+  it('marks the re-fit upper edge as provisional until there is more data', () => {
+    const source = readFileSync(resolve(ROOT, 'src/lib/growthBand.js'), 'utf8');
+    expect(source).toMatch(/PROVISIONAL/);
+    expect(source).toMatch(/50 or\s+(\*\s+)?more geckos/);
+    expect(source).toMatch(/at least 5 keepers/);
   });
 
   it('skips other species and unknown hatch dates', () => {

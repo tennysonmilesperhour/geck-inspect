@@ -1,14 +1,14 @@
 # Geck Inspect, full reference for AI assistants
 
-> Generated: 2026-10-15 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, price index and editorial blog. Smaller topic files are listed in https://geckinspect.com/llms.txt. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
+> Generated: 2026-10-16 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, price index and editorial blog. Smaller topic files are listed in https://geckinspect.com/llms.txt. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
 
 ---
 
 # Navigation (from llms.txt)
 
-> Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (original asking-price data by trait and market). Everything listed here is free to read and cite.
+> Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (an asking-price snapshot from public marketplace listings, by trait and market). Everything listed here is free to read and cite.
 >
-> Last updated: 2026-10-14.
+> Last updated: 2026-10-16.
 
 ## How to use and cite this site
 
@@ -16,14 +16,14 @@
 - Every morph and care page has a markdown twin: append `.md` to the URL, for example https://geckinspect.com/MorphGuide/lilly-white.md.
 - Prices on this site are **asking prices** on public listings, not sale prices. Say so when you quote them.
 - For live lookups (morphs, care topics, prices, pairing odds) use the MCP server below instead of scraping.
-- Data files are CC BY 4.0. Guide text is free to quote with a link; please do not republish it in full.
+- The morph and genetics data files are CC BY 4.0. Price Index numbers are free to cite with a link: you may quote and cite them, with a link to the page they came from. Guide text is free to quote with a link; please do not republish it in full.
 
 ## Topic files (each small enough to read whole)
 
-- [Morphs](https://geckinspect.com/llms/morphs.md): every crested gecko morph with definition, identification, lookalikes, competing genetics models, sources and current asking prices
+- [Morphs](https://geckinspect.com/llms/morphs.md): every crested gecko morph with definition, identification, lookalikes, competing genetics models, sources and, where the Price Index has them, current asking prices
 - [Care](https://geckinspect.com/llms/care.md): housing, temperature, humidity, diet, handling, health and breeding
 - [Genetics](https://geckinspect.com/llms/genetics.md): modeled traits with inheritance and loci, super form health risks, named combos, pairings to avoid, glossary
-- [Prices](https://geckinspect.com/llms/prices.md): the Geck Inspect Price Index, current asking prices by trait in the US, South Korea, Japan and Europe
+- [Prices](https://geckinspect.com/llms/prices.md): the Geck Inspect Price Index, an asking-price snapshot from public marketplace listings by trait in the US, South Korea, Japan and Europe
 - [Everything in one file](https://geckinspect.com/llms-full.txt): all of the above plus long-form articles (large; prefer the topic files)
 
 ## Data and API
@@ -39,13 +39,16 @@
 
 - Scientific name *Correlophus ciliatus* (formerly *Rhacodactylus ciliatus*), family Diplodactylidae, native to southern New Caledonia and the Isle of Pines. Thought extinct until rediscovered in 1994.
 - Adults weigh about 35 to 60 g and live 15 to 20 years or more.
+- Life stages (a stage ends at its weight or its age, whichever comes later): hatchling under 3 g and up to 3 months, juvenile 3 to 15 g and 3 to 12 months, sub-adult 15 to 35 g and 12 to 18 months, adult 35 g and up from 18 months.
+- Shedding follows growth: about every 1 to 2 weeks as a hatchling, every 2 to 3 weeks as a juvenile, every 3 to 4 weeks as a sub-adult and every 4 to 6 weeks as an adult.
 - Room temperature husbandry: 72 to 78°F (22 to 26°C) by day, a drop at night is fine, above 82°F (28°C) is dangerous.
 - Humidity 50 to 70% by day with a nightly misting spike; let the enclosure dry out between mistings.
 - Main diet is a complete powdered Crested Gecko Diet (CGD) mixed with water; insects are optional extras.
 - Minimum adult enclosure 18 x 18 x 24 inches, vertical.
 - They do not regrow a dropped tail. Tailless adults are common and healthy.
-- Do not breed a female under about 35 to 40 g and 18 months old.
-- Most morphs (Harlequin, Pinstripe, Dalmatian, Flame, base colors) are polygenic or line-bred. Single-gene traits: Lilly White, Cappuccino, Soft Scale and White Wall (incomplete dominant) and Axanthic (recessive). Albino (first healthy hatchlings announced March 2026) is expected to be recessive but is not yet proven.
+- Do not breed a female until she is at least 40 g and 18 months old, both (many breeders wait for 45 g). Males from about 25 to 30 g and 12 months.
+- Eggs hatch in about 70 to 90 days at 72 to 75°F (22 to 24°C); 90 to 120 days at 68 to 71°F; 60 to 75 days at 76 to 78°F. Keep incubation below about 80°F (27°C).
+- Most morphs (Harlequin, Pinstripe, Dalmatian, Flame, base colors) are polygenic or line-bred. Single-gene traits: Lilly White, Cappuccino, Soft Scale and White Wall (incomplete dominant) and Axanthic and Phantom (recessive). Sable is widely reported as a second version of the Cappuccino gene and Highway provisionally as a third; neither placement is settled. Albino (first healthy hatchlings announced March 2026) is expected to be recessive but is not yet proven.
 - Never pair Lilly White to Lilly White: 25% of eggs are Super Lilly White, which is lethal. Super Cappuccino has documented health problems too.
 - Lilly White traces to Lilly Exotics (Nick Lumb, United Kingdom), starting with an unusual hatchling in late 2010.
 
@@ -65,7 +68,7 @@ Geck Inspect is a free-to-start web and mobile app for crested gecko keepers and
 
 ## Per-morph guide pages (public, crawlable)
 
-Each of the 36 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
+Each of the 46 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, lookalikes and, where index data supports it, a typical price, plus Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
 
 - Harlequin: https://geckinspect.com/MorphGuide/harlequin
 - Extreme Harlequin: https://geckinspect.com/MorphGuide/extreme-harlequin
@@ -103,6 +106,16 @@ Each of the 36 crested gecko morphs in the guide has its own page with a definit
 - Cream: https://geckinspect.com/MorphGuide/cream
 - Tricolor: https://geckinspect.com/MorphGuide/tricolor
 - Bicolor: https://geckinspect.com/MorphGuide/bicolor
+- Phantom: https://geckinspect.com/MorphGuide/phantom
+- Empty Back: https://geckinspect.com/MorphGuide/empty-back
+- Super Empty Back: https://geckinspect.com/MorphGuide/super-empty-back
+- Whiteout: https://geckinspect.com/MorphGuide/whiteout
+- Super Whiteout: https://geckinspect.com/MorphGuide/super-whiteout
+- Luwak: https://geckinspect.com/MorphGuide/luwak
+- Super Lilly White: https://geckinspect.com/MorphGuide/super-lilly-white
+- Super Cappuccino: https://geckinspect.com/MorphGuide/super-cappuccino
+- Super Sable: https://geckinspect.com/MorphGuide/super-sable
+- Super Highway: https://geckinspect.com/MorphGuide/super-highway
 
 ## Contact
 
@@ -166,9 +179,9 @@ Crested geckos are arboreal, they use vertical height far more than floor space.
 
 | Life stage | Weight | Enclosure | Notes |
 | --- | --- | --- | --- |
-| Hatchling | 0 to 8 g | 6-qt tub or small Kritter Keeper | Deli cup of CGD + moss + small branches. Easy to monitor feeding. |
-| Juvenile | 8 to 20 g | 12×12×18 in glass terrarium | Introduce height. Fake or live plants for cover. |
-| Sub-adult | 20 to 35 g | 18×18×18 in | Optional intermediate step, or skip straight to adult sizing. |
+| Hatchling | under 3 g | 6-qt tub or small Kritter Keeper | Deli cup of CGD + moss + small branches. Easy to monitor feeding. |
+| Juvenile | 3 to 15 g | Tub until about 10 g, then a 12×12×18 in glass terrarium | Introduce height. Fake or live plants for cover. |
+| Sub-adult | 15 to 35 g | 18×18×18 in, or the adult enclosure from about 25 g | Optional intermediate step, or skip straight to adult sizing. |
 | Adult | 35 g+ | 18×18×24 in minimum | Larger (24×18×36 in) is always better. Do not house adults together. |
 
 **One gecko per enclosure**
@@ -290,9 +303,9 @@ _Permalink: https://geckinspect.com/CareGuide/feeding-schedules_
 
 | Life stage | CGD frequency | Insect frequency | Notes |
 | --- | --- | --- | --- |
-| Hatchling (0 to 8 g) | Fresh daily | Optional, 1 to 2 pinheads 1×/week | Target 0.2 to 0.5 g gain per week. |
-| Juvenile (8 to 20 g) | Fresh daily or every other day | 3 to 5 feeders 1 to 2×/week | Growth phase, never ration CGD. |
-| Sub-adult (20 to 35 g) | 3 to 4×/week | 4 to 6 feeders 1×/week | Start tracking monthly weight trend. |
+| Hatchling (under 3 g) | Fresh daily | Optional, 1 to 2 pinheads 1×/week | Expect about 0.5 to 1.5 g a month. |
+| Juvenile (3 to 15 g) | Fresh daily or every other day | 3 to 5 feeders 1 to 2×/week | Growth phase, never ration CGD. Expect about 1 to 4 g a month. |
+| Sub-adult (15 to 35 g) | 3 to 4×/week | 4 to 6 feeders 1×/week | Expect about 1 to 4 g a month, levelling off near adult size. |
 | Adult (35 g+) | 3×/week | 4 to 6 feeders 1×/2 weeks (optional) | Overfeeding adults causes obesity and fatty liver. |
 | Breeding female | 3 to 4×/week + extra calcium | 6 to 8 feeders 1 to 2×/week | Protein and calcium demand spikes during laying season. |
 
@@ -384,15 +397,17 @@ _Permalink: https://geckinspect.com/CareGuide/weight-tracking_
 Weight is the single most useful data point for monitoring crested gecko health. A downward trend is almost always the first sign of a problem, earlier than appetite changes, earlier than visible wasting, and sometimes weeks before a vet exam would catch it.
 
 - Weigh with a 0.1 g kitchen scale. A deli cup with a lid makes weighing easy and calm.
-- Juveniles: weekly weigh-ins. Expect steady gains (0.3 to 1.0 g/week depending on age).
+- Hatchlings and juveniles: weigh every 1 to 2 weeks (weekly for a new or struggling hatchling). Expect steady gains: about 0.5 to 1.5 g a month as a hatchling and 1 to 4 g a month as a juvenile.
+- Sub-adults: weigh every 3 weeks. Expect about 1 to 4 g a month, levelling off near adult size.
 - Adults: monthly weigh-ins. Healthy adults hold ±2 g month to month. Breeding females can swing 10 to 15 g pre- and post-lay.
+- Geck Inspect's weigh-in reminders follow the same rhythm: every 2 weeks while growing, every 3 weeks as a sub-adult and every 30 days as an adult.
 - Flag any 5 %+ drop over a month for investigation. Consistent drops across two months warrants a vet visit.
 
 ### Shedding
 
 _Permalink: https://geckinspect.com/CareGuide/shedding_
 
-Crested geckos shed every 1 to 4 weeks depending on age and growth rate. The shed itself takes about 10 to 20 minutes and usually happens overnight. You often will not see it, the animal eats its own shed immediately. The tell is a duller, chalkier-looking gecko one night, then a clean bright one the next morning.
+Growth drives shedding, so how often a crested gecko sheds depends on its life stage: about every 1 to 2 weeks as a hatchling, every 2 to 3 weeks as a juvenile, every 3 to 4 weeks as a sub-adult and every 4 to 6 weeks as an adult. A fast-growing gecko sheds at the short end. The shed itself takes about 10 to 20 minutes and usually happens overnight. You often will not see it, the animal eats its own shed immediately. The tell is a duller, chalkier-looking gecko one night, then a clean bright one the next morning.
 
 - Stuck shed on toes, tail tip, and around eyes is the most common husbandry problem. Root cause is almost always low humidity.
 - Fix: increase misting, raise ambient humidity to 80 to 100% for 2 to 3 nights, and provide a humid hide (plastic tub with damp moss).
@@ -442,37 +457,37 @@ If you have an existing collection, quarantine every new arrival for a minimum o
 - Weigh weekly. A new arrival that drops more than 10% during quarantine should not be introduced to your collection even after the period ends.
 - Wash hands, change shirts, and spray tools with a reptile-safe disinfectant (F10SC) between enclosures.
 
-### Hatchlings (0 to 3 g)
+### Hatchlings (under 3 g)
 
 _Permalink: https://geckinspect.com/CareGuide/hatchling-care_
 
 Hatchlings are the most fragile life stage. They are small, easily lost in large enclosures, and prone to dehydration. Most keeper-inflicted losses happen in the first 6 weeks after hatch.
 
 - Enclosure: 6-quart tub or small critter keeper with paper towel, a small branch, and a handful of fake leaves or sphagnum.
-- First meal: offer CGD 24 to 48 hours after hatching. Some hatchlings do not eat for the first 3 to 5 days, that is normal if they are holding weight.
+- First meal: offer CGD about 48 hours after hatching, once the yolk is absorbed. Some hatchlings do not eat for the first 3 to 5 days, that is normal if they are holding weight.
 - Humidity: mist 1 to 2 times daily. Let the sides of the tub dry between mists.
 - Do not handle. Observe only for the first month.
-- Weigh every 4 to 7 days. A hatchling that drops below hatching weight for more than a week needs attention.
+- Weigh weekly. Expect about 0.5 to 1.5 g a month. A hatchling that drops below hatching weight for more than a week needs attention.
 
 ### Juveniles (3 to 15 g)
 
 _Permalink: https://geckinspect.com/CareGuide/juvenile-care_
 
-The juvenile phase is the fastest growth window. Feed consistently, monitor weight weekly, and move up an enclosure size when the animal reaches ~10 g.
+The juvenile phase is the fastest growth window for its size. Feed consistently, weigh every 1 to 2 weeks, and move up from the hatchling tub when the animal reaches about 10 g.
 
 - Feed fresh CGD daily or every other day. Never ration at this age.
 - Insects (optional) 1 to 2 times per week, always dusted.
-- Expect 0.5 to 1.5 g weight gain per week under good husbandry.
+- Expect about 1 to 4 g a month under good husbandry. Temperature, diet and genetics all change the pace, so watch the trend, not one weigh-in.
 - Sexing becomes possible around 15 to 25 g. Do not stress-handle to check sex, a confirmed-male juvenile can still be housed safely solo.
 
 ### Sub-adults (15 to 35 g)
 
 _Permalink: https://geckinspect.com/CareGuide/subadult-care_
 
-Growth slows in the sub-adult phase. This is also the age when morph identity locks in and the final enclosure upgrade happens.
+Growth levels off toward the end of the sub-adult phase. This is also the age when morph identity locks in and the final enclosure upgrade happens.
 
-- Feed CGD 3 to 4 times per week. Expect 1 to 3 g weight gain per month.
-- Adult enclosure (18×18×24 in) is appropriate by ~25 g.
+- Feed CGD 3 to 4 times per week. Expect about 1 to 4 g a month, and weigh every 3 weeks.
+- Adult enclosure (18×18×24 in) is appropriate from about 25 g.
 - This is a good time to socialize handling if you intend to, calm 10-minute sessions 1 to 2 times per week.
 - Morph evaluation at 25 to 30 g is more accurate than at hatch. Pattern "fade" and base color clarify as the animal approaches adulthood.
 
@@ -509,19 +524,21 @@ Breeding too soon is the most common mistake new breeders make. The cost is the 
 | Female | 40 g (strict) | 18 months | 45 to 55 g, 24+ months, proven feeder |
 | Male | 25 to 30 g | 12 months | 35 g+, 18+ months, handles calmly |
 
+In short: a female needs at least 40 g and 18 months, both, before her first season (Geck Inspect's readiness badge uses the same numbers), and a male at least 25 to 30 g and 12 months. Many breeders wait for 35 g in males too.
+
 **Do not breed underweight or underage females**
 
 - Calcium depletion and egg-binding are the two most common causes of keeper-inflicted female mortality.
-- A female bred at 35 g can produce for one season, then die from secondary MBD the next.
+- Breeders report that a female paired below 40 g often lays for one season and then declines: calcium loss, egg-binding, or worse the following season.
 - Males can breed earlier safely, but the female is the limiting factor.
 
 ### Cooling period (off-season)
 
 _Permalink: https://geckinspect.com/CareGuide/cooling-period_
 
-Breeding-age females need a genuine off-season to recover calcium and fat reserves. The hobby standard is a cooling/resting period from roughly November through February, during which males and females are housed separately and no breeding occurs.
+Breeding-age females need a genuine off-season to recover calcium and fat reserves. The hobby standard is a resting period from roughly November through February, during which males and females are housed separately and no breeding occurs. The rest is the part that matters. A deliberate temperature drop is common but debated: many established breeders keep temperatures steady all year and still see good fertility.
 
-- Drop ambient temperature to 68 to 72°F during the day and 62 to 66°F at night for 2 to 3 months.
+- If you do cool: drop ambient temperature to 68 to 72°F during the day and 62 to 66°F at night for 2 to 3 months.
 - Reduce photoperiod to 10 hours.
 - Continue feeding on a normal adult schedule (3×/week CGD). Reduce or stop insects.
 - Separate males and females. Never leave a pair together year-round.
@@ -553,13 +570,15 @@ A female produces a clutch of 2 eggs every 4 to 6 weeks during the breeding seas
 
 _Permalink: https://geckinspect.com/CareGuide/incubation_
 
-Room-temperature incubation (72 to 76°F, 22 to 24°C) produces strong, slow-hatching clutches. Higher temperatures shorten incubation and can produce male-biased clutches but also raise deformity rates. Hobby standard has moved toward slightly cool, slow incubation.
+Most breeders incubate at room temperature, 72 to 75°F (22 to 24°C), where eggs hatch in about 70 to 90 days. Cooler eggs take longer and warmer eggs hatch sooner. Keep incubation below about 80°F (27°C): breeders report more deformed and weak hatchlings from hot incubation. Some breeders also report more males from warm incubation and more females from cool incubation, but that has not been shown in controlled studies of crested geckos, so do not count on temperature to choose the sex.
+
+*Days are counted from the lay date. Geck Inspect uses these same windows for hatch estimates and hatch alerts.*
 
 | Temperature | Incubation time | Notes |
 | --- | --- | --- |
-| 68 to 72°F (20 to 22°C) | 90 to 120 days | Cool. Strong, vigorous hatchlings. Slight female bias. |
-| 72 to 76°F (22 to 24°C) | 60 to 90 days | Hobby sweet spot. Balanced sex ratio and low deformity rate. |
-| 78 to 82°F (25 to 28°C) | 45 to 60 days | Warm. Higher deformity risk and possible neurological issues. |
+| 68 to 71°F (20 to 22°C) | 90 to 120 days | Slow. Many breeders report strong, vigorous hatchlings. |
+| 72 to 75°F (22 to 24°C) | 70 to 90 days | The hobby default. A predictable hatch window. |
+| 76 to 78°F (24 to 26°C) | 60 to 75 days | Faster. Hold it steady; a spike past 80°F (27°C) is the risk. |
 
 - Substrate: 1:1 (by weight) vermiculite and water, or perlite at the same ratio. Some breeders use SuperHatch (baked clay).
 - Container: deli cup with a small cross-slit in the lid. No standing water, too wet is the most common killer.
@@ -909,7 +928,7 @@ _Permalink: https://geckinspect.com/MorphGuide/cappuccino_
 
 A genetic trait with variable appearance across ages and combinations.
 
-Cappuccino appearance varies with age, base color and other traits. Breeders often inspect the pale marking at the tail base in young animals together with the overall pattern and documented lineage. There is no universal coffee-brown body or clean-edged saddle that identifies every Cappuccino.
+Cappuccino appearance varies with age, base color and other traits. Breeders often inspect the pale marking at the tail base in young animals together with the overall pattern and documented lineage. There is no universal coffee-brown body or clean-edged saddle that identifies every Cappuccino. Two copies make a Super Cappuccino, which usually hatches but has documented health problems, including narrowed nostrils, so breeders pair a Cappuccino to a normal or a Sable instead of another Cappuccino.
 
 **History.** The project was developed in South Korea and later investigated through breeder collaborations, including Pangea.
 
@@ -953,14 +972,14 @@ _Permalink: https://geckinspect.com/MorphGuide/highway_
 
 Incomplete-dominant trait with a continuous, clean dorsal stripe. Provisionally the third version of the Cappuccino and Sable gene.
 
-One copy makes a visual Highway and two copies make a Super Highway. Highway is treated as the third version of the Cappuccino and Sable gene, mainly because Super Highway hatchlings show nostril and health issues like Super Cappuccino; the community has not fully settled this, so it is still badged Emerging. A gecko holds two versions of the gene at most, so it can be Cappuccino plus Highway or Sable plus Highway. A clean, unbroken back also comes from Empty Back, Phantom and line-bred patternless animals, so a photo alone does not prove Highway.
+One copy makes a visual Highway and two copies make a Super Highway. Highway is treated, provisionally, as the third version of the Cappuccino and Sable gene. That rests mainly on breeder reports of nostril and health problems in Super Highway hatchlings like Super Cappuccino's; those reports are not established, and the community has not settled the placement, so it is still badged Emerging. A gecko holds two versions of the gene at most, so it can be Cappuccino plus Highway or Sable plus Highway. A clean, unbroken back also comes from Empty Back, Phantom and line-bred patternless animals, so a photo alone does not prove Highway.
 
 **Key features:**
 - Continuous, unbroken dorsal stripe
 - Clean sides
 - One copy is visible: no hidden het
 
-**Notes.** Avoid Highway x Highway: Super Highway hatchlings have reported nostril and health issues. Pair Highway to a normal, or to a Cappuccino or Sable for a compound with no super.
+**Notes.** Avoid Highway x Highway: some breeders report nostril and health problems in Super Highway hatchlings. That is not established, but it is reason enough to pair Highway to a normal, or to a Cappuccino or Sable for a compound with no super.
 
 ### Frappuccino
 
@@ -991,7 +1010,7 @@ _Permalink: https://geckinspect.com/MorphGuide/lilly-white_
 
 Proven incomplete-dominant trait producing bold white markings, the super form is lethal.
 
-Lilly White produces variable white or cream pattern that often becomes more extensive with age. Breeders assess multiple features, including tail, flank and ventral coloration, alongside lineage. High white coverage alone is insufficient: other traits may resemble it, and low-expression or Phantom combinations can look quite different.
+Lilly White produces variable white or cream pattern that often becomes more extensive with age. Breeders assess multiple features, including tail, flank and ventral coloration, alongside lineage. High white coverage alone is insufficient: other traits may resemble it, and low-expression or Phantom combinations can look quite different. Two copies make a Super Lilly White, which is lethal: embryos die in the egg or within days of hatching, so breeders pair a Lilly White to a gecko without Lilly White.
 
 **History.** The founding project was established by Nick Lumb at Lilly Exotics in the United Kingdom, beginning with an unusual hatchling in late 2010.
 
@@ -1034,7 +1053,7 @@ _Permalink: https://geckinspect.com/MorphGuide/albino_
 
 The newest crested gecko color gene: no black pigment and red eyes. The first healthy albino hatchlings were announced by Eureka Exotics in March 2026.
 
-An albino crested gecko lacks melanin, the black and brown pigment, so the animal shows only its yellow, orange, red and cream pigments, and its eyes are red or pink instead of dark. For years albino crested geckos were treated as a myth: the albino-looking hatchlings reported before 2026 were weak, deformed or did not survive, and most "albino" sales were pale animals or edited photos. That changed on 5 March 2026, when Eureka Exotics (Nicole Cullen, Newberry, Florida) announced the hatching of what appear to be the first viable albino crested geckos: babies with no visible melanin, red pupils and normal, robust health. Albinism is recessive in essentially every reptile where it has been worked out, so the crested gecko version is expected to be recessive too, but that still has to be shown by breeding the first albinos and their siblings. Until then, treat any "het albino" offer with caution.
+An albino crested gecko lacks melanin, the black and brown pigment, so the animal shows only its yellow, orange, red and cream pigments, and its eyes are red or pink instead of dark. For years albino crested geckos were treated as a myth: the albino-looking hatchlings reported before 2026 were weak, deformed or did not survive, and most "albino" sales were pale animals or edited photos. That changed on 5 March 2026, when Eureka Exotics announced the hatching of what appear to be the first viable albino crested geckos: babies with no visible melanin, red pupils and normal, robust health. Albinism is recessive in essentially every reptile where it has been worked out, so the crested gecko version is expected to be recessive too, but that still has to be shown by breeding the first albinos and their siblings. Until then, treat any "het albino" offer with caution.
 
 **History.** Albino-like crested geckos were reported several times before 2026, but none were healthy enough to breed. On 5 March 2026 Eureka Exotics announced the first apparently viable albino hatchlings. As of October 2026 the trait is still being worked: the next milestone is producing albino offspring from those animals, which would confirm how it is inherited.
 
@@ -1308,12 +1327,202 @@ Bicolor describes animals with two clearly distinct colors, usually a solid base
 - Typically base color on flanks/belly and a brighter color on the dorsum
 - Common and often marketed as a classic look
 
+### Phantom
+
+_Permalink: https://geckinspect.com/MorphGuide/phantom_
+
+**Rarity:** Uncommon  
+**Inheritance:** Recessive  
+**Category:** Color modifier
+
+Recessive gene that mutes pattern color and darkens the animal. Hets look normal. Treated as proven within documented lines.
+
+Phantom is recessive: a gecko needs two copies to show it, and a het Phantom looks like any other gecko. Foundation Genetics (LM Reptiles) and AC Reptiles both describe it as a simple recessive, and the Geck Inspect calculator treats it as proven. In the Foundation Genetics description it adds dark pigment and suppresses pattern, but its hold weakens near the tail base and on the sides, which is why pinstripes and lateral white can still show through. What a Phantom looks like depends on everything else it carries, so Phantoms can read as bicolor, patternless, buckskin, charcoal or cream animals. Because it hides in hets, Phantom explains many surprise quiet-backed hatchlings from two normal-looking parents.
+
+**History.** The name began as part of the visual label Phantom Pinstripe. AC Reptiles and Foundation Genetics later described Phantom as a recessive gene, and the two uses are not interchangeable.
+
+**Key features:**
+- Recessive: two copies to show, and hets look normal
+- Mutes pattern color and darkens the base
+- Pinstripe and lateral white can still show near the tail base and on the sides
+
+**Notes.** Recessive math: Phantom x Phantom gives all Phantoms; Phantom x het gives 50% Phantom and 50% het; het x het gives 25% Phantom, 50% het and 25% normal, and a normal-looking baby from that pairing has a 66% chance of being het. In Geck Inspect a bare Phantom tag means a visual Phantom.
+
+### Empty Back
+
+_Permalink: https://geckinspect.com/MorphGuide/empty-back_
+
+**Rarity:** Rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Pattern
+
+Clean back, pattern kept on the sides. Reported as incomplete dominant by Foundation Genetics; not yet independently proven.
+
+Empty Back describes a gecko whose back is clear of pattern while the sides keep theirs, often with stronger contrast on the flanks. Foundation Genetics models it as an incomplete-dominant gene: one copy clears the back and two copies (Super Empty Back) clear it further, and the super form is described as healthy. That model is the main published source, and few breeders publish their own Empty Back breeding results, so Geck Inspect badges it Emerging: reported, not yet independently proven. A clean back also comes from Highway, Phantom and line-bred patternless animals, so a photo alone does not prove Empty Back.
+
+**Key features:**
+- Clean, unpatterned back
+- Pattern concentrated on the sides
+- One copy is visible in the Foundation Genetics model, so there is no hidden het
+
+**Notes.** Foundation Genetics lists Harlequin as working against the clear back. In that model Empty Back x Empty Back gives about 25% Super Empty Back, 50% Empty Back and 25% normal.
+
+### Super Empty Back
+
+_Permalink: https://geckinspect.com/MorphGuide/super-empty-back_
+
+**Rarity:** Very rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Pattern
+
+Two copies of Empty Back. Described as healthy in the Foundation Genetics model; thinly documented.
+
+In the Foundation Genetics model, two copies of Empty Back suppress the back pattern further and often sharpen the contrast on the sides. The model describes the super form as healthy and freely breedable, unlike Super Lilly White or Super Cappuccino. Published breeding records are still thin, so treat a Super Empty Back label as a lineage claim: it needs two Empty Back parents and, ideally, test breeding.
+
+**Key features:**
+- Two copies of Empty Back
+- Back cleared further, sides often higher contrast
+- Described as healthy, with no reported super-form problems
+
+### Whiteout
+
+_Permalink: https://geckinspect.com/MorphGuide/whiteout_
+
+**Rarity:** Rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Structure
+
+White gene reported as incomplete dominant by AC Reptiles, whose records are the main documentation. Not yet independently proven.
+
+Whiteout adds white expression along the flanks and back. AC Reptiles reports it as incomplete dominant, on a different gene from Lilly White, with a Super Whiteout that is healthy and freely breedable. That would make Whiteout a way to stack white without risking Lilly White's lethal two-copy form. AC Reptiles' own breeding records are the main documentation, and much of the hobby still treats white walling as line-bred, so Geck Inspect badges Whiteout Emerging: reported, not independently proven. When the genetics calculator reads a collection, a White Wall tag counts as Whiteout.
+
+**History.** Documented by AC Reptiles (Anthony Caponetto), whose Whiteout page is the main source.
+
+**Key features:**
+- White expression on the sides and back
+- Reported incomplete dominant, so one copy is visible
+- A separate gene from Lilly White
+
+**Notes.** Whiteout x Lilly White cannot make a lethal super, because they are separate genes in this model. A Lilly White Whiteout still carries one Lilly White copy, so never pair it to another Lilly White.
+
+### Super Whiteout
+
+_Permalink: https://geckinspect.com/MorphGuide/super-whiteout_
+
+**Rarity:** Very rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Structure
+
+Two copies of Whiteout. AC Reptiles describes it as healthy and breedable; independent records are thin.
+
+Two copies of Whiteout give a Super Whiteout. AC Reptiles describes the super form as healthy and freely breedable, unlike Super Lilly White, which is why breeders use Whiteout to stack white. That rests on AC Reptiles' own records, so treat a Super Whiteout label as a lineage claim that needs two Whiteout parents.
+
+**Key features:**
+- Two copies of Whiteout
+- Described as healthy and breedable
+- More white than a single-copy Whiteout in AC Reptiles' description
+
+### Luwak
+
+_Permalink: https://geckinspect.com/MorphGuide/luwak_
+
+**Rarity:** Rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Combination
+
+Cappuccino plus Sable on the same gene. Widely reported, not settled; never a super itself.
+
+Luwak is the name for a gecko with one Cappuccino copy and one Sable copy. Under the widely reported one-gene model, Cappuccino and Sable are two versions of the same gene, so a gecko holds at most two copies between them: a Luwak has one of each and is never a Super Cappuccino or a Super Sable. Cappuccino x Sable gives about 25% Luwak and can never make a super, which is why it is the safer way to combine the two. Luwak x Luwak is different: about 25% Super Cappuccino, 25% Super Sable and 50% Luwak. MorphMarket's Morphpedia still lists Sable's place on the Cappuccino gene as suspected, so Geck Inspect badges Luwak Emerging. Looks vary, and dark color alone does not identify one; the parents do.
+
+**Key features:**
+- One Cappuccino copy plus one Sable copy
+- Never a super itself
+- Appearance varies, so lineage identifies it
+
+**Notes.** Do not pair a Luwak to another Luwak or to a Cappuccino: both can make Super Cappuccinos. A Luwak bred to a normal gives Cappuccinos and Sables, about half each, under the one-gene model.
+
+### Super Lilly White
+
+_Permalink: https://geckinspect.com/MorphGuide/super-lilly-white_
+
+**Rarity:** Very rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Structure
+
+The two-copy form of Lilly White. Lethal, so never pair Lilly White to Lilly White.
+
+Pairing two Lilly Whites gives about 25% Super Lilly White eggs. Those embryos die in the egg or within days of hatching, which is why Lilly White cannot be bred true and why Lilly White x Lilly White is the pairing every breeder warns against. The same applies to any two geckos that each carry Lilly White, including Frappuccinos. The Lilly White trait itself traces to Lilly Exotics (Nick Lumb) in the United Kingdom, starting with an unusual hatchling in late 2010. A seller offering a living Super Lilly White is mislabeling the animal.
+
+**Key features:**
+- Two copies of Lilly White
+- Lethal: dies in the egg or within days of hatching
+- About 25% of eggs from Lilly White x Lilly White
+
+**Notes.** Lilly White to a gecko without Lilly White gives about 50% Lilly White and never a Super Lilly White.
+
+### Super Cappuccino
+
+_Permalink: https://geckinspect.com/MorphGuide/super-cappuccino_
+
+**Rarity:** Rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Structure
+
+Two copies of Cappuccino. Hatches, but has documented health problems; breeders advise against producing it.
+
+Pairing two Cappuccinos gives about 25% Super Cappuccino. Unlike Super Lilly White, Super Cappuccinos usually hatch, but breeders document serious health problems: narrowed (stenosed) nostrils, breathing difficulty and poor thriving. Some breeders report that cooler incubation reduces the structural problems without removing them. For these reasons most breeders avoid Cappuccino x Cappuccino and the other pairings that can make one: Luwak x Luwak, Luwak x Cappuccino and Frappuccino x Cappuccino. Cappuccino to a normal, or to a Sable, never makes a Super Cappuccino.
+
+**Key features:**
+- Two copies of Cappuccino
+- Documented narrowed nostrils and breathing difficulty
+- Usually hatches, unlike Super Lilly White
+
+**Notes.** Cappuccino x Cappuccino gives about 25% Super Cappuccino, 50% Cappuccino and 25% normal.
+
+### Super Sable
+
+_Permalink: https://geckinspect.com/MorphGuide/super-sable_
+
+**Rarity:** Rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Color modifier
+
+Two copies of Sable. Appears viable but thinly documented.
+
+Pairing two Sables gives about 25% Super Sable, and so does Luwak x Luwak. Super Sables appear viable, unlike Super Lilly White, and no pattern of health problems has been documented, but published records are few. Because Sable is widely reported to share a gene with Cappuccino, whose super form has serious nostril problems, the community norm is to check nostril openings at hatch on any super in this group. A Super Sable bred to a normal gives only Sable babies, which is how a breeder can prove one.
+
+**Key features:**
+- Two copies of Sable
+- Appears viable, but thinly documented
+- Bred to a normal, every baby is a Sable
+
+**Notes.** Super Sable x Cappuccino gives Luwaks and Sables, about half each, and never a super, under the one-gene model.
+
+### Super Highway
+
+_Permalink: https://geckinspect.com/MorphGuide/super-highway_
+
+**Rarity:** Very rare  
+**Inheritance:** Incomplete dominant  
+**Category:** Pattern
+
+Two copies of Highway. Health problems reported, not established; avoid Highway x Highway.
+
+Pairing two Highways gives about 25% Super Highway. Some breeders report nostril and health problems in Super Highway hatchlings similar to Super Cappuccino's, and those reports are the main reason Highway is placed, provisionally, on the Cappuccino and Sable gene. Neither the health problems nor the placement is established in published breeding records, so Geck Inspect badges it Emerging and advises against Highway x Highway until more is known.
+
+**Key features:**
+- Two copies of Highway
+- Health problems reported, not established
+- About 25% of babies from Highway x Highway
+
+**Notes.** Pair Highway to a normal (about 50% Highway), or to a Cappuccino or Sable for a compound with no super.
+
 
 ---
 
 ## Geck Inspect Price Index (crested gecko asking prices)
 
-Generated 2026-10-07. Original data compiled by Geck Inspect from public crested gecko listings on the largest online reptile marketplaces in the United States, South Korea, Japan and Europe. These are **asking prices** on open listings, converted to USD at stored exchange rates, not sale prices. Only full catalog checks count, and a trait is shown only with at least 5 listings. Cite as "Geck Inspect Price Index" with a link to https://geckinspect.com/data. JSON: https://geckinspect.com/data/price-index.json. CSV: https://geckinspect.com/data/price-index.csv.
+Generated 2026-10-07. An asking-price snapshot from public marketplace listings of crested geckos in the United States, South Korea, Japan and Europe, compiled by Geck Inspect. These are **asking prices** on open listings, converted to USD at stored exchange rates, not sale prices. Only full catalog checks count. A row needs at least 30 listings to be shown. Rows with fewer than 100 are marked as a thin sample, because a few relisted geckos can move their median. Free to cite with a link: you may quote and cite these numbers, with a link to the page they came from. Cite as "Geck Inspect Price Index" with a link to https://geckinspect.com/data. JSON: https://geckinspect.com/data/price-index.json. CSV: https://geckinspect.com/data/price-index.csv.
 
 ### United States (checked 2026-10-06)
 
@@ -1322,7 +1531,6 @@ Generated 2026-10-07. Original data compiled by Geck Inspect from public crested
 | All crested geckos | 6985 | $150 | $250 | $450 |
 | Axanthic | 144 | $600 | $800 | $1,200 |
 | Brindle | 213 | $100 | $150 | $300 |
-| Buckskin | 15 | $100 | $150 | $200 |
 | Cappuccino | 384 | $244 | $350 | $596 |
 | Cream | 415 | $150 | $250 | $350 |
 | Dalmatian | 680 | $100 | $175 | $300 |
@@ -1335,17 +1543,15 @@ Generated 2026-10-07. Original data compiled by Geck Inspect from public crested
 | Hypo | 122 | $203 | $315 | $500 |
 | Lavender | 243 | $160 | $300 | $450 |
 | Lilly White | 1191 | $250 | $400 | $600 |
-| Olive | 17 | $200 | $250 | $450 |
 | Orange | 322 | $175 | $285 | $425 |
 | Partial Pinstripe | 386 | $120 | $175 | $300 |
-| Patternless | 27 | $125 | $150 | $275 |
 | Phantom | 589 | $150 | $250 | $400 |
 | Pinstripe | 949 | $150 | $249 | $350 |
 | Portholes | 388 | $125 | $200 | $350 |
 | Quad-stripe | 179 | $175 | $280 | $400 |
 | Red | 509 | $150 | $250 | $400 |
 | Red Base | 403 | $175 | $300 | $467 |
-| Reverse Pinstripe | 50 | $100 | $150 | $337 |
+| Reverse Pinstripe | 50 (thin sample) | $100 | $150 | $337 |
 | Sable | 112 | $490 | $610 | $863 |
 | Soft Scale | 168 | $219 | $340 | $500 |
 | Super Dalmatian | 390 | $200 | $360 | $500 |
@@ -1363,50 +1569,37 @@ Generated 2026-10-07. Original data compiled by Geck Inspect from public crested
 | All crested geckos | 2957 | $149 | $336 | $896 |
 | Axanthic | 345 | $336 | $747 | $2,166 |
 | Cappuccino | 140 | $112 | $243 | $598 |
-| Cream | 61 | $112 | $224 | $299 |
-| Dark | 17 | $90 | $187 | $224 |
+| Cream | 61 (thin sample) | $112 | $224 | $299 |
 | Drippy | 344 | $224 | $448 | $1,120 |
-| Empty Back | 53 | $224 | $373 | $1,195 |
+| Empty Back | 53 (thin sample) | $224 | $373 | $1,195 |
 | Extreme Harlequin | 395 | $149 | $373 | $1,120 |
-| Frappuccino | 59 | $149 | $224 | $448 |
+| Frappuccino | 59 (thin sample) | $149 | $224 | $448 |
 | Full Pinstripe | 196 | $187 | $336 | $1,120 |
-| Harlequin | 6 | $159 | $224 | $289 |
 | Het Axanthic | 263 | $187 | $336 | $1,120 |
-| Hypo | 83 | $373 | $598 | $1,494 |
+| Hypo | 83 (thin sample) | $373 | $598 | $1,494 |
 | Lilly White | 562 | $149 | $299 | $672 |
-| Phantom | 38 | $168 | $486 | $598 |
-| Pinstripe | 93 | $224 | $448 | $1,120 |
-| Portholes | 58 | $149 | $243 | $1,120 |
+| Phantom | 38 (thin sample) | $168 | $486 | $598 |
+| Pinstripe | 93 (thin sample) | $224 | $448 | $1,120 |
+| Portholes | 58 (thin sample) | $149 | $243 | $1,120 |
 | Quad-stripe | 197 | $187 | $373 | $1,195 |
-| Red | 51 | $112 | $149 | $261 |
+| Red | 51 (thin sample) | $112 | $149 | $261 |
 | Sable | 386 | $149 | $299 | $822 |
-| Super Dalmatian | 38 | $187 | $429 | $1,083 |
+| Super Dalmatian | 38 (thin sample) | $187 | $429 | $1,083 |
 | Tangerine | 180 | $149 | $336 | $747 |
 | Tri-color | 850 | $149 | $355 | $896 |
-| Yellow | 37 | $75 | $224 | $411 |
+| Yellow | 37 (thin sample) | $75 | $224 | $411 |
 
 ### Japan (checked 2026-10-06)
 
 | Trait | Listings | 25th percentile | Median | 75th percentile |
 | --- | --- | --- | --- | --- |
 | All crested geckos | 119 | $114 | $158 | $237 |
-| Dalmatian | 8 | $122 | $164 | $212 |
-| Dark | 6 | $101 | $171 | $259 |
-| Extreme Harlequin | 15 | $114 | $139 | $158 |
-| Harlequin | 15 | $101 | $120 | $158 |
-| Lilly White | 22 | $237 | $304 | $493 |
-| Pinstripe | 6 | $129 | $146 | $192 |
-| Red | 7 | $177 | $202 | $247 |
-| Tiger | 5 | $101 | $101 | $114 |
-| Tri-color | 11 | $142 | $164 | $190 |
 
 ### Europe (checked 2026-10-06)
 
 | Trait | Listings | 25th percentile | Median | 75th percentile |
 | --- | --- | --- | --- | --- |
 | All crested geckos | 183 | $113 | $135 | $211 |
-| Axanthic | 5 | $761 | $1,071 | $1,380 |
-| Lilly White | 11 | $113 | $113 | $127 |
 
 
 ---
@@ -1481,15 +1674,15 @@ Recessive traits like axanthic are invisible in carriers, so a normal-looking ge
 ### Your First Crested Gecko Breeding Season: A Month-by-Month Plan
 
 _Permalink: https://geckinspect.com/blog/first-crested-gecko-breeding-season_
-_Published 2026-07-08_
+_Published 2026-07-08 · Updated 2026-10-16_
 
 > A beginner breeder plan for your first crested gecko season: readiness weights, cooldown, pairing, egg laying, incubation, and hatchling care, month by month.
 
 **TL;DR:**
 - Only breed a female that is at least 18 months old and holding a stable 40 grams or more. Age and weight matter more than the calendar.
 - Crested geckos breed through the warm months and rest over winter. A cooldown from roughly November to January resets the cycle.
-- A proven female can lay two eggs about every four to five weeks across the season, so plan for many clutches, not one.
-- Incubate at cool room temperature (about 70 to 74 F). Eggs hatch in roughly 60 to 90 days. Never chase heat to speed it up.
+- A proven female can lay two eggs about every four to six weeks across the season, so plan for many clutches, not one.
+- Incubate at room temperature (about 72 to 75 F). Eggs hatch in roughly 70 to 90 days, longer if the room is cooler. Never chase heat to speed it up.
 - Track every pairing, lay date, and hatch so next season is driven by data instead of memory.
 
 Your first crested gecko breeding season is mostly about patience and preparation, not technique. Correlophus ciliatus is one of the most forgiving reptiles to breed, but the two mistakes that hurt beginners most, pairing a female too young and chasing incubation heat, both happen before a single egg hatches. This month-by-month plan walks the full cycle so you know what to do and, just as importantly, what to leave alone.
@@ -1509,8 +1702,8 @@ The season below assumes the Northern Hemisphere. If you keep geckos in the Sout
 | Nov to Jan | Cooldown / rest | Drop night temps to the low 60s F, shorten the light cycle, and let animals rest. No pairing. This rest improves fertility later. |
 | Late Jan to Feb | Warm back up | Return to normal temps and day length. Boost feeding with a calcium-rich diet. Confirm the female is at weight. |
 | Feb to Mar | Introductions | Introduce the pair for short supervised sessions. Separate them between sessions. Watch for stress or aggression. |
-| Mar to Sep | Laying season | Provide a moist lay box. Expect two eggs roughly every four to five weeks. Weigh the female often. |
-| Apr to Dec | Incubation and hatching | Each clutch hatches about 60 to 90 days after laying. Late clutches hatch into winter. |
+| Mar to Sep | Laying season | Provide a moist lay box. Expect two eggs roughly every four to six weeks. Weigh the female often. |
+| Apr to Dec | Incubation and hatching | At room temperature each clutch hatches about 70 to 90 days after laying (up to about 120 days in a cool room). Late clutches hatch into winter. |
 | Sep to Oct | Wind down | Fertility naturally tapers. Stop introductions and let the female rebuild condition before the next cooldown. |
 
 The cooldown is the step first-time breeders most often skip, and it is the cheapest way to improve a season. A rest period of six to ten weeks with cooler nights and a shorter photoperiod mimics winter and helps synchronize a healthy laying cycle when things warm up. It is not strictly required for eggs to appear, but skipping it tends to produce a ragged, less fertile season.
@@ -1523,7 +1716,7 @@ When you introduce the pair, do it in short supervised visits rather than housin
 - Keep it damp, not wet. If you squeeze the substrate and water runs out, it is too wet and eggs can mold or drown.
 - A gravid female will dig test holes before laying. Once she lays, gently recover the eggs and move them to your incubation container.
 
-Incubation is where beginners are tempted to intervene and should not. Crested gecko eggs incubate well at cool room temperature, roughly 70 to 74 F, in a lightly moist medium like perlite or vermiculite. Warmer temperatures shorten incubation but raise the risk of deformities and poor hatchlings, and sustained heat above the high 70s can cook a clutch. Cooler is slower and safer. At room temperature, expect roughly 60 to 90 days.
+Incubation is where beginners are tempted to intervene and should not. Crested gecko eggs incubate well at room temperature, roughly 72 to 75 F, in a lightly moist medium like perlite or vermiculite. Warmer temperatures shorten incubation but raise the risk of deformities and poor hatchlings, and sustained heat above about 80 F can cook a clutch. Cooler is slower and safer. At 72 to 75 F, expect roughly 70 to 90 days; at 68 to 71 F, 90 to 120 days.
 
 **Do not incubate hot**
 
@@ -1543,10 +1736,10 @@ A female should be at least 18 months old and holding a stable weight of 40 gram
 In the Northern Hemisphere, crested geckos typically breed from roughly February or March through September, with a natural winter rest. A cooldown of six to ten weeks from about November to January before the season helps synchronize a healthy, fertile laying cycle.
 
 **Q: How many eggs do crested geckos lay?**
-A proven female lays two eggs per clutch and can produce a clutch roughly every four to five weeks across the season, so a healthy female may lay many clutches in a year. This is why keeping her at weight and well supplemented with calcium is critical.
+A proven female lays two eggs per clutch and can produce a clutch roughly every four to six weeks across the season, so a healthy female may lay many clutches in a year. This is why keeping her at weight and well supplemented with calcium is critical.
 
 **Q: How long do crested gecko eggs take to hatch?**
-At cool room temperature (about 70 to 74 F), crested gecko eggs hatch in roughly 60 to 90 days. Warmer incubation is faster but increases the risk of deformities and weak hatchlings, so cooler and slower is the safer choice.
+At room temperature (about 72 to 75 F), crested gecko eggs hatch in roughly 70 to 90 days, and at 68 to 71 F in about 90 to 120 days. Warmer incubation is faster but increases the risk of deformities and weak hatchlings, so cooler and slower is the safer choice.
 
 **Q: Do I need an incubator for crested gecko eggs?**
 No. Crested gecko eggs incubate well at normal room temperature in a lightly moist medium. A dedicated incubator is optional and, if it runs warm, can do more harm than good. A stable cool room is usually the best incubator you have.
@@ -1622,24 +1815,24 @@ Fertility rate per pairing, the share of eggs from a given pair that are fertile
 ### Cappuccino Crested Gecko: Why Super Cappuccinos Are Risky
 
 _Permalink: https://geckinspect.com/blog/cappuccino-crested-gecko-genetics_
-_Published 2026-04-18_
+_Published 2026-04-18 · Updated 2026-10-16_
 
 > Cappuccino is incomplete dominant, not codominant. Super Cappuccinos (CAPP/CAPP) have documented breathing issues, here is what every breeder needs to know before pairing.
 
 **TL;DR:**
 - Cappuccino is incomplete dominant, one copy gives the visible trait, two copies produce the Super Cappuccino (Melanistic).
 - Super Cappuccinos have documented health issues including reduced nostril size and breathing difficulty. Breeding for supers is not recommended.
-- Cappuccino is allelic with Sable and Highway, they share the same gene location but produce distinct compound heterozygotes (Luwak, etc.) instead of supers.
+- Sable is widely reported to be a second version of the Cappuccino gene, so Cappuccino x Sable gives Luwak rather than a super. Highway is placed on the same gene provisionally; that is not settled.
 - Hobby sources commonly call Cappuccino "codominant." This is incorrect, true codominance is extremely rare in any animal species.
 
 The Cappuccino crested gecko is one of the most popular incomplete dominant traits introduced to the hobby in the last decade. It was discovered and proven by Reptile City Korea in 2020-2021 and has since become a staple of high-end Correlophus ciliatus breeding projects worldwide. But the trait carries health risks in homozygous form that newer breeders often miss because the hobby still calls it "codominant", a term that is almost always wrong when applied to crested geckos.
 
-This guide covers what Cappuccino actually is genetically, how to identify a heterozygous Cappuccino at a glance, why Super Cappuccinos should not be the goal of a pairing, and how the trait interacts with its allelic partners Sable and Highway.
+This guide covers what Cappuccino actually is genetically, how to identify a heterozygous Cappuccino at a glance, why Super Cappuccinos should not be the goal of a pairing, and how the trait interacts with Sable and Highway, which are thought to be other versions of the same gene.
 
 **Critical breeding warning**
 
 - Super Cappuccinos (homozygous CAPP/CAPP, also called Melanistic) have documented health concerns including reduced nostril size, breathing difficulty, and poor thriving.
-- Breeding specifically to produce Super Cappuccinos is not recommended. Pair Cappuccino × non-Cappuccino instead, you still produce ~50% Cappuccino offspring without risking the lethal homozygous expression.
+- Breeding specifically to produce Super Cappuccinos is not recommended. Pair Cappuccino × non-Cappuccino instead, you still produce ~50% Cappuccino offspring without producing any Super Cappuccinos.
 
 Cappuccino is incomplete dominant, NOT codominant. The distinction matters because incomplete dominant traits produce a distinct intermediate "super" form when homozygous, while codominant traits express both alleles independently and visibly. Most crested gecko traits historically labeled codominant in hobby literature are actually incomplete dominant, and the Foundation Genetics project led by Lil Monsters Reptiles has reclassified them as such.
 
@@ -1655,10 +1848,10 @@ When two Cappuccinos are paired, the expected outcomes per Punnett square are 25
 **Recommended pairing**
 
 - Cappuccino × non-Cappuccino → ~50% heterozygous Cappuccino, ~50% non-Cappuccino. No Supers produced. This is the standard responsible pairing.
-- Cappuccino × Sable → Luwak (compound heterozygote at the same locus, NOT a Super). Visually distinct phenotype, no documented health issues from this pairing.
-- Cappuccino × Highway → Compound heterozygote at the same locus. Phenotype distinct from both Cappuccino and Sable.
+- Cappuccino × Sable → about 25% Luwak (one copy of each, NOT a Super), plus Cappuccinos, Sables and normals. No documented health issues from this pairing.
+- Cappuccino × Highway → under the one-gene model, some babies carry one copy of each. Their health is not documented yet, so check nostril openings at hatch.
 
-The fact that Cappuccino × Sable produces a Luwak (and NOT a Super Cappuccino) is the key evidence that proves Cappuccino, Sable, and Highway are three distinct alleles at the same gene locus rather than three separate genes. If they were on different loci, the Cappuccino × Sable cross would produce some offspring carrying one copy each of Cappuccino and Sable on independent chromosomes, expressing both traits weakly, instead, what you actually see is a single distinct intermediate phenotype, which is the textbook signature of two alleles competing for the same gene slot.
+Be careful with what counts as evidence here. Cappuccino × Sable never making a Super Cappuccino does not by itself show they share a gene: a Super Cappuccino needs two Cappuccino copies, and that pairing only has one either way. The deciding test is breeding a Luwak to a normal. If Cappuccino and Sable are two versions of one gene, every baby inherits exactly one of them, so you see Cappuccinos and Sables but never a normal and never another Luwak. That is why the one-gene model is widely reported but still treated as unsettled (MorphMarket's Morphpedia lists it as suspected), and Highway's place on the same gene is more provisional still.
 
 *Cappuccino × Cappuccino expected outcomes*
 
@@ -1691,7 +1884,7 @@ Cappuccino was discovered and proven by Reptile City Korea in 2020-2021. The tra
 ### Super Cappuccino: Scam, or Just Misunderstood?
 
 _Permalink: https://geckinspect.com/blog/super-cappuccino-viability-debate_
-_Published 2026-05-05 · Updated 2026-06-02_
+_Published 2026-05-05 · Updated 2026-10-16_
 
 > Super Cappuccino crested geckos are genetically legitimate, but breeders call them a scam. Here's the real debate about viability, ethics, and breeding risk.
 
@@ -1699,7 +1892,7 @@ _Published 2026-05-05 · Updated 2026-06-02_
 - Super Cappuccino is the homozygous form of the incomplete-dominant Cappuccino morph, genetically real, not a scam.
 - Cappuccino × Cappuccino pairings produce ~25% Super Cappuccinos, ~50% Cappuccinos, and ~25% normals, per standard incomplete-dominant math.
 - Community concern centers on reported clutch failures and health issues in Cappuccino × Cappuccino pairings, not on whether the morph exists.
-- The safest breeding approach remains Cappuccino × non-carrier: 50% Cappuccino offspring, zero lethal-super risk.
+- The safest breeding approach remains Cappuccino × non-carrier: 50% Cappuccino offspring, zero Super Cappuccino risk.
 - Calling Super Cappuccino 'a scam' conflates the genetics with the ethics of chasing homozygous animals when viability data is still thin.
 
 A visual Cappuccino crested gecko will run you $400-$1,200 depending on the line. Pair it to another Cappuccino and the math says one in four babies is a Super Cappuccino, a Super Cappuccino, the homozygous form, worth multiples of that. On paper, it sounds like the easiest money in the hobby. In practice, a corner of the breeding community has decided the whole thing is a scam. Both sides are wrong in useful ways, and sorting out which parts are wrong matters for your breeding decisions and your animals' welfare.
@@ -2081,15 +2274,15 @@ Normal-colored animals cost about the same ($30-80). High-end crested gecko morp
 ### Crested Gecko Weight Chart by Age: Growth Milestones
 
 _Permalink: https://geckinspect.com/blog/crested-gecko-weight-chart-by-age_
-_Published 2026-05-05_
+_Published 2026-05-05 · Updated 2026-10-16_
 
 > Crested gecko weight chart from hatchling to adult. Track growth milestones month by month and learn when slow growth signals a problem.
 
 **TL;DR:**
-- A healthy crested gecko hatchling weighs 1.5-2 grams. Adults reach 35-55 grams at 18-24 months.
-- Juveniles (3-12 months) grow fastest, gaining 2-4 grams per month with proper diet and husbandry.
+- A healthy crested gecko hatchling weighs 1.5-3 grams. Adults reach 35-60 grams from about 18-24 months.
+- Juveniles (3-12 months) grow fastest, gaining about 1-4 grams per month with proper diet and husbandry.
 - Males tend to max out around 35-45 grams. Females, especially breeding females, often reach 45-55 grams.
-- Weigh monthly on a digital kitchen scale (0.1g precision). Consistent weight loss over 2+ weigh-ins is a red flag.
+- Weigh every 1-2 weeks while growing and monthly as an adult, on a digital kitchen scale (0.1g precision). Consistent weight loss over 2+ weigh-ins is a red flag.
 - Slow growth usually comes from low temperatures, inadequate diet, or stress, not genetics. Fix husbandry before assuming a gecko is "just small."
 
 Tracking your crested gecko's weight is the single most reliable way to monitor overall health. Unlike visible symptoms like lethargy or appetite changes, which can be subjective, weight is a number you can track over time. A gecko that gains steadily is thriving. A gecko that stalls or loses weight has a problem that needs investigation.
@@ -2100,9 +2293,9 @@ This chart shows the typical weight range for crested geckos at each age. Indivi
 
 | Age | Weight range | Life stage | Notes |
 | --- | --- | --- | --- |
-| Hatchling | 1.5-2g | Baby | Do not handle for first 2 weeks. First meal after first shed. |
-| 1 month | 2-3g | Baby | Should be eating CGD consistently. Tiny portions, changed daily. |
-| 2 months | 3-4g | Baby | Starting to explore enclosure actively at dusk. |
+| At hatch | 1.5-3g | Hatchling | Do not handle for first 2 weeks. First meal after first shed. |
+| 1 month | 2-3g | Hatchling | Should be eating CGD consistently. Tiny portions, changed daily. |
+| 2 months | 3-4g | Hatchling | Starting to explore enclosure actively at dusk. |
 | 3 months | 4-6g | Juvenile | Growth accelerating. Can start offering tiny insects. |
 | 4 months | 5-8g | Juvenile | Should be visibly larger than hatchling. Eating well. |
 | 5 months | 7-10g | Juvenile | Can begin gentle, brief handling sessions. |
@@ -2111,16 +2304,16 @@ This chart shows the typical weight range for crested geckos at each age. Indivi
 | 10 months | 18-25g | Juvenile | Growth rate may slow slightly. |
 | 12 months | 22-32g | Sub-adult | Many geckos are sexually mature but should not breed yet. |
 | 15 months | 28-38g | Sub-adult | Growth continues but slowing. |
-| 18 months | 32-45g | Adult | Males may plateau here. Females continue growing. |
+| 18 months | 32-45g | Sub-adult to adult | Adult once past 35g. Males may plateau here. Females continue growing. |
 | 24 months | 35-55g | Adult | Full adult size. Breeding weight for females: 40g minimum. |
 
 **How to weigh your crested gecko**
 
 - Use a digital kitchen scale with 0.1 gram precision. They cost $10-15 and are essential.
-- Weigh at the same time of day each month (before feeding is ideal).
+- Weigh at the same time of day each time (before feeding is ideal).
 - Place a small container or deli cup on the scale, tare it to zero, then gently place the gecko inside.
 - Record the weight in a log. Geck Inspect has built-in weight tracking that generates growth charts automatically.
-- Weigh monthly for routine tracking. Weigh weekly if you suspect a problem.
+- Weigh every 1-2 weeks while your gecko is growing, every 3 weeks as a sub-adult and monthly as an adult. Weigh weekly if you suspect a problem.
 
 The most common cause of slow growth in crested geckos is temperature. A gecko kept at 68F will grow significantly slower than one at 75F because metabolic rate is directly tied to temperature in ectotherms. If your gecko is underweight, check your thermometer before changing the diet. The second most common cause is diet quality. Cheap, off-brand CGDs or diets that rely too heavily on fruit and not enough on CGD will result in slower growth. Pangea and Repashy are the standard for a reason.
 
@@ -2140,19 +2333,19 @@ Use Geck Inspect's built-in weight tracking to log every weigh-in and automatica
 **Frequently asked questions:**
 
 **Q: How much should my crested gecko weigh?**
-A healthy adult crested gecko weighs 35-55 grams at 18-24 months old. Males typically max out at 35-45 grams, while females often reach 45-55 grams. Hatchlings start at 1.5-2 grams.
+A healthy adult crested gecko weighs 35-60 grams from about 18-24 months old. Males typically max out at 35-45 grams, while females often reach 45-55 grams. Hatchlings start at 1.5-3 grams.
 
 **Q: How fast do crested geckos grow?**
-Crested geckos grow fastest as juveniles (3-12 months), gaining 2-4 grams per month with proper husbandry. Growth slows after 12 months and most geckos reach full adult size by 18-24 months.
+Crested geckos grow fastest as juveniles (3-12 months), gaining about 1-4 grams per month with proper husbandry. Growth slows after 12 months and most geckos reach full adult size by 18-24 months.
 
 **Q: Why is my crested gecko not growing?**
 The three most common causes of slow growth are: low enclosure temperature (below 72F), inadequate diet (not enough CGD or low-quality food), and stress (enclosure too sparse, too much handling, or high-traffic location). Check all three before assuming genetics.
 
 **Q: How often should I weigh my crested gecko?**
-Monthly weigh-ins are ideal for routine health tracking. Use a digital scale with 0.1g precision. Weigh weekly if you suspect a health problem or during breeding season for females.
+Weigh every 1-2 weeks while your gecko is growing, every 3 weeks as a sub-adult and monthly as an adult. Use a digital scale with 0.1g precision. Weigh weekly if you suspect a health problem or during breeding season for females.
 
 **Q: When can I breed my crested gecko?**
-Males are physically capable of breeding around 9-12 months but should wait until they are 35+ grams and 12+ months old. Females should not be bred until they weigh at least 40 grams and are 18+ months old to avoid egg-binding and calcium depletion.
+Males are physically capable of breeding around 9-12 months but should wait until they are at least 25-30 grams and 12 months old, and many breeders wait for 35 grams. Females should not be bred until they weigh at least 40 grams and are 18+ months old to avoid egg-binding and calcium depletion.
 
 **Q: Do crested geckos lose weight in winter?**
 Some adult crested geckos experience a mild seasonal appetite decrease in winter, especially if room temperatures drop. A 1-2 gram fluctuation is normal. Significant weight loss (3+ grams) in winter should prompt a husbandry check.

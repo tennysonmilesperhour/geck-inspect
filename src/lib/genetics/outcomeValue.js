@@ -16,7 +16,7 @@
  */
 import { MORPHS } from '@/data/morph-guide';
 import { getComboMorph } from '@/lib/genetics';
-import { MORPH_GUIDE_SLUGS } from './calculatorCatalog';
+import { MORPH_PRICE_SLUGS } from './calculatorCatalog';
 
 // slug -> { low, high } parsed once from the guide's "$120-$400" style
 // strings (the guide uses an en-dash range separator in data).
@@ -40,7 +40,7 @@ export function priceForOutcome(outcome) {
   if (outcome.health_risk === 'lethal') return null;
   const candidates = [];
   for (const comboId of outcome.matching_combo_morphs || []) {
-    const slug = MORPH_GUIDE_SLUGS[comboId];
+    const slug = MORPH_PRICE_SLUGS[comboId];
     const price = slug && PRICE_BY_SLUG.get(slug);
     if (price) candidates.push({ ...price, source: getComboMorph(comboId)?.name || comboId });
   }
@@ -48,7 +48,7 @@ export function priceForOutcome(outcome) {
     // Fall back to the priciest single expressed gene with a guide entry.
     for (const [, pair] of Object.entries(outcome.genotype || {})) {
       for (const allele of pair) {
-        const slug = MORPH_GUIDE_SLUGS[allele];
+        const slug = MORPH_PRICE_SLUGS[allele];
         const price = slug && PRICE_BY_SLUG.get(slug);
         if (price) candidates.push({ ...price, source: price.name });
       }

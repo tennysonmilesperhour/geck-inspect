@@ -24,7 +24,7 @@ const BATCH_SIZE = 20;
 // missing them. Primary morph is any documented morph; traits are the
 // pattern, structure, colour and combo morphs that stack on a primary.
 // A lethal super (Super Lilly White) is left out: no living gecko is one.
-const MORPH_OPTIONS = MORPHS.filter(isLivingMorph)
+export const MORPH_OPTIONS = MORPHS.filter(isLivingMorph)
     .map((m) => ({ slug: m.slug, name: m.name, category: m.category }))
     .sort((a, b) => a.name.localeCompare(b.name));
 const TRAIT_CATEGORIES = new Set(['pattern', 'structure', 'color', 'combo']);

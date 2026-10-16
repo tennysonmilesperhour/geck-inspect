@@ -28,7 +28,7 @@ import {
 import { pct, simpleFraction, EGGS_PER_CLUTCH, DEFAULT_CLUTCHES_PER_SEASON, roundExpected } from '@/lib/genetics/clutchMath';
 
 export const POLYGENIC_NOTE =
-  'Pattern and base color (Harlequin, Pinstripe, Dalmatian, Flame, red or yellow base) are polygenic: many small genes add up. ' +
+  'Pattern and base color (Harlequin, Pinstripe, Dalmatian, Flame, red or yellow base) are polygenic looks: many small genes add up, even where Foundation Genetics models a single gene underneath. ' +
   'They are never given a percentage here. A look both parents show is likely in the babies, a look one parent shows is possible, ' +
   'and how strongly it shows varies from baby to baby.';
 

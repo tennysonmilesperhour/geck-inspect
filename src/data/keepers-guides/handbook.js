@@ -22,7 +22,7 @@ export const HANDBOOK_GUIDE = {
       kicker: "The Keeper's Guide Series",
       title: "Everything they don't tell you.",
       lead:
-        "The handbook every crested gecko keeper needs - answering the debates, decoding the behaviors, and settling the questions that live rent-free in forums and Facebook groups.",
+        "The handbook every crested gecko keeper needs, answering the debates, decoding the behaviors, and settling the questions that live rent-free in forums and Facebook groups.",
       tags: ['Behavior', 'Handling', 'UVB', 'Cohab', 'Sex', 'Setup'],
     },
 
@@ -38,7 +38,7 @@ export const HANDBOOK_GUIDE = {
           cols: 3,
           items: [
             {
-              meta: 'Warning - back off',
+              meta: 'Warning: back off',
               tone: 'ruby',
               title: 'Tail wag',
               text:
@@ -56,7 +56,7 @@ export const HANDBOOK_GUIDE = {
               tone: 'fern',
               title: 'Eye licking',
               text:
-                'They have no eyelids - tongue is their windshield wiper. Often mistaken for gaping.',
+                'They have no eyelids, so the tongue is their windshield wiper. Often mistaken for gaping.',
             },
             {
               meta: 'Active / alert / stressed',
@@ -119,7 +119,7 @@ export const HANDBOOK_GUIDE = {
               tone: 'amber',
               title: 'Freezing in place',
               text:
-                "Completely still, sometimes with one foot raised. Predator instinct - they think they're hidden. Stop what you're doing.",
+                "Completely still, sometimes with one foot raised. Predator instinct: they think they're hidden. Stop what you're doing.",
             },
             {
               meta: 'Enclosure problem',
@@ -163,17 +163,17 @@ export const HANDBOOK_GUIDE = {
             {
               title: 'Handle in the evening.',
               text:
-                "They're naturally active at dusk. Daytime handling wakes them up - double the stress. Post-dinner is prime time.",
+                "They're naturally active at dusk. Daytime handling wakes them up, which doubles the stress. Post-dinner is prime time.",
             },
             {
               title: 'Keep low to soft surfaces.',
               text:
-                "Over a bed, couch, or table with towel. They leap - they don't fall accidentally. A leap from 5 feet onto tile can crack a jaw.",
+                "Over a bed, couch, or table with towel. They leap. They don't fall accidentally. A leap from 5 feet onto tile can crack a jaw.",
             },
             {
               title: '10-15 minutes is the ceiling.',
               text:
-                "Even acclimated cresties find handling stressful. More time doesn't build more trust - it just drains them.",
+                "Even acclimated cresties find handling stressful. More time doesn't build more trust. It just drains them.",
             },
             {
               title: 'Skip handling during shedding and after feeding.',
@@ -301,7 +301,7 @@ export const HANDBOOK_GUIDE = {
               tone: 'amber',
               title: 'Female + Female',
               text:
-                'Occasionally works in large enclosures with same-size females. One usually bullies. No benefit to the gecko - just stress.',
+                'Occasionally works in large enclosures with same-size females. One usually bullies. No benefit to the gecko, just stress.',
             },
             {
               meta: 'NO',
@@ -340,7 +340,7 @@ export const HANDBOOK_GUIDE = {
       kicker: 'Bioactive',
       title: 'Paper towel vs. bioactive: which is actually better?',
       lead:
-        "Bioactive enclosures look incredible and require less cleaning - but they're NOT better for every gecko or every keeper. Here's when each makes sense.",
+        "Bioactive enclosures look incredible and require less cleaning, but they're NOT better for every gecko or every keeper. Here's when each makes sense.",
       blocks: [
         {
           type: 'compare',
@@ -353,7 +353,7 @@ export const HANDBOOK_GUIDE = {
                 'Gecko is a new arrival (quarantine period)',
                 'Currently troubleshooting feeding or health',
                 'You want to observe every poop and shed',
-                "You're new to the hobby - start here",
+                "You're new to the hobby: start here",
                 'The gecko came from an unknown source',
               ],
             },
@@ -426,7 +426,7 @@ export const HANDBOOK_GUIDE = {
     // 11 - Plant selection
     {
       kicker: 'Plant Selection',
-      title: 'What to put in - and what never to.',
+      title: 'What to put in, and what never to.',
       blocks: [
         {
           type: 'compare',
@@ -435,28 +435,28 @@ export const HANDBOOK_GUIDE = {
               heading: 'GECKO-SAFE',
               tone: 'fern',
               items: [
-                'Pothos (Epipremnum) - the default. Hardy, low-light, climbs.',
-                'Bromeliads (Neoregelia) - water-holding cups. Native-mimic aesthetic.',
-                'Snake plant (Sansevieria) - dry-tolerant, strong vertical lines.',
-                'Ficus pumila (creeping fig) - covers walls and backgrounds beautifully.',
-                'Maranta (prayer plant) - broad leaves, daily movement.',
-                'Orchids (jewel / phalaenopsis) - advanced, but stunning visual payoff.',
-                'Peperomia varieties - compact, easy, huge range of textures.',
-                "Ferns (Boston, bird's nest) - humidity-loving, fills dense canopy.",
+                'Pothos (Epipremnum): the default. Hardy, low-light, climbs.',
+                'Bromeliads (Neoregelia): water-holding cups. Native-mimic aesthetic.',
+                'Snake plant (Sansevieria): dry-tolerant, strong vertical lines.',
+                'Ficus pumila (creeping fig): covers walls and backgrounds beautifully.',
+                'Maranta (prayer plant): broad leaves, daily movement.',
+                'Orchids (jewel / phalaenopsis): advanced, but stunning visual payoff.',
+                'Peperomia varieties: compact, easy, huge range of textures.',
+                "Ferns (Boston, bird's nest): humidity-loving, fills dense canopy.",
               ],
             },
             {
               heading: 'NEVER USE',
               tone: 'ruby',
               items: [
-                'Dieffenbachia - contains calcium oxalates; severe toxicity if chewed.',
-                'Philodendron (most) - similar toxicity profile to dieffenbachia.',
-                'Oleander, azalea, lily - fatal to almost all animals. Never.',
-                'Spiky / thorny plants - cactus, agave; risk of eye or foot injury.',
-                'Plants treated with pesticides - big-box nursery plants are usually treated. Rinse thoroughly OR buy from a reptile-safe nursery.',
-                'Fertilized potting soil - systemic chemicals persist in soil for months.',
-                'Pothos marble/NEON variegated - higher oxalate concentration than green. Use green pothos.',
-                'Anything with milky sap - default rule when unsure; if it bleeds white, skip it.',
+                'Dieffenbachia: contains calcium oxalates; severe toxicity if chewed.',
+                'Philodendron (most): similar toxicity profile to dieffenbachia.',
+                'Oleander, azalea, lily: fatal to almost all animals. Never.',
+                'Spiky / thorny plants: cactus, agave; risk of eye or foot injury.',
+                'Plants treated with pesticides: big-box nursery plants are usually treated. Rinse thoroughly OR buy from a reptile-safe nursery.',
+                'Fertilized potting soil: systemic chemicals persist in soil for months.',
+                'Pothos marble/NEON variegated: higher oxalate concentration than green. Use green pothos.',
+                'Anything with milky sap: default rule when unsure; if it bleeds white, skip it.',
               ],
             },
           ],
@@ -606,7 +606,7 @@ export const HANDBOOK_GUIDE = {
       kicker: 'Color Changes',
       title: 'Fire-up and fire-down, decoded.',
       lead:
-        "The same gecko can look completely different morning to night. This isn't disease, mood, or magic - it's biology. Here's how it works and what it means.",
+        "The same gecko can look completely different morning to night. This isn't disease, mood, or magic. It's biology. Here's how it works and what it means.",
       blocks: [
         {
           type: 'compare',
@@ -650,7 +650,7 @@ export const HANDBOOK_GUIDE = {
             {
               title: '"It sits in the same spot for 12 hours."',
               text:
-                "Daytime sleep. Cresties lock onto a safe perch and stay there. They're not dead - touch a branch to check.",
+                "Daytime sleep. Cresties lock onto a safe perch and stay there. They're not dead. Touch a branch to check.",
             },
             {
               title: '"It stares at me from across the room."',
@@ -669,7 +669,7 @@ export const HANDBOOK_GUIDE = {
             {
               title: '"It chirped at me!"',
               text:
-                "Startle vocalization. Common in juveniles. Harmless - they'll grow out of it.",
+                "Startle vocalization. Common in juveniles. Harmless: they'll grow out of it.",
             },
             {
               title: '"It closed its eyes while I held it."',
@@ -686,7 +686,7 @@ export const HANDBOOK_GUIDE = {
       kicker: 'Shedding',
       title: 'What actually happens, and why you rarely see it.',
       lead:
-        'Cresties eat their own shed - a nutrient recovery strategy and an anti-predator scent cleanup. This is why 90% of sheds happen without you noticing.',
+        'Cresties eat their own shed: a nutrient recovery strategy and an anti-predator scent cleanup. This is why 90% of sheds happen without you noticing.',
       blocks: [
         { type: 'heading', text: 'How often' },
         {
@@ -701,14 +701,14 @@ export const HANDBOOK_GUIDE = {
             { label: 'Seniors (10+ yr)', value: 'Gaps can stretch past 6 weeks' },
           ],
         },
-        { type: 'heading', text: 'Stuck shed - watch for' },
+        { type: 'heading', text: 'Stuck shed: watch for' },
         {
           type: 'cards',
           cols: 2,
           items: [
             {
               tone: 'ruby',
-              title: 'TOES - most critical',
+              title: 'TOES: most critical',
               text: 'Retained shed constricts blood flow. Can cost them toes or a foot. Check every shed cycle.',
             },
             {
@@ -719,7 +719,7 @@ export const HANDBOOK_GUIDE = {
             {
               tone: 'amber',
               title: 'Around eyes',
-              text: 'Rare but serious - can impair vision.',
+              text: 'Rare but serious: can impair vision.',
             },
             {
               tone: 'fern',
@@ -760,7 +760,7 @@ export const HANDBOOK_GUIDE = {
             {
               title: 'Rehoming ethically',
               text:
-                "If life changes and you need to rehome: reach out to the original breeder first, then local reptile rescues, then morph-matching forums. NEVER release - they're non-native everywhere.",
+                "If life changes and you need to rehome: reach out to the original breeder first, then local reptile rescues, then morph-matching forums. NEVER release them: they're non-native everywhere.",
             },
           ],
         },
@@ -874,7 +874,7 @@ export const HANDBOOK_GUIDE = {
       kicker: 'The Series',
       title: "Where to go next in the Keeper's Guide.",
       lead:
-        'This handbook answers the everyday questions. For specific situations - trouble, new hobby directions, or going pro - the other guides go deep.',
+        'This handbook answers the everyday questions. For specific situations (trouble, new hobby directions, or going pro) the other guides go deep.',
       blocks: [
         {
           type: 'cards',
@@ -915,7 +915,7 @@ export const HANDBOOK_GUIDE = {
       kicker: 'The Principle',
       title: 'Observe more than you interact.',
       lead:
-        "The keepers who raise the healthiest geckos are the ones who watch carefully and intervene rarely. Almost everything a crested gecko does has a reason - most of them don't require you to do anything about it.",
+        "The keepers who raise the healthiest geckos are the ones who watch carefully and intervene rarely. Almost everything a crested gecko does has a reason, and most of them don't require you to do anything about it.",
       blocks: [
         {
           type: 'callout',

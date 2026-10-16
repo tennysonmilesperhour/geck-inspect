@@ -798,7 +798,7 @@ export default function MorphDetail() {
               <p className="mb-4 leading-relaxed">
                 These morphs get mixed up with {morphName} in listings and forums. Here is the quickest way to tell them apart.
               </p>
-              <MorphLookalikes slug={slug} name={morphName} lookalikes={lookalikes} />
+              <MorphLookalikes slug={slug} name={morphName} lookalikes={lookalikes} showIdLink={!notBred} />
             </Reveal>
           )}
 

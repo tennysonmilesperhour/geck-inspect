@@ -72,7 +72,9 @@ import {
   GECK_INTELLECT_URL,
 } from '../src/data/public-links.js';
 import { loadAppModule } from './lib/load-app-module.mjs';
-import { PRICE_INDEX_SAMPLE_RULE, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
+import { morphBreedingFact, morphGeneralLinks } from './lib/morph-page-links.mjs';
+import { PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_DATA_TERMS, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
+import { GUIDE_CALCULATOR_ALIASES } from '../src/lib/genetics/calculatorCatalog.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -207,12 +209,12 @@ function morphFor(slug) {
   return MORPHS[slug] || MORPHS[MORPH_SLUG_ALIASES[slug]] || null;
 }
 
-// Per-morph calculator pages (/calculator/<slug>). Decision D13: White
-// Wall is the engine's Whiteout and Phantom Pinstripe is how the
-// recessive Phantom reads, so those two morph pages point at the
-// calculator under the engine's name. Mirrored in CalculatorMorph.jsx.
+// Per-morph calculator pages (/calculator/<slug>). Decision D13: a White
+// Wall tag is read as the engine's Whiteout, so the White Wall page points
+// at the Whiteout calculator. The aliases are the ones the live page's
+// calculator button uses (src/components/morphguide/morphCta.js).
 const CALCULATOR_SLUGS = new Set(getCalculatorMorphRoutes().map((r) => r.path.split('/').pop()));
-const CALCULATOR_FOR_MORPH = { 'white-wall': 'whiteout', 'phantom-pinstripe': 'phantom' };
+const CALCULATOR_FOR_MORPH = GUIDE_CALCULATOR_ALIASES;
 function calculatorSlugFor(slug) {
   const calc = CALCULATOR_FOR_MORPH[slug] || slug;
   return CALCULATOR_SLUGS.has(calc) ? calc : null;
@@ -355,10 +357,14 @@ function morphMeta(slug) {
   const paragraphs = [m.description, m.foundationGenetics, m.history, m.notes]
     .filter((p) => typeof p === 'string' && p.trim())
     .slice(0, 3);
+  const breedingFact = morphBreedingFact(m);
   const facts = [
     inheritance ? `Inheritance: ${inheritance.label}.` : null,
     category ? `Category: ${category.label || category.id}.` : null,
-    rarity ? `Rarity: ${rarity}.` : null,
+    // A lethal super never lives long enough to be "very rare" (the live
+    // page says the same).
+    m.doNotBreed === 'lethal' ? 'Rarity: never survives.' : rarity ? `Rarity: ${rarity}.` : null,
+    breedingFact,
     m.priceRange ? `Typical adult price: ${m.priceRange}.` : null,
     m.aliases?.length ? `Also called: ${m.aliases.join(', ')}.` : null,
   ].filter(Boolean);
@@ -387,11 +393,10 @@ function morphMeta(slug) {
     inheritance && INHERITANCE_HUB_IDS.has(inheritance.id)
       ? { name: `All ${inheritance.label.toLowerCase()} crested gecko morphs`, href: `/MorphGuide/inheritance/${inheritance.id}` }
       : null,
-    // Anchor text that names the search the Genetics Guide should win.
-    { name: 'Crested gecko genetics guide', href: '/GeneticsGuide', note: 'which morphs follow a Punnett square and which are polygenic' },
-    { name: 'Crested gecko price guide', href: '/crested-gecko-price', note: 'what each morph and quality grade sells for' },
-    { name: 'Quality Scale', href: '/QualityScale', note: 'grade your gecko from 0 to 10' },
-    { name: 'Morph ID', href: '/Recognition', note: 'identify your gecko from a top and a side photo' },
+    // Genetics guide, price guide, Quality Scale and Morph ID; a super
+    // breeders avoid making gets the safer pairing instead of the price
+    // guide and Morph ID (scripts/lib/morph-page-links.mjs).
+    ...morphGeneralLinks(m),
   ].filter(Boolean);
   const linkSections = [
     lookalikes.length ? { title: 'How to tell it apart', items: lookalikes } : null,
@@ -884,7 +889,12 @@ function genericMeta(route) {
 /** /calculator/<slug>: the generic page plus a link to the morph's own page. */
 function calculatorMorphMeta(calc, route) {
   const meta = genericMeta(route);
-  const morphSlug = Object.keys(CALCULATOR_FOR_MORPH).find((s) => CALCULATOR_FOR_MORPH[s] === calc) || calc;
+  // The gene's own page when it has one (/calculator/whiteout links to
+  // /MorphGuide/whiteout, /calculator/phantom to /MorphGuide/phantom);
+  // otherwise the page whose look the calculator reads as this gene.
+  const morphSlug = MORPHS[calc]
+    ? calc
+    : Object.keys(CALCULATOR_FOR_MORPH).find((s) => CALCULATOR_FOR_MORPH[s] === calc) || calc;
   const morph = MORPHS[morphSlug];
   if (!morph) return meta;
   return {
@@ -892,7 +902,11 @@ function calculatorMorphMeta(calc, route) {
     linkSections: [
       {
         title: 'About this morph',
-        items: [{ name: `${morph.name} morph guide`, href: `/MorphGuide/${morph.slug}`, note: 'how to identify it, genetics and price' }],
+        items: [{
+          name: `${morph.name} morph guide`,
+          href: `/MorphGuide/${morph.slug}`,
+          note: morph.priceRange ? 'how to identify it, genetics and price' : 'how to identify it and its genetics',
+        }],
       },
     ],
   };
@@ -1095,11 +1109,11 @@ function openDataMeta(route) {
     ...meta,
     bodyHeading: 'Crested gecko open data',
     bodyLead:
-      'Geck Inspect publishes what it knows about crested geckos as free data: current asking prices by trait and market (the Geck Inspect Price Index), every morph in the Morph Guide, the genetics behind the calculator, and the care guide. Please credit Geck Inspect and link to the page you used.',
+      `Geck Inspect publishes what it knows about crested geckos as free data: current asking prices by trait and market (the Geck Inspect Price Index, ${PRICE_INDEX_WHAT}), every morph in the Morph Guide, the genetics behind the calculator, and the care guide. Please credit Geck Inspect and link to the page you used.`,
     bodyParagraphs: [
       ...priceSummary(),
       `AI assistants and developers can query the same data through the MCP server at ${MCP_URL} (no key needed), read the markdown version of any morph or care page by adding .md to its address, or start at ${SITE_URL}/llms.txt.`,
-      `Prices are asking prices on open listings, not sale prices. Prices outside the US are converted to USD. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} The price, morph and genetics data are licensed CC BY 4.0; the care guide text is free to quote with a link.`,
+      `Prices are asking prices on open listings, not sale prices. Prices outside the US are converted to USD. Only full catalog checks count. ${PRICE_INDEX_SAMPLE_RULE} The morph and genetics data are licensed CC BY 4.0. Price Index: ${PRICE_DATA_TERMS} The care guide text is free to quote with a link.`,
     ],
     table: priceTable(25),
     linkSections: OPEN_DATASETS.map((d) => ({

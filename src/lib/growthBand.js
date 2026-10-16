@@ -23,6 +23,11 @@
  * post) agreed with members, not with the chart. The lower edge, which
  * drives the "below typical" warning, is unchanged.
  *
+ * PROVISIONAL: that re-fit rests on about 16 geckos with weights, most of
+ * them from one account. It stays (Tennyson's decision, 16 Oct 2026), but
+ * re-check AHEAD_WINDOW_MONTHS against members' logged weights once 50 or
+ * more geckos with a hatch date have weights from at least 5 keepers.
+ *
  * Hatch weight is about 1.5 to 3 g. Reading the stages from the facts file
  * means the chart can never disagree with the care guide.
  */
@@ -39,7 +44,8 @@ export const ADULT_MIN_G = ADULT_WEIGHT_G.min;
 export const ADULT_MAX_G = ADULT_WEIGHT_G.max;
 export const HATCH_MIN_G = HATCH_WEIGHT_G.min;
 // How far behind (lower edge) and ahead (upper edge) of the stage pace a
-// healthy gecko can run, in months.
+// healthy gecko can run, in months. AHEAD_WINDOW_MONTHS is provisional:
+// see the note above (re-check at 50+ geckos from 5+ keepers).
 export const PACE_WINDOW_MONTHS = 3;
 export const AHEAD_WINDOW_MONTHS = 6;
 
@@ -128,12 +134,18 @@ export function growthVerdict(gecko, grams, onDate = new Date()) {
     // 60 g, so a normal 50 g adult used to read "above the typical 25 to
     // 47.5 g for an adult. Watch for fat pads".
     const adultCeilingAge = UPPER_EDGE[UPPER_EDGE.length - 1][0];
-    return {
-      level: 'above', ...band, ageMonths: age,
-      text: weight > ADULT_MAX_G || age >= adultCeilingAge
-        ? `${weight} g is above the typical ${ADULT_MIN_G} to ${ADULT_MAX_G} g for an adult. Watch for fat pads and feed CGD three times a week.`
-        : `${weight} g is ahead of the typical ${range} for ${at}. Fast growth is usually fine; just keep an eye on it.`,
-    };
+    // From 18 months a gecko is an adult by the life stages, so "fast
+    // growth" no longer fits a weight inside the adult range.
+    const adultAge = STAGE_PACE[STAGE_PACE.length - 1][0];
+    let text;
+    if (weight > ADULT_MAX_G || age >= adultCeilingAge) {
+      text = `${weight} g is above the typical ${ADULT_MIN_G} to ${ADULT_MAX_G} g for an adult. Watch for fat pads and feed CGD three times a week.`;
+    } else if (age >= adultAge) {
+      text = `${weight} g is ahead of the typical ${range} for ${at}, but inside the ${ADULT_MIN_G} to ${ADULT_MAX_G} g adult range, which is fine.`;
+    } else {
+      text = `${weight} g is ahead of the typical ${range} for ${at}. Fast growth is usually fine; just keep an eye on it.`;
+    }
+    return { level: 'above', ...band, ageMonths: age, text };
   }
   return { level: 'within', ...band, ageMonths: age, text: `${weight} g is within the typical ${range} for ${at}.` };
 }

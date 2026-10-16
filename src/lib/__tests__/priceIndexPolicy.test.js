@@ -75,4 +75,25 @@ describe('Price Index minimum sample', () => {
     expect(priceTraitMorphSlug('Drippy')).toBeNull();
     expect(priceTraitMorphSlug('constructor')).toBeNull();
   });
+
+  it('links the marketplace "Phantom" label to the Phantom gene page, not Phantom Pinstripe', () => {
+    // Sellers list Phantom as the recessive gene ("Het Phantom" beside it),
+    // and the Phantom Pinstripe page says its older label does not prove
+    // the gene. The new gene pages get their labels too.
+    expect(priceTraitMorphSlug('Phantom')).toBe('phantom');
+    expect(priceTraitMorphSlug('Empty Back')).toBe('empty-back');
+    expect(priceTraitMorphSlug('Frappuccino')).toBe('frappuccino');
+    const bySlug = Object.fromEntries(MORPHS.map((m) => [m.slug, m]));
+    expect(bySlug['phantom-pinstripe'].definition).toMatch(/label alone does not establish/);
+    expect(bySlug.phantom.inheritance).toBe('recessive');
+  });
+
+  it('puts the Phantom asking prices on the Phantom page only, in the agent files', async () => {
+    const { loadPriceIndex, priceRowsForMorph } = await import('../../../scripts/lib/agent-content.mjs');
+    const index = loadPriceIndex();
+    expect(index.latest.some((r) => r.trait === 'Phantom')).toBe(true);
+    const bySlug = Object.fromEntries(MORPHS.map((m) => [m.slug, m]));
+    expect(priceRowsForMorph(index, bySlug.phantom).map((r) => r.trait)).toContain('Phantom');
+    expect(priceRowsForMorph(index, bySlug['phantom-pinstripe'])).toEqual([]);
+  });
 });

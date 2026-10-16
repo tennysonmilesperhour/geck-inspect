@@ -25,6 +25,20 @@
 export const PRICE_INDEX_MIN_LISTINGS = 30;
 export const PRICE_INDEX_THIN_LISTINGS = 100;
 
+/**
+ * What the Price Index is and how others may use it, in the words every
+ * copy uses (Tennyson's decision of 16 Oct 2026). The index is an
+ * asking-price snapshot from public marketplace listings, not "original
+ * data", and its numbers are free to cite with a link rather than CC BY
+ * 4.0. The morph and genetics data stay CC BY 4.0. The source sites are
+ * not named anywhere until counsel says otherwise. A test checks that the
+ * dataset files, llms files, /data page and MCP server say this.
+ */
+export const PRICE_INDEX_WHAT = 'an asking-price snapshot from public marketplace listings';
+export const PRICE_DATA_LICENSE = 'Free to cite with a link';
+export const PRICE_DATA_TERMS =
+  'Free to cite with a link: you may quote and cite these numbers, with a link to the page they came from.';
+
 /** Plain-language rule, for page footnotes and the dataset methodology. */
 export const PRICE_INDEX_SAMPLE_RULE =
   `A row needs at least ${PRICE_INDEX_MIN_LISTINGS} listings to be shown. ` +
@@ -44,9 +58,15 @@ export function isThinRow(row) {
 // Marketplace trait labels that name a Morph Guide page by another name.
 // "Reverse Pinstripe" has no page of its own; the Pinstripe page explains it.
 // A test checks every target is a real morph slug, since a wrong one is a 404.
+//
+// "Phantom" links to the Phantom page (the recessive gene), not to Phantom
+// Pinstripe. Sellers list it as a gene, with "Het Phantom" and "66% Het
+// Phantom" beside it, and the Phantom Pinstripe page says that older
+// appearance label does not prove the gene. Until 16 Oct 2026 there was no
+// Phantom page, so the label pointed at Phantom Pinstripe. As with every
+// trait here, the label is the seller's and does not prove genotype.
 const TRAIT_SLUGS = {
   'Tri-color': 'tricolor',
-  Phantom: 'phantom-pinstripe',
   'Red Base': 'red-base',
   'Yellow Base': 'yellow-base',
   'Extreme Harlequin': 'extreme-harlequin',
@@ -54,11 +74,12 @@ const TRAIT_SLUGS = {
   'Lilly White': 'lilly-white',
   'Soft Scale': 'soft-scale',
   'White Wall': 'white-wall',
+  'Empty Back': 'empty-back',
   'Reverse Pinstripe': 'pinstripe',
 };
 const SAME_NAME_TRAITS = new Set([
   'Harlequin', 'Pinstripe', 'Dalmatian', 'Tiger', 'Brindle', 'Axanthic', 'Cappuccino', 'Sable',
-  'Patternless', 'Lavender', 'Olive', 'Cream', 'Buckskin', 'Hypo',
+  'Patternless', 'Lavender', 'Olive', 'Cream', 'Buckskin', 'Hypo', 'Phantom', 'Frappuccino',
 ]);
 
 /** The Morph Guide slug a market trait label links to, or null. */

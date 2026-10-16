@@ -96,7 +96,7 @@ export default function MorphIndexCard({ morph, onClick }) {
             {rarity.label}
           </span>
           {isNew ? (
-            <span className="inline-flex items-center rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white shadow">
+            <span className="inline-flex items-center rounded-full bg-rose-700 px-2 py-0.5 text-xs font-bold text-white shadow">
               New
             </span>
           ) : morph.isHeroAnchor ? (

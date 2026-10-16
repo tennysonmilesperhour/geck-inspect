@@ -16,14 +16,19 @@ export const GENETICS_GUIDE_PATH = '/GeneticsGuide';
 
 export const GENETICS_GUIDE_TITLE = 'Crested Gecko Genetics: Guide to Morphs and Inheritance';
 
+// Names each gene's model next to the word "polygenic", which the genetics
+// check (scripts/check-genetics-consistency.mjs) asks of any sentence that
+// mentions both.
 export const GENETICS_GUIDE_DESCRIPTION =
-  'Crested gecko genetics in plain words: which morphs follow a Punnett square (Lilly White, Axanthic, Cappuccino), which are polygenic, and pairings to avoid.';
+  'Crested gecko genetics: Punnett squares for incomplete dominant Lilly White and Cappuccino and recessive Axanthic, polygenic looks, and pairings to avoid.';
 
+// The last sentence credits Foundation Genetics, as the guide itself does:
+// the hobby calls Harlequin, Pinstripe and Dalmatian polygenic, while the
+// engine models each as a single gene.
 export const GENETICS_GUIDE_LEAD =
   'Crested gecko genetics decides what a pairing can hatch. A few morphs are single genes you can predict with a Punnett square: ' +
   'Lilly White, Cappuccino and Soft Scale are incomplete dominant, and Axanthic is recessive. ' +
-  'Most of what you see on a crested gecko (Harlequin, Pinstripe, Dalmatian spots and base color) is polygenic, ' +
-  'so breeders select toward it over generations instead of calculating it.';
+  'Most of what you see on a crested gecko (Harlequin, Pinstripe, Dalmatian spots and base color) is polygenic, so breeders select toward it over generations instead of calculating it. (Foundation Genetics models Harlequin, Pinstripe and Dalmatian themselves as single genes; how strongly each one shows is still polygenic.)';
 
 /** Inheritance labels that mean one gene, so a Punnett square predicts the look. */
 export const SINGLE_GENE_INHERITANCE = ['recessive', 'incomplete-dominant', 'co-dominant', 'dominant'];
