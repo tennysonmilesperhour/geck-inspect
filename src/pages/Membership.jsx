@@ -7,7 +7,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { reportError } from '@/lib/telemetry';
 import { Check, CheckCircle2, ChevronDown, Sparkles, Zap, Crown, Star, Loader2, Infinity as InfinityIcon, CreditCard } from 'lucide-react';
 import { User, PageConfig } from '@/entities/all';
-import { supabase } from '@/lib/supabaseClient';
+// The Supabase client loads when a plan button needs it, not with the
+// page: signed-out visitors read pricing here (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 import SupportContactCard from '@/components/support/SupportContactCard';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import {
@@ -612,6 +614,7 @@ export default function MembershipPage() {
     captureEvent('checkout_started', { tier: tier.key, interval: cycle, intent, from_prompt: fromPrompt });
     setLoadingAction(`${tier.key}:${intent}`);
     try {
+      const supabase = await getSupabase();
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           tier: tier.key,
