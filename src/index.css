@@ -739,9 +739,10 @@ button:focus-visible {
      about 48%), so muted captions pass 4.5 to 1 on every dark surface.
      This block comes after the theme blocks and is more specific, so it
      wins for all six themes; gray-* reads the same variables.
-     data-landing-hold (a signed-out visit that opened on "/") keeps the
-     old tinted text while the homepage A/B test runs, so neither design
-     changes mid-run (docs/planning/homepage-ab-test-2026-10.md).
+     data-landing-hold (a signed-out visitor on the homepage, set by
+     index.html or src/lib/useLandingThemeHold.js) keeps the old tinted
+     text while the homepage A/B test runs, so neither design changes
+     mid-run (docs/planning/homepage-ab-test-2026-10.md).
      ------------------------------------------------------------------ */
   :root[data-theme]:not([data-landing-hold]) {
     --slate-50:  0 0% 98%;

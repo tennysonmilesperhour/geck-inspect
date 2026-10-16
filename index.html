@@ -96,7 +96,9 @@
          mid-run. They get the old Blizzard defaults (unless they saved a
          theme) and the data-landing-hold attribute, which turns off the
          October text-colour and link-underline rules in src/index.css.
-         Remove this with the experiment. -->
+         A visitor who reaches "/" inside the app (from a guide page, say)
+         gets the same hold from src/lib/useLandingThemeHold.js, which the
+         homepage calls. Remove both with the experiment. -->
     <meta name="theme-color" content="#0a1913" />
     <script>
       (function () {
