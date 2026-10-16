@@ -29,7 +29,7 @@ export function spectrumPositionFor(slug) {
   ) {
     return { track: 'features', pos: 0 };
   }
-  if (['cappuccino', 'frappuccino', 'sable', 'axanthic', 'hypo', 'albino', 'moonglow', 'lavender'].includes(slug)) {
+  if (['cappuccino', 'frappuccino', 'sable', 'axanthic', 'hypo', 'albino', 'pied', 'moonglow', 'lavender'].includes(slug)) {
     return { track: 'pigment', pos: 0 };
   }
   return null;

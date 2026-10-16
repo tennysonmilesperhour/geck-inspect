@@ -69,6 +69,7 @@ const LESSON_BY_SLUG = {
   axanthic: 'structural',
   hypo: 'structural',
   albino: 'structural',
+  pied: 'structural',
   moonglow: 'structural',
   lavender: 'structural',
 };

@@ -1072,6 +1072,53 @@ export const MORPHS = [
       'Albino plus Axanthic is the combination keepers have waited for. Albino removes black pigment and Axanthic removes yellow and red, so a gecko carrying both should have almost no pigment left: a true white animal, the long-theorized Moonglow. Nobody has produced one yet, but with albinos now hatching, it remains a hypothesis until actual offspring and inheritance are documented. Be wary of any seller offering albinos, het albinos or albino combos before the founding breeder has proven the gene.',
   },
   {
+    slug: 'pied',
+    name: 'Pied',
+    definition:
+      'A Pied (Piebald) crested gecko shows sharply bordered patches of unpigmented white or pale pinkish-white scales interrupting normal body pigment and pattern.',
+    lookalikes: [
+      {
+        slug: 'lilly-white',
+        difference: 'Lilly White creates symmetrical white dorsal saddles, crest rows and lower flank walls, whereas Pied produces random, sharply bordered unpigmented patches that cut across normal pattern and toes.',
+      },
+      {
+        slug: 'white-wall',
+        difference: 'White Wall is a structured lateral cream-white bar along the lower flank, not an unpigmented piebald interruption.',
+      },
+      {
+        slug: 'extreme-harlequin',
+        difference: 'Extreme Harlequin covers the flanks and limbs in cream or orange pattern pigment rather than patches of unpigmented white skin.',
+      },
+    ],
+    aliases: ['Piebald', 'Pied Crested Gecko', 'Pinktoe'],
+    category: 'color',
+    inheritance: 'recessive',
+    rarity: 'very_rare',
+    priceTier: '$$$$',
+    priceRange: '$2,000 to $6,000',
+    summary:
+      'Rare piebald phenotype showing sharply demarcated patches of unpigmented white and translucent pinkish-ivory scales alongside normally pigmented areas.',
+    description:
+      'A Pied (or Piebald) crested gecko displays localized, sharply bordered areas where skin and scale pigment are completely absent, leaving pure chalk-white or translucent pale pinkish-ivory patches that abruptly cut across the animal\'s normal base color and pattern. Expression ranges from low-expression "pinktoe" or pied-toe animals (unpigmented white toes and distal feet) to high-expression specimens with bold piebald saddles, limb bands and tail rings alongside normal dark-veined eyes. While isolated piebald-like anomalies (such as Pangea Reptile\'s historical "Patient Zero") failed to reproduce predictably, dedicated multi-generation projects led by breeders such as Eureka Exotics have established heritable Pied and Pinktoe lines. Because minor random white toe tips can also appear as non-heritable developmental flukes, always verify documented multi-generation lineage before treating a specimen or "het Pied" claim as proven.',
+    keyFeatures: [
+      'Sharply demarcated patches of unpigmented pure white and translucent pinkish-ivory skin',
+      'Abruptly interrupts normal dorsal, lateral, limb or tail pattern rather than following standard Harlequin or Lilly White zones',
+      'Distal limb and toe depigmentation ("pied toes" or "pinktoe") is a frequent hallmark',
+      'Normal dark-veined iris pigmentation, unlike amelanistic Albino eyes',
+      'Lineage verification is essential to separate heritable Pied lines from isolated paradox or developmental white spots',
+    ],
+    visualIdentifiers: [
+      'Look for razor-sharp borders where normal dark or warm pigment stops and unpigmented white or pinkish-white skin begins',
+      'Inspect the toes, feet and tail for translucent pinkish-white depigmented segments',
+      'Confirm documented parent-to-offspring lineage from an established Pied breeding line',
+    ],
+    history:
+      'Early one-off piebald anomalies such as Pangea Reptile\'s "Patient Zero" drew intense hobby interest but did not establish a reproducible line. Subsequent multi-generation breeding by Eureka Exotics and collaborating keepers isolated reproducible Pied and Pinktoe lines.',
+    combinesWith: ['lilly-white', 'axanthic', 'harlequin', 'pinstripe', 'phantom-pinstripe'],
+    notes:
+      'Distinguish true heritable Pied lines from isolated white toe scales or paradox blotches, which can occur sporadically without passing to offspring. Always request multi-generation pairing records when evaluating Pied or het Pied offerings.',
+  },
+  {
     slug: 'hypo',
     name: 'Hypo (Hypomelanistic)',
     definition:
