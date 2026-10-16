@@ -1,26 +1,12 @@
-import { useMemo } from 'react';
-import { KEEPERS_GUIDES } from '@/data/keepers-guides';
 import GuideSlideshow from './GuideSlideshow';
 import { BookOpen, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useKeepersGuide } from './keepersGuides';
 
-// Each care category gets at most one Keeper's Guide, based on which
-// guide actually covers that category's subject matter. Categories
-// without a clean mapping (Handling, Health, Life Stages) render
-// nothing here, the long-form section cards below cover them.
-const CATEGORY_TO_GUIDE = {
-  overview: 'handbook',
-  housing: 'setup',
-  feeding: 'feeding',
-  breeding: 'breeding',
-};
-
+// Which guide a category shows, and how the guides load, is in
+// ./keepersGuides.js. Categories without a guide render nothing here.
 export default function KeepersGuideTabs({ categoryId }) {
-  const guide = useMemo(() => {
-    const guideId = CATEGORY_TO_GUIDE[categoryId];
-    if (!guideId) return null;
-    return KEEPERS_GUIDES.find((g) => g.id === guideId) || null;
-  }, [categoryId]);
+  const guide = useKeepersGuide(categoryId);
 
   if (!guide) return null;
 
