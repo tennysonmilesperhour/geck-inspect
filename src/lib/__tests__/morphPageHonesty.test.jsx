@@ -140,7 +140,7 @@ describe('morph pages with no guide price', () => {
     expect(html).toContain('href="/crested-gecko-price"');
   });
 
-  it('says "until the trait is proven" only where the calculator badges the trait Emerging', () => {
+  it('says "until the trait is proven" unless the calculator badges the trait Proven', () => {
     const unproven = /until the trait is proven/;
     for (const slug of ['empty-back', 'super-empty-back', 'whiteout', 'super-whiteout', 'luwak', 'super-sable', 'highway']) {
       expect(calculatorBadge(slug), slug).toBe('emerging');
@@ -148,9 +148,10 @@ describe('morph pages with no guide price', () => {
     }
     expect(calculatorBadge('phantom')).toBe('proven');
     expect(pageText('phantom').text).not.toMatch(unproven);
-    // Albino is not in the calculator, so it gets no badge either way.
+    // Albino is not in the calculator (its inheritance is not shown yet),
+    // so it has no badge, and its price section keeps the caution.
     expect(calculatorBadge('albino')).toBeNull();
-    expect(pageText('albino').text).not.toMatch(unproven);
+    expect(pageText('albino').text).toMatch(unproven);
   });
 
   it('reads the badge the calculator shows', () => {

@@ -804,12 +804,14 @@ export default function MorphDetail() {
                   {/* No priceRange is a gap in this guide, not proof there
                       is no market: the Price Index has hundreds of Phantom
                       and Empty Back listings. "Until the trait is proven"
-                      only where the calculator badges the gene Emerging. */}
+                      unless the calculator badges the gene Proven: Emerging
+                      genes, and Albino, which the calculator does not model
+                      because its inheritance is not shown yet. */}
                   <p className="leading-relaxed">
                     Geck Inspect does not give a typical price for {morphName} yet. See the{' '}
                     <Link to="/crested-gecko-price" className="text-emerald-300 underline">Price Index</Link>{' '}
                     for current asking prices.
-                    {calculatorBadge(slug) === 'emerging' && ' Treat any listing with caution until the trait is proven and animals sell openly.'}
+                    {calculatorBadge(slug) !== 'proven' && ' Treat any listing with caution until the trait is proven and animals sell openly.'}
                   </p>
                 </div>
               )}
