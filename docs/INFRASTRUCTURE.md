@@ -97,7 +97,8 @@ Since 16 October 2026 each member photo in `geck-inspect-media` also has a small
 | Sticker uploads readable by anyone | read | everyone | geck-inspect-media, folder `sticker-uploads` |
 | geck-inspect-media authenticated insert | upload | authenticated | bucket is geck-inspect-media |
 | geck_inspect_media_authed_insert | upload | authenticated | bucket is geck-inspect-media |
-| geck-inspect-media thumbnails by photo owner or admin | upload (restrictive, 16 Oct 2026) | authenticated | a name under `thumbs/` only for the owner of the photo at the same name without `thumbs/`, or an admin (`20261016090900_thumbnail_insert_rule.sql`) |
+| geck-inspect-media thumbnails follow their photo (insert) | upload (restrictive, 16 Oct 2026) | authenticated | a name under `thumbs/` only for the owner of the photo at the same name without `thumbs/`, or an admin (`20261016090900_thumbnail_rules.sql`) |
+| geck-inspect-media thumbnails follow their photo (update) | update (restrictive, 16 Oct 2026) | authenticated | the same rule for a rename into `thumbs/` |
 | geck-inspect-media owner update | update | authenticated | the uploader (`owner = auth.uid()`) |
 | geck_inspect_media_owner_update | update | authenticated | the uploader |
 | geck-inspect-media owner delete | delete | authenticated | the uploader |

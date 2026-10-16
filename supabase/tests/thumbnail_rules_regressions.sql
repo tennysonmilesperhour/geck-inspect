@@ -1,16 +1,16 @@
--- Who may add a photo thumbnail (thumbs/<path> in geck-inspect-media).
--- Regression checks for supabase/migrations/20261016090900_thumbnail_insert_rule.sql.
+-- Thumbnails follow their photo (thumbs/<path> in geck-inspect-media).
+-- Regression checks for supabase/migrations/20261016090900_thumbnail_rules.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members and switches roles the way the API does
 -- (request.jwt.claims plus SET ROLE). Every change rolls back.
 --
---   psql -X -v ON_ERROR_STOP=1 -d <scratch copy> -f supabase/tests/thumbnail_insert_rule_regressions.sql
+--   psql -X -v ON_ERROR_STOP=1 -d <scratch copy> -f supabase/tests/thumbnail_rules_regressions.sql
 --
--- It checks that a member may add the thumbnail of their own photo, may
--- not add one for another member's photo or for a photo with no owner,
--- that an admin may add any thumbnail, and that ordinary uploads outside
--- thumbs/ and in other buckets are unaffected.
+-- It checks that a member may create or rename a file into the thumbnail
+-- name of their own photo, but not of another member's photo or of a photo
+-- with no owner; that an admin may do both for any photo; and that ordinary
+-- uploads and renames outside thumbs/ are unaffected.
 begin;
 
 create temp table _who (
@@ -67,6 +67,18 @@ begin
 exception when insufficient_privilege then
   return false;
 end $$;
+-- Tries a rename as the current role: 'ok', 'refused' (row security
+-- refused the new name) or 'none' (the row is not the caller's to change).
+create function pg_temp.try_rename(p_from text, p_to text) returns text language plpgsql as $$
+declare n int;
+begin
+  update storage.objects set name = p_to
+   where bucket_id = 'geck-inspect-media' and name = p_from;
+  get diagnostics n = row_count;
+  return case when n = 1 then 'ok' else 'none' end;
+exception when insufficient_privilege then
+  return 'refused';
+end $$;
 grant execute on all functions in schema pg_temp to public;
 
 select pg_temp.mk('admin');
@@ -106,7 +118,23 @@ begin
     raise exception 'FAIL: an ordinary upload outside thumbs/ was refused';
   end if;
 
-  -- 4. The admin may add any thumbnail (the backfill).
+  -- 4. Renames follow the same rule.
+  perform pg_temp.as_postgres();
+  perform pg_temp.put('uploads/' || m || '/spare.webp', pg_temp.uid('member'));
+  perform pg_temp.put('uploads/' || m || '/spare2.webp', pg_temp.uid('member'));
+  perform pg_temp.put('uploads/' || m || '/c.webp', pg_temp.uid('member'));
+  perform pg_temp.as_member('member');
+  if pg_temp.try_rename('uploads/' || m || '/spare.webp', 'thumbs/uploads/' || o || '/b2.webp') <> 'refused' then
+    raise exception 'FAIL: a member renamed a file onto another member''s thumbnail name';
+  end if;
+  if pg_temp.try_rename('uploads/' || m || '/spare.webp', 'thumbs/uploads/' || m || '/c.webp') <> 'ok' then
+    raise exception 'FAIL: a member could not rename a file onto their own photo''s thumbnail name';
+  end if;
+  if pg_temp.try_rename('uploads/' || m || '/spare2.webp', 'uploads/' || m || '/renamed.webp') <> 'ok' then
+    raise exception 'FAIL: an ordinary rename outside thumbs/ was refused';
+  end if;
+
+  -- 5. The admin may add any thumbnail (the backfill).
   perform pg_temp.as_member('admin');
   if not pg_temp.try_insert('geck-inspect-media', 'thumbs/uploads/' || o || '/b.webp') then
     raise exception 'FAIL: the admin could not add another member''s thumbnail';
@@ -118,16 +146,15 @@ begin
   perform pg_temp.as_postgres();
 end $$;
 
--- 5. The rule is restrictive, for signed-in members, and on insert only.
+-- 6. Both rules are restrictive and for signed-in members.
 do $$
 begin
-  if not exists (
-    select 1 from pg_policies
-     where schemaname = 'storage' and tablename = 'objects'
-       and policyname = 'geck-inspect-media thumbnails by photo owner or admin'
-       and permissive = 'RESTRICTIVE' and cmd = 'INSERT' and roles = '{authenticated}'
-  ) then
-    raise exception 'FAIL: the thumbnail rule is missing or not a restrictive insert rule for authenticated';
+  if (select count(*) from pg_policies
+       where schemaname = 'storage' and tablename = 'objects'
+         and policyname like 'geck-inspect-media thumbnails follow their photo (%)'
+         and permissive = 'RESTRICTIVE' and roles = '{authenticated}'
+         and cmd in ('INSERT', 'UPDATE')) <> 2 then
+    raise exception 'FAIL: the two restrictive thumbnail rules (insert and update) are not both in place';
   end if;
 end $$;
 
