@@ -30,7 +30,7 @@ import {
 import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
-import { featuresWithConsultant, pageIsLive, planNumbers } from '@/lib/membershipFeatures';
+import { featuresWithConsultant, pageIsLive, planNumbers, withoutRetiredLines } from '@/lib/membershipFeatures';
 import { lastUpgradePrompt } from '@/lib/activation';
 import { isGuestMode } from '@/lib/guestMode';
 
@@ -739,7 +739,7 @@ export default function MembershipPage() {
     return {
       tier,
       pricing,
-      features: featuresWithConsultant(tier.key, tier.features, consultantLive),
+      features: featuresWithConsultant(tier.key, withoutRetiredLines(tier.features), consultantLive),
       enterpriseLifetimeUnavailable,
       isCurrent,
       isLocked,

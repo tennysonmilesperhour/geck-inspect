@@ -27,6 +27,18 @@ export function featuresWithConsultant(tierKey, features, consultantLive) {
   return list;
 }
 
+// Plan lines that belong to a retired page (src/lib/retiredPages.js). While
+// the page is retired its line is left off the plan cards, so a member never
+// pays for something that redirects; it comes back with the page.
+const RETIRED_PAGE_LINES = [
+  { page: 'OtherReptiles', line: /additional reptiles/i },
+];
+
+/** The plan's lines without those of retired pages. */
+export function withoutRetiredLines(features) {
+  return features.filter((f) => !RETIRED_PAGE_LINES.some(({ page, line }) => isPageRetired(page) && line.test(f)));
+}
+
 /**
  * True unless every page_config row for the page is switched off, or the
  * page is retired (src/lib/retiredPages.js), whatever its rows say: the AI

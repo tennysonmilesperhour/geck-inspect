@@ -8,6 +8,13 @@
 // removed. GIFs have no thumbnail, and a path that is already a
 // thumbnail is not doubled. Used by delete-my-account and
 // admin-delete-account.
+//
+// A thumbnail is erased even when the database keeps its photo because
+// another member's gecko still shows it (a sold or transferred gecko).
+// That is deliberate: the other member's card then loads the full photo
+// until the admin thumbnail tool makes a new copy, which costs only speed,
+// while keeping the departing member's own copies would leave files of
+// theirs public after the account is gone.
 
 export const MEDIA_BUCKET = "geck-inspect-media";
 const THUMBNAIL_PREFIX = "thumbs/";

@@ -70,15 +70,16 @@ describe('Membership: three plans with who each is for and the numbers that deci
     expect(text).toContain('For breeders who pair every season');
   });
 
-  it('collapses Free to six lines with a Show all toggle, and opens all twelve', async () => {
+  it('collapses Free to six lines with a Show all toggle, and opens all eleven', async () => {
+    // Twelve lines, less the Other Reptiles one while that page is retired.
     await render();
     const freeList = () => tree.root.find((n) => n.type === 'ul' && n.props.id === 'plan-features-free');
     expect(freeList().findAllByType('li')).toHaveLength(6);
     const toggle = tree.root.find((n) => n.type === 'button' && n.props['aria-controls'] === 'plan-features-free');
     expect(toggle.props['aria-expanded']).toBe(false);
-    expect(contents(toggle)).toContain('Show all 12 Free features');
+    expect(contents(toggle)).toContain('Show all 11 Free features');
     await act(async () => toggle.props.onClick());
-    expect(freeList().findAllByType('li')).toHaveLength(12);
+    expect(freeList().findAllByType('li')).toHaveLength(11);
     expect(tree.root.find((n) => n.type === 'button' && n.props['aria-controls'] === 'plan-features-free').props['aria-expanded']).toBe(true);
     // Keeper and Breeder are short enough to show in full.
     expect(tree.root.findAll((n) => n.type === 'button' && n.props['aria-controls'] === 'plan-features-keeper')).toHaveLength(0);
