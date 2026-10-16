@@ -20,7 +20,7 @@
 
 ## Topic files (each small enough to read whole)
 
-- [Morphs](https://geckinspect.com/llms/morphs.md): every crested gecko morph with definition, identification, lookalikes, competing genetics models, sources and, where the Price Index has them, current asking prices
+- [Morphs](https://geckinspect.com/llms/morphs.md): every crested gecko morph with definition, identification, lookalikes, competing genetics models and sources, and a link to its asking prices in the Price Index where it has them
 - [Care](https://geckinspect.com/llms/care.md): housing, temperature, humidity, diet, handling, health and breeding
 - [Genetics](https://geckinspect.com/llms/genetics.md): modeled traits with inheritance and loci, super form health risks, named combos, pairings to avoid, glossary
 - [Prices](https://geckinspect.com/llms/prices.md): the Geck Inspect Price Index, an asking-price snapshot from public marketplace listings by trait in the US, South Korea, Japan and Europe
