@@ -124,14 +124,14 @@ const GONE_REDIRECTS = [
 
 // Retired pages (src/lib/retiredPages.js): unfinished surfaces next to
 // paid ones cost trust. Each old URL, in its PascalCase and lowercase
-// spelling, goes to the closest live page. These redirects are temporary
-// (307), not permanent: Tennyson keeps every retired feature to release
-// again later (16 Oct 2026), and browsers remember a permanent redirect
-// for good, so a returning feature would stay hidden from anyone who
-// had visited its old address.
-const RETIRED_REDIRECTS = RETIRED_PAGES.flatMap(({ page, to }) => {
+// spelling, goes to the closest live page. A page marked `keep` (one
+// Tennyson keeps to release again later, 16 Oct 2026) gets a temporary
+// redirect (307): browsers remember a permanent one for good, so the
+// returning feature would stay hidden from anyone who had visited its
+// old address. The rest are gone for good and stay permanent.
+const RETIRED_REDIRECTS = RETIRED_PAGES.flatMap(({ page, to, keep }) => {
   const spellings = [...new Set([`/${page}`, `/${page.toLowerCase()}`])];
-  return spellings.map((from) => ({ from, to }));
+  return spellings.map((from) => ({ from, to, permanent: !keep }));
 });
 
 /*
@@ -412,10 +412,10 @@ function buildConfig() {
         destination: to,
         permanent: true,
       })),
-      ...RETIRED_REDIRECTS.map(({ from, to }) => ({
+      ...RETIRED_REDIRECTS.map(({ from, to, permanent }) => ({
         source: from,
         destination: to,
-        permanent: false,
+        permanent,
       })),
       ...CASE_REDIRECTS.map(({ from, to }) => ({
         source: from,

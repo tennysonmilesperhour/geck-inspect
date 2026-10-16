@@ -375,72 +375,72 @@
     {
       "source": "/BreedingLoans",
       "destination": "/Breeding",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/breedingloans",
       "destination": "/Breeding",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/Mentorship",
       "destination": "/",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/mentorship",
       "destination": "/",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/Giveaways",
       "destination": "/",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/giveaways",
       "destination": "/",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/Shipping",
       "destination": "/",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/shipping",
       "destination": "/",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/BreederShipping",
       "destination": "/",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/breedershipping",
       "destination": "/",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/TrainModel",
       "destination": "/Training",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/trainmodel",
       "destination": "/Training",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/CommunityConnect",
       "destination": "/Forum",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/communityconnect",
       "destination": "/Forum",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/MorphVisualizer",
@@ -455,22 +455,22 @@
     {
       "source": "/BreedingPairs",
       "destination": "/Breeding",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/breedingpairs",
       "destination": "/Breeding",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/Marketplace",
       "destination": "/Market?tab=browse",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/marketplace",
       "destination": "/Market?tab=browse",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/Promote",

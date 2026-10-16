@@ -2,7 +2,7 @@
 
 Review item E3 23 ("retire breadth") and the menu half of E3 25 (the Today screen and the phone tabs), from Part E of `comprehensive-review-2026-10-14.md`. Built on 16 October 2026.
 
-The rule the review set: take what nobody uses out of the app behind a switch, keep every database table, and delete the code only after a month with no traffic. Nothing here deletes data. Every retired page redirects somewhere sensible, and a member who follows an old link sees one short note saying why.
+The rule the review set: take what nobody uses out of the app behind a switch and keep every database table. On 16 October Tennyson approved the list and added one rule: every retired feature's code is kept too, to release again later (section 5). Nothing here deletes data or code. Every retired page redirects somewhere sensible, and a member who follows an old link sees one short note saying why.
 
 ## 1. What was retired
 
@@ -54,28 +54,25 @@ Today lists what is due today and overdue (feedings, weigh-ins, eggs close to ha
 ## 4. How to switch one back on
 
 - **A retired page** (Promote, AI Consultant, Other Reptiles, the store): delete its entry in `RETIRED_PAGES` (`src/lib/retiredPages.js`). The page still has its line in `src/pages.config.js`, so its route comes back. To put it back in the sidebar too, add it to `NAV_GROUPS` and give it a `sidebar` block in `NAV_REGISTRY` (`src/lib/navItems.js`), check the sidebar still fits in 12 (8 in Keeper mode), and update `src/lib/navItems.derived.test.js`. Run `node scripts/build-vercel-json.mjs` so the edge redirect goes too.
-- **One catch when switching back on:** the edge redirects for the old addresses are permanent ones (HTTP 301), and browsers remember those. Someone who already visited `/Promote`, `/BreederConsultant`, `/OtherReptiles` or `/Store` after 16 October keeps landing on the redirect target when they type or bookmark that address, until their browser cache clears. Links inside the app are not affected (they never reach the edge). If a page might come back soon, make its edge redirect temporary first (302, in `scripts/build-vercel-json.mjs`).
+- **The edge redirects for kept features are temporary** (HTTP 307): each entry marked `keep: true` in `RETIRED_PAGES` (Promote, the AI Consultant, Other Reptiles, the store and the Morph Visualizer), turned into redirects by `RETIRED_REDIRECTS` in `scripts/build-vercel-json.mjs`. Browsers do not remember a temporary redirect, so a page switched back on is reachable at its old address straight away. Pages gone for good (Breeding Loans, Community Connect, the old Marketplace and the rest) keep permanent redirects. The Morph Visualizer's addresses were permanent from 2 October until this release, so the few browsers that visited them in that time keep their remembered redirect; its lowercase alias `/morph-visualizer` stays permanent.
 - **The store**: also brings back the "Make a sticker" card on gecko records (`src/components/store/StickerGeckoActions.jsx` reads the same switch).
 - **The website builder**: delete the `websiteBuilder` line in `RETIRED_FEATURES` (`src/lib/retiredPages.js`).
 - **The AI Consultant**: the Membership page lists its message allowance again only when the page is both not retired and switched on in the Pages tool (`pageIsLive` in `src/lib/membershipFeatures.js`).
 
-## 5. When the code can go
+## 5. Kept for a later release
 
-Deleting the code is the next step after a month with no traffic, and the tables stay either way.
+Tennyson's decision of 16 October 2026: every retired feature stays in the code, "in the back pocket to release later", as well as in the database. There is no deletion date. Do not delete retired code or its tables without Tennyson's say; a session that finds a retired file unused should leave it, and a review that suggests deleting one should point here.
 
-| Code | Retired | Can be deleted from | Notes |
-|---|---|---|---|
-| Morph Visualizer: `src/pages/MorphVisualizer.jsx`, `src/components/morph-visualizer/` | 2 October | 2 November | Move `src/components/morph-visualizer/data/traits.js` somewhere neutral first: `scripts/check-genetics-consistency.mjs` reads it. |
-| Guess the Price helpers in `src/lib/marketHabit.js` and their tests | 6 October | 6 November | The admin Market habit card mentions it in a comment only. |
-| Promote: `src/pages/Promote.jsx`, `src/components/promote/`, `src/lib/postCraft.js` | 16 October | 16 November | The `generate-social-post` function and the monthly `report-social-overage` job belong with it (see section 6). |
-| AI Consultant: `src/pages/BreederConsultant.jsx`, `src/lib/assistantActions.js`, `src/lib/consultantContext.js`, `src/lib/consultantConversations.js` | 16 October | 16 November | The `invoke-llm` function is shared with other features; keep it. |
-| Other Reptiles: `src/pages/OtherReptiles.jsx`, `src/components/other-reptiles/` | 16 October | 16 November | Reminders and the Dashboard still read `other_reptiles` (section 6). |
-| Supplies store: `src/pages/Store.jsx`, `src/components/store/`, `src/lib/store/` | 16 October | 16 November | `StickerGeckoActions` is used on gecko records; remove those two lines with it. |
-| Website builder: `src/components/storefront/WebsiteBuilder.jsx` | 16 October | 16 November | Keep `StorefrontWebsite` (the public page uses it) and `src/lib/storeWebsite.js`. |
-| Morph study preview: `src/components/preview/morph-study/` | never in production | when the study is finished or dropped | Developer preview only. |
+What that means in practice:
+
+- Retired pages keep their line in `src/pages.config.js`, their components and their tests, and `RETIRED_PAGES` only reroutes them. Tests keep running on them, so they stay working while they wait.
+- Shared pieces they use stay: the `invoke-llm` function (also used by admin AI tools), `generate-social-post`, `src/lib/assistantActions.js`, `src/lib/postCraft.js`, `StickerGeckoActions`, and `src/components/morph-visualizer/data/traits.js` (which `scripts/check-genetics-consistency.mjs` also reads).
+- The jobs that would act on a retired feature are switched off rather than removed: the monthly social-post overage job is unscheduled (section 6), and feeding reminders for Other Reptiles have their own switch (section 6).
+- Switching one back on is section 4. Before releasing one, check it against what changed since (the gecko record, the Today screen, the design system), since it has not had a member using it.
+- The Morph study preview (`src/components/preview/morph-study/`) was never in production; it stays a developer preview until the study is finished or dropped.
 
 ## 6. Left as they were, on purpose
 
-- **The monthly social-post overage job** (`monthly-overage-billing`, calling `report-social-overage`) is still scheduled. With no posts it bills nothing, but it touches Stripe, so switching it off is Tennyson's call, not a session's.
-- **Tennyson's own two reptiles** with feeding reminders on still get them: the daily feeding job, the Dashboard's next actions and the feeding pop-ups still read `other_reptiles`, and the reminder links to `/OtherReptiles`, which now redirects with the note. Turn the reminders off on those two records, or decide to drop reptiles from the job.
+- **The monthly social-post overage job** (`monthly-overage-billing`, calling `report-social-overage`) is unscheduled by `20261016090600_retire_overage_billing.sql`. It had never run. The function itself is still deployed; scheduling the job again is one `cron.schedule` line, and only worth doing if Promote comes back with paid overage.
+- **Feeding reminders for Other Reptiles** are off by a switch, not removed: the daily feeding job leaves `other_reptiles` out while the `app_settings` row `other_reptile_reminders_enabled` is false (`20261016090700_reptile_reminders_switch.sql`; it was Tennyson's own two reptiles). To turn them back on with the page: `update public.app_settings set value = 'true'::jsonb where key = 'other_reptile_reminders_enabled';`. The Dashboard's next actions and the feeding pop-ups in the app still show reptile feedings to their owner.
 - **The admin Pages tool** still lists pages that are no longer in the sidebar; switching one on there no longer adds it to the sidebar.
