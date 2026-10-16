@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { Navigate } from 'react-router-dom';
 import {
@@ -23,6 +23,7 @@ import {
   ListChecks,
   Scale,
   Flag,
+  ImageDown,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import PageHeader from '@/components/shared/PageHeader';
@@ -47,6 +48,11 @@ import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
 import BlogManager from '@/components/admin/blog/BlogManager';
 import TestimonialsAdmin from '@/components/admin/TestimonialsAdmin';
 import BreederVerification from '@/components/admin/BreederVerification';
+import { lazy } from '@/lib/lazyWithRetry';
+
+// Loaded only when the section opens: it carries the image resizing code,
+// which the rest of the admin panel does not need.
+const PhotoThumbnails = lazy(() => import('@/components/admin/PhotoThumbnails'));
 import AIFeedbackQueue from '@/components/morph-id/AIFeedbackQueue';
 
 /**
@@ -66,6 +72,7 @@ import AIFeedbackQueue from '@/components/morph-id/AIFeedbackQueue';
  *   Analytics          , charts + cohort breakdowns
  *   Messaging          , broadcast messages to users
  *   Changelog          , publish app changelog entries
+ *   Photo thumbnails   , make the small card copies for older member photos
  *   System             , env / supabase / build health checks
  *
  * Each section is self-contained, picking one renders just that component
@@ -122,6 +129,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'scraped_data', label: 'Scraped data', icon: Database },
       { id: 'errors', label: 'Error logs', icon: AlertOctagon },
+      { id: 'photo_thumbnails', label: 'Photo thumbnails', icon: ImageDown },
       { id: 'system', label: 'Health & build', icon: Activity },
     ],
   },
@@ -148,6 +156,7 @@ const SECTION_TITLES = {
   store: 'Store',
   scraped_data: 'Scraped data review',
   errors: 'Error logs',
+  photo_thumbnails: 'Photo thumbnails',
   system: 'System health',
 };
 
@@ -274,6 +283,12 @@ export default function AdminPanel() {
         return <ScrapedDataReview />;
       case 'errors':
         return <ErrorLogsViewer />;
+      case 'photo_thumbnails':
+        return (
+          <Suspense fallback={<p className="text-sm text-slate-400">Loading…</p>}>
+            <PhotoThumbnails />
+          </Suspense>
+        );
       case 'system':
         return <SystemHealth />;
       default:
