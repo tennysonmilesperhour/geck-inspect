@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   TODAY_DEFAULTS_FROM,
   addDays,
@@ -272,18 +272,29 @@ describe('dates', () => {
 });
 
 describe('the demo collection', () => {
+  // The guest demo dates its records from the clock when its module first
+  // loads (loadDemoToday imports it on demand, so it loads inside this
+  // test), while this test asks for a fixed day. Without a fixed clock the
+  // two drift apart: from about 24 Nov 2026 the demo had nothing due on
+  // 16 Oct, the test failed, and with it `pnpm build` and every deploy.
   it('has a sensible Today: due items, each with somewhere to go', async () => {
-    const today = '2026-10-16';
-    const demo = await loadDemoToday(today);
-    expect(demo.geckos.length).toBeGreaterThan(5);
-    expect(demo.geckos.every((g) => !g.archived)).toBe(true);
-    const view = todayView(demo, { today });
-    expect(view.cards.length + view.comingUp.length).toBeGreaterThan(0);
-    for (const card of view.cards) {
-      expect(card.title).toBeTruthy();
-      expect(card.action?.to?.startsWith('/')).toBe(true);
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-16T12:00:00.000Z'));
+    try {
+      const today = '2026-10-16';
+      const demo = await loadDemoToday(today);
+      expect(demo.geckos.length).toBeGreaterThan(5);
+      expect(demo.geckos.every((g) => !g.archived)).toBe(true);
+      const view = todayView(demo, { today });
+      expect(view.cards.length + view.comingUp.length).toBeGreaterThan(0);
+      for (const card of view.cards) {
+        expect(card.title).toBeTruthy();
+        expect(card.action?.to?.startsWith('/')).toBe(true);
+      }
+      // No em or en dashes in anything the screen says.
+      expect(JSON.stringify(view)).not.toMatch(/[\u2013\u2014]/);
+    } finally {
+      vi.useRealTimers();
     }
-    // No em or en dashes in anything the screen says.
-    expect(JSON.stringify(view)).not.toMatch(/[\u2013\u2014]/);
   });
 });
