@@ -1,11 +1,11 @@
+import IllustratedGecko from './IllustratedGecko';
 import TraitGecko from './TraitGecko';
 
 /** Visible pattern examples; no invented pictures of unverified genotypes. */
 export default function MorphQuizGlyph({ cream = 'sides', lines = 'none', spots = 'none', tone = 'normal', eyes = 'dark', className = '' }) {
   if (eyes === 'red' || tone !== 'normal' || spots === 'red') {
-    const label = eyes === 'red' ? 'Eye pigment' : spots === 'red' ? 'Red spotting' : tone === 'gray' ? 'Cool body tones' : 'Pale body tones';
-    const color = eyes === 'red' || spots === 'red' ? '#a45c54' : tone === 'gray' ? '#888c88' : '#e5dcc3';
-    return <div aria-hidden="true" className={`flex flex-col items-center justify-center gap-2 rounded-lg bg-[#f4efdf] text-[#40534b] ${className}`} style={{ aspectRatio:'3/2' }}><span className="block w-8 h-8 rounded-full border border-black/15" style={{ background:color }} /><span className="text-xs">{label}</span><span className="text-[10px]">Check real photographs</span></div>;
+    const morph = eyes === 'red' ? 'albino' : spots === 'red' ? 'super-dalmatian' : tone === 'gray' ? 'axanthic' : 'lilly-white';
+    return <IllustratedGecko decorative morph={morph} className={className} />;
   }
   return <TraitGecko decorative view={lines === 'none' ? 'side' : 'top'} className={className} traits={{ dorsal:cream === 'none' ? 0 : 1, lateral:cream === 'everywhere' ? 1 : cream === 'sides' ? .62 : 0, pinstripe:lines === 'full' ? 1 : lines === 'broken' ? .5 : 0, spots:spots === 'lots' ? 1 : spots === 'some' ? .2 : 0 }} />;
 }

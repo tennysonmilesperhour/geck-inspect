@@ -52,6 +52,8 @@ import MorphProgressBar from '@/components/morphguide/MorphProgressBar';
 import MorphSwipeNav from '@/components/morphguide/MorphSwipeNav';
 import PatternSpectrum, { spectrumPositionFor } from '@/components/morphguide/PatternSpectrum';
 import IllustratedGecko, { hasIllustration } from '@/components/morphguide/IllustratedGecko';
+import { eyeStudyForMorph } from '@/components/morphguide/MorphEyeGuide';
+
 
 const RARITY_LABELS = {
   common: 'Common',
@@ -279,8 +281,7 @@ export default function MorphDetail() {
 
         // Community photos of this morph from the gallery; nice touch if we have them.
         try {
-          const normalized = (best?.morph_name || displayName).toLowerCase();
-          const firstWord = normalized.split(/\s+/)[0];
+          const normalized = (best?.morph_name || displayName).toLowerCase().trim();
           // Reviewed photos from members only. gecko_images also holds about
           // 3,800 scraped marketplace listing photos (created_by is null),
           // which the caption below would otherwise call keeper uploads.
@@ -289,7 +290,7 @@ export default function MorphDetail() {
           const { data: imgs } = await supabase
             .from('gecko_images')
             .select('id, image_url, primary_morph, owner_profile_id')
-            .ilike('primary_morph', `%${firstWord}%`)
+            .ilike('primary_morph', `%${normalized}%`)
             .eq('verified', true)
             .not('owner_profile_id', 'is', null)
             .limit(8);
@@ -576,6 +577,14 @@ export default function MorphDetail() {
           {(keyFeatures.length > 0 || visualIdentifiers.length > 0) && (
             <Reveal as="section" id="identify" className="scroll-mt-20">
               <SectionHeading icon={Eye}>How to identify {article(morphName)} {morphName}</SectionHeading>
+              {heroImage && hasIllustration(slug) && (
+                <figure className="mb-6 overflow-hidden rounded-2xl border border-neutral-800 bg-[#f4efdf] p-3 sm:p-4">
+                  <IllustratedGecko morph={slug} className="w-full rounded-xl" />
+                  <figcaption className="mt-2 text-center text-xs font-medium text-[#564c3d]">
+                    Field guide plate: {morphName} diagnostic pattern and pigment study
+                  </figcaption>
+                </figure>
+              )}
               {keyFeatures.length > 0 && (
                 <>
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-400 mb-3">Key features</h3>
@@ -589,10 +598,49 @@ export default function MorphDetail() {
                 </>
               )}
               <p className="mt-5 text-sm text-neutral-400">Visible features can suggest comparisons, but a photograph or illustration does not establish genotype. Use several views, natural firing states and documented lineage when assessing an animal.</p>
+              {eyeStudyForMorph(slug) && (() => {
+                const eyeStudy = eyeStudyForMorph(slug);
+                return (
+                  <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 sm:p-5">
+                    <div className="grid sm:grid-cols-[220px_1fr] gap-4 items-center">
+                      <figure className="m-0 overflow-hidden rounded-xl border border-neutral-800 bg-[#f4efdf] p-2">
+                        <img
+                          src={eyeStudy.plate}
+                          alt={`${eyeStudy.name} close-up eye study`}
+                          width="900"
+                          height="600"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-auto rounded-lg block"
+                        />
+                      </figure>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                            Ocular &amp; eye pigment study
+                          </span>
+                          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+                            {eyeStudy.badge}
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold text-white mt-1">{eyeStudy.name}</h3>
+                        <p className="mt-1.5 text-sm text-neutral-300 leading-relaxed">{eyeStudy.summary}</p>
+                        <p className="mt-1.5 text-xs text-neutral-400 leading-relaxed">{eyeStudy.genetics}</p>
+                        {eyeStudy.welfareNote && (
+                          <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-950/20 p-2.5 text-xs text-amber-200/90 leading-relaxed">
+                            {eyeStudy.welfareNote}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               {localMorph?.sources?.length > 0 && <div className="mt-4 rounded-xl border border-neutral-800 p-4"><h3 className="text-sm font-semibold text-white">Specimens and breeder references</h3><ul className="mt-2 space-y-2 text-sm">{localMorph.sources.map(url => <li key={url}><a href={url} target="_blank" rel="noreferrer" className="text-emerald-300 underline">{url.includes('pangea') ? 'Pangea Reptile' : url.includes('acreptiles') ? 'AC Reptiles · project observations' : url.includes('corch') ? 'Corch Geckos · Lilly White project' : 'LIL MONSTERS · specimens and breeder model'}</a></li>)}</ul></div>}
               {spectrumPositionFor(slug) !== null && (
                 <PatternSpectrum key={slug} focusSlug={slug} className="mt-8" />
               )}
+
               <InlineMorphCta slug={slug} to="/Recognition" placement="after_identify" icon={Camera}>
                 Not sure? Upload a photo to Morph ID and get a second opinion in seconds.
               </InlineMorphCta>

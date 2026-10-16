@@ -16,8 +16,10 @@ import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseClient';
 import { fetchProjectLinePhotos } from '@/lib/publicGeckoPhotos';
-import { PROJECT_LINES, LINE_CONFIDENCE, getProjectLine, lineImageKeywords } from '@/data/project-lines';
+import { PROJECT_LINES, LINE_CONFIDENCE, getProjectLine, lineImageKeywords, projectLinePlate } from '@/data/project-lines';
 import { getMorph } from '@/data/morph-guide';
+import { fieldGuidePlate } from '@/components/morphguide/IllustratedGecko';
+
 
 const RARITY_LABELS = {
   common: 'Common',
@@ -286,6 +288,22 @@ export default function ProjectLineDetailPage() {
 
         {/* Body */}
         <section className="max-w-5xl mx-auto px-4 md:px-6 py-10 space-y-6">
+          {/* Field guide phenotype study */}
+          {projectLinePlate(line.slug) && (
+            <figure className="m-0 overflow-hidden rounded-2xl border border-slate-800 bg-[#f4efdf] p-3 sm:p-4">
+              <img
+                src={projectLinePlate(line.slug)}
+                alt={`${line.name} field guide phenotype illustration`}
+                width="1264"
+                height="848"
+                className="w-full h-auto rounded-xl block"
+              />
+              <figcaption className="mt-2.5 text-center text-xs font-medium text-[#564c3d]">
+                Field guide study: {line.name} hallmark phenotype illustration (illustrative diagram, verify lineage with breeder records)
+              </figcaption>
+            </figure>
+          )}
+
           {/* Reference photos */}
           {images.length > 0 ? (
             <div className="space-y-3">
@@ -334,7 +352,7 @@ export default function ProjectLineDetailPage() {
             <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
               <div className="text-xs uppercase tracking-wider text-slate-500 mb-2">Tagged reference photos</div>
               <p className="text-sm text-slate-400 max-w-md mx-auto">
-                No community photos tagged for {line.name} yet. See current examples on MorphMarket.
+                No community photos tagged for {line.name} yet. Compare the field guide study above or see current examples on MorphMarket.
               </p>
               {line.morphMarketSearchUrl && (
                 <a
@@ -351,7 +369,7 @@ export default function ProjectLineDetailPage() {
           )}
 
           {/* Related morph examples (clearly NOT line-specific) */}
-          {relatedMorphImages.length > 0 && (
+          {relatedMorphs.length > 0 && (
             <div className="space-y-3">
               <div className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
                 Related morph traits
@@ -360,29 +378,34 @@ export default function ProjectLineDetailPage() {
                 These are examples of the morph traits this line builds on, sourced from the morph guide. They are NOT verified {line.name} specimens, just visual references for the underlying morph type.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {relatedMorphImages.map((rm) => (
-                  <Link
-                    key={rm.slug}
-                    to={`/MorphGuide/${rm.slug}`}
-                    className="group block"
-                  >
-                    <div className="aspect-square rounded-xl overflow-hidden border border-slate-700 bg-slate-900 relative">
-                      <img
-                        src={rm.url}
-                        alt={`${rm.name} morph example`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-2">
-                        <div className="text-[11px] font-semibold text-white">{rm.name}</div>
-                        <div className="text-[10px] text-slate-400">View morph</div>
+                {relatedMorphs.slice(0, 4).map((rm) => {
+                  const dbPhoto = relatedMorphImages.find((item) => item.slug === rm.slug);
+                  const src = dbPhoto?.url || fieldGuidePlate(rm.slug);
+                  return (
+                    <Link
+                      key={rm.slug}
+                      to={`/MorphGuide/${rm.slug}`}
+                      className="group block"
+                    >
+                      <div className={`aspect-square rounded-xl overflow-hidden border border-slate-700 relative ${dbPhoto?.url ? 'bg-slate-900' : 'bg-[#f4efdf]'}`}>
+                        <img
+                          src={src}
+                          alt={`${rm.name} morph example`}
+                          className={`w-full h-full ${dbPhoto?.url ? 'object-cover' : 'object-contain'} group-hover:scale-105 transition-transform`}
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-2">
+                          <div className="text-[11px] font-semibold text-white">{rm.name}</div>
+                          <div className="text-[10px] text-slate-300">{dbPhoto?.url ? 'View morph' : 'Field guide study'}</div>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
+
 
           {/* Description */}
           <Section icon={BookOpen} title="About this line">

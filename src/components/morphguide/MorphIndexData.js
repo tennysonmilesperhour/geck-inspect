@@ -143,15 +143,17 @@ export function useMorphGuideData() {
     return out;
   }, [dbRecords]);
 
-  // Bucket community photos on every word of their morph tag, so a
-  // "harlequin pinstripe" photo falls under both words.
+  // Bucket community photos by normalized morph tag and individual words
+  // (for single-word morph names) so multi-word morphs like Extreme Brindle
+  // or Super Soft Scale only match photos of that exact morph.
   const communityByKeyword = useMemo(() => {
     const buckets = {};
     for (const img of communityImages) {
-      const tag = (img.primary_morph || '').toLowerCase();
-      if (!tag || !img.image_url) continue;
-      for (const word of tag.split(/[\s/,]+/).filter(Boolean)) {
-        (buckets[word] ||= []).push(img.image_url);
+      const norm = normMorph(img.primary_morph);
+      if (!norm || !img.image_url) continue;
+      (buckets[norm] ||= []).push(img.image_url);
+      for (const word of norm.split(/\s+/).filter(Boolean)) {
+        if (word !== norm) (buckets[`word:${word}`] ||= []).push(img.image_url);
       }
     }
     return buckets;
@@ -170,9 +172,12 @@ export function useMorphGuideData() {
   const allMorphs = useMemo(() => {
     // Cap at 6 photos per morph: plenty for a rotating preview.
     const community = (name) => {
-      if (!name) return [];
-      const firstWord = name.toLowerCase().split(/\s+/)[0];
-      return (communityByKeyword[firstWord] || []).slice(0, 6);
+      const norm = normMorph(name);
+      if (!norm) return [];
+      const exact = communityByKeyword[norm] || [];
+      if (norm.includes(' ')) return exact.slice(0, 6);
+      const wordMatches = communityByKeyword[`word:${norm}`] || [];
+      return [...exact, ...wordMatches].slice(0, 6);
     };
     const localSlugs = new Set(MORPHS.map((m) => m.slug));
     const merged = MORPHS.map((m) => {

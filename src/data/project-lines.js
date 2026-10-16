@@ -147,29 +147,29 @@ export const PROJECT_LINES = [
     priceTier: '$$',
     priceRange: '$200-$600',
     summary:
-      'Confetti-style animals with black and red dalmatian spots, white snowflake spotting, and usually a hypo neon red base.',
+      'Confetti-style Dalmatian animals expressing three distinct spot colors at once: black spots, red spots, and olive-green oil spots on a light buckskin or cream base.',
     description:
-      'Mardi Gras is a community-recognized line built on a specific visual recipe: a hypo neon red base, layered with two dalmatian spot colors (black and red), plus white snowflake spotting on top. The result reads as carnival-colored, hence the name. Multiple breeders independently work toward the look, so there is no single founder. Animals labeled Mardi Gras vary in how cleanly the recipe expresses.',
+      'Mardi Gras (often called Confetti Dalmatian) is a community-recognized Dalmatian line defined by multi-color spotting rather than a red body base. A true Mardi Gras expresses three distinct Dalmatian spot pigments on the same animal: classic ink-black spots, brick-red spots, and mossy olive-green oil spots against a clean cream, yellow, or warm buckskin ground color so all three spot colors stand out clearly.',
     visualIdentity: [
-      'Hypo neon red base color (warm, saturated, with reduced melanin)',
-      'Black dalmatian spots distributed across the body',
-      'Red dalmatian spots (a separate spot color, not just darker base)',
-      'White snowflake spotting layered on top of the pattern',
-      'Pattern reads as multi-color confetti rather than two-tone',
+      'Clean cream, yellow, or warm buckskin ground color that lets spot colors pop',
+      'Ink-black Dalmatian spots distributed across the head, dorsum, flanks, and limbs',
+      'Brick-red and ruby Dalmatian spots mixed among the black spots',
+      'Olive-green (oil) Dalmatian spots providing the third carnival spot color',
+      'Pattern reads as multi-color confetti Dalmatian spotting rather than a red-bodied gecko',
     ],
     identificationTips: [
-      'All four elements should be present: hypo red base, black dals, red dals, white snowflakes',
-      'Animals with only black dals and red base are not Mardi Gras; they are dalmatian harlequins on red base',
-      'White snowflake spotting is the trickiest element to produce and the best diagnostic',
+      'All three spot colors should be present on a light base: black spots, red spots, and olive-green oil spots',
+      'Animals that are simply red-bodied geckos with black spots are red-base Dalmatians, not Mardi Gras',
+      'Unfired or natural daylight photos make it easiest to distinguish red spots and olive-green oil spots from standard black spots',
     ],
     verificationAdvice: [
-      'Ask the seller to point out each of the four trait elements in photos',
-      'Request photos of both parents; the look is reinforced when both parents express',
+      'Ask the seller for close-up macro photos showing black, red, and olive-green spots clearly in natural light',
+      'Request photos of both parents; multi-color confetti spotting is line-bred and reinforced when both parents carry red and oil spots',
       'No central registry exists; reputation of the breeder matters more than the line name itself',
-      'Mardi Gras is a goal phenotype, not a single gene; younger animals may develop more spotting with age',
+      'Mardi Gras is a multi-spot Dalmatian phenotype rather than a single simple gene; red and oil spots often increase as juveniles mature',
     ],
     morphMarketSearchUrl: 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?q=mardi+gras',
-    relatedMorphs: ['dalmatian', 'super-dalmatian', 'harlequin'],
+    relatedMorphs: ['dalmatian', 'super-dalmatian'],
     caveats: [],
   },
   {
@@ -488,6 +488,13 @@ export function getProjectLine(slug) {
   return PROJECT_LINES.find((l) => l.slug === slug) || null;
 }
 
+export const PROJECT_LINE_PLATE_ROOT = '/morph-guide/project-lines-v1';
+
+export function projectLinePlate(slug) {
+  const line = getProjectLine(slug);
+  return line ? `${PROJECT_LINE_PLATE_ROOT}/${line.slug}.webp` : null;
+}
+
 /**
  * Image-search keywords that uniquely identify this LINE (not generic
  * morphs). Used to pull line-tagged community photos from
@@ -518,3 +525,4 @@ export function lineImageKeywords(line) {
   });
   return out;
 }
+

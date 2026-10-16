@@ -22,7 +22,7 @@ import {
   INHERITANCE,
   RARITY,
 } from '@/data/morph-guide';
-import { PROJECT_LINES, LINE_CONFIDENCE, lineImageKeywords } from '@/data/project-lines';
+import { PROJECT_LINES, LINE_CONFIDENCE, lineImageKeywords, projectLinePlate } from '@/data/project-lines';
 import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 import MorphIndexCard from '@/components/morphguide/MorphIndexCard';
 import MorphIndexHero from '@/components/morphguide/MorphIndexHero';
@@ -35,6 +35,8 @@ import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import MorphQuiz from '@/components/morphguide/MorphQuiz';
 import MorphFamilyMap from '@/components/morphguide/MorphFamilyMap';
 import PatternSpectrum from '@/components/morphguide/PatternSpectrum';
+import MorphEyeGuide from '@/components/morphguide/MorphEyeGuide';
+
 
 const MORPH_COUNT = MORPHS.length;
 
@@ -275,17 +277,28 @@ function LineCard({ line }) {
   const confidence = LINE_CONFIDENCE[line.confidence] || LINE_CONFIDENCE['community-attributed'];
   const rarity = RARITY[line.rarity] || RARITY.uncommon;
   const hasImages = Array.isArray(line.heroImages) && line.heroImages.length > 0;
+  const plate = projectLinePlate(line.slug);
   return (
     <Link
       to={`/MorphGuide/lines/${line.slug}`}
       className="group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-violet-500/50 hover:bg-slate-900 transition-all duration-200 flex flex-col"
     >
-      <div className="aspect-[4/3] bg-gradient-to-br from-violet-950/40 via-slate-900 to-slate-950 relative overflow-hidden flex items-center justify-center">
+      <div className={`aspect-[4/3] relative overflow-hidden flex items-center justify-center ${hasImages ? 'bg-gradient-to-br from-violet-950/40 via-slate-900 to-slate-950' : plate ? 'bg-[#f4efdf]' : 'bg-gradient-to-br from-violet-950/40 via-slate-900 to-slate-950'}`}>
         {hasImages ? (
           <RotatingMorphImage
             images={line.heroImages}
             alt={`${line.name} crested gecko line reference`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : plate ? (
+          <img
+            src={plate}
+            alt={`${line.name} field guide phenotype illustration`}
+            width="1264"
+            height="848"
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <>
@@ -298,16 +311,21 @@ function LineCard({ line }) {
         {hasImages && (
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent pointer-events-none" />
         )}
+        {!hasImages && plate && (
+          <span className="absolute bottom-2 right-2 rounded-full bg-slate-950/80 px-2.5 py-0.5 text-[10px] font-medium text-slate-200">
+            Field guide study
+          </span>
+        )}
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
           <span
-            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${confidence.color}`}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm ${confidence.color}`}
             title={confidence.description}
           >
             <ShieldCheck className="w-3 h-3" />
             {confidence.short}
           </span>
           <span
-            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${rarity.color}`}
+            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm ${rarity.color}`}
           >
             {rarity.label}
           </span>
@@ -336,6 +354,7 @@ function LineCard({ line }) {
     </Link>
   );
 }
+
 
 function InheritanceLegend() {
   return (
@@ -901,7 +920,10 @@ export default function MorphGuidePage() {
 
             <PatternSpectrum className="mt-12" />
 
+            <MorphEyeGuide className="mt-12" />
+
             <MorphFamilyMap morphs={allMorphs} />
+
 
             <MorphIndexCompareTable />
 

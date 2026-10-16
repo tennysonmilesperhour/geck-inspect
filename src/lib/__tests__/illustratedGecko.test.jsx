@@ -4,12 +4,14 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import TraitGecko, { traitAsset, CREST_PATHS } from '@/components/morphguide/TraitGecko';
-import IllustratedGecko, { STUDY_MORPHS, hasIllustration } from '@/components/morphguide/IllustratedGecko';
+import IllustratedGecko, { STUDY_MORPHS, fieldGuidePlate, hasIllustration } from '@/components/morphguide/IllustratedGecko';
+import MorphEyeGuide, { EYE_COLOR_STUDIES, eyeStudyForMorph } from '@/components/morphguide/MorphEyeGuide';
 import { pinSegments } from '@/components/morphguide/traitStudyMath';
 import { SPECIMENS, STUDY_LESSONS, STUDY_QUESTIONS, normalizedStudy, traitDescription } from '@/components/morphguide/patternStudy';
 import PatternSpectrum, { spectrumPositionFor } from '@/components/morphguide/PatternSpectrum';
 import { SpecimenPhoto } from '@/components/morphguide/SpecimenStudy';
 import { MORPHS } from '@/data/morph-guide';
+import { PROJECT_LINES, projectLinePlate } from '@/data/project-lines';
 vi.mock('@/lib/posthog', () => ({ captureEvent: vi.fn() }));
 const slugs = new Set(MORPHS.map(m => m.slug));
 
@@ -77,19 +79,51 @@ describe('illustrated examples', () => {
   it('has local artwork for both views and every independent pigment layer', () => {
     for (const view of ['side','top']) for (const layer of ['base','cream','pin','tiger','spots']) expect(existsSync(`public${traitAsset(view,layer)}`)).toBe(true);
   });
-  it('limits generic illustrations to supported visible patterns', () => {
-    STUDY_MORPHS.forEach(slug => { expect(slugs.has(slug)).toBe(true); expect(hasIllustration(slug)).toBe(true); });
-    for (const slug of ['albino','moonglow','axanthic','phantom-pinstripe','soft-scale','toString']) {
+  it('provides a field guide plate for every morph in the guide and rejects unknown slugs', () => {
+    expect(STUDY_MORPHS).toHaveLength(MORPHS.length);
+    for (const morph of MORPHS) {
+      expect(hasIllustration(morph.slug)).toBe(true);
+      expect(existsSync(`public${fieldGuidePlate(morph.slug)}`)).toBe(true);
+      const html = renderToStaticMarkup(<IllustratedGecko morph={morph.slug} />);
+      expect(html).toContain(fieldGuidePlate(morph.slug));
+    }
+    for (const slug of ['unknown-morph', 'toString', '']) {
       expect(hasIllustration(slug)).toBe(false);
-      const html=renderToStaticMarkup(<IllustratedGecko morph={slug} />);
-      expect(html).not.toContain('<img'); expect(html).not.toContain('<image');
+      const html = renderToStaticMarkup(<IllustratedGecko morph={slug} />);
+      expect(html).not.toContain('<img');
+      expect(html).not.toContain('<image');
     }
   });
-  it('keeps an accessible base until pigment extraction is ready rather than showing a wrong full edited plate', () => {
+  it('provides close-up eye study plates and project line field guide plates on disk', () => {
+    expect(EYE_COLOR_STUDIES).toHaveLength(6);
+    for (const study of EYE_COLOR_STUDIES) {
+      expect(existsSync(`public${study.plate}`)).toBe(true);
+    }
+    const eyeHtml = renderToStaticMarkup(<MemoryRouter><MorphEyeGuide /></MemoryRouter>);
+    expect(eyeHtml).toContain('Crested Gecko Eye Colors');
+    expect(eyeHtml).toContain(EYE_COLOR_STUDIES[0].plate);
+    expect(eyeStudyForMorph('albino')?.id).toBe('ruby-albino');
+    expect(eyeStudyForMorph('axanthic')?.id).toBe('silver-gray');
+    expect(eyeStudyForMorph('cappuccino')?.id).toBe('melanistic-dark');
+    expect(eyeStudyForMorph('harlequin')).toBeNull();
+
+    for (const line of PROJECT_LINES) {
+      const plate = projectLinePlate(line.slug);
+      expect(plate).toBe(`/morph-guide/project-lines-v1/${line.slug}.webp`);
+      expect(existsSync(`public${plate}`)).toBe(true);
+    }
+    expect(projectLinePlate('unknown-line')).toBeNull();
+  });
+  it('keeps an accessible base until pigment extraction is ready and interpolates masks smoothly without NaN', () => {
     const html=renderToStaticMarkup(<TraitGecko traits={{ dorsal:1,lateral:1,pinstripe:1,spots:1 }} />);
     expect(html).toContain('role="img"'); expect(html).toContain(traitAsset('side'));
     expect(html).not.toContain('data-layer="pinstripe"');
     expect(html).not.toContain('NaN');
+    for (const v of [0.05, 0.25, 0.5, 0.85, 1]) {
+      const midHtml = renderToStaticMarkup(<TraitGecko view="top" tone="mahogany" fired={0.6} traits={{ dorsal: v, lateral: v, pinstripe: v, tiger: v, spots: v }} />);
+      expect(midHtml).not.toContain('NaN');
+      expect(midHtml).toContain('feColorMatrix');
+    }
   });
   it('starts with real specimens and offers studio and recognition practice', () => {
     const html=renderToStaticMarkup(<MemoryRouter><PatternSpectrum focusSlug="pinstripe" /></MemoryRouter>);
@@ -98,3 +132,4 @@ describe('illustrated examples', () => {
     expect(html).toContain('/MorphGuide/pinstripe');
   });
 });
+
