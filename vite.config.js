@@ -91,6 +91,11 @@ export default defineConfig({
   // also runs every worktree's copy of the tests.
   test: {
     exclude: ['**/node_modules/**', '**/.git/**', '.claude/**'],
+    // Vercel runs the whole suite inside every deploy's build, on a busier
+    // machine than a laptop or GitHub Actions. On 16 Oct 2026 a phone-screen
+    // test that takes 0.2 s here ran past the 5 s default there and failed
+    // the deploy. A test that really hangs still fails, after 20 s.
+    testTimeout: 20_000,
   },
   define: {
     __BUILD_INFO__: JSON.stringify(BUILD_INFO),

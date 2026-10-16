@@ -12,7 +12,7 @@
 // own query client is used here, with its real two-minute default and its
 // real 'geckos_changed' listener.
 import { useState } from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, configure, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { onlineManager, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -90,6 +90,10 @@ import QuickLog from '@/pages/QuickLog';
 import Today from '@/pages/Today';
 
 installDomHarness();
+// These tests render whole phone screens. On a busy build machine (Vercel
+// runs the suite in every deploy) a screen can take over a second to
+// settle, the default wait, so the waits here allow five.
+configure({ asyncUtilTimeout: 5000 });
 
 const MANGO = { id: 'g-mango', name: 'Mango', created_by: EMAIL, archived: false, status: 'Pet' };
 const NIMBUS = { id: 'g-nimbus', name: 'Nimbus', created_by: EMAIL, archived: false, status: 'Holdback' };
