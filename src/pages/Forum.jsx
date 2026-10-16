@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { isGuestMode } from '@/lib/guestMode';
 import { nameWithoutEmail } from '@/lib/publicColumns';
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -52,6 +53,9 @@ const EMPTY_POST = { title: '', content: '', category_id: '', image_urls: [] };
 
 export default function ForumPage() {
     const blockedAuthors = useBlockedAuthors();
+    // Demo posts are labelled "Sample" on each row, so a guest never takes
+    // them for real members.
+    const guestDemo = isGuestMode();
     const [forumPrefs, setForumPrefs] = usePageSettings('forum_prefs', {
         sortOrder: 'newest',
         collapseCategories: false,
@@ -352,6 +356,7 @@ export default function ForumPage() {
                                                         {post.title}
                                                     </Link>
                                                     <p className="text-xs md:text-sm text-slate-500 truncate">
+                                                        {guestDemo && <span className="mr-1.5 rounded border border-slate-600 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-300">Sample</span>}
                                                         by {nameWithoutEmail(post.author_name, 'Geck Inspect member')} ·{' '}
                                                         {formatDistanceToNow(new Date(post.created_date), {
                                                             addSuffix: true,
@@ -373,10 +378,15 @@ export default function ForumPage() {
                                                     <MessageCircle className="w-4 h-4" />
                                                     <span>{replyCounts[post.id] || 0}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1" title="Views">
-                                                    <Eye className="w-4 h-4" />
-                                                    <span>{post.view_count || 0}</span>
-                                                </div>
+                                                {/* A post with no recorded count (the demo's
+                                                    sample posts) shows none rather than an
+                                                    invented or zero number. */}
+                                                {post.view_count != null && (
+                                                    <div className="flex items-center gap-1" title="Views">
+                                                        <Eye className="w-4 h-4" />
+                                                        <span>{post.view_count}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}

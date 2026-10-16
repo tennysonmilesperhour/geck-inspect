@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { reportError } from '@/lib/telemetry';
-import { Check, CheckCircle2, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as InfinityIcon, CreditCard } from 'lucide-react';
+import { Check, CheckCircle2, ChevronDown, Sparkles, Zap, Crown, Star, Loader2, Infinity as InfinityIcon, CreditCard } from 'lucide-react';
 import { User, PageConfig } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
@@ -28,21 +28,23 @@ import {
 import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
-import { featuresWithConsultant, pageIsLive } from '@/lib/membershipFeatures';
+import { featuresWithConsultant, pageIsLive, planNumbers } from '@/lib/membershipFeatures';
 import { lastUpgradePrompt } from '@/lib/activation';
 import { isGuestMode } from '@/lib/guestMode';
 
 /**
  * Membership / pricing page.
  *
- * Tier setup per April 2026 product decisions:
+ * Layout since October 2026 (comprehensive review B4, adversarial review
+ * "The pricing page argues against itself"): three columns, each with who
+ * it is for and the four numbers that decide it, and no "best for" badge,
+ * since Free is what suits most keepers:
  *
- *   FREE       , 10 geckos, 1 active breeding pair, community access
- *   KEEPER*    , 50 geckos, 5 active breeding pairs, Morph ID credits, etc
- *                 (*marked "Most Popular", hovering badge above the card)
- *   BREEDER    , unlimited geckos + pairs, opt-in to be featured on the
- *                 home dashboard, marketplace sync, certificates, etc
- *   ENTERPRISE, hovering "Coming Soon" badge, waitlist CTA
+ *   FREE      10 geckos, 1 active breeding pair; its long list is
+ *             collapsed to six lines with "Show all"
+ *   KEEPER    50 geckos, 5 active breeding pairs, more Morph IDs
+ *   BREEDER   unlimited geckos and pairs, marketplace sync, waitlists
+ *   ENTERPRISE a row below the three, a waitlist while off sale
  *
  * Three billing cadences are surfaced through a top-of-page toggle:
  *
@@ -72,25 +74,30 @@ import { isGuestMode } from '@/lib/guestMode';
  * while the AI Consultant page is switched on (src/lib/membershipFeatures.js).
  */
 
+// Each plan says who it is for and leads with the numbers that decide it
+// (the comprehensive review, B4 and the adversarial review's pricing
+// finding, October 2026). The feature lists are unchanged; Free's is
+// ordered so its six most useful lines show before "Show all".
 const tiers = [
   {
     key: 'free',
     name: 'FREE',
     icon: Star,
-    description: 'Perfect for getting started',
-    featured: false,
+    description: 'For keepers with up to 10 geckos. Free for good.',
     comingSoon: false,
+    // Lines shown before "Show all" on the Free card.
+    collapsedCount: 6,
     features: [
-      'Up to 10 geckos in your collection',
-      'Up to 5 additional reptiles tracked',
-      'Basic breeding log (1 active pair)',
       'Weight tracking, feeding groups, and event logging',
       'Lineage tree for your geckos',
-      'Sales records and cost tracking',
       'Automatic value estimates from real listings',
-      'One free AI Morph ID every month',
-      '1 GB of photo storage',
+      'Sales records and cost tracking',
       'Morph Guide, genetics calculator, and care guides',
+      'One free AI Morph ID every month',
+      'Up to 10 geckos in your collection',
+      'Basic breeding log (1 active pair)',
+      'Up to 5 additional reptiles tracked',
+      '1 GB of photo storage',
       'Public marketplace browsing',
       'Community forum access',
     ],
@@ -99,8 +106,7 @@ const tiers = [
     key: 'keeper',
     name: 'KEEPER',
     icon: Zap,
-    description: 'For dedicated collectors',
-    featured: true, // <-- Most Popular
+    description: 'For keepers whose collection has grown past 10 geckos.',
     comingSoon: false,
     features: [
       'Everything in Free',
@@ -116,8 +122,7 @@ const tiers = [
     key: 'breeder',
     name: 'BREEDER',
     icon: Crown,
-    description: 'For serious breeders',
-    featured: false,
+    description: 'For breeders who pair every season and sell what hatches.',
     comingSoon: false,
     features: [
       'Everything in Keeper',
@@ -134,10 +139,9 @@ const tiers = [
     key: 'enterprise',
     name: 'ENTERPRISE',
     icon: Sparkles,
-    description: 'For breeders who price by the market',
-    featured: false,
+    description: 'For breeders who price by the market.',
     // Off sale while ENTERPRISE_ON_SALE is false (see stripe-config.js):
-    // the card shows "Coming soon" and a waitlist button instead of checkout.
+    // the row shows a waitlist button instead of checkout.
     comingSoon: !ENTERPRISE_ON_SALE,
     features: [
       'Everything in Breeder',
@@ -148,6 +152,8 @@ const tiers = [
     ],
   },
 ];
+
+const PLAN_COLUMNS = ['free', 'keeper', 'breeder'];
 
 // Lifetime is only offered when a tier actually has a live Stripe price
 // for it; otherwise the toggle would lead to dead purchase buttons.
@@ -160,20 +166,21 @@ const CYCLE_OPTIONS = [
   ...(LIFETIME_AVAILABLE ? [{ key: 'lifetime', label: 'Lifetime', hint: 'Pay once' }] : []),
 ];
 
-function HoveringBadge({ children, variant = 'popular' }) {
+// Badge text sits on a solid colour dark enough for white text (the old
+// emerald-500 badge measured 3.72 to 1; WCAG AA needs 4.5).
+function HoveringBadge({ children, variant = 'current' }) {
   const styles =
-    variant === 'popular'
-      ? 'bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/30'
+    variant === 'current'
+      ? 'bg-emerald-700 text-white border-emerald-600'
       : variant === 'lifetime'
-        ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/30'
-        : 'bg-slate-700 text-slate-200 border-slate-600';
+        ? 'bg-amber-400 text-slate-950 border-amber-300'
+        : 'bg-slate-700 text-slate-100 border-slate-600';
   return (
     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
       <span
         className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${styles}`}
       >
-        {variant === 'popular' && <Flame className="w-3 h-3" />}
-        {variant === 'lifetime' && <InfinityIcon className="w-3 h-3" />}
+        {variant === 'lifetime' && <InfinityIcon className="w-3 h-3" aria-hidden="true" />}
         {children}
       </span>
     </div>
@@ -200,7 +207,7 @@ function CycleToggle({ value, onChange }) {
               active
                 ? opt.key === 'lifetime'
                   ? 'bg-amber-500 text-slate-950'
-                  : 'bg-emerald-600 text-white'
+                  : 'bg-emerald-700 text-white'
                 : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -225,12 +232,196 @@ function CycleToggle({ value, onChange }) {
   );
 }
 
+function ctaLabel(p) {
+  if (p.isCurrent) return 'Current plan';
+  if (p.enterpriseLifetimeUnavailable) return 'Not available';
+  if (p.isLocked) return 'Join the waitlist';
+  if (p.tier.key === 'free' && p.signedOut) return 'Create free account';
+  return p.pricing?.cta || 'Choose plan';
+}
+
+function PlanButton({ plan: p, onChoose }) {
+  return (
+    <Button
+      onClick={() => onChoose(p.tier, p.pricing)}
+      disabled={p.busy || p.isCurrent || p.enterpriseLifetimeUnavailable}
+      className={`w-full min-h-11 font-semibold ${
+        p.isCurrent
+          ? 'bg-slate-800 hover:bg-slate-800 text-slate-100 border border-slate-600 cursor-default disabled:opacity-100'
+          : p.lifetimeAccent
+            ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
+            : 'bg-emerald-700 hover:bg-emerald-800 text-white'
+      }`}
+    >
+      {p.busy ? (
+        <>
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          Redirecting...
+        </>
+      ) : ctaLabel(p)}
+    </Button>
+  );
+}
+
+function TrialLink({ plan: p, onChoose }) {
+  if (!p.canStartTrial) return null;
+  return (
+    <div className="text-center">
+      <button
+        type="button"
+        onClick={() => onChoose(p.tier, p.pricing, p.trialIntent)}
+        disabled={p.anyBusy}
+        className="touch:min-h-11 text-sm text-slate-100 underline underline-offset-4 decoration-emerald-400 hover:decoration-white disabled:opacity-50"
+      >
+        {p.trialBusy ? 'Starting your trial...' : `or start a ${p.trialLength}-day free trial first`}
+      </button>
+      <p className="text-xs text-slate-400 mt-1.5">
+        No charge for {p.trialLength} days. Cancel before it ends and you pay nothing.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * One plan column: name, price, who it is for, the four numbers that
+ * decide it, the feature list (Free's collapsed to its first lines with
+ * "Show all"), the buy button and the optional trial link.
+ */
+function PlanCard({ plan: p, expanded, onToggle, onChoose }) {
+  const { tier, pricing, features } = p;
+  const Icon = tier.icon;
+  const collapsible = Boolean(tier.collapsedCount) && features.length > tier.collapsedCount;
+  const shown = collapsible && !expanded ? features.slice(0, tier.collapsedCount) : features;
+  const listId = `plan-features-${tier.key}`;
+  const planName = tier.name.charAt(0) + tier.name.slice(1).toLowerCase();
+  return (
+    <div className="relative">
+      {p.isCurrent && <HoveringBadge variant="current">Current plan</HoveringBadge>}
+      {!p.isCurrent && p.lifetimeAccent && <HoveringBadge variant="lifetime">Pay once</HoveringBadge>}
+      <Card
+        className={`h-full flex flex-col ${
+          p.isCurrent
+            ? 'border-2 border-emerald-600 bg-slate-900/95'
+            : p.lifetimeAccent
+              ? 'border-amber-400/50 bg-slate-900/90'
+              : 'border-slate-700 bg-slate-900/85'
+        }`}
+      >
+        <CardHeader className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-slate-800">
+              <Icon className={`w-5 h-5 ${p.lifetimeAccent ? 'text-amber-300' : 'text-emerald-300'}`} aria-hidden="true" />
+            </div>
+            <CardTitle className="text-2xl text-white">{tier.name}</CardTitle>
+          </div>
+          <div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-bold text-white">{pricing?.price ?? 'Custom'}</span>
+              {pricing?.billing && <span className="text-slate-300 text-sm">{pricing.billing}</span>}
+            </div>
+            {/* Who the plan is for, in one line. */}
+            <p className="text-base mt-2 text-slate-100 font-medium">{tier.description}</p>
+            {pricing?.priceCaption && <p className="text-xs mt-1.5 text-slate-400">{pricing.priceCaption}</p>}
+          </div>
+          <dl className="grid grid-cols-2 gap-2" aria-label={`${planName} plan limits`}>
+            {planNumbers(tier.key).map((n) => (
+              <div key={n.label} className="rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2">
+                <dt className="text-[11px] uppercase tracking-wide text-slate-300">{n.label}</dt>
+                <dd className="text-lg font-bold text-white">{n.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </CardHeader>
+
+        <CardContent className="flex-1 flex flex-col gap-5">
+          <ul id={listId} className="space-y-2.5 flex-1">
+            {shown.map((feature) => (
+              <li key={feature} className="flex gap-3">
+                <Check className={`w-5 h-5 flex-shrink-0 ${p.lifetimeAccent ? 'text-amber-300' : 'text-emerald-400'}`} aria-hidden="true" />
+                <span className="text-sm text-slate-200">{feature}</span>
+              </li>
+            ))}
+          </ul>
+          {collapsible && (
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-controls={listId}
+              onClick={onToggle}
+              className="-mt-2 inline-flex items-center gap-1 self-start touch:min-h-11 text-sm text-slate-100 underline underline-offset-4 decoration-slate-500 hover:decoration-white"
+            >
+              {expanded ? 'Show fewer' : `Show all ${features.length} ${planName} features`}
+              <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+            </button>
+          )}
+          <PlanButton plan={p} onChoose={onChoose} />
+          <TrialLink plan={p} onChoose={onChoose} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/**
+ * Enterprise sits below the three plans as one row: it is for a different
+ * customer (commercial operations), and while it is off sale its button
+ * joins the waitlist.
+ */
+function EnterpriseRow({ plan: p, onChoose }) {
+  const { tier, pricing, features } = p;
+  const Icon = tier.icon;
+  return (
+    <section aria-labelledby="enterprise-plan-heading" className="max-w-6xl mx-auto w-full rounded-2xl border border-slate-700 bg-slate-900/80 p-5 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center gap-5">
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Icon className="w-5 h-5 text-emerald-300" aria-hidden="true" />
+            <h2 id="enterprise-plan-heading" className="text-xl font-bold text-white">{tier.name}</h2>
+            {p.isCurrent && (
+              <span className="rounded-full bg-emerald-700 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">Current plan</span>
+            )}
+            {p.isLocked && (
+              <span className="rounded-full border border-slate-600 bg-slate-800 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-100">Waitlist</span>
+            )}
+          </div>
+          <p className="text-base text-slate-100 font-medium">{tier.description}</p>
+          <ul className="text-sm text-slate-200 space-y-1">
+            {features.map((feature) => (
+              <li key={feature} className="flex gap-2">
+                <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-400" aria-hidden="true" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="md:w-64 shrink-0 space-y-2">
+          {p.isLocked ? (
+            <p className="text-sm text-slate-200">Not on sale right now. Join the waitlist and we will tell you first.</p>
+          ) : p.enterpriseLifetimeUnavailable ? (
+            <p className="text-sm text-slate-200">Lifetime is not available for Enterprise. Message support for a custom quote.</p>
+          ) : (
+            <div>
+              <span className="text-3xl font-bold text-white">{pricing?.price ?? 'Custom'}</span>
+              {pricing?.billing && <span className="text-slate-300 text-sm"> {pricing.billing}</span>}
+              {pricing?.priceCaption && <p className="text-xs mt-1 text-slate-400">{pricing.priceCaption}</p>}
+            </div>
+          )}
+          <PlanButton plan={p} onChoose={onChoose} />
+          <TrialLink plan={p} onChoose={onChoose} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function MembershipPage() {
   const [user, setUser] = useState(null);
   // Keyed `${tier}:${intent}` so the buy button and the trial button on the
   // same card spin independently.
   const [loadingAction, setLoadingAction] = useState(null);
   const [cycle, setCycle] = useState('monthly');
+  // Plans whose full feature list is open ("Show all" on Free).
+  const [expandedPlans, setExpandedPlans] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -382,8 +573,11 @@ export default function MembershipPage() {
         title: 'Enterprise waitlist',
         description: 'Tell us about your operation using the support form below.',
       });
+      // window.scrollTo did nothing here: public pages scroll inside #root,
+      // not the document. Scrolling the support card itself works in any
+      // scroll container.
       requestAnimationFrame(() => {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        document.getElementById('membership-support')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
       });
       return;
     }
@@ -509,6 +703,56 @@ export default function MembershipPage() {
 
   if (isNativePlatform()) return <NativeMembership user={user} />;
 
+  // Everything a plan's card or row needs to know, worked out once.
+  const planState = (tier) => {
+    const isEnterprise = tier.key === 'enterprise';
+    const pricing = getTierPricing(tier.key, cycle);
+    // Enterprise has no lifetime price: say so instead of showing a stale
+    // monthly number.
+    const enterpriseLifetimeUnavailable = isEnterprise && cycle === 'lifetime' && !pricing;
+    // A plan with no billing cycle on file (Free, grandfathered, app
+    // store, referral month, comped) is current on every tab; Enterprise
+    // grants are always comped.
+    const isCurrent =
+      currentTier === tier.key &&
+      (isEnterprise ? true : !currentCycle || currentCycle === cycle);
+    // Off sale (Enterprise since 15 Oct 2026, ENTERPRISE_ON_SALE in
+    // stripe-config.js): a waitlist instead of checkout, except for members
+    // who already hold it.
+    const isLocked = tier.comingSoon && !isCurrent;
+    const isKeeperPromoCard = keeperPromoAvailable && tier.key === 'keeper';
+    // The trial is opt-in on its own link, so a member who just wants to
+    // pay is never pushed through one. Recurring paid plans only, one per
+    // account, and never for a member who already pays.
+    const canStartTrial =
+      !isCurrent &&
+      !isLocked &&
+      tier.key !== 'free' &&
+      cycle !== 'lifetime' &&
+      Boolean(pricing?.price_id) &&
+      !isGrandfathered &&
+      !hasPaidPlan &&
+      (isKeeperPromoCard || !trialUsed);
+    return {
+      tier,
+      pricing,
+      features: featuresWithConsultant(tier.key, tier.features, consultantLive),
+      enterpriseLifetimeUnavailable,
+      isCurrent,
+      isLocked,
+      trialIntent: isKeeperPromoCard ? 'keeper_trial' : 'trial',
+      trialLength: isKeeperPromoCard ? KEEPER_PROMO_TRIAL_DAYS : TRIAL_DAYS,
+      canStartTrial,
+      lifetimeAccent: cycle === 'lifetime' && !isEnterprise && tier.key !== 'free',
+      signedOut: !user,
+      busy: loadingAction === `${tier.key}:purchase`,
+      trialBusy: loadingAction === `${tier.key}:trial` || loadingAction === `${tier.key}:keeper_trial`,
+      anyBusy: Boolean(loadingAction),
+    };
+  };
+  const togglePlan = (key) =>
+    setExpandedPlans((list) => (list.includes(key) ? list.filter((k) => k !== key) : [...list, key]));
+
   const planCopy = membershipShellCopy();
 
   return (
@@ -630,284 +874,22 @@ export default function MembershipPage() {
           )}
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {tiers.map((tier) => {
-            const Icon = tier.icon;
-            const isFeatured = tier.featured;
-            const isEnterprise = tier.key === 'enterprise';
-            const pricing = getTierPricing(tier.key, cycle);
-            // Enterprise has no `lifetime` row in the pricing config,
-            // surface a friendly "Not available" instead of crashing or
-            // showing stale monthly numbers.
-            const enterpriseLifetimeUnavailable = isEnterprise && cycle === 'lifetime' && !pricing;
-
-            // Enterprise is current on every tab (comped grants have no
-            // billing cycle). Free users still match only when they have no
-            // billing cycle on file.
-            // A plan with no billing cycle on file (Free, grandfathered,
-            // app store, referral month, comped) is current on every tab.
-            const isCurrent =
-              currentTier === tier.key &&
-              (isEnterprise ? true : !currentCycle || currentCycle === cycle);
-            // A tier flagged comingSoon is greyed out with a waitlist CTA,
-            // except for members who already hold it. None is today:
-            // Enterprise was on sale from 6 to 15 Oct 2026 and is now behind
-            // ENTERPRISE_ON_SALE in stripe-config.js.
-            const isEnterpriseLocked = tier.comingSoon && !isCurrent;
-            const busy = loadingAction === `${tier.key}:purchase`;
-            const trialBusy = loadingAction === `${tier.key}:trial`;
-            const anyBusy = Boolean(loadingAction);
-
-            // The Keeper card carries the longer one-time promo instead of
-            // the standard trial when the member arrived from the Promote
-            // offer (/Membership?intent=keeper_trial).
-            const isKeeperPromoCard = keeperPromoAvailable && tier.key === 'keeper';
-            const trialLength = isKeeperPromoCard ? KEEPER_PROMO_TRIAL_DAYS : TRIAL_DAYS;
-
-            // The trial is opt-in and lives on its own button, so a member
-            // who just wants to pay is never pushed through one. Offered on
-            // recurring paid plans only: lifetime is a one-time purchase and
-            // Free has nothing to trial. One per account, and there is
-            // nothing to trial once you already hold a paid plan.
-            const canStartTrial =
-              !isCurrent &&
-              !isEnterpriseLocked &&
-              tier.key !== 'free' &&
-              cycle !== 'lifetime' &&
-              Boolean(pricing?.price_id) &&
-              !isGrandfathered &&
-              !hasPaidPlan &&
-              (isKeeperPromoCard || !trialUsed);
-
-            // Lifetime tab gets an amber accent so it visually reads as
-            // a different commercial proposition from the recurring tabs.
-            const lifetimeAccent = cycle === 'lifetime' && !isEnterprise && tier.key !== 'free';
-
-            return (
-              <div key={tier.key} className="relative">
-                {/* "Most popular" was not true (one paying member per
-                    plan, October 2026), so the badge says who it fits. */}
-                {isFeatured && cycle !== 'lifetime' && !isCurrent && (
-                  <HoveringBadge variant="popular">Best for most keepers</HoveringBadge>
-                )}
-                {isFeatured && cycle === 'lifetime' && (
-                  <HoveringBadge variant="lifetime">Best Value</HoveringBadge>
-                )}
-                {isEnterpriseLocked && (
-                  <HoveringBadge variant="coming">Coming Soon</HoveringBadge>
-                )}
-                {isCurrent && (
-                  <HoveringBadge variant={tier.key === 'enterprise' ? 'lifetime' : 'popular'}>
-                    Current plan
-                  </HoveringBadge>
-                )}
-                <Card
-                  className={`h-full flex flex-col transition-all duration-300 ${
-                    isCurrent && tier.key === 'enterprise'
-                      ? 'border-2 border-amber-400 bg-slate-900/95 shadow-2xl shadow-amber-500/30'
-                      : lifetimeAccent && isFeatured
-                        ? 'border-2 border-amber-500 bg-slate-900/95 shadow-2xl shadow-amber-500/20'
-                        : lifetimeAccent
-                          ? 'border-amber-500/40 bg-slate-900/85 hover:border-amber-400/60 hover:shadow-lg hover:shadow-amber-500/10'
-                          : isFeatured
-                            ? 'border-2 border-emerald-500 bg-slate-900/95 shadow-2xl shadow-emerald-500/20'
-                            : isEnterpriseLocked
-                              ? 'border-slate-700 bg-slate-900/50 opacity-80'
-                              : 'border-slate-700 bg-slate-900/80 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10'
-                  }`}
-                >
-                  <CardHeader className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`p-3 rounded-lg ${
-                          lifetimeAccent
-                            ? 'bg-amber-500/20'
-                            : isFeatured
-                              ? 'bg-emerald-500/20'
-                              : isEnterpriseLocked
-                                ? 'bg-slate-700/50'
-                                : 'bg-slate-800'
-                        }`}
-                      >
-                        <Icon
-                          className={`w-6 h-6 ${
-                            lifetimeAccent
-                              ? 'text-amber-300'
-                              : isFeatured
-                                ? 'text-emerald-400'
-                                : isEnterpriseLocked
-                                  ? 'text-slate-400'
-                                  : tier.key === 'enterprise'
-                                    ? 'text-amber-300'
-                                    : 'text-slate-300'
-                          }`}
-                        />
-                      </div>
-                      <CardTitle
-                        className={`text-2xl ${
-                          lifetimeAccent
-                            ? 'text-amber-200'
-                            : isFeatured
-                              ? 'text-emerald-300'
-                              : isEnterpriseLocked
-                                ? 'text-slate-400'
-                                : tier.key === 'enterprise'
-                                  ? 'text-amber-200'
-                                  : 'text-white'
-                        }`}
-                      >
-                        {tier.name}
-                      </CardTitle>
-                    </div>
-
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span
-                          className={`${isEnterpriseLocked ? 'text-2xl' : 'text-4xl'} font-bold ${
-                            lifetimeAccent
-                              ? 'text-amber-200'
-                              : isFeatured
-                                ? 'text-emerald-300'
-                                : isEnterpriseLocked
-                                  ? 'text-slate-400'
-                                  : tier.key === 'enterprise'
-                                    ? 'text-amber-200'
-                                    : 'text-white'
-                          }`}
-                        >
-                          {isEnterpriseLocked ? 'Coming soon' : enterpriseLifetimeUnavailable ? '-' : (pricing?.price ?? 'Custom')}
-                        </span>
-                        {!isEnterpriseLocked && !enterpriseLifetimeUnavailable && pricing?.billing && (
-                          <span className="text-slate-400 text-sm">{pricing.billing}</span>
-                        )}
-                      </div>
-                      <p
-                        className={`text-sm mt-2 ${
-                          lifetimeAccent
-                            ? 'text-amber-200/80'
-                            : isFeatured
-                              ? 'text-emerald-200/80'
-                              : isEnterpriseLocked
-                                ? 'text-slate-500'
-                                : 'text-slate-400'
-                        }`}
-                      >
-                        {tier.description}
-                      </p>
-                      {/* A plan nobody can buy yet shows no price or billing
-                          promise ("Billed monthly, starting today"). */}
-                      {isEnterpriseLocked ? (
-                        <p className="text-xs mt-1.5 text-slate-500 italic">
-                          Not on sale right now. Join the waitlist and we will tell you first.
-                        </p>
-                      ) : (pricing?.priceCaption || enterpriseLifetimeUnavailable) && (
-                        <p className="text-xs mt-1.5 text-slate-500 italic">
-                          {enterpriseLifetimeUnavailable
-                            ? 'Lifetime not available for Enterprise, message support for a custom quote.'
-                            : pricing.priceCaption}
-                        </p>
-                      )}
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="flex-1 flex flex-col gap-6">
-                    <ul className="space-y-3 flex-1">
-                      {featuresWithConsultant(tier.key, tier.features, consultantLive).map((feature, idx) => (
-                        <li key={idx} className="flex gap-3">
-                          <Check
-                            className={`w-5 h-5 flex-shrink-0 ${
-                              lifetimeAccent
-                                ? 'text-amber-400'
-                                : isFeatured
-                                  ? 'text-emerald-400'
-                                  : isEnterpriseLocked
-                                    ? 'text-slate-500'
-                                    : tier.key === 'enterprise'
-                                      ? 'text-amber-400'
-                                      : 'text-slate-400'
-                            }`}
-                          />
-                          <span
-                            className={`text-sm ${
-                              isFeatured
-                                ? 'text-slate-100'
-                                : isEnterpriseLocked
-                                  ? 'text-slate-500'
-                                  : 'text-slate-300'
-                            }`}
-                          >
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      onClick={() => handleCTA(tier, pricing)}
-                      disabled={busy || isCurrent || enterpriseLifetimeUnavailable}
-                      className={`w-full font-semibold ${
-                        isCurrent
-                          ? tier.key === 'enterprise'
-                            ? 'bg-amber-500 hover:bg-amber-500 text-slate-950 cursor-default'
-                            : 'bg-emerald-600 hover:bg-emerald-600 text-white cursor-default'
-                          : lifetimeAccent && isFeatured
-                            ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
-                            : lifetimeAccent
-                              ? 'bg-amber-600/90 hover:bg-amber-500 text-slate-950'
-                              : isFeatured
-                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                                : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
-                      }`}
-                    >
-                      {busy ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Redirecting...
-                        </>
-                      ) : isCurrent ? (
-                        'Current plan'
-                      ) : enterpriseLifetimeUnavailable ? (
-                        'Not available'
-                      ) : isEnterpriseLocked ? (
-                        'Join the waitlist'
-                      ) : tier.key === 'free' && !user ? (
-                        'Create free account'
-                      ) : (
-                        pricing?.cta || 'Choose plan'
-                      )}
-                    </Button>
-
-                    {canStartTrial && (
-                      <div className="-mt-3 text-center">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCTA(
-                              tier,
-                              pricing,
-                              isKeeperPromoCard ? 'keeper_trial' : 'trial',
-                            )
-                          }
-                          disabled={anyBusy}
-                          className="touch:min-h-11 text-sm text-emerald-400 hover:text-emerald-300 underline underline-offset-4 disabled:opacity-50"
-                        >
-                          {trialBusy
-                            ? 'Starting your trial...'
-                            : `or start a ${trialLength}-day free trial first`}
-                        </button>
-                        <p className="text-xs text-slate-500 mt-1.5">
-                          No charge for {trialLength} days. Cancel before it ends and you
-                          pay nothing.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            );
-          })}
+        {/* Plans: three columns (Free, Keeper, Breeder), each saying who
+            it is for with the numbers that decide it, and Enterprise as a
+            row underneath. */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto w-full">
+          {PLAN_COLUMNS.map((key) => (
+            <PlanCard
+              key={key}
+              plan={planState(tiers.find((t) => t.key === key))}
+              expanded={expandedPlans.includes(key)}
+              onToggle={() => togglePlan(key)}
+              onChoose={handleCTA}
+            />
+          ))}
         </div>
+
+        <EnterpriseRow plan={planState(tiers.find((t) => t.key === 'enterprise'))} onChoose={handleCTA} />
 
         {/* Visible FAQ, the same list as the FAQPage structured data. */}
         <section aria-labelledby="membership-faq-heading" className="max-w-3xl mx-auto w-full">
@@ -934,7 +916,7 @@ export default function MembershipPage() {
         </div>
 
         {/* Support contact, in-app ticket instead of mailto */}
-        <div className="max-w-2xl mx-auto w-full">
+        <div id="membership-support" className="max-w-2xl mx-auto w-full scroll-mt-6">
           <SupportContactCard title="Questions about a plan? Message support." />
         </div>
       </div>

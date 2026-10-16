@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Skull, DollarSign, HelpCircle } from 'lucide-react';
+import { Flower2, DollarSign, HelpCircle } from 'lucide-react';
 import SaleDetailsFields, { initialSaleDetails, saleDetailsPatch } from '@/components/business/SaleDetailsFields';
 
 const REASONS = [
-  { value: 'death', label: 'Passed Away', icon: Skull, color: 'border-red-500 text-red-400 bg-red-900/20 hover:bg-red-900/40' },
+  // A quiet flower in neutral colours: this is a loss, not an error.
+  { value: 'death', label: 'Passed away', icon: Flower2, color: 'border-slate-400 text-slate-100 bg-slate-800 hover:bg-slate-700' },
   { value: 'sold', label: 'Sold', icon: DollarSign, color: 'border-blue-500 text-blue-400 bg-blue-900/20 hover:bg-blue-900/40' },
   { value: 'other', label: 'Other', icon: HelpCircle, color: 'border-slate-500 text-slate-300 bg-slate-800 hover:bg-slate-700' },
 ];
 
 /**
- * Asks why a gecko is being archived. "Passed Away" and "Other" confirm
+ * Asks why a gecko is being archived. "Passed away" and "Other" confirm
  * straight away; "Sold" first asks what it sold for, so Business Tools
  * has the real price. onConfirm(reason, extraFields).
  *

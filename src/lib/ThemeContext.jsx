@@ -57,16 +57,23 @@ export const THEMES = [
   },
 ];
 
-// New profiles default to Blizzard for both primary theme and accent.
-// Existing users keep whatever they already saved in localStorage; the
-// default only applies when nothing is stored yet.
-export const DEFAULT_THEME = 'blizzard';
+// New visitors start on Emerald (comprehensive review B4, October 2026:
+// the old Blizzard default painted every page blue and put four accent
+// colours on one screen). Anyone with a theme already saved, on this
+// device or on their profile, keeps it.
+//
+// Until October 2026 the default itself was saved the first time the app
+// loaded, so a stored value did not mean a member chose it (115 of 147
+// profiles held blizzard/blizzard on 16 Oct). From now on a value is only
+// saved once the member picks one in Settings, so people who never pick
+// follow the default.
+export const DEFAULT_THEME = 'normal';
 const STORAGE_KEY = 'geckinspect.theme';
 const VALID_IDS = new Set(THEMES.map((t) => t.id));
 
 // Secondary "Accent color" is independent of the primary theme.
 // Reuses the same six morph IDs since each maps cleanly to a hue.
-export const DEFAULT_SECONDARY = 'blizzard';
+export const DEFAULT_SECONDARY = 'normal';
 const SECONDARY_STORAGE_KEY = 'geckinspect.secondary';
 
 export const SECONDARY_COLORS = [
@@ -78,13 +85,17 @@ export const SECONDARY_COLORS = [
   { id: 'super-hypo',     label: 'Hypo',      swatch: '#eab308', description: 'Golden yellow accents' },
 ];
 
-function readStored(key, validSet, fallback) {
-  if (typeof window === 'undefined') return fallback;
+function readStoredValue(key, validSet) {
+  if (typeof window === 'undefined') return null;
   try {
     const stored = window.localStorage.getItem(key);
     if (stored && validSet.has(stored)) return stored;
   } catch {}
-  return fallback;
+  return null;
+}
+
+function readStored(key, validSet, fallback) {
+  return readStoredValue(key, validSet) || fallback;
 }
 
 function applyAttribute(name, value) {
@@ -163,6 +174,11 @@ export const ThemeProvider = ({ children }) => {
   const [secondary, setSecondaryState] = useState(() =>
     readStored(SECONDARY_STORAGE_KEY, VALID_IDS, DEFAULT_SECONDARY)
   );
+  // Whether each value is the member's own (saved earlier, synced from
+  // their profile, or picked now) rather than the default. Only their own
+  // values are written back, so the default is never saved as a choice.
+  const themeIsOwn = useRef(readStoredValue(STORAGE_KEY, VALID_IDS) != null);
+  const secondaryIsOwn = useRef(readStoredValue(SECONDARY_STORAGE_KEY, VALID_IDS) != null);
 
   // Cloud writes are gated until we've confirmed the auth state. On cold
   // page loads the save effect would otherwise fire before
@@ -189,9 +205,11 @@ export const ThemeProvider = ({ children }) => {
       if (cancelled || !cloud) return;
       skipCloudWrite.current = true;
       if (cloud.ui_theme && VALID_IDS.has(cloud.ui_theme)) {
+        themeIsOwn.current = true;
         setThemeState(cloud.ui_theme);
       }
       if (cloud.ui_secondary && VALID_IDS.has(cloud.ui_secondary)) {
+        secondaryIsOwn.current = true;
         setSecondaryState(cloud.ui_secondary);
       }
       // Allow the upcoming state-effect ticks to write to localStorage
@@ -229,23 +247,28 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     applyAttribute('data-theme', theme);
     applyStatusBar(theme);
+    if (!themeIsOwn.current) return;
     try { window.localStorage.setItem(STORAGE_KEY, theme); } catch {}
     if (authReady && !skipCloudWrite.current) saveCloudPref('ui_theme', theme);
   }, [theme, authReady]);
 
   useEffect(() => {
     applyAttribute('data-secondary', secondary);
+    if (!secondaryIsOwn.current) return;
     try { window.localStorage.setItem(SECONDARY_STORAGE_KEY, secondary); } catch {}
     if (authReady && !skipCloudWrite.current) saveCloudPref('ui_secondary', secondary);
   }, [secondary, authReady]);
 
+  // Called from the Settings pickers: the member's own choice, saved.
   const setTheme = useCallback((nextId) => {
     if (!VALID_IDS.has(nextId)) return;
+    themeIsOwn.current = true;
     setThemeState(nextId);
   }, []);
 
   const setSecondary = useCallback((nextId) => {
     if (!VALID_IDS.has(nextId)) return;
+    secondaryIsOwn.current = true;
     setSecondaryState(nextId);
   }, []);
 

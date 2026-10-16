@@ -29,6 +29,7 @@ import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import GeckoCard from '../components/my-geckos/GeckoCard';
+import ArchiveStatusChip from '@/components/my-geckos/ArchiveStatusChip';
 import GeckoForm from '../components/my-geckos/GeckoForm';
 import WeighInMode from '../components/my-geckos/WeighInMode';
 import QuickAddGecko from '../components/my-geckos/QuickAddGecko';
@@ -653,7 +654,7 @@ export default function MyGeckosPage() {
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
                                 <Select value={collectionPrefs.defaultSort} onValueChange={(v) => { setCollectionPrefs({ defaultSort: v }); setSortBy(v); }}>
-                                    <SelectTrigger className="w-full h-8 text-xs">
+                                    <SelectTrigger aria-label="Default sort" className="w-full h-8 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -865,7 +866,7 @@ export default function MyGeckosPage() {
                         </div>
                         <div className="flex items-center gap-2 md:shrink-0">
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="flex-1 min-w-0 md:flex-none md:w-44 !h-8 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
+                                <SelectTrigger aria-label="Sort geckos" className="flex-1 min-w-0 md:flex-none md:w-44 !h-8 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                         <SelectValue placeholder="Sort" />
@@ -1159,13 +1160,7 @@ export default function MyGeckosPage() {
                                                                        <span className="text-xs bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-0.5 rounded-full">{gecko.species}</span>
                                                                     )}
                                                                     {showArchived && gecko.archive_reason && (
-                                                                        <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                                                                            gecko.archive_reason === 'death' ? 'border-red-700 text-red-400 bg-red-900/20' :
-                                                                            gecko.archive_reason === 'sold' ? 'border-blue-700 text-blue-400 bg-blue-900/20' :
-                                                                            'border-slate-600 text-slate-400 bg-slate-800'
-                                                                        }`}>
-                                                                            {gecko.archive_reason === 'death' ? 'Passed Away' : gecko.archive_reason === 'sold' ? 'Sold' : 'Other'}
-                                                                        </span>
+                                                                        <ArchiveStatusChip reason={gecko.archive_reason} />
                                                                     )}
                                                                 </div>
                                                                 {gecko.morphs_traits && (

@@ -37,3 +37,31 @@ export function pageIsLive(rows) {
   if (!Array.isArray(rows) || rows.length === 0) return false;
   return rows.some((r) => r?.is_enabled !== false && !isPageRetired(r?.page_name));
 }
+
+function formatStorage(bytes) {
+  if (bytes == null) return 'Unlimited';
+  return `${Math.round(bytes / (1024 * 1024 * 1024))} GB`;
+}
+
+const countLabel = (n) => (n == null || n === Infinity ? 'Unlimited' : String(n));
+
+// Active breeding pairs by plan. The app enforces these in
+// PlanLimitChecker (PLAN_LIMITS.breeding_pairs); a test keeps the two equal.
+export const ACTIVE_PAIR_LIMITS = { free: 1, keeper: 5, breeder: null, enterprise: null };
+
+/**
+ * The four numbers that decide between plans on the Membership page,
+ * read from the limits the app enforces (TIER_LIMITS, and the breeding
+ * pair limits mirrored from PlanLimitChecker), so a card can never promise more
+ * than a member actually gets.
+ */
+export function planNumbers(tierKey) {
+  const limits = TIER_LIMITS[tierKey] || TIER_LIMITS.free;
+  const pairs = tierKey in ACTIVE_PAIR_LIMITS ? ACTIVE_PAIR_LIMITS[tierKey] : ACTIVE_PAIR_LIMITS.free;
+  return [
+    { label: 'Geckos', value: countLabel(limits.maxGeckos) },
+    { label: 'Active pairs', value: countLabel(pairs) },
+    { label: 'Morph IDs a month', value: countLabel(limits.monthlyMorphIDCredits) },
+    { label: 'Photo storage', value: formatStorage(limits.maxStorageBytes) },
+  ];
+}

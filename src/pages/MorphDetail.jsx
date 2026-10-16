@@ -39,6 +39,7 @@ import { galleryMorphTerm } from '@/lib/morphGallery';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
+import { licenseLabel } from '@/lib/imageLicenses';
 import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
 import ReportContent from '@/components/support/ReportContent';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
@@ -554,7 +555,9 @@ export default function MorphDetail() {
             one-sentence definition and a photo, all on the first screen. */}
         <header className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-5 md:gap-10 md:items-center">
           <div>
-            <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-500 mb-3">
+            {/* neutral-400, not 500: #737373 on the page background measured 3.8
+                to 1 in an axe pass (October 2026); small text needs 4.5. */}
+            <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-400 mb-3">
               <Link
                 to="/MorphGuide"
                 onClick={(e) => backToGuide(e, 'breadcrumb_all_morphs')}
@@ -581,7 +584,7 @@ export default function MorphDetail() {
               {facts.map(({ label, value, to }) => {
                 const inner = (
                   <>
-                    <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</dt>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</dt>
                     <dd className="mt-0.5 text-sm font-semibold text-neutral-100 leading-snug">{value}</dd>
                   </>
                 );
@@ -606,7 +609,7 @@ export default function MorphDetail() {
               {seo.definition}
             </p>
 
-            <p className="mt-3 text-xs text-neutral-500">{bylineText(path)}</p>
+            <p className="mt-3 text-xs text-neutral-400">{bylineText(path)}</p>
           </div>
 
           <HeroImage src={heroImage} name={morphName} slug={slug} category={localMorph?.category} invitePhoto={isLivingMorph(localMorph)} />
@@ -803,40 +806,42 @@ export default function MorphDetail() {
             <Reveal as="section" id="photos" className="scroll-mt-20">
               <SectionHeading icon={Images}>{morphName} photos</SectionHeading>
 
-              {/* Reference photos pulled from geck-data: external licensed
-                  sources tagged with this morph. Each card carries an
-                  attribution line so license terms stay visible. */}
+              {/* Reference photos pulled from geck-data: outside photos whose
+                  licence allows commercial use (src/lib/imageLicenses.js).
+                  The credit and licence sit under every photo, always
+                  visible, as CC BY asks; they used to appear only on hover,
+                  so phones never showed them. */}
               {referenceImages.length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-white mb-1">Reference photos</h3>
                   <p className="text-sm text-neutral-400 mb-4">
-                    Curated reference set drawn from external CC-licensed sources.
+                    Photos from outside sources, shared under licences that allow use with credit. Each one is credited below it.
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {referenceImages.map((img, i) => {
                       const image = (
                         <img
                           src={img.url}
-                          alt={`${morphName} reference photo`}
+                          alt={`${morphName} reference photo${img.attribution ? `, ${img.attribution}` : ''}`}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
                       );
+                      const licence = licenseLabel(img.license);
                       return (
-                        <div
-                          key={`ref-${i}`}
-                          className="aspect-square rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 relative group"
-                        >
-                          {img.source_url ? (
-                            <a href={img.source_url} target="_blank" rel="noopener noreferrer">{image}</a>
-                          ) : image}
-                          {(img.attribution || img.license) && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-xs text-neutral-200 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {img.attribution ? <div className="truncate">{img.attribution}</div> : null}
-                              {img.license ? <div className="text-neutral-400">{img.license}</div> : null}
-                            </div>
-                          )}
-                        </div>
+                        <figure key={`ref-${i}`} className="m-0">
+                          <div className="aspect-square rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900">
+                            {img.source_url ? (
+                              <a href={img.source_url} target="_blank" rel="noopener noreferrer">{image}</a>
+                            ) : image}
+                          </div>
+                          <figcaption className="mt-1 text-xs text-neutral-300 leading-snug">
+                            {img.attribution ? <span className="block truncate" title={img.attribution}>{img.attribution}</span> : null}
+                            {licence.url ? (
+                              <a href={licence.url} target="_blank" rel="noopener noreferrer license" className="underline underline-offset-2">{licence.name}</a>
+                            ) : licence.name}
+                          </figcaption>
+                        </figure>
                       );
                     })}
                   </div>

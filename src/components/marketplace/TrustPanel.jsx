@@ -20,6 +20,7 @@ import {
   ShieldCheck, Award,
 } from 'lucide-react';
 import { breederPageTrustSignals, computeTrustSignals, deriveTrustTier, TRUST_TIER_META } from '@/lib/trustScore';
+import { VERIFIED_BREEDER_HELP_PATH, VERIFIED_BREEDER_LABEL } from '@/lib/verifiedBreeder';
 
 // Session cache: one fetch per seller, shared across every panel on the
 // page (a marketplace grid can show the same seller many times).
@@ -107,7 +108,7 @@ function compactHighlights(signals) {
     parts.push(`${signals.ownershipTransfers} completed transfer${signals.ownershipTransfers === 1 ? '' : 's'}`);
   }
   if (parts.length < 3 && signals.isVerifiedBreeder) {
-    parts.push('Verified breeder');
+    parts.push(VERIFIED_BREEDER_LABEL);
   }
   return parts.slice(0, 3);
 }
@@ -192,7 +193,10 @@ export default function TrustPanel({ email, breederSlug, variant = 'compact' }) 
           </SignalRow>
         )}
         {signals.isVerifiedBreeder && (
-          <SignalRow icon={ShieldCheck}>Verified breeder profile</SignalRow>
+          <SignalRow icon={ShieldCheck}>
+            <span className="font-semibold text-white">{VERIFIED_BREEDER_LABEL}</span>: checked by hand by the Geck Inspect team.{' '}
+            <a href={VERIFIED_BREEDER_HELP_PATH} className="underline underline-offset-2 text-slate-100">What that means</a>
+          </SignalRow>
         )}
         {signals.isFeaturedBreeder && (
           <SignalRow icon={Award}>Featured breeder on Geck Inspect</SignalRow>

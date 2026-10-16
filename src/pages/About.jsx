@@ -68,7 +68,7 @@ export default function About() {
           We built the platform we wanted as breeders
         </h1>
         <p className="text-lg text-slate-300 leading-relaxed max-w-3xl">
-          Geck Inspect is a professional web platform (free to start) for crested gecko (<em>Correlophus ciliatus</em>) breeders and keepers. It combines collection management, breeding planning, AI-powered morph identification on paid plans, multi-generation lineage tracking, and a verified community, in one place, built specifically for this species.
+          Geck Inspect is a professional web platform (free to start) for crested gecko (<em>Correlophus ciliatus</em>) breeders and keepers. It combines collection management, breeding planning, AI-powered morph identification on paid plans, multi-generation lineage tracking, and breeder pages that can earn a hand-checked Verified breeder badge, in one place, built specifically for this species.
         </p>
 
         <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 border-y border-slate-800/50 py-6">
@@ -112,7 +112,7 @@ export default function About() {
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Plan breedings with a genetics calculator that understands Lilly White (incomplete dominant, lethal super), Cappuccino, Axanthic, and Soft Scale.</span></li>
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Log egg lays, incubation temps, and hatch dates and watch hatchlings graduate into juveniles and adults.</span></li>
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Identify morphs with AI from a photo, primary morph, secondary traits, and base color.</span></li>
-              <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Read the <Link to="/CareGuide" className="text-emerald-300 underline-offset-2 hover:underline">Care Guide</Link>, <Link to="/MorphGuide" className="text-emerald-300 underline-offset-2 hover:underline">Morph Guide</Link>, and <Link to="/GeneticsGuide" className="text-emerald-300 underline-offset-2 hover:underline">Genetics Guide</Link>, written for beginners, deep enough for long-time breeders.</span></li>
+              <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Read the <Link to="/CareGuide" className="text-emerald-300 underline underline-offset-2">Care Guide</Link>, <Link to="/MorphGuide" className="text-emerald-300 underline underline-offset-2">Morph Guide</Link>, and <Link to="/GeneticsGuide" className="text-emerald-300 underline underline-offset-2">Genetics Guide</Link>, written for beginners, deep enough for long-time breeders.</span></li>
             </ul>
           </section>
 
@@ -121,7 +121,7 @@ export default function About() {
               <ShieldCheck className="w-5 h-5 text-emerald-400" /> Our editorial approach
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              Care and genetics content on Geck Inspect is written and reviewed by breeders with lived experience of the species, and every guide carries a <em>last updated</em> date. When we cite a figure (temperature ranges, breeding weights, incubation timing), it is drawn from established references, de Vosjoli's <em>Crested Gecko Manual</em>, Repashy and Pangea diet formulation notes, and collective community data from keepers tracking real animals on the platform. Corrections are welcomed at <Link to="/Contact" className="text-emerald-300 underline-offset-2 hover:underline">/Contact</Link>.
+              Care and genetics content on Geck Inspect is written and reviewed by breeders with lived experience of the species, and every guide carries a <em>last updated</em> date. When we cite a figure (temperature ranges, breeding weights, incubation timing), it is drawn from established references, de Vosjoli's <em>Crested Gecko Manual</em>, Repashy and Pangea diet formulation notes, and collective community data from keepers tracking real animals on the platform. Corrections are welcomed at <Link to="/Contact" className="text-emerald-300 underline underline-offset-2">/Contact</Link>.
             </p>
           </section>
 

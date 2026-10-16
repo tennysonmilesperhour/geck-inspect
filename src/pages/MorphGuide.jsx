@@ -624,7 +624,7 @@ export default function MorphGuidePage() {
           >
             <Dna className="w-4 h-4" />
             Morphs
-            <span className="text-xs opacity-70">{MORPHS.length}</span>
+            <span className="text-xs opacity-90">{MORPHS.length}</span>
           </button>
           <button
             role="tab"
@@ -639,7 +639,7 @@ export default function MorphGuidePage() {
           >
             <GitBranch className="w-4 h-4" />
             Project Lines
-            <span className="text-xs opacity-70">{PROJECT_LINES.length}</span>
+            <span className="text-xs opacity-90">{PROJECT_LINES.length}</span>
           </button>
         </div>
 

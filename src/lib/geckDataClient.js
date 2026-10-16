@@ -1,3 +1,5 @@
+import { COMMERCIAL_USE_LICENSES, isCommercialUseLicense } from '@/lib/imageLicenses';
+
 /**
  * Read-only public projections of the shared geck_data schema, hosted in the
  * main Supabase project. Eye in the Sky supplies listing observations;
@@ -61,6 +63,10 @@ function normMorph(s) {
  * to listing_images). Those are third-party photos with no licence, shown on
  * public Morph Guide pages, so the top-up was removed on 13 Oct 2026 and the
  * listing tables are members-only (docs/DECISIONS.md, decision 44).
+ *
+ * Only photos whose licence allows commercial use are returned (16 Oct
+ * 2026): Geck Inspect sells plans, so CC BY-NC photos and photos with no
+ * licence cannot be shown. See src/lib/imageLicenses.js.
  */
 export async function getMorphReferenceImages(morphName, { limit = 24, species = CRESTED_SPECIES } = {}) {
   if (!ANON_KEY) return { data: [], error: 'geck-data anon key not configured' };
@@ -74,10 +80,13 @@ export async function getMorphReferenceImages(morphName, { limit = 24, species =
       .select('image_url, storage_path, storage_bucket, license, attribution, source_kind, source_url')
       .eq('species', species)
       .eq('norm_morph_label', norm)
+      .in('license', COMMERCIAL_USE_LICENSES)
       .limit(limit);
     if (eErr) return { data: [], error: eErr.message };
 
-    const out = (external ?? []).map((row) => ({
+    // Checked again here, so a licence spelled differently in the table
+    // can never slip a NonCommercial photo onto the page.
+    const out = (external ?? []).filter((row) => isCommercialUseLicense(row.license)).map((row) => ({
       url: row.storage_path
         ? `${URL}/storage/v1/object/public/${row.storage_bucket || 'listing-images'}/${row.storage_path}`
         : row.image_url,

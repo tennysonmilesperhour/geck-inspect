@@ -12,18 +12,8 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { parseLocalDate, formatAge } from '@/lib/dateUtils';
 import { readinessFor, showReadinessOnCard } from '@/lib/breedingReadiness';
 import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
+import ArchiveStatusChip from '@/components/my-geckos/ArchiveStatusChip';
 
-const ARCHIVE_ICONS = {
-  death: '💀',
-  sold: '💵',
-  other: '📋',
-};
-
-const ARCHIVE_LABELS = {
-  death: 'Passed Away',
-  sold: 'Sold',
-  other: 'Other',
-};
 
 const initialsForName = (name = '') => String(name).trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'GI';
 const hueForName = (name = '') => [...String(name)].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 360, 17);
@@ -64,7 +54,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
 
   const showSpeciesBadge = gecko.species && gecko.species !== 'Crested Gecko';
   const showGravidBadge = gecko.sex === 'Female' && gecko.is_gravid;
-  const archiveIcon = gecko.archived ? ARCHIVE_ICONS[gecko.archive_reason] : null;
+  const archiveReason = gecko.archived ? gecko.archive_reason || 'other' : null;
   // "Intact" is the default state for most healthy geckos, so we only flag
   // the deviations from it on the card. NULL stays silent.
   const showTailBadge = gecko.tail_status === 'dropped' || gecko.tail_status === 'regenerating';
@@ -129,13 +119,8 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
         )}
 
         {/* Top-right: archive reason or quality badge */}
-        {archiveIcon ? (
-          <div
-            className="absolute top-2 right-2 text-2xl leading-none drop-shadow-lg"
-            title={`Archive reason: ${ARCHIVE_LABELS[gecko.archive_reason]}`}
-          >
-            {archiveIcon}
-          </div>
+        {archiveReason ? (
+          <ArchiveStatusChip reason={archiveReason} className="absolute top-2 right-2 shadow" />
         ) : gecko.quality_score != null ? (
           <div className="absolute top-2 right-2 drop-shadow-lg">
             <QualityBadge score={gecko.quality_score} size="sm" />

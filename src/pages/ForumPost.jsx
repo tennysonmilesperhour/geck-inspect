@@ -573,10 +573,12 @@ export default function ForumPostPage() {
                                 <Calendar className="w-4 h-4" />
                                 {format(new Date(post.created_date), 'PPP')}
                             </span>
-                            <span className="flex items-center gap-1">
-                                <Eye className="w-4 h-4" />
-                                {post.view_count || 0} {Number(post.view_count) === 1 ? 'view' : 'views'}
-                            </span>
+                            {post.view_count != null && (
+                                <span className="flex items-center gap-1">
+                                    <Eye className="w-4 h-4" />
+                                    {post.view_count} {Number(post.view_count) === 1 ? 'view' : 'views'}
+                                </span>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent>

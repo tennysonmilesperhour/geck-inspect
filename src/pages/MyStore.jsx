@@ -35,6 +35,7 @@ import {
 } from '@/components/storefront/StorefrontSections';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import PageHeader from '@/components/shared/PageHeader';
+import { VERIFIED_BREEDER_DEFINITION } from '@/lib/verifiedBreeder';
 
 const MIN_BANNER_WIDTH = 1280;
 const MIN_BANNER_HEIGHT = 320;
@@ -688,8 +689,7 @@ export default function MyStore() {
                                         <span>Your page shows the <span className="text-emerald-300 font-semibold">Verified breeder</span> badge.</span>
                                     ) : (
                                         <span>
-                                            The Verified breeder badge is given after a check by the Geck Inspect team: who you are, your own crested geckos tracked here,
-                                            a sales record (such as completed transfers), published store policies, and no open complaints. Ask through Contact once your page is set up.
+                                            {VERIFIED_BREEDER_DEFINITION} Ask through Contact once your page is set up.
                                         </span>
                                     )}
                                 </div>
