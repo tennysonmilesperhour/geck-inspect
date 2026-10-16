@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 // geckoAccess imports the entity layer; nothing here touches the database.
 vi.mock('@/entities/all', () => ({ Gecko: {}, CollectionMember: {} }));
 
 const {
   recordAccess, latestWeighIn, newestFirst, isNewestDay, recordSections,
-  sectionId, myGeckosHandoff, handoffSteps, calculatorLink,
+  sectionId, myGeckosHandoff, handoffSteps, calculatorLink, REMOVED_WITH_GECKO,
 } = await import('../recordModel');
 
 const owner = { id: 'u1', email: 'Keeper@Example.com' };
@@ -136,5 +137,23 @@ describe('the page to My Geckos hand-off', () => {
     expect(calculatorLink({ id: 'g1', sex: 'Female' })).toBe('/calculator?damGecko=g1');
     expect(calculatorLink({ id: 'g1', sex: 'Male' })).toBe('/calculator?sireGecko=g1');
     expect(calculatorLink({ id: 'g1' })).toBe('/calculator?sireGecko=g1');
+  });
+});
+
+// Deleting a gecko removes its weigh-ins (a trigger) and its feeding, shed
+// and vet records and ownership history (foreign keys that cascade). The
+// toast in My Geckos used to say only "its weigh-ins".
+describe('what a delete removes', () => {
+  it('names every kind of record that goes with the gecko', () => {
+    for (const kind of ['weigh-in', 'feeding', 'shed', 'vet visit', 'ownership record']) {
+      expect(REMOVED_WITH_GECKO).toContain(kind);
+    }
+  });
+
+  it('is what the My Geckos toast says after a delete', () => {
+    const page = readFileSync(new URL('../../../../pages/MyGeckos.jsx', import.meta.url), 'utf8');
+    const handler = page.match(/const handleDelete = async[\s\S]*?\n {4}\};/)?.[0] || '';
+    expect(handler).toContain('${REMOVED_WITH_GECKO} were permanently removed.');
+    expect(handler).not.toContain('its weigh-ins have been permanently removed');
   });
 });

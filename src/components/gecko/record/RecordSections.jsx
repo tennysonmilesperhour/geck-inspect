@@ -6,6 +6,7 @@ import {
   Info, PenLine, Sparkles, Utensils,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import ArchiveStatusChip from '@/components/my-geckos/ArchiveStatusChip';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { parseLocalDate, formatAge } from '@/lib/dateUtils';
@@ -86,7 +87,9 @@ export function RecordSummary({ gecko, latest, headingAs: Heading = 'h2', onOpen
           {latest && <Badge variant="outline" className="border-slate-600">{latest.grams} g</Badge>}
           {age && <Badge variant="outline" className="border-slate-600">{age === 'today' ? 'Hatched today' : `${age} old`}</Badge>}
           {gecko.sex === 'Female' && gecko.is_gravid && <Badge className="bg-pink-800 text-pink-100">Gravid</Badge>}
-          {gecko.archived && <Badge variant="outline" className="border-amber-600 text-amber-300">Archived</Badge>}
+          {/* Why it left the collection, in the same words as its card:
+              "In memory" for a gecko that died, "Sold", or "Archived". */}
+          {gecko.archived && <ArchiveStatusChip reason={gecko.archive_reason || 'other'} />}
         </div>
         {morphLine && <p className="mt-2 text-sm text-slate-300 line-clamp-2">{morphLine}</p>}
       </div>

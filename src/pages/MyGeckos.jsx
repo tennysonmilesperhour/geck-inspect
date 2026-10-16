@@ -40,7 +40,7 @@ import FirstGeckoFlow from '../components/onboarding/FirstGeckoFlow';
 import { clearPendingGecko, flowEvent, markPhotoPath, readPendingGecko } from '@/lib/firstGeckoFlow';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
-import { handoffSteps } from '@/components/gecko/record/recordModel';
+import { handoffSteps, REMOVED_WITH_GECKO } from '@/components/gecko/record/recordModel';
 import TransferHistory from '../components/my-geckos/TransferHistory';
 import GeckoFilters from '../components/my-geckos/GeckoFilters';
 import ArchiveReasonDialog from '../components/my-geckos/ArchiveReasonDialog';
@@ -268,6 +268,7 @@ export default function MyGeckosPage() {
     };
 
     const handleDelete = async (geckoId) => {
+        const name = geckos.find(g => g.id === geckoId)?.name?.trim() || 'The gecko';
         try {
             await retryApiCall(async () => {
                 return await Gecko.delete(geckoId);
@@ -279,10 +280,12 @@ export default function MyGeckosPage() {
             setIsDetailModalOpen(false);
 
             toast({
-                title: "Gecko Deleted",
-                // Revenue is computed from gecko rows, so a deleted sold gecko's
-                // sale leaves Business Tools too; the old text promised otherwise.
-                description: "The gecko and its weigh-ins have been permanently removed.",
+                title: "Gecko deleted",
+                // Says what the database removed with the gecko (its feeding,
+                // shed and vet records went too, not only the weigh-ins). Revenue
+                // is computed from gecko rows, so a deleted sold gecko's sale
+                // leaves Business Tools as well.
+                description: `${name} and ${REMOVED_WITH_GECKO} were permanently removed.`,
             });
         } catch (error) {
             console.error("Failed to delete gecko:", error);

@@ -259,18 +259,28 @@ describe('the gecko record, for its owner', () => {
     expect(textOf(tree)).toContain('Paired with Mango');
   });
 
+  // The weigh-in form saves a day after today as today (a future date is a
+  // typo), so a 10 Oct weigh-in keeps its date only once the clock has
+  // reached it. The clock is fixed so the test does not depend on the day
+  // it runs.
   it('logs a weigh-in and makes the newest one the gecko weight', async () => {
-    const onUpdate = vi.fn();
-    const tree = await mount({ onUpdate });
-    const grams = tree.root.find((n) => n.props.id === 'record-weight-grams');
-    const day = tree.root.find((n) => n.props.id === 'record-weight-date');
-    await act(async () => { grams.props.onChange({ target: { value: '35.5' } }); });
-    await act(async () => { day.props.onChange({ target: { value: '2026-10-10' } }); });
-    await act(async () => { tree.root.find((n) => n.type === 'form').props.onSubmit({ preventDefault() {} }); });
-    expect(state.created).toEqual([{ gecko_id: 'g1', weight_grams: 35.5, record_date: '2026-10-10' }]);
-    expect(state.updates).toContainEqual(['gecko', 'g1', { weight_grams: 35.5 }]);
-    expect(onUpdate).toHaveBeenCalled();
-    expect(textOf(tree)).toContain('Now 35.5 g');
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-16T12:00:00.000Z'));
+    try {
+      const onUpdate = vi.fn();
+      const tree = await mount({ onUpdate });
+      const grams = tree.root.find((n) => n.props.id === 'record-weight-grams');
+      const day = tree.root.find((n) => n.props.id === 'record-weight-date');
+      await act(async () => { grams.props.onChange({ target: { value: '35.5' } }); });
+      await act(async () => { day.props.onChange({ target: { value: '2026-10-10' } }); });
+      await act(async () => { tree.root.find((n) => n.type === 'form').props.onSubmit({ preventDefault() {} }); });
+      expect(state.created).toEqual([{ gecko_id: 'g1', weight_grams: 35.5, record_date: '2026-10-10' }]);
+      expect(state.updates).toContainEqual(['gecko', 'g1', { weight_grams: 35.5 }]);
+      expect(onUpdate).toHaveBeenCalled();
+      expect(textOf(tree)).toContain('Now 35.5 g');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('a backdated weigh-in is saved without changing the current weight', async () => {
@@ -337,6 +347,12 @@ describe('the gecko record, for its owner', () => {
     expect(hasButton(archived, 'Unarchive')).toBe(true);
     const confirm = archived.root.findAll((n) => n.type === 'button' && n.props['data-confirm-action'] !== undefined && innerText(n).includes('Delete for good'));
     expect(confirm).toHaveLength(1);
+    // The confirmation names everything the database removes with the
+    // gecko: its feeding, shed and vet records and its ownership history
+    // cascade with it, and a trigger removes its weigh-ins.
+    expect(textOf(archived)).toContain(
+      'permanently removes Nimbus and every weigh-in, feeding, shed, vet visit and ownership record logged for it.',
+    );
     await act(async () => { confirm[0].props.onClick(); });
     expect(onDelete).toHaveBeenCalledWith('g1');
   });
@@ -413,6 +429,24 @@ describe('who sees which actions', () => {
       expect(links.length).toBeGreaterThan(0);
       for (const a of links) expect(ids.has(a.props.href.slice(1)), `${a.props.href} for ${props.currentUser?.email || 'a visitor'}`).toBe(true);
     }
+  });
+
+  // A gecko that died is marked "In memory" in the record as on its card
+  // (ArchiveStatusChip), and the record says "Passed away" like the
+  // archive dialog and the edit form.
+  it('marks an archived gecko with its reason in words, "In memory" for a death', async () => {
+    const died = await mount({ gecko: { ...NIMBUS, archived: true, archive_reason: 'death' } });
+    const text = textOf(died);
+    expect(text).toContain('In memory');
+    expect(text).toContain('Passed away');
+    expect(text).not.toContain('Passed Away');
+    expect(hasButton(died, 'Passed away')).toBe(true);
+
+    expect(textOf(await mount({ gecko: { ...NIMBUS, archived: true, archive_reason: 'sold' } }))).toContain('Sold');
+    const other = textOf(await mount({ gecko: { ...NIMBUS, archived: true, archive_reason: null } }));
+    expect(other).toContain('Archived');
+    expect(other).not.toContain('In memory');
+    expect(textOf(await mount())).not.toContain('In memory');
   });
 
   it('a host without a flow shows no button for it', async () => {
