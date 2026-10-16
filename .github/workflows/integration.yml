@@ -1,0 +1,123 @@
+name: Browser and database tests
+
+# Two checks the unit tests cannot make (plan item E3 30). Neither needs a
+# secret or a real Supabase project, so both run on every pull request.
+#
+#   member-flow  The app in a real Chromium: sign up, sign in, add a first
+#                gecko, log a feeding, start a transfer, and no console
+#                errors. Built with `vite build` and served by
+#                `vite preview`; Supabase is answered inside the browser
+#                by e2e/support/fake-supabase.js.
+#
+#   database     Every migration replayed, in order, on a fresh Postgres 16
+#                with the Supabase roles and schemas stubbed
+#                (scripts/sql-harness), then every supabase/tests/*.sql
+#                regression file that does not need production accounts.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  member-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The browser build that matches @playwright/test in package.json.
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Member flow (sign up, add a gecko, log a feeding, start a transfer)
+        run: pnpm test:e2e
+        env:
+          E2E_SERVER: preview
+
+      # The trace replays every step with the page, the console and the
+      # network, which is the fastest way to see why a run failed.
+      - name: Keep the trace of a failed run
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The schema has vector columns (Morph ID's photo embeddings) and
+      # the official postgres:16 image does not ship pgvector, so the
+      # package is added inside the running database container. It comes
+      # from the PostgreSQL apt repository the image already uses.
+      - name: Add pgvector to the database container
+        run: >-
+          docker exec ${{ job.services.postgres.id }}
+          bash -c "apt-get update -qq && apt-get install -y -qq postgresql-16-pgvector > /dev/null"
+
+      - name: Make sure psql is installed
+        run: command -v psql || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client)
+
+      - name: Replay every migration on a fresh database
+        run: bash scripts/sql-harness/build.sh geck_harness
+
+      # Every supabase/tests/*.sql file runs, each on its own copy. The
+      # three that used to need production accounts (billing_repair,
+      # launch_repair, revenuecat_access) now make their own member when
+      # the database has none.
+      - name: Run the SQL regression files
+        run: bash scripts/sql-harness/run-tests.sh geck_harness
+
+      - name: Keep the logs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sql-harness-logs
+          path: .sql-harness-logs/
+          retention-days: 7
+          include-hidden-files: true

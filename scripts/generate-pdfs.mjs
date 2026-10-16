@@ -18,7 +18,7 @@
  * changes; the resulting PDFs are committed as static assets.
  */
 
-import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { jsPDF } from "jspdf";

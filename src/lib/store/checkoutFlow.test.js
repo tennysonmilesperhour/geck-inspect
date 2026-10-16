@@ -65,6 +65,9 @@ function fixture() {
         throw new Error(`Unexpected dependency ${path}`);
       },
       Request, Response, URLSearchParams, TextEncoder, crypto: webcrypto, btoa, console, fetch: stripe,
+      // Share the test's clock, so the signature age check reads the same
+      // time the test signed with even when the clock is frozen or moved.
+      Date,
     });
   }
   const checkout = () => handlers['store-checkout'](new Request('https://example.test/checkout', {

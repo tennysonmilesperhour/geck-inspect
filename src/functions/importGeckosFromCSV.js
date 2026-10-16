@@ -82,7 +82,7 @@ function parseDate(raw) {
   }
 
   // MM/DD/YYYY or DD/MM/YYYY, try US format first
-  const slashMatch = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  const slashMatch = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (slashMatch) {
     let [, a, b, y] = slashMatch;
     if (y.length === 2) y = '20' + y;

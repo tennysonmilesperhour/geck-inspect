@@ -288,6 +288,15 @@ describe('no double saves', () => {
 });
 
 describe('undo after Mark all fed keeps the group schedule right', () => {
+  // The group was last fed on a fixed date (10 October 2026) and "fed
+  // today" only moves it forward, so the clock is frozen after that date.
+  // Without this the tests fail on a machine whose clock reads earlier.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-16T12:00:00.000Z'));
+  });
+  afterEach(() => vi.useRealTimers());
+
   beforeEach(() => {
     mocks.geckos = [
       { id: 'g1', name: 'Alder', feeding_group_id: 'grp' },

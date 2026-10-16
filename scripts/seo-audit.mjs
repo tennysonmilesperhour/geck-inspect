@@ -39,7 +39,7 @@
  */
 
 import { readFileSync, writeFileSync, readdirSync, lstatSync, mkdirSync, existsSync } from 'node:fs';
-import { resolve, join, dirname, relative } from 'node:path';
+import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 

@@ -79,3 +79,10 @@ public/data/*
 
 # Claude Code agent worktrees (created inside the repo by workflows)
 .claude/worktrees/
+
+# Playwright output (pnpm test:e2e)
+test-results/
+playwright-report/
+
+# SQL harness logs (scripts/sql-harness)
+.sql-harness-logs/
