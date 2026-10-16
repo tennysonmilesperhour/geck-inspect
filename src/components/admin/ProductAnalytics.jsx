@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { safeExternalUrl, openExternalUrl } from '@/lib/safeExternalUrl';
-import { User, UserEvent } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +24,7 @@ import {
   YAxis,
 } from 'recharts';
 import {
+  AlertTriangle,
   ExternalLink,
   Plus,
   Trash2,
@@ -47,7 +47,7 @@ import {
 import { format, subDays, startOfDay } from 'date-fns';
 import MarketHabitCard from '@/components/admin/MarketHabitCard';
 import GrowthFunnelCard from '@/components/admin/GrowthFunnelCard';
-import { adminEmailSet, withoutAdminEvents } from '@/lib/adminData';
+import { adminEmailSet, analyticsLoadNotice, fetchAdminTable, fetchAllProfiles, USER_EVENT_COLUMNS, withoutAdminEvents } from '@/lib/adminData';
 
 /**
  * Product Analytics, the admin command center for product usage.
@@ -77,9 +77,10 @@ const PERIODS = [
 ];
 
 // Fetch horizon: 2x the longest period so every window has a
-// prior-period comparison, plus rolling-average lookback.
+// prior-period comparison, plus rolling-average lookback. Every event in
+// it is read, a page at a time (fetchAdminTable): the old single read of
+// up to 20,000 rows stopped at the API's 1,000-row limit.
 const FETCH_DAYS = 187;
-const FETCH_LIMIT = 20000;
 
 const PALETTE = {
   emerald: '#10b981',
@@ -390,14 +391,25 @@ function LiveMetrics() {
     setIsLoading(true);
     try {
       const sinceIso = subDays(new Date(), FETCH_DAYS).toISOString();
+      // A table that fails to load counts as empty; the screen says so.
+      const failed = [];
+      const orEmpty = (label) => (error) => {
+        console.error(`Product analytics: could not load ${label}`, error);
+        failed.push(label);
+        return [];
+      };
       const [users, events] = await Promise.all([
-        User.list().catch(() => []),
-        UserEvent.filter({ created_date: { $gte: sinceIso } }, '-created_date', FETCH_LIMIT).catch(() => []),
+        fetchAllProfiles('id,email,role,created_date').catch(orEmpty('profiles')),
+        fetchAdminTable('user_events', USER_EVENT_COLUMNS, { since: sinceIso }).catch(orEmpty('user_events')),
       ]);
-      setData({ users, events });
+      const truncated = Boolean(users.truncated || events.truncated);
+      if (truncated) {
+        console.warn('Product analytics: a table passed the row ceiling, so the numbers are a lower bound.');
+      }
+      setData({ users, events, failed, truncated });
     } catch (err) {
       console.error('Product analytics load failed:', err);
-      setData({ users: [], events: [] });
+      setData({ users: [], events: [], failed: ['profiles', 'user_events'], truncated: false });
     }
     setIsLoading(false);
   };
@@ -582,9 +594,16 @@ function LiveMetrics() {
       </div>
     );
   }
+  const loadNotice = analyticsLoadNotice({ failed: data?.failed, truncated: data?.truncated });
 
   return (
     <div className="space-y-6">
+      {loadNotice && (
+        <p role="status" className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          {loadNotice}
+        </p>
+      )}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-slate-400 max-w-2xl">
           First-party telemetry from the <code className="text-slate-300 text-xs">user_events</code> table.

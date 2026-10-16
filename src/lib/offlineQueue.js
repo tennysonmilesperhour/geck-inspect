@@ -19,6 +19,16 @@
 
 const KEY_PREFIX = 'geckinspect_offline_queue:';
 
+// Logs the server refused when the queue sent them, kept per account so
+// every open tab (and the page that made the log) can say "not saved"
+// instead of treating "no longer waiting" as "saved". Not under
+// KEY_PREFIX, so a refusal list is never read as a queue.
+const REFUSED_PREFIX = 'geckinspect_offline_refused:';
+// A refusal is shown until the member dismisses it, or for a week at most,
+// and only the newest few are kept, so the list cannot grow without end.
+const REFUSED_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const REFUSED_MAX = 50;
+
 // Name of the cross-tab flush lock, and of the localStorage lease used
 // when the browser has no Web Locks API. Deliberately not under
 // KEY_PREFIX, so it is never mistaken for a queue.
@@ -30,6 +40,7 @@ const LEASE_MS = 30_000;
 let storage = typeof localStorage !== 'undefined' ? localStorage : null;
 let owner = null;
 const listeners = new Set();
+const refusedListeners = new Set();
 let flushing = null;
 // undefined means "use navigator.locks if the browser has it".
 let locksOverride;
@@ -64,6 +75,7 @@ export function setQueueOwner(id) {
   if (next === owner) return;
   owner = next;
   notify();
+  notifyRefused();
 }
 
 export function getQueueOwner() {
@@ -120,6 +132,113 @@ export function pendingCount() {
   return readQueue().length;
 }
 
+// ----- logs the server refused -------------------------------------------
+//
+// A queued log leaves the queue in two ways: the server saved it, or the
+// server refused it (the gecko was deleted, the member lost access). Both
+// look the same from the queue alone, so before this list the one-tap log
+// page turned "kept on this phone" into "saved" for a refused log. The
+// flush now writes each refusal here, in the same browser storage the
+// queue uses, before it takes the log out of the queue.
+
+function refusedKey() {
+  return owner ? REFUSED_PREFIX + owner : null;
+}
+
+function notifyRefused() {
+  for (const fn of refusedListeners) {
+    try {
+      fn();
+    } catch {
+      // a broken listener must not stop the others
+    }
+  }
+}
+
+/** Call fn() whenever the list of refused logs changes. */
+export function subscribeRefused(fn) {
+  refusedListeners.add(fn);
+  return () => refusedListeners.delete(fn);
+}
+
+/** Refused logs for the signed-in account, oldest first, none older than a week. */
+export function readRefused(now = Date.now()) {
+  const key = refusedKey();
+  if (!key || !storage) return [];
+  try {
+    const parsed = JSON.parse(storage.getItem(key) || '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((r) => r?.id && now - (Date.parse(r.refusedAt) || 0) < REFUSED_MAX_AGE_MS);
+  } catch {
+    return [];
+  }
+}
+
+/** The refusal for one queued log, or null when it was not refused. */
+export function refusalFor(id) {
+  if (!id) return null;
+  return readRefused().find((r) => r.id === id) || null;
+}
+
+function writeRefused(list) {
+  const key = refusedKey();
+  if (!key || !storage) return false;
+  try {
+    if (list.length) storage.setItem(key, JSON.stringify(list));
+    else storage.removeItem(key);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    notifyRefused();
+  }
+}
+
+// Only what a page needs to name the log ("Feeding for Alder on 14 Oct"),
+// not the whole payload.
+function describeQueued(item) {
+  const d = item?.data || {};
+  const grams = Number(d.grams ?? d.weight_grams);
+  return {
+    entity: item?.entity || null,
+    kind: d.kind || null,
+    geckoId: d.geckoId || d.gecko_id || d.animal_id || (item?.entity === 'Gecko' ? item.recordId : null) || null,
+    date: d.date || d.eventDate || d.record_date || d.feeding_date || d.shed_date || null,
+    grams: Number.isFinite(grams) && grams > 0 ? grams : null,
+    accepted: typeof d.accepted === 'boolean' ? d.accepted : null,
+  };
+}
+
+function refusalReason(error) {
+  return {
+    code: error?.code ? String(error.code).slice(0, 40) : null,
+    status: Number.isFinite(Number(error?.status)) ? Number(error.status) : null,
+    message: String(error?.message || error || '').slice(0, 300),
+  };
+}
+
+function recordRefused(item, error) {
+  const entry = {
+    id: item.id,
+    ...describeQueued(item),
+    refusedAt: new Date().toISOString(),
+    error: refusalReason(error),
+  };
+  const next = [...readRefused().filter((r) => r.id !== item.id), entry];
+  return writeRefused(next.slice(-REFUSED_MAX));
+}
+
+/**
+ * The member has seen these refusals (or logged again): stop showing
+ * them. With no ids, every refusal for this account is cleared.
+ */
+export function dismissRefused(ids = null) {
+  const list = readRefused();
+  if (list.length === 0) return;
+  const drop = ids == null ? null : new Set([].concat(ids));
+  writeRefused(drop ? list.filter((r) => !drop.has(r.id)) : []);
+}
+
 function newId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
   return `q_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -171,13 +290,15 @@ export function clearAllQueues() {
     const keys = [];
     for (let i = 0; i < storage.length; i++) {
       const k = storage.key(i);
-      if (k && k.startsWith(KEY_PREFIX)) keys.push(k);
+      // Refusals name geckos and days, so they go with the queue.
+      if (k && (k.startsWith(KEY_PREFIX) || k.startsWith(REFUSED_PREFIX))) keys.push(k);
     }
     keys.forEach((k) => storage.removeItem(k));
   } catch {
     // nothing to clear
   }
   notify();
+  notifyRefused();
 }
 
 /**
@@ -292,7 +413,10 @@ async function withFlushLock(fn) {
  * the real write. Stops at the first retryable error (no connection, an
  * aborted request, an expired sign-in, a busy server): everything from
  * that write on stays queued, still in order. A write the database
- * refuses is dropped and returned in `failed` so the app can say so.
+ * refuses is dropped and returned in `failed` so the app can say so, and
+ * is recorded in the refused list (readRefused) before it leaves the
+ * queue, so a page that only sees "no longer waiting" can tell it apart
+ * from a saved log.
  *
  * Only one flush runs at a time across every open tab. A second call in
  * the same tab while one is running gets the same result. A call in
@@ -317,6 +441,10 @@ export function flushQueue(execute) {
             result.saved += 1;
           } catch (error) {
             if (isRetryableError(error)) break;
+            // Refusal first, removal second: removing notifies the pages
+            // watching the queue, and they must already find the refusal.
+            // Never under another account that signed in meanwhile.
+            if (owner === startOwner) recordRefused(item, error);
             removeQueued(item.id);
             result.failed.push({ item, error });
           }

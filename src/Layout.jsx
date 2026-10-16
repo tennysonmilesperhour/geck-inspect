@@ -50,6 +50,7 @@ import TierBadge, { tierRingClass, tierKeyFor } from "@/components/ui/TierBadge"
 // cleanup, pure JS cache + rate-limit helpers, and the static
 // navigation / level-progression constants.
 import { dataCache, retryApiCall } from '@/lib/layoutCache';
+import { loadPageConfigs } from '@/lib/pageConfigs';
 import {
   MILESTONES,
   USER_LEVELS,
@@ -451,22 +452,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     const fetchData = async () => {
       try {
 
-        // Load page configs
-        let configs = dataCache.get('page_configs');
-        if (!configs && dataCache.canMakeRequest('page_configs')) {
-          try {
-            dataCache.markRequestMade('page_configs');
-            configs = await retryApiCall(() => api.entities.PageConfig.list());
-            if (Array.isArray(configs)) {
-              dataCache.set('page_configs', configs);
-              setPageConfigs(configs);
-            }
-          } catch (error) {
-            console.log("Could not load page configs:", error);
-            setPageConfigs([]);
-          }
-        } else if (Array.isArray(configs)) {
-          setPageConfigs(configs);
+        // Load page configs: one request shared with the router
+        // (src/lib/pageConfigs.js), not a second one of its own.
+        try {
+          setPageConfigs(await loadPageConfigs());
+        } catch (error) {
+          console.log("Could not load page configs:", error);
+          setPageConfigs([]);
         }
 
         // Load user-specific data with very heavy caching
@@ -552,18 +544,15 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   }, [user]);
 
   // Live sidebar updates when an admin toggles a page in PageManagement.
-  // PageManagement clears `page_configs` in dataCache and fires
-  // `page_configs_changed` after every successful write; we re-fetch
+  // PageManagement drops the shared copy (src/lib/pageConfigs.js) and
+  // fires `page_configs_changed` after every successful write; we re-fetch
   // the list here so the sidebar reflects the new state without a
-  // browser reload.
+  // browser reload. The router refetches on the same event, and the two
+  // share one request.
   useEffect(() => {
     const refresh = async () => {
       try {
-        const configs = await retryApiCall(() => api.entities.PageConfig.list());
-        if (Array.isArray(configs)) {
-          dataCache.set('page_configs', configs);
-          setPageConfigs(configs);
-        }
+        setPageConfigs(await loadPageConfigs());
       } catch (error) {
         console.log('Could not refresh page configs after change:', error);
       }

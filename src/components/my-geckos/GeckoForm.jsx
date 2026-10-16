@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Gecko, UserActivity, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
+import { Gecko, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
@@ -546,9 +546,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             // WeightRecord entity, so it is counted here.
             if (recordWeight) captureEvent('weight_logged', { via: 'gecko_form', at_add: isNew });
             // Optional community activity must never turn a successful save into a failed form.
+            // (No user_activity row any more: the animal_created event above
+            // records the same thing, and the admin view reads that.)
             if (isNew && currentUser) {
-                UserActivity.create({ user_email: currentUser.email, activity_type: 'new_gecko',
-                    points: 5, related_entity_id: savedGecko.id }).catch(console.error);
                 if (savedGecko.is_public === true) {
                     notifyFollowersNewGecko(savedGecko, currentUser.email, currentUser.full_name).catch(console.error);
                 }

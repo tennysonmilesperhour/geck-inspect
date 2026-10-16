@@ -14,7 +14,9 @@
 //
 // POST {} -> { devices: [{ device, model, name, readings: { temp_f?, temp_c?, humidity? }, supported }],
 //              polled_at, credits_remaining }
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "../_shared/supabase.ts";
+import { CORS_HEADERS, json as jsonWith, preflight } from "../_shared/http.ts";
+import { signedInCaller } from "../_shared/caller.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -25,23 +27,17 @@ const TIER_POLLS: Record<string, number> = {
   free: 0, keeper: 200, breeder: 2000, enterprise: 10000,
 };
 
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+const json = (body: unknown, status = 200) => jsonWith(body, status, CORS_HEADERS);
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const early = preflight(req);
+  if (early) return early;
   try {
-    const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-    if (!token) return json({ error: "Sign in to read sensors.", code: "unauthenticated" }, 401);
-    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
-    const { data: { user } } = await userClient.auth.getUser();
-    if (!user) return json({ error: "Sign in to read sensors.", code: "unauthenticated" }, 401);
+    // The member's own client (anon key plus their session), so the tier
+    // and credit functions below run as them.
+    const caller = await signedInCaller(req, { supabaseUrl: SUPABASE_URL, apiKey: ANON_KEY });
+    if (!caller) return json({ error: "Sign in to read sensors.", code: "unauthenticated" }, 401);
+    const { user, client: userClient } = caller;
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: prof } = await admin.from("profiles")

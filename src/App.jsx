@@ -35,11 +35,11 @@ const PublicPageShell = lazy(() => import('@/components/public/PublicPageShell')
 const SignedOutFallback = lazy(() => import('@/components/public/SignedOutFallback'));
 import ScrollToTop from '@/components/shared/ScrollToTop';
 import NativeCareSync from '@/components/native/NativeCareSync';
-import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
 import { captureFirstTouch } from '@/lib/attribution';
 import { captureMorphShareRef } from '@/lib/morphShareRef';
 import { captureSignupGrantFromUrl } from '@/lib/store/signupGrant';
+import { disabledPagesFrom, loadPageConfigs } from '@/lib/pageConfigs';
 import { RETIRED_PAGES } from '@/lib/retiredPages';
 
 // First-touch attribution (referrer host, UTM tags, landing path) is
@@ -267,32 +267,12 @@ const AuthenticatedApp = () => {
   // browser reload to invalidate the in-memory disabledPages set.
   useEffect(() => {
     if (!isAuthenticated && !isGuest) return;
+    // One shared request with the sidebar (src/lib/pageConfigs.js), which
+    // also keeps essential pages on and handles duplicate rows.
     const loadDisabled = () => {
-      api.entities.PageConfig.list().then((configs) => {
-        if (!Array.isArray(configs)) return;
-        // Group by page_name so duplicate rows don't disable a page when
-        // the admin has already re-enabled one of the copies. A page is
-        // only considered disabled if NO row for that page_name is enabled.
-        const byName = new Map();
-        for (const c of configs) {
-          if (!c?.page_name) continue;
-          if (!byName.has(c.page_name)) byName.set(c.page_name, []);
-          byName.get(c.page_name).push(c);
-        }
-        const disabled = new Set();
-        for (const [name, rows] of byName.entries()) {
-          if (rows.every(r => r.is_enabled === false)) disabled.add(name);
-        }
-        // Never disable essential navigation targets, or pages that live
-        // screens link to: hiding FieldMode, Gallery or Training in the
-        // admin Pages tool is meant to take them out of the sidebar, but
-        // the passport quick log opens Field Mode, the Dashboard opens the
-        // Gallery, and admins send expert reviewers to Training.
-        ['Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages', 'FieldMode', 'Gallery', 'Training'].forEach(
-          p => disabled.delete(p)
-        );
-        setDisabledPages(disabled);
-      }).catch((err) => console.error('Failed to load page configs:', err));
+      loadPageConfigs()
+        .then((configs) => setDisabledPages(disabledPagesFrom(configs)))
+        .catch((err) => console.error('Failed to load page configs:', err));
     };
     loadDisabled();
     window.addEventListener('page_configs_changed', loadDisabled);
