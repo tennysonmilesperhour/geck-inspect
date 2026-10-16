@@ -55,3 +55,12 @@ jobs:
       # (see .github/workflows/seo-audit-weekly.yml).
       - name: Build (sitemap, llms, vite, prerender, SEO audit)
         run: pnpm build
+
+      # Fails when the main script plus what it loads up front passes
+      # 150 kB gzipped, a page's own script passes 60 kB, a public page
+      # passes 200 kB before it can draw, or an image in public/ passes
+      # 200 KB. Things already over on 16 Oct 2026 have allowances at that
+      # size (scripts/bundle-budget.json says how to tighten them). The
+      # step prints every size it checks, so the log shows what grew.
+      - name: Size budget
+        run: node scripts/check-bundle-size.mjs

@@ -5,28 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <!-- Fonts: preconnect + async CSS swap so the stylesheet doesn't
-         block first paint (CWV / LCP win). The `media="print"` trick
-         flips the media query back to `all` as soon as the CSS
-         download finishes; until then the font falls back to
-         system-ui, which matches Inter's metrics closely enough that
-         CLS stays near zero. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap" />
-    </noscript>
+    <!-- Fonts are self-hosted (public/fonts/, rules in src/styles/fonts.css).
+         The page's text only exists once the app has run, so without a
+         hint the browser would ask for the font after the scripts, and
+         text would draw in the fallback font and then jump. This starts
+         the one file the page draws first, alongside the scripts: the
+         landing page's Montserrat on "/" for visitors, Inter everywhere
+         else (members and the demo see the Dashboard on "/"). -->
+    <script>
+      (function () {
+        var p = location.pathname;
+        var landing = p === '/' || p === '/Home';
+        try {
+          if (sessionStorage.getItem('geck_inspect_guest_mode') === '1') landing = false;
+          for (var i = 0; landing && i < localStorage.length; i++) {
+            var k = localStorage.key(i) || '';
+            if (k.indexOf('sb-') === 0 && k.slice(-11) === '-auth-token') landing = false;
+          }
+        } catch (e) { /* storage blocked: treat as a visitor */ }
+        var link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'font';
+        link.type = 'font/woff2';
+        link.crossOrigin = 'anonymous';
+        link.href = landing ? '/fonts/montserrat-latin-v31.woff2' : '/fonts/inter-latin-v20.woff2';
+        document.head.appendChild(link);
+      })();
+    </script>
 
     <!-- Primary SEO -->
     <title>Geck Inspect: Crested Gecko Breeding App for Pricing, Pairings and Sales</title>

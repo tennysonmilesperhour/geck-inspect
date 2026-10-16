@@ -5,7 +5,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
-import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
+import { Gecko, FeedingGroup, CollectionMember } from '@/entities/all';
+import { loadRecentWeights } from '@/lib/recentWeights';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { bredInHouseIds, saleCategoryFor } from '@/lib/businessLedger';
 import { api } from '@/api/appClient';
@@ -156,7 +157,10 @@ export default function MyGeckosPage() {
                     // Pull every gecko visible to the user, own collection plus
                     // any collections shared with them via collection_members.
                     getVisibleGeckos(user, {}, '-created_date', GECKO_FETCH_LIMIT),
-                    WeightRecord.filter({ created_by: user.email }, '-record_date'),
+                    // The newest weigh-ins of each gecko, not every record
+                    // ever saved (that read stopped at 1,000 rows and lost
+                    // older geckos' weights). See src/lib/recentWeights.js.
+                    loadRecentWeights(user.email),
                     // Accepted memberships drive per-card edit gating. RLS
                     // already scopes this to the current user, so the empty
                     // filter is intentional.

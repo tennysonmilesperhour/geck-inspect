@@ -9,7 +9,10 @@
  *   Entity.update(id, data) → Object
  *   Entity.delete(id) → Object
  */
-import { supabase } from '@/lib/supabaseClient';
+// The Supabase client loads on first use rather than with the app, so a
+// signed-out visitor's first screen does not wait for it
+// (src/lib/supabaseLazy.js). Every method here is async already.
+import { getSupabase } from '@/lib/supabaseLazy';
 import { blockIfGuest, isGuestMode } from '@/lib/guestMode';
 // The demo collection (about 36 KB of sample geckos, plus the growth
 // curves it uses) is only needed in guest mode, so it loads on the first
@@ -28,6 +31,7 @@ import { noteEntityCreated } from '@/lib/activation';
 async function withAuthRetry(queryFn) {
   const result = await queryFn();
   if (result.error && (result.error.code === 'PGRST301' || result.error.message?.includes('JWT'))) {
+    const supabase = await getSupabase();
     const { error: refreshErr } = await supabase.auth.refreshSession();
     if (!refreshErr) return queryFn();
   }
@@ -380,6 +384,7 @@ export async function readColumns(entityName) {
   if (EVERYONE_READ_COLUMNS[entityName]) return EVERYONE_READ_COLUMNS[entityName];
   const publicColumns = PUBLIC_READ_COLUMNS[entityName];
   if (!publicColumns) return '*';
+  const supabase = await getSupabase();
   const { data } = await supabase.auth.getSession();
   return data?.session ? '*' : publicColumns;
 }
@@ -404,6 +409,7 @@ function createEntityClient(entityName) {
         return [];
       }
 
+      const supabase = await getSupabase();
       const columns = await readColumns(entityName);
       const run = () => {
         const emailFilter = filterObj?.email;
@@ -438,6 +444,7 @@ function createEntityClient(entityName) {
         if (mocks.isMockedEntity(entityName)) return mocks.guestMockGet(entityName, id);
         return null;
       }
+      const supabase = await getSupabase();
       const columns = await readColumns(entityName);
       const { data, error } = await withAuthRetry(() =>
         (entityName === 'User' ? supabase.rpc('read_profiles') : supabase.from(tableName)).select(columns).eq('id', id).maybeSingle()
@@ -448,6 +455,7 @@ function createEntityClient(entityName) {
 
     async create(record) {
       blockIfGuest('save changes');
+      const supabase = await getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       const email = user?.email || null;
       const insertRecord = buildInsertRecord(entityName, record, email, new Date().toISOString());
@@ -483,6 +491,7 @@ function createEntityClient(entityName) {
 
     async update(id, record) {
       blockIfGuest('save changes');
+      const supabase = await getSupabase();
       const patch = buildUpdateRecord(entityName, record, new Date().toISOString());
       const { data, error } = await withAuthRetry(() =>
         supabase
@@ -498,6 +507,7 @@ function createEntityClient(entityName) {
 
     async delete(id) {
       blockIfGuest('delete records');
+      const supabase = await getSupabase();
       const { data, error } = await withAuthRetry(() =>
         supabase.from(tableName).delete().eq('id', id).select().single()
       );
@@ -505,13 +515,16 @@ function createEntityClient(entityName) {
       return data;
     },
 
-    async list(sort = null) {
+    // list(sort, limit, skip). The limit used to be ignored, so callers
+    // that asked for "the latest 10 forum posts" or "30 profiles" read the
+    // whole table (the Dashboard and Community Pulse did, on every visit).
+    async list(sort = null, limit = null, skip = null) {
       if (isGuestMode()) {
         const mocks = await loadGuestMocks();
-        if (mocks.isMockedEntity(entityName)) return mocks.guestMockList(entityName, sort);
+        if (mocks.isMockedEntity(entityName)) return mocks.guestMockFilter(entityName, {}, sort, limit, skip);
         return [];
       }
-      return this.filter({}, sort);
+      return this.filter({}, sort, limit, skip);
     },
   };
 }

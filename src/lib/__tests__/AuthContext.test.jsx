@@ -27,13 +27,19 @@ import { queryClientInstance } from '../query-client';
 import { dataCache } from '../layoutCache';
 import SignOutButton from '@/components/auth/SignOutButton';
 import { getQueueOwner } from '../offlineQueue';
+import { __resetSupabaseLazy, hasSessionHint } from '../supabaseLazy';
 
 let auth, tree;
 const a = { id: 'auth-a', email: 'a@example.com' };
 const b = { id: 'auth-b', email: 'b@example.com' };
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 function Consumer() { auth = useAuth(); return null; }
-async function mount(children) { await act(async () => { tree = create(<AuthProvider><Consumer />{children}</AuthProvider>); }); }
+// The client loads through a dynamic import (src/lib/supabaseLazy.js), so
+// wait for it before the test drives auth events.
+async function mount(children) {
+  await act(async () => { tree = create(<AuthProvider><Consumer />{children}</AuthProvider>); });
+  await act(async () => { await vi.dynamicImportSettled(); });
+}
 async function emit(event, user) { await act(async () => state.callback(event, user ? { user } : null)); }
 beforeEach(() => {
   state.session = null; state.entitlements = []; state.profiles.clear();
@@ -42,7 +48,9 @@ beforeEach(() => {
   supabase.auth.getSession.mockImplementation(() => Promise.resolve({ data: { session: state.session } }));
   vi.stubGlobal('window', { addEventListener() {}, removeEventListener() {}, location: { href: '/Dashboard' } });
   vi.stubGlobal('document', { addEventListener() {}, removeEventListener() {} });
-  vi.stubGlobal('localStorage', { getItem: () => null, removeItem: vi.fn() });
+  // A browser that holds a Supabase sign-in, so the client loads at once
+  // (the signed-out start is covered at the end of this file).
+  vi.stubGlobal('localStorage', { getItem: () => null, removeItem: vi.fn(), length: 1, key: () => 'sb-test-auth-token' });
   vi.stubGlobal('sessionStorage', { getItem: () => null, removeItem: vi.fn() });
 });
 
@@ -160,5 +168,77 @@ describe('session enrichment isolation', () => {
     await mount(); await emit('SIGNED_IN', b);
     await act(async () => boot.resolve({ data: { session: { user: a } } }));
     expect(auth.user.auth_user_id).toBe(b.id);
+  });
+});
+
+describe('signed-out start (no stored sign-in in this browser)', () => {
+  let idle;
+  beforeEach(() => {
+    __resetSupabaseLazy();
+    state.callback = null;
+    supabase.auth.getSession.mockClear();
+    idle = [];
+    vi.stubGlobal('localStorage', { getItem: () => null, removeItem: vi.fn(), length: 0, key: () => null });
+    vi.stubGlobal('window', { addEventListener() {}, removeEventListener() {}, location: { href: '/', hash: '', search: '' }, requestIdleCallback: (cb) => { idle.push(cb); return idle.length; } });
+    vi.stubGlobal('document', { readyState: 'complete', addEventListener() {}, removeEventListener() {} });
+  });
+
+  it('shows the page at once and only loads the Supabase client once the page is idle', async () => {
+    expect(hasSessionHint()).toBe(false);
+    await mount();
+    expect(auth.isLoadingAuth).toBe(false);
+    expect(auth.isAuthenticated).toBe(false);
+    expect(state.callback).toBeNull();
+    expect(supabase.auth.getSession).not.toHaveBeenCalled();
+    await act(async () => { idle.splice(0).forEach((cb) => cb()); });
+    await act(async () => { await vi.dynamicImportSettled(); });
+    expect(typeof state.callback).toBe('function');
+    expect(auth.user).toBeNull();
+  });
+
+  it('picks up a sign-in finished on the sign-in form before the idle moment', async () => {
+    state.profiles.set(a.email, Promise.resolve({ data: { id: 'legacy-a' } }));
+    await mount();
+    expect(auth.isAuthenticated).toBe(false);
+    // The form signed in through the same client before this page listened.
+    state.session = { user: a };
+    await act(async () => { idle.splice(0).forEach((cb) => cb()); });
+    await act(async () => { await vi.dynamicImportSettled(); });
+    expect(auth.isAuthenticated).toBe(true);
+    expect(auth.user).toMatchObject({ id: 'legacy-a', auth_user_id: a.id });
+  });
+
+  it('still hears a sign-in that happens after the client arrives', async () => {
+    state.profiles.set(a.email, Promise.resolve({ data: { id: 'legacy-a' } }));
+    await mount();
+    await act(async () => { idle.splice(0).forEach((cb) => cb()); });
+    await act(async () => { await vi.dynamicImportSettled(); });
+    await emit('SIGNED_IN', a);
+    expect(auth.isAuthenticated).toBe(true);
+    expect(auth.user).toMatchObject({ id: 'legacy-a', auth_user_id: a.id });
+  });
+});
+
+describe('hasSessionHint', () => {
+  const browser = (location, keys = []) => {
+    vi.stubGlobal('window', { location, localStorage: { length: keys.length, key: (i) => keys[i] } });
+  };
+  it('is true for a stored sign-in or a sign-in link, false for a plain visit', () => {
+    browser({ hash: '', search: '' });
+    expect(hasSessionHint()).toBe(false);
+    browser({ hash: '', search: '?utm_source=instagram' }, ['geckinspect.theme']);
+    expect(hasSessionHint()).toBe(false);
+    browser({ hash: '', search: '' }, ['sb-mmuglfphhwlaluyfyxsp-auth-token']);
+    expect(hasSessionHint()).toBe(true);
+    browser({ hash: '#access_token=x&type=signup', search: '' });
+    expect(hasSessionHint()).toBe(true);
+    browser({ hash: '', search: '?code=abc' });
+    expect(hasSessionHint()).toBe(true);
+    browser({ hash: '#error=access_denied&error_description=x', search: '' });
+    expect(hasSessionHint()).toBe(true);
+  });
+  it('treats the native app as possibly signed in', () => {
+    vi.stubGlobal('window', { location: { hash: '', search: '' }, Capacitor: { isNativePlatform: () => true } });
+    expect(hasSessionHint()).toBe(true);
   });
 });

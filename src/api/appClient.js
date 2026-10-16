@@ -14,7 +14,10 @@
  * For third-party integrations (LLM calls, file uploads) import from
  * '@/integrations/Core' instead.
  */
-import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
+// The Supabase client loads on first use, not with the app
+// (src/lib/supabaseLazy.js): every call here is async anyway.
+import { getSupabase } from '@/lib/supabaseLazy';
+import { normalizeSupabaseUser } from '@/lib/normalizeSupabaseUser';
 import * as sbEntities from '@/api/supabaseEntities';
 import { loadUserProfile, currentAuthUser } from '@/lib/userProfile';
 import { isGuestMode, GUEST_USER, blockIfGuest } from '@/lib/guestMode';
@@ -27,13 +30,13 @@ const authFacade = {
     return loadUserProfile(user);
   },
   async logout() {
-    return supabase.auth.signOut();
+    return (await getSupabase()).auth.signOut();
   },
   // Ends the session in this browser only (the member's other devices stay
   // signed in). Used before sending someone with an expired sign-in to the
   // sign-in page, which otherwise sends a "signed-in" tab straight back.
   async endLocalSession() {
-    return supabase.auth.signOut({ scope: 'local' });
+    return (await getSupabase()).auth.signOut({ scope: 'local' });
   },
   loginWithRedirect() {
     window.location.href = '/AuthPortal';
@@ -43,6 +46,7 @@ const authFacade = {
   },
   async updateMe(data) {
     blockIfGuest('update your profile');
+    const supabase = await getSupabase();
     const { data: { user }, error } = await supabase.auth.updateUser({ data });
     if (error) throw error;
     return normalizeSupabaseUser(user);
@@ -63,6 +67,7 @@ const entitiesFacade = new Proxy({}, {
 
 const functionsFacade = {
   async invoke(functionName, body) {
+    const supabase = await getSupabase();
     const { data, error } = await supabase.functions.invoke(functionName, { body });
     if (error) throw error;
     return { data };

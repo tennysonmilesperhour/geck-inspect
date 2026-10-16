@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabase, getSupabaseWhenIdle } from '@/lib/supabaseLazy';
 
 // Each theme sets CSS custom properties via :root[data-theme="..."] in
 // src/index.css.
@@ -122,6 +122,7 @@ const ThemeContext = createContext({
 // applies and re-syncs the next time the user changes the theme.
 async function fetchCloudPrefs() {
   try {
+    const supabase = await getSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return null;
     // Resolve the profile row by EMAIL, the app-wide convention.
@@ -143,6 +144,7 @@ async function fetchCloudPrefs() {
 
 async function saveCloudPref(column, value) {
   try {
+    const supabase = await getSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
     await supabase
@@ -196,19 +198,28 @@ export const ThemeProvider = ({ children }) => {
       // without echoing back to the cloud, then resume normal writes.
       setTimeout(() => { skipCloudWrite.current = false; }, 0);
     };
+    let sub = null;
+    // Waits for the client instead of loading it: for a signed-out
+    // visitor there is no saved theme to fetch (src/lib/supabaseLazy.js).
+    // A member's sign-in state loads it straight away, so this is
+    // immediate for them.
     const init = async () => {
       try {
+        const supabase = await getSupabaseWhenIdle();
+        if (cancelled) return;
+        ({ data: sub } = supabase.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_IN') hydrate();
+        }));
         const { data } = await supabase.auth.getSession();
         if (cancelled) return;
         if (data?.session?.user) await hydrate();
+      } catch {
+        // No client (no signal): keep the theme stored on this device.
       } finally {
         if (!cancelled) setAuthReady(true);
       }
     };
     init();
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') hydrate();
-    });
     return () => {
       cancelled = true;
       sub?.subscription?.unsubscribe();

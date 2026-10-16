@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 /**
  * Read-only public projections of the shared geck_data schema, hosted in the
  * main Supabase project. Eye in the Sky supplies listing observations;
@@ -28,16 +26,26 @@ const fetchWithTimeout = (url, options = {}) => {
   );
 };
 
-export const geckData = ANON_KEY
-  ? createClient(URL, ANON_KEY, {
+// Created on first use. Building it when this file loaded put the whole
+// Supabase library into every Morph Guide page's first download, although
+// the reference photos it reads sit below the fold.
+let geckDataPromise = null;
+export function getGeckData() {
+  if (!ANON_KEY) return Promise.resolve(null);
+  if (!geckDataPromise) {
+    geckDataPromise = import('@supabase/supabase-js').then(({ createClient }) => createClient(URL, ANON_KEY, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
         detectSessionInUrl: false,
       },
       global: { fetch: fetchWithTimeout },
-    })
-  : null;
+    }));
+    // A failed download can be tried again on the next call.
+    geckDataPromise.catch(() => { geckDataPromise = null; });
+  }
+  return geckDataPromise;
+}
 
 function normMorph(s) {
   return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
@@ -55,11 +63,12 @@ function normMorph(s) {
  * listing tables are members-only (docs/DECISIONS.md, decision 44).
  */
 export async function getMorphReferenceImages(morphName, { limit = 24, species = CRESTED_SPECIES } = {}) {
-  if (!geckData) return { data: [], error: 'geck-data anon key not configured' };
+  if (!ANON_KEY) return { data: [], error: 'geck-data anon key not configured' };
   if (!morphName) return { data: [], error: 'morphName required' };
 
   const norm = normMorph(morphName);
   try {
+    const geckData = await getGeckData();
     const { data: external, error: eErr } = await geckData
       .from('external_reference_images')
       .select('image_url, storage_path, storage_bucket, license, attribution, source_kind, source_url')
@@ -89,9 +98,10 @@ export async function getMorphReferenceImages(morphName, { limit = 24, species =
  * inheritance, source URL). Returns null if no row exists.
  */
 export async function getMorphTaxonomy(morphName, species = CRESTED_SPECIES) {
-  if (!geckData) return { data: null, error: 'geck-data anon key not configured' };
+  if (!ANON_KEY) return { data: null, error: 'geck-data anon key not configured' };
   const norm = normMorph(morphName);
   try {
+    const geckData = await getGeckData();
     const { data, error } = await geckData
       .from('morph_taxonomy')
       .select('canonical_name, inheritance, allele_group, description, source_kind, source_url, updated_at')

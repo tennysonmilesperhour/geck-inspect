@@ -16,7 +16,7 @@
 //
 // Only the card id and when it was kept are stored. Nothing here
 // identifies a person.
-import { isShareId, SHARE_REF_PARAM } from '@/lib/morphShareCard';
+import { isShareId, SHARE_REF_PARAM } from '@/lib/morphShareIds';
 
 const STORAGE_KEY = 'geck_morph_share_ref_v1';
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;

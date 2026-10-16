@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE_URL } from '@/lib/constants';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabaseClient';
+// Loaded on first use, not with the page (src/lib/supabaseLazy.js).
+import { getSupabase } from '@/lib/supabaseLazy';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
@@ -244,6 +245,7 @@ export default function MorphDetail() {
       try {
         // Broad fetch of every morph_guide record, then dedupe in JS.
         // Tiny table (<100 rows) so no indexing concerns.
+        const supabase = await getSupabase();
         const { data, error } = await supabase
           .from('morph_guides')
           .select(

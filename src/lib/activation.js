@@ -5,7 +5,7 @@
 // PostHog is configured. See docs/planning/instrumentation-2026-10.md.
 //
 // All of it is best effort: a failed analytics call never blocks a save.
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabase } from '@/lib/supabaseLazy';
 import { captureEvent } from '@/lib/posthog';
 import { getFirstTouch, firstTouchProperties, getSignupCta, signupCtaProperties } from '@/lib/attribution';
 import { creditMorphShareSignup, getMorphShareRefForAccount } from '@/lib/morphShareRef';
@@ -49,6 +49,8 @@ export function isNewAccount(authUser, now = Date.now()) {
  */
 export async function recordSignupIfNew(authUser, profile) {
   if (!authUser?.id || !isNewAccount(authUser)) return false;
+  // Runs after sign-in, when the client is already here.
+  const supabase = await getSupabase();
   const flag = `${SIGNUP_FLAG_PREFIX}${authUser.id}`;
   const extra = profile && typeof profile.extra_data === 'object' && profile.extra_data ? profile.extra_data : null;
   if (readFlag(flag) || extra?.signup_tracked_at) {
@@ -111,6 +113,7 @@ const firstGeckoSettled = new Set();
 
 async function currentAuthIdentity() {
   try {
+    const supabase = await getSupabase();
     const { data } = await supabase.auth.getUser();
     return data?.user ? { id: data.user.id, email: data.user.email } : null;
   } catch {
@@ -134,6 +137,7 @@ export async function recordGeckoAdded(source, count = 1, options = {}) {
   const flag = `${FIRST_GECKO_FLAG_PREFIX}${who.id}`;
   if (firstGeckoSettled.has(who.id) || readFlag(flag)) return false;
   try {
+    const supabase = await getSupabase();
     const { count: total, error } = await supabase
       .from('geckos')
       .select('id', { count: 'exact', head: true })

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { getSupabase } from '@/lib/supabaseLazy';
 
 const REFERRAL_QUERY_PARAM = 'ref';
 const STORAGE_KEY = 'geck_inspect_pending_referral';
@@ -97,6 +97,7 @@ export async function applyPendingReferral(user) {
   }
 
   try {
+    const supabase = await getSupabase();
     const { error } = await supabase.rpc('apply_referral_code', { p_code: code });
     if (error) throw error;
     clearPendingReferralCode();
