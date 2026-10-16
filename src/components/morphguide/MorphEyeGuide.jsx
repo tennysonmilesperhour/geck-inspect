@@ -106,11 +106,11 @@ export const EYE_COLOR_STUDIES = [
     badge: 'Amelanistic / Albino',
     plate: '/morph-guide/eyes-v1/ruby-albino.webp',
     summary:
-      'Complete absence of melanin in the iris and retina, revealing a ruby-red vertical slit pupil and a coral-pink vascular iris.',
+      'Complete absence of melanin in the iris and retina, revealing a pale silvery-pearl to milky pinkish-ivory iris laced with fine crimson capillary veins and a ruby-red vertical slit pupil.',
     genetics:
-      'Expected recessive amelanism. The first viable, healthy Albino crested gecko hatchlings were announced by Eureka Exotics on 5 March 2026.',
+      'Expected recessive amelanism. The first viable, healthy Albino crested gecko hatchlings were announced by Eureka Exotics in March 2026.',
     whatToCheck: [
-      'True amelanistic eyes show pink or coral iris tissue and a ruby pupil in ordinary ambient room light, paired with complete absence of black or brown pigment across the body.',
+      'In documented Albino crested geckos, the iris stroma is a pale silvery-pearl or pinkish-ivory laced with delicate rose-crimson blood vessels, while the vertical slit pupil glows ruby-red against a translucent cream-peach amelanistic head.',
       'Camera flash and angled light can reflect red off the retina of any normal dark-eyed gecko (flash red-eye). Always inspect eyes in diffused daylight without flash.',
     ],
     relatedMorphs: [
