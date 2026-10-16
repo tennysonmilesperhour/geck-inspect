@@ -140,6 +140,7 @@ export const MORPH_CATEGORIES = {
     badge: "bg-amber-700",
     morphs: [
       "Hypo",
+      "Pied",
       "Moonglow",
       "Translucent",
       "High White",

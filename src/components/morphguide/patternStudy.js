@@ -433,6 +433,18 @@ export const MORPH_PROGRESSION_TRACKS = [
         ],
       },
       {
+        slug: 'pied',
+        label: 'Pied (Piebald)',
+        stage: 'Localized piebald depigmentation',
+        traits: { dorsal: 0.65, lateral: 0.55, pinstripe: 0.5, tiger: 0, spots: 0 },
+        tone: 'mahogany',
+        note: 'Sharply demarcated patches of completely unpigmented pure chalk-white and translucent pinkish-ivory skin abruptly cut across normal body pattern and distal toes.',
+        pins: [
+          { x: 52, y: 40, title: 'Abrupt Piebald Trunk Patch', detail: 'Razor-sharp border where normal dark and warm pigment stops and unpigmented white skin begins.' },
+          { x: 32, y: 69, title: 'Pied Toes ("Pinktoe")', detail: 'Unpigmented white and translucent pinkish-ivory distal feet and toes contrasting with pigmented upper limbs.' },
+        ],
+      },
+      {
         slug: 'albino',
         label: 'Albino',
         stage: 'Recessive TYR amelanistic',

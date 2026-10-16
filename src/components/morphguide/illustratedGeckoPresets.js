@@ -207,6 +207,15 @@ export const ILLUSTRATED_GECKO_PRESETS = {
       albino: true,
     },
   },
+  pied: {
+    label: 'Pied (Piebald)',
+    phenotype: {
+      palette: { base: '#784a2d', dark: '#3a2214', pattern: '#faf6ef', accent: '#f0dcd6', outline: '#24150d', eye: '#b88c3b' },
+      dorsal: 0.65,
+      lateral: 0.55,
+      lillyWhite: 0.8,
+    },
+  },
   hypo: {
     label: 'Hypo',
     phenotype: { palette: { base: '#e39a52', pattern: '#fdeec8', outline: '#6a4022', crest: '#f0b878' }, dorsal: 0.8, flameTongues: 0.6, lateral: 0.3 },

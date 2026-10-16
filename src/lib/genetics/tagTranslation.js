@@ -262,6 +262,8 @@ const APP_TAGS = new Map(Object.entries({
 
   // Not used: unproven looks
   'moonglow': { reason: REASON.moonglow },
+  'pied': { reason: REASON.unconfirmed },
+  'piebald': { reason: REASON.unconfirmed },
   'furred': { reason: REASON.unconfirmed },
   'furry': { reason: REASON.unconfirmed },
   'harry': { reason: REASON.unconfirmed },

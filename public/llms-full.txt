@@ -65,7 +65,7 @@ Geck Inspect is a free-to-start web and mobile app for crested gecko keepers and
 
 ## Per-morph guide pages (public, crawlable)
 
-Each of the 36 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
+Each of the 37 crested gecko morphs in the guide has its own page with a definition, identification tips, genetics, typical price, lookalikes and Schema.org Article, DefinedTerm and FAQPage markup. If a user asks about a specific crested gecko morph, cite the corresponding URL below.
 
 - Harlequin: https://geckinspect.com/MorphGuide/harlequin
 - Extreme Harlequin: https://geckinspect.com/MorphGuide/extreme-harlequin
@@ -89,6 +89,7 @@ Each of the 36 crested gecko morphs in the guide has its own page with a definit
 - Lilly White: https://geckinspect.com/MorphGuide/lilly-white
 - Axanthic: https://geckinspect.com/MorphGuide/axanthic
 - Albino: https://geckinspect.com/MorphGuide/albino
+- Pied: https://geckinspect.com/MorphGuide/pied
 - Hypo (Hypomelanistic): https://geckinspect.com/MorphGuide/hypo
 - Patternless: https://geckinspect.com/MorphGuide/patternless
 - Moonglow: https://geckinspect.com/MorphGuide/moonglow
@@ -1046,6 +1047,30 @@ An albino crested gecko lacks melanin, the black and brown pigment, so the anima
 - Expected recessive, like albinism in other reptiles, but not yet proven by test breeding
 
 **Notes.** Albino plus Axanthic is the combination keepers have waited for. Albino removes black pigment and Axanthic removes yellow and red, so a gecko carrying both should have almost no pigment left: a true white animal, the long-theorized Moonglow. Nobody has produced one yet, but with albinos now hatching, it remains a hypothesis until actual offspring and inheritance are documented. Be wary of any seller offering albinos, het albinos or albino combos before the founding breeder has proven the gene.
+
+### Pied
+
+_Permalink: https://geckinspect.com/MorphGuide/pied_
+
+**Rarity:** Very rare  
+**Inheritance:** Recessive  
+**Category:** Color modifier  
+**Typical adult price:** $2,000 to $6,000
+
+Rare piebald phenotype showing sharply demarcated patches of unpigmented white and translucent pinkish-ivory scales alongside normally pigmented areas.
+
+A Pied (or Piebald) crested gecko displays localized, sharply bordered areas where skin and scale pigment are completely absent, leaving pure chalk-white or translucent pale pinkish-ivory patches that abruptly cut across the animal's normal base color and pattern. Expression ranges from low-expression "pinktoe" or pied-toe animals (unpigmented white toes and distal feet) to high-expression specimens with bold piebald saddles, limb bands and tail rings alongside normal dark-veined eyes. While isolated piebald-like anomalies (such as Pangea Reptile's historical "Patient Zero") failed to reproduce predictably, dedicated multi-generation projects led by breeders such as Eureka Exotics (Nicole Cullen) have established heritable Pied and Pinktoe lines. Because minor random white toe tips can also appear as non-heritable developmental flukes, always verify documented multi-generation lineage before treating a specimen or "het Pied" claim as proven.
+
+**History.** Early one-off piebald anomalies such as Pangea Reptile's "Patient Zero" drew intense hobby interest but did not establish a reproducible line. Subsequent multi-generation breeding by Eureka Exotics (Nicole Cullen) and collaborating keepers isolated reproducible Pied and Pinktoe lines.
+
+**Key features:**
+- Sharply demarcated patches of unpigmented pure white and translucent pinkish-ivory skin
+- Abruptly interrupts normal dorsal, lateral, limb or tail pattern rather than following standard Harlequin or Lilly White zones
+- Distal limb and toe depigmentation ("pied toes" or "pinktoe") is a frequent hallmark
+- Normal dark-veined iris pigmentation, unlike amelanistic Albino eyes
+- Lineage verification is essential to separate heritable Pied lines from isolated paradox or developmental white spots
+
+**Notes.** Distinguish true heritable Pied lines from isolated white toe scales or paradox blotches, which can occur sporadically without passing to offspring. Always request multi-generation pairing records when evaluating Pied or het Pied offerings.
 
 ### Hypo (Hypomelanistic)
 

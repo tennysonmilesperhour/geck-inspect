@@ -135,6 +135,7 @@ export const KNOWN_PATH_PATTERNS = [
   "/MorphGuide/lilly-white",
   "/MorphGuide/axanthic",
   "/MorphGuide/albino",
+  "/MorphGuide/pied",
   "/MorphGuide/hypo",
   "/MorphGuide/patternless",
   "/MorphGuide/moonglow",
