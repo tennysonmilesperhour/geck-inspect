@@ -20,7 +20,7 @@ const ALLOWED = new Set(['cc0', 'pdm', 'public-domain', 'cc-by', 'cc-by-sa']);
 /**
  * Licence strings as stored by the importer (iNaturalist style). The
  * database's read policy allows exactly this list too
- * (supabase/migrations/20261015232800_ux.sql), so an older app copy or a
+ * (supabase/migrations/20261016090400_ux.sql), so an older app copy or a
  * direct API call cannot fetch the others; a test keeps the two equal.
  */
 export const COMMERCIAL_USE_LICENSES = ['cc0', 'cc-by', 'cc-by-sa', 'pdm'];

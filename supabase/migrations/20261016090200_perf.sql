@@ -48,7 +48,7 @@ as $$
 $$;
 
 comment on function public.recent_weight_records(integer) is
-  'The signed-in member''s newest p_per_gecko (1 to 50, default 8) weight records for each of their geckos. My Geckos uses it instead of reading every record (20261015232200_perf.sql).';
+  'The signed-in member''s newest p_per_gecko (1 to 50, default 8) weight records for each of their geckos. My Geckos uses it instead of reading every record (20261016090200_perf.sql).';
 
 revoke all on function public.recent_weight_records(integer) from public, anon;
 grant execute on function public.recent_weight_records(integer) to authenticated, service_role;

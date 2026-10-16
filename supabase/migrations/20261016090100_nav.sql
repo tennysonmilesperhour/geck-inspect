@@ -396,4 +396,4 @@ revoke all on function public.my_care_today(date) from public, anon, authenticat
 grant execute on function public.my_care_today(date) to authenticated, service_role;
 
 comment on function public.my_care_today(date) is
-  'The Today screen: what is due for the caller''s own animals (feedings, weigh-ins, hatch windows, vet follow-ups, Season Planner tasks and pairing windows), overdue and the next 7 days, by the reminder jobs'' rules. Read only. Migration 20261015232000_nav.sql.';
+  'The Today screen: what is due for the caller''s own animals (feedings, weigh-ins, hatch windows, vet follow-ups, Season Planner tasks and pairing windows), overdue and the next 7 days, by the reminder jobs'' rules. Read only. Migration 20261016090100_nav.sql.';

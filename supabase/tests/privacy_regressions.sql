@@ -1,5 +1,5 @@
 -- Privacy: log retention and private breeding project finances.
--- Regression checks for supabase/migrations/20261015231000_privacy.sql.
+-- Regression checks for supabase/migrations/20261016090000_privacy.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members and switches roles the way the API does

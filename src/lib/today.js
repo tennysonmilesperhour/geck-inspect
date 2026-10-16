@@ -3,7 +3,7 @@
 //
 // Where the list comes from:
 //   * a signed-in member: public.my_care_today in the database
-//     (supabase/migrations/20261015232000_nav.sql), which uses the
+//     (supabase/migrations/20261016090100_nav.sql), which uses the
 //     reminder jobs' own rules, so the screen and the reminders agree;
 //   * the guest demo and signed-out visitors: buildTodayFromRecords below,
 //     the same rules in JavaScript, run over the demo collection.

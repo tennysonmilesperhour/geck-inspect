@@ -52,7 +52,7 @@ describe('Price Index minimum sample', () => {
   });
 
   it('matches the database function', () => {
-    const sql = read('supabase/migrations/20261015232300_seo.sql');
+    const sql = read('supabase/migrations/20261016090300_seo.sql');
     expect(sql.match(new RegExp(`for_sale >= ${PRICE_INDEX_MIN_LISTINGS}\\b`, 'g'))).toHaveLength(2);
     expect(sql).toContain(`'thin', for_sale < ${PRICE_INDEX_THIN_LISTINGS}`);
     expect(sql).not.toMatch(/for_sale >= 5\b/);

@@ -1,4 +1,4 @@
--- Regression checks for supabase/migrations/20261015233000_revenue_counts.sql.
+-- Regression checks for supabase/migrations/20261016090500_revenue_counts.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser
 -- after every migration. Everything happens inside one transaction and is

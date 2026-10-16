@@ -15,7 +15,7 @@
  *
  * agent_hits are kept 90 days (the privacy policy says so). The daily
  * cron job privacy-retention-daily (apply_privacy_retention, migration
- * 20261015231000_privacy.sql) does the deleting; this weekly prune uses
+ * 20261016090000_privacy.sql) does the deleting; this weekly prune uses
  * the same cutoff as a backup, so it normally removes nothing.
  *
  * Needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (repo secrets).

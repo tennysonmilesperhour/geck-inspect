@@ -1,5 +1,5 @@
 -- The Today screen's list, public.my_care_today.
--- Regression checks for supabase/migrations/20261015232000_nav.sql.
+-- Regression checks for supabase/migrations/20261016090100_nav.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members, switches roles the way the API does

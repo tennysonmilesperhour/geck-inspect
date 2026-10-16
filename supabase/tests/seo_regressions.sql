@@ -1,5 +1,5 @@
 -- The Price Index minimum sample.
--- Regression checks for supabase/migrations/20261015232300_seo.sql.
+-- Regression checks for supabase/migrations/20261016090300_seo.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it writes its own market rows, then reads the index as a signed-out

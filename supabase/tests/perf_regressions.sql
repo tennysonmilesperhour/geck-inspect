@@ -1,5 +1,5 @@
 -- Newest weigh-ins per gecko (My Geckos).
--- Regression checks for supabase/migrations/20261015232200_perf.sql.
+-- Regression checks for supabase/migrations/20261016090200_perf.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members and switches roles the way the API does

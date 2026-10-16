@@ -17,7 +17,7 @@ describe('outside photo licences on a commercial service', () => {
   });
 
   it('the database read policy allows exactly the licences the app asks for', () => {
-    const sql = readFileSync(new URL('../../../supabase/migrations/20261015232800_ux.sql', import.meta.url), 'utf8');
+    const sql = readFileSync(new URL('../../../supabase/migrations/20261016090400_ux.sql', import.meta.url), 'utf8');
     const list = sql.match(/using \(license in \(([^)]+)\)\)/)[1].split(',').map((s) => s.trim().replace(/'/g, ''));
     expect([...list].sort()).toEqual([...COMMERCIAL_USE_LICENSES].sort());
     for (const l of list) expect(isCommercialUseLicense(l), l).toBe(true);

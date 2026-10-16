@@ -17,7 +17,7 @@
  * pages (PriceIndexTable, /data, /crested-gecko-price, their server HTML),
  * llms-full.txt and the MCP server all apply and state the same rule. The
  * database function open_price_index() applies the same minimum
- * (supabase/migrations/20261015232300_seo.sql); a test keeps them equal.
+ * (supabase/migrations/20261016090300_seo.sql); a test keeps them equal.
  *
  * Dependency-free so Node scripts can import it.
  */

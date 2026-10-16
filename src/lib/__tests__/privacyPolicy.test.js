@@ -65,7 +65,7 @@ describe('Privacy Policy: email records and deletion', () => {
 // Review item E3 31 (16 Oct 2026): the policy has to match what the code
 // now does with analytics and logs.
 const PRIVACY_SQL = readFileSync(
-  new URL('../../../supabase/migrations/20261015231000_privacy.sql', import.meta.url),
+  new URL('../../../supabase/migrations/20261016090000_privacy.sql', import.meta.url),
   'utf8',
 );
 const INDEX_HTML = readFileSync(new URL('../../../index.html', import.meta.url), 'utf8');

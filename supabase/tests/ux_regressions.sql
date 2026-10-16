@@ -1,5 +1,5 @@
 -- Outside reference photos: only commercial-use licences are readable.
--- Regression checks for supabase/migrations/20261015232800_ux.sql.
+-- Regression checks for supabase/migrations/20261016090400_ux.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it adds its own sample rows and switches roles the way the API does

@@ -385,7 +385,7 @@ begin
      and not has_column_privilege('anon', c.oid, a.attnum, 'select');
   if v_bad is not null then raise exception 'FAIL: signed-out visitors lost ordinary columns: %', v_bad; end if;
   -- The breeding project tables are owner-only since
-  -- 20261015231000_privacy.sql: signed-out visitors keep no column at all
+  -- 20261016090000_privacy.sql: signed-out visitors keep no column at all
   -- (supabase/tests/privacy_regressions.sql checks the rest).
   select string_agg(c.relname || '.' || a.attname, ', ') into v_bad
     from pg_class c

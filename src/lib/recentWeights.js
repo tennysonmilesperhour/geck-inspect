@@ -7,7 +7,7 @@
  * weigh-ins silently lost the weight (and the weight sort and breeding
  * readiness) of every gecko last weighed before the 1,000th newest record.
  *
- * public.recent_weight_records (supabase/migrations/20261015232200_perf.sql)
+ * public.recent_weight_records (supabase/migrations/20261016090200_perf.sql)
  * returns at most `perGecko` records per gecko, so the answer grows with
  * the number of geckos, not with years of history; this pages through it
  * in case even that passes 1,000 rows.
