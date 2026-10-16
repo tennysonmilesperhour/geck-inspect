@@ -1,4 +1,5 @@
 import { authRedirect } from '@/lib/nativeAuth';
+import { memberHome } from '@/lib/pwaLaunch';
 import { redirectFromSearch, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { isNativePlatform, detectPlatform } from '@/lib/revenuecat';
 import { useEffect, useState } from 'react';
@@ -129,7 +130,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     try {
       const native = isNativePlatform();
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google', options: { redirectTo: authRedirect('/MyGeckos'), skipBrowserRedirect: native },
+        provider: 'google', options: { redirectTo: authRedirect(memberHome()), skipBrowserRedirect: native },
       });
       if (error) throw error;
       if (native) {
@@ -157,7 +158,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
           email,
           password,
           options: {
-            emailRedirectTo: authRedirect('/MyGeckos'),
+            emailRedirectTo: authRedirect(memberHome()),
             data: { full_name: name },
           },
         });
@@ -204,7 +205,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: authRedirect('/MyGeckos') },
+      options: { emailRedirectTo: authRedirect(memberHome()) },
     });
     if (error) {
       toast({ title: 'Could not resend the email', description: error.message, variant: 'destructive' });

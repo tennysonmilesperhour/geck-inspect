@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { memberHome } from '@/lib/pwaLaunch';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,7 @@ export default function SetNewPassword() {
       return;
     }
     setDone(true);
-    setTimeout(() => navigate('/MyGeckos', { replace: true }), 1200);
+    setTimeout(() => navigate(memberHome(), { replace: true }), 1200);
   };
 
   return (

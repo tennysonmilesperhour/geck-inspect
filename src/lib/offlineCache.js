@@ -64,6 +64,14 @@ export function startQueryPersistence(queryClient, ownerId) {
     const parsed = raw ? JSON.parse(raw) : null;
     if (parsed?.state && Date.now() - (parsed.savedAt || 0) < MAX_AGE_MS) {
       hydrate(queryClient, parsed.state);
+      // A copy keeps the time it was loaded, so one under two minutes old
+      // counted as fresh and was shown without asking the server. A gecko
+      // added after the copy was saved then went missing until it expired.
+      // Marking every restored copy stale makes each page refetch it
+      // online, while offline it still shows.
+      for (const key of PERSISTED_KEYS) {
+        queryClient.invalidateQueries({ queryKey: [key], refetchType: 'none' });
+      }
     } else if (raw) {
       storage.removeItem(KEY_PREFIX + owner);
     }

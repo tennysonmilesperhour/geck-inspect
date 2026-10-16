@@ -147,3 +147,10 @@ describe('a PKCE link opened in another browser', () => {
     expect(isPkceLinkFromAnotherBrowser(fakeWindow('https://geckinspect.com/MyGeckos'))).toBe(false);
   });
 });
+
+describe('where a confirmed member lands with nothing else asked for', () => {
+  it('uses the home the caller gives (Today on a phone)', () => {
+    expect(destinationFor({ type: 'signup', next: '' }, 'https://geckinspect.com', '/Today')).toBe('/Today');
+    expect(destinationFor({ type: 'email', next: 'https://geckinspect.com/claim/abc' }, 'https://geckinspect.com', '/Today')).toBe('/claim/abc');
+  });
+});

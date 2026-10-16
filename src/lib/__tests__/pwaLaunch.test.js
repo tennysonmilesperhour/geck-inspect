@@ -4,6 +4,7 @@ import {
   firstScreenPage,
   handlePwaLaunch,
   isPhoneScreen,
+  memberHome,
   LAUNCH_HANDLED_KEY,
   pendingPwaLaunch,
   PHONE_QUERY,
@@ -161,3 +162,12 @@ describe('App.jsx uses these helpers', () => {
   });
 });
 
+
+describe('where a member lands after signing in', () => {
+  const win = (phone) => ({ matchMedia: () => ({ matches: phone }) });
+  it('is Today on a phone and My Geckos on a larger screen', () => {
+    expect(memberHome(win(true))).toBe('/Today');
+    expect(memberHome(win(false))).toBe('/MyGeckos');
+    expect(memberHome({})).toBe('/MyGeckos');
+  });
+});

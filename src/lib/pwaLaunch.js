@@ -47,6 +47,14 @@ export function pwaLaunchTarget(pathname, search, phone, hash = '') {
   return null;
 }
 
+/**
+ * Where a member lands after signing in when nothing else was asked for:
+ * Today on a phone (the phone's first tab), My Geckos on a larger screen.
+ */
+export function memberHome(win = globalThis.window) {
+  return isPhoneScreen(win) ? '/Today' : '/MyGeckos';
+}
+
 /** Whether this window is phone sized (see PHONE_QUERY). */
 export function isPhoneScreen(win = globalThis.window) {
   try {

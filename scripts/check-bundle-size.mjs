@@ -135,7 +135,13 @@ function main() {
   }
   const failures = checks.filter((c) => c.over);
   if (failures.length) {
-    console.error(`\n[size-budget] ${failures.length} over budget. Make it smaller (lazy-load a library at the action that needs it, resize an image), or see scripts/bundle-budget.json.`);
+    console.error(`\n[size-budget] ${failures.length} over budget.`);
+    if (failures.some((c) => c.id.startsWith('image:'))) {
+      console.error('[size-budget] A picture in public/ is over the limit. Run: pnpm shrink:images  (it re-saves each one a little smaller, same size in pixels), then commit the files.');
+    }
+    if (failures.some((c) => !c.id.startsWith('image:'))) {
+      console.error('[size-budget] A page loads too much code before it can draw. Load the new part on demand (lazyOptional in src/components/gecko/record/loadOnDemand.js, as the Morph Guide does for the Field Notebook), or see scripts/bundle-budget.json.');
+    }
     process.exit(1);
   }
   console.log(`\n[size-budget] all ${checks.length} checks within budget.`);

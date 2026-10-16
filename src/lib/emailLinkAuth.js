@@ -30,6 +30,7 @@
  */
 
 import { safeInternalPath } from '@/lib/safeInternalPath';
+import { memberHome } from '@/lib/pwaLaunch';
 
 /** The website's Supabase sign-in flow. See the steps above before changing it. */
 export const WEB_AUTH_FLOW = 'implicit';
@@ -66,11 +67,11 @@ function sameSitePath(next, origin) {
  * ends in Settings; a confirmation goes where the sign-up asked (the app's
  * first screen by default, or a claim link or invite page).
  */
-export function destinationFor({ type, next }, origin) {
+export function destinationFor({ type, next }, origin, home = '/MyGeckos') {
   if (type === 'recovery' || type === 'invite') return '/AuthPortal?mode=reset';
   if (type === 'email_change') return '/Settings';
   const path = sameSitePath(next, origin);
-  if (!path || path.startsWith('/AuthPortal')) return '/MyGeckos';
+  if (!path || path.startsWith('/AuthPortal')) return home;
   return path;
 }
 
@@ -101,7 +102,7 @@ export async function completeEmailLink(supabase, win = typeof window !== 'undef
     if (error) throw error;
     // A full load of the next page: the session is stored by now, and the
     // token leaves the address and the history entry.
-    win.location.replace(destinationFor(link, win.location.origin));
+    win.location.replace(destinationFor(link, win.location.origin, memberHome(win)));
     return 'done';
   } catch {
     const reset = link.type === 'recovery' || link.type === 'invite';

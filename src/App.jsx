@@ -18,6 +18,7 @@ import ConsentBanner from '@/components/shared/ConsentBanner'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { redirectFromSearch, takePostAuthRedirect } from '@/lib/postAuthRedirect';
+import { memberHome } from '@/lib/pwaLaunch';
 import PageNotFound from './lib/PageNotFound';
 import { isGuestMode } from '@/lib/guestMode';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -253,7 +254,7 @@ const AuthPortalAuthed = () => {
   const mode = new URLSearchParams(location.search).get('mode');
   if (mode === 'reset') return <SetNewPassword />;
   const target = redirectFromSearch(location.search);
-  return <Navigate to={target || '/'} replace />;
+  return <Navigate to={target || memberHome()} replace />;
 };
 
 // After an email confirmation or Google sign-in the app opens on

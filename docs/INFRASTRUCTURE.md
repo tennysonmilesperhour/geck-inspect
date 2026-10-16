@@ -92,8 +92,7 @@ Since 16 October 2026 each member photo in `geck-inspect-media` also has a small
 
 | Policy | For | Roles | Rule |
 |---|---|---|---|
-| geck-inspect-media public read | read | anon, authenticated | bucket is geck-inspect-media |
-| geck_inspect_media_public_read | read | everyone | bucket is geck-inspect-media |
+| geck-inspect-media owner or admin read | read (lists files) | authenticated | the file's uploader, or an admin (`20261016220000_media_listing_closed.sql`; until 16 Oct 2026 two rules let anyone list every file name) |
 | Sticker uploads readable by anyone | read | everyone | geck-inspect-media, folder `sticker-uploads` |
 | geck-inspect-media authenticated insert | upload | authenticated | bucket is geck-inspect-media |
 | geck_inspect_media_authed_insert | upload | authenticated | bucket is geck-inspect-media |
