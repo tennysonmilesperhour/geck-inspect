@@ -15,7 +15,9 @@
  * which does the same resize in the admin's browser.
  *
  * A missing thumbnail is never shown as broken: SmartImage and GeckoImage
- * try the thumbnail first and quietly fall back to the photo itself.
+ * try the thumbnail first and quietly fall back to the photo itself. A
+ * thumbnail that failed once is not asked for again in the same visit
+ * (noteMissingThumbnail below).
  */
 
 /**
@@ -99,12 +101,40 @@ export function thumbnailUrl(originalUrl, { supabaseUrl = import.meta.env?.VITE_
   return thumbPath ? `${origin}${PUBLIC_PREFIX}${thumbPath}` : null;
 }
 
+// Thumbnail addresses that failed to load during this visit (in memory
+// only). Until the backfill has run, most older photos have no thumbnail,
+// and every card that showed one asked for it again: a failed request and
+// an extra round trip before each photo painted, on every screen. Now the
+// first miss is the only one. A thumbnail made later (the backfill, or a
+// new upload) is used from the next visit.
+const missingThumbnails = new Set();
+
+/**
+ * Remember that a thumbnail address failed, so thumbnailFirst skips it
+ * for the rest of the visit. Anything that is not a thumbnail address is
+ * ignored, so a photo itself is never skipped, and nothing is remembered
+ * with no signal, when every address fails whether it exists or not.
+ *
+ * @param {string} url: the thumbnail address that failed
+ */
+export function noteMissingThumbnail(url) {
+  if (typeof url !== 'string' || !url.includes(PUBLIC_PREFIX + THUMBNAIL_PREFIX)) return;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  missingThumbnails.add(url);
+}
+
+/** Tests start each case with nothing remembered. */
+export function forgetMissingThumbnails() {
+  missingThumbnails.clear();
+}
+
 /**
  * The addresses a small photo slot should try, in order: the thumbnail
- * (when the slot needs no more than THUMBNAIL.maxEdge image pixels and
- * the photo has one), then the photo itself. Callers show their
- * placeholder after the last one fails. A slot with no width, or a wider
- * one, gets the photo only, so full-size views never load a thumbnail.
+ * (when the slot needs no more than THUMBNAIL.maxEdge image pixels, the
+ * photo has one, and it has not already failed in this visit), then the
+ * photo itself. Callers show their placeholder after the last one fails.
+ * A slot with no width, or a wider one, gets the photo only, so full-size
+ * views never load a thumbnail.
  *
  * @param {string} src: the photo's URL
  * @param {number} [width]: image pixels the slot needs across, the same
@@ -116,5 +146,5 @@ export function thumbnailFirst(src, width) {
   if (typeof src !== 'string' || !src.trim()) return [];
   const small = Number.isFinite(width) && width > 0 && width <= THUMBNAIL.maxEdge;
   const thumb = small ? thumbnailUrl(src) : null;
-  return thumb ? [thumb, src] : [src];
+  return thumb && !missingThumbnails.has(thumb) ? [thumb, src] : [src];
 }

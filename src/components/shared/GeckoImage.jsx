@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { geckoPlaceholderStyle, isGeckoPlaceholder } from '@/lib/geckoPlaceholder';
-import { thumbnailFirst } from '@/lib/photoThumbnails';
+import { noteMissingThumbnail, thumbnailFirst } from '@/lib/photoThumbnails';
 import GeckoPlaceholder from './GeckoPlaceholder';
 
 /**
@@ -42,8 +42,10 @@ export default function GeckoImage({ src, gecko, alt = '', className = '', style
       onError={event => {
         if (placeholder) return;
         // A missing thumbnail is expected; callers hear only about the
-        // photo itself failing.
+        // photo itself failing. It is remembered for the whole visit, so
+        // other slots showing this photo go straight to the photo itself.
         if (remaining.length === 1) onError?.(event);
+        if (shown !== src) noteMissingThumbnail(shown);
         setFailures({ src, urls: [...failedUrls, shown] });
       }}
     />

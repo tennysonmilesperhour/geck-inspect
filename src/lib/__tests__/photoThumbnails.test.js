@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   THUMBNAIL,
+  forgetMissingThumbnails,
+  noteMissingThumbnail,
   thumbnailFirst,
   thumbnailStoragePath,
   thumbnailUrl,
@@ -113,5 +115,49 @@ describe('thumbnailFirst', () => {
   it('documents the size the thumbnails are made at', () => {
     expect(THUMBNAIL.maxEdge).toBe(480);
     expect(THUMBNAIL.quality).toBeCloseTo(0.75);
+  });
+});
+
+// Until 16 Oct 2026 each card that mounted asked for a missing thumbnail
+// again: a failed request before every photo, on every screen.
+describe('a thumbnail that failed once in this visit', () => {
+  const photo = `${MEDIA}/uploads/u1/p1.webp`;
+  const thumb = `${MEDIA}/thumbs/uploads/u1/p1.webp`;
+  afterEach(() => {
+    forgetMissingThumbnails();
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it('is skipped from then on, and the photo is tried straight away', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', PROJECT);
+    noteMissingThumbnail(thumb);
+    expect(thumbnailFirst(photo, 96)).toEqual([photo]);
+    // Other photos still try their own thumbnails.
+    const other = `${MEDIA}/uploads/u1/p2.webp`;
+    expect(thumbnailFirst(other, 96)).toEqual([`${MEDIA}/thumbs/uploads/u1/p2.webp`, other]);
+  });
+
+  it('never skips a photo itself, whatever address is reported', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', PROJECT);
+    noteMissingThumbnail(photo);
+    noteMissingThumbnail('https://cdn.example/x.jpg');
+    noteMissingThumbnail(null);
+    expect(thumbnailFirst(photo, 96)).toEqual([thumb, photo]);
+    expect(thumbnailFirst('https://cdn.example/x.jpg', 96)).toEqual(['https://cdn.example/x.jpg']);
+  });
+
+  it('is not remembered with no signal, when every address fails', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', PROJECT);
+    vi.stubGlobal('navigator', { onLine: false });
+    noteMissingThumbnail(thumb);
+    expect(thumbnailFirst(photo, 96)).toEqual([thumb, photo]);
+  });
+
+  it('is forgotten on request (each new visit starts empty)', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', PROJECT);
+    noteMissingThumbnail(thumb);
+    forgetMissingThumbnails();
+    expect(thumbnailFirst(photo, 96)).toEqual([thumb, photo]);
   });
 });

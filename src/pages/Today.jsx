@@ -27,6 +27,7 @@ import { useOfflineQueue } from '@/lib/offlineSync';
 import { captureEvent } from '@/lib/posthog';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import {
+  isActiveGecko,
   isTodayUnavailable,
   loadDemoToday,
   loadMemberToday,
@@ -181,10 +182,14 @@ export default function Today() {
   });
 
   // The collection: the same copy Field Mode and the one-tap log use, so
-  // it is on the phone already and opens with no signal.
+  // it is on the phone already and opens with no signal. Asked for again
+  // every time the screen opens, like the list: a gecko added a moment ago
+  // (or on another device) must show here, and the copy restored from the
+  // phone's storage would otherwise count as fresh for two minutes.
   const geckoQuery = useQuery({
     queryKey: fieldModeQueryKey(user?.email),
     enabled: signedIn,
+    staleTime: 0,
     queryFn: () => loadWritableGeckos(user),
   });
 
@@ -212,15 +217,24 @@ export default function Today() {
     [data, today, queued, signedIn],
   );
 
-  const allGeckos = (demo ? data?.geckos : geckoQuery.data) || [];
+  // Geckos marked Sold are left out, as they are from the list above and
+  // the Log tab, so "See all" counts the same geckos.
+  const allGeckos = ((demo ? data?.geckos : geckoQuery.data) || []).filter(isActiveGecko);
   const geckos = [...allGeckos]
     .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
     .slice(0, GECKOS_SHOWN);
-  const noGeckos = signedIn && geckoQuery.isSuccess && allGeckos.length === 0;
+  // While the collection is being asked for again with no gecko in the
+  // copy (a first gecko just added), say nothing about it yet rather than
+  // "Add your first gecko" or "Nothing due today". Not with no signal,
+  // when that load cannot answer: in the app opened without a signal it
+  // still retries for several seconds, because the query client counts
+  // itself online until an 'offline' event, which then never fires.
+  const geckosSettling = signedIn && online && geckoQuery.isFetching && allGeckos.length === 0;
+  const noGeckos = signedIn && geckoQuery.isSuccess && !geckosSettling && (geckoQuery.data || []).length === 0;
 
   const unavailable = listQuery.isError && isTodayUnavailable(listQuery.error);
   const listFailed = listQuery.isError && !data;
-  const offlineNoCopy = !data && listQuery.fetchStatus === 'paused';
+  const offlineNoCopy = !data && (listQuery.fetchStatus === 'paused' || (signedIn && !online));
   const showingOldCopy = Boolean(data) && (listQuery.isError || !online) && data.today !== today;
 
   const dateLine = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
@@ -321,7 +335,7 @@ export default function Today() {
               <ul className="space-y-3">
                 {view.cards.map((card) => <DueCard key={card.id} card={card} demoSignedOut={demoSignedOut} />)}
               </ul>
-            ) : noGeckos ? null : (
+            ) : noGeckos || geckosSettling ? null : (
               <div className="rounded-2xl border border-emerald-700/40 bg-emerald-950/30 p-4">
                 <p className="flex items-center gap-2 text-base font-semibold text-emerald-100">
                   <CheckCircle2 className="h-5 w-5" aria-hidden="true" /> Nothing due today

@@ -22,9 +22,16 @@ export const queryClientInstance = new QueryClient({
 // it kept showing "Add your first gecko" for up to two minutes after the
 // first gecko was saved (audit step 31). Mark those caches stale here, once
 // for the whole app, so the next Dashboard visit refetches.
+//
+// 'field-mode' is the collection copy that Today, the Log tab, the one-tap
+// log (/log) and Field Mode share (src/lib/fieldModeData.js). Until 16 Oct
+// 2026 it was left out, so on a phone a gecko added a moment ago was
+// missing from all four for two minutes, and a brand new member could not
+// log the first feeding for the first gecko.
 export function invalidateCollectionCaches(client = queryClientInstance) {
 	client.invalidateQueries({ queryKey: ['dashboard', 'personal'] });
 	client.invalidateQueries({ queryKey: ['dashboard', 'hatchery'] });
+	client.invalidateQueries({ queryKey: ['field-mode'] });
 }
 
 if (typeof window !== 'undefined') {

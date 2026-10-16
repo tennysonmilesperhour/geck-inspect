@@ -49,15 +49,18 @@ const demoProfile = (key) => {
 
 const nowMs = Date.now();
 const daysAgo = (n) => new Date(nowMs - n * 86400000).toISOString();
-const monthsAgo = (n) => daysAgo(n * 30);
-// Date-only columns (egg and clutch lay and hatch dates) come back from
-// Supabase as YYYY-MM-DD, never a timestamp. A date input shows nothing
-// for a timestamp, so the demo uses the same shape as real rows.
-const dayAgo = (n) => {
-  const d = new Date(nowMs - n * 86400000);
+// Date-only columns (egg and clutch lay and hatch dates, weigh-in dates)
+// come back from Supabase as YYYY-MM-DD, never a timestamp. A date input
+// shows nothing for a timestamp, so the demo uses the same shape as real
+// rows. The day is the one on this device's calendar, as a keeper's own
+// log would be, and as Today counts days late (todayLocalISO).
+const localDayBefore = (ms, n) => {
+  const d = new Date(ms);
+  d.setDate(d.getDate() - n);
   const pad = (v) => String(v).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
+const dayAgo = (n) => localDayBefore(nowMs, n);
 
 // Hatch dates were written as fixed dates around June 2025, so the sample
 // geckos aged every day while their sample weights stayed put (a 7-month
@@ -467,6 +470,17 @@ const bandMid = (months) => {
   const band = growthBandAt(Math.max(0, months));
   return band ? (band.low + band.high) / 2 : null;
 };
+// Days from each gecko's latest weigh-in to today (or to its sale). Most
+// were weighed in the last three weeks. Today lists a gecko once its last
+// weigh-in is 30 days old, so the three named here make a short weigh-in
+// list beside the feeding: one late, one due today, one later this week.
+// Until 16 Oct 2026 every latest weigh-in was 45 days old, and the demo's
+// Today showed all 19 geckos as 15 days late.
+const LAST_WEIGHED_DAYS_AGO = {
+  'mock-gecko-7': 31, // Pixel
+  'mock-gecko-4': 30, // Nimbus
+  'mock-gecko-5': 26, // Cappy
+};
 const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
   const target = g.weight_grams;
   const points = 6;
@@ -477,8 +491,10 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
     : nowMs;
   const finalMid = bandMid(ageAt(soldAtMs) ?? 36);
   const scale = finalMid ? Math.min(1.3, Math.max(0.7, target / finalMid)) : 1;
+  const latestBack = LAST_WEIGHED_DAYS_AGO[g.id] ?? 8 + (gi % 12);
   return Array.from({ length: points }, (_, i) => {
-    const ms = soldAtMs - (points - i) * 45 * 86400000;
+    const back = latestBack + (points - 1 - i) * 45;
+    const ms = soldAtMs - back * 86400000;
     const age = ageAt(ms);
     const jitter = (((gi + i) % 3) - 1) * 0.5;
     const grams = age == null || age < 0 ? target : Math.min(target, bandMid(age) * scale);
@@ -486,7 +502,10 @@ const WEIGHT_RECORDS = ALL_GECKOS.flatMap((g, gi) => {
       id: `mock-wr-${g.id}-${i}`,
       gecko_id: g.id,
       weight_grams: Math.max(2, Math.round((grams + jitter) * 10) / 10),
-      record_date: new Date(ms).toISOString().slice(0, 10),
+      // Until 16 Oct 2026 this was the UTC day, so east of UTC in the
+      // morning (or in the Americas late at night) the demo's weigh-ins
+      // moved a day: Pixel two days late instead of one.
+      record_date: localDayBefore(soldAtMs, back),
       created_by: GUEST_EMAIL,
       created_date: new Date(ms).toISOString(),
     };
@@ -985,11 +1004,12 @@ const DIRECT_MESSAGES = [
 // Feeding groups (referenced by gecko.feeding_group_id)
 // ---------------------------------------------------------------------------
 // Same fields as real feeding_groups rows: an interval in days (required
-// in the database) and the date the group was last fed.
+// in the database) and the date the group was last fed. The hatchlings
+// are due today, so the demo's Today opens on a feeding to log.
 const FEEDING_GROUPS = [
   { id: 'mock-feed-1', label: 'A', color: '#10b981', diet_type: 'Pangea Fruit Mix', name: 'Adults A', interval_days: 3, last_fed_date: dayAgo(1), created_by: GUEST_EMAIL, created_date: daysAgo(500) },
   { id: 'mock-feed-2', label: 'B', color: '#3b82f6', diet_type: 'Repashy CGD', name: 'Subadults', interval_days: 3, last_fed_date: dayAgo(2), created_by: GUEST_EMAIL, created_date: daysAgo(400) },
-  { id: 'mock-feed-3', label: 'C', color: '#f97316', diet_type: 'Repashy CGD', name: 'Hatchlings', interval_days: 2, last_fed_date: dayAgo(1), created_by: GUEST_EMAIL, created_date: daysAgo(300) },
+  { id: 'mock-feed-3', label: 'C', color: '#f97316', diet_type: 'Repashy CGD', name: 'Hatchlings', interval_days: 2, last_fed_date: dayAgo(2), created_by: GUEST_EMAIL, created_date: daysAgo(300) },
 ];
 
 // ---------------------------------------------------------------------------
