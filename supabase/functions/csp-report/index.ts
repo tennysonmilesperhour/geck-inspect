@@ -23,7 +23,7 @@
 //   report-to (Reporting API): [ { "type": "csp-violation", "body": { "documentURL": ..., ... } } ]
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient } from "../_shared/supabase.ts";
 
 const ALLOWED_DOCUMENT = /^https:\/\/(www\.)?geckinspect\.com(\/|$)/;
 const MAX_REPORTS_PER_REQUEST = 5;

@@ -41,7 +41,8 @@ import {
   careLogErrorText,
 } from '@/lib/husbandryLog';
 import { createPageUrl } from '@/utils';
-import { queueFieldLog, isDeviceOffline, isSyncing, undoQueuedLog, UNDO_SYNCING_MESSAGE, useOfflineQueue } from '@/lib/offlineSync';
+import { dismissRefusedLogs, queueFieldLog, isDeviceOffline, isSyncing, undoQueuedLog, UNDO_SYNCING_MESSAGE, useOfflineQueue } from '@/lib/offlineSync';
+import RefusedLogsNotice from '@/components/shared/RefusedLogsNotice';
 import { enqueue, removeQueued, updateQueued, isNetworkError } from '@/lib/offlineQueue';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { createCareRecordOnce, newClientRequestId } from '@/lib/careLogOnce';
@@ -199,7 +200,9 @@ export default function FieldModePage() {
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [geckos, setGeckos] = useState([]);
-  const { pending: pendingSync, online } = useOfflineQueue();
+  // refused: logs made offline that the server would not save when the
+  // queue sent them. They are listed until the keeper dismisses them.
+  const { pending: pendingSync, online, refused: refusedLogs } = useOfflineQueue();
   // An expired sign-in shows "Sign in", not a connection error.
   const [sessionExpired, setSessionExpired] = useState(false);
   // The day the next log is for. Today unless the keeper backdates it.
@@ -869,6 +872,7 @@ export default function FieldModePage() {
           </span>
         </div>
       )}
+      <RefusedLogsNotice refused={refusedLogs} geckos={geckos} onDismiss={dismissRefusedLogs} />
 
       <div className="flex-1 overflow-y-auto pb-24">
         {sessionExpired || (!user && !loadError) ? (

@@ -35,10 +35,12 @@
 //   SUPABASE_URL          injected automatically
 //   SUPABASE_SERVICE_ROLE_KEY  injected automatically
 //
-// Deploy: supabase functions deploy send-push --no-verify-jwt
+// Deploy: declared in supabase/config.toml (verify_jwt = false), so the
+// Supabase GitHub integration deploys it from main.
 
-import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { createClient } from "../_shared/supabase.ts";
+import { bearerToken, CORS_HEADERS, json as jsonWith, preflight } from "../_shared/http.ts";
+import { isTrustedServerCaller } from "../_shared/caller.ts";
 // Node library via Deno's npm compat, more reliable than esm.sh because
 // Deno handles Node's `crypto` / `Buffer` polyfills natively on Edge.
 import webpush from "npm:web-push@3.6.7";
@@ -53,65 +55,26 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
 function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json", ...CORS },
-  });
+  return jsonWith(body, status, CORS_HEADERS);
 }
 
 // Caller authentication. JWT verification is off at the gateway (the DB
 // trigger is not a user), so the function checks the bearer itself. Two
 // callers are trusted: application code holding the service-role key,
 // and the notifications dispatcher trigger, which sends the Vault secret
-// `notification_service_role_key`. The secret never leaves the database:
-// verify_notification_dispatch_secret() compares it server-side and only
-// the service role may call that RPC.
-function constantTimeEq(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
-function bearerToken(req: Request): string {
-  const auth = req.headers.get("authorization") || "";
-  return auth.startsWith("Bearer ") ? auth.slice(7).trim() : auth.trim();
-}
-
-async function isAuthorizedCaller(provided: string): Promise<boolean> {
-  if (!provided) return false;
-  if (SERVICE_ROLE_KEY && constantTimeEq(provided, SERVICE_ROLE_KEY)) return true;
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
-  try {
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-      auth: { persistSession: false },
-    });
-    const { data, error } = await admin.rpc("verify_notification_dispatch_secret", {
-      p_secret: provided,
-    });
-    if (error) {
-      console.warn("send-push: dispatch secret check failed", error);
-      return false;
-    }
-    return data === true;
-  } catch (err) {
-    console.warn("send-push: dispatch secret check threw", err);
-    return false;
-  }
-}
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+// `notification_service_role_key` (isTrustedServerCaller in
+// _shared/caller.ts checks both).
+Deno.serve(async (req) => {
+  const early = preflight(req);
+  if (early) return early;
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
-  if (!(await isAuthorizedCaller(bearerToken(req)))) {
+  const trusted = await isTrustedServerCaller(bearerToken(req), {
+    supabaseUrl: SUPABASE_URL,
+    serviceRoleKey: SERVICE_ROLE_KEY,
+  });
+  if (!trusted) {
     return json({ error: "unauthorized" }, 401);
   }
 

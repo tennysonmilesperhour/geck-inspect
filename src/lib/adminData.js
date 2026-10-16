@@ -116,3 +116,132 @@ export function withoutAdminRows(rows, admins, field = 'created_by') {
     return !(value && admins.has(value));
   });
 }
+
+// Plain words for the product events a member's admin card lists. Events
+// not named here are shown as their own name with the underscores turned
+// into spaces ("market_view" becomes "Market view").
+const ACTIVITY_LABELS = {
+  animal_created: 'Added a gecko',
+  gecko_added: 'Added a gecko',
+  first_gecko_added: 'Added a first gecko',
+  animal_updated: 'Edited a gecko',
+  gecko_updated: 'Edited a gecko',
+  weight_logged: 'Logged a weigh-in',
+  egg_logged: 'Logged an egg',
+  quick_log: 'Used the one-tap log',
+  login_completed: 'Signed in',
+  signup_completed: 'Created an account',
+  morph_id_result: 'Ran Morph ID',
+  checkout_started: 'Opened checkout',
+  checkout_completed: 'Finished checkout',
+  billing_portal_opened: 'Opened the billing portal',
+  membership_viewed: 'Viewed Membership',
+};
+
+export function activityLabel(eventName) {
+  const name = String(eventName || '').trim();
+  if (!name) return 'Activity';
+  if (ACTIVITY_LABELS[name]) return ACTIVITY_LABELS[name];
+  const words = name.replace(/^\$/, '').replace(/[_-]+/g, ' ').trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : 'Activity';
+}
+
+// ----- reading a whole table for the analytics screens --------------------
+//
+// The API returns at most 1,000 rows per request (the project's row limit).
+// The two analytics screens (AnalyticsDashboard and ProductAnalytics) asked
+// for up to 20,000 user_events rows and every row of gecko_images, and each
+// request silently stopped at 1,000: on 16 Oct 2026 user_events held 12,043
+// rows (1,813 in the last 7 days alone) and gecko_images 3,809, so every
+// chart past the newest 1,000 rows was short. These helpers read the rows a
+// page at a time, and only the columns a chart uses (a gecko_images row
+// carries a 768-number image embedding the charts never look at).
+
+export const ADMIN_PAGE_SIZE = 1000;
+// A ceiling so a runaway table cannot freeze the browser. Far above
+// today's largest table; the screens log a warning if it is ever reached.
+export const ADMIN_MAX_ROWS = 200000;
+
+/**
+ * Every row a query matches, read a page at a time. buildQuery(withCount)
+ * returns a fresh query each time; the first page asks for the exact total,
+ * so the loop knows when it has everything even if the server's page limit
+ * is smaller than pageSize. Callers order on a unique key so no row is
+ * skipped or read twice between pages.
+ * Resolves to the rows, with `truncated: true` set on the array when
+ * maxRows stopped it early.
+ */
+export async function fetchAllRows(buildQuery, { pageSize = ADMIN_PAGE_SIZE, maxRows = ADMIN_MAX_ROWS } = {}) {
+  const rows = [];
+  let total = null;
+  while (rows.length < maxRows) {
+    const from = rows.length;
+    const { data, error, count } = await buildQuery(from === 0).range(from, from + pageSize - 1);
+    if (error) throw error;
+    if (from === 0 && Number.isFinite(count)) total = count;
+    const page = Array.isArray(data) ? data : [];
+    if (page.length === 0) break;
+    rows.push(...page);
+    if (total != null ? rows.length >= total : page.length < pageSize) break;
+  }
+  const result = rows.length > maxRows ? rows.slice(0, maxRows) : rows;
+  result.truncated = rows.length >= maxRows && (total == null || total > maxRows);
+  return result;
+}
+
+/**
+ * Chosen columns of one table, oldest first, every row (or every row
+ * since `since` on `dateColumn`). Reads as the signed-in admin, so the
+ * table's own admin read rule applies.
+ */
+export function fetchAdminTable(table, columns, { since = null, dateColumn = 'created_date', idColumn = 'id' } = {}) {
+  return fetchAllRows((withCount) => {
+    let query = supabase.from(table).select(columns, withCount ? { count: 'exact' } : undefined);
+    if (since) query = query.gte(dateColumn, since);
+    return query
+      .order(dateColumn, { ascending: true, nullsFirst: true })
+      .order(idColumn, { ascending: true });
+  });
+}
+
+/** Every member profile. Admins get every row from read_profiles. */
+export function fetchAllProfiles(columns = '*') {
+  return fetchAllRows((withCount) => supabase
+    .rpc('read_profiles', { p_emails: null }, withCount ? { count: 'exact' } : undefined)
+    .select(columns)
+    .order('created_date', { ascending: true, nullsFirst: true })
+    .order('id', { ascending: true }));
+}
+
+// The user_events columns the analytics charts read.
+export const USER_EVENT_COLUMNS = 'id,event_name,user_email,session_id,page,properties,created_date';
+
+// Plain names for the tables the analytics screens read.
+const TABLE_WORDS = {
+  profiles: 'accounts',
+  geckos: 'geckos',
+  gecko_images: 'photos',
+  forum_posts: 'forum posts',
+  forum_comments: 'forum comments',
+  breeding_plans: 'breeding plans',
+  direct_messages: 'messages',
+  user_events: 'events',
+};
+
+/**
+ * The line an analytics screen shows above its charts when a table did not
+ * load (it is counted as empty, so its numbers read as zero) or was cut
+ * short at ADMIN_MAX_ROWS. Null when everything loaded. Before this the
+ * only sign was in the browser console, so a failed table looked like a
+ * real zero.
+ */
+export function analyticsLoadNotice({ failed = [], truncated = false } = {}) {
+  const parts = [];
+  const names = [...new Set(failed || [])].map((t) => TABLE_WORDS[t] || String(t).replace(/_/g, ' '));
+  if (names.length) {
+    const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+    parts.push(`Could not load ${list}, so ${names.length === 1 ? 'those numbers show' : 'their numbers show'} as zero. Refresh to try again.`);
+  }
+  if (truncated) parts.push('A table has more rows than this screen reads, so some numbers are a lower bound.');
+  return parts.length ? parts.join(' ') : null;
+}

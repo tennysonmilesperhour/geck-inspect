@@ -1,14 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  User,
-  Gecko,
-  GeckoImage,
-  ForumPost,
-  ForumComment,
-  BreedingPlan,
-  DirectMessage,
-  UserEvent,
-} from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +10,15 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
-import { adminEmailSet, withoutAdminEvents, withoutAdminRows } from '@/lib/adminData';
+import {
+  adminEmailSet,
+  analyticsLoadNotice,
+  fetchAdminTable,
+  fetchAllProfiles,
+  USER_EVENT_COLUMNS,
+  withoutAdminEvents,
+  withoutAdminRows,
+} from '@/lib/adminData';
 import {
   Area,
   AreaChart,
@@ -35,6 +33,7 @@ import {
   YAxis,
 } from 'recharts';
 import {
+  AlertTriangle,
   Loader2,
   Users,
   TrendingUp,
@@ -62,9 +61,11 @@ import { format, subDays, startOfDay, differenceInDays, startOfWeek, addWeeks, s
  *   2. Is engagement real?    (DAU-ish metrics, posts per active user)
  *   3. Where is usage coming from? (which features people actually touch)
  *
- * All data is computed client-side from a single batched fetch so there's
- * no hidden N+1 or server-side aggregation. Period selector toggles
- * 7/30/90/365 day windows.
+ * All data is computed client-side from one batched fetch. Each table is
+ * read a page at a time and only for the columns the charts use
+ * (fetchAdminTable in src/lib/adminData.js): a single read stopped at the
+ * API's 1,000-row limit, which cut user_events and gecko_images short.
+ * Period selector toggles 7/30/90/365 day windows.
  */
 
 const PERIODS = [
@@ -179,17 +180,31 @@ export default function AnalyticsDashboard() {
       const maxPeriod = Math.max(...PERIODS.map((p) => p.value));
       const sinceIso = new Date(Date.now() - maxPeriod * 2 * 24 * 60 * 60 * 1000).toISOString();
 
+      // A table that fails to load counts as empty, as before, but the
+      // failure is reported (in the console and on the screen) instead of
+      // passing silently as "no data".
+      const failed = [];
+      const orEmpty = (label) => (error) => {
+        console.error(`Analytics: could not load ${label}`, error);
+        failed.push(label);
+        return [];
+      };
+      const owned = 'id,created_by,created_date';
       const [users, geckos, images, posts, comments, plans, messages, events] = await Promise.all([
-        User.list().catch(() => []),
-        Gecko.list().catch(() => []),
-        GeckoImage.list().catch(() => []),
-        ForumPost.list().catch(() => []),
-        ForumComment.list().catch(() => []),
-        BreedingPlan.list().catch(() => []),
-        DirectMessage.list().catch(() => []),
-        UserEvent.filter({ created_date: { $gte: sinceIso } }, '-created_date', 20000).catch(() => []),
+        fetchAllProfiles('id,email,role,full_name,breeder_name,created_date').catch(orEmpty('profiles')),
+        fetchAdminTable('geckos', owned).catch(orEmpty('geckos')),
+        fetchAdminTable('gecko_images', owned).catch(orEmpty('gecko_images')),
+        fetchAdminTable('forum_posts', owned).catch(orEmpty('forum_posts')),
+        fetchAdminTable('forum_comments', owned).catch(orEmpty('forum_comments')),
+        fetchAdminTable('breeding_plans', owned).catch(orEmpty('breeding_plans')),
+        fetchAdminTable('direct_messages', 'id,sender_email,created_date').catch(orEmpty('direct_messages')),
+        fetchAdminTable('user_events', USER_EVENT_COLUMNS, { since: sinceIso }).catch(orEmpty('user_events')),
       ]);
-      setData({ users, geckos, images, posts, comments, plans, messages, events });
+      const truncated = [users, geckos, images, posts, comments, plans, messages, events].some((rows) => rows.truncated);
+      if (truncated) {
+        console.warn('Analytics: a table passed the row ceiling, so the numbers are a lower bound.');
+      }
+      setData({ users, geckos, images, posts, comments, plans, messages, events, failed, truncated });
     } catch (err) {
       console.error('Analytics load failed:', err);
     }
@@ -565,6 +580,7 @@ export default function AnalyticsDashboard() {
     pageViewCount,
     cohortRows,
   } = computed;
+  const loadNotice = analyticsLoadNotice({ failed: data?.failed, truncated: data?.truncated });
 
   return (
     <div className="space-y-6">
@@ -599,6 +615,13 @@ export default function AnalyticsDashboard() {
           </Button>
         </div>
       </div>
+
+      {loadNotice && (
+        <p role="status" className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          {loadNotice}
+        </p>
+      )}
 
       <Tabs defaultValue="growth" className="w-full">
         <TabsList className="bg-slate-900 border border-slate-800">
