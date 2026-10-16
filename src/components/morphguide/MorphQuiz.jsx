@@ -12,10 +12,14 @@ import MorphQuizPanel, { STILL_MOTION } from '@/components/morphguide/MorphQuizP
  * compressed), which nothing else on the Morph Guide uses. It downloads
  * when the teaser scrolls near the screen, or when a visitor points at,
  * focuses or presses Start, not with the page.
- * The teaser stays on screen (and keeps keyboard focus) until it is here,
- * then the quiz replaces it exactly as before. If the download fails, the
- * quiz opens without the slide animation instead of not opening.
+ * The teaser stays on screen (and keeps keyboard focus), saying it is
+ * opening, until it is here, then the quiz replaces it exactly as before.
+ * If the download fails, or takes longer than MOTION_WAIT_MS (a slow phone
+ * connection), the quiz opens without the slide animation instead.
  */
+
+/** How long Start waits for the animation library before opening without it. */
+export const MOTION_WAIT_MS = 1000;
 
 let loadedKit = null;
 let pendingKit = null;
@@ -119,8 +123,10 @@ export default function MorphQuiz({ morphs = [] }) {
     starting.current = true;
     setOpening(true);
     captureEvent('morph_quiz_step', { step: 'start' });
-    loadQuizMotion()
-      .catch(() => STILL_MOTION)
+    Promise.race([
+      loadQuizMotion().catch(() => STILL_MOTION),
+      new Promise((resolve) => setTimeout(resolve, MOTION_WAIT_MS, STILL_MOTION)),
+    ])
       .then((loaded) => {
         starting.current = false;
         if (!mounted.current) return;

@@ -42,6 +42,10 @@ describe('Morph Guide quiz', () => {
     const user = userEvent.setup();
     await renderQuiz();
     expect(screen.getByRole('heading', { name: 'Which features can you see?' })).toBeTruthy();
+    // Have the animation library here first, as the teaser's preload
+    // normally does, so a slow test machine does not hit the one second cap.
+    const { loadQuizMotion } = await import('@/components/morphguide/MorphQuiz');
+    await loadQuizMotion();
 
     await user.click(screen.getByRole('button', { name: 'Start the quiz' }));
     const first = await screen.findByRole('heading', { name: QUIZ_STEPS[0].question }, SLOW);
@@ -78,6 +82,39 @@ describe('Morph Guide quiz', () => {
     expect(await screen.findByRole('heading', { name: 'Guides to compare with your observations' }, SLOW)).toBeTruthy();
     expect(screen.getByRole('link', { name: /Compare a photo with Morph ID/ })).toBeTruthy();
     vi.doUnmock('@/components/morphguide/quizMotion');
+  }, TEST_TIMEOUT);
+
+  it('opens without the animation after about a second when the download is slow, and says it is opening meanwhile', async () => {
+    vi.resetModules();
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    vi.doMock('@/components/morphguide/quizMotion', async () => {
+      await held;
+      return vi.importActual('@/components/morphguide/quizMotion');
+    });
+    let MOTION_WAIT_MS;
+    let loadQuizMotion;
+    try {
+      ({ MOTION_WAIT_MS, loadQuizMotion } = await import('@/components/morphguide/MorphQuiz'));
+      expect(MOTION_WAIT_MS).toBeGreaterThan(0);
+      expect(MOTION_WAIT_MS).toBeLessThanOrEqual(1000);
+      const user = userEvent.setup();
+      await renderQuiz();
+      await user.click(screen.getByRole('button', { name: 'Start the quiz' }));
+      const busy = screen.getByRole('button', { name: 'Opening the quiz' });
+      expect(busy.getAttribute('aria-busy')).toBe('true');
+
+      // The download is held until the end of this test, yet the quiz
+      // opens, plain (it used to wait for the download).
+      const first = await screen.findByRole('heading', { name: QUIZ_STEPS[0].question }, SLOW);
+      expect(document.activeElement).toBe(first);
+      expect(screen.getByRole('region', { name: 'Which features can you see? quiz' }).getAttribute('style')).toBeNull();
+    } finally {
+      // Let the held download finish before the next test mocks it afresh.
+      release();
+      await loadQuizMotion?.().catch(() => {});
+      vi.doUnmock('@/components/morphguide/quizMotion');
+    }
   }, TEST_TIMEOUT);
 
   it('starts the download when the teaser comes near the screen, and says it is opening', async () => {

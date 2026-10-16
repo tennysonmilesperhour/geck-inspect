@@ -2,9 +2,11 @@
 // The Care Guide opens on Overview with the Handbook, which comes with the
 // page; the other Keeper's Guides download after it has drawn
 // (src/components/careguide/keepersGuides.js). These tests check that a
-// topic still opens together with its guide, so the guide never appears
-// late and pushes the topic down, and that topics without a guide open at
-// once. Only the network edges are stubbed.
+// topic still opens together with its guide when the guide arrives in
+// time, so the guide never appears late and pushes the topic down, and
+// that topics without a guide open at once. A slow or failed download is
+// covered in CareGuideSlowGuide.test.jsx. Only the network edges are
+// stubbed.
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HelmetProvider } from 'react-helmet-async';
