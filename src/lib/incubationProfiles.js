@@ -1,46 +1,14 @@
 import { addDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
+import { INCUBATION_PROFILES as FACT_PROFILES } from '@/data/husbandry-facts';
 
 export const DEFAULT_INCUBATION_PROFILE_ID = 'balanced';
 
-export const INCUBATION_PROFILES = [
-  {
-    id: 'cool',
-    label: 'Cool and steady',
-    fahrenheit: '68 to 71°F',
-    celsius: '20 to 22°C',
-    minDays: 90,
-    maxDays: 120,
-    estimatedDays: 105,
-    alertDay: 85,
-    summary: 'A slower incubation timeline with more time for development.',
-    breederNote: 'Breeders often choose this range when they prefer a slower incubation. Hatchlings may emerge later, so steady conditions and patience matter.',
-  },
-  {
-    id: 'balanced',
-    label: 'Balanced room temperature',
-    fahrenheit: '72 to 75°F',
-    celsius: '22 to 24°C',
-    minDays: 70,
-    maxDays: 90,
-    estimatedDays: 80,
-    alertDay: 65,
-    summary: 'A common middle range that balances development time and predictability.',
-    breederNote: 'Many crested gecko breeders use this range because it avoids pushing development while keeping the hatch window manageable.',
-  },
-  {
-    id: 'warm',
-    label: 'Warm',
-    fahrenheit: '76 to 78°F',
-    celsius: '24 to 26°C',
-    minDays: 60,
-    maxDays: 75,
-    estimatedDays: 68,
-    alertDay: 55,
-    summary: 'A faster timeline that calls for closer temperature monitoring.',
-    breederNote: 'Warmer incubation can shorten development time. Stable control is especially important, and eggs should never be allowed to overheat.',
-  },
-];
+// The temperature ranges and day counts live in src/data/husbandry-facts.js
+// so the care guide's incubation table and the app's hatch estimates are
+// the same numbers. Before October 2026 the guide said 60 to 90 days at 72
+// to 76°F while the app estimated 70 to 90 days at 72 to 75°F.
+export const INCUBATION_PROFILES = FACT_PROFILES;
 
 export function getIncubationProfile(profileId) {
   return INCUBATION_PROFILES.find((profile) => profile.id === profileId)

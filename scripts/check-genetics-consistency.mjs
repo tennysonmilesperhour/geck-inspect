@@ -24,6 +24,21 @@
  * call an engine-modeled gene polygenic or unproven only if the same
  * passage also names the engine's model or credits Foundation Genetics.
  *
+ *  10. accepted facts (scripts/lib/accepted-facts.mjs): origin and history
+ *      (Lilly White from Lilly Exotics, late 2010; Cappuccino from South
+ *      Korea), super-form health (Super Lilly White lethal, Super
+ *      Cappuccino not lethal but unhealthy, Super Highway only reported)
+ *      and the husbandry numbers in src/data/husbandry-facts.js (life
+ *      stages, adult weight, breeding minimum, incubation, sheds). Checked
+ *      on the blog, the care guide, the Keeper's Guides, the morph guide,
+ *      project lines, the genetics guide and glossary, the calculator,
+ *      llms.txt, the getting-started emails and the AI prompts (Morph ID,
+ *      the Promote writer, the consultant, the health screen; genetics and
+ *      origin facts only for prompts).
+ *
+ * Runs in CI and inside `pnpm build` (through `pnpm test`: see
+ * src/lib/__tests__/acceptedFacts.test.js), so a Vercel deploy enforces it.
+ *
  * Exits 1 with a readable report on any mismatch; 0 when clean.
  */
 
@@ -36,6 +51,14 @@ import { translateMorphTags } from '../src/lib/genetics/tagTranslation.js';
 import { GLOSSARY_GROUPS } from '../src/data/genetics-glossary.js';
 import { PROJECT_LINES } from '../src/data/project-lines.js';
 import { TRAITS_BY_ID as VISUALIZER_TRAITS_BY_ID } from '../src/components/morph-visualizer/data/traits.js';
+import { CARE_CATEGORIES } from '../src/data/care-guide.js';
+import { BLOG_POSTS } from '../src/data/blog-posts.js';
+import { FEEDING_GUIDE } from '../src/data/keepers-guides/feeding.js';
+import { SETUP_GUIDE } from '../src/data/keepers-guides/setup.js';
+import { HANDBOOK_GUIDE } from '../src/data/keepers-guides/handbook.js';
+import { MORPH_GUIDE } from '../src/data/keepers-guides/morph.js';
+import { BREEDING_GUIDE } from '../src/data/keepers-guides/breeding.js';
+import { checkAcceptedFacts } from './lib/accepted-facts.mjs';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
@@ -355,6 +378,82 @@ for (const label of allLabels) {
   if (/\blily white\b/i.test(label)) {
     note('spelling', `'${label}' uses the one-L spelling; canonical is 'Lilly White'`);
   }
+}
+
+// ---------- 10. accepted facts ------------------------------------------
+// Every string inside a data module, with a readable path to it, so the
+// check reads the text as rendered (the care guide builds some of its
+// sentences from husbandry-facts.js).
+function* walkStrings(value, path) {
+  if (typeof value === 'string') {
+    yield { where: path, text: value };
+  } else if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i += 1) {
+      const item = value[i];
+      const label = item && typeof item === 'object' && (item.slug || item.id) ? `${item.slug || item.id}` : String(i);
+      yield* walkStrings(item, `${path}/${label}`);
+    }
+  } else if (value && typeof value === 'object') {
+    for (const [key, item] of Object.entries(value)) yield* walkStrings(item, `${path}.${key}`);
+  }
+}
+
+// Data modules: every rule.
+const FACT_DATA = [
+  ['care-guide', CARE_CATEGORIES],
+  ['blog', BLOG_POSTS],
+  ['morph-guide', MORPHS],
+  ['project-lines', PROJECT_LINES],
+  ['glossary', GLOSSARY_GROUPS],
+  ['keepers-guide', [FEEDING_GUIDE, SETUP_GUIDE, HANDBOOK_GUIDE, MORPH_GUIDE, BREEDING_GUIDE]],
+];
+for (const [surface, data] of FACT_DATA) {
+  for (const { where, text } of walkStrings(data, surface)) {
+    checkAcceptedFacts(text, (msg) => note(surface, `${where}: ${msg}`));
+  }
+}
+
+// Source files read as text: their string literals, with line numbers.
+// `only` limits AI prompts to the genetics, origin and history facts.
+const GENETICS_FACTS = ['lillyWhiteOrigin', 'superLillyWhite', 'superCappuccino', 'superHighway', 'cappuccinoOrigin', 'albinoStatus'];
+const FACT_FILES = [
+  ['genetics-guide', 'src/data/genetics-sections.jsx'],
+  ['genetics-guide', 'src/data/genetics-jsonld.js'],
+  ['genetics-guide', 'src/pages/GeneticsGuide.jsx'],
+  ['calculator', 'src/pages/GeneticCalculatorTool.jsx'],
+  ['calculator', 'src/lib/genetics/calculatorCatalog.js'],
+  ['calculator', 'src/lib/genetics/tagTranslation.js'],
+  ['morph-faq', 'src/lib/morphFaq.js'],
+  ['visualizer', 'src/components/morph-visualizer/data/traits.js'],
+  ['visualizer', 'src/components/morph-visualizer/data/genetics.js'],
+  ['visualizer', 'src/components/morph-visualizer/engine/compose.js'],
+  ['emails', 'supabase/functions/_shared/lifecycle-copy.ts'],
+  ['ai-prompt', 'src/components/morph-id/morphTaxonomy.js', GENETICS_FACTS],
+  ['ai-prompt', 'supabase/functions/recognize-gecko-morph/index.ts', GENETICS_FACTS],
+  ['ai-prompt', 'supabase/functions/generate-social-post/index.ts', GENETICS_FACTS],
+  ['ai-prompt', 'supabase/functions/health-screen/index.ts', GENETICS_FACTS],
+  ['ai-prompt', 'src/pages/BreederConsultant.jsx', GENETICS_FACTS],
+  ['ai-prompt', 'src/lib/assistantActions.js', GENETICS_FACTS],
+];
+for (const [surface, file, only] of FACT_FILES) {
+  let source;
+  try {
+    source = readSource(file);
+  } catch {
+    note(surface, `${file} is missing; update FACT_FILES in this script`);
+    continue;
+  }
+  for (const { text, line } of stringLiterals(source)) {
+    checkAcceptedFacts(text, (msg) => note(surface, `${file}:${line}: ${msg}`), { only });
+  }
+}
+
+// llms.txt is hand-written (its per-morph list is generated), line by line.
+{
+  const llms = readSource('public/llms.txt');
+  llms.split('\n').forEach((text, i) => {
+    checkAcceptedFacts(text, (msg) => note('llms.txt', `public/llms.txt:${i + 1}: ${msg}`));
+  });
 }
 
 // ---------- report ------------------------------------------------------

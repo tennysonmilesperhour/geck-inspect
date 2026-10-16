@@ -19,10 +19,11 @@
  *   - With 3 or more recorded sheds, use the median of the animal's own
  *     inter-shed intervals (median is robust to one missed log entry).
  *     The window is that median plus or minus ~15% (minimum 3 days).
- *   - Otherwise fall back to an age-based default. Juveniles (under ~12
- *     months old, or under ~15g if age is unknown) shed roughly every 2 to 3
- *     weeks, so the window is 14 to 21 days after the last shed. Adults shed
- *     roughly every 4 to 6 weeks, so 28 to 42 days.
+ *   - Otherwise fall back to the life stage's usual rhythm, the same one the
+ *     care guide states (src/data/husbandry-facts.js): hatchlings every 1 to
+ *     2 weeks, juveniles every 2 to 3, sub-adults every 3 to 4 and adults
+ *     every 4 to 6. The stage comes from the latest weight and the hatch
+ *     date, the same rule as the weigh-in reminders (src/lib/lifeStage.js).
  *
  * Adjustment
  *   - Recent weight gain above ~5% over roughly 30 days shortens the window
@@ -48,15 +49,19 @@
 import {
   addDays,
   differenceInCalendarDays,
-  differenceInMonths,
   format,
 } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
+import { LIFE_STAGE_BY_ID, stageShedWords } from '@/data/husbandry-facts';
+import { careStage } from '@/lib/lifeStage';
 
-const JUVENILE_MAX_MONTHS = 12;
-const JUVENILE_MAX_GRAMS = 15;
-const JUVENILE_WINDOW = { lo: 14, hi: 21, label: 'every 2 to 3 weeks' };
-const ADULT_WINDOW = { lo: 28, hi: 42, label: 'every 4 to 6 weeks' };
+/** The usual shed window for a care stage, in days after the last shed. */
+export function stageShedWindow(stageId) {
+  const stage = LIFE_STAGE_BY_ID[stageId] || LIFE_STAGE_BY_ID.juvenile;
+  const [lo, hi] = stage.shedWeeks;
+  return { lo: lo * 7, hi: hi * 7, label: stageShedWords(stage.id), name: stage.label.toLowerCase() };
+}
+
 const GROWTH_GAIN_THRESHOLD = 0.05; // 5% gain over ~30 days
 const GROWTH_SHORTEN_FACTOR = 0.8; // shortens the window ~20%
 
@@ -138,14 +143,15 @@ export function predictNextShed({
   const shedCount = shedDates.length;
   const lastShed = shedCount > 0 ? shedDates[shedDates.length - 1] : null;
 
-  // Life stage, used only when the animal lacks its own shed rhythm.
-  const ageMonths = hatched ? differenceInMonths(now, hatched) : null;
-  const grams = latestWeightGrams(weights);
-  const isJuvenile =
-    (ageMonths != null && ageMonths >= 0 && ageMonths < JUVENILE_MAX_MONTHS) ||
-    (ageMonths == null && grams != null && grams < JUVENILE_MAX_GRAMS);
-  const stage = isJuvenile ? JUVENILE_WINDOW : ADULT_WINDOW;
-  const stageName = isJuvenile ? 'juvenile' : 'adult';
+  // Life stage, used only when the animal lacks its own shed rhythm. With
+  // sheds logged but no weight or hatch date, the juvenile rhythm is the
+  // middle guess.
+  const stage = stageShedWindow(careStage({
+    weightGrams: latestWeightGrams(weights),
+    hatchDate: hatched ? format(hatched, 'yyyy-MM-dd') : null,
+    today: now,
+  }));
+  const stageName = stage.name;
 
   // Base window offsets in days from the anchor date.
   let loDays;

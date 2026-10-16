@@ -2,32 +2,46 @@
  * The healthy weight range for a crested gecko's age, drawn behind the
  * weight chart so "is 18 g normal at 8 months?" answers itself.
  *
- * The numbers are the care guide's (src/data/care-guide.js). Its Life Stages
- * table gives the pace: hatchlings up to 3 g by 3 months, juveniles 3 to 15 g
- * by 12 months, sub-adults 15 to 35 g by 18 months, and adults 35 to 60 g
- * (Overview). Real geckos run ahead of or behind that pace, so the band is
- * the guide's pace shifted up to three months either way:
+ * The numbers are the life stages in src/data/husbandry-facts.js, the same
+ * ones the care guide's Life Stages tables and the weigh-in reminders use:
+ * hatchlings up to 3 g by 3 months, juveniles 3 to 15 g by 12 months,
+ * sub-adults 15 to 35 g by 18 months, and adults 35 to 60 g. Real geckos
+ * run ahead of or behind that pace, so the band is the stages' pace
+ * shifted either way:
  *
  *   lower edge: each stage boundary reached three months late
- *   upper edge: each stage boundary reached three months early, rising to
+ *   upper edge: each stage boundary reached six months early, rising to
  *               the 60 g adult ceiling six months after adulthood
  *
- * Hatch weight is about 1.5 to 3 g. A test keeps these anchors and the guide
- * in step, so the chart can never disagree with the care guide.
+ * Why the upper edge reaches further: well-fed juveniles run well ahead of
+ * the stage pace. Until October 2026 the upper edge was also three months
+ * early, and members' own logged weights sat above it: on 16 Oct 2026 the
+ * median weight logged at 6 to 9 months was 14 g against an upper edge of
+ * 13 g, and at 9 to 12 months 23 g against 20 g (production weight_records
+ * with a hatch date; about 16 geckos, a small sample). The hand-written
+ * weight tables (the Keeper's Guide benchmarks and the weight-chart blog
+ * post) agreed with members, not with the chart. The lower edge, which
+ * drives the "below typical" warning, is unchanged.
+ *
+ * Hatch weight is about 1.5 to 3 g. Reading the stages from the facts file
+ * means the chart can never disagree with the care guide.
  */
 import { differenceInCalendarDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
+import { ADULT_WEIGHT_G, HATCH_WEIGHT_G, LIFE_STAGES } from '@/data/husbandry-facts';
 
-// Stage boundaries from the care guide's Life Stages table: [months, grams].
-export const STAGE_PACE = [
-  [3, 3],   // Hatchling: 0 to 3 g, 0 to 3 months
-  [12, 15], // Juvenile: 3 to 15 g, 3 to 12 months
-  [18, 35], // Sub-adult: 15 to 35 g, 12 to 18 months; adult from 18 months
-];
-export const ADULT_MIN_G = 35;
-export const ADULT_MAX_G = 60;
-export const HATCH_MIN_G = 1.5;
+// Stage boundaries as [months, grams]: hatchling ends at 3 g and 3 months,
+// juvenile at 15 g and 12 months, sub-adult at 35 g and 18 months.
+export const STAGE_PACE = LIFE_STAGES
+  .filter((stage) => stage.maxGrams !== null)
+  .map((stage) => [stage.maxMonths, stage.maxGrams]);
+export const ADULT_MIN_G = ADULT_WEIGHT_G.min;
+export const ADULT_MAX_G = ADULT_WEIGHT_G.max;
+export const HATCH_MIN_G = HATCH_WEIGHT_G.min;
+// How far behind (lower edge) and ahead (upper edge) of the stage pace a
+// healthy gecko can run, in months.
 export const PACE_WINDOW_MONTHS = 3;
+export const AHEAD_WINDOW_MONTHS = 6;
 
 // Band edges as [months, grams] points, built from the anchors above.
 export const LOWER_EDGE = [
@@ -36,8 +50,8 @@ export const LOWER_EDGE = [
 ];
 export const UPPER_EDGE = [
   [0, STAGE_PACE[0][1]],
-  ...STAGE_PACE.slice(1).map(([m, g]) => [m - PACE_WINDOW_MONTHS, g]),
-  [STAGE_PACE[STAGE_PACE.length - 1][0] + 2 * PACE_WINDOW_MONTHS, ADULT_MAX_G],
+  ...STAGE_PACE.slice(1).map(([m, g]) => [m - AHEAD_WINDOW_MONTHS, g]),
+  [STAGE_PACE[STAGE_PACE.length - 1][0] + 6, ADULT_MAX_G],
 ];
 
 // Days per average month, for fractional ages.
@@ -108,10 +122,16 @@ export function growthVerdict(gecko, grams, onDate = new Date()) {
     };
   }
   if (weight > band.high) {
+    // The adult warning compares with the adult range, and only once the
+    // band has reached it (24 months) or the weight is past the adult
+    // ceiling. Between 18 and 24 months the band still tops out below
+    // 60 g, so a normal 50 g adult used to read "above the typical 25 to
+    // 47.5 g for an adult. Watch for fat pads".
+    const adultCeilingAge = UPPER_EDGE[UPPER_EDGE.length - 1][0];
     return {
       level: 'above', ...band, ageMonths: age,
-      text: age >= STAGE_PACE[STAGE_PACE.length - 1][0]
-        ? `${weight} g is above the typical ${range} for an adult. Watch for fat pads and feed CGD three times a week.`
+      text: weight > ADULT_MAX_G || age >= adultCeilingAge
+        ? `${weight} g is above the typical ${ADULT_MIN_G} to ${ADULT_MAX_G} g for an adult. Watch for fat pads and feed CGD three times a week.`
         : `${weight} g is ahead of the typical ${range} for ${at}. Fast growth is usually fine; just keep an eye on it.`,
     };
   }

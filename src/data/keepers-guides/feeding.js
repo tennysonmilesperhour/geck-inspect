@@ -141,9 +141,9 @@ export const FEEDING_GUIDE = {
               meta: 'Enclosure',
               title: 'Size to the gecko, not the goal',
               items: [
-                'Hatchlings <12g: small critter keeper or 6qt tub.',
-                'Juveniles 12-25g: medium keeper or 12×12×18.',
-                'Adults 25g+: 18×18×24 minimum; 20-gal tall works.',
+                'Hatchlings and juveniles under about 10g: small critter keeper or 6qt tub.',
+                'Juveniles from about 10g: medium keeper or 12×12×18.',
+                'Sub-adults from about 25g, and adults: 18×18×24 minimum; 20-gal tall works.',
                 'Oversized enclosures stress small geckos and hide food.',
               ],
             },
@@ -269,8 +269,8 @@ export const FEEDING_GUIDE = {
         {
           type: 'stats',
           items: [
-            { value: '2-4g', label: 'Typical hatchling weight' },
-            { value: '~1g/mo', label: 'Growth', note: 'expected pace' },
+            { value: '1.5-3g', label: 'Typical hatch weight' },
+            { value: '0.5-1.5g/mo', label: 'Growth', note: 'expected pace' },
             { value: '5/wk', label: 'CGD available', note: 'nights per week' },
             { value: '1-2 wk', label: 'Shedding cadence' },
           ],
@@ -334,7 +334,7 @@ export const FEEDING_GUIDE = {
             {
               title: 'Outgrew the enclosure too fast',
               text:
-                "Owners often upgrade to an adult tank at 15g 'because they're growing.' Too much space = lost food, stress, and weight stalls. Wait until 20g+ for full-size adult enclosures.",
+                "Owners often upgrade to an adult tank at 15g 'because they're growing.' Too much space = lost food, stress, and weight stalls. Wait until about 25g for full-size adult enclosures.",
             },
             {
               title: 'Shedding cycle dominates',
@@ -347,17 +347,17 @@ export const FEEDING_GUIDE = {
           type: 'callout',
           tone: 'info',
           text:
-            'Expected adult weight by 12 months: 15-20g (sexual maturity). By 18 months: 25-40g. Track it.',
+            'A typical pace: about 15g by 12 months (the end of the juvenile stage) and about 35g by 18 months (adult). Healthy geckos often run a few months ahead or behind. Track the trend.',
         },
       ],
     },
 
     // 9 - Adults
     {
-      kicker: 'Life Stage · 1-5 years',
+      kicker: 'Life Stage · 18 months to 10 years',
       title: 'Adults: when sudden loss of appetite means something',
       lead:
-        'Healthy adults eat 2-3× per week. A sudden change from that baseline is the signal worth investigating.',
+        'Healthy adults eat about 3× per week. A sudden change from that baseline is the signal worth investigating.',
       blocks: [
         { type: 'heading', text: 'Usual suspects (in order)' },
         {
@@ -374,7 +374,7 @@ export const FEEDING_GUIDE = {
             },
             {
               title: 'Shedding (less obvious in adults)',
-              text: 'Adults shed every 4-8 weeks - easy to miss if colors are dark.',
+              text: 'Adults shed every 4-6 weeks, which is easy to miss if colors are dark.',
             },
             {
               title: 'Breeding season behavior (Mar-Oct)',
@@ -391,10 +391,10 @@ export const FEEDING_GUIDE = {
         {
           type: 'kv',
           rows: [
-            { label: 'Weight range', value: '30-55g (obese above ~65g)' },
-            { label: 'Feeding frequency', value: 'CGD 2-3× per week' },
+            { label: 'Weight range', value: '35-60g (obese above ~65g)' },
+            { label: 'Feeding frequency', value: 'CGD about 3× per week' },
             { label: 'Insects', value: 'Optional, 1× per week if at all' },
-            { label: 'Shed cycle', value: 'Every 4-8 weeks' },
+            { label: 'Shed cycle', value: 'Every 4-6 weeks' },
             { label: 'Expected poop', value: 'Pellet + white urates, regular cadence' },
             { label: 'Weight fluctuation', value: '±2-3g is normal across a year' },
           ],
@@ -404,10 +404,10 @@ export const FEEDING_GUIDE = {
 
     // 10 - Seniors
     {
-      kicker: 'Life Stage · 5+ years',
+      kicker: 'Life Stage · 10+ years',
       title: 'Senior geckos: less appetite is the norm, not the alarm',
       lead:
-        'Cresties live 15-20 years with good care. Appetite tapers naturally from age ~5 onward. The goal shifts from growth to maintenance.',
+        'Cresties live 15-20 years with good care. Appetite tapers naturally from about age 10 onward. The goal shifts from growth to maintenance.',
       blocks: [
         {
           type: 'compare',
@@ -475,7 +475,7 @@ export const FEEDING_GUIDE = {
               meta: 'Between clutches',
               title: 'Should be voracious',
               text:
-                'A mature female lays every 25-40 days in season. Between clutches she must rebuild calcium. Check her calcium sacs (back of mouth) - pale or shrunken = rest her from breeding.',
+                'A mature female lays every 4-6 weeks in season. Between clutches she must rebuild calcium. Check her calcium sacs (back of mouth): if they are pale or shrunken, rest her from breeding.',
             },
             {
               meta: 'Infertile clutches (solo females)',

@@ -568,7 +568,7 @@ export default function GeneticCalculatorTool({
                         <h2 className="text-sm font-semibold text-slate-100">Built crested-gecko-first</h2>
                       </div>
                       <p className="text-xs text-slate-400 leading-relaxed">
-                        The inheritance rules here are tuned for crested geckos (Correlophus ciliatus), not adapted from a general reptile calculator. Lilly White is modeled as incomplete-dominant with a lethal super, Cappuccino and Axanthic as recessives, and Soft Scale as dominant, so the outcomes match how these traits actually pass in the hobby. Learn the underlying rules in the{' '}
+                        The inheritance rules here are tuned for crested geckos (Correlophus ciliatus), not adapted from a general reptile calculator. Lilly White, Cappuccino and Soft Scale are modeled as incomplete dominant (Super Lilly White is lethal, Super Cappuccino has serious health problems) and Axanthic as recessive, so the outcomes match how these traits actually pass in the hobby. Learn the underlying rules in the{' '}
                         <Link to="/GeneticsGuide" className="text-purple-300 hover:text-purple-200">genetics guide</Link>.
                       </p>
                     </div>

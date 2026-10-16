@@ -335,16 +335,6 @@
       "permanent": true
     },
     {
-      "source": "/MorphGuide/super-lilly-white",
-      "destination": "/MorphGuide/lilly-white",
-      "permanent": true
-    },
-    {
-      "source": "/MorphGuide/phantom",
-      "destination": "/MorphGuide/phantom-pinstripe",
-      "permanent": true
-    },
-    {
       "source": "/MorphGuide/harley",
       "destination": "/MorphGuide/harlequin",
       "permanent": true

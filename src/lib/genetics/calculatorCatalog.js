@@ -45,7 +45,7 @@ export const SIMPLE_TRAITS = [
     super_label: 'Super Lilly White',
     super_lethal: true,
     blurb:
-      'Incomplete dominant, the first proven crested gecko gene (2012). One copy is the Lilly White look; the homozygous Super form is lethal in the egg.',
+      'Incomplete dominant, the first proven crested gecko gene (2012). One copy is the Lilly White look; the homozygous Super form is lethal (it dies in the egg or within days of hatching).',
   },
   {
     id: 'axanthic',
@@ -73,10 +73,13 @@ export const SIMPLE_TRAITS = [
     label: 'Empty Back',
     locus: 'EB',
     dominance: 'incomplete_dominant',
-    confidence: 'proven',
+    // Emerging, not proven: the engine's only source is Foundation
+    // Genetics, and this blurb used to credit "AC Reptiles breeding
+    // trials" with no source behind it (October 2026 review).
+    confidence: 'emerging',
     super_label: 'Super Empty Back',
     blurb:
-      'Incomplete dominant. Reduces dorsal pattern; the Super form strips nearly all dorsal markings. Proven through AC Reptiles breeding trials.',
+      'Incomplete dominant in the Foundation Genetics model, its main published source, so it is badged Emerging. Reduces dorsal pattern; the Super form is described as clearing it further and as healthy.',
   },
   {
     id: 'softscale',
@@ -182,7 +185,7 @@ export const COMPLEX_OPTIONS = [
     label: 'Super Highway (health reports)',
     pair: ['highway', 'highway'],
     confidence: 'emerging',
-    caution: 'Super Highway hatchlings have reported nostril and health issues, which is itself the evidence that Highway sits in this complex.',
+    caution: 'Some breeders report nostril and health problems in Super Highway hatchlings. That is not established, and those reports are also the main reason Highway is placed in this complex.',
   },
 ];
 
@@ -475,10 +478,10 @@ export const CALCULATOR_PAGES = [
     slug: 'highway',
     label: 'Highway',
     blurb:
-      'Provisionally a third allele in the Cappuccino complex: Super Highway health reports are the main evidence. Treated as allelic here, badged Emerging until the community settles it.',
+      'Provisionally a third allele in the Cappuccino complex: breeder reports of Super Highway health problems are the main evidence, and those reports are not established either. Treated as allelic here, badged Emerging until the community settles it.',
     confidence: 'emerging',
     super_lethal: false,
-    super_warning: 'Super Highway hatchlings have reported nostril and health issues.',
+    super_warning: 'Some breeders report nostril and health problems in Super Highway hatchlings (not established).',
     defaultState: { [COMPLEX_ID]: 'highway' },
   },
 ];
@@ -582,8 +585,13 @@ export const PAIRING_PAGES_BY_SLUG = Object.fromEntries(
 
 // ---------- Morph Guide outcome links ----------------------------------
 // Maps engine trait/combo ids to Morph Guide slugs where an entry
-// exists today. Missing entries (sable, phantom, empty-back, luwak) are
-// a content follow-up; the UI simply renders no link for those.
+// exists today. outcomeValue.js also prices outcomes through this map,
+// so two ids stay as they were when the Phantom, Empty Back, Whiteout and
+// Luwak pages were added (16 Oct 2026): whiteout still points at White
+// Wall, whose price and /calculator/whiteout link the market uses, and
+// sable is left out, since mapping it would start pricing Sable outcomes.
+// Phantom, Empty Back, Highway and Luwak have no guide price, so linking
+// them changes no estimate.
 
 export const MORPH_GUIDE_SLUGS = {
   lilly_white: 'lilly-white',
@@ -592,6 +600,9 @@ export const MORPH_GUIDE_SLUGS = {
   hypo: 'hypo',
   softscale: 'soft-scale',
   whiteout: 'white-wall',
+  phantom: 'phantom',
+  empty_back: 'empty-back',
+  highway: 'highway',
   harlequin: 'harlequin',
   pinstripe: 'pinstripe',
   dalmatian: 'dalmatian',
@@ -599,6 +610,7 @@ export const MORPH_GUIDE_SLUGS = {
   flame: 'flame',
   // combos
   frappuccino: 'frappuccino',
+  luwak: 'luwak',
   tricolor: 'tricolor',
   patternless: 'patternless',
 };
