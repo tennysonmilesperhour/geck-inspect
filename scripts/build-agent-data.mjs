@@ -9,7 +9,10 @@
  *                          otherwise the committed snapshot ships as is.
  *   data/price-index.csv   The same, flat.
  *   data/morphs.json       Every morph with definition, identification,
- *                          lookalikes, genetics models and sources.
+ *                          lookalikes, genetics models and sources, and
+ *                          where the Price Index has asking prices for
+ *                          it, a link to them (not the numbers: the
+ *                          catalog is CC BY 4.0, the index is not).
  *   data/genetics.json     The genetics engine's traits, combos and risky
  *                          pairings (the same facts the calculator uses).
  *   data/care.json         The care guide as structured blocks.
@@ -42,11 +45,10 @@ import {
   loadPriceIndex,
   careSectionMarkdown,
   careToMarkdown,
-  morphMarkdown,
+  morphCatalogMarkdown,
+  morphCatalogRecord,
   priceIndexToMarkdown,
-  priceRowsForMorph,
   withGeckInspectStatus,
-  MORPH_LABELS,
 } from './lib/agent-content.mjs';
 import {
   PRICE_DATA_LICENSE,
@@ -63,6 +65,9 @@ const TODAY = new Date().toISOString().slice(0, 10);
 
 // CC BY 4.0 covers the morph and genetics data. The Price Index is not CC
 // BY: its numbers are free to cite with a link (src/lib/priceIndexPolicy.js).
+// So the morph catalog (data/morphs.json, llms/morphs.md, the morph .md
+// twins) carries no Price Index numbers, only a link to each morph's rows,
+// and its license is true for everything in it.
 export const LICENSE_DATA = 'https://creativecommons.org/licenses/by/4.0/';
 export const LICENSE_PRICE_NOTE = PRICE_DATA_TERMS;
 export const LICENSE_TEXT_NOTE =
@@ -252,19 +257,10 @@ async function build() {
     url: `${SITE_URL}/MorphGuide`,
     license: LICENSE_DATA,
     attribution: `Geck Inspect Morph Guide, ${SITE_URL}/MorphGuide`,
-    // The askingPrices rows are Price Index data, which CC BY does not cover.
-    askingPricesLicense: `askingPrices rows come from the Geck Inspect Price Index (${SITE_URL}/data), ${PRICE_INDEX_WHAT}. ${LICENSE_PRICE_NOTE}`,
+    priceIndexNote: `Asking prices are not part of this catalog or its license. Each morph's priceIndex field (null when there are no rows) names its trait labels in the Geck Inspect Price Index (${SITE_URL}/data/price-index.json), ${PRICE_INDEX_WHAT}. ${LICENSE_PRICE_NOTE}`,
     updated: TODAY,
     count: morphs.length,
-    morphs: morphs.map((m) => ({
-      ...m,
-      url: `${SITE_URL}/MorphGuide/${m.slug}`,
-      markdown: `${SITE_URL}/MorphGuide/${m.slug}.md`,
-      categoryLabel: MORPH_LABELS.category[m.category] || m.category,
-      inheritanceLabel: MORPH_LABELS.inheritance[m.inheritance] || m.inheritance,
-      rarityLabel: MORPH_LABELS.rarity[m.rarity] || m.rarity,
-      askingPrices: priceRowsForMorph(priceIndex, m),
-    })),
+    morphs: morphs.map((m) => morphCatalogRecord(m, priceIndex)),
   }));
   sizes['data/genetics.json'] = write('data/genetics.json', json({
     name: 'Geck Inspect crested gecko genetics engine data',
@@ -291,7 +287,7 @@ async function build() {
 
   // Per-page markdown twins of the HTML pages.
   for (const m of morphs) {
-    write(`MorphGuide/${m.slug}.md`, `${morphMarkdown(m, { level: 1, full: true, priceIndex, nameOf })}\n_Source: Geck Inspect Morph Guide. Updated ${TODAY}. Cite ${SITE_URL}/MorphGuide/${m.slug}_\n`);
+    write(`MorphGuide/${m.slug}.md`, `${morphCatalogMarkdown(m, { level: 1, priceIndex, nameOf })}\n_Source: Geck Inspect Morph Guide. Updated ${TODAY}. Cite ${SITE_URL}/MorphGuide/${m.slug}_\n`);
   }
   for (const s of care) {
     write(`CareGuide/${s.id}.md`, `${careSectionMarkdown(s, 1)}\n_Source: Geck Inspect Care Guide. Updated ${TODAY}. Cite ${SITE_URL}/CareGuide/${s.id}_\n`);
@@ -301,8 +297,8 @@ async function build() {
   const header = (title, blurb) => `# ${title}\n\n> ${blurb} Updated ${TODAY}. Index: ${SITE_URL}/llms.txt\n\n`;
   sizes['llms/morphs.md'] = write('llms/morphs.md', header(
     'Crested gecko morphs (Geck Inspect Morph Guide)',
-    `All ${morphs.length} morphs with definitions, identification, lookalikes and, where the Price Index has them, current asking prices (free to cite with a link).`,
-  ) + morphs.map((m) => morphMarkdown(m, { level: 2, full: true, priceIndex, nameOf })).join('\n'));
+    `All ${morphs.length} morphs with definitions, identification and lookalikes, and a link to each morph's asking prices in the Price Index where it has them.`,
+  ) + morphs.map((m) => morphCatalogMarkdown(m, { level: 2, priceIndex, nameOf })).join('\n'));
   sizes['llms/care.md'] = write('llms/care.md', header(
     'Crested gecko care (Geck Inspect Care Guide)',
     `All ${care.length} care topics: housing, temperature, humidity, diet, handling, health and breeding.`,
@@ -335,7 +331,7 @@ async function build() {
     {
       id: 'morphs',
       name: 'Crested gecko morph catalog',
-      description: `Every documented crested gecko morph (${morphs.length}) with definition, inheritance, rarity, identification markers, lookalikes, competing genetics models, typical price range where one is known, and sources.`,
+      description: `Every documented crested gecko morph (${morphs.length}) with definition, inheritance, rarity, identification markers, lookalikes, competing genetics models, typical price range where one is known, and sources. Asking prices are in the Price Index, linked from each morph, not in this dataset.`,
       license: LICENSE_DATA,
       updated: TODAY,
       distribution: [

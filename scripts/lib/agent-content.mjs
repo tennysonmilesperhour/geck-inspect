@@ -194,6 +194,25 @@ export function priceRowsForMorph(index, morph) {
   }).sort(byMarketOrder);
 }
 
+/**
+ * Where a morph's asking prices are, for the morph catalog (data/morphs.json,
+ * llms/morphs.md and the MorphGuide/<slug>.md twins), or null when the Price
+ * Index has no rows for it. The catalog is CC BY 4.0 and the Price Index is
+ * not (it is free to cite with a link), so the catalog names the morph's
+ * trait labels in the index and links the index files instead of copying
+ * its numbers.
+ */
+export function priceIndexPointer(index, morph) {
+  const traits = [...new Set(priceRowsForMorph(index, morph).map((r) => r.trait))];
+  if (!traits.length) return null;
+  return {
+    name: 'Geck Inspect Price Index',
+    traits,
+    json: `${SITE_URL}/data/price-index.json`,
+    csv: `${SITE_URL}/data/price-index.csv`,
+    terms: PRICE_DATA_TERMS,
+  };
+}
 
 export const usd = (n) => (n == null ? 'n/a' : `$${Math.round(Number(n)).toLocaleString('en-US')}`);
 
@@ -250,8 +269,12 @@ export function careToMarkdown(sections) {
   return out.join('\n');
 }
 
-/** One morph as markdown. `full` adds lookalikes, identification, sources and live prices. */
-export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, nameOf = (s) => s } = {}) {
+/**
+ * One morph as markdown. `full` adds lookalikes, identification, sources and
+ * live prices: the Price Index table, or with `priceTable: false` (the morph
+ * catalog files, which are CC BY 4.0) a link to the morph's rows instead.
+ */
+export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, priceTable = true, nameOf = (s) => s } = {}) {
   const h = '#'.repeat(level);
   const out = [`${h} ${m.name}`, '', `_Permalink: ${SITE_URL}/MorphGuide/${m.slug}_`, ''];
   const facts = [];
@@ -285,7 +308,14 @@ export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, n
   if (full && m.combinesWith?.length) {
     out.push(`**Often combined with:** ${m.combinesWith.map(nameOf).join(', ')}`, '');
   }
-  if (full && priceIndex) {
+  const pointer = full && !priceTable ? priceIndexPointer(priceIndex, m) : null;
+  if (pointer) {
+    out.push(
+      `**Asking prices.** Not part of this morph catalog. The ${pointer.name} lists current asking prices for this morph under the trait label${pointer.traits.length > 1 ? 's' : ''} ${pointer.traits.map((t) => `"${t}"`).join(' and ')}: ${pointer.json} (CSV: ${pointer.csv}). ${pointer.terms}`,
+      '',
+    );
+  }
+  if (full && priceIndex && priceTable) {
     const rows = priceRowsForMorph(priceIndex, m);
     if (rows.length) {
       out.push(
@@ -303,6 +333,28 @@ export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, n
     out.push('**Sources:**', m.sources.map((s) => `- ${s}`).join('\n'), '');
   }
   return out.join('\n');
+}
+
+/**
+ * One morph as the morph catalog publishes it in data/morphs.json. The
+ * catalog is CC BY 4.0, so it carries no Price Index numbers: priceIndex
+ * points at the morph's rows in the index instead (priceIndexPointer).
+ */
+export function morphCatalogRecord(m, priceIndex) {
+  return {
+    ...m,
+    url: `${SITE_URL}/MorphGuide/${m.slug}`,
+    markdown: `${SITE_URL}/MorphGuide/${m.slug}.md`,
+    categoryLabel: MORPH_LABELS.category[m.category] || m.category,
+    inheritanceLabel: MORPH_LABELS.inheritance[m.inheritance] || m.inheritance,
+    rarityLabel: MORPH_LABELS.rarity[m.rarity] || m.rarity,
+    priceIndex: priceIndexPointer(priceIndex, m),
+  };
+}
+
+/** One morph as the catalog's markdown files have it (llms/morphs.md, MorphGuide/<slug>.md): no price table, a link to it. */
+export function morphCatalogMarkdown(m, { level = 1, priceIndex = null, nameOf = (s) => s } = {}) {
+  return morphMarkdown(m, { level, full: true, priceIndex, priceTable: false, nameOf });
 }
 
 export function morphsToMarkdown(morphs, opts = {}) {

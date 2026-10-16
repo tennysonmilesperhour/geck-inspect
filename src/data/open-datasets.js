@@ -10,6 +10,8 @@
 const SITE_URL = 'https://geckinspect.com';
 // CC BY 4.0, for the morph and genetics data. The Price Index is not CC BY:
 // its numbers are free to cite with a link (src/lib/priceIndexPolicy.js).
+// The morph catalog files carry no Price Index numbers (each morph links
+// to its rows instead), so CC BY is true for everything in them.
 export const DATA_LICENSE = 'https://creativecommons.org/licenses/by/4.0/';
 export const MCP_URL = `${SITE_URL}/mcp`;
 
@@ -38,7 +40,7 @@ export const OPEN_DATASETS = [
     id: 'morphs',
     name: 'Crested gecko morph catalog',
     description:
-      'Every documented crested gecko morph in the Geck Inspect Morph Guide with its definition, category, inheritance (polygenic, incomplete dominant, recessive), rarity, identification markers, lookalikes and how to tell them apart, competing genetics models, history, typical adult price range where one is known, and sources.',
+      'Every documented crested gecko morph in the Geck Inspect Morph Guide with its definition, category, inheritance (polygenic, incomplete dominant, recessive), rarity, identification markers, lookalikes and how to tell them apart, competing genetics models, history, typical adult price range where one is known, and sources. Current asking prices are not in this dataset: each morph links to its rows in the Geck Inspect Price Index.',
     keywords: ['crested gecko morphs', 'Harlequin', 'Lilly White', 'Phantom', 'Cappuccino', 'Axanthic'],
     license: DATA_LICENSE,
     files: [

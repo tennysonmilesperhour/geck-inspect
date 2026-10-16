@@ -13,9 +13,11 @@ import { HANDBOOK_GUIDE } from '@/data/keepers-guides/handbook';
  * opens on Overview, which shows only the Handbook. So the Handbook comes
  * with the page and the other guides download after it has drawn (when
  * the browser is idle, or as soon as a visitor reaches for the topic
- * list). CareGuide.jsx waits for a topic's guide before switching to that
- * topic, so a topic never appears first without its guide and then
- * jumps when the guide arrives. The Keeper's Guide Series page
+ * list). CareGuide.jsx waits up to GUIDE_WAIT_MS for a topic's guide
+ * before switching to that topic, so the two normally appear together.
+ * On a slow connection the topic opens after that wait with the guide's
+ * space held (GUIDE_SPACE), and the guide fills it when it arrives, so
+ * nothing below it jumps. The Keeper's Guide Series page
  * (CareGuideSeries.jsx) still imports all five with the page.
  */
 export const CATEGORY_TO_GUIDE = {
@@ -23,6 +25,18 @@ export const CATEGORY_TO_GUIDE = {
   housing: 'setup',
   feeding: 'feeding',
   breeding: 'breeding',
+};
+
+/** How long a topic switch waits for its guide before opening without it. */
+export const GUIDE_WAIT_MS = 1000;
+
+// The height of each downloaded guide's box on a phone, a small tablet
+// and wider screens (measured on 16 Oct 2026 at 375, 600 and 1280 px),
+// held while it downloads. Measure again if a guide's first slide changes.
+export const GUIDE_SPACE = {
+  setup: 'min-h-[965px] sm:min-h-[729px] md:min-h-[788px]',
+  feeding: 'min-h-[883px] sm:min-h-[676px] md:min-h-[700px]',
+  breeding: 'min-h-[960px] sm:min-h-[700px] md:min-h-[728px]',
 };
 
 const LOADERS = {
@@ -78,19 +92,27 @@ export function preloadKeepersGuides() {
   for (const categoryId of Object.keys(CATEGORY_TO_GUIDE)) loadGuideFor(categoryId);
 }
 
-/** The category's guide, re-rendering once it arrives if it was not here yet. */
+/**
+ * The category's guide, re-rendering once it arrives if it was not here
+ * yet. `waiting` is true while a guide the category has is still on its
+ * way; it turns false if the download fails, and the topic shows without
+ * its guide.
+ */
 export function useKeepersGuide(categoryId) {
   const guide = cachedGuideFor(categoryId);
   const [, setArrived] = useState(0);
+  const [failed, setFailed] = useState(null);
   useEffect(() => {
     if (guide || !CATEGORY_TO_GUIDE[categoryId]) return undefined;
     let cancelled = false;
     loadGuideFor(categoryId).then((g) => {
-      if (g && !cancelled) setArrived((n) => n + 1);
+      if (cancelled) return;
+      if (g) setArrived((n) => n + 1);
+      else setFailed(categoryId);
     });
     return () => {
       cancelled = true;
     };
   }, [categoryId, guide]);
-  return guide;
+  return { guide, waiting: !guide && hasKeepersGuide(categoryId) && failed !== categoryId };
 }

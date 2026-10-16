@@ -27,7 +27,7 @@ import Seo from '@/components/seo/Seo';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import ContentBlock from '@/components/careguide/ContentBlock';
 import KeepersGuideTabs from '@/components/careguide/KeepersGuideTabs';
-import { cachedGuideFor, hasKeepersGuide, loadGuideFor, preloadKeepersGuides } from '@/components/careguide/keepersGuides';
+import { GUIDE_WAIT_MS, cachedGuideFor, hasKeepersGuide, loadGuideFor, preloadKeepersGuides } from '@/components/careguide/keepersGuides';
 import ContentSignupPrompt, { careSignupCopy } from '@/components/public/ContentSignupPrompt';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 
@@ -325,18 +325,23 @@ export default function CareGuidePage() {
   }, []);
 
   // A topic shows together with its Keeper's Guide: when the guide is not
-  // here yet, the switch waits for it (normally already preloaded), so
-  // the guide never pops in and pushes the topic's sections down.
+  // here yet (it is normally preloaded), the switch waits for it, but for
+  // GUIDE_WAIT_MS at most, so a tap on a slow connection still answers.
+  // After that the topic opens with the guide's space held, and the guide
+  // fills it when it arrives (KeepersGuideTabs.jsx), so nothing jumps.
   const selectCategory = (id) => {
     requestedId.current = id;
+    let shown = false;
     const show = () => {
-      if (requestedId.current !== id) return;
+      if (shown || requestedId.current !== id) return;
+      shown = true;
       setActiveId(id);
       setSearchTerm('');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    if (cachedGuideFor(id) || !hasKeepersGuide(id)) show();
-    else loadGuideFor(id).then(show);
+    if (cachedGuideFor(id) || !hasKeepersGuide(id)) return show();
+    setTimeout(show, GUIDE_WAIT_MS);
+    loadGuideFor(id).then(show);
   };
 
   useEffect(() => {

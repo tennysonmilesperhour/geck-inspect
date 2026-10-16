@@ -4,12 +4,14 @@ import { useAuth } from '@/lib/AuthContext';
 import { captureEvent, ensurePostHog } from '@/lib/posthog';
 import { HOMEPAGE_FLAG, HOMEPAGE_TIMEOUT_MS, homepageEligible, homepagePreview, isHomepagePreview, readHomepageVariant, rememberHomepageExposure } from '@/lib/homepageExperiment';
 import HomeControl from './HomeControl';
+import useLandingThemeHold from '@/lib/useLandingThemeHold';
 
 const ENABLED = import.meta.env.VITE_HOMEPAGE_EXPERIMENT_ENABLED === '1';
 
 /** Both experimental arms share the same allocation and asset readiness gate. */
 export default function Home() {
   const { isAuthenticated, isGuest, isLoadingAuth } = useAuth();
+  useLandingThemeHold();
   const { search } = useLocation();
   const preview = homepagePreview(search);
   const [selection, setSelection] = useState(null);

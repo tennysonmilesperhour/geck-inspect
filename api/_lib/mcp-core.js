@@ -3760,6 +3760,17 @@ function priceRowsForMorph(index, morph) {
     return names.has(t) || MARKET_TRAIT_TO_SLUG[t] === morph.slug;
   }).sort(byMarketOrder);
 }
+function priceIndexPointer(index, morph) {
+  const traits = [...new Set(priceRowsForMorph(index, morph).map((r) => r.trait))];
+  if (!traits.length) return null;
+  return {
+    name: "Geck Inspect Price Index",
+    traits,
+    json: `${SITE_URL}/data/price-index.json`,
+    csv: `${SITE_URL}/data/price-index.csv`,
+    terms: PRICE_DATA_TERMS
+  };
+}
 const usd = (n) => n == null ? "n/a" : `$${Math.round(Number(n)).toLocaleString("en-US")}`;
 function blockToMarkdown(block) {
   switch (block.type) {
@@ -3803,7 +3814,7 @@ function careSectionMarkdown(s, level = 3) {
   }
   return out.join("\n");
 }
-function morphMarkdown(m, { level = 3, full = false, priceIndex: priceIndex2 = null, nameOf: nameOf2 = (s) => s } = {}) {
+function morphMarkdown(m, { level = 3, full = false, priceIndex: priceIndex2 = null, priceTable = true, nameOf: nameOf2 = (s) => s } = {}) {
   const h = "#".repeat(level);
   const out = [`${h} ${m.name}`, "", `_Permalink: ${SITE_URL}/MorphGuide/${m.slug}_`, ""];
   const facts = [];
@@ -3834,7 +3845,14 @@ function morphMarkdown(m, { level = 3, full = false, priceIndex: priceIndex2 = n
   if (full && m.combinesWith?.length) {
     out.push(`**Often combined with:** ${m.combinesWith.map(nameOf2).join(", ")}`, "");
   }
-  if (full && priceIndex2) {
+  const pointer = full && !priceTable ? priceIndexPointer(priceIndex2, m) : null;
+  if (pointer) {
+    out.push(
+      `**Asking prices.** Not part of this morph catalog. The ${pointer.name} lists current asking prices for this morph under the trait label${pointer.traits.length > 1 ? "s" : ""} ${pointer.traits.map((t) => `"${t}"`).join(" and ")}: ${pointer.json} (CSV: ${pointer.csv}). ${pointer.terms}`,
+      ""
+    );
+  }
+  if (full && priceIndex2 && priceTable) {
     const rows = priceRowsForMorph(priceIndex2, m);
     if (rows.length) {
       out.push(

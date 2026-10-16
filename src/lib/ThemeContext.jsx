@@ -99,10 +99,15 @@ function readStored(key, validSet, fallback) {
 }
 
 // Homepage experiment hold (docs/planning/homepage-ab-test-2026-10.md):
-// index.html marks a signed-out visit that opened on "/" with
-// data-landing-hold, and such a visit keeps the Blizzard defaults both
-// homepage designs launched with until the page reloads. Nothing is
-// saved, so it ends by itself. Remove this with the experiment.
+// a signed-out visitor on the homepage is marked with data-landing-hold
+// and keeps the Blizzard defaults both homepage designs launched with.
+// index.html marks a visit that opens on "/" (it lasts until the page
+// reloads); src/lib/useLandingThemeHold.js marks one that reaches the
+// homepage inside the app, and lifts it when they leave. While the mark
+// is on, a theme or accent the visitor never picked shows as the hold's
+// default, so the effects below cannot repaint the homepage in Emerald
+// when they run again (once the sign-in check finishes, for example).
+// Nothing is saved, so it ends by itself. Remove this with the experiment.
 const LANDING_HOLD_DEFAULT = 'blizzard';
 function defaultFor(fallback) {
   if (typeof document === 'undefined') return fallback;
@@ -260,15 +265,16 @@ export const ThemeProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    applyAttribute('data-theme', theme);
-    applyStatusBar(theme);
+    const shown = themeIsOwn.current ? theme : defaultFor(theme);
+    applyAttribute('data-theme', shown);
+    applyStatusBar(shown);
     if (!themeIsOwn.current) return;
     try { window.localStorage.setItem(STORAGE_KEY, theme); } catch {}
     if (authReady && !skipCloudWrite.current) saveCloudPref('ui_theme', theme);
   }, [theme, authReady]);
 
   useEffect(() => {
-    applyAttribute('data-secondary', secondary);
+    applyAttribute('data-secondary', secondaryIsOwn.current ? secondary : defaultFor(secondary));
     if (!secondaryIsOwn.current) return;
     try { window.localStorage.setItem(SECONDARY_STORAGE_KEY, secondary); } catch {}
     if (authReady && !skipCloudWrite.current) saveCloudPref('ui_secondary', secondary);
