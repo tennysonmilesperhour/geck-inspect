@@ -13,17 +13,39 @@
 // Keep the two in sync when changing quotas. Admins bypass. A screen
 // that fails after the credit was taken gives it back (refunded: true).
 //
+// Model: Claude Sonnet 5.5 (claude-sonnet-5-5, $2 / $10 per million tokens)
+// since 16 Oct 2026, replacing Sonnet 4.6 ($3 / $15). It stays in the same
+// class of model on purpose: this is a welfare check on a photo, a cheaper
+// model has not been graded on it, and a missed sign of metabolic bone
+// disease costs more than the screen. Sonnet 5.5 thinks before answering
+// by default and that thinking is paid out of max_tokens, so the call sets
+// low effort and leaves room for it. Claude Haiku 5.5 ($0.10 / $0.50) is
+// the next step once it has been checked on a few dozen labelled photos;
+// try it with the HEALTH_SCREEN_MODEL secret, no deploy needed.
+//
+// Every screen is logged (tokens and cost, never the photo) to
+// geck_data.model_invocations with surface "health_screen".
+//
 // POST { image_url: string, context?: { name, hatch_date, weight_grams, morphs } }
 // 200 -> { observations: [{ area, finding, severity, note }], overall_note,
 //          disclaimer, credits_remaining }
 // 402 -> { code: 'health_screen_credits_exhausted', ... }
+// 422 -> { code: 'refused' } when the model declines (credit given back)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { costCentsFromUsage } from "../_shared/model-cost.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-const MODEL = Deno.env.get("HEALTH_SCREEN_MODEL") || "claude-sonnet-4-6";
+const MODEL = Deno.env.get("HEALTH_SCREEN_MODEL") || "claude-sonnet-5-5";
+// Models that think first take an effort level and need room for the
+// thinking on top of the answer (about 1,200 tokens of JSON).
+const THINKING_MODELS = new Set(["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"]);
+const ANSWER_TOKENS = 1200;
+const THINKING_ROOM = 3000;
+
+const VET_LINE = "This is a photo check, not a veterinary diagnosis. A photo cannot rule out early metabolic bone disease or illness, so if your gecko is eating less, losing weight or moving oddly, see an exotics vet.";
 
 const TIER_SCREENS: Record<string, number> = {
   free: 1, keeper: 5, breeder: 15, enterprise: 40,
@@ -45,7 +67,7 @@ const SYSTEM = `You are a husbandry observation assistant for crested gecko (Cor
 Look for: body condition (underweight, healthy, overweight), tail and spine appearance (kinks or waviness can be worth a vet visit), retained shed (toes, tail tip, eyes), eye appearance, skin condition, hydration signs, and obvious injuries. If the photo quality or angle prevents assessment of an area, say so rather than guessing.
 
 Severity scale, use EXACTLY these values:
-- "looks_typical": nothing concerning visible in this area
+- "looks_typical": nothing concerning is visible in this area of this photo (a photo cannot rule out early illness)
 - "worth_watching": not urgent, recheck or adjust husbandry
 - "see_a_vet": visible sign that warrants a professional opinion
 
@@ -61,6 +83,32 @@ Deno.serve(async (req) => {
   // function, so a member cannot refund screens they really used.
   let charged = false;
   let chargedUserId: string | null = null;
+  let isAdmin = false;
+  const startedAt = Date.now();
+  // One row per screen that reached the model: tokens and cost only.
+  const logCall = async (usage: Record<string, number> | null, httpStatus: number, errorCode: string | null) => {
+    try {
+      const sink = createClient(SUPABASE_URL, SERVICE_KEY, { db: { schema: "geck_data" } });
+      const { error } = await sink.from("model_invocations").insert({
+        surface: "health_screen",
+        model: MODEL,
+        input_tokens: usage?.input_tokens ?? null,
+        output_tokens: usage?.output_tokens ?? null,
+        cache_read_tokens: usage?.cache_read_input_tokens ?? null,
+        cache_creation_tokens: usage?.cache_creation_input_tokens ?? null,
+        est_cost_cents: costCentsFromUsage(MODEL, usage),
+        user_id: chargedUserId,
+        is_admin: isAdmin,
+        photo_count: 1,
+        http_status: httpStatus,
+        error_code: errorCode,
+        duration_ms: Date.now() - startedAt,
+      });
+      if (error) console.warn("health-screen: call log failed", error.message);
+    } catch (logThrew) {
+      console.warn("health-screen: call log threw", logThrew);
+    }
+  };
   const fail = async (body: Record<string, unknown>, status: number) => {
     if (charged && chargedUserId) {
       try {
@@ -102,7 +150,7 @@ Deno.serve(async (req) => {
     const { data: verifiedTier, error: tierError } = await userClient.rpc("effective_tier_for_current_user");
     if (tierError) return json({ error: "Could not verify membership access." }, 503);
     const tier = verifiedTier && TIER_SCREENS[verifiedTier] != null ? verifiedTier : "free";
-    const isAdmin = prof?.role === "admin";
+    isAdmin = prof?.role === "admin";
 
     // Read and check the request before taking a credit, so a malformed
     // request does not cost the member a screen.
@@ -149,7 +197,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 1200,
+        max_tokens: ANSWER_TOKENS + (THINKING_MODELS.has(MODEL) ? THINKING_ROOM : 0),
+        ...(THINKING_MODELS.has(MODEL) ? { output_config: { effort: "low" } } : {}),
         system: SYSTEM,
         messages: [{
           role: "user",
@@ -162,9 +211,14 @@ Deno.serve(async (req) => {
     });
     if (!resp.ok) {
       const detail = await resp.text();
+      await logCall(null, resp.status, `upstream_${resp.status}`);
       return await fail({ error: `vision call failed (${resp.status})`, code: "vision_error", detail: detail.slice(0, 300) }, 502);
     }
     const payload = await resp.json();
+    if (payload?.stop_reason === "refusal") {
+      await logCall(payload?.usage ?? null, 200, "refusal");
+      return await fail({ error: "The health check could not review this photo. Try a different photo of the gecko.", code: "refused" }, 422);
+    }
     const text = (payload?.content || []).filter((b: { type: string }) => b.type === "text")
       .map((b: { text: string }) => b.text).join("\n");
     let parsed: { observations?: unknown[]; overall_note?: string } = {};
@@ -172,13 +226,18 @@ Deno.serve(async (req) => {
       const match = text.match(/\{[\s\S]*\}/);
       parsed = match ? JSON.parse(match[0]) : {};
     } catch {
+      await logCall(payload?.usage ?? null, 200, "parse_error");
       return await fail({ error: "could not parse screening result", code: "parse_error" }, 502);
     }
+    await logCall(payload?.usage ?? null, 200, null);
 
     return json({
       observations: parsed.observations || [],
       overall_note: parsed.overall_note || "",
-      disclaimer: "This is an observational husbandry screen, not a veterinary diagnosis. When in doubt, see an exotics vet.",
+      // Always the vet line: a photo that shows nothing wrong cannot rule out
+      // early metabolic bone disease or illness, so the screen never reads
+      // as an all-clear on its own.
+      disclaimer: VET_LINE,
       credits_remaining: creditsRemaining,
     });
   } catch (err) {

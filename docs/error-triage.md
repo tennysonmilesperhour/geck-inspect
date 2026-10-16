@@ -10,7 +10,7 @@ proposed fixes. Runs daily at **04:00 Arizona MST** (UTC-7, no DST).
 2. Groups rows by a signature derived from the message + first meaningful
    stack frame, then ranks groups by count-weighted recency.
 3. Skips any signature currently in cooldown (see `docs/error-triage-state.json`).
-4. Picks the top 3 candidates and, for each, hands them to Claude Sonnet
+4. Picks the top 3 candidates and, for each, hands them to Claude Sonnet 5.5
    with a tool-use loop (`search_code`, `read_file`, `list_directory`,
    `propose_fix`, `skip`).
 5. For any proposed fix with medium/high confidence, applies the file
@@ -26,7 +26,7 @@ Nothing ever merges automatically. All PRs are drafts.
 
 | Secret                      | Purpose                                                  |
 |-----------------------------|----------------------------------------------------------|
-| `ANTHROPIC_API_KEY`         | Claude Sonnet 4.6 for the triage loop (already present). |
+| `ANTHROPIC_API_KEY`         | Claude Sonnet 5.5 for the triage loop (already present). |
 | `SUPABASE_URL`              | `https://<project>.supabase.co`                          |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key; bypasses RLS for `error_logs`.         |
 

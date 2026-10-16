@@ -64,13 +64,15 @@ describe('buildGeckoDraftFromAnalysis', () => {
     ]));
   });
 
-  it('writes a notes line that marks the suggestion unverified and labels the model signal', () => {
+  it('writes a notes line that marks the suggestion unverified and says the score is the AI rating itself', () => {
     const draft = buildGeckoDraftFromAnalysis(
       { primary_morph: 'harlequin', confidence_score: 73 },
       [],
     );
     expect(draft.notes).toMatch(/Unverified Morph ID suggestion/);
-    expect(draft.notes).toMatch(/model signal 73\/100/);
+    expect(draft.notes).toMatch(/the AI's own estimate: close fit/);
+    // No number that reads like a measured accuracy.
+    expect(draft.notes).not.toMatch(/\d+\/100/);
     expect(draft.notes).toMatch(/Harlequin/);
   });
 

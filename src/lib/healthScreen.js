@@ -25,9 +25,12 @@
 import { supabase } from '@/lib/supabaseClient';
 import { canonicalizeMorphTags } from '@/lib/genetics';
 
-const FALLBACK_DISCLAIMER =
-  'This is an observational husbandry screen, not a veterinary diagnosis. ' +
-  'When in doubt, see an exotics vet.';
+// Matches the server's line (health-screen VET_LINE), used when an older
+// server sends none. A photo that shows nothing wrong is not an all-clear.
+export const FALLBACK_DISCLAIMER =
+  'This is a photo check, not a veterinary diagnosis. A photo cannot rule out ' +
+  'early metabolic bone disease or illness, so if your gecko is eating less, ' +
+  'losing weight or moving oddly, see an exotics vet.';
 
 /** The photo the screen reviews: the gecko's first (primary) photo. */
 export function firstPhotoUrl(gecko) {
