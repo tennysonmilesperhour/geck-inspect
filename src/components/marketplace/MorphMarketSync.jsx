@@ -134,7 +134,12 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
 
     setImportResult({ created, failed });
     setIsImporting(false);
-    if (created > 0) recordGeckoAdded('morphmarket_sync', created);
+    if (created > 0) {
+      recordGeckoAdded('morphmarket_sync', created);
+      // Today, the Log tab, Field Mode and the Dashboard keep a copy of the
+      // collection; this tells them it changed.
+      window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'imported' } }));
+    }
     if (created > 0) {
       onImportComplete?.();
     }

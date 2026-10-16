@@ -178,7 +178,8 @@ export async function syncNow() {
     if (result.saved > 0) {
       // Pages showing the collection pick up the synced logs.
       queryClientInstance.invalidateQueries({ queryKey: ['my-geckos'] });
-      queryClientInstance.invalidateQueries({ queryKey: ['field-mode'] });
+      // geckos_changed also marks the ['field-mode'] collection copy out of
+      // date (src/lib/query-client.js), so it is read once per sync, not twice.
       if (typeof window !== 'undefined') window.dispatchEvent(new Event('geckos_changed'));
     }
     return result;

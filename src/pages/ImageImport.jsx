@@ -263,7 +263,12 @@ export default function ImageImport() {
             }
         }
 
-        if (mode === 'geckos' && results.created > 0) recordGeckoAdded('image_import', results.created);
+        if (mode === 'geckos' && results.created > 0) {
+            recordGeckoAdded('image_import', results.created);
+            // Today, the Log tab, Field Mode and the Dashboard keep a copy of
+            // the collection; this tells them it changed.
+            window.dispatchEvent(new CustomEvent('geckos_changed', { detail: { action: 'imported' } }));
+        }
         setImportResults(results);
         setStep('done');
     };
