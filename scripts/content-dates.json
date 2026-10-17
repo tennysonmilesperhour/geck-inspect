@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16",
+  "generatedAt": "2026-10-17",
   "files": {
     "src/pages/Home.jsx": "2026-10-16",
     "src/pages/About.jsx": "2026-10-16",
@@ -25,12 +25,12 @@
     "src/pages/BreedingRecords.jsx": "2026-10-16",
     "src/pages/CrestedGeckoPrice.jsx": "2026-10-16",
     "src/pages/OpenData.jsx": "2026-10-16",
-    "src/pages/Recognition.jsx": "2026-10-16",
+    "src/pages/Recognition.jsx": "2026-10-17",
     "src/pages/Gallery.jsx": "2026-10-03",
     "src/pages/Forum.jsx": "2026-10-16",
     "src/pages/Marketplace.jsx": "2026-09-29",
     "src/pages/MarketplaceBuy.jsx": "2026-10-16",
-    "src/pages/Membership.jsx": "2026-10-16",
+    "src/pages/Membership.jsx": "2026-10-17",
     "src/lib/membershipSeo.js": "2026-10-15",
     "src/lib/morphMeta.js": "2026-10-16",
     "src/data/morph-guide.js": "2026-10-16",

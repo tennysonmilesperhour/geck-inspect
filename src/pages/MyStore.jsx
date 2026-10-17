@@ -5,7 +5,7 @@ import GeckoImage from '@/components/shared/GeckoImage';
 import GeckoBulkActions from '@/components/bulk/GeckoBulkActions';
 import { Gecko } from '@/entities/all';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
