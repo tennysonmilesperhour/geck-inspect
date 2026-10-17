@@ -125,7 +125,7 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 
 **Decided 16 Oct:** the checkout race is fixed only if it happens; the two hand-deployed functions stay as they are; the ReptiDex citations and the Eureka Exotics name on Albino stay; the 115 Blizzard profiles stay as they are; the growth band stays until 50 geckos; no spend on Morph ID grading without Tennyson's OK; the LLC is postponed; 2FA on the admin account in November (a reminder is set). The ten missing Morph Guide field guide plates are painted images, handed to another agent.
 
-**Done by Tennyson, 17 Oct:** the day-one $2.99 refunded (review item 12), and the Supabase service role key rotated (new secret key in Supabase, the `SUPABASE_SERVICE_ROLE_KEY` GitHub Actions secret replaced; the old key is revoked once the scheduled jobs have run on the new one).
+**Done by Tennyson, 17 Oct:** the day-one $2.99 refunded (review item 12), and the Supabase service role key rotated (new secret key in Supabase, the `SUPABASE_SERVICE_ROLE_KEY` GitHub Actions secret replaced; the old key revoked the same day, after the daily canary passed on the new one).
 
 ## Done on 3 October
 
