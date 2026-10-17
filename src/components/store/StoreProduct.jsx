@@ -12,6 +12,8 @@ import { SITE_URL } from '@/lib/organization-schema';
 import { supabase } from '@/lib/supabaseClient';
 import { formatCents, fulfillmentBadge } from '@/lib/store/format';
 import { captureEvent } from '@/lib/posthog';
+import { productImages } from '@/lib/store/productImages';
+import ProductImagePlaceholder from '@/components/store/ProductImagePlaceholder';
 
 export default function StoreProduct() {
   const { slug } = useParams();
@@ -62,7 +64,7 @@ export default function StoreProduct() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  const images = Array.isArray(product?.images) && product.images.length ? product.images : [];
+  const images = useMemo(() => productImages(product), [product]);
   const main = images[activeImage] || images[0] || null;
   const badge = product ? fulfillmentBadge(product.fulfillment_mode, vendor?.name) : null;
   const isAffiliate = product?.fulfillment_mode === 'affiliate_redirect';
@@ -155,17 +157,9 @@ export default function StoreProduct() {
             ) : product.slug === CUSTOM_SHIRT_SLUG ? (
               <ShirtPreview design={createDefaultShirtDesign()} />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-500">
-                No image
-              </div>
+              <ProductImagePlaceholder product={product} />
             )}
           </div>
-          {main?.kind === 'representative' && (
-            <p className="mt-2 text-xs text-slate-500">
-              Temporary AI-generated image. Use the Amazon link to see the real
-              listing photos, packaging, price, and availability.
-            </p>
-          )}
           {main?.kind === 'supplier_example' && (
             <p className="mt-2 text-xs text-slate-400">
               Supplier product photo. The Amazon search may include different sizes, pack counts or variants; check the seller’s listing before ordering.

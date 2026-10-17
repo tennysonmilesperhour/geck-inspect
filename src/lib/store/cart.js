@@ -104,7 +104,8 @@ export async function fetchCart() {
         id, quantity, unit_price_cents_snapshot, created_date, product_id, customization,
         product:store_products (
           id, slug, name, short_description, our_price_cents, images,
-          fulfillment_mode, vendor_id, status, free_shipping_eligible
+          fulfillment_mode, vendor_id, status, free_shipping_eligible,
+          vendor_product_url, vendor_extra
         )
       `)
       .eq('cart_id', cart.id)
