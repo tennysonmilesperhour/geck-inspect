@@ -105,14 +105,14 @@ export const MORPH_PROGRESSION_TRACKS = [
   {
     id: 'coverage',
     title: 'Dorsal & Lateral Coverage',
-    subtitle: 'From Patternless to Extreme Harlequin, with Lilly White for comparison',
-    summary: 'Watch how pale cream and orange pigment first occupies the dorsal saddle between the crest rows, then climbs the lateral flanks and wraps the limbs.',
+    subtitle: 'From Patternless to Extreme Harlequin, Whiteout & Lilly White',
+    summary: 'Watch how pale cream, orange, and structural white pigment first occupies the dorsal saddle between the crest rows, then climbs the lateral flanks and wraps the limbs.',
     steps: [
       {
         slug: 'patternless',
         label: 'Patternless',
         stage: 'Stage 1 · 0% pattern',
-        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0 },
+        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'buckskin',
         note: 'Uniform ground color across the dorsal saddle, lateral flanks, and limbs with no contrasting dorsal flame or flank patches.',
         pins: [
@@ -124,11 +124,11 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'bicolor',
         label: 'Bicolor',
         stage: 'Stage 2 · Two-tone region split',
-        traits: { dorsal: 0.78, lateral: 0, pinstripe: 0.1, tiger: 0, spots: 0 },
+        traits: { dorsal: 0.78, lateral: 0, pinstripe: 0.1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'Two broad, smoothly contrasting color zones: a lighter dorsal saddle over darker, unpatterned flanks and legs.',
         pins: [
-          { x: 48, y: 29, title: 'lighter Dorsal Zone', detail: 'A smooth, continuous paler tone occupies the back without jagged flame lobes.' },
+          { x: 48, y: 29, title: 'Lighter Dorsal Zone', detail: 'A smooth, continuous paler tone occupies the back without jagged flame lobes.' },
           { x: 45, y: 50, title: 'Solid Contrasting Flank', detail: 'Flanks and limbs stay in the darker ground tone with no harlequin patches.' },
         ],
       },
@@ -136,7 +136,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'flame',
         label: 'Flame',
         stage: 'Stage 3 · Patterned dorsum, quiet flanks',
-        traits: { dorsal: 0.96, lateral: 0.08, pinstripe: 0.18, tiger: 0, spots: 0 },
+        traits: { dorsal: 0.96, lateral: 0.08, pinstripe: 0.18, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'High-contrast cream and apricot flame lobes fill the dorsal field between the crest rows, while the flanks and limbs remain mostly dark ground color.',
         pins: [
@@ -148,7 +148,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'harlequin',
         label: 'Harlequin',
         stage: 'Stage 4 · Flank & limb pattern',
-        traits: { dorsal: 1, lateral: 0.58, pinstripe: 0.35, tiger: 0, spots: 0 },
+        traits: { dorsal: 1, lateral: 0.58, pinstripe: 0.35, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'Irregular cream and warm orange patches rise roughly halfway up the lateral flanks, accompanied by distinct pattern bands wrapping the forelimbs and hindlimbs.',
         pins: [
@@ -160,7 +160,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'extreme-harlequin',
         label: 'Extreme Harlequin',
         stage: 'Stage 5 · High-coverage flank & limbs',
-        traits: { dorsal: 1, lateral: 0.96, pinstripe: 0.75, tiger: 0, spots: 0 },
+        traits: { dorsal: 1, lateral: 0.96, pinstripe: 0.75, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'Interlocking cream and fiery orange markings blanket most of the lateral flanks and limbs, reaching up to touch the dorsolateral crest rows.',
         pins: [
@@ -169,10 +169,34 @@ export const MORPH_PROGRESSION_TRACKS = [
         ],
       },
       {
+        slug: 'whiteout',
+        label: 'Whiteout',
+        stage: 'For comparison · Whiteout (single-copy white boost)',
+        traits: { dorsal: 0.92, lateral: 0.76, pinstripe: 0.7, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.4, whiteFactor: 0.58, pied: 0 },
+        tone: 'mahogany',
+        note: 'Whiteout is an incomplete-dominant white-boosting trait that turns lateral and dorsal markings into crisp chalk-white and ivory over a rich walnut-mahogany base.',
+        pins: [
+          { x: 47, y: 47, title: 'Chalk-White Lateral Patches', detail: 'Opaque white lateral patches and limb bands replace warm yellow or orange flank pigment.' },
+          { x: 50, y: 29, title: 'Patterned Dorsal Field', detail: 'Unlike Lilly White, the dorsal saddle retains broken dark channels rather than a solid white sheet.' },
+        ],
+      },
+      {
+        slug: 'super-whiteout',
+        label: 'Super Whiteout',
+        stage: 'For comparison · Super Whiteout (two-copy viable adult)',
+        traits: { dorsal: 1, lateral: 0.96, pinstripe: 0.95, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.85, whiteFactor: 0.92, pied: 0 },
+        tone: 'mahogany',
+        note: 'Homozygous Super Whiteout is a viable high-white adult where confluent plates of chalk-white and porcelain-ivory cover most of the back, crests, and flanks.',
+        pins: [
+          { x: 49, y: 28, title: 'Confluent Porcelain Dorsum', detail: 'Thick chalk-white plates blanket the dorsal saddle and both raised crest rows.' },
+          { x: 45, y: 46, title: 'Narrow Base Seams', detail: 'Dark walnut and terracotta ground color is restricted to narrow seams on the upper flank and head.' },
+        ],
+      },
+      {
         slug: 'lilly-white',
         label: 'Lilly White',
         stage: 'For comparison · Lilly White, a separate gene',
-        traits: { dorsal: 1, lateral: 1, pinstripe: 1, tiger: 0, spots: 0 },
+        traits: { dorsal: 1, lateral: 1, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.75, whiteFactor: 1, pied: 0 },
         tone: 'mahogany',
         note: 'Lilly White is its own incomplete-dominant gene, not a further grade of Harlequin. This plate shows a high-expression animal, with white across the back, crests and tail and high lateral walls; expression varies, so confirm with lineage. Two copies are lethal: never pair Lilly White to Lilly White.',
         pins: [
@@ -184,15 +208,15 @@ export const MORPH_PROGRESSION_TRACKS = [
   },
   {
     id: 'pinning',
-    title: 'Crest Pinning & Structural White',
-    subtitle: 'From Buckskin to Full Pinstripe, Quad-Stripe & Phantom',
-    summary: 'Follow the two raised dorsolateral scale rows from behind the supraocular head crests to the tail base, and see how lateral stripes or pins without cream change them.',
+    title: 'Crest Pinning, Empty Back & White Wall',
+    subtitle: 'From Buckskin to Full Pinstripe, Empty Back, Highway & White Wall',
+    summary: 'Follow the two raised dorsolateral scale rows from behind the supraocular head crests to the tail base, and see how Empty Back clearing, Highway stripes, or lateral walls change the frame.',
     steps: [
       {
         slug: 'buckskin',
         label: 'Unpinned Base',
         stage: 'Stage 1 · 0% highlighted pin scales',
-        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0 },
+        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'buckskin',
         note: 'The raised dorsolateral crest scales carry the same warm buckskin ground color as the surrounding back and flanks.',
         pins: [
@@ -203,7 +227,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'highway',
         label: 'Highway',
         stage: 'For comparison · Highway, a separate gene',
-        traits: { dorsal: 0.72, lateral: 0.1, pinstripe: 0.55, tiger: 0, spots: 0 },
+        traits: { dorsal: 0.72, lateral: 0.1, pinstripe: 0.55, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'A clean, continuous pale band runs down the back between darker sides. Highway is its own incomplete-dominant gene, not a grade of pinning; it sits here because the two are often confused.',
         pins: [
@@ -215,7 +239,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'pinstripe',
         label: 'Full Pinstripe',
         stage: 'Stage 2 · Continuous twin crest lines',
-        traits: { dorsal: 0.3, lateral: 0.15, pinstripe: 1, tiger: 0, spots: 0 },
+        traits: { dorsal: 0.3, lateral: 0.15, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'Both left and right raised dorsolateral crest rows are continuously highlighted in bright ivory-cream from the head crown to the tail base.',
         pins: [
@@ -224,10 +248,46 @@ export const MORPH_PROGRESSION_TRACKS = [
         ],
       },
       {
+        slug: 'super-highway',
+        label: 'Super Highway',
+        stage: 'For comparison · Homozygous Super Highway',
+        traits: { dorsal: 1, lateral: 0, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0.3, pied: 0 },
+        tone: 'mahogany',
+        note: 'Two copies of Highway lock the entire dorsal corridor between the crest rows into a wide, unbroken ivory-cream stripe flanked by dark, unpatterned sides.',
+        pins: [
+          { x: 49, y: 28, title: 'Locked Dorsal Corridor', detail: 'Wide ivory-cream band fills the entire back between the left and right crest rows.' },
+          { x: 46, y: 50, title: 'Unpatterned Dark Flanks', detail: 'Smooth dark walnut-mahogany sides maximize contrast against the pale dorsal stripe.' },
+        ],
+      },
+      {
+        slug: 'empty-back',
+        label: 'Empty Back',
+        stage: 'Stage 3 · Heterozygous dorsal clearing',
+        traits: { dorsal: 0.25, lateral: 0.65, pinstripe: 0.45, tiger: 0, spots: 0, emptyBack: 0.72, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'buckskin',
+        note: 'Empty Back clears busy flame blotching from the dorsal saddle while leaving bold cream and apricot harlequin markings along the flanks and legs.',
+        pins: [
+          { x: 49, y: 28, title: 'Cleared Dorsal Field', detail: 'Dorsal saddle opens into smooth warm ground color rather than busy flame lobes.' },
+          { x: 46, y: 48, title: 'Active Lateral Pattern', detail: 'Bold cream and apricot harlequin patches remain vibrant along the lower and mid flank.' },
+        ],
+      },
+      {
+        slug: 'super-empty-back',
+        label: 'Super Empty Back',
+        stage: 'Stage 4 · Homozygous spotless dorsal corridor',
+        traits: { dorsal: 0, lateral: 0.82, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 1, whitewall: 0.25, whiteFactor: 0, pied: 0 },
+        tone: 'mahogany',
+        note: 'Homozygous Super Empty Back creates a completely spotless, solid dark dorsal corridor framed by bright ivory-cream pin rows and heavily patterned flanks.',
+        pins: [
+          { x: 49, y: 28, title: 'Spotless Dark Dorsal Corridor', detail: 'Solid dark mahogany-chestnut back completely free of dorsal flame blotches.' },
+          { x: 46, y: 38, title: 'Crisp Pinstripe Rails', detail: 'Bright ivory-cream crest rows separate the empty back from the patterned flanks below.' },
+        ],
+      },
+      {
         slug: 'white-wall-white-spot',
         label: 'White Spot / Porthole',
-        stage: 'Stage 3 · Lateral white portholes below pin row',
-        traits: { dorsal: 0.35, lateral: 0.62, pinstripe: 0.9, tiger: 0, spots: 0 },
+        stage: 'Stage 5 · Lateral white portholes below pin row',
+        traits: { dorsal: 0.35, lateral: 0.62, pinstripe: 0.9, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.48, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'Bright structural white portholes and lateral bars form along the mid-flank below the raised dorsolateral crest row.',
         pins: [
@@ -238,8 +298,8 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'white-wall',
         label: 'White Wall',
-        stage: 'Stage 4 · Raised thick lateral wall',
-        traits: { dorsal: 0.45, lateral: 0.88, pinstripe: 1, tiger: 0, spots: 0 },
+        stage: 'Stage 6 · Raised thick lateral wall',
+        traits: { dorsal: 0.45, lateral: 0.88, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 1, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'The lower lateral stripe expands into a solid, thick, continuous rectangular wall of bright white-cream plating the lower half of the flank.',
         pins: [
@@ -249,8 +309,8 @@ export const MORPH_PROGRESSION_TRACKS = [
       {
         slug: 'phantom-pinstripe',
         label: 'Phantom Pinstripe',
-        stage: 'Stage 5 · Pins without cream',
-        traits: { dorsal: 0.15, lateral: 0.05, pinstripe: 0.85, tiger: 0.25, spots: 0 },
+        stage: 'Stage 7 · Pins without cream',
+        traits: { dorsal: 0.15, lateral: 0.05, pinstripe: 0.85, tiger: 0.25, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'olive',
         note: 'Complete pinstripe rows whose raised scales lack the usual cream, a look historically sold as Phantom Pinstripe. The label alone does not prove the recessive Phantom gene, and a dark line under the row (reverse pinning) is a separate feature.',
         pins: [
@@ -270,7 +330,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'patternless',
         label: 'Unbanded Base',
         stage: 'Stage 1 · Smooth ground color',
-        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0 },
+        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'buckskin',
         note: 'Even buckskin-amber ground color without transverse dark bars or reticulated marbling.',
         pins: [
@@ -281,7 +341,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'tiger',
         label: 'Tiger',
         stage: 'Stage 2 · Continuous transverse bands',
-        traits: { dorsal: 0.12, lateral: 0, pinstripe: 0, tiger: 0.68, spots: 0 },
+        traits: { dorsal: 0.12, lateral: 0, pinstripe: 0, tiger: 0.68, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'orange',
         note: 'Recognizable dark chocolate-brown bars cross perpendicularly over the dorsal saddle and continue vertically down both lateral flanks.',
         pins: [
@@ -293,7 +353,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'tiger-brindle',
         label: 'Tiger Brindle',
         stage: 'Stage 3 · Forking & interrupted bands',
-        traits: { dorsal: 0.18, lateral: 0.1, pinstripe: 0.15, tiger: 0.82, spots: 0 },
+        traits: { dorsal: 0.18, lateral: 0.1, pinstripe: 0.15, tiger: 0.82, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'orange',
         note: 'Transverse dorsal bands begin to fork, split, and interconnect along the mid and lower flanks.',
         pins: [
@@ -304,7 +364,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'brindle',
         label: 'Brindle',
         stage: 'Stage 4 · Broken reticulated marbling',
-        traits: { dorsal: 0.22, lateral: 0.18, pinstripe: 0.2, tiger: 0.92, spots: 0 },
+        traits: { dorsal: 0.22, lateral: 0.18, pinstripe: 0.2, tiger: 0.92, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'buckskin',
         note: 'Irregular, broken, branching dark espresso markings weave across roughly half of the dorsal field, flanks, and limbs.',
         pins: [
@@ -315,7 +375,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'extreme-brindle',
         label: 'Extreme Brindle',
         stage: 'Stage 5 · High-density dark brindle',
-        traits: { dorsal: 0.28, lateral: 0.25, pinstripe: 0.3, tiger: 1, spots: 0 },
+        traits: { dorsal: 0.28, lateral: 0.25, pinstripe: 0.3, tiger: 1, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'mahogany',
         note: 'Dense dark espresso-black brindle marbling covers 80%+ of the back, flanks, and limbs, leaving narrow golden-amber fissures of ground color.',
         pins: [
@@ -328,14 +388,14 @@ export const MORPH_PROGRESSION_TRACKS = [
   {
     id: 'spotting',
     title: 'Dalmatian Spotting & Base Contrast',
-    subtitle: 'From Clean Buckskin & Yellow Base to Dalmatian & Super Dalmatian',
+    subtitle: 'From Clean Buckskin & Yellow Base to Dalmatian, Super Dalmatian & Mardi Gras',
     summary: 'Observe how discrete pigment spots vary in size, density, and color, and how they overlay clean buckskin, yellow, or patterned backgrounds.',
     steps: [
       {
         slug: 'buckskin',
         label: 'Buckskin Base',
         stage: 'Stage 1 · 0 discrete spots',
-        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0 },
+        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'buckskin',
         note: 'Clean granular scales across the head, trunk, limbs, and tail with no discrete melanistic or erythristic spots.',
         pins: [
@@ -346,7 +406,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'yellow-base',
         label: 'Yellow Base',
         stage: 'Stage 2 · High-contrast xanthophore ground',
-        traits: { dorsal: 0.35, lateral: 0.1, pinstripe: 0.1, tiger: 0, spots: 0 },
+        traits: { dorsal: 0.35, lateral: 0.1, pinstripe: 0.1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'yellow',
         note: 'Warm golden-mustard and buttery yellow ground color provides the classic high-contrast canvas prized in Dalmatian breeding lines.',
         pins: [
@@ -357,7 +417,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'dalmatian',
         label: 'Dalmatian',
         stage: 'Stage 3 · Scattered discrete spots',
-        traits: { dorsal: 0.1, lateral: 0, pinstripe: 0, tiger: 0, spots: 0.48 },
+        traits: { dorsal: 0.1, lateral: 0, pinstripe: 0, tiger: 0, spots: 0.48, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'yellow',
         note: 'Scattered, sharply defined round and oval black spots, with occasional red ones, over the body, head and limbs. The number varies widely between animals.',
         pins: [
@@ -369,7 +429,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'super-dalmatian',
         label: 'Super Dalmatian',
         stage: 'Stage 4 · Heavy density & macro ink-blots',
-        traits: { dorsal: 0.25, lateral: 0.1, pinstripe: 0.15, tiger: 0, spots: 1 },
+        traits: { dorsal: 0.25, lateral: 0.1, pinstripe: 0.15, tiger: 0, spots: 1, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
         tone: 'yellow',
         note: 'Heavy, dense spotting, often with large ink-blot spots and red spots over both base color and pale dorsal pattern. There is no fixed spot count.',
         pins: [
@@ -377,20 +437,140 @@ export const MORPH_PROGRESSION_TRACKS = [
           { x: 52, y: 28, title: 'Spots Over Pale Dorsum', detail: 'Dalmatian spots overlay pale dorsal cream as well as the ground color.' },
         ],
       },
+      {
+        slug: 'tricolor',
+        label: 'Tricolor Harlequin',
+        stage: 'Stage 5 · Multi-pigment cream, red & dark contrast',
+        traits: { dorsal: 0.9, lateral: 0.65, pinstripe: 0.45, tiger: 0, spots: 0.35, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'mahogany',
+        note: 'Combines three distinct pigment tiers on the same animal: dark espresso-mahogany base, fiery orange-red pattern patches, and high-contrast ivory-cream dorsal and lateral markings.',
+        pins: [
+          { x: 46, y: 45, title: 'Three-Color Flank Hierarchy', detail: 'Dark mahogany base, warm terracotta-red mid-tones, and bright cream lobes share the flank.' },
+          { x: 51, y: 29, title: 'Layered Dorsal Contrast', detail: 'Pale cream and orange-red pattern zones sit side by side along the back.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'bases',
+    title: 'Base Ground Colors & Firing',
+    subtitle: 'From Buckskin & Cream through Yellow, Orange, Red, Chocolate, Olive & Lavender',
+    summary: 'Compare how dermal xanthophores, erythrophores, and melanophores shift the underlying ground color across natural, warm, earthy, and cool lavender palettes.',
+    steps: [
+      {
+        slug: 'buckskin',
+        label: 'Buckskin',
+        stage: 'Base 1 · Wild-type golden-tan ground',
+        traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'buckskin',
+        note: 'Classic New Caledonian wild-type warm sandy-fawn and golden-buckskin ground color across the head, back, flanks, and limbs.',
+        pins: [
+          { x: 47, y: 42, title: 'Balanced Tan Dermal Ground', detail: 'Warm golden-fawn scales with natural sepia shading and no heavy red or dark saturation.' },
+        ],
+      },
+      {
+        slug: 'cream',
+        label: 'Cream Base',
+        stage: 'Base 2 · Pale parchment & ivory-buff ground',
+        traits: { dorsal: 0.45, lateral: 0.15, pinstripe: 0.25, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0.25, pied: 0 },
+        tone: 'cream',
+        note: 'Pale buttery parchment and warm ivory-buff ground tone that stays light even when fired up, creating soft tonal transitions.',
+        pins: [
+          { x: 48, y: 40, title: 'Pale Ivory-Buff Scales', detail: 'Light cream-buff ground across the trunk and limbs with gentle fawn shading.' },
+        ],
+      },
+      {
+        slug: 'yellow-base',
+        label: 'Yellow Base',
+        stage: 'Base 3 · Xanthophore-rich golden-citrine ground',
+        traits: { dorsal: 0.35, lateral: 0.12, pinstripe: 0.15, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'yellow',
+        note: 'Saturated golden-ochre and mustard-yellow xanthophore ground color that fires up bright amber-yellow.',
+        pins: [
+          { x: 46, y: 44, title: 'Golden-Ochre Flank Ground', detail: 'Rich yellow pteridine and carotenoid pigment filling the lateral and dorsal scales.' },
+        ],
+      },
+      {
+        slug: 'orange-base',
+        label: 'Orange Base',
+        stage: 'Base 4 · Warm terracotta-tangerine ground',
+        traits: { dorsal: 0.55, lateral: 0.32, pinstripe: 0.3, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'orange',
+        note: 'Warm burnt-apricot, persimmon, and terracotta-tangerine ground color bridging yellow xanthophores and red erythrophores.',
+        pins: [
+          { x: 46, y: 45, title: 'Terracotta-Tangerine Body', detail: 'Saturated warm orange dermal scales firing to deep burnt-sienna.' },
+        ],
+      },
+      {
+        slug: 'red-base',
+        label: 'Red Base',
+        stage: 'Base 5 · Deep brick-red & crimson erythrophore ground',
+        traits: { dorsal: 0.35, lateral: 0.15, pinstripe: 0.2, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'red',
+        note: 'Dense erythrophore pigment produces a rich venetian brick-red, madder-crimson, and deep cinnabar ground when fired up.',
+        pins: [
+          { x: 47, y: 44, title: 'Fired Brick-Crimson Flank', detail: 'Deep natural red pigment across the body without artificial neon saturation.' },
+        ],
+      },
+      {
+        slug: 'chocolate',
+        label: 'Chocolate Base',
+        stage: 'Base 6 · Rich roasted cocoa-umber ground',
+        traits: { dorsal: 0.45, lateral: 0.2, pinstripe: 0.35, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'chocolate',
+        note: 'Warm, velvety dark cocoa-brown and roasted chestnut-umber ground color that gives cream markings high contrast.',
+        pins: [
+          { x: 46, y: 45, title: 'Roasted Cocoa Ground', detail: 'Deep warm brown eumelanin tone distinct from cool black or olive.' },
+        ],
+      },
+      {
+        slug: 'olive',
+        label: 'Olive Base',
+        stage: 'Base 7 · Mossy green-umber ground',
+        traits: { dorsal: 0.35, lateral: 0.15, pinstripe: 0.25, tiger: 0.15, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'olive',
+        note: 'Layered yellow xanthophores over dark brown melanophores produce an earthy moss-olive, khaki, and sage-umber ground tone.',
+        pins: [
+          { x: 47, y: 44, title: 'Moss-Olive Dermal Scales', detail: 'Subtle green-olive cast created by yellow pigment over dark dermal melanin.' },
+        ],
+      },
+      {
+        slug: 'lavender',
+        label: 'Lavender Base',
+        stage: 'Base 8 · Cool slate-plum & dusty mauve ground',
+        traits: { dorsal: 0.68, lateral: 0.35, pinstripe: 0.45, tiger: 0.15, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'lavender',
+        note: 'Reduced warm yellow pigment over cool dermal melanin creates a smoky purple-gray, slate-plum, and dusty lavender-taupe base.',
+        pins: [
+          { x: 46, y: 45, title: 'Cool Slate-Lavender Flank', detail: 'Muted plum-gray ground contrasting with warm cream or apricot dorsal pattern.' },
+        ],
+      },
     ],
   },
   {
     id: 'pigment',
-    title: 'Pigment & Melanin Modifiers',
-    subtitle: 'Cappuccino, Sable, Axanthic, Hypo & Albino',
-    summary: 'Compare how single-gene and line-bred pigment modifiers alter melanin density, yellow/red xanthophores, and ocular iris & pupil appearance.',
+    title: 'Pigment, Dark & Recessive Modifiers',
+    subtitle: 'Phantom, Cappuccino, Luwak, Super Sable, Axanthic, Hypo, Pied & Albino',
+    summary: 'Compare how single-gene and allelic pigment modifiers alter melanin density, yellow/red xanthophores, piebald depigmentation, and ocular appearance.',
     steps: [
+      {
+        slug: 'phantom',
+        label: 'Phantom',
+        stage: 'Recessive · suppressed pattern pigment',
+        traits: { dorsal: 0.1, lateral: 0.05, pinstripe: 0.25, tiger: 0.2, spots: 0, emptyBack: 0.5, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'phantom',
+        note: 'Recessive Phantom mutes bright yellow and orange pattern pigment into velvety smoky mocha-taupe and charcoal-umber, often leaving a small white tail-base mark or tiny white portholes.',
+        pins: [
+          { x: 48, y: 31, title: 'Suppressed Smoky Dorsum', detail: 'Dorsal field blends quietly into the muted mocha-charcoal body without bright flame lobes.' },
+          { x: 64, y: 24, title: 'Residual Structural White Spot', detail: 'Small crisp ivory-white mark at the tail base where structural white persists.' },
+        ],
+      },
       {
         slug: 'cappuccino',
         label: 'Cappuccino',
         stage: 'Incomplete dominant · one copy (two make Super Cappuccino)',
-        traits: { dorsal: 0.25, lateral: 0.1, pinstripe: 0.15, tiger: 0.35, spots: 0 },
-        tone: 'mahogany',
+        traits: { dorsal: 0.25, lateral: 0.1, pinstripe: 0.15, tiger: 0.35, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'cappuccino',
         note: 'Often darker with reduced pattern, and young animals can show a pale marking at the tail base. Appearance varies a lot, so lineage confirms it.',
         pins: [
           { x: 22, y: 46, title: 'Eye color', detail: 'Some Cappuccino and Sable geckos show a dark iris, but eye color alone does not identify either.' },
@@ -398,11 +578,35 @@ export const MORPH_PROGRESSION_TRACKS = [
         ],
       },
       {
+        slug: 'luwak',
+        label: 'Luwak',
+        stage: 'Allelic compound het · Cappuccino x Sable',
+        traits: { dorsal: 0.42, lateral: 0.08, pinstripe: 0.55, tiger: 0.25, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'sable',
+        note: 'Luwak combines one copy of Cappuccino and one copy of Sable into a viable, velvety dark coffee-bean body with contrasting smoky parchment-cream dorsal and crest markings.',
+        pins: [
+          { x: 48, y: 29, title: 'Smoky Parchment Dorsal Chevrons', detail: 'Toasted-oat and parchment-cream dorsal markings stand out atop the dark espresso body.' },
+          { x: 46, y: 47, title: 'Velvety Dark Coffee Flank', detail: 'Deep roasted coffee-bean brown flanks with full normal granular scale density.' },
+        ],
+      },
+      {
+        slug: 'super-sable',
+        label: 'Super Sable',
+        stage: 'Homozygous · two-copy viable dark morph',
+        traits: { dorsal: 0.05, lateral: 0, pinstripe: 0.1, tiger: 0.15, spots: 0, emptyBack: 0.85, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'melanistic',
+        note: 'Homozygous Super Sable produces a healthy, normal-scaled adult with a saturated, matte-velvet dark bitter-chocolate and charcoal-umber body.',
+        pins: [
+          { x: 48, y: 40, title: 'Velvet Bitter-Chocolate Pelage', detail: 'Uniformly dark charcoal-mahogany body with full, opaque granular scale coverage.' },
+          { x: 64, y: 24, title: 'Crisp Tail-Base Dot', detail: 'Small pale ivory-cream dot at the tail base contrasting against the dark body.' },
+        ],
+      },
+      {
         slug: 'frappuccino',
         label: 'Frappuccino',
         stage: 'Cappuccino + Lilly White combo',
-        traits: { dorsal: 0.95, lateral: 0.88, pinstripe: 1, tiger: 0.2, spots: 0 },
-        tone: 'mahogany',
+        traits: { dorsal: 0.95, lateral: 0.88, pinstripe: 1, tiger: 0.2, spots: 0, emptyBack: 0, whitewall: 0.65, whiteFactor: 0.85, pied: 0 },
+        tone: 'cappuccino',
         note: 'Combines Cappuccino espresso-taupe ground color and dark eyes with Lilly White creamy-latte dorsal saddle and sweeping white lateral walls.',
         pins: [
           { x: 50, y: 27, title: 'Latte-Cream Dorsal Saddle', detail: 'Lilly White structural white softened by Cappuccino melanin into warm latte-cream.' },
@@ -413,8 +617,8 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'hypo',
         label: 'Hypomelanistic',
         stage: 'Reduced dark melanin',
-        traits: { dorsal: 0.75, lateral: 0.45, pinstripe: 0.35, tiger: 0.25, spots: 0 },
-        tone: 'yellow',
+        traits: { dorsal: 0.75, lateral: 0.45, pinstripe: 0.35, tiger: 0.25, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 },
+        tone: 'hypo',
         note: 'Suppressed black and dark brown melanin softens dark ground areas into dusty peach, pastel tangerine, and warm cinnamon-tan.',
         pins: [
           { x: 46, y: 43, title: 'Suppressed Dark Melanin', detail: 'Ground channels appear soft peach-tan or lavender-ash instead of dark chocolate.' },
@@ -424,7 +628,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'axanthic',
         label: 'Axanthic',
         stage: 'Recessive xanthophore absence',
-        traits: { dorsal: 0.9, lateral: 0.65, pinstripe: 0.55, tiger: 0.3, spots: 0 },
+        traits: { dorsal: 0.9, lateral: 0.65, pinstripe: 0.55, tiger: 0.3, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0.35, pied: 0 },
         tone: 'axanthic',
         note: 'Complete absence of yellow and red pigment leaves a crisp monochrome palette of charcoal-black, slate-gray, pewter, and pure chalk-white.',
         pins: [
@@ -436,7 +640,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'pied',
         label: 'Pied (Piebald)',
         stage: 'Localized piebald depigmentation',
-        traits: { dorsal: 0.65, lateral: 0.55, pinstripe: 0.5, tiger: 0, spots: 0 },
+        traits: { dorsal: 0.65, lateral: 0.55, pinstripe: 0.5, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0.88 },
         tone: 'mahogany',
         note: 'Sharply demarcated patches of completely unpigmented pure chalk-white and translucent pinkish-ivory skin abruptly cut across normal body pattern and distal toes.',
         pins: [
@@ -448,7 +652,7 @@ export const MORPH_PROGRESSION_TRACKS = [
         slug: 'albino',
         label: 'Albino',
         stage: 'Amelanistic · inheritance not yet proven',
-        traits: { dorsal: 0.88, lateral: 0.55, pinstripe: 0.65, tiger: 0, spots: 0 },
+        traits: { dorsal: 0.88, lateral: 0.55, pinstripe: 0.65, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0.3, pied: 0 },
         tone: 'albino',
         note: 'Complete absence of dark melanin produces a translucent buttery-cream and soft peach-pink body with a pale silvery-pearl iris and ruby-crimson vertical slit pupil.',
         pins: [
@@ -478,7 +682,7 @@ export const STUDY_LESSONS = [
   {
     id: 'harlequin',
     title: 'Lateral pattern',
-    subtitle: 'Harlequin & extreme',
+    subtitle: 'Harlequin, extreme & whiteout',
     region: 'lateral',
     view: 'side',
     trackId: 'coverage',
@@ -486,13 +690,13 @@ export const STUDY_LESSONS = [
     examples: ['selva', 'bliss', 'harlequin', 'flank', 'extreme'],
     traits: { dorsal: 1, lateral: 0.62 },
     look: 'Look for irregular markings rising up the lower flanks and wrapping across the limbs. Compare light, moderate, and heavy coverage across several animals.',
-    distinction: '“Extreme” is a breeder descriptor for high lateral coverage, with no universal percentage cutoff. Pattern color can be cream, yellow, or orange.',
+    distinction: '“Extreme” is a breeder descriptor for high lateral coverage, with no universal percentage cutoff. Pattern color can be cream, yellow, orange, or chalk-white.',
     guide: 'harlequin',
   },
   {
     id: 'pinstripe',
     title: 'Raised crest rows',
-    subtitle: 'Partial, full & quad pinstripe',
+    subtitle: 'Pinstripe, Empty Back & White Wall',
     region: 'pinstripe',
     view: 'top',
     trackId: 'pinning',
@@ -500,7 +704,7 @@ export const STUDY_LESSONS = [
     examples: ['pin', 'ponyBoy', 'raindrop', 'harlequin'],
     traits: { pinstripe: 1 },
     look: 'Follow each raised dorsal edge from the neck toward the tail base. Check both left and right rows for interruptions before grading continuity.',
-    distinction: 'Pinstripe is separate from the wide dorsal field between the ridges. A dark line beside a pale pin is called reverse pinning; it does not establish Phantom.',
+    distinction: 'Pinstripe is separate from the wide dorsal field between the ridges. Empty Back clears the dorsal saddle between the pins, while White Wall plates the lower flank.',
     guide: 'pinstripe',
   },
   {
@@ -520,11 +724,11 @@ export const STUDY_LESSONS = [
   {
     id: 'dalmatian',
     title: 'Discrete spots',
-    subtitle: 'Dalmatian & super Dalmatian',
+    subtitle: 'Dalmatian, Super & Mardi Gras',
     region: 'spots',
     view: 'side',
     trackId: 'spotting',
-    defaultStep: 1,
+    defaultStep: 2,
     examples: ['frito', 'cheeto', 'dalmatian', 'dense'],
     traits: { spots: 0.65 },
     look: 'Separate individual spots from the surrounding pattern. Inspect their size, crispness, color (black, red, or olive oil spots), and distribution over pale markings.',
@@ -532,16 +736,30 @@ export const STUDY_LESSONS = [
     guide: 'dalmatian',
   },
   {
+    id: 'bases',
+    title: 'Base ground colors',
+    subtitle: 'Buckskin, red, chocolate & lavender',
+    region: 'dorsal',
+    view: 'side',
+    trackId: 'bases',
+    defaultStep: 4,
+    examples: ['cheeto', 'bicolor', 'moonlight'],
+    traits: { dorsal: 0.35, lateral: 0.15, pinstripe: 0.2 },
+    look: 'Read the underlying dermal ground tone across the flanks, limbs, and head between any lighter pattern markings, and note whether the animal is fired up or fired down.',
+    distinction: 'Ground color shifts dramatically with firing state. Compare buckskin, yellow, orange, red, chocolate, olive, and cool slate-lavender under consistent lighting.',
+    guide: 'red-base',
+  },
+  {
     id: 'structural',
     title: 'Structural white & modifiers',
-    subtitle: 'Lilly White, Axanthic & Albino',
+    subtitle: 'Lilly White, Cappuccino, Axanthic, Pied & Albino',
     region: 'lateral',
     view: 'side',
     trackId: 'pigment',
-    defaultStep: 3,
+    defaultStep: 6,
     examples: ['moonlight', 'bliss', 'extreme'],
-    traits: { dorsal: 1, lateral: 0.92, pinstripe: 0.9 },
-    look: 'Observe how pigment traits transform the whole body: Lilly White floods the dorsum, tail tip, and flanks with chalk-white; Axanthic removes yellow and red; Albino removes dark melanin (its inheritance is still being proven).',
+    traits: { dorsal: 1, lateral: 0.92, pinstripe: 0.9, whiteFactor: 0.85 },
+    look: 'Observe how pigment traits transform the whole body: Lilly White floods the dorsum, tail tip, and flanks with chalk-white; Axanthic removes yellow and red; Pied creates sharp unpigmented patches; Albino removes dark melanin.',
     distinction: 'A pale fired-down gecko can mimic hypomelanistic or axanthic tones in a single photo. Always check firing range, eye pigment, and documented lineage.',
     guide: 'lilly-white',
   },
@@ -559,11 +777,30 @@ export const STUDY_QUESTIONS = [
 ];
 
 export const EMPTY_TRAITS = Object.freeze({ dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0 });
-export const normalizedStudy = input => Object.fromEntries(Object.keys(EMPTY_TRAITS).map(k => [k, Math.max(0, Math.min(1, Number(input?.[k]) || 0))]));
+export const EMPTY_STUDIO_TRAITS = Object.freeze({
+  dorsal: 0,
+  lateral: 0,
+  pinstripe: 0,
+  tiger: 0,
+  spots: 0,
+  emptyBack: 0,
+  whitewall: 0,
+  whiteFactor: 0,
+  pied: 0,
+});
+export const normalizedStudy = input =>
+  Object.fromEntries(Object.keys(EMPTY_TRAITS).map(k => [k, Math.max(0, Math.min(1, Number(input?.[k]) || 0))]));
+export const normalizedStudioTraits = input =>
+  Object.fromEntries(Object.keys(EMPTY_STUDIO_TRAITS).map(k => [k, Math.max(0, Math.min(1, Number(input?.[k]) || 0))]));
+
 export function traitDescription(key, value) {
   if (value <= 0) return 'Absent';
   if (key === 'pinstripe') return value >= .999 ? 'Continuous' : value > .8 ? 'Nearly continuous' : value > .35 ? 'Interrupted' : 'A few pin scales';
   if (key === 'spots') return value > .8 ? 'Dense' : value > .35 ? 'Scattered' : 'Sparse';
   if (key === 'tiger') return value > .7 ? 'Pronounced' : value > .3 ? 'Moderate' : 'Faint';
+  if (key === 'emptyBack') return value > .8 ? 'Full dorsal clear' : value > .35 ? 'Partial clearing' : 'Trace clearing';
+  if (key === 'whitewall') return value > .8 ? 'Solid lateral wall' : value > .35 ? 'Lateral bars & portholes' : 'Faint portholes';
+  if (key === 'whiteFactor') return value > .8 ? 'High white blanket' : value > .35 ? 'Whiteout frosting' : 'Light cream boost';
+  if (key === 'pied') return value > .8 ? 'Saddle & pied limbs' : value > .35 ? 'Flank patch & toes' : 'Pied toe tips';
   return value > .8 ? 'Extensive' : value > .35 ? 'Moderate' : 'Limited';
 }

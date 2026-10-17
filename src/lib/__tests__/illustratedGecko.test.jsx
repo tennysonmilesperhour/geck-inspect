@@ -68,14 +68,15 @@ describe('specimen-based lessons', () => {
 });
 
 describe('animated morph progression tracks', () => {
-  it('validates all 5 morph progression tracks, stage plates, and anatomical callouts', () => {
-    expect(MORPH_PROGRESSION_TRACKS).toHaveLength(5);
+  it('validates all 6 morph progression tracks, stage plates, and anatomical callouts', () => {
+    expect(MORPH_PROGRESSION_TRACKS).toHaveLength(6);
     for (const track of MORPH_PROGRESSION_TRACKS) {
       expect(track.steps.length).toBeGreaterThanOrEqual(4);
       for (const step of track.steps) {
         expect(slugs.has(step.slug)).toBe(true);
         expect(existsSync(`public${fieldGuidePlate(step.slug)}`)).toBe(true);
         expect(step.traits).toBeTruthy();
+        expect(BASE_TONES[step.tone]).toBeTruthy();
         expect(step.pins.length).toBeGreaterThan(0);
         for (const pt of step.pins) {
           expect(pt.x).toBeGreaterThanOrEqual(0);
@@ -98,7 +99,7 @@ describe('animated morph progression tracks', () => {
     // Spot counts are not a standard for Dalmatian or Super Dalmatian.
     expect(`${text('dalmatian')} ${text('super-dalmatian')}`).not.toMatch(/\d+\s*(to|-)\s*\d+\s*.*spots|\d+\+/i);
   });
-  it('renders MorphProgressionPlayer and CustomMorphComparator cleanly', () => {
+  it('renders MorphProgressionPlayer with outer leader-line callouts and CustomMorphComparator cleanly', () => {
     const playerHtml = renderToStaticMarkup(
       <MemoryRouter>
         <MorphProgressionPlayer trackId="coverage" initialStep={3} />
@@ -107,6 +108,9 @@ describe('animated morph progression tracks', () => {
     expect(playerHtml).toContain('Field guide progression');
     expect(playerHtml).toContain('Animate transition');
     expect(playerHtml).toContain('/morph-guide/field-guide-v1/harlequin.webp');
+    expect(playerHtml).toContain('data-callout-leader="1"');
+    expect(playerHtml).toContain('top:11.5%');
+    expect(playerHtml).toContain('top:88.5%');
 
     const compHtml = renderToStaticMarkup(
       <MemoryRouter>
@@ -199,19 +203,20 @@ describe('illustrated examples', () => {
     expect(projectLinePlate('unknown-line')).toBeNull();
   });
   it('draws the base and each requested layer straight from the precomputed pigment-only files, and interpolates masks smoothly without NaN across every base tone', () => {
-    const html=renderToStaticMarkup(<TraitGecko traits={{ dorsal:1,lateral:1,pinstripe:1,spots:1 }} />);
+    const html=renderToStaticMarkup(<TraitGecko traits={{ dorsal:1,lateral:1,pinstripe:1,spots:1,emptyBack:0.7,whitewall:0.8,whiteFactor:0.75,pied:0.8 }} />);
     expect(html).toContain('role="img"'); expect(html).toContain(traitAsset('side'));
-    for (const layer of ['dorsal','lateral','pinstripe','spots']) expect(html).toContain(`data-layer="${layer}"`);
+    for (const layer of ['dorsal','lateral','pinstripe','spots','emptyBack','whitewall','whiteFactor','pied']) expect(html).toContain(`data-layer="${layer}"`);
     // Never the full edited drawings (a whole second animal), and no in-page pixel work.
     expect(html).not.toContain('ink-studies'); expect(html).not.toContain('data:image');
     expect(html).not.toContain('NaN');
+    expect(Object.keys(BASE_TONES).length).toBeGreaterThanOrEqual(17);
     for (const toneKey of Object.keys(BASE_TONES)) {
-      const toneHtml = renderToStaticMarkup(<TraitGecko view="side" tone={toneKey} fired={0.75} traits={{ dorsal: 0.6, lateral: 0.5, pinstripe: 0.7, tiger: 0.4, spots: 0.3 }} />);
+      const toneHtml = renderToStaticMarkup(<TraitGecko view="side" tone={toneKey} fired={0.75} traits={{ dorsal: 0.6, lateral: 0.5, pinstripe: 0.7, tiger: 0.4, spots: 0.3, emptyBack: 0.4, whitewall: 0.5, whiteFactor: 0.5, pied: 0.4 }} />);
       expect(toneHtml).not.toContain('NaN');
       expect(toneHtml).toContain('feColorMatrix');
     }
     for (const v of [0.05, 0.25, 0.5, 0.85, 1]) {
-      const midHtml = renderToStaticMarkup(<TraitGecko view="top" tone="mahogany" fired={0.6} traits={{ dorsal: v, lateral: v, pinstripe: v, tiger: v, spots: v }} />);
+      const midHtml = renderToStaticMarkup(<TraitGecko view="top" tone="mahogany" fired={0.6} traits={{ dorsal: v, lateral: v, pinstripe: v, tiger: v, spots: v, emptyBack: v, whitewall: v, whiteFactor: v, pied: v }} />);
       expect(midHtml).not.toContain('NaN');
       expect(midHtml).toContain('feColorMatrix');
     }

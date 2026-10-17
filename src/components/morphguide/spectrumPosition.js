@@ -7,11 +7,33 @@
 export function spectrumPositionFor(slug) {
   const coverage = ['flame', 'harlequin', 'extreme-harlequin'].indexOf(slug);
   if (coverage >= 0) return { track: 'coverage', pos: coverage + 1 };
-  if (['bicolor', 'lilly-white', 'white-wall', 'creamsicle', 'tricolor'].includes(slug)) {
+  if (
+    [
+      'bicolor',
+      'lilly-white',
+      'super-lilly-white',
+      'whiteout',
+      'super-whiteout',
+      'white-wall',
+      'white-wall-white-spot',
+      'creamsicle',
+      'tricolor',
+    ].includes(slug)
+  ) {
     return { track: 'coverage', pos: 2 };
   }
   if (slug === 'pinstripe') return { track: 'pinning', pos: 2 };
-  if (['partial-pinstripe', 'quad-stripe', 'super-stripe'].includes(slug)) {
+  if (
+    [
+      'partial-pinstripe',
+      'quad-stripe',
+      'super-stripe',
+      'empty-back',
+      'super-empty-back',
+      'highway',
+      'super-highway',
+    ].includes(slug)
+  ) {
     return { track: 'pinning', pos: 1 };
   }
   if (
@@ -29,7 +51,37 @@ export function spectrumPositionFor(slug) {
   ) {
     return { track: 'features', pos: 0 };
   }
-  if (['cappuccino', 'frappuccino', 'sable', 'axanthic', 'hypo', 'albino', 'pied', 'moonglow', 'lavender'].includes(slug)) {
+  if (
+    [
+      'buckskin',
+      'cream',
+      'yellow-base',
+      'orange-base',
+      'orange-tangerine',
+      'red-base',
+      'chocolate',
+      'olive',
+    ].includes(slug)
+  ) {
+    return { track: 'bases', pos: 0 };
+  }
+  if (
+    [
+      'phantom',
+      'cappuccino',
+      'super-cappuccino',
+      'frappuccino',
+      'sable',
+      'super-sable',
+      'luwak',
+      'axanthic',
+      'hypo',
+      'albino',
+      'pied',
+      'moonglow',
+      'lavender',
+    ].includes(slug)
+  ) {
     return { track: 'pigment', pos: 0 };
   }
   return null;

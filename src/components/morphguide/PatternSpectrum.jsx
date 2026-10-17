@@ -2,15 +2,15 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { captureEvent } from '@/lib/posthog';
 import { MORPHS } from '@/data/morph-guide';
-import TraitGecko, { BASE_TONES } from './TraitGecko';
+import TraitGecko, { BASE_TONES, BASE_TONE_GROUPS } from './TraitGecko';
 import { fieldGuidePlate, hasIllustration } from './IllustratedGecko';
 import { SpecimenPhoto, RecognitionPractice } from './SpecimenStudy';
 import {
   SPECIMENS,
   STUDY_LESSONS,
   MORPH_PROGRESSION_TRACKS,
-  EMPTY_TRAITS,
-  normalizedStudy,
+  EMPTY_STUDIO_TRAITS,
+  normalizedStudioTraits,
   traitDescription,
 } from './patternStudy';
 
@@ -18,27 +18,81 @@ import {
 // downloading the studio; re-exported here for existing callers.
 export { spectrumPositionFor } from './spectrumPosition';
 
-const CONTROLS = [
-  ['dorsal', 'Dorsal pattern', 'The field between the crest rows.'],
-  ['lateral', 'Flank & leg pattern', 'Irregular patches on the sides and limbs.'],
-  ['pinstripe', 'Pinstripe continuity', 'Individual highlighted scales on the raised edges.'],
-  ['tiger', 'Dark band contrast', 'Transverse pattern, with naturally irregular edges.'],
-  ['spots', 'Dalmatian spotting', 'Individual spots with varied sizes and spacing.'],
+export const STUDIO_CONTROL_GROUPS = [
+  {
+    id: 'dorsal-structure',
+    title: 'Dorsal & Crest Structure',
+    subtitle: 'Back saddle, crest ridges & Empty Back clearing',
+    controls: [
+      ['dorsal', 'Dorsal pattern', 'Flame, bicolor, and dorsal saddle coverage between the crest rows.'],
+      ['pinstripe', 'Pinstripe continuity', 'Individual highlighted scales along the raised left and right dorsal ridges.'],
+      ['emptyBack', 'Empty Back clearing', 'Clears busy dorsal flame blotching to open a smooth dorsal corridor.'],
+    ],
+  },
+  {
+    id: 'flank-banding',
+    title: 'Flank, Wall & Banding',
+    subtitle: 'Lateral harlequin, structural white walls & dark tiger/brindle',
+    controls: [
+      ['lateral', 'Flank & leg pattern', 'Irregular harlequin patches rising up the sides and wrapping the limbs.'],
+      ['whitewall', 'White Wall & lateral bars', 'Thick structural cream-white lateral wall and quad-stripe flank bar.'],
+      ['tiger', 'Dark band contrast', 'Transverse tiger bars and broken, branching dark brindle networks.'],
+    ],
+  },
+  {
+    id: 'spotting-modifiers',
+    title: 'Spotting, White Factor & Piebald',
+    subtitle: 'Dalmatian spots, Whiteout/Lilly frosting & piebald patches',
+    controls: [
+      ['spots', 'Dalmatian spotting', 'Discrete black, red, and olive oil spots with varied size and spacing.'],
+      ['whiteFactor', 'Whiteout & Lilly frosting', 'Chalk-white and porcelain-ivory expansion across dorsal and flank pattern.'],
+      ['pied', 'Piebald patches', 'Sharply bordered unpigmented white body saddles and pied distal toes.'],
+    ],
+  },
+];
+
+export const STUDIO_PRESET_CATEGORIES = [
+  { id: 'all', label: 'All morphs' },
+  { id: 'coverage', label: 'Coverage & White' },
+  { id: 'pinning', label: 'Pinning & Empty Back' },
+  { id: 'banding', label: 'Banding & Spots' },
+  { id: 'bases', label: 'Base Colors' },
+  { id: 'modifiers', label: 'Dark & Recessive' },
 ];
 
 export const STUDIO_PRESETS = [
-  { id: 'patternless', label: 'Patternless', tone: 'buckskin', traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0 } },
-  { id: 'bicolor', label: 'Bicolor', tone: 'mahogany', traits: { dorsal: 0.78, lateral: 0, pinstripe: 0.08, tiger: 0, spots: 0 } },
-  { id: 'flame', label: 'Flame', tone: 'mahogany', traits: { dorsal: 0.92, lateral: 0.08, pinstripe: 0.15, tiger: 0, spots: 0 } },
-  { id: 'harlequin', label: 'Harlequin', tone: 'mahogany', traits: { dorsal: 1, lateral: 0.58, pinstripe: 0.35, tiger: 0, spots: 0 } },
-  { id: 'extreme-harlequin', label: 'Extreme Harlequin', tone: 'mahogany', traits: { dorsal: 1, lateral: 0.96, pinstripe: 0.75, tiger: 0, spots: 0 } },
-  { id: 'pinstripe', label: 'Full Pinstripe', tone: 'mahogany', traits: { dorsal: 0.35, lateral: 0.2, pinstripe: 1, tiger: 0, spots: 0 } },
-  { id: 'quad-stripe', label: 'Quad-Style Pin', tone: 'mahogany', traits: { dorsal: 0.25, lateral: 0.72, pinstripe: 1, tiger: 0, spots: 0 } },
-  { id: 'tiger', label: 'Tiger', tone: 'orange', traits: { dorsal: 0.15, lateral: 0, pinstripe: 0, tiger: 0.72, spots: 0 } },
-  { id: 'brindle-dal', label: 'Brindle + Spots', tone: 'buckskin', traits: { dorsal: 0.25, lateral: 0.2, pinstripe: 0.3, tiger: 0.95, spots: 0.55 } },
-  { id: 'dalmatian', label: 'Dalmatian', tone: 'yellow', traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0.52 } },
-  { id: 'super-dalmatian', label: 'Super Dalmatian', tone: 'yellow', traits: { dorsal: 0.2, lateral: 0, pinstripe: 0, tiger: 0, spots: 1 } },
-  { id: 'axanthic-harl', label: 'Axanthic Harlequin', tone: 'axanthic', traits: { dorsal: 0.95, lateral: 0.68, pinstripe: 0.6, tiger: 0.2, spots: 0 } },
+  { id: 'patternless', category: 'coverage', label: 'Patternless', tone: 'buckskin', traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'bicolor', category: 'coverage', label: 'Bicolor', tone: 'mahogany', traits: { dorsal: 0.78, lateral: 0, pinstripe: 0.08, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'flame', category: 'coverage', label: 'Flame', tone: 'mahogany', traits: { dorsal: 0.92, lateral: 0.08, pinstripe: 0.15, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'harlequin', category: 'coverage', label: 'Harlequin', tone: 'mahogany', traits: { dorsal: 1, lateral: 0.58, pinstripe: 0.35, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'extreme-harlequin', category: 'coverage', label: 'Extreme Harlequin', tone: 'mahogany', traits: { dorsal: 1, lateral: 0.96, pinstripe: 0.75, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'whiteout', category: 'coverage', label: 'Whiteout', tone: 'mahogany', traits: { dorsal: 0.92, lateral: 0.76, pinstripe: 0.7, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.4, whiteFactor: 0.58, pied: 0 } },
+  { id: 'super-whiteout', category: 'coverage', label: 'Super Whiteout', tone: 'mahogany', traits: { dorsal: 1, lateral: 0.96, pinstripe: 0.95, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.85, whiteFactor: 0.92, pied: 0 } },
+  { id: 'lilly-white', category: 'coverage', label: 'Lilly White', tone: 'mahogany', traits: { dorsal: 1, lateral: 1, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.75, whiteFactor: 1, pied: 0 } },
+  { id: 'pinstripe', category: 'pinning', label: 'Full Pinstripe', tone: 'mahogany', traits: { dorsal: 0.35, lateral: 0.2, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'quad-stripe', category: 'pinning', label: 'Quad-Stripe', tone: 'mahogany', traits: { dorsal: 0.25, lateral: 0.35, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.78, whiteFactor: 0, pied: 0 } },
+  { id: 'white-wall', category: 'pinning', label: 'White Wall', tone: 'mahogany', traits: { dorsal: 0.45, lateral: 0.65, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 1, whiteFactor: 0.25, pied: 0 } },
+  { id: 'empty-back', category: 'pinning', label: 'Empty Back', tone: 'buckskin', traits: { dorsal: 0.2, lateral: 0.68, pinstripe: 0.5, tiger: 0, spots: 0, emptyBack: 0.75, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'super-empty-back', category: 'pinning', label: 'Super Empty Back', tone: 'mahogany', traits: { dorsal: 0, lateral: 0.82, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 1, whitewall: 0.25, whiteFactor: 0, pied: 0 } },
+  { id: 'super-highway', category: 'pinning', label: 'Super Highway', tone: 'mahogany', traits: { dorsal: 1, lateral: 0, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0.3, pied: 0 } },
+  { id: 'tiger', category: 'banding', label: 'Tiger', tone: 'orange', traits: { dorsal: 0.15, lateral: 0, pinstripe: 0, tiger: 0.72, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'extreme-brindle', category: 'banding', label: 'Extreme Brindle', tone: 'mahogany', traits: { dorsal: 0.28, lateral: 0.25, pinstripe: 0.3, tiger: 1, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'dalmatian', category: 'banding', label: 'Dalmatian', tone: 'yellow', traits: { dorsal: 0, lateral: 0, pinstripe: 0, tiger: 0, spots: 0.52, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'super-dalmatian', category: 'banding', label: 'Super Dalmatian', tone: 'yellow', traits: { dorsal: 0.2, lateral: 0, pinstripe: 0, tiger: 0, spots: 1, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'mardi-gras', category: 'banding', label: 'Mardi Gras Spots', tone: 'cream', traits: { dorsal: 0.22, lateral: 0.12, pinstripe: 0.1, tiger: 0, spots: 0.88, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'red-harlequin', category: 'bases', label: 'Red Base Flame', tone: 'red', traits: { dorsal: 0.88, lateral: 0.25, pinstripe: 0.3, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'tangerine-harl', category: 'bases', label: 'Tangerine Harlequin', tone: 'orange', traits: { dorsal: 0.95, lateral: 0.72, pinstripe: 0.55, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'chocolate-pin', category: 'bases', label: 'Chocolate Pinstripe', tone: 'chocolate', traits: { dorsal: 0.45, lateral: 0.3, pinstripe: 1, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0.2, whiteFactor: 0, pied: 0 } },
+  { id: 'olive-tiger', category: 'bases', label: 'Olive Brindle', tone: 'olive', traits: { dorsal: 0.25, lateral: 0.15, pinstripe: 0.2, tiger: 0.78, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'lavender-harl', category: 'bases', label: 'Lavender Harlequin', tone: 'lavender', traits: { dorsal: 0.88, lateral: 0.62, pinstripe: 0.65, tiger: 0.15, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0.2, pied: 0 } },
+  { id: 'phantom', category: 'modifiers', label: 'Phantom', tone: 'phantom', traits: { dorsal: 0.1, lateral: 0.05, pinstripe: 0.25, tiger: 0.2, spots: 0, emptyBack: 0.5, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'cappuccino', category: 'modifiers', label: 'Cappuccino', tone: 'cappuccino', traits: { dorsal: 0.25, lateral: 0.1, pinstripe: 0.15, tiger: 0.35, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'luwak', category: 'modifiers', label: 'Luwak', tone: 'sable', traits: { dorsal: 0.42, lateral: 0.08, pinstripe: 0.55, tiger: 0.25, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'super-sable', category: 'modifiers', label: 'Super Sable', tone: 'melanistic', traits: { dorsal: 0.05, lateral: 0, pinstripe: 0.1, tiger: 0.15, spots: 0, emptyBack: 0.85, whitewall: 0, whiteFactor: 0, pied: 0 } },
+  { id: 'frappuccino', category: 'modifiers', label: 'Frappuccino', tone: 'cappuccino', traits: { dorsal: 0.95, lateral: 0.88, pinstripe: 1, tiger: 0.2, spots: 0, emptyBack: 0, whitewall: 0.65, whiteFactor: 0.85, pied: 0 } },
+  { id: 'axanthic-harl', category: 'modifiers', label: 'Axanthic Harlequin', tone: 'axanthic', traits: { dorsal: 0.95, lateral: 0.68, pinstripe: 0.6, tiger: 0.2, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0.35, pied: 0 } },
+  { id: 'pied', category: 'modifiers', label: 'Pied (Piebald)', tone: 'mahogany', traits: { dorsal: 0.65, lateral: 0.55, pinstripe: 0.5, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0, pied: 0.88 } },
+  { id: 'albino', category: 'modifiers', label: 'Albino', tone: 'albino', traits: { dorsal: 0.88, lateral: 0.55, pinstripe: 0.65, tiger: 0, spots: 0, emptyBack: 0, whitewall: 0, whiteFactor: 0.3, pied: 0 } },
 ];
 
 const LESSON_BY_SLUG = {
@@ -46,13 +100,20 @@ const LESSON_BY_SLUG = {
   flame: 'flame',
   harlequin: 'harlequin',
   'extreme-harlequin': 'harlequin',
+  whiteout: 'harlequin',
+  'super-whiteout': 'harlequin',
   creamsicle: 'harlequin',
   tricolor: 'harlequin',
-  'white-wall': 'harlequin',
+  'white-wall': 'pinstripe',
+  'white-wall-white-spot': 'pinstripe',
   pinstripe: 'pinstripe',
   'partial-pinstripe': 'pinstripe',
   'quad-stripe': 'pinstripe',
   'super-stripe': 'pinstripe',
+  'empty-back': 'pinstripe',
+  'super-empty-back': 'pinstripe',
+  highway: 'pinstripe',
+  'super-highway': 'pinstripe',
   tiger: 'tiger',
   brindle: 'tiger',
   'extreme-brindle': 'tiger',
@@ -62,21 +123,79 @@ const LESSON_BY_SLUG = {
   'super-dalmatian': 'dalmatian',
   'mardi-gras': 'dalmatian',
   confetti: 'dalmatian',
+  buckskin: 'bases',
+  cream: 'bases',
+  'yellow-base': 'bases',
+  'orange-base': 'bases',
+  'orange-tangerine': 'bases',
+  'red-base': 'bases',
+  chocolate: 'bases',
+  olive: 'bases',
+  lavender: 'bases',
   'lilly-white': 'structural',
+  'super-lilly-white': 'structural',
+  phantom: 'structural',
   cappuccino: 'structural',
+  'super-cappuccino': 'structural',
   frappuccino: 'structural',
   sable: 'structural',
+  'super-sable': 'structural',
+  luwak: 'structural',
   axanthic: 'structural',
   hypo: 'structural',
   albino: 'structural',
   pied: 'structural',
   moonglow: 'structural',
-  lavender: 'structural',
 };
+
+const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V'];
 
 function smoothBlend(x) {
   const t = Math.max(0, Math.min(1, x));
   return t * t * (3 - 2 * t);
+}
+
+/**
+ * Places numbered callout medallions in the clean top/bottom field-guide paper
+ * margins outside the gecko silhouette, with angled 2-segment leader lines
+ * connecting each outer badge to its anatomical target reticle on the gecko.
+ */
+function computeCalloutLayout(pins = []) {
+  if (!pins.length) return [];
+  if (pins.length === 1) {
+    const p = pins[0];
+    const isUpper = p.y <= 39;
+    const by = isUpper ? 11.5 : 88.5;
+    const bx = isUpper
+      ? Math.min(80, Math.max(54, p.x + 14))
+      : Math.min(76, Math.max(24, p.x - 10));
+    return [{ ...p, index: 0, bx, by, isUpper }];
+  }
+
+  const p0 = pins[0];
+  const p1 = pins[1];
+  let firstIsUpper;
+  if (p0.x <= 28) {
+    firstIsUpper = false;
+  } else if (p1.x <= 28) {
+    firstIsUpper = true;
+  } else {
+    firstIsUpper = p0.y <= p1.y;
+  }
+
+  return pins.map((p, idx) => {
+    const isUpper = idx === 0 ? firstIsUpper : idx === 1 ? !firstIsUpper : false;
+    const by = isUpper ? 11.5 : 88.5;
+    let bx;
+    if (isUpper) {
+      bx = Math.min(82, Math.max(52, p.x + (p.x < 55 ? 14 : 10)));
+    } else if (p.x <= 28) {
+      bx = 22;
+    } else {
+      bx = Math.min(76, Math.max(26, p.x - 12));
+    }
+    return { ...p, index: idx, bx, by, isUpper };
+  });
 }
 
 /**
@@ -181,6 +300,7 @@ export function MorphProgressionPlayer({
   const lowerStep = track.steps[lowerIdx] || track.steps[0];
   const upperStep = track.steps[upperIdx] || lowerStep;
   const pins = currentStep.pins || [];
+  const calloutLayout = computeCalloutLayout(pins);
   const selectedPin = pins[activePin] || pins[0];
 
   return (
@@ -272,49 +392,135 @@ export function MorphProgressionPlayer({
             : `Plate: ${currentStep.label}`}
         </div>
 
-        {/* Anatomical callout pins */}
-        {showPins && pins.length > 0 && (
+        {/* Outer margin callout medallions connected by angled leader lines to target reticles */}
+        {showPins && calloutLayout.length > 0 && (
           <>
             <svg
               className="pointer-events-none absolute inset-0 w-full h-full"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
+              viewBox="0 0 1264 848"
               aria-hidden="true"
             >
-              {pins.map((p, i) => (
-                <g key={p.title}>
-                  <circle
-                    cx={p.x}
-                    cy={p.y}
-                    r={activePin === i ? '3.2' : '2.2'}
-                    fill={activePin === i ? 'rgba(16, 185, 129, 0.25)' : 'rgba(15, 23, 42, 0.15)'}
-                    stroke={activePin === i ? '#059669' : '#334155'}
-                    strokeWidth="0.6"
-                  />
-                </g>
-              ))}
+              {calloutLayout.map((item, i) => {
+                const isSelected = activePin === i;
+                const tx = item.x * 12.64;
+                const ty = item.y * 8.48;
+                const bxSvg = item.bx * 12.64;
+                const bySvg = item.by * 8.48;
+                const elbowOffset = bxSvg >= tx ? 44 : -44;
+                const exSvg = tx + elbowOffset;
+                const eySvg = bySvg;
+                const dx = exSvg - tx;
+                const dy = eySvg - ty;
+                const dist = Math.hypot(dx, dy) || 1;
+                const rTarget = isSelected ? 13 : 11;
+                const sx = tx + (dx / dist) * (rTarget + 2);
+                const sy = ty + (dy / dist) * (rTarget + 2);
+                const strokeMain = isSelected ? '#0f766e' : '#3d3326';
+                const leaderPath = `M ${sx.toFixed(1)} ${sy.toFixed(1)} L ${exSvg.toFixed(1)} ${eySvg.toFixed(1)} L ${bxSvg.toFixed(1)} ${bySvg.toFixed(1)}`;
+
+                return (
+                  <g key={item.title} data-callout-leader={i + 1}>
+                    {/* Ivory paper halo under leader line for legibility across dark/light scales */}
+                    <path
+                      d={leaderPath}
+                      fill="none"
+                      stroke="#f4efdf"
+                      strokeWidth="4.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity="0.92"
+                    />
+                    {/* Crisp botanical/zoological leader line */}
+                    <path
+                      d={leaderPath}
+                      fill="none"
+                      stroke={strokeMain}
+                      strokeWidth={isSelected ? '2.2' : '1.6'}
+                      strokeDasharray={isSelected ? undefined : '5 3'}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    {/* Small diamond joint at leader elbow */}
+                    <polygon
+                      points={`${exSvg},${eySvg - 3.6} ${exSvg + 3.6},${eySvg} ${exSvg},${eySvg + 3.6} ${exSvg - 3.6},${eySvg}`}
+                      fill={strokeMain}
+                      stroke="#f4efdf"
+                      strokeWidth="1"
+                    />
+                    {/* Open zoological target reticle on the anatomical feature (never obscures scales) */}
+                    <circle
+                      cx={tx}
+                      cy={ty}
+                      r={rTarget}
+                      fill="none"
+                      stroke="#f4efdf"
+                      strokeWidth="4"
+                      opacity="0.9"
+                    />
+                    <circle
+                      cx={tx}
+                      cy={ty}
+                      r={rTarget}
+                      fill={isSelected ? 'rgba(13, 148, 136, 0.10)' : 'none'}
+                      stroke={strokeMain}
+                      strokeWidth={isSelected ? '2.2' : '1.6'}
+                    />
+                    {/* 4 compass crosshair ticks around the target ring */}
+                    <line x1={tx} y1={ty - rTarget - 5} x2={tx} y2={ty - rTarget + 1} stroke={strokeMain} strokeWidth="1.6" strokeLinecap="round" />
+                    <line x1={tx} y1={ty + rTarget - 1} x2={tx} y2={ty + rTarget + 5} stroke={strokeMain} strokeWidth="1.6" strokeLinecap="round" />
+                    <line x1={tx - rTarget - 5} y1={ty} x2={tx - rTarget + 1} y2={ty} stroke={strokeMain} strokeWidth="1.6" strokeLinecap="round" />
+                    <line x1={tx + rTarget - 1} y1={ty} x2={tx + rTarget + 5} y2={ty} stroke={strokeMain} strokeWidth="1.6" strokeLinecap="round" />
+                    {/* Pinpoint center dot */}
+                    <circle
+                      cx={tx}
+                      cy={ty}
+                      r="2.8"
+                      fill={strokeMain}
+                      stroke="#f4efdf"
+                      strokeWidth="1.2"
+                    />
+                  </g>
+                );
+              })}
             </svg>
-            {pins.map((p, i) => (
-              <button
-                key={p.title}
-                type="button"
-                onClick={() => setActivePin(i)}
-                aria-label={`Diagnostic callout ${i + 1}: ${p.title}`}
-                aria-pressed={activePin === i}
-                style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full grid place-items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
-              >
-                <span
-                  className={`grid place-items-center w-6 h-6 rounded-full border-2 border-white text-xs font-bold shadow-md transition-transform ${
-                    activePin === i
-                      ? 'bg-emerald-500 text-slate-950 scale-110'
-                      : 'bg-slate-950/85 text-white hover:scale-105'
+
+            {/* Outer margin callout badges (positioned off the gecko body at bx, by) */}
+            {calloutLayout.map((item, i) => {
+              const isSelected = activePin === i;
+              const roman = ROMAN_NUMERALS[i] || String(i + 1);
+              return (
+                <button
+                  key={item.title}
+                  type="button"
+                  onClick={() => setActivePin(i)}
+                  aria-label={`Diagnostic callout ${i + 1}: ${item.title}`}
+                  aria-pressed={isSelected}
+                  style={{ left: `${item.bx}%`, top: `${item.by}%` }}
+                  className={`group absolute -translate-x-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 rounded-full border px-2 py-1 shadow-md transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ${
+                    isSelected
+                      ? 'border-[#0f766e] bg-[#1c2421] text-[#f4efdf] ring-2 ring-[#0f766e]/35 scale-[1.03]'
+                      : 'border-[#564c3d]/60 bg-[#f4efdf]/95 text-[#2d251c] hover:border-[#0f766e] hover:bg-white'
                   }`}
                 >
-                  {i + 1}
-                </span>
-              </button>
-            ))}
+                  {/* Engraved diamond + numeral medallion */}
+                  <span
+                    className={`inline-flex items-center justify-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-bold tracking-wider ${
+                      isSelected
+                        ? 'bg-emerald-400 text-slate-950'
+                        : 'bg-[#2d251c] text-[#f4efdf]'
+                    }`}
+                  >
+                    <svg className="w-2.5 h-2.5 shrink-0" viewBox="0 0 12 12" aria-hidden="true">
+                      <polygon points="6,0.8 11.2,6 6,11.2 0.8,6" fill="currentColor" />
+                    </svg>
+                    <span>{roman}</span>
+                  </span>
+                  <span className="text-[11px] font-semibold tracking-tight pr-1 max-w-[11rem] sm:max-w-[14rem] truncate">
+                    {item.title}
+                  </span>
+                </button>
+              );
+            })}
           </>
         )}
       </div>
@@ -365,7 +571,9 @@ export function MorphProgressionPlayer({
           <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">{currentStep.note}</p>
           {showPins && selectedPin && (
             <p className="mt-2 text-xs text-emerald-300 leading-relaxed">
-              <span className="font-semibold">Callout {activePin + 1} ({selectedPin.title}):</span>{' '}
+              <span className="font-semibold">
+                Callout {ROMAN_NUMERALS[activePin] || activePin + 1} ({selectedPin.title}):
+              </span>{' '}
               {selectedPin.detail}
             </p>
           )}
@@ -392,9 +600,7 @@ export function MorphProgressionPlayer({
   );
 }
 
-// Only morphs with a painted field guide plate can be compared; entries
-// still waiting for one (Phantom, Whiteout, the supers) would show a
-// broken image.
+// Every morph with a painted field guide plate can be compared directly.
 const PLATE_MORPHS = MORPHS.filter(m => hasIllustration(m.slug));
 
 /**
@@ -588,7 +794,7 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
   const [mode, setMode] = useState('learn');
   const [view, setView] = useState(initialLesson.view);
   const [traits, setTraits] = useState(() =>
-    normalizedStudy(
+    normalizedStudioTraits(
       initialPosition !== undefined && initialTrack === 'pinning'
         ? { pinstripe: initialPosition / 2 }
         : initialLesson.traits
@@ -601,6 +807,8 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
   const [comparing, setComparing] = useState(false);
   const [transitionTrackId, setTransitionTrackId] = useState(initialLesson.trackId || 'coverage');
   const [studioAnimMode, setStudioAnimMode] = useState(null); // 'traits' | 'firing' | null
+  const [presetCategory, setPresetCategory] = useState('all');
+  const [activeControlGroup, setActiveControlGroup] = useState('all');
   const animRef = useRef(null);
   const studioLoopRef = useRef(null);
   const traitsRef = useRef(traits);
@@ -628,7 +836,17 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
     const hasAnyTrait = Object.values(startTraits).some(v => v > 0.1);
     const targetTraits = hasAnyTrait
       ? startTraits
-      : { dorsal: 1, lateral: 0.78, pinstripe: 1, tiger: 0.45, spots: 0.55 };
+      : {
+          dorsal: 1,
+          lateral: 0.78,
+          pinstripe: 1,
+          tiger: 0.45,
+          spots: 0.55,
+          emptyBack: 0,
+          whitewall: 0.45,
+          whiteFactor: 0.35,
+          pied: 0,
+        };
 
     const tick = now => {
       const elapsed = (now - startTime) / 1000;
@@ -637,16 +855,16 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
         setFired(nextFired);
         studioLoopRef.current = requestAnimationFrame(tick);
       } else if (studioAnimMode === 'traits') {
-        const duration = 2.6;
+        const duration = 2.8;
         const p = Math.min(1, elapsed / duration);
         const stageWindow = (idx, total) => {
           const start = (idx / total) * 0.65;
           return smoothBlend((p - start) / 0.35);
         };
-        const keys = ['dorsal', 'lateral', 'pinstripe', 'tiger', 'spots'];
+        const keys = Object.keys(EMPTY_STUDIO_TRAITS);
         const next = {};
         keys.forEach((k, idx) => {
-          next[k] = Number((targetTraits[k] * stageWindow(idx, keys.length)).toFixed(3));
+          next[k] = Number(((targetTraits[k] || 0) * stageWindow(idx, keys.length)).toFixed(3));
         });
         setTraits(next);
         traitsRef.current = next;
@@ -666,7 +884,7 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
   const animateToTraits = (targetInput, nextTone) => {
     setStudioAnimMode(null);
     if (nextTone && BASE_TONES[nextTone]) setTone(nextTone);
-    const target = normalizedStudy(targetInput);
+    const target = normalizedStudioTraits(targetInput);
     const start = { ...traitsRef.current };
     if (animRef.current) cancelAnimationFrame(animRef.current);
     if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
@@ -679,8 +897,8 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
       const elapsed = Math.min(1, (now - startTime) / duration);
       const ease = 1 - Math.pow(1 - elapsed, 3);
       const next = {};
-      for (const k of Object.keys(EMPTY_TRAITS)) {
-        next[k] = Number((start[k] + (target[k] - start[k]) * ease).toFixed(3));
+      for (const k of Object.keys(EMPTY_STUDIO_TRAITS)) {
+        next[k] = Number(((start[k] || 0) + (target[k] - (start[k] || 0)) * ease).toFixed(3));
       }
       setTraits(next);
       if (elapsed < 1) {
@@ -700,6 +918,16 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
     animateToTraits(l.traits);
     captureEvent('morph_spectrum_scrub', { track: l.id, placement: mode });
   };
+
+  const filteredPresets =
+    presetCategory === 'all'
+      ? STUDIO_PRESETS
+      : STUDIO_PRESETS.filter(p => p.category === presetCategory);
+
+  const visibleControlGroups =
+    activeControlGroup === 'all'
+      ? STUDIO_CONTROL_GROUPS
+      : STUDIO_CONTROL_GROUPS.filter(g => g.id === activeControlGroup);
 
   return (
     <section
@@ -774,7 +1002,7 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
               <div className="mt-5 rounded-xl overflow-hidden border border-slate-800">
                 <TraitGecko
                   view={lesson.view}
-                  traits={normalizedStudy(lesson.traits)}
+                  traits={normalizedStudioTraits(lesson.traits)}
                   focus={lesson.region}
                   annotate
                   title={`${lesson.subtitle}: anatomical region study`}
@@ -824,11 +1052,28 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
 
       {mode === 'explore' && (
         <>
-          <div className="mb-4 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Morph combinations &amp; presets
-              </span>
+          <div className="mb-4 rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Preset categories">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1">
+                  Morph presets:
+                </span>
+                {STUDIO_PRESET_CATEGORIES.map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    aria-pressed={presetCategory === cat.id}
+                    onClick={() => setPresetCategory(cat.id)}
+                    className={`rounded-md border px-2 py-0.5 text-[11px] font-semibold transition-colors ${
+                      presetCategory === cat.id
+                        ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200'
+                        : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -857,7 +1102,7 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="Morph presets">
-              {STUDIO_PRESETS.map(preset => (
+              {filteredPresets.map(preset => (
                 <button
                   key={preset.id}
                   type="button"
@@ -865,15 +1110,20 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
                     setComparing(false);
                     animateToTraits(preset.traits, preset.tone);
                   }}
-                  className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1 text-xs font-medium text-slate-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1 text-xs font-medium text-slate-300 transition-colors"
                 >
+                  <span
+                    className="w-2 h-2 rounded-full border border-white/25 shrink-0"
+                    style={{ backgroundColor: BASE_TONES[preset.tone]?.swatch || '#b5834a' }}
+                    aria-hidden="true"
+                  />
                   {preset.label}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6 items-start">
+          <div className="grid lg:grid-cols-[1.32fr_1.08fr] gap-6 items-start">
             <div>
               <TraitGecko
                 view={view}
@@ -911,30 +1161,49 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
                 </button>
               </div>
 
-              <div className="mt-3 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="mt-3 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Base ground tone
+                    Base ground tones ({Object.keys(BASE_TONES).length} dermal palettes)
                   </span>
-                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Base ground tone">
-                    {Object.entries(BASE_TONES).map(([id, info]) => (
-                      <button
-                        key={id}
-                        type="button"
-                        aria-pressed={tone === id}
-                        onClick={() => setTone(id)}
-                        className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-                          tone === id
-                            ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200'
-                            : 'border-slate-700 text-slate-300 hover:border-slate-600'
-                        }`}
-                      >
-                        {info.label}
-                      </button>
-                    ))}
-                  </div>
+                  <span className="text-xs font-semibold text-emerald-300">
+                    Active: {BASE_TONES[tone]?.label || 'Buckskin'}
+                  </span>
                 </div>
-                <div className="mt-2.5 flex items-center gap-3">
+
+                {BASE_TONE_GROUPS.map(group => (
+                  <div key={group.id} className="space-y-1">
+                    <div className="text-[11px] font-medium text-slate-400">{group.label}</div>
+                    <div className="flex flex-wrap gap-1.5" role="group" aria-label={group.label}>
+                      {group.tones.map(id => {
+                        const info = BASE_TONES[id];
+                        if (!info) return null;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            aria-pressed={tone === id}
+                            onClick={() => setTone(id)}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                              tone === id
+                                ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200'
+                                : 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-500'
+                            }`}
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full border border-white/30 shrink-0"
+                              style={{ backgroundColor: info.swatch }}
+                              aria-hidden="true"
+                            />
+                            {info.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                <div className="pt-1 flex items-center gap-3">
                   <label htmlFor={`${uid}-fired`} className="text-xs font-medium text-slate-300 shrink-0">
                     Firing state:{' '}
                     <span className="text-emerald-300">
@@ -986,7 +1255,7 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
                   type="button"
                   onClick={() => {
                     setComparing(false);
-                    animateToTraits(EMPTY_TRAITS);
+                    animateToTraits(EMPTY_STUDIO_TRAITS);
                   }}
                   className="text-sm text-slate-300 underline"
                 >
@@ -1000,34 +1269,79 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
               )}
             </div>
 
-            <div className="space-y-4">
-              {CONTROLS.map(([key, label, hint]) => (
-                <div key={key}>
-                  <label
-                    htmlFor={`${uid}-${key}`}
-                    className="flex justify-between gap-3 font-semibold text-sm text-slate-100"
+            <div className="space-y-3.5">
+              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Slider categories">
+                <button
+                  type="button"
+                  aria-pressed={activeControlGroup === 'all'}
+                  onClick={() => setActiveControlGroup('all')}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                    activeControlGroup === 'all'
+                      ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200'
+                      : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  All 3 categories (9 sliders)
+                </button>
+                {STUDIO_CONTROL_GROUPS.map(group => (
+                  <button
+                    key={group.id}
+                    type="button"
+                    aria-pressed={activeControlGroup === group.id}
+                    onClick={() => setActiveControlGroup(group.id)}
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      activeControlGroup === group.id
+                        ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200'
+                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
+                    }`}
                   >
-                    <span>{label}</span>
-                    <output className="text-emerald-300">{traitDescription(key, activeTraits[key])}</output>
-                  </label>
-                  <input
-                    id={`${uid}-${key}`}
-                    aria-label={label}
-                    aria-valuetext={traitDescription(key, activeTraits[key])}
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={activeTraits[key]}
-                    onChange={e => {
-                      if (animRef.current) cancelAnimationFrame(animRef.current);
-                      if (studioAnimMode === 'traits') setStudioAnimMode(null);
-                      setComparing(false);
-                      setTraits({ ...activeTraits, [key]: Number(e.target.value) });
-                    }}
-                    className="w-full accent-emerald-400 h-8"
-                  />
-                  <p className="text-xs text-slate-400">{hint}</p>
+                    {group.title}
+                  </button>
+                ))}
+              </div>
+
+              {visibleControlGroups.map(group => (
+                <div
+                  key={group.id}
+                  className="rounded-xl border border-slate-800/90 bg-slate-950/60 p-3.5 space-y-3"
+                >
+                  <div className="border-b border-slate-800/80 pb-2">
+                    <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                      {group.title}
+                    </div>
+                    <div className="text-[11px] text-slate-400">{group.subtitle}</div>
+                  </div>
+                  {group.controls.map(([key, label, hint]) => (
+                    <div key={key}>
+                      <label
+                        htmlFor={`${uid}-${key}`}
+                        className="flex justify-between gap-3 font-semibold text-sm text-slate-100"
+                      >
+                        <span>{label}</span>
+                        <output className="text-emerald-300">
+                          {traitDescription(key, activeTraits[key] || 0)}
+                        </output>
+                      </label>
+                      <input
+                        id={`${uid}-${key}`}
+                        aria-label={label}
+                        aria-valuetext={traitDescription(key, activeTraits[key] || 0)}
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={activeTraits[key] || 0}
+                        onChange={e => {
+                          if (animRef.current) cancelAnimationFrame(animRef.current);
+                          if (studioAnimMode === 'traits') setStudioAnimMode(null);
+                          setComparing(false);
+                          setTraits({ ...activeTraits, [key]: Number(e.target.value) });
+                        }}
+                        className="w-full accent-emerald-400 h-7"
+                      />
+                      <p className="text-xs text-slate-400">{hint}</p>
+                    </div>
+                  ))}
                 </div>
               ))}
 
@@ -1040,12 +1354,16 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
                   {BASE_TONES[tone]?.label || 'Buckskin'} ground ({fired > 0.75 ? 'fired up' : fired > 0.3 ? 'mid-fire' : 'fired down'}).
                 </p>
                 <p className="text-slate-300 leading-relaxed">
-                  <span className="font-semibold text-white">Dorsal &amp; flank:</span>{' '}
-                  Dorsal coverage is {traitDescription('dorsal', activeTraits.dorsal).toLowerCase()}; lateral and limb coverage is {traitDescription('lateral', activeTraits.lateral).toLowerCase()}.
+                  <span className="font-semibold text-white">Dorsal &amp; crests:</span>{' '}
+                  Dorsal coverage is {traitDescription('dorsal', activeTraits.dorsal).toLowerCase()}; pinning is {traitDescription('pinstripe', activeTraits.pinstripe).toLowerCase()}; Empty Back clearing is {traitDescription('emptyBack', activeTraits.emptyBack).toLowerCase()}.
                 </p>
                 <p className="text-slate-300 leading-relaxed">
-                  <span className="font-semibold text-white">Crests, bands &amp; spots:</span>{' '}
-                  Pinning is {traitDescription('pinstripe', activeTraits.pinstripe).toLowerCase()}; dark banding is {traitDescription('tiger', activeTraits.tiger).toLowerCase()}; spotting is {traitDescription('spots', activeTraits.spots).toLowerCase()}.
+                  <span className="font-semibold text-white">Flanks &amp; banding:</span>{' '}
+                  Flank pattern is {traitDescription('lateral', activeTraits.lateral).toLowerCase()}; White Wall is {traitDescription('whitewall', activeTraits.whitewall).toLowerCase()}; dark banding is {traitDescription('tiger', activeTraits.tiger).toLowerCase()}.
+                </p>
+                <p className="text-slate-300 leading-relaxed">
+                  <span className="font-semibold text-white">Spots, white &amp; pied:</span>{' '}
+                  Spotting is {traitDescription('spots', activeTraits.spots).toLowerCase()}; Whiteout/Lilly frosting is {traitDescription('whiteFactor', activeTraits.whiteFactor).toLowerCase()}; piebald is {traitDescription('pied', activeTraits.pied).toLowerCase()}.
                 </p>
               </div>
             </div>
@@ -1102,9 +1420,6 @@ export default function PatternSpectrum({ focusSlug, initialTrack, initialPositi
           </a>
         </p>
       </details>
-      {/* No hidden preload of every layer here: it fetched all ten
-          drawings on page load. The layers are small now and each loads
-          when a study needs it. */}
     </section>
   );
 }

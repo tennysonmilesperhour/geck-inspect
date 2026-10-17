@@ -44,15 +44,33 @@ export const CLIP_REGIONS = {
 };
 
 export const BASE_TONES = {
-  buckskin: { label: 'Buckskin', matrix: null },
-  mahogany: { label: 'Dark Mahogany', matrix: [0.76, 0.04, 0, 0, -0.04, 0.02, 0.66, 0, 0, -0.04, 0, 0.02, 0.58, 0, -0.03, 0, 0, 0, 1, 0] },
-  red: { label: 'Red Base', matrix: [1.04, 0.05, 0, 0, 0.01, 0.02, 0.69, 0, 0, -0.03, 0, 0, 0.58, 0, -0.03, 0, 0, 0, 1, 0] },
-  orange: { label: 'Tangerine', matrix: [1.06, 0.05, 0, 0, 0.02, 0.03, 0.86, 0, 0, -0.01, 0, 0, 0.62, 0, -0.03, 0, 0, 0, 1, 0] },
-  yellow: { label: 'Golden Yellow', matrix: [1.05, 0.05, 0, 0, 0.02, 0.04, 1.01, 0, 0, 0.01, 0, 0, 0.72, 0, -0.03, 0, 0, 0, 1, 0] },
-  olive: { label: 'Olive / Moss', matrix: [0.82, 0.08, 0, 0, -0.02, 0.05, 0.92, 0.02, 0, 0, 0, 0.04, 0.72, 0, -0.02, 0, 0, 0, 1, 0] },
-  axanthic: { label: 'Axanthic Gray', matrix: [0.42, 0.44, 0.14, 0, -0.02, 0.40, 0.45, 0.15, 0, -0.02, 0.38, 0.44, 0.18, 0, -0.01, 0, 0, 0, 1, 0] },
-  albino: { label: 'Albino', matrix: [1.08, 0.08, 0, 0, 0.08, 0.06, 0.98, 0.04, 0, 0.06, 0.04, 0.06, 0.88, 0, 0.05, 0, 0, 0, 1, 0] },
+  // Natural & Warm Bases
+  buckskin: { label: 'Buckskin', group: 'natural', swatch: '#a8875a', matrix: null },
+  cream: { label: 'Cream / Buff', group: 'natural', swatch: '#dcc59a', matrix: [1.08, 0.06, 0, 0, 0.05, 0.04, 1.04, 0.02, 0, 0.04, 0.02, 0.04, 0.88, 0, 0.02, 0, 0, 0, 1, 0] },
+  yellow: { label: 'Golden Yellow', group: 'natural', swatch: '#d6a438', matrix: [1.05, 0.05, 0, 0, 0.02, 0.04, 1.01, 0, 0, 0.01, 0, 0, 0.72, 0, -0.03, 0, 0, 0, 1, 0] },
+  orange: { label: 'Tangerine', group: 'natural', swatch: '#cb6828', matrix: [1.06, 0.05, 0, 0, 0.02, 0.03, 0.86, 0, 0, -0.01, 0, 0, 0.62, 0, -0.03, 0, 0, 0, 1, 0] },
+  red: { label: 'Red Base', group: 'natural', swatch: '#9c3424', matrix: [1.04, 0.05, 0, 0, 0.01, 0.02, 0.69, 0, 0, -0.03, 0, 0, 0.58, 0, -0.03, 0, 0, 0, 1, 0] },
+  mahogany: { label: 'Dark Mahogany', group: 'natural', swatch: '#4a281b', matrix: [0.76, 0.04, 0, 0, -0.04, 0.02, 0.66, 0, 0, -0.04, 0, 0.02, 0.58, 0, -0.03, 0, 0, 0, 1, 0] },
+  chocolate: { label: 'Chocolate', group: 'natural', swatch: '#633924', matrix: [0.84, 0.05, 0, 0, -0.02, 0.03, 0.71, 0, 0, -0.03, 0, 0.02, 0.58, 0, -0.03, 0, 0, 0, 1, 0] },
+  olive: { label: 'Olive / Moss', group: 'natural', swatch: '#6b7544', matrix: [0.82, 0.08, 0, 0, -0.02, 0.05, 0.92, 0.02, 0, 0, 0, 0.04, 0.72, 0, -0.02, 0, 0, 0, 1, 0] },
+  // Dark & Melanistic Gene Bases
+  phantom: { label: 'Phantom Taupe', group: 'dark', swatch: '#54473e', matrix: [0.62, 0.18, 0.05, 0, -0.02, 0.14, 0.60, 0.06, 0, -0.02, 0.10, 0.14, 0.54, 0, -0.01, 0, 0, 0, 1, 0] },
+  cappuccino: { label: 'Cappuccino', group: 'dark', swatch: '#382a24', matrix: [0.58, 0.10, 0.02, 0, -0.05, 0.06, 0.52, 0.03, 0, -0.05, 0.04, 0.06, 0.46, 0, -0.04, 0, 0, 0, 1, 0] },
+  sable: { label: 'Sable Umber', group: 'dark', swatch: '#2b1f1a', matrix: [0.52, 0.08, 0.02, 0, -0.06, 0.05, 0.46, 0.02, 0, -0.06, 0.03, 0.05, 0.40, 0, -0.05, 0, 0, 0, 1, 0] },
+  melanistic: { label: 'Super Dark / Melanistic', group: 'dark', swatch: '#1c1716', matrix: [0.38, 0.08, 0.02, 0, -0.07, 0.05, 0.36, 0.02, 0, -0.07, 0.04, 0.05, 0.34, 0, -0.06, 0, 0, 0, 1, 0] },
+  // Hypo, Lavender, Monochrome & Amelanistic Bases
+  lavender: { label: 'Lavender Slate', group: 'modifier', swatch: '#7b6f82', matrix: [0.68, 0.18, 0.14, 0, 0.01, 0.16, 0.62, 0.14, 0, 0, 0.18, 0.18, 0.72, 0, 0.03, 0, 0, 0, 1, 0] },
+  hypo: { label: 'Hypo Peach-Tan', group: 'modifier', swatch: '#c89268', matrix: [1.04, 0.08, 0.02, 0, 0.05, 0.06, 0.94, 0.04, 0, 0.03, 0.04, 0.06, 0.80, 0, 0.02, 0, 0, 0, 1, 0] },
+  axanthic: { label: 'Axanthic Gray', group: 'modifier', swatch: '#6e7276', matrix: [0.42, 0.44, 0.14, 0, -0.02, 0.40, 0.45, 0.15, 0, -0.02, 0.38, 0.44, 0.18, 0, -0.01, 0, 0, 0, 1, 0] },
+  leucistic: { label: 'Moonglow / Leucistic', group: 'modifier', swatch: '#ede9df', matrix: [0.75, 0.25, 0.10, 0, 0.16, 0.22, 0.76, 0.10, 0, 0.15, 0.18, 0.24, 0.66, 0, 0.14, 0, 0, 0, 1, 0] },
+  albino: { label: 'Albino', group: 'modifier', swatch: '#f2dec4', matrix: [1.08, 0.08, 0, 0, 0.08, 0.06, 0.98, 0.04, 0, 0.06, 0.04, 0.06, 0.88, 0, 0.05, 0, 0, 0, 1, 0] },
 };
+
+export const BASE_TONE_GROUPS = [
+  { id: 'natural', label: 'Warm & Natural Bases' },
+  { id: 'dark', label: 'Dark & Melanistic Genes' },
+  { id: 'modifier', label: 'Hypo, Lavender, Axanthic & Albino' },
+];
 
 function smoothstep(x) {
   const t = Math.max(0, Math.min(1, x));
@@ -75,6 +93,17 @@ function buildToneMatrix(tone, fired) {
     out[row * 5 + 4] += lift;
   }
   return out.map(n => Number(n.toFixed(4))).join(' ');
+}
+
+function buildWhiteFactorMatrix(whiteFactor) {
+  const w = clampTrait(whiteFactor);
+  if (w <= 0.001) return null;
+  // Smoothly shifts warm cream/apricot pattern into pure chalk-white (#faf8f2)
+  const r = Number((1 + w * 0.14).toFixed(4));
+  const g = Number((1 + w * 0.18).toFixed(4));
+  const b = Number((1 + w * 0.32).toFixed(4));
+  const lift = Number((w * 0.08).toFixed(4));
+  return `${r} 0.04 0 0 ${lift} 0.03 ${g} 0.02 0 ${lift} 0.04 0.06 ${b} 0 ${lift} 0 0 0 1 0`;
 }
 
 const layersByView = new Map();
@@ -116,9 +145,10 @@ function useNearViewport() {
 }
 // Smoothly reveals pre-painted watercolor islands with organic feathered lobes
 // so scrubbing from 0.00 to 1.00 never shows vertical bars or sudden jumps.
-function CoverageMask({ id, value, region, view }) {
+function CoverageMask({ id, value, emptyBack = 0, region, view }) {
   const lateral = region === 'lateral';
   const v = clampTrait(value);
+  const eb = lateral ? 0 : clampTrait(emptyBack);
   const fullBlend = smoothstep((v - 0.78) / 0.22);
   const blurId = `${id}-feather`;
   return (
@@ -182,6 +212,28 @@ function CoverageMask({ id, value, region, view }) {
           })}
         </g>
       )}
+      {/* Empty Back clearing: erases the interior dorsal saddle between the crest rows */}
+      {eb > 0 && (
+        <g fill="black" filter={`url(#${blurId})`}>
+          {view === 'top' ? (
+            <path
+              d="M210 296 Q360 258 520 264 Q615 274 685 298 L685 325 Q615 349 520 358 Q360 364 210 326 Z"
+              fillOpacity={smoothstep(eb)}
+              stroke="black"
+              strokeWidth={8 + eb * 22}
+              strokeOpacity={smoothstep(eb)}
+            />
+          ) : (
+            <path
+              d="M205 246 Q330 226 475 214 Q585 190 675 174 L670 202 Q575 218 475 248 Q340 278 205 266 Z"
+              fillOpacity={smoothstep(eb)}
+              stroke="black"
+              strokeWidth={6 + eb * 18}
+              strokeOpacity={smoothstep(eb)}
+            />
+          )}
+        </g>
+      )}
     </mask>
   );
 }
@@ -238,9 +290,19 @@ export default function TraitGecko({
     probe.src = traitAsset(selectedView);
     return () => { active = false; };
   }, [near, selectedView]);
-  const dorsal = clampTrait(traits.dorsal), lateral = clampTrait(traits.lateral), pin = clampTrait(traits.pinstripe), tiger = clampTrait(traits.tiger), spots = clampTrait(traits.spots);
+  const dorsal = clampTrait(traits.dorsal);
+  const lateral = clampTrait(traits.lateral);
+  const pin = clampTrait(traits.pinstripe);
+  const tiger = clampTrait(traits.tiger);
+  const spots = clampTrait(traits.spots);
+  const emptyBack = clampTrait(traits.emptyBack);
+  const whitewall = clampTrait(traits.whitewall);
+  const whiteFactor = clampTrait(traits.whiteFactor);
+  const pied = clampTrait(traits.pied);
   const toneMatrix = buildToneMatrix(tone, fired);
   const toneFilter = toneMatrix ? `url(#${uid}-tone)` : undefined;
+  const whiteMatrix = buildWhiteFactorMatrix(whiteFactor);
+  const patternFilter = whiteMatrix ? `url(#${uid}-whitefactor)` : undefined;
   const image = (trait, extra = {}) => <image href={traitAsset(selectedView,trait)} width="1000" height="667" {...extra} />;
   const spotRegions = pigments.spots.regions;
   const pinMaskPaths = selectedView === 'side' ? [...CREST_PATHS.side, UPPER_CREST_SIDE] : CREST_PATHS.top;
@@ -252,12 +314,20 @@ export default function TraitGecko({
             <feColorMatrix type="matrix" values={toneMatrix} />
           </filter>
         )}
+        {whiteMatrix && (
+          <filter id={`${uid}-whitefactor`} data-layer="whiteFactor" colorInterpolationFilters="sRGB">
+            <feColorMatrix type="matrix" values={whiteMatrix} />
+          </filter>
+        )}
+        <filter id={`${uid}-soft`} x="-10%" y="-10%" width="120%" height="120%">
+          <feGaussianBlur stdDeviation="5" />
+        </filter>
         <clipPath id={`${uid}-dorsal-region`}><path d={CLIP_REGIONS[selectedView].dorsal} /></clipPath>
         <clipPath id={`${uid}-flank-region`}><path d={CLIP_REGIONS[selectedView].lateral} /></clipPath>
-        <CoverageMask id={`${uid}-dorsal`} value={dorsal} view={selectedView} region="dorsal" />
-        <CoverageMask id={`${uid}-flank`} value={lateral} view={selectedView} region="lateral" />
+        <CoverageMask id={`${uid}-dorsal`} value={Math.max(dorsal, whiteFactor * 0.85)} emptyBack={emptyBack} view={selectedView} region="dorsal" />
+        <CoverageMask id={`${uid}-flank`} value={Math.max(lateral, whiteFactor * 0.72)} view={selectedView} region="lateral" />
         <mask id={`${uid}-pin`} maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="667">
-          {pinMaskPaths.flatMap((d,row) => pinSegments(pin,row).map((s,i) => <path key={`${row}-${i}`} d={d} fill="none" stroke="white" strokeLinecap="round" strokeWidth={18 + pin * 6} strokeOpacity={Math.min(1, pin * 5)} pathLength="100" strokeDasharray={`${s.length} ${100-s.length}`} strokeDashoffset={-s.start} />))}
+          {pinMaskPaths.flatMap((d,row) => pinSegments(Math.max(pin, whiteFactor * 0.85),row).map((s,i) => <path key={`${row}-${i}`} d={d} fill="none" stroke="white" strokeLinecap="round" strokeWidth={18 + Math.max(pin, whiteFactor * 0.85) * 6} strokeOpacity={Math.min(1, Math.max(pin, whiteFactor * 0.85) * 5)} pathLength="100" strokeDasharray={`${s.length} ${100-s.length}`} strokeDashoffset={-s.start} />))}
         </mask>
         <mask id={`${uid}-spots`} maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="667">
           {spotRegions.map(({ order, x, y, width, height }, idx) => {
@@ -280,11 +350,53 @@ export default function TraitGecko({
         </mask>
       </defs>
       {image('base',{ 'data-layer':'base', filter: toneFilter })}
-      {dorsal > 0 && <g clipPath={`url(#${uid}-dorsal-region)`}>{image('cream',{ mask:`url(#${uid}-dorsal)`, 'data-layer':'dorsal' })}</g>}
-      {lateral > 0 && <g clipPath={`url(#${uid}-flank-region)`}>{image('cream',{ mask:`url(#${uid}-flank)`, 'data-layer':'lateral' })}</g>}
+      {emptyBack > 0 && <g data-layer="emptyBack" />}
+      {(dorsal > 0 || whiteFactor > 0) && <g clipPath={`url(#${uid}-dorsal-region)`} filter={patternFilter}>{image('cream',{ mask:`url(#${uid}-dorsal)`, 'data-layer':'dorsal' })}</g>}
+      {(lateral > 0 || whiteFactor > 0) && <g clipPath={`url(#${uid}-flank-region)`} filter={patternFilter}>{image('cream',{ mask:`url(#${uid}-flank)`, 'data-layer':'lateral' })}</g>}
+      {whitewall > 0 && (
+        <g clipPath={`url(#${uid}-flank-region)`} data-layer="whitewall" filter={`url(#${uid}-soft)`} opacity={Math.min(0.92, 0.35 + whitewall * 0.58)}>
+          {selectedView === 'top' ? (
+            <>
+              <path d="M290 225 Q470 198 635 245" fill="none" stroke="#f7f2e4" strokeLinecap="round" strokeWidth={10 + whitewall * 28} />
+              <path d="M290 392 Q470 420 635 372" fill="none" stroke="#f7f2e4" strokeLinecap="round" strokeWidth={10 + whitewall * 28} />
+            </>
+          ) : (
+            <path
+              d="M315 352 Q425 326 535 286 Q605 262 652 248"
+              fill="none"
+              stroke="#f8f4e8"
+              strokeLinecap="round"
+              strokeWidth={12 + whitewall * 38}
+            />
+          )}
+        </g>
+      )}
       {tiger > 0 && image('tiger',{ opacity: Math.pow(tiger, 0.85), 'data-layer':'tiger', filter: toneFilter })}
       {spots > 0 && image('spots',{ mask:`url(#${uid}-spots)`, 'data-layer':'spots' })}
-      {pin > 0 && image('pin',{ mask:`url(#${uid}-pin)`, 'data-layer':'pinstripe' })}
+      {(pin > 0 || whiteFactor > 0) && <g filter={patternFilter}>{image('pin',{ mask:`url(#${uid}-pin)`, 'data-layer':'pinstripe' })}</g>}
+      {pied > 0 && (
+        <g data-layer="pied" opacity={Math.min(0.95, 0.45 + pied * 0.5)}>
+          {selectedView === 'top' ? (
+            <>
+              <ellipse cx="485" cy="312" rx={38 + pied * 58} ry={42 + pied * 48} fill="#faf7f0" stroke="#e8cfc6" strokeWidth="3" filter={`url(#${uid}-soft)`} />
+              {pied > 0.25 && <circle cx="315" cy="145" r={16 + pied * 18} fill="#faf6ee" stroke="#ead2c9" strokeWidth="2.5" filter={`url(#${uid}-soft)`} />}
+              {pied > 0.25 && <circle cx="635" cy="485" r={18 + pied * 20} fill="#faf6ee" stroke="#ead2c9" strokeWidth="2.5" filter={`url(#${uid}-soft)`} />}
+            </>
+          ) : (
+            <>
+              <path
+                d={`M${510 - pied * 45} 215 Q${560 + pied * 35} 195 ${615 + pied * 25} 218 L${620 + pied * 20} 325 Q${555} 348 ${495 - pied * 35} 320 Z`}
+                fill="#faf7f0"
+                stroke="#e8cfc6"
+                strokeWidth="3"
+                filter={`url(#${uid}-soft)`}
+              />
+              {pied > 0.2 && <ellipse cx="290" cy="495" rx={18 + pied * 20} ry={14 + pied * 14} fill="#faf6ee" stroke="#ead2c9" strokeWidth="2.5" filter={`url(#${uid}-soft)`} />}
+              {pied > 0.2 && <ellipse cx="645" cy="435" rx={20 + pied * 22} ry={15 + pied * 14} fill="#faf6ee" stroke="#ead2c9" strokeWidth="2.5" filter={`url(#${uid}-soft)`} />}
+            </>
+          )}
+        </g>
+      )}
       {annotate && <RegionAnnotation view={selectedView} focus={focus} />}
     </svg>}
     {error && !decorative && <p role="status" className="absolute inset-x-2 bottom-2 rounded bg-white/95 p-2 text-xs text-amber-950">Pattern artwork could not load. Use the specimen photographs for this study.</p>}
