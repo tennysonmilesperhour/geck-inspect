@@ -34,11 +34,11 @@ All screens use synthetic fixtures. QR links point to localhost and do not trans
 - 26 browser cases passed: 13 at desktop size and 13 with the Pixel 7 phone profile. Four detail checks passed again after tightening screenshot timing.
 - Final verification against the production Vite preview also passed all 26 desktop and phone cases in 50.8 seconds. Its temporary server and browser workers stopped after the run.
 - Browser cases cover signed-in acceptance, signup/verification on a fresh device, lost local continuation, login failure/retry, expired verification, wrong account, closed/invalid links, cancellation, reload after success, collection arrival, section focus, form preservation and mobile overflow.
-- Unit suite: 267 files and 3,036 tests passed with the clock 400 days ahead and 400 days back. The normal-date full run passed 3,035 tests before the final unavailable-server regression was added; all 26 transfer tests then passed. Three earlier timeouts reading unchanged files in the Documents checkout disappeared in the temporary checkout.
+- Unit suite: 267 files and 3,036 tests passed, including runs with the clock 400 days ahead and 400 days back. GitHub also passed the normal-date suite. Three earlier timeouts reading unchanged files in the Documents checkout disappeared in the temporary checkout.
 - ESLint: no errors and 73 existing warnings. Typecheck and the full build passed with fixture configuration. Prerender and SEO audit passed for all 172 routes with no errors, warnings or orphans.
 - Database: all 292 migrations replayed, the new migration applied a second time, all 26 regression files passed, all 73 QR assertions passed, and four tests with concurrent database connections passed.
 - Database tests run against disposable local fixtures, not customer data. Browser requests to external services were intercepted locally.
-- One existing CI size gate remains over budget: the Lilly White public guide is 238.99 kB gzipped against its 238 kB allowance. Unchanged main `99e61bee`, built with the same fixture configuration, is already 238.63 kB. Shared auth continuation adds 0.36 kB; the entry stays under its 150 kB limit. No allowance was raised and no unrelated public-page optimization was included.
+- All 311 size checks pass in the CI-equivalent build. The native sign-in listener loads only on native devices, keeping the public entry at 148.45 kB against 150 kB and the Lilly White guide at 237.59 kB against 238 kB. No allowance was raised. The 23 auth/native callback tests and scoped lint passed after this loading change; native callback and launch-link recovery logic are unchanged.
 
 ## Release approval and remaining hosted checks
 
