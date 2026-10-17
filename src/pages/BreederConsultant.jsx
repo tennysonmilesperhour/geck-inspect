@@ -341,7 +341,7 @@ export default function BreederConsultantPage() {
 
     const renderActionCard = (msg) => (
         <div className="space-y-3">
-            <ReactMarkdown className="prose prose-sm prose-invert max-w-none">{msg.say}</ReactMarkdown>
+            <div className="prose prose-sm prose-invert max-w-none"><ReactMarkdown>{msg.say}</ReactMarkdown></div>
             <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
                 <p className="text-emerald-200 text-sm font-medium">{msg.describe}</p>
                 {msg.status === 'pending' && (
@@ -363,7 +363,7 @@ export default function BreederConsultantPage() {
                     <div className="mt-3 space-y-2">
                         <div className="flex items-start gap-2 text-sm text-slate-300">
                             <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                            <ReactMarkdown className="prose prose-sm prose-invert max-w-none">{msg.resultMessage || 'Done.'}</ReactMarkdown>
+                            <div className="prose prose-sm prose-invert max-w-none"><ReactMarkdown>{msg.resultMessage || 'Done.'}</ReactMarkdown></div>
                         </div>
                         {msg.undoable && (
                             <Button size="sm" variant="ghost" onClick={() => handleUndoAction(msg)} className="text-slate-400 hover:text-slate-200 h-7 px-2">
@@ -435,7 +435,7 @@ export default function BreederConsultantPage() {
                             <div className={`min-w-0 max-w-xl p-4 rounded-lg break-words [&_pre]:overflow-x-auto [&_table]:block [&_table]:overflow-x-auto ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}>
                                 {msg.role === 'action'
                                     ? renderActionCard(msg)
-                                    : <ReactMarkdown className="prose prose-sm prose-invert max-w-none">{msg.content}</ReactMarkdown>}
+                                    : <div className="prose prose-sm prose-invert max-w-none"><ReactMarkdown>{msg.content}</ReactMarkdown></div>}
                             </div>
                             {msg.role === 'user' && (
                                 <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">

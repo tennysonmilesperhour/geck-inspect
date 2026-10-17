@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import vm from 'node:vm';
-import ts from 'typescript';
+// TypeScript 5's compiler API: TypeScript 7 (the typecheck) has none yet.
+import ts from 'typescript5';
 
 const source = (name) => readFileSync(new URL(`../../../supabase/functions/${name}/index.ts`, import.meta.url), 'utf8');
 

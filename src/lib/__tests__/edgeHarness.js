@@ -12,7 +12,8 @@
 // function does about it.
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import ts from 'typescript';
+// TypeScript 5's compiler API: TypeScript 7 (the typecheck) has none yet.
+import ts from 'typescript5';
 
 export function functionSource(name) {
   return readFileSync(new URL(`../../../supabase/functions/${name}/index.ts`, import.meta.url), 'utf8');

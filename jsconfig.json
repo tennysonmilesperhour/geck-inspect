@@ -5,7 +5,6 @@
   // parses every included file and fails on syntax/structure errors,
   // which makes it a usable gate.
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },

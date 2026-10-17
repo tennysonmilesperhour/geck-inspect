@@ -53,7 +53,7 @@ const ROUTE_MAP_MODULES = [/\/src\/main\.jsx$/, /\/src\/App\.jsx$/, /\/src\/page
 // mark all of them as up-front. They are left out; Rollup itself moves
 // the few pieces the shared code really uses into its chunk.
 const BARREL_PACKAGES = /\/node_modules\/(\.pnpm\/[^/]+\/node_modules\/)?(lucide-react|date-fns|framer-motion|motion-dom|motion-utils)\//
-const LUCIDE_ICON = /\/lucide-react\/dist\/esm\/icons\/[a-z0-9-]+\.js$/
+const LUCIDE_ICON = /\/lucide-react\/dist\/esm\/icons\/[a-z0-9-]+\.m?js$/
 function stableChunks() {
   let upFront = null
   return (id, { getModuleIds, getModuleInfo }) => {
@@ -115,6 +115,10 @@ export default defineConfig({
       '@/': srcDir + '/',
     },
   },
+  // lucide-react 1 puts its licence comment above every icon, so a file
+  // with 40 icons carried 40 copies. 'eof' keeps one copy of each distinct
+  // licence at the end of each file instead.
+  esbuild: { legalComments: 'eof' },
   build: {
     // dist/.vite/manifest.json maps each source page to its chunk, so
     // scripts/prerender.mjs can add a modulepreload for the page chunk to

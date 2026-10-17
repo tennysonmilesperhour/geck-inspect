@@ -48,8 +48,9 @@ create policy "geck-inspect-media owner delete" on storage.objects for delete to
 create policy "geck-inspect-media owner update" on storage.objects for update to authenticated
   using ((bucket_id = 'geck-inspect-media'::text) AND (owner = auth.uid()))
   with check ((bucket_id = 'geck-inspect-media'::text) AND (owner = auth.uid()));
-create policy "geck-inspect-media public read" on storage.objects for select to anon, authenticated
-  using (bucket_id = 'geck-inspect-media'::text);
+-- No public read policy on geck-inspect-media: migration
+-- 20261016220000_media_listing_closed.sql replaced both with its owner or
+-- admin read (files still load by URL; only listing is closed).
 create policy "geck_inspect_media_authed_insert" on storage.objects for insert to authenticated
   with check (bucket_id = 'geck-inspect-media'::text);
 create policy "geck_inspect_media_owner_delete" on storage.objects for delete to authenticated
@@ -57,7 +58,5 @@ create policy "geck_inspect_media_owner_delete" on storage.objects for delete to
 create policy "geck_inspect_media_owner_update" on storage.objects for update to authenticated
   using ((bucket_id = 'geck-inspect-media'::text) AND (owner = auth.uid()))
   with check ((bucket_id = 'geck-inspect-media'::text) AND (owner = auth.uid()));
-create policy "geck_inspect_media_public_read" on storage.objects for select to public
-  using (bucket_id = 'geck-inspect-media'::text);
 create policy "public read listing-images" on storage.objects for select to public
   using (bucket_id = 'listing-images'::text);

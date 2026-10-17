@@ -5,6 +5,11 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    ignore:
+      # typescript5 is TypeScript 5 kept for its compiler API, which the
+      # edge function tests use; TypeScript 7 does not have one yet.
+      - dependency-name: typescript5
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-and-patch:
         update-types:

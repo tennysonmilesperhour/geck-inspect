@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { createHmac, webcrypto } from 'node:crypto';
 import { runInNewContext } from 'node:vm';
-import ts from 'typescript';
+// TypeScript 5's compiler API: TypeScript 7 (the typecheck) has none yet.
+import ts from 'typescript5';
 import { describe, expect, it, vi } from 'vitest';
 import * as pricing from '../../../supabase/functions/_shared/stickerPricing.js';
 import * as snapshots from '../../../supabase/functions/_shared/storeOrderSnapshot.js';

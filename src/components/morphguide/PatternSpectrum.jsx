@@ -14,10 +14,6 @@ import {
   traitDescription,
 } from './patternStudy';
 
-// Lives in its own small file so a morph page can check it without
-// downloading the studio; re-exported here for existing callers.
-export { spectrumPositionFor } from './spectrumPosition';
-
 export const STUDIO_CONTROL_GROUPS = [
   {
     id: 'dorsal-structure',

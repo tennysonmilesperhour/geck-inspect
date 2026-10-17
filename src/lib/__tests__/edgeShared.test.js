@@ -5,7 +5,8 @@
 // who the database client acts as), so the move changed no behaviour.
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import ts from 'typescript';
+// TypeScript 5's compiler API: TypeScript 7 (the typecheck) has none yet.
+import ts from 'typescript5';
 import { describe, expect, it } from 'vitest';
 import { actionOf, fakeFetch, fakeSupabase, filterValue, loadFunction, postJson } from './edgeHarness';
 

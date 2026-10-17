@@ -9,7 +9,10 @@ import MorphEyeGuide, { EYE_COLOR_STUDIES, MorphEyeStudyPanel, eyeStudyForMorph 
 import { eyeStudyIdForMorph } from '@/components/morphguide/eyeStudyIndex';
 import { pinSegments } from '@/components/morphguide/traitStudyMath';
 import { SPECIMENS, STUDY_LESSONS, STUDY_QUESTIONS, MORPH_PROGRESSION_TRACKS, normalizedStudy, traitDescription } from '@/components/morphguide/patternStudy';
-import PatternSpectrum, { spectrumPositionFor, MorphProgressionPlayer, CustomMorphComparator } from '@/components/morphguide/PatternSpectrum';
+import PatternSpectrum, { MorphProgressionPlayer, CustomMorphComparator } from '@/components/morphguide/PatternSpectrum';
+// Imported from its own file, as MorphDetail does: re-exporting it from
+// the studio made the build give it a separate download on morph pages.
+import { spectrumPositionFor } from '@/components/morphguide/spectrumPosition';
 import { SpecimenPhoto } from '@/components/morphguide/SpecimenStudy';
 import { MORPHS } from '@/data/morph-guide';
 import { PROJECT_LINES, projectLinePlate } from '@/data/project-lines';
