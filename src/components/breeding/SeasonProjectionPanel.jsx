@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { CalendarRange, Lock } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
@@ -17,8 +16,7 @@ import {
   seasonSellTime,
   simulateSeason,
 } from '@/lib/seasonProjection';
-import { upgradePromptClicked } from '@/lib/activation';
-import { createPageUrl } from '@/utils';
+import { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
 
 const money = (n) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(Number(n) || 0)).toLocaleString('en-US')}`;
 const pct = (p) => {
@@ -219,13 +217,13 @@ export default function SeasonProjectionPanel({ phenotypes, priceIndex, seed, se
             <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
             <span>
               How long a season like this takes to sell, from real MorphMarket sales, is part of Enterprise.{' '}
-              <Link
-                to={createPageUrl('Membership')}
-                onClick={() => upgradePromptClicked('market_intelligence', 'season_projection')}
+              <UpgradePlansLink
+                limitType="market_intelligence"
+                surface="season_projection"
                 className="text-amber-300 hover:text-amber-200 font-medium"
               >
                 See Enterprise
-              </Link>
+              </UpgradePlansLink>
             </span>
           </p>
         ) : sell ? (

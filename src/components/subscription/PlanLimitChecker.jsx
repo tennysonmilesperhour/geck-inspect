@@ -2,10 +2,9 @@ import { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Lock, ArrowRight, Check } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { resolveTier } from '@/lib/tierLimits';
-import { upgradePromptShown, upgradePromptClicked } from '@/lib/activation';
+import { upgradePromptShown } from '@/lib/activation';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 
 // Plan limits and feature flags. Source of truth for:
 //   - how many geckos the user can own (geckos)
@@ -263,19 +262,19 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                     </div>
 
                     <div className="flex gap-3">
-                        <Button variant="outline" onClick={onClose} className="flex-1 border-slate-600">
+                        <Button variant="outline" type="button" onClick={onClose} className="flex-1 border-slate-600">
                             Maybe Later
                         </Button>
-                        <Link
-                            to={createPageUrl("Membership")}
-                            className="flex-1"
-                            onClick={() => upgradePromptClicked(limitType, `plan_limit_${limitType}`)}
+                        <UpgradePlansButton
+                            limitType={limitType}
+                            surface={`plan_limit_${limitType}`}
+                            trackShown={false}
+                            onAfter={onClose}
+                            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                         >
-                            <Button className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
-                                View Plans
-                                <ArrowRight className="w-4 h-4 ml-2" />
-                            </Button>
-                        </Link>
+                            View Plans
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </UpgradePlansButton>
                     </div>
                 </div>
             </DialogContent>

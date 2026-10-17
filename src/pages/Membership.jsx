@@ -10,6 +10,7 @@ import { User, PageConfig } from '@/entities/all';
 // The Supabase client loads when a plan button needs it, not with the
 // page: signed-out visitors read pricing here (src/lib/supabaseLazy.js).
 import { getSupabase } from '@/lib/supabaseLazy';
+import { currentAuthUser, loadUserProfile } from '@/lib/userProfile';
 import SupportContactCard from '@/components/support/SupportContactCard';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import {
@@ -31,7 +32,14 @@ import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
 import { featuresWithConsultant, pageIsLive, planNumbers, withoutRetiredLines } from '@/lib/membershipFeatures';
-import { lastUpgradePrompt } from '@/lib/activation';
+import { lastUpgradePrompt, noteUpgradePromptFromLocation } from '@/lib/activation';
+import {
+  claimCheckoutSettlement,
+  markCheckoutReturned,
+  pollForPaidPlan,
+  stripCheckoutQuery,
+  takeCheckoutReturn,
+} from '@/lib/checkoutReturn';
 import { isGuestMode } from '@/lib/guestMode';
 
 /**
@@ -426,10 +434,6 @@ export default function MembershipPage() {
   const [expandedPlans, setExpandedPlans] = useState([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    User.me().then(setUser).catch(() => setUser(null));
-  }, []);
-
   // Only list AI Consultant allowances while members can open the page.
   const [consultantLive, setConsultantLive] = useState(false);
   useEffect(() => {
@@ -442,66 +446,94 @@ export default function MembershipPage() {
 
   // Stripe sends the member back to /Membership?checkout=success (or
   // =cancelled). Read it once, then drop it from the address bar so a
-  // refresh or a bookmark does not show the confirmation again.
+  // refresh or a bookmark does not show the confirmation again. Success is
+  // also kept in this tab: stripping the query used to end the poll if the
+  // page remounted before the webhook wrote the plan.
   const [checkoutReturn] = useState(() => {
     try {
-      const params = new URLSearchParams(window.location.search);
-      const value = params.get('checkout');
-      if (value !== 'success' && value !== 'cancelled') return null;
-      params.delete('checkout');
-      const rest = params.toString();
-      window.history.replaceState(
-        window.history.state,
-        '',
-        `${window.location.pathname}${rest ? `?${rest}` : ''}${window.location.hash}`,
-      );
-      return value;
+      const taken = takeCheckoutReturn(window.location.search);
+      if (taken.status === 'success' || taken.status === 'cancelled') {
+        const next = `${window.location.pathname}${stripCheckoutQuery(window.location.search, window.location.hash)}`;
+        if (next !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+          window.history.replaceState(window.history.state, '', next);
+        }
+      }
+      return taken;
     } catch {
-      return null;
+      return { status: null, emitReturned: false };
     }
   });
 
-  // Funnel: the pricing page was viewed, and, on return from Stripe, whether
-  // checkout completed or was cancelled.
   useEffect(() => {
+    // The success return polls a fresh profile itself. A parallel User.me()
+    // started at the same moment can resolve later with the pre-webhook
+    // Free row and paint over the paid plan.
+    if (checkoutReturn.status === 'success') return undefined;
+    let cancelled = false;
+    User.me().then((next) => { if (!cancelled) setUser(next); }).catch(() => { if (!cancelled) setUser(null); });
+    return () => { cancelled = true; };
+  }, [checkoutReturn]);
+
+  // Funnel: the pricing page was viewed, and, on return from Stripe, whether
+  // checkout completed or was cancelled. A plans button can also land here
+  // with from_prompt, limit_type and surface. Count that click if the
+  // button handler did not already record it in this tab.
+  useEffect(() => {
+    noteUpgradePromptFromLocation(window.location.search);
     captureEvent('membership_viewed');
-    if (checkoutReturn === 'success') captureEvent('checkout_returned', { claimed_status: 'success' });
-    else if (checkoutReturn === 'cancelled') captureEvent('checkout_cancelled');
+    if (checkoutReturn.status === 'success' && markCheckoutReturned()) {
+      captureEvent('checkout_returned', { claimed_status: 'success' });
+    } else if (checkoutReturn.status === 'cancelled') {
+      captureEvent('checkout_cancelled');
+    }
   }, [checkoutReturn]);
 
   // After a successful checkout the Stripe webhook updates the plan a few
-  // seconds later. Re-read the member a few times so the confirmation can
-  // name the new plan instead of the old one.
+  // seconds later. Re-read the member until the account shows a paid plan
+  // (up to six times, about a minute). Stripe's webhook log stays the
+  // record of money. checkout_completed is the in-app step. If the minute
+  // passes and the plan is still Free, checkout_sync_timeout records that
+  // the webhook did not update the account in time.
   const [planConfirmed, setPlanConfirmed] = useState(false);
+  const [planSyncTimedOut, setPlanSyncTimedOut] = useState(false);
   useEffect(() => {
-    if (checkoutReturn !== 'success') return undefined;
-    let cancelled = false;
-    let attempts = 0;
-    const poll = async () => {
-      attempts += 1;
-      try {
-        const fresh = await User.me();
-        if (cancelled) return;
-        if (fresh) setUser(fresh);
-        if (fresh && resolveTier(fresh) !== 'free') {
+    if (checkoutReturn.status !== 'success') return undefined;
+    let stopped = false;
+    // Keep reading after the member leaves this page. The outcome event is
+    // how we see a webhook that never updates the plan. setState stops.
+    pollForPaidPlan({
+      loadUser: async () => {
+        const authUser = await currentAuthUser();
+        if (!authUser) return null;
+        return loadUserProfile(authUser, { fresh: true });
+      },
+      onUser: (fresh) => { if (!stopped) setUser(fresh); },
+    }).then((result) => {
+      if (result.outcome === 'stopped') return;
+      if (!claimCheckoutSettlement()) return;
+      const fromPrompt = lastUpgradePrompt();
+      if (result.outcome === 'paid') {
+        if (!stopped) {
+          if (result.user) setUser(result.user);
           setPlanConfirmed(true);
-          // The paid plan is confirmed on the account, not just claimed
-          // by the return URL. Stripe's webhook log stays the source of
-          // truth for revenue; this is the in-app funnel step.
-          captureEvent('checkout_completed', {
-            tier: resolveTier(fresh),
-            from_prompt: lastUpgradePrompt(),
-            attempts,
-          });
-          return;
         }
-      } catch {
-        // keep trying a few times
+        captureEvent('checkout_completed', {
+          tier: result.tier,
+          from_prompt: fromPrompt,
+          attempts: result.attempts,
+        });
+        return;
       }
-      if (!cancelled && attempts < 6) setTimeout(poll, 2500);
-    };
-    poll();
-    return () => { cancelled = true; };
+      if (!stopped) setPlanSyncTimedOut(true);
+      captureEvent('checkout_sync_timeout', {
+        outcome: 'timeout',
+        tier: result.user ? resolveTier(result.user) : null,
+        membership_tier: result.user?.membership_tier || null,
+        from_prompt: fromPrompt,
+        attempts: result.attempts,
+      });
+    });
+    return () => { stopped = true; };
   }, [checkoutReturn]);
 
   // The Promote page links here as ?intent=keeper_trial to offer the
@@ -795,7 +827,7 @@ export default function MembershipPage() {
             <CycleToggle value={cycle} onChange={setCycle} />
           </div>
 
-          {checkoutReturn === 'success' && (
+          {checkoutReturn.status === 'success' && (
             <div
               role="status"
               className="mx-auto max-w-xl flex items-start gap-3 rounded-2xl border border-emerald-400/50 bg-emerald-500/10 px-5 py-4 text-left text-sm text-emerald-100"
@@ -810,13 +842,15 @@ export default function MembershipPage() {
                 <p className="mt-1 text-emerald-100/80">
                   {planConfirmed
                     ? 'Everything in your plan is unlocked now.'
-                    : 'Your plan switches on within a minute. If this page still shows Free after that, refresh it, or message support below and we will sort it out.'}
+                    : planSyncTimedOut
+                      ? 'We could not confirm the new plan yet. Refresh this page in a moment. If it still says Free, message support below and we will sort it out.'
+                      : 'Your plan switches on within a minute. If this page still shows Free after that, refresh it, or message support below and we will sort it out.'}
                 </p>
               </div>
             </div>
           )}
 
-          {checkoutReturn === 'cancelled' && (
+          {checkoutReturn.status === 'cancelled' && (
             <p className="text-sm text-slate-400">
               Checkout was cancelled, so nothing was charged. Pick a plan whenever you are ready.
             </p>

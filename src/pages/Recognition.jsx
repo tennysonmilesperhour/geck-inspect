@@ -18,7 +18,8 @@ import { loadMorphIdQuota, morphIdGate, morphIdScansLeftLabel } from '@/lib/morp
 import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis, applyCorrections } from '@/lib/morphIdDraft';
 import { captureEvent } from '@/lib/posthog';
-import { upgradePromptShown, upgradePromptClicked } from '@/lib/activation';
+import { upgradePromptShown } from '@/lib/activation';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 import { onPhotoPath } from '@/lib/firstGeckoFlow';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
@@ -357,10 +358,10 @@ export default function Recognition() {
                   : `Your monthly scans reset ${creditResetWhen()}. Upgrade your plan to identify more geckos now.`}
               </p>
               <div className="flex flex-wrap gap-2 justify-center mt-1">
-                <Button onClick={() => { upgradePromptClicked('morph_id', 'morph_id_locked'); navigate('/Membership'); }}>
+                <UpgradePlansButton limitType="morph_id" surface="morph_id_locked" trackShown={false}>
                   See plans
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/MorphGuide')}>
+                </UpgradePlansButton>
+                <Button type="button" variant="outline" onClick={() => navigate('/MorphGuide')}>
                   Open the Morph Guide
                 </Button>
               </div>
@@ -547,16 +548,21 @@ export default function Recognition() {
                     <RotateCcw className="w-4 h-4 mr-2" /> Try again
                   </Button>
                 )}
-                {friendly.cta && (
+                {friendly.cta && isExhausted && (
+                  <UpgradePlansButton
+                    limitType="morph_id"
+                    surface="morph_id_exhausted"
+                    trackShown={false}
+                    className="bg-amber-500 hover:bg-amber-400 text-slate-950"
+                  >
+                    {friendly.cta.label}
+                  </UpgradePlansButton>
+                )}
+                {friendly.cta && !isExhausted && (
                   <Button
-                    onClick={() => {
-                      if (isExhausted) upgradePromptClicked('morph_id', 'morph_id_exhausted');
-                      navigate(friendly.cta.href);
-                    }}
-                    className={isExhausted
-                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
-                      : 'bg-rose-500 hover:bg-rose-400 text-white'
-                    }
+                    type="button"
+                    onClick={() => navigate(friendly.cta.href)}
+                    className="bg-rose-500 hover:bg-rose-400 text-white"
                   >
                     {friendly.cta.label}
                   </Button>
