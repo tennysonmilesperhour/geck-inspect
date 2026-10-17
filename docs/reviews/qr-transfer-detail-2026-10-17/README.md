@@ -1,6 +1,6 @@
 # QR transfer and gecko detail review
 
-Prepared on `codex/qr-transfer-detail` from main `99e61bee`. The existing checkouts and their work were preserved. This branch has not been merged and no production database, account permissions, Auth settings or ownership were changed.
+Prepared on `codex/qr-transfer-detail` from main `99e61bee`, with the native callback fix from `f64e5bae` incorporated. The existing checkouts and their work were preserved. This branch has not been merged and no production database, account permissions, Auth settings or ownership were changed.
 
 ## What changed
 
@@ -39,7 +39,8 @@ All screens use synthetic fixtures. QR links point to localhost and do not trans
 - Database: all 292 migrations replayed, the new migration applied a second time, all 26 regression files passed, all 73 QR assertions passed, and four tests with concurrent database connections passed.
 - Database tests run against disposable local fixtures, not customer data. Browser requests to external services were intercepted locally.
 - Request-mocked browser contexts block service workers so network routing stays inside the fixtures. Service-worker behavior has separate unit coverage. CI stops at the first exhausted browser failure to upload its trace promptly; no assertions or timeouts were relaxed.
-- All 311 size checks pass in the CI-equivalent build. The native sign-in listener loads only on native devices, keeping the public entry at 148.45 kB against 150 kB and the Lilly White guide at 237.59 kB against 238 kB. No allowance was raised. The 23 auth/native callback tests and scoped lint passed after this loading change; native callback and launch-link recovery logic are unchanged.
+- All 311 size checks pass in the CI-equivalent build. The native sign-in listener loads only on native devices, keeping the public entry at 148.45 kB against 150 kB and the Lilly White guide at 237.59 kB against 238 kB. No allowance was raised.
+- After incorporating main's native callback fix, all 35 focused auth tests and scoped lint passed. The native router now resumes transfers without reloading, retains the target during recovery or failure, and preserves main's duplicate callback protection.
 
 ## Release approval and remaining hosted checks
 

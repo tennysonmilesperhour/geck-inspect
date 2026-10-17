@@ -29,6 +29,13 @@ export function parseNativeAuthCallback(value) {
   };
 }
 
+// Capacitor retains the launch URL across webview reloads, so stay in the
+// running router rather than reloading and consuming the same link again.
+function navigateAfterAuth(path) {
+  window.history.replaceState(window.history.state, '', path);
+  window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
+}
+
 // Check an email token link inside the app, so the session lands here and
 // not in the phone's browser. Throws when the link is expired or used.
 async function completeNativeTokenLink({ tokenHash, type, target }, Browser) {
@@ -38,7 +45,7 @@ async function completeNativeTokenLink({ tokenHash, type, target }, Browser) {
   const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type });
   if (error) { handledCodes.delete(tokenHash); throw error; }
   await Browser.close().catch(() => {});
-  window.location.replace(type === 'recovery' || type === 'invite' ? authContinuationPath(target, { reset: true }) : target || '/MyGeckos');
+  navigateAfterAuth(type === 'recovery' || type === 'invite' ? authContinuationPath(target, { reset: true }) : target || '/MyGeckos');
 }
 
 let installed = false;
@@ -61,11 +68,11 @@ export async function installNativeAuth() {
       const { error } = await supabase.auth.exchangeCodeForSession(callback.code);
       if (error) { handledCodes.delete(callback.code); throw error; }
       await Browser.close().catch(() => {});
-      window.location.replace(callback.recovery ? authContinuationPath(callback.target, { reset: true }) : callback.target || '/MyGeckos');
+      navigateAfterAuth(callback.recovery ? authContinuationPath(callback.target, { reset: true }) : callback.target || '/MyGeckos');
     } catch {
       // Never log the callback URL or authorization code.
       await Browser.close().catch(() => {});
-      window.location.replace(`/AuthPortal?authError=callback${callback?.target ? `&redirect=${encodeURIComponent(callback.target)}` : ''}`);
+      navigateAfterAuth(`/AuthPortal?authError=callback${callback?.target ? `&redirect=${encodeURIComponent(callback.target)}` : ''}`);
     }
   };
   await App.addListener('appUrlOpen', handle);
