@@ -25,6 +25,7 @@ import RecommendedKitForGecko from './RecommendedKitForGecko';
 
 const generatedUrl = '/store/products/digital-gram-scale.jpg';
 const destination = 'https://www.amazon.com/s?k=digital+gram+scale+0.1g+reptile&tag=geckinspect09-20';
+const correctedDestination = 'https://www.amazon.com/s?k=digital+gram+scale+0.1g+reptile&tag=geckinspect-20';
 beforeEach(() => {
   db.selects = [];
   db.product = {
@@ -45,7 +46,7 @@ describe('product image display boundaries', () => {
     expect(screen.getByText('See photos on Amazon')).toBeTruthy();
     expect(screen.getByText('Est. $19.99')).toBeTruthy();
     expect(screen.getByText('Weigh your gecko.')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Find on Amazon' }).getAttribute('href')).toBe(destination);
+    expect(screen.getByRole('link', { name: 'Find on Amazon' }).getAttribute('href')).toBe(correctedDestination);
   });
 
   it('excludes generated images from detail galleries and Product JSON-LD', async () => {
@@ -56,7 +57,7 @@ describe('product image display boundaries', () => {
     expect(container.querySelector('img')).toBeNull();
     expect(JSON.parse(screen.getByTestId('product-schema').textContent)[0].image).toEqual([]);
     expect(container.innerHTML).not.toContain(generatedUrl);
-    expect(screen.getByRole('link', { name: 'Find on Amazon' }).getAttribute('href')).toBe(destination);
+    expect(screen.getByRole('link', { name: 'Find on Amazon' }).getAttribute('href')).toBe(correctedDestination);
   });
 
   it('filters legacy SVGs in recommendations and requests their provenance fields', async () => {

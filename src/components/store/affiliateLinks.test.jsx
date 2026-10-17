@@ -20,7 +20,7 @@ it('navigates and logs the resolved tagged product URL despite stale search meta
   };
   render(<AddToCartButton product={product} />);
   const link = screen.getByRole('link', { name: 'Buy at vendor' });
-  const expected = 'https://www.amazon.com/dp/0974297100?tag=geckinspect09-20';
+  const expected = 'https://www.amazon.com/dp/0974297100?tag=geckinspect-20';
   expect(link.getAttribute('href')).toBe(expected);
   expect(link.getAttribute('rel')).toContain('sponsored');
   link.addEventListener('click', event => event.preventDefault());
@@ -32,5 +32,5 @@ it('navigates and logs the resolved tagged product URL despite stale search meta
 it('labels unresolved tagged search destinations honestly', () => {
   const url = 'https://www.amazon.com/s?k=Govee+hygrometer&tag=geckinspect09-20';
   render(<AddToCartButton product={{ slug: 'aff-govee-hygrometer', fulfillment_mode: 'affiliate_redirect', vendor_product_url: url }} />);
-  expect(screen.getByRole('link', { name: 'Find on Amazon' }).getAttribute('href')).toBe(url);
+  expect(screen.getByRole('link', { name: 'Find on Amazon' }).getAttribute('href')).toBe('https://www.amazon.com/s?k=Govee+hygrometer&tag=geckinspect-20');
 });

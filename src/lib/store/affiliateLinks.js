@@ -18,27 +18,50 @@ const VERIFIED_PRODUCTS = {
   },
 };
 
-// Existing catalog tag, also verified against the owner's Associates StoreID.
-const VERIFIED_ASSOCIATE_TAG = 'geckinspect09-20';
+// Owner-designated tag (2026-10-17). The database still contains the older tag;
+// normalize outbound links here until that separate data correction is applied.
+export const AMAZON_ASSOCIATE_TAG = 'geckinspect-20';
+const LEGACY_ASSOCIATE_TAG = 'geckinspect09-20';
+
+function applyAmazonTag(url) {
+  let hasTag = false;
+  const params = url.search ? url.search.slice(1).split('&') : [];
+  const corrected = params.map((param) => {
+    const key = param.split('=', 1)[0];
+    try {
+      if (decodeURIComponent(key) === 'tag') {
+        hasTag = true;
+        return `${key}=${AMAZON_ASSOCIATE_TAG}`;
+      }
+    } catch { /* Leave malformed, unrelated parameter names unchanged. */ }
+    return param;
+  });
+  if (!hasTag) corrected.push(`tag=${AMAZON_ASSOCIATE_TAG}`);
+  // Keep other parameters' order, duplicates and encoding, plus the fragment.
+  url.search = corrected.join('&');
+}
 
 export function productVendorLink(product) {
   const safeUrl = safeExternalUrl(product?.vendor_product_url);
   if (!safeUrl) return { url: null, isAmazonSearch: false };
   const url = new URL(safeUrl);
-  const isAmazonSearch = (url.hostname === 'amazon.com' || url.hostname === 'www.amazon.com')
-    && url.pathname === '/s';
+  const isAmazon = url.hostname === 'amazon.com' || url.hostname === 'www.amazon.com';
+  const isAmazonSearch = isAmazon && url.pathname === '/s';
   const match = VERIFIED_PRODUCTS[product?.slug];
 
-  // A later catalog edit takes precedence. Only resolve the specific legacy
-  // search and product identity we verified, retaining its existing tag.
-  if (product?.fulfillment_mode === 'affiliate_redirect' && match
+  // A later destination edit takes precedence. Only resolve the specific legacy
+  // search and product identity we verified. Attribution is corrected separately.
+  const resolveVerifiedProduct = product?.fulfillment_mode === 'affiliate_redirect' && match
     && product.name === match.name && isAmazonSearch
     && url.searchParams.get('k') === match.query
-    && url.searchParams.get('tag') === VERIFIED_ASSOCIATE_TAG
-    && [...url.searchParams.keys()].length === 2 && !url.hash) {
+    && [LEGACY_ASSOCIATE_TAG, AMAZON_ASSOCIATE_TAG].includes(url.searchParams.get('tag'))
+    && [...url.searchParams.keys()].length === 2 && !url.hash;
+
+  if (product?.fulfillment_mode === 'affiliate_redirect' && isAmazon) applyAmazonTag(url);
+  if (resolveVerifiedProduct) {
     url.pathname = `/dp/${match.asin}`;
     url.searchParams.delete('k');
     return { url: url.href, isAmazonSearch: false };
   }
-  return { url: safeUrl, isAmazonSearch };
+  return { url: url.href, isAmazonSearch };
 }
