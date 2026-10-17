@@ -8,6 +8,10 @@ export { PROVIDER_UNAVAILABLE_MESSAGE };
 // this and see the raw upstream message instead, so they can debug a
 // provider outage without showing that text to members.
 const FRIENDLY_ERROR = {
+  ai_consent_declined: {
+    title: 'AI request canceled',
+    body: 'Nothing was sent to the AI providers and no scan was used. Your photos are still here.',
+  },
   morph_id_credits_exhausted: {
     title: "You're out of MorphID credits for this month",
     body: 'Your credits reset at midnight UTC on the 1st. Upgrade your plan to identify more geckos now.',

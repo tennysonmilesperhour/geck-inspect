@@ -6,7 +6,7 @@ import { breadcrumbSchema } from '@/lib/organization-schema';
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 import AnalyticsChoice from '@/components/shared/AnalyticsChoice';
 
-const LAST_UPDATED = '2026-10-16';
+const LAST_UPDATED = '2026-10-17';
 
 const Section = ({ title, children }) => (
     <div className="space-y-3">
@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
                         <Shield className="w-8 h-8 text-emerald-400 flex-shrink-0" />
                         <div>
                             <h1 className="text-2xl font-bold text-slate-100">Privacy Policy</h1>
-                            <p className="text-slate-500 text-sm">Last updated: October 16, 2026</p>
+                            <p className="text-slate-500 text-sm">Last updated: October 17, 2026</p>
                         </div>
                     </div>
 
@@ -64,10 +64,11 @@ export default function PrivacyPolicy() {
 
                     <Section title="1. Information We Collect">
                         <p><strong className="text-slate-300">Account Information:</strong> When you register, we collect your name and email address.</p>
+                        <p><strong className="text-slate-300">Optional profile information:</strong> The phone number, business address, general location, website and social contact details you choose to add to your profile.</p>
                         <p><strong className="text-slate-300">Gecko & Breeding Data:</strong> Information you enter about your gecko collection, breeding plans, egg records, and related notes.</p>
                         <p><strong className="text-slate-300">Images:</strong> Photos you upload of your geckos or for morph identification purposes. In the iOS and Android apps you can take those photos with the device camera or choose them from the photo library. The camera is used only when you tap a photo button.</p>
                         <p><strong className="text-slate-300">Phone reminders:</strong> If you turn on phone reminders in the app, feeding and weigh-in times are scheduled on that device. Those reminders stay on the phone. They are not sent to a push service.</p>
-                        <p><strong className="text-slate-300">Usage Data:</strong> We may collect basic analytics such as pages visited and features used to improve the Service.</p>
+                        <p><strong className="text-slate-300">Usage Data:</strong> We collect pages visited and features used, browser/device identifiers and general device information for analytics. Analytics providers may derive an approximate location from your network address. Error reports can contain the error message, stack trace, page, browser/device information and account email. These help us find and fix failures. We do not request GPS access.</p>
                         <p><strong className="text-slate-300">Communications:</strong> Messages you send to other users or to us via the platform.</p>
                         <p><strong className="text-slate-300">AI Consultant chats:</strong> The questions you ask the AI Breeder Consultant and its answers are saved to your account so you can reopen them. Only you can see them, and you can delete any chat at any time.</p>
                     </Section>
@@ -104,6 +105,7 @@ export default function PrivacyPolicy() {
                     </Section>
 
                     <Section title="6. Third-Party Services">
+                        <p>Before an AI request, the app asks permission and names the provider and information being shared. Cancel stops that request before it reaches the AI provider. Permission is requested again for a later request; it is not stored as a permanent preference.</p>
                         <p>These are the services that receive some of your data in order to run Geck Inspect, and what each one gets:</p>
                         <ul className="list-disc list-inside space-y-1 ml-2">
                             <li><strong className="text-slate-300">Supabase</strong> (database, authentication, file storage): your account, your collection, and the photos you upload.</li>
@@ -111,7 +113,7 @@ export default function PrivacyPolicy() {
                             <li><strong className="text-slate-300">Stripe</strong> (website payments): your email and payment details when you buy a membership on the website. Card numbers never touch our servers. The iOS and Android apps do not use Stripe to sell digital memberships.</li>
                             <li><strong className="text-slate-300">Apple</strong> and <strong className="text-slate-300">Google</strong> (in-app purchases): if you buy a membership inside the iOS or Android app, that purchase is billed by the App Store or Google Play.</li>
                             <li><strong className="text-slate-300">RevenueCat</strong> (subscription management): a subscriber identifier and your subscription status, so a store purchase unlocks the same plan on the website.</li>
-                            <li><strong className="text-slate-300">Anthropic</strong> (AI): the gecko photos and text you submit to the morph identifier, health screen, breeder consultant, and social post generator.</li>
+                            <li><strong className="text-slate-300">Anthropic</strong> (AI): the photos, text and selected records you submit to morph identification, health screening, image-to-record import, the breeder consultant and social post generation.</li>
                             <li><strong className="text-slate-300">Replicate</strong> (visual comparison): when enabled, the gecko image or image URL used to generate visual embeddings for similarity search and morph reference retrieval.</li>
                             <li><strong className="text-slate-300">Govee</strong> (optional enclosure sensors): when you connect this integration, server-side requests use your Govee API credentials and device identifiers to retrieve sensor readings.</li>
                             <li><strong className="text-slate-300">Resend</strong> (email delivery): your email address and the content of emails we send you. Resend tells us whether each email was delivered, bounced or reported as spam and, when open and click tracking is turned on, whether it was opened and which link was clicked. We keep that record so we know our emails arrive.</li>

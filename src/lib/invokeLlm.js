@@ -1,3 +1,4 @@
+import { requireAiConsent } from '@/lib/aiConsent';
 /**
  * InvokeLLM, client wrapper for the `invoke-llm` Supabase edge function.
  *
@@ -20,6 +21,7 @@
 import { supabase } from '@/lib/supabaseClient';
 
 async function callInvokeLlm(body) {
+  requireAiConsent('invoke-llm');
   const { data, error } = await supabase.functions.invoke('invoke-llm', { body });
 
   if (error) {

@@ -4,6 +4,8 @@
 // invoke-llm handler against a fake database and a fake Anthropic API.
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/aiConsent', () => ({ requireAiConsent: vi.fn() }));
+
 vi.mock('@/entities/all', () => ({
   Gecko: {}, WeightRecord: {}, ShedRecord: {}, Egg: {}, BreedingPlan: {}, FeedingGroup: {},
 }));

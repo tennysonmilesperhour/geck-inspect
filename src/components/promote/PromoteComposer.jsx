@@ -1,3 +1,4 @@
+import { requireAiConsent } from '@/lib/aiConsent';
 import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -275,6 +276,7 @@ export default function PromoteComposer({
   // Calls generate-social-post and returns its data, or null after
   // showing a readable error.
   const callWriter = async (extra) => {
+    requireAiConsent('generate-social-post');
     const { data, error: fnErr } = await supabase.functions.invoke('generate-social-post', {
       body: { ...writerPayload(), ...extra },
     });

@@ -1,3 +1,4 @@
+import { requireAiConsent } from '@/lib/aiConsent';
 import GeckoImage from '@/components/shared/GeckoImage';
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -85,6 +86,7 @@ function OnDemandVisualSearch({ imageUrl, isAdmin }) {
       setIsLoading(true);
       setError(null);
       try {
+        requireAiConsent('embed-gecko-image');
         const embedRes = await supabase.functions.invoke('embed-gecko-image', {
           body: { imageUrl },
         });

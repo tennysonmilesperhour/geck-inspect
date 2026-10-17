@@ -1,3 +1,4 @@
+import { requireAiConsent } from '@/lib/aiConsent';
 import { supabase } from '@/lib/supabaseClient';
 
 // Calls the Supabase edge function `recognize-gecko-morph`, which routes
@@ -66,6 +67,8 @@ export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, fired
   // credit. Ignored by a server without the morph_id_requests table.
   if (typeof requestKey === 'string' && requestKey) body.request_key = requestKey;
 
+  try { requireAiConsent('recognize-gecko-morph'); }
+  catch (error) { return { data: null, error }; }
   const { data, error } = await supabase.functions.invoke('recognize-gecko-morph', {
     body,
   });

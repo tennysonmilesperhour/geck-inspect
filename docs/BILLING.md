@@ -143,10 +143,10 @@ redeployed.
 - Verify the Apple app's in-app purchase credentials, product availability,
   subscription groups/levels and store agreements in App Store Connect. The
   RevenueCat dashboard reports its in-app purchase key as valid.
-- In App Store Connect, route Apple server notifications to the incoming Apple
-  webhook URL displayed on RevenueCat's Apple app settings, then send Apple's
-  test notification. RevenueCat's dashboard had received no Apple server
-  notification during this audit; this part is still unverified.
+- On 17 October 2026, both production and sandbox Apple server notification
+  URLs were configured with this app's receiver from RevenueCat settings.
+  No delivery has been observed yet. Send a test notification or run the
+  sandbox lifecycle test and verify receipt; configuration alone is not proof.
 - On the actual release binary, use an ordinary account for Keeper and Breeder
   sandbox purchases, restore after reinstall, upgrade, cancellation with paid
   time remaining, expiration/refund, and an account transfer. Verify both UI and

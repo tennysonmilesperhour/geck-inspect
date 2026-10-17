@@ -1,3 +1,4 @@
+import { requireAiConsent } from '@/lib/aiConsent';
 import React, { useState, useEffect, Suspense } from 'react';
 import { User, Gecko, BreedingPlan, Egg } from '@/entities/all';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
@@ -158,6 +159,7 @@ export default function ImageImport() {
         setStep('processing');
 
         try {
+            requireAiConsent('recognize-import-data');
             const batches = [];
             for (let i = 0; i < images.length; i += 10) {
                 batches.push(images.slice(i, i + 10).map(img => img.url));

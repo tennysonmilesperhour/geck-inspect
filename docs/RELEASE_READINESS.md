@@ -1,8 +1,10 @@
-# Release readiness, 8 October 2026
+# Release readiness, 17 October 2026
 
-This is the current store-submission status. The September evidence record is kept at the bottom. Nothing has been submitted to the App Store or Google Play.
+The live Apple account supersedes the older checklist below. Geck Inspect **was submitted** on 7 September as version **1.0 (6)** and rejected under **2.1, Information Needed**. The Paid Apps Agreement is now Active. See [the current requirement audit](APP_STORE_REQUIREMENTS.md) for evidence and remaining blockers.
 
-Store version for the first upload: **1.0** (iOS build **1**, Android versionName **1.0**, versionCode **1**). Bundle id and package name: `com.geckinspect.app`. Display name: Geck Inspect.
+Do not submit or claim full compliance yet. A replacement build needs a number **greater than 6** (check App Store Connect again before choosing it), physical-device verification and recording, completed review notes, and the remaining content-safety and rights checks. The Xcode project still uses build 1; that is not the next upload number.
+
+## October 8 implementation record (historical)
 
 ## What changed in code
 
@@ -63,7 +65,7 @@ Do these yourself. They cannot be done from the repo.
 - [ ] Apple Developer Program ($99 a year) and a signed Paid Apps agreement, with tax and banking.
 - [ ] App Store Connect app for `com.geckinspect.app`, subscriptions in one group, and Apple server notifications pointed at RevenueCat. Send the test notification.
 - [ ] Privacy nutrition answers pasted from the section above. Privacy URL `https://geckinspect.com/PrivacyPolicy`. Terms URL `https://geckinspect.com/Terms`. Support email on the Contact page.
-- [ ] iOS signing: open `ios/App` in Xcode, select your team, archive version 1.0 (1) with a current Xcode, upload to TestFlight. Do not submit for review until the device checks pass.
+- [ ] iOS signing: open `ios/App` in Xcode, select your team, archive version 1.0 with a build number greater than the highest already uploaded with a current Xcode, upload to TestFlight. Do not submit for review until the device checks pass.
 - [ ] Google Play Console ($25) and, if you want the lower fee, the Small Business Program.
 - [ ] Create the Android upload keystore. Release builds read `GECK_ANDROID_KEYSTORE`, `GECK_ANDROID_STORE_PASSWORD`, `GECK_ANDROID_KEY_ALIAS`, and `GECK_ANDROID_KEY_PASSWORD`. Prefer Play App Signing so Google holds the app signing key.
 - [ ] Upload an AAB to a closed test. Play requires 12 testers on a closed test for 14 days before production for new personal accounts. That clock starts when the testers are opted in.

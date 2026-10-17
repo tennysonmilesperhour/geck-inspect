@@ -1,5 +1,7 @@
 # App-store billing readiness (RevenueCat)
 
+**Historical planning checklist.** Do not use the old Pro/lifetime catalog below for a release. The live catalog is four Keeper/Breeder monthly/annual subscriptions; see [BILLING.md](BILLING.md) and [APP_STORE_REQUIREMENTS.md](APP_STORE_REQUIREMENTS.md).
+
 Moved from the appendix of ROADMAP.md on 30 September 2026. It was written before the iOS and Android projects existed, and some of it has since been built (native purchases with restore are in the code), so check it against step 9 of docs/planning/feature-completeness-audit-2026-09-29.md before following it.
 
 Read this before starting an iOS or Android build. Today the web app uses `@revenuecat/purchases-js` with the public sandbox key. The mobile path requires platform-specific SDKs, platform-specific product catalogs, and store-side configuration that has to be done in a specific order.
