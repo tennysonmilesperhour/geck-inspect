@@ -51,10 +51,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { getVisibleGeckos } from '@/lib/geckoAccess';
-import { valueFromTraitTable, qualityTierFor } from '@/lib/traitValuation';
+import { buildMorphAverages, visualMorphs, valueGecko } from '@/lib/portfolioValue';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { CollectionValuation, MorphPriceCache } from '@/api/supabaseEntities';
-import { canonicalizeMorphTag } from '@/lib/genetics';
 import { createPageUrl } from '@/utils';
 import Seo from '@/components/seo/Seo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,17 +61,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import SignInRequired from '@/components/shared/SignInRequired';
-
-// Heuristics v1: quality tier multipliers applied to the morph comp
-// average. Documented in the file header; keep these in sync with it.
-const TIER_MULTIPLIERS = {
-  investment: 1.5,
-  high_end: 1.25,
-  breeder: 1.0,
-  pet: 0.6,
-};
-
-const HET_PREFIX = /^(possible\s+het|pos\s+het|p\.?\s*het|het)\s+/i;
 
 const BASIS_META = {
   listing: { label: 'Listing price', className: 'bg-emerald-900/40 border-emerald-700 text-emerald-200' },
@@ -83,95 +71,13 @@ const BASIS_META = {
   unpriced: { label: 'No data', className: 'bg-slate-900/60 border-slate-700 text-slate-500' },
 };
 
-function formatCurrency(n) {
-  return `$${Math.round(Number(n) || 0).toLocaleString()}`;
-}
-
 function toNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-/** market_price_estimate is jsonb {low, high, average}; tolerate strings. */
-function estimateAverage(gecko) {
-  let est = gecko.market_price_estimate;
-  if (!est) return null;
-  if (typeof est === 'string') {
-    try { est = JSON.parse(est); } catch { return null; }
-  }
-  return toNumber(est.average);
-}
-
-/**
- * Build a lookup of canonical morph name (lowercase) to the community
- * average price from morph_price_cache rows.
- */
-function buildMorphAverages(cacheRows) {
-  const acc = new Map();
-  for (const row of cacheRows || []) {
-    const name = canonicalizeMorphTag(row.morph_name);
-    const price = toNumber(row.price) || toNumber(row.average_price) || toNumber(row.min_price);
-    if (!name || !price) continue;
-    const key = name.toLowerCase();
-    const cur = acc.get(key) || { sum: 0, count: 0, name };
-    cur.sum += price;
-    cur.count += 1;
-    acc.set(key, cur);
-  }
-  const out = new Map();
-  for (const [key, { sum, count, name }] of acc) {
-    out.set(key, { average: sum / count, name });
-  }
-  return out;
-}
-
-/** Visual (non-het) canonical morph tags for a gecko. */
-function visualMorphs(gecko) {
-  const tags = Array.isArray(gecko.morph_tags) ? gecko.morph_tags : [];
-  return tags
-    .filter((t) => typeof t === 'string' && t.trim() && !HET_PREFIX.test(t.trim()))
-    .map((t) => canonicalizeMorphTag(t))
-    .filter(Boolean);
-}
-
-/** Value one gecko per the model documented at the top of this file. */
-function valueGecko(gecko, morphAverages, traitIndex) {
-  const listing = toNumber(gecko.listing_price);
-  if (listing) return { value: listing, basis: 'listing', drivingMorph: visualMorphs(gecko)[0] || null };
-
-  const asking = toNumber(gecko.asking_price);
-  if (asking) return { value: asking, basis: 'asking', drivingMorph: visualMorphs(gecko)[0] || null };
-
-  const aiAvg = estimateAverage(gecko);
-  if (aiAvg) return { value: aiAvg, basis: 'ai_estimate', drivingMorph: visualMorphs(gecko)[0] || null };
-
-  // Geck Data trait value table: cross-reference the selected traits.
-  const fromTraits = valueFromTraitTable(gecko, traitIndex, qualityTierFor(gecko));
-  if (fromTraits) {
-    return { ...fromTraits, basis: 'geck_data', drivingMorph: fromTraits.trait };
-  }
-
-  // Morph comp: best matching community average among visual morphs.
-  let best = null;
-  for (const morph of visualMorphs(gecko)) {
-    const hit = morphAverages.get(morph.toLowerCase());
-    if (hit && (!best || hit.average > best.average)) best = hit;
-  }
-  if (best) {
-    const tier = qualityTierFor(gecko);
-    const multiplier = TIER_MULTIPLIERS[tier] ?? 1.0;
-    return {
-      value: best.average * multiplier,
-      basis: 'morph_comp',
-      drivingMorph: best.name,
-      compMorph: best.name,
-      compAverage: best.average,
-      tier,
-      multiplier,
-    };
-  }
-
-  return { value: 0, basis: 'unpriced', drivingMorph: visualMorphs(gecko)[0] || null };
+function formatCurrency(n) {
+  return `$${Math.round(Number(n) || 0).toLocaleString()}`;
 }
 
 function BasisChip({ valuation }) {

@@ -99,3 +99,10 @@ export function indexMorphsBySlug(records) {
  * docs/specs/morph-catalogue-consolidation.md.
  */
 export const KNOWN_MORPH_SLUGS = MORPHS.map((m) => m.slug);
+
+// Lower-case and collapse separators so 'Extreme Harlequin' and
+// 'extreme_harlequin' both map to 'extreme harlequin'. Used to match
+// hero-anchor rows (snake_case canonical ids) against MORPHS names.
+export function normMorph(s) {
+  return (s || '').toLowerCase().replace(/[\s_-]+/g, ' ').trim();
+}

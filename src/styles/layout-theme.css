@@ -1335,3 +1335,33 @@ html.glass-warp .liquid-glass::before {
 }
 select.glass-field { padding-right: 0.25rem; max-width: 7.5rem; }
 select.glass-field option { background: rgb(15 23 42); color: rgb(226 232 240); }
+/* Event indicators share the existing unread state; the menu itself stays intact. */
+.sidebar-nav-item .nav-event-count {
+  margin-left: auto;
+  flex-shrink: 0;
+  min-width: 1.25rem;
+  padding: .125rem .375rem;
+  border-radius: 999px;
+  background: #e9bc54;
+  color: #211a08;
+  text-align: center;
+  font-size: .625rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.favorite-tile .nav-event-count { position: absolute; top: .25rem; right: .25rem; }
+.desktop-sidebar-wrapper.is-collapsed .nav-event-count { display: none; }
+.desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item[data-new-events] > svg {
+  color: #f3cb75;
+  animation: nav-event-gold 2.4s ease-in-out infinite;
+}
+@keyframes nav-event-gold {
+  0%, 100% { filter: drop-shadow(0 0 2px #e9bc5466); }
+  50% { filter: drop-shadow(0 0 7px #e9bc54dd); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item[data-new-events] > svg {
+    animation: none;
+    filter: drop-shadow(0 0 4px #e9bc5499);
+  }
+}

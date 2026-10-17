@@ -5,6 +5,7 @@ import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
 import { createPageUrl, getDisplayName } from "@/utils";
 import { api } from '@/api/appClient';
+import { countNavNotifications } from '@/lib/navNotifications';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
@@ -705,6 +706,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   }
 
   const sidebarBadge = getSidebarBadge();
+  const navEventCounts = countNavNotifications(recentNotifications, isGuest ? null : user?.email);
+  const eventLabel = (page, label) => navEventCounts[page] ? `${label}, ${navEventCounts[page]} unread ${navEventCounts[page] === 1 ? 'event' : 'events'}` : label;
+  const eventBadge = (page) => navEventCounts[page] > 0 && <span aria-hidden="true" className="nav-event-count">{navEventCounts[page] > 99 ? '99+' : navEventCounts[page]}</span>;
 
   // The sidebar's items from the page_config rows, less the breeder pages
   // in Keeper mode (src/lib/navItems.js, buildNavItems and keeperNavItems;
@@ -754,6 +758,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <div className="px-2 mb-2">
         <Link
           to={dashUrl}
+          aria-label={eventLabel('Dashboard', 'Dashboard')}
+          title={eventLabel('Dashboard', 'Dashboard')}
+          data-new-events={navEventCounts.Dashboard > 0 || undefined}
           data-tutorial-id="Dashboard"
           data-tutorial-label="Dashboard"
           className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
@@ -762,6 +769,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         >
           <Home className="mr-2 h-5 w-5 flex-shrink-0" />
           <span className="truncate">Dashboard</span>
+          {eventBadge('Dashboard')}
         </Link>
       </div>
     );
@@ -791,6 +799,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 key={item.page_name}
                 to={itemUrl}
                 onClick={handleNavClick}
+                aria-label={eventLabel(item.page_name, item.display_name)}
+                title={eventLabel(item.page_name, item.display_name)}
+                data-new-events={navEventCounts[item.page_name] > 0 || undefined}
                 data-tutorial-id={item.page_name}
                 data-tutorial-label={item.display_name}
                 className={`group flex flex-col items-center justify-center gap-2 rounded-lg border px-2 py-4 text-center transition-colors sidebar-nav-item favorite-tile ${
@@ -803,6 +814,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 <span className="text-[11px] font-semibold leading-tight line-clamp-2 sidebar-collapse-hide">
                   {item.display_name}
                 </span>
+                {eventBadge(item.page_name)}
               </Link>
             );
           })}
@@ -841,6 +853,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 key={item.page_name}
                 to={itemUrl}
                 onClick={handleNavClick}
+                aria-label={eventLabel(item.page_name, item.display_name)}
+                title={eventLabel(item.page_name, item.display_name)}
+                data-new-events={navEventCounts[item.page_name] > 0 || undefined}
                 data-tutorial-id={item.page_name}
                 data-tutorial-label={item.display_name}
                 className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item
@@ -851,6 +866,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               >
                 <IconComponent className="mr-2 h-5 w-5 flex-shrink-0" />
                 <span className="truncate">{item.display_name}</span>
+                {eventBadge(item.page_name)}
                 {/* Guests keep `user` set (GUEST_USER) so the "Login"
                     marker below doesn't trigger; instead we flag pages
                     gated behind auth as view-only so the visitor knows

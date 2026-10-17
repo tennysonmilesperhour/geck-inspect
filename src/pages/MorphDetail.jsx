@@ -21,6 +21,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import {
   morphSlug,
+  normMorph,
   morphDisplayName,
   pickBestMorphRecord,
   indexMorphsBySlug,
@@ -41,8 +42,6 @@ import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
 import { licenseLabel } from '@/lib/imageLicenses';
 import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
-import { fetchHeroAnchorPhotos } from '@/lib/publicGeckoPhotos';
-import { normMorph } from '@/components/morphguide/MorphIndexData';
 import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import PublicPageShell from '@/components/public/PublicPageShell';
@@ -406,6 +405,7 @@ export default function MorphDetail() {
 
         // Show-winner photo for this morph, if available.
         try {
+          const { fetchHeroAnchorPhotos } = await import('@/lib/publicGeckoPhotos');
           const anchors = await fetchHeroAnchorPhotos(supabase, 200);
           const targetNorm = normMorph(best?.morph_name || displayName);
           const match = (anchors || []).find((a) => normMorph(a.primary_morph) === targetNorm && sanitizeImage(a.image_url));
