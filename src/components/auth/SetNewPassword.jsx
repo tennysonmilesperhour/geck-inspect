@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { redirectFromSearch, takePostAuthRedirect } from '@/lib/postAuthRedirect';
 import { memberHome } from '@/lib/pwaLaunch';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,7 +42,9 @@ export default function SetNewPassword() {
       return;
     }
     setDone(true);
-    setTimeout(() => navigate(memberHome(), { replace: true }), 1200);
+    const saved = takePostAuthRedirect();
+    const next = redirectFromSearch(window.location.search) || saved || memberHome();
+    setTimeout(() => navigate(next, { replace: true }), 1200);
   };
 
   return (
@@ -55,7 +58,7 @@ export default function SetNewPassword() {
             </p>
           </div>
           {done ? (
-            <p className="text-emerald-300 font-medium">Password updated. Taking you to your collection.</p>
+            <p className="text-emerald-300 font-medium">Password updated. You can continue now.</p>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">

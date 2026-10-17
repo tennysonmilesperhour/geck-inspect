@@ -45,7 +45,7 @@ export default function RecordPassport({
           <p className="text-sm text-slate-300">
             Passport <span className="font-mono text-slate-100">{code}</span>. Anyone with the link or the QR card sees {name}&apos;s public history.
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
               <a href={`/passport/${code}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4 mr-2" /> View passport
@@ -57,7 +57,7 @@ export default function RecordPassport({
                   <QrCode className="w-4 h-4 mr-2" /> QR card
                 </a>
               </Button>
-            ) : <span />}
+            ) : null}
           </div>
           <Suspense fallback={null}>
             <ShareMenu
@@ -70,7 +70,7 @@ export default function RecordPassport({
       ) : (
         <div className="space-y-2">
           <p className="text-sm text-slate-400">
-            A passport gives {name} a public page and a QR card with its lineage and weigh-ins, so the buyer can claim it when you sell.
+            A passport gives {name} a public page and a QR card with its lineage and weigh-ins.
           </p>
           <Button variant="outline" onClick={onCreatePassport} className="w-full sm:w-auto">
             <QrCode className="w-4 h-4 mr-2" /> Make a passport
@@ -79,15 +79,21 @@ export default function RecordPassport({
       )}
 
       {access.canTransfer && (
-        <Button variant="outline" onClick={onTransfer} className="w-full sm:w-auto border-amber-600 text-amber-300 hover:bg-amber-900/20">
-          <ArrowRightLeft className="w-4 h-4 mr-2" /> Transfer to a new owner
-        </Button>
+        <div className="border-t border-slate-700 pt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-slate-200">New owner</p>
+            <p className="text-sm text-slate-400 mt-1">Create a transfer link for the next keeper to add {name} to their collection.</p>
+          </div>
+          <Button variant="outline" onClick={onTransfer} className="w-full sm:w-auto shrink-0">
+            <ArrowRightLeft className="w-4 h-4" /> Transfer to a new owner
+          </Button>
+        </div>
       )}
 
       {access.canEdit && (
-        <div className="space-y-2">
-          <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">Papers (PDF)</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="space-y-2 border-t border-slate-700 pt-4">
+          <p className="text-sm text-slate-200 font-semibold">Download papers</p>
+          <div className="flex flex-wrap gap-2">
             {PAPERS.map((paper) => {
               const Icon = paper.icon;
               const working = busy === paper.id;
@@ -98,6 +104,7 @@ export default function RecordPassport({
                   onClick={() => onPaper(paper.id)}
                   disabled={Boolean(busy)}
                   title={paper.title}
+                  className="w-full sm:w-auto"
                 >
                   {working
                     ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {paper.busyLabel}</>
@@ -110,7 +117,9 @@ export default function RecordPassport({
       )}
 
       {access.canEdit && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="space-y-2 border-t border-slate-700 pt-4">
+          <p className="text-sm text-slate-200 font-semibold">Visibility</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-slate-800 p-3 rounded-lg">
             <div className="flex items-center justify-between gap-2">
               <Label htmlFor="record-public" className="text-slate-200 flex items-center gap-2 cursor-pointer">
@@ -129,6 +138,7 @@ export default function RecordPassport({
               <Switch id="record-gallery" checked={Boolean(galleryDisplay)} onCheckedChange={onToggleGallery} />
             </div>
             <p className="text-xs text-slate-400 mt-1.5">Show this gecko&apos;s photos in the public Gallery.</p>
+          </div>
           </div>
         </div>
       )}

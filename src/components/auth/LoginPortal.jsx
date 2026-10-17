@@ -1,6 +1,6 @@
 import { authRedirect } from '@/lib/nativeAuth';
 import { memberHome } from '@/lib/pwaLaunch';
-import { redirectFromSearch, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
+import { authContinuationPath, peekPostAuthRedirect, redirectFromSearch, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { isNativePlatform, detectPlatform } from '@/lib/revenuecat';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -57,6 +57,8 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   // ID guest hand-off use it); ?mode=forgot opens the reset form.
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get('mode');
+  const continuation = redirectFromSearch(searchParams.toString()) || peekPostAuthRedirect();
+  const returnPath = continuation ? authContinuationPath(continuation) : memberHome();
   // A claim link or collection invite sent the visitor here with
   // ?redirect= or ?next=; remember it so they land back there after signing
   // in, confirming their email, or coming back from Google.
@@ -130,7 +132,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     try {
       const native = isNativePlatform();
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google', options: { redirectTo: authRedirect(memberHome()), skipBrowserRedirect: native },
+        provider: 'google', options: { redirectTo: authRedirect(returnPath), skipBrowserRedirect: native },
       });
       if (error) throw error;
       if (native) {
@@ -158,7 +160,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
           email,
           password,
           options: {
-            emailRedirectTo: authRedirect(memberHome()),
+            emailRedirectTo: authRedirect(returnPath),
             data: { full_name: name },
           },
         });
@@ -205,7 +207,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: authRedirect(memberHome()) },
+      options: { emailRedirectTo: authRedirect(returnPath) },
     });
     if (error) {
       toast({ title: 'Could not resend the email', description: error.message, variant: 'destructive' });
@@ -224,7 +226,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: authRedirect('/AuthPortal?mode=reset'),
+        redirectTo: authRedirect(authContinuationPath(continuation, { reset: true })),
       });
       if (error) {
         toast({ title: 'Could not send the reset email', description: error.message, variant: 'destructive' });
@@ -253,6 +255,9 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center space-y-6">
+          {continuation?.startsWith('/claim/') && (
+            <p className="text-sm text-slate-300">Your transfer is saved in the email link. After verifying your email, sign in and accept ownership. You can also scan the owner&apos;s QR code again.</p>
+          )}
           <img
             src={APP_LOGO_ICON_URL}
             alt="Geck Inspect"

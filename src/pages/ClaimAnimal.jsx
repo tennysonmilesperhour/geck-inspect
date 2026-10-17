@@ -1,271 +1,186 @@
+import { useState, useEffect, useRef } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { ArrowRightLeft, ShieldCheck, Clock, Check, Loader2 } from 'lucide-react';
 import GeckoImage from '@/components/shared/GeckoImage';
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
-import { format } from 'date-fns';
-import { ArrowRightLeft, ShieldCheck, Clock, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { animalFromPreview, claimErrorKind } from '@/lib/transfers';
+import { authContinuationPath, clearPostAuthRedirect, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { recordGeckoAdded } from '@/lib/activation';
 
-// The page a buyer opens from a transfer link. It uses the app's own
-// cards, colors and buttons (it had its own palette and fonts until
-// 29 Sep 2026, P10).
-const card = 'rounded-xl border border-slate-800 bg-slate-900 p-5 sm:p-6';
-
-function CenteredState({ children }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
-      <div className="text-center max-w-md mx-auto px-4">{children}</div>
-    </div>
-  );
-}
+const card = 'rounded-xl border border-slate-700 bg-slate-900 p-5 sm:p-6';
+const messages = {
+  not_found: ['Transfer not found', 'This link is invalid or has been removed. Ask the owner for a new link.'],
+  already_claimed: ['Already claimed', 'This transfer has already been completed.'],
+  cancelled: ['Transfer cancelled', 'The owner cancelled this link. Ask them for a new one.'],
+  expired: ['Transfer expired', 'This link has expired. Ask the owner for a new one.'],
+  wrong_account: ['Use the invited account', 'This link is for a different email address. Sign in with the email the owner invited.'],
+  verify_email: ['Verify your email first', 'Open your confirmation email, then sign in again. Your transfer link will still be here.'],
+  own_animal: ['You already own this animal', 'Share the QR code or link with the new owner.'],
+  sign_in: ['Sign in to continue', 'Your session has ended. Sign in again to accept ownership.'],
+  seller_changed: ['Transfer no longer valid', 'The sender no longer owns this animal. Ask the current owner for a new link.'],
+  gecko_limit: ['Your plan is full', 'Archive a gecko you no longer keep or upgrade your plan, then try this link again.'],
+  claim_failed: ['Could not complete the transfer', 'Your connection may have been interrupted. Try again to check whether the transfer completed.'],
+  error: ['Could not load the transfer', 'Check your connection and try again.'],
+};
 
 export default function ClaimAnimal() {
   const { token } = useParams();
-  const auth = useAuth?.() || {};
-  const currentUser = auth.user;
-
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const currentUser = auth.isAuthenticated && !auth.isGuest ? auth.user : null;
+  const accountId = currentUser?.auth_user_id || currentUser?.id;
+  const requestOwner = useRef();
+  requestOwner.current = `${accountId || ''}:${token || ''}`;
+  const claimPath = `/claim/${encodeURIComponent(token || '')}`;
+  const signInPath = authContinuationPath(claimPath);
   const [transfer, setTransfer] = useState(null);
-  const [animal, setAnimal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
-  const [contributePrice, setContributePrice] = useState(true);
+  const [contributePrice, setContributePrice] = useState(false);
+  const [reload, setReload] = useState(0);
+  const animal = animalFromPreview(transfer);
 
   useEffect(() => {
-    if (!token) return;
+    let active = true;
+    setIsLoading(true);
+    setError(null);
+    setClaimed(false);
+    setClaiming(false);
+    setContributePrice(false);
+    setTransfer(null);
     (async () => {
-      setIsLoading(true);
       try {
-        // transfer_requests is no longer world-readable (only the sender
-        // and the intended recipient can read rows), so the public claim
-        // page reads a display-only preview through a SECURITY DEFINER
-        // function keyed by the token. It returns status, expiry, the
-        // animal pointer, message, price and a masked recipient email.
-        const { data: tr, error: trErr } = await supabase
-          .rpc('get_transfer_preview', { p_token: token });
-
-        if (trErr || !tr) {
-          setError('not_found');
-          return;
-        }
-        if (tr.status === 'claimed') {
-          setError('already_claimed');
-          return;
-        }
-        if (tr.status === 'cancelled') {
-          setError('cancelled');
-          return;
-        }
-        if (tr.status === 'expired' || new Date(tr.expires_at) < new Date()) {
-          setError('expired');
-          return;
-        }
-        setTransfer(tr);
-
-        // The preview carries the animal's name, first photo and morph, so
-        // the page shows them even when the animal is private (the buyer
-        // cannot read a private gecko's row before the claim).
-        setAnimal(animalFromPreview(tr));
-      } catch (err) {
-        console.error(err);
-        setError('error');
+        // The server returns only status and expiry until the caller is
+        // authorized. Never fetch a private animal row to fill this preview.
+        const { data, error: rpcError } = await supabase.rpc('get_transfer_preview', { p_token: token });
+        if (!active) return;
+        if (rpcError) { setError('error'); return; }
+        if (!data) { setError('not_found'); return; }
+        setTransfer(data);
+        if (data.claimed_by_you) {
+          clearPostAuthRedirect();
+          setClaimed(true);
+        } else if (data.status === 'claimed') setError('already_claimed');
+        else if (data.status === 'cancelled') setError('cancelled');
+        else if (data.status === 'expired' || (data.expires_at && new Date(data.expires_at) <= new Date())) setError('expired');
+      } catch {
+        if (active) setError('error');
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     })();
-  }, [token]);
+    return () => { active = false; };
+  }, [token, accountId, reload]);
 
   const handleClaim = async () => {
-    if (!currentUser) {
-      window.location.href = `/AuthPortal?redirect=/claim/${token}`;
-      return;
-    }
+    if (!currentUser || claiming) return;
+    const owner = requestOwner.current;
     setClaiming(true);
     try {
-      // The claim reassigns the animal across an RLS boundary (the claimer
-      // isn't the owner yet), so it runs server-side in a SECURITY DEFINER
-      // function that validates the token and moves ownership atomically.
-      const { error: rpcError } = await supabase.rpc('claim_transfer', {
-        p_token: token,
-        p_contribute: contributePrice,
-      });
-
-      if (rpcError) {
-        console.error('Claim failed:', rpcError);
-        setError(claimErrorKind(rpcError));
-        return;
-      }
-
+      const { data, error: rpcError } = await supabase.rpc('claim_transfer', { p_token: token, p_contribute: contributePrice });
+      if (requestOwner.current !== owner) return;
+      if (rpcError) { setError(claimErrorKind(rpcError)); return; }
+      if (!data?.ok) { setError('claim_failed'); return; }
+      clearPostAuthRedirect();
+      setTransfer((previous) => ({ ...previous, animal_type: data.animal_type }));
       setClaimed(true);
-      recordGeckoAdded('claim');
-    } catch (err) {
-      console.error('Claim failed:', err);
-      setError('claim_failed');
+      if (!data.already_claimed) recordGeckoAdded('claim');
+    } catch {
+      if (requestOwner.current === owner) setError('claim_failed');
+    } finally {
+      if (requestOwner.current === owner) setClaiming(false);
+    }
+  };
+
+  const switchAccount = async () => {
+    setClaiming(true);
+    rememberPostAuthRedirect(claimPath);
+    try {
+      await auth.logout(false);
+      navigate(signInPath, { replace: true });
+    } catch {
+      setError('error');
     } finally {
       setClaiming(false);
     }
   };
 
-  // Loading
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="space-y-4 w-full max-w-md mx-auto px-4">
-          <div className="animate-pulse rounded-xl h-48 bg-slate-900" />
-          <div className="animate-pulse rounded-xl h-12 bg-slate-900" />
-        </div>
-      </div>
-    );
-  }
-
-  // Success state
-  if (claimed) {
-    return (
-      <CenteredState>
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-500/15">
-          <Check size={32} className="text-emerald-400" />
-        </div>
-        <h1 className="text-2xl font-bold mb-2 text-slate-100">
-          {animal?.successHeading || 'Welcome to your new animal!'}
-        </h1>
-        <p className="text-sm mb-6 text-slate-400">
-          <strong className="text-slate-200">{animal?.name}</strong> has been added to your collection with full history intact.
-        </p>
-        <div className="flex gap-3 justify-center flex-wrap">
-          <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white min-h-11">
-            <Link to={animal?.collectionPath || '/MyGeckos'}>View my collection</Link>
-          </Button>
-          {animal?.passport_code && (
-            <Button asChild variant="outline" className="border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 bg-transparent min-h-11">
-              <Link to={`/passport/${animal.passport_code}`}>View passport</Link>
-            </Button>
-          )}
-        </div>
-      </CenteredState>
-    );
-  }
-
-  // Error states
-  if (error) {
-    const messages = {
-      not_found: { title: 'Transfer not found', msg: 'This transfer link is invalid or has been removed.' },
-      already_claimed: { title: 'Already claimed', msg: 'This transfer has already been completed by another user.' },
-      cancelled: { title: 'Transfer cancelled', msg: 'The seller cancelled this transfer before it was claimed.' },
-      expired: { title: 'Transfer expired', msg: 'This transfer link has expired. Ask the seller to send a new one.' },
-      wrong_account: {
-        title: 'Wrong account',
-        msg: transfer?.to_email_masked
-          ? `This transfer was sent to ${transfer.to_email_masked}. Sign in with that email address to claim it.`
-          : 'This transfer was sent to a different email address. Sign in with that address to claim it.',
-      },
-      seller_changed: { title: 'Transfer no longer valid', msg: 'The seller no longer owns this animal, so this transfer cannot be completed. Ask the seller to send a new one.' },
-      gecko_limit: { title: 'Your plan is full', msg: 'Your plan has no room for another active gecko. Archive one you no longer keep, or upgrade your plan, then open this link again.' },
-      claim_failed: { title: 'Claim failed', msg: 'Something went wrong. Please try again or contact the seller.' },
-      error: { title: 'Something went wrong', msg: 'Please try again later.' },
-    };
-    const e = messages[error] || messages.error;
-    return (
-      <CenteredState>
-        <Clock size={48} className="mx-auto mb-4 text-slate-500" />
-        <h1 className="text-2xl font-bold mb-2 text-slate-100">{e.title}</h1>
-        <p className="text-sm mb-6 text-slate-400">{e.msg}</p>
-        <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white min-h-11">
-          <Link to="/">Go to Geck Inspect</Link>
-        </Button>
-      </CenteredState>
-    );
-  }
-
-  // Main claim page
-  const profileImg = animal?.image_urls?.[0];
-
+  const terminal = ['not_found', 'already_claimed', 'cancelled', 'expired', 'seller_changed'].includes(error);
+  const detailVisible = currentUser && transfer?.recipient_authorized && transfer?.animal_name;
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="max-w-md mx-auto px-4 py-12">
-        <div className="text-center mb-6">
-          <ArrowRightLeft size={32} className="mx-auto mb-3 text-emerald-400" />
-          <h1 className="text-2xl font-bold text-slate-100">Ownership transfer</h1>
-          <p className="text-sm mt-1 text-slate-400">Someone is transferring an animal to you</p>
-        </div>
-
-        {/* Animal summary */}
-        <div className={`${card} mb-6`}>
-          <div className="flex items-center gap-4">
-            <GeckoImage src={profileImg} alt={animal?.name} className="w-20 h-20 rounded-xl object-cover" />
-            <div className="min-w-0">
-              <h2 className="text-lg font-semibold text-slate-100 break-words">{animal?.name}</h2>
-              <p className="text-sm text-slate-400">{animal?.subtitle || 'Animal'}</p>
-              {animal?.passport_code && (
-                <code className="text-xs font-mono px-2 py-0.5 rounded-full mt-1 inline-block bg-slate-800 text-slate-400">
-                  {animal.passport_code}
-                </code>
-              )}
-            </div>
+    <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4 py-12">
+      <Helmet><title>Ownership transfer | Geck Inspect</title><meta name="robots" content="noindex, nofollow" /><meta name="referrer" content="no-referrer" /></Helmet>
+      <div className="w-full max-w-md space-y-5">
+        {isLoading ? (
+          <div className="space-y-4" role="status" aria-label="Loading transfer"><div className="animate-pulse rounded-xl h-40 bg-slate-900" /><div className="animate-pulse rounded-xl h-12 bg-slate-900" /></div>
+        ) : claimed ? (
+          <div className={`${card} text-center space-y-4`} role="status">
+            <Check size={36} className="mx-auto text-emerald-400" />
+            <h1 className="text-2xl font-bold">Ownership accepted</h1>
+            <p className="text-sm text-slate-300">Your {transfer?.animal_type === 'other_reptile' ? 'animal' : 'gecko'} is now in your collection. Its record and history have been kept.</p>
+            <Button asChild><Link to={animal?.collectionPath || '/MyGeckos'}>View my collection</Link></Button>
           </div>
-
-          {transfer.message && (
-            <div className="mt-4 p-3 rounded-lg bg-slate-800/60 border border-slate-800">
-              <p className="text-xs uppercase tracking-wider mb-1 text-slate-500">Message from seller</p>
-              <p className="text-sm text-slate-300 whitespace-pre-wrap">{transfer.message}</p>
+        ) : error ? (
+          <div className={`${card} space-y-4`} role="alert">
+            <Clock size={32} className="text-slate-400" />
+            <h1 className="text-2xl font-bold">{(messages[error] || messages.error)[0]}</h1>
+            <p className="text-sm text-slate-300">{(messages[error] || messages.error)[1]}</p>
+            <div className="flex flex-wrap gap-2">
+              {!terminal && <Button onClick={() => setReload((value) => value + 1)} disabled={claiming}>Try again</Button>}
+              {['wrong_account', 'verify_email', 'sign_in'].includes(error) && (currentUser
+                ? <Button variant="outline" onClick={switchAccount} disabled={claiming}>Sign in again</Button>
+                : <Button asChild><Link to={signInPath}>Sign in</Link></Button>)}
+              <Button asChild variant="outline"><Link to={currentUser ? '/MyGeckos' : '/'}>{currentUser ? 'My collection' : 'Geck Inspect'}</Link></Button>
             </div>
-          )}
-
-          {transfer.sale_price && (
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-sm text-slate-400">Sale price:</span>
-              <span className="text-lg font-semibold text-slate-100">
-                ${Number(transfer.sale_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Price contribution opt-in */}
-        {transfer.sale_price && (
-          <label className={`${card} flex items-start gap-3 mb-6 cursor-pointer !p-4`}>
-            <input
-              type="checkbox"
-              checked={contributePrice}
-              onChange={e => setContributePrice(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded accent-emerald-500"
-            />
-            <div>
-              <p className="text-sm font-medium text-slate-200">Contribute this sale price to market data</p>
-              <p className="text-xs mt-0.5 text-slate-400">Anonymized, helps breeders understand morph pricing trends.</p>
-            </div>
-          </label>
-        )}
-
-        {/* Auth gate / claim button */}
-        {!currentUser ? (
-          <div className="space-y-3">
-            <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700 text-white min-h-12">
-              <Link to={`/AuthPortal?mode=signup&redirect=/claim/${token}`}>Create your free account to claim</Link>
-            </Button>
-            <p className="text-xs text-center text-slate-400">
-              Already have an account?{' '}
-              <Link to={`/AuthPortal?redirect=/claim/${token}`} className="underline text-emerald-300">Sign in</Link>
-            </p>
           </div>
         ) : (
-          <Button
-            onClick={handleClaim}
-            disabled={claiming}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white min-h-12"
-          >
-            {claiming ? <Loader2 size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
-            {claiming ? 'Claiming...' : 'Accept ownership'}
-          </Button>
+          <>
+            <header className="text-center space-y-2">
+              <ArrowRightLeft size={32} className="mx-auto text-emerald-400" />
+              <h1 className="text-2xl font-bold">Ownership transfer</h1>
+              <p className="text-sm text-slate-300">Accept a gecko into your collection.</p>
+            </header>
+            <section className={`${card} space-y-4`} aria-label="Transfer details">
+              {detailVisible ? (
+                <>
+                  <div className="flex items-center gap-4">
+                    <GeckoImage src={animal?.image_urls?.[0]} alt={animal?.name} className="w-20 h-20 rounded-lg object-cover" />
+                    <div className="min-w-0"><h2 className="font-semibold break-words">{animal?.name}</h2><p className="text-sm text-slate-400">{animal?.subtitle}</p></div>
+                  </div>
+                  {transfer.message && <p className="text-sm text-slate-300 whitespace-pre-wrap break-words">{transfer.message}</p>}
+                  {transfer.sale_price != null && <p className="text-sm">Sale price: ${Number(transfer.sale_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>}
+                </>
+              ) : <p className="text-sm text-slate-300">Animal and owner details stay private until you are authorized to view them. Confirm this link with the owner before accepting.</p>}
+              <p className="text-sm text-slate-400">{transfer?.claim_mode === 'email' ? 'Use the verified email address the owner invited.' : 'The first verified account to accept this link becomes the owner.'}</p>
+              {transfer?.expires_at && <p className="text-xs text-slate-400">Expires {new Date(transfer.expires_at).toLocaleString()}</p>}
+            </section>
+            {detailVisible && transfer.sale_price != null && (
+              <label className={`${card} flex items-start gap-3 cursor-pointer`}>
+                <input type="checkbox" checked={contributePrice} onChange={(event) => setContributePrice(event.target.checked)} className="mt-1 h-4 w-4 accent-emerald-500" />
+                <span className="text-sm">Contribute this sale price to anonymous market data</span>
+              </label>
+            )}
+            {!currentUser ? (
+              <div className="space-y-3">
+                <Button asChild className="w-full"><Link to={`${signInPath}&mode=signup`} onClick={() => rememberPostAuthRedirect(claimPath)}>Create account</Link></Button>
+                <Button asChild variant="outline" className="w-full"><Link to={signInPath} onClick={() => rememberPostAuthRedirect(claimPath)}>Sign in</Link></Button>
+                <p className="text-xs text-slate-400">After email verification, you will return here to accept. If you lose this page, scan the QR code or open the original link again.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-slate-400 break-all">Signed in as {currentUser.email}</p>
+                <Button onClick={handleClaim} disabled={claiming} className="w-full">{claiming ? <Loader2 size={18} className="mr-2 animate-spin" /> : <ShieldCheck size={18} className="mr-2" />}{claiming ? 'Accepting...' : 'Accept ownership'}</Button>
+                <Button variant="outline" onClick={switchAccount} disabled={claiming} className="w-full">Use another account</Button>
+              </div>
+            )}
+          </>
         )}
-
-        <p className="text-xs text-center mt-6 text-slate-500">
-          Transfer expires {transfer.expires_at ? format(new Date(transfer.expires_at), 'MMM d, yyyy') : 'in 72 hours'}
-        </p>
       </div>
-    </div>
+    </main>
   );
 }

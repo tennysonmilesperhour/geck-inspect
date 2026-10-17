@@ -265,9 +265,13 @@ const PostAuthRedirect = () => {
   const location = useLocation();
   useEffect(() => {
     if (!isAuthenticated) return;
-    const target = takePostAuthRedirect();
+    // Recovery must finish before a pending claim can resume. Explicit callback
+    // targets win over stale state saved by a different tab or earlier transfer.
+    if (new URLSearchParams(location.search).get('mode') === 'reset') return;
+    const savedTarget = takePostAuthRedirect();
+    const target = redirectFromSearch(location.search) || (location.pathname.startsWith('/claim/') ? null : savedTarget);
     if (target && target !== location.pathname + location.search) navigate(target, { replace: true });
-  }, [isAuthenticated]);
+  }, [isAuthenticated, location.pathname, location.search, navigate]);
   return null;
 };
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Camera, ChevronLeft, ChevronRight, Images, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { DEFAULT_GECKO_CARD } from '@/lib/constants';
 import GeckoImage from '@/components/shared/GeckoImage';
 import SmartImage from '@/components/shared/SmartImage';
@@ -85,17 +86,19 @@ export function PhotoLightbox({ gecko, index, onIndex, onClose }) {
       className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4"
       onClick={onClose}
     >
-      <button className="touch-hit absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 text-white hover:text-slate-300 z-10" onClick={onClose} aria-label="Close photos">
-        <X className="w-8 h-8" />
-      </button>
-      <button
-        className="touch-hit absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
+      <Button variant="secondary" size="icon" className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 z-10" onClick={(e) => { e.stopPropagation(); onClose(); }} aria-label="Close photos">
+        <X className="w-5 h-5" />
+      </Button>
+      <Button
+        variant="secondary"
+        size="icon"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10"
         disabled={at === 0}
         onClick={(e) => { e.stopPropagation(); onIndex(Math.max(0, at - 1)); }}
         aria-label="Previous photo"
       >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
+        <ChevronLeft className="w-5 h-5" />
+      </Button>
       <GeckoImage
         gecko={gecko}
         src={urls[at]}
@@ -104,14 +107,16 @@ export function PhotoLightbox({ gecko, index, onIndex, onClose }) {
         style={rotationStyle(gecko, urls[at])}
         onClick={(e) => e.stopPropagation()}
       />
-      <button
-        className="touch-hit absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
+      <Button
+        variant="secondary"
+        size="icon"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
         disabled={at === urls.length - 1}
         onClick={(e) => { e.stopPropagation(); onIndex(Math.min(urls.length - 1, at + 1)); }}
         aria-label="Next photo"
       >
-        <ChevronRight className="w-6 h-6" />
-      </button>
+        <ChevronRight className="w-5 h-5" />
+      </Button>
       <div className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom))] text-slate-300 text-sm">{at + 1} / {urls.length}</div>
     </div>
   );
@@ -129,30 +134,32 @@ function GrowthSlideshow({ gecko, slides }) {
       <p className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
         <Camera className="w-4 h-4 text-emerald-400" /> Growth slideshow
       </p>
-      <div className="flex flex-wrap gap-1 touch:gap-2" role="tablist" aria-label="Life stage">
+      <div className="flex flex-wrap gap-1 touch:gap-2" role="group" aria-label="Life stage">
         {slides.map((s, i) => (
-          <button
+          <Button
             key={s.url}
             type="button"
-            role="tab"
-            aria-selected={at === i}
+            size="sm"
+            variant={at === i ? 'default' : 'outline'}
+            aria-pressed={at === i}
             onClick={() => setIndex(i)}
-            className={`text-xs px-2 py-1 touch:min-h-11 rounded transition-colors ${at === i ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
           >
             {LIFE_STAGE_LABELS[s.stage] || s.stage}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={() => setIndex(Math.max(0, at - 1))}
           disabled={at === 0}
           aria-label="Earlier stage"
-          className="bg-slate-800 hover:bg-slate-700 text-white p-1.5 touch:min-h-11 touch:min-w-11 touch:inline-flex touch:items-center touch:justify-center rounded-lg disabled:opacity-30 flex-shrink-0"
+          className="shrink-0"
         >
           <ChevronLeft className="w-5 h-5" />
-        </button>
+        </Button>
         <div className="relative flex-1 rounded-lg overflow-hidden bg-slate-800 min-h-[160px]">
           <SmartImage
             key={`slide-${slide.url}`}
@@ -170,15 +177,17 @@ function GrowthSlideshow({ gecko, slides }) {
             {label} · {at + 1}/{slides.length}
           </div>
         </div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={() => setIndex(Math.min(slides.length - 1, at + 1))}
           disabled={at === slides.length - 1}
           aria-label="Later stage"
-          className="bg-slate-800 hover:bg-slate-700 text-white p-1.5 touch:min-h-11 touch:min-w-11 touch:inline-flex touch:items-center touch:justify-center rounded-lg disabled:opacity-30 flex-shrink-0"
+          className="shrink-0"
         >
           <ChevronRight className="w-5 h-5" />
-        </button>
+        </Button>
       </div>
       <p className="text-xs text-slate-500">Tag more photos with a life stage in the edit form to add slides.</p>
     </div>

@@ -113,6 +113,9 @@ jobs:
       - name: Run the SQL regression files
         run: bash scripts/sql-harness/run-tests.sh geck_harness
 
+      - name: Check concurrent transfer claims, revocation and expiry
+        run: bash scripts/sql-harness/transfer-concurrency.sh geck_harness
+
       - name: Keep the logs of a failed run
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -30,29 +30,26 @@ export default function RecordManage({ gecko, access, onArchive, onReason, onDel
   if (!access.canEdit) return null;
   const name = gecko.name || 'this gecko';
   return (
-    <RecordCard id="manage" icon={Settings2} title="Manage" headingAs={headingAs} contentClassName="space-y-3">
+    <RecordCard id="manage" icon={Settings2} title="Manage" headingAs={headingAs} contentClassName="flex flex-wrap items-start gap-3">
       <Button asChild variant="outline" className="w-full sm:w-auto">
         <Link to={`/QualityScale?geckoId=${gecko.id}`}><Ruler className="w-4 h-4 mr-2" /> Score structure</Link>
       </Button>
 
       {gecko.archived && gecko.archive_reason && onReason && (
-        <div className="bg-slate-800 p-3 rounded-lg">
+        <div className="w-full bg-slate-800 p-3 rounded-lg">
           <p className="text-xs text-slate-400 mb-2">Why it is archived</p>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Archive reason">
             {ARCHIVE_REASONS.map((opt) => (
-              <button
+              <Button
                 key={opt.value}
                 type="button"
+                size="sm"
+                variant={gecko.archive_reason === opt.value ? 'default' : 'outline'}
                 onClick={() => onReason(opt.value)}
                 aria-pressed={gecko.archive_reason === opt.value}
-                className={`text-xs px-3 py-1.5 touch:min-h-11 rounded border transition-colors ${
-                  gecko.archive_reason === opt.value
-                    ? 'border-yellow-500 bg-yellow-900/40 text-yellow-300'
-                    : 'border-slate-600 text-slate-300 hover:bg-slate-700'
-                }`}
               >
                 {opt.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -62,7 +59,7 @@ export default function RecordManage({ gecko, access, onArchive, onReason, onDel
         <Button
           variant="outline"
           onClick={() => onArchive(gecko.id, !gecko.archived)}
-          className={gecko.archived ? 'w-full border-emerald-600 text-emerald-400 hover:bg-emerald-900/20' : 'w-full border-red-600 text-red-400 hover:bg-red-900/20'}
+          className="w-full sm:w-auto h-auto min-h-9 whitespace-normal text-left"
         >
           {gecko.archived
             ? <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
@@ -73,7 +70,7 @@ export default function RecordManage({ gecko, access, onArchive, onReason, onDel
       {gecko.archived && onDelete && access.canDelete && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" className="w-full border-red-800 text-red-400 hover:bg-red-950/40 hover:text-red-300">
+            <Button variant="outline" className="w-full sm:w-auto border-red-800 text-red-400 hover:bg-red-950/40 hover:text-red-300">
               <Trash2 className="w-4 h-4 mr-2" /> Delete for good
             </Button>
           </AlertDialogTrigger>

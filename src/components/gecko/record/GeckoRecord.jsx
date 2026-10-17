@@ -19,7 +19,7 @@ import { recordAccess, recordSections, latestWeighIn, isNewestDay } from './reco
 import { hasMorePhotos, PhotoLightbox, PhotosSection } from './RecordPhotos';
 import {
   BottomOffers, CareSection, DetailsCard, FamilyCard, HistorySection, JumpLinks,
-  MoreSection, RecordSummary, VetSection,
+  MoreSection, RecordGroup, RecordSummary, VetSection,
 } from './RecordSections';
 import RecordWeights from './RecordWeights';
 import RecordPassport from './RecordPassport';
@@ -49,12 +49,9 @@ const VisitorAside = lazyOptional(() => import('./RecordVisitor'));
  * passports, profiles, the market), so a new section is added once and
  * both places get it.
  *
- * Order on a phone, top to bottom: name and photo; jump links to every
- * section; parents and the value estimate (both in view without
- * scrolling); weights with the growth chart; feeding and sheds; vet
- * visits; photos; passport, transfer and papers; breeding; event history;
- * genetics, health check and lookalikes; manage (archive, delete); and the
- * sticker and supplies offers last.
+ * The summary and actions lead, followed by related groups: overview,
+ * care history, breeding, sharing and records, then optional tools. Jump
+ * links keep each group within reach without hiding unfinished forms.
  *
  * Props:
  *   gecko        the gecko row
@@ -104,6 +101,7 @@ export default function GeckoRecord({
 
   const titleLevel = variant === 'page' ? 'h1' : 'h2';
   const sectionLevel = variant === 'page' ? 'h2' : 'h3';
+  const cardLevel = variant === 'page' ? 'h3' : 'h4';
   const latest = latestWeighIn(record.weights, view);
   const shedForecast = access.keeper
     ? null
@@ -114,8 +112,6 @@ export default function GeckoRecord({
     hasWeights: record.weights.length > 0,
     hasShedForecast: Boolean(shedForecast),
     hasPassport: Boolean(view.passport_code),
-    hasMorePhotos: morePhotos,
-    isFemale: view.sex === 'Female',
   });
   const readiness = access.canEdit && !view.archived ? readinessFor(view, record.weights) : null;
   const known = useMemo(
@@ -299,11 +295,14 @@ export default function GeckoRecord({
         }`}
       >
         {leading}
-        <div className="ml-auto flex items-center gap-2">
+        <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200" aria-hidden="true">{view.name || 'Gecko record'}</p>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {access.canEdit && (
             <EventTracker
               entityId={view.id}
               entityType="gecko"
+              triggerVariant="default"
+              triggerLabel="Log event"
               EventEntity={GeckoEvent}
               gecko={view}
               onEventAdded={refreshEvents}
@@ -312,8 +311,8 @@ export default function GeckoRecord({
           )}
           {access.canEdit && onEdit ? (
             <Button variant="outline" size="sm" onClick={() => onEdit(view)} aria-label={`Edit ${view.name || 'gecko'}`}>
-              <Edit className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Edit</span>
+              <Edit className="w-4 h-4" />
+              Edit
             </Button>
           ) : access.keeper && !access.canEdit ? (
             <span
@@ -326,98 +325,103 @@ export default function GeckoRecord({
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-6">
         <RecordSummary gecko={view} latest={latest} headingAs={titleLevel} onOpenPhoto={() => setLightboxIndex(0)} />
         <JumpLinks sections={sections} />
 
-        <div className="grid gap-4 lg:grid-cols-2 items-start">
+        <RecordGroup id="overview" title="Overview" headingAs={sectionLevel}>
           <FamilyCard
             gecko={view}
             sire={record.sire}
             dam={record.dam}
             offspringCount={record.offspring.length}
             canEdit={access.canEdit}
-            headingAs={sectionLevel}
+            headingAs={cardLevel}
           />
+          <DetailsCard gecko={view} headingAs={cardLevel} />
           {access.canSeeValue
             ? <MarketValueCard gecko={{ ...view, weight_grams: latest ? latest.grams : null }} />
             : !access.keeper && (
               <Suspense fallback={null}>
-                <VisitorAside gecko={view} owner={record.owner} currentUser={currentUser} headingAs={sectionLevel} />
+                <VisitorAside gecko={view} owner={record.owner} currentUser={currentUser} headingAs={cardLevel} />
               </Suspense>
             )}
-
           {readiness && <ReadinessCard gecko={view} readiness={readiness} />}
-          <DetailsCard gecko={view} headingAs={sectionLevel} />
+          {morePhotos && <PhotosSection gecko={view} onOpen={setLightboxIndex} headingAs={cardLevel} />}
+        </RecordGroup>
 
-          <RecordWeights
-            gecko={view}
-            weights={record.weights}
-            latest={latest}
-            loading={record.loading}
-            canEdit={access.canEdit}
-            reminder={access.isOwner && !guest ? { email: currentUser?.email } : null}
-            onAdd={addWeight}
-            onDelete={deleteWeight}
-            headingAs={sectionLevel}
-          />
-          <CareSection
-            gecko={view}
-            keeper={access.keeper}
-            weights={record.weights}
-            legacyEvents={record.events}
-            refreshKey={husbandryKey}
-            shedForecast={shedForecast}
-            headingAs={sectionLevel}
-          />
-
-          {access.keeper && (
-            <VetSection gecko={view} canEdit={access.canEdit && !guest} currentUserEmail={currentUser?.email || null} headingAs={sectionLevel} />
-          )}
-          {morePhotos && <PhotosSection gecko={view} onOpen={setLightboxIndex} headingAs={sectionLevel} />}
-
-          <RecordPassport
-            gecko={view}
-            access={access}
-            busy={busyPaper}
-            isPublic={isPublic}
-            galleryDisplay={view.gallery_display}
-            onCreatePassport={createPassport}
-            onTransfer={() => setShowTransfer(true)}
-            onPaper={makePaper}
-            onTogglePublic={(checked) => setPublic(checked)}
-            onToggleGallery={setGallery}
-            headingAs={sectionLevel}
-          />
-
-          {access.keeper && (
-            <RecordBreeding
+        {sections.some((section) => section.id === 'care-history') && (
+          <RecordGroup id="care-history" title="Care history" headingAs={sectionLevel}>
+            <RecordWeights
               gecko={view}
-              plans={record.plans}
-              eggs={record.eggs}
-              offspring={record.offspring}
               weights={record.weights}
+              latest={latest}
+              loading={record.loading}
               canEdit={access.canEdit}
-              partnerFor={partnerFor}
-              onTogglePlanPublic={setPlanPublic}
-              headingAs={sectionLevel}
+              reminder={access.isOwner && !guest ? { email: currentUser?.email } : null}
+              onAdd={addWeight}
+              onDelete={deleteWeight}
+              headingAs={cardLevel}
             />
-          )}
-          {access.keeper && (
-            <HistorySection gecko={view} events={record.events} currentUserEmail={currentUser?.email} guest={guest} headingAs={sectionLevel} />
-          )}
-        </div>
+            <CareSection
+              gecko={view}
+              keeper={access.keeper}
+              weights={record.weights}
+              legacyEvents={record.events}
+              refreshKey={husbandryKey}
+              shedForecast={shedForecast}
+              headingAs={cardLevel}
+            />
+            {access.keeper && (
+              <>
+                <VetSection gecko={view} canEdit={access.canEdit && !guest} currentUserEmail={currentUser?.email || null} headingAs={cardLevel} />
+                <HistorySection gecko={view} events={record.events} currentUserEmail={currentUser?.email} guest={guest} headingAs={cardLevel} />
+              </>
+            )}
+          </RecordGroup>
+        )}
+
+        {access.keeper && (
+          <RecordBreeding
+            gecko={view}
+            plans={record.plans}
+            eggs={record.eggs}
+            offspring={record.offspring}
+            weights={record.weights}
+            canEdit={access.canEdit}
+            partnerFor={partnerFor}
+            onTogglePlanPublic={setPlanPublic}
+            headingAs={sectionLevel}
+          />
+        )}
+
+        {sections.some((section) => section.id === 'sharing') && (
+          <RecordGroup id="sharing" title="Sharing and records" headingAs={sectionLevel} columns={false}>
+            <RecordPassport
+              gecko={view}
+              access={access}
+              busy={busyPaper}
+              isPublic={isPublic}
+              galleryDisplay={view.gallery_display}
+              onCreatePassport={createPassport}
+              onTransfer={() => setShowTransfer(true)}
+              onPaper={makePaper}
+              onTogglePublic={(checked) => setPublic(checked)}
+              onToggleGallery={setGallery}
+              headingAs={cardLevel}
+            />
+            <RecordManage
+              gecko={view}
+              access={access}
+              onArchive={onArchive}
+              onReason={setArchiveReason}
+              onDelete={onDelete}
+              headingAs={cardLevel}
+            />
+          </RecordGroup>
+        )}
 
         <MoreSection gecko={view} weights={record.weights} currentUser={currentUser} headingAs={sectionLevel} />
-
-        <RecordManage
-          gecko={view}
-          access={access}
-          onArchive={onArchive}
-          onReason={setArchiveReason}
-          onDelete={onDelete}
-          headingAs={sectionLevel}
-        />
 
         <BottomOffers gecko={view} canEdit={access.canEdit} />
       </div>

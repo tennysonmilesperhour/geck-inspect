@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabaseClient';
 
 /**
- * Ownership transfers: the seller starts one, the buyer gets an email with a
- * claim link, and the buyer claims it on /claim/:token.
+ * Ownership transfers: the owner creates a QR or email claim link, and the
+ * recipient accepts it on /claim/:token.
  *
  * The rows live in transfer_requests. Only the animal's owner can start or
  * change one (RLS plus the guard_transfer_request trigger); the seller can
@@ -34,7 +34,10 @@ export function parseSalePrice(raw) {
 }
 
 export function claimUrlFor(token, origin) {
-  const base = origin || (typeof window !== 'undefined' ? window.location.origin : 'https://geckinspect.com');
+  // A native WebView's capacitor://localhost or https://localhost address
+  // cannot be opened by a recipient. QR links must leave the native app.
+  const native = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+  const base = origin || (!native && typeof window !== 'undefined' ? window.location.origin : 'https://geckinspect.com');
   return `${base}/claim/${token}`;
 }
 
@@ -66,6 +69,9 @@ export function animalFromPreview(tr) {
 export function claimErrorKind(error) {
   const msg = String(error?.message || '').toLowerCase();
   const hint = String(error?.hint || '').toLowerCase();
+  if (msg.includes('verif') || msg.includes('confirmed email')) return 'verify_email';
+  if (msg.includes('own animal') || msg.includes('your own') || msg.includes('yourself')) return 'own_animal';
+  if (msg.includes('sign in') || msg.includes('not authenticated')) return 'sign_in';
   if (msg.includes('already claimed')) return 'already_claimed';
   if (msg.includes('cancelled')) return 'cancelled';
   if (msg.includes('expired')) return 'expired';
@@ -80,7 +86,7 @@ export function claimErrorKind(error) {
 /** A pending transfer whose link has run out counts as expired. */
 export function effectiveTransferStatus(transfer, now = new Date()) {
   if (!transfer) return 'pending';
-  if (transfer.status === 'pending' && transfer.expires_at && new Date(transfer.expires_at) < now) {
+  if (transfer.status === 'pending' && transfer.expires_at && new Date(transfer.expires_at) <= now) {
     return 'expired';
   }
   return transfer.status || 'pending';
@@ -126,7 +132,7 @@ export async function sendTransferEmail(token) {
 }
 
 /**
- * Create the transfer and email the buyer. Throws on a failed insert;
+ * Create a server-issued transfer, optionally emailing the buyer. Throws on failure;
  * returns { token, claimUrl, emailed }.
  */
 export async function startTransfer({ animalId, animalType = 'gecko', toEmail, salePrice, message }) {
@@ -134,30 +140,26 @@ export async function startTransfer({ animalId, animalType = 'gecko', toEmail, s
   if (authError || !authData?.user?.id) {
     throw new Error('You need to be signed in to transfer ownership.');
   }
-  const token = crypto.randomUUID();
-  const row = buildTransferRow({
-    animalId,
-    animalType,
-    userId: authData.user.id,
-    userEmail: authData.user.email,
-    toEmail,
-    salePrice,
-    message,
-    token,
+  const { data, error } = await supabase.rpc('create_transfer', {
+    p_animal_id: animalId,
+    p_animal_type: animalType,
+    p_to_email: String(toEmail || '').trim().toLowerCase() || null,
+    p_sale_price: salePrice ?? null,
+    p_message: String(message || '').trim() || null,
   });
-  const { error } = await supabase.from('transfer_requests').insert(row);
+  if (error?.code === 'PGRST202' || error?.code === '42883') {
+    throw new Error('Transfer links are temporarily unavailable. Please try again later.');
+  }
   if (error) throw error;
-  const email = await sendTransferEmail(token);
-  return { token, claimUrl: claimUrlFor(token), emailed: email.delivered };
+  if (!data?.token) throw new Error('The transfer link could not be created. Please try again.');
+  const email = toEmail ? await sendTransferEmail(data.token) : { delivered: false };
+  return { ...data, claimUrl: claimUrlFor(data.token), emailed: email.delivered };
+
 }
 
 /** Cancel a pending transfer the signed-in user sent. */
 export async function cancelTransfer(transferId) {
-  const { error } = await supabase
-    .from('transfer_requests')
-    .update({ status: 'cancelled', updated_date: new Date().toISOString() })
-    .eq('id', transferId)
-    .eq('status', 'pending');
+  const { error } = await supabase.rpc('revoke_transfer', { p_transfer_id: transferId });
   if (error) throw error;
 }
 
