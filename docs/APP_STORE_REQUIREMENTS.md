@@ -63,3 +63,12 @@ The manifest now also declares optional phone/address/contact details, messages,
 - [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/), checked 17 October 2026: 1.2, 2.1, 2.3, 3.1, 4.2, 4.8, 5.1 and 5.2.
 - [Account deletion](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion).
 - [Privacy manifest data types](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacycollecteddatatypes/nsprivacycollecteddatatype).
+
+## Native callback fix, 17 October 2026
+
+Simulator testing found a blank-screen loop after email confirmation. Capacitor retains the last launch URL across webview reloads, while the app reloaded after both callback success and failure. Native callback completion now replaces the router location without reloading, preserving the in-memory duplicate guard.
+
+- Added router-level regression tests for warm and cold callbacks, duplicate delivery, signup/recovery/invite token links, failures and web isolation.
+- Full build: 268 test files, 3,030 passing tests; lint has zero errors and 75 existing warnings; typecheck passes.
+- Rebuilt and installed on iPhone 17 simulator, iOS 26.5. A fresh QA recovery email opened the native reset form immediately, without a relaunch. No password was changed.
+- Physical-device auth verification remains pending, so the native release verification flag remains unset. This fix still needs a new signed App Store binary.
