@@ -87,6 +87,13 @@ export type RequestShape = {
   callInstruction: string;
 };
 
+// The most an answer may run to on a model that is forced to call the tool.
+// The model never sees this number and output is billed as used, so a
+// higher ceiling costs nothing on a normal answer. 1536 once cut off
+// five-photo answers; the largest answer since the ceiling went to 3000 was
+// 2,087 tokens (production, October 2026), so 4096 leaves room.
+export const FORCED_TOOL_MAX_TOKENS = 4096;
+
 /**
  * Model-specific parts of the analyzer request. Older models are forced to
  * call the tool. Newer ones think before answering, so they also get room for
@@ -95,7 +102,7 @@ export type RequestShape = {
  */
 export function requestShape(model: string, toolName: string): RequestShape {
   if (!NO_FORCED_TOOL_MODELS.has(model)) {
-    return { toolChoice: { type: "tool", name: toolName }, maxTokens: 3000, callInstruction: "" };
+    return { toolChoice: { type: "tool", name: toolName }, maxTokens: FORCED_TOOL_MAX_TOKENS, callInstruction: "" };
   }
   return {
     toolChoice: { type: "auto" },
@@ -103,4 +110,17 @@ export function requestShape(model: string, toolName: string): RequestShape {
     outputConfig: { effort: "medium" },
     callInstruction: ` Answer only by calling the ${toolName} tool, exactly once.`,
   };
+}
+
+export type RetryReason = "max_tokens" | "no_tool_call" | "status" | "network";
+
+/**
+ * The request shape for the one retry. An answer cut off at the ceiling
+ * would be cut off again by the identical request (and cost another 30 to 40
+ * seconds), so that retry gets twice the room. Any other retry (a busy
+ * provider, a dropped connection, a missing tool call) resends the same
+ * shape. Nothing the model reads changes.
+ */
+export function retryShape(shape: RequestShape, reason: RetryReason): RequestShape {
+  return reason === "max_tokens" ? { ...shape, maxTokens: shape.maxTokens * 2 } : shape;
 }

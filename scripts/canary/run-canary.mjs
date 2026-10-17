@@ -17,8 +17,13 @@
 //      enough listings, and the app's own valuation code
 //      (src/lib/traitValuation.js) prices reference geckos inside sane bands.
 //   3. Morph ID: two real identifications on held-out breeder-tagged geckos
-//      return a usable answer in time. Accuracy is reported, not enforced:
-//      two geckos are too few to grade, and the eval workflow does that.
+//      return a usable answer in under 100 seconds. Accuracy is reported,
+//      not enforced: two geckos are too few to grade, and the eval workflow
+//      does that. Like the Morph ID page, the canary first asks the function
+//      to wake the photo-matching model (a warm-up that sends no photo), and
+//      it prints each call's embedding and Claude time from the function's
+//      Server-Timing header, so a slow run says whether Replicate was still
+//      booting (a "Replicate cold start") or the analyzer was slow.
 //
 // Cost: two identifications, about 6 cents a day.
 
@@ -28,6 +33,7 @@ import { evalAccount, authOptions } from '../morph-id-eval/evalAccount.mjs';
 import { buildTraitValueIndex, valueFromTraitTable } from '../../src/lib/traitValuation.js';
 import { CORE_TRAITS, REFERENCE_GECKOS } from './references.mjs';
 import { classifyMorphIdFailure } from './morphIdOutcome.mjs';
+import { describeTiming, parseServerTiming } from './serverTiming.mjs';
 
 const env = process.env;
 const SUPABASE_URL = env.SUPABASE_URL;
@@ -114,12 +120,37 @@ async function pickMorphIdRows() {
   return picked;
 }
 
+const FUNCTION_URL = () => `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/recognize-gecko-morph`;
+
+// What the Morph ID page sends when it opens (src/lib/morphIdWarmup.js): the
+// function wakes the photo-matching model with a photo the project owns.
+// Sent without waiting, at the start of the run, so the market checks give
+// the model time to boot the way a member picking photos does.
+function warmMorphId(token) {
+  return fetch(FUNCTION_URL(), {
+    method: 'POST',
+    signal: AbortSignal.timeout(20_000),
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ action: 'warm' }),
+  }).then(
+    async (response) => {
+      const payload = await response.json().catch(() => ({}));
+      console.error(`Morph ID warm-up: HTTP ${response.status} ${JSON.stringify(payload)}`);
+    },
+    (error) => console.error(`Morph ID warm-up failed: ${error.message}`),
+  );
+}
+
 async function identify(token, row) {
   const started = Date.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 125_000);
   try {
-    const response = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/recognize-gecko-morph`, {
+    const response = await fetch(FUNCTION_URL(), {
       method: 'POST',
       signal: controller.signal,
       headers: {
@@ -135,9 +166,10 @@ async function identify(token, row) {
       }),
     });
     const payload = await response.json().catch(() => ({}));
-    return { status: response.status, payload, seconds: (Date.now() - started) / 1000 };
+    const timing = parseServerTiming(response.headers.get('server-timing'));
+    return { status: response.status, payload, timing, seconds: (Date.now() - started) / 1000 };
   } catch (error) {
-    return { status: 0, payload: { error: error.name === 'AbortError' ? 'timed out after 125s' : error.message }, seconds: (Date.now() - started) / 1000 };
+    return { status: 0, payload: { error: error.name === 'AbortError' ? 'timed out after 125s' : error.message }, timing: {}, seconds: (Date.now() - started) / 1000 };
   } finally {
     clearTimeout(timer);
   }
@@ -147,16 +179,21 @@ async function checkMorphId(token) {
   const rows = await pickMorphIdRows();
   record('Morph ID', `found ${MORPH_ID_SAMPLES} test geckos with reachable photos`, rows.length === MORPH_ID_SAMPLES, `${rows.length} found`);
   for (const row of rows) {
-    const { status, payload, seconds } = await identify(token, row);
+    const { status, payload, timing, seconds } = await identify(token, row);
     const analysis = payload.analysis || {};
     const outcome = classifyMorphIdFailure({ status, payload });
     const accepted = new Set([row.expected_primary_morph, ...(row.accepted_morphs || [])]);
     const top3 = [analysis.primary_morph, ...(analysis.candidate_morphs || []).map((c) => c.morph)].filter(Boolean);
     const hit = top3.slice(0, 3).some((m) => accepted.has(m));
+    // Where the time went, from the function's Server-Timing header.
+    const split = describeTiming(timing);
     if (outcome.ok) {
       record('Morph ID', `identifies ${row.id}`, true,
         `${analysis.primary_morph} (${analysis.assessment_status}) in ${seconds.toFixed(0)}s; breeder tagged ${[...accepted].join('/')}; ${hit ? 'match in top 3' : 'no match in top 3'}`);
-      record('Morph ID', `answers ${row.id} in under 100 seconds`, seconds < 100, `${seconds.toFixed(0)}s`);
+      // The limit stays at 100 s: members wait up to 120 s, and a slow run
+      // should fail this check, not be waved through.
+      record('Morph ID', `answers ${row.id} in under 100 seconds`, seconds < 100,
+        `${seconds.toFixed(0)}s${split ? `; ${split}` : ''}`);
     } else if (outcome.kind === 'provider_billing') {
       // Credit-balance failures stay visible, and stay distinct from a
       // bug in the function. The detail does not repeat the provider body.
@@ -164,7 +201,8 @@ async function checkMorphId(token) {
         'Anthropic credit balance or billing is too low. This is a provider account issue, separate from an application failure.');
     } else {
       const detail = `HTTP ${status}: ${payload.code || ''} ${String(payload.error || '').slice(0, 240)}`.trim();
-      record('Morph ID', `application failure on ${row.id}`, false, detail);
+      record('Morph ID', `application failure on ${row.id}`, false,
+        `${detail} after ${seconds.toFixed(0)}s${split ? `; ${split}` : ''}`);
     }
   }
 }
@@ -191,9 +229,14 @@ async function main() {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
+  const runMorphId = !SKIP_MORPH_ID && MORPH_ID_SAMPLES > 0;
+  const warming = runMorphId ? warmMorphId(token) : null;
   await checkMarketData(admin);
   await checkValueTable(member);
-  if (!SKIP_MORPH_ID && MORPH_ID_SAMPLES > 0) await checkMorphId(token);
+  if (runMorphId) {
+    await warming;
+    await checkMorphId(token);
+  }
 
   const failed = results.filter((r) => !r.ok);
   const lines = [

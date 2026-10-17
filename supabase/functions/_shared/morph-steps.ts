@@ -1,0 +1,298 @@
+// The order of the steps before a Morph ID analysis, with the network calls
+// passed in. Kept apart from index.ts (Deno URL imports) so vitest can check
+// the order (src/lib/__tests__/morphSteps.test.js).
+//
+// Until October 2026 every step waited for the one before it: sign-in,
+// profile, plan, the per-network cap, the request key, the credit, the
+// scans-left read, and only then the photo embedding. On member calls 0.7 to
+// 8.1 s went by before the embedding started. Now:
+//
+//   1. The sign-in check and reading the body run together.
+//   2. As soon as the member is known and the photos are valid, the photo
+//      lookup (embedding plus reference photos) starts. It never throws.
+//   3. Profile and plan are read together, then the two per-network reads.
+//   4. The request key is claimed before the credit is taken (a repeat of a
+//      finished request must never spend a credit), and the credit is taken
+//      before the analyzer is called (a paid call needs a reserved scan).
+//   5. The scans-left read starts after the credit and is awaited only when
+//      the answer is built.
+//
+// Every early exit aborts the photo lookup, so it stops polling. A prediction
+// Replicate already accepted still runs; it costs a fraction of a cent.
+import { isWarmRequest } from "./morph-warm.ts";
+
+export type AuthUser = {
+  id: string;
+  email?: string | null;
+  app_metadata?: Record<string, unknown> | null;
+};
+
+export type ProfileRow = {
+  membership_tier?: string | null;
+  subscription_status?: string | null;
+  role?: string | null;
+  morph_id_show_value_estimate?: boolean | null;
+} | null;
+
+export type Profile = {
+  auth_user_id: string;
+  membership_tier: string | null;
+  subscription_status: string | null;
+  role: string | null;
+  morph_id_show_value_estimate: boolean | null;
+  is_eval_account: boolean;
+};
+
+export type RequestClaim =
+  | { kind: "disabled" }
+  | { kind: "claimed" }
+  | { kind: "replay"; response: Record<string, unknown> }
+  | { kind: "running" };
+
+export type ParsedRequest = {
+  imageUrls: string[];
+  ageStage: string;
+  firedState: string;
+  requestKey: string | null;
+};
+
+export type MorphStepDeps<Evidence> = {
+  getUser(): Promise<AuthUser | null>;
+  readBody(): Promise<Record<string, unknown>>;
+  /** Starts the photo lookup. Must not throw; checks `signal` to stop early. */
+  startEvidence(imageUrls: string[], signal: AbortSignal): Promise<Evidence>;
+  loadProfileRow(user: AuthUser): Promise<ProfileRow>;
+  loadEffectiveTier(): Promise<{ data: unknown; error: unknown }>;
+  fetchPerIpCap(): Promise<number | null>;
+  countIpCalls(ipHash: string): Promise<number>;
+  claimRequestKey(userId: string, key: string): Promise<RequestClaim>;
+  consumeCredit(userId: string, tier: string, creditsIncluded: number): Promise<{
+    data: { credits_consumed?: number } | null;
+    error: { message?: string } | null;
+  }>;
+  readScansRemaining(userId: string, tier: string, monthly: number): Promise<number | null>;
+  settleRequestKey(userId: string, key: string | null, status: "done" | "failed", response: null): Promise<void>;
+};
+
+export type MorphStepPolicy = {
+  /** The analyzer key is set. */
+  configured: boolean;
+  ipHash: string | null;
+  parseRequest(body: Record<string, unknown>): ParsedRequest | null;
+  resolveTier(profile: Profile): string;
+  creditsFor(tier: string): number;
+  resolveModel(body: Record<string, unknown>, mayChoose: boolean): string;
+  resolveSurface(body: Record<string, unknown>, mayTag: boolean): string;
+};
+
+// What the handler's error path needs, filled in as the steps run (it used
+// to be the handler's hoisted variables).
+export type MorphStepState = {
+  profile: Profile | null;
+  tier: string | null;
+  creditsIncluded: number;
+  isAdmin: boolean;
+  isEvalAccount: boolean;
+  imageUrls: string[];
+  ageStage: string;
+  firedState: string;
+  model: string;
+  surface: string;
+  claimedKey: string | null;
+  creditWasConsumed: boolean;
+  creditsConsumed: number;
+};
+
+export function newStepState(defaultModel: string): MorphStepState {
+  return {
+    profile: null,
+    tier: null,
+    creditsIncluded: 0,
+    isAdmin: false,
+    isEvalAccount: false,
+    imageUrls: [],
+    ageStage: "unknown",
+    firedState: "unknown",
+    model: defaultModel,
+    surface: "morph_id_production",
+    claimedKey: null,
+    creditWasConsumed: false,
+    creditsConsumed: 0,
+  };
+}
+
+export type MorphStepOutcome<Evidence> =
+  | { kind: "auth_failed"; error: string }
+  | { kind: "warm"; user: AuthUser; body: Record<string, unknown> }
+  | { kind: "not_configured" }
+  | { kind: "bad_request" }
+  | { kind: "ip_limited"; cap: number; used: number }
+  | { kind: "replay"; response: Record<string, unknown> }
+  | { kind: "running" }
+  | { kind: "credits_exhausted" }
+  | { kind: "credit_check_failed"; message: string }
+  | {
+    kind: "ready";
+    evidence: Promise<Evidence>;
+    /** Null for admin and evaluation calls, which take no credit. */
+    scansRemaining: Promise<number | null> | null;
+    /** Stops the photo lookup if the request ends before it is used. */
+    abortEvidence: () => void;
+  };
+
+type Timer = { measure<T>(step: "auth" | "db", work: PromiseLike<T>): Promise<T> };
+const untimed: Timer = { measure: (_step, work) => Promise.resolve(work) };
+
+function profileFrom(user: AuthUser, row: ProfileRow, effectiveTier: unknown): Profile {
+  return {
+    auth_user_id: user.id,
+    membership_tier: (effectiveTier as string | null | undefined) ?? row?.membership_tier ?? null,
+    subscription_status: row?.subscription_status ?? null,
+    role: row?.role ?? null,
+    morph_id_show_value_estimate: row?.morph_id_show_value_estimate ?? false,
+    // Set only by the morph-id-eval workflow (scripts/morph-id-eval/run-ci.mjs).
+    // app_metadata can be written by the service role alone, so a user cannot
+    // grant it to themselves.
+    is_eval_account: user.app_metadata?.morph_eval === true,
+  };
+}
+
+function messageOf(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+/**
+ * Runs everything before the analyzer call. Returns how the request ends
+ * early, or "ready" with the photo lookup still running. `state` is filled
+ * in as it goes. A throw (a database call that throws instead of returning
+ * an error) aborts the photo lookup and reaches the handler's error path.
+ */
+export async function runMorphSteps<Evidence>(
+  deps: MorphStepDeps<Evidence>,
+  policy: MorphStepPolicy,
+  state: MorphStepState,
+  timing: Timer = untimed,
+): Promise<MorphStepOutcome<Evidence>> {
+  const lookup = new AbortController();
+  const exit = <T extends MorphStepOutcome<Evidence>>(outcome: T): T => {
+    lookup.abort();
+    return outcome;
+  };
+
+  try {
+    // 1. Sign-in check and the body together.
+    const [signedIn, body] = await Promise.all([
+      timing.measure("auth", deps.getUser().then(
+        (user) => ({ user, error: null as string | null }),
+        (err) => ({ user: null, error: messageOf(err) }),
+      )),
+      deps.readBody().catch(() => ({} as Record<string, unknown>)),
+    ]);
+    if (signedIn.error) return exit({ kind: "auth_failed", error: `auth lookup failed: ${signedIn.error}` });
+    const user = signedIn.user;
+    if (!user) return exit({ kind: "auth_failed", error: "auth required" });
+    if (isWarmRequest(body)) return exit({ kind: "warm", user, body });
+    if (!policy.configured) return exit({ kind: "not_configured" });
+
+    const parsed = policy.parseRequest(body);
+    if (!parsed) return exit({ kind: "bad_request" });
+    state.imageUrls = parsed.imageUrls;
+    state.ageStage = parsed.ageStage;
+    state.firedState = parsed.firedState;
+
+    // 2. Start the photo lookup now; it is awaited just before the analyzer.
+    const evidence = deps.startEvidence(parsed.imageUrls, lookup.signal);
+
+    // 3. Profile and plan together.
+    let profile: Profile;
+    try {
+      const [row, tierResult] = await timing.measure("db", Promise.all([
+        deps.loadProfileRow(user),
+        deps.loadEffectiveTier(),
+      ]));
+      if (tierResult.error) throw new Error("Could not verify membership access");
+      profile = profileFrom(user, row, tierResult.data);
+    } catch (err) {
+      return exit({ kind: "auth_failed", error: `auth lookup failed: ${messageOf(err)}` });
+    }
+    state.profile = profile;
+    state.isAdmin = profile.role === "admin";
+    // The evaluation account grades the held-out test set without spending
+    // credits and may tag its calls as morph_id_eval. It gets nothing else.
+    state.isEvalAccount = profile.is_eval_account;
+    state.tier = policy.resolveTier(profile);
+    state.creditsIncluded = policy.creditsFor(state.tier);
+    const mayChoose = state.isAdmin || state.isEvalAccount;
+    state.model = policy.resolveModel(body, mayChoose);
+    state.surface = policy.resolveSurface(body, mayChoose);
+
+    // 4. Per-network daily cap: the cap and today's count together. Only
+    // production traffic counts (eval and admin self-tagged calls are exempt).
+    if (!state.isAdmin && state.surface === "morph_id_production" && policy.ipHash) {
+      const [cap, used] = await timing.measure("db", Promise.all([
+        deps.fetchPerIpCap(),
+        deps.countIpCalls(policy.ipHash),
+      ]));
+      if (cap && cap > 0 && used >= cap) return exit({ kind: "ip_limited", cap, used });
+    }
+
+    // 5. A repeat of a request this member already sent (double tap, retry
+    // after a dropped connection) is answered from the stored result, or
+    // told to wait while the first run is still going. Neither costs a
+    // credit. Admin and evaluation calls never use credits, so they skip it.
+    const metered = !state.isAdmin && !state.isEvalAccount;
+    if (metered && parsed.requestKey) {
+      const claim = await timing.measure("db", deps.claimRequestKey(profile.auth_user_id, parsed.requestKey));
+      if (claim.kind === "replay") return exit({ kind: "replay", response: claim.response });
+      if (claim.kind === "running") return exit({ kind: "running" });
+      if (claim.kind === "claimed") state.claimedKey = parsed.requestKey;
+    }
+
+    // 6. Reserve the scan. The scans-left read starts now and is awaited
+    // only when the answer is built.
+    let scansRemaining: Promise<number | null> | null = null;
+    if (metered) {
+      const { data: usage, error } = await timing.measure(
+        "db",
+        deps.consumeCredit(profile.auth_user_id, state.tier, state.creditsIncluded),
+      );
+      if (error) {
+        await deps.settleRequestKey(profile.auth_user_id, state.claimedKey, "failed", null);
+        if ((error.message || "").includes("morph_id_credits_exhausted")) return exit({ kind: "credits_exhausted" });
+        return exit({ kind: "credit_check_failed", message: error.message || "" });
+      }
+      state.creditsConsumed = usage?.credits_consumed ?? 0;
+      state.creditWasConsumed = true;
+      scansRemaining = deps.readScansRemaining(profile.auth_user_id, state.tier, state.creditsIncluded);
+    }
+
+    return { kind: "ready", evidence, scansRemaining, abortEvidence: () => lookup.abort() };
+  } catch (err) {
+    lookup.abort();
+    throw err;
+  }
+}
+
+// Supabase keeps a worker running for work handed to EdgeRuntime.waitUntil
+// after the response is sent (send-email uses the same thing).
+type EdgeRuntimeLike = { waitUntil(promise: Promise<unknown>): void };
+
+/**
+ * Runs `work` after the response: hands it to EdgeRuntime.waitUntil when the
+ * runtime has it (and returns at once), otherwise waits for it. A failure is
+ * logged, never thrown, so it cannot change the answer.
+ */
+export function finishAfterResponse(work: Promise<unknown>): Promise<void> {
+  const safe = Promise.resolve(work).then(
+    () => undefined,
+    (err) => {
+      console.error("background write failed:", messageOf(err));
+    },
+  );
+  const runtime = (globalThis as { EdgeRuntime?: EdgeRuntimeLike }).EdgeRuntime;
+  if (runtime && typeof runtime.waitUntil === "function") {
+    runtime.waitUntil(safe);
+    return Promise.resolve();
+  }
+  return safe;
+}

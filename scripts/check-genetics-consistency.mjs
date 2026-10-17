@@ -459,6 +459,8 @@ const FACT_FILES = [
   ['emails', 'supabase/functions/_shared/lifecycle-copy.ts'],
   ['ai-prompt', 'src/components/morph-id/morphTaxonomy.js', GENETICS_FACTS],
   ['ai-prompt', 'supabase/functions/recognize-gecko-morph/index.ts', GENETICS_FACTS],
+  // The Morph ID instructions themselves (moved out of index.ts on 17 Oct 2026).
+  ['ai-prompt', 'supabase/functions/recognize-gecko-morph/request.ts', GENETICS_FACTS],
   ['ai-prompt', 'supabase/functions/generate-social-post/index.ts', GENETICS_FACTS],
   ['ai-prompt', 'supabase/functions/health-screen/index.ts', GENETICS_FACTS],
   ['ai-prompt', 'src/pages/BreederConsultant.jsx', GENETICS_FACTS],

@@ -60,6 +60,38 @@ smoke runs are far too small to compare models: one gecko is 5 points. The
 full Sonnet 5.5 and Opus 5.5 runs on 6 October stopped when the Anthropic
 credit ran out, which also broke production Morph ID calls that week.
 
+## The speed work of 17 October 2026 and grading
+
+Morph ID was made faster without touching what decides the answer, so runs
+before and after it compare like for like:
+
+- **The request the model reads is unchanged.** The instructions, tool schema
+  and content blocks now live in `supabase/functions/recognize-gecko-morph/request.ts`,
+  and `src/lib/__tests__/morphRequestSnapshot.test.js` checks them byte for
+  byte against the request sent before the change. Same model, same photo
+  embedded, same pinned Replicate version, same reference photos.
+- **Only the answer's ceiling moved.** `max_tokens` went from 3000 to 4096 on
+  Sonnet 4.6. The model never sees it; it only stops an unusually long answer
+  from being cut off. A cut-off answer is retried once with twice the room.
+- **A cold photo-matching model fails faster.** If Replicate is still booting
+  the embedding model 75 seconds into a call, the call now ends with
+  `upstream_timeout` at about 76 seconds instead of running Claude with too
+  little time left. The grader retries a 502 once after 5 seconds
+  (`scripts/eval-morph-id.mjs`), and the boot carries on meanwhile, so the
+  retry normally finds the model warm. Before, the same call failed at 100 to
+  130 seconds and was retried the same way.
+- **A throttled embedding waits instead of dropping the references.** Under
+  Replicate's one-request-at-a-time limit (less than $5 of credit), a
+  throttled embedding used to be skipped, which took the reference photos out
+  of that call's prompt. It now waits once for Replicate's `Retry-After` when
+  that fits in the time limit. A run graded one call at a time rarely meets
+  this; if a run's references were missing on some rows before, a rerun can
+  differ there.
+- **Each call says where its time went.** The function's `Server-Timing`
+  header splits a call into sign-in, database, embedding, reference query,
+  Claude and writes; the function log has the same line per call
+  (`event: "morph_id_timing"`).
+
 ## Why this number is not a valid accuracy figure yet
 
 1. **Seller leakage.** The split was made by listing, not by seller. Checked

@@ -128,6 +128,22 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 
 **Done by Tennyson, 17 Oct:** the day-one $2.99 refunded (review item 12), and the Supabase service role key rotated (new secret key in Supabase, the `SUPABASE_SERVICE_ROLE_KEY` GitHub Actions secret replaced; the old key revoked the same day, after the daily canary passed on the new one).
 
+## Added 17 October: Morph ID speed
+
+Same model, same instructions, same answer fields; the request the model reads is checked byte for byte by `src/lib/__tests__/morphRequestSnapshot.test.js`. Details in `supabase/functions/recognize-gecko-morph/README.md`.
+
+**Supabase, function (`recognize-gecko-morph`, declared, deploys on merge):** the photo lookup starts as soon as the member is signed in and runs alongside the database steps; one time budget of 105 s from arrival (embedding by 75 s, no Claude call with under 27 s left, which ends in the usual refunded `upstream_timeout` at about 76 s instead of 100 to 130 s); the spend log row is written after the answer; the answer ceiling is 4096 tokens and a cut-off answer is retried with twice the room; every answer has a `Server-Timing` header and one timing line in the log. New: `{ "action": "warm" }` wakes the Replicate model with a project photo, at most once a minute, logged as zero-cost `morph_id_warm` rows in `geck_data.model_invocations`.
+
+**Vercel:** the Morph ID page sends that warm-up when a signed-in member with a scan left opens it, and again on picking the top view after 3 minutes. No photo is sent. The daily canary sends it too and prints each call's embedding and Claude time (its 100 s limit is unchanged).
+
+**Supabase, migration `20261017170000_morph_reference_vectors.sql`:** `morph_visual_neighbors` reads a narrow copy of the eligible reference photos (`public.morph_reference_vectors`, kept in step by a trigger on `gecko_images`), with the same signature and the same results. Test: `supabase/tests/morph_neighbors_regressions.sql` (same rows, same order, similarity within 1e-9, against a copy of the old query; and the copy stays in step through inserts, edits and deletes). The function and the page work with or without it, so the order the three deploys land in does not matter.
+
+### Morph ID speed: what still needs Tennyson
+
+1. **Replicate credit at $5 or more** (Replicate dashboard, Billing). Below that Replicate allows one request at a time.
+2. **Before and after the migration, on production (read-only, SQL Editor):** run `explain (analyze, buffers) select * from public.morph_visual_neighbors((select image_embedding from public.gecko_images where image_embedding is not null and verified limit 1), 48);` for two stored embeddings. Before, it took 280 to 581 ms with about 11,000 buffers and should show a Seq Scan on `gecko_images`; after, it should read `morph_reference_vectors` in tens of ms. If the "before" plan shows an index scan on `idx_gecko_images_embedding` instead, tell the next session before merging: the new function is exact, and the old one would then have been approximate.
+3. **After the deploy:** open Morph ID, wait a minute, tap Identify, and check the `embed` time in the response's `Server-Timing` header (browser network panel) is under 5 s. On the next cold canary day, call 1's embed time should drop.
+
 ## Done on 3 October
 
 **Edge functions deployed** (all from the repo copy):

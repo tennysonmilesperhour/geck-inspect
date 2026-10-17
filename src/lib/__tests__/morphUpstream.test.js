@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  FORCED_TOOL_MAX_TOKENS,
   PROVIDER_UNAVAILABLE_MESSAGE,
   RETRYABLE_UPSTREAM_STATUS,
   isProviderBillingFailure,
   requestShape,
+  retryShape,
   upstreamErrorCode,
   upstreamFailureResponse,
 } from '../../../supabase/functions/_shared/morph-upstream.ts';
@@ -97,5 +99,54 @@ describe('requestShape', () => {
       expect(shape.maxTokens).toBeGreaterThan(3000);
       expect(shape.outputConfig).toEqual({ effort: 'medium' });
     }
+  });
+
+  // The largest answer since the ceiling went to 3000 was 2,087 tokens.
+  it('gives Sonnet 4.6 a 4096-token ceiling and keeps 12000 on the newer models', () => {
+    expect(FORCED_TOOL_MAX_TOKENS).toBe(4096);
+    expect(requestShape('claude-sonnet-4-6', 'submit_morph_analysis').maxTokens).toBe(4096);
+    expect(requestShape('claude-haiku-4-5', 'submit_morph_analysis').maxTokens).toBe(4096);
+    for (const model of ['claude-sonnet-5-5', 'claude-opus-5-5']) {
+      expect(requestShape(model, 'submit_morph_analysis').maxTokens).toBe(12000);
+    }
+  });
+});
+
+describe('retryShape', () => {
+  const shape = requestShape('claude-sonnet-4-6', 'submit_morph_analysis');
+
+  it('doubles the ceiling for the retry of an answer cut off at it', () => {
+    const retry = retryShape(shape, 'max_tokens');
+    expect(retry.maxTokens).toBe(8192);
+    expect(retry.toolChoice).toEqual(shape.toolChoice);
+    expect(retry.callInstruction).toBe(shape.callInstruction);
+    expect(shape.maxTokens).toBe(4096);
+  });
+
+  it('leaves every other retry as it was', () => {
+    for (const reason of ['no_tool_call', 'status', 'network']) {
+      expect(retryShape(shape, reason)).toEqual(shape);
+    }
+  });
+});
+
+describe('the analyzer call that is not started', () => {
+  // When the photo-matching model is still booting at its deadline, or under
+  // 27 s are left, the function ends with the existing timeout failure
+  // instead of calling the analyzer: same code, same member text, and the
+  // scan is handed back the same way.
+  it('reads as the usual upstream_timeout with the scan refunded', () => {
+    const failure = upstreamFailureResponse({
+      code: 'upstream_timeout',
+      diagnostic: 'Analyzer timed out before it started: the photo-matching model was still starting up',
+      creditRefunded: true,
+    });
+    expect(failure).toEqual({
+      error: 'Analyzer timed out before it started: the photo-matching model was still starting up',
+      code: 'upstream_timeout',
+      user_message: PROVIDER_UNAVAILABLE_MESSAGE,
+      credit_refunded: true,
+      failure_kind: 'provider_unavailable',
+    });
   });
 });
