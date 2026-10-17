@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { openUpgradePlans, upgradeMembershipPath, upgradePromptShown } from '@/lib/activation';
+import { openUpgradePlans, upgradeMembershipPath, upgradePromptShown } from '@/lib/upgradePrompt';
 
 /**
  * Plans control on a locked feature.

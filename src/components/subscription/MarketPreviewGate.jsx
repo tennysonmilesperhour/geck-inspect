@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { ArrowRight, Lock } from 'lucide-react';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import { getTierPricing } from '@/lib/stripe-config';
-import { upgradePromptShown } from '@/lib/activation';
+import { upgradePromptShown } from '@/lib/upgradePrompt';
 import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 
 /**

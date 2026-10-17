@@ -18,7 +18,7 @@ import { loadMorphIdQuota, morphIdGate, morphIdScansLeftLabel } from '@/lib/morp
 import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis, applyCorrections } from '@/lib/morphIdDraft';
 import { captureEvent } from '@/lib/posthog';
-import { upgradePromptShown } from '@/lib/activation';
+import { upgradePromptShown } from '@/lib/upgradePrompt';
 import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 import { onPhotoPath } from '@/lib/firstGeckoFlow';
 

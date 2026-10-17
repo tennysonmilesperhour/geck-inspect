@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Sparkles, Lock, ArrowRight, Check } from 'lucide-react';
 import { resolveTier } from '@/lib/tierLimits';
-import { upgradePromptShown } from '@/lib/activation';
+import { upgradePromptShown } from '@/lib/upgradePrompt';
 import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 
 // Plan limits and feature flags. Source of truth for:

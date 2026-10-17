@@ -32,7 +32,7 @@ import { captureEvent } from '@/lib/posthog';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
 import { featuresWithConsultant, pageIsLive, planNumbers, withoutRetiredLines } from '@/lib/membershipFeatures';
-import { lastUpgradePrompt, noteUpgradePromptFromLocation } from '@/lib/activation';
+import { lastUpgradePrompt, noteUpgradePromptFromLocation } from '@/lib/upgradePrompt';
 import {
   claimCheckoutSettlement,
   markCheckoutReturned,

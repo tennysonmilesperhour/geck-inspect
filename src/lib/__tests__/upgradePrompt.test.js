@@ -10,7 +10,7 @@ import {
   openUpgradePlans,
   upgradeMembershipPath,
   upgradePromptClicked,
-} from '../activation';
+} from '../upgradePrompt';
 
 function memoryStore() {
   const data = new Map();
