@@ -64,7 +64,8 @@ test(`signup keeps the transfer in the ${confirmation} opened on a fresh device`
   // No local/session storage crosses to this context. The exact email
   // callback carries continuation through verification and session setup.
   const { viewport, isMobile, hasTouch, deviceScaleFactor, userAgent } = testInfo.project.use;
-  const freshContext = await browser.newContext({ viewport, isMobile, hasTouch, deviceScaleFactor, userAgent, reducedMotion: 'reduce' });
+  // Manual contexts do not inherit Playwright's fixture context options.
+  const freshContext = await browser.newContext({ viewport, isMobile, hasTouch, deviceScaleFactor, userAgent, reducedMotion: 'reduce', serviceWorkers: 'block' });
   await installFixture(freshContext, fake);
   const freshPage = await freshContext.newPage();
   const newRecipient = fake.account('new-recipient@example.com');

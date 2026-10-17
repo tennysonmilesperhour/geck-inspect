@@ -32,12 +32,18 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
+  // Stop after the first exhausted failure so CI uploads its trace promptly.
+  // A passing run still executes every desktop and phone case.
+  maxFailures: process.env.CI ? 1 : 0,
   forbidOnly: Boolean(process.env.CI),
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    // Request-mocked flows must not let a service worker bypass routing.
+    // Service-worker behavior has separate tests.
+    serviceWorkers: 'block',
   },
   // A desktop and a phone, so CI also walks the phone home (Today, the Log tab).
   projects: [
