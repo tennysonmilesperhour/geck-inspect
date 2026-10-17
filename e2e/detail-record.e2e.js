@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createTransferFixture, installFixture } from './support/transfer-fixture.js';
+import { createTransferFixture, installFixture, openGeckoRecord } from './support/transfer-fixture.js';
 
 test.use({ reducedMotion: 'reduce' });
 
@@ -7,7 +7,13 @@ test('the card record groups its actions and keeps care edits when moving betwee
   const { fake, owner } = createTransferFixture({ withTransfer: false });
   await installFixture(context, fake, owner);
   await page.goto('/MyGeckos');
-  await page.getByRole('button', { name: 'View Mango' }).click();
+  const sidebar = page.locator('.desktop-sidebar-wrapper');
+  if (await sidebar.isVisible()) {
+    // Exercise the CI starting state and verify that leaving the rail works.
+    await page.mouse.move(4, 300);
+    await expect(sidebar).not.toHaveClass(/\bis-collapsed\b/);
+  }
+  await openGeckoRecord(page, 'Mango');
   const record = page.getByRole('dialog', { name: 'Mango', exact: true });
   await expect(record).toBeVisible();
   await expect(record.getByRole('button', { name: 'Edit Mango' })).toBeVisible();
@@ -41,7 +47,7 @@ test('an owner generates a QR code and can revoke the link from Transfers', asyn
   const { fake, owner } = createTransferFixture({ withTransfer: false });
   await installFixture(context, fake, owner);
   await page.goto('/MyGeckos');
-  await page.getByRole('button', { name: 'View Mango' }).click();
+  await openGeckoRecord(page, 'Mango');
   const record = page.getByRole('dialog', { name: 'Mango', exact: true });
   await record.getByRole('navigation', { name: 'Parts of this record' }).getByRole('link', { name: 'Sharing', exact: true }).click();
   await record.getByRole('button', { name: 'Transfer to a new owner' }).click();

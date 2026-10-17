@@ -8,6 +8,8 @@ Owners can generate a QR link or email-restricted invitation from a gecko record
 
 Signup, confirmation, OAuth, password recovery and login retain the pending claim in the callback URL, with local storage as a fallback. Default implicit confirmation links and token-hash confirmation links were tested in fresh browser contexts. The recipient explicitly accepts ownership and then sees the gecko in their collection. Native owners generate public HTTPS QR links.
 
+Transfer tokens are redacted from first-party event paths and error URLs, using the same sanitizer already used by GA and PostHog. Query strings and hashes remain excluded from first-party error URLs.
+
 The shared gecko record now groups Overview, Care history, Breeding, Sharing and optional tools. Log event and Edit stay visible. Navigation, photo controls and secondary actions use existing design-system buttons. Forms stay mounted so moving between sections does not discard unfinished entries.
 
 ## Privacy decision
@@ -34,13 +36,15 @@ All screens use synthetic fixtures. QR links point to localhost and do not trans
 - 26 browser cases passed: 13 at desktop size and 13 with the Pixel 7 phone profile. Four detail checks passed again after tightening screenshot timing.
 - Production Vite preview checks passed all 26 desktop and phone cases, including a final run with CI settings after the native loading change and fixture isolation update. Its temporary server and browser workers stopped after each run.
 - Browser cases cover signed-in acceptance, signup/verification on a fresh device, lost local continuation, login failure/retry, expired verification, wrong account, closed/invalid links, cancellation, reload after success, collection arrival, section focus, form preservation and mobile overflow.
-- Unit suite: 267 files and 3,036 tests passed, including runs with the clock 400 days ahead and 400 days back. GitHub also passed the normal-date suite. Three earlier timeouts reading unchanged files in the Documents checkout disappeared in the temporary checkout.
+- Unit suite: 269 files and 3,050 tests passed. The full suite was also checked with the clock 400 days ahead and 400 days back in GitHub CI. Three earlier timeouts reading unchanged files in the Documents checkout disappeared in the temporary checkout.
 - ESLint: no errors and 73 existing warnings. Typecheck and the full build passed with fixture configuration. Prerender and SEO audit passed for all 172 routes with no errors, warnings or orphans.
 - Database: all 292 migrations replayed, the new migration applied a second time, all 26 regression files passed, all 73 QR assertions passed, and four tests with concurrent database connections passed.
 - Database tests run against disposable local fixtures, not customer data. Browser requests to external services were intercepted locally.
 - Request-mocked browser contexts block service workers so network routing stays inside the fixtures. Service-worker behavior has separate unit coverage. CI stops at the first exhausted browser failure to upload its trace promptly; no assertions or timeouts were relaxed.
-- All 311 size checks pass in the CI-equivalent build. The native sign-in listener loads only on native devices, keeping the public entry at 148.45 kB against 150 kB and the Lilly White guide at 237.59 kB against 238 kB. No allowance was raised.
+- Hosted browser traces exposed the desktop sidebar covering the first card when Chromium's pointer started on the hover rail. The fixture now moves the pointer into the page and waits for the sidebar to clear the button. Six affected desktop/phone cases passed, including an intentional hover-and-leave check. An unrelated quiz focus test now waits for the existing focus effect, preserving its assertion and timeout.
+- All 311 size checks pass in the CI-equivalent build. The native sign-in listener loads only on native devices, keeping the public entry at 148.46 kB against 150 kB and the Lilly White guide at 237.61 kB against 238 kB. No allowance was raised.
 - After incorporating main's native callback fix, all 35 focused auth tests and scoped lint passed. The native router now resumes transfers without reloading, retains the target during recovery or failure, and preserves main's duplicate callback protection.
+- All 43 focused telemetry, analytics, guest-isolation and privacy tests passed after adding first-party transfer-token redaction.
 
 ## Release approval and remaining hosted checks
 

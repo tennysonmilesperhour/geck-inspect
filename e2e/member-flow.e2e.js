@@ -5,7 +5,7 @@
 // wrote: the gecko, the feeding row and the transfer request.
 import { expect, test } from '@playwright/test';
 import { createFakeSupabase } from './support/fake-supabase.js';
-import { transferRpcHandlers } from './support/transfer-fixture.js';
+import { openGeckoRecord, transferRpcHandlers } from './support/transfer-fixture.js';
 
 const MEMBER = { name: 'Sam Keeper', email: 'sam@example.com', password: 'correct-horse-battery' };
 const BUYER = 'riley@example.com';
@@ -105,7 +105,7 @@ test('a new member signs up, adds a gecko, logs a feeding and starts a transfer'
 
   await test.step('start a transfer to a buyer', async () => {
     await page.goto('/MyGeckos');
-    await page.getByRole('button', { name: 'View Mango' }).click();
+    await openGeckoRecord(page, 'Mango');
     // "Transfer Ownership" on the record window; the one-record rework
     // (October 2026) calls it "Transfer to a new owner".
     await page.getByRole('button', { name: /^Transfer (Ownership|to a new owner)$/ }).click();

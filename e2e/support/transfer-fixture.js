@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
+import { expect } from '@playwright/test';
 import { createFakeSupabase } from './fake-supabase.js';
 
 export const OWNER = { email: 'owner@example.com', name: 'Alex Keeper' };
@@ -115,4 +116,22 @@ export async function installFixture(context, fake, user) {
   await keepOffline(context);
   await fake.install(context);
   if (user) await fake.signIn(context, user);
+}
+
+export async function openGeckoRecord(page, name) {
+  const viewRecord = page.getByRole('button', { name: `View ${name}`, exact: true });
+  await expect(viewRecord).toBeVisible();
+  const sidebar = page.locator('.desktop-sidebar-wrapper');
+  if (await sidebar.isVisible()) {
+    // A fresh Chromium pointer can start on the hover-expanded sidebar.
+    // Move into the page and wait for its actual bounds to clear the card.
+    const viewport = page.viewportSize();
+    await page.mouse.move(viewport.width - 1, viewport.height - 1);
+    await expect.poll(async () => {
+      const rail = await sidebar.boundingBox();
+      const button = await viewRecord.boundingBox();
+      return rail && button && rail.x + rail.width <= button.x;
+    }).toBe(true);
+  }
+  await viewRecord.click();
 }

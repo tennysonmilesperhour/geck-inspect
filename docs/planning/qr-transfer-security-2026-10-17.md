@@ -40,6 +40,8 @@ There is a product ambiguity about which notes are private keeper text and which
 
 The client keeps the claim path through signup, verification and login, including an explicit redirect in verification email callbacks. This is navigation state, not authorization. The database still validates the token and account when the recipient presses Claim. Reopening the original QR link recovers a pending offer if browser state is lost. Reopening a completed link recovers success only for its current claimant. A callback on another device can continue with the claim path when Supabase's configured redirect allowlist accepts the app callback. A missing/expired auth callback must retain the claim path and offer login or a new verification email.
 
+First-party product-event page paths and error URLs redact the bearer token using the existing analytics URL sanitizer. Error URLs also omit the query and hash. GA and PostHog retain main's existing token redaction and consent behavior. Claim and Auth pages send no-referrer and no-store headers.
+
 ## Approval and rollout
 
 Before merging, approve these exact production changes: the claim-mode column and pending-offer index, the replacement participant SELECT policy and verified-account helper, the owner-only notes archive and its RLS/grants, the private transfer functions and public RPC entry points, the stricter transfer guard, the redacted preview, and the updated atomic claim. The SELECT policy restricts raw rows to verified participants and grants an open-QR recipient access only to their own completed transfer row. In particular, approve archiving private keeper notes for the sender and leaving other private/shared history under its existing permissions.
