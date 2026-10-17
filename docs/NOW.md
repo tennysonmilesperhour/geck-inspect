@@ -4,7 +4,7 @@ The 90-day plan (Part E5 of `docs/planning/comprehensive-review-2026-10-14.md`) 
 
 ## Where the numbers stand
 
-Read from production on 15 October 2026. Admin account left out of every number.
+Read from production on 17 October 2026. Admin account left out of every number.
 
 | Number | Today | Day 30, 17 Nov | Day 60, 17 Dec | Day 90, 17 Jan 2027 |
 |---|---|---|---|---|
@@ -12,14 +12,14 @@ Read from production on 15 October 2026. Admin account left out of every number.
 | Collections hand-imported | 0 recorded | 5 | 10 | |
 | Paying breeders (not comped) | 0 | 2 | 6 | 10+ at $10 a month or more |
 | Recurring revenue, comps left out (scoreboard) | $2.99 | | | |
-| Monthly recurring (Revenue card, matches Stripe) | $8.98 | | under $50 with cost over $150 is a tripwire | |
+| Monthly recurring (Revenue card, matches Stripe) | $8.98 ($5.99 of it cancels on 1 Nov) | | under $50 with cost over $150 is a tripwire | |
 | Passports issued | 3 (plus 2 on the admin's geckos) | 10 | 50 | |
 | Passports claimed | 0 (plus 2 from the admin's own sales) | | 15 | 25+ |
 | Claimers still active 2 weeks on | 0 of 0 (admin's own sales left out) | | 3 | |
 | Weekly active breeders (logging records) | 2 | | 4+ | 5+ for four straight weeks |
-| Weekly active members (signed in) | 9 of 62 | | | |
-| Signups, last 7 days | 6 | | | |
-| Day-one first gecko rate | 1 of 7 (14%) | | | |
+| Weekly active members (signed in) | 6 of 62 | | | |
+| Signups, last 7 days | 5 | | | |
+| Day-one first gecko rate | 1 of 5 (20%) | | | |
 | Monthly cost | not recorded | under $100 | | |
 
 Notes on today's numbers:
@@ -27,7 +27,8 @@ Notes on today's numbers:
 - **Paying breeders is 0, not 1.** One member paid $5.99 for one month of Breeder on 1 October (UTC) and cancelled 45 minutes later, so the plan runs to about 1 November and does not renew. A goodwill comp (given on 5 October) then keeps them on Breeder until 1 December. E5 says a comped account is not evidence, so the scoreboard leaves them out of paying breeders and its revenue figure. One Keeper pays $2.99 a month, which is the whole of the scoreboard's recurring revenue. One lifetime Enterprise plan has no lifetime payment on record and is not counted (a lifetime plan counts only when the ledger holds a lifetime purchase; an older monthly payment does not make it paid).
 - **Revenue today.** The scoreboard shows $2.99 (the Keeper). The Revenue card on Admin, Overview shows $8.98 once its migration (`20261015151400_stripe_ledger.sql`) is applied: the Keeper plus the cancelled Breeder month, which drops off about 1 November and shows under "Cancellations scheduled". The day 60 tripwire uses the Revenue card's figure ("Two revenue figures" below says why).
 - **Claimers still active 2 weeks on** leaves out buyers of the admin's own sales, like the passport counts. Today that is 0 of 0: the only buyer who claimed 14 or more days ago bought from the admin.
-- **Weekly active breeders, last 8 weeks (newest first):** 2, 2, 1, 1, 1, 3, 1, 3 (computed from today's owners; see "What weekly active breeders leaves out" below).
+- **Weekly active breeders, last 8 weeks (newest first):** 2, 0, 3, 1, 0, 4, 1, 1, in weeks ending on Saturdays from 17 Oct back (computed from today's owners; see "What weekly active breeders leaves out" below). The 15 October reading used weeks ending that Thursday, so the two series do not line up week for week.
+- **The $2.99 refund (17 Oct) is not on the Revenue card yet.** Stripe sends the app only the events its webhook endpoint is subscribed to, and `charge.refunded` and the dispute events were never added there, so refunds and disputes do not reach the ledger. Adding them is on Tennyson's list in `docs/planning/deploy-queue-2026-10-03.md`; then resend the refund's `charge.refunded` event from its page in the Stripe Dashboard.
 - **App Store payers** count by their `keeper` or `breeder` entitlement, Breeder winning when a member has both. Trials, promotional grants and RevenueCat's Test Store do not count; the legacy `Geck Inspect Pro` entitlement belongs to Test Store products (`docs/BILLING.md`). There were no App Store entitlements in production on 15 October.
 - **Email delivery** shows on the card once the email delivery view (migration `20261015151200_lifecycle_emails.sql`) is in production; opens, clicks and bounces also need the Resend webhook (`docs/planning/deploy-queue-2026-10-03.md`, round 2).
 
