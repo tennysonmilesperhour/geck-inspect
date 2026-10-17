@@ -45,7 +45,7 @@ describe('product image display boundaries', () => {
     expect(screen.getByText('See photos on Amazon')).toBeTruthy();
     expect(screen.getByText('Est. $19.99')).toBeTruthy();
     expect(screen.getByText('Weigh your gecko.')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Buy at vendor' }).getAttribute('href')).toBe(destination);
+    expect(screen.getByRole('link', { name: 'Find on Amazon' }).getAttribute('href')).toBe(destination);
   });
 
   it('excludes generated images from detail galleries and Product JSON-LD', async () => {
@@ -56,7 +56,7 @@ describe('product image display boundaries', () => {
     expect(container.querySelector('img')).toBeNull();
     expect(JSON.parse(screen.getByTestId('product-schema').textContent)[0].image).toEqual([]);
     expect(container.innerHTML).not.toContain(generatedUrl);
-    expect(screen.getByRole('link', { name: 'Buy at vendor' }).getAttribute('href')).toBe(destination);
+    expect(screen.getByRole('link', { name: 'Find on Amazon' }).getAttribute('href')).toBe(destination);
   });
 
   it('filters legacy SVGs in recommendations and requests their provenance fields', async () => {
