@@ -128,6 +128,21 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 
 **Done by Tennyson, 17 Oct:** the day-one $2.99 refunded (review item 12), and the Supabase service role key rotated (new secret key in Supabase, the `SUPABASE_SERVICE_ROLE_KEY` GitHub Actions secret replaced; the old key revoked the same day, after the daily canary passed on the new one).
 
+## Added 17 October: Morph ID speed
+
+Same model, same instructions, same answer fields; the request the model reads is checked byte for byte by `src/lib/__tests__/morphRequestSnapshot.test.js`. Details in `supabase/functions/recognize-gecko-morph/README.md`.
+
+**Supabase, function (`recognize-gecko-morph`, declared, deploys on merge):** the profile, plan and per-network reads run together, and the photo lookup starts once the scan is reserved (so a repeat, a run still going, a network over its cap or an account with no scans left never reaches Replicate) and runs alongside the scans-left read; one time budget of 105 s from arrival (Claude is started only with 32 s left for one or two photos, 3.5 s more per photo past two, and the embedding must be done by the point that still leaves that plus the reference query: 69.5 s for one or two photos, 59 s for five; past it the call ends in the usual refunded `upstream_timeout` at 59 to 70 s instead of 100 to 130 s); the spend log row is written after the answer; the answer ceiling is 4096 tokens and a cut-off answer is retried with twice the room; every answer has a `Server-Timing` header and one timing line in the log. New: `{ "action": "warm" }` wakes the Replicate model with a project photo, at most once a minute, logged as zero-cost `morph_id_warm` rows in `geck_data.model_invocations`.
+
+**Vercel:** the Morph ID page sends that warm-up when a signed-in member with a scan left opens it, and again on picking the top view after 3 minutes. No photo is sent. The daily canary sends it too and prints each call's embedding and Claude time (its 100 s limit is unchanged).
+
+**Held back: a faster reference-photo query.** The session also built a narrow, exact copy of the reference photos for `morph_visual_neighbors`. Before merging, `supabase/tests/morph_neighbors_production_check.sql` was run on production (read-only, 18 Oct): 20 of 20 sample photos came back with different reference photos from the exact answer, so today's function uses the approximate `idx_gecko_images_embedding` index. The exact query would change which reference photos Morph ID sees, so it was dropped from the merge. It could come back after a graded run shows it does not lower accuracy.
+
+### Morph ID speed: what still needs Tennyson
+
+1. **Replicate credit at $5 or more** (Replicate dashboard, Billing). Below that Replicate allows one request at a time.
+2. **After the deploy:** open Morph ID, wait a minute, tap Identify, and check the `embed` time in the response's `Server-Timing` header (browser network panel) is under 5 s. On the next cold canary day, call 1's embed time should drop.
+
 ## Done on 3 October
 
 **Edge functions deployed** (all from the repo copy):

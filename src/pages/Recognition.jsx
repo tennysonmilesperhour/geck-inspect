@@ -21,6 +21,7 @@ import { captureEvent } from '@/lib/posthog';
 import { upgradePromptShown } from '@/lib/upgradePrompt';
 import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 import { onPhotoPath } from '@/lib/firstGeckoFlow';
+import { warmMorphId } from '@/lib/morphIdWarmup';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
@@ -157,6 +158,16 @@ export default function Recognition() {
   useEffect(() => {
     if (morphIdLocked) upgradePromptShown('morph_id', 'morph_id_locked');
   }, [morphIdLocked]);
+
+  // Wake the photo-matching model while the member picks photos, so it is
+  // not still booting when they tap Identify. Only for a signed-in member
+  // with a scan to use, once the scans-left read has settled. No photo or
+  // member detail is sent (src/lib/morphIdWarmup.js).
+  const quotaSettled = isAdmin || quotaQuery.isSuccess || quotaQuery.isError;
+  const canWarm = Boolean(user) && !isGuest && !isLoadingAuth && quotaSettled && !morphIdLocked;
+  useEffect(() => {
+    if (canWarm) warmMorphId();
+  }, [canWarm]);
 
   // One request key per set of photos and answers. A retry of the same
   // photos (after a timeout, a dropped connection or a double tap) sends
