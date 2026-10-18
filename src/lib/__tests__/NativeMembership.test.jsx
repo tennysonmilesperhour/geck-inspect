@@ -1,4 +1,5 @@
 import React from 'react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { act, create } from 'react-test-renderer';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.hoisted(() => vi.stubGlobal('window', { self: null, top: null }));
@@ -19,30 +20,42 @@ beforeEach(() => {
 });
 
 describe('native membership screen', () => {
+  it('opens legal pages inside the app router without handing them to iOS', () => {
+    function Location() { return <output>{useLocation().pathname}</output>; }
+    const tree = create(<MemoryRouter><NativeMembership user={null} /><Location /></MemoryRouter>);
+    for (const [label, path] of [['Terms', '/Terms'], ['Privacy', '/PrivacyPolicy']]) {
+      const link = tree.root.findAllByType('a').find(node => contents(node) === label);
+      const event = { button: 0, preventDefault: vi.fn() };
+      act(() => link.props.onClick(event));
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(contents(tree.root.findByType('output'))).toBe(path);
+    }
+    tree.unmount();
+  });
   it('updates access after restoration even when the page account snapshot is unchanged', () => {
     const user = { membership_tier: 'free' };
-    const tree = create(<NativeMembership user={user} />);
+    const tree = create(<MemoryRouter><NativeMembership user={user} /></MemoryRouter>);
     fixture.storeTier = 'breeder';
-    act(() => tree.update(<NativeMembership user={user} />));
+    act(() => tree.update(<MemoryRouter><NativeMembership user={user} /></MemoryRouter>));
     expect(contents(tree.toJSON())).toContain('Your Breeder access is active');
     const buttons = tree.root.findAllByType('button').filter(b => contents(b) === 'Included in your current access');
     expect(buttons).toHaveLength(4);
     expect(buttons.every(b => b.props.disabled)).toBe(true);
     fixture.storeTier = 'free';
-    act(() => tree.update(<NativeMembership user={user} />));
+    act(() => tree.update(<MemoryRouter><NativeMembership user={user} /></MemoryRouter>));
     expect(contents(tree.toJSON())).not.toContain('Your Breeder access is active');
     tree.unmount();
   });
   it('shows both actual plans with recurring periods and excludes unknown Test Store packages', () => {
     fixture.packages.push({ identifier: '$rc_lifetime', product: { identifier: 'lifetime', priceString: '$99' } });
-    const tree = create(<NativeMembership user={{ membership_tier: 'free' }} />);
+    const tree = create(<MemoryRouter><NativeMembership user={{ membership_tier: 'free' }} /></MemoryRouter>);
     expect(tree.root.findAllByType('h2').map(contents)).toEqual(['Keeper', 'Keeper', 'Breeder', 'Breeder']);
     const text = contents(tree.toJSON());
     expect(text).toContain('$4.00 per month'); expect(text).toContain('$40.00 per year');
     expect(text).not.toContain('$99'); tree.unmount();
   });
   it('reconciles a Keeper purchase and reports Keeper instead of promising Breeder', async () => {
-    const tree = create(<NativeMembership user={{ membership_tier: 'free' }} />);
+    const tree = create(<MemoryRouter><NativeMembership user={{ membership_tier: 'free' }} /></MemoryRouter>);
     const button = tree.root.findAllByType('button').find(b => contents(b) === 'Continue for $4.00 per month');
     await act(async () => button.props.onClick());
     expect(fixture.purchase).toHaveBeenCalledWith(fixture.packages[0]); expect(fixture.sync).toHaveBeenCalledOnce();
@@ -50,13 +63,13 @@ describe('native membership screen', () => {
     tree.unmount();
   });
   it('does not sell a second store subscription to an existing direct member', () => {
-    const tree = create(<NativeMembership user={{ membership_tier: 'keeper' }} />);
+    const tree = create(<MemoryRouter><NativeMembership user={{ membership_tier: 'keeper' }} /></MemoryRouter>);
     const purchaseButtons = tree.root.findAllByType('button').filter(b => /Included in|Manage your existing/.test(contents(b)));
     expect(purchaseButtons).toHaveLength(4); expect(purchaseButtons.every(b => b.props.disabled)).toBe(true);
     tree.unmount();
   });
   it('gives visitors a clear sign-in action before requesting store offerings', () => {
-    const tree = create(<NativeMembership user={null} />);
+    const tree = create(<MemoryRouter><NativeMembership user={null} /></MemoryRouter>);
     const text = contents(tree.toJSON()); expect(text).toContain('Sign in to view store plans');
     expect(text).not.toContain('Store plans are currently unavailable'); tree.unmount();
   });
