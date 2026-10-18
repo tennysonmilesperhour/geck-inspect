@@ -1,6 +1,7 @@
 // User.setWeeklyNotes (src/entities/all.js): the Settings switch for Weekly
-// Gecko Notes saves one column, on the member's own profile row, and
-// nothing else. The whole-form save (updateMyUserData) never carries it.
+// Gecko Notes saves its column and the time of the choice, on the member's
+// own profile row, and nothing else. The whole-form save
+// (updateMyUserData) never carries either.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const fx = vi.hoisted(() => ({ calls: [], answer: { data: [{ email: 'sam@example.com' }], error: null }, user: { id: 'u1', email: 'sam@example.com' } }));
@@ -28,12 +29,15 @@ beforeEach(() => {
 });
 
 describe('User.setWeeklyNotes', () => {
-  it('updates only email_weekly_notes_enabled (and updated_date) on the member\'s own row', async () => {
+  it('updates only the switch, when it was chosen (and updated_date) on the member\'s own row', async () => {
     expect(await User.setWeeklyNotes(false)).toBe(false);
     expect(fx.calls[0]).toEqual(['from', 'profiles']);
     expect(fx.calls[1][0]).toBe('update');
-    expect(Object.keys(fx.calls[1][1]).sort()).toEqual(['email_weekly_notes_enabled', 'updated_date']);
+    expect(Object.keys(fx.calls[1][1]).sort()).toEqual(['email_weekly_notes_choice_at', 'email_weekly_notes_enabled', 'updated_date']);
     expect(fx.calls[1][1].email_weekly_notes_enabled).toBe(false);
+    // Moving the switch is an explicit choice, so the region rule for the
+    // EEA and the UK never overrides it (the database stamps its own clock).
+    expect(Number.isNaN(Date.parse(fx.calls[1][1].email_weekly_notes_choice_at))).toBe(false);
     expect(fx.calls[2]).toEqual(['eq', 'email', 'sam@example.com']);
     expect(await User.setWeeklyNotes(true)).toBe(true);
     expect(fx.calls[5][1].email_weekly_notes_enabled).toBe(true);

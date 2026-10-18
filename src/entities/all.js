@@ -58,6 +58,10 @@ export const User = new Proxy({}, {
     // moves. It is a column of its own (profiles.email_weekly_notes_enabled)
     // and never part of the Settings form, so the whole-form save above (or
     // a Settings tab left open from before) can never switch it back on.
+    // Moving the switch is the member's own choice, so it also records when
+    // (email_weekly_notes_choice_at; the database puts its own clock on it),
+    // and the EEA and UK region rule never overrides it
+    // (src/lib/weeklyNotesConsent.js).
     // A PostgREST error comes back as is: PGRST204 means the column is not
     // there yet (the site deployed before the migration).
     if (prop === 'setWeeklyNotes') {
@@ -65,8 +69,9 @@ export const User = new Proxy({}, {
         const supabase = await getSupabase();
         const user = await currentAuthUser();
         if (!user?.email) throw new Error('Sign in to change your email settings.');
+        const now = new Date().toISOString();
         const { data, error } = await supabase.from('profiles')
-          .update({ email_weekly_notes_enabled: enabled === true, updated_date: new Date().toISOString() })
+          .update({ email_weekly_notes_enabled: enabled === true, email_weekly_notes_choice_at: now, updated_date: now })
           .eq('email', user.email)
           .select('email');
         if (error) throw error;

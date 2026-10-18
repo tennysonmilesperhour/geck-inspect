@@ -35,6 +35,20 @@
 --    the old master value) does not bring the notes back; only the
 --    member's own weekly switch does.
 --
+-- 2b. profiles.email_weekly_notes_choice_at: when the member last made an
+--    explicit choice about the notes (the sign-up box, the Settings switch
+--    or the stop link), stamped with the database's clock. Empty means no
+--    choice. Members in the EEA and the UK get the notes only if they turn
+--    them on (decision of 18 Oct 2026, docs/planning/weekly-notes-2026-10.md
+--    section 1): the sign-up box starts unticked there, and
+--    weekly_notes_region_default() lets the app turn the notes off for a
+--    signed-in member whose browser is there and who has never chosen.
+--    It acts only on the caller's own profile and never after a choice.
+--    The sign-up box's value travels in the sign-up metadata
+--    (weekly_notes_at_signup) and is saved when the profile is made
+--    (handle_new_auth_user) or, when the profile already existed, by
+--    weekly_notes_region_default() on the first sign-in.
+--
 -- 3. public.weekly_notes_sends, the ledger: one row per member and note,
 --    unique on (email, slug), written by claim_weekly_note before the email
 --    goes. Keyed on the slug, not the step, so adding or renumbering notes
@@ -48,7 +62,7 @@
 -- 5. weekly_notes_candidates(): who may get a note now. claim_weekly_note():
 --    the per-member claim send-email makes. enqueue_weekly_notes(): the
 --    hourly job. unsubscribe_weekly_notes_by_token(): the "stop Weekly Gecko
---    Notes" link, which works signed out.
+--    Notes" link, which works signed out and records a choice.
 --
 -- 6. The job weekly-notes-hourly at 50 past each hour (the lifecycle job
 --    runs at 35 past).
@@ -107,7 +121,7 @@ begin
 end $$;
 
 comment on column public.profiles.email_weekly_notes_enabled is
-  'Weekly Gecko Notes on or off for this member. Defaults to on; members who had Platform Announcements or all email off when it was added started off. Changed by the Settings switch (its own save, never the whole-form save) and by unsubscribe_weekly_notes_by_token, and turned off by profiles_weekly_notes_follow_email_off whenever all email is switched off. Turning it off keeps every other email.';
+  'Weekly Gecko Notes on or off for this member. Defaults to on; members who had Platform Announcements or all email off when it was added started off. Set from the sign-up box (handle_new_auth_user), changed by the Settings switch (its own save, never the whole-form save) and by unsubscribe_weekly_notes_by_token, turned off by profiles_weekly_notes_follow_email_off whenever all email is switched off, and turned off by weekly_notes_region_default for a member in the EEA or the UK who never chose. Turning it off keeps every other email.';
 
 -- Stopping all email stops the weekly notes too. The trigger only ever
 -- turns the weekly switch off, so turning email back on never restarts the
@@ -136,6 +150,188 @@ create trigger profiles_weekly_notes_follow_email_off
   for each row
   when (old.email_notifications_enabled is true and new.email_notifications_enabled is not true)
   execute function public.weekly_notes_follow_email_off();
+
+-- 2b. The member's choice, and members in the EEA and the UK
+--
+-- When the member last chose, themselves, whether to get the notes: the
+-- sign-up box, the Settings switch or the stop link. Empty means they never
+-- chose, which is every existing member when this is added. The region
+-- rule below never overrides a member who chose.
+
+alter table public.profiles
+  add column if not exists email_weekly_notes_choice_at timestamptz;
+
+comment on column public.profiles.email_weekly_notes_choice_at is
+  'When the member last chose whether to get Weekly Gecko Notes (the sign-up box, the Settings switch or the stop link), on the database clock. Null means no choice yet; only then may weekly_notes_region_default turn the notes off for a member in the EEA or the UK.';
+
+-- The time is always the database's, whoever writes it: the Settings
+-- switch sends the browser's time, and a phone's clock can be wrong. Runs
+-- as whoever made the change (no definer rights) and touches only the row
+-- being written.
+create or replace function public.weekly_notes_stamp_choice()
+returns trigger
+language plpgsql
+security invoker
+set search_path to ''
+as $function$
+begin
+  if new.email_weekly_notes_choice_at is not null
+     and (tg_op = 'INSERT'
+          or new.email_weekly_notes_choice_at is distinct from old.email_weekly_notes_choice_at) then
+    new.email_weekly_notes_choice_at := now();
+  end if;
+  return new;
+end;
+$function$;
+
+revoke all on function public.weekly_notes_stamp_choice() from public, anon, authenticated;
+
+comment on function public.weekly_notes_stamp_choice() is
+  'Trigger: a Weekly Gecko Notes choice written to profiles.email_weekly_notes_choice_at gets the database''s clock, not the browser''s.';
+
+drop trigger if exists profiles_weekly_notes_stamp_choice on public.profiles;
+create trigger profiles_weekly_notes_stamp_choice
+  before insert or update of email_weekly_notes_choice_at on public.profiles
+  for each row
+  execute function public.weekly_notes_stamp_choice();
+
+-- The sign-up box. The form sends its value as weekly_notes_at_signup in
+-- the sign-up metadata (a JSON true or false). The profile is made here,
+-- by the trigger on auth.users, so the choice is saved with it. Google
+-- sign-in sends no such key, which is no choice. This is the baseline
+-- definition (20260410025954) with the two weekly columns added; nothing
+-- else changes. When a profile row for the address already existed (the
+-- insert does nothing), weekly_notes_region_default() saves the box on
+-- the member's first sign-in instead.
+create or replace function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  v_weekly boolean := case
+    when jsonb_typeof(new.raw_user_meta_data -> 'weekly_notes_at_signup') = 'boolean'
+      then (new.raw_user_meta_data ->> 'weekly_notes_at_signup')::boolean
+  end;
+begin
+  if new.email is null or new.email = '' then
+    return new;
+  end if;
+
+  insert into public.profiles (email, full_name, created_by, created_date, updated_date,
+                               email_weekly_notes_enabled, email_weekly_notes_choice_at)
+  values (
+    new.email,
+    nullif(trim(coalesce(
+      new.raw_user_meta_data ->> 'full_name',
+      new.raw_user_meta_data ->> 'name',
+      ''
+    )), ''),
+    new.email,
+    now(),
+    now(),
+    -- No box (Google sign-in): the column's default, on. The region rule
+    -- may turn it off at the first sign-in in the EEA or the UK.
+    coalesce(v_weekly, true),
+    case when v_weekly is not null then now() end
+  )
+  on conflict (email) do nothing;
+
+  return new;
+end;
+$function$;
+
+revoke all on function public.handle_new_auth_user() from public, anon, authenticated;
+grant execute on function public.handle_new_auth_user() to service_role;
+
+comment on function public.handle_new_auth_user() is
+  'Creates the public.profiles row for a new auth user. Without it the account is invisible to billing, tier checks, and every table that joins on profiles.email. Saves the sign-up box for Weekly Gecko Notes (metadata weekly_notes_at_signup) as the member''s choice.';
+
+-- The region rule. The app calls this once per browser session, after
+-- sign-in, for a member who has never chosen, when the browser is in the
+-- EEA or the UK (p_consent_region true: src/lib/analyticsConsent.js
+-- regionNeedsConsent, the Vercel country cookie or the time zone) or when
+-- the member's sign-up box has not been saved yet. Only the database can
+-- tell whether a choice exists, so it checks again here:
+--
+--   * acts only on the caller's own profile row (the address of the
+--     signed-in account, the same row the profile update policy allows);
+--   * a choice already recorded: nothing changes ('chosen');
+--   * the sign-up box not saved yet (the profile existed before sign-up):
+--     the box is saved now, on or off, as the choice ('signup-choice');
+--   * otherwise, in the region: the notes go off, and no choice is recorded,
+--     so the member's own switch can still turn them on ('region-off');
+--   * otherwise nothing changes ('unchanged').
+--
+-- It can only ever turn the notes off, except to save the member's own
+-- sign-up box. A member can run it from anywhere; the worst it does is
+-- stop their own notes.
+create or replace function public.weekly_notes_region_default(p_consent_region boolean)
+returns text
+language plpgsql
+volatile
+security definer
+set search_path to 'public'
+as $function$
+declare
+  v_uid uuid := auth.uid();
+  v_email text;
+  v_meta jsonb;
+  v_box boolean;
+  v_choice_at timestamptz;
+begin
+  if v_uid is null then
+    return 'not-signed-in';
+  end if;
+  select u.email, u.raw_user_meta_data into v_email, v_meta
+    from auth.users u
+   where u.id = v_uid;
+  if v_email is null or v_email = '' then
+    return 'no-profile';
+  end if;
+
+  if jsonb_typeof(v_meta -> 'weekly_notes_at_signup') = 'boolean' then
+    v_box := (v_meta ->> 'weekly_notes_at_signup')::boolean;
+  end if;
+
+  -- Each update re-checks "no choice yet" on the row itself, so a Settings
+  -- save that lands at the same moment always wins.
+  if v_box is not null then
+    update public.profiles p
+       set email_weekly_notes_enabled = v_box,
+           email_weekly_notes_choice_at = now()
+     where p.email = v_email
+       and p.email_weekly_notes_choice_at is null;
+    if found then
+      return 'signup-choice';
+    end if;
+  elsif p_consent_region is true then
+    update public.profiles p
+       set email_weekly_notes_enabled = false
+     where p.email = v_email
+       and p.email_weekly_notes_choice_at is null
+       and p.email_weekly_notes_enabled is distinct from false;
+    if found then
+      return 'region-off';
+    end if;
+  end if;
+
+  select p.email_weekly_notes_choice_at into v_choice_at
+    from public.profiles p
+   where p.email = v_email;
+  if not found then
+    return 'no-profile';
+  end if;
+  return case when v_choice_at is not null then 'chosen' else 'unchanged' end;
+end;
+$function$;
+
+revoke all on function public.weekly_notes_region_default(boolean) from public, anon, authenticated;
+grant execute on function public.weekly_notes_region_default(boolean) to authenticated, service_role;
+
+comment on function public.weekly_notes_region_default(boolean) is
+  'Weekly Gecko Notes for the signed-in caller only: when no choice is recorded, saves a sign-up box not saved yet, or (p_consent_region, a browser in the EEA or the UK) turns the notes off without recording a choice. Never acts after a choice. Returns chosen, signup-choice, region-off, unchanged, no-profile or not-signed-in.';
 
 -- 3. The ledger --------------------------------------------------------------
 
@@ -461,9 +657,11 @@ comment on function public.enqueue_weekly_notes(timestamptz, integer) is
 -- A copy of unsubscribe_email_by_token (20261003031622): the same token
 -- check through email_unsubscribe_token, which also checks the id's
 -- pattern. The only difference is the column it turns off, so reminders
--- and the other emails the member chose keep coming. A repeat call returns
--- true again. It touches no column protect_profile_privileged_columns
--- guards. Open to signed-out visitors, because the page and the mail app's
+-- and the other emails the member chose keep coming. Stopping is the
+-- member's choice, so it also records when (email_weekly_notes_choice_at),
+-- and the region rule never acts after it. A repeat call returns true
+-- again. It touches no column protect_profile_privileged_columns guards.
+-- Open to signed-out visitors, because the page and the mail app's
 -- one-click button call it with no sign-in: the signature is the proof.
 
 create or replace function public.unsubscribe_weekly_notes_by_token(p_token text)
@@ -485,7 +683,8 @@ begin
     return false;
   end if;
   update public.profiles
-     set email_weekly_notes_enabled = false
+     set email_weekly_notes_enabled = false,
+         email_weekly_notes_choice_at = now()
    where id = v_id;
   return found;
 end;
@@ -495,7 +694,7 @@ revoke all on function public.unsubscribe_weekly_notes_by_token(text) from publi
 grant execute on function public.unsubscribe_weekly_notes_by_token(text) to anon, authenticated, service_role;
 
 comment on function public.unsubscribe_weekly_notes_by_token(text) is
-  'The "stop Weekly Gecko Notes" link: checks the signed unsubscribe token and turns off only profiles.email_weekly_notes_enabled. Works signed out.';
+  'The "stop Weekly Gecko Notes" link: checks the signed unsubscribe token, turns off only profiles.email_weekly_notes_enabled and records the choice (email_weekly_notes_choice_at). Works signed out.';
 
 -- 9. The schedule ----------------------------------------------------------------
 --

@@ -1,6 +1,7 @@
 -- Weekly Gecko Notes: who may get one, the 7-day and 20-hour spacing, the
--- lifecycle window, never twice, the claim, the drip-only unsubscribe and
--- account erasure. Regression checks for
+-- lifecycle window, never twice, the claim, the drip-only unsubscribe,
+-- the sign-up box and the region rule for the EEA and the UK, and account
+-- erasure. Regression checks for
 -- supabase/migrations/20261018002200_weekly_notes.sql and
 -- 20261018002300_erase_weekly_notes.sql.
 --
@@ -35,8 +36,12 @@ grant all on _t0 to public;
 
 -- A member as Supabase Auth makes one (the auth.users trigger makes the
 -- profile). The helpers copy supabase/tests/lifecycle_regressions.sql.
+-- p_meta is the sign-up metadata (the sign-up form's box travels in it);
+-- p_profile_first makes the profile row before the account, like a row
+-- imported from the old platform.
 create function pg_temp.mk(p_tag text, p_signed_up timestamptz, p_name text default 'Sam Keeper',
-                           p_confirmed boolean default true, p_role text default 'user')
+                           p_confirmed boolean default true, p_role text default 'user',
+                           p_meta jsonb default '{}'::jsonb, p_profile_first boolean default false)
 returns text
 language plpgsql
 as $$
@@ -44,11 +49,14 @@ declare
   v_id uuid := gen_random_uuid();
   v_email text := 'weekly-' || p_tag || '-' || left(v_id::text, 8) || '@example.com';
 begin
+  if p_profile_first then
+    insert into public.profiles (email) values (v_email);
+  end if;
   insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
                           raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated', v_email,
           'not-a-real-password', case when p_confirmed then p_signed_up end,
-          '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, p_signed_up, p_signed_up);
+          '{"provider":"email","providers":["email"]}'::jsonb, p_meta, p_signed_up, p_signed_up);
   if not exists (select 1 from public.profiles where email = v_email) then
     insert into public.profiles (email) values (v_email);
   end if;
@@ -635,14 +643,20 @@ select pg_temp.as_postgres();
 do $$
 declare v record;
 begin
-  select email_weekly_notes_enabled, email_notifications_enabled into v
+  select email_weekly_notes_enabled, email_notifications_enabled, email_weekly_notes_choice_at into v
     from public.profiles where email = pg_temp.em('unsub');
   if v.email_weekly_notes_enabled is not false or v.email_notifications_enabled is not true then
     raise exception 'FAIL: the weekly unsubscribe should turn off weekly notes only: %', row_to_json(v);
   end if;
-  select email_weekly_notes_enabled, email_notifications_enabled into v
+  -- Stopping is the member's choice: it is recorded, so the region rule
+  -- never acts on this member again.
+  if v.email_weekly_notes_choice_at is distinct from now() then
+    raise exception 'FAIL: the weekly unsubscribe should record the choice: %', row_to_json(v);
+  end if;
+  select email_weekly_notes_enabled, email_notifications_enabled, email_weekly_notes_choice_at into v
     from public.profiles where email = pg_temp.em('tamper');
-  if v.email_weekly_notes_enabled is not true or v.email_notifications_enabled is not true then
+  if v.email_weekly_notes_enabled is not true or v.email_notifications_enabled is not true
+     or v.email_weekly_notes_choice_at is not null then
     raise exception 'FAIL: a tampered token changed a profile: %', row_to_json(v);
   end if;
   if pg_temp.cand('unsub', now()) then
@@ -759,6 +773,9 @@ begin
   if (select email_weekly_notes_enabled from public.profiles where email = v_e) is not true then
     raise exception 'FAIL: a new member should start with weekly notes on';
   end if;
+  if (select email_weekly_notes_choice_at from public.profiles where email = v_e) is not null then
+    raise exception 'FAIL: a member who signed up with no box should have no recorded choice';
+  end if;
   insert into public.profiles (email) values ('weekly-bare@example.com');
   if (select email_weekly_notes_enabled from public.profiles where email = 'weekly-bare@example.com') is not true then
     raise exception 'FAIL: a profile inserted without the column should default to on';
@@ -863,6 +880,11 @@ begin
     raise exception 'FAIL: a member can call enqueue_weekly_notes';
   exception when insufficient_privilege then null;
   end;
+  -- The region rule is the one weekly function a member may run, on
+  -- their own profile (block 12b).
+  if public.weekly_notes_region_default(false) is distinct from 'unchanged' then
+    raise exception 'FAIL: a member should be able to run weekly_notes_region_default';
+  end if;
 end $$;
 
 select pg_temp.as_anon();
@@ -886,6 +908,11 @@ begin
   begin
     perform public.enqueue_weekly_notes();
     raise exception 'FAIL: a signed-out visitor can call enqueue_weekly_notes';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.weekly_notes_region_default(true);
+    raise exception 'FAIL: a signed-out visitor can call weekly_notes_region_default';
   exception when insufficient_privilege then null;
   end;
 end $$;
@@ -926,12 +953,334 @@ begin
   end if;
 end $$;
 
+-- 12b. Members in the EEA and the UK: the sign-up box, the region rule and
+--      the recorded choice
+--
+-- Decision of 18 Oct 2026 (docs/planning/weekly-notes-2026-10.md, section
+-- 1). The sign-up form sends its box as weekly_notes_at_signup in the
+-- sign-up metadata, and the profile is made with it as the member's
+-- choice. Google sign-in sends no box, which is no choice. For a member
+-- who never chose, the app calls weekly_notes_region_default(true) when
+-- the browser is in the EEA or the UK, and the notes go off. A recorded
+-- choice (the box, the Settings switch, the stop link) is never overridden.
+select pg_temp.mk('box_on', now() - interval '30 days', p_meta => '{"full_name":"Ana Keeper","weekly_notes_at_signup":true}');
+select pg_temp.mk('box_off', now() - interval '30 days', p_meta => '{"full_name":"Ben Keeper","weekly_notes_at_signup":false}');
+select pg_temp.mk('google', now() - interval '30 days',
+                  p_meta => '{"full_name":"Cat Keeper","avatar_url":"https://example.com/cat.png","email_verified":true}');
+select pg_temp.mk('box_text', now() - interval '30 days', p_meta => '{"weekly_notes_at_signup":"false"}');
+select pg_temp.mk('eea_new', now() - interval '30 days');
+select pg_temp.mk('eea_other', now() - interval '30 days');
+select pg_temp.mk('us', now() - interval '30 days');
+select pg_temp.mk('settings', now() - interval '30 days');
+-- Profile rows that existed before the account (imported), so the sign-up
+-- trigger's insert does nothing and the box waits for the first sign-in.
+select pg_temp.mk('pre_off', now() - interval '30 days', p_meta => '{"weekly_notes_at_signup":false}', p_profile_first => true);
+select pg_temp.mk('pre_on', now() - interval '30 days', p_meta => '{"weekly_notes_at_signup":true}', p_profile_first => true);
+update public.profiles set email_weekly_notes_enabled = false where email = pg_temp.em('pre_on');
+
+-- The box is saved with the profile.
+do $$
+declare
+  v record;
+  v_id uuid;
+  v_email text;
+begin
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('box_on');
+  if v.is_on is not true or v.chosen_at is distinct from now() then
+    raise exception 'FAIL: a ticked sign-up box should save the notes on, as a choice: %', row_to_json(v);
+  end if;
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('box_off');
+  if v.is_on is not false or v.chosen_at is distinct from now() then
+    raise exception 'FAIL: an unticked sign-up box should save the notes off, as a choice: %', row_to_json(v);
+  end if;
+  if pg_temp.cand('box_off', now()) or not pg_temp.cand('box_on', now()) then
+    raise exception 'FAIL: the sign-up box should decide who is a candidate';
+  end if;
+  -- Google sign-in, and a box that is not a JSON true or false: no choice,
+  -- so the default (on) and room for the region rule.
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('google');
+  if v.is_on is not true or v.chosen_at is not null then
+    raise exception 'FAIL: a Google sign-up should keep the default with no choice: %', row_to_json(v);
+  end if;
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('box_text');
+  if v.is_on is not true or v.chosen_at is not null then
+    raise exception 'FAIL: a box that is not true or false should count as no choice: %', row_to_json(v);
+  end if;
+  -- The sign-up trigger still does its old job: the name from the
+  -- metadata (full_name, or Google's name), created_by, and the dates.
+  v_id := gen_random_uuid();
+  v_email := 'weekly-trigger-' || left(v_id::text, 8) || '@example.com';
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated', v_email,
+          'not-a-real-password', '{"provider":"email","providers":["email"]}'::jsonb,
+          '{"full_name":"  Dee Keeper  ","weekly_notes_at_signup":false}'::jsonb, now(), now());
+  select full_name, created_by, created_date, email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at
+    into v from public.profiles where email = v_email;
+  if v.full_name is distinct from 'Dee Keeper' or v.created_by is distinct from v_email
+     or v.created_date is distinct from now() or v.is_on is not false or v.chosen_at is distinct from now() then
+    raise exception 'FAIL: the sign-up trigger should fill the profile and save the box: %', row_to_json(v);
+  end if;
+  v_id := gen_random_uuid();
+  v_email := 'weekly-trigger-' || left(v_id::text, 8) || '@example.com';
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated', v_email,
+          'not-a-real-password', '{"provider":"google","providers":["google"]}'::jsonb,
+          '{"name":"Eve Keeper","email_verified":true}'::jsonb, now(), now());
+  select full_name, email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at
+    into v from public.profiles where email = v_email;
+  if v.full_name is distinct from 'Eve Keeper' or v.is_on is not true or v.chosen_at is not null then
+    raise exception 'FAIL: a Google sign-up should get its name and the default with no choice: %', row_to_json(v);
+  end if;
+  update public.profiles set email_weekly_notes_enabled = false where email like 'weekly-trigger-%';
+  -- A profile that already existed is left alone at sign-up.
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('pre_off');
+  if v.is_on is not true or v.chosen_at is not null then
+    raise exception 'FAIL: the sign-up trigger changed a profile that already existed: %', row_to_json(v);
+  end if;
+  if not pg_temp.cand('eea_new', now()) or not pg_temp.cand('eea_other', now()) then
+    raise exception 'FAIL: members with no choice should start as candidates';
+  end if;
+end $$;
+
+-- The region rule turns the notes off for a member who never chose, and
+-- records no choice.
+select pg_temp.as_member('eea_new');
+do $$
+declare v text;
+begin
+  v := public.weekly_notes_region_default(true);
+  if v is distinct from 'region-off' then
+    raise exception 'FAIL: the region rule should turn off a member with no choice, got %', v;
+  end if;
+  -- A second call (another tab) changes nothing.
+  v := public.weekly_notes_region_default(true);
+  if v is distinct from 'unchanged' then
+    raise exception 'FAIL: a second region call should change nothing, got %', v;
+  end if;
+end $$;
+select pg_temp.as_postgres();
+do $$
+declare v record;
+begin
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('eea_new');
+  if v.is_on is not false or v.chosen_at is not null then
+    raise exception 'FAIL: the region rule should turn the notes off without recording a choice: %', row_to_json(v);
+  end if;
+  if pg_temp.cand('eea_new', now()) then
+    raise exception 'FAIL: a member the region rule turned off is still a candidate';
+  end if;
+  -- Never another member: nothing in the call names one.
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('eea_other');
+  if v.is_on is not true or v.chosen_at is not null or not pg_temp.cand('eea_other', now()) then
+    raise exception 'FAIL: the region rule changed another member: %', row_to_json(v);
+  end if;
+end $$;
+
+-- Outside the region nothing changes for a member with no box.
+select pg_temp.as_member('us');
+do $$
+begin
+  if public.weekly_notes_region_default(false) is distinct from 'unchanged' then
+    raise exception 'FAIL: outside the region the call should change nothing';
+  end if;
+end $$;
+select pg_temp.as_postgres();
+do $$
+begin
+  if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('us')) is not true then
+    raise exception 'FAIL: a member outside the region lost the default';
+  end if;
+end $$;
+
+-- Never after an explicit choice: the sign-up box ...
+select pg_temp.as_member('box_on');
+do $$
+begin
+  if public.weekly_notes_region_default(true) is distinct from 'chosen' then
+    raise exception 'FAIL: the region rule should leave a ticked sign-up box alone';
+  end if;
+end $$;
+-- ... even when the sign-up metadata is edited later: the box is saved once.
+select pg_temp.as_postgres();
+update auth.users set raw_user_meta_data = '{"weekly_notes_at_signup":true}' where email = pg_temp.em('box_off');
+select pg_temp.as_member('box_off');
+do $$
+begin
+  if public.weekly_notes_region_default(false) is distinct from 'chosen' then
+    raise exception 'FAIL: edited sign-up metadata should not change a recorded choice';
+  end if;
+end $$;
+select pg_temp.as_postgres();
+do $$
+begin
+  if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('box_on')) is not true
+     or (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('box_off')) is not false then
+    raise exception 'FAIL: the region rule or the metadata overrode a sign-up choice';
+  end if;
+end $$;
+
+-- ... the Settings switch (the browser's clock is replaced with the
+-- database's) ...
+select pg_temp.as_member('settings');
+update public.profiles
+   set email_weekly_notes_enabled = true, email_weekly_notes_choice_at = '2001-01-01T00:00:00Z'
+ where email = pg_temp.em('settings');
+do $$
+begin
+  if public.weekly_notes_region_default(true) is distinct from 'chosen' then
+    raise exception 'FAIL: the region rule should leave a Settings choice alone';
+  end if;
+end $$;
+-- A later save that does not touch the choice keeps its time.
+update public.profiles set bio = 'Keeps Axanthics' where email = pg_temp.em('settings');
+select pg_temp.as_postgres();
+do $$
+declare v record;
+begin
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('settings');
+  if v.is_on is not true or v.chosen_at is distinct from now() then
+    raise exception 'FAIL: a Settings choice should be kept, on the database clock: %', row_to_json(v);
+  end if;
+end $$;
+
+-- ... and the stop link (block 6): the member later turns the notes back
+-- on in Settings, and the region rule leaves that alone too.
+select pg_temp.as_member('unsub');
+do $$
+begin
+  if public.weekly_notes_region_default(true) is distinct from 'chosen' then
+    raise exception 'FAIL: the region rule should leave a member who used the stop link alone';
+  end if;
+  update public.profiles
+     set email_weekly_notes_enabled = true, email_weekly_notes_choice_at = now()
+   where email = pg_temp.em('unsub');
+  if public.weekly_notes_region_default(true) is distinct from 'chosen' then
+    raise exception 'FAIL: the region rule should leave a member who turned the notes back on alone';
+  end if;
+end $$;
+select pg_temp.as_postgres();
+do $$
+begin
+  if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('unsub')) is not true then
+    raise exception 'FAIL: the region rule overrode a member who turned the notes back on';
+  end if;
+end $$;
+
+-- A member the region rule turned off can still turn the notes on.
+select pg_temp.as_member('eea_new');
+update public.profiles
+   set email_weekly_notes_enabled = true, email_weekly_notes_choice_at = now()
+ where email = pg_temp.em('eea_new');
+do $$
+begin
+  if public.weekly_notes_region_default(true) is distinct from 'chosen' then
+    raise exception 'FAIL: after turning the notes on the region rule should leave the member alone';
+  end if;
+end $$;
+select pg_temp.as_postgres();
+do $$
+begin
+  if not pg_temp.cand('eea_new', now()) then
+    raise exception 'FAIL: a member who turned the notes on after the region rule is not a candidate';
+  end if;
+end $$;
+
+-- A profile that existed before sign-up: the box is saved on the first
+-- sign-in, inside the region or not, and wins over the region rule.
+select pg_temp.as_member('pre_off');
+do $$
+begin
+  if public.weekly_notes_region_default(false) is distinct from 'signup-choice' then
+    raise exception 'FAIL: an unsaved sign-up box should be saved on the first sign-in';
+  end if;
+  if public.weekly_notes_region_default(false) is distinct from 'chosen' then
+    raise exception 'FAIL: a saved sign-up box should be saved only once';
+  end if;
+end $$;
+select pg_temp.as_member('pre_on');
+do $$
+begin
+  if public.weekly_notes_region_default(true) is distinct from 'signup-choice' then
+    raise exception 'FAIL: a ticked box in the region should be saved as the choice';
+  end if;
+end $$;
+select pg_temp.as_postgres();
+do $$
+declare v record;
+begin
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('pre_off');
+  if v.is_on is not false or v.chosen_at is distinct from now() then
+    raise exception 'FAIL: the unticked box should be saved off as a choice: %', row_to_json(v);
+  end if;
+  select email_weekly_notes_enabled as is_on, email_weekly_notes_choice_at as chosen_at into v
+    from public.profiles where email = pg_temp.em('pre_on');
+  if v.is_on is not true or v.chosen_at is distinct from now() then
+    raise exception 'FAIL: the ticked box should be saved on as a choice (consent in the region): %', row_to_json(v);
+  end if;
+end $$;
+
+-- With no sign-in there is nobody to act for.
+do $$
+begin
+  if public.weekly_notes_region_default(true) is distinct from 'not-signed-in' then
+    raise exception 'FAIL: the region rule acted with no signed-in caller';
+  end if;
+end $$;
+
+select pg_temp.retire('box_on');
+select pg_temp.retire('google');
+select pg_temp.retire('box_text');
+select pg_temp.retire('eea_new');
+select pg_temp.retire('eea_other');
+select pg_temp.retire('us');
+select pg_temp.retire('settings');
+select pg_temp.retire('pre_on');
+select pg_temp.retire('unsub');
+
 -- 13. The one-time backfill, and the file run twice ---------------------------
 --
 -- Back to the moment before the column existed: four members whose
--- announcement setting differs, then the migration file itself.
+-- announcement setting differs, then the migration file itself. The
+-- sign-up trigger goes back to its baseline definition (20260410025954),
+-- which knows nothing of the weekly columns.
 drop trigger profiles_weekly_notes_follow_email_off on public.profiles;
+drop trigger profiles_weekly_notes_stamp_choice on public.profiles;
+create or replace function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+begin
+  if new.email is null or new.email = '' then
+    return new;
+  end if;
+  insert into public.profiles (email, full_name, created_by, created_date, updated_date)
+  values (
+    new.email,
+    nullif(trim(coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', '')), ''),
+    new.email,
+    now(),
+    now()
+  )
+  on conflict (email) do nothing;
+  return new;
+end;
+$function$;
+drop function public.weekly_notes_region_default(boolean);
 alter table public.profiles drop column email_weekly_notes_enabled;
+alter table public.profiles drop column email_weekly_notes_choice_at;
 select pg_temp.mk('bf_on', now() - interval '30 days');
 select pg_temp.mk('bf_off', now() - interval '30 days');
 select pg_temp.mk('bf_null', now() - interval '30 days');
@@ -960,10 +1309,15 @@ begin
   if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('bf_master')) is not false then
     raise exception 'FAIL: a member with all email off should start opted out, so turning email on later does not start the notes';
   end if;
+  -- Nobody who was there before has a recorded choice, so the region rule
+  -- can reach them when they next sign in.
+  if exists (select 1 from public.profiles where email like 'weekly-bf%' and email_weekly_notes_choice_at is not null) then
+    raise exception 'FAIL: the migration recorded a choice for an existing member';
+  end if;
 end $$;
 
 -- Members change their minds; a second run of the file must not undo it.
-update public.profiles set email_weekly_notes_enabled = false where email = pg_temp.em('bf_on');
+update public.profiles set email_weekly_notes_enabled = false, email_weekly_notes_choice_at = now() where email = pg_temp.em('bf_on');
 update public.profiles set email_weekly_notes_enabled = true where email = pg_temp.em('bf_off');
 
 \ir ../migrations/20261018002200_weekly_notes.sql
@@ -982,6 +1336,24 @@ begin
   if (select count(*) from pg_trigger where tgrelid = 'public.profiles'::regclass
         and tgname = 'profiles_weekly_notes_follow_email_off' and not tgisinternal) <> 1 then
     raise exception 'FAIL: the stop-all trigger should exist exactly once after a second run';
+  end if;
+  if (select count(*) from pg_trigger where tgrelid = 'public.profiles'::regclass
+        and tgname = 'profiles_weekly_notes_stamp_choice' and not tgisinternal) <> 1 then
+    raise exception 'FAIL: the choice-time trigger should exist exactly once after a second run';
+  end if;
+  if (select email_weekly_notes_choice_at from public.profiles where email = pg_temp.em('bf_on')) is distinct from now()
+     or (select email_weekly_notes_choice_at from public.profiles where email = pg_temp.em('bf_off')) is not null then
+    raise exception 'FAIL: running the migration again changed a recorded choice';
+  end if;
+end $$;
+
+-- After both runs the sign-up trigger saves the box again.
+select pg_temp.mk('bf_box', now(), p_meta => '{"weekly_notes_at_signup":false}');
+do $$
+begin
+  if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('bf_box')) is not false
+     or (select email_weekly_notes_choice_at from public.profiles where email = pg_temp.em('bf_box')) is distinct from now() then
+    raise exception 'FAIL: after the migration ran twice the sign-up box is not saved';
   end if;
 end $$;
 

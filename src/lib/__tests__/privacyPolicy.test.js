@@ -94,6 +94,9 @@ describe('Privacy Policy: Weekly Gecko Notes', () => {
     expect(WEEKLY_PARAGRAPH).toContain('your email address');
     expect(WEEKLY_PARAGRAPH).toContain('which email in the series we sent and when');
     expect(WEEKLY_PARAGRAPH).toContain('when we last checked whether one was due');
+    // profiles.email_weekly_notes_choice_at, added by the same migration.
+    expect(WEEKLY_PARAGRAPH).toContain('when you last chose to get them or not');
+    expect(WEEKLY_SQL).toContain('add column if not exists email_weekly_notes_choice_at timestamptz');
   });
 
   it('says how to stop it, and that stopping keeps reminders', () => {
@@ -103,6 +106,40 @@ describe('Privacy Policy: Weekly Gecko Notes', () => {
     // The trigger in the migration: stopping all email stops the notes for good.
     expect(WEEKLY_PARAGRAPH).toContain('Unsubscribing from all notification emails stops them too, and they stay off until you turn them back on in Settings.');
     expect(WEEKLY_SQL).toContain('create trigger profiles_weekly_notes_follow_email_off');
+  });
+
+  // The decision of 18 Oct 2026 (docs/planning/weekly-notes-2026-10.md,
+  // section 1): off unless turned on in the EEA and the UK, a choice at
+  // sign-up for new members, and a recorded choice never overridden.
+  const CHOICE_PARAGRAPH = PAGE.match(/New members choose at sign-up[^<]*/)?.[0] ?? '';
+  const LOGIN = readFileSync(new URL('../../components/auth/LoginPortal.jsx', import.meta.url), 'utf8');
+
+  it('says new members choose at sign-up, and the sign-up form has the box', () => {
+    expect(CHOICE_PARAGRAPH).toContain('New members choose at sign-up: the sign-up form has a box for Weekly Gecko Notes');
+    expect(CHOICE_PARAGRAPH).toContain('we save what you chose and when, as we do each time you use the Settings switch or the stop link');
+    expect(LOGIN).toContain('Send me Weekly Gecko Notes, one short crested gecko tip a week');
+    expect(LOGIN).toContain('[SIGNUP_METADATA_KEY]: weeklyNotes === true');
+    expect(WEEKLY_SQL).toContain("jsonb_typeof(new.raw_user_meta_data -> 'weekly_notes_at_signup') = 'boolean'");
+    // The stop link records the choice too.
+    expect(WEEKLY_SQL).toMatch(/set email_weekly_notes_enabled = false,\s+email_weekly_notes_choice_at = now\(\)\s+where id = v_id;/);
+  });
+
+  it('says the notes are off unless turned on in the EEA and the UK, and only sent with consent', () => {
+    expect(CHOICE_PARAGRAPH).toContain('In the European Economic Area and the United Kingdom, Weekly Gecko Notes are off unless you turn them on');
+    expect(CHOICE_PARAGRAPH).toContain('the box starts unticked there, and we send them only with your consent');
+    expect(CHOICE_PARAGRAPH).toContain("from the country your connection comes from and your browser's time zone");
+    expect(LOGIN).toContain('useState(() => signupBoxDefault())');
+  });
+
+  it('says what happens to a member there who never chose, and that a choice is never overridden', () => {
+    expect(CHOICE_PARAGRAPH).toContain('the notes are turned off for you the next time you sign in from there');
+    expect(CHOICE_PARAGRAPH).toContain('until then they stay as they were, and every note has its one-click stop link');
+    expect(CHOICE_PARAGRAPH).toContain('Everywhere else the box starts ticked, and the notes come until you stop them.');
+    expect(CHOICE_PARAGRAPH).toContain('A choice you made is never changed because of where you are later.');
+    // The database function acts only while no choice is recorded.
+    const fn = WEEKLY_SQL.slice(WEEKLY_SQL.indexOf('create or replace function public.weekly_notes_region_default'));
+    expect(fn).toContain('and p.email_weekly_notes_choice_at is null');
+    expect(fn).toContain('where u.id = v_uid');
   });
 
   it('says deleting the account erases these records, and the erasure does', () => {

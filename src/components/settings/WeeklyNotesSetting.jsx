@@ -14,7 +14,8 @@ import { User } from '@/entities/all';
  * so an old Settings tab can never switch it back on. The page keeps the
  * value in its own state (`enabled` and `onChange`), so it survives the
  * email list closing and opening with the master switch. A failed save puts
- * the switch back.
+ * the switch back. Each save also records when the member chose, so the
+ * EEA and UK region rule (src/lib/weeklyNotesConsent.js) never overrides it.
  */
 export default function WeeklyNotesSetting({ enabled, onChange }) {
   const [saving, setSaving] = useState(false);

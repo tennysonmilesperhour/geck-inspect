@@ -16,6 +16,7 @@ import { Loader2, Mail, Lock, User as UserIcon, Check, ArrowLeft } from 'lucide-
 import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { isGuestMode } from '@/lib/guestMode';
 import { isPkceLinkFromAnotherBrowser, readEmailLink } from '@/lib/emailLinkAuth';
+import { SIGNUP_METADATA_KEY, signupBoxDefault } from '@/lib/weeklyNotesConsent';
 
 // Supabase refuses a password sign-in for an unconfirmed address with
 // code email_not_confirmed (older versions only say so in the message).
@@ -81,6 +82,11 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   const [signUpSent, setSignUpSent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  // Weekly Gecko Notes: ticked by default, except for a browser in the EEA
+  // or the UK, where the notes need the member's consent
+  // (src/lib/weeklyNotesConsent.js). The value goes in the sign-up metadata
+  // and the database saves it as the member's choice with the profile.
+  const [weeklyNotes, setWeeklyNotes] = useState(() => signupBoxDefault());
   // A gecko the visitor typed in the guest demo, saved once the account
   // exists (My Geckos picks it up), and the way back to the demo.
   const [pendingGeckoName] = useState(() => readPendingGecko()?.name || null);
@@ -159,7 +165,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
           password,
           options: {
             emailRedirectTo: authRedirect(memberHome()),
-            data: { full_name: name },
+            data: { full_name: name, [SIGNUP_METADATA_KEY]: weeklyNotes === true },
           },
         });
         if (error) {
@@ -532,6 +538,17 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                         onCheckedChange={(checked) => setRememberMe(!!checked)}
                       />
                       <span className="text-sm text-slate-400">Stay signed in</span>
+                    </label>
+                  )}
+
+                  {isSignUp && (
+                    <label className="flex items-start gap-2 touch:min-h-11 cursor-pointer select-none">
+                      <Checkbox
+                        className="mt-0.5"
+                        checked={weeklyNotes}
+                        onCheckedChange={(checked) => setWeeklyNotes(checked === true)}
+                      />
+                      <span className="text-sm text-slate-400">Send me Weekly Gecko Notes, one short crested gecko tip a week</span>
                     </label>
                   )}
 
