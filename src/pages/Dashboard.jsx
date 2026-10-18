@@ -298,9 +298,22 @@ export default function Dashboard() {
 
                         <div className="relative z-10 p-5 md:p-10">
                             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
-                                    <Flame className="w-3.5 h-3.5" />
-                                    {todayLabel}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
+                                        <Flame className="w-3.5 h-3.5" />
+                                        {todayLabel}
+                                    </div>
+                                    <div className="inline-flex items-center rounded-full border border-slate-700/80 bg-slate-900/80 p-0.5 text-xs font-semibold">
+                                        <Link
+                                            to="/Today"
+                                            className="rounded-full px-3 py-1 text-slate-400 transition-colors hover:text-slate-100"
+                                        >
+                                            Daily Care
+                                        </Link>
+                                        <span className="rounded-full bg-emerald-600 px-3 py-1 text-white shadow-sm">
+                                            Overview
+                                        </span>
+                                    </div>
                                 </div>
                                 <SignOutButton className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800 backdrop-blur-sm" />
                             </div>
@@ -345,7 +358,7 @@ export default function Dashboard() {
                                         store curation, then passive views (Preview, What's New). */}
                                     {user && !isFirstRun && (
                                         <Link to={createPageUrl('MyGeckos')}>
-                                            <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg shadow-emerald-500/20">
+                                            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/20">
                                                 <GitBranch className="w-4 h-4 mr-2" />
                                                 My Collection
                                             </Button>
@@ -539,7 +552,7 @@ export default function Dashboard() {
                                         <h3 className="font-semibold">Community Hatchery</h3>
                                     </div>
                                     <div>
-                                        <p className="text-4xl font-bold text-white">
+                                        <p className="text-4xl font-bold font-mono tabular-nums text-white">
                                             {hatcheryStats.hatched.toLocaleString()}
                                         </p>
                                         <p className="text-xs text-slate-400 uppercase tracking-wider mt-1">
@@ -559,18 +572,18 @@ export default function Dashboard() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-xs">
                                         <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-2">
-                                            <p className="text-slate-500 uppercase tracking-wider text-[10px]">
+                                            <p className="text-slate-500 uppercase tracking-wider text-xs">
                                                 Incubating
                                             </p>
-                                            <p className="text-lg font-bold text-amber-300">
+                                            <p className="text-lg font-bold font-mono tabular-nums text-amber-300">
                                                 {hatcheryStats.incubating}
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-2">
-                                            <p className="text-slate-500 uppercase tracking-wider text-[10px]">
+                                            <p className="text-slate-500 uppercase tracking-wider text-xs">
                                                 Active Pairs
                                             </p>
-                                            <p className="text-lg font-bold text-emerald-300">
+                                            <p className="text-lg font-bold font-mono tabular-nums text-emerald-300">
                                                 {hatcheryStats.plans}
                                             </p>
                                         </div>

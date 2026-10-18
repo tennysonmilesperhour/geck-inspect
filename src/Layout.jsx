@@ -43,6 +43,16 @@ import {
   MOBILE_MENU_ID
 } from "@/components/ui/Sidebar";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import UserBadge from "@/components/ui/UserBadge";
 import TierBadge, { tierRingClass, tierKeyFor } from "@/components/ui/TierBadge";
 
@@ -181,6 +191,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   // The Log tab's sheet (feeding, weigh-in, shed or Field Mode).
   const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const [loginPromptFeature, setLoginPromptFeature] = useState(null);
 
   // The phone header is glass that floats over the page, so the page pads
   // its top by the header's height (--top-bar-h, read in index.css). It is
@@ -654,9 +665,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   };
 
   const handleLoginPrompt = (featureName) => {
-    if (window.confirm(`${featureName} requires an account. Would you like to sign up or log in now?`)) {
-      handleLogin();
-    }
+    setLoginPromptFeature(featureName);
   };
 
   const nextMilestone = MILESTONES.find((m) => imageCount < m.count);
@@ -800,7 +809,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 }`}
               >
                 <IconComponent className="h-7 w-7 flex-shrink-0" />
-                <span className="text-[11px] font-semibold leading-tight line-clamp-2 sidebar-collapse-hide">
+                <span className="text-xs font-semibold leading-tight line-clamp-2 sidebar-collapse-hide">
                   {item.display_name}
                 </span>
               </Link>
@@ -857,7 +866,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     upfront which tabs they can actually use.           */}
                 {isGuest && item.requires_auth && (
                   <span
-                    className="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wider text-yellow-200 bg-yellow-400/15 border border-yellow-300/30 rounded px-1.5 py-0.5"
+                    className="ml-auto shrink-0 text-xs font-bold uppercase tracking-wider text-yellow-200 bg-yellow-400/15 border border-yellow-300/30 rounded px-1.5 py-0.5"
                     title="Guests can view this page but cannot save changes"
                   >
                     view only
@@ -886,7 +895,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           aria-expanded={open}
           data-tutorial-id={`__group_${group.id}`}
           data-tutorial-label={group.label}
-          className="sidebar-collapse-hide w-full flex items-center justify-between px-4 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sage-700 hover:text-emerald-200 transition-colors"
+          className="sidebar-collapse-hide w-full flex items-center justify-between px-4 pt-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-sage-700 hover:text-emerald-200 transition-colors"
         >
           <span>{group.label}</span>
           {open ? <ChevronDown className="h-3.5 w-3.5 opacity-60" /> : <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
@@ -931,7 +940,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               onError={(e) => swapToFallback(e, APP_LOGO_URL)}
             />
           )}
-              <span className="text-lg font-bold text-emerald-100" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
+              <span className="text-lg font-extrabold tracking-tight text-emerald-100" style={{ fontFamily: "'Montserrat', system-ui, sans-serif", letterSpacing: '-0.02em' }}>Geck Inspect</span>
             </Link>
           </SidebarHeader>
 
@@ -1094,7 +1103,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       onError={(e) => swapToFallback(e, APP_LOGO_URL)}
                     />
                   )}
-                  <span className="text-xl font-bold text-emerald-100 sidebar-collapse-hide whitespace-nowrap" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
+                  <span className="text-lg font-extrabold tracking-tight text-emerald-100 sidebar-collapse-hide whitespace-nowrap" style={{ fontFamily: "'Montserrat', system-ui, sans-serif", letterSpacing: '-0.02em' }}>Geck Inspect</span>
                 </Link>
               </div>
 
@@ -1236,6 +1245,14 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               <div className="flex items-center gap-2">
                 {user ? (
                   <div className="gecko-header-actions">
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
+                      className="gecko-header-action"
+                      aria-label="Open quick search"
+                    >
+                      <Search />
+                    </button>
                     <MarketIntelligenceButton user={user} />
                     <Link to={createPageUrl("Messages")} className="gecko-header-action" aria-label="Messages">
                       <Mail />
@@ -1256,10 +1273,20 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     </Link>
                   </div>
                 ) : (
-                  <Button onClick={handleLogin} size="sm" className="bg-gradient-to-r from-sage-600 to-earth-600 hover:from-sage-700 hover:to-earth-700">
-                    <UserPlus className="w-4 h-4 mr-1" />
-                    Login
-                  </Button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
+                      className="hover:bg-emerald-500/20 rounded-lg transition-colors duration-200 inline-flex items-center justify-center w-9 h-9 touch:w-11 touch:h-11 text-emerald-200 hover:text-emerald-50"
+                      aria-label="Open quick search"
+                    >
+                      <Search className="w-5 h-5" />
+                    </button>
+                    <Button onClick={handleLogin} size="sm" className="bg-gradient-to-r from-sage-600 to-earth-600 hover:from-sage-700 hover:to-earth-700">
+                      <UserPlus className="w-4 h-4 mr-1" />
+                      Login
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
@@ -1277,6 +1304,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 >
                   <Search className="w-4 h-4" />
                   <span className="flex-1 text-left text-emerald-500/70">Quick search…</span>
+                  <kbd className="hidden sm:inline-flex items-center rounded border border-emerald-700/50 bg-emerald-900/40 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300/80">
+                    ⌘K
+                  </kbd>
                 </button>
               </div>
 
@@ -1377,6 +1407,37 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} onDismiss={handleRoleDismissed} />
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
+      <AlertDialog
+        open={Boolean(loginPromptFeature)}
+        onOpenChange={(open) => {
+          if (!open) setLoginPromptFeature(null);
+        }}
+      >
+        <AlertDialogContent className="border-slate-700 bg-slate-900 text-slate-100">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-100">
+              Sign in to open {loginPromptFeature}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-300">
+              {loginPromptFeature} requires a Geck Inspect account. Sign in or create a free account to track your collection, log care, and unlock keeper tools.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700">
+              Not now
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setLoginPromptFeature(null);
+                handleLogin();
+              }}
+              className="bg-emerald-600 text-white hover:bg-emerald-500"
+            >
+              Sign in or sign up
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {/* Feeding reminders and the guest demo card share one corner and
           stack instead of overlapping. */}
       <FloatingNoticeStack>

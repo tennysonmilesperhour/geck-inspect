@@ -27,6 +27,16 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard, LogOut, TrendingUp
 } from 'lucide-react';
 import { resolveTier } from '@/lib/tierLimits';
@@ -343,6 +353,7 @@ const HATCHERY_SORT_VALUES = new Set(HATCHERY_SORT_OPTIONS.map((o) => o.value));
 
 export default function SettingsPage() {
     const [user, setUser] = useState(null);
+    const [confirmPolicyReplaceOpen, setConfirmPolicyReplaceOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
@@ -880,12 +891,41 @@ export default function SettingsPage() {
                                     className="h-7 px-2.5 text-xs border-emerald-700/60 bg-emerald-900/20 text-emerald-200 hover:bg-emerald-900/40 hover:text-emerald-100"
                                     onClick={() => {
                                         const hasContent = (formData.store_policy || '').trim().length > 0;
-                                        if (hasContent && !window.confirm('Replace your current policy with the example template?')) return;
+                                        if (hasContent) {
+                                            setConfirmPolicyReplaceOpen(true);
+                                            return;
+                                        }
                                         handleChange('store_policy', STORE_POLICY_EXAMPLE);
                                     }}
                                 >
                                     Use example template
                                 </Button>
+                                <AlertDialog open={confirmPolicyReplaceOpen} onOpenChange={setConfirmPolicyReplaceOpen}>
+                                    <AlertDialogContent className="border-slate-700 bg-slate-900 text-slate-100">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle className="text-slate-100">
+                                                Replace current store policy?
+                                            </AlertDialogTitle>
+                                            <AlertDialogDescription className="text-slate-300">
+                                                This will replace your current store policy text with the example template. You can still edit it before saving.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel className="border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700">
+                                                Cancel
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={() => {
+                                                    setConfirmPolicyReplaceOpen(false);
+                                                    handleChange('store_policy', STORE_POLICY_EXAMPLE);
+                                                }}
+                                                className="bg-emerald-600 text-white hover:bg-emerald-500"
+                                            >
+                                                Replace with template
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                             <Textarea
                                 id="store_policy"
