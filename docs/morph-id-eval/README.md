@@ -69,10 +69,9 @@ before and after it compare like for like:
   and content blocks now live in `supabase/functions/recognize-gecko-morph/request.ts`,
   and `src/lib/__tests__/morphRequestSnapshot.test.js` checks them byte for
   byte against the request sent before the change. Same model, same photo
-  embedded, same pinned Replicate version, same reference photos (the faster
-  reference query returns what the old one did when that one compared every
-  row; `supabase/tests/morph_neighbors_production_check.sql` confirms that on
-  production before the change is merged).
+  embedded, same pinned Replicate version, same reference photos (the reference
+  query is unchanged: a faster exact version was held back because production's
+  current query is approximate, so an exact one would change the photos).
 - **Only the answer's ceiling moved.** `max_tokens` went from 3000 to 4096 on
   Sonnet 4.6. The model never sees it; it only stops an unusually long answer
   from being cut off. A cut-off answer is retried once with twice the room.

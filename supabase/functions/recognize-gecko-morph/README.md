@@ -24,8 +24,6 @@ are unusable, and it never treats model scores as calibrated probabilities.
 - Supabase CLI installed and linked to the project
 - Anthropic and Replicate API keys
 - `20260905031350_morph_retrieval_evidence.sql` applied
-- `20261017170000_morph_reference_vectors.sql` applied for the faster
-  reference-photo query (the function works the same without it)
 
 ## Secrets
 
@@ -52,19 +50,14 @@ match. The one exception is a Replicate model that is still booting at the
 embedding deadline (69.5 seconds after the request arrived for one or two
 photos, 59 for five): see "Time limits" below.
 
-Since 17 October 2026 the reference photos are read from
-`public.morph_reference_vectors` (migration
-`20261017170000_morph_reference_vectors.sql`), a copy of the eligible
-`gecko_images` rows with the labels worked out once and the embedding stored in
-the row. A trigger keeps it in step. `morph_visual_neighbors` kept its name,
-arguments and results: `supabase/tests/morph_neighbors_regressions.sql` shows
-it returns what the old query returns when that query compares every row.
-Whether production's old function did compare every row (rather than use the
-approximate `idx_gecko_images_embedding` index) cannot be read from EXPLAIN,
-because a function with a SET clause is never inlined and its plan shows one
-Function Scan. `supabase/tests/morph_neighbors_production_check.sql` checks it
-on production by comparing the function's answers with the exact ones; it is
-run before the migration is merged (deploy queue, 17 October).
+A faster exact version of the reference-photo query (a narrow copy of the
+eligible rows) was built on 17 October 2026 and held back.
+`supabase/tests/morph_neighbors_production_check.sql` compares what
+production's `morph_visual_neighbors` returns with the exact nearest photos:
+on 18 October all 20 sample photos differed, so production's function uses
+the approximate `idx_gecko_images_embedding` index. An exact query would change
+which reference photos Morph ID sees, and so some answers, which needs a graded
+run first (`docs/morph-id-eval/README.md`).
 
 ## How a request runs, and where the time goes
 

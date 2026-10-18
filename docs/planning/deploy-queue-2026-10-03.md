@@ -136,19 +136,12 @@ Same model, same instructions, same answer fields; the request the model reads i
 
 **Vercel:** the Morph ID page sends that warm-up when a signed-in member with a scan left opens it, and again on picking the top view after 3 minutes. No photo is sent. The daily canary sends it too and prints each call's embedding and Claude time (its 100 s limit is unchanged).
 
-**Supabase, migration `20261017170000_morph_reference_vectors.sql`:** `morph_visual_neighbors` reads a narrow copy of the eligible reference photos (`public.morph_reference_vectors`, kept in step by a trigger on `gecko_images`), with the same signature, and the same results provided production's old function compares every row (step 2 below checks that before the merge). Test: `supabase/tests/morph_neighbors_regressions.sql` (same rows, same order, similarity within 1e-9, against a copy of the old query with the approximate index taken out of its way; and the copy stays in step through inserts, edits and deletes). The function and the page work with or without it, so the order the three deploys land in does not matter.
+**Held back: a faster reference-photo query.** The session also built a narrow, exact copy of the reference photos for `morph_visual_neighbors`. Before merging, `supabase/tests/morph_neighbors_production_check.sql` was run on production (read-only, 18 Oct): 20 of 20 sample photos came back with different reference photos from the exact answer, so today's function uses the approximate `idx_gecko_images_embedding` index. The exact query would change which reference photos Morph ID sees, so it was dropped from the merge. It could come back after a graded run shows it does not lower accuracy.
 
 ### Morph ID speed: what still needs Tennyson
 
 1. **Replicate credit at $5 or more** (Replicate dashboard, Billing). Below that Replicate allows one request at a time.
-2. **Before merging, on production (read-only, SQL Editor): check that today's `morph_visual_neighbors` is exact.** Merging applies the migration, so this comes first.
-   - Paste `supabase/tests/morph_neighbors_production_check.sql` into the SQL Editor and run it: one SELECT, about 10 to 30 seconds (if it times out, change `limit 20` to `limit 10`). It returns one row.
-   - **`different` = 0** (verdict "exact: same reference photos in the same order"): the old function already returns the exact nearest photos, so the new one returns the same and Morph ID's reference photos do not move. Merge.
-   - **`different` above 0**: the old function used the approximate `idx_gecko_images_embedding` index, and the new one would change the reference photos (and so some answers). Do not merge; tell the next session.
-   - After the deploy, run the same file again. It should still say 0.
-   - Why not EXPLAIN: `morph_visual_neighbors` has `set search_path to ''`, and Postgres never inlines a function with a SET clause, so `explain` on a call to it prints a single Function Scan node and nothing about the index inside. The Seq Scan on `gecko_images` it can show belongs to the subquery that picks the sample photo, not to the function. EXPLAIN still times it: `explain (analyze, buffers) select * from public.morph_visual_neighbors((select image_embedding from public.gecko_images where image_embedding is not null and verified limit 1), 48);` took 280 to 581 ms with about 11,000 buffers before; after, the Function Scan line should show tens of ms.
-   - Checked on a local copy on 18 Oct: with the old function on the regression test's photos the check says 0; with the old function forced onto the HNSW index, 20 of 20 differ; with the new function, 0.
-3. **After the deploy:** open Morph ID, wait a minute, tap Identify, and check the `embed` time in the response's `Server-Timing` header (browser network panel) is under 5 s. On the next cold canary day, call 1's embed time should drop.
+2. **After the deploy:** open Morph ID, wait a minute, tap Identify, and check the `embed` time in the response's `Server-Timing` header (browser network panel) is under 5 s. On the next cold canary day, call 1's embed time should drop.
 
 ## Done on 3 October
 

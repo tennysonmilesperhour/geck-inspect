@@ -1,7 +1,8 @@
 -- Does production's morph_visual_neighbors return the exact nearest
--- reference photos? A read-only check for the Supabase SQL editor, to run
--- before merging 20261017170000_morph_reference_vectors.sql and again after
--- (docs/planning/deploy-queue-2026-10-03.md, "Morph ID speed", step 2).
+-- reference photos? A read-only check for the Supabase SQL editor. Run on
+-- production on 18 Oct 2026: 20 of 20 samples differed, so the function uses
+-- the approximate index, and an exact rewrite (built and held back that day)
+-- would change Morph ID's reference photos.
 --
 -- Why a comparison and not EXPLAIN: morph_visual_neighbors has
 -- "set search_path to ''", and Postgres never inlines a function with a SET
@@ -18,11 +19,9 @@
 --
 -- One row comes back. "different" counts the embeddings whose reference
 -- photos (which ones, and in what order) are not the exact ones.
---   different = 0: the function is exact. Before the migration, that means
---     the old function was exact, and the new one (proved equal to the exact
---     old query by morph_neighbors_regressions.sql) returns the same photos.
---   different > 0: before the migration, the old function was approximate
---     and the new one would change Morph ID's reference photos. Do not merge.
+--   different = 0: the function returns the exact nearest photos.
+--   different > 0: it is approximate; an exact replacement would change
+--     Morph ID's reference photos.
 --
 -- It reads only, and takes about 10 to 30 seconds (two scans of every
 -- reference photo for each embedding). If the editor times out, change
