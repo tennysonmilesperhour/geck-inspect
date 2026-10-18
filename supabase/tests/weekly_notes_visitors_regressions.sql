@@ -19,7 +19,7 @@
 -- 20261018150100_weekly_notes_visitor_fixes_2.sql and
 -- 20261018150200_weekly_notes_visitor_fixes_3.sql; section 12 covers
 -- 20261018150300_weekly_notes_visitor_fixes_4.sql; section 13 covers
--- 20261018162400_weekly_notes_visitor_fixes_5.sql (the reviews of 18 Oct
+-- 20261018150400_weekly_notes_visitor_fixes_5.sql (the reviews of 18 Oct
 -- 2026).
 --
 -- Each block raises "FAIL: ..." when a rule is broken. The last line
@@ -1082,7 +1082,7 @@ begin
   raise notice 'visitor candidates with 2,000 suppressions and 2,000 visitors: % ms', round(v_ms);
 end $$;
 
--- 13. The fifth review (20261018162400) ------------------------------------------------------------
+-- 13. The fifth review (20261018150400) ------------------------------------------------------------
 do $$
 declare
   v_old timestamptz := now() - interval '40 days';
@@ -1223,7 +1223,7 @@ begin
   v_start := clock_timestamp();
   perform count(*) from public.weekly_notes_candidates(now(), true);
   v_ms := extract(epoch from clock_timestamp() - v_start) * 1000;
-  -- About 0.4 s here; the rule before 162400 took over 4 s.
+  -- About 0.4 s here; the rule before 150400 took over 4 s.
   if v_ms > 2000 then
     raise exception 'FAIL: member candidates took % ms with 3,000 members', round(v_ms);
   end if;
@@ -1254,7 +1254,7 @@ values ('old-trigger@example.com', 'notes:care', now() - interval '20 days', now
 \ir ../migrations/20261018150100_weekly_notes_visitor_fixes_2.sql
 \ir ../migrations/20261018150200_weekly_notes_visitor_fixes_3.sql
 \ir ../migrations/20261018150300_weekly_notes_visitor_fixes_4.sql
-\ir ../migrations/20261018162400_weekly_notes_visitor_fixes_5.sql
+\ir ../migrations/20261018150400_weekly_notes_visitor_fixes_5.sql
 do $$
 begin
   if not exists (select 1 from public.newsletter_subscribers where email = 'rerun@example.com' and confirmed_at is not null) then
