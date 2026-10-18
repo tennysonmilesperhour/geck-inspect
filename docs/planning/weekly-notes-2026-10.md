@@ -198,6 +198,8 @@ The tests (`WRITING_RULES` in `scripts/lib/weekly-notes.mjs`, and the accepted f
 
 ## 6. Adding a note (for the scheduled session)
 
+**Who does it.** A standing Claude session, "Weekly Gecko Notes writer" (`session_01YR1zwTcYBhRJEVBMhn1QG4`), is woken every Thursday at 15:49 UTC by the routine of the same name (`trig_01WiuAnCp2EWqc5VYotHKSBt`, set up 18 October 2026; first run 22 October). Each wake it works out whether a note is needed by the rule below, writes and checks at most two, and pushes to main. With 16 notes written, the first new one is due about week 8 (mid December). To pause it, disable the routine in Claude's routines list; to change what it does, edit the routine's prompt or message the session.
+
 1. Read this document, including the do-not-use list in section 5.
 2. Write `content/weekly-notes/<next NNN>-<slug>.md` in the format below, with its sources.
 3. Run `pnpm build:weekly-notes`, then `pnpm vitest run src/lib/__tests__/weeklyNotes.test.js`, `node scripts/check-genetics-consistency.mjs` and `pnpm test`. The build also adds the new slug to `content/weekly-notes/published-slugs.json`; commit that file with the note.
