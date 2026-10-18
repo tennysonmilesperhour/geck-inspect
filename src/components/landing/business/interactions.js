@@ -255,7 +255,7 @@ export function mountBusinessHome(root, track) {
       photoTitle: '“Where do I even start?”',
       title: 'There’s a reason behind the range.',
       description: 'See the asking-price context, inspect the comparisons and bring your own knowledge of the animal. A starting point you can understand.',
-      hint: 'Try “Inspect sample comparables” →'
+      hint: 'Try “Inspect sample comparables”'
     },
     pair: {
       image: "/demo-geckos/blush.webp",
@@ -264,7 +264,7 @@ export function mountBusinessHome(root, track) {
       photoTitle: '“What could they produce?”',
       title: 'Turn curiosity into a pairing you understand.',
       description: 'Change the parents and watch the single-gene outcomes respond. Explore the possibilities, and see a clear warning when the model flags a lethal combination.',
-      hint: 'Try changing either parent’s Lilly White copies →'
+      hint: 'Try changing either parent’s Lilly White copies'
     },
     track: {
       image: "/demo-geckos/bliss.webp",
@@ -273,7 +273,7 @@ export function mountBusinessHome(root, track) {
       photoTitle: '“How is the season going?”',
       title: 'The numbers are finally together.',
       description: 'Add a show expense or a feed cost. See it alongside recorded sales, with a balance that changes as you go. There is less to reconstruct at the end of the season.',
-      hint: 'Try adding an $80 show expense →'
+      hint: 'Try adding an $80 show expense'
     },
     sell: {
       image: "/demo-geckos/moonlight.webp",
@@ -282,7 +282,7 @@ export function mountBusinessHome(root, track) {
       photoTitle: '“Everything they need is here.”',
       title: 'Be ready when the right buyer arrives.',
       description: 'Open a buyer packet with the animal’s photo, recorded parents, weights and care notes. The history you kept has somewhere useful to go.',
-      hint: 'Try “Preview the buyer packet” →'
+      hint: 'Try “Preview the buyer packet”'
     }
   };
   function updateStory(name) {
