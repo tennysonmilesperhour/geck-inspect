@@ -337,7 +337,7 @@ describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
   });
 
   it('says how to stop them, what stays, how to have it deleted and what joining does', () => {
-    expect(VISITOR_PARAGRAPH).toContain('The link in every note stops them at once, from any device, and it also stops them if you later make an account with the same address, however it is written (with or without dots or a plus tag), until you turn them on again in Settings.');
+    expect(VISITOR_PARAGRAPH).toContain('The link in every note stops them at once, from any device, and it also stops them if you later make an account with the same address, however it is written (with or without a plus tag, and for Gmail with or without dots), until you turn them on again in Settings.');
     // Any spelling of the inbox, and the first sign-in keeps the stop (the fourth fixes migration).
     expect(FIXES4_SQL).toContain('create or replace function public.weekly_notes_visitor_stop_at(p_email text)');
     expect(FIXES4_SQL).toContain('if public.weekly_notes_visitor_stop_at(v_email) is not null then');

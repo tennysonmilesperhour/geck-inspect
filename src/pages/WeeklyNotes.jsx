@@ -119,10 +119,11 @@ export default function WeeklyNotes() {
                         {state === 'member' && (
                             <div className="text-center space-y-4">
                                 <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-400" aria-hidden="true" />
-                                <h1 className="text-2xl font-bold text-slate-100">This address has an account</h1>
+                                <h1 className="text-2xl font-bold text-slate-100">You have a Geck Inspect account</h1>
                                 <p className="text-slate-400">
-                                    Members get Weekly Gecko Notes after their first two weeks. The switch for
-                                    them is in Settings, under Email notifications.
+                                    This address, or another spelling of it, belongs to an account. Members get
+                                    Weekly Gecko Notes after their first two weeks. The switch for them is in
+                                    Settings, under Email notifications.
                                 </p>
                                 <Link to="/Settings#email-notifications"><Button variant="outline">Open Settings</Button></Link>
                             </div>

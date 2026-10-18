@@ -135,7 +135,8 @@ describe('/WeeklyNotes', () => {
     fx.rpcAnswer = () => ({ data: 'member', error: null });
     renderAt('/WeeklyNotes?t=tok_ABC-123');
     await user.click(screen.getByRole('button', { name: 'Confirm my email' }));
-    expect(await screen.findByRole('heading', { name: 'This address has an account' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'You have a Geck Inspect account' })).toBeTruthy();
+    expect(screen.getByText(/This address, or another spelling of it, belongs to an account/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Settings' })).toBeTruthy();
   });
 

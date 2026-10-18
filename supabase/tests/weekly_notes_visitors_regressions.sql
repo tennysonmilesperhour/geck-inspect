@@ -18,7 +18,8 @@
 -- Section 11 covers the fixes in 20261018150000_weekly_notes_visitor_fixes.sql,
 -- 20261018150100_weekly_notes_visitor_fixes_2.sql and
 -- 20261018150200_weekly_notes_visitor_fixes_3.sql; section 12 covers
--- 20261018150300_weekly_notes_visitor_fixes_4.sql (the reviews of 18 Oct
+-- 20261018150300_weekly_notes_visitor_fixes_4.sql; section 13 covers
+-- 20261018150400_weekly_notes_visitor_fixes_5.sql (the reviews of 18 Oct
 -- 2026).
 --
 -- Each block raises "FAIL: ..." when a rule is broken. The last line
@@ -1081,6 +1082,154 @@ begin
   raise notice 'visitor candidates with 2,000 suppressions and 2,000 visitors: % ms', round(v_ms);
 end $$;
 
+-- 13. The fifth review (20261018150400) ------------------------------------------------------------
+do $$
+declare
+  v_old timestamptz := now() - interval '40 days';
+  v_at timestamptz := (select t0 from _t0) + interval '160 days';
+  v_token text;
+  v jsonb;
+  v_key bigint;
+begin
+  -- "Already" only for a spelling that really gets the notes: a spelling
+  -- that bounced does not lock the inbox out.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('kimx+geckos@example.org', 'notes:care', v_at - interval '9 days', v_at - interval '9 days');
+  insert into public.email_suppressions (email, reason) values ('kimx+geckos@example.org', 'bounced');
+  if pg_temp.ask('k1', 'kimx@example.org', v_at, null) <> 'confirm' then
+    raise exception 'FAIL: a bounced spelling locked the inbox out with "already"';
+  end if;
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('k1'), v_at) <> 'confirmed'
+     or not pg_temp.vcand('kimx@example.org', v_at + interval '1 hour', true) then
+    raise exception 'FAIL: the plain address could not sign up after a plus-tag bounce';
+  end if;
+
+  -- The stop link stops every spelling of the inbox and kills every
+  -- pending link for it; a new sign-up afterwards is offered again.
+  -- (Both links are asked for before either is pressed.)
+  perform pg_temp.ask('sa1', 'stop.all@gmail.com', v_at, null);
+  if pg_temp.ask('sa2', 'stopall+p@gmail.com', v_at, null) <> 'confirm' then
+    raise exception 'FAIL: setup, the second spelling should get its own link';
+  end if;
+  perform public.confirm_weekly_notes_signup_at(pg_temp.tok('sa1'), v_at);
+  v_token := public.weekly_notes_subscriber_token('stop.all@gmail.com');
+  if not public.unsubscribe_weekly_notes_subscriber(v_token) then
+    raise exception 'FAIL: the visitor stop link did not work';
+  end if;
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('sa2'), v_at) <> 'invalid'
+     or exists (select 1 from public.newsletter_subscribers
+                 where public.email_inbox_key(email) = 'stopall@gmail.com' and unsubscribed_at is null) then
+    raise exception 'FAIL: a stop left another spelling of the inbox, or its pending link, alive';
+  end if;
+  if pg_temp.ask('sa3', 'stopall@gmail.com', v_at + interval '2 days', null) <> 'confirm' then
+    raise exception 'FAIL: an inbox that stopped could not sign up again';
+  end if;
+
+  -- The confirm button takes the form's per-inbox lock.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirm_token_hash, confirm_sent_at)
+  values ('lock.check@gmail.com', 'notes:care', v_at, encode(extensions.digest('lock-check-token-0123456789abcdefgh', 'sha256'), 'hex'), v_at);
+  perform public.confirm_weekly_notes_signup_at('lock-check-token-0123456789abcdefgh', v_at);
+  v_key := hashtextextended('weekly_notes_signup:' || public.email_inbox_key('lock.check@gmail.com'), 0);
+  if not exists (select 1 from pg_locks l
+                  where l.locktype = 'advisory' and l.pid = pg_backend_pid() and l.objsubid = 1
+                    and ((l.classid::bigint << 32) | l.objid::bigint) = v_key) then
+    raise exception 'FAIL: the confirm button did not take the per-inbox lock';
+  end if;
+
+  -- Spellings already confirmed side by side: one series, chosen before
+  -- the 7-day rule, which counts the whole inbox.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('dup.one@gmail.com', 'notes:care', v_at - interval '30 days', v_at - interval '30 days'),
+         ('dupone+b@gmail.com', 'notes:care', v_at - interval '20 days', v_at - interval '20 days');
+  if (select count(*) from public.weekly_notes_subscriber_candidates(v_at, true) c
+       where public.email_inbox_key(c.email) = 'dupone@gmail.com') <> 1
+     or not pg_temp.vcand('dup.one@gmail.com', v_at, true) then
+    raise exception 'FAIL: two spellings of one inbox both became visitor candidates';
+  end if;
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('dupone+b@gmail.com', 1, 'a-note', v_at - interval '2 days');
+  if exists (select 1 from public.weekly_notes_subscriber_candidates(v_at, true) c
+              where public.email_inbox_key(c.email) = 'dupone@gmail.com') then
+    raise exception 'FAIL: the 7-day rule let a second spelling of the inbox get a note';
+  end if;
+
+  -- No repeats across spellings: a visitor who signs up again under
+  -- another spelling, and a visitor who joins under another spelling.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('mia.lopez@gmail.com', 'notes:care', v_at - interval '40 days', v_at - interval '40 days');
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('mia.lopez@gmail.com', 1, 'a-note', v_at - interval '20 days');
+  update public.newsletter_subscribers set unsubscribed_at = v_at - interval '15 days' where email = 'mia.lopez@gmail.com';
+  perform pg_temp.ask('mia', 'mialopez@gmail.com', v_at, null);
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('mia'), v_at) <> 'confirmed' then
+    raise exception 'FAIL: setup, the second spelling should confirm';
+  end if;
+  v := public.claim_weekly_note_subscriber('mialopez@gmail.com', array['a-note', 'b-note'], v_at + interval '1 hour', array[1, 2]);
+  if v->>'slug' is distinct from 'b-note' then
+    raise exception 'FAIL: signing up again under another spelling repeated a note, got %', v;
+  end if;
+  perform pg_temp.mk_member('sam@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'sam@example.com';
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('sam+notes@example.com', 1, 'a-note', now() - interval '10 days');
+  v := public.claim_weekly_note('sam@example.com', array['a-note', 'b-note'], now());
+  if v->>'slug' is distinct from 'b-note' then
+    raise exception 'FAIL: a visitor who joined under another spelling got a note again, got %', v;
+  end if;
+
+  -- The do-not-email check is by inbox for members too.
+  insert into public.email_suppressions (email, reason) values ('lee2+notes@outlook.com', 'complained');
+  perform pg_temp.mk_member('lee2@outlook.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'lee2@outlook.com';
+  if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'lee2@outlook.com')
+     or not public.email_is_suppressed('lee2@outlook.com')
+     or public.email_is_suppressed('kim@yahoo.com') then
+    raise exception 'FAIL: the member path did not match the do-not-email list by inbox';
+  end if;
+
+  -- Erasure covers every spelling of the inbox.
+  perform pg_temp.mk_member('era.se@gmail.com', v_old);
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('erase+notes@gmail.com', 'notes:care', v_old - interval '30 days', v_old - interval '30 days');
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('erase+notes@gmail.com', 1, 'a-note', v_old - interval '20 days');
+  if (public.admin_erase_weekly_notes_visitor('erase+notes@gmail.com'))->>'reason' is distinct from 'has-account' then
+    raise exception 'FAIL: a visitor erasure ran on an inbox that has an account';
+  end if;
+  perform public.admin_erase_account('era.se@gmail.com');
+  if exists (select 1 from public.newsletter_subscribers where public.email_inbox_key(email) = 'erase@gmail.com')
+     or exists (select 1 from public.weekly_notes_sends where public.email_inbox_key(email) = 'erase@gmail.com') then
+    raise exception 'FAIL: account erasure left visitor rows or the ledger under another spelling';
+  end if;
+
+  -- The guide form's log knows the inbox.
+  insert into public.guide_email_sends (email) values ('V.Ictim+1@gmail.com');
+  if (select inbox_key from public.guide_email_sends where email = 'V.Ictim+1@gmail.com') <> 'victim@gmail.com' then
+    raise exception 'FAIL: the guide form log has the wrong inbox key';
+  end if;
+end $$;
+
+-- A rough cost check: the member candidates stay fast with many members
+-- (the member rule reads a member's last choice only when there is a stop).
+do $$
+declare
+  v_start timestamptz;
+  v_ms numeric;
+begin
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  select '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+         'perfm' || g || '@example.com', 'x', now() - interval '40 days',
+         '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now() - interval '40 days', now() - interval '40 days'
+    from generate_series(1, 3000) g;
+  update public.profiles set email_notifications_enabled = true, email_weekly_notes_enabled = true where email like 'perfm%@example.com';
+  analyze public.profiles;
+  v_start := clock_timestamp();
+  perform count(*) from public.weekly_notes_candidates(now(), true);
+  v_ms := extract(epoch from clock_timestamp() - v_start) * 1000;
+  -- About 0.4 s here; the rule before 150400 took over 4 s.
+  if v_ms > 2000 then
+    raise exception 'FAIL: member candidates took % ms with 3,000 members', round(v_ms);
+  end if;
+  raise notice 'member candidates with 3,000 members: % ms', round(v_ms);
+end $$;
+
 -- 10. Running the fixes migration again changes nothing ------------------------------------------
 select pg_temp.ask('rerun', 'rerun@example.com', now(), null);
 insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, unsubscribed_at)
@@ -1091,11 +1240,21 @@ values ('future-confirm@example.com', 'homepage', now() - interval '1 day', now(
 -- A profile the 150100 trigger left off with no choice (made before the
 -- stop row here, so today's trigger does not record one).
 insert into public.profiles (email, email_weekly_notes_enabled) values ('old-trigger@example.com', false);
+-- A profile that chose before a stop on another spelling (possible before
+-- 150300), and a spelling left confirmed beside a newer stop.
+-- (Triggers off for this one row: the stamp trigger would date the choice now.)
+set local session_replication_role = replica;
+insert into public.profiles (email, email_weekly_notes_enabled, email_weekly_notes_choice_at) values ('chose.early@gmail.com', true, now() - interval '30 days');
+set local session_replication_role = origin;
+insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at, unsubscribed_at)
+values ('choseearly+v@gmail.com', 'notes:care', now() - interval '25 days', now() - interval '25 days', now() - interval '5 days'),
+       ('chose.early+w@gmail.com', 'notes:care', now() - interval '24 days', now() - interval '24 days', null);
 insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at, unsubscribed_at)
 values ('old-trigger@example.com', 'notes:care', now() - interval '20 days', now() - interval '20 days', now() - interval '10 days');
 \ir ../migrations/20261018150100_weekly_notes_visitor_fixes_2.sql
 \ir ../migrations/20261018150200_weekly_notes_visitor_fixes_3.sql
 \ir ../migrations/20261018150300_weekly_notes_visitor_fixes_4.sql
+\ir ../migrations/20261018150400_weekly_notes_visitor_fixes_5.sql
 do $$
 begin
   if not exists (select 1 from public.newsletter_subscribers where email = 'rerun@example.com' and confirmed_at is not null) then
@@ -1113,6 +1272,12 @@ begin
   end if;
   if (select confirmed_at from public.newsletter_subscribers where email = 'future-confirm@example.com') is not null then
     raise exception 'FAIL: the migration left a confirmation dated in the future';
+  end if;
+  if (select email_weekly_notes_enabled from public.profiles where email = 'chose.early@gmail.com') is not false then
+    raise exception 'FAIL: a profile that chose before a newer stop on another spelling still shows the notes on';
+  end if;
+  if (select unsubscribed_at from public.newsletter_subscribers where email = 'chose.early+w@gmail.com') is null then
+    raise exception 'FAIL: a spelling left confirmed beside a newer stop was not stopped';
   end if;
   if (select email_weekly_notes_choice_at from public.profiles where email = 'old-trigger@example.com') is null
      or (select email_weekly_notes_enabled from public.profiles where email = 'old-trigger@example.com') is not false then

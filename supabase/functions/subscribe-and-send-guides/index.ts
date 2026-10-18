@@ -2,9 +2,10 @@
 //
 // The homepage lead-magnet form posts to this function. It:
 //   1. Validates the payload (email shape, length caps, honeypot).
-//   2. Allows one email per address per day and a few per network per
-//      hour, counted in `guide_email_sends`, so a script cannot use the
-//      form to send mail to strangers.
+//   2. Allows one email per inbox per day (plus tags and Gmail dots count
+//      as one inbox: guide_email_sends.inbox_key, from email_inbox_key) and
+//      a few per network per hour, counted in `guide_email_sends`, so a
+//      script cannot use the form to send mail to strangers.
 //   3. Adds a new address to `newsletter_subscribers`. An address already
 //      there keeps its consent and any unsubscribe. An unsubscribed
 //      address, and one on the do-not-email list (email_inbox_suppressed:
@@ -170,8 +171,12 @@ serve(async (req) => {
   try {
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // The database's own rule for which inbox an address reaches, so the
+    // count matches the inbox_key it stores with each request.
+    const { data: inboxKey, error: keyErr } = await supabase.rpc("email_inbox_key", { p_email: email });
+    if (keyErr || typeof inboxKey !== "string" || !inboxKey) throw keyErr || new Error("no inbox key");
     const [byAddress, byNetwork] = await Promise.all([
-      countSince("email", email, dayAgo),
+      countSince("inbox_key", inboxKey, dayAgo),
       ipKey ? countSince("ip_hash", ipKey, hourAgo) : Promise.resolve(0),
     ]);
     if (byAddress >= LIMIT_PER_ADDRESS_PER_DAY) {

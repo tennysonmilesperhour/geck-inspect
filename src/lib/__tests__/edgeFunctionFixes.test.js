@@ -48,10 +48,13 @@ describe('client IP for rate limits', () => {
 });
 
 describe('subscribe-and-send-guides never undoes an unsubscribe', () => {
-  function run(existing, { sentToday = 0, suppressed = false, suppressionError = false, resendStatus = 200, env = ENV } = {}) {
+  function run(existing, { sentToday = 0, suppressed = false, suppressionError = false, inboxKeyError = false, resendStatus = 200, env = ENV } = {}) {
     const db = fakeSupabase((call) => {
+      if (call.rpc === 'email_inbox_key') {
+        return inboxKeyError ? { data: null, error: { message: 'down' } } : { data: 'the-inbox@example.com', error: null };
+      }
       if (call.table === 'guide_email_sends' && actionOf(call) === 'select') {
-        return { count: filterValue(call, 'eq', 'email') ? sentToday : 0, error: null };
+        return { count: filterValue(call, 'eq', 'inbox_key') === 'the-inbox@example.com' ? sentToday : 0, error: null };
       }
       if (call.table === 'newsletter_subscribers' && actionOf(call) === 'select') return { data: existing, error: null };
       if (call.rpc === 'email_inbox_suppressed') {
@@ -85,6 +88,17 @@ describe('subscribe-and-send-guides never undoes an unsubscribe', () => {
       expect(r.net.requests).toHaveLength(0);
       expect(r.db.rpcCalls('email_inbox_suppressed')[0].args).toEqual({ p_email: 'bounced@example.com' });
     }
+  });
+
+  it('counts the daily limit per inbox, and refuses when the inbox cannot be worked out', async () => {
+    const r = run(null, { sentToday: 1 });
+    expect(await ask(r, 'Some.One+x@example.com')).toEqual({ ok: true, skipped: 'recently_sent' });
+    expect(r.db.rpcCalls('email_inbox_key')[0].args).toEqual({ p_email: 'some.one+x@example.com' });
+    expect(r.net.requests).toHaveLength(0);
+    const broken = run(null, { inboxKeyError: true });
+    const res = await broken.fn.handle(postJson('https://x.test/', { email: 'reader@example.com' }));
+    expect(res.status).toBe(500);
+    expect(broken.net.requests).toHaveLength(0);
   });
 
   it('gives the same reply at the daily limit, after a failed send and without a Resend key', async () => {
