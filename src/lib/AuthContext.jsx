@@ -6,6 +6,7 @@ import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
 import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
 import { recordSignupIfNew } from '@/lib/activation';
+import { applyWeeklyNotesRegionDefault, weeklyNotesAfter } from '@/lib/weeklyNotesConsent';
 import { setAnalyticsContext } from '@/lib/telemetry';
 import { loadUserProfile } from '@/lib/userProfile';
 import { queryClientInstance } from '@/lib/query-client';
@@ -90,6 +91,16 @@ export const AuthProvider = ({ children }) => {
         recordSignupIfNew(session.user, enriched).catch(() => {});
         applyPendingReferral(enriched);
         applyPendingSignupGrant();
+        // Weekly Gecko Notes: in the EEA and the UK they are off unless the
+        // member turned them on (src/lib/weeklyNotesConsent.js). Once per
+        // browser session, in the background; it never rejects. When it
+        // changed the notes, the context user follows (Settings listens for
+        // WEEKLY_NOTES_CHANGED_EVENT too).
+        void applyWeeklyNotesRegionDefault(session.user, enriched).then((outcome) => {
+          const enabled = weeklyNotesAfter(outcome, session.user);
+          if (enabled === null || revision !== revisionRef.current) return;
+          setUser((prev) => (prev ? { ...prev, email_weekly_notes_enabled: enabled } : prev));
+        });
       });
     };
     const start = (supabase) => {

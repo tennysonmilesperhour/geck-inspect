@@ -21,9 +21,14 @@
 import {
   ADULT_WEIGHT_G,
   BREEDING,
+  HEAT_DANGER_C,
+  HEAT_DANGER_F,
   INCUBATION_DAYS,
+  INCUBATION_MAX_SAFE_C,
+  INCUBATION_MAX_SAFE_F,
   INCUBATION_PROFILES,
   LIFE_STAGES,
+  WEIGH_IN_DAYS,
 } from '../../src/data/husbandry-facts.js';
 
 // ---------- the facts, in words ----------------------------------------
@@ -46,6 +51,9 @@ export const ACCEPTED_FACTS = {
   lifeStages: `Life stages: ${LIFE_STAGES.map((s, i) => `${s.label.toLowerCase()} ${i === 0 ? `under ${s.maxGrams}` : `${LIFE_STAGES[i - 1].maxGrams}${s.maxGrams === null ? '+' : ` to ${s.maxGrams}`}`} g`).join(', ')}.`,
   adultWeight: `Adults weigh ${ADULT_WEIGHT_G.min} to ${ADULT_WEIGHT_G.max} g.`,
   shedIntervals: `Shed intervals: ${LIFE_STAGES.map((s) => `${s.label.toLowerCase()} every ${s.shedWeeks[0]} to ${s.shedWeeks[1]} weeks`).join(', ')}.`,
+  heatDanger: `Heat danger starts above ${HEAT_DANGER_F}\u00B0F (${HEAT_DANGER_C}\u00B0C), one number everywhere; nothing hotter is safe.`,
+  incubationMax: `No incubation temperature goes above ${INCUBATION_MAX_SAFE_F}\u00B0F (${INCUBATION_MAX_SAFE_C}\u00B0C); above it the hobby reports more deformed and weak hatchlings.`,
+  weighInDays: `Weigh-in reminders: every ${WEIGH_IN_DAYS.growing} days for a hatchling or juvenile, every ${WEIGH_IN_DAYS.subadult} days for a sub-adult and every ${WEIGH_IN_DAYS.adult} days for an adult (those are the longest gaps; weighing more often is always fine).`,
 };
 
 // ---------- helpers -------------------------------------------------------
@@ -259,6 +267,75 @@ export const SENTENCE_RULES = [
       const index = STAGE_INDEX[stageWord[1].toLowerCase().replace(/s$/, '').replace('subadult', 'sub-adult')];
       const [wLo, wHi] = LIFE_STAGES[index].shedWeeks;
       if (lo !== wLo || hi !== wHi) return `gives ${stageWord[1]} a shed interval of ${m[1]} to ${m[2]} ${m[3]}`;
+      return null;
+    },
+  },
+  {
+    fact: 'heatDanger',
+    test(s) {
+      // Egg temperatures are incubationMax's job.
+      if (/\b(incubat\w*|eggs?|clutch\w*)\b/i.test(s)) return null;
+      // "Kills appetite" is not heat danger, so "kill" is not one of the words.
+      const harm = /heat stress|\bfatal\b|\bdanger\w*|\bdeath\b|\bdeadly\b|\blethal\b|\boverheat\w*|\btoo hot\b/i;
+      if (harm.test(s)) {
+        for (const m of s.matchAll(/\b(above|past|over|exceed\w*|beyond|higher than|hotter than)\s+(about\s+)?(\d+)\s*\u00B0\s*([FC])\b/gi)) {
+          const unit = m[4].toUpperCase();
+          const n = Number(m[3]);
+          if (n !== (unit === 'F' ? HEAT_DANGER_F : HEAT_DANGER_C)) return `puts heat danger above ${n}\u00B0${unit}`;
+        }
+      }
+      // "fine up to 85\u00B0F", "can tolerate 84\u00B0F"
+      for (const m of s.matchAll(/\b(fine|safe|okay|ok|comfortable|tolerat\w*|cope|handle)\b[^.;]{0,25}?(\d+)\s*\u00B0\s*([FC])\b/gi)) {
+        const unit = m[3].toUpperCase();
+        const n = Number(m[2]);
+        if (n > (unit === 'F' ? HEAT_DANGER_F : HEAT_DANGER_C) && !NEGATION.test(m[0])) return `calls ${n}\u00B0${unit} safe for a crested gecko`;
+      }
+      return null;
+    },
+  },
+  {
+    fact: 'incubationMax',
+    test(s) {
+      if (!/\b(incubat\w*|eggs?|clutch\w*)\b/i.test(s)) return null;
+      for (const m of s.matchAll(/(\d+)\s*\u00B0\s*([FC])\b/g)) {
+        const unit = m[2];
+        const n = Number(m[1]);
+        // Room temperatures under 60\u00B0F are not incubation temperatures.
+        if (n > (unit === 'F' ? INCUBATION_MAX_SAFE_F : INCUBATION_MAX_SAFE_C)) {
+          return `gives an incubation temperature of ${n}\u00B0${unit}`;
+        }
+      }
+      return null;
+    },
+  },
+  {
+    fact: 'weighInDays',
+    test(s) {
+      if (!/\bweigh/i.test(s)) return null;
+      const UNIT = '(days?|weeks?|months?)';
+      const toDays = (n, unit) => (/^week/i.test(unit) ? n * 7 : /^month/i.test(unit) ? n * 30 : n);
+      // The reminder gaps are the longest a keeper should leave; weighing
+      // more often (a gecko that is losing weight) is always fine.
+      for (const m of s.matchAll(new RegExp(`\\bevery\\s+(\\d+)\\s*(?:to|-)\\s*(\\d+)\\s*${UNIT}\\b`, 'gi'))) {
+        if (toDays(Number(m[2]), m[3]) > WEIGH_IN_DAYS.adult) return `gives a weigh-in gap of every ${m[1]} to ${m[2]} ${m[3]}`;
+      }
+      for (const m of s.matchAll(new RegExp(`\\bevery\\s+(\\d+)\\s*${UNIT}\\b`, 'gi'))) {
+        if (toDays(Number(m[1]), m[2]) > WEIGH_IN_DAYS.adult) return `gives a weigh-in gap of every ${m[1]} ${m[2]}`;
+      }
+      // The gap for each life stage: "every 30 days for an adult" or "an
+      // adult every 30 days" (never across "and", "or" or another "every").
+      const STAGE = '(hatchling|juvenile|sub-?adult|adult)s?';
+      const longest = (stage) => (/^sub/i.test(stage) ? WEIGH_IN_DAYS.subadult
+        : /^adult/i.test(stage) ? WEIGH_IN_DAYS.adult : WEIGH_IN_DAYS.growing);
+      const pairs = [
+        ...[...s.matchAll(new RegExp(`\\bevery\\s+(\\d+)\\s*${UNIT}\\s+(?:for|as|with)\\s+(?:an?\\s+)?(?:new\\s+|young\\s+|growing\\s+|struggling\\s+)?${STAGE}\\b`, 'gi'))]
+          .map((m) => ({ stage: m[3], n: Number(m[1]), unit: m[2] })),
+        ...[...s.matchAll(new RegExp(`\\b${STAGE}\\b(?:(?!\\b(?:and|or|but|every|then)\\b)[^,.;]){0,25}?\\bevery\\s+(\\d+)\\s*${UNIT}\\b`, 'gi'))]
+          .map((m) => ({ stage: m[1], n: Number(m[2]), unit: m[3] })),
+      ];
+      for (const { stage, n, unit } of pairs) {
+        if (toDays(n, unit) > longest(stage)) return `gives a ${stage.toLowerCase()} a weigh-in gap of every ${n} ${unit}`;
+      }
       return null;
     },
   },

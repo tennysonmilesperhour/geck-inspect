@@ -34,6 +34,14 @@ const WRONG = [
   ['adultWeight', 'Healthy adults weigh about 30 to 55 g.'],
   ['shedIntervals', 'Crested geckos shed every 1 to 4 weeks depending on age and growth rate.'],
   ['shedIntervals', 'Adults shed every 4-8 weeks, easy to miss if colors are dark.'],
+  // The Feeding guide said 85°F until October 2026; a note could say it again.
+  ['heatDanger', 'Above 85°F causes heat stress, which can be fatal.'],
+  ['heatDanger', 'Above 85°F a crested gecko is under heat stress.'],
+  ['heatDanger', 'Crested geckos are fine up to 85°F.'],
+  ['incubationMax', 'Keep incubation at 84°F for a faster hatch.'],
+  ['weighInDays', 'Weigh a hatchling every 30 days and an adult every 90 days.'],
+  ['weighInDays', 'Weigh a sub-adult every 30 days.'],
+  ['weighInDays', 'Weigh every 2 to 6 weeks.'],
 ];
 
 // Correct sentences, including the tricky ones the rules must leave alone.
@@ -63,6 +71,13 @@ const RIGHT = [
   'Hatchlings shed every 1-2 weeks.',
   'Juveniles shed every 2-3 weeks.',
   'Adults shed every 4-6 weeks.',
+  'Above 82°F (28°C) causes heat stress, which can be fatal.',
+  'Above 80°F or below 68°F kills appetite.',
+  'Above about 80°F (27°C) the hobby reports more deformed and weak hatchlings.',
+  'Weigh every 3-4 days.',
+  'Weigh a new or struggling hatchling every week.',
+  'Every 14 days for a hatchling or juvenile, every 21 days for a sub-adult and every 30 days for an adult.',
+  'Keep the rhythm: every 14 days while a crested gecko is growing, every 21 days as a sub-adult and every 30 days as an adult.',
 ];
 
 describe('accepted facts rules', () => {

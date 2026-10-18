@@ -8,6 +8,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import * as lifecycleCopy from '../../../supabase/functions/_shared/lifecycle-copy.ts';
+// send-email also imports the Weekly Gecko Notes helper; the harness drops
+// imports, so both modules go in as globals.
+import * as weeklyNotes from '../../../supabase/functions/_shared/weekly-notes.ts';
+import { WEIGH_IN_DAYS } from '../../data/husbandry-facts.js';
 import { fakeFetch, fakeSupabase, loadFunction, postJson } from './edgeHarness';
 
 const { lifecycleEmail, lifecycleReason, LIFECYCLE_TYPES } = lifecycleCopy;
@@ -91,7 +95,7 @@ describe('lifecycle copy', () => {
   it.each(SAMPLES)('%s: no em dash, en dash or double hyphen', (_title, type, facts) => {
     const email = lifecycleEmail(type, facts);
     const all = `${email.title}\n${email.body}\n${email.cta}\n${lifecycleReason(facts)}`;
-    expect(all).not.toMatch(/—|–|--/);
+    expect(all).not.toMatch(/\u2014|\u2013|--/);
     expect(email.title.length).toBeLessThanOrEqual(70);
     expect(email.url.startsWith('/')).toBe(true);
   });
@@ -101,6 +105,25 @@ describe('lifecycle copy', () => {
       expect(lifecycleEmail(type, MANGO).url).toBe('/log?gecko=g_mango&type=weight');
     }
     expect(lifecycleEmail('lifecycle_day0', MANGO).url).toBe('/log?gecko=g_mango&type=weight');
+  });
+
+  it('the footer mentions Weekly Gecko Notes without promising them', () => {
+    // They may never come (the switch is off, no postal address is set, or
+    // the member turned them off, never ticked the sign-up box or is in the
+    // EEA or the UK), so the footer says they come only if on, and where to
+    // change it, and no longer says the emails stop after two weeks.
+    const reason = lifecycleReason(MANGO);
+    expect(reason).toBe('You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.');
+    expect(reason).not.toMatch(/stop after that|come once a week/);
+  });
+
+  it('states the facts the weekly notes repeat the same way', () => {
+    // The scale: care guide, weight tracking (src/data/care-guide.js).
+    expect(lifecycleEmail('lifecycle_day0', MANGO).body).toContain('Use a kitchen scale that reads to 0.1 g.');
+    expect(lifecycleEmail('lifecycle_day0', MANGO).body).not.toMatch(/reads to 1 g/);
+    // The rhythm: the weigh-in reminders' own numbers.
+    const day14 = lifecycleEmail('lifecycle_day14', MANGO).body;
+    expect(day14).toContain(`every ${WEIGH_IN_DAYS.growing} days while a crested gecko is growing, every ${WEIGH_IN_DAYS.subadult} days as a sub-adult and every ${WEIGH_IN_DAYS.adult} days as an adult`);
   });
 
   it('the lineage email opens that gecko on the family tree', () => {
@@ -157,7 +180,7 @@ function setup({ profile = {}, rpc = {}, env = {} } = {}) {
   const net = fakeFetch(() => ({ body: { id: 'email-1' } }));
   const fn = loadFunction('send-email', {
     env: { ...ENV, ...env },
-    globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy },
+    globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy, ...weeklyNotes },
   });
   const send = async (payload) => {
     const res = await fn.handle(postJson('https://x.test/', payload, { authorization: `Bearer ${ENV.SUPABASE_SERVICE_ROLE_KEY}` }));

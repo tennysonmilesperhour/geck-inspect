@@ -1,0 +1,22 @@
+{
+  "about": "Every Weekly Gecko Notes slug ever built into the catalog, in the order it was first built. The ledger in the database is keyed on the slug, so a slug here is never renamed, reused or removed. pnpm build:weekly-notes adds new slugs. To withdraw a note, delete its file, renumber the rest and add its slug to withdrawn. See docs/planning/weekly-notes-2026-10.md, section 6.",
+  "published": [
+    "heat-is-the-bigger-risk",
+    "watch-the-weight-trend",
+    "today-tells-you-what-is-due",
+    "fresh-cgd-every-feeding",
+    "shed-rhythm-by-stage",
+    "humidity-rises-at-night",
+    "is-your-gecko-on-pace",
+    "never-pair-two-lilly-whites",
+    "where-66-percent-het-comes-from",
+    "fire-it-up-before-the-photo",
+    "reading-het-labels",
+    "forty-grams-and-eighteen-months",
+    "a-lay-box-for-every-female",
+    "pick-an-incubation-temperature",
+    "a-passport-before-it-leaves",
+    "start-from-the-gecko-you-want"
+  ],
+  "withdrawn": []
+}

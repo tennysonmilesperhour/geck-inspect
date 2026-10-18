@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17",
+  "generatedAt": "2026-10-18",
   "files": {
     "src/pages/Home.jsx": "2026-10-16",
     "src/pages/About.jsx": "2026-10-16",
@@ -52,6 +52,6 @@
   },
   "declared": {
     "src/pages/Terms.jsx": "2026-09-08",
-    "src/pages/PrivacyPolicy.jsx": "2026-10-17"
+    "src/pages/PrivacyPolicy.jsx": "2026-10-18"
   }
 }

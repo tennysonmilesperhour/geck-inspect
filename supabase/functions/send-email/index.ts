@@ -27,6 +27,7 @@
 //     body:       string,  // used as the plain-text body
 //     url?:       string,  // link rendered in the CTA button
 //     facts?:     object,  // lifecycle_* types only, see below
+//     weekly?:    object,  // weekly_notes only, see below
 //   }
 //
 // Lifecycle emails (lifecycle_day0, _day1, _day3, _day7, _day14) come from
@@ -34,6 +35,28 @@
 // title and body. The words are built here by _shared/lifecycle-copy.ts,
 // so the database never holds email copy. They ride the announcements
 // preference (day 0, 1, 3) or the care updates one (day 7, 14).
+//
+// Weekly Gecko Notes (type weekly_notes) come from enqueue_weekly_notes()
+// with only { weekly: { run_at } }: the job asks "is a note due for this
+// member?", and this function decides, because only it can see the two
+// things that decide it: the EMAIL_POSTAL_ADDRESS secret and the catalog of
+// written notes (_shared/weekly-notes.generated.ts, built from
+// content/weekly-notes). The order matters, and is why a skip never uses up
+// a member's next note:
+//   1. Every check that can skip comes first: the run marker, the postal
+//      address (US law, CAN-SPAM, wants one in commercial email), a
+//      non-empty catalog, the master switch, a login, the suppression list
+//      and a signed unsubscribe token (a commercial email must carry an
+//      unsubscribe that works signed out). Nothing is written by any of them.
+//   2. Then claim_weekly_note: under a per-member lock the database checks
+//      every rule again (the weekly preference, the 16-day lifecycle window,
+//      7 days since the last note, 20 hours since any lifecycle email),
+//      picks the first slug the member has not had and writes the ledger row
+//      (unique on address and slug). A caught-up member gets no row.
+//   3. Only a claimed note is sent.
+// A Resend failure after the claim leaves that note spent: never sending a
+// member the same note twice wins over always sending. The payload's title,
+// body and url are ignored for this type.
 //
 // Delivery log: every email handed to Resend is tagged with its type and
 // recorded as 'sent' in email_deliveries (record_email_event); the
@@ -55,7 +78,9 @@
 // (email_unsubscribe_token, service role only). The footer links to
 // SITE_URL/Unsubscribe?t=<token>, which works signed out, and the
 // List-Unsubscribe header points at the email-unsubscribe function for
-// one-click unsubscribe from the mail app (RFC 8058). If the token cannot
+// one-click unsubscribe from the mail app (RFC 8058). A weekly note adds
+// &scope=weekly to both, so its links stop only Weekly Gecko Notes and keep
+// reminders and other email. If the token cannot
 // be made even on a second try, the email still carries a working route:
 // the header and footer point at the email switches in Settings, which
 // every recipient can reach because addresses with no login are skipped.
@@ -68,6 +93,7 @@
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { isLifecycleType, lifecycleEmail, lifecycleReason } from "../_shared/lifecycle-copy.ts";
+import { isWeeklyNotesType, weeklyNoteEmail, weeklyNoteSlugs, WEEKLY_NOTES_REASON, WEEKLY_NOTES_STOP_WORDS } from "../_shared/weekly-notes.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Geck Inspect <alerts@geckinspect.com>";
@@ -204,12 +230,16 @@ type UnsubscribeLinks = { page: string; oneClick: string | null };
 
 const SETTINGS_EMAIL_URL = `${SITE_URL}/Settings#email-notifications`;
 
-function unsubscribeLinks(token: string | null | undefined): UnsubscribeLinks {
+// scope "weekly" (Weekly Gecko Notes) makes both links stop only those
+// emails. The token stays the first parameter, so resend-webhook's query
+// stripping and the t= redaction in src/lib/ga.js still cover it.
+function unsubscribeLinks(token: string | null | undefined, scope?: "weekly"): UnsubscribeLinks {
   if (!token) return { page: SETTINGS_EMAIL_URL, oneClick: null };
   const t = encodeURIComponent(token);
+  const s = scope ? `&scope=${scope}` : "";
   return {
-    page: `${SITE_URL}/Unsubscribe?t=${t}`,
-    oneClick: `${SUPABASE_URL}/functions/v1/email-unsubscribe?t=${t}`,
+    page: `${SITE_URL}/Unsubscribe?t=${t}${s}`,
+    oneClick: `${SUPABASE_URL}/functions/v1/email-unsubscribe?t=${t}${s}`,
   };
 }
 
@@ -328,6 +358,9 @@ type RenderOptions = {
   cta?: string;
   // Why this email came. Defaults to the notification-settings line.
   reason?: string;
+  // The unsubscribe link's words, when the link stops only one kind of
+  // email ("stop Weekly Gecko Notes"). Defaults to the all-email words.
+  unsubscribeWords?: string;
 };
 
 const DEFAULT_REASON = "You\u2019re getting this because email notifications are enabled in your Geck Inspect settings.";
@@ -343,7 +376,9 @@ function renderHtml(
   const safeBody = escapeHtml(body).replace(/\n/g, "<br>");
   const safeCta = escapeHtml(options.cta || "Open in Geck Inspect");
   const safeReason = escapeHtml(options.reason || DEFAULT_REASON);
-  const unsubscribeWords = unsubscribe.oneClick ? "unsubscribe from these emails" : "turn these emails off";
+  const unsubscribeWords = escapeHtml(
+    options.unsubscribeWords || (unsubscribe.oneClick ? "unsubscribe from these emails" : "turn these emails off"),
+  );
   const postal = EMAIL_POSTAL_ADDRESS
     ? `<br>Geck Inspect, ${escapeHtml(EMAIL_POSTAL_ADDRESS)}`
     : "";
@@ -521,10 +556,37 @@ serve(async (req) => {
     render.reason = lifecycleReason(facts);
   }
 
+  // Weekly Gecko Notes: see the order in the header. Nothing in this block
+  // or the checks after it writes anything; only the claim further down does.
+  const weekly = isWeeklyNotesType(type);
+  if (weekly) {
+    // Only enqueue_weekly_notes() sends this type, always with a run
+    // marker. A notification row a member writes for themselves reaches
+    // this function through the dispatcher with no weekly field, so it can
+    // never send one (the same rule as lifecycle-without-facts).
+    if (!payload.weekly || typeof payload.weekly !== "object" || Array.isArray(payload.weekly)) {
+      return json({ delivered: 0, skipped: "weekly-notes-without-run" });
+    }
+    if (!EMAIL_POSTAL_ADDRESS) {
+      return json({ delivered: 0, skipped: "weekly-notes-no-postal-address" });
+    }
+    if (weeklyNoteSlugs().length === 0) {
+      return json({ delivered: 0, skipped: "weekly-notes-empty" });
+    }
+    // The words come from the catalog only, never from the payload.
+    title = "Geck Inspect";
+    body = "";
+    url = "/";
+  }
+
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
 
+  // The select stays as it is for every type, weekly included: this
+  // function can deploy before the migration that adds
+  // email_weekly_notes_enabled, and an unknown column here would skip every
+  // email as profile-lookup-failed. claim_weekly_note checks that switch.
   const { data: profile, error: profileErr } = await supabase
     .from("profiles")
     .select("id, role, email_notifications_enabled, email_notification_types")
@@ -544,37 +606,104 @@ serve(async (req) => {
       return json({ delivered: 0, skipped: "master-off" });
     }
 
-    const allowed: string[] = Array.isArray(profile.email_notification_types)
-      ? profile.email_notification_types
-      : [];
-    const prefKey = TYPE_TO_EMAIL_KEY[type] || type;
-    if (!allowed.includes(prefKey)) {
-      return json({ delivered: 0, skipped: "type-not-allowed" });
+    // Weekly notes have their own switch (profiles.email_weekly_notes_enabled),
+    // which claim_weekly_note checks, not a key in this list. Without this
+    // exception the unmapped type would be skipped for everyone.
+    if (!weekly) {
+      const allowed: string[] = Array.isArray(profile.email_notification_types)
+        ? profile.email_notification_types
+        : [];
+      const prefKey = TYPE_TO_EMAIL_KEY[type] || type;
+      if (!allowed.includes(prefKey)) {
+        return json({ delivered: 0, skipped: "type-not-allowed" });
+      }
     }
 
     // Profiles imported from the old platform have no sign-in account, so
     // they cannot open the app or change these settings. More than half of
     // notification mail was going to them. Admin alerts above always go to
     // real admin accounts and skip this check.
-    if ((await hasLogin(supabase, userEmail)) === false) {
+    const login = await hasLogin(supabase, userEmail);
+    if (login === false) {
       return json({ delivered: 0, skipped: "no-login" });
     }
 
     // A hard bounce or a spam complaint stops every email that is not an
     // admin alert. Mailing those addresses again is what gets a sending
     // domain blocked, and then reminders stop reaching everyone.
-    if ((await isSuppressed(supabase, userEmail)) === true) {
+    const suppressed = await isSuppressed(supabase, userEmail);
+    if (suppressed === true) {
       return json({ delivered: 0, skipped: "suppressed" });
+    }
+
+    // A reminder still goes when a check cannot answer (a missed reminder
+    // costs the member more than a stray email). A weekly note can wait:
+    // the job asks again in about 20 hours.
+    if (weekly && (login === null || suppressed === null)) {
+      return json({ delivered: 0, skipped: "weekly-notes-check-failed" });
     }
   }
 
-  const unsubscribe = unsubscribeLinks(await unsubscribeToken(supabase, profile?.id));
+  const token = await unsubscribeToken(supabase, profile?.id);
+
+  if (weekly) {
+    // A commercial email must carry an unsubscribe that works without
+    // signing in, so a weekly note never falls back to the Settings link.
+    // Nothing has been claimed yet, so the member keeps their next note.
+    if (!token) {
+      return json({ delivered: 0, skipped: "weekly-notes-no-token" });
+    }
+
+    // The claim: the last step before sending, after every check that can
+    // skip. It is the only write, and it is what makes a note go once.
+    let claim: Record<string, unknown> = {};
+    try {
+      const { data, error } = await supabase.rpc("claim_weekly_note", {
+        p_email: userEmail,
+        p_slugs: weeklyNoteSlugs(),
+      });
+      if (error) {
+        console.warn("send-email: weekly note claim failed", error.message);
+        return json({ delivered: 0, skipped: "weekly-notes-claim-failed" });
+      }
+      if (data && typeof data === "object" && !Array.isArray(data)) claim = data as Record<string, unknown>;
+    } catch (err) {
+      console.warn("send-email: weekly note claim threw", err);
+      return json({ delivered: 0, skipped: "weekly-notes-claim-failed" });
+    }
+    const claimedSlug = typeof claim.slug === "string" ? claim.slug : "";
+    if (!claimedSlug) {
+      // not-eligible, caught-up, already-sent, bad-catalog or no-email.
+      const reason = typeof claim.reason === "string" && /^[a-z-]{1,40}$/.test(claim.reason)
+        ? claim.reason
+        : "not-claimed";
+      return json({ delivered: 0, skipped: `weekly-notes-${reason}` });
+    }
+
+    // The slugs came from the same catalog, so this is never null in
+    // practice; it is checked so a bad answer can never send an empty email.
+    const note = weeklyNoteEmail(claimedSlug, { hasGecko: claim.has_gecko === true });
+    if (!note) {
+      return json({ delivered: 0, skipped: "weekly-notes-unknown-slug" });
+    }
+    title = note.title;
+    body = note.body;
+    url = note.url;
+    render.cta = note.cta;
+    render.reason = WEEKLY_NOTES_REASON;
+    render.unsubscribeWords = WEEKLY_NOTES_STOP_WORDS;
+  }
+
+  const unsubscribe = unsubscribeLinks(token, weekly ? "weekly" : undefined);
   const html = renderHtml(title, body, url, unsubscribe, render);
+  const stopLine = render.unsubscribeWords
+    ? `\n${render.unsubscribeWords.charAt(0).toUpperCase()}${render.unsubscribeWords.slice(1)}: ${unsubscribe.page}`
+    : unsubscribe.oneClick
+    ? `\nUnsubscribe from these emails: ${unsubscribe.page}`
+    : `\nTurn these emails off in Settings: ${unsubscribe.page}`;
   const text = `${body}\n\n${render.cta ? `${render.cta}: ` : ""}${textLink(absoluteLink(url))}` +
     `\n\n${render.reason || DEFAULT_REASON}` +
-    (unsubscribe.oneClick
-      ? `\nUnsubscribe from these emails: ${unsubscribe.page}`
-      : `\nTurn these emails off in Settings: ${unsubscribe.page}`) +
+    stopLine +
     (EMAIL_POSTAL_ADDRESS ? `\nGeck Inspect, ${EMAIL_POSTAL_ADDRESS}` : "");
   const tags = [{ name: "type", value: typeTag(type) }];
   const delivery = sendWithRetry(userEmail, title, text, html, unsubscribeHeaders(unsubscribe), tags)
