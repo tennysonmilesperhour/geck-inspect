@@ -245,6 +245,42 @@ describe('recognize-gecko-morph handler', () => {
     expect(await res.json()).toEqual({ ...stored, replayed: true });
     expect(db.rpcCalls('consume_morph_id_credit')).toHaveLength(0);
     expect(anthropicCalls(fn.requests)).toHaveLength(0);
+    // The repeat's photo never goes to Replicate.
+    expect(replicateCalls(fn.requests)).toHaveLength(0);
+  });
+
+  it('never sends a photo to Replicate when the member has no scans left', async () => {
+    const db = fakeSupabase((call) => {
+      if (call.table === 'profiles') return { data: { membership_tier: 'free' }, error: null };
+      if (call.rpc === 'effective_tier_for_current_user') return { data: 'free', error: null };
+      if (call.rpc === 'consume_morph_id_credit') return { data: null, error: { message: 'morph_id_credits_exhausted' } };
+      return { data: null, error: null };
+    }, { user: MEMBER });
+    const fn = load({ db });
+    const res = await fn.handle(post({ imageUrls: [TOP], request_key: 'key-12345678' }));
+    expect(res.status).toBe(402);
+    expect((await res.json()).code).toBe('morph_id_credits_exhausted');
+    expect(replicateCalls(fn.requests)).toHaveLength(0);
+    expect(anthropicCalls(fn.requests)).toHaveLength(0);
+  });
+
+  it('gives the embedding less time when Claude will read more photos', async () => {
+    const preferFor = async (imageUrls) => {
+      const fn = load({
+        answer: (r) => (r.url.startsWith('https://api.anthropic.com/') ? anthropicOk() : { status: 201, body: { status: 'succeeded', output: VECTOR } }),
+      });
+      const res = await fn.handle(post({ imageUrls }));
+      expect(res.status).toBe(200);
+      const [embed] = replicateCalls(fn.requests);
+      return embed.init.headers.Prefer;
+    };
+    // One photo: the embedding has until 69.5 s, so Replicate's full 60 s hold.
+    expect(await preferFor([TOP])).toBe('wait=60');
+    // Five photos: until 59 s from arrival, so the whole seconds left of that
+    // once the request has been read (58, or 57 on a slow machine).
+    const fivePhotos = Number((await preferFor([TOP, SIDE, TOP, SIDE, TOP])).replace('wait=', ''));
+    expect(fivePhotos).toBeLessThan(59);
+    expect(fivePhotos).toBeGreaterThanOrEqual(57);
   });
 
   it('refuses a signed-out caller before any lookup starts', async () => {

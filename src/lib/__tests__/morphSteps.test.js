@@ -1,8 +1,8 @@
 // The order of Morph ID's steps before the analyzer call
-// (supabase/functions/_shared/morph-steps.ts, 17 Oct 2026): the photo
-// lookup starts as soon as the member is known, independent database reads
-// run together, a repeat never spends a credit, and every early exit stops
-// the photo lookup.
+// (supabase/functions/_shared/morph-steps.ts, 17 Oct 2026): independent
+// database reads run together, a repeat never spends a credit, and the photo
+// lookup (a Replicate prediction for the caller's photo) starts only once the
+// call will reach the analyzer, so no early exit ever reaches Replicate.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   finishAfterResponse,
@@ -98,35 +98,56 @@ describe('runMorphSteps', () => {
     await expect(h.run).resolves.toEqual({ kind: 'auth_failed', error: 'auth required' });
   });
 
-  it('starts the embedding right after sign-in, before the profile, plan or claim come back', async () => {
+  it('starts the embedding only once the scan is reserved, together with the scans-left read', async () => {
     const h = harness();
+    await upToClaim(h);
+    expect(h.deps.startEvidence).not.toHaveBeenCalled();
+    h.calls.claimRequestKey.resolve({ kind: 'claimed' });
     await flush();
-    h.calls.getUser.resolve(USER);
-    h.calls.readBody.resolve(BODY);
-    await flush();
-    expect(h.log).toEqual(['getUser', 'readBody', 'startEvidence', 'loadProfileRow', 'loadEffectiveTier']);
+    expect(h.deps.startEvidence).not.toHaveBeenCalled();
+    h.calls.consumeCredit.resolve({ data: { credits_consumed: 1 }, error: null });
+    const outcome = await h.run;
+    expect(outcome.kind).toBe('ready');
+    expect(h.log.slice(-4)).toEqual(['claimRequestKey', 'consumeCredit', 'startEvidence', 'readScansRemaining']);
     expect(h.calls.startEvidence.imageUrls).toEqual(BODY.imageUrls);
-    expect(h.calls.claimRequestKey).toBeUndefined();
+    expect(h.deps.startEvidence).toHaveBeenCalledTimes(1);
   });
 
-  it('starts profile and plan together, and the two per-network reads together', async () => {
+  it('starts profile, plan and the two per-network reads together', async () => {
     const h = harness();
     await flush();
     h.calls.getUser.resolve(USER);
     h.calls.readBody.resolve(BODY);
     await flush();
-    // Both started while neither has answered.
-    expect(h.calls.loadProfileRow).toBeDefined();
-    expect(h.calls.loadEffectiveTier).toBeDefined();
+    // All four started while none has answered.
+    expect(h.log).toEqual(['getUser', 'readBody', 'fetchPerIpCap', 'countIpCalls', 'loadProfileRow', 'loadEffectiveTier']);
+    expect(h.calls.countIpCalls.args).toEqual(['hash-1']);
+    h.calls.fetchPerIpCap.resolve(10);
+    h.calls.countIpCalls.resolve(1);
     h.calls.loadProfileRow.resolve({ membership_tier: 'keeper' });
     await flush();
-    expect(h.calls.fetchPerIpCap).toBeUndefined();
+    // The claim waits for the plan.
+    expect(h.calls.claimRequestKey).toBeUndefined();
     h.calls.loadEffectiveTier.resolve({ data: 'keeper', error: null });
     await flush();
-    expect(h.calls.fetchPerIpCap).toBeDefined();
-    expect(h.calls.countIpCalls).toBeDefined();
-    expect(h.calls.countIpCalls.args).toEqual(['hash-1']);
+    expect(h.calls.claimRequestKey).toBeDefined();
+    expect(h.deps.startEvidence).not.toHaveBeenCalled();
+  });
+
+  it('waits for the per-network reads before the claim when they are slower than the plan', async () => {
+    const h = harness();
+    await flush();
+    h.calls.getUser.resolve(USER);
+    h.calls.readBody.resolve(BODY);
+    await flush();
+    h.calls.loadProfileRow.resolve({ membership_tier: 'keeper' });
+    h.calls.loadEffectiveTier.resolve({ data: 'keeper', error: null });
+    await flush();
     expect(h.calls.claimRequestKey).toBeUndefined();
+    h.calls.fetchPerIpCap.resolve(10);
+    h.calls.countIpCalls.resolve(1);
+    await flush();
+    expect(h.calls.claimRequestKey).toBeDefined();
   });
 
   it('claims the key before the credit and has the credit taken before it reports ready', async () => {
@@ -153,31 +174,34 @@ describe('runMorphSteps', () => {
     expect(outcome.scansRemaining).toBeInstanceOf(Promise);
     h.calls.readScansRemaining.resolve(4);
     await expect(outcome.scansRemaining).resolves.toBe(4);
-    // The embedding is still running and still wanted.
+    // The embedding started after the credit and is still wanted.
+    expect(h.log.indexOf('startEvidence')).toBeGreaterThan(h.log.indexOf('consumeCredit'));
     expect(h.calls.startEvidence.signal.aborted).toBe(false);
     h.calls.startEvidence.resolve({ evidence: { status: 'available' }, timedOut: false });
     await expect(outcome.evidence).resolves.toMatchObject({ timedOut: false });
   });
 
-  it('never takes a credit after a replay, and stops the embedding', async () => {
+  it('never takes a credit or reaches Replicate after a replay', async () => {
     const h = harness();
     await upToClaim(h);
     h.calls.claimRequestKey.resolve({ kind: 'replay', response: { success: true } });
     await expect(h.run).resolves.toEqual({ kind: 'replay', response: { success: true } });
     expect(h.calls.consumeCredit).toBeUndefined();
-    expect(h.calls.startEvidence.signal.aborted).toBe(true);
+    expect(h.deps.startEvidence).not.toHaveBeenCalled();
   });
 
-  it('never takes a credit while the first run is still going (409), and stops the embedding', async () => {
+  it('never takes a credit or reaches Replicate while the first run is still going (409)', async () => {
+    // A double tap: the second request must not post a prediction that
+    // competes with the first one's under Replicate's one-at-a-time limit.
     const h = harness();
     await upToClaim(h);
     h.calls.claimRequestKey.resolve({ kind: 'running' });
     await expect(h.run).resolves.toEqual({ kind: 'running' });
     expect(h.calls.consumeCredit).toBeUndefined();
-    expect(h.calls.startEvidence.signal.aborted).toBe(true);
+    expect(h.deps.startEvidence).not.toHaveBeenCalled();
   });
 
-  it('stops the embedding on the per-network limit, before any claim or credit', async () => {
+  it('never reaches Replicate on the per-network limit, and takes no claim or credit', async () => {
     const h = harness();
     await flush();
     h.calls.getUser.resolve(USER);
@@ -190,10 +214,10 @@ describe('runMorphSteps', () => {
     h.calls.countIpCalls.resolve(3);
     await expect(h.run).resolves.toEqual({ kind: 'ip_limited', cap: 3, used: 3 });
     expect(h.calls.claimRequestKey).toBeUndefined();
-    expect(h.calls.startEvidence.signal.aborted).toBe(true);
+    expect(h.deps.startEvidence).not.toHaveBeenCalled();
   });
 
-  it('stops the embedding when the scans are used up (402) or the credit check fails, after settling the key', async () => {
+  it('never reaches Replicate when the scans are used up (402) or the credit check fails, and settles the key', async () => {
     for (const [message, kind] of [
       ['morph_id_credits_exhausted', 'credits_exhausted'],
       ['connection reset', 'credit_check_failed'],
@@ -207,7 +231,7 @@ describe('runMorphSteps', () => {
       expect(outcome.kind).toBe(kind);
       expect(h.deps.settleRequestKey).toHaveBeenCalledWith('user-1', 'key-12345678', 'failed', null);
       expect(h.state.creditWasConsumed).toBe(false);
-      expect(h.calls.startEvidence.signal.aborted).toBe(true);
+      expect(h.deps.startEvidence).not.toHaveBeenCalled();
       expect(h.calls.readScansRemaining).toBeUndefined();
     }
   });
@@ -224,7 +248,7 @@ describe('runMorphSteps', () => {
     }
   });
 
-  it('stops the embedding when the plan cannot be verified', async () => {
+  it('never reaches Replicate when the plan cannot be verified', async () => {
     const h = harness();
     await flush();
     h.calls.getUser.resolve(USER);
@@ -236,7 +260,7 @@ describe('runMorphSteps', () => {
       kind: 'auth_failed',
       error: 'auth lookup failed: Could not verify membership access',
     });
-    expect(h.calls.startEvidence.signal.aborted).toBe(true);
+    expect(h.deps.startEvidence).not.toHaveBeenCalled();
   });
 
   it('answers a warm-up after sign-in alone, without the embedding, profile or credit', async () => {
@@ -275,17 +299,40 @@ describe('runMorphSteps', () => {
     expect(outcome.scansRemaining).toBeNull();
     expect(h.calls.claimRequestKey).toBeUndefined();
     expect(h.calls.consumeCredit).toBeUndefined();
+    expect(h.calls.readScansRemaining).toBeUndefined();
     expect(h.state.isEvalAccount).toBe(true);
+    // No scan to wait for: the embedding starts right after the cap check.
+    expect(h.log.at(-1)).toBe('startEvidence');
   });
 
-  it('aborts the embedding and rethrows when a step throws', async () => {
+  it('does not wait for the per-network reads when the cap does not apply (admin), and ignores their failure', async () => {
+    const h = harness();
+    await flush();
+    h.calls.getUser.resolve(USER);
+    h.calls.readBody.resolve(BODY);
+    await flush();
+    h.calls.loadProfileRow.resolve({ role: 'admin' });
+    h.calls.loadEffectiveTier.resolve({ data: 'enterprise', error: null });
+    const outcome = await h.run;
+    expect(outcome.kind).toBe('ready');
+    expect(h.state.isAdmin).toBe(true);
+    expect(h.calls.claimRequestKey).toBeUndefined();
+    expect(h.calls.consumeCredit).toBeUndefined();
+    expect(h.deps.startEvidence).toHaveBeenCalledTimes(1);
+    // Rejecting a read nobody awaits must not surface as an unhandled rejection.
+    h.calls.fetchPerIpCap.reject(new Error('cap read failed'));
+    h.calls.countIpCalls.reject(new Error('count failed'));
+    await flush();
+  });
+
+  it('rethrows when a step throws, before the embedding starts', async () => {
     const h = harness();
     await upToClaim(h);
     h.calls.claimRequestKey.resolve({ kind: 'claimed' });
     await flush();
     h.calls.consumeCredit.reject(new Error('socket hang up'));
     await expect(h.run).rejects.toThrow('socket hang up');
-    expect(h.calls.startEvidence.signal.aborted).toBe(true);
+    expect(h.deps.startEvidence).not.toHaveBeenCalled();
     expect(h.state.claimedKey).toBe('key-12345678');
     expect(h.state.creditWasConsumed).toBe(false);
   });

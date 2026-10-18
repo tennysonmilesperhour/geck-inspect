@@ -18,9 +18,14 @@
 -- table it reads changes. No approximate (HNSW) index and no lower-precision
 -- vector: the answer must be the same rows in the same order
 -- (supabase/tests/morph_neighbors_regressions.sql checks it against a copy
--- of the old query). The app version open in members' browsers and the
--- deployed function both keep working, and the function's grants (service
--- role only) are kept by CREATE OR REPLACE.
+-- of the old query reading every row). Whether production's old function
+-- read every row, or used the approximate idx_gecko_images_embedding index,
+-- EXPLAIN cannot show (a function with a SET clause is never inlined), so
+-- supabase/tests/morph_neighbors_production_check.sql compares its answers
+-- with the exact ones on production before this file is merged
+-- (docs/planning/deploy-queue-2026-10-03.md). The app version open in
+-- members' browsers and the deployed function both keep working, and the
+-- function's grants (service role only) are kept by CREATE OR REPLACE.
 --
 -- Safe to run twice.
 

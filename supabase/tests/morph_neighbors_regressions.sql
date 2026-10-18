@@ -20,7 +20,9 @@
 begin;
 
 -- The old query must be exact for the comparison: take the approximate
--- (HNSW) index out of its way inside this transaction.
+-- (HNSW) index out of its way inside this transaction. Production keeps the
+-- index, so whether its old function was exact is checked there by
+-- supabase/tests/morph_neighbors_production_check.sql before the merge.
 drop index if exists public.idx_gecko_images_embedding;
 
 -- A random but repeatable corpus: 400 photos from 40 sellers, with every

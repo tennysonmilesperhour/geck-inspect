@@ -131,10 +131,11 @@ describe('retryShape', () => {
 });
 
 describe('the analyzer call that is not started', () => {
-  // When the photo-matching model is still booting at its deadline, or under
-  // 27 s are left, the function ends with the existing timeout failure
-  // instead of calling the analyzer: same code, same member text, and the
-  // scan is handed back the same way.
+  // When the photo-matching model is still booting at its deadline, or less
+  // than the analyzer's minimum for the photo count is left (32 s for one or
+  // two photos, 42.5 s for five), the function ends with the existing
+  // timeout failure instead of calling the analyzer: same code, same member
+  // text, and the scan is handed back the same way.
   it('reads as the usual upstream_timeout with the scan refunded', () => {
     const failure = upstreamFailureResponse({
       code: 'upstream_timeout',

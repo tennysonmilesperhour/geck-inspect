@@ -118,8 +118,9 @@ import { buildClaudeRequest, type FewShotExample } from "./request.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
-// Time limits (whole request 105 s from arrival, embedding 75 s, analyzer
-// at most 90 s and never started with under 27 s left) are in
+// Time limits (whole request 105 s from arrival; the embedding by 69.5 s for
+// one or two photos, 59 s for five; the analyzer at most 90 s and never
+// started with less than its minimum for the photo count) are in
 // ../_shared/morph-budget.ts, with the reasons.
 const REPLICATE_API_TOKEN = Deno.env.get("REPLICATE_API_TOKEN");
 // The photo the warm-up embeds (../_shared/morph-warm.ts).
@@ -655,7 +656,8 @@ async function loadVisualEvidence(
           token: REPLICATE_API_TOKEN,
           model: VISUAL_EMBEDDING_MODEL,
           // One deadline for the request, the throttled retry and every
-          // poll (75 s from arrival, ../_shared/morph-budget.ts).
+          // poll (69.5 s from arrival for one or two photos, 59 s for five,
+          // ../_shared/morph-budget.ts).
           deadline: options.deadlines.embed,
           signal: options.signal,
           // Retrieval is corroborating evidence, but answering without it
@@ -692,8 +694,8 @@ async function loadVisualEvidence(
     }
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    // The query gets until 78 s from arrival; past that the answer goes
-    // ahead without references, as it does when the query fails.
+    // The query gets 3 s past the embedding deadline; past that the answer
+    // goes ahead without references, as it does when the query fails.
     const neighborLimit = deadlineSignal(options.deadlines.neighbors, options.signal);
     try {
       const { data, error } = await options.timing.measure(
@@ -947,8 +949,8 @@ async function callClaude(
   for (;;) {
     attempt += 1;
     // The time left in this call's budget (min(90 s, time left in the
-    // request)). There is no floor: the handler does not start a call that
-    // has less than 27 s, the fastest answer on record.
+    // request)). There is no floor: the handler does not start a call with
+    // less than its minimum for the photo count (claudeMinMs).
     const remainingMs = Math.max(0, deadlineMs - (Date.now() - startedAt));
     const canRetry = () =>
       attempt === 1 && deadlineMs - (Date.now() - startedAt) > RETRY_MIN_REMAINING_MS;
@@ -1063,7 +1065,6 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only", code: "method_not_allowed" }, 405);
 
   const timing = new MorphTiming(arrivedAt);
-  const deadlines = morphDeadlines(arrivedAt);
   // Filled in as the steps run; the error path reads it.
   const state = newStepState(CLAUDE_MODEL);
   // Every answer carries a Server-Timing header and writes one timing line
@@ -1105,7 +1106,12 @@ serve(async (req) => {
         const parsed = await req.json().catch(() => ({}));
         return parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : {};
       },
-      startEvidence: (imageUrls, signal) => loadVisualEvidence(imageUrls, { signal, deadlines, timing }),
+      // The deadlines depend on how many photos Claude will read.
+      startEvidence: (imageUrls, signal) => loadVisualEvidence(imageUrls, {
+        signal,
+        deadlines: morphDeadlines(arrivedAt, imageUrls.length),
+        timing,
+      }),
       loadProfileRow: async (user) => {
         const { data } = await admin.from("profiles")
           .select("membership_tier, subscription_status, role, morph_id_show_value_estimate")
@@ -1216,15 +1222,17 @@ serve(async (req) => {
     const showPriceRange = !!profile.morph_id_show_value_estimate && (isPaidTier || isAdmin);
     const includeValueEstimate = false;
 
-    // The photo lookup has been running since sign-in; wait for it here.
+    // The photo lookup has been running since the scan was reserved; wait
+    // for it here.
     const waitStarted = Date.now();
     const { evidence: visualEvidence, timedOut } = await outcome.evidence;
     timing.add("wait", Date.now() - waitStarted);
     // A call that cannot finish is not started: the member gets the usual
-    // "try again" answer with the scan handed back, at about 76 s instead of
-    // a timed-out analyzer call at 100 to 130 s. The Replicate boot carries
-    // on, so the retry finds the model warm.
-    if (timedOut || skipClaude(arrivedAt, Date.now())) {
+    // "try again" answer with the scan handed back, at the embedding
+    // deadline (69.5 s for one or two photos, 59 s for five) instead of a
+    // timed-out analyzer call at 105 s. The Replicate boot carries on, so
+    // the retry finds the model warm.
+    if (timedOut || skipClaude(arrivedAt, Date.now(), imageUrls.length)) {
       throw new UpstreamError(
         timedOut
           ? "Analyzer timed out before it started: the photo-matching model was still starting up"

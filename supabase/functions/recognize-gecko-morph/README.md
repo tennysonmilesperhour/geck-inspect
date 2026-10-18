@@ -48,16 +48,23 @@ animal, capped per morph and de-duplicated by listing/source cluster.
 Retrieval fails open. If Replicate or the corpus index is unavailable, Claude
 still analyzes the user photos. When strong retrieval conflicts with the model,
 the final assessment is downgraded to tentative rather than presenting a strong
-match. The one exception is a Replicate model that is still booting 75 seconds
-after the request arrived: see "Time limits" below.
+match. The one exception is a Replicate model that is still booting at the
+embedding deadline (69.5 seconds after the request arrived for one or two
+photos, 59 for five): see "Time limits" below.
 
 Since 17 October 2026 the reference photos are read from
 `public.morph_reference_vectors` (migration
 `20261017170000_morph_reference_vectors.sql`), a copy of the eligible
 `gecko_images` rows with the labels worked out once and the embedding stored in
 the row. A trigger keeps it in step. `morph_visual_neighbors` kept its name,
-arguments and exact results; `supabase/tests/morph_neighbors_regressions.sql`
-compares it with the old query.
+arguments and results: `supabase/tests/morph_neighbors_regressions.sql` shows
+it returns what the old query returns when that query compares every row.
+Whether production's old function did compare every row (rather than use the
+approximate `idx_gecko_images_embedding` index) cannot be read from EXPLAIN,
+because a function with a SET clause is never inlined and its plan shows one
+Function Scan. `supabase/tests/morph_neighbors_production_check.sql` checks it
+on production by comparing the function's answers with the exact ones; it is
+run before the migration is merged (deploy queue, 17 October).
 
 ## How a request runs, and where the time goes
 
@@ -66,25 +73,28 @@ mostly the length of the answer). The rest is kept short by running
 independent steps together (`../_shared/morph-steps.ts`):
 
 1. The sign-in check and reading the body run together.
-2. As soon as the member is known and the photos are valid, the photo lookup
-   starts: Replicate embeds the top view, then `morph_visual_neighbors` finds
-   the reference photos.
-3. While that runs: the profile and the plan are read together, then the
-   per-network cap and today's count together, then the request key is
-   claimed, then the scan is reserved. The key always comes before the scan
-   (a repeat of a finished request never spends one) and the scan before the
-   Claude call.
-4. The scans-left read starts after the scan is reserved and is only awaited
-   when the answer is built.
+2. The profile, the plan, the per-network cap and today's count are read
+   together.
+3. The request key is claimed, then the scan is reserved. The key always
+   comes before the scan (a repeat of a finished request never spends one)
+   and the scan before the Claude call.
+4. Then the photo lookup starts (Replicate embeds the top view, then
+   `morph_visual_neighbors` finds the reference photos), alongside the
+   scans-left read, which is only awaited when the answer is built. Admin and
+   evaluation calls take no scan, so for them it starts after step 2.
 5. The photo lookup is awaited just before the Claude call.
 6. After the answer: the refund (for a "better photos needed" answer) and the
    request-key settle are awaited, because the answer reports the refund and a
    retry replays the stored answer. The spend log row is written after the
    answer goes out (`EdgeRuntime.waitUntil`).
 
-Every early exit (sign-in failure, per-network limit, a repeat, a run still
-going, no scans left, a failed credit check) stops the photo lookup. A
-prediction Replicate already accepted still runs, for a fraction of a cent.
+The photo lookup waits for the scan on purpose. Replicate runs a prediction
+once it has accepted it, whether or not the function keeps waiting, and the
+photo address comes from the caller. So an early exit (sign-in failure,
+per-network limit, a repeat, a run still going, no scans left, a failed
+credit check) never reaches Replicate: a double tap cannot take the first
+request's place under Replicate's one-at-a-time limit, and an account with
+no scans left cannot have Replicate fetch photos in a loop.
 
 Every answer carries a `Server-Timing` header (exposed to the browser), and
 the function logs one JSON line per request (`event: "morph_id_timing"`) with
@@ -113,18 +123,27 @@ All counted from the moment the request arrives (`../_shared/morph-budget.ts`):
 
 - The whole request: 105 seconds, 15 under the browser's 120 second limit
   (`src/lib/supabaseClient.js`) and 20 under the canary's 125.
-- The embedding: 75 seconds. One timer covers the prediction request, one
-  throttled retry and every poll, and `Prefer: wait` asks Replicate to hold the
-  request for the seconds left. The reference-photo query then has until 78
-  seconds.
-- Claude: at most 90 seconds and never past 105 seconds. A call is not started
-  with less than 27 seconds left, because no answer on record took less than
-  26.9 seconds.
+- Claude: at most 90 seconds and never past 105 seconds. A call is started
+  only with enough time left for the photos it reads: 32 seconds for one or
+  two photos and 3.5 more for each photo past two, so 42.5 for five
+  (five-photo answers have taken up to 41 seconds). The 32 is an estimate
+  just above the median answer (about 30 seconds); the times have not been
+  split by photo count yet, and the `morph_id_timing` log line (`photos`,
+  `claude`) is where to check it.
+- The embedding: until the point that still leaves the reference-photo query
+  3 seconds, half a second to start the call and Claude its minimum, so 69.5
+  seconds from arrival for one or two photos and 59 for five. One timer
+  covers the prediction request, one throttled retry and every poll, and
+  `Prefer: wait` asks Replicate to hold the request for the seconds left. The
+  reference-photo query then has 3 seconds. The limits come from the same
+  numbers, so a request that gets past the reference query (even one cut off
+  at its deadline, which then goes ahead without references) always has
+  Claude's minimum left.
 
-If the embedding model is still booting at its deadline, or under 27 seconds
-are left when Claude would start, the function answers with the usual
+If the embedding model is still booting at its deadline, or less than Claude's
+minimum is left when Claude would start, the function answers with the usual
 `upstream_timeout` failure (same code, same member text, scan handed back)
-without calling Claude, at about 76 seconds instead of 100 to 130. The
+without calling Claude, at 59 to 70 seconds instead of 100 to 130. The
 Replicate boot carries on, so a retry finds the model warm. An embedding that
 fails outright (a bad photo, a refused request) still answers without
 reference photos, as before. A throttled embedding (Replicate allows one

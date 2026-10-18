@@ -69,16 +69,19 @@ before and after it compare like for like:
   and content blocks now live in `supabase/functions/recognize-gecko-morph/request.ts`,
   and `src/lib/__tests__/morphRequestSnapshot.test.js` checks them byte for
   byte against the request sent before the change. Same model, same photo
-  embedded, same pinned Replicate version, same reference photos.
+  embedded, same pinned Replicate version, same reference photos (the faster
+  reference query returns what the old one did when that one compared every
+  row; `supabase/tests/morph_neighbors_production_check.sql` confirms that on
+  production before the change is merged).
 - **Only the answer's ceiling moved.** `max_tokens` went from 3000 to 4096 on
   Sonnet 4.6. The model never sees it; it only stops an unusually long answer
   from being cut off. A cut-off answer is retried once with twice the room.
 - **A cold photo-matching model fails faster.** If Replicate is still booting
-  the embedding model 75 seconds into a call, the call now ends with
-  `upstream_timeout` at about 76 seconds instead of running Claude with too
-  little time left. The grader retries a 502 once after 5 seconds
-  (`scripts/eval-morph-id.mjs`), and the boot carries on meanwhile, so the
-  retry normally finds the model warm. Before, the same call failed at 100 to
+  the embedding model 69.5 seconds into a one- or two-photo call (59 seconds
+  into a five-photo call), the call ends there with `upstream_timeout`
+  instead of running Claude with too little time left. The grader retries a
+  502 once after 5 seconds (`scripts/eval-morph-id.mjs`), and the boot
+  carries on meanwhile, so the retry normally finds the model warm. Before, the same call failed at 100 to
   130 seconds and was retried the same way.
 - **A throttled embedding waits instead of dropping the references.** Under
   Replicate's one-request-at-a-time limit (less than $5 of credit), a

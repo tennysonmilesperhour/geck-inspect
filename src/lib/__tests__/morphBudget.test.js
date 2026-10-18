@@ -1,11 +1,15 @@
 // Morph ID's time budget (supabase/functions/_shared/morph-budget.ts,
 // 17 Oct 2026): everything counts from arrival, the embedding has its own
-// deadline, and no analyzer call starts that cannot finish.
+// deadline, and no analyzer call starts that cannot finish. The embedding
+// deadline and the analyzer minimum come from the same numbers, so no
+// request gets past the embedding with too little time left.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CLAUDE_MAX_MS,
-  CLAUDE_MIN_MS,
+  CLAUDE_START_MARGIN_MS,
+  NEIGHBOR_QUERY_MS,
   REQUEST_BUDGET_MS,
+  claudeMinMs,
   claudeTimeoutMs,
   deadlineSignal,
   morphDeadlines,
@@ -17,10 +21,25 @@ const ARRIVED = 1_800_000_000_000;
 describe('morph budget', () => {
   afterEach(() => vi.useRealTimers());
 
-  it('gives the embedding until 75 s and the reference query until 78 s after arrival', () => {
-    expect(morphDeadlines(ARRIVED)).toEqual({
-      embed: ARRIVED + 75_000,
-      neighbors: ARRIVED + 78_000,
+  it('asks for more analyzer time with more photos: 32 s up to two, 42.5 s for five', () => {
+    expect([1, 2, 3, 4, 5].map(claudeMinMs)).toEqual([32_000, 32_000, 35_500, 39_000, 42_500]);
+    // Out-of-range counts are treated as the nearest real one.
+    expect(claudeMinMs(0)).toBe(32_000);
+    expect(claudeMinMs(9)).toBe(42_500);
+    // Five-photo answers run up to 41 s; the minimum covers them.
+    expect(claudeMinMs(5)).toBeGreaterThan(41_000);
+  });
+
+  it('gives the embedding until 69.5 s (one or two photos) or 59 s (five), and the reference query 3 s more', () => {
+    expect(morphDeadlines(ARRIVED, 1)).toEqual({
+      embed: ARRIVED + 69_500,
+      neighbors: ARRIVED + 72_500,
+      end: ARRIVED + 105_000,
+    });
+    expect(morphDeadlines(ARRIVED, 2)).toEqual(morphDeadlines(ARRIVED, 1));
+    expect(morphDeadlines(ARRIVED, 5)).toEqual({
+      embed: ARRIVED + 59_000,
+      neighbors: ARRIVED + 62_000,
       end: ARRIVED + 105_000,
     });
   });
@@ -44,15 +63,30 @@ describe('morph budget', () => {
     }
   });
 
-  it('skips the analyzer below 27 s left and calls it at exactly 27 s', () => {
-    expect(CLAUDE_MIN_MS).toBe(27_000);
-    expect(skipClaude(ARRIVED, ARRIVED + 105_000 - 27_000)).toBe(false);
-    expect(skipClaude(ARRIVED, ARRIVED + 105_000 - 26_999)).toBe(true);
-    // A request still waiting on the embedding at its 75 s deadline has
-    // 30 s left; a slow reference query (78 s) leaves exactly 27 s.
-    expect(skipClaude(ARRIVED, ARRIVED + 75_000)).toBe(false);
-    expect(skipClaude(ARRIVED, ARRIVED + 78_000)).toBe(false);
-    expect(skipClaude(ARRIVED, ARRIVED + 80_000)).toBe(true);
+  it('starts the analyzer for any request whose reference query ends by its deadline, for every photo count', () => {
+    for (const photos of [1, 2, 3, 4, 5]) {
+      const { embed, neighbors } = morphDeadlines(ARRIVED, photos);
+      // The limits agree: embedding deadline + query + start margin + analyzer minimum = budget.
+      expect(embed - ARRIVED + NEIGHBOR_QUERY_MS + CLAUDE_START_MARGIN_MS + claudeMinMs(photos)).toBe(REQUEST_BUDGET_MS);
+      // A request whose evidence arrives in time is never refused, even a
+      // reference query cut off at its deadline (the answer then goes ahead
+      // without references a few milliseconds later).
+      expect(skipClaude(ARRIVED, embed, photos)).toBe(false);
+      expect(skipClaude(ARRIVED, neighbors, photos)).toBe(false);
+      expect(skipClaude(ARRIVED, neighbors + 50, photos)).toBe(false);
+      expect(skipClaude(ARRIVED, neighbors + CLAUDE_START_MARGIN_MS, photos)).toBe(false);
+      expect(skipClaude(ARRIVED, neighbors + CLAUDE_START_MARGIN_MS + 1, photos)).toBe(true);
+    }
+  });
+
+  it('no longer starts a five-photo call with 32.6 s left (an embedding done at 72 s)', () => {
+    // Before, a boot finishing at 72 s passed the 27 s check and the call
+    // was cut off at 105 s; the embedding would now have stopped at 59 s.
+    const now = ARRIVED + 72_400;
+    expect(claudeTimeoutMs(ARRIVED, now)).toBe(32_600);
+    expect(skipClaude(ARRIVED, now, 5)).toBe(true);
+    expect(skipClaude(ARRIVED, now, 1)).toBe(false);
+    expect(morphDeadlines(ARRIVED, 5).embed).toBeLessThan(now);
   });
 
   it('aborts a deadline signal at the deadline or when the parent aborts', () => {
