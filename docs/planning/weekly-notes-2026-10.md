@@ -2,13 +2,13 @@
 
 After a member's first two weeks (the five getting-started emails, `lifecycle-emails-2026-10.md`), each member gets **Weekly Gecko Notes**: one short email a week with one practical crested gecko tip and one button, in order, for as long as they stay subscribed. New notes are added over time by a scheduled Claude session, so a member who reaches the end simply waits for the next one.
 
-Everything here is built and tested. **Nothing is sent yet.** The migration adds the switch off, and the session that shipped it turns it on right after the deploy (18 October), since Tennyson asked for the notes to run without waiting on him. send-email still refuses every note until a postal address is set, so **the postal address is the one thing left** (section 1). Until then each member costs at most one skipped send-email call a day, and nothing is used up.
+Everything here is built and tested. **The notes are on.** The migration adds the switch off, and the session that shipped it turned it on right after the deploy (18 October), since Tennyson asked for the notes to run without waiting on him. The postal address (`EMAIL_POSTAL_ADDRESS`) was set on 18 October at about 15:20 UTC, so nothing is left blocking them. The first notes are due from about 22:50 UTC that day: 52 members, 20 a run, as each member's 20-hour wait since the last check runs out (a run that starts a fraction of a second early leaves a group for the next hour).
 
 ## 1. What Tennyson needs to do
 
-Tennyson asked for the notes to run without waiting on his approval (18 October), so the 16 notes need no sign-off, and he delegated the legal choice for the EEA and the UK, which is decided below. **The only blocker before any note sends is the `EMAIL_POSTAL_ADDRESS` secret**, because US law (CAN-SPAM) expects a postal address in commercial email.
+Tennyson asked for the notes to run without waiting on his approval (18 October), so the 16 notes need no sign-off, and he delegated the legal choice for the EEA and the UK, which is decided below. The `EMAIL_POSTAL_ADDRESS` secret, which US law (CAN-SPAM) expects in commercial email, is set (18 October), so nothing is waiting on him.
 
-1. **Set the postal address.** In the Supabase dashboard (Edge Functions, Secrets), set `EMAIL_POSTAL_ADDRESS` to a street address, or a registered PO box or mail receiving agency. While it is empty, send-email skips every weekly note, and the skip uses up nothing.
+1. **The postal address** (done 18 October). It lives in the Supabase dashboard (Edge Functions, Secrets: https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/functions/secrets) as `EMAIL_POSTAL_ADDRESS`, a street address or a registered PO box or mail receiving agency; it is kept out of this public repo. If it is ever emptied, send-email skips every weekly note, and the skip uses up nothing.
 2. **The switch** (turned on by the session after the 18 October deploy; to check or to turn it off), in the SQL editor:
 
    ```sql
@@ -319,7 +319,7 @@ A member asked about with no new ledger row was skipped by send-email (no postal
 
 ## 9. Visitors without an account (added 18 October 2026)
 
-Tennyson asked for an email capture for people who have not signed up, feeding the same drip. It is live with the same switch and the same postal address gate as the member notes: **nothing reaches a visitor until `EMAIL_POSTAL_ADDRESS` is set** (section 1), but sign-ups and confirmations work now and wait in line.
+Tennyson asked for an email capture for people who have not signed up, feeding the same drip. It is live with the same switch and the same postal address gate as the member notes: the postal address is set (18 October), so a confirmed visitor gets the first note at the next hourly run.
 
 **Where the form is.** Under the account prompt at the end of the public guide pages: the Morph Guide (the grid, each morph page's end panel and the hub pages), the Care Guide and its topic pages, the Genetics Guide and the calculator. Each morph page shows it once, at the end (the mid-page prompt passes `notes={false}`). It loads only when the prompt first comes into view, so it adds nothing to those pages' first download (the size check counts only what loads up front). It is not on the homepage while the A/B test runs (`docs/planning/homepage-ab-test-2026-10.md`); add it to the winning page afterwards. There is also a page of its own, `/WeeklyNotes` (not indexed), which is a good link for a bio or a post. Signed-in members see neither form; their notes come with the account.
 
