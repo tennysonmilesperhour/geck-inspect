@@ -100,6 +100,9 @@ describe('Privacy Policy: Weekly Gecko Notes', () => {
     expect(WEEKLY_PARAGRAPH).toContain('Every weekly email has a link that stops only these emails');
     expect(WEEKLY_PARAGRAPH).toContain('Settings has a switch for them');
     expect(WEEKLY_PARAGRAPH).toContain('Stopping them keeps your reminders and other email');
+    // The trigger in the migration: stopping all email stops the notes for good.
+    expect(WEEKLY_PARAGRAPH).toContain('Unsubscribing from all notification emails stops them too, and they stay off until you turn them back on in Settings.');
+    expect(WEEKLY_SQL).toContain('create trigger profiles_weekly_notes_follow_email_off');
   });
 
   it('says deleting the account erases these records, and the erasure does', () => {

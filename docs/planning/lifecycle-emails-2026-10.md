@@ -36,7 +36,7 @@ Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend b
   | Day 14 | days 14 to 16 | has a gecko | weigh it again |
 
   The review counts day 7 and day 14 as one weigh-in email, which is why the plan says "four". A member who never adds a gecko gets day 0 and day 1 and nothing more.
-- **After day 14.** Weekly Gecko Notes take over once the account is 16 days old: one short email a week, in order, with its own stop link (`docs/planning/weekly-notes-2026-10.md`). The two never overlap, and a weekly note waits 20 hours after any lifecycle email. The footer of every lifecycle email now says so: "It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them." (It used to say the emails stop after two weeks.) The day 0 email now asks for a scale that reads to 0.1 g, and day 14 gives the reminder rhythm (every 14 days while growing, 21 as a sub-adult, 30 as an adult), so the weekly notes repeat the same facts.
+- **After day 14.** Weekly Gecko Notes take over once the account is 16 days old: one short email a week, in order, with its own stop link (`docs/planning/weekly-notes-2026-10.md`). The two never overlap, and a weekly note waits 20 hours after any lifecycle email. The footer of every lifecycle email now mentions them without promising them, because they wait for a switch and a postal address and the member may turn them off: "It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings." (It used to say the emails stop after two weeks.) The day 0 email now asks for a scale that reads to 0.1 g, and day 14 gives the reminder rhythm (every 14 days while growing, 21 as a sub-adult, 30 as an adult), so the weekly notes repeat the same facts.
 - **Never twice.** Each member and step gets one row in `lifecycle_email_sends` before the email is handed over, and the row is unique, so a repeated or overlapping run cannot send a step again. At most one lifecycle email per member in any 20 hours. A step whose window has passed is dropped, so turning the switch on never sends a "welcome" to someone who joined weeks ago.
 - **Preferences.** Day 0, 1 and 3 follow the member's *Platform Announcements* email switch; day 7 and 14 follow *Breeding & Care Updates*. The master email switch, the unsubscribe link and the one-click List-Unsubscribe header work exactly as for every other notification email.
 - **When.** A job runs every hour at 35 past (`lifecycle-emails-hourly`). The welcome waits until the account is an hour old, so it can mention what the member did in onboarding (a first gecko, a first weight), and goes with the next hourly run after that: one to two hours after joining. The brief asked for a daily job; hourly sends the welcome within two hours instead of up to a day later, and each later step arrives at about the time of day the member joined. While the switch is off each run is one lookup.
@@ -73,7 +73,7 @@ Everything else hangs off that record: the weight chart, the feeding day and the
 
 [ Add your first gecko ]  https://geckinspect.com/MyGeckos
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -92,7 +92,7 @@ That first weight starts the growth curve, and the curve is what tells you when 
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -109,7 +109,7 @@ One thing to do next: add the rest of your collection. Name and morph are enough
 
 [ Add your other geckos ]  https://geckinspect.com/MyGeckos
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -128,7 +128,7 @@ Keeping more than a handful? Import a spreadsheet or a MorphMarket export and th
 
 [ Add a gecko ]  https://geckinspect.com/MyGeckos
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -145,7 +145,7 @@ Add Mango's sire and dam. Names from the breeder's listing are enough; you do no
 
 [ Open Mango's family tree ]  https://geckinspect.com/Lineage?geckoId=g_mango
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -162,7 +162,7 @@ Add Mango's dam. Names from the breeder's listing are enough; you do not need to
 
 [ Open Mango's family tree ]  https://geckinspect.com/Lineage?geckoId=g_mango
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -179,7 +179,7 @@ Open the family tree to see it, and add grandparents if the breeder gave you the
 
 [ Open Mango's family tree ]  https://geckinspect.com/Lineage?geckoId=g_mango
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -196,7 +196,7 @@ Juveniles should gain steadily. A stall or a drop is often the first sign that s
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -213,7 +213,7 @@ Juveniles should gain steadily. A stall or a drop is often the first sign that s
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -230,7 +230,7 @@ Keep the rhythm: every 14 days while a crested gecko is growing, every 21 days a
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -247,7 +247,7 @@ Keep the rhythm: every 14 days while a crested gecko is growing, every 21 days a
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
@@ -264,7 +264,7 @@ Keep the rhythm: every 14 days while a crested gecko is growing, every 21 days a
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 <!-- preview:end -->

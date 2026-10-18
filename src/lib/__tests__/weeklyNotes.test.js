@@ -15,15 +15,24 @@ import {
   GENERATED_FILE,
   LIMITS,
   NOTES_DIR,
+  NOT_FOR_NOTES,
+  PUBLISHED_FILE,
+  PUBLISHED_FILE_NAME,
   REPO_ROOT,
+  RETIRED_NAMES,
   allProblems,
   catalogProblems,
+  committedPublishedSlugs,
   liveRoutes,
   noteProblems,
   parseNote,
   pathProblem,
+  publishedFileText,
+  publishedProblems,
+  readPublished,
   readWeeklyNotes,
   sourceProblems,
+  withNewSlugs,
   wordCount,
   writingProblems,
 } from '../../../scripts/lib/weekly-notes.mjs';
@@ -31,7 +40,8 @@ import { RETIRED_PAGE_NAMES } from '../retiredPages';
 import { fakeFetch, fakeSupabase, loadFunction, postJson } from './edgeHarness';
 
 const NOTES = readWeeklyNotes();
-const FILES = readdirSync(NOTES_DIR).filter((name) => !name.startsWith('.'));
+// Every file in the folder except the published-slugs list.
+const FILES = readdirSync(NOTES_DIR).filter((name) => !name.startsWith('.') && name !== PUBLISHED_FILE_NAME);
 const SITE = 'https://geckinspect.com';
 
 describe('the generated catalog', () => {
@@ -54,8 +64,9 @@ describe('the generated catalog', () => {
 });
 
 describe('numbering', () => {
-  it('every file in the folder is a note named NNN-slug.md', () => {
+  it('every file in the folder is a note named NNN-slug.md (or the published-slugs list)', () => {
     expect(FILES.length).toBeGreaterThan(0);
+    expect(readdirSync(NOTES_DIR)).toContain(PUBLISHED_FILE_NAME);
     for (const name of FILES) expect(name).toMatch(/^\d{3}-[a-z0-9-]+\.md$/);
     expect(NOTES).toHaveLength(FILES.length);
   });
@@ -140,8 +151,51 @@ describe('writing rules', () => {
     ['a CGD brand', 'Feed Pangea or Repashy.'],
     ['a season', 'Every summer, check the heat.'],
     ['a month', 'Check again in July.'],
+    ['May, the month', 'Check again in May, when the room warms up.'],
+    // The forms a review showed slipping past the first version of the rules.
+    ['a share of something', 'About 50% of hatchlings that die are lost to heat.'],
+    ['researchers', 'Researchers found that a cool room halves the risk.'],
+    ['a dated paper', 'A 2019 paper found heat stress.'],
+    ['vets agreeing', 'Vets agree that heat is the bigger risk.'],
+    ['first person plural', 'When we hatched our first clutch, half of it was lost to a hot week.'],
+    ['a member count with words between', 'Over 60 Geck Inspect members logged a heat loss last year.'],
+    ['bucks', 'A Lilly White costs about 300 bucks.'],
+    ['a price without a symbol', 'A Harlequin sells for 200 now.'],
+    ['an attributed quote', 'As one breeder put it, "Heat is the silent killer."'],
+    ['a quote with its speaker after it', '"Never again," she said.'],
+    ['Community Connect', 'Ask in Community Connect.'],
+    ['the Training Center', 'Try the Training Center.'],
+    ['Breeding Pairs', 'Open Breeding Pairs.'],
+    ['the Shipping page', 'Book it on Shipping.'],
+    ['a horizontal bar', 'Heat kills \u2015 fast.'],
+    ['a minus sign', 'A \u22125 g change.'],
+    ['a figure dash', 'Weigh every 1\u20122 weeks.'],
   ])('rejects %s', (_label, text) => {
     expect(writingProblems(text).length).toBeGreaterThan(0);
+  });
+
+  it('leaves alone the ordinary words the stricter rules sit next to', () => {
+    for (const text of [
+      'Most breeders wait for at least 40 g and 18 months.',
+      'At 40 g and 18 months, most breeders pair her.',
+      'You may see it shed overnight.',
+      'Weigh before shipping a gecko to a new home.',
+      'Soak the gecko on damp paper towel. On paper, two in three are hets.',
+      'The record says what is missing.',
+      'That is where "66% possible het" comes from.',
+    ]) {
+      expect(writingProblems(text), text).toEqual([]);
+    }
+  });
+
+  it('names every retired page and feature', () => {
+    for (const name of ['Community Connect', 'Breeding Pairs', 'Morph Visualizer', 'Other Reptiles', 'Training Center', 'AI Consultant', 'Shipping', 'website builder']) {
+      expect(RETIRED_NAMES, name).toContain(name);
+    }
+    for (const name of RETIRED_PAGE_NAMES) {
+      const words = name.replace(/([a-z])([A-Z])/g, '$1 $2');
+      expect(writingProblems(`Open ${words} today.`), words).not.toEqual([]);
+    }
   });
 
   it('allows the percentages, compound words and app labels the notes use', () => {
@@ -207,12 +261,85 @@ describe('live links', () => {
     ['/CareGuide/no-such-topic', /not a live page/],
     ['/MyGeckos#weights', /only on \/Settings/],
     ['/Settings#no-such-section', /no id=/],
+    ['/AdminPanel', /admins only/],
+    ['/ImageImport', /admins only/],
+    ['/Training', /internal admin page/],
+    ['/AuthPortal', /sign-in page/],
+    ['/ForumPost', /needs a post id/],
+    ['/MorphMarketExport', /marketplace/],
   ])('rejects %s', (path, reason) => {
     expect(pathProblem(path, live)).toMatch(reason);
   });
 
   it('allows a Settings anchor that exists on the page', () => {
     expect(pathProblem('/Settings#email-notifications', live)).toBeNull();
+  });
+
+  it('every page kept out of the notes is still a page, so the list cannot go stale', () => {
+    const pages = readFileSync(`${REPO_ROOT}/src/pages.config.js`, 'utf8');
+    for (const name of Object.keys(NOT_FOR_NOTES)) {
+      expect(pages, name).toMatch(new RegExp(`"${name}"\\s*:`));
+      expect(live.has(`/${name}`), name).toBe(false);
+    }
+  });
+});
+
+// ---------- published slugs ---------------------------------------------------
+//
+// The ledger is unique on (email, slug), so a renamed note would go again to
+// everyone who had it. published-slugs.json only ever grows.
+
+describe('published slugs', () => {
+  const ledger = readPublished();
+  const note = (step, slug) => ({ ...parseNote(`${String(step).padStart(3, '0')}-${slug}.md`, `---\nstep: ${step}\nslug: ${slug}\n---\nx`) });
+  const a = note(1, 'heat-first');
+  const b = note(2, 'weight-next');
+  const L = (published, withdrawn = []) => ({ published, withdrawn, errors: [], missing: false });
+
+  it('the file lists every note, in step order, and is exactly what the build writes', () => {
+    expect(ledger.errors).toEqual([]);
+    for (const n of NOTES) expect(ledger.published, n.slug).toContain(n.slug);
+    expect(readFileSync(PUBLISHED_FILE, 'utf8')).toBe(publishedFileText(ledger));
+    expect(withNewSlugs(NOTES, ledger).published).toEqual(ledger.published);
+    expect(publishedProblems(NOTES, ledger)).toEqual([]);
+  });
+
+  it('only ever grows: every slug in a committed version of the file is still listed', () => {
+    const committed = committedPublishedSlugs();
+    // null where git or the history is not available (some build machines).
+    if (committed === null) return;
+    for (const slug of committed) expect(ledger.published, slug).toContain(slug);
+  });
+
+  it('a renamed note fails: its old slug was published and no note has it', () => {
+    const renamed = note(1, 'heat-renamed');
+    const next = withNewSlugs([renamed, b], L(['heat-first', 'weight-next']));
+    expect(next.published).toEqual(['heat-first', 'weight-next', 'heat-renamed']);
+    expect(publishedProblems([renamed, b], next, { committed: null }).join('\n')).toMatch(/"heat-first" was published and no note has it any more/);
+  });
+
+  it('a slug taken out of the file by hand fails against the committed history', () => {
+    expect(publishedProblems([b], L(['weight-next']), { committed: new Set(['heat-first', 'weight-next']) }).join('\n'))
+      .toMatch(/"heat-first" is in a committed version of this file and was taken out/);
+  });
+
+  it('a note withdrawn on purpose passes, and its slug can never come back', () => {
+    expect(publishedProblems([b], L(['heat-first', 'weight-next'], ['heat-first']), { committed: null })).toEqual([]);
+    expect(publishedProblems([a, b], L(['heat-first', 'weight-next'], ['heat-first']), { committed: null }).join('\n'))
+      .toMatch(/"heat-first" was withdrawn and cannot come back/);
+    expect(publishedProblems([b], L(['weight-next'], ['heat-first']), { committed: null }).join('\n'))
+      .toMatch(/only a published slug can be withdrawn/);
+  });
+
+  it('a new note not built yet is named, and the build adds it at the end', () => {
+    expect(publishedProblems([a, b], L(['heat-first']), { committed: null }).join('\n')).toMatch(/"weight-next" is not listed yet; run pnpm build:weekly-notes/);
+    expect(withNewSlugs([a, b], L(['heat-first'])).published).toEqual(['heat-first', 'weight-next']);
+  });
+
+  it('allProblems includes these checks, so the build refuses a rename', () => {
+    const renamed = { ...NOTES[0], slug: `${NOTES[0].slug}-renamed`, fileName: NOTES[0].fileName.replace('.md', '-renamed.md') };
+    const problems = allProblems([renamed, ...NOTES.slice(1)], { ledger: withNewSlugs([renamed, ...NOTES.slice(1)], ledger), committed: null });
+    expect(problems.join('\n')).toMatch(new RegExp(`"${NOTES[0].slug}" was published and no note has it any more`));
   });
 });
 
@@ -294,7 +421,11 @@ describe('weekly-notes.ts', () => {
     expect(WEEKLY_NOTES_TYPE).toBe('weekly_notes');
     expect(isWeeklyNotesType('weekly_notes')).toBe(true);
     expect(isWeeklyNotesType('weekly_digest')).toBe(false);
-    expect(WEEKLY_NOTES_REASON).toBe('You are getting Weekly Gecko Notes, one short email a week, because you have a Geck Inspect account.');
+    // It says the email is promotional (CAN-SPAM wants that in commercial
+    // email sent without prior affirmative consent), and follows the rules.
+    expect(WEEKLY_NOTES_REASON).toBe('Weekly Gecko Notes are promotional emails from Geck Inspect, one short tip a week. You are getting them because you have a Geck Inspect account.');
+    expect(WEEKLY_NOTES_REASON).toMatch(/promotional/);
+    expect(writingProblems(WEEKLY_NOTES_REASON)).toEqual([]);
     expect(WEEKLY_NOTES_STOP_WORDS).toBe('stop Weekly Gecko Notes');
   });
 

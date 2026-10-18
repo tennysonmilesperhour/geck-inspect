@@ -495,6 +495,74 @@ begin
   end if;
 end $$;
 
+-- 4b. The ledger row carries the run's time, not the claim's -----------------------
+--
+-- The job asks at the run's clock (its p_now, written to the poll row) and
+-- send-email claims a few seconds later. Stamped with the claim's own
+-- clock, the member would be left out one week later at the same minute
+-- and every note would come an hour after the last.
+do $$
+declare
+  v_t0 timestamptz := (select t0 from _t0) + interval '50 minutes';
+  v_e text := pg_temp.mk('stamp', (select t0 from _t0) - interval '30 days');
+  v_late text := pg_temp.mk('stamplate', (select t0 from _t0) - interval '30 days');
+  v jsonb;
+begin
+  insert into public.weekly_notes_polls (email, polled_at) values (v_e, v_t0);
+  v := public.claim_weekly_note(v_e, array['a', 'b'], v_t0 + interval '3 seconds');
+  if v->>'slug' <> 'a' then
+    raise exception 'FAIL: the stamp member should get note a: %', v;
+  end if;
+  if (select created_date from public.weekly_notes_sends where email = v_e and slug = 'a') <> v_t0 then
+    raise exception 'FAIL: the ledger row should carry the run''s time %, got %', v_t0,
+      (select created_date from public.weekly_notes_sends where email = v_e and slug = 'a');
+  end if;
+  -- The same minute one week later: due again, so the next note keeps its hour.
+  if not pg_temp.cand('stamp', v_t0 + interval '7 days') then
+    raise exception 'FAIL: one week after a note, at the same minute, the member should be due again';
+  end if;
+  v := public.claim_weekly_note(v_e, array['a', 'b'], v_t0 + interval '7 days 4 seconds');
+  if v->>'slug' <> 'b' then
+    raise exception 'FAIL: the second note should go a week after the first: %', v;
+  end if;
+
+  -- A poll from more than an hour before the claim is not this run's: the
+  -- claim's own time is used.
+  insert into public.weekly_notes_polls (email, polled_at) values (v_late, v_t0 - interval '2 hours');
+  perform public.claim_weekly_note(v_late, array['a'], v_t0);
+  if (select created_date from public.weekly_notes_sends where email = v_late) <> v_t0 then
+    raise exception 'FAIL: an old poll should not set the ledger time';
+  end if;
+end $$;
+select pg_temp.retire('stamp');
+select pg_temp.retire('stamplate');
+
+-- 4c. One address, two profile rows (an imported row that differs in case) ----------
+do $$
+declare
+  v_t0 timestamptz := (select t0 from _t0);
+  v_e text := pg_temp.mk('dupe', (select t0 from _t0) - interval '30 days');
+  v_upper text;
+begin
+  v_upper := upper(left(v_e, 1)) || substr(v_e, 2);
+  insert into public.profiles (email, full_name, email_notifications_enabled, created_date)
+  values (v_upper, 'Imported Keeper', true, v_t0 - interval '400 days');
+  if not pg_temp.cand('dupe', v_t0) then
+    raise exception 'FAIL: a member with two profile rows, both on, should be a candidate';
+  end if;
+  -- The stop link turns off the row send-email found (the lower-case one).
+  update public.profiles set email_weekly_notes_enabled = false where email = v_e;
+  if pg_temp.cand('dupe', v_t0) or public.claim_weekly_note(v_e, array['a'], v_t0)->>'reason' <> 'not-eligible' then
+    raise exception 'FAIL: the imported row kept weekly notes going after the member stopped them';
+  end if;
+  update public.profiles set email_weekly_notes_enabled = true where email = v_e;
+  update public.profiles set email_weekly_notes_enabled = false where email = v_upper;
+  if pg_temp.cand('dupe', v_t0) then
+    raise exception 'FAIL: either row being off should stop the notes';
+  end if;
+end $$;
+select pg_temp.retire('dupe');
+
 -- 5. Never twice ---------------------------------------------------------------------
 do $$
 declare
@@ -581,6 +649,81 @@ begin
     raise exception 'FAIL: a member who stopped weekly notes is still a candidate';
   end if;
 end $$;
+
+-- 6b. Stopping all email stops the notes for good ------------------------------------
+--
+-- The all-email link (every lifecycle and notification email, and the
+-- second button on the stop page) and the Settings master switch turn the
+-- weekly switch off too. Turning email back on, or a stale Settings tab
+-- saving the old master value, does not restart the notes; only the
+-- member's own weekly switch does.
+select pg_temp.mk('allstop', now() - interval '30 days');
+select pg_temp.mk('masteroff', now() - interval '30 days');
+create temp table _tok2 on commit drop as
+  select public.email_unsubscribe_token((select id from public.profiles where email = pg_temp.em('allstop'))) as good;
+grant all on _tok2 to public;
+
+select pg_temp.as_anon();
+do $$
+begin
+  if public.unsubscribe_email_by_token((select good from _tok2)) is not true then
+    raise exception 'FAIL: the all-email unsubscribe refused a valid token';
+  end if;
+end $$;
+select pg_temp.as_postgres();
+
+do $$
+declare v record;
+begin
+  select email_weekly_notes_enabled, email_notifications_enabled into v
+    from public.profiles where email = pg_temp.em('allstop');
+  if v.email_notifications_enabled is not false or v.email_weekly_notes_enabled is not false then
+    raise exception 'FAIL: the all-email unsubscribe should stop the weekly notes too: %', row_to_json(v);
+  end if;
+end $$;
+
+-- The member turns email back on (or an old Settings tab saves master on).
+select pg_temp.as_member('allstop');
+update public.profiles set email_notifications_enabled = true where email = pg_temp.em('allstop');
+select pg_temp.as_postgres();
+do $$
+begin
+  if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('allstop')) is not false
+     or pg_temp.cand('allstop', now()) then
+    raise exception 'FAIL: turning email back on restarted the weekly notes';
+  end if;
+end $$;
+
+-- Only the member's own weekly switch brings them back.
+select pg_temp.as_member('allstop');
+update public.profiles set email_weekly_notes_enabled = true where email = pg_temp.em('allstop');
+select pg_temp.as_postgres();
+do $$
+begin
+  if not pg_temp.cand('allstop', now()) then
+    raise exception 'FAIL: a member who turned the weekly switch back on is not a candidate';
+  end if;
+end $$;
+
+-- The Settings master switch, saved by the member under row security.
+select pg_temp.as_member('masteroff');
+update public.profiles set email_notifications_enabled = false, bio = 'Keeps Lilly Whites' where email = pg_temp.em('masteroff');
+update public.profiles set email_notifications_enabled = true where email = pg_temp.em('masteroff');
+select pg_temp.as_postgres();
+do $$
+begin
+  if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('masteroff')) is not false then
+    raise exception 'FAIL: switching all email off in Settings should stop the weekly notes';
+  end if;
+  -- A save that leaves email on (the whole-form Save) changes nothing.
+  update public.profiles set email_weekly_notes_enabled = true where email = pg_temp.em('masteroff');
+  update public.profiles set email_notifications_enabled = true, bio = 'Keeps Harlequins' where email = pg_temp.em('masteroff');
+  if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('masteroff')) is not true then
+    raise exception 'FAIL: a save with email still on turned the weekly notes off';
+  end if;
+end $$;
+select pg_temp.retire('allstop');
+select pg_temp.retire('masteroff');
 
 -- 7. A member changes their own switch, never someone else's ---------------------
 select pg_temp.as_member('tamper');
@@ -787,12 +930,17 @@ end $$;
 --
 -- Back to the moment before the column existed: four members whose
 -- announcement setting differs, then the migration file itself.
+drop trigger profiles_weekly_notes_follow_email_off on public.profiles;
 alter table public.profiles drop column email_weekly_notes_enabled;
 select pg_temp.mk('bf_on', now() - interval '30 days');
 select pg_temp.mk('bf_off', now() - interval '30 days');
 select pg_temp.mk('bf_null', now() - interval '30 days');
 select pg_temp.mk('bf_empty', now() - interval '30 days');
+select pg_temp.mk('bf_master', now() - interval '30 days');
 update public.profiles set email_notification_types = array['announcements', 'breeding_updates'] where email = pg_temp.em('bf_on');
+-- Announcements on, but all email off (the all-email unsubscribe).
+update public.profiles set email_notification_types = array['announcements'], email_notifications_enabled = false
+ where email = pg_temp.em('bf_master');
 update public.profiles set email_notification_types = array['breeding_updates'] where email = pg_temp.em('bf_off');
 update public.profiles set email_notification_types = null where email = pg_temp.em('bf_null');
 update public.profiles set email_notification_types = '{}'::text[] where email = pg_temp.em('bf_empty');
@@ -808,6 +956,9 @@ begin
      or (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('bf_null')) is not false
      or (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('bf_empty')) is not false then
     raise exception 'FAIL: a member with announcements off (or an empty or null list) should start opted out';
+  end if;
+  if (select email_weekly_notes_enabled from public.profiles where email = pg_temp.em('bf_master')) is not false then
+    raise exception 'FAIL: a member with all email off should start opted out, so turning email on later does not start the notes';
   end if;
 end $$;
 
@@ -827,6 +978,10 @@ begin
   if (select count(*) from cron.job where jobname = 'weekly-notes-hourly') <> 1
      or (select value from public.app_settings where key = 'weekly_notes_enabled') <> 'true'::jsonb then
     raise exception 'FAIL: a second run duplicated the job or reset the switch';
+  end if;
+  if (select count(*) from pg_trigger where tgrelid = 'public.profiles'::regclass
+        and tgname = 'profiles_weekly_notes_follow_email_off' and not tgisinternal) <> 1 then
+    raise exception 'FAIL: the stop-all trigger should exist exactly once after a second run';
   end if;
 end $$;
 

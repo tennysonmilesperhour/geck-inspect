@@ -521,6 +521,11 @@ export default function SettingsPage() {
         setIsSaving(true);
         try {
             await User.updateMyUserData(formData);
+            // Saving with all email off also turns Weekly Gecko Notes off in
+            // the database (the profiles_weekly_notes_follow_email_off
+            // trigger), and turning email back on does not restart them, so
+            // the switch shows what was saved.
+            if (formData.email_notifications_enabled === false) setWeeklyNotesEnabled(false);
             syncNativeCareReminders({ email: user?.email, feedingAlertsEnabled: formData.feeding_alerts_enabled !== false }).catch(() => {});
             toast({ title: "Settings Saved", description: "Your profile has been successfully updated." });
             setHasUnsavedChanges(false);

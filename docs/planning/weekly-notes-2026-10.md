@@ -2,12 +2,25 @@
 
 After a member's first two weeks (the five getting-started emails, `lifecycle-emails-2026-10.md`), each member gets **Weekly Gecko Notes**: one short email a week with one practical crested gecko tip and one button, in order, for as long as they stay subscribed. New notes are added over time by a scheduled Claude session, so a member who reaches the end simply waits for the next one.
 
-Everything here is built and tested. **Nothing is sent yet**: the switch is off, and send-email refuses every note until a postal address is set.
+Everything here is built and tested. **Nothing is sent yet**: the switch is off, and send-email refuses every note until a postal address is set. Two decisions in section 1 are Tennyson's and come first.
 
 ## 1. What Tennyson needs to do
 
-1. **Set the postal address.** In the Supabase dashboard (Edge Functions, Secrets), set `EMAIL_POSTAL_ADDRESS` to a street address, or a registered PO box or mail receiving agency. US law (CAN-SPAM) expects a postal address in commercial email. While it is empty, send-email skips every weekly note, and the skip uses up nothing.
-2. **Turn the notes on**, in the SQL editor, once the address is set:
+Nothing goes out until these steps are done, in this order.
+
+1. **Read the 16 notes and approve them.** They are in `content/weekly-notes`, one file per note, and listed in section 4. The words came from the workflow brief of 18 October and were checked against the repo's facts and writing rules, but nobody has approved them yet. Reply "approved", or with changes, before step 4. They go out under the Geck Inspect name, one a week, to every member who has the notes on.
+2. **Decide how members agree to the notes.** This is a legal choice, and it is yours. Today the notes are on by default for new members, and existing members start with them on unless they had turned off Platform Announcements or all email.
+   - **In the US** that is allowed: CAN-SPAM lets a business email its members until they opt out, as long as each email says it is promotional, has a stop link that works and carries a postal address. The weekly footer does all three ("Weekly Gecko Notes are promotional emails from Geck Inspect", the stop link, and the address from step 3).
+   - **In the UK and the EU** marketing email to a person needs their consent, or the "soft opt-in". The soft opt-in only works if the person was offered a simple way to refuse when they gave their email address, and sign-up does not offer one today. So for members in the UK or the EU, the notes have no legal basis yet. The app cannot tell which members those are.
+
+   The choices:
+   - **(a) Opt in.** Before step 4, turn the notes off for everyone who has an account now, and ask members in the app to turn them on. Safest, reaches fewer members, and needs a small in-app prompt built first. The first half is one line in the SQL editor, which never turns anyone on: `update public.profiles set email_weekly_notes_enabled = false;`. With (a) the "promotional" line can also leave the footer, because members who turned the notes on themselves have given what US law calls affirmative consent.
+   - **(b) Soft opt-in for new members.** Add a plain line with a one-tap refusal to the sign-up page ("After your first two weeks we send Weekly Gecko Notes. Untick to skip them."), save the answer to the member's switch, and keep existing members off (as in (a)) until they have seen that line. Needs the sign-up change built first.
+   - **(c) Keep the default as it is**, and accept the risk for members in the UK and the EU (perhaps after checking how many of today's accounts are outside the US).
+
+   Write the choice in `docs/DECISIONS.md` (decision 58). The Privacy Policy line for the notes should then name the legal basis: consent for (a); legitimate interests and the soft opt-in for (b).
+3. **Set the postal address.** In the Supabase dashboard (Edge Functions, Secrets), set `EMAIL_POSTAL_ADDRESS` to a street address, or a registered PO box or mail receiving agency. US law (CAN-SPAM) expects a postal address in commercial email. While it is empty, send-email skips every weekly note, and the skip uses up nothing.
+4. **Turn the notes on**, in the SQL editor, once steps 1 to 3 are done:
 
    ```sql
    update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';
@@ -20,14 +33,15 @@ Everything here is built and tested. **Nothing is sent yet**: the switch is off,
    ```
 
    Setting the value back to `false` stops the next run.
-3. **After the first merge that only adds a note**, check in the Supabase dashboard (Edge Functions, send-email) that the deployed version moved. That is how a new note goes live (section 6).
+5. **After the first merge that only adds a note**, check in the Supabase dashboard (Edge Functions, send-email) that the deployed version moved. That is how a new note goes live (section 6).
 
 ## 2. The rules
 
 - **Never twice.** A member never gets the same note twice, and a repeated or overlapping run cannot double-send.
 - **Spacing.** At most one weekly note per member in any 7 days, and none while the member is inside the 16-day getting-started window. At most one email of either kind (getting-started or weekly) per member in any 20 hours.
 - **Who.** Only members who can sign in (a confirmed, not deleted, not anonymous, not banned account, the same rules as the getting-started emails), with the master email switch on, the Weekly Gecko Notes switch on, and an address that has not bounced or reported spam.
-- **Stopping.** Every note has its own "stop Weekly Gecko Notes" link and one-click header. It turns off only these emails; reminders and the other emails the member chose keep coming. Settings has a switch for it. Stopping lasts until the member turns it back on.
+- **Stopping.** Every note has its own "stop Weekly Gecko Notes" link and one-click header. It turns off only these emails; reminders and the other emails the member chose keep coming. Settings has a switch for it. Stopping all email (the all-email link in any other email, the stop page's second button, or the master switch in Settings) turns the notes off too. Stopping lasts until the member turns the Weekly Gecko Notes switch back on; turning email back on does not restart them.
+- **The stop page asks first.** Opening the stop link shows one button ("Stop Weekly Gecko Notes") and changes nothing until it is pressed, because mail security scanners open every link in an email. The mail app's own one-click Unsubscribe button needs no second click.
 - **The law.** No note goes out without a postal address. A note skipped for that reason, or because the member has had every note written so far, does not use up the member's next note. A member who has caught up gets the next note within a day of it being added.
 
 ## 3. How it works
@@ -37,7 +51,7 @@ Every hour at 50 past, the job `weekly-notes-hourly` runs `enqueue_weekly_notes(
 1. It picks the members who may get a note (`weekly_notes_candidates`), oldest last-asked first, at most 20 a run.
 2. For each one it writes the time into `weekly_notes_polls` (one row per member) and asks send-email about them. A member is asked at most once in any 20 hours; the poll row is claimed first, so two runs that overlap never ask about the same member twice.
 3. **send-email decides**, because only send-email can see two things: the `EMAIL_POSTAL_ADDRESS` secret, and the list of written notes (the catalog bundled with the function). In order, it checks the run marker, the postal address and that the catalog is not empty, then the master switch, that the address can sign in and is not suppressed, and that a signed unsubscribe link can be made. Any of these can skip the email, and none of them writes anything.
-4. Then it calls `claim_weekly_note`. Under a lock for that member, the database checks every rule again (both switches, the suppression list, the 16-day window, 7 days since the last note, 20 hours since a getting-started email), picks the first note in the catalog the member has not had, and writes the ledger row in `weekly_notes_sends`, which is unique on the address and the note.
+4. Then it calls `claim_weekly_note`. Under a lock for that member, the database checks every rule again (both switches, the suppression list, the 16-day window, 7 days since the last note, 20 hours since a getting-started email), picks the first note in the catalog the member has not had, and writes the ledger row in `weekly_notes_sends`, which is unique on the address and the note. The row is stamped with the hourly run's time (the poll row's), not the claim's a few seconds later, so the next note is due at the same minute a week later instead of drifting an hour later every week.
 5. Only a claimed note is sent.
 
 What that guarantees:
@@ -59,7 +73,7 @@ The limit of 20 a run spreads the first switch-on for the 64 accounts over about
 | Piece | Where |
 |---|---|
 | The switch `weekly_notes_enabled` (false, not public) | `app_settings`, migration `20261018002200_weekly_notes.sql` |
-| The member's switch `profiles.email_weekly_notes_enabled` (on for new members) | same migration. Its own column, never part of the Settings form, so the whole-form save (or a stale Settings tab) cannot switch it back on. Existing members who had Platform Announcements off started opted out |
+| The member's switch `profiles.email_weekly_notes_enabled` (on for new members) | same migration. Its own column, never part of the Settings form, so the whole-form save (or a stale Settings tab) cannot switch it back on. Existing members who had Platform Announcements or all email off started opted out. The trigger `profiles_weekly_notes_follow_email_off` turns it off whenever all email is switched off. An address with two profile rows (an imported row that differs in case) needs the switch on in both |
 | The ledger `weekly_notes_sends` (id, email, step, slug, created_date) | same migration. Keyed on the slug, so adding or renumbering notes later never re-sends one; `step` records the note's position when it was sent |
 | The poll table `weekly_notes_polls` (email, polled_at) | same migration |
 | `weekly_notes_candidates`, `claim_weekly_note`, `enqueue_weekly_notes`, `unsubscribe_weekly_notes_by_token` | same migration |
@@ -67,6 +81,7 @@ The limit of 20 a run spreads the first switch-on for the 64 accounts over about
 | The send and the claim | `supabase/functions/send-email/index.ts` |
 | One-click stop with `&scope=weekly` | `supabase/functions/email-unsubscribe/index.ts` |
 | The words | `content/weekly-notes/NNN-slug.md`, one file per note |
+| Every slug ever published, and the withdrawn ones | `content/weekly-notes/published-slugs.json`, which only grows (section 6) |
 | The catalog send-email ships | `supabase/functions/_shared/weekly-notes.generated.ts`, written by `pnpm build:weekly-notes` |
 | The helper send-email calls | `supabase/functions/_shared/weekly-notes.ts` |
 | The rules every note follows | `scripts/lib/weekly-notes.mjs` |
@@ -85,12 +100,12 @@ Subject and heading: the note's subject. Then the body, the one button, and the 
 
 <button words>: https://geckinspect.com<path>
 
-You are getting Weekly Gecko Notes, one short email a week, because you have a Geck Inspect account.
+Weekly Gecko Notes are promotional emails from Geck Inspect, one short tip a week. You are getting them because you have a Geck Inspect account.
 Stop Weekly Gecko Notes: https://geckinspect.com/Unsubscribe?t=<token>&scope=weekly
 Geck Inspect, <postal address>
 ```
 
-The HTML version has "Change preferences" (Settings) next to the stop link. A member with no gecko gets the note's no-gecko button when the note has one.
+The HTML version has "Change preferences" (Settings) next to the stop link. A member with no gecko gets the note's no-gecko button when the note has one. The first footer sentence says the email is promotional, which US law wants in commercial email sent without prior affirmative consent (section 1, step 2).
 
 ## 4. The notes
 
@@ -113,7 +128,7 @@ The HTML version has "Change preferences" (Settings) next to the stop link. A me
 | 15 | `a-passport-before-it-leaves` | Give your gecko a passport before it leaves | Make a passport (`/MyGeckos`) | Read about hatchling records (`/CareGuide/hatching-and-record-keeping`) |
 | 16 | `start-from-the-gecko-you-want` | Start from the gecko you want | Plan backward (`/calculator/reverse`) | same button |
 
-The text is the approved copy word for word, with three changes the tests forced:
+The text is the copy from the workflow brief of 18 October, word for word. Tennyson has not approved it yet (section 1, step 1). Three changes were forced by the tests:
 
 - Note 14's button opened `/Breeding?tab=hatchery`. Buttons may not carry a query string (the link rules in section 8), so it opens `/Breeding` and says "Open Breeding" instead of "Open the Hatchery". The body already tells the member to pick the Hatchery tab.
 - Notes 9 and 11 cited `src/data/keepers-guides/morph.js` lines 269 to 271 (and 270) as a source. Those lines are the "50% het, coin flip (visual x het)" badge on the do-not-use list, so the citation was dropped. The words of both notes did not change; the glossary lines they also cite support them.
@@ -147,7 +162,9 @@ The source lines on this list are in `DO_NOT_CITE` in `scripts/lib/weekly-notes.
 
 **Seasons.** Write "when your room warms up" or "when your house cools", never a month or a season, because every member starts at note 1 on a different date.
 
-**Writing rules** (the tests enforce every one): no em dash, no en dash, no "--", no " - " and no "1-2" style ranges (write "1 to 2"); plain language and short sentences; crested gecko terms used precisely (Lilly White, Harlequin, Phantom, Cappuccino, Axanthic, Sable, Highway, Dalmatian, Pinstripe); never an invented statistic, study, quote, price, member count or personal story, and no first person singular; never call a note an article, a blog post or a newsletter issue, and never link the blog (blog work is shelved); never mention a retired feature (Promote, the AI Consultant, Other Reptiles, the supplies store, the website builder, the Morph Visualizer, and the older retired pages in `src/lib/retiredPages.js`); no CGD brand or marketplace names; percentages only from 5, 10, 25, 50, 66, 70, 80 and 100.
+**Writing rules**: no em dash, no en dash, nothing that looks like a dash (a minus sign, a horizontal bar), no "--", no " - " and no "1-2" style ranges (write "1 to 2"); plain language and short sentences; crested gecko terms used precisely (Lilly White, Harlequin, Phantom, Cappuccino, Axanthic, Sable, Highway, Dalmatian, Pinstripe); never an invented statistic, study, quote, price, member count or personal story, and no first person ("I", "we", "our"); never call a note an article, a blog post or a newsletter issue, and never link the blog (blog work is shelved); never mention a retired feature or page (Promote, the AI Consultant, Other Reptiles, the supplies store, the website builder, the Morph Visualizer, and the older retired pages in `src/lib/retiredPages.js`, such as Community Connect, Shipping and the Training Center); no CGD brand or marketplace names; percentages only from 5, 10, 25, 50, 66, 70, 80 and 100, and never as "N% of" something; husbandry numbers (the 82°F heat line, the 80°F incubation maximum, the weigh-in gaps) exactly as in `src/data/husbandry-facts.js`.
+
+The tests (`WRITING_RULES` in `scripts/lib/weekly-notes.mjs`, and the accepted facts) catch the common form of each rule, such as "50% of", "researchers found", "costs 300 bucks", "as one breeder put it" or "60 Geck Inspect members". They cannot catch every wording, so whoever writes or reviews a note still reads it against this list.
 
 **Reserve topics** (ideas for the next notes, each with its source and the trap to avoid):
 
@@ -171,16 +188,16 @@ The source lines on this list are in `DO_NOT_CITE` in `scripts/lib/weekly-notes.
 
 1. Read this document, including the do-not-use list in section 5.
 2. Write `content/weekly-notes/<next NNN>-<slug>.md` in the format below, with its sources.
-3. Run `pnpm build:weekly-notes`, then `pnpm vitest run src/lib/__tests__/weeklyNotes.test.js`, `node scripts/check-genetics-consistency.mjs` and `pnpm test`.
+3. Run `pnpm build:weekly-notes`, then `pnpm vitest run src/lib/__tests__/weeklyNotes.test.js`, `node scripts/check-genetics-consistency.mjs` and `pnpm test`. The build also adds the new slug to `content/weekly-notes/published-slugs.json`; commit that file with the note.
 4. Commit to `main`. The merge redeploys send-email with the new catalog (every merge deploys every declared function), and members who were caught up get the new note within a day.
 
 Rules for the session:
 
 - **Keep at least 8 written notes ahead of the number of weeks since launch.** Launch is the day the switch was turned on; no member can be further along than one note a week since then, so this keeps every member at least 8 notes from the end. The query in section 7 gives both numbers.
 - **Keep at least four unsent notes ahead of the furthest member** (the second query in section 7). If the first rule holds, this one does too.
-- **Never rename or reuse a published slug.** The ledger is keyed on the slug, so a renamed note is a new note and goes again to everyone who had it.
+- **Never rename or reuse a published slug.** The ledger is keyed on the slug, so a renamed note is a new note and goes again to everyone who had it. This is checked, not just asked: `published-slugs.json` lists every slug ever built, and the build and the tests fail when a listed slug has no note (a rename), when a slug is taken out of that file (checked against every committed version git can see), or when a withdrawn slug comes back.
 - **Fix wording by editing the body.** The slug stays.
-- **To withdraw a note, delete its file and renumber the rest** (the file names and the `step` lines). Renumbering never re-sends anything, because the ledger is keyed on the slug.
+- **To withdraw a note, delete its file, renumber the rest** (the file names and the `step` lines) **and add its slug to `withdrawn`** in `published-slugs.json` (it stays under `published` too). Renumbering never re-sends anything, because the ledger is keyed on the slug. A withdrawn slug can never be used again: members who had the old note would never get the new one.
 - A note inserted earlier in the order is sent next to anyone who has not had it, before the later notes they have not had.
 
 ### The file format
@@ -195,7 +212,7 @@ Front matter: one `key: value` per line. Everything after the first `: ` is the 
 - `slug` (required): the file name after `NNN-`. Never renamed once published.
 - `subject` (required): the subject line and the email heading, 1 to 60 characters.
 - `cta` (required): the button words, 1 to 40 characters.
-- `path` (required): an in-app path from the live pages, starting with a single `/`. Not `/log`, not a bare `/Pedigree` or `/GeckoDetail`, not `/blog`, not a retired page, no query string. A `#anchor` only on `/Settings`, and only one that exists there.
+- `path` (required): an in-app path from the live pages, starting with a single `/`. Not `/log`, not a bare `/Pedigree` or `/GeckoDetail`, not `/blog`, not a retired page, not an admin or internal page (`NOT_FOR_NOTES` in `scripts/lib/weekly-notes.mjs`: the Admin panel, Image Import, Training, the sign-in page, a bare forum post or profile, the marketplace export), no query string. A `#anchor` only on `/Settings`, and only one that exists there.
 - `cta_no_gecko` and `path_no_gecko` (optional, both or neither): the button for members with no gecko in their collection.
 - `sources` (required): `; `-separated `file:line` or `file:start-end` references to the repo lines behind every fact in the note. For reviewers and the scheduled writer; never sent.
 
@@ -265,7 +282,8 @@ A member asked about with no new ledger row was skipped by send-email (no postal
 
 ## 8. The tests
 
-- `src/lib/__tests__/weeklyNotes.test.js`: the generated catalog is not stale; numbering, unique slugs and subjects; lengths; every writing rule, each shown catching its mistake; every button opens a live page (and `/blog`, retired pages, `/log`, `/Pedigree` and query strings are refused); every source points at real lines and none at the do-not-use list; send-email end to end (the payload's words ignored, every skip before the claim, the footer, the scoped links and headers, the tag); email-unsubscribe's weekly scope.
-- `supabase/tests/weekly_notes_regressions.sql`: eligibility and each boundary, the job, the claim, never twice, the drip-only unsubscribe, a member's own switch, the defaults and the one-time backfill, the two series never overlapping, erasure, permissions, and the delivery numbers. It also runs the migration file a second time.
-- `scripts/check-genetics-consistency.mjs` checks every note's subject and paragraphs against the accepted facts and the dual-model rule.
+- `src/lib/__tests__/weeklyNotes.test.js`: the generated catalog is not stale; numbering, unique slugs and subjects; the published-slugs list (a rename, a removal and a reused withdrawn slug each fail); lengths; every writing rule, each shown catching its mistake, and the ordinary words next to them left alone; every button opens a live member page (and `/blog`, retired pages, admin pages, `/log`, `/Pedigree` and query strings are refused); every source points at real lines and none at the do-not-use list; send-email end to end (the payload's words ignored, every skip before the claim, the footer, the scoped links and headers, the tag); email-unsubscribe's weekly scope.
+- `supabase/tests/weekly_notes_regressions.sql`: eligibility and each boundary, the job, the claim, the run's time on the ledger row, an address with two profile rows, never twice, the drip-only unsubscribe, stopping all email stopping the notes for good, a member's own switch, the defaults and the one-time backfill, the two series never overlapping, erasure, permissions, and the delivery numbers. It also runs the migration file a second time.
+- `scripts/check-genetics-consistency.mjs` checks every note's subject, buttons and paragraphs against the accepted facts (genetics and the husbandry numbers) and the dual-model rule; `src/lib/__tests__/husbandryFacts.test.js` holds the notes to the one heat danger line.
+- `src/pages/__tests__/Unsubscribe.test.jsx`: opening a stop link changes nothing until a button is pressed.
 - `src/lib/__tests__/privacyPolicy.test.js` holds the Privacy Policy to the two tables' columns.

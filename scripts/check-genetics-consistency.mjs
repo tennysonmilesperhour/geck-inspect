@@ -493,7 +493,10 @@ for (const [surface, file, only] of FACT_FILES) {
 // the same words and would report every problem twice. Each body paragraph
 // is checked as one passage, so a sentence wrapped over two lines in the
 // file is still read whole; problems point at the paragraph's first line.
-// The dual-model rule applies too.
+// The subject and both buttons' words are checked too, and so is the
+// dual-model rule. The accepted facts include the husbandry numbers (the
+// heat danger line, the safe incubation maximum and the weigh-in gaps), so
+// a note cannot drift from src/data/husbandry-facts.js either.
 {
   const dir = resolve(here, '..', 'content/weekly-notes');
   let files = [];
@@ -506,10 +509,13 @@ for (const [surface, file, only] of FACT_FILES) {
   for (const name of files) {
     const rel = `content/weekly-notes/${name}`;
     const parsed = parseNote(name, readFileSync(resolve(dir, name), 'utf8'));
-    if (parsed.subject) {
-      const line = readFileSync(resolve(dir, name), 'utf8').split('\n').findIndex((l) => l.startsWith('subject: ')) + 1;
-      checkAcceptedFacts(parsed.subject, (msg) => note('weekly-notes', `${rel}:${line}: ${msg}`));
-      checkPassage('weekly-notes', `${rel}:${line}`, parsed.subject);
+    // The subject and both buttons' words, each on its own front matter line.
+    const fileLines = readFileSync(resolve(dir, name), 'utf8').split('\n');
+    for (const [key, value] of [['subject', parsed.subject], ['cta', parsed.cta], ['cta_no_gecko', parsed.ctaNoGecko]]) {
+      if (!value) continue;
+      const line = fileLines.findIndex((l) => l.startsWith(`${key}: `)) + 1;
+      checkAcceptedFacts(value, (msg) => note('weekly-notes', `${rel}:${line}: ${msg}`));
+      checkPassage('weekly-notes', `${rel}:${line}`, value);
     }
     for (const paragraph of parsed.paragraphs) {
       checkAcceptedFacts(paragraph.text, (msg) => note('weekly-notes', `${rel}:${paragraph.line}: ${msg}`));

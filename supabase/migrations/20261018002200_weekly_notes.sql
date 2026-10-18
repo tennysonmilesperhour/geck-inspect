@@ -21,11 +21,19 @@
 --    the Settings page's whole-form save (or a stale Settings tab) can
 --    never switch it back on. Added once with a one-time backfill: an
 --    existing member who turned off Platform Announcements (or whose list
---    is empty, which send-email reads as all off) starts opted out. The
---    guard means a second run never touches the column, so a migration can
---    never undo an opt-out. profiles has no column-level grants, so the
---    member's existing own-row update policy covers it, and it is not one
---    of the columns protect_profile_privileged_columns guards.
+--    is empty, which send-email reads as all off), or who has email off
+--    altogether, starts opted out. The guard means a second run never
+--    touches the column, so a migration can never undo an opt-out.
+--    profiles has no column-level grants, so the member's existing own-row
+--    update policy covers it, and it is not one of the columns
+--    protect_profile_privileged_columns guards.
+--
+--    Stopping all email stops the notes too, for good: a trigger turns the
+--    weekly switch off whenever email_notifications_enabled goes from on to
+--    off (the all-email unsubscribe link, the Settings master switch, an
+--    admin). Turning email back on later (or a stale Settings tab saving
+--    the old master value) does not bring the notes back; only the
+--    member's own weekly switch does.
 --
 -- 3. public.weekly_notes_sends, the ledger: one row per member and note,
 --    unique on (email, slug), written by claim_weekly_note before the email
@@ -89,15 +97,45 @@ begin
     alter table public.profiles
       add column email_weekly_notes_enabled boolean not null default true;
     -- One time only: members who turned off Platform Announcements (or
-    -- whose list is empty) start opted out of the weekly notes too.
+    -- whose list is empty), or who have email off altogether, start opted
+    -- out of the weekly notes too.
     update public.profiles
        set email_weekly_notes_enabled = false
-     where not ('announcements' = any(coalesce(email_notification_types, '{}'::text[])));
+     where not ('announcements' = any(coalesce(email_notification_types, '{}'::text[])))
+        or email_notifications_enabled is not true;
   end if;
 end $$;
 
 comment on column public.profiles.email_weekly_notes_enabled is
-  'Weekly Gecko Notes on or off for this member. Defaults to on; members who had Platform Announcements off when it was added started off. Changed by the Settings switch (its own save, never the whole-form save) and by unsubscribe_weekly_notes_by_token. Turning it off keeps every other email.';
+  'Weekly Gecko Notes on or off for this member. Defaults to on; members who had Platform Announcements or all email off when it was added started off. Changed by the Settings switch (its own save, never the whole-form save) and by unsubscribe_weekly_notes_by_token, and turned off by profiles_weekly_notes_follow_email_off whenever all email is switched off. Turning it off keeps every other email.';
+
+-- Stopping all email stops the weekly notes too. The trigger only ever
+-- turns the weekly switch off, so turning email back on never restarts the
+-- notes by itself. It runs as whoever made the update (no definer rights)
+-- and touches only the row being updated.
+create or replace function public.weekly_notes_follow_email_off()
+returns trigger
+language plpgsql
+security invoker
+set search_path to ''
+as $function$
+begin
+  new.email_weekly_notes_enabled := false;
+  return new;
+end;
+$function$;
+
+revoke all on function public.weekly_notes_follow_email_off() from public, anon, authenticated;
+
+comment on function public.weekly_notes_follow_email_off() is
+  'Trigger: when profiles.email_notifications_enabled goes from on to off, turns email_weekly_notes_enabled off too, so stopping all email stops Weekly Gecko Notes for good.';
+
+drop trigger if exists profiles_weekly_notes_follow_email_off on public.profiles;
+create trigger profiles_weekly_notes_follow_email_off
+  before update of email_notifications_enabled on public.profiles
+  for each row
+  when (old.email_notifications_enabled is true and new.email_notifications_enabled is not true)
+  execute function public.weekly_notes_follow_email_off();
 
 -- 3. The ledger --------------------------------------------------------------
 
@@ -154,8 +192,11 @@ comment on table public.weekly_notes_polls is
 -- (select * from public.weekly_notes_candidates();) whether the switch is
 -- on or not. The member rules copy lifecycle_email_candidates
 -- (20261015151200) exactly, with an account at least 16 days old instead of
--- younger, and the member's weekly switch on. p_ignore_polls is for the
--- claim, which runs after the poll was written.
+-- younger, and the member's weekly switch on. An address with more than one
+-- profile row (an imported row that differs only in case) must have the
+-- switch on in every one of them, because the stop link and the Settings
+-- switch each change one row. p_ignore_polls is for the claim, which runs
+-- after the poll was written.
 
 create or replace function public.weekly_notes_candidates(
   p_now timestamptz default now(),
@@ -181,6 +222,11 @@ as $function$
        and u.created_at <= p_now - interval '16 days'
        and p.email_notifications_enabled is true
        and p.email_weekly_notes_enabled is true
+       and not exists (
+             select 1 from public.profiles p2
+              where lower(p2.email) = lower(u.email)
+                and p2.email_weekly_notes_enabled is not true
+           )
      order by lower(u.email), p.created_date nulls last
   )
   select m.email, w.polled_at as last_polled_at
@@ -212,7 +258,7 @@ revoke all on function public.weekly_notes_candidates(timestamptz, boolean) from
 grant execute on function public.weekly_notes_candidates(timestamptz, boolean) to service_role;
 
 comment on function public.weekly_notes_candidates(timestamptz, boolean) is
-  'Members who may get a Weekly Gecko Note at p_now: can sign in, account at least 16 days old, email and weekly switches on, not suppressed, no lifecycle email in 20 hours, no weekly note in 7 days and (unless p_ignore_polls) not asked about in 20 hours. Read-only; service role only.';
+  'Members who may get a Weekly Gecko Note at p_now: can sign in, account at least 16 days old, email and weekly switches on (the weekly one on every profile row for the address), not suppressed, no lifecycle email in 20 hours, no weekly note in 7 days and (unless p_ignore_polls) not asked about in 20 hours. Read-only; service role only.';
 
 -- 6. The claim -------------------------------------------------------------------
 --
@@ -222,6 +268,13 @@ comment on function public.weekly_notes_candidates(timestamptz, boolean) is
 -- re-checks every rule, picks the first slug the member has not had and
 -- writes the ledger row. A caught-up member gets {reason: 'caught-up'} and
 -- no row, so they get the next note written as soon as it exists.
+--
+-- The row's time is the hourly run's time (the member's poll row, when the
+-- job wrote it in the last hour), not the moment of the claim, which comes
+-- a few seconds later. The 7-day rule is checked against the run's clock,
+-- so stamping the claim's own clock would leave the member out one week
+-- later at the same minute, and each note would arrive an hour after the
+-- last. The rules themselves are still checked at p_now.
 
 create or replace function public.claim_weekly_note(
   p_email text,
@@ -239,6 +292,8 @@ declare
   v_slug text;
   v_step integer;
   v_has_gecko boolean;
+  v_polled timestamptz;
+  v_stamp timestamptz;
 begin
   if v_email = '' then
     return jsonb_build_object('reason', 'no-email');
@@ -283,8 +338,15 @@ begin
     return jsonb_build_object('reason', 'caught-up');
   end if;
 
+  -- The run's time when this claim comes from the job's last ask.
+  select w.polled_at into v_polled from public.weekly_notes_polls w where w.email = v_email;
+  v_stamp := case
+    when v_polled is not null and v_polled <= p_now and v_polled > p_now - interval '1 hour' then v_polled
+    else p_now
+  end;
+
   insert into public.weekly_notes_sends (email, step, slug, created_date)
-  values (v_email, v_step, v_slug, p_now)
+  values (v_email, v_step, v_slug, v_stamp)
   on conflict (email, slug) do nothing;
   if not found then
     return jsonb_build_object('reason', 'already-sent');
@@ -301,7 +363,7 @@ revoke all on function public.claim_weekly_note(text, text[], timestamptz) from 
 grant execute on function public.claim_weekly_note(text, text[], timestamptz) to service_role;
 
 comment on function public.claim_weekly_note(text, text[], timestamptz) is
-  'Claims the next Weekly Gecko Note for one address: re-checks every rule under a per-member lock, picks the first slug in p_slugs (step order) the member has not had and writes the ledger row. Returns {slug, step, has_gecko} or {reason}. Writes nothing for not-eligible, caught-up or bad-catalog. Service role only (send-email).';
+  'Claims the next Weekly Gecko Note for one address: re-checks every rule under a per-member lock, picks the first slug in p_slugs (step order) the member has not had and writes the ledger row, stamped with the hourly run''s time when the job asked in the last hour. Returns {slug, step, has_gecko} or {reason}. Writes nothing for not-eligible, caught-up or bad-catalog. Service role only (send-email).';
 
 -- 7. The job -------------------------------------------------------------------
 --

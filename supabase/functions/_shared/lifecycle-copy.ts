@@ -267,8 +267,10 @@ export function lifecycleEmail(type: string, facts: LifecycleFacts | null | unde
   }
 }
 
-// The footer line that says why this email came.
+// The footer line that says why this email came. It mentions Weekly Gecko
+// Notes without promising them: they wait for a switch and a postal address,
+// and the member may already have turned them off in Settings.
 export function lifecycleReason(facts: LifecycleFacts | null | undefined): string {
   const joined = shortDate(facts?.signed_up_at);
-  return `You are getting this because you joined Geck Inspect${joined ? ` on ${joined}` : ""}. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.`;
+  return `You are getting this because you joined Geck Inspect${joined ? ` on ${joined}` : ""}. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.`;
 }

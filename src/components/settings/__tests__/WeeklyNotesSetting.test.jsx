@@ -109,4 +109,10 @@ describe('Settings never puts the column in the form', () => {
   it('the whole-form save sends formData, which has no weekly key', () => {
     expect(SETTINGS).toContain('await User.updateMyUserData(formData);');
   });
+
+  it('saving with all email off shows the weekly switch off, as the database trigger left it', () => {
+    const save = block('const handleSave = async () => {', 'setIsSaving(false);');
+    expect(save).toContain('if (formData.email_notifications_enabled === false) setWeeklyNotesEnabled(false);');
+    expect(save.indexOf('setWeeklyNotesEnabled(false)')).toBeGreaterThan(save.indexOf('await User.updateMyUserData(formData);'));
+  });
 });

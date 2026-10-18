@@ -1,6 +1,8 @@
 /**
  * Weekly Gecko Notes: the email files, the rules every note must follow,
- * and the set of in-app pages a note's button may open.
+ * the set of in-app pages a note's button may open, and the append-only
+ * list of published slugs (content/weekly-notes/published-slugs.json) that
+ * keeps a renamed note from going to everyone a second time.
  *
  * Each note is one file, content/weekly-notes/NNN-slug.md (the format is
  * in docs/planning/weekly-notes-2026-10.md). Three things read them through
@@ -19,10 +21,11 @@
  *
  * Plain Node (no Vite aliases), so the build script can import it.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RETIRED_PAGE_NAMES } from '../../src/lib/retiredPages.js';
+import { RETIRED_FEATURES, RETIRED_PAGE_NAMES, RETIRED_PAGES } from '../../src/lib/retiredPages.js';
 import { CARE_CATEGORIES } from '../../src/data/care-guide.js';
 import { MORPHS } from '../../src/data/morph-guide.js';
 import { FEEDING_GUIDE } from '../../src/data/keepers-guides/feeding.js';
@@ -36,6 +39,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(HERE, '..', '..');
 export const NOTES_DIR = resolve(REPO_ROOT, 'content/weekly-notes');
 export const GENERATED_FILE = resolve(REPO_ROOT, 'supabase/functions/_shared/weekly-notes.generated.ts');
+// Every slug ever built into the catalog. See publishedProblems below.
+export const PUBLISHED_FILE_NAME = 'published-slugs.json';
+export const PUBLISHED_FILE = resolve(NOTES_DIR, PUBLISHED_FILE_NAME);
 
 export const FILE_NAME_RE = /^(\d{3})-([a-z0-9-]+)\.md$/;
 export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -207,6 +213,21 @@ export function settingsAnchors() {
 
 let liveCache = null;
 
+// Live pages a note's button must not open, with the reason: admin-only
+// screens, the sign-in page (a member reading a note already has an
+// account), pages that show nothing without an id in the address, and the
+// export page named after a marketplace. Each name must still be a page in
+// pages.config.js (the test checks), so this list cannot quietly go stale.
+export const NOT_FOR_NOTES = {
+  AdminPanel: 'is for admins only',
+  ImageImport: 'is for admins only',
+  Training: 'is an internal admin page (the Evidence Lab)',
+  AuthPortal: 'is the sign-in page; a member reading a note already has an account',
+  ForumPost: 'needs a post id',
+  PublicProfile: 'needs a profile id',
+  MorphMarketExport: 'is named after a marketplace',
+};
+
 /**
  * Every in-app path a note's button may open. Built from the app's own
  * route data, so a page that is renamed or retired drops out by itself.
@@ -215,7 +236,7 @@ export function liveRoutes() {
   if (liveCache) return liveCache;
   const set = new Set(['/']);
   for (const key of readPagesKeys()) {
-    if (!RETIRED_PAGE_NAMES.has(key)) set.add(`/${key}`);
+    if (!RETIRED_PAGE_NAMES.has(key) && !(key in NOT_FOR_NOTES)) set.add(`/${key}`);
   }
   for (const category of CARE_CATEGORIES) {
     for (const section of category.sections || []) set.add(`/CareGuide/${section.id}`);
@@ -248,6 +269,9 @@ export function pathProblem(path, live = liveRoutes()) {
   for (const name of RETIRED_PAGE_NAMES) {
     if (first.toLowerCase() === name.toLowerCase()) return `${name} is a retired page`;
   }
+  for (const [name, why] of Object.entries(NOT_FOR_NOTES)) {
+    if (first.toLowerCase() === name.toLowerCase()) return `/${name} ${why}`;
+  }
   if (anchor !== undefined) {
     if (base !== '/Settings') return 'a #anchor is allowed only on /Settings';
     if (!settingsAnchors().has(anchor)) return `/Settings has no id="${anchor}"`;
@@ -261,27 +285,68 @@ export function pathProblem(path, live = liveRoutes()) {
 
 const PERCENT_ALLOWED = new Set([5, 10, 25, 50, 66, 70, 80, 100]);
 
+// Retired pages and features by the names a member would know them by:
+// each retired page's name split into words ("Community Connect",
+// "Breeding Pairs", "Shipping"), plus the older names the docs and the app
+// used. Built from src/lib/retiredPages.js, so a page retired later is
+// covered by itself. Multi-word names match in any case; a one-word page
+// name ("Shipping", "Store") matches only capitalised, so the plain word
+// in a sentence ("before shipping a gecko") is still allowed.
+const escapeRe = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const splitCamel = (name) => name.replace(/([a-z])([A-Z])/g, '$1 $2');
+export const RETIRED_NAMES = [
+  ...new Set([
+    ...RETIRED_PAGES.map((r) => splitCamel(r.page)),
+    ...Object.keys(RETIRED_FEATURES).map((key) => splitCamel(key).toLowerCase()),
+    'Training Center', 'AI Training Center', 'AI Consultant', 'Breeder Consultant', 'supplies store',
+    'sticker designer', 'sticker builder', 'website editor', 'website builder',
+  ]),
+];
+const RETIRED_NAME_RES = RETIRED_NAMES.map((name) => (name.includes(' ')
+  ? new RegExp(`\\b${escapeRe(name).replace(/ /g, '\\s+')}\\b`, 'i')
+  : new RegExp(`\\b${escapeRe(name)}\\b`)));
+
+// Characters that look like a dash: figure dash, horizontal bar, two- and
+// three-em dashes, minus sign, small and full-width dashes, and the vertical
+// presentation forms. Written by code point so this file holds none of them.
+const DASH_LOOKALIKES = new RegExp(`[${[0x2012, 0x2015, 0x2e3a, 0x2e3b, 0x2212, 0xfe31, 0xfe32, 0xfe58, 0xfe63, 0xff0d]
+  .map((c) => `\\u${c.toString(16).padStart(4, '0')}`).join('')}]`);
+
+// Words that are units, so "18 months, most breeders" is not a member count.
+const UNIT = '(?:g|grams?|kg|months?|weeks?|days?|years?|hours?|minutes?|eggs?|clutch\\w*|percent|\u00B0F|\u00B0C)';
+
 // [pattern, what is wrong]. Run on the subject, the button words and the
-// body (never on sources, which are file paths).
+// body (never on sources, which are file paths). The rules catch the common
+// forms of each mistake, not every possible wording, so a reviewer still
+// reads every new note (docs/planning/weekly-notes-2026-10.md, section 6).
 export const WRITING_RULES = [
   [/\u2014/, 'has an em dash'],
   [/\u2013/, 'has an en dash'],
+  [DASH_LOOKALIKES, 'has a character that looks like a dash (figure dash, horizontal bar, minus sign and similar)'],
   [/--/, 'has "--"'],
-  [/ - /, 'has " - " used as a dash'],
-  [/\d\s?-\s?\d/, 'has a number range with a hyphen; write "1 to 2"'],
+  [/ [-\u2010\u2011] /, 'has " - " used as a dash'],
+  [/\d\s?[-\u2010\u2011]\s?\d/, 'has a number range with a hyphen; write "1 to 2"'],
   [/[#*_`[\]<>]/, 'has a markdown or HTML character (# * _ ` [ ] < >)'],
   [/https?:\/\/|\bwww\.|geckinspect\.com/i, 'has a web address; the button carries the link'],
   [/(^|[\s("'])\/[A-Za-z]/, 'has an in-app path; the button carries the link'],
   [/\bI\b|\bI['\u2019](m|ve|d|ll)\b/, 'speaks in the first person singular'],
   [/\b(my|me|mine|myself)\b/i, 'speaks in the first person singular'],
+  [/\b(we|we're|we've|we'd|we'll|our|ours|ourselves|us)\b/i, 'speaks in the first person plural; say what the member can do, or name Geck Inspect'],
   [/\b(articles?|blogs?|blogging|newsletters?|this issue|last issue|next issue|issue #?\d+)\b/i, 'calls itself an article, blog post or newsletter issue'],
   [/\bpromote\b|\bconsultant\b|\bother reptiles\b|\bstores?\b|\bsupplies\b|\bstickers?\b|\bwebsite builder\b|\bvisuali[sz]er\b|\bguess the price\b|\bgiveaways?\b|\bmentorship\b|\bbreeding loans?\b|\bassistant chat\b|\bhealth screen\w*\b|\bgrowth reel\b|\bsensors?\b/i, 'names a retired feature'],
-  [/[$\u20AC\u00A3]|\bUSD\b|\bdollars?\b/i, 'mentions a price'],
+  ...RETIRED_NAMES.map((name, i) => [RETIRED_NAME_RES[i], `names a retired page or feature (${name})`]),
+  [/[$\u20AC\u00A3\u00A5]|\b(USD|EUR|GBP)\b|\b(dollars?|bucks|cents?|euros?|quid)\b/i, 'mentions a price'],
+  [/\b(costs?|costing|sells? for|sold for|selling for|worth|priced at|goes for|go for|fetch(es)?)\b[^.!?]{0,20}\d/i, 'mentions a price'],
   [/\bmorph ?market\b|\bpalm street\b|\bfauna classifieds\b|\bkingsnake\b|\breptidex\b|\bgeckistry\b|\bbreed ledger\b/i, 'names a marketplace or another app'],
-  [/\b(studies|research|science)\s+(show|shows|found|finds|suggest|suggests|proves?)\b|\bsurveys?\b|\baccording to\b|\bpercent of\b/i, 'sounds like a made-up statistic'],
-  [/\b\d[\d,.]*\s*(members|keepers|breeders|people|users)\b|\b(hundreds|thousands|millions|dozens) of (members|keepers|breeders|people|users)\b/i, 'counts members, keepers, breeders, people or users'],
+  [/\b(studies|research|science|evidence|data)\s+(show|shows|showed|found|finds|suggest|suggests|suggested|proves?|proved)\b|\bsurveys?\b|\baccording to\b|\bpercent of\b|\b(researchers?|scientists?|scientific(ally)?)\b|\b(vets?|veterinarians?|experts?)\s+(say|says|agree|agrees|recommend|recommends)\b|\ban?\s+(\d{4}\s+)?(paper|study|trial|survey|report)\s+(found|finds|shows?|showed|says?|suggests?)\b|\ba\s+\d{4}\s+(paper|study|trial|survey)\b/i, 'sounds like a made-up statistic or study'],
+  [/\b\d+(?:\.\d+)?\s*(?:%|percent)\s+of\b/i, 'gives "N% of" something, which reads as a statistic; the notes use percentages only for genetics odds and the 5% weight drop'],
+  [new RegExp(`\\b\\d[\\d,]*\\+?\\s+(?!${UNIT}\\b)(?:[A-Za-z][\\w'-]*\\s+){0,3}?(members|accounts|keepers|breeders|users|people|owners|subscribers)\\b`, 'i'), 'counts members, keepers, breeders, people or users'],
+  [/\b(hundreds|thousands|millions|dozens) of (members|keepers|breeders|people|users|owners)\b/i, 'counts members, keepers, breeders, people or users'],
+  [/["\u201C\u201D][^"\u201C\u201D]{1,200}["\u201C\u201D]\s*,?\s*((he|she|they|one [\w-]+|a [\w-]+|another [\w-]+)\s+)?(said|says|say|told|tells|wrote|writes|explains?|explained|recalls?|recalled)\b|\b(said|says|told|tells|wrote|writes|put it|explained|recalls?|recalled)\s*[,:]?\s*["\u201C]|\bas (one|a|another|an) [\w-]+( [\w-]+)? (put it|puts it|says|said|told)\b/i, 'has an attributed quote; the notes never quote anyone'],
   [/\b(pangea|repashy|leachie|lugarti|black panther|zoo ?med)\b/i, 'names a CGD brand'],
   [/\b(spring|summer|autumn|winter)\b|\b(January|February|March|April|June|July|August|September|October|November|December)\b/, 'names a season or a month; write "when your room warms up" instead'],
+  // May, the month, without catching "may" the verb.
+  [/\b(in|of|by|until|till|since|from|through|early|late|mid|during|before|after|last|next|this|every) May\b|\bMay\s+(\d|and\b|or\b|to\b|through\b|until\b)/, 'names a season or a month; write "when your room warms up" instead'],
   [/\{\{|\}\}/, 'has a template placeholder'],
 ];
 
@@ -411,14 +476,133 @@ export function catalogProblems(notes) {
   return out;
 }
 
+// ---------- published slugs ----------------------------------------------
+//
+// The database ledger (weekly_notes_sends) is unique on the address and the
+// slug, so a slug is a note's identity for good. If a published note were
+// renamed, its new slug would be one nobody has had, and every member who
+// already got the note would get it again as their next email. Withdrawing a
+// note and later giving its slug to a different note would do the opposite:
+// members who had the old one would silently never get the new one.
+//
+// content/weekly-notes/published-slugs.json lists every slug ever built into
+// the catalog, in the order it was first built, plus the ones withdrawn on
+// purpose. pnpm build:weekly-notes adds new slugs to it; nothing removes
+// any. The checks below make a rename, a removal or a reuse fail the build
+// and the tests instead of reaching members.
+
+export const PUBLISHED_ABOUT = 'Every Weekly Gecko Notes slug ever built into the catalog, in the order it was first built. The ledger in the database is keyed on the slug, so a slug here is never renamed, reused or removed. pnpm build:weekly-notes adds new slugs. To withdraw a note, delete its file, renumber the rest and add its slug to withdrawn. See docs/planning/weekly-notes-2026-10.md, section 6.';
+
+/** published-slugs.json, parsed. Never throws; problems go into `errors`. */
+export function readPublished(file = PUBLISHED_FILE) {
+  const empty = { published: [], withdrawn: [], errors: [], missing: false };
+  if (!existsSync(file)) {
+    return { ...empty, missing: true, errors: [`${PUBLISHED_FILE_NAME} is missing; run pnpm build:weekly-notes to make it`] };
+  }
+  let data;
+  try {
+    data = JSON.parse(readFileSync(file, 'utf8'));
+  } catch (err) {
+    return { ...empty, errors: [`${PUBLISHED_FILE_NAME} is not valid JSON (${err.message})`] };
+  }
+  const errors = [];
+  const list = (key) => {
+    const value = data?.[key];
+    if (!Array.isArray(value) || value.some((s) => typeof s !== 'string')) {
+      errors.push(`${PUBLISHED_FILE_NAME}: "${key}" must be a list of slugs`);
+      return [];
+    }
+    return value;
+  };
+  return { published: list('published'), withdrawn: list('withdrawn'), errors, missing: false };
+}
+
+/** The file's exact text for a ledger (deterministic, ends with a newline). */
+export function publishedFileText(ledger) {
+  return `${JSON.stringify({ about: PUBLISHED_ABOUT, published: ledger.published, withdrawn: ledger.withdrawn }, null, 2)}\n`;
+}
+
+/** The ledger with every catalog slug it does not list yet added, in step order. */
+export function withNewSlugs(notes, ledger) {
+  const published = [...ledger.published];
+  for (const note of notes) {
+    if (note.slug && SLUG_RE.test(note.slug) && !published.includes(note.slug)) published.push(note.slug);
+  }
+  return { ...ledger, published, errors: ledger.missing ? [] : ledger.errors, missing: false };
+}
+
+/**
+ * Every slug in any committed version of published-slugs.json that git can
+ * see here, or null when git (or the history) is not available, as in some
+ * build machines. This is what makes the list append-only: a slug taken
+ * out of the file by hand is still in an older version.
+ */
+export function committedPublishedSlugs() {
+  const path = rel(PUBLISHED_FILE);
+  const git = (args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  let shas;
+  try {
+    shas = git(['log', '--format=%H', '--', path]).split('\n').filter(Boolean);
+  } catch {
+    return null;
+  }
+  const out = new Set();
+  for (const sha of shas) {
+    try {
+      const data = JSON.parse(git(['show', `${sha}:${path}`]));
+      for (const slug of Array.isArray(data?.published) ? data.published : []) out.add(slug);
+    } catch {
+      // The commit that deleted the file, or a version that does not parse.
+    }
+  }
+  return out;
+}
+
+/** Problems between the notes and the published slugs. */
+export function publishedProblems(notes, ledger = readPublished(), { committed = committedPublishedSlugs() } = {}) {
+  const F = PUBLISHED_FILE_NAME;
+  const out = [...ledger.errors];
+  const catalog = new Set(notes.map((n) => n.slug).filter(Boolean));
+  const published = new Set(ledger.published);
+  const withdrawn = new Set(ledger.withdrawn);
+  for (const [key, values] of [['published', ledger.published], ['withdrawn', ledger.withdrawn]]) {
+    const seen = new Set();
+    for (const slug of values) {
+      if (seen.has(slug)) out.push(`${F}: "${slug}" is listed twice under ${key}`);
+      seen.add(slug);
+      if (!SLUG_RE.test(slug) || slug.length > SLUG_MAX) out.push(`${F}: "${slug}" under ${key} is not a valid slug`);
+    }
+  }
+  for (const slug of withdrawn) {
+    if (!published.has(slug)) out.push(`${F}: "${slug}" is under withdrawn but not under published; only a published slug can be withdrawn, and it stays under published too`);
+    if (catalog.has(slug)) out.push(`${F}: "${slug}" was withdrawn and cannot come back: members who had the old note would never get the new one. Give the note a new slug`);
+  }
+  for (const slug of published) {
+    if (!withdrawn.has(slug) && !catalog.has(slug)) {
+      out.push(`${F}: "${slug}" was published and no note has it any more. Never rename a published slug: a renamed note goes again to every member who already had it. Put the old slug back, or, to withdraw the note on purpose, add "${slug}" to withdrawn`);
+    }
+  }
+  for (const slug of catalog) {
+    if (!published.has(slug)) out.push(`${F}: "${slug}" is not listed yet; run pnpm build:weekly-notes, which adds it`);
+  }
+  if (committed) {
+    for (const slug of committed) {
+      if (!published.has(slug)) out.push(`${F}: "${slug}" is in a committed version of this file and was taken out. The list only grows: put it back (and under withdrawn, if its note is gone)`);
+    }
+  }
+  return out;
+}
+
 /** Every problem in the series, each starting with its file name. */
-export function allProblems(notes = readWeeklyNotes()) {
+export function allProblems(notes = readWeeklyNotes(), { ledger = readPublished(), committed } = {}) {
   const live = liveRoutes();
   return [
     ...notes.flatMap((note) => noteProblems(note, { live }).map((p) => `${note.fileName}: ${p}`)),
     ...catalogProblems(notes),
+    ...publishedProblems(notes, ledger, committed === undefined ? undefined : { committed }),
   ];
 }
 
 export const NOTES_DIR_REL = rel(NOTES_DIR);
+export const PUBLISHED_FILE_REL = rel(PUBLISHED_FILE);
 export const GENERATED_FILE_REL = rel(GENERATED_FILE);

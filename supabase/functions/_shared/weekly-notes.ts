@@ -17,9 +17,16 @@ import { WEEKLY_NOTES } from "./weekly-notes.generated.ts";
 
 export const WEEKLY_NOTES_TYPE = "weekly_notes";
 
-// The footer line that says why this email came.
+// The footer line that says what this email is and why it came. The notes'
+// buttons point at Geck Inspect features, so they are treated as commercial
+// email. US law (CAN-SPAM, 15 U.S.C. 7704(a)(5)) then wants three things:
+// a clear statement that the email is promotional (unless the member gave
+// prior affirmative consent, which the default-on switch is not), a way to
+// stop it, and a postal address. This line is the first; the stop link and
+// EMAIL_POSTAL_ADDRESS are the others. Whether the statement can go is
+// Tennyson's call (docs/planning/weekly-notes-2026-10.md, section 1).
 export const WEEKLY_NOTES_REASON =
-  "You are getting Weekly Gecko Notes, one short email a week, because you have a Geck Inspect account.";
+  "Weekly Gecko Notes are promotional emails from Geck Inspect, one short tip a week. You are getting them because you have a Geck Inspect account.";
 
 // The footer link's words. The link stops only these emails.
 export const WEEKLY_NOTES_STOP_WORDS = "stop Weekly Gecko Notes";

@@ -134,19 +134,21 @@ One short email a week after a member's first two weeks, in order, for as long a
 
 **Supabase (applied by the merge):**
 
-- `20261018002200_weekly_notes.sql`: the switch `weekly_notes_enabled` (false, not public), the member's own switch `profiles.email_weekly_notes_enabled` (on for new members; existing members who had Platform Announcements off start opted out, once), the ledger `weekly_notes_sends`, the poll table `weekly_notes_polls`, the functions `weekly_notes_candidates`, `claim_weekly_note`, `enqueue_weekly_notes` and `unsubscribe_weekly_notes_by_token`, and the job `weekly-notes-hourly` at 50 past each hour. Additive and safe to run twice. While the switch is off the job is one lookup an hour.
+- `20261018002200_weekly_notes.sql`: the switch `weekly_notes_enabled` (false, not public), the member's own switch `profiles.email_weekly_notes_enabled` (on for new members; existing members who had Platform Announcements or all email off start opted out, once), the trigger `profiles_weekly_notes_follow_email_off` (stopping all email turns the notes off too, for good), the ledger `weekly_notes_sends`, the poll table `weekly_notes_polls`, the functions `weekly_notes_candidates`, `claim_weekly_note`, `enqueue_weekly_notes` and `unsubscribe_weekly_notes_by_token`, and the job `weekly-notes-hourly` at 50 past each hour. Additive and safe to run twice. While the switch is off the job is one lookup an hour.
 - `20261018002300_erase_weekly_notes.sql`: `admin_erase_account` restated from `20261015151600` with two lines that delete the member's weekly notes rows.
 - Test: `supabase/tests/weekly_notes_regressions.sql` (and `lifecycle_regressions.sql` still passes against the restated erasure).
 
 **Edge functions (deployed by the same merge; both already declared in `supabase/config.toml`):** `send-email` (claims and sends the notes, with their own footer and a `&scope=weekly` stop link and one-click header; ships the catalog `_shared/weekly-notes.generated.ts`) and `email-unsubscribe` (a `scope=weekly` POST stops only the weekly notes). send-email's profile lookup is unchanged, so it works whether the migration lands before or after it.
 
-**Vercel:** the Weekly Gecko Notes switch in Settings (its own save), the Unsubscribe page's weekly wording with a "Stop all Geck Inspect email" button, and the Privacy Policy (updated 18 October). The getting-started footer now says Weekly Gecko Notes follow, and two of its facts match the notes (a 0.1 g scale; weigh every 14, 21 and 30 days by stage).
+**Vercel:** the Weekly Gecko Notes switch in Settings (its own save); the Unsubscribe page, which now changes nothing until a button is pressed ("Stop Weekly Gecko Notes", "Stop all notification emails" or "Unsubscribe"), because mail scanners open links, for the all-email links in reminder emails too; and the Privacy Policy (updated 18 October). The getting-started footer now says Weekly Gecko Notes may follow and can be turned off in Settings, and two of its facts match the notes (a 0.1 g scale; weigh every 14, 21 and 30 days by stage).
 
 **What still needs Tennyson:**
 
-1. Set the edge function secret `EMAIL_POSTAL_ADDRESS` (a street address, or a registered PO box or mail receiving agency). Without it no weekly note is sent, and the skip uses up nothing.
-2. Turn the notes on: `update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';` With 64 confirmed accounts and 20 a run, the first round takes about four hours; after that each member gets one note about every 7 days.
-3. After the first merge that only adds a note, check that the send-email version in the dashboard moved.
+1. Read the 16 notes in `content/weekly-notes` and approve them (section 1 of `weekly-notes-2026-10.md`).
+2. Choose how members agree to the notes (consent or soft opt-in for members in the UK and the EU; the three choices are in section 1 of the plan) and record it in decision 58.
+3. Set the edge function secret `EMAIL_POSTAL_ADDRESS` (a street address, or a registered PO box or mail receiving agency). Without it no weekly note is sent, and the skip uses up nothing.
+4. Turn the notes on: `update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';` With 64 confirmed accounts and 20 a run, the first round takes about four hours; after that each member gets one note about every 7 days.
+5. After the first merge that only adds a note, check that the send-email version in the dashboard moved.
 
 ## Done on 3 October
 

@@ -13,14 +13,21 @@ import { CheckCircle2, Loader2, MailX } from 'lucide-react';
  * Every notification email links here with a signed token
  * (/Unsubscribe?t=<profile id>.<signature>). The database checks the
  * signature (unsubscribe_email_by_token) and turns email notifications
- * off for that member. The signature is the proof, so it works from any
- * device, signed in or not. Push and in-app notifications are unchanged.
+ * off for that member, Weekly Gecko Notes included. The signature is the
+ * proof, so it works from any device, signed in or not. Push and in-app
+ * notifications are unchanged.
  *
- * Weekly Gecko Notes link here with &scope=weekly. Then only those emails
- * stop (unsubscribe_weekly_notes_by_token), and the page offers a second
- * button that stops all Geck Inspect email, which runs only when clicked.
- * An old cached copy of this page ignores the scope and stops all email,
- * which is the safe direction.
+ * Weekly Gecko Notes link here with &scope=weekly. Then the main button
+ * stops only those emails (unsubscribe_weekly_notes_by_token), and a
+ * second button stops all notification emails.
+ *
+ * Nothing changes until the member presses a button. Mail security
+ * scanners (Microsoft Defender Safe Links, Proofpoint, Mimecast) open every
+ * link in a delivered email, scripts included, so a page that acted on
+ * opening would unsubscribe members who never clicked. RFC 8058 asks for
+ * this confirmation step; the mail app's own one-click Unsubscribe button
+ * is a POST to the email-unsubscribe function, which still needs no click
+ * here. One page with one button is what US law (CAN-SPAM) allows.
  */
 const RPC = {
     all: 'unsubscribe_email_by_token',
@@ -34,7 +41,8 @@ export default function Unsubscribe() {
     const initialScope = params.get('scope') === 'weekly' ? 'weekly' : 'all';
     // Which emails the last request was about, and how it went.
     const [scope, setScope] = useState(initialScope);
-    const [state, setState] = useState(token ? 'working' : 'missing');
+    // confirm (nothing done yet), working, done, invalid, error or missing.
+    const [state, setState] = useState(token ? 'confirm' : 'missing');
     const live = useRef(true);
 
     const run = useCallback(async (which) => {
@@ -51,11 +59,10 @@ export default function Unsubscribe() {
 
     useEffect(() => {
         live.current = true;
-        if (token) run(initialScope);
         return () => {
             live.current = false;
         };
-    }, [token, initialScope, run]);
+    }, []);
 
     return (
         <PublicPageShell>
@@ -63,6 +70,27 @@ export default function Unsubscribe() {
             <div className="max-w-xl mx-auto px-4 py-12">
                 <Card>
                     <CardContent className="p-8 text-center space-y-4">
+                        {state === 'confirm' && scope === 'weekly' && (
+                            <>
+                                <MailX className="w-10 h-10 mx-auto text-emerald-400" />
+                                <h1 className="text-2xl font-bold text-slate-100">Stop Weekly Gecko Notes?</h1>
+                                <p className="text-slate-400">
+                                    This stops only the weekly email. Reminders, hatch alerts and the other
+                                    emails you chose still arrive.
+                                </p>
+                            </>
+                        )}
+                        {state === 'confirm' && scope === 'all' && (
+                            <>
+                                <MailX className="w-10 h-10 mx-auto text-emerald-400" />
+                                <h1 className="text-2xl font-bold text-slate-100">Unsubscribe from notification emails?</h1>
+                                <p className="text-slate-400">
+                                    Geck Inspect will stop sending you notification emails, Weekly Gecko Notes
+                                    included. Hatch alerts, messages and replies still show in the app, and push
+                                    notifications are unchanged.
+                                </p>
+                            </>
+                        )}
                         {state === 'working' && (
                             <>
                                 <Loader2 className="w-8 h-8 mx-auto animate-spin text-emerald-400" />
@@ -87,9 +115,10 @@ export default function Unsubscribe() {
                                 <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-400" />
                                 <h1 className="text-2xl font-bold text-slate-100">You are unsubscribed</h1>
                                 <p className="text-slate-400">
-                                    Geck Inspect will stop sending you notification emails. Hatch alerts,
-                                    messages and replies still show in the app, and push notifications are
-                                    unchanged. You can turn emails back on in Settings at any time.
+                                    Geck Inspect will stop sending you notification emails, Weekly Gecko Notes
+                                    included. Hatch alerts, messages and replies still show in the app, and push
+                                    notifications are unchanged. You can turn emails back on in Settings at any
+                                    time; Weekly Gecko Notes have their own switch there.
                                 </p>
                             </>
                         )}
@@ -107,14 +136,20 @@ export default function Unsubscribe() {
                             </>
                         )}
                         <div className="pt-2 flex flex-wrap justify-center gap-3">
+                            {state === 'confirm' && scope === 'weekly' && (
+                                <Button onClick={() => run('weekly')}>Stop Weekly Gecko Notes</Button>
+                            )}
+                            {state === 'confirm' && scope === 'all' && (
+                                <Button onClick={() => run('all')}>Unsubscribe</Button>
+                            )}
+                            {scope === 'weekly' && (state === 'confirm' || state === 'done') && (
+                                <Button variant="outline" onClick={() => run('all')}>
+                                    Stop all notification emails
+                                </Button>
+                            )}
                             <Link to="/Settings#email-notifications">
                                 <Button variant="outline">Email settings</Button>
                             </Link>
-                            {state === 'done' && scope === 'weekly' && (
-                                <Button variant="outline" onClick={() => run('all')}>
-                                    Stop all Geck Inspect email
-                                </Button>
-                            )}
                         </div>
                     </CardContent>
                 </Card>

@@ -9,16 +9,19 @@
 //   Body: List-Unsubscribe=One-Click
 //
 // The database checks the signature (unsubscribe_email_by_token) and turns
-// email notifications off for that member. No sign-in: the signature is the
-// proof. A GET (someone opening the address in a browser) is sent on to the
-// friendly page, SITE_URL/Unsubscribe?t=..., which does the same thing and
-// says so.
+// email notifications off for that member (Weekly Gecko Notes included). No
+// sign-in: the signature is the proof. A GET (someone, or a mail security
+// scanner, opening the address in a browser) never unsubscribes: it is sent
+// on to the friendly page, SITE_URL/Unsubscribe?t=..., which asks the member
+// to press one button first, as RFC 8058 asks. Only the mail app's POST
+// acts with no click.
 //
 // Weekly Gecko Notes carry &scope=weekly on the same address. That POST
 // calls unsubscribe_weekly_notes_by_token instead, which turns off only the
 // weekly notes, so reminders and the other emails the member chose keep
-// coming. A GET keeps the scope on its way to the page. Any other scope, or
-// none, is the all-email unsubscribe above.
+// coming. A GET keeps the scope on its way to the page, which then offers
+// "Stop Weekly Gecko Notes". Any other scope, or none, is the all-email
+// unsubscribe above.
 //
 // Deploy: supabase functions deploy email-unsubscribe --no-verify-jwt
 
