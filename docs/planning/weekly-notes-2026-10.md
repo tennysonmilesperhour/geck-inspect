@@ -205,7 +205,7 @@ The tests (`WRITING_RULES` in `scripts/lib/weekly-notes.mjs`, and the accepted f
 
 Rules for the session:
 
-- **Keep at least 8 written notes ahead of the number of weeks since launch.** Launch is the day the switch was turned on; no member can be further along than one note a week since then, so this keeps every member at least 8 notes from the end. The query in section 7 gives both numbers.
+- **Keep at least 8 written notes ahead of the number of weeks since launch.** Launch is the day the switch was turned on, **18 October 2026** (02:40 UTC); no member can be further along than one note a week since then, so this keeps every member at least 8 notes from the end. The query in section 7 gives both numbers.
 - **Keep at least four unsent notes ahead of the furthest member** (the second query in section 7). If the first rule holds, this one does too.
 - **Never rename or reuse a published slug.** The ledger is keyed on the slug, so a renamed note is a new note and goes again to everyone who had it. This is checked, not just asked: `published-slugs.json` lists every slug ever built, and the build and the tests fail when a listed slug has no note (a rename), when a slug is taken out of that file (checked against every committed version git can see), or when a withdrawn slug comes back.
 - **Fix wording by editing the body.** The slug stays.
