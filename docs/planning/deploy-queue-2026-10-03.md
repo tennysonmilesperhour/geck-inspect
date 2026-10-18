@@ -165,6 +165,20 @@ One short email a week after a member's first two weeks, in order, for as long a
 2. Turn the notes on: `update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';` With 64 confirmed accounts and 20 a run, the first round takes about four hours; after that each member gets one note about every 7 days.
 3. After the first merge that only adds a note, check that the send-email version in the dashboard moved.
 
+## Added 18 October: Weekly Gecko Notes for visitors (live 03:18 UTC)
+
+An email sign-up for people without an account, feeding the same weekly notes. Design in `docs/planning/weekly-notes-2026-10.md`, section 9; decision 59.
+
+**Supabase (applied by the merge, commit 307e8531):** `20261018120000_weekly_notes_visitors.sql` closes `newsletter_subscribers` to the public API (the old `anyone_can_subscribe` insert policy is gone; admins can read it), adds the visitor columns and the form's send log `weekly_notes_signup_sends`, the functions `request_weekly_notes_signup`, `confirm_weekly_notes_signup`, `weekly_notes_subscriber_token`, `unsubscribe_weekly_notes_subscriber`, `weekly_notes_subscriber_candidates`, `claim_weekly_note_subscriber`, `weekly_notes_visitor_cleanup` (job `weekly-notes-visitor-cleanup`, 04:25 daily) and `admin_erase_weekly_notes_visitor`, and restates `enqueue_weekly_notes` to ask about confirmed visitors after members. Test: `supabase/tests/weekly_notes_visitors_regressions.sql`.
+
+**Edge functions:** `subscribe-weekly-notes` is new and declared in `supabase/config.toml` (verify_jwt false); `send-email` gained the visitor branch and `email-unsubscribe` the `scope=visitor` stop. All three deployed with the merge.
+
+**Vercel:** the form under the account prompt on the guide pages, the `/WeeklyNotes` page (sign-up and the confirmation button) and the visitor stop on `/Unsubscribe`; the Privacy Policy describes visitor sign-ups.
+
+**Checked in production on 18 October:** a sign-up to Resend's test inbox returned 200 and left one unconfirmed row and one send-log row with a hashed network; a bad address returned 400; confirm, a second press ("already"), becoming due, the stop link and dropping off the list all worked in a rolled-back transaction; `anon` has no access to `newsletter_subscribers`. The test row was erased with `admin_erase_weekly_notes_visitor`.
+
+**What still needs Tennyson:** nothing new. Visitors' notes wait on the same `EMAIL_POSTAL_ADDRESS` secret as members' (step 1 above). Sign-ups and confirmations work now and wait in line.
+
 ## Done on 3 October
 
 **Edge functions deployed** (all from the repo copy):
