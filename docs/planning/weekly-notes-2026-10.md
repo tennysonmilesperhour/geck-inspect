@@ -2,14 +2,14 @@
 
 After a member's first two weeks (the five getting-started emails, `lifecycle-emails-2026-10.md`), each member gets **Weekly Gecko Notes**: one short email a week with one practical crested gecko tip and one button, in order, for as long as they stay subscribed. New notes are added over time by a scheduled Claude session, so a member who reaches the end simply waits for the next one.
 
-Everything here is built and tested. **Nothing is sent yet**: the switch is off, and send-email refuses every note until a postal address is set. The postal address is the only thing the notes wait on (section 1).
+Everything here is built and tested. **Nothing is sent yet.** The migration adds the switch off, and the session that shipped it turns it on right after the deploy (18 October), since Tennyson asked for the notes to run without waiting on him. send-email still refuses every note until a postal address is set, so **the postal address is the one thing left** (section 1). Until then each member costs at most one skipped send-email call a day, and nothing is used up.
 
 ## 1. What Tennyson needs to do
 
 Tennyson asked for the notes to run without waiting on his approval (18 October), so the 16 notes need no sign-off, and he delegated the legal choice for the EEA and the UK, which is decided below. **The only blocker before any note sends is the `EMAIL_POSTAL_ADDRESS` secret**, because US law (CAN-SPAM) expects a postal address in commercial email.
 
 1. **Set the postal address.** In the Supabase dashboard (Edge Functions, Secrets), set `EMAIL_POSTAL_ADDRESS` to a street address, or a registered PO box or mail receiving agency. While it is empty, send-email skips every weekly note, and the skip uses up nothing.
-2. **Turn the notes on**, in the SQL editor:
+2. **The switch** (turned on by the session after the 18 October deploy; to check or to turn it off), in the SQL editor:
 
    ```sql
    update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';
@@ -31,12 +31,12 @@ The notes themselves can still change at any time: edit a note's body (section 6
 Tennyson delegated this call and asked not to wait for his approval. It is reversible (the end of this section), and it is decision 58 in `docs/DECISIONS.md`.
 
 - **In the EEA and the UK the notes are off unless the member turns them on.** Turning them on (the sign-up box or the Settings switch) is the member's consent, which EU and UK law (the ePrivacy rules and PECR) want before marketing email. A browser counts as there when `regionNeedsConsent()` in `src/lib/analyticsConsent.js` is true: Vercel's country cookie says "ask", or the browser's time zone is European. It is the same signal the analytics question uses, and it errs toward asking (a few people outside the EEA and the UK are treated as inside).
-- **New members choose at sign-up.** The sign-up form has one box, "Send me Weekly Gecko Notes, one short crested gecko tip a week", ticked by default except when the browser is in the EEA or the UK. Its value travels in the sign-up metadata (`weekly_notes_at_signup`), and the database saves it as the member's choice when it makes the profile (`handle_new_auth_user`). When a profile row for the address already existed, the box is saved on the member's first sign-in instead. Google sign-in has no form, so it counts as no choice, and the next rule applies.
+- **New members choose at sign-up.** (The box sits inside the email form, under the email and password, so it reads as part of email sign-up; "Continue with Google" above it ignores the box.) The sign-up form has one box, "Send me Weekly Gecko Notes, one short crested gecko tip a week", ticked by default except when the browser is in the EEA or the UK. Its value travels in the sign-up metadata (`weekly_notes_at_signup`), and the database saves it as the member's choice when it makes the profile (`handle_new_auth_user`). When a profile row for the address already existed, the box is saved on the member's first sign-in instead. Google sign-in has no form, so it counts as no choice, and the next rule applies.
 - **A member who never chose, signing in from the EEA or the UK, has the notes turned off.** After sign-in the app calls `weekly_notes_region_default(true)` at most once per browser session, in the background. It acts only on the caller's own profile, and only when no choice is recorded. It records no choice itself, so the member can still turn the notes on in Settings.
 - **Every explicit choice is recorded with its time**, in `profiles.email_weekly_notes_choice_at` (the database's clock): the sign-up box, the Settings switch and the stop link in every note. The region rule never overrides a member who chose, wherever they are later.
 - **Everyone else keeps the default on**, with the one-click stop in every email and the Settings switch. That is what CAN-SPAM allows in the US: email until the member opts out, as long as each email says it is promotional, has a stop link that works and carries a postal address. The weekly footer does all three.
 - **What this cannot reach.** The app only learns where a member is when they sign in. An existing member in the EEA or the UK who never signs in again cannot be located, so they keep the default (on, unless they had turned off Platform Announcements or all email when the notes were added), and every note they get carries the one-click stop. Nothing else is done for them.
-- **The Privacy Policy** (section 8, updated 18 October) says the notes are off unless turned on in the EEA and the UK, sent there only with consent, that new members choose at sign-up and that a choice is recorded and never overridden.
+- **The Privacy Policy** (section 8, updated 18 October) says the sign-up box starts unticked in the EEA and the UK and that, once the app knows a member is there (at sign-up or their next sign-in from there), the notes stay off unless they turn them on; that new members choose at sign-up and that a choice is recorded and never overridden.
 
 To reverse it:
 

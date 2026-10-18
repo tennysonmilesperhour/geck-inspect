@@ -37,6 +37,33 @@ export const CHOICE_COLUMN = 'email_weekly_notes_choice_at';
 
 const SESSION_KEY_PREFIX = 'geckinspect.weekly-notes-region:';
 
+/**
+ * Fired on window when the region rule or a saved sign-up box changed the
+ * member's Weekly Gecko Notes, with `detail.enabled`. Settings may already
+ * have read the profile by then (it loads at the same time as the rule
+ * runs), so it listens for this to show the new value without a reload.
+ */
+export const WEEKLY_NOTES_CHANGED_EVENT = 'geckinspect:weekly-notes-changed';
+
+/** Whether the notes are on after a database answer, or null when it changed nothing. */
+export function weeklyNotesAfter(outcome, authUser) {
+  if (outcome === 'region-off') return false;
+  if (outcome === 'signup-choice') {
+    const box = signupBoxFromMetadata(authUser);
+    return box === null ? null : box;
+  }
+  return null;
+}
+
+function announce(enabled) {
+  try {
+    if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return;
+    window.dispatchEvent(new CustomEvent(WEEKLY_NOTES_CHANGED_EVENT, { detail: { enabled } }));
+  } catch {
+    // An old browser without CustomEvent: Settings shows it on the next load.
+  }
+}
+
 // Used when sessionStorage cannot be read or written (private mode, a
 // locked-down browser): still at most once per page load.
 const askedInMemory = new Set();
@@ -118,7 +145,10 @@ export async function applyWeeklyNotesRegionDefault(authUser, profile, deps = {}
     const supabase = await getClient();
     const { data, error } = await supabase.rpc('weekly_notes_region_default', { p_consent_region: region });
     if (error) return 'failed';
-    return typeof data === 'string' ? data : 'failed';
+    const outcome = typeof data === 'string' ? data : 'failed';
+    const enabled = weeklyNotesAfter(outcome, authUser);
+    if (enabled !== null) announce(enabled);
+    return outcome;
   } catch {
     return 'failed';
   }

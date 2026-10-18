@@ -4,7 +4,7 @@
 // acts only on the caller, never after a choice) is in
 // supabase/tests/weekly_notes_regressions.sql, block 12b.
 import { readFileSync } from 'node:fs';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { timeZoneNeedsConsent } from '@/lib/analyticsConsent';
 import {
   CHOICE_COLUMN,
@@ -13,6 +13,8 @@ import {
   applyWeeklyNotesRegionDefault,
   signupBoxDefault,
   signupBoxFromMetadata,
+  WEEKLY_NOTES_CHANGED_EVENT,
+  weeklyNotesAfter,
 } from '@/lib/weeklyNotesConsent';
 
 const MIGRATION = readFileSync(
@@ -189,5 +191,50 @@ describe('the region rule after sign-in', () => {
       expect(answer).toBe('nothing-to-do');
       expect(client.calls).toEqual([]);
     }
+  });
+});
+
+// Review of 18 Oct 2026: Settings reads the profile at the same moment the
+// rule runs, so a member who lands on Settings could see the switch "On"
+// while the database had just turned it off. The rule now announces what
+// it changed, and Settings and the signed-in user follow it.
+describe('telling the page what the rule changed', () => {
+  const seen = [];
+  const listen = (event) => seen.push(event.detail);
+  // This file runs without a browser; a bare EventTarget stands in for window.
+  let hadWindow;
+  beforeEach(() => {
+    seen.length = 0;
+    hadWindow = 'window' in globalThis;
+    if (!hadWindow) globalThis.window = new EventTarget();
+    globalThis.window.addEventListener(WEEKLY_NOTES_CHANGED_EVENT, listen);
+  });
+  afterEach(() => {
+    globalThis.window.removeEventListener(WEEKLY_NOTES_CHANGED_EVENT, listen);
+    if (!hadWindow) delete globalThis.window;
+  });
+
+  it('reads the new state from the database answer', () => {
+    expect(weeklyNotesAfter('region-off', member)).toBe(false);
+    expect(weeklyNotesAfter('signup-choice', { ...member, user_metadata: { [SIGNUP_METADATA_KEY]: true } })).toBe(true);
+    expect(weeklyNotesAfter('signup-choice', { ...member, user_metadata: { [SIGNUP_METADATA_KEY]: false } })).toBe(false);
+    for (const nothing of ['chosen', 'unchanged', 'no-profile', 'not-signed-in', 'failed', 'skipped']) {
+      expect(weeklyNotesAfter(nothing, member)).toBeNull();
+    }
+  });
+
+  it('announces a region switch-off once, and nothing when the database changed nothing', async () => {
+    await run(member, noChoice, { client: fakeClient({ data: 'region-off', error: null }) });
+    expect(seen).toEqual([{ enabled: false }]);
+    __resetWeeklyNotesRegionMemory();
+    await run(member, noChoice, { client: fakeClient({ data: 'unchanged', error: null }) });
+    expect(seen).toEqual([{ enabled: false }]);
+  });
+
+  it('Settings listens for it', () => {
+    const settings = readFileSync(new URL('../../pages/Settings.jsx', import.meta.url), 'utf8');
+    expect(settings).toContain('window.addEventListener(WEEKLY_NOTES_CHANGED_EVENT, onChanged)');
+    const auth = readFileSync(new URL('../AuthContext.jsx', import.meta.url), 'utf8');
+    expect(auth).toContain('weeklyNotesAfter(outcome, session.user)');
   });
 });

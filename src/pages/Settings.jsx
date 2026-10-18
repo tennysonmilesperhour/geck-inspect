@@ -41,6 +41,7 @@ import SignInRequired from '@/components/shared/SignInRequired';
 import PageHeader from '@/components/shared/PageHeader';
 import WeighInReminderSetting from '@/components/settings/WeighInReminderSetting';
 import WeeklyNotesSetting from '@/components/settings/WeeklyNotesSetting';
+import { WEEKLY_NOTES_CHANGED_EVENT } from '@/lib/weeklyNotesConsent';
 import CollectionArtworkSetting from '@/components/settings/CollectionArtworkSetting';
 
 const STORE_POLICY_EXAMPLE = [
@@ -348,6 +349,15 @@ export default function SettingsPage() {
     // Weekly Gecko Notes: its own state and its own save, never in formData,
     // so the Save button (and a stale Settings tab) cannot write it.
     const [weeklyNotesEnabled, setWeeklyNotesEnabled] = useState(true);
+    // The region rule (src/lib/weeklyNotesConsent.js) can turn the notes
+    // off just after this page read the profile; show its result.
+    useEffect(() => {
+        const onChanged = (event) => {
+            if (typeof event?.detail?.enabled === 'boolean') setWeeklyNotesEnabled(event.detail.enabled);
+        };
+        window.addEventListener(WEEKLY_NOTES_CHANGED_EVENT, onChanged);
+        return () => window.removeEventListener(WEEKLY_NOTES_CHANGED_EVENT, onChanged);
+    }, []);
     const [isSaving, setIsSaving] = useState(false);
     const [portalBusy, setPortalBusy] = useState(false);
     const [newSpecialty, setNewSpecialty] = useState('');

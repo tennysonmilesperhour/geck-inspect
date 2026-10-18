@@ -87,7 +87,7 @@ const WEEKLY_PARAGRAPH = PAGE.match(/For Weekly Gecko Notes we keep[^<]*/)?.[0] 
 
 describe('Privacy Policy: Weekly Gecko Notes', () => {
   it('names the weekly email, how often it comes and when it starts', () => {
-    expect(PAGE).toMatch(/Send Weekly Gecko Notes, a short weekly email with one crested gecko care or record-keeping tip\. It starts after your first two weeks and comes once a week until you stop it\./);
+    expect(PAGE).toContain('Send Weekly Gecko Notes, a short weekly email with one crested gecko care or record-keeping tip, if you have them on. They start after your first two weeks and come once a week until you stop them (in the European Economic Area and the United Kingdom, only if you turn them on; see section 8).');
   });
 
   it('says what is stored for it', () => {
@@ -124,9 +124,10 @@ describe('Privacy Policy: Weekly Gecko Notes', () => {
     expect(WEEKLY_SQL).toMatch(/set email_weekly_notes_enabled = false,\s+email_weekly_notes_choice_at = now\(\)\s+where id = v_id;/);
   });
 
-  it('says the notes are off unless turned on in the EEA and the UK, and only sent with consent', () => {
-    expect(CHOICE_PARAGRAPH).toContain('In the European Economic Area and the United Kingdom, Weekly Gecko Notes are off unless you turn them on');
-    expect(CHOICE_PARAGRAPH).toContain('the box starts unticked there, and we send them only with your consent');
+  it('says the box starts unticked in the EEA and the UK, and the notes stay off there once we know where the member is', () => {
+    expect(CHOICE_PARAGRAPH).toContain('In the European Economic Area and the United Kingdom the box starts unticked, and once we know you are there (at sign-up, or the next time you sign in from there) the notes stay off unless you turn them on.');
+    // No flat promise the code cannot keep for members it has not located yet.
+    expect(PAGE).not.toContain('we send them only with your consent');
     expect(CHOICE_PARAGRAPH).toContain("from the country your connection comes from and your browser's time zone");
     expect(LOGIN).toContain('useState(() => signupBoxDefault())');
   });

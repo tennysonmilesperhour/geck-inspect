@@ -109,10 +109,11 @@ describe('lifecycle copy', () => {
 
   it('the footer mentions Weekly Gecko Notes without promising them', () => {
     // They may never come (the switch is off, no postal address is set, or
-    // the member turned them off), so the footer says "may" and where to
-    // turn them off, and no longer says the emails stop after two weeks.
+    // the member turned them off, never ticked the sign-up box or is in the
+    // EEA or the UK), so the footer says they come only if on, and where to
+    // change it, and no longer says the emails stop after two weeks.
     const reason = lifecycleReason(MANGO);
-    expect(reason).toBe('You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.');
+    expect(reason).toBe('You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.');
     expect(reason).not.toMatch(/stop after that|come once a week/);
   });
 

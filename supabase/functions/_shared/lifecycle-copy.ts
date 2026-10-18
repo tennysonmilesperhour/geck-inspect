@@ -272,5 +272,5 @@ export function lifecycleEmail(type: string, facts: LifecycleFacts | null | unde
 // and the member may already have turned them off in Settings.
 export function lifecycleReason(facts: LifecycleFacts | null | undefined): string {
   const joined = shortDate(facts?.signed_up_at);
-  return `You are getting this because you joined Geck Inspect${joined ? ` on ${joined}` : ""}. It is one of a few short emails in your first two weeks. After that, you may get Weekly Gecko Notes, one short tip a week. You can turn them off in Settings.`;
+  return `You are getting this because you joined Geck Inspect${joined ? ` on ${joined}` : ""}. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.`;
 }
