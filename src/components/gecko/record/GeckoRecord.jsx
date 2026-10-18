@@ -210,7 +210,7 @@ export default function GeckoRecord({
       toast({
         title: checked ? 'Added to the gallery' : 'Removed from the gallery',
         description: checked
-          ? `${photos} ${photos === 1 ? 'photo is' : 'photos are'} now in the public Gallery.`
+          ? `${photos} ${photos === 1 ? 'photo submitted' : 'photos submitted'} for review. New photos appear in the public Gallery after approval.`
           : 'Its photos are no longer in the public Gallery.',
       });
     } catch (error) {

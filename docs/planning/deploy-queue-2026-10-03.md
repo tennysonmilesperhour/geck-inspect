@@ -289,3 +289,19 @@ Deployed: `generate-social-post` v22 (matches the repo). Not yet exercised again
 **Done 15 October:** `recognize-gecko-morph` v71, deployed from the repo by the Supabase GitHub integration when PR 129 merged (see "Round 1" above), includes this `taxonomy.ts`. The note below is kept for history.
 
 The new `taxonomy.ts` lets the model return `sable`, `highway` and `luwak`, and `index.ts` tells the model to name the look-alikes a photo cannot rule out (line-bred looks, shared genes) in its uncertainty reasons. The rest of the Sable work (tag picker, morph guide page, glossary, marketplace filter, calculator) was already live through Vercel.
+
+## 18 October: public content approval
+
+New forum posts, comments and gallery photos now start pending and hidden from
+other members and visitors. Text/photo edits return them to pending. Existing
+published rows keep their visibility. Admin Panel > Reports now includes a
+Publication approvals queue with full text, all attached photos, approval and
+rejection. Approval checks the revision being reviewed so concurrent edits cannot
+be published unseen. Existing report/hide/block handling stays in place.
+
+Migration: `20261018152154_public_content_approval.sql`. Verified on a fresh
+Postgres 16 database through all 299 migrations, repeated safely, and tested as
+owner, another member, anonymous visitor and admin. All 29 SQL regression files
+passed after the visual-search fixture explicitly marked its photos approved.
+The iOS release build passed all 3,419 unit tests, lint and the 172-route SEO audit.
+Physical-device testing of this new admin flow and TestFlight build remains pending.
