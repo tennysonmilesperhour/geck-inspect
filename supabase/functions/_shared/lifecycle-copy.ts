@@ -140,7 +140,7 @@ function day0(facts: LifecycleFacts): LifecycleEmail {
       body: paragraphs(
         greeting(facts),
         `Thanks for joining, and ${g.name} is already in. Good start.`,
-        `One thing to do today: weigh ${g.name} and log it in grams. A kitchen scale that reads to 1 g is fine. Weigh before a feeding so a full belly does not pad the number.`,
+        `One thing to do today: weigh ${g.name} and log it in grams. Use a kitchen scale that reads to 0.1 g. Weigh before a feeding so a full belly does not pad the number.`,
         "That first weight starts the growth curve, and the curve is what tells you when a female is big enough to breed. Most breeders wait for at least 40 g and 18 months.",
       ),
       url: weighLink(facts),
@@ -238,7 +238,9 @@ function weighIn(facts: LifecycleFacts, day: 7 | 14): LifecycleEmail | null {
         : count === 1
         ? `${lastLine ?? `${g.Name} has one weight on record.`} One more turns that number into a trend.`
         : `${g.Name} still has no weight on record. Today is a good day for the first one.`,
-      `Keep the rhythm: every two to four weeks while a crested gecko is growing, monthly once it is adult. The weigh-in reminder on ${g.possessive} record tells you when the next one is due, so check it is switched on.`,
+      // The reminder rhythm (WEIGH_IN_DAYS in src/data/husbandry-facts.js;
+      // src/lib/__tests__/lifecycleEmails.test.js holds this line to it).
+      `Keep the rhythm: every 14 days while a crested gecko is growing, every 21 days as a sub-adult and every 30 days as an adult. The weigh-in reminder on ${g.possessive} record tells you when the next one is due, so check it is switched on.`,
     ),
     url: weighLink(facts),
     cta: `Log ${g.possessive} weight`,
@@ -268,5 +270,5 @@ export function lifecycleEmail(type: string, facts: LifecycleFacts | null | unde
 // The footer line that says why this email came.
 export function lifecycleReason(facts: LifecycleFacts | null | undefined): string {
   const joined = shortDate(facts?.signed_up_at);
-  return `You are getting this because you joined Geck Inspect${joined ? ` on ${joined}` : ""}. It is one of a few short emails in your first two weeks, and they stop after that.`;
+  return `You are getting this because you joined Geck Inspect${joined ? ` on ${joined}` : ""}. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes come once a week, and each one has a link to stop them.`;
 }

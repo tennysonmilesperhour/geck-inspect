@@ -128,6 +128,26 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 
 **Done by Tennyson, 17 Oct:** the day-one $2.99 refunded (review item 12), and the Supabase service role key rotated (new secret key in Supabase, the `SUPABASE_SERVICE_ROLE_KEY` GitHub Actions secret replaced; the old key revoked the same day, after the daily canary passed on the new one).
 
+## Added 18 October: Weekly Gecko Notes (waiting to merge)
+
+One short email a week after a member's first two weeks, in order, for as long as they stay subscribed. The design, the 16 notes and how a session adds more are in `docs/planning/weekly-notes-2026-10.md`.
+
+**Supabase (applied by the merge):**
+
+- `20261018002200_weekly_notes.sql`: the switch `weekly_notes_enabled` (false, not public), the member's own switch `profiles.email_weekly_notes_enabled` (on for new members; existing members who had Platform Announcements off start opted out, once), the ledger `weekly_notes_sends`, the poll table `weekly_notes_polls`, the functions `weekly_notes_candidates`, `claim_weekly_note`, `enqueue_weekly_notes` and `unsubscribe_weekly_notes_by_token`, and the job `weekly-notes-hourly` at 50 past each hour. Additive and safe to run twice. While the switch is off the job is one lookup an hour.
+- `20261018002300_erase_weekly_notes.sql`: `admin_erase_account` restated from `20261015151600` with two lines that delete the member's weekly notes rows.
+- Test: `supabase/tests/weekly_notes_regressions.sql` (and `lifecycle_regressions.sql` still passes against the restated erasure).
+
+**Edge functions (deployed by the same merge; both already declared in `supabase/config.toml`):** `send-email` (claims and sends the notes, with their own footer and a `&scope=weekly` stop link and one-click header; ships the catalog `_shared/weekly-notes.generated.ts`) and `email-unsubscribe` (a `scope=weekly` POST stops only the weekly notes). send-email's profile lookup is unchanged, so it works whether the migration lands before or after it.
+
+**Vercel:** the Weekly Gecko Notes switch in Settings (its own save), the Unsubscribe page's weekly wording with a "Stop all Geck Inspect email" button, and the Privacy Policy (updated 18 October). The getting-started footer now says Weekly Gecko Notes follow, and two of its facts match the notes (a 0.1 g scale; weigh every 14, 21 and 30 days by stage).
+
+**What still needs Tennyson:**
+
+1. Set the edge function secret `EMAIL_POSTAL_ADDRESS` (a street address, or a registered PO box or mail receiving agency). Without it no weekly note is sent, and the skip uses up nothing.
+2. Turn the notes on: `update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';` With 64 confirmed accounts and 20 a run, the first round takes about four hours; after that each member gets one note about every 7 days.
+3. After the first merge that only adds a note, check that the send-email version in the dashboard moved.
+
 ## Done on 3 October
 
 **Edge functions deployed** (all from the repo copy):

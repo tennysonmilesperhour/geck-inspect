@@ -26,7 +26,7 @@ Production runs 34 functions. 30 are declared in `supabase/config.toml` (15 sinc
 | admin-end-trial | true | no | Admin tool; not in use. Tennyson is deleting it |
 | csp-report | false | yes | Browsers posting Content-Security-Policy reports |
 | delete-my-account | true | yes | A member deleting their own account in Settings |
-| email-unsubscribe | false | yes | One-click unsubscribe from mail apps (signed link) |
+| email-unsubscribe | false | yes | One-click unsubscribe from mail apps (signed link); with `&scope=weekly` it stops only Weekly Gecko Notes |
 | embed-gecko-image | false | **no** | Morph ID photo embeddings (expert reviewers, backfill key). Repo copy is newer, see below |
 | export-training-corpus | true | **no** | Admins and expert reviewers exporting the labelled photos. Repo copy is newer, see below |
 | generate-social-post | true | yes | Promote drafts (retired in the app) |
@@ -48,7 +48,7 @@ Production runs 34 functions. 30 are declared in `supabase/config.toml` (15 sinc
 | revenuecat-webhook | false | yes | RevenueCat (shared Authorization header) |
 | send-breeder-inquiry | false | yes | Public breeder inquiry form (rate limited) |
 | send-collection-invite | false | yes | Collection invites (reads the session itself) |
-| send-email | false | yes | Notifications trigger and lifecycle job (dispatch secret) |
+| send-email | false | yes | Notifications trigger, lifecycle job and Weekly Gecko Notes job (dispatch secret). Ships the notes catalog `_shared/weekly-notes.generated.ts`, so a merge that only adds a note redeploys it |
 | send-push | false | yes | Notifications trigger (dispatch secret) |
 | set-platform-connection | true | yes | Promote: save an encrypted Bluesky app password |
 | stripe-billing-portal | true | yes | "Manage billing" on the Membership page |
@@ -138,18 +138,21 @@ Times are UTC. "In the repo" says whether a runnable migration creates the job; 
 | season-planner-reminders-daily | 14:20 daily | yes | `enqueue_season_planner_reminders()` | yes |
 | vet-followups-daily | 14:25 daily | yes | `enqueue_vet_followups()` | yes |
 | weekly-digest-sunday | 16:00 Sunday | yes | `enqueue_weekly_digest()` | yes |
+| weekly-notes-hourly | :50 every hour | yes, but sends nothing until switched on | `enqueue_weekly_notes()` | yes (`20261018002200_weekly_notes.sql`, not merged when this was written) |
 | weighin-reminders-weekly | 15:00 Sunday | yes | `enqueue_weighin_reminders()` | archive only |
 
 Round 3 of the review fixes (not merged when this was written) adds `privacy-retention-daily` (04:05 daily) and unschedules `monthly-overage-billing`.
 
-Jobs that call an edge function (`monthly-overage-billing`, and the functions behind `market-value-daily`, the notification trigger and the lifecycle emails) send the Vault secret `notification_service_role_key` as a bearer token; the functions check it with `verify_notification_dispatch_secret()`, which only the service role may run.
+Jobs that call an edge function (`monthly-overage-billing`, and the functions behind `market-value-daily`, the notification trigger, the lifecycle emails and Weekly Gecko Notes) send the Vault secret `notification_service_role_key` as a bearer token; the functions check it with `verify_notification_dispatch_secret()`, which only the service role may run.
+
+**Weekly Gecko Notes** (`docs/planning/weekly-notes-2026-10.md`). `weekly-notes-hourly` runs `enqueue_weekly_notes()`, which does one lookup and stops while `app_settings` `weekly_notes_enabled` is false (the default). When it is on, it asks send-email about up to 20 members a run and records each ask in `weekly_notes_polls` (one row per member, at most one ask in 20 hours). send-email claims each note with `claim_weekly_note()`, which writes `weekly_notes_sends` (unique on address and slug). `weekly_notes_candidates()` (read-only) shows who is due; `unsubscribe_weekly_notes_by_token()` (open to signed-out visitors, signature checked) turns off only `profiles.email_weekly_notes_enabled`. All but the unsubscribe are service role only; admins can read both tables. The edge function secret `EMAIL_POSTAL_ADDRESS` now gates the notes: while it is empty, send-email skips every weekly note before claiming, so nothing is used up.
 
 ## 5. Vault secrets (names only)
 
 | Name | Used for | Created |
 |---|---|---|
-| notification_service_role_key | The bearer the database's jobs and triggers send to edge functions | 7 May 2026, updated 4 Sep 2026 |
-| email_unsubscribe_secret | Signs the unsubscribe links in notification emails | 3 Oct 2026 |
+| notification_service_role_key | The bearer the database's jobs and triggers send to edge functions (also `enqueue_weekly_notes`) | 7 May 2026, updated 4 Sep 2026 |
+| email_unsubscribe_secret | Signs the unsubscribe links in notification emails, including the Weekly Gecko Notes stop link (`unsubscribe_weekly_notes_by_token` checks the same signature) | 3 Oct 2026 |
 
 Not yet created: `morph_share_view_key` (Tennyson's step, see `docs/OPERATIONS.md`). Until it exists, shared Morph ID cards count no views.
 

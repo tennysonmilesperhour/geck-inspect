@@ -6,7 +6,7 @@ import { breadcrumbSchema } from '@/lib/organization-schema';
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 import AnalyticsChoice from '@/components/shared/AnalyticsChoice';
 
-const LAST_UPDATED = '2026-10-17';
+const LAST_UPDATED = '2026-10-18';
 
 const Section = ({ title, children }) => (
     <div className="space-y-3">
@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
                         <Shield className="w-8 h-8 text-emerald-400 flex-shrink-0" />
                         <div>
                             <h1 className="text-2xl font-bold text-slate-100">Privacy Policy</h1>
-                            <p className="text-slate-500 text-sm">Last updated: October 17, 2026</p>
+                            <p className="text-slate-500 text-sm">Last updated: October 18, 2026</p>
                         </div>
                     </div>
 
@@ -81,6 +81,7 @@ export default function PrivacyPolicy() {
                             <li>Store and display your gecko collection and breeding records</li>
                             <li>Enable community features such as the forum, gallery, and marketplace</li>
                             <li>Send transactional emails (e.g., notifications you have opted into)</li>
+                            <li>Send Weekly Gecko Notes, a short weekly email with one crested gecko care or record-keeping tip. It starts after your first two weeks and comes once a week until you stop it.</li>
                             <li>Improve and develop new features based on usage patterns</li>
                             <li>Respond to support requests</li>
                         </ul>
@@ -141,6 +142,7 @@ export default function PrivacyPolicy() {
                         <p>If automatic deletion is unavailable, Settings records a request and we delete or anonymize the personal data within 30 days. We also keep records we are required to retain by law, such as payment amounts. Files that could not be removed automatically are cleared within 30 days.</p>
                         <p>Error reports (which can include your email address and the page you were on) and the log of visits from search engines and AI crawlers are deleted after 90 days. The copies of payment notifications that Stripe and RevenueCat (for App Store and Google Play purchases) send us are emptied after 90 days: we keep only the notification's reference, its type and whether we processed it, which our billing records need. Our own count of pages and features used (section 5) is not on this 90-day schedule: we keep it so we can compare use from month to month, and deleting your account deletes your records in it.</p>
                         <p>Deletion also removes your email address from our email delivery records, along with the details tied to it (a bounce message, or which link you clicked). What is left has no address and no details: technical references for each email, the kind of email, what happened to it (for example, delivered or opened) and when. That is enough to still count how many emails arrived.</p>
+                        <p>For Weekly Gecko Notes we keep your email address, which email in the series we sent and when, and when we last checked whether one was due. Every weekly email has a link that stops only these emails, and Settings has a switch for them. Stopping them keeps your reminders and other email. Deleting your account erases these records.</p>
                         <p>One short list is kept on purpose. If an address bounced or its owner marked our email as spam, we keep that address on a do-not-email list so we never email it again, even after the account is deleted. It holds the address, the reason (a bounce or a spam report), when it was added and last changed, the reference our email service gave the email that caused it, and for a bounce, the kind of bounce and the short message the receiving mail server sent back, which can repeat the address. To ask for an address to be taken off it, contact us at the email below.</p>
                     </Section>
 

@@ -41,6 +41,7 @@
     "build:morphs-csv": "node scripts/build-morphs-csv.mjs",
     "shrink:images": "node scripts/shrink-images.mjs",
     "build:vercel-json": "node scripts/build-vercel-json.mjs",
+    "build:weekly-notes": "node scripts/build-weekly-notes.mjs",
     "submit:indexnow": "node scripts/submit-indexnow.mjs",
     "build:pdfs": "node scripts/generate-pdfs.mjs",
     "build:analytics-demo": "node scripts/build-analytics-demo.mjs",

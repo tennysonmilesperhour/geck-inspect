@@ -4,9 +4,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { clientIp } from '../../../supabase/functions/_shared/client-ip.ts';
-// send-email imports the lifecycle copy; the harness drops imports, so the
-// tests hand the real module in as globals.
+// send-email imports the lifecycle copy and the Weekly Gecko Notes helper;
+// the harness drops imports, so the tests hand the real modules in as globals.
 import * as lifecycleCopy from '../../../supabase/functions/_shared/lifecycle-copy.ts';
+import * as weeklyNotes from '../../../supabase/functions/_shared/weekly-notes.ts';
 import { TIER_LIMITS } from '../tierLimits';
 import {
   actionOf, fakeFetch, fakeSupabase, filterValue, functionSource, loadFunction, optionsOf, payloadOf, postJson,
@@ -184,7 +185,7 @@ describe('send-email skips people who cannot sign in', () => {
       return undefined;
     });
     const net = fakeFetch(() => ({ body: { id: 'email-1' } }));
-    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy } });
+    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy, ...weeklyNotes } });
     const send = () => fn.handle(postJson('https://x.test/', {
       user_email: 'Legacy@Example.com', type: 'weekly_digest', title: 'Your week', body: 'Hi',
     }, { authorization: `Bearer ${ENV.SUPABASE_SERVICE_ROLE_KEY}` }));
@@ -232,7 +233,7 @@ describe('send-email keeps the notification link inside its href', () => {
       return undefined;
     });
     const net = fakeFetch(() => ({ body: { id: 'email-1' } }));
-    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy } });
+    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy, ...weeklyNotes } });
     return fn.handle(postJson('https://x.test/', {
       user_email: 'keeper@example.com', type: 'new_reply', title: 'New reply', body: 'Bob replied to your comment.', url,
     }, { authorization: `Bearer ${ENV.SUPABASE_SERVICE_ROLE_KEY}` })).then(() => net.requests[0]?.body);

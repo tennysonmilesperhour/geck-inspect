@@ -37,7 +37,8 @@
  *      on the blog, the care guide, the Keeper's Guides, the morph guide
  *      and its search snippets, project lines, the genetics guide, its
  *      search text and glossary, the calculator and its pairing pages,
- *      llms.txt, the getting-started emails and the AI prompts (Morph ID,
+ *      llms.txt, the getting-started emails, the Weekly Gecko Notes
+ *      (content/weekly-notes) and the AI prompts (Morph ID,
  *      the Promote writer, the consultant, the health screen; genetics and
  *      origin facts only for prompts).
  *
@@ -64,7 +65,8 @@ import { HANDBOOK_GUIDE } from '../src/data/keepers-guides/handbook.js';
 import { MORPH_GUIDE } from '../src/data/keepers-guides/morph.js';
 import { BREEDING_GUIDE } from '../src/data/keepers-guides/breeding.js';
 import { checkAcceptedFacts } from './lib/accepted-facts.mjs';
-import { readFileSync } from 'node:fs';
+import { parseNote } from './lib/weekly-notes.mjs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -484,6 +486,36 @@ for (const [surface, file, only] of FACT_FILES) {
   llms.split('\n').forEach((text, i) => {
     checkAcceptedFacts(text, (msg) => note('llms.txt', `public/llms.txt:${i + 1}: ${msg}`));
   });
+}
+
+// Weekly Gecko Notes (content/weekly-notes/*.md), the source files, not the
+// generated supabase/functions/_shared/weekly-notes.generated.ts: it holds
+// the same words and would report every problem twice. Each body paragraph
+// is checked as one passage, so a sentence wrapped over two lines in the
+// file is still read whole; problems point at the paragraph's first line.
+// The dual-model rule applies too.
+{
+  const dir = resolve(here, '..', 'content/weekly-notes');
+  let files = [];
+  try {
+    files = readdirSync(dir).filter((name) => name.endsWith('.md')).sort();
+  } catch {
+    note('weekly-notes', 'content/weekly-notes is missing; the Weekly Gecko Notes must be checked');
+  }
+  if (!files.length && existsSync(dir)) note('weekly-notes', 'content/weekly-notes has no notes');
+  for (const name of files) {
+    const rel = `content/weekly-notes/${name}`;
+    const parsed = parseNote(name, readFileSync(resolve(dir, name), 'utf8'));
+    if (parsed.subject) {
+      const line = readFileSync(resolve(dir, name), 'utf8').split('\n').findIndex((l) => l.startsWith('subject: ')) + 1;
+      checkAcceptedFacts(parsed.subject, (msg) => note('weekly-notes', `${rel}:${line}: ${msg}`));
+      checkPassage('weekly-notes', `${rel}:${line}`, parsed.subject);
+    }
+    for (const paragraph of parsed.paragraphs) {
+      checkAcceptedFacts(paragraph.text, (msg) => note('weekly-notes', `${rel}:${paragraph.line}: ${msg}`));
+      checkPassage('weekly-notes', `${rel}:${paragraph.line}`, paragraph.text);
+    }
+  }
 }
 
 // ---------- report ------------------------------------------------------

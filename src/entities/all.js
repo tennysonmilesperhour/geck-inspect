@@ -54,6 +54,26 @@ export const User = new Proxy({}, {
         return normalizeSupabaseUser(user);
       };
     }
+    // Weekly Gecko Notes on or off, saved on its own the moment the switch
+    // moves. It is a column of its own (profiles.email_weekly_notes_enabled)
+    // and never part of the Settings form, so the whole-form save above (or
+    // a Settings tab left open from before) can never switch it back on.
+    // A PostgREST error comes back as is: PGRST204 means the column is not
+    // there yet (the site deployed before the migration).
+    if (prop === 'setWeeklyNotes') {
+      return async (enabled) => {
+        const supabase = await getSupabase();
+        const user = await currentAuthUser();
+        if (!user?.email) throw new Error('Sign in to change your email settings.');
+        const { data, error } = await supabase.from('profiles')
+          .update({ email_weekly_notes_enabled: enabled === true, updated_date: new Date().toISOString() })
+          .eq('email', user.email)
+          .select('email');
+        if (error) throw error;
+        if (!Array.isArray(data) || data.length === 0) throw new Error('Your profile was not found. Reload the page and try again.');
+        return enabled === true;
+      };
+    }
     return sb.UserEntity?.[prop];
   }
 });
