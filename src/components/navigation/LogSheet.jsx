@@ -42,10 +42,49 @@ export default function LogSheet({ open, onOpenChange }) {
   const email = guest ? null : user?.email;
   const queryKey = fieldModeQueryKey(email);
   const [waiting, setWaiting] = useState(null);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef(null);
   // Whether the sheet is still open after a wait: closed meanwhile, the
   // member changed their mind, so the log does not open.
   const openRef = useRef(open);
-  useEffect(() => { openRef.current = open; }, [open]);
+  useEffect(() => {
+    openRef.current = open;
+    if (!open) {
+      setDragY(0);
+      setIsDragging(false);
+      dragStartRef.current = null;
+    }
+  }, [open]);
+
+  const handlePointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    dragStartRef.current = { y: e.clientY, time: performance.now() };
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragStartRef.current) return;
+    const rawDelta = e.clientY - dragStartRef.current.y;
+    // Allow full downward drag; apply rubber-band damping if pulled upward
+    const nextY = rawDelta >= 0 ? rawDelta : rawDelta * 0.18;
+    setDragY(nextY);
+  };
+
+  const handlePointerEnd = (e) => {
+    if (!dragStartRef.current) return;
+    const rawDelta = (e.clientY ?? dragStartRef.current.y) - dragStartRef.current.y;
+    const elapsed = Math.max(1, performance.now() - dragStartRef.current.time);
+    const velocity = rawDelta / elapsed;
+    dragStartRef.current = null;
+    setIsDragging(false);
+    if (rawDelta > 84 || (rawDelta > 32 && velocity > 0.55)) {
+      setDragY(0);
+      onOpenChange(false);
+    } else {
+      setDragY(0);
+    }
+  };
 
   const geckoQuery = useQuery({
     queryKey,
@@ -113,8 +152,21 @@ export default function LogSheet({ open, onOpenChange }) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl border-slate-700 bg-slate-950 px-4 pt-5 pb-[calc(1rem+env(safe-area-inset-bottom))] text-slate-100"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        style={{
+          transform: dragY !== 0 ? `translateY(${dragY}px)` : undefined,
+          transition: isDragging ? 'none' : 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+          touchAction: 'pan-x',
+        }}
+        className="rounded-t-2xl border-slate-700 bg-slate-950 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] text-slate-100"
       >
+        <div
+          className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-600/80 cursor-grab active:cursor-grabbing"
+          aria-hidden="true"
+        />
         <SheetHeader className="text-left">
           <SheetTitle className="text-lg text-slate-100">Log</SheetTitle>
           <SheetDescription className="text-slate-400">
@@ -131,7 +183,7 @@ export default function LogSheet({ open, onOpenChange }) {
                   onClick={() => go(kind, pick)}
                   disabled={Boolean(waiting)}
                   aria-busy={busy || undefined}
-                  className="flex w-full min-h-14 items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-left hover:border-emerald-600/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 disabled:opacity-70"
+                  className="flex w-full min-h-14 items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-left transition-colors hover:border-emerald-600/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 disabled:opacity-70"
                 >
                   <Icon className="h-5 w-5 shrink-0 text-emerald-300" aria-hidden="true" />
                   <span className="min-w-0 flex-1">

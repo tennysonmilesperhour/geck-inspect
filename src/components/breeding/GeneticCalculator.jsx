@@ -445,7 +445,7 @@ export default function GeneticCalculator({ sire, dam }) {
                     {label}
                     {o.health_risk === 'lethal' && <span className="ml-1.5 text-xs text-red-400">(non-viable)</span>}
                   </span>
-                  <span className="text-sm font-mono text-slate-200 whitespace-nowrap">
+                  <span className="text-sm font-mono tabular-nums text-slate-200 whitespace-nowrap">
                     {pct(o.probability)}
                     {frac && <span className="text-slate-500 ml-1.5">{frac}</span>}
                   </span>
@@ -456,20 +456,20 @@ export default function GeneticCalculator({ sire, dam }) {
                 <div className="flex items-center justify-between gap-3 mt-1">
                   <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${
                         o.health_risk === 'lethal' ? 'bg-red-500' : 'bg-emerald-500'
                       }`}
                       style={{ width: `${Math.max(o.probability * 100, 1.5)}%` }}
                     />
                   </div>
-                  <span className="text-xs text-slate-400 font-mono whitespace-nowrap">
+                  <span className="text-xs text-slate-400 font-mono tabular-nums whitespace-nowrap">
                     ≈{roundExpected(o.probability * eggs)} of {eggs} eggs
                   </span>
                 </div>
                 {(links.length > 0 || priceForOutcome(o) || o.health_risk !== 'lethal') && (
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     {priceForOutcome(o) && (
-                      <span className="text-[11px] text-slate-500 font-mono">
+                      <span className="text-xs text-slate-500 font-mono tabular-nums">
                         guide price ${priceForOutcome(o).low} to ${priceForOutcome(o).high}
                       </span>
                     )}
@@ -532,11 +532,11 @@ export default function GeneticCalculator({ sire, dam }) {
             />
             <p className="text-xs text-slate-400">
               Chance of at least one this season:{' '}
-              <span className="font-mono text-emerald-300">{pct(pAtLeastOne(selected.probability, eggs))}</span>
+              <span className="font-mono tabular-nums text-emerald-300">{pct(pAtLeastOne(selected.probability, eggs))}</span>
               {selected.probability > 0 && selected.probability < 1 && (
                 <>
                   {' '}· roughly{' '}
-                  <span className="font-mono text-slate-300">
+                  <span className="font-mono tabular-nums text-slate-300">
                     {eggsForConfidence(selected.probability, 0.9)}
                   </span>{' '}
                   eggs for 90% odds
@@ -570,12 +570,12 @@ export default function GeneticCalculator({ sire, dam }) {
             <div className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
               <p className="text-xs text-slate-300">
                 Rough market context: the priced outcomes here suggest roughly{' '}
-                <span className="font-mono text-emerald-300">
+                <span className="font-mono tabular-nums text-emerald-300">
                   ${value.low.toLocaleString()} to ${value.high.toLocaleString()}
                 </span>{' '}
                 across a {eggs}-egg season.
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Based on Morph Guide price ranges covering {pct(value.coverage)} of the predicted
                 distribution. Quality, lineage, and polygenic looks decide the real numbers.
               </p>

@@ -323,7 +323,7 @@ export default function Recognition() {
         {firstGeckoPath && user && !isGuest && (
           <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-3 md:p-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300">Your first gecko, step 1 of 3</p>
+              <p className="text-xs uppercase tracking-wider font-semibold text-emerald-300">Your first gecko, step 1 of 3</p>
               <p className="text-sm text-slate-200 mt-0.5">
                 Add a top and a side photo and run Morph ID. Then tap &ldquo;Add to my collection&rdquo; and the morph and photos are filled in for you.
               </p>
@@ -440,8 +440,16 @@ export default function Recognition() {
 
             {imageUrls.length > 0 && (
               <div className="pt-4 border-t border-slate-700 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-start">
-                <div className="w-full md:w-80">
+                <div className="relative w-full md:w-80 overflow-hidden rounded-xl">
                   <PhotoSlideshow urls={imageUrls} alt="Gecko under review" maxHeightClass="max-h-[320px]" />
+                  {isAnalyzing && (
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl border border-emerald-400/50 bg-emerald-950/15"
+                    >
+                      <div className="morph-scan-line absolute inset-x-0 h-16 bg-gradient-to-b from-transparent via-emerald-400/25 to-emerald-300/60 border-b border-emerald-300/90 shadow-[0_0_20px_rgba(52,211,153,0.45)]" />
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-3">
                   <div>

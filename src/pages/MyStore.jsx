@@ -16,6 +16,16 @@ import { Switch } from '@/components/ui/switch';
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import {
     Store, Save, Loader2, ExternalLink, ArrowLeft, Plus, X, Lock, Crown, GitBranch,
@@ -128,6 +138,7 @@ export default function MyStore() {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [confirmPolicyReplaceOpen, setConfirmPolicyReplaceOpen] = useState(false);
     const [page, setPage] = useState(null);
     const [form, setForm] = useState(EMPTY_FORM);
     const [geckos, setGeckos] = useState([]);
@@ -904,12 +915,41 @@ export default function MyStore() {
                                         className="h-7 px-2.5 text-xs border-emerald-700/60 bg-emerald-900/20 text-emerald-200 hover:bg-emerald-900/40 hover:text-emerald-100 shrink-0"
                                         onClick={() => {
                                             const hasContent = (form.policies || '').trim().length > 0;
-                                            if (hasContent && !window.confirm('Replace your current policy with the example template?')) return;
+                                            if (hasContent) {
+                                                setConfirmPolicyReplaceOpen(true);
+                                                return;
+                                            }
                                             set('policies', STORE_POLICY_EXAMPLE);
                                         }}
                                     >
                                         Use example template
                                     </Button>
+                                    <AlertDialog open={confirmPolicyReplaceOpen} onOpenChange={setConfirmPolicyReplaceOpen}>
+                                        <AlertDialogContent className="border-slate-700 bg-slate-900 text-slate-100">
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle className="text-slate-100">
+                                                    Replace current store policy?
+                                                </AlertDialogTitle>
+                                                <AlertDialogDescription className="text-slate-300">
+                                                    This will replace your current store policy text with the example template. You can still edit it before saving.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel className="border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700">
+                                                    Cancel
+                                                </AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={() => {
+                                                        setConfirmPolicyReplaceOpen(false);
+                                                        set('policies', STORE_POLICY_EXAMPLE);
+                                                    }}
+                                                    className="bg-emerald-600 text-white hover:bg-emerald-500"
+                                                >
+                                                    Replace with template
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </div>
                             </CardHeader>
                             <CardContent>

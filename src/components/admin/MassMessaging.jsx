@@ -26,6 +26,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 /**
  * Mass messaging, broadcast an announcement to a target audience.
@@ -87,6 +97,7 @@ export default function MassMessaging({ prefill, onPrefillConsumed }) {
   const [directory, setDirectory] = useState(null);
   const [senderEmail, setSenderEmail] = useState(null);
   const [directoryError, setDirectoryError] = useState(null);
+  const [pendingBroadcast, setPendingBroadcast] = useState(null);
   const { toast } = useToast();
 
   // Load the account list once so the recipient count is shown before
@@ -126,15 +137,6 @@ export default function MassMessaging({ prefill, onPrefillConsumed }) {
   const generateUpdateAnnouncement = async () => {
     setIsGenerating(true);
     try {
-      // Pick the most-recently *published* changelog entry so the
-      // announcement always describes the current release.
-      //
-      // We can't trust `-created_date` here: the April 2026 entries were
-      // backfilled from the BUILTIN_UPDATES fallback in mid-May, so their
-      // created_date is newer than the genuinely-most-recent May entry.
-      // Sorting by created_date and picking the first published row would
-      // (and did) surface April instead of May. Sort by published_date
-      // among published rows, with created_date as a tiebreaker.
       const entries = await ChangeLog.list('-created_date');
       const published = (entries || []).filter((e) => e.is_published);
       const byPublished = (a, b) => {
@@ -211,7 +213,6 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
     }
 
     setIsSending(true);
-    setSendProgress({ sent: 0, total: 0, failures: 0 });
     try {
       const {
         data: { user: sbUser },
@@ -227,28 +228,36 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
         throw new Error('Nobody in this group to send to.');
       }
       const groupLabel = TARGET_GROUPS.find((g) => g.value === targetGroup)?.label || targetGroup;
-      if (!window.confirm(`Send "${subject.trim()}" to ${targetUsers.length} account${targetUsers.length === 1 ? '' : 's'} (${groupLabel})?`)) {
-        setSendProgress(null);
-        setIsSending(false);
-        return;
-      }
-      setSendProgress({ sent: 0, total: targetUsers.length, failures: 0 });
+      setIsSending(false);
+      setPendingBroadcast({ targetUsers, groupLabel });
+    } catch (err) {
+      console.error('Send failed:', err);
+      toast({
+        title: 'Send failed',
+        description: err.message || 'Unknown error',
+        variant: 'destructive',
+      });
+      setIsSending(false);
+    }
+  };
 
+  const executeBroadcast = async () => {
+    if (!pendingBroadcast) return;
+    const { targetUsers } = pendingBroadcast;
+    setPendingBroadcast(null);
+    setIsSending(true);
+    setSendProgress({ sent: 0, total: targetUsers.length, failures: 0 });
+    try {
       let sent = 0;
       let failures = 0;
       for (const user of targetUsers) {
         try {
-          // Send from the system identity instead of the admin's personal
-          // email so the admin's inbox doesn't end up with one outgoing
-          // conversation per recipient. Messages.jsx renders this sender
-          // as "Geck Inspect Team" with a System badge.
           await DirectMessage.create({
             sender_email: 'system@geckinspect.com',
             recipient_email: user.email,
             content: `**${subject}**\n\n${content}`,
             message_type: 'system',
           });
-          // Notifications RLS was just fixed, so this will actually land now.
           try {
             await Notification.create({
               user_email: user.email,
@@ -258,7 +267,6 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
               metadata: { is_mass_message: true },
             });
           } catch (nErr) {
-            // Non-fatal: message went through, notification failed.
             console.warn(`Notification failed for ${user.email}:`, nErr);
           }
           sent++;
@@ -430,6 +438,30 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
             )}
           </Button>
         </div>
+
+        <AlertDialog open={Boolean(pendingBroadcast)} onOpenChange={(open) => !open && setPendingBroadcast(null)}>
+          <AlertDialogContent className="bg-slate-900 border-slate-700 text-slate-100">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Mass Broadcast</AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-300">
+                {pendingBroadcast
+                  ? `Send "${subject.trim()}" to ${pendingBroadcast.targetUsers.length} account${pendingBroadcast.targetUsers.length === 1 ? '' : 's'} (${pendingBroadcast.groupLabel})?`
+                  : ''}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={executeBroadcast}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white"
+              >
+                Send Broadcast
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

@@ -32,11 +32,22 @@ export default function CommandPalette() {
   const navigate = useNavigate();
 
   // Listen for a custom event so any button in the app can open the palette
-  // (the header launcher dispatches 'open_command_palette' on click).
+  // (the header launcher dispatches 'open_command_palette' on click), and
+  // support the standard Cmd+K / Ctrl+K keyboard shortcut from anywhere.
   useEffect(() => {
     const handler = () => setOpen(true);
+    const onKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setOpen((prev) => !prev);
+      }
+    };
     window.addEventListener('open_command_palette', handler);
-    return () => window.removeEventListener('open_command_palette', handler);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('open_command_palette', handler);
+      window.removeEventListener('keydown', onKeyDown);
+    };
   }, []);
 
   const goTo = (page) => {

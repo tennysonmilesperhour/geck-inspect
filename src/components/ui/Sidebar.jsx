@@ -80,35 +80,28 @@ export function Sidebar({ children, className }) {
     }, [isMobileOpen, toggleSidebar]);
 
     return (
-        <>
-            {/* Desktop Sidebar (always visible) */}
-            <aside className={`hidden md:flex flex-col h-screen w-72 ${className}`}>
+        /* Mobile Sidebar (overlay)
+           The drawer stays mounted off-screen when closed. It is only a
+           modal dialog while open; when closed, inert and aria-hidden
+           keep its links out of the Tab order and away from screen
+           readers (they used to be 33 invisible Tab stops). */
+        <div
+            ref={drawerRef}
+            id={MOBILE_MENU_ID}
+            role={isMobileOpen ? 'dialog' : undefined}
+            aria-modal={isMobileOpen ? 'true' : undefined}
+            aria-label="Menu"
+            aria-hidden={isMobileOpen ? undefined : 'true'}
+            inert={isMobileOpen ? undefined : ''}
+            data-state={isMobileOpen ? 'open' : 'closed'}
+            className={`fixed inset-0 z-50 flex md:hidden transition-transform duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            style={{ overscrollBehavior: 'none', touchAction: isMobileOpen ? 'pan-y' : 'none' }}
+        >
+            <aside className={`flex flex-col h-full w-72 shadow-lg ${className}`} style={{ overscrollBehavior: 'none' }}>
                 {children}
             </aside>
-
-            {/* Mobile Sidebar (overlay) */}
-            {/* The drawer stays mounted off-screen when closed. It is only a
-                modal dialog while open; when closed, inert and aria-hidden
-                keep its links out of the Tab order and away from screen
-                readers (they used to be 33 invisible Tab stops). */}
-            <div
-                ref={drawerRef}
-                id={MOBILE_MENU_ID}
-                role={isMobileOpen ? 'dialog' : undefined}
-                aria-modal={isMobileOpen ? 'true' : undefined}
-                aria-label="Menu"
-                aria-hidden={isMobileOpen ? undefined : 'true'}
-                inert={isMobileOpen ? undefined : ''}
-                data-state={isMobileOpen ? 'open' : 'closed'}
-                className={`fixed inset-0 z-50 flex md:hidden transition-transform duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
-                style={{ overscrollBehavior: 'none', touchAction: isMobileOpen ? 'pan-y' : 'none' }}
-            >
-                <aside className={`flex flex-col h-full w-72 shadow-lg ${className}`} style={{ overscrollBehavior: 'none' }}>
-                    {children}
-                </aside>
-                <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={toggleSidebar} aria-hidden="true"></div>
-            </div>
-        </>
+            <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={toggleSidebar} aria-hidden="true"></div>
+        </div>
     );
 }
 

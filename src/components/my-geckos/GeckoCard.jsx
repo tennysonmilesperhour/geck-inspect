@@ -39,6 +39,31 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
     return sorted[0]?.weight_grams;
   }, [gecko.id, weightRecords]);
 
+  const sparklinePath = React.useMemo(() => {
+    const geckoWeights = weightRecords
+      .filter(w => w.gecko_id === gecko.id && typeof w.weight_grams === 'number')
+      .sort((a, b) => new Date(a.record_date) - new Date(b.record_date))
+      .slice(-6);
+    if (geckoWeights.length < 2) return null;
+    const vals = geckoWeights.map(w => w.weight_grams);
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const range = max - min || 1;
+    return vals
+      .map((v, i) => {
+        const x = (2 + (i / (vals.length - 1)) * 44).toFixed(1);
+        const y = (16 - ((v - min) / range) * 12).toFixed(1);
+        return `${i === 0 ? 'M' : 'L'}${x} ${y}`;
+      })
+      .join(' ');
+  }, [gecko.id, weightRecords]);
+
+  const hetTraitsList = React.useMemo(() => {
+    if (Array.isArray(gecko.het_traits) && gecko.het_traits.length > 0) return gecko.het_traits.slice(0, 3);
+    if (Array.isArray(gecko.secondary_traits) && gecko.secondary_traits.length > 0) return gecko.secondary_traits.slice(0, 3);
+    return [];
+  }, [gecko.het_traits, gecko.secondary_traits]);
+
   const primaryImage = gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE;
   const demoPhotoUnavailable = gecko.photo_is_illustrative && !gecko.image_urls?.[0];
   const primaryMeta = gecko.image_crop_data?.[primaryImage] || {};
@@ -75,7 +100,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
       aria-label={`${gecko.name}, no illustrative photo assigned`}
     >
       <span className="text-4xl font-semibold tracking-wide opacity-90">{initialsForName(gecko.name)}</span>
-      <span className="mt-2 rounded bg-slate-950/70 px-2 py-1 text-[10px] font-semibold">No photo</span>
+      <span className="mt-2 rounded bg-slate-950/70 px-2 py-1 text-xs font-semibold">No photo</span>
     </div>
   ) : (
     <SmartImage
@@ -112,30 +137,23 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           </button>
         ) : photo}
 
-        {/* Top-left: bare sex symbol + feeding group pill (aligned heights) */}
-        <div className="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5">
-          <span
-            className={`inline-flex items-center justify-center h-6 text-lg font-bold leading-none ${getSexColor(gecko.sex)}`}
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7)' }}
-            aria-label={gecko.sex || 'Unknown sex'}
-          >
-            {getSexIcon(gecko.sex)}
-          </span>
-          {!gecko.archived && feedingGroup && (
+        {/* Top-left: feeding group pill only so the photo stays unobstructed */}
+        {!gecko.archived && feedingGroup && (
+          <div className="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5">
             <span
-              className="pointer-events-auto inline-flex items-center justify-center h-6 w-6 rounded-full text-white text-[11px] font-bold shadow border border-white/30 leading-none"
+              className="pointer-events-auto inline-flex items-center justify-center h-6 w-6 rounded-full text-white text-xs font-bold shadow border border-white/30 leading-none"
               style={{ backgroundColor: feedingGroup.color || '#f97316' }}
               title={`Feeding Group ${feedingGroup.label || ''}${feedingGroup.name ? ': ' + feedingGroup.name : ''}${feedingGroup.diet_type ? ', ' + feedingGroup.diet_type : ''}`}
             >
               {feedingGroup.label}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {gecko.photo_is_illustrative && !demoPhotoUnavailable && (
-          <span className="pointer-events-none absolute bottom-2 left-2 rounded bg-slate-950/85 px-2 py-1 text-[10px] font-semibold text-white shadow">
+          <span className="pointer-events-none absolute bottom-2 left-2 rounded bg-slate-950/85 px-2 py-1 text-xs font-semibold text-white shadow">
             Illustrative photo
-            <span className="block text-[9px] font-normal text-slate-200">Not the sample animal</span>
+            <span className="block text-xs font-normal text-slate-300">Not the sample animal</span>
           </span>
         )}
 
@@ -155,7 +173,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             size="sm"
             onClick={handleViewClick}
             aria-label={`View ${gecko.name || 'gecko'}`}
-            className="h-8 px-2.5 touch:min-h-11 touch:min-w-11 bg-slate-900/75 hover:bg-slate-800/85 text-emerald-300 border border-emerald-600/40 backdrop-blur-sm font-medium"
+            className="h-8 px-2.5 touch:min-h-11 touch:min-w-11 bg-slate-900/80 hover:bg-slate-800/90 text-emerald-300 border border-emerald-600/40 backdrop-blur-sm font-medium"
           >
             <Eye className="w-3.5 h-3.5" />
             <span className="hidden sm:inline ml-1.5 text-xs">View</span>
@@ -165,7 +183,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
               size="sm"
               onClick={handleEditClick}
               aria-label={`Edit ${gecko.name || 'gecko'}`}
-              className="h-8 px-2.5 touch:min-h-11 touch:min-w-11 bg-slate-900/75 hover:bg-slate-800/85 text-emerald-300 border border-emerald-600/40 backdrop-blur-sm font-medium"
+              className="h-8 px-2.5 touch:min-h-11 touch:min-w-11 bg-slate-900/80 hover:bg-slate-800/90 text-emerald-300 border border-emerald-600/40 backdrop-blur-sm font-medium"
             >
               <Edit className="w-3.5 h-3.5" />
               <span className="hidden sm:inline ml-1.5 text-xs">Edit</span>
@@ -177,31 +195,54 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
       {/* Body, flex column so cards in a grid share the same baseline */}
       <CardContent className="p-3 flex-1 flex flex-col gap-1.5">
         <div className="min-w-0">
-          <h3 className="font-bold text-base sm:text-lg text-emerald-100 truncate leading-tight">
-            {gecko.name}
-          </h3>
+          <div className="flex items-center justify-between gap-1.5">
+            <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate leading-tight">
+              {gecko.name}
+            </h3>
+            <span
+              className={`shrink-0 text-base font-bold leading-none ${getSexColor(gecko.sex)}`}
+              aria-label={gecko.sex || 'Unknown sex'}
+            >
+              {getSexIcon(gecko.sex)}
+            </span>
+          </div>
+          {gecko.morph && (
+            <p className="mt-0.5 text-xs font-semibold text-emerald-300/90 truncate">
+              {gecko.morph}
+            </p>
+          )}
           {gecko.gecko_id_code && (
-            <p className="mt-0.5 text-[11px] text-slate-500 font-mono uppercase tracking-wider truncate">
+            <p className="mt-0.5 text-xs text-slate-400 font-mono uppercase tracking-wider truncate tabular-nums">
               {gecko.gecko_id_code}
             </p>
           )}
-          {!isOwner && (
-            <Badge
-              className="mt-1 bg-blue-900/40 text-blue-200 border border-blue-700/50 text-[10px] inline-flex items-center gap-1 max-w-full"
-              title={`Shared by ${gecko.created_by || 'another keeper'}`}
-            >
-              <Users2 className="w-2.5 h-2.5 flex-shrink-0" />
-              <span className="truncate">Shared</span>
-            </Badge>
+          {hetTraitsList.length > 0 && (
+            <div className="max-h-0 opacity-0 group-hover:max-h-16 group-hover:opacity-100 group-focus-within:max-h-16 group-focus-within:opacity-100 overflow-hidden transition-all duration-300">
+              <div className="flex flex-wrap gap-1 pt-1.5">
+                {hetTraitsList.map((trait) => (
+                  <span
+                    key={trait}
+                    className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
+                  >
+                    {trait}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
         {/* Stats row, left-aligned, wraps when narrow, never jumps */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm mt-auto">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm mt-auto tabular-nums">
           {latestWeight != null && (
-            <div className="inline-flex items-center gap-1 text-emerald-400">
+            <div className="inline-flex items-center gap-1.5 text-emerald-400">
               <Weight className="w-3 h-3 shrink-0" />
               <span className="font-semibold">{latestWeight}g</span>
+              {sparklinePath && (
+                <svg width="48" height="18" viewBox="0 0 48 18" fill="none" aria-hidden="true" className="shrink-0 opacity-85">
+                  <path d={sparklinePath} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
               <WeightHealthBadge weightRecords={weightRecords.filter(w => w.gecko_id === gecko.id)} />
             </div>
           )}
@@ -216,31 +257,37 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           )}
         </div>
 
-        {/* Status badges, inline so they don't stack as detached chunks */}
-        {(showGravidBadge || showSpeciesBadge || showTailBadge || showReadiness) && (
-          <div className="flex flex-wrap gap-1.5">
+        {/* Actionable breeding state badges + quiet inline metadata for passive traits */}
+        {(showGravidBadge || showReadiness || showTailBadge || showSpeciesBadge || !isOwner) && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
             {showReadiness && <ReadinessBadge readiness={readiness} />}
             {showGravidBadge && (
-              <Badge className="bg-pink-700 text-pink-100 text-[10px] h-5 px-1.5 py-0 font-medium flex items-center gap-1">
-                <Heart className="w-2.5 h-2.5" /> Gravid
+              <Badge className="bg-pink-900/60 text-pink-200 border border-pink-700/50 text-xs h-5 px-2 py-0 font-medium flex items-center gap-1">
+                <Heart className="w-3 h-3" /> Gravid
               </Badge>
             )}
-            {showTailBadge && (
-              <Badge
-                className={`text-[10px] h-5 px-1.5 py-0 font-medium ${
-                  gecko.tail_status === 'dropped'
-                    ? 'bg-amber-900/60 text-amber-200 border border-amber-700/60'
-                    : 'bg-sky-900/60 text-sky-200 border border-sky-700/60'
-                }`}
-                title={gecko.tail_status === 'dropped' ? 'Tail has been dropped (crested geckos do not regrow tails)' : 'Tail is regenerating'}
-              >
-                {tailBadgeLabel}
-              </Badge>
-            )}
-            {showSpeciesBadge && (
-              <Badge className="bg-teal-900 text-teal-300 border border-teal-700 text-[10px] h-5 px-1.5 py-0 font-medium">
-                {gecko.species}
-              </Badge>
+            {(showTailBadge || showSpeciesBadge || !isOwner) && (
+              <span className="inline-flex flex-wrap items-center gap-1 text-xs text-slate-400">
+                {showTailBadge && (
+                  <span
+                    title={gecko.tail_status === 'dropped' ? 'Tail has been dropped (crested geckos do not regrow tails)' : 'Tail is regenerating'}
+                  >
+                    {tailBadgeLabel}
+                  </span>
+                )}
+                {showTailBadge && (showSpeciesBadge || !isOwner) && <span aria-hidden="true">·</span>}
+                {showSpeciesBadge && <span>{gecko.species}</span>}
+                {showSpeciesBadge && !isOwner && <span aria-hidden="true">·</span>}
+                {!isOwner && (
+                  <span
+                    className="inline-flex items-center gap-1 text-slate-300"
+                    title={`Shared by ${gecko.created_by || 'another keeper'}`}
+                  >
+                    <Users2 className="w-3 h-3 shrink-0" />
+                    Shared
+                  </span>
+                )}
+              </span>
             )}
           </div>
         )}

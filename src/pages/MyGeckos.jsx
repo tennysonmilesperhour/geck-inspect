@@ -10,7 +10,7 @@ import { loadRecentWeights } from '@/lib/recentWeights';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { bredInHouseIds, saleCategoryFor } from '@/lib/businessLedger';
 import { api } from '@/api/appClient';
-import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale, LayoutGrid } from 'lucide-react';
+import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale, LayoutGrid, MoreHorizontal, Upload } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import CardGridSkeleton from '../components/shared/CardGridSkeleton';
 import EmptyState from '../components/shared/EmptyState';
@@ -694,11 +694,9 @@ export default function MyGeckosPage() {
                         below: archive, export and weigh-in have nothing to act
                         on yet, and they pushed its buttons off a phone screen. */}
                     {!isFirstRun && (
-                    <>
-                    {/* Secondary tools sit in an even 2-column grid on phones
-                        (they wrapped into a ragged 2+2 row). From sm up the
-                        wrapper is display:contents, so the row is unchanged. */}
-                    <div className={showArchived ? 'contents' : 'grid grid-cols-2 gap-2 w-full sm:contents'}>
+                    <div className="flex items-center gap-2 w-full sm:w-auto sm:contents">
+                    {/* Desktop / tablet secondary tools */}
+                    <div className={showArchived ? 'contents' : 'hidden sm:contents'}>
                     <Button
                         variant="outline"
                         onClick={() => { setShowArchived(!showArchived); loadGeckos(); }}
@@ -806,25 +804,95 @@ export default function MyGeckosPage() {
                     </div>
                     {!showArchived && (
                         <>
-                            {/* Primary action leads on phones: full width, above
-                                the secondary tools, instead of wrapping to last. */}
-                            <Button className="order-first w-full sm:w-auto md:order-none" onClick={() => {
-                                // The demo opens Quick Add too; saving there offers a
-                                // free account to keep the gecko (and a way back).
+                            <Button className="flex-1 sm:flex-none sm:w-auto" onClick={() => {
                                 if (user?.is_guest) { openQuickAdd({ guest: true }); return; }
                                 openAddFlow();
                             }}>
                                 <PlusCircle className="w-5 h-5 mr-2" />
                                 Add Gecko
                             </Button>
+                            <Button
+                                variant="outline"
+                                className="sm:hidden shrink-0"
+                                onClick={() => setIsWeighInOpen(true)}
+                                title="Record weights for all geckos in one pass"
+                                disabled={geckos.filter(g => !g.archived).length === 0}
+                            >
+                                <Scale className="w-4 h-4 mr-1.5 text-emerald-400" />
+                                Weigh-in
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="sm:hidden shrink-0 h-10 w-10"
+                                        aria-label="More collection actions"
+                                    >
+                                        <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700 text-slate-100 w-52">
+                                    <DropdownMenuItem
+                                        className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                                        onClick={() => setIsImportModalOpen(true)}
+                                    >
+                                        <Upload className="w-4 h-4 mr-2 text-emerald-400" />
+                                        Import from CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                                        disabled={!filteredAndSortedGeckos || filteredAndSortedGeckos.length === 0}
+                                        onClick={() => {
+                                            try {
+                                                const name = exportGeckosCSV(filteredAndSortedGeckos, { collection: geckos });
+                                                captureEvent('roster_exported', { format: 'csv', count: filteredAndSortedGeckos.length });
+                                                toast({ title: 'CSV exported', description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}` });
+                                            } catch (err) {
+                                                toast({ title: 'Export failed', description: err.message, variant: 'destructive' });
+                                            }
+                                        }}
+                                    >
+                                        <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-400" />
+                                        Export as CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                                        disabled={!filteredAndSortedGeckos || filteredAndSortedGeckos.length === 0}
+                                        onClick={async () => {
+                                            try {
+                                                const name = await exportGeckosPDF(filteredAndSortedGeckos, {
+                                                    collection: geckos,
+                                                    title: `${user?.full_name || user?.email || 'My'} Gecko Roster`,
+                                                    userName: user?.full_name || user?.email,
+                                                });
+                                                captureEvent('roster_exported', { format: 'pdf', count: filteredAndSortedGeckos.length });
+                                                toast({ title: 'PDF exported', description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}` });
+                                            } catch (err) {
+                                                toast({ title: 'Export failed', description: err.message, variant: 'destructive' });
+                                            }
+                                        }}
+                                    >
+                                        <FileText className="w-4 h-4 mr-2 text-emerald-400" />
+                                        Export as PDF
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                                        onClick={() => { setShowArchived(!showArchived); loadGeckos(); }}
+                                    >
+                                        <Archive className="w-4 h-4 mr-2 text-slate-400" />
+                                        View Archive
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </>
                     )}
-                    </>
+                    </div>
                     )}
                 </PageHeader>
 
                 {/* Collection / Transfers tabs */}
-                <div className="flex items-center gap-1 mb-6 border-b border-slate-800">
+                <div className="flex items-center gap-1 mb-4 border-b border-slate-800">
                     <button
                         type="button"
                         onClick={() => setActiveTab('collection')}
@@ -854,22 +922,22 @@ export default function MyGeckosPage() {
                     />
                 ) : (
                 <>
-                <div className="mb-6">
-                    {/* Toolbar, single row: search (grows) + sort + view + filters */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-2 rounded-xl border border-slate-700 bg-slate-900">
+                <div className="mb-4">
+                    {/* Toolbar, single row on both mobile and desktop: search (grows) + sort + view */}
+                    <div className="flex items-center gap-2 p-2 rounded-xl border border-slate-700 bg-slate-900">
                         <div className="relative flex-1 min-w-0">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <Input
                                 type="text"
-                                placeholder="Search by name, ID, morph, or tag..."
+                                placeholder="Search geckos..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 h-9 bg-slate-950 border-slate-700 text-slate-100 focus-visible:ring-emerald-500/40"
+                                className="pl-9 h-9 bg-slate-950 border-slate-700 text-slate-100 focus-visible:ring-emerald-500/40"
                             />
                         </div>
-                        <div className="flex items-center gap-2 md:shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0">
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger aria-label="Sort geckos" className="flex-1 min-w-0 md:flex-none md:w-44 !h-8 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
+                                <SelectTrigger aria-label="Sort geckos" className="w-32 sm:w-44 !h-9 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                         <SelectValue placeholder="Sort" />
@@ -893,7 +961,7 @@ export default function MyGeckosPage() {
                                 <button
                                     type="button"
                                     onClick={() => setViewMode('card')}
-                                    className={`h-8 w-8 touch:h-11 touch:w-11 rounded flex items-center justify-center transition-colors ${viewMode === 'card' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                                    className={`h-8 w-8 rounded flex items-center justify-center transition-colors ${viewMode === 'card' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                                     aria-label="Card view"
                                 >
                                     <Grid3x3 className="w-4 h-4" />
@@ -901,7 +969,7 @@ export default function MyGeckosPage() {
                                 <button
                                     type="button"
                                     onClick={() => setViewMode('list')}
-                                    className={`h-8 w-8 touch:h-11 touch:w-11 rounded flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                                    className={`h-8 w-8 rounded flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                                     aria-label="List view"
                                 >
                                     <List className="w-4 h-4" />
@@ -911,7 +979,7 @@ export default function MyGeckosPage() {
                     </div>
 
                     {/* Filters panel, slimmer than before. Opens inline below the toolbar. */}
-                    <div className="mt-3">
+                    <div className="mt-2">
                         <GeckoFilters
                             filters={filters}
                             onFiltersChange={setFilters}
