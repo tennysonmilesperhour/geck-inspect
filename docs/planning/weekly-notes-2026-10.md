@@ -67,6 +67,7 @@ What that guarantees:
 
 - No address, no unsubscribe link, or a caught-up member means no ledger row, so the member's next note is never used up.
 - The same note can never go twice: the unique key, the lock and the poll claim each prevent it. The lock is per inbox (20261018172000, waiting in a draft PR while deployments are paused), so two accounts on one inbox (a plus-tag or dotted Gmail test account) cannot claim at the same moment either.
+- The hourly job stamps polls and the ledger with its start time, which varies by a fraction of a second. The 7-day and 20-hour rules allow 10 minutes (20261018172000, waiting in a draft PR), so the run 7 days or 20 hours later counts even when it starts a moment earlier than the last one did. Before that, about every other week a note slid an hour later.
 - The 7-day and 20-hour rules are checked twice, once when choosing candidates and once in the claim.
 - A caught-up member, or one skipped for a missing address, is asked about again every 20 to 21 hours. So a newly written note reaches them within a day of the merge that adds it, at a cost of at most one function call per member per day.
 - Nothing depends on the order in which the migration, the functions and the site finish deploying.

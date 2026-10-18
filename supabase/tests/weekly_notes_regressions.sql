@@ -341,7 +341,9 @@ begin
   -- insert finds the first run's row and changes nothing. One session
   -- cannot reproduce that timing (here the candidates already leave the
   -- member out), so check the guard is in the job.
-  if position($g$where w.polled_at <= p_now - interval '20 hours'$g$ in
+  -- (20 hours less the 10 minutes' allowance for a run that starts a moment
+  -- early, from 20261018172000.)
+  if position($g$where w.polled_at <= p_now - (interval '20 hours' - interval '10 minutes')$g$ in
               pg_get_functiondef('public.enqueue_weekly_notes(timestamptz, integer)'::regprocedure)) = 0 then
     raise exception 'FAIL: the job no longer guards its poll claim against an overlapping run';
   end if;

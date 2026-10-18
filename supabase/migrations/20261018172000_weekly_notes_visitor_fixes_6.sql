@@ -33,6 +33,18 @@
 --    exists on the inbox, as everywhere else (an unconfirmed sign-up or a
 --    deleted login no longer blocks it).
 --
+-- 7. A run that starts a moment early still counts. The hourly job starts
+--    a fraction of a second after :50, by a different amount each time,
+--    and stamps the ledger and the poll with that start. The 7-day and
+--    20-hour rules compared exact times, so when a run started even 0.2
+--    seconds earlier than the one before, the address waited an extra
+--    hour: on 18 Oct the 22:50 run skipped 20 members polled at 02:50.
+--    About every other week a member's note slid an hour later. Both
+--    rules (member, visitor, and the hourly job's own check when it
+--    records the ask) now allow 10 minutes, so the run 7 days (or 20
+--    hours) later always counts. Runs are an hour apart, so this never
+--    lets two notes through in one week.
+--
 -- A correction to 20261018150400's header: its one-time fix stopped only
 -- spellings left confirmed beside a newer stop. Two spellings both
 -- confirmed with no stop stay confirmed; the visitor candidates pick one
@@ -1009,3 +1021,241 @@ grant execute on function public.admin_erase_account(text) to service_role;
 
 comment on function public.admin_erase_account(text) is
   'Deletes or anonymises one member''s rows (D16). Service role only; called by the admin-delete-account edge function, which then removes the returned Storage files and the login. Keeps email_suppressions on purpose, so an address that bounced or complained is never mailed again.';
+
+-- 7. The member rule: a run that starts a moment early still counts --------------------------------
+--
+-- The 20261018150400 body with the 7-day and 20-hour comparisons changed
+-- (marked).
+
+create or replace function public.weekly_notes_candidates(
+  p_now timestamptz default now(),
+  p_ignore_polls boolean default false
+)
+returns table (email text, last_polled_at timestamptz)
+language sql
+stable
+security definer
+set search_path to 'public'
+as $function$
+  with members as (
+    select distinct on (lower(u.email))
+           lower(u.email) as email
+      from auth.users u
+      join public.profiles p on lower(p.email) = lower(u.email)
+     where u.email is not null
+       and u.email_confirmed_at is not null
+       and u.deleted_at is null
+       and coalesce(u.is_anonymous, false) = false
+       and (u.banned_until is null or u.banned_until < p_now)
+       -- After the lifecycle window (lifecycle needs > p_now - 16 days).
+       and u.created_at <= p_now - interval '16 days'
+       and p.email_notifications_enabled is true
+       and p.email_weekly_notes_enabled is true
+       and not exists (
+             select 1 from public.profiles p2
+              where lower(p2.email) = lower(u.email)
+                and p2.email_weekly_notes_enabled is not true
+           )
+     order by lower(u.email), p.created_date nulls last
+  )
+  select m.email, w.polled_at as last_polled_at
+    from members m
+    left join public.weekly_notes_polls w on w.email = m.email
+   -- The inbox match (email_inbox_suppressed), so a spam report under
+   -- another spelling of the inbox stops these too.
+   where not public.email_inbox_suppressed(m.email)
+     -- At most one marketing email in any 20 hours: no weekly note within
+     -- 20 hours of a lifecycle email (a day 14 email sent late).
+     and not exists (
+           select 1 from public.lifecycle_email_sends l
+            where l.email = m.email
+              and l.created_date > p_now - interval '20 hours'
+         )
+     -- A stop from a visitor note holds for the inbox once it has an
+     -- account, unless the member turned the notes on again afterwards
+     -- (the Settings switch: email_weekly_notes_choice_at is newer).
+     -- weekly_notes_visitor_stop_at decides what counts as a stop (any
+     -- spelling of the inbox, after a request, not followed by a new
+     -- sign-up). The member's last choice is read only when there is a
+     -- stop, so this costs one index lookup per member.
+     and (case
+            when public.weekly_notes_visitor_stop_at(m.email) is null then true
+            else public.weekly_notes_visitor_stop_at(m.email) < coalesce((
+                   select max(p3.email_weekly_notes_choice_at) from public.profiles p3
+                    where lower(p3.email) = m.email), '-infinity'::timestamptz)
+          end)
+     -- At most one weekly note in any 7 days, to any spelling of the inbox.
+     -- Changed in 20261018172000: 10 minutes' allowance, so the run 7 days
+     -- later counts even when it starts a moment earlier than the last one.
+     and not exists (
+           select 1 from public.weekly_notes_sends n
+            where public.email_inbox_key(n.email) = public.email_inbox_key(m.email)
+              and n.created_date > p_now - (interval '7 days' - interval '10 minutes')
+         )
+     -- Asked about at most once in any 20 hours, with the same allowance
+     -- (changed in 20261018172000).
+     and (p_ignore_polls
+          or w.polled_at is null
+          or w.polled_at <= p_now - (interval '20 hours' - interval '10 minutes'));
+$function$;
+
+revoke all on function public.weekly_notes_candidates(timestamptz, boolean) from public, anon, authenticated;
+grant execute on function public.weekly_notes_candidates(timestamptz, boolean) to service_role;
+
+comment on function public.weekly_notes_candidates(timestamptz, boolean) is
+  'Members who may get a Weekly Gecko Note at p_now: can sign in, account at least 16 days old, email and weekly switches on (the weekly one on every profile row for the address), not suppressed (email_inbox_suppressed), no lifecycle email in 20 hours, no weekly note to the inbox in 7 days, no visitor stop on their inbox (weekly_notes_visitor_stop_at) newer than the member''s last choice, and (unless p_ignore_polls) not asked about in 20 hours. The 7-day and 20-hour rules allow 10 minutes, so the hourly run that comes 7 days or 20 hours later always counts. Read-only; service role only.';
+
+-- 7. The visitor rule: the same allowance ----------------------------------------------------------
+--
+-- The 20261018150400 body with the 7-day and 20-hour comparisons changed
+-- (marked).
+
+create or replace function public.weekly_notes_subscriber_candidates(
+  p_now timestamptz default now(),
+  p_ignore_polls boolean default false
+)
+returns table (email text, last_polled_at timestamptz)
+language sql
+stable
+security definer
+set search_path to 'public'
+as $function$
+  -- One row per inbox (the first spelling confirmed), chosen before the
+  -- 7-day and poll rules, so two spellings of one inbox never make two
+  -- series.
+  with eligible as (
+    select distinct on (public.email_inbox_key(s.email)) s.email
+      from public.newsletter_subscribers s
+     where s.weekly_notes_requested_at is not null
+       and s.confirmed_at is not null
+       -- Only a click on a link sent for this request confirms it.
+       and s.confirmed_at >= s.weekly_notes_requested_at
+       and s.unsubscribed_at is null
+       and s.email = lower(s.email)
+       -- Members get the notes through the member rules and their own
+       -- switch, whichever spelling of the inbox has the account.
+       and not exists (select 1 from auth.users u
+                        where public.email_inbox_key(u.email) = public.email_inbox_key(s.email)
+                          and u.email_confirmed_at is not null
+                          and u.deleted_at is null)
+       and not public.email_inbox_suppressed(s.email)
+       -- A stop on another spelling, newer than this row's confirmation.
+       and public.weekly_notes_visitor_stop_at(s.email) is null
+     order by public.email_inbox_key(s.email), s.confirmed_at, s.email
+  )
+  select e.email, w.polled_at as last_polled_at
+    from eligible e
+    left join public.weekly_notes_polls w on w.email = e.email
+   -- At most one note in any 7 days to any spelling of the inbox, and
+   -- asked about at most once in any 20 hours, each with 10 minutes'
+   -- allowance (changed in 20261018172000).
+   where not exists (
+           select 1 from public.weekly_notes_sends n
+            where public.email_inbox_key(n.email) = public.email_inbox_key(e.email)
+              and n.created_date > p_now - (interval '7 days' - interval '10 minutes')
+         )
+     and (p_ignore_polls
+          or w.polled_at is null
+          or w.polled_at <= p_now - (interval '20 hours' - interval '10 minutes'));
+$function$;
+
+revoke all on function public.weekly_notes_subscriber_candidates(timestamptz, boolean) from public, anon, authenticated;
+grant execute on function public.weekly_notes_subscriber_candidates(timestamptz, boolean) to service_role;
+
+comment on function public.weekly_notes_subscriber_candidates(timestamptz, boolean) is
+  'Visitor addresses that may get a Weekly Gecko Note at p_now: asked on the form, confirmed by a click after the request, not unsubscribed, no account that can sign in on any spelling of the inbox (members follow the member rules), not suppressed (email_inbox_suppressed), no newer stop on another spelling (weekly_notes_visitor_stop_at), one spelling per inbox (the first confirmed), no note to the inbox in 7 days and (unless p_ignore_polls) not asked about in 20 hours. The 7-day and 20-hour rules allow 10 minutes, so the hourly run that comes 7 days or 20 hours later always counts. Read-only; service role only.';
+
+-- 7. The hourly job: the same allowance when it records its ask ------------------------------------
+--
+-- The 20261018120000 body with the poll comparison changed (marked).
+-- Without this the job would find an address the rules above now let
+-- through, then skip it as "already taken by an overlapping run".
+
+create or replace function public.enqueue_weekly_notes(
+  p_now timestamptz default now(),
+  p_limit integer default 20
+)
+returns integer
+language plpgsql
+security definer
+set search_path to 'public', 'extensions', 'vault'
+as $function$
+declare
+  v_email_url constant text :=
+    'https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/send-email';
+  v_key text;
+  v_count integer := 0;
+  v_rows integer;
+  r record;
+begin
+  if not exists (
+    select 1 from public.app_settings
+     where key = 'weekly_notes_enabled' and value = 'true'::jsonb
+  ) then
+    return 0;
+  end if;
+
+  select decrypted_secret into v_key
+    from vault.decrypted_secrets
+   where name = 'notification_service_role_key'
+   limit 1;
+  if v_key is null or v_key = '' then
+    raise warning 'enqueue_weekly_notes: notification_service_role_key is missing';
+    return 0;
+  end if;
+
+  for r in
+    select c.email, 'member'::text as audience, c.last_polled_at
+      from public.weekly_notes_candidates(p_now) c
+    union all
+    select v.email, 'visitor'::text, v.last_polled_at
+      from public.weekly_notes_subscriber_candidates(p_now) v
+    order by 2, 3 nulls first, 1
+    limit greatest(coalesce(p_limit, 20), 0)
+  loop
+    insert into public.weekly_notes_polls as w (email, polled_at)
+    values (r.email, p_now)
+    on conflict (email) do update
+      set polled_at = excluded.polled_at
+      -- Changed in 20261018172000: the same 10 minutes' allowance as the
+      -- candidate rules, so the run 20 hours later can take the address.
+      where w.polled_at <= p_now - (interval '20 hours' - interval '10 minutes');
+    get diagnostics v_rows = row_count;
+    if v_rows = 0 then
+      -- An overlapping run already took this address.
+      continue;
+    end if;
+
+    begin
+      perform net.http_post(
+        url := v_email_url,
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer ' || v_key
+        ),
+        body := jsonb_build_object(
+          'user_email', r.email,
+          'type', 'weekly_notes',
+          'weekly', case
+            when r.audience = 'visitor' then jsonb_build_object('run_at', p_now, 'audience', 'visitor')
+            else jsonb_build_object('run_at', p_now)
+          end
+        )
+      );
+      v_count := v_count + 1;
+    exception when others then
+      -- The poll row stays, so the address is asked again in 20 hours.
+      -- Nothing was claimed, so no note is used up.
+      raise warning 'enqueue_weekly_notes: send-email call failed: %', sqlerrm;
+    end;
+  end loop;
+
+  return v_count;
+end;
+$function$;
+
+revoke all on function public.enqueue_weekly_notes(timestamptz, integer) from public, anon, authenticated;
+grant execute on function public.enqueue_weekly_notes(timestamptz, integer) to service_role;
+
+comment on function public.enqueue_weekly_notes(timestamptz, integer) is
+  'Hourly Weekly Gecko Notes job (weekly-notes-hourly): while app_settings weekly_notes_enabled is true, asks send-email about up to p_limit addresses, members first and then confirmed visitors (weekly.audience visitor), oldest poll first, each at most once in 20 hours (with 10 minutes'' allowance, so the run 20 hours later counts). send-email claims and sends. Returns how many it asked about.';

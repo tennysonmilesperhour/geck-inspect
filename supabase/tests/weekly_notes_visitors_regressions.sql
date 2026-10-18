@@ -1340,6 +1340,76 @@ begin
   end if;
 end $$;
 
+-- The 7-day and 20-hour rules allow for a run that starts a moment early.
+-- The hourly job stamps polls and the ledger with its start time, which
+-- varies by a fraction of a second, so the run 7 days or 20 hours later
+-- can start just before the exact mark (on 18 Oct: 22:50:00.098 against a
+-- poll at 02:50:00.306).
+do $$
+declare
+  v_old timestamptz := now() - interval '60 days';
+  -- A run start like production's, with the fraction of a second.
+  v_t timestamptz := (select t0 from _t0) + interval '180 days 50 minutes 0.324977 seconds';
+  v_week timestamptz := v_t + interval '7 days' - interval '0.3 seconds';
+  v_day timestamptz := v_t + interval '20 hours' - interval '0.2 seconds';
+begin
+  -- A member with last week's note.
+  perform pg_temp.mk_member('drift.m6@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'drift.m6@example.com';
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('drift.m6@example.com', 1, 'a-note', v_t);
+  insert into public.weekly_notes_polls (email, polled_at) values ('drift.m6@example.com', v_t);
+  if not exists (select 1 from public.weekly_notes_candidates(v_week) c where c.email = 'drift.m6@example.com') then
+    raise exception 'FAIL: a run that started 0.3 seconds earlier than last week''s missed the member';
+  end if;
+  if exists (select 1 from public.weekly_notes_candidates(v_t + interval '7 days' - interval '15 minutes', true) c where c.email = 'drift.m6@example.com') then
+    raise exception 'FAIL: the member 7-day rule let a note through 15 minutes early';
+  end if;
+  if (public.claim_weekly_note('drift.m6@example.com', array['a-note', 'b-note'], v_week))->>'slug' is distinct from 'b-note' then
+    raise exception 'FAIL: the claim refused the run that started 0.3 seconds early';
+  end if;
+
+  -- A member asked about 20 hours ago and not sent anything.
+  perform pg_temp.mk_member('drift.p6@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'drift.p6@example.com';
+  insert into public.weekly_notes_polls (email, polled_at) values ('drift.p6@example.com', v_t);
+  if not exists (select 1 from public.weekly_notes_candidates(v_day) c where c.email = 'drift.p6@example.com') then
+    raise exception 'FAIL: a run that started 0.2 seconds early skipped a member asked about 20 hours before';
+  end if;
+  if exists (select 1 from public.weekly_notes_candidates(v_t + interval '20 hours' - interval '15 minutes') c where c.email = 'drift.p6@example.com') then
+    raise exception 'FAIL: the member 20-hour rule let an ask through 15 minutes early';
+  end if;
+  -- The job itself takes the address (its own poll check has the same
+  -- allowance). The other members here are switched off for this one run,
+  -- so the job's limit cannot leave this member out, then put back.
+  create temp table _drift_on on commit drop as
+    select email from public.profiles where email_weekly_notes_enabled is true and email <> 'drift.p6@example.com';
+  update public.profiles set email_weekly_notes_enabled = false where email in (select email from _drift_on);
+  perform public.enqueue_weekly_notes(v_day, 1000);
+  update public.profiles set email_weekly_notes_enabled = true where email in (select email from _drift_on);
+  if (select polled_at from public.weekly_notes_polls where email = 'drift.p6@example.com') <> v_day then
+    raise exception 'FAIL: the job found the member but skipped it as already taken';
+  end if;
+
+  -- The same for a visitor.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('drift.v6@example.com', 'notes:care', v_t - interval '30 days', v_t - interval '30 days'),
+         ('drift.vp6@example.com', 'notes:care', v_t - interval '30 days', v_t - interval '30 days');
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('drift.v6@example.com', 1, 'a-note', v_t);
+  insert into public.weekly_notes_polls (email, polled_at) values ('drift.v6@example.com', v_t), ('drift.vp6@example.com', v_t);
+  if not pg_temp.vcand('drift.v6@example.com', v_week) then
+    raise exception 'FAIL: a run that started 0.3 seconds earlier than last week''s missed the visitor';
+  end if;
+  if pg_temp.vcand('drift.v6@example.com', v_t + interval '7 days' - interval '15 minutes', true) then
+    raise exception 'FAIL: the visitor 7-day rule let a note through 15 minutes early';
+  end if;
+  if not pg_temp.vcand('drift.vp6@example.com', v_day) then
+    raise exception 'FAIL: a run that started 0.2 seconds early skipped a visitor asked about 20 hours before';
+  end if;
+  if pg_temp.vcand('drift.vp6@example.com', v_t + interval '20 hours' - interval '15 minutes') then
+    raise exception 'FAIL: the visitor 20-hour rule let an ask through 15 minutes early';
+  end if;
+end $$;
+
 -- A rough cost check with visitor stops: 3,000 members, 600 of them on an
 -- inbox with a visitor stop (the branch that reads the member's last
 -- choice, through profiles_email_lower_idx).
