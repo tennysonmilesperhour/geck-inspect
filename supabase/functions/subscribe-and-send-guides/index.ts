@@ -7,7 +7,9 @@
 //      form to send mail to strangers.
 //   3. Adds a new address to `newsletter_subscribers`. An address already
 //      there keeps its consent and any unsubscribe, and an unsubscribed
-//      address is not emailed.
+//      address is not emailed. Every accepted request gets the same reply,
+//      {ok: true} (or {ok: true, skipped: "recently_sent"} at the limit),
+//      so the form cannot be used to learn whether an address unsubscribed.
 //   4. Sends an email via Resend with download links for the Care
 //      Guide and Genetics Guide PDFs (hosted as static assets on the
 //      site at /downloads/<filename>.pdf).
@@ -171,7 +173,7 @@ serve(async (req) => {
       ipKey ? countSince("ip_hash", ipKey, hourAgo) : Promise.resolve(0),
     ]);
     if (byAddress >= LIMIT_PER_ADDRESS_PER_DAY) {
-      return json({ ok: true, delivered: 0, skipped: "recently_sent" });
+      return json({ ok: true, skipped: "recently_sent" });
     }
     if (byNetwork >= LIMIT_PER_NETWORK_PER_HOUR) {
       return json({
@@ -213,25 +215,30 @@ serve(async (req) => {
     }
   }
 
-  // Someone who unsubscribed gets no mail from this form. The page shows
-  // the download links after any successful submit, so a person asking
-  // for the guides still gets them. The reply does not say why, so the
-  // form cannot be used to learn who has unsubscribed.
-  if (existing?.unsubscribed_at) {
-    return json({ ok: true, delivered: 0 });
-  }
-
-  if (!RESEND_API_KEY) {
-    return json({ ok: true, delivered: 0, skipped: "no-resend-key" });
-  }
-
   // Logged before sending so a quick second request already counts it.
+  // An unsubscribed address is logged too, so it meets the daily limit
+  // like any other.
   const { error: logErr } = await supabase
     .from("guide_email_sends")
     .insert({ email, ip_hash: ipKey });
   if (logErr) {
     console.warn("subscribe-and-send-guides: send log failed", logErr);
     return json({ error: "Could not send the guides right now." }, 500);
+  }
+
+  // Someone who unsubscribed gets no mail from this form. The page shows
+  // the download links after any successful submit, so a person asking
+  // for the guides still gets them. The reply is the same as a sent one,
+  // and the short wait stands in for the send, so neither the reply nor
+  // its timing says who has unsubscribed.
+  if (existing?.unsubscribed_at) {
+    await new Promise((resolve) => setTimeout(resolve, 300 + Math.floor(Math.random() * 500)));
+    return json({ ok: true });
+  }
+
+  if (!RESEND_API_KEY) {
+    console.warn("subscribe-and-send-guides: RESEND_API_KEY is not set");
+    return json({ ok: true });
   }
 
   const subject = "Your free crested gecko Care & Genetics Guides";
@@ -251,10 +258,9 @@ serve(async (req) => {
   ].join("\n");
 
   try {
-    const result = await sendEmail(email, subject, text, renderHtml());
-    return json({ ok: true, delivered: 1, id: result?.id });
+    await sendEmail(email, subject, text, renderHtml());
   } catch (err) {
     console.warn("subscribe-and-send-guides: delivery failed", err);
-    return json({ ok: true, delivered: 0, skipped: "delivery-failed" });
   }
+  return json({ ok: true });
 });

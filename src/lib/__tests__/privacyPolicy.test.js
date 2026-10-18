@@ -281,6 +281,10 @@ const FIXES2_SQL = readFileSync(
   new URL('../../../supabase/migrations/20261018150100_weekly_notes_visitor_fixes_2.sql', import.meta.url),
   'utf8',
 );
+const FIXES3_SQL = readFileSync(
+  new URL('../../../supabase/migrations/20261018150200_weekly_notes_visitor_fixes_3.sql', import.meta.url),
+  'utf8',
+);
 const VISITOR_PARAGRAPH = PAGE.match(/If you asked for Weekly Gecko Notes without an account[^<]*/)?.[0] ?? '';
 
 describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
@@ -307,7 +311,10 @@ describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
     expect(log.sort()).toEqual(['created_at', 'email', 'id', 'ip_hash', 'kind'].sort());
     // Added by the fixes migration: the inbox key the limits count.
     expect([...FIXES_SQL.matchAll(/add column if not exists ([a-z_]+)/g)].map((m) => m[1])).toEqual(['inbox_key']);
-    expect(VISITOR_PARAGRAPH).toContain('a record of the emails the sign-up form sent you, with your address in a simplified form used only to count them (kept 30 days');
+    expect(VISITOR_PARAGRAPH).toContain('a record of each request the sign-up form received for your address (including any it answered without sending an email, for example to an address that bounced), with your address in a simplified form used only to count them (kept 30 days');
+    // Quiet requests (nothing sent) are logged too, members with all email off included.
+    expect(FIXES3_SQL).toMatch(/insert into public\.weekly_notes_signup_sends \(email, inbox_key, ip_hash, kind, created_at\)\s+values \(v_email, v_inbox, v_ip, v_kind, p_now\);/);
+    expect(VISITOR_PARAGRAPH).toContain("If someone uses the form with your account's address, we keep the same record, even if you have turned all email off and nothing is sent.");
     expect(VISITOR_PARAGRAPH).toContain('a scrambled form of your network address with that record, never the address itself');
     expect(VISITOR_SQL).toContain("delete from public.weekly_notes_signup_sends where created_at < p_now - interval '30 days'");
     expect(FIXES_SQL).toContain("and coalesce(confirm_sent_at, weekly_notes_requested_at) < p_now - interval '30 days'");
@@ -315,8 +322,11 @@ describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
 
   it('says how to stop them, what stays, how to have it deleted and what joining does', () => {
     expect(VISITOR_PARAGRAPH).toContain('The link in every note stops them at once, from any device, and it also stops them if you later make an account with the same address (until you turn them on again in Settings).');
-    // A new profile for a stopped visitor starts with the notes off, whatever the sign-up box said.
+    // A new profile for a stopped visitor starts with the notes off, whatever
+    // the sign-up box said, and the stop is its recorded choice, so the first
+    // sign-in does not save the box over it (the third fixes migration).
     expect(FIXES2_SQL).toContain('create trigger profiles_weekly_notes_visitor_stop');
+    expect(FIXES3_SQL).toContain('new.email_weekly_notes_choice_at := v_stop;');
     // The stop link turns off the member switch, and the member rules skip a
     // newer visitor stop (the fixes migration).
     expect(FIXES_SQL).toMatch(/update public\.profiles\s+set email_weekly_notes_enabled = false,\s+email_weekly_notes_choice_at = now\(\)/);

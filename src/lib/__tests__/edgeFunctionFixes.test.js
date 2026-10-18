@@ -66,10 +66,22 @@ describe('subscribe-and-send-guides never undoes an unsubscribe', () => {
     const { db, net, fn } = run({ id: 'sub-1', unsubscribed_at: '2026-09-01T00:00:00Z' });
     const res = await fn.handle(postJson('https://x.test/', { email: 'gone@example.com' }));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true, delivered: 0 });
+    expect(await res.json()).toEqual({ ok: true });
     const writes = db.table('newsletter_subscribers').filter((c) => actionOf(c) !== 'select');
     expect(writes).toHaveLength(0);
     expect(net.requests).toHaveLength(0);
+  });
+
+  it('answers an unsubscribed address exactly like one it emailed, and counts it toward the limit', async () => {
+    const gone = run({ id: 'sub-1', unsubscribed_at: '2026-09-01T00:00:00Z' });
+    const sent = run({ id: 'sub-2', unsubscribed_at: null });
+    const goneReply = await (await gone.fn.handle(postJson('https://x.test/', { email: 'gone@example.com' }))).json();
+    const sentReply = await (await sent.fn.handle(postJson('https://x.test/', { email: 'reader@example.com' }))).json();
+    expect(goneReply).toEqual(sentReply);
+    expect(sent.net.requests).toHaveLength(1);
+    for (const { db } of [gone, sent]) {
+      expect(db.table('guide_email_sends').filter((c) => actionOf(c) === 'insert')).toHaveLength(1);
+    }
   });
 
   it('does not touch an existing subscriber row', async () => {
