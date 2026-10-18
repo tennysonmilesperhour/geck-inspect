@@ -89,6 +89,8 @@ The full deep-dive analysis lives in /docs/ as Word documents. These are for hum
 
 Working style preferences
 
+**Manual steps: lead with the link and the exact values.** When something only Tennyson can do by hand (a dashboard secret, a webhook, a DNS record, a setting) and no tool in the session can do it, open with the direct link and the exact values to paste, then any explanation, so he can do it in under a minute. Do not first try a tool that asks him to type the value into a prompt: the Supabase secret tool (`create_edge_function_secret`) times out in cloud sessions. Edge function secrets go at https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/functions/secrets. Afterwards, check the change took effect where you can (for example a probe that sends nothing) and say so.
+
 **No em dashes anywhere. This is a hard rule.** Em dashes (the long horizontal `—`, U+2014) are the single biggest "this was written by AI" giveaway in 2026 copy. Do not use them in:
 - Landing page copy (src/pages/Home.jsx and any marketing surface)
 - In-app UI strings (button labels, empty states, tooltips, modal titles, toasts, form copy, page headings, descriptions)
