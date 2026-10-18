@@ -41,6 +41,8 @@
 	<string>Take photos of your geckos for collection records and morph identification.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose gecko photos for collection records and morph identification.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save gecko photos to your photo library when you choose to save them.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

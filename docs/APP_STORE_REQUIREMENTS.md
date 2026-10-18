@@ -72,3 +72,11 @@ Simulator testing found a blank-screen loop after email confirmation. Capacitor 
 - Full build: 268 test files, 3,030 passing tests; lint has zero errors and 75 existing warnings; typecheck passes.
 - Rebuilt and installed on iPhone 17 simulator, iOS 26.5. A fresh QA recovery email opened the native reset form immediately, without a relaunch. No password was changed.
 - Physical-device auth verification remains pending, so the native release verification flag remains unset. This fix still needs a new signed App Store binary.
+
+## Physical iPhone checks, 18 October 2026
+
+- Signed development build from snapshot `4b4f0361` installed on iPhone 11, iOS 18.5. Today, sign out and a fresh email recovery callback passed. The callback opens the native reset form without a reload loop; no password was changed. A subsequent cold launch returns to Today with the session intact.
+- All four native subscription products load with prices and periods. Renewal wording, Restore purchases, Terms, Privacy and support contact are visible. No transaction or restore is claimed.
+- Physical testing found that the camera plugin rejected photo selection because `NSPhotoLibraryAddUsageDescription` was absent. Added the required purpose string. The plugin checks all three photo/camera descriptions even though capture uses `saveToGallery: false`.
+- Rebuilt, signed and installed the corrected package. Both the source and compiled Info.plist contain all three descriptions. The native source dialog now opens and selecting the library reaches the iOS permission prompt. Granting photo/camera access and actual capture remain pending.
+- This phone's iOS 18.5 does not fulfill Apple's requested latest-OS recording. No App Store upload or resubmission is claimed.
