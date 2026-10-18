@@ -1340,7 +1340,7 @@ begin
   end if;
 end $$;
 
--- A rough cost check with visitor stops: 3,000 members, 300 of them on an
+-- A rough cost check with visitor stops: 3,000 members, 600 of them on an
 -- inbox with a visitor stop (the branch that reads the member's last
 -- choice, through profiles_email_lower_idx).
 do $$
@@ -1357,16 +1357,17 @@ begin
   update public.profiles set email_notifications_enabled = true, email_weekly_notes_enabled = true where email like 'perfs%@example.com';
   insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at, unsubscribed_at)
   select 'perfs' || g || '+v@example.com', 'notes:care', now() - interval '30 days', now() - interval '30 days', now() - interval '20 days'
-    from generate_series(1, 300) g;
+    from generate_series(1, 600) g;
   analyze public.profiles;
   analyze public.newsletter_subscribers;
   v_start := clock_timestamp();
   perform count(*) from public.weekly_notes_candidates(now(), true);
   v_ms := extract(epoch from clock_timestamp() - v_start) * 1000;
+  -- About 1 s here with profiles_email_lower_idx, about 4 s without it.
   if v_ms > 2000 then
-    raise exception 'FAIL: member candidates took % ms with 300 visitor stops among 3,000 members', round(v_ms);
+    raise exception 'FAIL: member candidates took % ms with 600 visitor stops among 3,000 members', round(v_ms);
   end if;
-  raise notice 'member candidates with 300 visitor stops among 3,000 members: % ms', round(v_ms);
+  raise notice 'member candidates with 600 visitor stops among 3,000 members: % ms', round(v_ms);
 end $$;
 
 -- 10. Running the fixes migration again changes nothing ------------------------------------------
