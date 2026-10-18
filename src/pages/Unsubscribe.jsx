@@ -83,8 +83,8 @@ export default function Unsubscribe() {
                                 <MailX className="w-10 h-10 mx-auto text-emerald-400" />
                                 <h1 className="text-2xl font-bold text-slate-100">Stop Weekly Gecko Notes?</h1>
                                 <p className="text-slate-400">
-                                    You asked for them on a Geck Inspect guide page. Nothing more will be sent
-                                    to this address.
+                                    You signed up for them on the Geck Inspect website. This stops them for this
+                                    address.
                                 </p>
                             </>
                         )}
@@ -122,8 +122,8 @@ export default function Unsubscribe() {
                                 <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-400" />
                                 <h1 className="text-2xl font-bold text-slate-100">Weekly Gecko Notes are off</h1>
                                 <p className="text-slate-400">
-                                    Nothing more will be sent to this address. You can sign up again any time
-                                    on the Weekly Gecko Notes page.
+                                    Weekly Gecko Notes will not be sent to this address any more. You can sign up
+                                    again any time on the Weekly Gecko Notes page.
                                 </p>
                             </>
                         )}

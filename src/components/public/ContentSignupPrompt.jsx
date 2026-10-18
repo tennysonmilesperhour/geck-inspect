@@ -33,7 +33,10 @@ import { rememberSignupCta } from '@/lib/attribution';
  * A page with two prompts passes notes={false} on the first.
  */
 const FREE_FACTS = ['Free for up to 10 geckos', 'No card needed'];
-const WeeklyNotesSignup = lazy(() => import('./WeeklyNotesSignup'));
+// Optional: if its file cannot load (a deploy swapped the files, a flaky
+// connection), the prompt simply shows without it, instead of the error
+// reaching the page.
+const WeeklyNotesSignup = lazy(() => import('./WeeklyNotesSignup').catch(() => ({ default: () => null })));
 
 export default function ContentSignupPrompt({
   pageType,

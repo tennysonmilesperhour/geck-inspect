@@ -36,9 +36,10 @@ export const WEEKLY_NOTES_REASON =
 
 // The visitor's footer line. A visitor confirmed the sign-up by email,
 // which is prior affirmative consent, but the line says the same plain
-// thing members read, and names where they signed up.
+// thing members read, and names where they signed up (a guide page or the
+// /WeeklyNotes page, both on the website).
 export const WEEKLY_NOTES_VISITOR_REASON =
-  "Weekly Gecko Notes are promotional emails from Geck Inspect, one short tip a week. You are getting them because you asked for them on a Geck Inspect guide page.";
+  "Weekly Gecko Notes are promotional emails from Geck Inspect, one short tip a week. You are getting them because you signed up for them on the Geck Inspect website.";
 
 // The footer link's words. The link stops only these emails.
 export const WEEKLY_NOTES_STOP_WORDS = "stop Weekly Gecko Notes";
@@ -69,6 +70,12 @@ export function weeklyNoteSlugs(): string[] {
 // shared ledger skips the notes they already had.
 export function weeklyNoteVisitorSlugs(): string[] {
   return [...WEEKLY_NOTES].filter((note) => note.visitors).sort((a, b) => a.step - b.step).map((note) => note.slug);
+}
+
+// The catalog step of each note in weeklyNoteVisitorSlugs(), in the same
+// order, so a visitor's ledger row records the same step a member's would.
+export function weeklyNoteVisitorSteps(): number[] {
+  return [...WEEKLY_NOTES].filter((note) => note.visitors).sort((a, b) => a.step - b.step).map((note) => note.step);
 }
 
 // The email for one slug, or null for a slug the catalog does not have. A

@@ -71,8 +71,12 @@ describe('visitor buttons in the notes', () => {
   });
 
   it('weekly-notes.ts gives the visitor order and the visitor button', () => {
-    const { weeklyNoteVisitorSlugs, weeklyNoteSlugs, weeklyNoteEmail } = weeklyNotes;
+    const { weeklyNoteVisitorSlugs, weeklyNoteVisitorSteps, weeklyNoteSlugs, weeklyNoteEmail } = weeklyNotes;
     expect(weeklyNoteVisitorSlugs()).toEqual(NOTES.filter((n) => n.visitors).map((n) => n.slug));
+    // The catalog step of each, so a visitor's ledger row says the member's step.
+    expect(weeklyNoteVisitorSteps()).toEqual(NOTES.filter((n) => n.visitors).map((n) => n.step));
+    expect(weeklyNoteVisitorSteps()).toContain(4);
+    expect(weeklyNoteVisitorSteps()).not.toContain(3);
     expect(weeklyNoteVisitorSlugs()).not.toContain('today-tells-you-what-is-due');
     expect(weeklyNoteSlugs()).toContain('today-tells-you-what-is-due');
     const withButton = NOTES.find((n) => n.visitorPath);
@@ -127,7 +131,7 @@ describe('send-email sends a visitor their note', () => {
     expect(db.rpcCalls('claim_weekly_note')).toHaveLength(0);
     expect(db.rpcCalls('weekly_notes_subscriber_token')[0].args).toEqual({ p_email: 'ana@example.com' });
     expect(db.rpcCalls('claim_weekly_note_subscriber')[0].args).toEqual({
-      p_email: 'ana@example.com', p_slugs: weeklyNotes.weeklyNoteVisitorSlugs(),
+      p_email: 'ana@example.com', p_slugs: weeklyNotes.weeklyNoteVisitorSlugs(), p_steps: weeklyNotes.weeklyNoteVisitorSteps(),
     });
 
     const note = NOTES.find((n) => n.slug === weeklyNotes.weeklyNoteVisitorSlugs()[1]);
@@ -261,6 +265,20 @@ describe('subscribe-weekly-notes', () => {
       expect(net.requests[0].body.subject).toBe(subject);
       expect(net.requests[0].body.text).not.toContain('/WeeklyNotes?t=');
       expect(net.requests[0].body.text).not.toMatch(/[\u2013\u2014]| -- /);
+    }
+  });
+
+  it('sends nothing to a suppressed address or a member with email off, and answers as usual', async () => {
+    const { net, post } = form({ answer: { data: { status: 'quiet' }, error: null } });
+    expect(await post({ email: 'ana@example.com' })).toEqual({ status: 200, body: { ok: true } });
+    expect(net.requests).toHaveLength(0);
+  });
+
+  it('refuses an address with characters a real one does not need, before the database', async () => {
+    for (const email of ['<x>@example.com', '"a"@example.com', 'a,b@example.com', 'a@exa mple.com']) {
+      const { db, post } = form();
+      expect((await post({ email })).status).toBe(400);
+      expect(db.calls).toHaveLength(0);
     }
   });
 

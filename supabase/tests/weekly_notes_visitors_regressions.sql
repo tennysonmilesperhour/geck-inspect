@@ -2,7 +2,8 @@
 -- the public API, the form's database step and its rate limits, the
 -- confirmation link, who may get a note, the shared ledger with members,
 -- the stop link, the hourly job, the daily cleanup and erasure. Regression
--- checks for supabase/migrations/20261018120000_weekly_notes_visitors.sql.
+-- checks for supabase/migrations/20261018120000_weekly_notes_visitors.sql and
+-- 20261018150000_weekly_notes_visitor_fixes.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser,
 -- the same way as supabase/tests/weekly_notes_regressions.sql: it moves the
@@ -13,6 +14,9 @@
 --
 -- send-email's visitor branch and the subscribe-weekly-notes function are
 -- tested in src/lib/__tests__/weeklyNotesVisitors.test.js.
+--
+-- Section 11 covers the fixes in 20261018150000_weekly_notes_visitor_fixes.sql
+-- (the review of 18 Oct 2026).
 --
 -- Each block raises "FAIL: ..." when a rule is broken. The last line
 -- prints "weekly notes visitor regressions: all passed".
@@ -203,7 +207,7 @@ begin
   if pg_temp.ask('ana2', 'ana@example.com', v_t0 + interval '1 minute', 'net-a') <> 'confirm' then
     raise exception 'FAIL: a second request in a day should still get a confirmation';
   end if;
-  if public.confirm_weekly_notes_signup(pg_temp.tok('ana'), v_t0 + interval '2 minutes') <> 'invalid' then
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('ana'), v_t0 + interval '2 minutes') <> 'invalid' then
     raise exception 'FAIL: an older link still works after a new one was sent';
   end if;
   -- A third request in 24 hours is refused and logs nothing.
@@ -257,27 +261,45 @@ begin
 end $$;
 
 -- 3. The confirmation link -----------------------------------------------------------
+-- Signed out, only the button's own function is open, and it uses the
+-- database's clock (the tokens here were sent 200 days ago, so expired).
 select pg_temp.as_anon();
 do $$
-declare v_t0 timestamptz := (select t0 from _t0);
 begin
-  if public.confirm_weekly_notes_signup('short', v_t0) <> 'invalid'
-     or public.confirm_weekly_notes_signup(null, v_t0) <> 'invalid'
-     or public.confirm_weekly_notes_signup(repeat('a', 43), v_t0) <> 'invalid' then
-    raise exception 'FAIL: a made-up link was accepted';
+  begin
+    perform public.confirm_weekly_notes_signup_at(pg_temp.tok('ana2'), now() - interval '200 days');
+    raise exception 'FAIL: a signed-out visitor can confirm with a clock of their choosing';
+  exception when insufficient_privilege then
+    null;
+  end;
+  if public.confirm_weekly_notes_signup(pg_temp.tok('n2')) <> 'expired' then
+    raise exception 'FAIL: the public confirm did not use the database clock';
   end if;
-  -- Expired after 7 days.
-  if public.confirm_weekly_notes_signup(pg_temp.tok('n1'), v_t0 + interval '8 days') <> 'expired' then
-    raise exception 'FAIL: an 8-day-old link was not expired';
-  end if;
-  if public.confirm_weekly_notes_signup(pg_temp.tok('ana2'), v_t0 + interval '1 hour') <> 'confirmed' then
-    raise exception 'FAIL: the latest link did not confirm';
-  end if;
-  if public.confirm_weekly_notes_signup(pg_temp.tok('ana2'), v_t0 + interval '2 hours') <> 'already' then
-    raise exception 'FAIL: a second press should say already';
+  if public.confirm_weekly_notes_signup('made-up-token-that-is-long-enough-to-pass') <> 'invalid' then
+    raise exception 'FAIL: the public confirm accepted a made-up link';
   end if;
 end $$;
 select pg_temp.as_postgres();
+
+do $$
+declare v_t0 timestamptz := (select t0 from _t0);
+begin
+  if public.confirm_weekly_notes_signup_at('short', v_t0) <> 'invalid'
+     or public.confirm_weekly_notes_signup_at(null, v_t0) <> 'invalid'
+     or public.confirm_weekly_notes_signup_at(repeat('a', 43), v_t0) <> 'invalid' then
+    raise exception 'FAIL: a made-up link was accepted';
+  end if;
+  -- Expired after 7 days.
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('n1'), v_t0 + interval '8 days') <> 'expired' then
+    raise exception 'FAIL: an 8-day-old link was not expired';
+  end if;
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('ana2'), v_t0 + interval '1 hour') <> 'confirmed' then
+    raise exception 'FAIL: the latest link did not confirm';
+  end if;
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('ana2'), v_t0 + interval '2 hours') <> 'already' then
+    raise exception 'FAIL: a second press should say already';
+  end if;
+end $$;
 
 do $$
 declare v_t0 timestamptz := (select t0 from _t0);
@@ -299,7 +321,7 @@ do $$
 declare v_t0 timestamptz := (select t0 from _t0);
 begin
   perform pg_temp.ask('sup', 'suppressed@example.com', v_t0, null);
-  perform public.confirm_weekly_notes_signup(pg_temp.tok('sup'), v_t0);
+  perform public.confirm_weekly_notes_signup_at(pg_temp.tok('sup'), v_t0);
   if not pg_temp.vcand('suppressed@example.com', v_t0 + interval '1 hour') then
     raise exception 'FAIL: setup, the visitor should be a candidate before suppression';
   end if;
@@ -310,7 +332,7 @@ begin
 
   -- A visitor who makes an account leaves the visitor list.
   perform pg_temp.ask('joiner', 'joiner@example.com', v_t0, null);
-  perform public.confirm_weekly_notes_signup(pg_temp.tok('joiner'), v_t0);
+  perform public.confirm_weekly_notes_signup_at(pg_temp.tok('joiner'), v_t0);
   if not pg_temp.vcand('joiner@example.com', v_t0 + interval '1 hour') then
     raise exception 'FAIL: setup, the joiner should be a candidate';
   end if;
@@ -321,7 +343,7 @@ begin
   -- A link pressed after making an account says so.
   perform pg_temp.ask('joiner2', 'late-joiner@example.com', v_t0, null);
   perform pg_temp.mk_member('late-joiner@example.com', v_t0 + interval '1 hour');
-  if public.confirm_weekly_notes_signup(pg_temp.tok('joiner2'), v_t0 + interval '2 hours') <> 'member' then
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('joiner2'), v_t0 + interval '2 hours') <> 'member' then
     raise exception 'FAIL: confirming after making an account should say member';
   end if;
 end $$;
@@ -434,7 +456,7 @@ begin
   if pg_temp.vcand('ana@example.com', v_t0 + interval '60 days 1 hour', true) then
     raise exception 'FAIL: asking again turned the notes back on without a click';
   end if;
-  if public.confirm_weekly_notes_signup(pg_temp.tok('ana5'), v_t0 + interval '60 days 1 hour') <> 'confirmed' then
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('ana5'), v_t0 + interval '60 days 1 hour') <> 'confirmed' then
     raise exception 'FAIL: the new link did not confirm';
   end if;
   if not pg_temp.vcand('ana@example.com', v_t0 + interval '60 days 2 hours', true) then
@@ -555,10 +577,166 @@ begin
   end if;
 end $$;
 
--- 10. Running the migration again changes nothing ------------------------------------------------
+-- 11. The review fixes (20261018150000) ------------------------------------------------------------
+do $$
+declare
+  v_t0 timestamptz := (select t0 from _t0);
+  v_at timestamptz := (select t0 from _t0) + interval '120 days';
+  v jsonb;
+  v_tok text;
+  v_member_old timestamptz := now() - interval '40 days';
+begin
+  -- One inbox, one limit: plus tags and Gmail dots count together.
+  if pg_temp.ask('bob1', 'bob+one@example.com', v_at, null) <> 'confirm'
+     or pg_temp.ask('bob2', 'bob+two@example.com', v_at, null) <> 'confirm'
+     or pg_temp.ask('bob3', 'Bob@example.com', v_at, null) <> 'address-limit' then
+    raise exception 'FAIL: plus tags gave one inbox more than 2 emails a day';
+  end if;
+  if pg_temp.ask('g1', 'a.b.c@gmail.com', v_at, null) <> 'confirm'
+     or pg_temp.ask('g2', 'abc+x@googlemail.com', v_at, null) <> 'confirm'
+     or pg_temp.ask('g3', 'ab.c@gmail.com', v_at, null) <> 'address-limit' then
+    raise exception 'FAIL: Gmail dots gave one inbox more than 2 emails a day';
+  end if;
+  if public.email_inbox_key(' A.B.C+news@GoogleMail.com ') <> 'abc@gmail.com'
+     or public.email_inbox_key('first.last+x@example.com') <> 'first.last@example.com' then
+    raise exception 'FAIL: the inbox key is wrong';
+  end if;
+  -- Odd characters are refused before anything is written.
+  if pg_temp.ask('odd1', '<x>@example.com', v_at, null) <> 'bad-email'
+     or pg_temp.ask('odd2', 'a b@example.com', v_at, null) <> 'bad-email'
+     or pg_temp.ask('odd3', '"a"@example.com', v_at, null) <> 'bad-email'
+     or pg_temp.ask('odd4', 'a@b@example.com', v_at, null) <> 'bad-email' then
+    raise exception 'FAIL: an address with odd characters was accepted';
+  end if;
+  if pg_temp.ask('ok1', 'o''brien@example.co.uk', v_at, null) <> 'confirm' then
+    raise exception 'FAIL: a real address with an apostrophe was refused';
+  end if;
+
+  -- Quiet: nothing for a suppressed address or a member with all email off.
+  insert into public.email_suppressions (email, reason) values ('bounced@example.com', 'bounced');
+  if pg_temp.ask('q1', 'bounced@example.com', v_at, null) <> 'quiet' then
+    raise exception 'FAIL: the form would email an address that bounced';
+  end if;
+  perform pg_temp.mk_member('email-off@example.com', v_member_old);
+  update public.profiles set email_notifications_enabled = false where email = 'email-off@example.com';
+  if pg_temp.ask('q2', 'email-off@example.com', v_at, null) <> 'quiet' then
+    raise exception 'FAIL: the form would email a member who turned all email off';
+  end if;
+  if exists (select 1 from public.weekly_notes_signup_sends where email in ('bounced@example.com', 'email-off@example.com')) then
+    raise exception 'FAIL: a quiet request was logged as an email';
+  end if;
+
+  -- A half-finished sign-up is not a member.
+  perform pg_temp.ask('half', 'half@example.com', v_at, null);
+  perform public.confirm_weekly_notes_signup_at(pg_temp.tok('half'), v_at);
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'half@example.com',
+          'x', null, '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, v_at, v_at);
+  if not pg_temp.vcand('half@example.com', v_at + interval '1 hour') then
+    raise exception 'FAIL: an unconfirmed sign-up stopped a confirmed visitor''s notes';
+  end if;
+
+  -- A row marked confirmed before it ever asked is not trusted.
+  insert into public.newsletter_subscribers (email, source, confirmed_at) values ('preconfirmed@example.com', 'homepage', v_t0);
+  if pg_temp.ask('pre', 'preconfirmed@example.com', v_at, null) <> 'confirm' then
+    raise exception 'FAIL: a pre-confirmed row should still get a confirmation link';
+  end if;
+  if pg_temp.vcand('preconfirmed@example.com', v_at + interval '1 hour', true) then
+    raise exception 'FAIL: a row confirmed before the form became a candidate without a click';
+  end if;
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('pre'), v_at) <> 'confirmed'
+     or not pg_temp.vcand('preconfirmed@example.com', v_at + interval '1 hour', true) then
+    raise exception 'FAIL: the click did not confirm the pre-confirmed row';
+  end if;
+
+  -- The cleanup counts from the newest link.
+  perform pg_temp.ask('late1', 'late@example.com', v_at, null);
+  perform pg_temp.ask('late2', 'late@example.com', v_at + interval '29 days', null);
+  perform public.weekly_notes_visitor_cleanup(v_at + interval '31 days');
+  if public.confirm_weekly_notes_signup_at(pg_temp.tok('late2'), v_at + interval '31 days') <> 'confirmed' then
+    raise exception 'FAIL: the cleanup killed a 2-day-old link';
+  end if;
+
+  -- The visitor claim records the catalog step.
+  perform pg_temp.ask('steps', 'steps@example.com', v_at, null);
+  perform public.confirm_weekly_notes_signup_at(pg_temp.tok('steps'), v_at);
+  if public.claim_weekly_note_subscriber('steps@example.com', array['a-note', 'b-note'], v_at + interval '1 hour', array[1])->>'reason' <> 'bad-catalog' then
+    raise exception 'FAIL: steps that do not match the slugs were accepted';
+  end if;
+  v := public.claim_weekly_note_subscriber('steps@example.com', array['a-note', 'b-note'], v_at + interval '1 hour', array[1, 4]);
+  if (v->>'step')::int <> 1 then
+    raise exception 'FAIL: the first claim should record step 1, got %', v;
+  end if;
+  v := public.claim_weekly_note_subscriber('steps@example.com', array['a-note', 'b-note'], v_at + interval '8 days', array[1, 4]);
+  if (v->>'step')::int <> 4 or (select step from public.weekly_notes_sends where email = 'steps@example.com' and slug = 'b-note') <> 4 then
+    raise exception 'FAIL: the visitor ledger did not record the catalog step, got %', v;
+  end if;
+end $$;
+
+-- A visitor's stop holds once the address has an account.
+do $$
+declare
+  v_old timestamptz := now() - interval '40 days';
+  v_token text;
+  v_id uuid;
+begin
+  -- A member (account 40 days old, notes on) who was a visitor first.
+  perform pg_temp.mk_member('carry@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'carry@example.com';
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('carry@example.com', 'notes:morph-detail', v_old - interval '30 days', v_old - interval '30 days');
+  if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'carry@example.com') then
+    raise exception 'FAIL: setup, the member should be a member candidate';
+  end if;
+  -- They press stop in an old visitor note.
+  v_token := public.weekly_notes_subscriber_token('carry@example.com');
+  if not public.unsubscribe_weekly_notes_subscriber(v_token) then
+    raise exception 'FAIL: the visitor stop link did not work';
+  end if;
+  if (select email_weekly_notes_enabled from public.profiles where email = 'carry@example.com') is not false
+     or (select email_weekly_notes_choice_at from public.profiles where email = 'carry@example.com') is null then
+    raise exception 'FAIL: the visitor stop did not turn off the member switch and record the choice';
+  end if;
+  if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'carry@example.com') then
+    raise exception 'FAIL: member notes would keep coming after a visitor stop';
+  end if;
+
+  -- A visitor who stopped, then joins with no choice (Google sign-in).
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at, unsubscribed_at)
+  values ('stopped-joiner@example.com', 'notes:care', v_old - interval '60 days', v_old - interval '60 days', v_old - interval '50 days');
+  perform pg_temp.mk_member('stopped-joiner@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true, email_weekly_notes_choice_at = null where email = 'stopped-joiner@example.com';
+  if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'stopped-joiner@example.com') then
+    raise exception 'FAIL: a visitor who stopped got member notes after joining without choosing them';
+  end if;
+  -- Turning them on in Settings afterwards is a newer choice, and wins.
+  update public.profiles set email_weekly_notes_choice_at = now() where email = 'stopped-joiner@example.com';
+  if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'stopped-joiner@example.com') then
+    raise exception 'FAIL: turning the notes on in Settings after a visitor stop did not count';
+  end if;
+
+  -- Erasure: a visitor's address leaves the delivery log; a member's
+  -- account erasure removes the form's send log.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at) values ('erase-me@example.com', 'notes:care', now());
+  insert into public.email_deliveries (event_key, email, email_type, event, detail)
+  values ('sent:erase-me-1', 'erase-me@example.com', 'weekly_notes_signup_confirm', 'sent', '{"link":"x"}');
+  perform public.admin_erase_weekly_notes_visitor('erase-me@example.com');
+  if exists (select 1 from public.email_deliveries where email = 'erase-me@example.com')
+     or (select detail from public.email_deliveries where event_key = 'sent:erase-me-1') <> '{}'::jsonb then
+    raise exception 'FAIL: erasing a visitor left the address in the delivery log';
+  end if;
+  insert into public.weekly_notes_signup_sends (email, inbox_key, kind) values ('carry@example.com', 'carry@example.com', 'member');
+  perform public.admin_erase_account('carry@example.com');
+  if exists (select 1 from public.weekly_notes_signup_sends where email = 'carry@example.com') then
+    raise exception 'FAIL: account erasure left the form''s send log';
+  end if;
+end $$;
+
+-- 10. Running the fixes migration again changes nothing ------------------------------------------
 select pg_temp.ask('rerun', 'rerun@example.com', now(), null);
-select public.confirm_weekly_notes_signup(pg_temp.tok('rerun'), now());
-\ir ../migrations/20261018120000_weekly_notes_visitors.sql
+select public.confirm_weekly_notes_signup_at(pg_temp.tok('rerun'), now());
+\ir ../migrations/20261018150000_weekly_notes_visitor_fixes.sql
 do $$
 begin
   if not exists (select 1 from public.newsletter_subscribers where email = 'rerun@example.com' and confirmed_at is not null) then
@@ -569,6 +747,11 @@ begin
   end if;
   if (select count(*) from pg_policies where tablename = 'newsletter_subscribers') <> 1 then
     raise exception 'FAIL: the subscriber table should have exactly one policy (admin read)';
+  end if;
+  -- One function per name, so the API can never pick the old one.
+  if (select count(*) from pg_proc where proname = 'confirm_weekly_notes_signup') <> 1
+     or (select count(*) from pg_proc where proname = 'claim_weekly_note_subscriber') <> 1 then
+    raise exception 'FAIL: an old confirm or claim function is still there';
   end if;
 end $$;
 

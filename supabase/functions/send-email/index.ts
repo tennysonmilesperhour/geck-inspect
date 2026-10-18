@@ -104,7 +104,7 @@
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { isLifecycleType, lifecycleEmail, lifecycleReason } from "../_shared/lifecycle-copy.ts";
-import { isWeeklyNotesType, weeklyNoteEmail, weeklyNoteSlugs, weeklyNoteVisitorSlugs, WEEKLY_NOTES_REASON, WEEKLY_NOTES_STOP_WORDS, WEEKLY_NOTES_VISITOR_REASON } from "../_shared/weekly-notes.ts";
+import { isWeeklyNotesType, weeklyNoteEmail, weeklyNoteSlugs, weeklyNoteVisitorSlugs, weeklyNoteVisitorSteps, WEEKLY_NOTES_REASON, WEEKLY_NOTES_STOP_WORDS, WEEKLY_NOTES_VISITOR_REASON } from "../_shared/weekly-notes.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Geck Inspect <alerts@geckinspect.com>";
@@ -782,6 +782,9 @@ async function sendVisitorNote(supabase: RpcClient, userEmail: string): Promise<
     const { data, error } = await supabase.rpc("claim_weekly_note_subscriber", {
       p_email: userEmail,
       p_slugs: weeklyNoteVisitorSlugs(),
+      // The catalog step of each slug, so the ledger row says the same
+      // step a member's would.
+      p_steps: weeklyNoteVisitorSteps(),
     });
     if (error) {
       console.warn("send-email: visitor note claim failed", error.message);

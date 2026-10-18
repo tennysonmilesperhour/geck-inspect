@@ -64,7 +64,9 @@ export default function WeeklyNotes() {
             />
             <div className="max-w-xl mx-auto px-4 py-12">
                 <Card>
-                    <CardContent className="p-8 space-y-4">
+                    {/* Announced when it changes, so a screen reader hears whether
+                        the confirmation worked after the button goes away. */}
+                    <CardContent className="p-8 space-y-4" aria-live="polite">
                         {state === 'form' && (
                             <>
                                 <Mail className="w-10 h-10 text-emerald-400" aria-hidden="true" />

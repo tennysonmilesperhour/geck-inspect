@@ -179,6 +179,8 @@ An email sign-up for people without an account, feeding the same weekly notes. D
 
 **What still needs Tennyson:** nothing new. Visitors' notes wait on the same `EMAIL_POSTAL_ADDRESS` secret as members' (step 1 above). Sign-ups and confirmations work now and wait in line.
 
+**Review fixes, 18 October (`20261018150000_weekly_notes_visitor_fixes.sql`):** a visitor's stop now also stops the member notes and holds after they make an account; limits count inboxes (plus tags, Gmail dots); nothing is sent to suppressed addresses or members with email off; the confirm button uses the database's clock (`confirm_weekly_notes_signup(p_token)`, the old two-argument version is dropped); pre-existing "confirmed" rows need a fresh click; only accounts that can sign in count as members; the cleanup counts from the newest link; visitor ledger rows record the catalog step (`claim_weekly_note_subscriber` gained `p_steps`, the three-argument version is dropped); erasure covers the form's send log and the delivery log. `weekly_notes_candidates` and `admin_erase_account` are restated with one change each (both matched production before restating). Functions: `send-email` passes `p_steps`; `subscribe-weekly-notes` handles the quiet status. If send-email deploys before the migration, its visitor claim fails and is retried 20 hours later with nothing used up; if the migration lands first, the old send-email's claim still works (p_steps is optional).
+
 ## Done on 3 October
 
 **Edge functions deployed** (all from the repo copy):

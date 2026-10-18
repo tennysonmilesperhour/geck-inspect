@@ -128,7 +128,7 @@ describe('Unsubscribe page', () => {
     const user = userEvent.setup();
     renderAt('/Unsubscribe?t=sub1.sig&scope=visitor');
     expect(screen.getByRole('heading', { name: 'Stop Weekly Gecko Notes?' })).toBeTruthy();
-    expect(screen.getByText(/You asked for them on a Geck Inspect guide page\. Nothing more will be sent to this address\./)).toBeTruthy();
+    expect(screen.getByText(/You signed up for them on the Geck Inspect website\. This stops them for this address\./)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Email settings' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Stop all notification emails' })).toBeNull();
     await new Promise((resolve) => setTimeout(resolve, 20));

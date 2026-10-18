@@ -12,11 +12,13 @@
 //      its hash.
 //   3. Sends one email: the confirmation link, or "you already get them",
 //      or, for an address with an account, where the Settings switch is.
+//      An address that bounced or marked our email as spam, or a member
+//      who turned all email off, gets nothing (status quiet).
 //      Nothing is added to the weekly notes until the link is pressed
 //      (confirm_weekly_notes_signup, on /WeeklyNotes?t=...).
 //
-// The reply is the same for all three, so the form cannot be used to learn
-// whether an address has an account or is on the list.
+// The reply is the same for all four, so the form cannot be used to learn
+// whether an address has an account, is on the list or was suppressed.
 //
 // Secrets (shared with send-email and subscribe-and-send-guides):
 //   RESEND_API_KEY, EMAIL_FROM, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
@@ -61,8 +63,11 @@ async function networkKey(req: Request): Promise<string | null> {
   return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
 }
 
+// A first filter; the database step has the strict rule. Characters a
+// real address does not need (angle brackets, quotes, commas and the like)
+// are refused, so nothing odd can reach an email header or a log.
 function isPlausibleEmail(s: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 254;
+  return /^[^\s@<>"(),;:\[\]\\]+@[^\s@<>"(),;:\[\]\\]+\.[^\s@<>"(),;:\[\]\\]+$/.test(s) && s.length <= 254;
 }
 
 function escapeHtml(s: string): string {
@@ -217,6 +222,10 @@ serve(async (req) => {
   }
   if (status === "address-limit") {
     return json({ ok: true, recently_sent: true });
+  }
+  // Nothing is sent, and the reply looks like any other.
+  if (status === "quiet") {
+    return json({ ok: true });
   }
   if (status === "network-limit") {
     return json({
