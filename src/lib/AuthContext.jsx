@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useRef } from 'r
 import { getSupabase, getSupabaseWhenIdle, hasSessionHint, peekSupabase } from '@/lib/supabaseLazy';
 import { normalizeSupabaseUser } from '@/lib/normalizeSupabaseUser';
 import { identifyUser, resetUser, captureEvent, setGuestAnalyticsMode } from '@/lib/posthog';
-import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
+import { isGuestMode, isStagingDemoHost, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
 import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
 import { recordSignupIfNew } from '@/lib/activation';
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   // Such a visitor sees the page at once (no "checking sign-in" spinner)
   // and the Supabase client downloads after the page has drawn
   // (src/lib/supabaseLazy.js). Everyone else waits for the check as before.
-  const [signedOutStart] = useState(() => !hasSessionHint());
+  const [signedOutStart] = useState(() => isStagingDemoHost() || !hasSessionHint());
   const [user, setUser] = useState(() => (signedOutStart && isGuestMode() ? GUEST_USER : null));
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(() => isGuestMode());
@@ -92,6 +92,13 @@ export const AuthProvider = ({ children }) => {
         applyPendingSignupGrant();
       });
     };
+    // Staging is a public, read-only guest demo. Do not restore or create a
+    // Supabase session here: staging shares the production Supabase project.
+    if (isStagingDemoHost()) {
+      setGuestMode(true);
+      setGuestAnalyticsMode(true);
+      return () => {};
+    }
     const start = (supabase) => {
       if (!mounted) return;
       ({ data: { subscription } } = supabase.auth.onAuthStateChange(reconcile));

@@ -17,8 +17,13 @@ const FLAG_KEY = 'geck_inspect_guest_mode';
 
 export const GUEST_WRITE_BLOCKED_EVENT = 'geck_inspect_guest_write_blocked';
 
+export function isStagingDemoHost() {
+  return typeof window !== 'undefined' && window.location.hostname === 'staging.geckinspect.com';
+}
+
 export function isGuestMode() {
   if (typeof window === 'undefined') return false;
+  if (isStagingDemoHost()) return true;
   try {
     return window.sessionStorage.getItem(FLAG_KEY) === '1';
   } catch {
@@ -28,6 +33,7 @@ export function isGuestMode() {
 
 export function setGuestMode(on) {
   if (typeof window === 'undefined') return;
+  if (isStagingDemoHost()) return;
   try {
     if (on) window.sessionStorage.setItem(FLAG_KEY, '1');
     else window.sessionStorage.removeItem(FLAG_KEY);

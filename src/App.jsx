@@ -20,7 +20,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation, 
 import { redirectFromSearch, takePostAuthRedirect } from '@/lib/postAuthRedirect';
 import { memberHome } from '@/lib/pwaLaunch';
 import PageNotFound from './lib/PageNotFound';
-import { isGuestMode } from '@/lib/guestMode';
+import { isGuestMode, isStagingDemoHost } from '@/lib/guestMode';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { RevenueCatProvider } from '@/lib/RevenueCatContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
@@ -447,7 +447,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route
         path="/AuthPortal"
-        element={isGuest ? <LoginPortal /> : <AuthPortalAuthed />}
+        element={isStagingDemoHost() ? <Navigate to="/Dashboard" replace /> : isGuest ? <LoginPortal /> : <AuthPortalAuthed />}
       />
       <Route element={<LayoutOutlet />}>
         <Route path="/" element={<MainPage />} />

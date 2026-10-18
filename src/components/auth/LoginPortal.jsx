@@ -3,7 +3,7 @@ import { memberHome } from '@/lib/pwaLaunch';
 import { redirectFromSearch, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { isNativePlatform, detectPlatform } from '@/lib/revenuecat';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { APP_LOGO_ICON_URL } from '@/lib/constants';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,7 +15,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Mail, Lock, User as UserIcon, Check, ArrowLeft } from 'lucide-react';
 import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { isGuestMode } from '@/lib/guestMode';
-import { useAuth } from '@/lib/AuthContext';
 import { isPkceLinkFromAnotherBrowser, readEmailLink } from '@/lib/emailLinkAuth';
 
 // Supabase refuses a password sign-in for an unconfirmed address with
@@ -54,9 +53,6 @@ function GoogleIcon() {
 
 
 export default function LoginPortal({ requiredFeature: _requiredFeature = null }) {
-  const navigate = useNavigate();
-  const { enterGuestMode } = useAuth();
-  const onStaging = typeof window !== 'undefined' && window.location.hostname === 'staging.geckinspect.com';
   // ?mode=signup opens on Create Account (landing page CTAs and the morph
   // ID guest hand-off use it); ?mode=forgot opens the reset form.
   const [searchParams] = useSearchParams();
@@ -553,19 +549,6 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
 
           </CardContent>
         </Card>
-
-        {onStaging && !isForgot && (
-          <button
-            type="button"
-            onClick={() => {
-              enterGuestMode();
-              navigate('/Dashboard');
-            }}
-            className="w-full rounded-md border border-emerald-700/70 bg-emerald-950/40 px-4 py-3 text-sm font-semibold text-emerald-100 hover:bg-emerald-900/60"
-          >
-            Explore the read-only demo without signing in
-          </button>
-        )}
 
         <p className="text-center text-xs text-slate-500">
           By continuing you agree to our{' '}
