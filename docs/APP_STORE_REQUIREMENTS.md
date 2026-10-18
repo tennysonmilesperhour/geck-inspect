@@ -80,3 +80,12 @@ Simulator testing found a blank-screen loop after email confirmation. Capacitor 
 - Physical testing found that the camera plugin rejected photo selection because `NSPhotoLibraryAddUsageDescription` was absent. Added the required purpose string. The plugin checks all three photo/camera descriptions even though capture uses `saveToGallery: false`.
 - Rebuilt, signed and installed the corrected package. Both the source and compiled Info.plist contain all three descriptions. The native source dialog now opens and selecting the library reaches the iOS permission prompt. Granting photo/camera access and actual capture remain pending.
 - This phone's iOS 18.5 does not fulfill Apple's requested latest-OS recording. No App Store upload or resubmission is claimed.
+
+## Release preparation and additional checks, 18 October 2026
+
+- The owner confirmed in this chat that they have the rights to the app's reference photos. This is the owner's attestation; separate license documents have not been independently reviewed.
+- The owner selected manual approval before new public posts/photos appear. That approval queue is not yet implemented or verified; do not describe it as live.
+- Limited access to two gecko photos was approved. Both top and side photos load into Morph ID with previews. Location and captions were excluded in the system picker.
+- The native AI disclosure names Anthropic and Replicate and identifies the shared data. Cancel returns the cancellation message and states no scan was used. No identification request was run in this test.
+- A Release archive for version 1.0 (7) compiled and signed successfully. Its bundle identifier, build number, three camera/photo usage descriptions, privacy manifest and code signature were verified. The full build passed 287 files / 3,419 tests, with zero lint errors (75 existing warnings) and a clean 172-route SEO audit.
+- The native callback verification flag was supplied to this build after the fresh recovery callback passed on the physical phone. Archive creation alone does not verify purchase delivery or constitute App Review submission.
