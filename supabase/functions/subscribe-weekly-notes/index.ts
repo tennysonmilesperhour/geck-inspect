@@ -223,8 +223,11 @@ serve(async (req) => {
   if (status === "address-limit") {
     return json({ ok: true, recently_sent: true });
   }
-  // Nothing is sent, and the reply looks like any other.
+  // Nothing is sent, and the reply looks like any other. The short wait
+  // stands in for the email send, so the reply's timing does not give a
+  // quiet address away either.
   if (status === "quiet") {
+    await new Promise((resolve) => setTimeout(resolve, 300 + Math.floor(Math.random() * 500)));
     return json({ ok: true });
   }
   if (status === "network-limit") {

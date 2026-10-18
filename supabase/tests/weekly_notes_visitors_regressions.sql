@@ -16,7 +16,8 @@
 -- tested in src/lib/__tests__/weeklyNotesVisitors.test.js.
 --
 -- Section 11 covers the fixes in 20261018150000_weekly_notes_visitor_fixes.sql
--- (the review of 18 Oct 2026).
+-- and 20261018150100_weekly_notes_visitor_fixes_2.sql (the reviews of 18 Oct
+-- 2026).
 --
 -- Each block raises "FAIL: ..." when a rule is broken. The last line
 -- prints "weekly notes visitor regressions: all passed".
@@ -622,8 +623,30 @@ begin
   if pg_temp.ask('q2', 'email-off@example.com', v_at, null) <> 'quiet' then
     raise exception 'FAIL: the form would email a member who turned all email off';
   end if;
-  if exists (select 1 from public.weekly_notes_signup_sends where email in ('bounced@example.com', 'email-off@example.com')) then
-    raise exception 'FAIL: a quiet request was logged as an email';
+  if (select count(*) from public.weekly_notes_signup_sends
+       where email in ('bounced@example.com', 'email-off@example.com') and kind = 'quiet') <> 2
+     or exists (select 1 from public.weekly_notes_signup_sends
+                 where email in ('bounced@example.com', 'email-off@example.com') and kind <> 'quiet') then
+    raise exception 'FAIL: a quiet request should be logged as quiet, never as an email';
+  end if;
+  -- A quiet address meets the same limit as any other, so its replies match.
+  if pg_temp.ask('q3', 'bounced@example.com', v_at, null) <> 'quiet'
+     or pg_temp.ask('q4', 'bounced@example.com', v_at, null) <> 'address-limit' then
+    raise exception 'FAIL: a quiet address does not reach the limit like other addresses';
+  end if;
+  -- The suppression list is checked by inbox.
+  if pg_temp.ask('q5', 'Bounced+gecko@example.com', v_at + interval '2 days', null) <> 'quiet' then
+    raise exception 'FAIL: a plus-tag variant of a suppressed inbox got a confirmation';
+  end if;
+  -- An imported profile with no login and email off can still sign up.
+  insert into public.profiles (email, email_notifications_enabled) values ('imported-off@example.com', false);
+  if pg_temp.ask('q6', 'imported-off@example.com', v_at, null) <> 'confirm' then
+    raise exception 'FAIL: an imported profile with no login was treated as a member with email off';
+  end if;
+  -- International domains are accepted again.
+  if pg_temp.ask('idn1', 'hans@müller.de', v_at, null) <> 'confirm'
+     or pg_temp.ask('idn2', 'someone@example.xn--p1ai', v_at, null) <> 'confirm' then
+    raise exception 'FAIL: an international or punycode domain was refused';
   end if;
 
   -- A half-finished sign-up is not a member.
@@ -635,6 +658,14 @@ begin
           'x', null, '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, v_at, v_at);
   if not pg_temp.vcand('half@example.com', v_at + interval '1 hour') then
     raise exception 'FAIL: an unconfirmed sign-up stopped a confirmed visitor''s notes';
+  end if;
+
+  -- A confirmation dated before the request (a row confirmed before the
+  -- form, asked during the first release) is not a candidate.
+  insert into public.newsletter_subscribers (email, source, confirmed_at, weekly_notes_requested_at)
+  values ('window@example.com', 'homepage', v_t0, v_at);
+  if pg_temp.vcand('window@example.com', v_at + interval '1 hour', true) then
+    raise exception 'FAIL: a confirmation older than the request made a candidate';
   end if;
 
   -- A row marked confirmed before it ever asked is not trusted.
@@ -656,6 +687,19 @@ begin
   perform public.weekly_notes_visitor_cleanup(v_at + interval '31 days');
   if public.confirm_weekly_notes_signup_at(pg_temp.tok('late2'), v_at + interval '31 days') <> 'confirmed' then
     raise exception 'FAIL: the cleanup killed a 2-day-old link';
+  end if;
+
+  -- A visitor who stopped and asked again without pressing the link: the
+  -- unpressed link goes after 30 days, the earlier sign-up and stop stay.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at, unsubscribed_at)
+  values ('again@example.com', 'notes:care', v_at - interval '20 days', v_at - interval '20 days', v_at - interval '10 days');
+  perform pg_temp.ask('again', 'again@example.com', v_at, null);
+  perform public.weekly_notes_visitor_cleanup(v_at + interval '31 days');
+  if exists (select 1 from public.newsletter_subscribers where email = 'again@example.com'
+              and (confirm_token_hash is not null or confirm_sent_at is not null))
+     or not exists (select 1 from public.newsletter_subscribers where email = 'again@example.com'
+                     and unsubscribed_at is not null and weekly_notes_requested_at is not null) then
+    raise exception 'FAIL: the cleanup kept an unpressed link on a stopped row, or dropped the stop';
   end if;
 
   -- The visitor claim records the catalog step.
@@ -706,6 +750,13 @@ begin
   insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at, unsubscribed_at)
   values ('stopped-joiner@example.com', 'notes:care', v_old - interval '60 days', v_old - interval '60 days', v_old - interval '50 days');
   perform pg_temp.mk_member('stopped-joiner@example.com', v_old);
+  -- The new profile starts with the notes off and no choice, so Settings
+  -- shows them off.
+  if (select email_weekly_notes_enabled from public.profiles where email = 'stopped-joiner@example.com') is not false
+     or (select email_weekly_notes_choice_at from public.profiles where email = 'stopped-joiner@example.com') is not null then
+    raise exception 'FAIL: a stopped visitor''s new profile did not start with the notes off';
+  end if;
+  -- Even if something switched it on without a choice, the member rule holds.
   update public.profiles set email_weekly_notes_enabled = true, email_weekly_notes_choice_at = null where email = 'stopped-joiner@example.com';
   if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'stopped-joiner@example.com') then
     raise exception 'FAIL: a visitor who stopped got member notes after joining without choosing them';
@@ -714,6 +765,26 @@ begin
   update public.profiles set email_weekly_notes_choice_at = now() where email = 'stopped-joiner@example.com';
   if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'stopped-joiner@example.com') then
     raise exception 'FAIL: turning the notes on in Settings after a visitor stop did not count';
+  end if;
+
+  -- A ticked sign-up box does not undo a visitor stop.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at, unsubscribed_at)
+  values ('ticked@example.com', 'notes:care', v_old - interval '60 days', v_old - interval '60 days', v_old - interval '50 days');
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'ticked@example.com',
+          'x', v_old, '{"provider":"email","providers":["email"]}'::jsonb, '{"weekly_notes_at_signup": true}'::jsonb, v_old, v_old);
+  if (select email_weekly_notes_enabled from public.profiles where email = 'ticked@example.com') is not false then
+    raise exception 'FAIL: the sign-up box turned the notes back on after a visitor stop';
+  end if;
+
+  -- An odd row cannot block a member: a stop on a row that never asked for
+  -- the notes does not count (section 10 checks future dates are cleared).
+  perform pg_temp.mk_member('odd-row@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'odd-row@example.com';
+  insert into public.newsletter_subscribers (email, source, unsubscribed_at) values ('odd-row@example.com', 'homepage', now() + interval '70 years');
+  if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'odd-row@example.com') then
+    raise exception 'FAIL: a guide-form row with a future stop blocked a member';
   end if;
 
   -- Erasure: a visitor's address leaves the delivery log; a member's
@@ -735,8 +806,10 @@ end $$;
 
 -- 10. Running the fixes migration again changes nothing ------------------------------------------
 select pg_temp.ask('rerun', 'rerun@example.com', now(), null);
+insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, unsubscribed_at)
+values ('future-stop@example.com', 'notes:care', now() - interval '1 day', now() + interval '70 years');
 select public.confirm_weekly_notes_signup_at(pg_temp.tok('rerun'), now());
-\ir ../migrations/20261018150000_weekly_notes_visitor_fixes.sql
+\ir ../migrations/20261018150100_weekly_notes_visitor_fixes_2.sql
 do $$
 begin
   if not exists (select 1 from public.newsletter_subscribers where email = 'rerun@example.com' and confirmed_at is not null) then
@@ -749,6 +822,12 @@ begin
     raise exception 'FAIL: the subscriber table should have exactly one policy (admin read)';
   end if;
   -- One function per name, so the API can never pick the old one.
+  if (select unsubscribed_at from public.newsletter_subscribers where email = 'future-stop@example.com') > now() then
+    raise exception 'FAIL: the migration left a stop dated in the future';
+  end if;
+  if (select count(*) from pg_trigger where tgname = 'profiles_weekly_notes_visitor_stop' and not tgisinternal) <> 1 then
+    raise exception 'FAIL: the visitor-stop trigger should exist exactly once';
+  end if;
   if (select count(*) from pg_proc where proname = 'confirm_weekly_notes_signup') <> 1
      or (select count(*) from pg_proc where proname = 'claim_weekly_note_subscriber') <> 1 then
     raise exception 'FAIL: an old confirm or claim function is still there';

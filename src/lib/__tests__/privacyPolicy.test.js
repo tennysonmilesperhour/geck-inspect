@@ -277,6 +277,10 @@ const FIXES_SQL = readFileSync(
   new URL('../../../supabase/migrations/20261018150000_weekly_notes_visitor_fixes.sql', import.meta.url),
   'utf8',
 );
+const FIXES2_SQL = readFileSync(
+  new URL('../../../supabase/migrations/20261018150100_weekly_notes_visitor_fixes_2.sql', import.meta.url),
+  'utf8',
+);
 const VISITOR_PARAGRAPH = PAGE.match(/If you asked for Weekly Gecko Notes without an account[^<]*/)?.[0] ?? '';
 
 describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
@@ -310,12 +314,14 @@ describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
   });
 
   it('says how to stop them, what stays, how to have it deleted and what joining does', () => {
-    expect(VISITOR_PARAGRAPH).toContain('The link in every note stops them at once, from any device, and it also stops them if you later make an account with the same address (until you turn them on again yourself).');
+    expect(VISITOR_PARAGRAPH).toContain('The link in every note stops them at once, from any device, and it also stops them if you later make an account with the same address (until you turn them on again in Settings).');
+    // A new profile for a stopped visitor starts with the notes off, whatever the sign-up box said.
+    expect(FIXES2_SQL).toContain('create trigger profiles_weekly_notes_visitor_stop');
     // The stop link turns off the member switch, and the member rules skip a
     // newer visitor stop (the fixes migration).
     expect(FIXES_SQL).toMatch(/update public\.profiles\s+set email_weekly_notes_enabled = false,\s+email_weekly_notes_choice_at = now\(\)/);
     expect(FIXES_SQL).toContain('and s.unsubscribed_at >= coalesce((');
-    expect(VISITOR_PARAGRAPH).toContain('we keep your address, the page and dates of your sign-up, the date you stopped and the list of notes we sent');
+    expect(VISITOR_PARAGRAPH).toContain('we keep your address, the page and dates of your sign-up, the date you stopped, the list of notes we sent and when we last checked whether one was due');
     expect(VISITOR_PARAGRAPH).toContain('ask us at the address below and we delete all of it, along with your address in our email delivery records');
     expect(FIXES_SQL).toContain('create or replace function public.admin_erase_weekly_notes_visitor(p_email text)');
     expect(FIXES_SQL).toMatch(/update public\.email_deliveries x\s+set email = null,/);
