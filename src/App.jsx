@@ -20,7 +20,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation, 
 import { redirectFromSearch, takePostAuthRedirect } from '@/lib/postAuthRedirect';
 import { memberHome } from '@/lib/pwaLaunch';
 import PageNotFound from './lib/PageNotFound';
-import { isGuestMode, isStagingDemoHost } from '@/lib/guestMode';
+import { isGuestMode } from '@/lib/guestMode';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { RevenueCatProvider } from '@/lib/RevenueCatContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
@@ -201,6 +201,7 @@ const retiredRoutes = RETIRED_PAGES.flatMap(({ page, to, prefix }) => [
 ]);
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+const isStagingDemoHost = () => typeof window !== 'undefined' && window.location.hostname === 'staging.geckinspect.com';
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>

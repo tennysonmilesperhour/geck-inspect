@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useRef } from 'r
 import { getSupabase, getSupabaseWhenIdle, hasSessionHint, peekSupabase } from '@/lib/supabaseLazy';
 import { normalizeSupabaseUser } from '@/lib/normalizeSupabaseUser';
 import { identifyUser, resetUser, captureEvent, setGuestAnalyticsMode } from '@/lib/posthog';
-import { isGuestMode, isStagingDemoHost, setGuestMode, GUEST_USER } from '@/lib/guestMode';
+import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
 import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
 import { recordSignupIfNew } from '@/lib/activation';
@@ -15,6 +15,7 @@ import { startQueryPersistence, stopQueryPersistence, clearPersistedQueries } fr
 import { setQueueOwner } from '@/lib/offlineQueue';
 
 const AuthContext = createContext();
+const isStagingDemoHost = () => typeof window !== 'undefined' && window.location.hostname === 'staging.geckinspect.com';
 
 export const AuthProvider = ({ children }) => {
   // A browser with no stored sign-in, no sign-in link in the address and
