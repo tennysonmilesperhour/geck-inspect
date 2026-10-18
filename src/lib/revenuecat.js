@@ -92,13 +92,15 @@ async function configureNative(apiKey, appUserId) {
     PurchasesNative.setLogLevel({ level: LogLevelNative.WARN });
     await PurchasesNative.configure({ apiKey, appUserID: appUserId });
     nativeConfigured = true;
-    return PurchasesNative;
+    // Capacitor's proxy exposes a synthetic `then` method. Returning that proxy
+    // from an async function makes Promise assimilation wait forever.
+    return true;
   }
   const current = await PurchasesNative.getAppUserID();
   if (current?.appUserID !== appUserId) {
     await PurchasesNative.logIn({ appUserID: appUserId });
   }
-  return PurchasesNative;
+  return true;
 }
 
 async function configureWeb(apiKey, appUserId) {
@@ -118,7 +120,7 @@ async function configureWeb(apiKey, appUserId) {
 /**
  * Configure the SDK for the current platform. Always returns a Promise:
  * null when there is nothing to configure (server render, no API key,
- * or no signed-in user), otherwise the configured web instance or native plugin.
+ * or no signed-in user), otherwise the configured web instance or native true.
  *
  * Anonymous visitors get nothing on purpose. Loading the SDK for them
  * cost every landing-page visit two thirds of a megabyte and gave them
