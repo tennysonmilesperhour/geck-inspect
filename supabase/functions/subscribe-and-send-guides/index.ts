@@ -6,10 +6,12 @@
 //      hour, counted in `guide_email_sends`, so a script cannot use the
 //      form to send mail to strangers.
 //   3. Adds a new address to `newsletter_subscribers`. An address already
-//      there keeps its consent and any unsubscribe, and an unsubscribed
-//      address is not emailed. Every accepted request gets the same reply,
-//      {ok: true} (or {ok: true, skipped: "recently_sent"} at the limit),
-//      so the form cannot be used to learn whether an address unsubscribed.
+//      there keeps its consent and any unsubscribe. An unsubscribed
+//      address, and one on the do-not-email list (email_inbox_suppressed:
+//      a bounce or a spam report), is not emailed. Every accepted request
+//      gets the same reply, {ok: true} (or {ok: true, skipped:
+//      "recently_sent"} at the limit), so the form cannot be used to learn
+//      whether an address unsubscribed or is on that list.
 //   4. Sends an email via Resend with download links for the Care
 //      Guide and Genetics Guide PDFs (hosted as static assets on the
 //      site at /downloads/<filename>.pdf).
@@ -226,12 +228,22 @@ serve(async (req) => {
     return json({ error: "Could not send the guides right now." }, 500);
   }
 
-  // Someone who unsubscribed gets no mail from this form. The page shows
-  // the download links after any successful submit, so a person asking
-  // for the guides still gets them. The reply is the same as a sent one,
-  // and the short wait stands in for the send, so neither the reply nor
-  // its timing says who has unsubscribed.
-  if (existing?.unsubscribed_at) {
+  // Someone who unsubscribed, or whose inbox bounced or reported our email
+  // as spam, gets no mail from this form. If the check itself fails,
+  // nothing is sent either. The page shows the download links after any
+  // successful submit, so a person asking for the guides still gets them.
+  // The reply is the same as a sent one, and the short wait stands in for
+  // the send, so neither the reply nor its timing says who is on either
+  // list.
+  let suppressed = true;
+  try {
+    const { data, error } = await supabase.rpc("email_inbox_suppressed", { p_email: email });
+    if (error) console.warn("subscribe-and-send-guides: suppression check failed", error.message);
+    else suppressed = data === true;
+  } catch (err) {
+    console.warn("subscribe-and-send-guides: suppression check threw", err);
+  }
+  if (existing?.unsubscribed_at || suppressed) {
     await new Promise((resolve) => setTimeout(resolve, 300 + Math.floor(Math.random() * 500)));
     return json({ ok: true });
   }

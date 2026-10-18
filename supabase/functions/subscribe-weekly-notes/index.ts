@@ -99,7 +99,7 @@ function formEmail(kind: string, token?: string): FormEmail | null {
     return {
       subject: "You already get Weekly Gecko Notes",
       paragraphs: [
-        "This address is already signed up for Weekly Gecko Notes, so nothing changes. Each note has a link at the bottom that stops them.",
+        "This address, or another spelling of it (with or without dots or a plus tag), is already signed up for Weekly Gecko Notes, so nothing changes. Each note has a link at the bottom that stops them.",
         "If you did not ask for this, you can ignore this email.",
       ],
       cta: "Open the Care Guide",
@@ -111,7 +111,7 @@ function formEmail(kind: string, token?: string): FormEmail | null {
     return {
       subject: "Weekly Gecko Notes and your Geck Inspect account",
       paragraphs: [
-        "This address already has a Geck Inspect account. Members get Weekly Gecko Notes after their first two weeks, and the switch for them is in Settings, under Email notifications.",
+        "This address, or another spelling of it (with or without dots or a plus tag), already has a Geck Inspect account. Members get Weekly Gecko Notes after their first two weeks, and the switch for them is in Settings, under Email notifications.",
         "If you did not ask for this, you can ignore this email.",
       ],
       cta: "Open Settings",

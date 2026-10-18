@@ -285,7 +285,23 @@ const FIXES3_SQL = readFileSync(
   new URL('../../../supabase/migrations/20261018150200_weekly_notes_visitor_fixes_3.sql', import.meta.url),
   'utf8',
 );
+const FIXES4_SQL = readFileSync(
+  new URL('../../../supabase/migrations/20261018150300_weekly_notes_visitor_fixes_4.sql', import.meta.url),
+  'utf8',
+);
 const VISITOR_PARAGRAPH = PAGE.match(/If you asked for Weekly Gecko Notes without an account[^<]*/)?.[0] ?? '';
+
+describe('Privacy Policy: the free guides form', () => {
+  const GUIDES_FN = readFileSync(new URL('../../../supabase/functions/subscribe-and-send-guides/index.ts', import.meta.url), 'utf8');
+  it('says what the homepage guide form keeps, for how long, and who it never emails', () => {
+    expect(PAGE).toContain('If you ask for the free Care and Genetics Guides on our homepage, we collect your email address, email you the guides and keep your address in our list of email sign-ups.');
+    expect(PAGE).toContain('We keep a record of each request, with a scrambled form of your network address, for 30 days');
+    expect(FIXES4_SQL).toContain("delete from public.guide_email_sends where created_at < p_now - interval '30 days';");
+    expect(PAGE).toContain('We do not email an address that unsubscribed or is on our do-not-email list (section 8).');
+    expect(GUIDES_FN).toContain('supabase.rpc("email_inbox_suppressed", { p_email: email })');
+    expect(GUIDES_FN).toContain('if (existing?.unsubscribed_at || suppressed) {');
+  });
+});
 
 describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
   it('says what a visitor gives, and that nothing starts before they confirm', () => {
@@ -321,7 +337,11 @@ describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
   });
 
   it('says how to stop them, what stays, how to have it deleted and what joining does', () => {
-    expect(VISITOR_PARAGRAPH).toContain('The link in every note stops them at once, from any device, and it also stops them if you later make an account with the same address (until you turn them on again in Settings).');
+    expect(VISITOR_PARAGRAPH).toContain('The link in every note stops them at once, from any device, and it also stops them if you later make an account with the same address, however it is written (with or without dots or a plus tag), until you turn them on again in Settings.');
+    // Any spelling of the inbox, and the first sign-in keeps the stop (the fourth fixes migration).
+    expect(FIXES4_SQL).toContain('create or replace function public.weekly_notes_visitor_stop_at(p_email text)');
+    expect(FIXES4_SQL).toContain('if public.weekly_notes_visitor_stop_at(v_email) is not null then');
+    expect(PAGE).toContain('If you stopped them as a visitor before making an account, that stop stays your choice whatever the box says, until you turn them on in Settings (see below).');
     // A new profile for a stopped visitor starts with the notes off, whatever
     // the sign-up box said, and the stop is its recorded choice, so the first
     // sign-in does not save the box over it (the third fixes migration).
