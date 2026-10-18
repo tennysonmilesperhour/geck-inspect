@@ -6,6 +6,8 @@ cta: Open Breeding
 path: /Breeding
 cta_no_gecko: Read about incubation
 path_no_gecko: /CareGuide/incubation
+visitor_cta: Read the incubation guide
+visitor_path: /CareGuide/incubation
 sources: src/data/husbandry-facts.js:100-159; src/data/care-guide.js:954-984; src/data/care-guide.js:960; src/components/breeding/Hatchery.jsx:60-75; src/components/breeding/Hatchery.jsx:210-225; src/components/breeding/Hatchery.jsx:353-356; src/components/breeding/AddEggsDialog.jsx:74-76; src/components/breeding/BreedingPlanCard.jsx:276-284; src/components/breeding/BreedingPlanCard.jsx:565-568; src/pages/Breeding.jsx:59-64; src/pages/Breeding.jsx:102-107; src/lib/today.js:385; src/App.jsx:375
 ---
 If you have eggs on the way, pick one incubation temperature and hold it

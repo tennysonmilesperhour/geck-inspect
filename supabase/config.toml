@@ -69,6 +69,13 @@ verify_jwt = false
 [functions.subscribe-and-send-guides]
 verify_jwt = false
 
+# Public Weekly Gecko Notes form on the guide pages, for visitors without
+# an account. Signed-out visitors use it; the database step rate-limits by
+# address and network, and nothing is added until the emailed link is
+# pressed.
+[functions.subscribe-weekly-notes]
+verify_jwt = false
+
 # Public breeder inquiry form. Signed-out buyers use it; the handler
 # rate-limits by network.
 [functions.send-breeder-inquiry]

@@ -6,6 +6,8 @@ cta: Open My Geckos
 path: /MyGeckos
 cta_no_gecko: Read about weight tracking
 path_no_gecko: /CareGuide/weight-tracking
+visitor_cta: Read the weight guide
+visitor_path: /CareGuide/weight-tracking
 sources: src/data/husbandry-facts.js:30-49; src/lib/lifeStage.js:66-81; src/data/keepers-guides/setup.js:314-336; src/lib/growthBand.js:1-37; src/lib/__tests__/growthBand.test.js:41-43; src/lib/growthBand.js:106-110; src/lib/growthBand.js:131-136; src/components/shared/WeightChart.jsx:43; src/components/shared/WeightChart.jsx:55; src/components/shared/WeightChart.jsx:87-89; src/components/gecko/record/RecordWeights.jsx:79-80; src/components/gecko/record/GeckoRecord.jsx:353; src/components/my-geckos/GeckoForm.jsx:245-262; src/components/my-geckos/GeckoForm.jsx:650; src/pages.config.js:114; src/App.jsx:375; src/data/care-guide.js:607
 ---
 Crested geckos have four life stages: hatchlings under 3 g (to 3 months),

@@ -263,3 +263,50 @@ describe('Consent wording matches what the code does', () => {
     expect(TRACKER).not.toMatch(/analyticsAllowed/);
   });
 });
+
+// Weekly Gecko Notes for visitors without an account (migration
+// 20261018120000_weekly_notes_visitors.sql, 18 Oct 2026). The columns the
+// migration adds to newsletter_subscribers, and the form's send log, are
+// read from the migration, so one added later fails here until the policy
+// describes it.
+const VISITOR_SQL = readFileSync(
+  new URL('../../../supabase/migrations/20261018120000_weekly_notes_visitors.sql', import.meta.url),
+  'utf8',
+);
+const VISITOR_PARAGRAPH = PAGE.match(/If you asked for Weekly Gecko Notes without an account[^<]*/)?.[0] ?? '';
+
+describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
+  it('says what a visitor gives, and that nothing starts before they confirm', () => {
+    expect(PAGE).toContain('If you ask for Weekly Gecko Notes on one of our guide pages, we collect your email address and the page you asked from. Nothing else is needed, and the notes start only after you confirm by email');
+    expect(PAGE).toContain('Send Weekly Gecko Notes to visitors without an account who ask for them on a guide page, once they confirm by pressing the link we email them.');
+    // Only the confirmation button sets confirmed_at.
+    expect(VISITOR_SQL).toMatch(/update public\.newsletter_subscribers\s+set confirmed_at = p_now,/);
+  });
+
+  it('describes every column the migration adds and the send log', () => {
+    const added = [...VISITOR_SQL.matchAll(/add column if not exists ([a-z_]+)/g)].map((m) => m[1]).sort();
+    const wording = {
+      // The confirmation link is kept only as a hash and goes with the request.
+      confirm_sent_at: 'when you asked and confirmed',
+      confirm_token_hash: 'If you do not confirm within 30 days, we delete the request.',
+      weekly_notes_requested_at: 'when you asked and confirmed',
+      weekly_notes_source: 'the page you asked from',
+    };
+    expect(added).toEqual(Object.keys(wording).sort());
+    for (const phrase of Object.values(wording)) expect(VISITOR_PARAGRAPH).toContain(phrase);
+
+    const log = tableColumns(VISITOR_SQL, 'weekly_notes_signup_sends');
+    expect(log.sort()).toEqual(['created_at', 'email', 'id', 'ip_hash', 'kind'].sort());
+    expect(VISITOR_PARAGRAPH).toContain('a record of the emails the sign-up form sent you (kept 30 days');
+    expect(VISITOR_PARAGRAPH).toContain('a scrambled form of your network address with that record, never the address itself');
+    expect(VISITOR_SQL).toContain("delete from public.weekly_notes_signup_sends where created_at < p_now - interval '30 days'");
+    expect(VISITOR_SQL).toContain("and weekly_notes_requested_at < p_now - interval '30 days'");
+  });
+
+  it('says how to stop them, what stays, how to have it deleted and what joining does', () => {
+    expect(VISITOR_PARAGRAPH).toContain('The link in every note stops them at once, from any device.');
+    expect(VISITOR_PARAGRAPH).toContain('we keep only your address and the date you stopped, so we never email you again by mistake; ask us at the address below and we delete that too');
+    expect(VISITOR_SQL).toContain('create or replace function public.admin_erase_weekly_notes_visitor(p_email text)');
+    expect(VISITOR_PARAGRAPH).toContain('If you later make an account with the same address, the notes carry on as a member\'s, without repeats.');
+  });
+});

@@ -6,6 +6,8 @@ cta: Open Breeding
 path: /Breeding
 cta_no_gecko: Read about egg laying
 path_no_gecko: /CareGuide/egg-laying
+visitor_cta: Read the egg-laying guide
+visitor_path: /CareGuide/egg-laying
 sources: src/data/care-guide.js:934-947; src/data/care-guide.js:690; src/data/keepers-guides/handbook.js:813; src/data/keepers-guides/feeding.js:470-472; src/data/keepers-guides/feeding.js:484; src/data/keepers-guides/feeding.js:489-490; src/data/keepers-guides/breeding.js:375-381; src/components/breeding/AddEggsDialog.jsx:74-76; src/components/breeding/BreedingPlanCard.jsx:565
 ---
 An adult female crested gecko can lay eggs even with no male. Those eggs are

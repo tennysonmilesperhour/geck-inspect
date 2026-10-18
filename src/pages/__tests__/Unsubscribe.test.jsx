@@ -124,6 +124,32 @@ describe('Unsubscribe page', () => {
     expect(screen.queryByRole('button', { name: 'Stop all notification emails' })).toBeNull();
   });
 
+  it('a visitor link (no account) stops their notes only when pressed, and offers no Settings', async () => {
+    const user = userEvent.setup();
+    renderAt('/Unsubscribe?t=sub1.sig&scope=visitor');
+    expect(screen.getByRole('heading', { name: 'Stop Weekly Gecko Notes?' })).toBeTruthy();
+    expect(screen.getByText(/You asked for them on a Geck Inspect guide page\. Nothing more will be sent to this address\./)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Email settings' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Stop all notification emails' })).toBeNull();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(fx.calls).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Stop Weekly Gecko Notes' }));
+    expect(await screen.findByRole('heading', { name: 'Weekly Gecko Notes are off' })).toBeTruthy();
+    expect(fx.calls).toEqual([{ fn: 'unsubscribe_weekly_notes_subscriber', args: { p_token: 'sub1.sig' } }]);
+    expect(screen.getByRole('button', { name: 'Weekly Gecko Notes page' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Email settings' })).toBeNull();
+  });
+
+  it('a changed visitor link points to a recent note, not Settings', async () => {
+    const user = userEvent.setup();
+    fx.answer = () => ({ data: false, error: null });
+    renderAt('/Unsubscribe?t=bad&scope=visitor');
+    await user.click(screen.getByRole('button', { name: 'Stop Weekly Gecko Notes' }));
+    expect(await screen.findByRole('heading', { name: 'This link does not work' })).toBeTruthy();
+    expect(screen.getByText(/Use the link at the bottom of a recent note\./)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Email settings' })).toBeNull();
+  });
+
   it('a link with no token asks the database nothing and offers no button', async () => {
     renderAt('/Unsubscribe?scope=weekly');
     expect(screen.getByRole('heading', { name: 'This link does not work' })).toBeTruthy();

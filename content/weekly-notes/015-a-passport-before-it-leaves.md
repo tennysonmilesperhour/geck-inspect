@@ -6,6 +6,8 @@ cta: Make a passport
 path: /MyGeckos
 cta_no_gecko: Read about hatchling records
 path_no_gecko: /CareGuide/hatching-and-record-keeping
+visitor_cta: See how passports work
+visitor_path: /pedigree-tracker
 sources: src/components/gecko/record/RecordPassport.jsx:13-23; src/components/gecko/record/RecordPassport.jsx:70-84; src/components/gecko/record/RecordPassport.jsx:111-119; src/components/gecko/record/GeckoRecord.jsx:221-228; src/pages/PassportQR.jsx:25-28; src/pages/AnimalPassport.jsx:617-640; src/App.jsx:412-414; src/data/keepers-guides/setup.js:146-157; src/data/care-guide.js:1000
 ---
 When a crested gecko changes hands, its history should go with it. A careful

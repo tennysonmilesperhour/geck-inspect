@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
@@ -26,8 +26,14 @@ import { rememberSignupCta } from '@/lib/attribution';
  *
  * variant "card" is the compact mid-page version; "panel" is the larger
  * end-of-page version.
+ *
+ * Under the account prompt, visitors not ready for an account can ask for
+ * Weekly Gecko Notes by email (WeeklyNotesSignup). It loads when the prompt
+ * first comes into view, so it adds nothing to the page's first download.
+ * A page with two prompts passes notes={false} on the first.
  */
 const FREE_FACTS = ['Free for up to 10 geckos', 'No card needed'];
+const WeeklyNotesSignup = lazy(() => import('./WeeklyNotesSignup'));
 
 export default function ContentSignupPrompt({
   pageType,
@@ -38,22 +44,29 @@ export default function ContentSignupPrompt({
   buttonLabel = 'Create a free account',
   secondary = { label: 'See how the pedigree tracker works', to: '/pedigree-tracker' },
   variant = 'card',
+  notes = true,
   className = '',
 }) {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   const ref = useRef(null);
   const seen = useRef(false);
+  const [showNotes, setShowNotes] = useState(false);
   const cta = ctaId || pageType;
 
   useEffect(() => {
-    if (isAuthenticated || !ref.current || typeof IntersectionObserver === 'undefined') return undefined;
+    if (isAuthenticated || !ref.current) return undefined;
+    if (typeof IntersectionObserver === 'undefined') {
+      setShowNotes(true);
+      return undefined;
+    }
     seen.current = false;
     const node = ref.current;
     const observer = new IntersectionObserver(
       (entries) => {
         if (seen.current || !entries.some((e) => e.isIntersecting)) return;
         seen.current = true;
+        setShowNotes(true);
         captureEvent('content_cta_viewed', { cta, page_type: pageType, page: location.pathname, variant });
         observer.disconnect();
       },
@@ -118,6 +131,11 @@ export default function ContentSignupPrompt({
           </li>
         ))}
       </ul>
+      {notes && showNotes && (
+        <Suspense fallback={null}>
+          <WeeklyNotesSignup source={cta} page={location.pathname} />
+        </Suspense>
+      )}
     </aside>
   );
 }

@@ -11,6 +11,12 @@
 // (claim_weekly_note), passing weeklyNoteSlugs() in step order, and builds
 // the email for the slug it gets back with weeklyNoteEmail().
 //
+// Visitors without an account (the sign-up form on the public guide pages,
+// confirmed by email) get the same notes through claim_weekly_note_subscriber,
+// in the order weeklyNoteVisitorSlugs() gives: every note except the ones
+// marked "visitors: no", with each note's visitor button, which always
+// opens a page that works signed out.
+//
 // Keep the import below on one line: the edge function test harness drops
 // single-line imports and hands this module in as globals.
 import { WEEKLY_NOTES } from "./weekly-notes.generated.ts";
@@ -27,6 +33,12 @@ export const WEEKLY_NOTES_TYPE = "weekly_notes";
 // Tennyson's call (docs/planning/weekly-notes-2026-10.md, section 1).
 export const WEEKLY_NOTES_REASON =
   "Weekly Gecko Notes are promotional emails from Geck Inspect, one short tip a week. You are getting them because you have a Geck Inspect account.";
+
+// The visitor's footer line. A visitor confirmed the sign-up by email,
+// which is prior affirmative consent, but the line says the same plain
+// thing members read, and names where they signed up.
+export const WEEKLY_NOTES_VISITOR_REASON =
+  "Weekly Gecko Notes are promotional emails from Geck Inspect, one short tip a week. You are getting them because you asked for them on a Geck Inspect guide page.";
 
 // The footer link's words. The link stops only these emails.
 export const WEEKLY_NOTES_STOP_WORDS = "stop Weekly Gecko Notes";
@@ -52,14 +64,32 @@ export function weeklyNoteSlugs(): string[] {
   return [...WEEKLY_NOTES].sort((a, b) => a.step - b.step).map((note) => note.slug);
 }
 
+// The visitor order: every note visitors may get, in step order. A visitor
+// who later makes an account carries on through weeklyNoteSlugs(), and the
+// shared ledger skips the notes they already had.
+export function weeklyNoteVisitorSlugs(): string[] {
+  return [...WEEKLY_NOTES].filter((note) => note.visitors).sort((a, b) => a.step - b.step).map((note) => note.slug);
+}
+
 // The email for one slug, or null for a slug the catalog does not have. A
-// member with no gecko gets the note's no-gecko button when it has one.
+// member with no gecko gets the note's no-gecko button when it has one. A
+// visitor gets the visitor button (or the note's own, which then works
+// signed out), and null for a members-only note.
 export function weeklyNoteEmail(
   slug: string,
-  { hasGecko }: { hasGecko: boolean } = { hasGecko: true },
+  { hasGecko, visitor = false }: { hasGecko: boolean; visitor?: boolean } = { hasGecko: true },
 ): WeeklyNoteEmail | null {
   const note = WEEKLY_NOTES.find((n) => n.slug === slug);
   if (!note) return null;
+  if (visitor) {
+    if (!note.visitors) return null;
+    return {
+      title: note.subject,
+      body: note.body,
+      url: note.visitorPath ?? note.path,
+      cta: note.visitorCta ?? note.cta,
+    };
+  }
   const noGecko = hasGecko === false && Boolean(note.pathNoGecko && note.ctaNoGecko);
   return {
     title: note.subject,

@@ -9,6 +9,11 @@ export type WeeklyNote = {
   path: string;
   ctaNoGecko: string | null;
   pathNoGecko: string | null;
+  // The button for a visitor without an account; null uses cta and path.
+  visitorCta: string | null;
+  visitorPath: string | null;
+  // false: members only (the note is about pages that need an account).
+  visitors: boolean;
 };
 
 export const WEEKLY_NOTES: readonly WeeklyNote[] = [
@@ -21,6 +26,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/CareGuide/temperature",
     ctaNoGecko: null,
     pathNoGecko: null,
+    visitorCta: null,
+    visitorPath: null,
+    visitors: true,
   },
   {
     step: 2,
@@ -31,6 +39,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/MyGeckos",
     ctaNoGecko: "Add a gecko",
     pathNoGecko: "/MyGeckos",
+    visitorCta: "Read the weight guide",
+    visitorPath: "/CareGuide/weight-tracking",
+    visitors: true,
   },
   {
     step: 3,
@@ -41,6 +52,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/MyGeckos",
     ctaNoGecko: "Add a gecko",
     pathNoGecko: "/MyGeckos",
+    visitorCta: null,
+    visitorPath: null,
+    visitors: false,
   },
   {
     step: 4,
@@ -51,6 +65,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/Today",
     ctaNoGecko: "Read the CGD basics",
     pathNoGecko: "/CareGuide/cgd-basics",
+    visitorCta: "Read the CGD guide",
+    visitorPath: "/CareGuide/cgd-basics",
+    visitors: true,
   },
   {
     step: 5,
@@ -61,6 +78,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/FieldMode",
     ctaNoGecko: "Read about shedding",
     pathNoGecko: "/CareGuide/shedding",
+    visitorCta: "Read the shedding guide",
+    visitorPath: "/CareGuide/shedding",
+    visitors: true,
   },
   {
     step: 6,
@@ -71,6 +91,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/CareGuide/humidity",
     ctaNoGecko: null,
     pathNoGecko: null,
+    visitorCta: null,
+    visitorPath: null,
+    visitors: true,
   },
   {
     step: 7,
@@ -81,6 +104,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/MyGeckos",
     ctaNoGecko: "Read about weight tracking",
     pathNoGecko: "/CareGuide/weight-tracking",
+    visitorCta: "Read the weight guide",
+    visitorPath: "/CareGuide/weight-tracking",
+    visitors: true,
   },
   {
     step: 8,
@@ -91,6 +117,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/calculator/pairing/lilly-white-x-normal",
     ctaNoGecko: null,
     pathNoGecko: null,
+    visitorCta: null,
+    visitorPath: null,
+    visitors: true,
   },
   {
     step: 9,
@@ -101,6 +130,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/calculator/pairing/het-axanthic-x-het-axanthic",
     ctaNoGecko: null,
     pathNoGecko: null,
+    visitorCta: null,
+    visitorPath: null,
+    visitors: true,
   },
   {
     step: 10,
@@ -111,6 +143,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/Recognition",
     ctaNoGecko: null,
     pathNoGecko: null,
+    visitorCta: null,
+    visitorPath: null,
+    visitors: true,
   },
   {
     step: 11,
@@ -121,6 +156,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/Lineage",
     ctaNoGecko: "Open the Genetics Guide",
     pathNoGecko: "/GeneticsGuide",
+    visitorCta: "Read the Genetics Guide",
+    visitorPath: "/GeneticsGuide",
+    visitors: true,
   },
   {
     step: 12,
@@ -131,6 +169,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/MyGeckos",
     ctaNoGecko: "Read about breeding readiness",
     pathNoGecko: "/CareGuide/breeding-readiness",
+    visitorCta: "Read about breeding readiness",
+    visitorPath: "/CareGuide/breeding-readiness",
+    visitors: true,
   },
   {
     step: 13,
@@ -141,6 +182,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/Breeding",
     ctaNoGecko: "Read about egg laying",
     pathNoGecko: "/CareGuide/egg-laying",
+    visitorCta: "Read the egg-laying guide",
+    visitorPath: "/CareGuide/egg-laying",
+    visitors: true,
   },
   {
     step: 14,
@@ -151,6 +195,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/Breeding",
     ctaNoGecko: "Read about incubation",
     pathNoGecko: "/CareGuide/incubation",
+    visitorCta: "Read the incubation guide",
+    visitorPath: "/CareGuide/incubation",
+    visitors: true,
   },
   {
     step: 15,
@@ -161,6 +208,9 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/MyGeckos",
     ctaNoGecko: "Read about hatchling records",
     pathNoGecko: "/CareGuide/hatching-and-record-keeping",
+    visitorCta: "See how passports work",
+    visitorPath: "/pedigree-tracker",
+    visitors: true,
   },
   {
     step: 16,
@@ -171,5 +221,8 @@ export const WEEKLY_NOTES: readonly WeeklyNote[] = [
     path: "/calculator/reverse",
     ctaNoGecko: null,
     pathNoGecko: null,
+    visitorCta: null,
+    visitorPath: null,
+    visitors: true,
   },
 ];

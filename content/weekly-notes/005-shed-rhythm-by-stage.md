@@ -6,6 +6,8 @@ cta: Log a shed
 path: /FieldMode
 cta_no_gecko: Read about shedding
 path_no_gecko: /CareGuide/shedding
+visitor_cta: Read the shedding guide
+visitor_path: /CareGuide/shedding
 sources: src/data/husbandry-facts.js:36-48; src/data/care-guide.js:629-647; src/lib/shedPrediction.js:62-67; src/lib/shedPrediction.js:167-196; src/pages/FieldMode.jsx:165; src/pages/FieldMode.jsx:1028-1049; src/components/gecko/HusbandryHistory.jsx:75-105; src/components/gecko/record/RecordSections.jsx:236-260
 ---
 Growth drives shedding, so how often a crested gecko sheds depends on its life

@@ -48,7 +48,7 @@ export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export const SLUG_MAX = 64;
 
 // The front matter keys, in the order the docs list them.
-export const KEYS = ['step', 'slug', 'subject', 'cta', 'path', 'cta_no_gecko', 'path_no_gecko', 'sources'];
+export const KEYS = ['step', 'slug', 'subject', 'cta', 'path', 'cta_no_gecko', 'path_no_gecko', 'visitor_cta', 'visitor_path', 'visitors', 'sources'];
 const REQUIRED = ['step', 'slug', 'subject', 'cta', 'path', 'sources'];
 
 export const LIMITS = {
@@ -66,7 +66,9 @@ const rel = (path) => path.slice(REPO_ROOT.length + 1);
  * format goes into `errors`, which noteProblems reports.
  *
  * Returns { fileName, step, slug, subject, cta, path, ctaNoGecko,
- * pathNoGecko, sources, body, paragraphs, bodyStartLine, errors }.
+ * pathNoGecko, visitorCta, visitorPath, visitors, sources, body,
+ * paragraphs, bodyStartLine, errors }. visitors is false only for a note
+ * marked "visitors: no" (it goes to members only).
  * `paragraphs` is [{ line, text }] with the file line each paragraph starts
  * on; lines inside a paragraph are joined with a space, and `body` is the
  * paragraphs joined by a blank line ("\n\n").
@@ -82,6 +84,9 @@ export function parseNote(fileName, text) {
     path: null,
     ctaNoGecko: null,
     pathNoGecko: null,
+    visitorCta: null,
+    visitorPath: null,
+    visitors: true,
     sources: [],
     body: '',
     paragraphs: [],
@@ -135,6 +140,15 @@ export function parseNote(fileName, text) {
   if (('cta_no_gecko' in front) !== ('path_no_gecko' in front)) {
     errors.push('cta_no_gecko and path_no_gecko go together: give both or neither');
   }
+  if (('visitor_cta' in front) !== ('visitor_path' in front)) {
+    errors.push('visitor_cta and visitor_path go together: give both or neither');
+  }
+  if ('visitors' in front && front.visitors !== 'no') {
+    errors.push(`visitors "${front.visitors}" can only be no (leave it out to send the note to visitors too)`);
+  }
+  if (front.visitors === 'no' && 'visitor_path' in front) {
+    errors.push('a note with visitors: no has no visitor button; drop visitor_cta and visitor_path');
+  }
 
   if ('step' in front) {
     if (/^[1-9]\d*$/.test(front.step)) note.step = Number(front.step);
@@ -146,6 +160,9 @@ export function parseNote(fileName, text) {
   note.path = front.path ?? null;
   note.ctaNoGecko = front.cta_no_gecko ?? null;
   note.pathNoGecko = front.path_no_gecko ?? null;
+  note.visitorCta = front.visitor_cta ?? null;
+  note.visitorPath = front.visitor_path ?? null;
+  note.visitors = front.visitors !== 'no';
   note.sources = front.sources ? front.sources.split('; ').map((s) => s.trim()).filter(Boolean) : [];
 
   // The body: paragraphs separated by blank lines.
@@ -246,7 +263,7 @@ export function liveRoutes() {
     set.add(`/CareGuide/series/${guide.id}`);
   }
   for (const morph of MORPHS) set.add(`/MorphGuide/${morph.slug}`);
-  for (const path of ['/calculator', '/calculator/reverse', '/calculator/learn', '/crested-gecko-price']) set.add(path);
+  for (const path of ['/calculator', '/calculator/reverse', '/calculator/learn', '/crested-gecko-price', '/pedigree-tracker', '/breeding-records']) set.add(path);
   for (const page of PAIRING_PAGES) set.add(`/calculator/pairing/${page.slug}`);
   for (const page of CALCULATOR_PAGES) set.add(`/calculator/${page.slug}`);
   liveCache = set;
@@ -279,6 +296,24 @@ export function pathProblem(path, live = liveRoutes()) {
   }
   if (!live.has(base)) return 'is not a live page';
   return null;
+}
+
+/**
+ * Why a visitor's button path is not allowed, or null when it is fine.
+ * Visitors (Weekly Gecko Notes without an account, section 9 of the plan)
+ * have no account, so the button must open a page that works signed out:
+ * the guides, the Morph Guide, the calculator pages, Morph ID and the
+ * public pages that explain the record book.
+ */
+export const VISITOR_PAGES = ['/', '/GeneticsGuide', '/Recognition', '/pedigree-tracker', '/breeding-records', '/crested-gecko-price', '/Membership', '/MorphGuide', '/CareGuide', '/calculator'];
+const VISITOR_PREFIXES = ['/CareGuide/', '/MorphGuide/', '/calculator/'];
+
+export function visitorPathProblem(path, live = liveRoutes()) {
+  const why = pathProblem(path, live);
+  if (why) return why;
+  const p = String(path);
+  if (VISITOR_PAGES.includes(p) || VISITOR_PREFIXES.some((prefix) => p.startsWith(prefix))) return null;
+  return 'needs an account; a visitor\'s button must open a page that works signed out';
 }
 
 // ---------- the writing rules --------------------------------------------
@@ -436,11 +471,12 @@ export function noteProblems(note, { live = liveRoutes() } = {}) {
   length('subject', note.subject, LIMITS.subject);
   length('cta', note.cta, LIMITS.cta);
   if (note.ctaNoGecko !== null) length('cta_no_gecko', note.ctaNoGecko, LIMITS.cta);
+  if (note.visitorCta !== null) length('visitor_cta', note.visitorCta, LIMITS.cta);
   const words = wordCount(note.body);
   if (words < LIMITS.words[0] || words > LIMITS.words[1]) {
     out.push(`body is ${words} words; it must be ${LIMITS.words[0]} to ${LIMITS.words[1]}`);
   }
-  const fields = [['subject', note.subject], ['cta', note.cta], ['cta_no_gecko', note.ctaNoGecko], ['body', note.body]];
+  const fields = [['subject', note.subject], ['cta', note.cta], ['cta_no_gecko', note.ctaNoGecko], ['visitor_cta', note.visitorCta], ['body', note.body]];
   for (const [label, value] of fields) {
     if (value === null) continue;
     for (const why of writingProblems(value)) out.push(`${label} ${why}`);
@@ -451,6 +487,19 @@ export function noteProblems(note, { live = liveRoutes() } = {}) {
     const why = pathProblem(value, live);
     if (why) out.push(`${label} "${value}" ${why}`);
   }
+  // Visitors get visitor_path, or the note's own path when that works
+  // signed out. A note whose page needs an account and has no visitor
+  // button must say visitors: no.
+  if (note.visitors && note.path !== null) {
+    const label = note.visitorPath !== null ? 'visitor_path' : 'path';
+    const value = note.visitorPath ?? note.path;
+    const why = visitorPathProblem(value, live);
+    if (why) {
+      out.push(note.visitorPath !== null
+        ? `${label} "${value}" ${why}`
+        : `path "${value}" needs an account; add visitor_cta and visitor_path for visitors, or visitors: no`);
+    }
+  }
   out.push(...sourceProblems(note));
   return out;
 }
@@ -459,6 +508,7 @@ export function noteProblems(note, { live = liveRoutes() } = {}) {
 export function catalogProblems(notes) {
   const out = [];
   if (!notes.length) out.push('there are no notes in content/weekly-notes');
+  else if (!notes.some((n) => n.visitors)) out.push('no note goes to visitors; at least one must');
   notes.forEach((note, i) => {
     if (note.step !== i + 1) out.push(`${note.fileName}: expected step ${i + 1} here; steps run 1 to N with no gaps or repeats`);
   });

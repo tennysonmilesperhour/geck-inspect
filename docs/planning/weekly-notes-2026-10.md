@@ -316,3 +316,47 @@ A member asked about with no new ledger row was skipped by send-email (no postal
 - `scripts/check-genetics-consistency.mjs` checks every note's subject, buttons and paragraphs against the accepted facts (genetics and the husbandry numbers) and the dual-model rule; `src/lib/__tests__/husbandryFacts.test.js` holds the notes to the one heat danger line.
 - `src/pages/__tests__/Unsubscribe.test.jsx`: opening a stop link changes nothing until a button is pressed.
 - `src/lib/__tests__/privacyPolicy.test.js` holds the Privacy Policy to the two tables' columns, the choice column, and the EEA and UK wording (off unless turned on, a choice at sign-up, never overridden).
+
+## 9. Visitors without an account (added 18 October 2026)
+
+Tennyson asked for an email capture for people who have not signed up, feeding the same drip. It is live with the same switch and the same postal address gate as the member notes: **nothing reaches a visitor until `EMAIL_POSTAL_ADDRESS` is set** (section 1), but sign-ups and confirmations work now and wait in line.
+
+**Where the form is.** Under the account prompt at the end of the public guide pages: the Morph Guide (the grid, each morph page's end panel and the hub pages), the Care Guide and its topic pages, the Genetics Guide and the calculator. Each morph page shows it once, at the end (the mid-page prompt passes `notes={false}`). It loads only when the prompt first comes into view, so it adds nothing to those pages' first download (the size check counts only what loads up front). It is not on the homepage while the A/B test runs (`docs/planning/homepage-ab-test-2026-10.md`); add it to the winning page afterwards. There is also a page of its own, `/WeeklyNotes` (not indexed), which is a good link for a bio or a post. Signed-in members see neither form; their notes come with the account.
+
+**How a visitor joins (double opt-in).**
+
+1. The form posts the address to `subscribe-weekly-notes`. The database step `request_weekly_notes_signup()` applies the limits (2 emails per address a day, 10 per network an hour, counted by a keyed hash of the IP) and makes a confirmation link. Only the link's sha256 is stored.
+2. The visitor gets "Confirm your Weekly Gecko Notes". The button opens `/WeeklyNotes?t=...`, which asks them to press one more button (mail scanners open every link, so opening it changes nothing). That press runs `confirm_weekly_notes_signup()` and sets `confirmed_at`. Links last 7 days and only the newest works.
+3. An address already confirmed gets "You already get Weekly Gecko Notes"; an address with an account gets "Weekly Gecko Notes and your Geck Inspect account" (the switch is in Settings). The form's reply is the same for all three, so it cannot be used to learn who has an account.
+
+Double opt-in is the consent EU and UK law want before marketing email, so visitors get the same treatment wherever they are, and it keeps typos and strangers' addresses off the list.
+
+**What a visitor gets.** The same notes in the same order, minus the ones marked `visitors: no` (today only note 3, which is about the Today screen). A note whose button opens a page that needs an account has a visitor button instead (`visitor_cta` and `visitor_path` in the note file), always a page that works signed out: a Care Guide topic, the Genetics Guide, the calculator, Morph ID or the pedigree tracker page. `pnpm build:weekly-notes` refuses a note that breaks this (section 6). The footer says "You are getting them because you asked for them on a Geck Inspect guide page", carries the postal address and one link, "Stop Weekly Gecko Notes", with no Settings link (`&scope=visitor`; the one-click header works the same way).
+
+**Rules.** The same spacing as members: at most one note in 7 days, asked about at most once in 20 hours, never a note twice. The hourly job asks about members first, then confirmed visitors, within the same 20 a run. The ledger (`weekly_notes_sends`) is shared and keyed on the address, so a visitor who later makes an account continues as a member after their getting-started fortnight, without repeats. While an address has an account it is never treated as a visitor.
+
+**Stopping and erasing.** The stop link (`unsubscribe_weekly_notes_subscriber`, signed with its own prefix so it can never act on a member) stops every email to that visitor address and kills any confirmation link. The row is kept with its stop date, so the address is never mailed again by mistake. An unconfirmed request is dropped after 30 days and the form's send log is kept 30 days (`weekly-notes-visitor-cleanup`, daily). A deletion request from a visitor: `select public.admin_erase_weekly_notes_visitor('name@example.com');` in the SQL editor.
+
+**The guide PDF form on the homepage** is separate. People who asked only for the PDFs are not on the notes list: their row has no notes request, and asking for the guides never counted as asking for weekly email. They can sign up for the notes on any guide page like anyone else.
+
+**Security fix in the same change.** Until 18 October anyone could insert rows into `newsletter_subscribers` with the public key (an old "anyone can subscribe" policy). No app code used it, but it would have let a script add strangers to the list already marked confirmed. The table is now closed to the public API; only the two form functions (service role) and the database functions write to it, and admins can read it.
+
+**Numbers** (read-only):
+
+```sql
+-- Sign-ups, confirmations and stops
+select count(*) filter (where weekly_notes_requested_at is not null) as asked,
+       count(*) filter (where confirmed_at is not null and weekly_notes_requested_at is not null) as confirmed,
+       count(*) filter (where unsubscribed_at is not null and weekly_notes_requested_at is not null) as stopped
+  from public.newsletter_subscribers;
+
+-- Which pages the sign-ups came from
+select weekly_notes_source, count(*), count(*) filter (where confirmed_at is not null) as confirmed
+  from public.newsletter_subscribers where weekly_notes_requested_at is not null
+ group by 1 order by 2 desc;
+
+-- Visitors due on the next run
+select * from public.weekly_notes_subscriber_candidates();
+```
+
+The tests: `supabase/tests/weekly_notes_visitors_regressions.sql` (the database rules), `src/lib/__tests__/weeklyNotesVisitors.test.js` (the note files, send-email's visitor branch, the one-click stop and the form function), `src/pages/__tests__/WeeklyNotes.test.jsx` (the form, the confirm page, the prompt) and the visitor cases in `src/pages/__tests__/Unsubscribe.test.jsx` and `src/lib/__tests__/privacyPolicy.test.js`.

@@ -6,6 +6,8 @@ cta: Open Today
 path: /Today
 cta_no_gecko: Read the CGD basics
 path_no_gecko: /CareGuide/cgd-basics
+visitor_cta: Read the CGD guide
+visitor_path: /CareGuide/cgd-basics
 sources: src/data/care-guide.js:363-382; src/data/care-guide.js:408; src/pages/Today.jsx:40-57; src/lib/today.js:36; src/lib/today.js:172-211
 ---
 Crested gecko diet, or CGD, is a complete diet on its own. It is made to be a

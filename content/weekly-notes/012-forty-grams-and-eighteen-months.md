@@ -6,6 +6,8 @@ cta: Check your females
 path: /MyGeckos
 cta_no_gecko: Read about breeding readiness
 path_no_gecko: /CareGuide/breeding-readiness
+visitor_cta: Read about breeding readiness
+visitor_path: /CareGuide/breeding-readiness
 sources: src/data/husbandry-facts.js:84-98; src/data/care-guide.js:860-891; src/lib/breedingReadiness.js:1-14; src/lib/breedingReadiness.js:31-37; src/lib/breedingReadiness.js:39-46; src/lib/breedingReadiness.js:78-105; src/components/breeding/BreedingReadiness.jsx:15-25; src/components/breeding/BreedingReadiness.jsx:35-80; src/components/gecko/record/GeckoRecord.jsx:350
 ---
 A female crested gecko needs two numbers before her first season: at least 40

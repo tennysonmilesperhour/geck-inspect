@@ -21,6 +21,11 @@ import { CheckCircle2, Loader2, MailX } from 'lucide-react';
  * stops only those emails (unsubscribe_weekly_notes_by_token), and a
  * second button stops all notification emails.
  *
+ * A visitor's Weekly Gecko Note (no account; they signed up on a guide
+ * page) links here with &scope=visitor and a visitor token. The button
+ * stops every email to that address (unsubscribe_weekly_notes_subscriber).
+ * There is no Settings page for them, so the page offers none.
+ *
  * Nothing changes until the member presses a button. Mail security
  * scanners (Microsoft Defender Safe Links, Proofpoint, Mimecast) open every
  * link in a delivered email, scripts included, so a page that acted on
@@ -32,13 +37,16 @@ import { CheckCircle2, Loader2, MailX } from 'lucide-react';
 const RPC = {
     all: 'unsubscribe_email_by_token',
     weekly: 'unsubscribe_weekly_notes_by_token',
+    visitor: 'unsubscribe_weekly_notes_subscriber',
 };
 
 export default function Unsubscribe() {
     const location = useLocation();
     const params = new URLSearchParams(location.search);
     const token = params.get('t') || '';
-    const initialScope = params.get('scope') === 'weekly' ? 'weekly' : 'all';
+    const asked = params.get('scope');
+    const initialScope = asked === 'weekly' || asked === 'visitor' ? asked : 'all';
+    const visitor = initialScope === 'visitor';
     // Which emails the last request was about, and how it went.
     const [scope, setScope] = useState(initialScope);
     // confirm (nothing done yet), working, done, invalid, error or missing.
@@ -70,6 +78,16 @@ export default function Unsubscribe() {
             <div className="max-w-xl mx-auto px-4 py-12">
                 <Card>
                     <CardContent className="p-8 text-center space-y-4">
+                        {state === 'confirm' && scope === 'visitor' && (
+                            <>
+                                <MailX className="w-10 h-10 mx-auto text-emerald-400" />
+                                <h1 className="text-2xl font-bold text-slate-100">Stop Weekly Gecko Notes?</h1>
+                                <p className="text-slate-400">
+                                    You asked for them on a Geck Inspect guide page. Nothing more will be sent
+                                    to this address.
+                                </p>
+                            </>
+                        )}
                         {state === 'confirm' && scope === 'weekly' && (
                             <>
                                 <MailX className="w-10 h-10 mx-auto text-emerald-400" />
@@ -95,7 +113,17 @@ export default function Unsubscribe() {
                             <>
                                 <Loader2 className="w-8 h-8 mx-auto animate-spin text-emerald-400" />
                                 <p className="text-slate-300">
-                                    {scope === 'weekly' ? 'Turning off Weekly Gecko Notes...' : 'Turning off notification emails...'}
+                                    {scope === 'all' ? 'Turning off notification emails...' : 'Turning off Weekly Gecko Notes...'}
+                                </p>
+                            </>
+                        )}
+                        {state === 'done' && scope === 'visitor' && (
+                            <>
+                                <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-400" />
+                                <h1 className="text-2xl font-bold text-slate-100">Weekly Gecko Notes are off</h1>
+                                <p className="text-slate-400">
+                                    Nothing more will be sent to this address. You can sign up again any time
+                                    on the Weekly Gecko Notes page.
                                 </p>
                             </>
                         )}
@@ -131,6 +159,8 @@ export default function Unsubscribe() {
                                 <p className="text-slate-400">
                                     {state === 'error'
                                         ? 'We could not reach Geck Inspect. Check your connection and open the link again.'
+                                        : visitor
+                                        ? 'The link is incomplete or has been changed. Use the link at the bottom of a recent note.'
                                         : 'The unsubscribe link is incomplete or has been changed. Use the link from a recent email, or turn emails off in Settings.'}
                                 </p>
                             </>
@@ -138,6 +168,9 @@ export default function Unsubscribe() {
                         <div className="pt-2 flex flex-wrap justify-center gap-3">
                             {state === 'confirm' && scope === 'weekly' && (
                                 <Button onClick={() => run('weekly')}>Stop Weekly Gecko Notes</Button>
+                            )}
+                            {state === 'confirm' && scope === 'visitor' && (
+                                <Button onClick={() => run('visitor')}>Stop Weekly Gecko Notes</Button>
                             )}
                             {state === 'confirm' && scope === 'all' && (
                                 <Button onClick={() => run('all')}>Unsubscribe</Button>
@@ -147,9 +180,17 @@ export default function Unsubscribe() {
                                     Stop all notification emails
                                 </Button>
                             )}
-                            <Link to="/Settings#email-notifications">
-                                <Button variant="outline">Email settings</Button>
-                            </Link>
+                            {visitor ? (
+                                state === 'done' && (
+                                    <Link to="/WeeklyNotes">
+                                        <Button variant="outline">Weekly Gecko Notes page</Button>
+                                    </Link>
+                                )
+                            ) : (
+                                <Link to="/Settings#email-notifications">
+                                    <Button variant="outline">Email settings</Button>
+                                </Link>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

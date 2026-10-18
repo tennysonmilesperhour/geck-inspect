@@ -890,6 +890,7 @@ export default function MorphDetail() {
               <ContentSignupPrompt
                 pageType="morph"
                 ctaId="morph_mid"
+                notes={false}
                 className="mt-6"
                 headline={`Track your own ${possessive(morphName)} lineage and value, free`}
                 body="Add your gecko with a photo and a name. Geck Inspect keeps its weights and parents together, builds its pedigree as you add the sire and dam, and estimates its value from real crested gecko listings."

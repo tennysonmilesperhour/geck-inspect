@@ -26,7 +26,7 @@ Production runs 34 functions. 30 are declared in `supabase/config.toml` (15 sinc
 | admin-end-trial | true | no | Admin tool; not in use. Tennyson is deleting it |
 | csp-report | false | yes | Browsers posting Content-Security-Policy reports |
 | delete-my-account | true | yes | A member deleting their own account in Settings |
-| email-unsubscribe | false | yes | One-click unsubscribe from mail apps (signed link); with `&scope=weekly` it stops only Weekly Gecko Notes |
+| email-unsubscribe | false | yes | One-click unsubscribe from mail apps (signed link); with `&scope=weekly` it stops only Weekly Gecko Notes; with `&scope=visitor` it stops a visitor's notes (`unsubscribe_weekly_notes_subscriber`) |
 | embed-gecko-image | false | **no** | Morph ID photo embeddings (expert reviewers, backfill key). Repo copy is newer, see below |
 | export-training-corpus | true | **no** | Admins and expert reviewers exporting the labelled photos. Repo copy is newer, see below |
 | generate-social-post | true | yes | Promote drafts (retired in the app) |
@@ -55,6 +55,7 @@ Production runs 34 functions. 30 are declared in `supabase/config.toml` (15 sinc
 | stripe-checkout | true | yes | Membership checkout |
 | stripe-webhook | false | yes | Stripe (signature checked over the raw body) |
 | subscribe-and-send-guides | false | yes | Landing page "send me the guides" form |
+| subscribe-weekly-notes | false | yes | Weekly Gecko Notes form for visitors on the guide pages (confirmation email; database step `request_weekly_notes_signup`) |
 | waitlist-signup | false | yes | Public waitlist sign-ups and confirmations |
 
 In the repo but not deployed: `store-checkout` and `store-stripe-webhook` (the supplies store checkout is off).
@@ -138,7 +139,8 @@ Times are UTC. "In the repo" says whether a runnable migration creates the job; 
 | season-planner-reminders-daily | 14:20 daily | yes | `enqueue_season_planner_reminders()` | yes |
 | vet-followups-daily | 14:25 daily | yes | `enqueue_vet_followups()` | yes |
 | weekly-digest-sunday | 16:00 Sunday | yes | `enqueue_weekly_digest()` | yes |
-| weekly-notes-hourly | :50 every hour | yes, but sends nothing until switched on | `enqueue_weekly_notes()` | yes (`20261018002200_weekly_notes.sql`, not merged when this was written) |
+| weekly-notes-hourly | :50 every hour | yes | `enqueue_weekly_notes()` (members, then confirmed visitors) | yes (`20261018002200_weekly_notes.sql`, `20261018120000_weekly_notes_visitors.sql`) |
+| weekly-notes-visitor-cleanup | 04:25 daily | yes | `weekly_notes_visitor_cleanup()` | yes (`20261018120000_weekly_notes_visitors.sql`) |
 | weighin-reminders-weekly | 15:00 Sunday | yes | `enqueue_weighin_reminders()` | archive only |
 
 Round 3 of the review fixes (not merged when this was written) adds `privacy-retention-daily` (04:05 daily) and unschedules `monthly-overage-billing`.
@@ -146,6 +148,8 @@ Round 3 of the review fixes (not merged when this was written) adds `privacy-ret
 Jobs that call an edge function (`monthly-overage-billing`, and the functions behind `market-value-daily`, the notification trigger, the lifecycle emails and Weekly Gecko Notes) send the Vault secret `notification_service_role_key` as a bearer token; the functions check it with `verify_notification_dispatch_secret()`, which only the service role may run.
 
 **Weekly Gecko Notes** (`docs/planning/weekly-notes-2026-10.md`). `weekly-notes-hourly` runs `enqueue_weekly_notes()`, which does one lookup and stops while `app_settings` `weekly_notes_enabled` is false (the default). When it is on, it asks send-email about up to 20 members a run and records each ask in `weekly_notes_polls` (one row per member, at most one ask in 20 hours). send-email claims each note with `claim_weekly_note()`, which writes `weekly_notes_sends` (unique on address and slug). `weekly_notes_candidates()` (read-only) shows who is due; `unsubscribe_weekly_notes_by_token()` (open to signed-out visitors, signature checked) turns off only `profiles.email_weekly_notes_enabled` and records the choice in `profiles.email_weekly_notes_choice_at`, and the trigger `profiles_weekly_notes_follow_email_off` turns it off whenever `email_notifications_enabled` goes from on to off. For the EEA and the UK (decision 58): `handle_new_auth_user` (the `on_auth_user_created` trigger) saves the sign-up box (`weekly_notes_at_signup` in the sign-up metadata) as the member's choice, and `weekly_notes_region_default()`, which signed-in members may run on their own profile only, turns the notes off for a member who never chose; the trigger `profiles_weekly_notes_stamp_choice` puts the database's clock on every choice. All but the unsubscribe and the region rule are service role only; admins can read both tables. The edge function secret `EMAIL_POSTAL_ADDRESS` now gates the notes: while it is empty, send-email skips every weekly note before claiming, so nothing is used up.
+
+**Weekly Gecko Notes for visitors** (section 9 of the plan, `20261018120000_weekly_notes_visitors.sql`). The form on the public guide pages posts to `subscribe-weekly-notes`, which calls `request_weekly_notes_signup()` (service role: rate limits, then a confirmation link whose sha256 is kept in `newsletter_subscribers.confirm_token_hash`; every email the form sends is logged in `weekly_notes_signup_sends`). `/WeeklyNotes?t=...` calls `confirm_weekly_notes_signup()` (open to signed-out visitors) on a button press. Confirmed visitors with no sign-in account are `weekly_notes_subscriber_candidates()`; the hourly job asks send-email about them with `weekly.audience = 'visitor'`, and send-email claims with `claim_weekly_note_subscriber()` (same lock and ledger as members). Their stop link is `weekly_notes_subscriber_token()` / `unsubscribe_weekly_notes_subscriber()`. `newsletter_subscribers` is closed to the public API (admins read it). `weekly-notes-visitor-cleanup` drops unconfirmed requests after 30 days. To erase a visitor on request: `select public.admin_erase_weekly_notes_visitor('name@example.com');` in the SQL console.
 
 ## 5. Vault secrets (names only)
 

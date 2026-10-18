@@ -23,6 +23,12 @@
 // "Stop Weekly Gecko Notes". Any other scope, or none, is the all-email
 // unsubscribe above.
 //
+// A visitor's Weekly Gecko Note (no account; the sign-up form on the public
+// guide pages) carries &scope=visitor and a visitor token. That POST calls
+// unsubscribe_weekly_notes_subscriber, which stops every email to that
+// visitor address. A member token never passes that check, nor a visitor
+// token the member ones.
+//
 // Deploy: supabase functions deploy email-unsubscribe --no-verify-jwt
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
@@ -42,11 +48,12 @@ function text(body: string, status = 200) {
 serve(async (req) => {
   const url = new URL(req.url);
   const token = (url.searchParams.get("t") || "").slice(0, 200);
-  const scope = url.searchParams.get("scope") === "weekly" ? "weekly" : "all";
+  const asked = url.searchParams.get("scope");
+  const scope = asked === "weekly" || asked === "visitor" ? asked : "all";
 
   if (req.method === "GET" || req.method === "HEAD") {
     const query = token
-      ? `?t=${encodeURIComponent(token)}${scope === "weekly" ? "&scope=weekly" : ""}`
+      ? `?t=${encodeURIComponent(token)}${scope === "all" ? "" : `&scope=${scope}`}`
       : "";
     const target = `${SITE_URL}/Unsubscribe${query}`;
     return new Response(null, { status: 302, headers: { location: target, "cache-control": "no-store" } });
@@ -58,7 +65,11 @@ serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
-  const rpc = scope === "weekly" ? "unsubscribe_weekly_notes_by_token" : "unsubscribe_email_by_token";
+  const rpc = scope === "weekly"
+    ? "unsubscribe_weekly_notes_by_token"
+    : scope === "visitor"
+    ? "unsubscribe_weekly_notes_subscriber"
+    : "unsubscribe_email_by_token";
   const { data, error } = await supabase.rpc(rpc, { p_token: token });
   if (error) {
     console.warn("email-unsubscribe: rpc failed", error);
@@ -67,6 +78,9 @@ serve(async (req) => {
   if (data !== true) return text("This unsubscribe link is not valid", 400);
   if (scope === "weekly") {
     return text("You will not get Weekly Gecko Notes any more. Reminders and other email you chose still arrive.");
+  }
+  if (scope === "visitor") {
+    return text("You will not get Weekly Gecko Notes any more.");
   }
   return text("You are unsubscribed from Geck Inspect notification emails.");
 });

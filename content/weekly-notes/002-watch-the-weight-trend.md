@@ -6,6 +6,8 @@ cta: Open your geckos
 path: /MyGeckos
 cta_no_gecko: Add a gecko
 path_no_gecko: /MyGeckos
+visitor_cta: Read the weight guide
+visitor_path: /CareGuide/weight-tracking
 sources: src/data/care-guide.js:613; src/data/care-guide.js:618; src/data/care-guide.js:621; src/data/care-guide.js:623; src/data/husbandry-facts.js:52; supabase/functions/_shared/lifecycle-copy.ts:143
 ---
 In a crested gecko, a falling weight is usually the first sign of a problem.

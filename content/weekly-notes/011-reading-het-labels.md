@@ -6,6 +6,8 @@ cta: Open your family trees
 path: /Lineage
 cta_no_gecko: Open the Genetics Guide
 path_no_gecko: /GeneticsGuide
+visitor_cta: Read the Genetics Guide
+visitor_path: /GeneticsGuide
 sources: src/data/genetics-glossary.js:31; src/data/genetics-glossary.js:46-48; src/data/genetics-glossary.js:50-53; src/data/genetics-glossary.js:60; src/data/genetics-sections.jsx:354; src/data/genetics-sections.jsx:577-581; src/data/genetics-sections.jsx:590-599; src/data/genetics-sections.jsx:606-611; src/data/keepers-guides/morph.js:274-278; src/data/keepers-guides/morph.js:604-606; src/lib/genetics/calculatorCatalog.js:570-584; src/pages/Lineage.jsx:637-659; src/pages/Lineage.jsx:863-867; src/pages/Lineage.jsx:940; src/pages/Lineage.jsx:1569-1636; src/pages/GeneticsGuide.jsx:15; src/pages/GeneticsGuide.jsx:386; src/App.jsx:376; src/pages.config.js:104
 ---
 Sale listings often put a label next to the morph: 100% het or 66% possible
