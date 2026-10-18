@@ -4,9 +4,9 @@
 -- once: create or replace, add column and create index if not exists, and
 -- one-time data fixes that change nothing on a second run.
 --
--- Numbered 150400 because 20261018150300 (dated ahead of its time, like
--- the files before it) is already applied; a file must sort after the
--- newest applied one (docs/MIGRATIONS.md).
+-- Dated 16:24 UTC on 18 October: it was first numbered 150400, but
+-- 20261018152154_public_content_approval.sql went live first, and a file
+-- must sort after the newest applied one (docs/MIGRATIONS.md).
 --
 -- What it fixes, in plain words:
 --
@@ -242,7 +242,7 @@ begin
   select s.slug, s.ord::integer
     into v_slug, v_step
     from unnest(p_slugs) with ordinality as s(slug, ord)
-   -- Changed in 20261018150400: a note any spelling of the inbox had
+   -- Changed in 20261018162400: a note any spelling of the inbox had
    -- counts, so a visitor who joins under another spelling gets no repeats.
    where not exists (
      select 1 from public.weekly_notes_sends w
@@ -339,7 +339,7 @@ begin
   select s.slug, s.ord::integer
     into v_slug, v_ord
     from unnest(p_slugs) with ordinality as s(slug, ord)
-   -- Changed in 20261018150400: a note any spelling of the inbox had
+   -- Changed in 20261018162400: a note any spelling of the inbox had
    -- counts, so signing up again under another spelling repeats nothing.
    where not exists (
      select 1 from public.weekly_notes_sends w
@@ -531,7 +531,7 @@ begin
   if not found or v_row.weekly_notes_requested_at is null then
     return 'invalid';
   end if;
-  -- Added in 20261018150400: the form's per-inbox lock (taken before the
+  -- Added in 20261018162400: the form's per-inbox lock (taken before the
   -- row lock, in the form's order), so two clicks on links for two
   -- spellings cannot both start a series.
   perform pg_advisory_xact_lock(hashtextextended('weekly_notes_signup:' || public.email_inbox_key(v_row.email), 0));
@@ -557,7 +557,7 @@ begin
     return 'already';
   end if;
   -- Another spelling of the inbox already gets the notes, so this one
-  -- does not start a second series (changed in 20261018150400: the same
+  -- does not start a second series (changed in 20261018162400: the same
   -- rule as the form).
   if public.weekly_notes_inbox_signed_up(v_row.email, v_row.id) then
     return 'already';
@@ -613,7 +613,7 @@ begin
   if v_email is null then
     return false;
   end if;
-  -- Changed in 20261018150400: the form's per-inbox lock, then every
+  -- Changed in 20261018162400: the form's per-inbox lock, then every
   -- notes row of the inbox stops and loses its confirmation link, so a
   -- pending link on another spelling cannot start them again.
   perform pg_advisory_xact_lock(hashtextextended('weekly_notes_signup:' || public.email_inbox_key(v_email), 0));
@@ -661,7 +661,7 @@ set search_path to 'public'
 as $function$
   -- One row per inbox (the first spelling confirmed), chosen before the
   -- 7-day and poll rules, so two spellings of one inbox never make two
-  -- series (changed in 20261018150400).
+  -- series (changed in 20261018162400).
   with eligible as (
     select distinct on (public.email_inbox_key(s.email)) s.email
       from public.newsletter_subscribers s
@@ -730,13 +730,13 @@ begin
   if v_email = '' then
     return jsonb_build_object('erased', false, 'reason', 'no-email');
   end if;
-  -- Changed in 20261018150400: an account on any spelling of the inbox
+  -- Changed in 20261018162400: an account on any spelling of the inbox
   -- (admin_erase_account then erases the visitor rows too).
   if exists (select 1 from auth.users u where public.email_inbox_key(u.email) = public.email_inbox_key(v_email)) then
     -- An account: admin_erase_account erases everything, these rows included.
     return jsonb_build_object('erased', false, 'reason', 'has-account');
   end if;
-  -- Every spelling of the inbox (changed in 20261018150400).
+  -- Every spelling of the inbox (changed in 20261018162400).
   delete from public.newsletter_subscribers
    where lower(email) = v_email or public.email_inbox_key(email) = public.email_inbox_key(v_email);
   get diagnostics v_subscribers = row_count;
@@ -1256,7 +1256,7 @@ begin
 
   -- 1n. Usage, integrations and subscriptions.
   -- Visitor rows, the ledger and the polls for every spelling of the
-  -- inbox go too (20261018150400), so a visitor series under another
+  -- inbox go too (20261018162400), so a visitor series under another
   -- spelling cannot start again once the account is gone.
   delete from public.newsletter_subscribers x where lower(x.email) = v_email or (v_uid is not null and x.user_id = v_uid) or public.email_inbox_key(x.email) = public.email_inbox_key(v_email);
   delete from public.guide_email_sends x where lower(x.email) = v_email or x.inbox_key = public.email_inbox_key(v_email);
