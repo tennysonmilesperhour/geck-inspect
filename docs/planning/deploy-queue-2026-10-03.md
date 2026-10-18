@@ -138,6 +138,8 @@ Same model, same instructions, same answer fields; the request the model reads i
 
 **Held back: a faster reference-photo query.** The session also built a narrow, exact copy of the reference photos for `morph_visual_neighbors`. Before merging, `supabase/tests/morph_neighbors_production_check.sql` was run on production (read-only, 18 Oct): 20 of 20 sample photos came back with different reference photos from the exact answer, so today's function uses the approximate `idx_gecko_images_embedding` index. The exact query would change which reference photos Morph ID sees, so it was dropped from the merge. It could come back after a graded run shows it does not lower accuracy.
 
+**Live 18 Oct, 00:25 UTC** (`recognize-gecko-morph` v76). The daily canary run by hand right after: both identifications passed, 38 s (embedding 6.9 s, Claude 29.6 s) and 33 s (embedding 0.9 s, Claude 30.3 s), against 101 s on 16 Oct when the embedding model was cold. Claude's own 30 s is unchanged on purpose: it follows the answer's length, and shortening the answer could change which morph is picked.
+
 ### Morph ID speed: what still needs Tennyson
 
 1. **Replicate credit at $5 or more** (Replicate dashboard, Billing). Below that Replicate allows one request at a time.

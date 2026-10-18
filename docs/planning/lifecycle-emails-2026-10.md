@@ -1,6 +1,6 @@
 # Lifecycle emails and the email delivery log, 16 October 2026
 
-Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend bounce and complaint webhook) from `comprehensive-review-2026-10-14.md`, plus two small email defects. Everything here is built and tested and **nothing is sent yet**: the lifecycle emails wait for Tennyson to approve the copy below and flip one switch.
+Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend bounce and complaint webhook) from `comprehensive-review-2026-10-14.md`, plus two small email defects. Everything here is built and tested. **The lifecycle emails are on since 17 October 2026** (Tennyson asked for them to run without waiting on a copy review): the first day-14 email went at 16:35 UTC and the first two welcome emails that evening. The copy below is what members receive; change it in `supabase/functions/_shared/lifecycle-copy.ts`.
 
 ## 1. What Tennyson needs to do
 
