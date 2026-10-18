@@ -3,13 +3,14 @@ import { act, create } from 'react-test-renderer';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.hoisted(() => vi.stubGlobal('window', { self: null, top: null }));
 afterAll(() => vi.unstubAllGlobals());
-const fixture = vi.hoisted(() => ({ packages: [], sync: vi.fn(), purchase: vi.fn(), toast: vi.fn() }));
-vi.mock('@/lib/RevenueCatContext', () => ({ useRevenueCat: () => ({ offerings: { current: { availablePackages: fixture.packages } }, isReady: true, sync: fixture.sync, customerInfo: null }) }));
+const fixture = vi.hoisted(() => ({ packages: [], storeTier: 'free', sync: vi.fn(), purchase: vi.fn(), toast: vi.fn() }));
+vi.mock('@/lib/RevenueCatContext', () => ({ useRevenueCat: () => ({ offerings: { current: { availablePackages: fixture.packages } }, isReady: true, sync: fixture.sync, customerInfo: null, storeTier: fixture.storeTier }) }));
 vi.mock('@/lib/revenuecat', () => ({ configureRevenueCat: async () => ({}), purchasePackage: (...args) => fixture.purchase(...args), restorePurchases: async () => ({}), fetchOfferings: async () => null }));
 vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: fixture.toast }) }));
 import NativeMembership from '../../components/subscription/NativeMembership';
 const contents = node => typeof node === 'string' ? node : (node.children || []).map(contents).join('');
 beforeEach(() => {
+  fixture.storeTier = 'free';
   fixture.sync.mockReset().mockResolvedValue('keeper'); fixture.purchase.mockReset(); fixture.toast.mockReset();
   fixture.packages = ['keeper', 'breeder'].flatMap((tier, i) => ['monthly', 'annual'].map((cycle, j) => ({
     identifier: `${tier}_${cycle}`, packageType: 'CUSTOM',
@@ -18,6 +19,20 @@ beforeEach(() => {
 });
 
 describe('native membership screen', () => {
+  it('updates access after restoration even when the page account snapshot is unchanged', () => {
+    const user = { membership_tier: 'free' };
+    const tree = create(<NativeMembership user={user} />);
+    fixture.storeTier = 'breeder';
+    act(() => tree.update(<NativeMembership user={user} />));
+    expect(contents(tree.toJSON())).toContain('Your Breeder access is active');
+    const buttons = tree.root.findAllByType('button').filter(b => contents(b) === 'Included in your current access');
+    expect(buttons).toHaveLength(4);
+    expect(buttons.every(b => b.props.disabled)).toBe(true);
+    fixture.storeTier = 'free';
+    act(() => tree.update(<NativeMembership user={user} />));
+    expect(contents(tree.toJSON())).not.toContain('Your Breeder access is active');
+    tree.unmount();
+  });
   it('shows both actual plans with recurring periods and excludes unknown Test Store packages', () => {
     fixture.packages.push({ identifier: '$rc_lifetime', product: { identifier: 'lifetime', priceString: '$99' } });
     const tree = create(<NativeMembership user={{ membership_tier: 'free' }} />);

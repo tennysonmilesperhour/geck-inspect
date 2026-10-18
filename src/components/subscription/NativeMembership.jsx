@@ -9,12 +9,12 @@ import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 
 // Product identity is configured in RevenueCat; localized prices come from Apple.
 export default function NativeMembership({ user }) {
-  const { offerings, isReady, sync, customerInfo } = useRevenueCat();
+  const { offerings, isReady, sync, customerInfo, storeTier } = useRevenueCat();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [reloadedOfferings, setReloadedOfferings] = useState(null);
   const signedIn = Boolean(user && !user.is_guest);
-  const existingTier = resolveTier(user);
+  const existingTier = resolveTier(user ? { ...user, revenuecat_tier: storeTier, revenuecat_pro_active: storeTier === 'breeder' } : null);
   const hasDirectMembership = ['keeper', 'breeder', 'enterprise'].includes(user?.membership_tier);
   const ranks = ['free', 'keeper', 'breeder', 'enterprise'];
   const packages = ((reloadedOfferings || offerings)?.current?.availablePackages || [])
