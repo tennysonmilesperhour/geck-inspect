@@ -277,9 +277,10 @@ describe('recognize-gecko-morph handler', () => {
     // One photo: the embedding has until 69.5 s, so Replicate's full 60 s hold.
     expect(await preferFor([TOP])).toBe('wait=60');
     // Five photos: until 59 s from arrival, so the whole seconds left of that
-    // once the request has been read (58, or 57 on a slow machine).
+    // once the request has been read (59 when that takes under a millisecond,
+    // 58, or 57 on a slow machine), always under one photo's 60.
     const fivePhotos = Number((await preferFor([TOP, SIDE, TOP, SIDE, TOP])).replace('wait=', ''));
-    expect(fivePhotos).toBeLessThan(59);
+    expect(fivePhotos).toBeLessThanOrEqual(59);
     expect(fivePhotos).toBeGreaterThanOrEqual(57);
   });
 
