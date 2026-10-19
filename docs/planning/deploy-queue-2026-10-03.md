@@ -307,3 +307,7 @@ owner, another member, anonymous visitor and admin. All 29 SQL regression files
 passed after the visual-search fixture explicitly marked its photos approved.
 The iOS release build passed all 3,419 unit tests, lint and the 172-route SEO audit.
 Physical-device testing of this new admin flow and TestFlight build remains pending.
+
+## 19 October: getting-started email spacing (not deployed)
+
+Deployments are paused, so this waits in a draft PR. Merging it applies `20261019001200_lifecycle_spacing_allowance.sql`; nothing else is needed. It restates `lifecycle_email_candidates` (the body matched production by checksum before restating) with one change: the 20-hour spacing allows 10 minutes for the hourly run's clock. Each `lifecycle_email_sends` row is stamped with its run's start, which moves by a fraction of a second, so an exact 20 hours could leave a member for the next hour (the same pattern skipped 20 Weekly Gecko Notes members in the 22:50 run on 18 Oct). Only day 0 and day 1 can meet the rule, and in production no member had reached it yet. The weekly notes rule against a recent getting-started email needs no change: its stamps are at 35 past and weekly runs at 50 past. Test: section 8 of `supabase/tests/lifecycle_regressions.sql`, which fails with the exact comparison put back.
