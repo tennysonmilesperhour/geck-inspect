@@ -26,6 +26,7 @@ Production runs 34 functions. 30 are declared in `supabase/config.toml` (15 sinc
 | admin-end-trial | true | no | Admin tool; not in use. Tennyson is deleting it |
 | csp-report | false | yes | Browsers posting Content-Security-Policy reports |
 | delete-my-account | true | yes | A member deleting their own account in Settings |
+| discard-empty-account | true | yes | "Use my existing account" on the Add your email screen: deletes the caller's login only when it is an empty social sign-in (no email, no phone) |
 | email-unsubscribe | false | yes | One-click unsubscribe from mail apps (signed link); with `&scope=weekly` it stops only Weekly Gecko Notes; with `&scope=visitor` it stops a visitor's notes (`unsubscribe_weekly_notes_subscriber`) |
 | embed-gecko-image | false | **no** | Morph ID photo embeddings (expert reviewers, backfill key). Repo copy is newer, see below |
 | export-training-corpus | true | **no** | Admins and expert reviewers exporting the labelled photos. Repo copy is newer, see below |

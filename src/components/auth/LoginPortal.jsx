@@ -3,6 +3,7 @@ import { memberHome } from '@/lib/pwaLaunch';
 import { redirectFromSearch, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { isNativePlatform, detectPlatform } from '@/lib/revenuecat';
 import { signInWithApple, isAppleCancel } from '@/lib/appleSignIn';
+import { readSignInEmail, clearSignInEmail } from '@/lib/signInEmail';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { APP_LOGO_ICON_URL } from '@/lib/constants';
@@ -101,7 +102,9 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     if (target) rememberPostAuthRedirect(target);
   }, []);
 
-  const [email, setEmail] = useState('');
+  // Prefilled after "Use my existing account" (AddEmailGate), used once.
+  const [email, setEmail] = useState(readSignInEmail);
+  useEffect(() => { clearSignInEmail(); }, []);
   const [password, setPassword] = useState('');
   // Asked at sign-up so new members are not shown as "Geck Inspect
   // member" everywhere until they find Settings (audit step 32). The

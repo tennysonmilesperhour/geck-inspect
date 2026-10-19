@@ -20,6 +20,12 @@ verify_jwt = true
 [functions.delete-my-account]
 verify_jwt = true
 
+# "Use my existing account" on the Add your email screen. The gateway
+# requires a session; the handler deletes only the caller, and only when
+# that login is an empty social sign-in (no email, no phone).
+[functions.discard-empty-account]
+verify_jwt = true
+
 # Public waitlist signups and confirmation links. Buyers are signed out,
 # so the gateway lets anonymous calls through; the handler only acts
 # through service-role database functions and mails addresses read from

@@ -321,3 +321,11 @@ Migration: `20261019214000_profile_when_email_added.sql`. Additive (a new
 trigger only). Checked against production inside a rolled-back transaction.
 No current account lacks an email (73 of 73 have one), so nobody is affected
 until Facebook is switched on.
+
+Same day, the one case left: the email typed already has an account. The
+screen now offers "Use my existing account", which calls the new
+`discard-empty-account` edge function (declared in `supabase/config.toml`,
+verify_jwt true) to delete the caller's login, signs out, and opens sign-in
+with the email filled in. The function deletes only the caller, and only when
+that login has no email, no phone and nothing but social identities
+(`supabase/functions/_shared/empty-account.ts`). Passed `deno check`.

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { isEmailTaken, keepSignInEmail } from '@/lib/signInEmail';
 
 // Shown instead of the app to a member signed in with no email (a Facebook
 // account made with only a phone number). Everything in Geck Inspect is
@@ -20,6 +21,8 @@ export default function AddEmailGate() {
   const [email, setEmail] = useState('');
   const [sentTo, setSentTo] = useState('');
   const [busy, setBusy] = useState(false);
+  // The email typed belongs to an existing account.
+  const [takenEmail, setTakenEmail] = useState('');
 
   const sendLink = async (e) => {
     e.preventDefault();
@@ -29,11 +32,29 @@ export default function AddEmailGate() {
     try {
       const supabase = await getSupabase();
       const { error } = await supabase.auth.updateUser({ email: address }, { emailRedirectTo: authRedirect('/MyGeckos') });
+      if (isEmailTaken(error)) { setTakenEmail(address); return; }
       if (error) throw error;
       setSentTo(address);
     } catch (error) {
       toast({ title: 'Could not send the link', description: error.message, variant: 'destructive' });
     } finally { setBusy(false); }
+  };
+
+  // Remove the empty Facebook login just made, then sign in to the
+  // existing account with its password.
+  const useExistingAccount = async () => {
+    setBusy(true);
+    try {
+      const supabase = await getSupabase();
+      const { error } = await supabase.functions.invoke('discard-empty-account', { body: {} });
+      if (error) throw error;
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+      keepSignInEmail(takenEmail);
+      window.location.assign('/AuthPortal');
+    } catch (error) {
+      toast({ title: 'Could not switch accounts', description: error.message, variant: 'destructive' });
+      setBusy(false);
+    }
   };
 
   // For a link confirmed in another browser or on another device: ask
@@ -63,7 +84,20 @@ export default function AddEmailGate() {
         </div>
         <Card className="shadow-xl">
           <CardContent className="pt-6 space-y-4">
-            {sentTo ? (
+            {takenEmail ? (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-300">
+                  <strong className="text-white">{takenEmail}</strong> already has a Geck Inspect account. Sign in to it with your password instead. The empty Facebook sign-in you just made will be removed.
+                </p>
+                <Button type="button" onClick={useExistingAccount} disabled={busy} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+                  {busy && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Use my existing account
+                </Button>
+                <button type="button" onClick={() => setTakenEmail('')} disabled={busy} className="touch:min-h-11 w-full text-sm text-slate-400 hover:text-white">
+                  Use a different email
+                </button>
+              </div>
+            ) : sentTo ? (
               <div className="space-y-4">
                 <p className="text-sm text-slate-300">
                   We sent a link to <strong className="text-white">{sentTo}</strong>. Tap it to confirm, and your account opens here.
