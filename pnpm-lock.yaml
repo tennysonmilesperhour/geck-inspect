@@ -134,6 +134,9 @@ importers:
       framer-motion:
         specifier: ^11.16.4
         version: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      geck-apple-sign-in:
+        specifier: file:native/apple-sign-in
+        version: file:native/apple-sign-in(@capacitor/core@8.5.3)
       heic-to:
         specifier: 1.5.2
         version: 1.5.2
@@ -2633,6 +2636,11 @@ packages:
 
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
+
+  geck-apple-sign-in@file:native/apple-sign-in:
+    resolution: {directory: native/apple-sign-in, type: directory}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   generator-function@2.0.1:
     resolution: {integrity: sha512-SFdFmIJi+ybC0vjlHN0ZGVGHc3lgE0DxPAT0djjVg+kjOnSqclqmj0KQ7ykTOLP6YxoqOvuAODGdcHJn+43q3g==}
@@ -6585,6 +6593,10 @@ snapshots:
       is-callable: 1.2.7
 
   functions-have-names@1.2.3: {}
+
+  geck-apple-sign-in@file:native/apple-sign-in(@capacitor/core@8.5.3):
+    dependencies:
+      '@capacitor/core': 8.5.3
 
   generator-function@2.0.1: {}
 
