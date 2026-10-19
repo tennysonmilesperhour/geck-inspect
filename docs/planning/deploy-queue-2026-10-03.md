@@ -343,7 +343,7 @@ added in the SQL editor without a migration. No third-party service sees the
 content. Reports, blocking and moderator hide/remove are unchanged, and a
 moderator's hide survives the author's edit.
 
-Migration: `20261019120000_public_content_auto_approval.sql`. Additive, so the
+Migration: `20261019230000_public_content_auto_approval.sql`. Additive, so the
 app version open in browsers keeps working. Verified on a fresh Postgres 16
 build of all migrations, applied twice safely; all 29 SQL regression files pass,
 including the rewritten `public_content_approval.sql`. 3,423 unit tests pass.
