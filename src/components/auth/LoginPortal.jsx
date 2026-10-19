@@ -49,6 +49,22 @@ function GoogleIcon() {
   );
 }
 
+function FacebookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+      <path
+        fill="#ffffff"
+        d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"
+      />
+    </svg>
+  );
+}
+
+// Facebook sign-in stays off until the Facebook provider is enabled in
+// Supabase (Auth > Providers > Facebook). With it off, the button would
+// only show a "provider is not enabled" error.
+const FACEBOOK_SIGNIN_ENABLED = false;
+
 // Where email links bring people back. Confirmation lands in the app;
 // password resets land on the "choose a new password" form.
 
@@ -76,7 +92,9 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   // confirmed yet, so the form can offer to send the link again.
   const [unconfirmed, setUnconfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  // Which social sign-in is opening ('google' or 'facebook'), so only that
+  // button spins.
+  const [oauthLoading, setOauthLoading] = useState(null);
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
   const [isForgot, setIsForgot] = useState(initialMode === 'forgot');
   const [signUpSent, setSignUpSent] = useState(false);
@@ -131,22 +149,28 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     }
   }, [initialMode]);
 
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
+  const handleOAuthSignIn = async (provider) => {
+    const label = provider === 'facebook' ? 'Facebook' : 'Google';
+    setOauthLoading(provider);
     try {
       const native = isNativePlatform();
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google', options: { redirectTo: authRedirect(memberHome()), skipBrowserRedirect: native },
+        provider,
+        options: {
+          redirectTo: authRedirect(memberHome()),
+          skipBrowserRedirect: native,
+          ...(provider === 'facebook' ? { scopes: 'email' } : {}),
+        },
       });
       if (error) throw error;
       if (native) {
-        if (!data?.url) throw new Error('Google sign-in did not return a URL.');
+        if (!data?.url) throw new Error(`${label} sign-in did not return a URL.`);
         const { Browser } = await import('@capacitor/browser');
         await Browser.open({ url: data.url });
       }
     } catch (error) {
-      toast({ title: 'Google sign-in failed', description: error.message, variant: 'destructive' });
-    } finally { setIsGoogleLoading(false); }
+      toast({ title: `${label} sign-in failed`, description: error.message, variant: 'destructive' });
+    } finally { setOauthLoading(null); }
   };
 
   const handleSubmit = async (e) => {
@@ -424,15 +448,29 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleGoogleSignIn}
-                  disabled={isGoogleLoading || isLoading}
+                  onClick={() => handleOAuthSignIn('google')}
+                  disabled={!!oauthLoading || isLoading}
                   className="w-full bg-white hover:bg-slate-100 text-slate-900 border-slate-300 font-medium gap-2"
                 >
-                  {isGoogleLoading
+                  {oauthLoading === 'google'
                     ? <Loader2 className="w-4 h-4 animate-spin" />
                     : <GoogleIcon />}
                   Continue with Google
                 </Button>
+
+                {FACEBOOK_SIGNIN_ENABLED && (
+                  <Button
+                    type="button"
+                    onClick={() => handleOAuthSignIn('facebook')}
+                    disabled={!!oauthLoading || isLoading}
+                    className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white font-medium gap-2"
+                  >
+                    {oauthLoading === 'facebook'
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <FacebookIcon />}
+                    Continue with Facebook
+                  </Button>
+                )}
 
                 {/* Divider */}
                 <div className="flex items-center gap-3">
@@ -554,7 +592,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
 
                   <Button
                     type="submit"
-                    disabled={isLoading || isGoogleLoading}
+                    disabled={isLoading || !!oauthLoading}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
                   >
                     {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}

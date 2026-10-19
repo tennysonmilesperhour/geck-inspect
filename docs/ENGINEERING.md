@@ -192,7 +192,11 @@ The native identifier is `com.geckinspect.app`. Supabase now allows these exact
 returns: `com.geckinspect.app://auth/callback` and the same URL with `?mode=reset`.
 The canonical web auth site is `https://geckinspect.com`; `/MyGeckos` and
 `/AuthPortal?mode=reset` are also allowed. iOS currently uses email/password;
-web and Android also expose Google sign-in.
+web and Android also expose Google sign-in. Facebook sign-in is built
+(`FACEBOOK_SIGNIN_ENABLED` in `src/components/auth/LoginPortal.jsx`) and
+stays off until the Facebook provider is enabled in Supabase. It is hidden on
+iOS for the same Guideline 4.8 reason as Google: showing either there needs
+Sign in with Apple first.
 
 Build/sync uses `pnpm cap:sync`. `pnpm ios:release` checks the iOS SDK key, native
 callback verification and webhook verification before opening Xcode. Keep
