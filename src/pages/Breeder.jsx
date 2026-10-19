@@ -104,6 +104,9 @@ export default function Breeder() {
   // of the auto "Available now" grid.
   const [curatedGeckos, setCuratedGeckos] = useState([]);
   const [reviews, setReviews] = useState([]);
+  // The breeder's MorphMarket store, once they proved they own it
+  // (verify-morphmarket-store). Anyone can read verified rows.
+  const [morphmarketSlug, setMorphmarketSlug] = useState(null);
   const [storePolicy, setStorePolicy] = useState('');
   const [inferredGeckos, setInferredGeckos] = useState([]);
   const [uniqueOwners, setUniqueOwners] = useState(0);
@@ -301,6 +304,19 @@ export default function Breeder() {
     };
   }, [slug, inferredDisplayName, canonical]);
 
+  useEffect(() => {
+    if (!profile?.user_id) return undefined;
+    let cancelled = false;
+    supabase
+      .from('morphmarket_store_links')
+      .select('store_slug')
+      .eq('user_id', profile.user_id)
+      .eq('status', 'verified')
+      .maybeSingle()
+      .then(({ data }) => { if (!cancelled) setMorphmarketSlug(data?.store_slug || null); });
+    return () => { cancelled = true; };
+  }, [profile?.user_id]);
+
   const reloadReviews = async () => {
     if (!profile?.user_id) return;
     const { data } = await supabase
@@ -484,7 +500,7 @@ export default function Breeder() {
           <>
             <StorefrontWebsite page={{ ...storePage, policies: storePage?.policies || storePolicy }} profile={profile}
               settings={storeSettings} geckos={curatedGeckos.length ? curatedGeckos : forSaleGeckos}
-              plans={featuredPlans} waitlist={waitlist}
+              plans={featuredPlans} waitlist={waitlist} morphmarketSlug={morphmarketSlug}
               onInquire={profile.accepts_inquiries === false ? undefined : gecko => { setInquiryGecko(gecko); setInquiryOpen(true); }}
               // By slug, so signed-out buyers see the track record too (they
               // cannot read the owner's email). The email is only a fallback

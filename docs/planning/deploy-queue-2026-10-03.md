@@ -355,3 +355,37 @@ app version open in browsers keeps working. Verified on a fresh Postgres 16
 build of all migrations, applied twice safely; all 29 SQL regression files pass,
 including the rewritten `public_content_approval.sql`. 3,423 unit tests pass.
 The rule runs in the database, so the iOS build already uses it with no rebuild.
+
+## 19 October: Verified MorphMarket seller and the MorphMarket CSV
+
+MorphMarket has no "sign in with MorphMarket" and no public API, so a member
+proves they own a store with a code. On My Store, the MorphMarket store card
+gives a code like `GI-7K3P9Q`; the member pastes it into their MorphMarket
+About text and presses Check my store. The new `verify-morphmarket-store`
+function reads the public store page and, when the code is there, their
+breeder page shows "Verified MorphMarket seller" linking to the store. If
+MorphMarket blocks the automatic read, the store appears at the top of Admin >
+Breeder verification for a check by hand ("Code is there" or "Not there").
+
+Migration: `20261019233000_morphmarket_store_links.sql` (a new table and two
+admin functions, additive). Checked against production inside a block that
+rolled back: the table and grants apply, a second member cannot verify a store
+already verified to someone else, and signed-out visitors cannot run the admin
+functions. Function: `verify-morphmarket-store`, declared in
+`supabase/config.toml` with `verify_jwt = true`, so the merge deploys it. No
+secrets needed.
+
+Not yet known: whether MorphMarket lets a Supabase server read store pages.
+If every check lands in the admin queue, the automatic path is blocked and
+the hand check is the process.
+
+The MorphMarket CSV export now starts with an `Animal_ID` column (the Geck
+Inspect ID code, or the record id), which Bulk Import 2.0 requires and uses to
+update listings on a second upload instead of adding copies. The photo column
+is now `Photo URLs`, the name MorphMarket's help pages use. The importer reads
+MorphMarket's own header spellings (`Animal Id`, `Birth Date`, `Desc`,
+`Photo Urls`) and keeps the Animal ID as the gecko's ID code, so a second
+import of the same file is refused row by row instead of duplicating geckos.
+MorphMarket's site could not be reached from the build session, so the other
+column names are still unconfirmed; step 19 of the feature audit (the two-row
+test import) is still the proof.

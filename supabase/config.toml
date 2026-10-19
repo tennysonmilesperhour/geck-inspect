@@ -175,3 +175,8 @@ verify_jwt = false
 
 [functions.report-social-overage]
 verify_jwt = false
+
+# MorphMarket store verification. Members only; the handler reads the
+# session itself and only changes the caller's own row.
+[functions.verify-morphmarket-store]
+verify_jwt = true

@@ -57,6 +57,7 @@ Production runs 34 functions. 30 are declared in `supabase/config.toml` (15 sinc
 | stripe-webhook | false | yes | Stripe (signature checked over the raw body) |
 | subscribe-and-send-guides | false | yes | Landing page "send me the guides" form |
 | subscribe-weekly-notes | false | yes | Weekly Gecko Notes form for visitors on the guide pages (confirmation email; database step `request_weekly_notes_signup`) |
+| verify-morphmarket-store | true | yes | A member proving they own a MorphMarket store (code in the store's About text); added 19 Oct 2026 |
 | waitlist-signup | false | yes | Public waitlist sign-ups and confirmations |
 
 In the repo but not deployed: `store-checkout` and `store-stripe-webhook` (the supplies store checkout is off).
