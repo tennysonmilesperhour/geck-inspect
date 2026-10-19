@@ -307,3 +307,17 @@ owner, another member, anonymous visitor and admin. All 29 SQL regression files
 passed after the visual-search fixture explicitly marked its photos approved.
 The iOS release build passed all 3,419 unit tests, lint and the 172-route SEO audit.
 Physical-device testing of this new admin flow and TestFlight build remains pending.
+
+## 19 October: profile for members who add an email later
+
+Facebook sign-in (still switched off) can produce an account with no email
+when the Facebook account was made with a phone number. Profiles are keyed by
+email, so the signup trigger skips them. The app now shows an "Add your email"
+screen (`src/components/auth/AddEmailGate.jsx`) instead of loading, and a new
+trigger runs `handle_new_auth_user` when an account's email goes from empty to
+set, so confirming the email creates the profile.
+
+Migration: `20261019214000_profile_when_email_added.sql`. Additive (a new
+trigger only). Checked against production inside a rolled-back transaction.
+No current account lacks an email (73 of 73 have one), so nobody is affected
+until Facebook is switched on.
