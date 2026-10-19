@@ -321,3 +321,30 @@ Migration: `20261019214000_profile_when_email_added.sql`. Additive (a new
 trigger only). Checked against production inside a rolled-back transaction.
 No current account lacks an email (73 of 73 have one), so nobody is affected
 until Facebook is switched on.
+
+## 19 October: automatic approval for public content
+
+The approval queue from 18 October now only gets the items that need a person.
+The database decides on each new post, comment, gallery photo and edit:
+
+- A held word (slurs, explicit words, threats, off-platform contact such as
+  WhatsApp or Telegram, scam payment phrases) always waits for an admin.
+- A member with rejected content, or approved content a moderator later hid,
+  always waits.
+- A member with at least 2 approved, visible items is approved at once.
+- Anyone else is approved at once for text with no photo or link; a photo or a
+  link waits.
+- An edit of something live follows the same rules. An edit of something
+  pending or rejected waits.
+
+The reason is stored in `approval_hold_reason` and shown in the admin queue.
+Held words live in `public.moderation_held_terms` (admin-only), so a word can be
+added in the SQL editor without a migration. No third-party service sees the
+content. Reports, blocking and moderator hide/remove are unchanged, and a
+moderator's hide survives the author's edit.
+
+Migration: `20261019120000_public_content_auto_approval.sql`. Additive, so the
+app version open in browsers keeps working. Verified on a fresh Postgres 16
+build of all migrations, applied twice safely; all 29 SQL regression files pass,
+including the rewritten `public_content_approval.sql`. 3,423 unit tests pass.
+The rule runs in the database, so the iOS build already uses it with no rebuild.

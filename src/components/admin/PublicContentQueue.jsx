@@ -31,7 +31,7 @@ export default function PublicContentQueue() {
   return <Card className="mb-6">
     <CardHeader>
       <CardTitle>Publication approvals</CardTitle>
-      <p className="text-sm text-slate-400">Review all text and photos before approving. New forum posts, comments, gallery photos and their edits stay visible only to their owner and admins until approved. Rejection keeps them private.</p>
+      <p className="text-sm text-slate-400">Text with no photo or link from a member in good standing, and anything from members with at least 2 approved items, is approved automatically. Items here were held by those rules: a held word, a photo or link from a new member, an author with rejected or hidden content, or an edit of something not yet approved. Held items stay visible only to their owner and admins. Rejection keeps them private. Held words are in the moderation_held_terms table.</p>
     </CardHeader>
     <CardContent className="space-y-4">
       <div className="flex gap-2">
@@ -44,6 +44,7 @@ export default function PublicContentQueue() {
         const photos = [...new Set([c.image_url, ...(Array.isArray(c.image_urls) ? c.image_urls : []), ...(Array.isArray(c.training_meta?.image_urls) ? c.training_meta.image_urls : [])].filter(url => typeof url === 'string' && /^https?:\/\//.test(url)))];
         return <article key={`${row.target_type}:${row.target_id}`} className="border border-slate-700 rounded-lg p-4 space-y-3">
           <p className="text-sm text-slate-400">{REPORT_TARGETS[row.target_type]?.label} · {c.created_by} · Revision {row.revision}</p>
+          {c.approval_hold_reason && <p className="text-sm text-amber-300">Held: {c.approval_hold_reason}</p>}
           <h3 className="font-semibold break-words">{c.title || c.primary_morph || 'Submitted content'}</h3>
           <p className="whitespace-pre-wrap break-words">{c.content || c.notes}</p>
           {c.author_name && <p>Author: {c.author_name}</p>}

@@ -121,3 +121,7 @@ Check each item in App Store Connect before pressing Submit:
 - Description, keywords and screenshots do not mention Android, Google Play or other platforms, and do not quote prices that differ from the store.
 - Age rating questionnaire, App Privacy answers and the encryption question match the build.
 - The build selected is the newest upload (build 7 or later), not build 6.
+
+## Member content filtering, 19 October 2026
+
+Guideline 1.2 asks for a way to filter objectionable material before it is posted, a way to report it, a way to block users, and a way to contact the developer. Filtering is now automatic in the database (`20261019120000_public_content_auto_approval.sql`): held words, photos and links from new members, and anything from members with rejected or hidden content wait in Admin Panel > Reports > Publication approvals; everything else is published at once. Reporting, blocking and the support address were already in place. For the review notes: "New posts and photos are screened automatically against a list of objectionable terms; photos and links from new members, and all content from members with prior removals, are held for manual approval. Members can report any post, comment or photo and block other members. Reports are reviewed within 24 hours."
