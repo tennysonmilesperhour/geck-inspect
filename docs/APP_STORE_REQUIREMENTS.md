@@ -89,3 +89,35 @@ Simulator testing found a blank-screen loop after email confirmation. Capacitor 
 - The native AI disclosure names Anthropic and Replicate and identifies the shared data. Cancel returns the cancellation message and states no scan was used. No identification request was run in this test.
 - A Release archive for version 1.0 (7) compiled and signed successfully. Its bundle identifier, build number, three camera/photo usage descriptions, privacy manifest and code signature were verified. The full build passed 287 files / 3,419 tests, with zero lint errors (75 existing warnings) and a clean 172-route SEO audit.
 - The native callback verification flag was supplied to this build after the fresh recovery callback passed on the physical phone. Archive creation alone does not verify purchase delivery or constitute App Review submission.
+
+## Rejection for missing Terms of Use link, 19 October 2026
+
+Apple's automated check stopped the submission because the App Store product page had no working link to the Terms of Use (EULA), which every app selling auto-renewable subscriptions needs. This is a metadata fix in App Store Connect. No new binary is needed for it.
+
+Fix (done by hand in App Store Connect, App Information and the version page):
+
+1. Append these lines to the end of the App Description, in every localization the listing has:
+
+   ```
+   Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your Apple Account settings.
+   Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+   Privacy Policy: https://geckinspect.com/PrivacyPolicy
+   ```
+
+2. Leave App Information > License Agreement on Apple's standard license. Our own Terms page does not yet cover renewals, trials or refunds (that text is still a draft in docs/legal/terms-additions-draft.md), so Apple's standard EULA is the safer one to name.
+3. Confirm App Information > Privacy Policy URL is `https://geckinspect.com/PrivacyPolicy` and opens.
+
+The binary already shows Terms and Privacy links, Restore purchases, store price and period, and renewal wording on the native Membership screen, which covers the in-app half of guideline 3.1.2.
+
+### Pre-submit checklist for simple metadata rejections
+
+Check each item in App Store Connect before pressing Submit:
+
+- Description has the Terms of Use (EULA) link and Privacy link, in every localization.
+- Privacy Policy URL and Support URL are filled in and load on a phone.
+- All four subscriptions are attached to this version's submission, each with a display name, description, price and review screenshot, and the subscription group has a localized display name.
+- App Review Information has a working demo account (email and password) that reaches the paid screens, a contact name, phone and email, and notes explaining where Membership, Restore purchases and account deletion are.
+- Screenshots are from the current build, show no retired features, and include iPad sizes if the app ships on iPad.
+- Description, keywords and screenshots do not mention Android, Google Play or other platforms, and do not quote prices that differ from the store.
+- Age rating questionnaire, App Privacy answers and the encryption question match the build.
+- The build selected is the newest upload (build 7 or later), not build 6.
