@@ -2,6 +2,7 @@
 step: 8
 slug: never-pair-two-lilly-whites
 subject: Why you should never pair two Lilly Whites
+preview: Two copies of Lilly White are lethal. Here is what the second pairing costs you.
 cta: See the Lilly White pairing
 path: /calculator/pairing/lilly-white-x-normal
 sources: scripts/lib/accepted-facts.mjs:34-35; src/data/morph-guide.js:975; src/data/morph-guide.js:986-989; src/data/morph-guide.js:1733-1738; src/data/morph-guide.js:1756-1757; src/lib/genetics/calculatorCatalog.js:529-544

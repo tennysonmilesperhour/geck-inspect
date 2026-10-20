@@ -2,6 +2,7 @@
 step: 13
 slug: a-lay-box-for-every-female
 subject: Every adult female needs a lay box
+preview: She can lay without a male. A deli cup and 3 to 4 inches of moist coco fiber will do.
 cta: Open Breeding
 path: /Breeding
 cta_no_gecko: Read about egg laying

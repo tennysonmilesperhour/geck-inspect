@@ -1,7 +1,8 @@
 ---
 step: 3
 slug: today-tells-you-what-is-due
-subject: Check each gecko's weigh-in reminder
+subject: Is the weigh-in reminder on for each gecko?
+preview: Every 14 days for juveniles, 21 for sub-adults, 30 for adults. Here is how to check.
 cta: Open My Geckos
 path: /MyGeckos
 cta_no_gecko: Add a gecko

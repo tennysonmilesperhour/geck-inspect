@@ -2,6 +2,7 @@
 step: 9
 slug: where-66-percent-het-comes-from
 subject: Where "66% possible het" comes from
+preview: The odds behind the label, worked out from one Axanthic het pairing.
 cta: Run the het x het pairing
 path: /calculator/pairing/het-axanthic-x-het-axanthic
 sources: src/data/genetics-sections.jsx:110; src/data/genetics-sections.jsx:121-129; src/data/genetics-sections.jsx:164-167; src/data/genetics-glossary.js:46-51; src/data/morph-guide.js:1017; src/data/morph-guide.js:1019; src/data/morph-guide.js:1022; src/data/morph-guide.js:1033; src/data/keepers-guides/morph.js:278-281; src/lib/genetics/calculatorCatalog.js:578-584; src/App.jsx:384

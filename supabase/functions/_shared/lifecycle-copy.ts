@@ -13,7 +13,10 @@
 //
 // Voice (PRODUCT.md): a trusted breeder with good records. Short sentences,
 // one next step per email, real crested gecko terms, no hype, no dashes as
-// punctuation.
+// punctuation. Since 20 Oct 2026 they are letters from Tennyson: a subject
+// built from the member's own record, a preview line that adds to the
+// subject instead of repeating it, and on day 0 and day 1 a question to
+// reply to. docs/marketing/email-brain.md has the rules and the evidence.
 
 export type LifecycleFacts = {
   first_name?: string | null;
@@ -30,8 +33,10 @@ export type LifecycleFacts = {
 };
 
 export type LifecycleEmail = {
-  // Subject line and heading.
+  // Subject line.
   title: string;
+  // The line the inbox shows after the subject.
+  preheader: string;
   // Plain text, paragraphs separated by a blank line.
   body: string;
   // In-app path for the button.
@@ -47,6 +52,14 @@ export const LIFECYCLE_TYPES = [
   "lifecycle_day7",
   "lifecycle_day14",
 ] as const;
+
+// Who signs the letters (plain text and HTML).
+export const LIFECYCLE_SIGNOFF = ["Tennyson", "Geck Inspect"];
+
+// Options the copy cannot know by itself. canReply is true when replies
+// reach a mailbox Tennyson reads (EMAIL_REPLY_TO is set); without it the
+// emails do not ask a question nobody would see the answer to.
+export type LifecycleOptions = { canReply?: boolean };
 
 export function isLifecycleType(type: string): boolean {
   return (LIFECYCLE_TYPES as readonly string[]).includes(type);
@@ -114,19 +127,20 @@ function treeLink(facts: LifecycleFacts): string {
 
 const paragraphs = (...parts: Array<string | null | false>) => parts.filter(Boolean).join("\n\n");
 
-function day0(facts: LifecycleFacts): LifecycleEmail {
+function day0(facts: LifecycleFacts, ask: (line: string) => string | null): LifecycleEmail {
   const name = firstName(facts);
-  const title = name ? `Welcome to Geck Inspect, ${name}` : "Welcome to Geck Inspect";
   const hasGecko = Number(facts.gecko_count) > 0 && Boolean(clean(facts.gecko_id, 64));
 
   if (!hasGecko) {
     return {
-      title,
+      title: name ? `${name}, start with one gecko` : "Start with one gecko",
+      preheader: "A name and a morph are enough. Everything else hangs off that record.",
       body: paragraphs(
         greeting(facts),
-        "Thanks for joining. Geck Inspect is a record book built for crested geckos: weights, feedings, sheds, parents and pairings, kept in one place you can show a buyer.",
-        "One thing to do today: add one gecko. A name and a morph are enough. Write the morph the way the breeder listed it, such as Lilly White, Harlequin, Dalmatian or Phantom. Not sure? Morph ID reads a top photo and a side photo and suggests the likely morph. Free members get one identification a month.",
-        "Everything else hangs off that record: the weight chart, the feeding day and the family tree.",
+        "I'm Tennyson. I build Geck Inspect on my own, for people who keep and breed crested geckos.",
+        "The one thing worth doing today: add one gecko. A name and a morph are enough, written the way the breeder listed it, such as Lilly White, Harlequin, Dalmatian or Phantom. Not sure of the morph? Morph ID reads a top photo and a side photo and suggests the likely one. Free members get one identification a month.",
+        "Once a gecko is in, the weight chart, the feeding day and the family tree all hang off that record.",
+        ask("A question while I have you: what got you into crested geckos? Hit reply and tell me. I read every answer."),
       ),
       url: "/MyGeckos",
       cta: "Add your first gecko",
@@ -136,12 +150,14 @@ function day0(facts: LifecycleFacts): LifecycleEmail {
   const g = geckoName(facts);
   if (!(Number(facts.weight_count) > 0)) {
     return {
-      title,
+      title: `${g.Name} is in. Next: a first weight`,
+      preheader: "Weigh before a feeding, on a scale that reads to 0.1 g. It starts the growth curve.",
       body: paragraphs(
         greeting(facts),
-        `Thanks for joining, and ${g.name} is already in. Good start.`,
-        `One thing to do today: weigh ${g.name} and log it in grams. Use a kitchen scale that reads to 0.1 g. Weigh before a feeding so a full belly does not pad the number.`,
-        "That first weight starts the growth curve, and the curve is what tells you when a female is big enough to breed. Most breeders wait for at least 40 g and 18 months.",
+        `I'm Tennyson, and I build Geck Inspect. ${g.Name} is already in, which is the hard part.`,
+        `The next step takes a minute: weigh ${g.name} and log it in grams. Use a kitchen scale that reads to 0.1 g. Weigh before a feeding so a full belly does not pad the number.`,
+        "That first number starts the growth curve, and the curve is what tells you when a female is big enough to breed. Most breeders wait for at least 40 g and 18 months.",
+        ask(`A question: is ${g.name} a pet, a future breeder, or still undecided? Hit reply and tell me. I read every answer.`),
       ),
       url: weighLink(facts),
       cta: `Log ${g.possessive} weight`,
@@ -149,25 +165,29 @@ function day0(facts: LifecycleFacts): LifecycleEmail {
   }
 
   return {
-    title,
+    title: `${g.Name} has a growth chart. Add the rest?`,
+    preheader: "Name and morph are enough for each. A spreadsheet or MorphMarket export comes in at once.",
     body: paragraphs(
       greeting(facts),
-      `Thanks for joining. ${g.Name} is in with a first weight, so the growth chart has already started.`,
-      "One thing to do next: add the rest of your collection. Name and morph are enough for each one. If you keep your animals in a spreadsheet or have a MorphMarket export, import it in one go instead.",
+      `I'm Tennyson, and I build Geck Inspect. ${g.Name} is in with a first weight, so the growth chart has already started. That is further than most people get on day one.`,
+      "Next: add the rest of your collection. Name and morph are enough for each one. If you keep your animals in a spreadsheet or have a MorphMarket export, import it in one go instead.",
+      ask("How many geckos do you keep? Hit reply and tell me. I read every answer, and it shapes what I build next."),
     ),
     url: "/MyGeckos",
     cta: "Add your other geckos",
   };
 }
 
-function day1(facts: LifecycleFacts): LifecycleEmail {
+function day1(facts: LifecycleFacts, ask: (line: string) => string | null): LifecycleEmail {
   return {
-    title: "Start with the gecko you know best",
+    title: "The two-minute way to add your first gecko",
+    preheader: "Name and morph. Hatch date, parents and photos can wait.",
     body: paragraphs(
       greeting(facts),
       "Your collection is still empty. That is normal on day one, so here is the shortest way in.",
-      "Pick the gecko you know best and add its name and morph. It takes two minutes. If you still have the breeder's listing, the morph line and the sire and dam names are all you need for now. Hatch date and photos can wait.",
+      "Pick the gecko you know best and add its name and morph. It takes two minutes. If you still have the breeder's listing, copy the morph line from it. Hatch date, parents and photos can wait.",
       "Keeping more than a handful? Import a spreadsheet or a MorphMarket export and the whole collection comes in at once.",
+      ask("If something stopped you, reply and tell me what it was. I fix what people trip on."),
     ),
     url: "/MyGeckos",
     cta: "Add a gecko",
@@ -183,6 +203,7 @@ function day3(facts: LifecycleFacts): LifecycleEmail | null {
   if (sire && dam) {
     return {
       title: `${g.Possessive} family tree is started`,
+      preheader: `Each generation you add is evidence for what ${g.name} may carry.`,
       body: paragraphs(
         greeting(facts),
         `${g.Name} already has a sire and a dam on record, which puts you ahead of most keepers.`,
@@ -196,6 +217,7 @@ function day3(facts: LifecycleFacts): LifecycleEmail | null {
   const missing = sire ? "dam" : dam ? "sire" : "sire and dam";
   return {
     title: `Who are ${g.possessive} parents?`,
+    preheader: "A photo cannot show what a gecko carries. The pedigree can.",
     body: paragraphs(
       greeting(facts),
       "Parents tell you what a photo cannot. A gecko with an Axanthic parent carries Axanthic even when it looks like a normal Harlequin, and only the pedigree shows it.",
@@ -213,10 +235,14 @@ function weighIn(facts: LifecycleFacts, day: 7 | 14): LifecycleEmail | null {
   const last = grams(facts.last_weight_grams);
   const when = shortDate(facts.last_weight_date);
   const lastLine = last ? `${g.Possessive} last weight was ${last}${when ? ` on ${when}` : ""}.` : null;
+  const lastShort = last ? `Last weight: ${last}${when ? ` on ${when}` : ""}.` : null;
 
   if (day === 7) {
     return {
       title: `Time to weigh ${g.name}`,
+      preheader: count === 0
+        ? "A week in and no weight yet. It is two taps."
+        : `${lastShort ?? "One weight on record."} One more makes a trend.`,
       body: paragraphs(
         greeting(facts),
         count === 0
@@ -231,6 +257,7 @@ function weighIn(facts: LifecycleFacts, day: 7 | 14): LifecycleEmail | null {
 
   return {
     title: `Two weeks in: weigh ${g.name} again`,
+    preheader: "The rhythm: every 14 days while growing, 21 as a sub-adult, 30 as an adult.",
     body: paragraphs(
       greeting(facts),
       count >= 2
@@ -249,13 +276,18 @@ function weighIn(facts: LifecycleFacts, day: 7 | 14): LifecycleEmail | null {
 
 // The email for one step, or null when the facts do not support it (for
 // example a weigh-in email with no gecko to weigh). send-email skips a null.
-export function lifecycleEmail(type: string, facts: LifecycleFacts | null | undefined): LifecycleEmail | null {
+export function lifecycleEmail(
+  type: string,
+  facts: LifecycleFacts | null | undefined,
+  options: LifecycleOptions = {},
+): LifecycleEmail | null {
   const f = facts && typeof facts === "object" ? facts : {};
+  const ask = (line: string) => (options.canReply ? line : null);
   switch (type) {
     case "lifecycle_day0":
-      return day0(f);
+      return day0(f, ask);
     case "lifecycle_day1":
-      return day1(f);
+      return day1(f, ask);
     case "lifecycle_day3":
       return day3(f);
     case "lifecycle_day7":

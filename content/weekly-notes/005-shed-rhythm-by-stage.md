@@ -2,6 +2,7 @@
 step: 5
 slug: shed-rhythm-by-stage
 subject: How often should your gecko shed?
+preview: Every 1 to 2 weeks for hatchlings, 4 to 6 for adults, and how to spot stuck shed.
 cta: Log a shed
 path: /FieldMode
 cta_no_gecko: Read about shedding

@@ -389,3 +389,22 @@ import of the same file is refused row by row instead of duplicating geckos.
 MorphMarket's site could not be reached from the build session, so the other
 column names are still unconfirmed; step 19 of the feature audit (the two-row
 test import) is still the proof.
+
+## 20 October: email overhaul (letters, preview lines, relevance gate)
+
+Migration: `20261020230000_email_relevance_and_outcomes.sql`. It replaces
+`weekly_notes_candidates` with the same signature (grants kept), adding one
+condition: a member needs a gecko on record or a sign-in within 60 days. It
+adds the admin-only `email_outcomes(p_days)`. No table or column changes. The
+gate was checked against production read-only: next week's list goes from 57
+members to 35.
+
+Function: `send-email` (already declared, so the merge deploys it). The
+getting-started emails and Weekly Gecko Notes are now plain letters signed by
+Tennyson, with a preview line, and use two new optional secrets,
+`EMAIL_FROM_PERSONAL` and `EMAIL_REPLY_TO`. Unset, they send from
+`EMAIL_FROM` as before and ask no reply question.
+
+Waiting on Tennyson: the Resend webhook (never connected; no open, click,
+bounce or complaint has ever been recorded) and the two secrets.
+`docs/marketing/email-brain.md`, section 1, has the links and values.

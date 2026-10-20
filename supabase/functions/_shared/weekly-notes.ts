@@ -45,8 +45,10 @@ export const WEEKLY_NOTES_VISITOR_REASON =
 export const WEEKLY_NOTES_STOP_WORDS = "stop Weekly Gecko Notes";
 
 export type WeeklyNoteEmail = {
-  // Subject line and heading.
+  // Subject line.
   title: string;
+  // The line the inbox shows after the subject.
+  preheader: string;
   // Plain text, paragraphs separated by a blank line.
   body: string;
   // In-app path for the button.
@@ -92,6 +94,7 @@ export function weeklyNoteEmail(
     if (!note.visitors) return null;
     return {
       title: note.subject,
+      preheader: note.preview,
       body: note.body,
       url: note.visitorPath ?? note.path,
       cta: note.visitorCta ?? note.cta,
@@ -100,6 +103,7 @@ export function weeklyNoteEmail(
   const noGecko = hasGecko === false && Boolean(note.pathNoGecko && note.ctaNoGecko);
   return {
     title: note.subject,
+    preheader: note.preview,
     body: note.body,
     url: noGecko ? (note.pathNoGecko as string) : note.path,
     cta: noGecko ? (note.ctaNoGecko as string) : note.cta,
