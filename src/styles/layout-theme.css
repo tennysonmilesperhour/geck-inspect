@@ -1365,3 +1365,20 @@ select.glass-field option { background: rgb(15 23 42); color: rgb(226 232 240); 
     filter: drop-shadow(0 0 4px #e9bc5499);
   }
 }
+
+/* Phone bottom bar hides on scroll down (20 Oct 2026): useHideOnScroll in
+   Layout.jsx adds .is-scrolled-away while the page scrolls down, and the
+   bar slides out through the bottom edge. The first scroll up brings it
+   back. Reduced motion skips the slide but still hides the bar. */
+.gecko-bottom-nav--bar {
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+.gecko-bottom-nav--bar.is-scrolled-away {
+  transform: translateY(calc(100% + 2px));
+}
+@media (prefers-reduced-motion: reduce) {
+  .gecko-bottom-nav--bar {
+    transition: none;
+  }
+}
