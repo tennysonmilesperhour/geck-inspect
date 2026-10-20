@@ -25,7 +25,7 @@ vi.mock('@/entities/all', () => ({
   SupportMessage: { create: async () => ({}) },
 }));
 vi.mock('@/lib/AuthContext', () => ({ useAuth: () => ({ user: fx.member, isAuthenticated: Boolean(fx.member) }) }));
-vi.mock('@/lib/posthog', () => ({ captureEvent: (...args) => fx.captureEvent(...args) }));
+vi.mock('@/lib/posthog', () => ({ captureEvent: (...args) => fx.captureEvent(...args), ensurePostHog: async () => null }));
 vi.mock('@/lib/telemetry', () => ({ reportError: (...args) => fx.reportError(...args) }));
 vi.mock('@/lib/billingPortal', () => ({ openBillingPortal: vi.fn() }));
 
