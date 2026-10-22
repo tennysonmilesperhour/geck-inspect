@@ -57,13 +57,17 @@ begin
   perform set_config('role', 'postgres', true);
 end $$;
 
--- A member account, as Supabase Auth makes one.
+-- A member account, as Supabase Auth makes one. Signing up sets
+-- last_sign_in_at, which Auth does. Since 20 Oct 2026 a member is a
+-- weekly-notes candidate only with a gecko on record or a sign-in within
+-- 60 days, so a caller that expects a candidate signs them up inside that
+-- window (the stop checks below use accounts about 40 days old).
 create function pg_temp.mk_member(p_email text, p_at timestamptz) returns void language plpgsql as $$
 begin
   insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at, last_sign_in_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', p_email,
-          'not-a-real-password', p_at, '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, p_at, p_at);
+          'not-a-real-password', p_at, '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, p_at, p_at, p_at);
   if not exists (select 1 from public.profiles where email = p_email) then
     insert into public.profiles (email) values (p_email);
   end if;
