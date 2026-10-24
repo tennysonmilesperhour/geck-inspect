@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Share2, Twitter, Facebook, Instagram, Link as LinkIcon, Check, ExternalLink } from 'lucide-react';
+import { Share2, Link as LinkIcon, Check, ExternalLink } from 'lucide-react';
+import { Twitter, Facebook, Instagram } from '@/components/icons/BrandIcons';
 
 /**
  * Share menu for gecko profile pages, public passport (AnimalPassport)

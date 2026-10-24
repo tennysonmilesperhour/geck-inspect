@@ -74,7 +74,7 @@ All three load from Google Fonts in `index.html` with a non-blocking swap. One c
 - **Tabs:** `src/components/ui/tabs.jsx`, the house tab bar (dark strip, hairline border, scrolls sideways on phones instead of clipping).
 - **Empty states:** `src/components/shared/EmptyState.jsx`. One primary action, an optional second (for example "Import a spreadsheet" beside "Add your first gecko"), an optional hint line.
 - **Dialogs:** use the Radix dialog in `src/components/ui/dialog.jsx`. A hand-built full-screen overlay must spread `useModalOverlay(onClose)` (`src/hooks/useModalOverlay.js`) for Escape, focus and `role="dialog"`, so floating notices hide behind it.
-- **Icons:** lucide-react only.
+- **Icons:** lucide-react, plus `src/components/icons/BrandIcons.jsx` for the Instagram, Facebook, YouTube and Twitter logos that lucide 1 removed. Production builds draw lucide icons with the smaller `src/lib/leanLucideIcon.js` (see `scripts/vite-plugins/lean-lucide-icons.mjs`), which does not read `LucideProvider` or the `nonScalingStroke` prop, so do not rely on either.
 
 ## 7. Behaviour standards
 

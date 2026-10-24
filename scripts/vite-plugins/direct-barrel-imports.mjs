@@ -6,8 +6,8 @@
  *
  * into one import per icon or function file:
  *
- *   import X from 'lucide-react/icons/x'
- *   import Spinner from 'lucide-react/icons/loader-circle'
+ *   import X from 'lucide-react/dist/esm/icons/x.mjs'
+ *   import Spinner from 'lucide-react/dist/esm/icons/loader-circle.mjs'
  *   import { format } from 'date-fns/format'
  *
  * Why: both packages are imported through one index file that re-exports
@@ -22,6 +22,11 @@
  * date-fns name with no file of its own) stay on the original import, so
  * nothing changes for them. Tests and the dev server keep the plain
  * imports (apply: 'build').
+ *
+ * The icon paths come from lucide-react's own index file, so they follow
+ * the package when it moves things around. Version 1 dropped the
+ * 'lucide-react/icons/x' shortcut and renamed its files to .mjs, which
+ * is why the import points into dist/ by its full file name.
  */
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -29,18 +34,37 @@ import path from 'node:path';
 
 const IMPORT_RE = /import\s*\{([^}]*)\}\s*from\s*(['"])(lucide-react|date-fns)\2\s*;?/g;
 
-/** name -> icon file stem, read from lucide-react's own index file. */
-export function lucideIconFiles(barrelSource) {
+/**
+ * name -> icon file inside the package (for example dist/esm/icons/x.mjs),
+ * read from lucide-react's own index file. `barrelDir` is the folder of
+ * that index file inside the package, since its icon paths are relative.
+ */
+export function lucideIconFiles(barrelSource, barrelDir = '.') {
   const map = new Map();
-  const line = /export\s*\{([^}]*)\}\s*from\s*'\.\/icons\/([a-z0-9-]+)\.js'/g;
+  const line = /export\s*\{([^}]*)\}\s*from\s*'\.\/(icons\/[a-z0-9-]+\.m?js)'/g;
   let m;
   while ((m = line.exec(barrelSource))) {
     for (const part of m[1].split(',')) {
       const alias = /default\s+as\s+([A-Za-z0-9_$]+)/.exec(part.trim());
-      if (alias) map.set(alias[1], m[2]);
+      if (alias) map.set(alias[1], path.posix.join(barrelDir, m[2]));
     }
   }
   return map;
+}
+
+/**
+ * lucide-react's ES module index file: its source, and its folder inside
+ * the package. package.json names it ("module"); version 1 has no
+ * "exports" map, so package.json itself can be resolved directly.
+ */
+export function readLucideBarrel(require) {
+  const pkgFile = require.resolve('lucide-react/package.json');
+  const { module: file } = JSON.parse(readFileSync(pkgFile, 'utf8'));
+  if (!file) throw new Error('lucide-react/package.json has no "module" field to find its index file.');
+  return {
+    source: readFileSync(path.join(path.dirname(pkgFile), file), 'utf8'),
+    dir: path.posix.dirname(file),
+  };
 }
 
 /** The date-fns functions with their own subpath file, from its package.json exports. */
@@ -69,7 +93,7 @@ export function rewriteBarrelImports(code, { lucide, dateFns }) {
       if (!m) { kept.push(spec); continue; }
       const [, name, local = name] = m;
       if (pkg === 'lucide-react' && lucide.has(name)) {
-        direct.push(`import ${local} from 'lucide-react/icons/${lucide.get(name)}';`);
+        direct.push(`import ${local} from 'lucide-react/${lucide.get(name)}';`);
       } else if (pkg === 'date-fns' && dateFns.has(name)) {
         direct.push(`import { ${name}${local !== name ? ` as ${local}` : ''} } from 'date-fns/${name}';`);
       } else {
@@ -89,10 +113,9 @@ export default function directBarrelImports({ root }) {
   let maps = null;
   const load = () => {
     if (maps) return maps;
-    const lucideCjs = require.resolve('lucide-react');
-    const lucideEsm = path.join(path.dirname(path.dirname(lucideCjs)), 'esm', 'lucide-react.js');
+    const barrel = readLucideBarrel(require);
     const datePkg = JSON.parse(readFileSync(require.resolve('date-fns/package.json'), 'utf8'));
-    maps = { lucide: lucideIconFiles(readFileSync(lucideEsm, 'utf8')), dateFns: dateFnsFiles(datePkg) };
+    maps = { lucide: lucideIconFiles(barrel.source, barrel.dir), dateFns: dateFnsFiles(datePkg) };
     return maps;
   };
   return {

@@ -1,23 +1,26 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { dateFnsFiles, lucideIconFiles, rewriteBarrelImports } from '../../../scripts/vite-plugins/direct-barrel-imports.mjs';
+import { dateFnsFiles, lucideIconFiles, readLucideBarrel, rewriteBarrelImports } from '../../../scripts/vite-plugins/direct-barrel-imports.mjs';
 import { installReducedMotion } from '../reducedMotion';
 
 const require = createRequire(path.resolve('package.json'));
-const lucideEsm = path.join(path.dirname(path.dirname(require.resolve('lucide-react'))), 'esm', 'lucide-react.js');
+const lucideBarrel = readLucideBarrel(require);
 const maps = {
-  lucide: lucideIconFiles(readFileSync(lucideEsm, 'utf8')),
+  lucide: lucideIconFiles(lucideBarrel.source, lucideBarrel.dir),
   dateFns: dateFnsFiles(JSON.parse(readFileSync(require.resolve('date-fns/package.json'), 'utf8'))),
 };
 
 describe('direct icon and date imports (build only)', () => {
   it('reads every icon and its aliases from lucide-react itself', () => {
     expect(maps.lucide.size).toBeGreaterThan(3000);
-    expect(maps.lucide.get('X')).toBe('x');
+    expect(maps.lucide.get('X')).toBe('dist/esm/icons/x.mjs');
     // An alias resolves to the icon's real file.
     expect(maps.lucide.get('CheckCircle2')).toBe(maps.lucide.get('CircleCheck'));
+    // Every mapped file exists, so the rewritten import resolves in the build.
+    const pkgDir = path.dirname(require.resolve('lucide-react/package.json'));
+    for (const file of new Set(maps.lucide.values())) expect(existsSync(path.join(pkgDir, file))).toBe(true);
     expect(maps.dateFns.has('parseISO')).toBe(true);
   });
 
@@ -26,8 +29,8 @@ describe('direct icon and date imports (build only)', () => {
       "import { X, Loader2 as Spinner } from 'lucide-react';\nimport { format, parseISO as parse } from 'date-fns';\n",
       maps,
     );
-    expect(out).toContain("import X from 'lucide-react/icons/x';");
-    expect(out).toMatch(/import Spinner from 'lucide-react\/icons\/[a-z-]+';/);
+    expect(out).toContain("import X from 'lucide-react/dist/esm/icons/x.mjs';");
+    expect(out).toContain("import Spinner from 'lucide-react/dist/esm/icons/loader-circle.mjs';");
     expect(out).toContain("import { format } from 'date-fns/format';");
     expect(out).toContain("import { parseISO as parse } from 'date-fns/parseISO';");
     expect(out).not.toMatch(/from 'lucide-react';|from 'date-fns';/);
@@ -35,7 +38,7 @@ describe('direct icon and date imports (build only)', () => {
 
   it('leaves names it cannot place on the original import, and other code alone', () => {
     const out = rewriteBarrelImports("import {\n  icons,\n  X,\n} from 'lucide-react'\nconst s = 'date-fns';", maps);
-    expect(out).toContain("import X from 'lucide-react/icons/x';");
+    expect(out).toContain("import X from 'lucide-react/dist/esm/icons/x.mjs';");
     expect(out).toContain("import { icons } from 'lucide-react';");
     expect(out).toContain("const s = 'date-fns';");
     expect(rewriteBarrelImports("import { icons } from 'lucide-react';", maps)).toBeNull();
