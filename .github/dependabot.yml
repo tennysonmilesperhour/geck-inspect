@@ -10,6 +10,14 @@ updates:
       # edge function tests use; TypeScript 7 does not have one yet.
       - dependency-name: typescript5
         update-types: ["version-update:semver-major"]
+      # @vercel/og 1.0.3 makes every Vercel deploy fail at "Deploying
+      # outputs": "The Edge Function middleware is referencing unsupported
+      # modules: @vercel". The middleware never imports it, and GitHub CI
+      # passes, so only the Vercel deploy shows the failure. Seen on 24 Oct
+      # 2026 in the npm-minor-and-patch group update. Before lifting this,
+      # bump it alone and check that the Vercel preview deploy is Ready.
+      - dependency-name: "@vercel/og"
+        versions: [">1.0.1"]
     groups:
       npm-minor-and-patch:
         update-types:

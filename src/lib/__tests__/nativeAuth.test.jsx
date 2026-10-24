@@ -60,6 +60,23 @@ describe('native auth navigation without reloading the webview', () => {
     expect(screen.getByTestId('route').textContent).toBe('/AuthPortal?mode=reset');
   });
 
+  it('returns a confirmed recipient to the transfer without reloading', async () => {
+    await start(`${callback}?code=transfer-code&redirect=%2Fclaim%2Ftest-transfer`);
+    expect(screen.getByTestId('route').textContent).toBe('/claim/test-transfer');
+    expect(window.history.state).toEqual({ idx: 0 });
+  });
+
+  it('keeps the transfer target while a token link opens password recovery', async () => {
+    await start(`${callback}?token_hash=recovery-hash&type=recovery&redirect=%2Fclaim%2Ftest-transfer`);
+    expect(screen.getByTestId('route').textContent).toBe('/AuthPortal?mode=reset&redirect=%2Fclaim%2Ftest-transfer');
+  });
+
+  it('keeps the transfer target when confirmation fails', async () => {
+    mocks.exchange.mockResolvedValue({ error: new Error('Expired') });
+    await start(`${callback}?code=expired-transfer&redirect=%2Fclaim%2Ftest-transfer`);
+    expect(screen.getByTestId('route').textContent).toBe('/AuthPortal?authError=callback&redirect=%2Fclaim%2Ftest-transfer');
+  });
+
   it.each(['signup', 'recovery', 'invite'])('finishes a %s token link', async (type) => {
     await start(`${callback}?token_hash=test-hash&type=${type}`);
     expect(mocks.verify).toHaveBeenCalledWith({ token_hash: 'test-hash', type });

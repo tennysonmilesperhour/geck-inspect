@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { looksBlocked, newVerifyCode, pageHasCode, parseStoreSlug, storeUrl } from '../morphmarketStore';
-import { buildMorphMarketCSV, morphMarketAnimalId, parseMorphMarketCSV } from '../morphmarketSync';
+import { formatMorphMarketCSV, morphMarketAnimalId, parseMorphMarketCSV } from '../morphmarketSync';
 
 describe('MorphMarket store verification', () => {
   it('reads the store handle from a link or a bare handle', () => {
@@ -48,7 +48,7 @@ describe('MorphMarket store verification', () => {
 
 describe('MorphMarket CSV', () => {
   it('writes an Animal ID first so a second upload updates listings', () => {
-    const csv = buildMorphMarketCSV([{ id: 'abc', gecko_id_code: 'TCC 24-031', sex: 'Female' }]);
+    const csv = formatMorphMarketCSV([{ id: 'abc', gecko_id_code: 'TCC 24-031', sex: 'Female' }]);
     const [header, row] = csv.replace(/^\uFEFF/, '').split('\r\n');
     expect(header.split(',')[0]).toBe('Animal_ID');
     expect(row.split(',')[0]).toBe('TCC-24-031');
@@ -72,7 +72,7 @@ describe('MorphMarket CSV', () => {
   });
 
   it('reads back the file it writes', () => {
-    const csv = buildMorphMarketCSV([{ id: 'g1', gecko_id_code: 'TCC-9', morphs_traits: 'Harlequin', sex: 'Male', hatch_date: '2025-01-02', image_urls: ['https://a.jpg'] }]);
+    const csv = formatMorphMarketCSV([{ id: 'g1', gecko_id_code: 'TCC-9', morphs_traits: 'Harlequin', sex: 'Male', hatch_date: '2025-01-02', image_urls: ['https://a.jpg'] }]);
     const { records } = parseMorphMarketCSV(csv);
     expect(records[0]).toMatchObject({ gecko_id_code: 'TCC-9', sex: 'Male', hatch_date: '2025-01-02', image_urls: ['https://a.jpg'] });
   });
@@ -82,7 +82,7 @@ describe('live MorphMarket field contract (24 October 2026)', () => {
   it('uses supported headers, trait separators, maturity and whole grams', () => {
     const hatch = new Date();
     hatch.setUTCMonth(hatch.getUTCMonth() - 10);
-    const csv = buildMorphMarketCSV([{
+    const csv = formatMorphMarketCSV([{
       id: 'contract-1', status: 'For Sale', asking_price: 250,
       hatch_date: hatch.toISOString().slice(0, 10), weight_grams: 24.7,
       morphs_traits: 'Lilly White, Harlequin', marketplace_description: 'Calm',
@@ -100,10 +100,10 @@ describe('live MorphMarket field contract (24 October 2026)', () => {
   });
 
   it('omits all-empty optional columns but keeps values aligned in mixed batches', () => {
-    const blank = buildMorphMarketCSV([{ id: 'a' }, { id: 'b' }]);
+    const blank = formatMorphMarketCSV([{ id: 'a' }, { id: 'b' }]);
     const header = blank.split('\r\n')[0].split(',');
     for (const name of ['Price', 'Weight', 'DOB', 'Desc', 'Photo_Urls']) expect(header).not.toContain(name);
-    const mixed = buildMorphMarketCSV([{ id: 'a', asking_price: 250, weight_grams: 18, hatch_date: '2025-05-01' }, { id: 'b' }]);
+    const mixed = formatMorphMarketCSV([{ id: 'a', asking_price: 250, weight_grams: 18, hatch_date: '2025-05-01' }, { id: 'b' }]);
     const { records } = parseMorphMarketCSV(mixed);
     expect(records[0]).toMatchObject({ asking_price: 250, weight_grams: 18, hatch_date: '2025-05-01' });
     expect(records[1]).not.toHaveProperty('asking_price');

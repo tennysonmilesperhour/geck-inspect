@@ -30,10 +30,9 @@ export function FtcDisclosureBlock() {
           an item suits your animal.
         </p>
         <p>
-          <span className="font-medium text-slate-300">Temporary image note:</span>{' '}
-          Some product images are AI-generated placeholders. Amazon links open
-          the real listing, where you can see the current product photos,
-          packaging, price, and availability.
+          Check Amazon for current product photos, packaging, price, and
+          availability. Search links may include different sizes, pack counts,
+          or variants.
         </p>
       </div>
     </div>

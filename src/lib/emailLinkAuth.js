@@ -30,6 +30,7 @@
  */
 
 import { safeInternalPath } from '@/lib/safeInternalPath';
+import { authContinuationPath, redirectFromSearch, safeRedirectPath } from '@/lib/postAuthRedirect';
 import { memberHome } from '@/lib/pwaLaunch';
 
 /** The website's Supabase sign-in flow. See the steps above before changing it. */
@@ -68,16 +69,21 @@ function sameSitePath(next, origin) {
  * first screen by default, or a claim link or invite page).
  */
 export function destinationFor({ type, next }, origin, home = '/MyGeckos') {
-  if (type === 'recovery' || type === 'invite') return '/AuthPortal?mode=reset';
-  if (type === 'email_change') return '/Settings';
   const path = sameSitePath(next, origin);
-  if (!path || path.startsWith('/AuthPortal')) return home;
-  return path;
+  const target = path?.startsWith('/AuthPortal')
+    ? redirectFromSearch(new URL(path, origin).search)
+    : safeRedirectPath(path);
+  if (type === 'recovery' || type === 'invite') return authContinuationPath(target, { reset: true });
+  if (type === 'email_change') return '/Settings';
+  return target || home;
 }
 
 /** The app address that hands a token link to the native app. */
 export function nativeHandoff({ tokenHash, type, next }) {
-  if (!String(next || '').startsWith(NATIVE_CALLBACK_PREFIX)) return null;
+  try {
+    const url = new URL(next);
+    if (`${url.protocol}//${url.host}${url.pathname}` !== NATIVE_CALLBACK_PREFIX) return null;
+  } catch { return null; }
   const sep = next.includes('?') ? '&' : '?';
   return `${next}${sep}token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(type)}`;
 }
@@ -106,7 +112,11 @@ export async function completeEmailLink(supabase, win = typeof window !== 'undef
     return 'done';
   } catch {
     const reset = link.type === 'recovery' || link.type === 'invite';
-    win.location.replace(`/AuthPortal?authError=link${reset ? '&mode=reset' : ''}`);
+    const destination = destinationFor(link, win.location.origin);
+    const target = destination.startsWith('/AuthPortal')
+      ? redirectFromSearch(new URL(destination, win.location.origin).search)
+      : safeRedirectPath(destination);
+    win.location.replace(`/AuthPortal?authError=link${reset ? '&mode=reset' : ''}${target && target !== '/MyGeckos' ? `&redirect=${encodeURIComponent(target)}` : ''}`);
     return 'failed';
   }
 }

@@ -391,6 +391,57 @@ import of the same file is refused row by row instead of duplicating geckos.
 The original build session could not reach MorphMarket. The live two-row
 check below now supplies that proof.
 
+### 24 October safety follow-up: export paused
+
+Tennyson superseded warning-only: do not allow export if it could erase existing
+MorphMarket data. Both export screens now disable every CSV download and copy
+control, and the shared production CSV builder rejects export even for complete
+records. Import is still available. Two regression cases prove rejection before
+any download is created; the existing formatter and formula-safety tests remain.
+Validation: all 3,484 tests in 296 files pass; lint has 0 errors and 75 existing
+warnings.
+
+At the safety pause, the old export had 14 of 33 supported fields. The reference
+below records the missing 19, lossy mappings and replacement listing-field
+workflow. The later full-field workspace and preservation proof below supersede this pause.
+The earlier successful create/update test remains valid historical evidence,
+not permission to re-enable a potentially destructive export.
+
+### 24 October: full listing workspace and preservation proof
+
+Added private storage for all 33 supported fields, the original source and draft,
+with owner-only access even when the gecko is public. The workspace at
+`/MorphMarketExport` loads a complete fresh Animal Records CSV, matches exact
+seller IDs, exposes every field, shows explicit changes and resolves conflicts
+with saved edits. It blocks erasing populated values, changing identity,
+unknown columns, invalid values and spreadsheet formula transformations.
+Collection values are optional suggestions, never automatic replacements.
+Complete reverse imports atomically save the private fields and create private
+animals, or match an existing ID without overwriting collection details.
+
+Migration `20261024204147_morphmarket_listing_details.sql` applied in the local
+311-migration PostgreSQL harness. Regression checks passed for owner privacy,
+anonymous access denial, stale saves, identity, blanking and atomic rollback.
+All 3,544 tests in 301 files pass; lint has 0 errors and 73 existing warnings.
+The expanded live preservation test passed with the shared formatter: A changed
+126 to 127 and retained its other 32 supported fields; B retained all 33. Private
+notes, wholesale details, shipping, diet, length, proven breeder, group ID and
+sale preferences were populated and retained. Fixed real export spellings for
+diet and length units. The deployed editor saved both full private records and
+visibly refused clearing price. Guarded downloads require a fresh source and
+review; the old quick-export builder stays blocked. See the reference for proof
+scope and the final UI checks.
+
+Final production UI proof on `9d8fb4b`: downloaded the reviewed two-row file
+from Geck Inspect, uploaded it unchanged to MorphMarket, then exported the same
+pair again. A changed 127 to 128 and retained the other 32 supported fields;
+B retained all 33. Listing numbers stayed 4174375 and 4174376, with no duplicates.
+Refreshed and saved the returned source with no pending changes. The live return
+import reported zero created and two matched. All disposable records remain
+archived. Final checks: 3,564 tests in 302 files pass, lint 0 errors and 71
+existing warnings, production deployment READY. Active sale/payment,
+wholesale-only and populated-video behavior remain outside the live proof.
+
 ### 24 October follow-up: badge and CSV round trip proven
 
 Read all 33 Supported Fields on the signed-in MorphMarket Import Animals
@@ -452,8 +503,8 @@ MorphMarket listings are now archived; permanent deletion remains with Tennyson.
 Data-loss finding: a separate upload with Price, DOB and Weight columns removed
 still cleared both dates and weights and changed both prices to $0. The importer
 adds missing fields as blank. Restored all values with the full file. Warnings
-now explain this directly. Tennyson chose to keep export available with a
-clear warning on 24 October, without blocking incomplete files. See the
+now explain this directly. Tennyson initially chose warning-only, then
+superseded that choice with the export pause above. See the
 reference for exact test values and scope. For Sale shipping, payments and
 sold-state flows were not exercised.
 

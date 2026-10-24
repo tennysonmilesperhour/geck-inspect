@@ -1,9 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const invoke = vi.fn();
-vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke } } }));
+const getUser = vi.fn();
+const rpc = vi.fn();
+vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke }, auth: { getUser }, rpc } }));
 
 const {
+  startTransfer,
+  cancelTransfer,
   animalFromPreview,
   buildTransferRow,
   claimErrorKind,
@@ -70,6 +74,12 @@ describe('transfer rows', () => {
 
   it('makes claim links on the given origin', () => {
     expect(claimUrlFor('abc', 'https://geckinspect.com')).toBe('https://geckinspect.com/claim/abc');
+  });
+
+  it('uses the public website for QR links generated in a native app', () => {
+    vi.stubGlobal('window', { location: { origin: 'capacitor://localhost' }, Capacitor: { isNativePlatform: () => true } });
+    expect(claimUrlFor('native-token')).toBe('https://geckinspect.com/claim/native-token');
+    vi.unstubAllGlobals();
   });
 
   it('treats a pending transfer past its expiry as expired', () => {
@@ -186,5 +196,46 @@ describe('claim errors', () => {
   it('falls back to a generic failure', () => {
     expect(claimErrorKind({ message: 'connection reset' })).toBe('claim_failed');
     expect(claimErrorKind(null)).toBe('claim_failed');
+  });
+});
+
+
+describe('server-issued transfer links', () => {
+  beforeEach(() => {
+    getUser.mockReset(); rpc.mockReset(); invoke.mockReset();
+    getUser.mockResolvedValue({ data: { user: { id: 'owner', email: 'owner@example.com' } } });
+  });
+  it('creates a scoped QR link on the server without emailing anyone', async () => {
+    rpc.mockResolvedValue({ data: { id: 'transfer', token: 'opaque-token', expires_at: '2026-10-20T12:00:00Z', claim_mode: 'link' } });
+    const result = await startTransfer({ animalId: 'g1', toEmail: null, salePrice: null, message: '  hello  ' });
+    expect(rpc).toHaveBeenCalledWith('create_transfer', { p_animal_id: 'g1', p_animal_type: 'gecko', p_to_email: null, p_sale_price: null, p_message: 'hello' });
+    expect(result.claimUrl).toMatch(/\/claim\/opaque-token$/);
+    expect(invoke).not.toHaveBeenCalled();
+  });
+  it('emails only after the authenticated create succeeds', async () => {
+    rpc.mockResolvedValue({ error: { message: 'Only the owner can transfer it.' } });
+    await expect(startTransfer({ animalId: 'someone-elses-gecko', toEmail: 'buyer@example.com' })).rejects.toMatchObject({ message: 'Only the owner can transfer it.' });
+    expect(invoke).not.toHaveBeenCalled();
+  });
+  it('requires a session before starting a transfer', async () => {
+    getUser.mockResolvedValue({ data: { user: null } });
+    await expect(startTransfer({ animalId: 'g1' })).rejects.toThrow('signed in');
+    expect(rpc).not.toHaveBeenCalled();
+  });
+  it('fails clearly without a browser fallback when the server is not ready', async () => {
+    rpc.mockResolvedValue({ error: { code: 'PGRST202', message: 'Could not find create_transfer' } });
+    await expect(startTransfer({ animalId: 'g1' })).rejects.toThrow('temporarily unavailable');
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(invoke).not.toHaveBeenCalled();
+  });
+  it('revokes through the owner-checked server operation', async () => {
+    rpc.mockResolvedValue({ data: { status: 'cancelled' } });
+    await cancelTransfer('transfer');
+    expect(rpc).toHaveBeenCalledWith('revoke_transfer', { p_transfer_id: 'transfer' });
+  });
+  it('maps verification and self-transfer failures', () => {
+    expect(claimErrorKind({ message: 'verified email required' })).toBe('verify_email');
+    expect(claimErrorKind({ message: 'cannot transfer to yourself' })).toBe('own_animal');
+    expect(claimErrorKind({ message: 'not authenticated' })).toBe('sign_in');
   });
 });

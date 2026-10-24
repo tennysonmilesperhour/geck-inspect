@@ -154,3 +154,26 @@ describe('where a confirmed member lands with nothing else asked for', () => {
     expect(destinationFor({ type: 'email', next: 'https://geckinspect.com/claim/abc' }, 'https://geckinspect.com', '/Today')).toBe('/claim/abc');
   });
 });
+
+
+describe('transfer continuation across email verification', () => {
+  const callback = ORIGIN + '/AuthPortal?redirect=%2Fclaim%2Fprivate-token';
+  it('unwraps the same-site auth callback without needing local storage', () => {
+    expect(destinationFor({ type: 'signup', next: callback }, ORIGIN)).toBe('/claim/private-token');
+  });
+  it('keeps the pending claim through recovery', () => {
+    expect(destinationFor({ type: 'recovery', next: callback }, ORIGIN)).toBe('/AuthPortal?mode=reset&redirect=%2Fclaim%2Fprivate-token');
+  });
+  it('does not accept an external nested return path', () => {
+    expect(destinationFor({ type: 'signup', next: ORIGIN + '/AuthPortal?redirect=https%3A%2F%2Fevil.test' }, ORIGIN)).toBe('/MyGeckos');
+  });
+  it('preserves the transfer when email verification fails on another device', async () => {
+    const win = fakeWindow(ORIGIN + '/AuthPortal?token_hash=expired&type=signup&next=' + encodeURIComponent(callback));
+    expect(await completeEmailLink(client({ error: { message: 'expired' } }), win)).toBe('failed');
+    expect(win.location.replace).toHaveBeenCalledWith('/AuthPortal?authError=link&redirect=%2Fclaim%2Fprivate-token');
+  });
+  it('reads a validated continuation from a native callback', () => {
+    expect(parseNativeAuthCallback('com.geckinspect.app://auth/callback?code=abc&redirect=%2Fclaim%2Fprivate-token').target).toBe('/claim/private-token');
+    expect(parseNativeAuthCallback('com.geckinspect.app://auth/callback?code=abc&redirect=https%3A%2F%2Fevil.test').target).toBeNull();
+  });
+});

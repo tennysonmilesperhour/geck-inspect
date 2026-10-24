@@ -5,6 +5,8 @@ import { formatCents, fulfillmentBadge, isCartEligible } from '@/lib/store/forma
 import { FtcDisclosureInline } from '@/components/store/FtcDisclosure';
 import AddToCartButton from '@/components/store/AddToCartButton';
 import { isAwaitingCheckout } from '@/lib/store/checkoutFlags';
+import { primaryProductImage } from '@/lib/store/productImages';
+import ProductImagePlaceholder from '@/components/store/ProductImagePlaceholder';
 
 const TONE_CLASSES = {
   emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-700/40',
@@ -15,10 +17,7 @@ const TONE_CLASSES = {
 
 export default function ProductCard({ product, vendorName }) {
   if (!product) return null;
-  const primary =
-    (Array.isArray(product.images) && product.images.find((i) => i.is_primary)) ||
-    (Array.isArray(product.images) && product.images[0]) ||
-    null;
+  const primary = primaryProductImage(product);
   const cartEligible = isCartEligible(product.fulfillment_mode);
   const badge = fulfillmentBadge(product.fulfillment_mode, vendorName);
   const showAffiliate = product.fulfillment_mode === 'affiliate_redirect';
@@ -44,9 +43,7 @@ export default function ProductCard({ product, vendorName }) {
         ) : product.slug === CUSTOM_SHIRT_SLUG ? (
           <ShirtPreview design={createDefaultShirtDesign()} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">
-            No image
-          </div>
+          <ProductImagePlaceholder product={product} />
         )}
       </Link>
       <div className="p-3 flex flex-col flex-1 gap-2">

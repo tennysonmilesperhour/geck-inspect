@@ -242,7 +242,7 @@ describe('the gecko record, for its owner', () => {
   it('links to each section from the top, and every link has its section', async () => {
     const tree = await mount();
     const links = tree.root.findAll((n) => n.type === 'a' && String(n.props.href || '').startsWith('#record-'));
-    expect(links.map((a) => innerText(a))).toEqual(['Weights', 'Feeding and sheds', 'Vet visits', 'Lineage', 'Passport', 'Breeding']);
+    expect(links.map((a) => innerText(a))).toEqual(['Overview', 'Care history', 'Breeding', 'Sharing', 'More']);
     const ids = new Set(tree.root.findAll((n) => typeof n.props?.id === 'string').map((n) => n.props.id));
     for (const a of links) expect(ids.has(a.props.href.slice(1)), a.props.href).toBe(true);
   });
@@ -257,6 +257,19 @@ describe('the gecko record, for its owner', () => {
     expect(at('manage')).toBeLessThan(at('Make a sticker'));
     expect(order.at(-1)).toBe('Supplies');
     expect(at('Make a sticker')).toBe(order.length - 2);
+  });
+
+  it('groups care records together and keeps transfer and housekeeping in sharing', async () => {
+    const tree = await mount();
+    const care = tree.root.find((n) => n.type === 'section' && n.props.id === 'record-care-history');
+    const sharing = tree.root.find((n) => n.type === 'section' && n.props.id === 'record-sharing');
+    for (const label of ['Weights', 'Feeding and sheds', 'Vet visits', 'Event history']) {
+      expect(innerText(care), label).toContain(label);
+    }
+    expect(innerText(care)).not.toContain('Transfer to a new owner');
+    expect(innerText(sharing)).toContain('Transfer to a new owner');
+    expect(innerText(sharing)).toContain('Archive');
+    expect(innerText(sharing)).not.toContain('Feeding and shed log');
   });
 
   it('names the pairing partner even when the host does not have it', async () => {

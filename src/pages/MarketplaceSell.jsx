@@ -340,7 +340,7 @@ function ListingCard({
                 className="touch:min-h-11 inline-flex items-center gap-1 text-[10px] text-slate-400 hover:text-emerald-300 transition-colors py-0.5"
                 title="Add this listing to your MorphMarket CSV batch"
               >
-                <ExternalLink className="w-3 h-3" /> Send to MorphMarket
+                <ExternalLink className="w-3 h-3" /> Review MorphMarket listing
               </Link>
               <button
                 type="button"
