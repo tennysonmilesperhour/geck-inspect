@@ -71,7 +71,12 @@ use M/D/YYYY and are converted to ISO. Two dates contain only month/year and
 remain unset with warnings. Photo counts are retained. All six source seller
 IDs are blank, so the importer warns about repeat-import duplicates rather
 than pretending the marketplace's listing number is the seller's Animal_ID.
-This is a real-file parser check, not a completed import into the account.
+After production deployment of `63994ac0`, loaded this same downloaded file
+through Seller Console > MorphMarket Sync > Import CSV. The live dialog
+showed five correct names, sexes, traits and prices and all eight expected
+warnings. Cancelled the dialog without creating records because these are
+existing animals, not the disposable test pair. This proves the deployed
+file selection and preview path, not a completed import into the account.
 
 ## Live proof record
 

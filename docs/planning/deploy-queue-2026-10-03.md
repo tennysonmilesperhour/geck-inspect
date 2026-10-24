@@ -414,6 +414,14 @@ cannot be stored as a full hatch date.
 Validation: `pnpm lint` passed with 0 errors and 75 existing warnings;
 `pnpm test` passed all 3,479 tests in 295 files. The real downloaded CSV
 also passed assertions for titles, dates, photo counts and species filtering.
+Commit `63994ac0` was pushed directly to main and Vercel reported a successful
+production deployment. The live Import CSV dialog then showed the five
+crested records with correct names, sexes, traits and prices and all eight
+expected warnings. Cancelled without creating records. Separate GitHub
+member-flow and database checks also failed on the preceding commit: the
+browser installer does not support the runner's Ubuntu version, and two
+weekly-email SQL fixtures fail. The main checks job was cancelled when a
+newer unrelated commit arrived.
 
 Not yet proven: Tennyson has been asked for his actual store link and to run
 Check my store. The initial production query returned no rows. There is no
