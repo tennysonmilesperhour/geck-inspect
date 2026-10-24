@@ -1377,8 +1377,21 @@ select.glass-field option { background: rgb(15 23 42); color: rgb(226 232 240); 
 .gecko-bottom-nav--bar.is-scrolled-away {
   transform: translateY(calc(100% + 2px));
 }
+/* The floating notices and the feedback button ride down with the bar so
+   no gap opens under them. `translate` is its own property, so it adds to
+   any Tailwind transform (the feedback button's tap scale) without
+   replacing it. Phones only: from md up there is no bottom bar. */
+@media (max-width: 767.98px) {
+  [data-follows-bottom-bar] {
+    transition: translate 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  :root[data-bottom-bar-away] [data-follows-bottom-bar] {
+    translate: 0 var(--bottom-bar-h);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .gecko-bottom-nav--bar {
+  .gecko-bottom-nav--bar,
+  [data-follows-bottom-bar] {
     transition: none;
   }
 }
