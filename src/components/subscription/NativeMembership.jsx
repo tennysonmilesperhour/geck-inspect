@@ -62,8 +62,9 @@ export default function NativeMembership({ user, userChecked = true }) {
           const funnel = { tier: plan.tier, interval: plan.period === 'per year' ? 'annual' : 'monthly', paywall_outcome: currentOutcomeVariant() };
           captureEvent('native_purchase_started', funnel);
           await purchasePackage(pkg);
+          // Store success is independent of the entitlement refresh.
+          captureEvent('native_purchase_completed', funnel);
           const tier = await sync();
-          captureEvent('native_purchase_completed', { ...funnel, active_tier: tier || 'free' });
           toast({ title: tier && tier !== 'free' ? `${TIER_LIMITS[tier].label} access is active` : 'Purchase received', description: tier && tier !== 'free' ? 'Your membership features are ready.' : 'Your store may still be processing this purchase. Refresh access shortly.' });
         })}>{alreadyCovered ? 'Included in your current access' : hasDirectMembership ? 'Manage your existing membership' : `Continue for ${pkg.product.priceString} ${plan.period}`}</Button>
       </div>;
