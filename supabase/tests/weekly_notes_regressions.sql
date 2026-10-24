@@ -1,9 +1,11 @@
 -- Weekly Gecko Notes: who may get one, the 7-day and 20-hour spacing, the
--- lifecycle window, never twice, the claim, the drip-only unsubscribe,
+-- lifecycle window, the relevance gate (a gecko on record, or a sign-in
+-- within 60 days), never twice, the claim, the drip-only unsubscribe,
 -- the sign-up box and the region rule for the EEA and the UK, and account
 -- erasure. Regression checks for
--- supabase/migrations/20261018002200_weekly_notes.sql and
--- 20261018002300_erase_weekly_notes.sql.
+-- supabase/migrations/20261018002200_weekly_notes.sql,
+-- 20261018002300_erase_weekly_notes.sql and
+-- 20261020230000_email_relevance_and_outcomes.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members, moves the clock with the p_now argument the
@@ -58,11 +60,14 @@ begin
   if p_profile_first then
     insert into public.profiles (email) values (v_email);
   end if;
+  -- last_sign_in_at is the sign-up. Supabase Auth records a sign-in when
+  -- the account is created, and the relevance gate (20 Oct 2026) treats
+  -- that as "signed in within 60 days" until it ages out.
   insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at, last_sign_in_at)
   values ('00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated', v_email,
           'not-a-real-password', case when p_confirmed then p_signed_up end,
-          '{"provider":"email","providers":["email"]}'::jsonb, p_meta, p_signed_up, p_signed_up);
+          '{"provider":"email","providers":["email"]}'::jsonb, p_meta, p_signed_up, p_signed_up, p_signed_up);
   if not exists (select 1 from public.profiles where email = v_email) then
     insert into public.profiles (email) values (v_email);
   end if;
@@ -295,6 +300,64 @@ end $$;
 
 -- Block 2's members are done; switch them off so later counts are exact.
 update public.profiles set email_weekly_notes_enabled = false where email like 'weekly-%';
+
+-- 2b. Relevance, since 20 Oct 2026 (20261020230000). A member gets a note
+--     with a gecko on record, or a sign-in more recent than 60 days ago.
+--     Leaving someone off the list does not touch their switch. Signing in
+--     or adding a gecko puts them back. The factory records a sign-in at
+--     sign-up, which is why a 30-day-old member in the blocks above is
+--     still a candidate with no gecko.
+do $$
+declare
+  v_t0 timestamptz := (select t0 from _t0);
+  v_quiet timestamptz := (select t0 from _t0) - interval '90 days';
+  v_on boolean;
+begin
+  perform pg_temp.mk('quiet', v_quiet);
+  if pg_temp.cand('quiet', v_t0) then
+    raise exception 'FAIL: a member with no gecko and no sign-in for 90 days is a candidate';
+  end if;
+  select email_weekly_notes_enabled into v_on from public.profiles where email = pg_temp.em('quiet');
+  if v_on is not true then
+    raise exception 'FAIL: leaving a quiet member off the list turned their switch off';
+  end if;
+
+  -- The gate is last_sign_in_at > p_now - 60 days, so exactly 60 days is out.
+  update auth.users set last_sign_in_at = v_t0 - interval '60 days' where email = pg_temp.em('quiet');
+  if pg_temp.cand('quiet', v_t0) then
+    raise exception 'FAIL: a sign-in exactly 60 days ago made a member with no gecko a candidate';
+  end if;
+  update auth.users set last_sign_in_at = v_t0 - interval '60 days' + interval '1 second' where email = pg_temp.em('quiet');
+  if not pg_temp.cand('quiet', v_t0) then
+    raise exception 'FAIL: a sign-in one second inside 60 days did not make the member a candidate';
+  end if;
+
+  update auth.users set last_sign_in_at = v_quiet where email = pg_temp.em('quiet');
+  if pg_temp.cand('quiet', v_t0) then
+    raise exception 'FAIL: clearing the recent sign-in left a member with no gecko as a candidate';
+  end if;
+  insert into public.geckos (id, name, created_by, created_date, morphs_traits)
+  values ('weekly-quiet-' || left(gen_random_uuid()::text, 8), 'Mango', upper(pg_temp.em('quiet')), v_quiet, 'Lilly White Harlequin');
+  if not pg_temp.cand('quiet', v_t0) then
+    raise exception 'FAIL: a gecko on record did not bring a quiet member back';
+  end if;
+
+  -- Never signed in (Auth did not record one) and no gecko: not a candidate,
+  -- even though the account is only 30 days old.
+  perform pg_temp.mk('nosignin', v_t0 - interval '30 days');
+  update auth.users set last_sign_in_at = null where email = pg_temp.em('nosignin');
+  if pg_temp.cand('nosignin', v_t0) then
+    raise exception 'FAIL: a member who never signed in and has no gecko is a candidate';
+  end if;
+  insert into public.geckos (id, name, created_by, created_date, morphs_traits)
+  values ('weekly-nosignin-' || left(gen_random_uuid()::text, 8), 'Mango', pg_temp.em('nosignin'), v_t0, 'Lilly White Harlequin');
+  if not pg_temp.cand('nosignin', v_t0) then
+    raise exception 'FAIL: a gecko on record did not make a never-signed-in member a candidate';
+  end if;
+end $$;
+select pg_temp.retire('quiet');
+select pg_temp.retire('nosignin');
+
 update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';
 
 -- 3. The job, with the switch on ----------------------------------------------
