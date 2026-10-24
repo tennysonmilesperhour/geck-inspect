@@ -42,9 +42,10 @@ import { createPageUrl } from '@/utils';
 import PageHeader from '@/components/shared/PageHeader';
 import {
   buildMorphMarketCSV,
+  MORPHMARKET_EXPORT_BLOCKED_REASON,
   buildMorphMarketRow,
   exportMorphMarketCSV,
-  MM_HEADERS,
+  morphMarketHeaders,
 } from '@/lib/morphmarketSync';
 import QuickFixModal from '@/components/morph-market/QuickFixModal';
 import { resolveTier } from '@/lib/tierLimits';
@@ -83,7 +84,8 @@ const MONTHS = [
 const REQUIRED_FIELDS = [
   { key: 'sex', label: 'Sex', test: (g) => g.sex && g.sex !== 'Unknown' },
   { key: 'morphs_traits', label: 'Traits', test: (g) => Boolean((g.morphs_traits && g.morphs_traits.trim()) || (Array.isArray(g.morph_tags) && g.morph_tags.length > 0)) },
-  { key: 'asking_price', label: 'Price', test: (g) => g.asking_price != null && g.asking_price !== '' },
+  { key: 'asking_price', label: 'Price', test: (g) => !['For Sale', 'Sold'].includes(g.status) || Number(g.asking_price) > 0 },
+  { key: 'hatch_date', label: 'Hatch date for maturity', test: (g) => Boolean(buildMorphMarketRow(g).Maturity) },
   { key: 'image_urls', label: 'At least 1 image', test: (g) => Array.isArray(g.image_urls) && g.image_urls.length > 0 },
 ];
 
@@ -102,7 +104,7 @@ function maturityLabel(months) {
   if (months == null) return 'Unknown';
   if (months < 3) return 'Baby';
   if (months < 8) return 'Juvenile';
-  if (months < 14) return 'Sub-Adult';
+  if (months < 14) return 'Subadult';
   return 'Adult';
 }
 
@@ -444,7 +446,7 @@ function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
 // the QuickFix modal for those.
 const EDITABLE_HEADERS = {
   Sex:    { field: 'sex',           type: 'select', options: ['Male', 'Female', 'Unsexed'] },
-  Status: { field: 'status',        type: 'select', options: STATUS_OPTIONS },
+  State:  { field: 'status',        type: 'select', options: STATUS_OPTIONS },
   Traits: { field: 'morphs_traits', type: 'text' },
   Price:  { field: 'asking_price',  type: 'number' },
   Weight: { field: 'weight_grams',  type: 'number' },
@@ -529,6 +531,7 @@ function EditableCell({ value, displayValue, config, onCommit }) {
 }
 
 function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
+  const headers = morphMarketHeaders(geckos);
   if (geckos.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-6 text-center">
@@ -542,7 +545,7 @@ function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
   return (
     <div className="space-y-1">
       <p className="text-[11px] text-slate-500 flex items-center gap-1">
-        <ArrowRight className="w-3 h-3" /> Scroll horizontally for all {MM_HEADERS.length} columns. Click any Sex / Status / Traits / Price / Weight cell to edit it inline.
+        <ArrowRight className="w-3 h-3" /> Scroll horizontally for all {headers.length} columns. Click any Sex / State / Traits / Price / Weight cell to edit it inline.
       </p>
       <div className="relative rounded-xl border border-slate-800 bg-slate-950/40">
         <div className="overflow-x-scroll rounded-xl">
@@ -551,7 +554,7 @@ function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
               <tr>
                 <th className="text-left px-2 py-2 font-medium">#</th>
                 <th className="text-left px-2 py-2 font-medium">Fix</th>
-                {MM_HEADERS.map((h) => (
+                {headers.map((h) => (
                   <th key={h} className="text-left px-2 py-2 font-medium whitespace-nowrap">
                     {h}
                     {EDITABLE_HEADERS[h] && <span className="ml-1 text-emerald-500/70" title="Editable">✎</span>}
@@ -583,7 +586,7 @@ function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
                         {missing.length > 0 ? 'Fix' : 'Edit'}
                       </button>
                     </td>
-                    {MM_HEADERS.map((h) => {
+                    {headers.map((h) => {
                       const config = EDITABLE_HEADERS[h];
                       if (!config) {
                         return (
@@ -717,7 +720,7 @@ export default function MorphMarketExport() {
                 setBatchIds((prev) => [...new Set([...prev, ...ids])]);
                 toast({
                   title: ids.length === 1 ? 'Added to the MorphMarket batch' : `Added ${ids.length} to the MorphMarket batch`,
-                  description: 'Check the fields, then download the CSV and upload it on MorphMarket.',
+                  description: 'Your selection is saved. Export is paused to protect existing MorphMarket details.',
                 });
               }
               if (params.has('add')) {
@@ -907,11 +910,12 @@ export default function MorphMarketExport() {
       toast({ title: 'Batch is empty', description: 'Add some geckos first.', variant: 'destructive' });
       return;
     }
-    const filename = exportMorphMarketCSV(batchGeckos);
-    toast({
-      title: 'CSV downloaded',
-      description: `${batchGeckos.length} listing${batchGeckos.length === 1 ? '' : 's'} saved to ${filename}.`,
-    });
+    try {
+      const filename = exportMorphMarketCSV(batchGeckos);
+      toast({ title: 'CSV downloaded', description: filename });
+    } catch (error) {
+      toast({ title: 'Export unavailable', description: error.message, variant: 'destructive' });
+    }
   };
 
   const handleCopy = async () => {
@@ -920,10 +924,10 @@ export default function MorphMarketExport() {
       await navigator.clipboard.writeText(buildMorphMarketCSV(batchGeckos));
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
-    } catch {
+    } catch (error) {
       toast({
-        title: 'Copy failed',
-        description: 'Your browser blocked clipboard access. Use Download instead.',
+        title: 'Copy unavailable',
+        description: error.message,
         variant: 'destructive',
       });
     }
@@ -974,9 +978,9 @@ export default function MorphMarketExport() {
           title="MorphMarket Bulk Export"
           description={
             <>
-              Filter your collection, batch the geckos you want to list, and download a CSV that drops straight into{' '}
+              Review your saved batch for{' '}
               <a
-                href="https://www.morphmarket.com/me/ads/import/"
+                href="https://www.morphmarket.com/inventory/import"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-emerald-400 underline underline-offset-2"
@@ -984,7 +988,7 @@ export default function MorphMarketExport() {
                 MorphMarket Bulk Import
                 <ExternalLink className="w-3 h-3 inline ml-0.5" />
               </a>
-              . Selecting a gecko and adding it to the batch removes it from the pool, so you can keep filtering for the next group.
+              . CSV download and copy are paused to protect existing listing data.
             </>
           }
         >
@@ -995,6 +999,9 @@ export default function MorphMarketExport() {
           </Link>
         </PageHeader>
 
+        <p role="alert" className="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
+          {MORPHMARKET_EXPORT_BLOCKED_REASON}
+        </p>
         <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)] gap-6">
           <div className="space-y-4 min-w-0">
             <FilterPanel
@@ -1008,7 +1015,9 @@ export default function MorphMarketExport() {
                 <p className="text-base font-semibold text-slate-100">Tips</p>
                 <p>Click a tile to select it. Click again to deselect. Use "Select all" to grab everything matching the current filter.</p>
                 <p>Geckos missing required MorphMarket fields show an amber badge. Open the gecko to fill them in before exporting.</p>
-                <p>The CSV download is the same file MorphMarket's Bulk Import 2.0 expects. Upload it on their import page as-is.</p>
+                <p>Upload the CSV on MorphMarket, review its checks, and leave Synchronize/Replace off for a partial batch. Keep Animal_ID unchanged on later uploads to update the same listings.</p>
+                <p>MorphMarket uses your Seller Profile currency. Check it matches your prices, and choose shipping there for For Sale listings.</p>
+                <p>Re-importing can erase existing MorphMarket values, even when a column is omitted. Missing prices became $0 and missing hatch dates and weights were cleared in our live test. Fill those values before uploading updates. Weights are rounded to whole grams. If maturity is blank, add a hatch date here or choose maturity on MorphMarket.</p>
               </CardContent>
             </Card>
           </div>
@@ -1142,7 +1151,7 @@ export default function MorphMarketExport() {
                   {batchMissingCount > 0 && (
                     <p className="text-xs text-amber-300 flex items-center gap-1.5 mt-0.5">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      {batchMissingCount} gecko{batchMissingCount === 1 ? '' : 's'} missing required MorphMarket fields. They'll still export, but the upload may reject them.
+                      {batchMissingCount} gecko{batchMissingCount === 1 ? '' : 's'} missing required MorphMarket fields. Export is currently paused.
                     </p>
                   )}
                 </div>
@@ -1151,7 +1160,7 @@ export default function MorphMarketExport() {
                     variant="outline"
                     size="sm"
                     onClick={handleCopy}
-                    disabled={batchGeckos.length === 0}
+                    disabled
                     className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
@@ -1160,7 +1169,7 @@ export default function MorphMarketExport() {
                   <Button
                     size="sm"
                     onClick={handleDownload}
-                    disabled={batchGeckos.length === 0}
+                    disabled
                     className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
                   >
                     <Download className="w-3.5 h-3.5 mr-1" />
@@ -1191,6 +1200,7 @@ export default function MorphMarketExport() {
                     variant="outline"
                     size="sm"
                     onClick={handleCopy}
+                    disabled
                     className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
@@ -1199,6 +1209,7 @@ export default function MorphMarketExport() {
                   <Button
                     size="sm"
                     onClick={handleDownload}
+                    disabled
                     className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
                   >
                     <Download className="w-3.5 h-3.5 mr-1" />
@@ -1213,7 +1224,7 @@ export default function MorphMarketExport() {
                     Show summary by maturity
                   </summary>
                   <div className="p-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    {['Baby', 'Juvenile', 'Sub-Adult', 'Adult'].map((label) => {
+                    {['Baby', 'Juvenile', 'Subadult', 'Adult'].map((label) => {
                       const count = batchGeckos.filter((g) => maturityLabel(ageMonths(g.hatch_date)) === label).length;
                       return (
                         <div key={label} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-center">
@@ -1263,6 +1274,7 @@ export default function MorphMarketExport() {
                   variant="outline"
                   size="sm"
                   onClick={handleCopy}
+                  disabled
                   className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
@@ -1271,6 +1283,7 @@ export default function MorphMarketExport() {
                 <Button
                   size="sm"
                   onClick={handleDownload}
+                  disabled
                   className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
                 >
                   <Download className="w-3.5 h-3.5 mr-1" />

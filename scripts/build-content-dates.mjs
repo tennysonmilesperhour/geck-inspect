@@ -65,6 +65,8 @@ export const FILES = [
   'src/pages/BreedingRecords.jsx',
   'src/pages/CrestedGeckoPrice.jsx',
   'src/pages/OpenData.jsx',
+  'src/pages/Compare.jsx',
+  'src/data/comparisons.js',
   'src/pages/Recognition.jsx',
   'src/pages/Gallery.jsx',
   'src/pages/Forum.jsx',

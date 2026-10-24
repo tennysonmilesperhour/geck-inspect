@@ -2,22 +2,24 @@
 
 How Geck Inspect writes, sends and judges email. Read this before writing or changing any email: the getting-started emails (`supabase/functions/_shared/lifecycle-copy.ts`), Weekly Gecko Notes (`content/weekly-notes/`), reminders or anything new. Every rule here has a reason, and most reasons have a source (section 7).
 
-## 1. What Tennyson needs to do
+## 1. Setup status and replies
 
-Three dashboard steps. Until step 1 is done, nobody can see whether any email works.
+Dashboard setup completed on 24 October 2026, around 12:35 MDT (18:35 UTC). End-to-end verification passed at 12:54 MDT (18:54 UTC) with one approved getting-started test email to Tennyson.
 
-1. **Connect Resend's webhook (opens, clicks, bounces, complaints).** Not done: `email_deliveries` holds 97 "sent" rows and not one other event, and `resend-webhook` has not been called once.
-   - https://resend.com/webhooks, Add endpoint
+1. **Resend webhook connected.** Endpoint `6e56f06c-541f-4717-a3ef-52e9a8137bbd` is enabled at https://resend.com/webhooks/6e56f06c-541f-4717-a3ef-52e9a8137bbd.
    - URL: `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/resend-webhook`
    - Events: `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.opened`, `email.clicked`, `email.bounced`, `email.complained`
-   - Copy the signing secret (starts with `whsec_`) into https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/functions/secrets as `RESEND_WEBHOOK_SECRET`
-   - https://resend.com/domains, the geckinspect.com domain, turn on **Click tracking** (open tracking too, but section 4 explains why opens barely count)
-2. **Send as a person, and let replies reach you.** Same secrets page:
-   - `EMAIL_FROM_PERSONAL` = `Tennyson at Geck Inspect <tennyson@geckinspect.com>` (any address on the verified geckinspect.com domain works for sending)
-   - `EMAIL_REPLY_TO` = an inbox you actually read
-   - Only the getting-started emails and Weekly Gecko Notes use these. Reminders, digests and alerts keep `EMAIL_FROM`.
-   - The day 0 and day 1 emails ask a question to reply to **only when `EMAIL_REPLY_TO` is set**, so nobody is asked something no one will read.
-3. **Answer the replies.** At this list size a reply is the best signal there is (section 4), and Godin's strongest kind of permission is a personal relationship. A two-line answer is enough.
+   - Its signing secret is saved as `RESEND_WEBHOOK_SECRET` in Supabase; the saved SHA-256 digest matches the endpoint secret exactly. Never put the value in this document.
+   - **Click and open tracking enabled.** Resend now requires a tracking subdomain. GoDaddy added `links.geckinspect.com` CNAME `links2.resend-dns.com`; public DNS resolves it. Resend reports the tracking CNAME as Verified.
+   - **Verified end to end:** test email `01a16f42-fa0b-7ca8-bfa5-c8effb34d03b` produced `delivered` at 18:53:43 UTC, `clicked` at 18:54:27 UTC and `opened` at 18:54:33 UTC in `public.email_deliveries`. The tracked button redirected to `https://geckinspect.com/MyGeckos`; the click and pixel fetch were deliberate test actions, not member engagement. The earlier HTTP 401 was the deliberately unsigned probe, not a failed Resend signature.
+2. **Personal sender and reply inbox configured.** Both secrets are saved:
+   - `EMAIL_FROM_PERSONAL` = `Tennyson at Geck Inspect <tennyson@geckinspect.com>`
+   - `EMAIL_REPLY_TO` = `tennysontaggart@gmail.com`
+   - Getting-started emails, Weekly Gecko Notes and re-permission letters use these. Reminders, digests and alerts keep `EMAIL_FROM`.
+   - Day 0 and day 1 reply questions are enabled by `EMAIL_REPLY_TO`.
+   - **Verified actual sender and reply-to:** Resend and the received Gmail MIME headers both show the values above on the day 0 test, subject "Tennyson (setup test), start with one gecko". The reply question is present. Gmail placed it in the Promotions inbox, with SPF, DKIM and DMARC passing.
+   - Sending DNS records are verified. Resend's existing inbound MX conflict remains; replies use Gmail and do not depend on Resend receiving mail for the domain.
+3. **Answer the replies.** This remains Tennyson's ongoing task. At this list size a reply is the best signal there is (section 4), and Godin's strongest kind of permission is a personal relationship. A two-line answer is enough.
 
 ## 2. What the data said on 20 October
 
@@ -48,7 +50,7 @@ Each one is a rule we follow, then why.
    - *Relevant:* it fits where the member is now (no gecko yet, one gecko, a breeder with pairings) and the season.
 3. **Would they miss it?** Godin's test for a newsletter is whether people would notice if it stopped. A weekly note earns its slot by being the tip a keeper would forward to a friend. If it would not be missed, do not send it.
 4. **One email, one next step.** Each getting-started email moves the member one step toward the moment the app becomes useful: a gecko on record, then a first weight, then parents, then a trend. (Val Geisler's dinner party: take the coat, show them round, then serve dinner. Patrick McKenzie: write one email per step where new users stall.) One button.
-5. **Triggered by what they did, not by the calendar.** Behaviour-triggered emails get about twice the clicks of scheduled sends. The getting-started emails already branch on the member's record. The weekly notes do not yet (section 6).
+5. **Triggered by what they did, not by the calendar.** Behaviour-triggered emails get about twice the clicks of scheduled sends. The getting-started emails branch on the member's record, and since 24 October so do the weekly notes (section 5).
 6. **A letter from a person beats a designed card.** HubSpot found the more HTML-heavy an email, the lower its opens and clicks; simple letter-style emails won even though people *say* they prefer designed ones. A named sender ("person at company") does better than the company name alone. So since 20 October these emails are a plain white letter, no heading, signed "Tennyson", from Tennyson when step 1.2 is done.
 7. **The subject says what is inside, using the member's data.** Clear beats clever on clicks (AWeber: clear subject lines drew 541% more response than clever ones; curiosity can win opens and lose clicks). Good: "Mango is in. Next: a first weight". Bad: "Welcome to Geck Inspect" (says nothing) or "You won't believe this" (clickbait).
 8. **The preview line adds to the subject.** The grey text after the subject decides a lot of opens. Without it, mail apps show the first words of the email, which used to be "Geck Inspect" and the subject again. Every email now sets one, 20 to 100 characters, never a repeat of the subject. Put the useful number in it ("Every 14 days for juveniles, 21 for sub-adults, 30 for adults").
@@ -83,15 +85,21 @@ Targets for now (to revise once there are 4 weeks of data):
 ## 5. Who gets what
 
 - **Getting-started emails:** members in their first 16 days, by step and record (`docs/planning/lifecycle-emails-2026-10.md`).
-- **Weekly Gecko Notes:** from day 16, **only for members with at least one gecko on record or who signed in within the last 60 days** (since 20 October, `20261020230000_email_relevance_and_outcomes.sql`). Before the gate the next week's list was 57 members; after it, 35. The 22 left out have no gecko and have not signed in for two months. Their switch is untouched: the moment they sign in or add a gecko, they are back on the next hourly run.
+- **Weekly Gecko Notes:** from day 16, **only for members with at least one gecko on record, a sign-in within the last 60 days, or a yes on purpose within the last year** (the Settings switch, the sign-up box, or the keep button below). The gate came on 20 October (`20261020230000_email_relevance_and_outcomes.sql`) and took the next week's list from 57 to 35; the yes rule came on 24 October. Nobody's switch is touched: signing in or adding a gecko lets a member back in on the next hourly run.
+- **Which note, and how it opens (since 24 October).** Each note can say who it is for and when (`audience` and `months` in its file, `docs/planning/weekly-notes-2026-10.md` section 6), and send-email reads the member's record (`weekly_note_facts`) before choosing:
+  - `keepers` (a gecko on record): the weigh-in reminder, on-pace and passport notes.
+  - `female` (a female on record): 40 g and 18 months. `adult-female` (a female at 35 g or 18 months): the lay box. `breeders` (a breeding plan, an egg or a clutch): incubation temperature.
+  - `months: 5-9`: the heat note waits for May to September (UTC months, read as northern hemisphere seasons). A note held back is not skipped: it comes in its season, or once the member's record fits.
+  - A `lead` opens the note with the member's own gecko: "Mango has gone longest without a weigh-in: the last was Oct 2, at 12.4 g." If the record cannot fill it, the note starts as before. Visitors (sign-ups without an account) get every note marked for visitors in season, never a lead.
+- **The re-permission email (since 24 October).** Members the gate leaves out get one email, once, from Tennyson: "Still keeping crested geckos?" The button opens `/KeepNotes`, which asks for one press (mail scanners open links) and records a yes, or a no. Doing nothing changes nothing: they are already left out, and come back if they sign in or add a gecko. 24 members qualified on 24 October. Switch: `app_settings` key `weekly_notes_repermission_enabled`; the job runs hourly at 55 past (`weekly-notes-repermission-hourly`), 20 at a time, and never within 7 days of a weekly note or 20 hours of a getting-started email. It goes once per inbox, not per account: since `20261024201200` the claim locks the inbox, so two accounts on one inbox (a plus-tag or dotted Gmail spelling) cannot both get it. Deleting an account erases its record. In `email_outcomes`, its "recorded" column counts the members who pressed keep.
 - **Reminders and alerts** (weigh-in due, feeding due, messages): the member asked for these per gecko or per type. Out of scope here.
 
 ## 6. What is next, in order
 
-1. **Connect the webhook** (section 1). Without it, no click, bounce or complaint is known.
+1. **Watch real delivery and engagement** (section 1 setup and verification are complete). Exclude the documented setup test when judging member clicks or opens.
 2. **Read `email_outcomes(60)` every Monday** for four weeks, and add a line to the log below.
-3. **Re-permission email for the 22 dormant members.** One email, once: "Still keeping crested geckos? Say yes and the weekly notes keep coming; otherwise I'll stop." Only a click keeps them on. This is Godin's rule applied to people who never really asked.
-4. **Make the weekly notes personal and seasonal.** A note can use the member's record (the weight-trend note naming their gecko whose last weigh-in is oldest; the lay box note only to keepers with an adult female) and the time of year (heat in summer, humidity in winter). Notes for breeders go to breeders.
+3. **Read the re-permission result** two weeks after it goes out: `select * from public.email_outcomes(60) where kind = 're-permission';` and `select count(*) filter (where kept_at is not null) as kept, count(*) as sent from public.weekly_notes_repermission_sends;`. A keep rate under 10% says the list was mostly people who signed up once and moved on, which is fine: they stop getting mail.
+4. **More personal notes.** New notes should use `audience` and `lead` where the record makes them sharper, for example a shed note for keepers that names a gecko with no shed logged.
 5. **A holdout** once the list passes about 300 members (section 4).
 
 ## 7. Sources
@@ -119,3 +127,6 @@ Weak or vendor-only claims left out on purpose: "a single call to action lifts c
 | Week | What changed | Outcome |
 |---|---|---|
 | 20 Oct 2026 | Letter format, preview lines, personal sender (waiting on secrets), new getting-started subjects, reply questions, weekly-notes relevance gate, `email_outcomes` | Baseline in section 2 |
+| 24 Oct 2026 | Weekly notes by audience and season with a personal lead; one-time re-permission email (24 members) and `/KeepNotes`. Webhook still not connected: no click data yet | Read 7 Nov |
+| 24 Oct 2026 (setup check) | Enabled the seven-event Resend webhook; saved webhook, personal-sender and reply-to secrets; enabled click/open tracking and added the tracking CNAME. Tracking DNS is verified; the first post-setup email remains pending | `email_outcomes(60)`: day 0 sent/returned/recorded 11/5/1; day 1 8/1/0; day 3 3/0/0; day 7 1/1/0; day 14 1/0/0; weekly heat 54/0/0; weekly weight trend 1/0/0. All stops 0. `email_delivery_stats`: 108 sent across 15 type/week rows; delivered/opened/clicked/bounced/complained all 0. These are pre-setup counts, not evidence of zero engagement or complaints. No test email sent during this check. |
+| 24 Oct 2026 (12:54 MDT verification) | One approved day 0 test to Tennyson through production `send-email`. Personal From, Gmail Reply-To and reply question verified in the received message; SPF/DKIM/DMARC pass. Signed delivered, clicked and opened events reached Supabase | `email_outcomes(60)` unchanged from the setup check: the test did not add a lifecycle send-ledger row. `email_delivery_stats`: 109 unique sent, 1 delivered, 1 clicked, 1 opened, 0 bounced/complained. The week of 19 Oct `lifecycle_day0` row is 6 sent / 1 delivered / 1 clicked / 1 opened. All three non-sent events belong to test `01a16f42-fa0b-7ca8-bfa5-c8effb34d03b`; exclude them from engagement conclusions. Two raw sent rows for this email (application and webhook) are deduplicated by the stats view. No bounce or complaint was simulated. |

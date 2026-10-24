@@ -3,6 +3,8 @@ step: 7
 slug: is-your-gecko-on-pace
 subject: Is your gecko growing on pace?
 preview: About 7 g at 6 months, 15 g at 12 and 35 g at 18. How to read the trend.
+audience: keepers
+lead: Take {gecko}: last weighed at {gecko_weight} on {gecko_weighed}. Here is how to tell whether that is on pace. || {gecko} has no weight on record yet, and pace starts with a first weigh-in.
 cta: Open My Geckos
 path: /MyGeckos
 cta_no_gecko: Read about weight tracking

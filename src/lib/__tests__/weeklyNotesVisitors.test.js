@@ -128,10 +128,10 @@ describe('send-email sends a visitor their note', () => {
     expect(db.table('profiles')).toHaveLength(0);
     expect(db.rpcCalls('email_has_login')).toHaveLength(0);
     expect(db.rpcCalls('email_unsubscribe_token')).toHaveLength(0);
-    expect(db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+    expect(db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
     expect(db.rpcCalls('weekly_notes_subscriber_token')[0].args).toEqual({ p_email: 'ana@example.com' });
     expect(db.rpcCalls('claim_weekly_note_subscriber')[0].args).toEqual({
-      p_email: 'ana@example.com', p_slugs: weeklyNotes.weeklyNoteVisitorSlugs(), p_steps: weeklyNotes.weeklyNoteVisitorSteps(),
+      p_email: 'ana@example.com', p_slugs: weeklyNotes.weeklyNoteVisitorSlugs(new Date().getUTCMonth() + 1), p_steps: weeklyNotes.weeklyNoteVisitorSteps(new Date().getUTCMonth() + 1),
     });
 
     const note = NOTES.find((n) => n.slug === weeklyNotes.weeklyNoteVisitorSlugs()[1]);
