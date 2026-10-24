@@ -516,3 +516,7 @@ Functions: `send-email` and `send-push` (both declared) map
 
 Regression file: `supabase/tests/passport_transfer_request_regressions.sql`.
 Nothing waits on Tennyson.
+
+## 24 October: getting-started email spacing (written 19 October)
+
+Written on 19 October as `20261019001200` and held while deployments were paused; merged on 24 October as `20261024183300_lifecycle_spacing_allowance.sql`, re-dated to sort after the migrations that went live in between (the last is the Weekly Gecko Notes sixth round, `20261024182000`). Merging it applies the migration; nothing else is needed. It restates `lifecycle_email_candidates` (the body matched production by checksum on 19 and 24 October) with one change: the 20-hour spacing allows 10 minutes for the hourly run's clock. Each `lifecycle_email_sends` row is stamped with its run's start, which moves by a fraction of a second, so an exact 20 hours could leave a member for the next hour (the same pattern skipped 20 Weekly Gecko Notes members in the 22:50 run on 18 Oct). Only day 0 and day 1 can meet the rule, and in production no member had reached it by 19 October. The weekly notes rule against a recent getting-started email needs no change: its stamps are at 35 past and weekly runs at 50 past. Test: section 8 of `supabase/tests/lifecycle_regressions.sql`, which fails with the exact comparison put back.
