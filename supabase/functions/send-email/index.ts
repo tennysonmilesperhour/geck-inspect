@@ -104,7 +104,7 @@
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { isLifecycleType, LIFECYCLE_SIGNOFF, lifecycleEmail, lifecycleReason } from "../_shared/lifecycle-copy.ts";
-import { isWeeklyNotesType, weeklyNoteEmail, weeklyNoteSlugs, weeklyNoteVisitorSlugs, weeklyNoteVisitorSteps, WEEKLY_NOTES_REASON, WEEKLY_NOTES_STOP_WORDS, WEEKLY_NOTES_VISITOR_REASON } from "../_shared/weekly-notes.ts";
+import { isRepermissionType, isWeeklyNotesType, REPERMISSION_REASON, repermissionEmail, weeklyNoteEmail, weeklyNoteMemberPlan, weeklyNoteSlugs, weeklyNoteVisitorSlugs, weeklyNoteVisitorSteps, WEEKLY_NOTES_REASON, WEEKLY_NOTES_STOP_WORDS, WEEKLY_NOTES_VISITOR_REASON } from "../_shared/weekly-notes.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Geck Inspect <alerts@geckinspect.com>";
@@ -635,13 +635,25 @@ serve(async (req) => {
 
   // Weekly Gecko Notes: see the order in the header. Nothing in this block
   // or the checks after it writes anything; only the claim further down does.
-  const weekly = isWeeklyNotesType(type);
+  // The re-permission email goes through the same checks as a weekly note
+  // (its own switch, the postal address, a stop link that works signed
+  // out) and is claimed once per inbox, after every check.
+  const repermission = isRepermissionType(type);
+  if (repermission) {
+    if (!payload.repermission || typeof payload.repermission !== "object" || Array.isArray(payload.repermission)) {
+      return json({ delivered: 0, skipped: "repermission-without-run" });
+    }
+    if (!EMAIL_POSTAL_ADDRESS) {
+      return json({ delivered: 0, skipped: "repermission-no-postal-address" });
+    }
+  }
+  const weekly = isWeeklyNotesType(type) || repermission;
   if (weekly) {
     // Only enqueue_weekly_notes() sends this type, always with a run
     // marker. A notification row a member writes for themselves reaches
     // this function through the dispatcher with no weekly field, so it can
     // never send one (the same rule as lifecycle-without-facts).
-    if (!payload.weekly || typeof payload.weekly !== "object" || Array.isArray(payload.weekly)) {
+    if (!repermission && (!payload.weekly || typeof payload.weekly !== "object" || Array.isArray(payload.weekly))) {
       return json({ delivered: 0, skipped: "weekly-notes-without-run" });
     }
     if (!EMAIL_POSTAL_ADDRESS) {
@@ -660,7 +672,7 @@ serve(async (req) => {
     auth: { persistSession: false },
   });
 
-  if (weekly && (payload.weekly as Record<string, unknown>).audience === "visitor") {
+  if (weekly && !repermission && (payload.weekly as Record<string, unknown>).audience === "visitor") {
     return await sendVisitorNote(supabase, userEmail);
   }
 
@@ -735,13 +747,49 @@ serve(async (req) => {
       return json({ delivered: 0, skipped: "weekly-notes-no-token" });
     }
 
+    if (repermission) {
+      let claimed = false;
+      try {
+        const { data, error } = await supabase.rpc("claim_weekly_notes_repermission", { p_email: userEmail });
+        if (error) console.warn("send-email: re-permission claim failed", error.message);
+        else claimed = Boolean(data && typeof data === "object" && (data as Record<string, unknown>).claimed === true);
+      } catch (err) {
+        console.warn("send-email: re-permission claim threw", err);
+      }
+      if (!claimed) return json({ delivered: 0, skipped: "repermission-not-claimed" });
+      const email = repermissionEmail();
+      return deliver(supabase, userEmail, type, email.title, email.body, `${email.url}?t=${encodeURIComponent(token)}`, {
+        cta: email.cta,
+        reason: REPERMISSION_REASON,
+        unsubscribeWords: WEEKLY_NOTES_STOP_WORDS,
+        preheader: email.preheader,
+        letter: true,
+        signoff: LIFECYCLE_SIGNOFF,
+      }, unsubscribeLinks(token, "weekly"));
+    }
+
+    // The member's record: which notes fit them, and the lead that opens
+    // the note. Without it the member waits for the next run, so a note
+    // for breeders or keepers is never skipped over by mistake.
+    let facts: Record<string, unknown> | null = null;
+    try {
+      const { data, error } = await supabase.rpc("weekly_note_facts", { p_email: userEmail });
+      if (error) console.warn("send-email: weekly note facts failed", error.message);
+      else if (data && typeof data === "object" && !Array.isArray(data)) facts = data as Record<string, unknown>;
+    } catch (err) {
+      console.warn("send-email: weekly note facts threw", err);
+    }
+    if (!facts) return json({ delivered: 0, skipped: "weekly-notes-facts-failed" });
+    const plan = weeklyNoteMemberPlan(facts, new Date().getUTCMonth() + 1);
+
     // The claim: the last step before sending, after every check that can
     // skip. It is the only write, and it is what makes a note go once.
     let claim: Record<string, unknown> = {};
     try {
-      const { data, error } = await supabase.rpc("claim_weekly_note", {
+      const { data, error } = await supabase.rpc("claim_weekly_note_from", {
         p_email: userEmail,
-        p_slugs: weeklyNoteSlugs(),
+        p_slugs: plan.slugs,
+        p_steps: plan.steps,
       });
       if (error) {
         console.warn("send-email: weekly note claim failed", error.message);
@@ -763,7 +811,7 @@ serve(async (req) => {
 
     // The slugs came from the same catalog, so this is never null in
     // practice; it is checked so a bad answer can never send an empty email.
-    const note = weeklyNoteEmail(claimedSlug, { hasGecko: claim.has_gecko === true });
+    const note = weeklyNoteEmail(claimedSlug, { hasGecko: claim.has_gecko === true, facts });
     if (!note) {
       return json({ delivered: 0, skipped: "weekly-notes-unknown-slug" });
     }
@@ -829,6 +877,8 @@ async function deliver(
 // A visitor's Weekly Gecko Note (see the header). Every check that can skip
 // comes before the claim, and the claim is the only write.
 async function sendVisitorNote(supabase: RpcClient, userEmail: string): Promise<Response> {
+  // Seasonal notes wait for their months (weekly-notes.ts, inSeason).
+  const month = new Date().getUTCMonth() + 1;
   const suppressed = await isSuppressed(supabase, userEmail);
   if (suppressed === true) return json({ delivered: 0, skipped: "suppressed" });
   if (suppressed === null) return json({ delivered: 0, skipped: "weekly-notes-check-failed" });
@@ -849,10 +899,10 @@ async function sendVisitorNote(supabase: RpcClient, userEmail: string): Promise<
   try {
     const { data, error } = await supabase.rpc("claim_weekly_note_subscriber", {
       p_email: userEmail,
-      p_slugs: weeklyNoteVisitorSlugs(),
+      p_slugs: weeklyNoteVisitorSlugs(month),
       // The catalog step of each slug, so the ledger row says the same
       // step a member's would.
-      p_steps: weeklyNoteVisitorSteps(),
+      p_steps: weeklyNoteVisitorSteps(month),
     });
     if (error) {
       console.warn("send-email: visitor note claim failed", error.message);

@@ -408,3 +408,20 @@ Tennyson, with a preview line, and use two new optional secrets,
 Waiting on Tennyson: the Resend webhook (never connected; no open, click,
 bounce or complaint has ever been recorded) and the two secrets.
 `docs/marketing/email-brain.md`, section 1, has the links and values.
+
+## 24 October: personal and seasonal weekly notes, the re-permission email
+
+Migration: `20261024150000_weekly_notes_personal_and_repermission.sql`. New:
+`weekly_note_facts`, `claim_weekly_note_from` (the claim with catalog
+steps; `claim_weekly_note` stays for a rollback), the table
+`weekly_notes_repermission_sends`, `weekly_notes_repermission_candidates`,
+`claim_weekly_notes_repermission`, `keep_weekly_notes_by_token` (anon and
+authenticated, checked by the signed token), `enqueue_weekly_notes_repermission`
+and the job `weekly-notes-repermission-hourly` (55 past). Replaced with the
+same signature: `weekly_notes_candidates` (a yes within a year passes the
+gate) and `email_outcomes` (a re-permission row). The switch
+`weekly_notes_repermission_enabled` is added off. Checked against production
+in a block that rolled back: 24 members qualify, 38 keepers, 26 with a
+female, 15 with an adult female, 9 breeders.
+
+Function: `send-email` (already declared). Site: the `/KeepNotes` page.
