@@ -6,9 +6,10 @@ import { normalizeWebsite, WEBSITE_FONTS, websitePalette, safeWebsiteUrl } from 
 import { publicExternalLinks, themeFor, geckoDetailHref } from './StorefrontSections';
 import './storefrontWebsite.css';
 import { VERIFIED_BREEDER_DEFINITION, VERIFIED_BREEDER_LABEL } from '@/lib/verifiedBreeder';
+import { storeUrl } from '@/lib/morphmarketStore';
 
 export default function StorefrontWebsite({ page = {}, profile = {}, settings = {}, geckos = [], plans = [], waitlist,
-  reviews, trust, onInquire, onOpenGecko, preview = false, onSectionSelect }) {
+  reviews, trust, onInquire, onOpenGecko, preview = false, onSectionSelect, morphmarketSlug }) {
   const w = normalizeWebsite(settings.website);
   const palette = websitePalette(w, themeFor(settings.theme).swatchHex);
   const title = page.title || profile.display_name || 'Your breeding business';
@@ -48,6 +49,9 @@ export default function StorefrontWebsite({ page = {}, profile = {}, settings = 
           {page.tagline && <p className="sw-tagline">{page.tagline}</p>}
           {profile.years_breeding > 0 && <p className="sw-verified">{profile.years_breeding} {profile.years_breeding === 1 ? 'year' : 'years'} breeding</p>}
           {profile.is_verified && <p className="sw-verified" title={VERIFIED_BREEDER_DEFINITION}>✓ {VERIFIED_BREEDER_LABEL}</p>}
+          {morphmarketSlug && <p className="sw-verified" title="This breeder proved they own this MorphMarket store.">
+            <a href={storeUrl(morphmarketSlug)} target="_blank" rel="noopener noreferrer">✓ Verified MorphMarket seller</a>
+          </p>}
           {primary && <div className="sw-hero-action">{primary}</div>}
         </div>
       </header>

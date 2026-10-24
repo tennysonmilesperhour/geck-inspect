@@ -27,6 +27,7 @@ import { HANDBOOK_GUIDE } from '@/data/keepers-guides/handbook';
 import { MORPH_GUIDE } from '@/data/keepers-guides/morph';
 import { BREEDING_GUIDE } from '@/data/keepers-guides/breeding';
 import { BLOG_POSTS } from '@/data/blog-posts';
+import { readWeeklyNotes } from '../../../scripts/lib/weekly-notes.mjs';
 
 const category = (id) => CARE_CATEGORIES.find((c) => c.id === id);
 const section = (catId, sectionId) => category(catId).sections.find((s) => s.id === sectionId);
@@ -235,6 +236,21 @@ describe('one heat danger line', () => {
   it('llms.txt says the same', () => {
     const llms = readFileSync(new URL('../../../public/llms.txt', import.meta.url), 'utf8');
     expect(llms).toContain(`above ${HEAT_DANGER_F}°F (${HEAT_DANGER_C}°C) is dangerous`);
+  });
+
+  it('so do the Weekly Gecko Notes, which reach members by email', () => {
+    // Every number given with "above", "past" or "over" in a note that talks
+    // about heat harm is the danger line, and the heat note states it.
+    const notes = readWeeklyNotes();
+    const text = notes.flatMap((n) => [n.subject, n.cta, n.ctaNoGecko, ...n.paragraphs.map((p) => p.text)]).filter(Boolean);
+    const lines = text.filter((t) => HEAT.test(t) && /\d+\s*°F/.test(t));
+    expect(lines.length).toBeGreaterThanOrEqual(1);
+    for (const line of lines) {
+      for (const [, n] of line.matchAll(/(?:above|past|over) (?:about )?(\d+)\s*°F/gi)) {
+        expect(Number(n), line).toBe(HEAT_DANGER_F);
+      }
+    }
+    expect(text.join('\n')).toContain(`The number to remember is ${HEAT_DANGER_F}°F.`);
   });
 });
 

@@ -1,13 +1,13 @@
 # Lifecycle emails and the email delivery log, 16 October 2026
 
-Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend bounce and complaint webhook) from `comprehensive-review-2026-10-14.md`, plus two small email defects. Everything here is built and tested and **nothing is sent yet**: the lifecycle emails wait for Tennyson to approve the copy below and flip one switch.
+Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend bounce and complaint webhook) from `comprehensive-review-2026-10-14.md`, plus two small email defects. Everything here is built and tested. **The lifecycle emails are on since 17 October 2026** (Tennyson asked for them to run without waiting on a copy review): the first day-14 email went at 16:35 UTC and the first two welcome emails that evening. The copy below is what members receive; change it in `supabase/functions/_shared/lifecycle-copy.ts`. **Rewritten 20 October 2026** as letters from Tennyson with a preview line each, new subjects and a reply question on day 0 and day 1 (shown only once `EMAIL_REPLY_TO` is set); the rules and the evidence are in `docs/marketing/email-brain.md`.
 
 ## 1. What Tennyson needs to do
 
 1. **Read the copy in section 4** and reply with changes or "approved". Every variant a member can receive is shown, filled in for a sample member (Sam, whose first gecko is Mango, a Lilly White Harlequin).
 2. **Apply the migration** `supabase/migrations/20261015151200_lifecycle_emails.sql` and **deploy** `send-email` and the new `resend-webhook` function (`supabase functions deploy resend-webhook --no-verify-jwt`). The migration is additive and safe to run twice.
 3. **Connect Resend's webhook.** In the Resend dashboard: Webhooks, Add endpoint, `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/resend-webhook`, tick the email events (sent, delivered, delivery delayed, opened, clicked, bounced, complained). Copy its signing secret (starts with `whsec_`) into the Supabase function secret `RESEND_WEBHOOK_SECRET`. Turn on open and click tracking for the sending domain, or opens and clicks stay at zero.
-4. **Add a postal address** to the footer: the function secret `EMAIL_POSTAL_ADDRESS` (a PO box or registered agent address works). US law expects one in email that mentions upgrades; the footer prints it as soon as the secret is set.
+4. **Add a postal address** to the footer: the function secret `EMAIL_POSTAL_ADDRESS` (a PO box or registered agent address works). **Done 18 October**; the footer prints it on every email from then on. US law expects one in email that mentions upgrades. Weekly Gecko Notes do not send at all without it.
 5. **Turn the lifecycle emails on** once the copy is approved, in the SQL editor:
 
    ```sql
@@ -36,7 +36,8 @@ Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend b
   | Day 14 | days 14 to 16 | has a gecko | weigh it again |
 
   The review counts day 7 and day 14 as one weigh-in email, which is why the plan says "four". A member who never adds a gecko gets day 0 and day 1 and nothing more.
-- **Never twice.** Each member and step gets one row in `lifecycle_email_sends` before the email is handed over, and the row is unique, so a repeated or overlapping run cannot send a step again. At most one lifecycle email per member in any 20 hours. A step whose window has passed is dropped, so turning the switch on never sends a "welcome" to someone who joined weeks ago.
+- **After day 14.** Weekly Gecko Notes take over once the account is 16 days old: one short email a week, in order, with its own stop link (`docs/planning/weekly-notes-2026-10.md`). The two never overlap, and a weekly note waits 20 hours after any lifecycle email. The footer of every lifecycle email now mentions them without promising them, because they wait for a switch and a postal address and the member may turn them off: "It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings." (It used to say the emails stop after two weeks.) The day 0 email now asks for a scale that reads to 0.1 g, and day 14 gives the reminder rhythm (every 14 days while growing, 21 as a sub-adult, 30 as an adult), so the weekly notes repeat the same facts.
+- **Never twice.** Each member and step gets one row in `lifecycle_email_sends` before the email is handed over, and the row is unique, so a repeated or overlapping run cannot send a step again. At most one lifecycle email per member in any 20 hours. The check allows 10 minutes for the hourly run's clock (`20261024183300_lifecycle_spacing_allowance.sql`, from 24 October): each ledger row is stamped with its run's start, which moves by a fraction of a second, and an exact 20 hours left a member for the next hour when a run started that much early. Runs are an hour apart, so the run 19 hours on is still held back. A step whose window has passed is dropped, so turning the switch on never sends a "welcome" to someone who joined weeks ago.
 - **Preferences.** Day 0, 1 and 3 follow the member's *Platform Announcements* email switch; day 7 and 14 follow *Breeding & Care Updates*. The master email switch, the unsubscribe link and the one-click List-Unsubscribe header work exactly as for every other notification email.
 - **When.** A job runs every hour at 35 past (`lifecycle-emails-hourly`). The welcome waits until the account is an hour old, so it can mention what the member did in onboarding (a first gecko, a first weight), and goes with the next hourly run after that: one to two hours after joining. The brief asked for a daily job; hourly sends the welcome within two hours instead of up to a day later, and each later step arrives at about the time of day the member joined. While the switch is off each run is one lookup.
 - **Where the words live.** `supabase/functions/_shared/lifecycle-copy.ts`. Changing a sentence is a `send-email` deploy, not a migration. The test `src/lib/__tests__/lifecycleEmails.test.js` fails if this preview and the real copy drift apart; after a copy change, refresh the preview with `WRITE_LIFECYCLE_PREVIEW=1 pnpm vitest run src/lib/__tests__/lifecycleEmails.test.js`.
@@ -59,81 +60,106 @@ Each block is the plain-text version; the HTML version has the same words with t
 <!-- preview:start -->
 ### Day 0, no gecko yet
 
-Subject: Welcome to Geck Inspect, Sam
+Subject: Sam, start with one gecko
+Preview: A name and a morph are enough. Everything else hangs off that record.
 
 ```text
 Hi Sam,
 
-Thanks for joining. Geck Inspect is a record book built for crested geckos: weights, feedings, sheds, parents and pairings, kept in one place you can show a buyer.
+I'm Tennyson. I build Geck Inspect on my own, for people who keep and breed crested geckos.
 
-One thing to do today: add one gecko. A name and a morph are enough. Write the morph the way the breeder listed it, such as Lilly White, Harlequin, Dalmatian or Phantom. Not sure? Morph ID reads a top photo and a side photo and suggests the likely morph. Free members get one identification a month.
+The one thing worth doing today: add one gecko. A name and a morph are enough, written the way the breeder listed it, such as Lilly White, Harlequin, Dalmatian or Phantom. Not sure of the morph? Morph ID reads a top photo and a side photo and suggests the likely one. Free members get one identification a month.
 
-Everything else hangs off that record: the weight chart, the feeding day and the family tree.
+Once a gecko is in, the weight chart, the feeding day and the family tree all hang off that record.
+
+A question while I have you: what got you into crested geckos? Hit reply and tell me. I read every answer.
 
 [ Add your first gecko ]  https://geckinspect.com/MyGeckos
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 0, one gecko, no weight yet
 
-Subject: Welcome to Geck Inspect, Sam
+Subject: Mango is in. Next: a first weight
+Preview: Weigh before a feeding, on a scale that reads to 0.1 g. It starts the growth curve.
 
 ```text
 Hi Sam,
 
-Thanks for joining, and Mango is already in. Good start.
+I'm Tennyson, and I build Geck Inspect. Mango is already in, which is the hard part.
 
-One thing to do today: weigh Mango and log it in grams. A kitchen scale that reads to 1 g is fine. Weigh before a feeding so a full belly does not pad the number.
+The next step takes a minute: weigh Mango and log it in grams. Use a kitchen scale that reads to 0.1 g. Weigh before a feeding so a full belly does not pad the number.
 
-That first weight starts the growth curve, and the curve is what tells you when a female is big enough to breed. Most breeders wait for at least 40 g and 18 months.
+That first number starts the growth curve, and the curve is what tells you when a female is big enough to breed. Most breeders wait for at least 40 g and 18 months.
+
+A question: is Mango a pet, a future breeder, or still undecided? Hit reply and tell me. I read every answer.
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 0, one gecko already weighed
 
-Subject: Welcome to Geck Inspect, Sam
+Subject: Mango has a growth chart. Add the rest?
+Preview: Name and morph are enough for each. A spreadsheet or MorphMarket export comes in at once.
 
 ```text
 Hi Sam,
 
-Thanks for joining. Mango is in with a first weight, so the growth chart has already started.
+I'm Tennyson, and I build Geck Inspect. Mango is in with a first weight, so the growth chart has already started. That is further than most people get on day one.
 
-One thing to do next: add the rest of your collection. Name and morph are enough for each one. If you keep your animals in a spreadsheet or have a MorphMarket export, import it in one go instead.
+Next: add the rest of your collection. Name and morph are enough for each one. If you keep your animals in a spreadsheet or have a MorphMarket export, import it in one go instead.
+
+How many geckos do you keep? Hit reply and tell me. I read every answer, and it shapes what I build next.
 
 [ Add your other geckos ]  https://geckinspect.com/MyGeckos
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 1, still no gecko (only sent when the collection is empty)
 
-Subject: Start with the gecko you know best
+Subject: The two-minute way to add your first gecko
+Preview: Name and morph. Hatch date, parents and photos can wait.
 
 ```text
 Hi Sam,
 
 Your collection is still empty. That is normal on day one, so here is the shortest way in.
 
-Pick the gecko you know best and add its name and morph. It takes two minutes. If you still have the breeder's listing, the morph line and the sire and dam names are all you need for now. Hatch date and photos can wait.
+Pick the gecko you know best and add its name and morph. It takes two minutes. If you still have the breeder's listing, copy the morph line from it. Hatch date, parents and photos can wait.
 
 Keeping more than a handful? Import a spreadsheet or a MorphMarket export and the whole collection comes in at once.
 
+If something stopped you, reply and tell me what it was. I fix what people trip on.
+
 [ Add a gecko ]  https://geckinspect.com/MyGeckos
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 3, no parents on record
 
 Subject: Who are Mango's parents?
+Preview: A photo cannot show what a gecko carries. The pedigree can.
 
 ```text
 Hi Sam,
@@ -144,13 +170,17 @@ Add Mango's sire and dam. Names from the breeder's listing are enough; you do no
 
 [ Open Mango's family tree ]  https://geckinspect.com/Lineage?geckoId=g_mango
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 3, sire on record, dam missing
 
 Subject: Who are Mango's parents?
+Preview: A photo cannot show what a gecko carries. The pedigree can.
 
 ```text
 Hi Sam,
@@ -161,13 +191,17 @@ Add Mango's dam. Names from the breeder's listing are enough; you do not need to
 
 [ Open Mango's family tree ]  https://geckinspect.com/Lineage?geckoId=g_mango
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 3, both parents on record
 
 Subject: Mango's family tree is started
+Preview: Each generation you add is evidence for what Mango may carry.
 
 ```text
 Hi Sam,
@@ -178,13 +212,17 @@ Open the family tree to see it, and add grandparents if the breeder gave you the
 
 [ Open Mango's family tree ]  https://geckinspect.com/Lineage?geckoId=g_mango
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 7, no weight yet
 
 Subject: Time to weigh Mango
+Preview: A week in and no weight yet. It is two taps.
 
 ```text
 Hi Sam,
@@ -195,13 +233,17 @@ Juveniles should gain steadily. A stall or a drop is often the first sign that s
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 7, one weight
 
 Subject: Time to weigh Mango
+Preview: Last weight: 4.5 g on Oct 16. One more makes a trend.
 
 ```text
 Hi Sam,
@@ -212,58 +254,73 @@ Juveniles should gain steadily. A stall or a drop is often the first sign that s
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 14, no weight yet
 
 Subject: Two weeks in: weigh Mango again
+Preview: The rhythm: every 14 days while growing, 21 as a sub-adult, 30 as an adult.
 
 ```text
 Hi Sam,
 
 Mango still has no weight on record. Today is a good day for the first one.
 
-Keep the rhythm: every two to four weeks while a crested gecko is growing, monthly once it is adult. The weigh-in reminder on Mango's record tells you when the next one is due, so check it is switched on.
+Keep the rhythm: every 14 days while a crested gecko is growing, every 21 days as a sub-adult and every 30 days as an adult. The weigh-in reminder on Mango's record tells you when the next one is due, so check it is switched on.
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 14, one weight
 
 Subject: Two weeks in: weigh Mango again
+Preview: The rhythm: every 14 days while growing, 21 as a sub-adult, 30 as an adult.
 
 ```text
 Hi Sam,
 
 Mango's last weight was 4.5 g on Oct 16. One more turns that number into a trend.
 
-Keep the rhythm: every two to four weeks while a crested gecko is growing, monthly once it is adult. The weigh-in reminder on Mango's record tells you when the next one is due, so check it is switched on.
+Keep the rhythm: every 14 days while a crested gecko is growing, every 21 days as a sub-adult and every 30 days as an adult. The weigh-in reminder on Mango's record tells you when the next one is due, so check it is switched on.
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 
 ### Day 14, three weights
 
 Subject: Two weeks in: weigh Mango again
+Preview: The rhythm: every 14 days while growing, 21 as a sub-adult, 30 as an adult.
 
 ```text
 Hi Sam,
 
 Mango has 3 weights on record, enough to draw the start of a growth curve. The last was 6 g on Oct 28.
 
-Keep the rhythm: every two to four weeks while a crested gecko is growing, monthly once it is adult. The weigh-in reminder on Mango's record tells you when the next one is due, so check it is switched on.
+Keep the rhythm: every 14 days while a crested gecko is growing, every 21 days as a sub-adult and every 30 days as an adult. The weigh-in reminder on Mango's record tells you when the next one is due, so check it is switched on.
 
 [ Log Mango's weight ]  https://geckinspect.com/log?gecko=g_mango&type=weight
 
-You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks, and they stop after that.
+Tennyson
+Geck Inspect
+
+You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.
 Change preferences or unsubscribe from these emails.
 ```
 <!-- preview:end -->

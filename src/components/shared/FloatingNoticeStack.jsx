@@ -32,6 +32,7 @@ export default function FloatingNoticeStack({ children }) {
     <div
       ref={ref}
       data-floating-stack
+      data-follows-bottom-bar
       className="fixed bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-4 right-4 z-[60] flex flex-col items-end gap-2 pointer-events-none [&>*]:pointer-events-auto"
     >
       {children}

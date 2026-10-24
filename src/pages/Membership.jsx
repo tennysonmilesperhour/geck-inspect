@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import NativeMembership from '@/components/subscription/NativeMembership';
+import OutcomeHeadline from '@/components/subscription/OutcomeHeadline';
+import PriceIndexProof from '@/components/public/PriceIndexProof';
 import { isNativePlatform } from '@/lib/revenuecat';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,7 @@ import {
   membershipShellCopy,
 } from '@/lib/membershipSeo';
 import { captureEvent } from '@/lib/posthog';
+import { currentOutcomeVariant } from '@/lib/outcomePromise';
 import { openBillingPortal } from '@/lib/billingPortal';
 import { resolveTier } from '@/lib/tierLimits';
 import { featuresWithConsultant, pageIsLive, planNumbers, withoutRetiredLines } from '@/lib/membershipFeatures';
@@ -426,6 +429,8 @@ function EnterpriseRow({ plan: p, onChoose }) {
 
 export default function MembershipPage() {
   const [user, setUser] = useState(null);
+  // The outcome test waits for this so a paying member is never enrolled.
+  const [userChecked, setUserChecked] = useState(false);
   // Keyed `${tier}:${intent}` so the buy button and the trial button on the
   // same card spin independently.
   const [loadingAction, setLoadingAction] = useState(null);
@@ -470,7 +475,10 @@ export default function MembershipPage() {
     // Free row and paint over the paid plan.
     if (checkoutReturn.status === 'success') return undefined;
     let cancelled = false;
-    User.me().then((next) => { if (!cancelled) setUser(next); }).catch(() => { if (!cancelled) setUser(null); });
+    User.me()
+      .then((next) => { if (!cancelled) setUser(next); })
+      .catch(() => { if (!cancelled) setUser(null); })
+      .finally(() => { if (!cancelled) setUserChecked(true); });
     return () => { cancelled = true; };
   }, [checkoutReturn]);
 
@@ -643,7 +651,7 @@ export default function MembershipPage() {
 
     const fromPrompt = lastUpgradePrompt();
     captureEvent('plan_selected', { tier: tier.key, interval: cycle, intent, from_prompt: fromPrompt });
-    captureEvent('checkout_started', { tier: tier.key, interval: cycle, intent, from_prompt: fromPrompt });
+    captureEvent('checkout_started', { tier: tier.key, interval: cycle, intent, from_prompt: fromPrompt, paywall_outcome: currentOutcomeVariant() });
     setLoadingAction(`${tier.key}:${intent}`);
     try {
       const supabase = await getSupabase();
@@ -736,7 +744,7 @@ export default function MembershipPage() {
     setLoadingAction(null);
   };
 
-  if (isNativePlatform()) return <NativeMembership user={user} />;
+  if (isNativePlatform()) return <NativeMembership user={user} userChecked={userChecked} />;
 
   // Everything a plan's card or row needs to know, worked out once.
   const planState = (tier) => {
@@ -811,12 +819,18 @@ export default function MembershipPage() {
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-2xl md:text-4xl font-bold text-slate-100">
-            {planCopy.heading}
-          </h1>
+          <OutcomeHeadline
+            surface="web"
+            pending={!userChecked && checkoutReturn.status !== 'success'}
+            enabled={!hasPaidPlan && !isGrandfathered && checkoutReturn.status !== 'success'}
+            controlHeading={planCopy.heading}
+            headingClassName="text-2xl md:text-4xl font-bold text-slate-100"
+            leadClassName="text-lg md:text-xl text-emerald-100 max-w-2xl mx-auto"
+          />
           <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto">
             {planCopy.lead}
           </p>
+          <PriceIndexProof className="text-sm text-slate-400 max-w-xl mx-auto" />
           {planCopy.paragraphs.map((text) => (
             <p key={text} className="text-sm text-slate-400 max-w-xl mx-auto">
               {text}

@@ -6,7 +6,7 @@
 // works start to finish when that download fails.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -49,7 +49,9 @@ describe('Morph Guide quiz', () => {
 
     await user.click(screen.getByRole('button', { name: 'Start the quiz' }));
     const first = await screen.findByRole('heading', { name: QUIZ_STEPS[0].question }, SLOW);
-    await waitFor(() => expect(document.activeElement).toBe(first));
+    // Focus moves just after the heading appears; under load the two can be
+    // a moment apart, so wait for it rather than checking the same instant.
+    await vi.waitFor(() => expect(document.activeElement).toBe(first), SLOW);
     // framer-motion drives the slide-in through the section's inline style.
     expect(screen.getByRole('region', { name: 'Which features can you see? quiz' }).getAttribute('style')).toMatch(/opacity/);
     expect(screen.queryByRole('heading', { name: 'Which features can you see?' })).toBeNull();
@@ -75,7 +77,9 @@ describe('Morph Guide quiz', () => {
     expect(quiz.getAttribute('style')).toBeNull();
     for (const step of QUIZ_STEPS) {
       const heading = await screen.findByRole('heading', { name: step.question }, SLOW);
-      await waitFor(() => expect(document.activeElement).toBe(heading));
+      // Focus moves just after the heading appears; under load the two can be
+      // a moment apart, so wait for it rather than checking the same instant.
+      await vi.waitFor(() => expect(document.activeElement).toBe(heading), SLOW);
       const none = step.options.find((o) => o.id === 'none' || o.id === 'no') || step.options[0];
       await user.click(screen.getByRole('button', { name: new RegExp(none.label) }));
     }
@@ -107,8 +111,9 @@ describe('Morph Guide quiz', () => {
       // The download is held until the end of this test, yet the quiz
       // opens, plain (it used to wait for the download).
       const first = await screen.findByRole('heading', { name: QUIZ_STEPS[0].question }, SLOW);
-      // Focus is applied by a passive effect after the heading renders.
-      await waitFor(() => expect(document.activeElement).toBe(first));
+      // Focus moves just after the heading appears; under load the two can be
+      // a moment apart, so wait for it rather than checking the same instant.
+      await vi.waitFor(() => expect(document.activeElement).toBe(first), SLOW);
       expect(screen.getByRole('region', { name: 'Which features can you see? quiz' }).getAttribute('style')).toBeNull();
     } finally {
       // Let the held download finish before the next test mocks it afresh.

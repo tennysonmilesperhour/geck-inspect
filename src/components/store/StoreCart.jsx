@@ -28,6 +28,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 import { captureEvent } from '@/lib/posthog';
+import { primaryProductImage } from '@/lib/store/productImages';
 import { isPricedSticker, normalizeStickerFinish, STICKER_FINISHES, STICKER_BULK_MINIMUM, stickerCartQuantity } from '@/lib/store/stickerPricing';
 
 export default function StoreCart() {
@@ -224,9 +225,7 @@ export default function StoreCart() {
               const sticker = isCustomStickerLine(item);
               const shirt = isCustomShirtLine(item);
               const design = sticker || shirt ? item.customization : null;
-              const primary =
-                (Array.isArray(p?.images) && p.images.find((i) => i.is_primary)) ||
-                (Array.isArray(p?.images) && p.images[0]);
+              const primary = primaryProductImage(p);
               const detailPath = sticker ? '/Store/stickers' : shirt ? '/Store/tees' : `/Store/p/${p?.slug}`;
               return (
                 <div

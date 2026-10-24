@@ -137,7 +137,7 @@ export default function RecordPassport({
               <Label htmlFor="record-gallery" className="text-slate-200 cursor-pointer">Gallery display</Label>
               <Switch id="record-gallery" checked={Boolean(galleryDisplay)} onCheckedChange={onToggleGallery} />
             </div>
-            <p className="text-xs text-slate-400 mt-1.5">Show this gecko&apos;s photos in the public Gallery.</p>
+            <p className="text-xs text-slate-400 mt-1.5">Submit this gecko&apos;s photos to the public Gallery. Photos from established members appear right away; others appear after a quick check.</p>
           </div>
           </div>
         </div>

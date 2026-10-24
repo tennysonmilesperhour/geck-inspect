@@ -8,7 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { TRANSFER_TTL_HOURS, copyText, isValidEmail, parseSalePrice, startTransfer } from '@/lib/transfers';
 
-export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', onTransferred }) {
+/**
+ * Seller's transfer form. Replaces the three browser pop-ups the gecko and
+ * reptile records used to show. On send it creates the transfer, either as a
+ * QR link the owner shows or shares, or as a claim link emailed to the buyer,
+ * and shows the link so the seller can copy it too.
+ * initialEmail fills the buyer's address when the owner arrives from a
+ * buyer's transfer request (the passport page's "ask the owner" button).
+ */
+export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', initialEmail = '', onTransferred }) {
   const [mode, setMode] = useState('link');
   const [email, setEmail] = useState('');
   const [price, setPrice] = useState('');
@@ -20,15 +28,18 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
 
   useEffect(() => {
     if (!open) return;
-    setMode(animalType === 'gecko' ? 'link' : 'email');
-    setEmail('');
+    // A buyer who asked from the passport page gave their email, so the
+    // form opens on email mode with it filled in; otherwise a gecko opens
+    // on the QR link.
+    setMode(initialEmail || animalType !== 'gecko' ? 'email' : 'link');
+    setEmail(initialEmail || '');
     setPrice(animal?.asking_price != null ? String(animal.asking_price) : '');
     setMessage('');
     setErrors({});
     setSubmitting(false);
     setResult(null);
     setCopied(false);
-  }, [open, animal?.id, animal?.asking_price, animalType]);
+  }, [open, animal?.id, animal?.asking_price, animalType, initialEmail]);
 
   const animalName = animal?.name || (animalType === 'gecko' ? 'this gecko' : 'this animal');
   const handleSubmit = async (event) => {

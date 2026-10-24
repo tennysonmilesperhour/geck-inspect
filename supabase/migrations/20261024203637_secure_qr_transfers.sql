@@ -1,4 +1,6 @@
--- Secure QR transfers. Written 17 Oct 2026, not approved for production.
+-- Secure QR transfers. Written 17 Oct 2026 as 20261017200248; re-dated on
+-- 24 Oct to run after main's newest migration, and released on Tennyson's
+-- instruction to merge the open pull requests.
 -- claim_transfer starts from 20261015120000_ownership_checks.sql.
 -- get_transfer_preview starts from 20261003004122_passport_transfers_lineage.sql.
 -- Existing signatures and email transfers remain supported. New links are

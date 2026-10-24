@@ -9,10 +9,25 @@
 //   Body: List-Unsubscribe=One-Click
 //
 // The database checks the signature (unsubscribe_email_by_token) and turns
-// email notifications off for that member. No sign-in: the signature is the
-// proof. A GET (someone opening the address in a browser) is sent on to the
-// friendly page, SITE_URL/Unsubscribe?t=..., which does the same thing and
-// says so.
+// email notifications off for that member (Weekly Gecko Notes included). No
+// sign-in: the signature is the proof. A GET (someone, or a mail security
+// scanner, opening the address in a browser) never unsubscribes: it is sent
+// on to the friendly page, SITE_URL/Unsubscribe?t=..., which asks the member
+// to press one button first, as RFC 8058 asks. Only the mail app's POST
+// acts with no click.
+//
+// Weekly Gecko Notes carry &scope=weekly on the same address. That POST
+// calls unsubscribe_weekly_notes_by_token instead, which turns off only the
+// weekly notes, so reminders and the other emails the member chose keep
+// coming. A GET keeps the scope on its way to the page, which then offers
+// "Stop Weekly Gecko Notes". Any other scope, or none, is the all-email
+// unsubscribe above.
+//
+// A visitor's Weekly Gecko Note (no account; the sign-up form on the public
+// guide pages) carries &scope=visitor and a visitor token. That POST calls
+// unsubscribe_weekly_notes_subscriber, which stops every email to that
+// visitor address. A member token never passes that check, nor a visitor
+// token the member ones.
 //
 // Deploy: supabase functions deploy email-unsubscribe --no-verify-jwt
 
@@ -33,9 +48,14 @@ function text(body: string, status = 200) {
 serve(async (req) => {
   const url = new URL(req.url);
   const token = (url.searchParams.get("t") || "").slice(0, 200);
+  const asked = url.searchParams.get("scope");
+  const scope = asked === "weekly" || asked === "visitor" ? asked : "all";
 
   if (req.method === "GET" || req.method === "HEAD") {
-    const target = `${SITE_URL}/Unsubscribe${token ? `?t=${encodeURIComponent(token)}` : ""}`;
+    const query = token
+      ? `?t=${encodeURIComponent(token)}${scope === "all" ? "" : `&scope=${scope}`}`
+      : "";
+    const target = `${SITE_URL}/Unsubscribe${query}`;
     return new Response(null, { status: 302, headers: { location: target, "cache-control": "no-store" } });
   }
   if (req.method !== "POST") return text("Method not allowed", 405);
@@ -45,11 +65,22 @@ serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
-  const { data, error } = await supabase.rpc("unsubscribe_email_by_token", { p_token: token });
+  const rpc = scope === "weekly"
+    ? "unsubscribe_weekly_notes_by_token"
+    : scope === "visitor"
+    ? "unsubscribe_weekly_notes_subscriber"
+    : "unsubscribe_email_by_token";
+  const { data, error } = await supabase.rpc(rpc, { p_token: token });
   if (error) {
     console.warn("email-unsubscribe: rpc failed", error);
     return text("Could not unsubscribe right now", 500);
   }
   if (data !== true) return text("This unsubscribe link is not valid", 400);
+  if (scope === "weekly") {
+    return text("You will not get Weekly Gecko Notes any more. Reminders and other email you chose still arrive.");
+  }
+  if (scope === "visitor") {
+    return text("You will not get Weekly Gecko Notes any more.");
+  }
   return text("You are unsubscribed from Geck Inspect notification emails.");
 });

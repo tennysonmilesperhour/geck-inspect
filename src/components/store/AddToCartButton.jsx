@@ -8,7 +8,7 @@ import { CUSTOM_STICKER_SLUG } from '@/lib/store/customSticker';
 import { CUSTOM_SHIRT_SLUG } from '@/lib/store/customShirt';
 import { captureEvent } from '@/lib/posthog';
 import { supabase } from '@/lib/supabaseClient';
-import { safeExternalUrl } from '@/lib/safeExternalUrl';
+import { productVendorLink } from '@/lib/store/affiliateLinks';
 import { isAwaitingCheckout } from '@/lib/store/checkoutFlags';
 import { isGuestMode } from '@/lib/guestMode';
 
@@ -34,7 +34,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
 
   if (!product) return null;
   const cartEligible = isCartEligible(product.fulfillment_mode);
-  const vendorUrl = safeExternalUrl(product.vendor_product_url);
+  const { url: vendorUrl, isAmazonSearch } = productVendorLink(product);
 
   if (isAwaitingCheckout(product)) {
     return (
@@ -108,7 +108,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
           vendor_id: product.vendor_id,
           source_path: typeof window !== 'undefined' ? window.location.pathname : null,
           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-          destination_url: product.vendor_product_url,
+          destination_url: vendorUrl,
         });
       } catch (e) {
         console.warn('affiliate click log failed', e);
@@ -117,7 +117,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
         product_id: product.id,
         product_name: product.name,
         vendor_id: product.vendor_id,
-        destination_url: product.vendor_product_url,
+        destination_url: vendorUrl,
       });
     } catch (e) {
       console.warn('affiliate click tracking failed', e);
@@ -163,7 +163,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
     >
       <a href={vendorUrl} target="_blank" rel="noopener noreferrer sponsored" onClick={handleAffiliate}>
         <ExternalLink className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} mr-1`} />
-        {product.vendor_extra?.link_type === 'search' ? 'Find on Amazon' : 'Buy at vendor'}
+        {isAmazonSearch ? 'Find on Amazon' : 'Buy at vendor'}
       </a>
     </Button>
   );

@@ -2,7 +2,8 @@ import { supabase } from '@/lib/supabaseClient';
 
 /**
  * Ownership transfers: the owner creates a QR or email claim link, and the
- * recipient accepts it on /claim/:token.
+ * recipient accepts it on /claim/:token. A buyer can also ask for one from
+ * the gecko's passport page (requestPassportTransfer).
  *
  * The rows live in transfer_requests. Only the animal's owner can start or
  * change one (RLS plus the guard_transfer_request trigger); the seller can
@@ -155,6 +156,32 @@ export async function startTransfer({ animalId, animalType = 'gecko', toEmail, s
   const email = toEmail ? await sendTransferEmail(data.token) : { delivered: false };
   return { ...data, claimUrl: claimUrlFor(data.token), emailed: email.delivered };
 
+}
+
+/**
+ * A buyer on a passport page asks the owner to start a transfer. The server
+ * (request_passport_transfer) sends the owner a chat message and a
+ * transfer_request notification, which also goes out by email and push and
+ * opens the transfer form with the buyer's email filled in.
+ *
+ * Never throws. Returns { status } where status is 'sent',
+ * 'already_requested', 'unavailable' (the database function is not live
+ * yet), or 'failed' with a message the page can show.
+ */
+export async function requestPassportTransfer(passportCode) {
+  try {
+    const { data, error } = await supabase.rpc('request_passport_transfer', { p_passport_code: passportCode });
+    if (error) {
+      // PGRST202: the function does not exist yet (the site deployed first).
+      if (error.code === 'PGRST202' || /could not find the function/i.test(error.message || '')) {
+        return { status: 'unavailable' };
+      }
+      return { status: 'failed', message: error.message || 'The request could not be sent.' };
+    }
+    return { status: data?.status === 'already_requested' ? 'already_requested' : 'sent' };
+  } catch (e) {
+    return { status: 'failed', message: e?.message || 'The request could not be sent.' };
+  }
 }
 
 /** Cancel a pending transfer the signed-in user sent. */

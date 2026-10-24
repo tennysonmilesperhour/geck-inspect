@@ -1,6 +1,6 @@
 # QR transfer security and rollout review
 
-This change is prepared for review on `codex/qr-transfer-detail`. It has not been merged, applied to production, or used to transfer a customer's animal. The migration is `20261017200248_secure_qr_transfers.sql`.
+This change was prepared on `codex/qr-transfer-detail` and merged to main on 24 Oct 2026 when Tennyson asked for the open pull requests to be merged. The migration was written as `20261017200248_secure_qr_transfers.sql` and re-dated to `20261024203637_secure_qr_transfers.sql` so it runs after main's newest migration.
 
 ## Transfer contract
 

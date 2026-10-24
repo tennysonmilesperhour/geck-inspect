@@ -67,6 +67,8 @@ Once the decision is made, remove the losing page, wrapper, special analytics co
 
 ## Changes made while the test runs
 
+**18 October 2026, business-page symbols:** Tennyson explicitly requested replacing all homepage emojis with original symbols. The business page's text-glyph icons (including arrows, checks, feature marks and dialog controls) now use a custom inline SVG set. The mobile checklist marks use the same set. Copy, product screenshots, interactions, control page, allocation and metrics stay the same. Treat this deployment as a visual revision of the business arm when reporting results; the experiment was not restarted.
+
 Round 3 of the review fixes (`docs/planning/comprehensive-review-2026-10-14.md`, E3) shipped while this test was running. It was integrated on top of the test so that neither design changes mid-run. What reached the homepage, and what did not:
 
 - **One factual correction, control only.** The control FAQ answer "Does Geck Inspect support other reptiles?" promised basic records for other reptiles, and Other Reptiles was retired the same day (`docs/planning/retired-features-2026-10.md`). It now says records are for crested geckos only. The business page never mentioned other reptiles.

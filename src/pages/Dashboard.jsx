@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { lazy } from '@/lib/lazyWithRetry';
+import { useAuth } from '@/lib/AuthContext';
+import '@/styles/dashboard-home.css';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import Seo from '@/components/seo/Seo';
@@ -17,6 +20,8 @@ import {
     Camera,
     Crown,
     Eye,
+    SlidersHorizontal,
+    Plus,
 } from 'lucide-react';
 import StatsCard from '../components/dashboard/StatsCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
@@ -31,9 +36,11 @@ import LiveFeed from '../components/dashboard/LiveFeed';
 import WelcomeShelf from '../components/dashboard/WelcomeShelf';
 import IncubatorTimeline from '../components/dashboard/IncubatorTimeline';
 import IdNeedsPanel from '../components/dashboard/IdNeedsPanel';
-import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import ChangeLogModal from '../components/changelog/ChangeLogModal';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import HomeCollection from '@/components/dashboard/HomeCollection';
 import { Card, CardContent } from '@/components/ui/card';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import FirstGeckoStarter from '@/components/onboarding/FirstGeckoStarter';
@@ -41,6 +48,9 @@ import SignOutButton from '@/components/auth/SignOutButton';
 import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { createPageUrl, getDisplayName } from '@/utils';
 import { format } from 'date-fns';
+
+const ImageDetailModal = lazy(() => import('../components/gallery/ImageDetailModal'));
+const HomeValues = lazy(() => import('@/components/dashboard/HomeValues'));
 
 const EMPTY_LIST = [];
 const EMPTY_STATS = { users: 0, geckos: 0, images: 0, posts: 0, verifiedImages: 0 };
@@ -129,36 +139,11 @@ async function loadHatcheryCounts(email) {
     return { hatched, incubating, total, plans };
 }
 
-/**
- * Dashboard, April 2026 creative rework.
- *
- * Key changes vs the previous version:
- *
- * 1. New "personal hero" at the top that greets the user by name and
- *    shows their own collection count inline. Gradient is animated so
- *    the dashboard feels alive the moment it loads.
- * 2. Three-column layout for the main content grid:
- *       left, Next Actions + Community Pulse (the fun stuff)
- *       mid  , Gecko of the Day (the eye candy)
- *       right, Stats + Featured Breeders + hatchery widget
- *    This replaces the old "big content + tiny sidebar" split that
- *    felt lopsided.
- * 3. Pruned the query fan-out: the old dashboard loaded 500 geckos,
- *    100 users, and two separate 20/5 image calls. New version loads
- *    20 geckos for the recent count, 20 images for the community
- *    strip, 10 posts, plus the gecko of the day. Per-user queries
- *    run inside NextActions / FeaturedBreeders scoped to the current
- *    user only.
- * 4. Recent Activity tiles no longer use `scale-105` on hover, that
- *    was the root cause of the sluggish gallery hover. See the
- *    RecentActivity component for details.
- */
-
 export default function Dashboard() {
     const navigate = useNavigate();
     // A gecko kept in the guest demo and not saved yet (My Geckos saves it).
     const [pendingGeckoName] = useState(() => readPendingGecko()?.name || null);
-    const [dashPrefs] = usePageSettings('dashboard_prefs', {
+    const [dashPrefs, updateDashPrefs] = usePageSettings('dashboard_prefs', {
         showGeckoOfTheDay: true,
         showFeaturedBreeders: true,
         showCommunityPulse: true,
@@ -167,7 +152,9 @@ export default function Dashboard() {
         showLiveFeed: true,
         showIdNeeds: true,
         showWelcomeShelf: true,
+        showValues: true,
     });
+    const [showCustomize, setShowCustomize] = useState(false);
     const [selectedImageData, setSelectedImageData] = useState(null);
     const [showChangelog, setShowChangelog] = useState(false);
     const [changelogGlowing, setChangelogGlowing] = useState(false);
@@ -176,12 +163,7 @@ export default function Dashboard() {
     // block is cached by the shared QueryClient, so leaving the dashboard
     // and coming back within staleTime renders from cache instead of
     // re-running the whole fan-out on every visit.
-    const meQuery = useQuery({
-        queryKey: ['dashboard', 'me'],
-        queryFn: () => User.me().catch(() => null),
-        staleTime: 5 * 60 * 1000,
-    });
-    const user = meQuery.data ?? null;
+    const { user, isLoadingAuth } = useAuth();
     const email = user?.email || null;
 
     const communityQuery = useQuery({
@@ -233,7 +215,7 @@ export default function Dashboard() {
         return () => window.removeEventListener('changelog_read', handler);
     }, []);
 
-    const isLoading = meQuery.isLoading || communityQuery.isLoading;
+    const isLoading = isLoadingAuth || communityQuery.isLoading;
 
     const handleImageSelect = (image, uploader) => {
         setSelectedImageData({ image, uploader });
@@ -289,14 +271,14 @@ export default function Dashboard() {
             <div className="absolute bottom-0 left-0 w-[32rem] h-[32rem] bg-gradient-radial from-teal-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 p-4 md:p-8">
-                <div className="max-w-7xl mx-auto space-y-6">
+                <div className="max-w-7xl mx-auto space-y-6 dashboard-home">
                     {/* HERO STRIP, personal greeting + live mini stats */}
                     <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/60 via-slate-900/80 to-slate-950/80 backdrop-blur-sm dashboard-card-hover">
                         <div className="absolute inset-0 dashboard-aurora opacity-50 pointer-events-none" />
                         <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
                         <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                        <div className="relative z-10 p-5 md:p-10">
+                        <div className="relative z-10 p-5 md:p-6">
                             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                                 <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
                                     <Flame className="w-3.5 h-3.5" />
@@ -306,10 +288,10 @@ export default function Dashboard() {
                             </div>
                             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 md:gap-6">
                                 <div className="space-y-2 md:space-y-3">
-                                    <h1 className="text-3xl md:text-6xl font-bold tracking-tight leading-[1.05] bg-gradient-to-b from-white via-emerald-100 to-emerald-300 bg-clip-text text-transparent">
+                                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight text-slate-100">
                                         {greeting}{firstName ? `, ${firstName}` : ''}
                                     </h1>
-                                    <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
+                                    <p className="text-slate-300 text-sm max-w-2xl leading-relaxed">
                                         {(personalStats.geckos > 0 || !user || isGuestMode()) ? (
                                             <>
                                                 Right now,{' '}
@@ -335,14 +317,13 @@ export default function Dashboard() {
                                             'Welcome to Geck Inspect. Everything on this page fills in as your collection grows.'
                                         )}
                                     </p>
-                                    <p className="text-emerald-300/70 text-sm md:text-base">
+                                    <p className="text-emerald-200 text-xs">
                                         {seasonalKicker}
                                     </p>
                                 </div>
 
-                                <div className="flex flex-wrap gap-2.5">
-                                    {/* Order: primary action (My Collection) first, then
-                                        store curation, then passive views (Preview, What's New). */}
+                                <div className="flex flex-wrap gap-2.5 home-hero-actions">
+                                    {user && !isFirstRun && <Button asChild><Link to="/BatchHusbandry"><Plus className="w-4 h-4 mr-2" />Log care</Link></Button>}
                                     {user && !isFirstRun && (
                                         <Link to={createPageUrl('MyGeckos')}>
                                             <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg shadow-emerald-500/20">
@@ -390,10 +371,19 @@ export default function Dashboard() {
                         </div>
                     </div>
 
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <nav aria-label="Homepage sections" className="flex flex-wrap gap-1 text-sm">
+                            <a className="home-jump" href="#home-workspace">Your workspace</a>
+                            <a className="home-jump" href="#home-community">Community</a>
+                            <a className="home-jump" href="#home-breeding">Breeding & tools</a>
+                        </nav>
+                        <Button variant="outline" size="sm" onClick={() => setShowCustomize(true)}><SlidersHorizontal className="w-4 h-4 mr-2" />Customize home</Button>
+                    </div>
+                    <section id="home-workspace" aria-label="Your workspace" className="space-y-5 home-section">
                     {/* ACTIVATION: a signed-in keeper with no animals yet gets
                         the one thing that matters first, not community totals
                         and breeder tools. */}
-                    {!isLoading && user && !isGuestMode() && personalStats.geckos === 0 && (
+                    {isFirstRun && (
                         // The guided first gecko: add it (by photo or typed),
                         // its parents, then what it needs next and its value.
                         <FirstGeckoStarter
@@ -408,11 +398,15 @@ export default function Dashboard() {
                     {/* What needs doing today comes before any totals. Only
                         shown once there are geckos, otherwise its "All caught
                         up" state would sit next to the add-your-first card. */}
-                    {hasGeckos && <NextActions currentUserEmail={user?.email} />}
+                    <div className={`grid gap-5 ${hasGeckos && dashPrefs.showCommunityPulse ? 'lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]' : ''}`}>
+                        {hasGeckos && <NextActions currentUserEmail={user?.email} />}
+                        {dashPrefs.showCommunityPulse && <CommunityPulse />}
+                    </div>
+                    {IOT_SENSORS_ENABLED && user && <EnclosureClimate user={user} />}
 
                     {/* STATS STRIP */}
                     {isLoading ? (
-                        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
+                        <div className={`home-stats grid grid-cols-2 md:grid-cols-4 gap-3 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
                             {[...Array(4)].map((_, i) => (
                                 <div
                                     key={i}
@@ -425,7 +419,7 @@ export default function Dashboard() {
                         // community cards were dropped (VIP audit P4.3): with a
                         // small community they advertised an empty room, and
                         // "Forum Threads" was a sample capped at 10, not a count.
-                        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
+                        <div className={`home-stats grid grid-cols-2 md:grid-cols-4 gap-3 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
                             <StatsCard
                                 title="Your Geckos"
                                 value={personalStats.geckos.toLocaleString()}
@@ -457,7 +451,7 @@ export default function Dashboard() {
                         </div>
                     ) : (
                         // Signed-out / guest view: pure community stats.
-                        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
+                        <div className={`home-stats grid grid-cols-2 md:grid-cols-4 gap-3 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
                             <StatsCard
                                 title="Keepers"
                                 value={stats.users.toLocaleString()}
@@ -489,22 +483,20 @@ export default function Dashboard() {
                         </div>
                     )}
 
-                    {/* Referral offer, moved off the sidebar so it has room to
-                        be read. Renders nothing for guests and signed-out visitors. */}
-                    <ReferralLinkCard />
+                    {hasGeckos && user && !isGuestMode() && dashPrefs.showValues && <Suspense fallback={<div className="h-28 rounded-xl bg-slate-900 animate-pulse" aria-label="Loading value summaries" />}><HomeValues user={user} /></Suspense>}
+                    {hasGeckos && user && <HomeCollection user={user} />}
+                    </section>
 
-                    {dashPrefs.showWelcomeShelf && <WelcomeShelf currentUser={user} />}
-
-
+                    <section id="home-community" aria-labelledby="home-community-title" className="space-y-5 home-section">
+                        <div className="flex flex-wrap justify-between gap-3 items-center">
+                            <div><h2 id="home-community-title" className="text-2xl font-semibold text-slate-100">Community</h2><p className="text-sm text-slate-300 mt-1">Keepers, photos, and conversations.</p></div>
+                            <Link to="/Forum" className="text-sm text-emerald-300 underline touch:min-h-11 inline-flex items-center">Open Forum</Link>
+                        </div>
+                        {dashPrefs.showWelcomeShelf && <WelcomeShelf currentUser={user} />}
                     {/* MAIN CONTENT GRID, 3 columns on large screens */}
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                        {/* Left column, Next Actions + Community Pulse */}
+                        {/* Community activity */}
                         <div className="xl:col-span-4 space-y-6">
-                            {/* Govee enclosure readings; hidden until a real device
-                                test passes (IOT_SENSORS_ENABLED), and renders
-                                nothing without a connection */}
-                            {IOT_SENSORS_ENABLED && user && <EnclosureClimate user={user} />}
-                            {dashPrefs.showCommunityPulse && <CommunityPulse />}
                             {dashPrefs.showLiveFeed && <LiveFeed currentUserEmail={user?.email} />}
                         </div>
 
@@ -525,25 +517,30 @@ export default function Dashboard() {
                             />
                         </div>
 
-                        {/* Right column, Featured breeders + hatchery */}
+                        {/* Identification requests and breeders */}
                         <div className="xl:col-span-3 space-y-6">
                             {dashPrefs.showIdNeeds && <IdNeedsPanel currentUserEmail={user?.email} />}
                             {dashPrefs.showFeaturedBreeders && <FeaturedBreeders />}
-
+                        </div>
+                    </div>
+                    </section>
+                    <section id="home-breeding" aria-labelledby="home-breeding-title" className="space-y-5 home-section">
+                        <h2 id="home-breeding-title" className="text-2xl font-semibold text-slate-100">Breeding & tools</h2>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
                             {dashPrefs.showHatchery && <IncubatorTimeline email={email} />}
 
                             {dashPrefs.showHatchery && <Card className="gecko-card">
                                 <CardContent className="p-5 space-y-4">
                                     <div className="flex items-center gap-2 text-gecko-text">
                                         <Egg className="w-5 h-5 text-amber-400" />
-                                        <h3 className="font-semibold">Community Hatchery</h3>
+                                        <h3 className="font-semibold">Your Hatchery</h3>
                                     </div>
                                     <div>
                                         <p className="text-4xl font-bold text-white">
                                             {hatcheryStats.hatched.toLocaleString()}
                                         </p>
                                         <p className="text-xs text-slate-400 uppercase tracking-wider mt-1">
-                                            Hatched this year
+                                            Recorded hatches
                                         </p>
                                     </div>
                                     <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
@@ -605,15 +602,34 @@ export default function Dashboard() {
                                 </Card>
                             )}
                         </div>
-                    </div>
+                    </section>
+                    <ReferralLinkCard />
+
                 </div>
             </div>
 
+            <Dialog open={showCustomize} onOpenChange={setShowCustomize}>
+                <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+                    <DialogHeader><DialogTitle>Customize home</DialogTitle><DialogDescription>Choose what appears on your homepage. Preferences are saved on this device.</DialogDescription></DialogHeader>
+                    <div className="space-y-1">
+                        {[
+                            ['showCommunityPulse', 'Community Pulse'], ['showLiveFeed', 'Community Live'],
+                            ['showWelcomeShelf', 'New keepers'], ['showGeckoOfTheDay', 'Gecko of the Day'],
+                            ['showIdNeeds', 'Help identify geckos'], ['showFeaturedBreeders', 'Featured breeders'],
+                            ['showHatchery', 'Hatchery and incubator timeline'], ['showValues', 'Collection and season values'],
+                            ['compactStats', 'Compact collection statistics'],
+                        ].map(([key, label]) => <label key={key} className="flex items-center justify-between gap-4 py-3 text-sm text-slate-200">
+                            {label}<Checkbox checked={Boolean(dashPrefs[key])} onCheckedChange={(checked) => updateDashPrefs({ [key]: checked === true })} />
+                        </label>)}
+                    </div>
+                    <Button onClick={() => setShowCustomize(false)}>Done</Button>
+                </DialogContent>
+            </Dialog>
             {selectedImageData && (
-                <ImageDetailModal
+                <Suspense fallback={<p role="status" className="text-center p-4">Opening photo…</p>}><ImageDetailModal
                     data={selectedImageData}
                     onClose={() => setSelectedImageData(null)}
-                />
+                /></Suspense>
             )}
             <ChangeLogModal isOpen={showChangelog} onClose={() => setShowChangelog(false)} />
         </div>

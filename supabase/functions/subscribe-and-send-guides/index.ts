@@ -2,12 +2,17 @@
 //
 // The homepage lead-magnet form posts to this function. It:
 //   1. Validates the payload (email shape, length caps, honeypot).
-//   2. Allows one email per address per day and a few per network per
-//      hour, counted in `guide_email_sends`, so a script cannot use the
-//      form to send mail to strangers.
+//   2. Allows one email per inbox per day (plus tags and Gmail dots count
+//      as one inbox: guide_email_sends.inbox_key, from email_inbox_key) and
+//      a few per network per hour, counted in `guide_email_sends`, so a
+//      script cannot use the form to send mail to strangers.
 //   3. Adds a new address to `newsletter_subscribers`. An address already
-//      there keeps its consent and any unsubscribe, and an unsubscribed
-//      address is not emailed.
+//      there keeps its consent and any unsubscribe. An unsubscribed
+//      address, and one on the do-not-email list (email_inbox_suppressed:
+//      a bounce or a spam report), is not emailed. Every accepted request
+//      gets the same reply, {ok: true} (or {ok: true, skipped:
+//      "recently_sent"} at the limit), so the form cannot be used to learn
+//      whether an address unsubscribed or is on that list.
 //   4. Sends an email via Resend with download links for the Care
 //      Guide and Genetics Guide PDFs (hosted as static assets on the
 //      site at /downloads/<filename>.pdf).
@@ -166,12 +171,16 @@ serve(async (req) => {
   try {
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // The database's own rule for which inbox an address reaches, so the
+    // count matches the inbox_key it stores with each request.
+    const { data: inboxKey, error: keyErr } = await supabase.rpc("email_inbox_key", { p_email: email });
+    if (keyErr || typeof inboxKey !== "string" || !inboxKey) throw keyErr || new Error("no inbox key");
     const [byAddress, byNetwork] = await Promise.all([
-      countSince("email", email, dayAgo),
+      countSince("inbox_key", inboxKey, dayAgo),
       ipKey ? countSince("ip_hash", ipKey, hourAgo) : Promise.resolve(0),
     ]);
     if (byAddress >= LIMIT_PER_ADDRESS_PER_DAY) {
-      return json({ ok: true, delivered: 0, skipped: "recently_sent" });
+      return json({ ok: true, skipped: "recently_sent" });
     }
     if (byNetwork >= LIMIT_PER_NETWORK_PER_HOUR) {
       return json({
@@ -213,25 +222,40 @@ serve(async (req) => {
     }
   }
 
-  // Someone who unsubscribed gets no mail from this form. The page shows
-  // the download links after any successful submit, so a person asking
-  // for the guides still gets them. The reply does not say why, so the
-  // form cannot be used to learn who has unsubscribed.
-  if (existing?.unsubscribed_at) {
-    return json({ ok: true, delivered: 0 });
-  }
-
-  if (!RESEND_API_KEY) {
-    return json({ ok: true, delivered: 0, skipped: "no-resend-key" });
-  }
-
   // Logged before sending so a quick second request already counts it.
+  // An unsubscribed address is logged too, so it meets the daily limit
+  // like any other.
   const { error: logErr } = await supabase
     .from("guide_email_sends")
     .insert({ email, ip_hash: ipKey });
   if (logErr) {
     console.warn("subscribe-and-send-guides: send log failed", logErr);
     return json({ error: "Could not send the guides right now." }, 500);
+  }
+
+  // Someone who unsubscribed, or whose inbox bounced or reported our email
+  // as spam, gets no mail from this form. If the check itself fails,
+  // nothing is sent either. The page shows the download links after any
+  // successful submit, so a person asking for the guides still gets them.
+  // The reply is the same as a sent one, and the short wait stands in for
+  // the send, so neither the reply nor its timing says who is on either
+  // list.
+  let suppressed = true;
+  try {
+    const { data, error } = await supabase.rpc("email_inbox_suppressed", { p_email: email });
+    if (error) console.warn("subscribe-and-send-guides: suppression check failed", error.message);
+    else suppressed = data === true;
+  } catch (err) {
+    console.warn("subscribe-and-send-guides: suppression check threw", err);
+  }
+  if (existing?.unsubscribed_at || suppressed) {
+    await new Promise((resolve) => setTimeout(resolve, 300 + Math.floor(Math.random() * 500)));
+    return json({ ok: true });
+  }
+
+  if (!RESEND_API_KEY) {
+    console.warn("subscribe-and-send-guides: RESEND_API_KEY is not set");
+    return json({ ok: true });
   }
 
   const subject = "Your free crested gecko Care & Genetics Guides";
@@ -251,10 +275,9 @@ serve(async (req) => {
   ].join("\n");
 
   try {
-    const result = await sendEmail(email, subject, text, renderHtml());
-    return json({ ok: true, delivered: 1, id: result?.id });
+    await sendEmail(email, subject, text, renderHtml());
   } catch (err) {
     console.warn("subscribe-and-send-guides: delivery failed", err);
-    return json({ ok: true, delivered: 0, skipped: "delivery-failed" });
   }
+  return json({ ok: true });
 });

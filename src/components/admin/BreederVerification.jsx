@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { VERIFIED_BREEDER_CHECKS } from '@/lib/verifiedBreeder';
+import { storeUrl } from '@/lib/morphmarketStore';
 
 /**
  * Breeder verification (decision D9). An admin opens a breeder page,
@@ -109,6 +110,61 @@ function BreederRow({ row, onChanged }) {
   );
 }
 
+// Stores MorphMarket would not let verify-morphmarket-store read. The admin
+// opens the store, looks for the code in its About text and decides.
+function MorphMarketQueue() {
+  const { toast } = useToast();
+  const [rows, setRows] = useState([]);
+  const [busyId, setBusyId] = useState(null);
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase.rpc('admin_morphmarket_review_queue');
+    if (!error) setRows(Array.isArray(data) ? data : []);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const decide = async (row, verified) => {
+    setBusyId(row.user_id);
+    const { error } = await supabase.rpc('admin_set_morphmarket_verified', { p_user_id: row.user_id, p_verified: verified });
+    setBusyId(null);
+    if (error) {
+      toast({ title: 'Not saved', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: verified ? 'MorphMarket store verified' : 'Marked as not found', description: row.store_slug });
+    load();
+  };
+
+  if (rows.length === 0) return null;
+  return (
+    <Card className="bg-slate-900 border-amber-700/50">
+      <CardContent className="p-4 space-y-3">
+        <p className="font-semibold text-slate-100">MorphMarket stores to check by hand</p>
+        <p className="text-xs text-slate-400">MorphMarket blocked the automatic check. Open the store and look for the code in its About text.</p>
+        {rows.map((row) => (
+          <div key={row.user_id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800 p-2">
+            <div className="min-w-0 text-sm">
+              <a href={storeUrl(row.store_slug)} target="_blank" rel="noreferrer" className="text-emerald-300 hover:underline inline-flex items-center gap-1">
+                {row.store_slug} <ExternalLink className="w-3 h-3" />
+              </a>
+              <span className="text-slate-400"> · code <span className="font-mono text-slate-200">{row.code}</span> · {row.email}</span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" disabled={busyId === row.user_id} onClick={() => decide(row, false)} className="border-slate-600">
+                Not there
+              </Button>
+              <Button size="sm" disabled={busyId === row.user_id} onClick={() => decide(row, true)} className="bg-emerald-700 hover:bg-emerald-800 text-white">
+                Code is there
+              </Button>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function BreederVerification() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -134,6 +190,7 @@ export default function BreederVerification() {
 
   return (
     <div className="space-y-4">
+      <MorphMarketQueue />
       <p className="text-sm text-slate-400">
         Every breeder page is listed here, unverified first. Tick each item after checking it, then verify.
         The badge shows on the breeder's public page.

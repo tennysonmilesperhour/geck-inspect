@@ -1,6 +1,6 @@
 import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
@@ -24,6 +24,8 @@ import { hasFireStatePhotos } from '@/lib/fireStatePhotos';
 import OwnershipChain from '@/components/passport/OwnershipChain';
 import { exportProvenanceCertificate } from '@/lib/certificateExport';
 import { geckoSelect, PUBLIC_READ_COLUMNS } from '@/lib/publicColumns';
+import { requestPassportTransfer } from '@/lib/transfers';
+import { toast } from '@/components/ui/use-toast';
 
 // The passport is the page buyers see when they scan a tub label or open a
 // shared link. It used its own palette tokens and two display fonts; since
@@ -386,6 +388,8 @@ export default function AnimalPassport() {
   const { passportCode } = useParams();
   const auth = useAuth?.() || {};
   const currentUser = auth.user;
+  const navigate = useNavigate();
+  const [requestingTransfer, setRequestingTransfer] = useState(false);
 
   const [gecko, setGecko] = useState(null);
   const [sire, setSire] = useState(null);
@@ -523,6 +527,30 @@ export default function AnimalPassport() {
   // Messages opens a conversation from ?recipient= (this used ?recipientEmail=,
   // which it never read, so these buttons opened an empty inbox).
   const messageSeller = currentUser ? `/Messages?recipient=${encodeURIComponent(gecko.created_by)}` : '/AuthPortal';
+
+  // Until 24 Oct 2026 this button only opened an empty chat, so the owner
+  // heard nothing unless the buyer wrote and sent a message. Now it sends the
+  // owner a transfer request (chat message, notification, email and push)
+  // and then opens the conversation.
+  const askForTransfer = async () => {
+    if (!currentUser) {
+      navigate(`/AuthPortal?redirect=${encodeURIComponent(`/passport/${passportCode}`)}`);
+      return;
+    }
+    setRequestingTransfer(true);
+    const res = await requestPassportTransfer(passportCode);
+    setRequestingTransfer(false);
+    if (res.status === 'failed') {
+      toast({ title: 'Request not sent', description: res.message, variant: 'destructive' });
+      return;
+    }
+    if (res.status === 'sent') {
+      toast({ title: 'Transfer request sent', description: 'The owner has been notified. You will get an email with a claim link when they send the transfer.' });
+    } else if (res.status === 'already_requested') {
+      toast({ title: 'Already requested', description: 'You asked the owner about this gecko in the last day. You can message them below.' });
+    }
+    navigate(messageSeller);
+  };
 
   return (
     <>
@@ -665,11 +693,15 @@ export default function AnimalPassport() {
                   </Link>
                 </Button>
               )}
-              <Button asChild variant="outline" className="border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 bg-transparent">
-                <Link to={messageSeller}>
-                  <ArrowRightLeft className="w-4 h-4" />
-                  Ask the seller for a transfer invitation
-                </Link>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={askForTransfer}
+                disabled={requestingTransfer}
+                className="border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 bg-transparent"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                {requestingTransfer ? 'Sending request...' : 'Ask the owner to transfer this gecko to me'}
               </Button>
             </div>
           )}

@@ -195,7 +195,7 @@ export default function ForumPostPage() {
             // email/push. Clients cannot read another member's private settings.
             try {
                 const recipient = replyingTo?.created_by || post?.created_by;
-                if (recipient && recipient !== currentUser.email) {
+                if (createdComment.approval_status !== 'pending' && recipient && recipient !== currentUser.email) {
                     await Notification.create({
                         user_email: recipient,
                         type: replyingTo ? 'new_reply' : 'new_comment',
@@ -211,7 +211,7 @@ export default function ForumPostPage() {
             setComments((prev) => [createdComment, ...prev]);
             setNewComment('');
             setReplyingTo(null);
-            toast({ title: 'Posted' });
+            toast({ title: 'Submitted for approval', description: 'Your comment stays private until reviewed.' });
         } catch (error) {
             console.error('Failed to post comment:', error);
             toast({
@@ -298,7 +298,7 @@ export default function ForumPostPage() {
             });
             setPost((prev) => ({ ...prev, ...saved }));
             setPostDraft(null);
-            toast({ title: 'Post updated' });
+            toast({ title: 'Changes submitted for approval' });
         } catch (error) {
             toast({ title: 'Could not save', description: error.message || 'Try again in a moment.', variant: 'destructive' });
         }
@@ -318,7 +318,7 @@ export default function ForumPostPage() {
             setComments((prev) => prev.map((c) => (c.id === editingCommentId ? { ...c, ...saved } : c)));
             setEditingCommentId(null);
             setCommentDraft('');
-            toast({ title: 'Comment updated' });
+            toast({ title: 'Changes submitted for approval' });
         } catch (error) {
             toast({ title: 'Could not save', description: error.message || 'Try again in a moment.', variant: 'destructive' });
         }
@@ -465,7 +465,10 @@ export default function ForumPostPage() {
                                 </div>
                             </div>
                         ) : (
+                            <>
                             <p className="text-slate-300 whitespace-pre-wrap break-words mb-3">{comment.content}</p>
+                            {comment.approval_status !== 'approved' && comment.approval_status && <p className="text-sm text-amber-300">{comment.approval_status === 'pending' ? 'Awaiting approval. Only you and admins can see this.' : 'Not approved for publication. Edit to submit again.'}</p>}
+                            </>
                         )}
                         <div className="flex items-center gap-2 flex-wrap">
                             <Button
@@ -620,6 +623,7 @@ export default function ForumPostPage() {
                                     {post.content}
                                 </p>
                                 <ForumPhotoGrid value={post.image_urls} />
+                                {post.approval_status && post.approval_status !== 'approved' && <p className="text-sm text-amber-300">{post.approval_status === 'pending' ? 'Awaiting approval. Only you and admins can see this.' : 'Not approved for publication. Edit to submit again.'}</p>}
                             </>
                         )}
                     </CardContent>

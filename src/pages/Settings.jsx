@@ -40,6 +40,8 @@ import { saveOnboarding } from '@/lib/onboardingState';
 import SignInRequired from '@/components/shared/SignInRequired';
 import PageHeader from '@/components/shared/PageHeader';
 import WeighInReminderSetting from '@/components/settings/WeighInReminderSetting';
+import WeeklyNotesSetting from '@/components/settings/WeeklyNotesSetting';
+import { WEEKLY_NOTES_CHANGED_EVENT } from '@/lib/weeklyNotesConsent';
 import CollectionArtworkSetting from '@/components/settings/CollectionArtworkSetting';
 
 const STORE_POLICY_EXAMPLE = [
@@ -344,6 +346,18 @@ export default function SettingsPage() {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [formData, setFormData] = useState(initialFormData);
+    // Weekly Gecko Notes: its own state and its own save, never in formData,
+    // so the Save button (and a stale Settings tab) cannot write it.
+    const [weeklyNotesEnabled, setWeeklyNotesEnabled] = useState(true);
+    // The region rule (src/lib/weeklyNotesConsent.js) can turn the notes
+    // off just after this page read the profile; show its result.
+    useEffect(() => {
+        const onChanged = (event) => {
+            if (typeof event?.detail?.enabled === 'boolean') setWeeklyNotesEnabled(event.detail.enabled);
+        };
+        window.addEventListener(WEEKLY_NOTES_CHANGED_EVENT, onChanged);
+        return () => window.removeEventListener(WEEKLY_NOTES_CHANGED_EVENT, onChanged);
+    }, []);
     const [isSaving, setIsSaving] = useState(false);
     const [portalBusy, setPortalBusy] = useState(false);
     const [newSpecialty, setNewSpecialty] = useState('');
@@ -377,6 +391,7 @@ export default function SettingsPage() {
                 const currentUser = await User.me();
                 if (currentUser) {
                     setUser(currentUser);
+                    setWeeklyNotesEnabled(currentUser.email_weekly_notes_enabled !== false);
                     setFormData({
                         bio: currentUser.bio || '',
                         location: currentUser.location || '',
@@ -516,6 +531,11 @@ export default function SettingsPage() {
         setIsSaving(true);
         try {
             await User.updateMyUserData(formData);
+            // Saving with all email off also turns Weekly Gecko Notes off in
+            // the database (the profiles_weekly_notes_follow_email_off
+            // trigger), and turning email back on does not restart them, so
+            // the switch shows what was saved.
+            if (formData.email_notifications_enabled === false) setWeeklyNotesEnabled(false);
             syncNativeCareReminders({ email: user?.email, feedingAlertsEnabled: formData.feeding_alerts_enabled !== false }).catch(() => {});
             toast({ title: "Settings Saved", description: "Your profile has been successfully updated." });
             setHasUnsavedChanges(false);
@@ -969,6 +989,9 @@ export default function SettingsPage() {
                                     saved to columns nothing reads. */}
                                 <p className="text-sm text-slate-400 mb-2">Email me about:</p>
                                 {notificationTypes.map(notifType => renderNotificationSwitch(notifType, formData.email_notification_types.includes(notifType.key), () => toggleArrayItem('email_notification_types', notifType.key)))}
+                                {/* Saves on its own (User.setWeeklyNotes): a column the
+                                    form never holds, so Save cannot write it. */}
+                                <WeeklyNotesSetting enabled={weeklyNotesEnabled} onChange={setWeeklyNotesEnabled} />
                             </div>
                         )}
                     </CardContent>
