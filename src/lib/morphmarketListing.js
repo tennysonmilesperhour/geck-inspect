@@ -1,4 +1,4 @@
-import { csvEscape, splitCSVRecords, parseCSVLine, headerKey } from './morphmarketSync';
+import { csvEscape, splitCSVRecords, parseCSVLine, headerKey } from './morphmarketSync.js';
 
 const yesNo = ['Yes', 'No'];
 export const MORPHMARKET_FIELDS = [
@@ -49,6 +49,11 @@ export function normalizeMorphMarketValue(key, value) {
     const partial = /^(\d{1,2})\/(\d{4})$/.exec(trimmed);
     if (partial) return `${partial[2]}-${partial[1].padStart(2, '0')}`;
   }
+  if (key === 'Length_Type') {
+    const units = { 'm (total length)': 'total_length_m', 'cm (total length)': 'total_length_cm', 'm (snout to vent)': 'snout_to_vent_m', 'cm (snout to vent)': 'snout_to_vent_cm' };
+    return units[trimmed.toLowerCase()] || text;
+  }
+  if (key === 'Diet' && trimmed) return text.split(',').map(v => diet.find(d => d.toLowerCase() === v.trim().toLowerCase()) || v.trim()).join(', ');
   if (key === 'Is_Group' && /^sold individually$/i.test(trimmed)) return 'No';
   if (key === 'Is_Group' && /^sold as (?:a )?group$/i.test(trimmed)) return 'Yes';
   const field = MORPHMARKET_FIELDS.find(f => f.key === key);

@@ -19,11 +19,11 @@ describe('full MorphMarket listing preservation', () => {
     expect(native.hatch_date).toBeUndefined();
   });
   it('reads real export spellings, source dates, groups and reference fields', () => {
-    const source = fields({ DOB: '6/8/2025', Is_Group: 'Sold individually', Proven_Breeder: 'True' });
+    const source = fields({ DOB: '6/8/2025', Is_Group: 'Sold individually', Proven_Breeder: 'True', Length: '12.0', Length_Type: 'cm (total length)', Diet: 'cricket, meal replacement' });
     const headers = MORPHMARKET_KEYS.map(k => k === 'Animal_ID' ? 'Animal_Id*' : k === 'Category' ? 'Category*' : k);
     const csv = `${headers.join(',')},Mm_Url**,Sires**\n${MORPHMARKET_KEYS.map(k => csvEscape(source[k])).join(',')},https://example.com/animal,Parent A`;
     const parsed = readMorphMarketSource(csv)[0];
-    expect(parsed.fields).toMatchObject({ DOB: '2025-06-08', Is_Group: 'No', Proven_Breeder: 'Yes' });
+    expect(parsed.fields).toMatchObject({ DOB: '2025-06-08', Is_Group: 'No', Proven_Breeder: 'Yes', Length_Type: 'total_length_cm', Diet: 'Cricket, Meal Replacement' });
     expect(parsed.raw.DOB).toBe('6/8/2025');
     expect(parsed.extra['Sires**']).toBe('Parent A');
     expect(readMorphMarketSource(file([fields({ DOB: '6/2025' })]))[0].fields.DOB).toBe('2025-06');
