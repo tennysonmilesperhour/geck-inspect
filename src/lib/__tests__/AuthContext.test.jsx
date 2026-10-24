@@ -21,6 +21,13 @@ vi.mock('@/lib/posthog', () => ({ identifyUser: vi.fn(), resetUser: vi.fn(), cap
 vi.mock('@/lib/referral', () => ({ applyPendingReferral: vi.fn() }));
 vi.mock('@/lib/store/signupGrant', () => ({ applyPendingSignupGrant: vi.fn() }));
 vi.mock('@/lib/guestMode', () => ({ isGuestMode: () => false, setGuestMode: vi.fn(), GUEST_USER: { id: 'guest' } }));
+// The Weekly Gecko Notes region rule (src/lib/weeklyNotesConsent.js) has its
+// own tests; here only that the provider hands it the account and profile.
+const weekly = vi.hoisted(() => ({ calls: [], outcome: 'skipped' }));
+vi.mock('@/lib/weeklyNotesConsent', () => ({
+  applyWeeklyNotesRegionDefault: (authUser, profile) => { weekly.calls.push([authUser, profile]); return Promise.resolve(weekly.outcome); },
+  weeklyNotesAfter: (outcome) => (outcome === 'region-off' ? false : null),
+}));
 import { AuthProvider, useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import { queryClientInstance } from '../query-client';
@@ -42,7 +49,7 @@ async function mount(children) {
 }
 async function emit(event, user) { await act(async () => state.callback(event, user ? { user } : null)); }
 beforeEach(() => {
-  state.session = null; state.entitlements = []; state.profiles.clear();
+  state.session = null; state.entitlements = []; state.profiles.clear(); weekly.calls = []; weekly.outcome = 'skipped';
   toast.mockClear();
   supabase.auth.signOut.mockReset().mockImplementation(async () => { state.callback('SIGNED_OUT', null); return { error: null }; });
   supabase.auth.getSession.mockImplementation(() => Promise.resolve({ data: { session: state.session } }));
@@ -132,6 +139,30 @@ describe('sign-out control', () => {
   });
 });
 afterEach(() => { if (tree) act(() => tree.unmount()); vi.unstubAllGlobals(); });
+
+describe('Weekly Gecko Notes region rule', () => {
+  it('runs after sign-in with the account and its loaded profile, in the background', async () => {
+    state.profiles.set(a.email, Promise.resolve({ data: { id: 'legacy-a', email_weekly_notes_enabled: true, email_weekly_notes_choice_at: null } }));
+    await mount(); await emit('SIGNED_IN', a);
+    expect(weekly.calls).toHaveLength(1);
+    expect(weekly.calls[0][0]).toBe(a);
+    expect(weekly.calls[0][1]).toMatchObject({ id: 'legacy-a', email: a.email, email_weekly_notes_choice_at: null });
+    expect(auth.isAuthenticated).toBe(true);
+  });
+  it('shows the notes as off on the signed-in user when the rule turned them off', async () => {
+    weekly.outcome = 'region-off';
+    state.profiles.set(a.email, Promise.resolve({ data: { id: 'legacy-a', email_weekly_notes_enabled: true, email_weekly_notes_choice_at: null } }));
+    await mount(); await emit('SIGNED_IN', a);
+    await act(async () => {});
+    expect(auth.user.email_weekly_notes_enabled).toBe(false);
+  });
+  it('does not run for an account that signed out before its profile loaded', async () => {
+    const profile = deferred(); state.profiles.set(a.email, profile.promise);
+    await mount(); await emit('SIGNED_IN', a); await emit('SIGNED_OUT', null);
+    await act(async () => profile.resolve({ data: { id: 'legacy-a', email_weekly_notes_choice_at: null } }));
+    expect(weekly.calls).toEqual([]);
+  });
+});
 
 describe('session enrichment isolation', () => {
   it('does not resurrect a signed-out account when its profile finishes loading', async () => {

@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-10-17",
+  "generatedAt": "2026-10-20",
   "files": {
     "src/pages/Home.jsx": "2026-10-16",
     "src/pages/About.jsx": "2026-10-16",
     "src/pages/Contact.jsx": "2026-10-16",
     "src/pages/Terms.jsx": "2026-10-08",
-    "src/pages/PrivacyPolicy.jsx": "2026-10-17",
+    "src/pages/PrivacyPolicy.jsx": "2026-10-18",
     "src/pages/MarketplaceVerification.jsx": "2026-10-16",
     "src/pages/CareGuide.jsx": "2026-10-16",
     "src/pages/CareGuideSeries.jsx": "2026-09-29",
     "src/pages/CareGuideTopic.jsx": "2026-10-05",
     "src/pages/MorphGuide.jsx": "2026-10-16",
-    "src/pages/MorphDetail.jsx": "2026-10-16",
+    "src/pages/MorphDetail.jsx": "2026-10-18",
     "src/pages/MorphTaxonomyHub.jsx": "2026-10-06",
     "src/pages/ProjectLineDetail.jsx": "2026-10-16",
     "src/pages/QualityScale.jsx": "2026-10-16",
@@ -27,7 +27,7 @@
     "src/pages/OpenData.jsx": "2026-10-16",
     "src/pages/Recognition.jsx": "2026-10-17",
     "src/pages/Gallery.jsx": "2026-10-03",
-    "src/pages/Forum.jsx": "2026-10-16",
+    "src/pages/Forum.jsx": "2026-10-18",
     "src/pages/Marketplace.jsx": "2026-09-29",
     "src/pages/MarketplaceBuy.jsx": "2026-10-16",
     "src/pages/Membership.jsx": "2026-10-17",
@@ -52,6 +52,6 @@
   },
   "declared": {
     "src/pages/Terms.jsx": "2026-09-08",
-    "src/pages/PrivacyPolicy.jsx": "2026-10-17"
+    "src/pages/PrivacyPolicy.jsx": "2026-10-18"
   }
 }

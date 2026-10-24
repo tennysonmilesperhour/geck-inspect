@@ -417,6 +417,9 @@ begin
   execute format($q$insert into public.gecko_images (image_url, created_by, image_embedding) values
     ('https://example.com/a.jpg', %L, %L::extensions.vector),
     ('https://example.com/b.jpg', %L, %L::extensions.vector)$q$, pg_temp.who('alice'), v_vec, pg_temp.who('alice'), v_vec);
+  -- Visual search exercises published photos; new uploads now await approval.
+  update public.gecko_images set approval_status = 'approved', moderation_hidden = false
+    where image_url in ('https://example.com/a.jpg', 'https://example.com/b.jpg');
   perform pg_temp.as_member('bob');
   if exists (select 1 from public.similar_gecko_images_by_url('https://example.com/a.jpg', 5) s where s.created_by is not null) then
     raise exception 'FAIL: visual search gives another member''s email';

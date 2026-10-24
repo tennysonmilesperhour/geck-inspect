@@ -4,9 +4,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { clientIp } from '../../../supabase/functions/_shared/client-ip.ts';
-// send-email imports the lifecycle copy; the harness drops imports, so the
-// tests hand the real module in as globals.
+// send-email imports the lifecycle copy and the Weekly Gecko Notes helper;
+// the harness drops imports, so the tests hand the real modules in as globals.
 import * as lifecycleCopy from '../../../supabase/functions/_shared/lifecycle-copy.ts';
+import * as weeklyNotes from '../../../supabase/functions/_shared/weekly-notes.ts';
 import { TIER_LIMITS } from '../tierLimits';
 import {
   actionOf, fakeFetch, fakeSupabase, filterValue, functionSource, loadFunction, optionsOf, payloadOf, postJson,
@@ -47,28 +48,83 @@ describe('client IP for rate limits', () => {
 });
 
 describe('subscribe-and-send-guides never undoes an unsubscribe', () => {
-  function run(existing) {
+  function run(existing, { sentToday = 0, suppressed = false, suppressionError = false, inboxKeyError = false, resendStatus = 200, env = ENV } = {}) {
     const db = fakeSupabase((call) => {
-      if (call.table === 'guide_email_sends' && actionOf(call) === 'select') return { count: 0, error: null };
+      if (call.rpc === 'email_inbox_key') {
+        return inboxKeyError ? { data: null, error: { message: 'down' } } : { data: 'the-inbox@example.com', error: null };
+      }
+      if (call.table === 'guide_email_sends' && actionOf(call) === 'select') {
+        return { count: filterValue(call, 'eq', 'inbox_key') === 'the-inbox@example.com' ? sentToday : 0, error: null };
+      }
       if (call.table === 'newsletter_subscribers' && actionOf(call) === 'select') return { data: existing, error: null };
+      if (call.rpc === 'email_inbox_suppressed') {
+        return suppressionError ? { data: null, error: { message: 'down' } } : { data: suppressed, error: null };
+      }
       return undefined;
     });
-    const net = fakeFetch(() => ({ body: { id: 'email-1' } }));
+    const net = fakeFetch(() => ({ status: resendStatus, body: resendStatus === 200 ? { id: 'email-1' } : { message: 'no' } }));
     const fn = loadFunction('subscribe-and-send-guides', {
-      env: ENV,
+      env,
       globals: { createClient: () => db.client, clientIp, fetch: net.fetch },
     });
     return { db, net, fn };
   }
+  const ask = async ({ fn }, email) => (await fn.handle(postJson('https://x.test/', { email }))).json();
 
   it('leaves an unsubscribed address alone and sends it nothing', async () => {
     const { db, net, fn } = run({ id: 'sub-1', unsubscribed_at: '2026-09-01T00:00:00Z' });
     const res = await fn.handle(postJson('https://x.test/', { email: 'gone@example.com' }));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true, delivered: 0 });
+    expect(await res.json()).toEqual({ ok: true });
     const writes = db.table('newsletter_subscribers').filter((c) => actionOf(c) !== 'select');
     expect(writes).toHaveLength(0);
     expect(net.requests).toHaveLength(0);
+  });
+
+  it('sends nothing to an address on the do-not-email list, or when that check fails, and answers as usual', async () => {
+    for (const opts of [{ suppressed: true }, { suppressionError: true }]) {
+      const r = run(null, opts);
+      expect(await ask(r, 'bounced@example.com')).toEqual({ ok: true });
+      expect(r.net.requests).toHaveLength(0);
+      expect(r.db.rpcCalls('email_inbox_suppressed')[0].args).toEqual({ p_email: 'bounced@example.com' });
+    }
+  });
+
+  it('counts the daily limit per inbox, and refuses when the inbox cannot be worked out', async () => {
+    const r = run(null, { sentToday: 1 });
+    expect(await ask(r, 'Some.One+x@example.com')).toEqual({ ok: true, skipped: 'recently_sent' });
+    expect(r.db.rpcCalls('email_inbox_key')[0].args).toEqual({ p_email: 'some.one+x@example.com' });
+    expect(r.net.requests).toHaveLength(0);
+    const broken = run(null, { inboxKeyError: true });
+    const res = await broken.fn.handle(postJson('https://x.test/', { email: 'reader@example.com' }));
+    expect(res.status).toBe(500);
+    expect(broken.net.requests).toHaveLength(0);
+  });
+
+  it('gives the same reply at the daily limit, after a failed send and without a Resend key', async () => {
+    const limited = [run({ id: 'a', unsubscribed_at: '2026-09-01T00:00:00Z' }, { sentToday: 1 }), run(null, { sentToday: 1 })];
+    for (const r of limited) {
+      expect(await ask(r, 'someone@example.com')).toEqual({ ok: true, skipped: 'recently_sent' });
+      expect(r.net.requests).toHaveLength(0);
+    }
+    const failed = run(null, { resendStatus: 500 });
+    expect(await ask(failed, 'reader@example.com')).toEqual({ ok: true });
+    expect(failed.net.requests).toHaveLength(1);
+    const noKey = run(null, { env: { ...ENV, RESEND_API_KEY: '' } });
+    expect(await ask(noKey, 'reader@example.com')).toEqual({ ok: true });
+    expect(noKey.net.requests).toHaveLength(0);
+  });
+
+  it('answers an unsubscribed address exactly like one it emailed, and counts it toward the limit', async () => {
+    const gone = run({ id: 'sub-1', unsubscribed_at: '2026-09-01T00:00:00Z' });
+    const sent = run({ id: 'sub-2', unsubscribed_at: null });
+    const goneReply = await (await gone.fn.handle(postJson('https://x.test/', { email: 'gone@example.com' }))).json();
+    const sentReply = await (await sent.fn.handle(postJson('https://x.test/', { email: 'reader@example.com' }))).json();
+    expect(goneReply).toEqual(sentReply);
+    expect(sent.net.requests).toHaveLength(1);
+    for (const { db } of [gone, sent]) {
+      expect(db.table('guide_email_sends').filter((c) => actionOf(c) === 'insert')).toHaveLength(1);
+    }
   });
 
   it('does not touch an existing subscriber row', async () => {
@@ -184,7 +240,7 @@ describe('send-email skips people who cannot sign in', () => {
       return undefined;
     });
     const net = fakeFetch(() => ({ body: { id: 'email-1' } }));
-    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy } });
+    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy, ...weeklyNotes } });
     const send = () => fn.handle(postJson('https://x.test/', {
       user_email: 'Legacy@Example.com', type: 'weekly_digest', title: 'Your week', body: 'Hi',
     }, { authorization: `Bearer ${ENV.SUPABASE_SERVICE_ROLE_KEY}` }));
@@ -232,7 +288,7 @@ describe('send-email keeps the notification link inside its href', () => {
       return undefined;
     });
     const net = fakeFetch(() => ({ body: { id: 'email-1' } }));
-    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy } });
+    const fn = loadFunction('send-email', { env: ENV, globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy, ...weeklyNotes } });
     return fn.handle(postJson('https://x.test/', {
       user_email: 'keeper@example.com', type: 'new_reply', title: 'New reply', body: 'Bob replied to your comment.', url,
     }, { authorization: `Bearer ${ENV.SUPABASE_SERVICE_ROLE_KEY}` })).then(() => net.requests[0]?.body);

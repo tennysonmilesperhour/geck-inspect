@@ -37,6 +37,7 @@ import { createPageUrl } from '@/utils';
 import { isGuestMode } from '@/lib/guestMode';
 import { nameWithoutEmail } from '@/lib/publicColumns';
 import { formatDistanceToNow } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
 /**
@@ -53,6 +54,7 @@ const EMPTY_POST = { title: '', content: '', category_id: '', image_urls: [] };
 
 export default function ForumPage() {
     const blockedAuthors = useBlockedAuthors();
+    const { toast } = useToast();
     // Demo posts are labelled "Sample" on each row, so a guest never takes
     // them for real members.
     const guestDemo = isGuestMode();
@@ -123,6 +125,7 @@ export default function ForumPage() {
             setPosts((prev) => [createdPost, ...prev]);
             setShowCreatePost(false);
             setNewPost(EMPTY_POST);
+            toast({ title: 'Submitted for approval', description: 'Your post stays private until reviewed.' });
         } catch (error) {
             console.error('Failed to create post:', error);
         }
@@ -355,6 +358,7 @@ export default function ForumPage() {
                                                     >
                                                         {post.title}
                                                     </Link>
+                                                    {post.approval_status && post.approval_status !== 'approved' && <p className="text-xs text-amber-300">{post.approval_status === 'pending' ? 'Awaiting approval' : 'Not approved for publication'}</p>}
                                                     <p className="text-xs md:text-sm text-slate-500 truncate">
                                                         {guestDemo && <span className="mr-1.5 rounded border border-slate-600 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-300">Sample</span>}
                                                         by {nameWithoutEmail(post.author_name, 'Geck Inspect member')} ·{' '}

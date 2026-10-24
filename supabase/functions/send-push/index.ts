@@ -135,6 +135,8 @@ Deno.serve(async (req) => {
     // Season Planner task and plan due dates (enqueue_season_planner_reminders).
     task_reminder: "feeding_due",
     waitlist_signup: "marketplace_inquiry",
+    // A buyer asking for a passport transfer follows the "Messages" switch.
+    transfer_request: "new_message",
     referral_reward: "announcement",
     referral_grant_ended: "announcement",
     // A rejected Morph Guide photo follows the "Morph Submissions" switch.

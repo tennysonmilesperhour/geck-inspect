@@ -99,6 +99,7 @@ export function PublicFooter() {
             <li><Link to="/About" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">About</Link></li>
             <li><Link to="/Contact" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Contact</Link></li>
             <li><Link to="/MarketplaceVerification" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Marketplace Trust</Link></li>
+            <li><Link to="/compare" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Compare</Link></li>
             <li><Link to="/Terms" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Terms</Link></li>
             <li><Link to="/PrivacyPolicy" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Privacy</Link></li>
             <li><GeckIntellectLink className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white" /></li>

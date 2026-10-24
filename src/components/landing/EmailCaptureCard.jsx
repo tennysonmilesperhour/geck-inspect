@@ -98,7 +98,7 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
             {submitted ? (
               <div className="home-glass-inset px-4 py-3 inline-flex items-center gap-3 text-emerald-200">
                 <CheckCircle className="w-5 h-5" />
-                {/* The email can fail quietly (the function reports delivered: 0),
+                {/* The email can fail quietly (the function answers ok either way),
                     so the PDFs are linked here too. */}
                 <div className="text-sm">
                   {alreadySent

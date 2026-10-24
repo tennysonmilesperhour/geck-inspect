@@ -273,7 +273,7 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
       route.fulfill({
         status,
         contentType: 'application/json',
-        headers: { 'access-control-allow-origin': '*', ...headers },
+        headers: { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range', ...headers },
         body: payload === undefined ? '' : JSON.stringify(payload),
       });
 
@@ -371,7 +371,7 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
         const matched = applyFilters(rows, params);
         const page = applyOrderAndLimit(matched, params);
         const range = { 'content-range': `0-${Math.max(page.length - 1, 0)}/${matched.length}` };
-        if (method === 'HEAD') return route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', ...range } });
+        if (method === 'HEAD') return route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range', ...range } });
         if (wantsObject) {
           if (page.length !== 1) {
             return json({ code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned', details: `The result contains ${page.length} rows` }, 406);

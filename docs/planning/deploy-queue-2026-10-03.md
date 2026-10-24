@@ -128,6 +128,69 @@ Plan items E3 23 to 31 of `docs/planning/comprehensive-review-2026-10-14.md`, pl
 
 **Done by Tennyson, 17 Oct:** the day-one $2.99 refunded (review item 12), and the Supabase service role key rotated (new secret key in Supabase, the `SUPABASE_SERVICE_ROLE_KEY` GitHub Actions secret replaced; the old key revoked the same day, after the daily canary passed on the new one).
 
+## Added 17 October: Morph ID speed
+
+Same model, same instructions, same answer fields; the request the model reads is checked byte for byte by `src/lib/__tests__/morphRequestSnapshot.test.js`. Details in `supabase/functions/recognize-gecko-morph/README.md`.
+
+**Supabase, function (`recognize-gecko-morph`, declared, deploys on merge):** the profile, plan and per-network reads run together, and the photo lookup starts once the scan is reserved (so a repeat, a run still going, a network over its cap or an account with no scans left never reaches Replicate) and runs alongside the scans-left read; one time budget of 105 s from arrival (Claude is started only with 32 s left for one or two photos, 3.5 s more per photo past two, and the embedding must be done by the point that still leaves that plus the reference query: 69.5 s for one or two photos, 59 s for five; past it the call ends in the usual refunded `upstream_timeout` at 59 to 70 s instead of 100 to 130 s); the spend log row is written after the answer; the answer ceiling is 4096 tokens and a cut-off answer is retried with twice the room; every answer has a `Server-Timing` header and one timing line in the log. New: `{ "action": "warm" }` wakes the Replicate model with a project photo, at most once a minute, logged as zero-cost `morph_id_warm` rows in `geck_data.model_invocations`.
+
+**Vercel:** the Morph ID page sends that warm-up when a signed-in member with a scan left opens it, and again on picking the top view after 3 minutes. No photo is sent. The daily canary sends it too and prints each call's embedding and Claude time (its 100 s limit is unchanged).
+
+**Held back: a faster reference-photo query.** The session also built a narrow, exact copy of the reference photos for `morph_visual_neighbors`. Before merging, `supabase/tests/morph_neighbors_production_check.sql` was run on production (read-only, 18 Oct): 20 of 20 sample photos came back with different reference photos from the exact answer, so today's function uses the approximate `idx_gecko_images_embedding` index. The exact query would change which reference photos Morph ID sees, so it was dropped from the merge. It could come back after a graded run shows it does not lower accuracy.
+
+**Live 18 Oct, 00:25 UTC** (`recognize-gecko-morph` v76). The daily canary run by hand right after: both identifications passed, 38 s (embedding 6.9 s, Claude 29.6 s) and 33 s (embedding 0.9 s, Claude 30.3 s), against 101 s on 16 Oct when the embedding model was cold. Claude's own 30 s is unchanged on purpose: it follows the answer's length, and shortening the answer could change which morph is picked.
+
+### Morph ID speed: what still needs Tennyson
+
+1. **Replicate credit at $5 or more** (Replicate dashboard, Billing). Below that Replicate allows one request at a time.
+2. **After the deploy:** open Morph ID, wait a minute, tap Identify, and check the `embed` time in the response's `Server-Timing` header (browser network panel) is under 5 s. On the next cold canary day, call 1's embed time should drop.
+
+## Added 18 October: Weekly Gecko Notes
+
+One short email a week after a member's first two weeks, in order, for as long as they stay subscribed. The design, the 16 notes and how a session adds more are in `docs/planning/weekly-notes-2026-10.md`.
+
+**Supabase (applied by the merge):**
+
+- `20261018002200_weekly_notes.sql`: the switch `weekly_notes_enabled` (false, not public), the member's own switch `profiles.email_weekly_notes_enabled` (on for new members unless they untick the sign-up box; existing members who had Platform Announcements or all email off start opted out, once), `profiles.email_weekly_notes_choice_at` (when the member last chose, stamped by the trigger `profiles_weekly_notes_stamp_choice`), the trigger `profiles_weekly_notes_follow_email_off` (stopping all email turns the notes off too, for good), `handle_new_auth_user` restated to save the sign-up box with the profile, the ledger `weekly_notes_sends`, the poll table `weekly_notes_polls`, the functions `weekly_notes_candidates`, `claim_weekly_note`, `enqueue_weekly_notes`, `unsubscribe_weekly_notes_by_token` (records the choice) and `weekly_notes_region_default` (the EEA and UK rule, run by members on their own profile), and the job `weekly-notes-hourly` at 50 past each hour. Additive and safe to run twice. While the switch is off the job is one lookup an hour.
+- `20261018002300_erase_weekly_notes.sql`: `admin_erase_account` restated from `20261015151600` with two lines that delete the member's weekly notes rows.
+- Test: `supabase/tests/weekly_notes_regressions.sql` (and `lifecycle_regressions.sql` still passes against the restated erasure).
+
+**Edge functions (deployed by the same merge; both already declared in `supabase/config.toml`):** `send-email` (claims and sends the notes, with their own footer and a `&scope=weekly` stop link and one-click header; ships the catalog `_shared/weekly-notes.generated.ts`) and `email-unsubscribe` (a `scope=weekly` POST stops only the weekly notes). send-email's profile lookup is unchanged, so it works whether the migration lands before or after it.
+
+**Vercel:** the Weekly Gecko Notes switch in Settings (its own save, which records the choice); the sign-up box "Send me Weekly Gecko Notes, one short crested gecko tip a week" (ticked except in the EEA and the UK); the region rule after sign-in (`src/lib/weeklyNotesConsent.js`; before the migration lands it does nothing, and the next session tries again); the Unsubscribe page, which now changes nothing until a button is pressed ("Stop Weekly Gecko Notes", "Stop all notification emails" or "Unsubscribe"), because mail scanners open links, for the all-email links in reminder emails too; and the Privacy Policy (updated 18 October). The getting-started footer now says Weekly Gecko Notes may follow and can be turned off in Settings, and two of its facts match the notes (a 0.1 g scale; weigh every 14, 21 and 30 days by stage).
+
+**What still needs Tennyson:** the notes run without waiting on his approval (his request, 18 Oct), and the EEA and UK legal basis is decided (decision 58: off unless turned on there). Both steps are done (18 Oct).
+
+1. Set the edge function secret `EMAIL_POSTAL_ADDRESS` (a street address, or a registered PO box or mail receiving agency; US law expects one). **Done 18 Oct, about 15:20 UTC**, checked with a probe that sends nothing. Without it no weekly note is sent, and the skip uses up nothing.
+2. Turn the notes on (done 18 Oct): `update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';` With 64 confirmed accounts and 20 a run, the first round takes about four hours; after that each member gets one note about every 7 days.
+3. After the first merge that only adds a note, check that the send-email version in the dashboard moved.
+
+## Added 18 October: Weekly Gecko Notes for visitors (live 03:18 UTC)
+
+An email sign-up for people without an account, feeding the same weekly notes. Design in `docs/planning/weekly-notes-2026-10.md`, section 9; decision 59.
+
+**Supabase (applied by the merge, commit 307e8531):** `20261018120000_weekly_notes_visitors.sql` closes `newsletter_subscribers` to the public API (the old `anyone_can_subscribe` insert policy is gone; admins can read it), adds the visitor columns and the form's send log `weekly_notes_signup_sends`, the functions `request_weekly_notes_signup`, `confirm_weekly_notes_signup`, `weekly_notes_subscriber_token`, `unsubscribe_weekly_notes_subscriber`, `weekly_notes_subscriber_candidates`, `claim_weekly_note_subscriber`, `weekly_notes_visitor_cleanup` (job `weekly-notes-visitor-cleanup`, 04:25 daily) and `admin_erase_weekly_notes_visitor`, and restates `enqueue_weekly_notes` to ask about confirmed visitors after members. Test: `supabase/tests/weekly_notes_visitors_regressions.sql`.
+
+**Edge functions:** `subscribe-weekly-notes` is new and declared in `supabase/config.toml` (verify_jwt false); `send-email` gained the visitor branch and `email-unsubscribe` the `scope=visitor` stop. All three deployed with the merge.
+
+**Vercel:** the form under the account prompt on the guide pages, the `/WeeklyNotes` page (sign-up and the confirmation button) and the visitor stop on `/Unsubscribe`; the Privacy Policy describes visitor sign-ups.
+
+**Checked in production on 18 October:** a sign-up to Resend's test inbox returned 200 and left one unconfirmed row and one send-log row with a hashed network; a bad address returned 400; confirm, a second press ("already"), becoming due, the stop link and dropping off the list all worked in a rolled-back transaction; `anon` has no access to `newsletter_subscribers`. The test row was erased with `admin_erase_weekly_notes_visitor`.
+
+**What still needs Tennyson:** nothing. The `EMAIL_POSTAL_ADDRESS` secret (step 1 above) was set on 18 Oct, so confirmed visitors get notes like members.
+
+**Review fixes, 18 October (`20261018150000_weekly_notes_visitor_fixes.sql`):** a visitor's stop now also stops the member notes and holds after they make an account; limits count inboxes (plus tags, Gmail dots); nothing is sent to suppressed addresses or members with email off; the confirm button uses the database's clock (`confirm_weekly_notes_signup(p_token)`, the old two-argument version is dropped); pre-existing "confirmed" rows need a fresh click; only accounts that can sign in count as members; the cleanup counts from the newest link; visitor ledger rows record the catalog step (`claim_weekly_note_subscriber` gained `p_steps`, the three-argument version is dropped); erasure covers the form's send log and the delivery log. `weekly_notes_candidates` and `admin_erase_account` are restated with one change each (both matched production before restating). Functions: `send-email` passes `p_steps`; `subscribe-weekly-notes` handles the quiet status. If send-email deploys before the migration, its visitor claim fails and is retried 20 hours later with nothing used up; if the migration lands first, the old send-email's claim still works (p_steps is optional). Checked in production after the deploy: all twelve functions match the tested definitions, and a rolled-back run showed the inbox limit, the refused address, the quiet reply for a suppressed address, the confirm, and the grants (signed out can only press confirm).
+
+**Second review round, 18 October (`20261018150100_weekly_notes_visitor_fixes_2.sql`):** a stopped visitor's new profile starts with the notes off whatever the sign-up box said (trigger `profiles_weekly_notes_visitor_stop`); the member rule counts only stops on rows that asked for the notes, and future stop dates are cleared; the limits come before the quiet rule and quiet requests are logged (kind `quiet`), so replies cannot tell them apart; the quiet rule checks the inbox against suppressions and only treats sign-in accounts as members; international domains are accepted again; confirmations older than the request are cleared and not counted; unpressed links on stopped rows are dropped after 30 days. `subscribe-weekly-notes` waits a moment on a quiet reply so its timing matches a send. Numbered `150100` because `150000` was dated ahead of its time; see the note in `docs/MIGRATIONS.md`.
+
+**Third review round, 18 October (`20261018150200_weekly_notes_visitor_fixes_3.sql`):** the visitor-stop trigger now records the stop as the member's choice (off, dated at the stop), because a profile with no choice had the ticked sign-up box saved over the stop at the member's first sign-in; a profile the old trigger already left without a choice gets one. The form's quiet rule and the visitor candidates match suppressions with the new `email_inbox_suppressed()` (exact, without the plus tag, and every Gmail spelling), so a plus-tag bounce no longer silences the plain address outside Gmail; a member with all email off is matched by inbox too. Confirmations dated in the future are cleared. `subscribe-and-send-guides` (the homepage guide form) now gives every accepted request the same reply and logs unsubscribed addresses toward the daily limit, so it can no longer show who unsubscribed.
+
+**Fourth review round, 18 October (`20261018150300_weekly_notes_visitor_fixes_4.sql`):** an inbox is one person throughout. One function decides what counts as a visitor stop (`weekly_notes_visitor_stop_at`: any spelling of the inbox, after a request, not followed by a newer sign-up), used by the profile trigger, the first-sign-in rule, the member rule and the visitor candidates. The stop link now records the member's choice on a profile that was already off with no choice (before, the first sign-in could save the ticked box over the stop), and the first-sign-in rule checks for a stop itself. Spam complaints silence every spelling of an inbox again (only bounces keep the narrow match). An inbox with an account is a member on the form, on the confirm button and in the visitor candidates, and a second spelling of an inbox that already gets the notes is answered "already". Erasure removes form-log rows for every spelling. Two expression indexes keep the inbox lookups fast (2,000 visitors and 2,000 suppressions: about 0.6 s, from about 84 s). The daily cleanup also deletes the homepage guide form's log after 30 days, and `subscribe-and-send-guides` checks the do-not-email list before sending. `subscribe-weekly-notes`: the "already" and "member" emails mention another spelling of the address.
+
+**Fifth review round, 18 October (`20261018150400_weekly_notes_visitor_fixes_5.sql`):** the member rule had become slow with many members (it read every profile once per member: about 65 s at 10,000 members, paid again by every member claim); it now reads a member's last choice only when the inbox has a visitor stop (3,000 members: about 0.4 s). "Already signed up" counts only a spelling that gets the notes now (`weekly_notes_inbox_signed_up`), so a bounced spelling cannot lock an inbox out. The stop link stops every spelling of the inbox and kills every pending link for it; the confirm button takes the form's per-inbox lock (two clicks at the same moment: the second answers "already", checked with two connections); visitor candidates pick one spelling per inbox. Both claims and both 7-day rules count the whole inbox, so moving between spellings repeats nothing. `email_is_suppressed` (send-email's check before every member email) and the member candidates match the do-not-email list by inbox. Account erasure removes visitor rows, ledger and polls for every spelling; a visitor erasure is refused when any spelling has an account. The guide form's daily limit counts the inbox (new generated column `guide_email_sends.inbox_key`). One-time data fixes stop spellings left confirmed beside a newer stop and turn off profiles whose last choice is older than a visitor stop. `/WeeklyNotes`: the member answer reads "You have a Geck Inspect account".
+
+**Sixth review round, 18 October, merged 24 October (`20261024182000_weekly_notes_visitor_fixes_6.sql`).** Deployments were paused on 18 Oct, so it waited in a draft PR. It was written as `20261018172000` and re-dated on 24 Oct to sort after `20261020230000_email_relevance_and_outcomes.sql`, which had rewritten `weekly_notes_candidates` in the meantime; the member rule in this file is built on that newer body, so the relevance gate (a gecko on record or a sign-in within 60 days) stays. The same merge fixed two CI failures already red on main: the Weekly Gecko Notes SQL tests (their members had no gecko and no sign-in, so the 20 Oct gate left them out) and the browser test job (pinned to Ubuntu 24.04, because Playwright 1.56 cannot install Chromium on the Ubuntu 26.04 runners). Both claims lock the inbox instead of the spelling (two accounts on one inbox could otherwise claim at the same moment and get the same note twice; production had one such inbox due on 18 Oct, the owner's own test accounts). Account erasure keeps another live account's rows on the same inbox; erasure scrubs every spelling from the delivery log; an index on `profiles (lower(email))` keeps the member rule fast when inboxes have visitor stops; a spelling that never confirmed only loses its link when the inbox stops; a visitor erasure is not blocked by an unconfirmed sign-up; and the 7-day and 20-hour rules allow 10 minutes, so the hourly run 7 days or 20 hours later counts even when it starts a fraction of a second earlier than the last one did (on 18 Oct the 22:50 run skipped 20 members polled at 02:50:00.306 because it started at 22:50:00.098). The erasure fix showed up live the same evening: deleting a test account at 23:10 wiped the poll rows of the owner's two other accounts on the same inbox. Merging it applies the migration; nothing else is needed.
+
 ## Done on 3 October
 
 **Edge functions deployed** (all from the repo copy):
@@ -230,3 +293,240 @@ Deployed: `generate-social-post` v22 (matches the repo). Not yet exercised again
 **Done 15 October:** `recognize-gecko-morph` v71, deployed from the repo by the Supabase GitHub integration when PR 129 merged (see "Round 1" above), includes this `taxonomy.ts`. The note below is kept for history.
 
 The new `taxonomy.ts` lets the model return `sable`, `highway` and `luwak`, and `index.ts` tells the model to name the look-alikes a photo cannot rule out (line-bred looks, shared genes) in its uncertainty reasons. The rest of the Sable work (tag picker, morph guide page, glossary, marketplace filter, calculator) was already live through Vercel.
+
+## 18 October: public content approval
+
+New forum posts, comments and gallery photos now start pending and hidden from
+other members and visitors. Text/photo edits return them to pending. Existing
+published rows keep their visibility. Admin Panel > Reports now includes a
+Publication approvals queue with full text, all attached photos, approval and
+rejection. Approval checks the revision being reviewed so concurrent edits cannot
+be published unseen. Existing report/hide/block handling stays in place.
+
+Migration: `20261018152154_public_content_approval.sql`. Verified on a fresh
+Postgres 16 database through all 299 migrations, repeated safely, and tested as
+owner, another member, anonymous visitor and admin. All 29 SQL regression files
+passed after the visual-search fixture explicitly marked its photos approved.
+The iOS release build passed all 3,419 unit tests, lint and the 172-route SEO audit.
+Physical-device testing of this new admin flow and TestFlight build remains pending.
+
+## 19 October: profile for members who add an email later
+
+Facebook sign-in (still switched off) can produce an account with no email
+when the Facebook account was made with a phone number. Profiles are keyed by
+email, so the signup trigger skips them. The app now shows an "Add your email"
+screen (`src/components/auth/AddEmailGate.jsx`) instead of loading, and a new
+trigger runs `handle_new_auth_user` when an account's email goes from empty to
+set, so confirming the email creates the profile.
+
+Migration: `20261019214000_profile_when_email_added.sql`. Additive (a new
+trigger only). Checked against production inside a rolled-back transaction.
+No current account lacks an email (73 of 73 have one), so nobody is affected
+until Facebook is switched on.
+
+Same day, the one case left: the email typed already has an account. The
+screen now offers "Use my existing account", which calls the new
+`discard-empty-account` edge function (declared in `supabase/config.toml`,
+verify_jwt true) to delete the caller's login, signs out, and opens sign-in
+with the email filled in. The function deletes only the caller, and only when
+that login has no email, no phone and nothing but social identities
+(`supabase/functions/_shared/empty-account.ts`). Passed `deno check`.
+## 19 October: automatic approval for public content
+
+The approval queue from 18 October now only gets the items that need a person.
+The database decides on each new post, comment, gallery photo and edit:
+
+- A held word (slurs, explicit words, threats, off-platform contact such as
+  WhatsApp or Telegram, scam payment phrases) always waits for an admin.
+- A member with rejected content, or approved content a moderator later hid,
+  always waits.
+- A member with at least 2 approved, visible items is approved at once.
+- Anyone else is approved at once for text with no photo or link; a photo or a
+  link waits.
+- An edit of something live follows the same rules. An edit of something
+  pending or rejected waits.
+
+The reason is stored in `approval_hold_reason` and shown in the admin queue.
+Held words live in `public.moderation_held_terms` (admin-only), so a word can be
+added in the SQL editor without a migration. No third-party service sees the
+content. Reports, blocking and moderator hide/remove are unchanged, and a
+moderator's hide survives the author's edit.
+
+Migration: `20261019230000_public_content_auto_approval.sql`. Additive, so the
+app version open in browsers keeps working. Verified on a fresh Postgres 16
+build of all migrations, applied twice safely; all 29 SQL regression files pass,
+including the rewritten `public_content_approval.sql`. 3,423 unit tests pass.
+The rule runs in the database, so the iOS build already uses it with no rebuild.
+
+## 19 October: Verified MorphMarket seller and the MorphMarket CSV
+
+MorphMarket has no "sign in with MorphMarket" and no public API, so a member
+proves they own a store with a code. On My Store, the MorphMarket store card
+gives a code like `GI-7K3P9Q`; the member pastes it into their MorphMarket
+About text and presses Check my store. The new `verify-morphmarket-store`
+function reads the public store page and, when the code is there, their
+breeder page shows "Verified MorphMarket seller" linking to the store. If
+MorphMarket blocks the automatic read, the store appears at the top of Admin >
+Breeder verification for a check by hand ("Code is there" or "Not there").
+
+Migration: `20261019233000_morphmarket_store_links.sql` (a new table and two
+admin functions, additive). Checked against production inside a block that
+rolled back: the table and grants apply, a second member cannot verify a store
+already verified to someone else, and signed-out visitors cannot run the admin
+functions. Function: `verify-morphmarket-store`, declared in
+`supabase/config.toml` with `verify_jwt = true`, so the merge deploys it. No
+secrets needed.
+
+Proven 24 October: MorphMarket returned 403 to both the exact local User-Agent
+and the Supabase function. Use the hand-check process below when blocked.
+
+The MorphMarket CSV export now starts with an `Animal_ID` column (the Geck
+Inspect ID code, or the record id), which Bulk Import 2.0 requires and uses to
+update listings on a second upload instead of adding copies. The original photo
+column was `Photo URLs`; the 24 October live check below
+corrected it to `Photo_Urls`. The importer reads
+MorphMarket's own header spellings (`Animal Id`, `Birth Date`, `Desc`,
+`Photo Urls`) and keeps the Animal ID as the gecko's ID code, so a second
+import of the same file is refused row by row instead of duplicating geckos.
+The original build session could not reach MorphMarket. The live two-row
+check below now supplies that proof.
+
+### 24 October follow-up: badge and CSV round trip proven
+
+Read all 33 Supported Fields on the signed-in MorphMarket Import Animals
+page. The full list and allowed values are saved in
+[morphmarket-import-reference-2026-10-24.md](morphmarket-import-reference-2026-10-24.md).
+Corrected export headers to State, Desc and Photo_Urls, removed Currency
+(MorphMarket uses Seller Profile currency), corrected Subadult, used spaces
+between traits and rounded weights to whole grams. ISO dates and comma-separated
+photos match the published field rules. Empty optional columns are omitted
+and the preview matches the file, but
+live testing proved omission does not protect existing values. Both export
+screens warn that missing values can erase data, including omitted columns,
+and explain currency, shipping and keeping Animal_ID unchanged.
+
+A real six-row MorphMarket export exposed starred required headers and
+M/D/YYYY birth dates, which the parser now reads. It skips the Leachianus
+row with a warning, keeps five crested rows, warns about partial dates and
+blank seller IDs, and has a redacted regression fixture. It also reads
+State, M/F sex initials and space-separated photos, and
+no longer mistakes Not For Sale for For Sale. It keeps private, unlisted,
+inactive and expired listings private, and warns when a partial birth date
+cannot be stored as a full hatch date.
+
+Validation: `pnpm lint` passed with 0 errors and 75 existing warnings;
+`pnpm test` passed all 3,479 tests in 295 files. The real downloaded CSV
+also passed assertions for titles, dates, photo counts and species filtering.
+Commit `63994ac0` was pushed directly to main and Vercel reported a successful
+production deployment. The live Import CSV dialog then showed the five
+crested records with correct names, sexes, traits and prices and all eight
+expected warnings. Cancelled without creating records. Separate GitHub
+member-flow and database checks also failed on the preceding commit: the
+browser installer does not support the runner's Ubuntu version, and two
+weekly-email SQL fixtures fail. The main checks job was cancelled when a
+newer unrelated commit arrived.
+
+Live store proof: Tennyson supplied `tennyson_miles`. Curl with the exact
+function User-Agent returned 403 and a Cloudflare challenge page. The real
+My Store check saved `pending`, `needs_review=true`, and `MorphMarket answered
+403`; edge logs confirm the check ran. After reading the visible About code,
+Admin > Breeder verification > Code is there saved `verified by an admin`.
+Saved the breeder profile and confirmed the public badge at
+https://geckinspect.com/Breeder/thegeckogarden links to the correct store.
+The card now explains the hand check and retaining the code until verified.
+Tennyson approved removing the code on 24 October. Removed only that paragraph
+and confirmed it is absent from the public About text.
+
+Live CSV proof: created two disposable Pet records, exported them through the
+production batch builder and uploaded the unchanged CSV with Synchronize/Replace
+off. MorphMarket created listings 4174375 and 4174376 with the correct fields
+and all three photos. Changed A's price from 125 to 126 in Geck Inspect,
+exported and uploaded again: the same two listing numbers remained, with no
+duplicates. Exported the pair from MorphMarket and imported through the live
+Geck Inspect dialog: two records created, with IDs, dates, sexes, prices,
+weights, descriptions as notes and photos retained. Existing seller IDs were
+correctly refused first; only the disposable originals were renamed and
+archived to permit the return test. All four Geck Inspect records and both
+MorphMarket listings are now archived; permanent deletion remains with Tennyson.
+
+Data-loss finding: a separate upload with Price, DOB and Weight columns removed
+still cleared both dates and weights and changed both prices to $0. The importer
+adds missing fields as blank. Restored all values with the full file. Warnings
+now explain this directly. Tennyson chose to keep export available with a
+clear warning on 24 October, without blocking incomplete files. See the
+reference for exact test values and scope. For Sale shipping, payments and
+sold-state flows were not exercised.
+
+Final validation on current main: `pnpm lint` passed with 0 errors and 75
+existing warnings; `pnpm test` passed 3,479 tests in 295 files. The exact
+lockfile installed successfully. No formula-neutralization behavior changed.
+
+## 20 October: email overhaul (letters, preview lines, relevance gate)
+
+Migration: `20261020230000_email_relevance_and_outcomes.sql`. It replaces
+`weekly_notes_candidates` with the same signature (grants kept), adding one
+condition: a member needs a gecko on record or a sign-in within 60 days. It
+adds the admin-only `email_outcomes(p_days)`. No table or column changes. The
+gate was checked against production read-only: next week's list goes from 57
+members to 35.
+
+Function: `send-email` (already declared, so the merge deploys it). The
+getting-started emails and Weekly Gecko Notes are now plain letters signed by
+Tennyson, with a preview line, and use two new optional secrets,
+`EMAIL_FROM_PERSONAL` and `EMAIL_REPLY_TO`. Unset, they send from
+`EMAIL_FROM` as before and ask no reply question.
+
+Waiting on Tennyson: the Resend webhook (never connected; no open, click,
+bounce or complaint has ever been recorded) and the two secrets.
+`docs/marketing/email-brain.md`, section 1, has the links and values.
+
+## 24 October: personal and seasonal weekly notes, the re-permission email
+
+Migration: `20261024150000_weekly_notes_personal_and_repermission.sql`. New:
+`weekly_note_facts`, `claim_weekly_note_from` (the claim with catalog
+steps; `claim_weekly_note` stays for a rollback), the table
+`weekly_notes_repermission_sends`, `weekly_notes_repermission_candidates`,
+`claim_weekly_notes_repermission`, `keep_weekly_notes_by_token` (anon and
+authenticated, checked by the signed token), `enqueue_weekly_notes_repermission`
+and the job `weekly-notes-repermission-hourly` (55 past). Replaced with the
+same signature: `weekly_notes_candidates` (a yes within a year passes the
+gate) and `email_outcomes` (a re-permission row). The switch
+`weekly_notes_repermission_enabled` is added off. Checked against production
+in a block that rolled back: 24 members qualify, 38 keepers, 26 with a
+female, 15 with an adult female, 9 breeders.
+
+Function: `send-email` (already declared). Site: the `/KeepNotes` page.
+
+## 24 October: transfer requests from the passport page
+
+Migration: `20261024181000_passport_transfer_request.sql`. It adds
+`request_passport_transfer(passport_code)` (signed-in members only) and
+replaces `notify_dispatch_on_insert` with its production body plus one title
+line for the new `transfer_request` type. No table or column changes.
+
+Why: the passport's "Ask the seller for a transfer invitation" button only
+opened an empty chat, so an owner heard nothing when a buyer scanned the QR
+code. The button now sends the owner a chat message and a `transfer_request`
+notification (in-app, email and push, following the owner's "new message"
+setting). The notification opens the gecko with the transfer form already
+open and the buyer's email filled in. One request per buyer per gecko a day,
+at most 10 an hour per buyer, and blocking stops it both ways.
+
+Functions: `send-email` and `send-push` (both declared) map
+`transfer_request` to the "new message" preference.
+
+Regression file: `supabase/tests/passport_transfer_request_regressions.sql`.
+Nothing waits on Tennyson.
+
+## 24 October: getting-started email spacing (written 19 October)
+
+Written on 19 October as `20261019001200` and held while deployments were paused; merged on 24 October as `20261024183300_lifecycle_spacing_allowance.sql`, re-dated to sort after the migrations that went live in between (the last is the Weekly Gecko Notes sixth round, `20261024182000`). Merging it applies the migration; nothing else is needed. It restates `lifecycle_email_candidates` (the body matched production by checksum on 19 and 24 October) with one change: the 20-hour spacing allows 10 minutes for the hourly run's clock. Each `lifecycle_email_sends` row is stamped with its run's start, which moves by a fraction of a second, so an exact 20 hours could leave a member for the next hour (the same pattern skipped 20 Weekly Gecko Notes members in the 22:50 run on 18 Oct). Only day 0 and day 1 can meet the rule, and in production no member had reached it by 19 October. The weekly notes rule against a recent getting-started email needs no change: its stamps are at 35 past and weekly runs at 50 past. Test: section 8 of `supabase/tests/lifecycle_regressions.sql`, which fails with the exact comparison put back.
+
+## 24 October: re-permission email fixes
+
+Migration: `20261024201200_weekly_notes_repermission_fixes.sql`, dated after `20261024183300`, production's newest when it was pushed. Two fixes, found while finishing the sixth Weekly Gecko Notes review:
+
+- `claim_weekly_notes_repermission` locks the inbox, not the spelling, as the weekly notes claims do since `20261024182000`. Two accounts on one inbox are asked about in the same hourly run; with a lock per spelling both claims could pass the once-per-inbox check and the person would get the email twice. The email is still switched off (`weekly_notes_repermission_enabled`).
+- `admin_erase_account` deletes the re-permission record (`weekly_notes_repermission_sends`), which `20261024150000` added after the function was last written. The erased address's own row goes, and every spelling of the inbox when no other account that can sign in remains, the same rule as the weekly notes ledger.
+
+New test file: `supabase/tests/weekly_notes_repermission_regressions.sql` (who is due it, the lock, once per inbox, the keep button, the job and its switch, erasure). Production's copies of both functions matched main's migrations before the push. Nothing waits on Tennyson.

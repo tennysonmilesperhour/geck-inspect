@@ -3,7 +3,8 @@ import { MorphGuide } from '@/entities/MorphGuide';
 // Loaded on first use, not with the page (src/lib/supabaseLazy.js).
 import { getSupabase } from '@/lib/supabaseLazy';
 import { fetchHeroAnchorPhotos } from '@/lib/publicGeckoPhotos';
-import { morphSlug, pickBestMorphRecord } from '@/lib/morphUtils';
+import { morphSlug, pickBestMorphRecord, normMorph } from '@/lib/morphUtils';
+export { normMorph } from '@/lib/morphUtils';
 import { MORPHS } from '@/data/morph-guide';
 
 /**
@@ -90,13 +91,6 @@ export function sanitizeImage(url) {
     return null;
   }
   return url;
-}
-
-// Lower-case and collapse separators so 'Extreme Harlequin' and
-// 'extreme_harlequin' both map to 'extreme harlequin'. Used to match
-// hero-anchor rows (snake_case canonical ids) against MORPHS names.
-export function normMorph(s) {
-  return (s || '').toLowerCase().replace(/[\s_-]+/g, ' ').trim();
 }
 
 /**

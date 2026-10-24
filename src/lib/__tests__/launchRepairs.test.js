@@ -3,6 +3,8 @@ import { buildMorphMarketCSV } from '../morphmarketSync';
 
 const native = vi.hoisted(() => ({
   configure: vi.fn(), setLogLevel: vi.fn(), getAppUserID: vi.fn(), logIn: vi.fn(),
+  // Capacitor proxies expose `then`, even though they are not promises.
+  then: vi.fn((_resolve, reject) => reject(new Error('Plugin proxy was assimilated as a promise'))),
 }));
 vi.mock('@revenuecat/purchases-capacitor', () => ({ Purchases: native, LOG_LEVEL: { WARN: 'WARN' } }));
 
@@ -24,11 +26,12 @@ describe('launch repair regressions', () => {
     vi.stubGlobal('window', { Capacitor: { isNativePlatform: () => true, getPlatform: () => 'android' } });
     vi.stubEnv('VITE_REVENUECAT_ANDROID_API_KEY', 'fixture-key');
     const { configureRevenueCat } = await import('../revenuecat');
-    expect(await configureRevenueCat({ id: '11111111-1111-4111-8111-111111111111' })).toBe(native);
+    expect(await configureRevenueCat({ id: '11111111-1111-4111-8111-111111111111' })).toBe(true);
     expect(native.configure).toHaveBeenCalledWith({ apiKey: 'fixture-key', appUserID: '11111111-1111-4111-8111-111111111111' });
     native.getAppUserID.mockResolvedValue({ appUserID: '11111111-1111-4111-8111-111111111111' });
-    expect(await configureRevenueCat({ id: '22222222-2222-4222-8222-222222222222' })).toBe(native);
+    expect(await configureRevenueCat({ id: '22222222-2222-4222-8222-222222222222' })).toBe(true);
     expect(native.logIn).toHaveBeenCalledWith({ appUserID: '22222222-2222-4222-8222-222222222222' });
+    expect(native.then).not.toHaveBeenCalled();
   });
 });
 

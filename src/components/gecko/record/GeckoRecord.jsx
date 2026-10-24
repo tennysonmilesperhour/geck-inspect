@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Gecko, GeckoEvent, WeightRecord, BreedingPlan } from '@/entities/all';
 import { isGuestMode } from '@/lib/guestMode';
 import { generatePassportCode } from '@/lib/passportUtils';
+import { isValidEmail } from '@/lib/transfers';
 import { predictNextShed } from '@/lib/shedPrediction';
 import { readinessFor } from '@/lib/breedingReadiness';
 import { ReadinessCard } from '@/components/breeding/BreedingReadiness';
@@ -99,8 +100,21 @@ export default function GeckoRecord({
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [husbandryKey, setHusbandryKey] = useState(0);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [transferTo, setTransferTo] = useState('');
   const [confirmPrivate, setConfirmPrivate] = useState(false);
   const [busyPaper, setBusyPaper] = useState(null);
+
+  // A buyer's transfer request (request_passport_transfer) links the owner
+  // here with ?transfer_to=<buyer email>: open the transfer form with that
+  // address filled in. Only the owner can transfer, so others see nothing.
+  useEffect(() => {
+    if (!access.canTransfer || guest || typeof window === 'undefined') return;
+    const to = new URLSearchParams(window.location.search).get('transfer_to');
+    if (to && isValidEmail(to)) {
+      setTransferTo(to.trim().toLowerCase());
+      setShowTransfer(true);
+    }
+  }, [access.canTransfer, guest, view.id]);
 
   const titleLevel = variant === 'page' ? 'h1' : 'h2';
   const sectionLevel = variant === 'page' ? 'h2' : 'h3';
@@ -210,7 +224,7 @@ export default function GeckoRecord({
       toast({
         title: checked ? 'Added to the gallery' : 'Removed from the gallery',
         description: checked
-          ? `${photos} ${photos === 1 ? 'photo is' : 'photos are'} now in the public Gallery.`
+          ? `${photos} ${photos === 1 ? 'photo submitted' : 'photos submitted'} to the public Gallery. Photos from established members appear right away; others appear after a quick check.`
           : 'Its photos are no longer in the public Gallery.',
       });
     } catch (error) {
@@ -383,7 +397,7 @@ export default function GeckoRecord({
             isPublic={isPublic}
             galleryDisplay={view.gallery_display}
             onCreatePassport={createPassport}
-            onTransfer={() => setShowTransfer(true)}
+            onTransfer={() => { setTransferTo(''); setShowTransfer(true); }}
             onPaper={makePaper}
             onTogglePublic={(checked) => setPublic(checked)}
             onToggleGallery={setGallery}
@@ -428,7 +442,7 @@ export default function GeckoRecord({
 
       {showTransfer && (
         <Suspense fallback={null}>
-          <TransferDialog open={showTransfer} onOpenChange={setShowTransfer} animal={view} animalType="gecko" />
+          <TransferDialog open={showTransfer} onOpenChange={setShowTransfer} animal={view} animalType="gecko" initialEmail={transferTo} />
         </Suspense>
       )}
 

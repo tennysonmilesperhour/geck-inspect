@@ -1,0 +1,14 @@
+{
+  "name": "geck-apple-sign-in",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sign in with Apple for the Geck Inspect iOS app (Capacitor 8, Swift Package Manager).",
+  "license": "UNLICENSED",
+  "files": ["ios/", "Package.swift"],
+  "capacitor": {
+    "ios": { "src": "ios" }
+  },
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  }
+}

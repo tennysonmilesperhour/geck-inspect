@@ -20,6 +20,12 @@ verify_jwt = true
 [functions.delete-my-account]
 verify_jwt = true
 
+# "Use my existing account" on the Add your email screen. The gateway
+# requires a session; the handler deletes only the caller, and only when
+# that login is an empty social sign-in (no email, no phone).
+[functions.discard-empty-account]
+verify_jwt = true
+
 # Public waitlist signups and confirmation links. Buyers are signed out,
 # so the gateway lets anonymous calls through; the handler only acts
 # through service-role database functions and mails addresses read from
@@ -67,6 +73,13 @@ verify_jwt = false
 # use it; the handler rate-limits by network and never clears an
 # unsubscribe.
 [functions.subscribe-and-send-guides]
+verify_jwt = false
+
+# Public Weekly Gecko Notes form on the guide pages, for visitors without
+# an account. Signed-out visitors use it; the database step rate-limits by
+# address and network, and nothing is added until the emailed link is
+# pressed.
+[functions.subscribe-weekly-notes]
 verify_jwt = false
 
 # Public breeder inquiry form. Signed-out buyers use it; the handler
@@ -162,3 +175,8 @@ verify_jwt = false
 
 [functions.report-social-overage]
 verify_jwt = false
+
+# MorphMarket store verification. Members only; the handler reads the
+# session itself and only changes the caller's own row.
+[functions.verify-morphmarket-store]
+verify_jwt = true

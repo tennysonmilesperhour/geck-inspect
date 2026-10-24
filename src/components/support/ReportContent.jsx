@@ -108,7 +108,12 @@ export default function ReportContent({
         {!compact && buttonText}
       </Button>
     </DialogTrigger>
-    <DialogContent onClick={(e) => e.stopPropagation()}>
+    <DialogContent
+      // Reports close explicitly so an outside touch cannot discard the draft.
+      onPointerDownOutside={(event) => event.preventDefault()}
+      style={{ pointerEvents: 'auto' }}
+      onClick={(e) => e.stopPropagation()}
+    >
       <DialogTitle>Report this {what}</DialogTitle>
       <DialogDescription>Tell us about harassment, scams, misleading listings, stolen photos, animal welfare worries or anything else that breaks the rules. A moderator reviews every report.</DialogDescription>
       <div className="space-y-2">

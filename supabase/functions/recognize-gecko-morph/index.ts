@@ -57,6 +57,16 @@
 //                                           (last 25 lost to API credit)
 // v61 reads partial pinning as Pinstripe when the breeder photo vote leads
 // with Pinstripe (same three on the shortlist, new order).
+//
+// Speed (17 Oct 2026; the model and the prompt are unchanged): the photo
+// lookup starts as soon as the member is signed in and runs while the
+// profile, plan, per-network cap, request key and credit are checked
+// (../_shared/morph-steps.ts). One time budget runs from arrival
+// (../_shared/morph-budget.ts). Every answer carries a Server-Timing header
+// (../_shared/morph-timing.ts). The page wakes the photo-matching model
+// before Identify with { action: "warm" } (../_shared/morph-warm.ts). The
+// request the model reads is built in request.ts; a snapshot test keeps it
+// byte for byte what it was, and changing it needs a graded run.
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -75,24 +85,46 @@ import {
   type VisualEvidence,
 } from "../_shared/morph-evidence.ts";
 import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
-import { RETRYABLE_UPSTREAM_STATUS, requestShape, upstreamErrorCode, upstreamFailureResponse } from "../_shared/morph-upstream.ts";
+import { RETRYABLE_UPSTREAM_STATUS, retryShape, upstreamErrorCode, upstreamFailureResponse } from "../_shared/morph-upstream.ts";
 import { refundMorphIdCreditOnce } from "../_shared/morph-refund.ts";
 import { clientIp } from "../_shared/client-ip.ts";
 import { costCentsFromUsage } from "../_shared/model-cost.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
+  EmbeddingCanceledError,
+  EmbeddingTimeoutError,
   meanNormalizedEmbeddings,
 } from "../_shared/visual-embedding.ts";
+import {
+  CLAUDE_MAX_MS,
+  claudeTimeoutMs,
+  deadlineSignal,
+  morphDeadlines,
+  type MorphDeadlines,
+  skipClaude,
+} from "../_shared/morph-budget.ts";
+import { MorphTiming, serverTimingHeader, timingLogLine } from "../_shared/morph-timing.ts";
+import {
+  finishAfterResponse,
+  newStepState,
+  type ParsedRequest,
+  type Profile,
+  type RequestClaim,
+  runMorphSteps,
+} from "../_shared/morph-steps.ts";
+import { buildWarmRequest, DEFAULT_WARM_IMAGE_URL, shouldWarm, WARM_SURFACE } from "../_shared/morph-warm.ts";
+import { buildClaudeRequest, type FewShotExample } from "./request.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
-// The whole request must finish inside the browser's 120 s deadline
-// (src/lib/supabaseClient.js) so a timed-out analysis is refunded here
-// instead of finishing unseen after the member gave up.
-const REQUEST_BUDGET_MS = 100_000;
-const CLAUDE_DEADLINE_MS = 90_000;
+// Time limits (whole request 105 s from arrival; the embedding by 69.5 s for
+// one or two photos, 59 s for five; the analyzer at most 90 s and never
+// started with less than its minimum for the photo count) are in
+// ../_shared/morph-budget.ts, with the reasons.
 const REPLICATE_API_TOKEN = Deno.env.get("REPLICATE_API_TOKEN");
+// The photo the warm-up embeds (../_shared/morph-warm.ts).
+const WARM_IMAGE_URL = Deno.env.get("MORPH_WARM_IMAGE_URL") || DEFAULT_WARM_IMAGE_URL;
 const VISUAL_EMBEDDING_MODEL = Deno.env.get("SIGLIP_MODEL") ||
   DEFAULT_VISUAL_EMBEDDING_MODEL;
 const VISUAL_RETRIEVAL_ENABLED = Deno.env.get("MORPH_VISUAL_RETRIEVAL") !== "false";
@@ -272,11 +304,13 @@ const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  // Lets the page (and the browser's network panel) read where the time went.
+  "Access-Control-Expose-Headers": "Server-Timing",
 };
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, extraHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
-    status, headers: { "Content-Type": "application/json", ...CORS },
+    status, headers: { "Content-Type": "application/json", ...CORS, ...extraHeaders },
   });
 }
 
@@ -296,42 +330,102 @@ const TIER_MORPH_ID_CREDITS: Record<string, number> = {
   enterprise: 15,
 };
 
-type Profile = {
-  auth_user_id: string;
-  membership_tier: string | null;
-  subscription_status: string | null;
-  role: string | null;
-  morph_id_show_value_estimate: boolean | null;
-  is_eval_account: boolean;
-};
-
-async function loadProfile(authToken: string): Promise<Profile | null> {
-  // Use the caller's JWT to identify them, then fetch the profile row
-  // server-side with the service role so RLS doesn't gate the lookup
-  // even for users whose `profiles.email` linkage is legacy.
-  const userClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${authToken}` } },
-  });
-  const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return null;
-  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const { data } = await admin.from("profiles")
-    .select("membership_tier, subscription_status, role, morph_id_show_value_estimate")
-    .eq("email", user.email)
-    .maybeSingle();
-  const { data: effectiveTier, error: tierError } = await userClient.rpc("effective_tier_for_current_user");
-  if (tierError) throw new Error("Could not verify membership access");
-  return {
-    auth_user_id: user.id,
-    membership_tier: effectiveTier ?? data?.membership_tier ?? null,
-    subscription_status: data?.subscription_status ?? null,
-    role: data?.role ?? null,
-    morph_id_show_value_estimate: data?.morph_id_show_value_estimate ?? false,
-    // Set only by the morph-id-eval workflow (scripts/morph-id-eval/run-ci.mjs).
-    // app_metadata can be written by the service role alone, so a user cannot
-    // grant it to themselves.
-    is_eval_account: user.app_metadata?.morph_eval === true,
+// The photos and context from the request body, or null when no usable
+// photo URL was sent.
+function parseRequest(body: Record<string, unknown>): ParsedRequest | null {
+  const isSafeImageUrl = (value: unknown) => {
+    if (typeof value !== "string" || value.length > 2048) return false;
+    try { return new URL(value).protocol === "https:"; } catch { return false; }
   };
+  let imageUrls: string[] = [];
+  if (Array.isArray(body?.imageUrls)) {
+    imageUrls = body.imageUrls.filter(isSafeImageUrl) as string[];
+  } else if (isSafeImageUrl(body?.imageUrl)) {
+    imageUrls = [body.imageUrl as string];
+  }
+  if (imageUrls.length === 0) return null;
+  return {
+    imageUrls: imageUrls.slice(0, 5),
+    ageStage: typeof body?.age_stage === "string" && AGE_STAGE_IDS.includes(body.age_stage)
+      ? body.age_stage
+      : "unknown",
+    firedState: typeof body?.fired_state === "string" && FIRED_STATE_IDS.includes(body.fired_state)
+      ? body.fired_state
+      : "unknown",
+    requestKey: typeof body?.request_key === "string" && REQUEST_KEY_PATTERN.test(body.request_key)
+      ? body.request_key
+      : null,
+  };
+}
+
+// When the newest warm-up went out (any member), or null.
+async function lastWarmAt(): Promise<string | null> {
+  try {
+    const { data } = await geckDataSink()
+      .from("model_invocations")
+      .select("called_at")
+      .eq("surface", WARM_SURFACE)
+      .order("called_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return typeof data?.called_at === "string" ? data.called_at : null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+// Asks Replicate to boot the photo-matching model with the project's own
+// photo, at most once a minute across all members, and answers 202 without
+// waiting for it. Reads nothing from the body, takes no credit and no
+// request key, and is not counted by the per-network cap (that counts only
+// morph_id_production rows). See ../_shared/morph-warm.ts.
+async function warmUp(
+  userId: string,
+  body: Record<string, unknown>,
+  ipHash: string | null,
+): Promise<{ warmed: boolean; reason?: string }> {
+  if (!VISUAL_RETRIEVAL_ENABLED || !REPLICATE_API_TOKEN) return { warmed: false, reason: "not_configured" };
+  const request = buildWarmRequest(body, {
+    token: REPLICATE_API_TOKEN,
+    model: VISUAL_EMBEDDING_MODEL,
+    imageUrl: WARM_IMAGE_URL,
+  });
+  if (!request) return { warmed: false, reason: "no_known_version" };
+  if (!shouldWarm(await lastWarmAt(), Date.now())) return { warmed: false, reason: "recent" };
+
+  const started = Date.now();
+  let httpStatus: number | null = null;
+  let errorCode: string | null = null;
+  let predictionId: string | null = null;
+  try {
+    const res = await fetch(request.url, { ...request.init, signal: AbortSignal.timeout(10_000) });
+    httpStatus = res.status;
+    const created = await res.json().catch(() => null);
+    predictionId = typeof created?.id === "string" ? created.id : null;
+    if (!res.ok) errorCode = `replicate_${res.status}`;
+  } catch (_err) {
+    errorCode = "warm_failed";
+  }
+  await finishAfterResponse(logInvocation({
+    surface: WARM_SURFACE,
+    model: VISUAL_EMBEDDING_MODEL,
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_read_tokens: null,
+    cache_creation_tokens: null,
+    est_cost_cents: 0,
+    user_id: userId,
+    tier: null,
+    is_admin: false,
+    photo_count: 0,
+    few_shot_count: null,
+    http_status: httpStatus,
+    error_code: errorCode,
+    duration_ms: Date.now() - started,
+    request_id: predictionId,
+    ip_hash: ipHash,
+  }));
+  return errorCode ? { warmed: false, reason: errorCode } : { warmed: true };
 }
 
 // Request keys: the browser sends one key per set of photos. A retry with
@@ -343,12 +437,6 @@ async function loadProfile(authToken: string): Promise<Profile | null> {
 const REQUEST_KEY_PATTERN = /^[A-Za-z0-9_-]{8,64}$/;
 const REPLAY_WINDOW_MS = 60 * 60 * 1000;
 const RUNNING_WINDOW_MS = 3 * 60 * 1000;
-
-type RequestClaim =
-  | { kind: "disabled" }
-  | { kind: "claimed" }
-  | { kind: "replay"; response: Record<string, unknown> }
-  | { kind: "running" };
 
 function requestStoreMissing(error: { code?: string; message?: string } | null): boolean {
   if (!error) return false;
@@ -447,14 +535,6 @@ function resolveTier(profile: Profile): string {
   return t && t in TIER_MORPH_ID_CREDITS ? t : "free";
 }
 
-type FewShotExample = {
-  image_url: string;
-  primary_morph: string;
-  base_color: string | null;
-  gecko_name?: string | null;
-  source: "hero_anchor" | "manual_touch";
-};
-
 let fewShotCache: Promise<FewShotExample[]> | null = null;
 
 type Row = {
@@ -538,286 +618,113 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
   return fewShotCache;
 }
 
-async function loadVisualEvidence(imageUrls: string[]): Promise<VisualEvidence> {
+type EvidenceResult = {
+  evidence: VisualEvidence;
+  // The embedding was still booting (or running) at its deadline. The
+  // request then ends with upstream_timeout before the analyzer is called:
+  // answering without the reference photos would change what the model
+  // reads, and the time left would not cover an analyzer call anyway.
+  timedOut: boolean;
+};
+
+function unavailableEvidence(model: string | null, note: string): VisualEvidence {
+  return {
+    status: "unavailable",
+    model,
+    photo_count: 0,
+    neighbors: [],
+    consensus: null,
+    note,
+  };
+}
+
+async function loadVisualEvidence(
+  imageUrls: string[],
+  options: { signal: AbortSignal; deadlines: MorphDeadlines; timing: MorphTiming },
+): Promise<EvidenceResult> {
   if (!VISUAL_RETRIEVAL_ENABLED) {
-    return {
-      status: "unavailable",
-      model: null,
-      photo_count: 0,
-      neighbors: [],
-      consensus: null,
-      note: "Visual retrieval is disabled.",
-    };
+    return { evidence: unavailableEvidence(null, "Visual retrieval is disabled."), timedOut: false };
   }
   if (!REPLICATE_API_TOKEN) {
-    return {
-      status: "unavailable",
-      model: null,
-      photo_count: 0,
-      neighbors: [],
-      consensus: null,
-      note: "Visual embedding provider is not configured.",
-    };
+    return { evidence: unavailableEvidence(null, "Visual embedding provider is not configured."), timedOut: false };
   }
 
   try {
-    const settled = await Promise.allSettled(
+    const settled = await options.timing.measure("embed", Promise.allSettled(
       imageUrls.slice(0, RETRIEVAL_MAX_PHOTOS).map((imageUrl) =>
         createVisualEmbedding(imageUrl, {
           token: REPLICATE_API_TOKEN,
           model: VISUAL_EMBEDDING_MODEL,
-          timeoutMs: 52_000,
-          // Retrieval is corroborating evidence. If the provider is throttled,
-          // continue immediately with the vision model instead of delaying ID.
-          rateLimitAttempts: 1,
+          // One deadline for the request, the throttled retry and every
+          // poll (69.5 s from arrival for one or two photos, 59 s for five,
+          // ../_shared/morph-budget.ts).
+          deadline: options.deadlines.embed,
+          signal: options.signal,
+          // Retrieval is corroborating evidence, but answering without it
+          // changes the prompt. A throttled request (Replicate allows one
+          // at a time under $5 of credit) waits once for Retry-After when
+          // that still fits before the deadline, then the answer goes ahead
+          // without references as before.
+          rateLimitAttempts: 2,
         })
       ),
-    );
+    ));
     const embeddings = settled.flatMap((result) =>
       result.status === "fulfilled" ? [result.value.embedding] : []
     );
     const queryEmbedding = meanNormalizedEmbeddings(embeddings);
     if (queryEmbedding.length === 0) {
-      const firstError = settled.find((result) => result.status === "rejected");
-      const detail = firstError?.status === "rejected"
-        ? String(firstError.reason instanceof Error ? firstError.reason.message : firstError.reason)
+      const failures = settled.flatMap((result) => result.status === "rejected" ? [result.reason] : []);
+      if (failures.some((reason) => reason instanceof EmbeddingCanceledError)) {
+        // The request already ended; nobody reads this.
+        return { evidence: unavailableEvidence(VISUAL_EMBEDDING_MODEL, "Canceled."), timedOut: false };
+      }
+      const firstError = failures[0];
+      const detail = firstError !== undefined
+        ? String(firstError instanceof Error ? firstError.message : firstError)
         : "No query embedding was produced.";
       console.error("visual evidence unavailable:", detail.slice(0, 300));
       return {
-        status: "unavailable",
-        model: VISUAL_EMBEDDING_MODEL,
-        photo_count: 0,
-        neighbors: [],
-        consensus: null,
-        note: detail.slice(0, 180),
+        evidence: unavailableEvidence(VISUAL_EMBEDDING_MODEL, detail.slice(0, 180)),
+        timedOut: failures.some((reason) => reason instanceof EmbeddingTimeoutError),
       };
+    }
+    if (options.signal.aborted) {
+      return { evidence: unavailableEvidence(VISUAL_EMBEDDING_MODEL, "Canceled."), timedOut: false };
     }
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { data, error } = await admin.rpc("morph_visual_neighbors", {
-      query_embedding: queryEmbedding,
-      match_count: 48,
-    });
-    if (error) throw new Error(`visual neighbor query failed: ${error.message}`);
-    return buildVisualEvidence((data || []) as RawVisualNeighbor[], {
-      model: VISUAL_EMBEDDING_MODEL,
-      photoCount: embeddings.length,
-      minSimilarity: RETRIEVAL_MIN_SIMILARITY,
-      maxNeighbors: 8,
-      maxPerMorph: 2,
-      rankingDepth: 16,
-    });
+    // The query gets 3 s past the embedding deadline; past that the answer
+    // goes ahead without references, as it does when the query fails.
+    const neighborLimit = deadlineSignal(options.deadlines.neighbors, options.signal);
+    try {
+      const { data, error } = await options.timing.measure(
+        "neighbors",
+        admin.rpc("morph_visual_neighbors", {
+          query_embedding: queryEmbedding,
+          match_count: 48,
+        }).abortSignal(neighborLimit.signal),
+      );
+      if (error) throw new Error(`visual neighbor query failed: ${error.message}`);
+      return {
+        evidence: buildVisualEvidence((data || []) as RawVisualNeighbor[], {
+          model: VISUAL_EMBEDDING_MODEL,
+          photoCount: embeddings.length,
+          minSimilarity: RETRIEVAL_MIN_SIMILARITY,
+          maxNeighbors: 8,
+          maxPerMorph: 2,
+          rankingDepth: 16,
+        }),
+        timedOut: false,
+      };
+    } finally {
+      neighborLimit.clear();
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("visual evidence unavailable:", message);
-    return {
-      status: "unavailable",
-      model: VISUAL_EMBEDDING_MODEL,
-      photo_count: 0,
-      neighbors: [],
-      consensus: null,
-      note: message.slice(0, 180),
-    };
+    if (!options.signal.aborted) console.error("visual evidence unavailable:", message);
+    return { evidence: unavailableEvidence(VISUAL_EMBEDDING_MODEL, message.slice(0, 180)), timedOut: false };
   }
-}
-
-function buildRetrievalContext(evidence: VisualEvidence): string {
-  if (evidence.status !== "available" || evidence.neighbors.length === 0) return "";
-  const mapping = evidence.neighbors.map((neighbor, index) => {
-    const traits = [
-      ...neighbor.genetic_traits,
-      ...neighbor.secondary_traits,
-      neighbor.base_color,
-    ].filter(Boolean).slice(0, 6).join(", ");
-    const detail = traits ? `; other breeder tags=${traits}` : "";
-    return `  ${index + 1}. breeder's main pattern=${neighbor.primary_morph}${detail}; similarity=${neighbor.similarity.toFixed(3)}`;
-  }).join("\n");
-  const vote = (evidence.ranking || []).slice(0, 3)
-    .map((rank) => `${rank.primary_morph} ${Math.round(rank.share * 100)}%`).join(", ");
-  const consensus = vote
-    ? `Vote among the ${evidence.ranking_depth} closest reference photos (one per breeder): ${vote}.`
-    : "No reference vote.";
-  return `The ${evidence.neighbors.length} image(s) immediately before this note are the closest reference photos to the user's gecko, each tagged by the breeder who listed that animal. Breeder tags are reliable for those animals. A missing tag is unknown, not negative. Compare the user's gecko with them: a close reference can still differ in pattern, and the user's photos decide.\n${mapping}\n${consensus}`;
-}
-
-function buildInstructions(fewShotBank: FewShotExample[], includeValueEstimate: boolean) {
-  const bankIntro = fewShotBank.length === 0 ? "" :
-    `\n\nFew-shot reference: the first ${fewShotBank.length} attached image(s) are LABELED reference examples (the user's photo(s) follow, after this text). Hero-anchor entries are competition-judged show winners (gold-standard visual definitions); manual-touch entries are community-verified examples. Use them as visual anchors for the canonical look of each primary_morph BEFORE evaluating the user's photo. The mapping, in order:\n${fewShotBank.map((ex, i) => {
-      const tier = ex.source === "hero_anchor" ? " [hero]" : "";
-      const name = ex.gecko_name ? ` "${ex.gecko_name}"` : "";
-      const color = ex.base_color ? ` (base ${ex.base_color})` : "";
-      return `  ${i + 1}. ${ex.primary_morph}${tier}${name}${color}`;
-    }).join("\n")}`;
-
-  const valueLine = includeValueEstimate
-    ? `\n- value_estimate_usd_low / value_estimate_usd_high: a CONSERVATIVE retail price band in US dollars for an unrelated, unproven specimen at the apparent life stage, based on the morph quality you actually see in the photo. Reflect uncertainty by widening the band. value_estimate_notes is one sentence on what drives the band (e.g., "high white expression on a clean pin lifts this; unproven het knocks it down").`
-    : "";
-
-  return `You are a world-expert crested gecko (Correlophus ciliatus) visual morph
-identification assistant. Analyze the user's photograph(s) and call the
-\`submit_morph_analysis\` tool. Use only ids in the schema.
-
-Rules:
-- First assess whether the images show one crested gecko clearly enough for visual
-  identification. Set usable_for_id=false for the wrong subject, multiple animals,
-  severe blur, heavy obstruction, or lighting that prevents a responsible call.
-- primary_morph is the best visual pattern-class candidate. If evidence is
-  insufficient, provide a technical fallback but set usable_for_id=false. The app
-  will withhold that fallback as an identification.
-- visual_profile is the primary representation of what is actually visible.
-  Classify pattern family, pinning, banding, and spotting independently because
-  these traits can co-occur. Use unknown when the relevant body region is not
-  visible; use none only when the region is visible and the trait is absent.
-- pattern_color describes the visible pattern pigment separately from the base
-  color. Use mixed when two distinct pattern colors are visible (for example,
-  cream/white plus orange/yellow in a tricolor animal).
-- Return one photo_observations entry for each user photo, in the same order.
-  Inspect every photo separately before synthesizing. A poor or redundant image
-  may have contributes_to_result=false and must not dilute a strong diagnostic
-  view. Per-photo evidence_signal is a relative evidence-strength signal, not an
-  accuracy percentage.
-- Return up to three distinct candidate_morphs in descending visual-evidence order.
-  Scores are relative model signals, not calibrated probabilities. Cite the visual
-  feature that supports or weakens each candidate.
-- Do not call harlequin for a flame, or extreme_harlequin without more than 60%
-  leg pattern.
-- genetic_traits is only for a trait whose visible phenotype is strongly expressed.
-  A photo cannot prove genotype, carrier status, lineage, or hidden hets. Leave the
-  array empty when lineage would be required. Use generic axanthic for a visible
-  axanthic-like phenotype; never infer axanthic_vca or axanthic_tsm from photos.
-  Phantom and Cream-on-Cream are visual-expression suggestions, not proof of their
-  underlying genotype.
-- Line-bred phenotypes, fired state and lighting make different morphs look alike.
-  Cappuccino, Sable and Highway are widely reported to be forms of one gene, though
-  that is not settled (Luwak is reported as Cappuccino plus Sable), and they
-  overlap with line-bred dark or clean-backed animals; Lilly White overlaps with
-  White Wall, Whiteout and line-bred high white. Only list sable, highway or luwak
-  when the expression is strong and distinctive, and when a look-alike fits, say
-  in uncertainty_reasons which look-alikes the photos cannot rule out and that recorded
-  lineage settles it.
-- secondary_traits is observational modifiers. Multiple allowed.
-- Harlequin is the base pattern most other crested gecko patterns sit on. When a
-  harlequin also shows another pattern, that pattern is primary_morph, the way
-  breeders list the animal: full pinning is pinstripe, partial pinning is
-  partial_pinstripe, four stripes are quad_stripe, and three distinct colors is
-  tricolor. List harlequin as another candidate_morph. Extreme harlequin and super
-  harlequin are morphs in their own right: keep them as primary_morph and list the
-  other pattern as a candidate.
-- tricolor means three distinct colors (the base plus two pattern colors, such as
-  cream/white and orange/yellow) in roughly equal amounts, usually on a harlequin,
-  sometimes a pinstripe. Add tricolor to secondary_traits whenever the three colors
-  are present.
-- evidence_markers must name concrete visible features such as dorsal coverage,
-  leg coverage, pin continuity, spot count, flank pattern, and white placement.
-- uncertainty_reasons must name missing views, ambiguous lookalikes, age effects,
-  fired state, blur, glare, or color cast when relevant.
-- confidence_score is a model signal about the top visual candidate, not the
-  probability that the identification is correct. Reference photos carry the tags
-  of the breeders who listed them; use them to see how breeders name a look, but
-  the user's own photos decide.${valueLine}
-
-Taxonomy version: ${TAXONOMY_VERSION}.${bankIntro}`;
-}
-
-function buildTool(includeValueEstimate: boolean) {
-  const properties: Record<string, unknown> = {
-    primary_morph:     { type: "string", enum: PRIMARY_MORPH_IDS },
-    genetic_traits:    { type: "array", items: { type: "string", enum: PHOTO_GENETIC_TRAIT_IDS } },
-    secondary_traits:  { type: "array", items: { type: "string", enum: SECONDARY_TRAIT_IDS } },
-    base_color:        { type: "string", enum: BASE_COLOR_IDS },
-    pattern_intensity: { type: "string", enum: PATTERN_INTENSITY_IDS },
-    white_amount:      { type: "string", enum: WHITE_AMOUNT_IDS },
-    pattern_color:     { type: "string", enum: PATTERN_COLOR_IDS },
-    fired_state:       { type: "string", enum: FIRED_STATE_IDS },
-    confidence_score:  { type: "integer", minimum: 0, maximum: 100 },
-    visual_profile: {
-      type: "object",
-      required: ["pattern_family", "pinning", "banding", "spotting", "white_cream_traits"],
-      properties: {
-        pattern_family: { type: "string", enum: PATTERN_FAMILY_IDS },
-        pinning: { type: "string", enum: PINNING_IDS },
-        banding: { type: "string", enum: BANDING_IDS },
-        spotting: { type: "string", enum: SPOTTING_IDS },
-        white_cream_traits: {
-          type: "array",
-          uniqueItems: true,
-          items: { type: "string", enum: WHITE_PLACEMENT_IDS },
-        },
-      },
-    },
-    candidate_morphs:  {
-      type: "array",
-      maxItems: 3,
-      items: {
-        type: "object",
-        required: ["morph", "score", "why"],
-        properties: {
-          morph: { type: "string", enum: PRIMARY_MORPH_IDS },
-          score: { type: "integer", minimum: 0, maximum: 100 },
-          why: { type: "string", description: "Short visual evidence for or against this candidate." },
-        },
-      },
-    },
-    photo_observations: {
-      type: "array",
-      minItems: 1,
-      maxItems: 5,
-      items: {
-        type: "object",
-        required: ["photo_number", "view", "quality_grade", "contributes_to_result", "evidence_signal", "visible_features", "limitations"],
-        properties: {
-          photo_number: { type: "integer", minimum: 1, maximum: 5 },
-          view: { type: "string", enum: ["dorsal", "left_side", "right_side", "three_quarter", "head", "underside", "tail", "unclear"] },
-          quality_grade: { type: "string", enum: ["good", "usable", "poor"] },
-          contributes_to_result: { type: "boolean" },
-          evidence_signal: { type: "integer", minimum: 0, maximum: 100 },
-          visible_features: { type: "array", maxItems: 4, items: { type: "string" } },
-          limitations: { type: "array", maxItems: 3, items: { type: "string" } },
-        },
-      },
-    },
-    evidence_markers:    { type: "array", maxItems: 6, items: { type: "string" } },
-    uncertainty_reasons: { type: "array", maxItems: 5, items: { type: "string" } },
-    photo_assessment: {
-      type: "object",
-      required: ["subject_is_crested_gecko", "usable_for_id", "quality_grade", "issues", "next_photo_needed"],
-      properties: {
-        subject_is_crested_gecko: { type: "boolean" },
-        usable_for_id: { type: "boolean" },
-        quality_grade: { type: "string", enum: ["good", "usable", "poor"] },
-        issues: { type: "array", maxItems: 5, items: { type: "string" } },
-        next_photo_needed: { type: "string", description: "The single most useful next photo, or an empty string." },
-      },
-    },
-    explanation: { type: "string", description: "Two concise sentences grounded in visible evidence and uncertainty." },
-  };
-  if (includeValueEstimate) {
-    properties.value_estimate_usd_low = {
-      type: "integer", minimum: 0,
-      description: "Conservative low end of retail price band in USD for an unrelated, unproven specimen at apparent life stage.",
-    };
-    properties.value_estimate_usd_high = {
-      type: "integer", minimum: 0,
-      description: "Conservative high end of retail price band in USD.",
-    };
-    properties.value_estimate_notes = {
-      type: "string",
-      description: "One sentence on what drives the price band.",
-    };
-  }
-  return {
-    name: "submit_morph_analysis",
-    description: "Submit the structured morph analysis for this crested gecko photo.",
-    input_schema: {
-      type: "object",
-      required: [
-        "primary_morph", "confidence_score", "candidate_morphs",
-        "visual_profile", "evidence_markers", "uncertainty_reasons",
-        "photo_observations", "photo_assessment", "explanation",
-      ],
-      properties,
-    },
-  };
 }
 
 function clampToTaxonomy(
@@ -1011,80 +918,23 @@ async function callClaude(
   model: string,
   context: { ageStage: string; firedState: string },
   visualEvidence: VisualEvidence,
-  deadlineMs: number = CLAUDE_DEADLINE_MS,
+  deadlineMs: number = CLAUDE_MAX_MS,
 ): Promise<CallClaudeResult> {
   const bank = await loadFewShotBank();
 
-  // Cacheable block: bank images + bank-intro + rules text. Stable
-  // across calls within the warm-instance lifetime (and across cold
-  // starts as long as the bank composition + includeValueEstimate are
-  // unchanged). The instructions text always exists (the no-bank
-  // baseline still ships rules), so this block is always non-empty and
-  // safe to anchor the cache on. Marking the LAST cacheable block with
-  // cache_control: ephemeral caches everything up to and including it
-  // for 5 minutes; subsequent requests pay 10% of input rate for that
-  // prefix.
-  const cacheableContent: Record<string, unknown>[] = [
-    ...bank.map((ex) => ({ type: "image", source: { type: "url", url: ex.image_url } })),
-    { type: "text", text: buildInstructions(bank, includeValueEstimate) },
-  ];
-  cacheableContent[cacheableContent.length - 1] = {
-    ...cacheableContent[cacheableContent.length - 1],
-    cache_control: { type: "ephemeral" },
-  };
-
-  // Variable block: query-specific visual neighbors followed by the user
-  // images and a per-call trailing hint. Never cached because retrieval
-  // changes with every request.
-  const retrievalNeighbors = visualEvidence.status === "available"
-    ? visualEvidence.neighbors.slice(0, 3)
-    : [];
-  const retrievalBlocks: Record<string, unknown>[] = retrievalNeighbors.length > 0
-    ? [
-      ...retrievalNeighbors.map((neighbor) => ({
-        type: "image",
-        source: { type: "url", url: neighbor.image_url },
-      })),
-      { type: "text", text: buildRetrievalContext({
-        ...visualEvidence,
-        neighbors: retrievalNeighbors,
-      }) },
-    ]
-    : [];
-  const userBlocks: Record<string, unknown>[] = imageUrls.map((url) => (
-    { type: "image", source: { type: "url", url } }
-  ));
-  const photoText = imageUrls.length > 1
-    ? `The immediately preceding ${imageUrls.length} images are of the same user-submitted animal. Synthesize across them.`
-    : `The immediately preceding image is the user's submitted animal.`;
-  const trailingText = `${photoText} User-provided context: life stage=${context.ageStage}; fired state=${context.firedState}. Treat unknown values as unavailable context. Call the tool with your analysis.`;
-  const variableContent: Record<string, unknown>[] = [
-    ...retrievalBlocks,
-    ...userBlocks,
-    { type: "text", text: trailingText },
-  ];
-
-  const tool = buildTool(includeValueEstimate);
-  const startedAt = Date.now();
-  // Newer models reject a forced tool call and think before answering; see
-  // requestShape. 1536 max_tokens once cut off five-photo answers, so the
-  // floor is 3000 (output is billed as used, so a higher ceiling is free).
-  const shape = requestShape(model, tool.name);
-  if (shape.callInstruction) {
-    const last = variableContent[variableContent.length - 1] as { type: string; text: string };
-    variableContent[variableContent.length - 1] = { ...last, text: last.text + shape.callInstruction };
-  }
-  const requestBody = JSON.stringify({
+  // The instructions, tool schema and content blocks are built in
+  // request.ts (prompt caching, reference photos, the member's photos and
+  // the trailing context line); see the notes there.
+  const { body: request, shape } = buildClaudeRequest({
+    bank,
+    imageUrls,
+    includeValueEstimate,
     model,
-    max_tokens: shape.maxTokens,
-    tools: [tool],
-    tool_choice: shape.toolChoice,
-    ...(shape.outputConfig ? { output_config: shape.outputConfig } : {}),
-    messages: [{
-      role: "user",
-      content: [...cacheableContent, ...variableContent],
-    }],
+    context,
+    visualEvidence,
   });
+  let requestBody = JSON.stringify(request);
+  const startedAt = Date.now();
 
   // One retry for a brief upstream hiccup (rate limit, overload, 5xx, a
   // dropped connection, a cut-off answer), only while enough of the budget
@@ -1098,7 +948,10 @@ async function callClaude(
   let durationMs = 0;
   for (;;) {
     attempt += 1;
-    const remainingMs = Math.max(15_000, deadlineMs - (Date.now() - startedAt));
+    // The time left in this call's budget (min(90 s, time left in the
+    // request)). There is no floor: the handler does not start a call with
+    // less than its minimum for the photo count (claudeMinMs).
+    const remainingMs = Math.max(0, deadlineMs - (Date.now() - startedAt));
     const canRetry = () =>
       attempt === 1 && deadlineMs - (Date.now() - startedAt) > RETRY_MIN_REMAINING_MS;
     const retryPause = () => new Promise((resolve) => setTimeout(resolve, 1500));
@@ -1176,6 +1029,12 @@ async function callClaude(
     const truncated = body.stop_reason === "max_tokens";
     if (!toolBlock?.input || truncated) {
       if (canRetry()) {
+        // An answer cut off at the ceiling would be cut off again by the
+        // same request, so the retry gets twice the room (retryShape).
+        // Nothing the model reads changes.
+        if (truncated) {
+          requestBody = JSON.stringify({ ...request, max_tokens: retryShape(shape, "max_tokens").maxTokens });
+        }
         await retryPause();
         continue;
       }
@@ -1200,55 +1059,27 @@ async function callClaude(
 }
 
 serve(async (req) => {
+  // The time budget runs from here (../_shared/morph-budget.ts).
+  const arrivedAt = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only", code: "method_not_allowed" }, 405);
 
+  const timing = new MorphTiming(arrivedAt);
+  // Filled in as the steps run; the error path reads it.
+  const state = newStepState(CLAUDE_MODEL);
+  // Every answer carries a Server-Timing header and writes one timing line
+  // to the log (no photo URLs, nothing about the member).
+  const respond = (body: Record<string, unknown>, status = 200, label?: string) => {
+    timing.finish();
+    const durations = timing.snapshot();
+    const outcome = label ?? (typeof body.code === "string" ? body.code : (status < 300 ? "ok" : "error"));
+    console.log(timingLogLine({ outcome, status, photoCount: state.imageUrls.length, durations }));
+    return json(body, status, { "Server-Timing": serverTimingHeader(durations) });
+  };
+
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  if (!token) return json({ error: "auth required", code: "auth_required" }, 401);
-
-  let profile: Profile | null;
-  try {
-    profile = await loadProfile(token);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return json({ error: `auth lookup failed: ${message}`, code: "auth_required" }, 401);
-  }
-  if (!profile) return json({ error: "auth required", code: "auth_required" }, 401);
-  if (!ANTHROPIC_API_KEY) return json({ error: "Morph ID is not configured", code: "config_error" }, 500);
-
-  const isAdmin = profile.role === "admin";
-  // The evaluation account grades the held-out test set without spending
-  // credits and may tag its calls as morph_id_eval. It gets nothing else.
-  const isEvalAccount = profile.is_eval_account;
-  const tier = resolveTier(profile);
-  const creditsIncluded = TIER_MORPH_ID_CREDITS[tier] ?? TIER_MORPH_ID_CREDITS.free;
-
-  // Paid members who turn on the Settings toggle see asking prices for the
-  // looks Morph ID found. The app works those out from the Price Index,
-  // with the number of listings behind them (src/lib/morphIdPriceRange.js);
-  // this flag only tells it to. The model is no longer asked to guess a
-  // dollar band from the photo: that number had no source behind it and
-  // contradicted "value estimates from real listings", so it stays off
-  // (the prompt and schema plumbing for it is kept but never switched on).
-  // Admins inherit Breeder-or-better, so the toggle is read as-is for them.
-  const isPaidTier = tier === "keeper" || tier === "breeder" || tier === "enterprise";
-  const showPriceRange = !!profile.morph_id_show_value_estimate && (isPaidTier || isAdmin);
-  const includeValueEstimate = false;
-
-  const requestStartedAt = Date.now();
-  // Set once this run owns its request key; settled in both exits below.
-  let claimedKey: string | null = null;
-
-  // Hoisted so the catch block can include them in the spend-log row.
-  // Defaults match what `logInvocation` should see if we crash before
-  // parsing the request body.
-  let imageUrls: string[] = [];
-  let model = CLAUDE_MODEL;
-  let surface = "morph_id_production";
-  let creditWasConsumed = false;
-  let ageStage = "unknown";
-  let firedState = "unknown";
+  if (!token) return respond({ error: "auth required", code: "auth_required" }, 401);
 
   // Hash the caller's IP once up front; null when IP_HASH_SALT is unset
   // or the client IP can't be determined. Both cases skip per-IP
@@ -1256,141 +1087,170 @@ serve(async (req) => {
   // every other dashboard slice.
   const ipHash = await hashIp(extractClientIp(req));
 
+  // The caller's JWT identifies them; the profile row is then read with the
+  // service role so RLS doesn't gate the lookup even for users whose
+  // `profiles.email` linkage is legacy.
+  const userClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  let abortEvidence = () => {};
   try {
-    const body = await req.json().catch(() => ({}));
-    const isSafeImageUrl = (value: unknown) => {
-      if (typeof value !== "string" || value.length > 2048) return false;
-      try { return new URL(value).protocol === "https:"; } catch { return false; }
-    };
-    if (Array.isArray(body?.imageUrls)) {
-      imageUrls = body.imageUrls.filter(isSafeImageUrl) as string[];
-    } else if (isSafeImageUrl(body?.imageUrl)) {
-      imageUrls = [body.imageUrl];
-    }
-    if (imageUrls.length === 0) {
-      return json({ error: "imageUrls or imageUrl is required", code: "bad_request" }, 400);
-    }
-    imageUrls = imageUrls.slice(0, 5);
-    ageStage = typeof body?.age_stage === "string" && AGE_STAGE_IDS.includes(body.age_stage)
-      ? body.age_stage
-      : "unknown";
-    firedState = typeof body?.fired_state === "string" && FIRED_STATE_IDS.includes(body.fired_state)
-      ? body.fired_state
-      : "unknown";
+    const outcome = await runMorphSteps<EvidenceResult>({
+      getUser: async () => {
+        const { data } = await userClient.auth.getUser();
+        return data?.user ?? null;
+      },
+      readBody: async () => {
+        const parsed = await req.json().catch(() => ({}));
+        return parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : {};
+      },
+      // The deadlines depend on how many photos Claude will read.
+      startEvidence: (imageUrls, signal) => loadVisualEvidence(imageUrls, {
+        signal,
+        deadlines: morphDeadlines(arrivedAt, imageUrls.length),
+        timing,
+      }),
+      loadProfileRow: async (user) => {
+        const { data } = await admin.from("profiles")
+          .select("membership_tier, subscription_status, role, morph_id_show_value_estimate")
+          .eq("email", user.email)
+          .maybeSingle();
+        return data ?? null;
+      },
+      loadEffectiveTier: async () => {
+        const { data, error } = await userClient.rpc("effective_tier_for_current_user");
+        return { data, error };
+      },
+      fetchPerIpCap: fetchPerIpDailyCap,
+      countIpCalls: countTodaysCallsForIp,
+      claimRequestKey,
+      consumeCredit: async (userId, tier, creditsIncluded) => {
+        const { data, error } = await admin.rpc("consume_morph_id_credit", {
+          p_user_id: userId,
+          p_tier: tier,
+          p_credits_included: creditsIncluded,
+        });
+        return { data, error };
+      },
+      readScansRemaining: readMorphIdScansRemaining,
+      settleRequestKey,
+    }, {
+      configured: !!ANTHROPIC_API_KEY,
+      ipHash,
+      parseRequest,
+      resolveTier,
+      creditsFor: (tier) => TIER_MORPH_ID_CREDITS[tier] ?? TIER_MORPH_ID_CREDITS.free,
+      // Per-request model override (defaults to env-configured CLAUDE_MODEL).
+      // The eval pipeline sends `model: "claude-haiku-4-5"` for cheap iteration
+      // and "claude-sonnet-4-6" for benchmark runs. Production callers
+      // (Recognition.jsx) omit `model` and get the env default.
+      // Only admins and the eval account may choose: any member could name
+      // the most expensive model, which costs several times the default.
+      resolveModel: (body, mayChoose) => mayChoose ? resolveModel(body?.model) : CLAUDE_MODEL,
+      // Surface tag for the spend-log sink. Eval script sends
+      // surface='morph_id_eval' + the shared secret header; admin callers
+      // can tag themselves freely; everyone else gets 'morph_id_production'.
+      resolveSurface: (body, mayTag) => resolveSurface(body?.surface, mayTag, req.headers.get("x-eval-secret")),
+    }, state, timing);
 
-    // Per-request model override (defaults to env-configured CLAUDE_MODEL).
-    // The eval pipeline sends `model: "claude-haiku-4-5"` for cheap iteration
-    // and "claude-sonnet-4-6" for benchmark runs. Production callers
-    // (Recognition.jsx) omit `model` and get the env default.
-    // Only admins and the eval account may choose: any member could name
-    // the most expensive model, which costs several times the default.
-    model = (isAdmin || isEvalAccount) ? resolveModel(body?.model) : CLAUDE_MODEL;
-
-    // Surface tag for the spend-log sink. Eval script sends
-    // surface='morph_id_eval' + the shared secret header; admin callers
-    // can tag themselves freely; everyone else gets 'morph_id_production'.
-    surface = resolveSurface(
-      body?.surface,
-      isAdmin || isEvalAccount,
-      req.headers.get("x-eval-secret"),
-    );
-
-    // Per-IP daily cap. Only enforced for production traffic (eval and
-    // admin self-tagged calls are exempt). Cap value is pulled live from
-    // runtime_config.morph_id_per_ip_daily, so changes via the
-    // /data-admin/control panel take effect on the next request.
-    if (!isAdmin && surface === "morph_id_production" && ipHash) {
-      const cap = await fetchPerIpDailyCap();
-      if (cap && cap > 0) {
-        const used = await countTodaysCallsForIp(ipHash);
-        if (used >= cap) {
-          await logInvocation({
-            surface, model,
-            input_tokens: 0, output_tokens: 0,
-            cache_read_tokens: null, cache_creation_tokens: null,
-            est_cost_cents: 0,
-            user_id: profile.auth_user_id, tier, is_admin: isAdmin,
-            photo_count: imageUrls.length, few_shot_count: null,
-            http_status: 429,
-            error_code: "morph_id_ip_daily_exhausted",
-            duration_ms: 0, request_id: null,
-            ip_hash: ipHash,
-          });
-          return json({
-            error: "Daily MorphID limit reached for this network. Try again tomorrow.",
-            code: "morph_id_ip_daily_exhausted",
-            cap, used,
-          }, 429);
-        }
-      }
-    }
-
-    // A repeat of a request this member already sent (double tap, retry
-    // after a dropped connection) is answered from the stored result, or
-    // told to wait while the first run is still going. Neither costs a
-    // credit. Admin and evaluation calls never use credits, so they skip it.
-    const requestKey = typeof body?.request_key === "string" && REQUEST_KEY_PATTERN.test(body.request_key)
-      ? body.request_key
-      : null;
-    if (!isAdmin && !isEvalAccount && requestKey) {
-      const claim = await claimRequestKey(profile.auth_user_id, requestKey);
-      if (claim.kind === "replay") {
-        return json({ ...claim.response, replayed: true });
-      }
-      if (claim.kind === "running") {
-        return json({
+    switch (outcome.kind) {
+      case "auth_failed":
+        return respond({ error: outcome.error, code: "auth_required" }, 401);
+      case "warm":
+        return respond(await warmUp(outcome.user.id, outcome.body, ipHash), 202, "warm");
+      case "not_configured":
+        return respond({ error: "Morph ID is not configured", code: "config_error" }, 500);
+      case "bad_request":
+        return respond({ error: "imageUrls or imageUrl is required", code: "bad_request" }, 400);
+      case "ip_limited":
+        // Per-IP daily cap. Cap value is pulled live from
+        // runtime_config.morph_id_per_ip_daily, so changes via the
+        // /data-admin/control panel take effect on the next request.
+        await finishAfterResponse(logInvocation({
+          surface: state.surface, model: state.model,
+          input_tokens: 0, output_tokens: 0,
+          cache_read_tokens: null, cache_creation_tokens: null,
+          est_cost_cents: 0,
+          user_id: state.profile?.auth_user_id ?? null, tier: state.tier, is_admin: state.isAdmin,
+          photo_count: state.imageUrls.length, few_shot_count: null,
+          http_status: 429,
+          error_code: "morph_id_ip_daily_exhausted",
+          duration_ms: 0, request_id: null,
+          ip_hash: ipHash,
+        }));
+        return respond({
+          error: "Daily MorphID limit reached for this network. Try again tomorrow.",
+          code: "morph_id_ip_daily_exhausted",
+          cap: outcome.cap, used: outcome.used,
+        }, 429);
+      case "replay":
+        return respond({ ...outcome.response, replayed: true });
+      case "running":
+        return respond({
           error: "Your last analysis of these photos is still running.",
           code: "morph_id_in_progress",
         }, 409);
-      }
-      if (claim.kind === "claimed") claimedKey = requestKey;
-    }
-
-    let creditsConsumed = 0;
-    let creditsRemaining: number | null = null;
-    if (!isAdmin && !isEvalAccount) {
-      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      const { data: usage, error: rpcErr } = await admin.rpc("consume_morph_id_credit", {
-        p_user_id: profile.auth_user_id,
-        p_tier: tier,
-        p_credits_included: creditsIncluded,
-      });
-      if (rpcErr) {
-        await settleRequestKey(profile.auth_user_id, claimedKey, "failed", null);
-        if ((rpcErr.message || "").includes("morph_id_credits_exhausted")) {
-          return json({
-            error: "Monthly MorphID credit limit reached.",
-            code: "morph_id_credits_exhausted",
-            tier,
-            credits_included: creditsIncluded,
-          }, 402);
-        }
-        return json({
-          error: `credit check failed: ${rpcErr.message}`,
+      case "credits_exhausted":
+        return respond({
+          error: "Monthly MorphID credit limit reached.",
+          code: "morph_id_credits_exhausted",
+          tier: state.tier,
+          credits_included: state.creditsIncluded,
+        }, 402);
+      case "credit_check_failed":
+        return respond({
+          error: `credit check failed: ${outcome.message}`,
           code: "credit_check_failed",
         }, 500);
-      }
-      creditsConsumed = usage?.credits_consumed ?? 0;
-      creditsRemaining = await readMorphIdScansRemaining(
-        profile.auth_user_id,
-        tier,
-        creditsIncluded,
+    }
+    abortEvidence = outcome.abortEvidence;
+
+    const profile = state.profile!;
+    const tier = state.tier!;
+    const { isAdmin, imageUrls, model, ageStage, firedState, creditsIncluded } = state;
+    // Paid members who turn on the Settings toggle see asking prices for the
+    // looks Morph ID found. The app works those out from the Price Index,
+    // with the number of listings behind them (src/lib/morphIdPriceRange.js);
+    // this flag only tells it to. The model is no longer asked to guess a
+    // dollar band from the photo: that number had no source behind it and
+    // contradicted "value estimates from real listings", so it stays off
+    // (the prompt and schema plumbing for it is kept but never switched on).
+    // Admins inherit Breeder-or-better, so the toggle is read as-is for them.
+    const isPaidTier = tier === "keeper" || tier === "breeder" || tier === "enterprise";
+    const showPriceRange = !!profile.morph_id_show_value_estimate && (isPaidTier || isAdmin);
+    const includeValueEstimate = false;
+
+    // The photo lookup has been running since the scan was reserved; wait
+    // for it here.
+    const waitStarted = Date.now();
+    const { evidence: visualEvidence, timedOut } = await outcome.evidence;
+    timing.add("wait", Date.now() - waitStarted);
+    // A call that cannot finish is not started: the member gets the usual
+    // "try again" answer with the scan handed back, at the embedding
+    // deadline (69.5 s for one or two photos, 59 s for five) instead of a
+    // timed-out analyzer call at 105 s. The Replicate boot carries on, so
+    // the retry finds the model warm.
+    if (timedOut || skipClaude(arrivedAt, Date.now(), imageUrls.length)) {
+      throw new UpstreamError(
+        timedOut
+          ? "Analyzer timed out before it started: the photo-matching model was still starting up"
+          : "Analyzer timed out before it started: too little time left for an answer",
+        504,
+        "upstream_timeout",
+        { httpStatus: 504, durationMs: 0 },
       );
-      if (creditsRemaining == null) {
-        creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
-      }
-      creditWasConsumed = true;
     }
 
-    const visualEvidence = await loadVisualEvidence(imageUrls);
-    const result = await callClaude(
+    const result = await timing.measure("claude", callClaude(
       imageUrls,
       includeValueEstimate,
       model,
       { ageStage, firedState },
       visualEvidence,
-      Math.min(CLAUDE_DEADLINE_MS, REQUEST_BUDGET_MS - (Date.now() - requestStartedAt)),
-    );
+      claudeTimeoutMs(arrivedAt, Date.now()),
+    ));
     const analysis = clampToTaxonomy(
       result.raw,
       includeValueEstimate,
@@ -1400,17 +1260,27 @@ serve(async (req) => {
     );
     analysis.age_stage = ageStage;
     analysis.user_reported_fired_state = firedState;
+
+    const writesStarted = Date.now();
+    let creditsConsumed = state.creditsConsumed;
+    let creditsRemaining: number | null = null;
+    if (outcome.scansRemaining) {
+      creditsRemaining = await outcome.scansRemaining;
+      if (creditsRemaining == null) {
+        creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
+      }
+    }
     // D19: a "better photos needed" answer gives the member nothing to act
     // on, so the credit is handed back and they can retake the photos. Since
     // 6 Oct 2026 this covers paid monthly credits too, not only the free scan.
     let creditRefunded = false;
     if (
-      creditWasConsumed &&
+      state.creditWasConsumed &&
       analysis.assessment_status === "insufficient_evidence"
     ) {
       const refunded = await refundMorphIdCredit(profile.auth_user_id);
       if (refunded) {
-        creditWasConsumed = false;
+        state.creditWasConsumed = false;
         creditRefunded = true;
         creditsConsumed = Math.max(0, creditsConsumed - 1);
         const refreshed = await readMorphIdScansRemaining(
@@ -1421,8 +1291,10 @@ serve(async (req) => {
         creditsRemaining = refreshed ?? Math.max(0, (creditsRemaining ?? 0) + 1);
       }
     }
-    await logInvocation({
-      surface,
+    // The spend log is written after the answer goes out (it took 88 to
+    // 1,265 ms when it was awaited). Logging fails open either way.
+    const spendLog = logInvocation({
+      surface: state.surface,
       model,
       input_tokens: result.usage.input_tokens ?? 0,
       output_tokens: result.usage.output_tokens ?? 0,
@@ -1458,35 +1330,47 @@ serve(async (req) => {
       // a strong answer cannot be paired with a different photo.
       image_urls: imageUrls,
     };
-    await settleRequestKey(profile.auth_user_id, claimedKey, "done", responseBody);
-    return json(responseBody);
+    // Awaited: a retry with the same key replays this stored answer.
+    await settleRequestKey(profile.auth_user_id, state.claimedKey, "done", responseBody);
+    timing.add("writes", Date.now() - writesStarted);
+    await finishAfterResponse(spendLog);
+    return respond(responseBody);
   } catch (err) {
+    abortEvidence();
+    const profile = state.profile;
+    if (!profile) {
+      // Nothing was reserved before the member was known.
+      const message = err instanceof Error ? err.message : String(err);
+      return respond({ error: message, code: "internal_error", credit_refunded: false, failure_kind: "application" }, 500);
+    }
     // Provider failures (network, 5xx, billing, timeout) and our own
     // errors both return the reserved scan. A member's monthly scan is
     // only used up when an analysis actually comes back.
+    const writesStarted = Date.now();
     let creditRefundedOnError = false;
-    if (creditWasConsumed) {
+    if (state.creditWasConsumed) {
       creditRefundedOnError = await refundMorphIdCredit(profile.auth_user_id);
     }
-    await settleRequestKey(profile.auth_user_id, claimedKey, "failed", null);
+    await settleRequestKey(profile.auth_user_id, state.claimedKey, "failed", null);
+    timing.add("writes", Date.now() - writesStarted);
     if (err instanceof UpstreamError) {
       const failure = upstreamFailureResponse({
         code: err.code,
         diagnostic: err.message,
         creditRefunded: creditRefundedOnError,
       });
-      await logInvocation({
-        surface,
-        model,
+      await finishAfterResponse(logInvocation({
+        surface: state.surface,
+        model: state.model,
         input_tokens: 0,
         output_tokens: 0,
         cache_read_tokens: null,
         cache_creation_tokens: null,
         est_cost_cents: 0,
         user_id: profile.auth_user_id,
-        tier,
-        is_admin: isAdmin,
-        photo_count: imageUrls.length,
+        tier: state.tier,
+        is_admin: state.isAdmin,
+        photo_count: state.imageUrls.length,
         few_shot_count: null,
         http_status: err.httpStatus,
         // Billing stays distinct from a bad request or a 5xx in our code,
@@ -1495,30 +1379,30 @@ serve(async (req) => {
         duration_ms: err.durationMs,
         request_id: err.requestId,
         ip_hash: ipHash,
-      });
-      return json(failure, err.status === 429 ? 503 : 502);
+      }));
+      return respond(failure, err.status === 429 ? 503 : 502);
     }
     const message = err instanceof Error ? err.message : String(err);
-    await logInvocation({
-      surface,
-      model,
+    await finishAfterResponse(logInvocation({
+      surface: state.surface,
+      model: state.model,
       input_tokens: 0,
       output_tokens: 0,
       cache_read_tokens: null,
       cache_creation_tokens: null,
       est_cost_cents: 0,
       user_id: profile.auth_user_id,
-      tier,
-      is_admin: isAdmin,
-      photo_count: imageUrls.length,
+      tier: state.tier,
+      is_admin: state.isAdmin,
+      photo_count: state.imageUrls.length,
       few_shot_count: null,
       http_status: null,
       error_code: "internal_error",
       duration_ms: null,
       request_id: null,
       ip_hash: ipHash,
-    });
-    return json({
+    }));
+    return respond({
       error: message,
       code: "internal_error",
       credit_refunded: creditRefundedOnError,

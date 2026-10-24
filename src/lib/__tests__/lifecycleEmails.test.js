@@ -8,9 +8,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import * as lifecycleCopy from '../../../supabase/functions/_shared/lifecycle-copy.ts';
+// send-email also imports the Weekly Gecko Notes helper; the harness drops
+// imports, so both modules go in as globals.
+import * as weeklyNotes from '../../../supabase/functions/_shared/weekly-notes.ts';
+import { WEIGH_IN_DAYS } from '../../data/husbandry-facts.js';
 import { fakeFetch, fakeSupabase, loadFunction, postJson } from './edgeHarness';
 
-const { lifecycleEmail, lifecycleReason, LIFECYCLE_TYPES } = lifecycleCopy;
+const { lifecycleEmail, lifecycleReason, LIFECYCLE_SIGNOFF, LIFECYCLE_TYPES } = lifecycleCopy;
 
 const ENV = {
   SUPABASE_URL: 'https://project.supabase.co',
@@ -49,16 +53,19 @@ const SAMPLES = [
 const SITE = 'https://geckinspect.com';
 
 function previewOf(title, type, facts) {
-  const email = lifecycleEmail(type, facts);
+  const email = lifecycleEmail(type, facts, { canReply: true });
   return [
     `### ${title}`,
     '',
     `Subject: ${email.title}`,
+    `Preview: ${email.preheader}`,
     '',
     '```text',
     email.body,
     '',
     `[ ${email.cta} ]  ${SITE}${email.url}`,
+    '',
+    ...LIFECYCLE_SIGNOFF,
     '',
     lifecycleReason(facts),
     'Change preferences or unsubscribe from these emails.',
@@ -91,7 +98,7 @@ describe('lifecycle copy', () => {
   it.each(SAMPLES)('%s: no em dash, en dash or double hyphen', (_title, type, facts) => {
     const email = lifecycleEmail(type, facts);
     const all = `${email.title}\n${email.body}\n${email.cta}\n${lifecycleReason(facts)}`;
-    expect(all).not.toMatch(/—|–|--/);
+    expect(all).not.toMatch(/\u2014|\u2013|--/);
     expect(email.title.length).toBeLessThanOrEqual(70);
     expect(email.url.startsWith('/')).toBe(true);
   });
@@ -101,6 +108,25 @@ describe('lifecycle copy', () => {
       expect(lifecycleEmail(type, MANGO).url).toBe('/log?gecko=g_mango&type=weight');
     }
     expect(lifecycleEmail('lifecycle_day0', MANGO).url).toBe('/log?gecko=g_mango&type=weight');
+  });
+
+  it('the footer mentions Weekly Gecko Notes without promising them', () => {
+    // They may never come (the switch is off, no postal address is set, or
+    // the member turned them off, never ticked the sign-up box or is in the
+    // EEA or the UK), so the footer says they come only if on, and where to
+    // change it, and no longer says the emails stop after two weeks.
+    const reason = lifecycleReason(MANGO);
+    expect(reason).toBe('You are getting this because you joined Geck Inspect on Oct 15. It is one of a few short emails in your first two weeks. After that, Weekly Gecko Notes, one short tip a week, come if you have them on. You can change that in Settings.');
+    expect(reason).not.toMatch(/stop after that|come once a week/);
+  });
+
+  it('states the facts the weekly notes repeat the same way', () => {
+    // The scale: care guide, weight tracking (src/data/care-guide.js).
+    expect(lifecycleEmail('lifecycle_day0', MANGO).body).toContain('Use a kitchen scale that reads to 0.1 g.');
+    expect(lifecycleEmail('lifecycle_day0', MANGO).body).not.toMatch(/reads to 1 g/);
+    // The rhythm: the weigh-in reminders' own numbers.
+    const day14 = lifecycleEmail('lifecycle_day14', MANGO).body;
+    expect(day14).toContain(`every ${WEIGH_IN_DAYS.growing} days while a crested gecko is growing, every ${WEIGH_IN_DAYS.subadult} days as a sub-adult and every ${WEIGH_IN_DAYS.adult} days as an adult`);
   });
 
   it('the lineage email opens that gecko on the family tree', () => {
@@ -122,7 +148,7 @@ describe('lifecycle copy', () => {
 
   it('copes with no name, an address in the name field, and a gecko with no name', () => {
     expect(lifecycleEmail('lifecycle_day1', { first_name: null }).body.startsWith('Hi,')).toBe(true);
-    expect(lifecycleEmail('lifecycle_day0', { first_name: 'sam@example.com', gecko_count: 0 }).title).toBe('Welcome to Geck Inspect');
+    expect(lifecycleEmail('lifecycle_day0', { first_name: 'sam@example.com', gecko_count: 0 }).title).toBe('Start with one gecko');
     const unnamed = lifecycleEmail('lifecycle_day7', { ...MANGO, gecko_name: '  ' });
     expect(unnamed.title).toBe('Time to weigh your gecko');
     expect(unnamed.cta).toBe("Log your gecko's weight");
@@ -157,7 +183,7 @@ function setup({ profile = {}, rpc = {}, env = {} } = {}) {
   const net = fakeFetch(() => ({ body: { id: 'email-1' } }));
   const fn = loadFunction('send-email', {
     env: { ...ENV, ...env },
-    globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy },
+    globals: { createClient: () => db.client, fetch: net.fetch, ...lifecycleCopy, ...weeklyNotes },
   });
   const send = async (payload) => {
     const res = await fn.handle(postJson('https://x.test/', payload, { authorization: `Bearer ${ENV.SUPABASE_SERVICE_ROLE_KEY}` }));
@@ -185,10 +211,44 @@ describe('send-email sends lifecycle emails', () => {
     });
   });
 
+  it('is a letter from Tennyson with its own preview line', async () => {
+    const { net, send } = setup();
+    await send({ user_email: 'sam@example.com', type: 'lifecycle_day3', facts: MANGO });
+    const mail = net.requests[0].body;
+    const preheader = lifecycleEmail('lifecycle_day3', MANGO).preheader;
+    expect(mail.html).toContain(`opacity:0;">${preheader.replace(/'/g, '&#39;')}`);
+    expect(mail.html).not.toContain('<h1');
+    expect(mail.html).toContain('Tennyson<br>Geck Inspect');
+    expect(mail.text).toContain('\n\nTennyson\nGeck Inspect\n\n');
+    // No personal sender set: the usual From and no Reply-To.
+    expect(mail.from).toBe('Geck Inspect <alerts@geckinspect.com>');
+    expect(mail.reply_to).toBeUndefined();
+    expect(mail.text).not.toContain('Hit reply');
+  });
+
+  it('comes from a person, and asks a question, once replies reach one', async () => {
+    const { net, send } = setup({ env: { EMAIL_FROM_PERSONAL: 'Tennyson at Geck Inspect <tennyson@geckinspect.com>', EMAIL_REPLY_TO: 'inbox@example.com' } });
+    await send({ user_email: 'sam@example.com', type: 'lifecycle_day0', facts: MANGO });
+    const mail = net.requests[0].body;
+    expect(mail.from).toBe('Tennyson at Geck Inspect <tennyson@geckinspect.com>');
+    expect(mail.reply_to).toBe('inbox@example.com');
+    expect(mail.text).toContain('Hit reply and tell me.');
+  });
+
+  it('every variant has a preview line that adds to the subject', () => {
+    for (const [, type, facts] of SAMPLES) {
+      const email = lifecycleEmail(type, facts, { canReply: true });
+      expect(email.preheader.length).toBeGreaterThanOrEqual(20);
+      expect(email.preheader.length).toBeLessThanOrEqual(100);
+      expect(email.preheader.toLowerCase().startsWith(email.title.toLowerCase())).toBe(false);
+      expect(`${email.preheader}\n${email.body}`).not.toMatch(/\u2014|\u2013|--/);
+    }
+  });
+
   it('ignores a title or body in the payload, so only the approved copy goes out', async () => {
     const { net, send } = setup();
     await send({ user_email: 'sam@example.com', type: 'lifecycle_day1', title: 'Buy now', body: 'spam', facts: { first_name: 'Sam' } });
-    expect(net.requests[0].body.subject).toBe('Start with the gecko you know best');
+    expect(net.requests[0].body.subject).toBe('The two-minute way to add your first gecko');
     expect(net.requests[0].body.text).not.toContain('spam');
   });
 

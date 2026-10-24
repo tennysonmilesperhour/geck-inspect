@@ -5,6 +5,7 @@ import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
 import { createPageUrl, getDisplayName } from "@/utils";
 import { api } from '@/api/appClient';
+import { countNavNotifications } from '@/lib/navNotifications';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
@@ -75,6 +76,7 @@ import {
 // works with no signal (the dialog code is already here for the command
 // palette).
 import LogSheet from '@/components/navigation/LogSheet';
+import { useHideOnScroll } from '@/lib/useHideOnScroll';
 import { NOT_QUIET_FILTER, isQuietNotification, markAllNotificationsRead } from '@/lib/notificationsApi';
 import { listenForPushRotation, syncPushSubscription } from '@/lib/webPush';
 
@@ -169,6 +171,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   const { toggleSidebar, isMobileOpen } = useSidebar();
 
+  // The phone bottom bar slides off the bottom while scrolling down and
+  // comes back on the first scroll up. A new page starts with it showing.
+  const [mainScrollEl, setMainScrollEl] = useState(null);
+  const [bottomNavHidden, setBottomNavHidden] = useHideOnScroll(mainScrollEl, { resetKey: location.pathname });
+
   // Phones open on Today, the first tab (review item E3 25). Only the bare
   // "/" a cold open, a sign-in or the phone app lands on is moved; the
   // Dashboard stays one tap away in the menu, and wider screens keep it as
@@ -181,6 +188,16 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   // The Log tab's sheet (feeding, weigh-in, shed or Field Mode).
   const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const bottomNavAway = bottomNavHidden && !logSheetOpen && !isMobileOpen;
+
+  // Floating notices and the feedback button sit just above the bar, so they
+  // follow it down (see [data-follows-bottom-bar] in layout-theme.css).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (bottomNavAway) root.dataset.bottomBarAway = '';
+    else delete root.dataset.bottomBarAway;
+    return () => { delete root.dataset.bottomBarAway; };
+  }, [bottomNavAway]);
 
   // The phone header is glass that floats over the page, so the page pads
   // its top by the header's height (--top-bar-h, read in index.css). It is
@@ -705,6 +722,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   }
 
   const sidebarBadge = getSidebarBadge();
+  const navEventCounts = countNavNotifications(recentNotifications, isGuest ? null : user?.email);
+  const eventLabel = (page, label) => navEventCounts[page] ? `${label}, ${navEventCounts[page]} unread ${navEventCounts[page] === 1 ? 'event' : 'events'}` : label;
+  const eventBadge = (page) => navEventCounts[page] > 0 && <span aria-hidden="true" className="nav-event-count">{navEventCounts[page] > 99 ? '99+' : navEventCounts[page]}</span>;
 
   // The sidebar's items from the page_config rows, less the breeder pages
   // in Keeper mode (src/lib/navItems.js, buildNavItems and keeperNavItems;
@@ -754,6 +774,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <div className="px-2 mb-2">
         <Link
           to={dashUrl}
+          aria-label={eventLabel('Dashboard', 'Dashboard')}
+          title={eventLabel('Dashboard', 'Dashboard')}
+          data-new-events={navEventCounts.Dashboard > 0 || undefined}
           data-tutorial-id="Dashboard"
           data-tutorial-label="Dashboard"
           className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
@@ -762,6 +785,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         >
           <Home className="mr-2 h-5 w-5 flex-shrink-0" />
           <span className="truncate">Dashboard</span>
+          {eventBadge('Dashboard')}
         </Link>
       </div>
     );
@@ -791,6 +815,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 key={item.page_name}
                 to={itemUrl}
                 onClick={handleNavClick}
+                aria-label={eventLabel(item.page_name, item.display_name)}
+                title={eventLabel(item.page_name, item.display_name)}
+                data-new-events={navEventCounts[item.page_name] > 0 || undefined}
                 data-tutorial-id={item.page_name}
                 data-tutorial-label={item.display_name}
                 className={`group flex flex-col items-center justify-center gap-2 rounded-lg border px-2 py-4 text-center transition-colors sidebar-nav-item favorite-tile ${
@@ -803,6 +830,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 <span className="text-[11px] font-semibold leading-tight line-clamp-2 sidebar-collapse-hide">
                   {item.display_name}
                 </span>
+                {eventBadge(item.page_name)}
               </Link>
             );
           })}
@@ -841,6 +869,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 key={item.page_name}
                 to={itemUrl}
                 onClick={handleNavClick}
+                aria-label={eventLabel(item.page_name, item.display_name)}
+                title={eventLabel(item.page_name, item.display_name)}
+                data-new-events={navEventCounts[item.page_name] > 0 || undefined}
                 data-tutorial-id={item.page_name}
                 data-tutorial-label={item.display_name}
                 className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item
@@ -851,6 +882,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               >
                 <IconComponent className="mr-2 h-5 w-5 flex-shrink-0" />
                 <span className="truncate">{item.display_name}</span>
+                {eventBadge(item.page_name)}
                 {/* Guests keep `user` set (GUEST_USER) so the "Login"
                     marker below doesn't trigger; instead we flag pages
                     gated behind auth as view-only so the visitor knows
@@ -1315,7 +1347,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           {/* Bottom padding leaves room for the tab bar (phones) and for
               the floating notices, so the end of a page can scroll clear. */}
-          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(var(--bottom-bar-h)+0.5rem+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
+          <div ref={setMainScrollEl} className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(var(--bottom-bar-h)+0.5rem+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
             <PaymentIssueBanner user={user} />
             <AppShellContext.Provider value={true}>
               {/* Keyed by path so moving to another page clears a crashed one. */}
@@ -1331,8 +1363,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         {/* Phone bottom bar (review item E3 25): Today, Geckos, Log, More.
             Log opens a short sheet; More opens the full menu. */}
         <nav
-          className="gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
+          className={`gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex ${bottomNavAway ? 'is-scrolled-away' : ''}`}
           aria-label="Main"
+          onFocus={() => setBottomNavHidden(false)}
         >
           {PHONE_TABS.map((tab) => {
             const Icon = NAV_ICON_MAP[tab.icon] || Menu;

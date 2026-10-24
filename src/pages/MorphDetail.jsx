@@ -21,6 +21,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import {
   morphSlug,
+  normMorph,
   morphDisplayName,
   pickBestMorphRecord,
   indexMorphsBySlug,
@@ -41,8 +42,6 @@ import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
 import { licenseLabel } from '@/lib/imageLicenses';
 import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
-import { fetchHeroAnchorPhotos } from '@/lib/publicGeckoPhotos';
-import { normMorph } from '@/components/morphguide/MorphIndexData';
 import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import PublicPageShell from '@/components/public/PublicPageShell';
@@ -406,6 +405,7 @@ export default function MorphDetail() {
 
         // Show-winner photo for this morph, if available.
         try {
+          const { fetchHeroAnchorPhotos } = await import('@/lib/publicGeckoPhotos');
           const anchors = await fetchHeroAnchorPhotos(supabase, 200);
           const targetNorm = normMorph(best?.morph_name || displayName);
           const match = (anchors || []).find((a) => normMorph(a.primary_morph) === targetNorm && sanitizeImage(a.image_url));
@@ -890,6 +890,7 @@ export default function MorphDetail() {
               <ContentSignupPrompt
                 pageType="morph"
                 ctaId="morph_mid"
+                notes={false}
                 className="mt-6"
                 headline={`Track your own ${possessive(morphName)} lineage and value, free`}
                 body="Add your gecko with a photo and a name. Geck Inspect keeps its weights and parents together, builds its pedigree as you add the sire and dam, and estimates its value from real crested gecko listings."

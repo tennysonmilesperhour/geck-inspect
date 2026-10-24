@@ -23,7 +23,7 @@
 | 1.2 member content | Report UI, moderator hide/remove controls, blocked-author filtering and database messaging blocks are implemented. | Pre-publication filtering is not established by the inspected implementation. Choose and implement moderation before public posts/photos go live, assign a reviewer and response target, and test two-account reports/blocks. Existing hide-after-report controls alone are not proof of filtering. |
 | 3.1 subscriptions | Store-provided prices and periods, feature descriptions, restore, management and Terms/Privacy links exist. iOS Membership uses native purchases. | Sandbox purchase each tier, restore after reinstall, confirm upgrades/cancellation/expiry and cross-platform entitlements. Observe Apple-to-RevenueCat delivery. |
 | 4.2 useful native product | Bundled app includes camera/photo picker, local reminders, StoreKit, collection and breeding workflows. | Demonstrate actual device use and responsive layouts. Compilation does not establish usability or Apple's assessment. |
-| 4.8 authentication | Google sign-in is hidden on iOS; email/password remains available. | Confirm registration, email callback, normal login and password recovery on the device. |
+| 4.8 authentication | Sign in with Apple is built (native, off until `APPLE_SIGNIN_ENABLED`); Google and Facebook show on iOS only with it; email/password remains available. | Confirm registration, email callback, normal login and password recovery on the device. |
 | 5.1 privacy and AI sharing | Added explicit per-request data/provider confirmation to all seven direct AI-call sites, covering six services. Cancel stops the AI call. Updated privacy copy and native manifest. | Test the prompt on the actual WebView and verify the installed binary's traffic and App Privacy purposes. The website and old build differ until deployed/rebuilt. |
 | 5.1.1 account deletion | Settings has a confirmed self-delete flow, subscription warning and fallback support request. Backend scopes deletion to caller. | Delete only a disposable test account, prove login and private files are removed, and verify retained shared records are anonymized. |
 | 5.2 content rights | Store declaration exists. | Verify licenses/permission for third-party reference images and service data; retain supporting documentation for Apple. No new rights claim was made during this audit. |
@@ -63,3 +63,65 @@ The manifest now also declares optional phone/address/contact details, messages,
 - [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/), checked 17 October 2026: 1.2, 2.1, 2.3, 3.1, 4.2, 4.8, 5.1 and 5.2.
 - [Account deletion](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion).
 - [Privacy manifest data types](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacycollecteddatatypes/nsprivacycollecteddatatype).
+
+## Native callback fix, 17 October 2026
+
+Simulator testing found a blank-screen loop after email confirmation. Capacitor retains the last launch URL across webview reloads, while the app reloaded after both callback success and failure. Native callback completion now replaces the router location without reloading, preserving the in-memory duplicate guard.
+
+- Added router-level regression tests for warm and cold callbacks, duplicate delivery, signup/recovery/invite token links, failures and web isolation.
+- Full build: 268 test files, 3,030 passing tests; lint has zero errors and 75 existing warnings; typecheck passes.
+- Rebuilt and installed on iPhone 17 simulator, iOS 26.5. A fresh QA recovery email opened the native reset form immediately, without a relaunch. No password was changed.
+- Physical-device auth verification remains pending, so the native release verification flag remains unset. This fix still needs a new signed App Store binary.
+
+## Physical iPhone checks, 18 October 2026
+
+- Signed development build from snapshot `4b4f0361` installed on iPhone 11, iOS 18.5. Today, sign out and a fresh email recovery callback passed. The callback opens the native reset form without a reload loop; no password was changed. A subsequent cold launch returns to Today with the session intact.
+- All four native subscription products load with prices and periods. Renewal wording, Restore purchases, Terms, Privacy and support contact are visible. No transaction or restore is claimed.
+- Physical testing found that the camera plugin rejected photo selection because `NSPhotoLibraryAddUsageDescription` was absent. Added the required purpose string. The plugin checks all three photo/camera descriptions even though capture uses `saveToGallery: false`.
+- Rebuilt, signed and installed the corrected package. Both the source and compiled Info.plist contain all three descriptions. The native source dialog now opens and selecting the library reaches the iOS permission prompt. Granting photo/camera access and actual capture remain pending.
+- This phone's iOS 18.5 does not fulfill Apple's requested latest-OS recording. No App Store upload or resubmission is claimed.
+
+## Release preparation and additional checks, 18 October 2026
+
+- The owner confirmed in this chat that they have the rights to the app's reference photos. This is the owner's attestation; separate license documents have not been independently reviewed.
+- The owner selected manual approval before new public posts/photos appear. That approval queue is not yet implemented or verified; do not describe it as live.
+- Limited access to two gecko photos was approved. Both top and side photos load into Morph ID with previews. Location and captions were excluded in the system picker.
+- The native AI disclosure names Anthropic and Replicate and identifies the shared data. Cancel returns the cancellation message and states no scan was used. No identification request was run in this test.
+- A Release archive for version 1.0 (7) compiled and signed successfully. Its bundle identifier, build number, three camera/photo usage descriptions, privacy manifest and code signature were verified. The full build passed 287 files / 3,419 tests, with zero lint errors (75 existing warnings) and a clean 172-route SEO audit.
+- The native callback verification flag was supplied to this build after the fresh recovery callback passed on the physical phone. Archive creation alone does not verify purchase delivery or constitute App Review submission.
+
+## Rejection for missing Terms of Use link, 19 October 2026
+
+Apple's automated check stopped the submission because the App Store product page had no working link to the Terms of Use (EULA), which every app selling auto-renewable subscriptions needs. This is a metadata fix in App Store Connect. No new binary is needed for it.
+
+Fix (done by hand in App Store Connect, App Information and the version page):
+
+1. Append these lines to the end of the App Description, in every localization the listing has:
+
+   ```
+   Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your Apple Account settings.
+   Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+   Privacy Policy: https://geckinspect.com/PrivacyPolicy
+   ```
+
+2. Leave App Information > License Agreement on Apple's standard license. Our own Terms page does not yet cover renewals, trials or refunds (that text is still a draft in docs/legal/terms-additions-draft.md), so Apple's standard EULA is the safer one to name.
+3. Confirm App Information > Privacy Policy URL is `https://geckinspect.com/PrivacyPolicy` and opens.
+
+The binary already shows Terms and Privacy links, Restore purchases, store price and period, and renewal wording on the native Membership screen, which covers the in-app half of guideline 3.1.2.
+
+### Pre-submit checklist for simple metadata rejections
+
+Check each item in App Store Connect before pressing Submit:
+
+- Description has the Terms of Use (EULA) link and Privacy link, in every localization.
+- Privacy Policy URL and Support URL are filled in and load on a phone.
+- All four subscriptions are attached to this version's submission, each with a display name, description, price and review screenshot, and the subscription group has a localized display name.
+- App Review Information has a working demo account (email and password) that reaches the paid screens, a contact name, phone and email, and notes explaining where Membership, Restore purchases and account deletion are.
+- Screenshots are from the current build, show no retired features, and include iPad sizes if the app ships on iPad.
+- Description, keywords and screenshots do not mention Android, Google Play or other platforms, and do not quote prices that differ from the store.
+- Age rating questionnaire, App Privacy answers and the encryption question match the build.
+- The build selected is the newest upload (build 7 or later), not build 6.
+
+## Member content filtering, 19 October 2026
+
+Guideline 1.2 asks for a way to filter objectionable material before it is posted, a way to report it, a way to block users, and a way to contact the developer. Filtering is now automatic in the database (`20261019230000_public_content_auto_approval.sql`): held words, photos and links from new members, and anything from members with rejected or hidden content wait in Admin Panel > Reports > Publication approvals; everything else is published at once. Reporting, blocking and the support address were already in place. For the review notes: "New posts and photos are screened automatically against a list of objectionable terms; photos and links from new members, and all content from members with prior removals, are held for manual approval. Members can report any post, comment or photo and block other members. Reports are reviewed within 24 hours."

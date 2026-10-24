@@ -1,3 +1,4 @@
+import PublicContentQueue from './PublicContentQueue';
 import { useCallback, useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ExternalLink, EyeOff, Eye, Trash2, Check, Loader2, Flag, RefreshCw } from 'lucide-react';
@@ -91,6 +92,8 @@ export default function ReportsQueue({ onCountChange }) {
   };
 
   return (
+    <>
+    <PublicContentQueue />
     <Card>
       <CardHeader>
         <CardTitle className="text-slate-100 flex items-center gap-2">
@@ -242,5 +245,6 @@ export default function ReportsQueue({ onCountChange }) {
         </AlertDialogContent>
       </AlertDialog>
     </Card>
+    </>
   );
 }

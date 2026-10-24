@@ -4,6 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Upload, X, Loader2, Check } from 'lucide-react';
 import { isNativePlatform } from '@/lib/revenuecat';
 import { captureDevicePhoto } from '@/lib/devicePhoto';
+import { warmMorphId } from '@/lib/morphIdWarmup';
 import { MAX_EXTRA_VIEWS, REQUIRED_VIEWS, orderedViewUrls, viewsReady } from './photoViews';
 
 // Morph ID photo slots (Tennyson, 29 Sep 2026): a top view and a side view
@@ -97,6 +98,10 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
 
   const pick = async (target) => {
     targetRef.current = target;
+    // The top view is the photo the reference lookup embeds. Picking it is
+    // the last moment to wake that model before Identify, for a member who
+    // lingered on the page. Only { action: 'warm' } is sent, never the photo.
+    if (target === 'top') warmMorphId();
     if (isNativePlatform()) {
       try {
         const file = await captureDevicePhoto();
