@@ -390,6 +390,40 @@ MorphMarket's site could not be reached from the build session, so the other
 column names are still unconfirmed; step 19 of the feature audit (the two-row
 test import) is still the proof.
 
+### 24 October follow-up: live field reference checked, round trip pending
+
+Read all 33 Supported Fields on the signed-in MorphMarket Import Animals
+page. The full list and allowed values are saved in
+[morphmarket-import-reference-2026-10-24.md](morphmarket-import-reference-2026-10-24.md).
+Corrected export headers to State, Desc and Photo_Urls, removed Currency
+(MorphMarket uses Seller Profile currency), corrected Subadult, used spaces
+between traits and rounded weights to whole grams. ISO dates and comma-separated
+photos match the published field rules. Empty optional columns are omitted;
+the preview matches the file. Both export screens warn about blank cells in
+mixed columns, currency, shipping and keeping Animal_ID unchanged.
+
+A real six-row MorphMarket export exposed starred required headers and
+M/D/YYYY birth dates, which the parser now reads. It skips the Leachianus
+row with a warning, keeps five crested rows, warns about partial dates and
+blank seller IDs, and has a redacted regression fixture. It also reads
+State, M/F sex initials and space-separated photos, and
+no longer mistakes Not For Sale for For Sale. It keeps private, unlisted,
+inactive and expired listings private, and warns when a partial birth date
+cannot be stored as a full hatch date.
+
+Validation: `pnpm lint` passed with 0 errors and 75 existing warnings;
+`pnpm test` passed all 3,479 tests in 295 files. The real downloaded CSV
+also passed assertions for titles, dates, photo counts and species filtering.
+
+Not yet proven: Tennyson has been asked for his actual store link and to run
+Check my store. The initial production query returned no rows. There is no
+curl result or Supabase fetch result yet, so automatic access versus hand
+review remains undecided. No About code was removed.
+
+The two disposable listings still need to be created, updated without
+duplicates, exported back into Geck Inspect and deleted by Tennyson. Neither
+feature is marked complete from unit tests or field documentation alone.
+
 ## 20 October: email overhaul (letters, preview lines, relevance gate)
 
 Migration: `20261020230000_email_relevance_and_outcomes.sql`. It replaces
