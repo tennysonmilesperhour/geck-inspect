@@ -4,6 +4,8 @@ import { ShoppingBag, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { formatCents } from '@/lib/store/format';
 import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
+import { primaryProductImage } from '@/lib/store/productImages';
+import ProductImagePlaceholder from '@/components/store/ProductImagePlaceholder';
 
 /**
  * RecommendedKitForGecko, small aside that turns the gecko-app context
@@ -55,7 +57,8 @@ export default function RecommendedKitForGecko({ gecko, compact = false }) {
           .from('store_products')
           .select(`
             id, slug, name, short_description, our_price_cents, images,
-            fulfillment_mode, lifecycle_stage_tags, status, is_featured
+            fulfillment_mode, lifecycle_stage_tags, status, is_featured,
+            vendor_product_url, vendor_extra
           `)
           .eq('status', 'active');
         // Recommend only what can be bought today: while Geck Inspect
@@ -102,9 +105,7 @@ export default function RecommendedKitForGecko({ gecko, compact = false }) {
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {products.map((p) => {
-          const primary =
-            (Array.isArray(p.images) && p.images.find((i) => i.is_primary)) ||
-            (Array.isArray(p.images) && p.images[0]);
+          const primary = primaryProductImage(p);
           return (
             <Link
               key={p.id}
@@ -119,7 +120,7 @@ export default function RecommendedKitForGecko({ gecko, compact = false }) {
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
-                ) : null}
+                ) : <ProductImagePlaceholder product={p} />}
               </div>
               <div className="p-2">
                 <div className="text-[12px] font-semibold text-slate-100 line-clamp-2 leading-tight">

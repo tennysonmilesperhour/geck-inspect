@@ -2,7 +2,7 @@
  * MorphMarket CSV export / import utilities.
  *
  * MorphMarket's Bulk Import 2.0 accepts CSV/TSV with a header row.
- * Columns can be in any order; only included columns are processed.
+ * Columns can be in any order; the live importer can clear omitted fields.
  *
  * Reference:
  *   https://support.morphmarket.com/article/123-importing-exporting-animals
@@ -167,6 +167,8 @@ export function morphMarketAnimalId(gecko) {
 
 // ─── Export ─────────────────────────────────────────────────────────────────
 
+export const MORPHMARKET_EXPORT_BLOCKED_REASON = 'MorphMarket export is paused because uploads can erase existing listing details, even when columns are omitted. Export will return after we can preserve those details.';
+
 /**
  * Export an array of gecko objects as a MorphMarket-compatible CSV and
  * trigger a browser download.
@@ -183,13 +185,13 @@ export function exportMorphMarketCSV(geckos, { filename } = {}) {
   return name;
 }
 
-/**
- * Build the MorphMarket CSV text for the given geckos. Exposed so the
- * batch builder can preview the file in the UI and copy it to the
- * clipboard without forcing a download. Includes a UTF-8 BOM so Excel
- * opens it cleanly.
- */
-export function buildMorphMarketCSV(geckos) {
+/** Block both download and clipboard callers until preservation is proven. */
+export function buildMorphMarketCSV() {
+  throw new Error(MORPHMARKET_EXPORT_BLOCKED_REASON);
+}
+
+/** Pure formatter for regression checks, not a production export entry point. */
+export function formatMorphMarketCSV(geckos) {
   const headers = morphMarketHeaders(geckos);
   const header = headers.map(csvEscape).join(',');
   const rows = geckos.map((g) => {
@@ -205,7 +207,7 @@ export function buildMorphMarketCSV(geckos) {
  */
 export const MM_HEADERS = MM_COLUMNS.map((c) => c.header);
 
-/** Omit empty optional columns so an empty batch field is not sent as a replacement. */
+/** Omit empty optional columns for readability; MorphMarket can still clear those fields. */
 export function morphMarketHeaders(geckos) {
   const optional = new Set(['Price', 'DOB', 'Weight', 'Traits', 'Desc', 'Photo_Urls']);
   return MM_COLUMNS.filter((c) => !optional.has(c.header) || geckos.some((g) => c.exportFn(g) !== ''))

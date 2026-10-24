@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { exportMorphMarketCSV, parseMorphMarketCSV } from '@/lib/morphmarketSync';
+import { exportMorphMarketCSV, parseMorphMarketCSV, MORPHMARKET_EXPORT_BLOCKED_REASON } from '@/lib/morphmarketSync';
 import { Gecko } from '@/entities/all';
 import { recordGeckoAdded } from '@/lib/activation';
 import { resolveTier } from '@/lib/tierLimits';
@@ -61,7 +61,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
             <Crown className="w-8 h-8 text-emerald-400 mx-auto" />
             <p className="text-sm text-slate-300 font-semibold">MorphMarket Sync</p>
             <p className="text-xs text-slate-500">
-              Export and import listings to MorphMarket CSV format. Available on the Breeder tier.
+              Import MorphMarket listings. CSV export is currently paused. Available on the Breeder tier.
             </p>
           </div>
           {/* inline-block so the top margin applies (a bare link is
@@ -90,11 +90,12 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
       });
       return;
     }
-    const filename = exportMorphMarketCSV(forSaleGeckos);
-    toast({
-      title: 'CSV exported',
-      description: `${forSaleGeckos.length} listing${forSaleGeckos.length === 1 ? '' : 's'} saved to ${filename}`,
-    });
+    try {
+      const filename = exportMorphMarketCSV(forSaleGeckos);
+      toast({ title: 'CSV exported', description: filename });
+    } catch (error) {
+      toast({ title: 'Export unavailable', description: error.message, variant: 'destructive' });
+    }
   };
 
   const handleFileSelect = (e) => {
@@ -166,13 +167,11 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
               MorphMarket Bulk Import
               <ExternalLink className="w-3 h-3 inline ml-0.5" />
             </a>
-            . Open the batch builder to filter by weight, hatch date, sex, and status, then add picks to the export. Or quick-export every "For Sale" gecko at once, or import a MorphMarket CSV back into Geck Inspect.
+            . You can still import a MorphMarket CSV into Geck Inspect.
           </p>
 
           <p className="text-xs text-amber-200">
-            Before uploading, check maturity, shipping, and your MorphMarket Seller Profile currency.
-            Keep Animal_ID unchanged and Synchronize/Replace off for a partial batch.
-            Empty optional columns are omitted, but blank cells in included columns can erase existing values.
+            {MORPHMARKET_EXPORT_BLOCKED_REASON}
           </p>
 
           <Link to={createPageUrl('MorphMarketExport')} className="block">
@@ -190,6 +189,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
               size="sm"
               variant="outline"
               onClick={handleExport}
+              disabled
               className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
             >
               <Download className="w-3.5 h-3.5 mr-1.5" />

@@ -18,7 +18,7 @@ import { parseStoreSlug, storeUrl } from '@/lib/morphmarketStore';
 const CHECK_MESSAGES = {
   not_found: 'We read your store page but did not find the code yet. Save your About text on MorphMarket, then check again.',
   no_store: 'MorphMarket says that store does not exist. Check the link and try again.',
-  needs_review: 'MorphMarket did not let us read your page automatically. We will check it by hand, usually within a day. Keep the code in your About text until then.',
+  needs_review: 'Your store is queued for a hand check. MorphMarket blocked the automatic read. Keep the code in your About text until this card says Verified.',
 };
 
 async function callVerify(body) {
@@ -109,6 +109,7 @@ export default function MorphMarketVerifyCard({ userId }) {
         </CardTitle>
         <CardDescription>
           Prove the MorphMarket store is yours and your page shows a Verified MorphMarket seller badge that links to it.
+          {' '}If MorphMarket blocks the automatic check, the Geck Inspect team checks your About text by hand.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -141,7 +142,7 @@ export default function MorphMarketVerifyCard({ userId }) {
                   Your store <ExternalLink className="w-3 h-3" />
                 </a>
               </li>
-              <li>Come back and press Check my store. Once it is verified you can delete the code.</li>
+              <li>Come back and press Check my store. Keep the code in place while a hand check is pending. Once this card says Verified, you can delete the code.</li>
             </ol>
             {checkMessage && <p className="text-sm text-amber-200">{checkMessage}</p>}
             <div className="flex flex-wrap gap-2">
