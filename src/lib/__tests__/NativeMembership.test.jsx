@@ -4,15 +4,16 @@ import { act, create } from 'react-test-renderer';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.hoisted(() => vi.stubGlobal('window', { self: null, top: null }));
 afterAll(() => vi.unstubAllGlobals());
-const fixture = vi.hoisted(() => ({ packages: [], storeTier: 'free', sync: vi.fn(), purchase: vi.fn(), toast: vi.fn() }));
+const fixture = vi.hoisted(() => ({ packages: [], storeTier: 'free', sync: vi.fn(), purchase: vi.fn(), toast: vi.fn(), capture: vi.fn() }));
 vi.mock('@/lib/RevenueCatContext', () => ({ useRevenueCat: () => ({ offerings: { current: { availablePackages: fixture.packages } }, isReady: true, sync: fixture.sync, customerInfo: null, storeTier: fixture.storeTier }) }));
 vi.mock('@/lib/revenuecat', () => ({ configureRevenueCat: async () => ({}), purchasePackage: (...args) => fixture.purchase(...args), restorePurchases: async () => ({}), fetchOfferings: async () => null }));
+vi.mock('@/lib/posthog', () => ({ captureEvent: (...args) => fixture.capture(...args), ensurePostHog: async () => null }));
 vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: fixture.toast }) }));
 import NativeMembership from '../../components/subscription/NativeMembership';
 const contents = node => typeof node === 'string' ? node : (node.children || []).map(contents).join('');
 beforeEach(() => {
   fixture.storeTier = 'free';
-  fixture.sync.mockReset().mockResolvedValue('keeper'); fixture.purchase.mockReset(); fixture.toast.mockReset();
+  fixture.sync.mockReset().mockResolvedValue('keeper'); fixture.purchase.mockReset(); fixture.toast.mockReset(); fixture.capture.mockReset();
   fixture.packages = ['keeper', 'breeder'].flatMap((tier, i) => ['monthly', 'annual'].map((cycle, j) => ({
     identifier: `${tier}_${cycle}`, packageType: 'CUSTOM',
     product: { identifier: `com.geckinspect.${tier}.${cycle}`, priceString: `$${(i + 1) * (j ? 40 : 4)}.00` },
@@ -60,6 +61,39 @@ describe('native membership screen', () => {
     await act(async () => button.props.onClick());
     expect(fixture.purchase).toHaveBeenCalledWith(fixture.packages[0]); expect(fixture.sync).toHaveBeenCalledOnce();
     expect(fixture.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Keeper access is active' }));
+    expect(fixture.capture).toHaveBeenCalledWith('native_purchase_started', { tier: 'keeper', interval: 'monthly', paywall_outcome: null });
+    expect(fixture.capture).toHaveBeenCalledWith('native_purchase_completed', { tier: 'keeper', interval: 'monthly', paywall_outcome: null });
+    expect(fixture.capture.mock.calls.filter(([event]) => event === 'native_purchase_completed')).toHaveLength(1);
+    tree.unmount();
+  });
+  it('records store success once before a failed entitlement sync, without losing the error', async () => {
+    fixture.sync.mockImplementation(async () => {
+      expect(fixture.capture.mock.calls.filter(([event]) => event === 'native_purchase_completed')).toHaveLength(1);
+      throw new Error('Entitlement sync unavailable');
+    });
+    const tree = create(<MemoryRouter><NativeMembership user={{ membership_tier: 'free' }} /></MemoryRouter>);
+    const button = tree.root.findAllByType('button').find(b => contents(b) === 'Continue for $4.00 per month');
+    await act(async () => button.props.onClick());
+    expect(fixture.purchase).toHaveBeenCalledOnce();
+    expect(fixture.sync).toHaveBeenCalledOnce();
+    expect(fixture.capture.mock.calls.filter(([event]) => event === 'native_purchase_completed')).toEqual([
+      ['native_purchase_completed', { tier: 'keeper', interval: 'monthly', paywall_outcome: null }],
+    ]);
+    expect(fixture.toast).toHaveBeenCalledWith(expect.objectContaining({ description: 'Entitlement sync unavailable', variant: 'destructive' }));
+    expect(button.props.disabled).toBe(false);
+    tree.unmount();
+  });
+  it.each([
+    ['failed', new Error('Store unavailable')],
+    ['cancelled', { userCancelled: true }],
+  ])('does not count a %s purchase as completed', async (_status, error) => {
+    fixture.purchase.mockRejectedValue(error);
+    const tree = create(<MemoryRouter><NativeMembership user={{ membership_tier: 'free' }} /></MemoryRouter>);
+    const button = tree.root.findAllByType('button').find(b => contents(b) === 'Continue for $4.00 per month');
+    await act(async () => button.props.onClick());
+    expect(fixture.capture.mock.calls.map(([event]) => event)).toEqual(['native_purchase_started']);
+    expect(fixture.sync).not.toHaveBeenCalled();
+    expect(button.props.disabled).toBe(false);
     tree.unmount();
   });
   it('does not sell a second store subscription to an existing direct member', () => {

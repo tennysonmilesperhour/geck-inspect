@@ -19,12 +19,19 @@
 -- 20261018150100_weekly_notes_visitor_fixes_2.sql and
 -- 20261018150200_weekly_notes_visitor_fixes_3.sql; section 12 covers
 -- 20261018150300_weekly_notes_visitor_fixes_4.sql; section 13 covers
--- 20261018150400_weekly_notes_visitor_fixes_5.sql (the reviews of 18 Oct
+-- 20261018150400_weekly_notes_visitor_fixes_5.sql; section 14 covers
+-- 20261024182000_weekly_notes_visitor_fixes_6.sql (the reviews of 18 Oct
 -- 2026).
 --
 -- Each block raises "FAIL: ..." when a rule is broken. The last line
 -- prints "weekly notes visitor regressions: all passed".
 begin;
+
+-- Test members count as signed in now, so the relevance gate from
+-- 20261020230000 (a gecko on record or a sign-in within 60 days) lets them
+-- through. The gate's own checks set last_sign_in_at themselves. Rolled
+-- back with everything else.
+alter table auth.users alter column last_sign_in_at set default now();
 
 create temp table _t0 on commit drop as
   select date_trunc('hour', now()) - interval '200 days' as t0,
@@ -1059,6 +1066,110 @@ begin
   end if;
 end $$;
 
+-- Round 6 (20261024182000) checks that need a small table. They run here,
+-- before the cost checks below add thousands of rows, because each
+-- visitor-candidates call is slow once those rows exist.
+
+-- The 7-day and 20-hour rules allow for a run that starts a moment early.
+-- The hourly job stamps polls and the ledger with its start time, which
+-- varies by a fraction of a second, so the run 7 days or 20 hours later
+-- can start just before the exact mark (on 18 Oct: 22:50:00.098 against a
+-- poll at 02:50:00.306).
+do $$
+declare
+  v_old timestamptz := now() - interval '60 days';
+  -- A run start like production's, with the fraction of a second.
+  v_t timestamptz := (select t0 from _t0) + interval '180 days 50 minutes 0.324977 seconds';
+  v_week timestamptz := v_t + interval '7 days' - interval '0.3 seconds';
+  v_day timestamptz := v_t + interval '20 hours' - interval '0.2 seconds';
+begin
+  -- A member with last week's note.
+  perform pg_temp.mk_member('drift.m6@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'drift.m6@example.com';
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('drift.m6@example.com', 1, 'a-note', v_t);
+  insert into public.weekly_notes_polls (email, polled_at) values ('drift.m6@example.com', v_t);
+  if not exists (select 1 from public.weekly_notes_candidates(v_week) c where c.email = 'drift.m6@example.com') then
+    raise exception 'FAIL: a run that started 0.3 seconds earlier than last week''s missed the member';
+  end if;
+  if exists (select 1 from public.weekly_notes_candidates(v_t + interval '7 days' - interval '15 minutes', true) c where c.email = 'drift.m6@example.com') then
+    raise exception 'FAIL: the member 7-day rule let a note through 15 minutes early';
+  end if;
+  if (public.claim_weekly_note('drift.m6@example.com', array['a-note', 'b-note'], v_week))->>'slug' is distinct from 'b-note' then
+    raise exception 'FAIL: the claim refused the run that started 0.3 seconds early';
+  end if;
+
+  -- A member asked about 20 hours ago and not sent anything.
+  perform pg_temp.mk_member('drift.p6@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'drift.p6@example.com';
+  insert into public.weekly_notes_polls (email, polled_at) values ('drift.p6@example.com', v_t);
+  if not exists (select 1 from public.weekly_notes_candidates(v_day) c where c.email = 'drift.p6@example.com') then
+    raise exception 'FAIL: a run that started 0.2 seconds early skipped a member asked about 20 hours before';
+  end if;
+  if exists (select 1 from public.weekly_notes_candidates(v_t + interval '20 hours' - interval '15 minutes') c where c.email = 'drift.p6@example.com') then
+    raise exception 'FAIL: the member 20-hour rule let an ask through 15 minutes early';
+  end if;
+  -- The job itself takes the address (its own poll check has the same
+  -- allowance). The other members here are switched off for this one run,
+  -- so the job's limit cannot leave this member out, then put back.
+  create temp table _drift_on on commit drop as
+    select email from public.profiles where email_weekly_notes_enabled is true and email <> 'drift.p6@example.com';
+  update public.profiles set email_weekly_notes_enabled = false where email in (select email from _drift_on);
+  perform public.enqueue_weekly_notes(v_day, 1000);
+  update public.profiles set email_weekly_notes_enabled = true where email in (select email from _drift_on);
+  if (select polled_at from public.weekly_notes_polls where email = 'drift.p6@example.com') <> v_day then
+    raise exception 'FAIL: the job found the member but skipped it as already taken';
+  end if;
+
+  -- The same for a visitor.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('drift.v6@example.com', 'notes:care', v_t - interval '30 days', v_t - interval '30 days'),
+         ('drift.vp6@example.com', 'notes:care', v_t - interval '30 days', v_t - interval '30 days');
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('drift.v6@example.com', 1, 'a-note', v_t);
+  insert into public.weekly_notes_polls (email, polled_at) values ('drift.v6@example.com', v_t), ('drift.vp6@example.com', v_t);
+  if not pg_temp.vcand('drift.v6@example.com', v_week) then
+    raise exception 'FAIL: a run that started 0.3 seconds earlier than last week''s missed the visitor';
+  end if;
+  if pg_temp.vcand('drift.v6@example.com', v_t + interval '7 days' - interval '15 minutes', true) then
+    raise exception 'FAIL: the visitor 7-day rule let a note through 15 minutes early';
+  end if;
+  if not pg_temp.vcand('drift.vp6@example.com', v_day) then
+    raise exception 'FAIL: a run that started 0.2 seconds early skipped a visitor asked about 20 hours before';
+  end if;
+  if pg_temp.vcand('drift.vp6@example.com', v_t + interval '20 hours' - interval '15 minutes') then
+    raise exception 'FAIL: the visitor 20-hour rule let an ask through 15 minutes early';
+  end if;
+end $$;
+
+-- The relevance gate from 20261020230000 stays in the member rule that
+-- 20261024182000 rewrites: a gecko on record or a sign-in within 60 days.
+do $$
+declare
+  v_old timestamptz := now() - interval '90 days';
+begin
+  perform pg_temp.mk_member('gate.six@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'gate.six@example.com';
+  update auth.users set last_sign_in_at = null where email = 'gate.six@example.com';
+  if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'gate.six@example.com') then
+    raise exception 'FAIL: a member with no gecko who never signed in got a note';
+  end if;
+  update auth.users set last_sign_in_at = now() - interval '61 days' where email = 'gate.six@example.com';
+  if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'gate.six@example.com') then
+    raise exception 'FAIL: a member with no gecko who last signed in 61 days ago got a note';
+  end if;
+  if (public.claim_weekly_note('gate.six@example.com', array['a-note'], now()))->>'reason' is distinct from 'not-eligible' then
+    raise exception 'FAIL: the claim let through a member the relevance gate leaves out';
+  end if;
+  update auth.users set last_sign_in_at = now() - interval '59 days' where email = 'gate.six@example.com';
+  if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'gate.six@example.com') then
+    raise exception 'FAIL: a member who signed in 59 days ago was left out';
+  end if;
+  update auth.users set last_sign_in_at = now() - interval '61 days' where email = 'gate.six@example.com';
+  insert into public.geckos (name, created_by) values ('Juniper', 'gate.six@example.com');
+  if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'gate.six@example.com') then
+    raise exception 'FAIL: a member with a gecko on record was left out';
+  end if;
+end $$;
+
 -- A rough cost check: visitor candidates with many suppressions stay fast
 -- (the inbox lookups use indexes).
 do $$
@@ -1116,9 +1227,11 @@ begin
   if not public.unsubscribe_weekly_notes_subscriber(v_token) then
     raise exception 'FAIL: the visitor stop link did not work';
   end if;
+  -- (A spelling that never confirmed only loses its link: 20261024182000.)
   if public.confirm_weekly_notes_signup_at(pg_temp.tok('sa2'), v_at) <> 'invalid'
      or exists (select 1 from public.newsletter_subscribers
-                 where public.email_inbox_key(email) = 'stopall@gmail.com' and unsubscribed_at is null) then
+                 where public.email_inbox_key(email) = 'stopall@gmail.com'
+                   and (confirm_token_hash is not null or (confirmed_at is not null and unsubscribed_at is null))) then
     raise exception 'FAIL: a stop left another spelling of the inbox, or its pending link, alive';
   end if;
   if pg_temp.ask('sa3', 'stopall@gmail.com', v_at + interval '2 days', null) <> 'confirm' then
@@ -1230,6 +1343,150 @@ begin
   raise notice 'member candidates with 3,000 members: % ms', round(v_ms);
 end $$;
 
+-- 14. The sixth review (20261024182000) ------------------------------------------------------------
+do $$
+declare
+  v_old timestamptz := now() - interval '40 days';
+  v_at timestamptz := (select t0 from _t0) + interval '170 days';
+  v_token text;
+  v_id uuid;
+begin
+  -- Both claims lock the inbox, so two accounts on one inbox cannot claim
+  -- at the same moment.
+  perform public.claim_weekly_note('lock.member6@gmail.com', array['a-note'], now());
+  if not exists (select 1 from pg_locks l
+                  where l.locktype = 'advisory' and l.pid = pg_backend_pid() and l.objsubid = 1
+                    and ((l.classid::bigint << 32) | l.objid::bigint) = hashtextextended('weekly_notes:lockmember6@gmail.com', 0)) then
+    raise exception 'FAIL: the member claim did not lock the inbox';
+  end if;
+  -- The same for claim_weekly_note_from, the member claim send-email uses.
+  perform public.claim_weekly_note_from('lock.from6@gmail.com', array['a-note'], array[1], now());
+  if not exists (select 1 from pg_locks l
+                  where l.locktype = 'advisory' and l.pid = pg_backend_pid() and l.objsubid = 1
+                    and ((l.classid::bigint << 32) | l.objid::bigint) = hashtextextended('weekly_notes:lockfrom6@gmail.com', 0)) then
+    raise exception 'FAIL: the member claim send-email uses did not lock the inbox';
+  end if;
+  perform public.claim_weekly_note_subscriber('lock.visitor6+x@gmail.com', array['a-note'], now(), array[1]);
+  if not exists (select 1 from pg_locks l
+                  where l.locktype = 'advisory' and l.pid = pg_backend_pid() and l.objsubid = 1
+                    and ((l.classid::bigint << 32) | l.objid::bigint) = hashtextextended('weekly_notes:lockvisitor6@gmail.com', 0)) then
+    raise exception 'FAIL: the visitor claim did not lock the inbox';
+  end if;
+
+  -- The stop link takes the form's per-inbox lock.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('stop.lock6@gmail.com', 'notes:care', v_at - interval '5 days', v_at - interval '5 days');
+  v_token := public.weekly_notes_subscriber_token('stop.lock6@gmail.com');
+  perform public.unsubscribe_weekly_notes_subscriber(v_token);
+  if not exists (select 1 from pg_locks l
+                  where l.locktype = 'advisory' and l.pid = pg_backend_pid() and l.objsubid = 1
+                    and ((l.classid::bigint << 32) | l.objid::bigint) = hashtextextended('weekly_notes_signup:stoplock6@gmail.com', 0)) then
+    raise exception 'FAIL: the stop link did not take the per-inbox lock';
+  end if;
+
+  -- The member 7-day rule counts every spelling of the inbox.
+  perform pg_temp.mk_member('seven.day6@gmail.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'seven.day6@gmail.com';
+  if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'seven.day6@gmail.com') then
+    raise exception 'FAIL: setup, the member should be a candidate';
+  end if;
+  insert into public.weekly_notes_sends (email, step, slug, created_date) values ('sevenday6+v@gmail.com', 1, 'a-note', now() - interval '2 days');
+  if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'seven.day6@gmail.com') then
+    raise exception 'FAIL: the member 7-day rule missed a note to another spelling of the inbox';
+  end if;
+
+  -- The stop link does not mark a spelling that never confirmed as
+  -- stopped; it only kills its link, and the cleanup still deletes it.
+  perform pg_temp.ask('u1', 'unc.one6@gmail.com', v_at, null);
+  perform pg_temp.ask('u2', 'uncone6+p@gmail.com', v_at, null);
+  perform public.confirm_weekly_notes_signup_at(pg_temp.tok('u1'), v_at);
+  v_token := public.weekly_notes_subscriber_token('unc.one6@gmail.com');
+  if not public.unsubscribe_weekly_notes_subscriber(v_token) then
+    raise exception 'FAIL: the visitor stop link did not work';
+  end if;
+  if (select unsubscribed_at from public.newsletter_subscribers where email = 'uncone6+p@gmail.com') is not null
+     or (select confirm_token_hash from public.newsletter_subscribers where email = 'uncone6+p@gmail.com') is not null then
+    raise exception 'FAIL: the stop link marked a never-confirmed spelling stopped, or left its link alive';
+  end if;
+  perform public.weekly_notes_visitor_cleanup(v_at + interval '31 days');
+  if exists (select 1 from public.newsletter_subscribers where email = 'uncone6+p@gmail.com') then
+    raise exception 'FAIL: the cleanup kept a never-confirmed spelling after 30 days';
+  end if;
+
+  -- Account erasure leaves another account on the same inbox alone.
+  perform pg_temp.mk_member('alice6@gmail.com', v_old);
+  perform pg_temp.mk_member('a.lice6@gmail.com', v_old);
+  insert into public.weekly_notes_sends (email, step, slug, created_date)
+  values ('alice6@gmail.com', 1, 'a-note', now() - interval '8 days'),
+         ('a.lice6@gmail.com', 1, 'a-note', now() - interval '9 days');
+  insert into public.weekly_notes_polls (email, polled_at) values ('alice6@gmail.com', now() - interval '1 day');
+  insert into public.email_deliveries (event_key, email, email_type, event, detail)
+  values ('sent:alice6-1', 'alice6@gmail.com', 'weekly_notes', 'sent', '{}');
+  perform public.admin_erase_account('a.lice6@gmail.com');
+  if not exists (select 1 from public.weekly_notes_sends where email = 'alice6@gmail.com')
+     or not exists (select 1 from public.weekly_notes_polls where email = 'alice6@gmail.com')
+     or not exists (select 1 from public.email_deliveries where event_key = 'sent:alice6-1' and email = 'alice6@gmail.com') then
+    raise exception 'FAIL: erasing one account wiped another account''s rows on the same inbox';
+  end if;
+  if exists (select 1 from public.weekly_notes_sends where email = 'a.lice6@gmail.com') then
+    raise exception 'FAIL: erasure left the erased account''s own ledger';
+  end if;
+
+  -- Erasure scrubs the delivery log for every spelling it erases.
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('pat.k6@gmail.com', 'notes:care', v_at - interval '20 days', v_at - interval '20 days');
+  insert into public.email_deliveries (event_key, email, email_type, event, detail)
+  values ('clicked:patk6-1', 'pat.k6@gmail.com', 'weekly_notes', 'clicked', '{"link":"https://geckinspect.com/CareGuide"}');
+  if (public.admin_erase_weekly_notes_visitor('patk6@gmail.com'))->>'erased' is distinct from 'true' then
+    raise exception 'FAIL: the visitor erasure did not run';
+  end if;
+  if exists (select 1 from public.email_deliveries where email = 'pat.k6@gmail.com')
+     or (select detail from public.email_deliveries where event_key = 'clicked:patk6-1') <> '{}'::jsonb then
+    raise exception 'FAIL: erasure left another spelling in the delivery log';
+  end if;
+
+  -- A visitor erasure is not refused because of an unconfirmed sign-up.
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'erasme6+shop@gmail.com',
+          'x', null, '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, v_old, v_old);
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('er.asme6@gmail.com', 'notes:care', v_at - interval '20 days', v_at - interval '20 days');
+  if (public.admin_erase_weekly_notes_visitor('er.asme6@gmail.com'))->>'erased' is distinct from 'true' then
+    raise exception 'FAIL: an unconfirmed sign-up blocked a visitor erasure';
+  end if;
+end $$;
+
+-- A rough cost check with visitor stops: 3,000 members, 600 of them on an
+-- inbox with a visitor stop (the branch that reads the member's last
+-- choice, through profiles_email_lower_idx).
+do $$
+declare
+  v_start timestamptz;
+  v_ms numeric;
+begin
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  select '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+         'perfs' || g || '@example.com', 'x', now() - interval '40 days',
+         '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now() - interval '40 days', now() - interval '40 days'
+    from generate_series(1, 3000) g;
+  update public.profiles set email_notifications_enabled = true, email_weekly_notes_enabled = true where email like 'perfs%@example.com';
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at, unsubscribed_at)
+  select 'perfs' || g || '+v@example.com', 'notes:care', now() - interval '30 days', now() - interval '30 days', now() - interval '20 days'
+    from generate_series(1, 600) g;
+  analyze public.profiles;
+  analyze public.newsletter_subscribers;
+  v_start := clock_timestamp();
+  perform count(*) from public.weekly_notes_candidates(now(), true);
+  v_ms := extract(epoch from clock_timestamp() - v_start) * 1000;
+  -- About 1 s here with profiles_email_lower_idx, about 4 s without it.
+  if v_ms > 2000 then
+    raise exception 'FAIL: member candidates took % ms with 600 visitor stops among 3,000 members', round(v_ms);
+  end if;
+  raise notice 'member candidates with 600 visitor stops among 3,000 members: % ms', round(v_ms);
+end $$;
+
 -- 10. Running the fixes migration again changes nothing ------------------------------------------
 select pg_temp.ask('rerun', 'rerun@example.com', now(), null);
 insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, unsubscribed_at)
@@ -1255,6 +1512,7 @@ values ('old-trigger@example.com', 'notes:care', now() - interval '20 days', now
 \ir ../migrations/20261018150200_weekly_notes_visitor_fixes_3.sql
 \ir ../migrations/20261018150300_weekly_notes_visitor_fixes_4.sql
 \ir ../migrations/20261018150400_weekly_notes_visitor_fixes_5.sql
+\ir ../migrations/20261024182000_weekly_notes_visitor_fixes_6.sql
 do $$
 begin
   if not exists (select 1 from public.newsletter_subscribers where email = 'rerun@example.com' and confirmed_at is not null) then

@@ -59,6 +59,8 @@ import {
   morphInheritanceHubs,
 } from './seo-routes.mjs';
 import { OPEN_DATASETS, MCP_URL, openDataJsonLd } from '../src/data/open-datasets.js';
+import { COMPARISONS, COMPARISONS_CHECKED } from '../src/data/comparisons.js';
+import { fillComparison } from '../src/lib/comparisonCopy.js';
 import {
   MEMBERSHIP_FAQS,
   MEMBERSHIP_JSON_LD,
@@ -1151,6 +1153,42 @@ function membershipMeta(route) {
   };
 }
 
+/**
+ * /compare and /compare/<slug>: the comparison table and verdict in the
+ * static HTML, and links between the comparisons so none is an orphan.
+ */
+function compareMeta(route) {
+  const meta = genericMeta(route);
+  const others = (slug) => ({
+    title: 'Other comparisons',
+    items: COMPARISONS.filter((c) => c.slug !== slug).map((c) => ({ name: `Geck Inspect vs ${c.name}`, href: `/compare/${c.slug}`, note: fillComparison(c.pickUs) })),
+  });
+  const slug = route.path.split('/')[2];
+  if (!slug) {
+    return {
+      ...meta,
+      bodyHeading: 'Compare Geck Inspect',
+      bodyParagraphs: [`Geck Inspect is built for crested geckos only. Each comparison says where the other tool is the better pick. Checked ${COMPARISONS_CHECKED}.`],
+      linkSections: [others(null)],
+    };
+  }
+  const c = COMPARISONS.find((x) => x.slug === slug);
+  if (!c) return meta;
+  return {
+    ...meta,
+    bodyHeading: c.heading,
+    bodyLead: fillComparison(c.lead),
+    bodyParagraphs: [
+      `Where ${c.short} is the better pick: ${c.theyWin.map(fillComparison).join(' ')}`,
+      `Where Geck Inspect is the better pick: ${c.weWin.map(fillComparison).join(' ')}`,
+      `Pick ${c.name} if ${fillComparison(c.pickThem).replace(/^./, (ch) => ch.toLowerCase())} Pick Geck Inspect if ${fillComparison(c.pickUs).replace(/^./, (ch) => ch.toLowerCase())}`,
+      `${c.short} details checked ${COMPARISONS_CHECKED} from their own pages. Prices change; check their site before you decide.`,
+    ],
+    table: { title: `${c.heading}, side by side`, headers: ['', 'Geck Inspect', c.short], rows: c.rows.map((row) => row.map(fillComparison)) },
+    linkSections: [{ title: 'Compare', items: [{ name: 'All comparisons', href: '/compare', note: 'every tool side by side' }] }, others(slug)],
+  };
+}
+
 /** /crested-gecko-price: the hand-written guide plus the live asking prices. */
 function priceGuideMeta(route) {
   const meta = genericMeta(route);
@@ -1183,6 +1221,7 @@ function routeMeta(route) {
   if (route.path === '/MorphGuide') return morphGuideIndexMeta(route);
   if (route.path === '/data') return openDataMeta(route);
   if (route.path === '/crested-gecko-price') return priceGuideMeta(route);
+  if (route.path === '/compare' || route.path.startsWith('/compare/')) return compareMeta(route);
   const categoryMatch = route.path.match(/^\/MorphGuide\/category\/([a-z0-9-]+)$/);
   if (categoryMatch) return categoryHubMeta(categoryMatch[1], route);
   const inheritanceMatch = route.path.match(/^\/MorphGuide\/inheritance\/([a-z0-9-]+)$/);
@@ -1441,6 +1480,7 @@ function injectNoscriptBody(html, route) {
             <a href="/QualityScale">Quality Scale</a>
             <a href="/MarketplaceVerification">Verification</a>
             <a href="/Membership">Pricing</a>
+            <a href="/compare">Compare</a>
             <a href="/About">About</a>
           </nav>
           ${crumbs}
@@ -1516,6 +1556,7 @@ function pageModuleFor(path) {
     [/^\/pedigree-tracker$/, 'PedigreeTracker'],
     [/^\/breeding-records$/, 'BreedingRecords'],
     [/^\/crested-gecko-price$/, 'CrestedGeckoPrice'],
+    [/^\/compare(\/[^/]+)?$/, 'Compare'],
   ];
   for (const [re, mod] of rules) if (re.test(path)) return mod;
   const single = path.match(/^\/([A-Za-z]+)$/);

@@ -3,6 +3,7 @@ step: 14
 slug: pick-an-incubation-temperature
 subject: Pick an incubation temperature, get a hatch window
 preview: 72 to 75°F hatches in 70 to 90 days. Hotter is not better.
+audience: breeders
 cta: Open Breeding
 path: /Breeding
 cta_no_gecko: Read about incubation

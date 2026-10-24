@@ -2,7 +2,7 @@
  * MorphMarket CSV export / import utilities.
  *
  * MorphMarket's Bulk Import 2.0 accepts CSV/TSV with a header row.
- * Columns can be in any order; only included columns are processed.
+ * Columns can be in any order; the live importer can clear omitted fields.
  *
  * Reference:
  *   https://support.morphmarket.com/article/123-importing-exporting-animals
@@ -84,7 +84,7 @@ const MM_COLUMNS = [
   },
   {
     header: 'Traits',
-    exportFn: (g) => g.morphs_traits || (Array.isArray(g.morph_tags) ? g.morph_tags.join(', ') : ''),
+    exportFn: (g) => (g.morphs_traits || (Array.isArray(g.morph_tags) ? g.morph_tags.join(' ') : '')).replace(/[,;]+/g, ' '),
     importKey: 'morphs_traits',
   },
   {
@@ -93,12 +93,7 @@ const MM_COLUMNS = [
     importKey: 'asking_price',
   },
   {
-    header: 'Currency',
-    exportFn: () => 'USD',
-    importKey: null,
-  },
-  {
-    header: 'Status',
+    header: 'State',
     exportFn: (g) => {
       if (g.status === 'For Sale') return 'For Sale';
       if (g.status === 'Sold') return 'Sold';
@@ -113,7 +108,8 @@ const MM_COLUMNS = [
   },
   {
     header: 'Weight',
-    exportFn: (g) => (g.weight_grams != null ? String(g.weight_grams) : ''),
+    // MorphMarket accepts positive whole grams only.
+    exportFn: (g) => Number.isFinite(Number(g.weight_grams)) && Number(g.weight_grams) >= 0.5 ? String(Math.round(Number(g.weight_grams))) : '',
     importKey: 'weight_grams',
   },
   {
@@ -123,9 +119,10 @@ const MM_COLUMNS = [
       const ageMonths = Math.floor(
         (Date.now() - new Date(g.hatch_date).getTime()) / (1000 * 60 * 60 * 24 * 30.44)
       );
+      if (!Number.isFinite(ageMonths) || ageMonths < 0) return '';
       if (ageMonths < 3) return 'Baby';
       if (ageMonths < 8) return 'Juvenile';
-      if (ageMonths < 14) return 'Sub-Adult';
+      if (ageMonths < 14) return 'Subadult';
       return 'Adult';
     },
     importKey: null,
@@ -141,7 +138,7 @@ const MM_COLUMNS = [
     importKey: null,
   },
   {
-    header: 'Description',
+    header: 'Desc',
     exportFn: (g) => {
       const parts = [];
       if (g.marketplace_description) parts.push(g.marketplace_description);
@@ -152,8 +149,8 @@ const MM_COLUMNS = [
     importKey: 'marketplace_description',
   },
   {
-    // MorphMarket's help pages call this field "Photo URLs".
-    header: 'Photo URLs',
+    // Use the signed-in importer's canonical header.
+    header: 'Photo_Urls',
     exportFn: (g) => (Array.isArray(g.image_urls) ? g.image_urls.join(',') : ''),
     importKey: 'image_urls',
   },
@@ -193,19 +190,27 @@ export function exportMorphMarketCSV(geckos, { filename } = {}) {
  * opens it cleanly.
  */
 export function buildMorphMarketCSV(geckos) {
-  const header = MM_COLUMNS.map((c) => csvEscape(c.header)).join(',');
-  const rows = geckos.map((g) =>
-    MM_COLUMNS.map((c) => csvEscape(c.exportFn(g))).join(',')
-  );
+  const headers = morphMarketHeaders(geckos);
+  const header = headers.map(csvEscape).join(',');
+  const rows = geckos.map((g) => {
+    const row = buildMorphMarketRow(g);
+    return headers.map((h) => csvEscape(row[h])).join(',');
+  });
   return '\uFEFF' + [header, ...rows].join('\r\n');
 }
 
 /**
- * The MorphMarket column headers, in the order they're written to the
- * CSV. Used by the batch builder's preview table so the on-screen
- * layout matches the file the breeder downloads.
+ * All supported export headers. Use morphMarketHeaders for a batch's
+ * actual columns, which omit optional fields with no values.
  */
 export const MM_HEADERS = MM_COLUMNS.map((c) => c.header);
+
+/** Omit empty optional columns for readability; MorphMarket can still clear those fields. */
+export function morphMarketHeaders(geckos) {
+  const optional = new Set(['Price', 'DOB', 'Weight', 'Traits', 'Desc', 'Photo_Urls']);
+  return MM_COLUMNS.filter((c) => !optional.has(c.header) || geckos.some((g) => c.exportFn(g) !== ''))
+    .map((c) => c.header);
+}
 
 /**
  * Build a single MorphMarket row as a plain object keyed by column
@@ -266,10 +271,17 @@ export function parseMorphMarketCSV(csvText) {
       return '';
     };
 
+    const category = get('Category');
+    if (category && !/^crested geckos?$/i.test(category)) {
+      warnings.push(`Row ${i + 1}: skipped ${category}. This importer is for crested geckos.`);
+      continue;
+    }
+
     const record = {};
 
     const animalId = get('Animal_ID', 'Animal ID', 'AnimalID');
     if (animalId) record.gecko_id_code = animalId;
+    else warnings.push(`Row ${i + 1}: no Animal_ID. Importing this row again can create a duplicate. Assign an ID on MorphMarket before exporting if you need repeat imports.`);
 
     // Name: derive from Title or Traits
     const title = get('Title');
@@ -279,8 +291,8 @@ export function parseMorphMarketCSV(csvText) {
 
     // Sex
     const sex = get('Sex');
-    if (/male/i.test(sex) && !/female/i.test(sex)) record.sex = 'Male';
-    else if (/female/i.test(sex)) record.sex = 'Female';
+    if (/^(male|m)$/i.test(sex)) record.sex = 'Male';
+    else if (/^(female|f)$/i.test(sex)) record.sex = 'Female';
     else record.sex = 'Unsexed'; // the app's value for unsexed geckos (was 'Unknown', which no sex filter matched)
 
     // Price
@@ -291,19 +303,24 @@ export function parseMorphMarketCSV(csvText) {
     }
 
     // Status
-    const status = get('Status');
-    if (/for sale/i.test(status)) {
+    const status = get('State', 'Status');
+    record.is_public = false;
+    if (/^for sale(?: \(needs image\))?$/i.test(status)) {
       record.status = 'For Sale';
-      record.is_public = true;
-    } else if (/sold/i.test(status)) {
+      record.is_public = !/^(private|unlisted)$/i.test(get('Visibility')) && !/^(inactive|expired)$/i.test(get('Enabled'));
+    } else if (/^sold$/i.test(status)) {
       record.status = 'Sold';
     } else {
       record.status = 'Pet';
     }
 
     // DOB / hatch date
-    const dob = get('DOB', 'Birth Date', 'Birthdate', 'Hatch Date');
-    if (dob) record.hatch_date = dob;
+    const sourceDob = get('DOB', 'Birth Date', 'Birthdate', 'Hatch Date');
+    // MorphMarket's export uses M/D/YYYY even though its importer accepts ISO.
+    const usDate = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(sourceDob);
+    const dob = usDate ? `${usDate[3]}-${usDate[1].padStart(2, '0')}-${usDate[2].padStart(2, '0')}` : sourceDob;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dob) && !Number.isNaN(Date.parse(dob)) && new Date(dob).toISOString().slice(0, 10) === dob) record.hatch_date = dob;
+    else if (dob) warnings.push(`Row ${i + 1}: birth date "${sourceDob}" was not imported. Geck Inspect needs a complete YYYY-MM-DD date.`);
 
     // Weight
     const weight = get('Weight');
@@ -319,7 +336,7 @@ export function parseMorphMarketCSV(csvText) {
     // Images
     const images = get('Images', 'Photo URLs', 'Photos');
     if (images) {
-      record.image_urls = images.split(',').map((u) => u.trim()).filter(Boolean);
+      record.image_urls = images.split(/[\s,]+/).map((u) => u.trim()).filter(Boolean);
     }
 
     records.push(record);
@@ -333,7 +350,7 @@ export function parseMorphMarketCSV(csvText) {
 }
 
 function headerKey(name) {
-  return String(name).replace(/^\uFEFF/, '').toLowerCase().replace(/[\s_]+/g, '');
+  return String(name).replace(/^\uFEFF/, '').toLowerCase().replace(/\*+$/, '').replace(/[\s_]+/g, '');
 }
 
 /**
