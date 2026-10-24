@@ -425,3 +425,24 @@ in a block that rolled back: 24 members qualify, 38 keepers, 26 with a
 female, 15 with an adult female, 9 breeders.
 
 Function: `send-email` (already declared). Site: the `/KeepNotes` page.
+
+## 24 October: transfer requests from the passport page
+
+Migration: `20261024181000_passport_transfer_request.sql`. It adds
+`request_passport_transfer(passport_code)` (signed-in members only) and
+replaces `notify_dispatch_on_insert` with its production body plus one title
+line for the new `transfer_request` type. No table or column changes.
+
+Why: the passport's "Ask the seller for a transfer invitation" button only
+opened an empty chat, so an owner heard nothing when a buyer scanned the QR
+code. The button now sends the owner a chat message and a `transfer_request`
+notification (in-app, email and push, following the owner's "new message"
+setting). The notification opens the gecko with the transfer form already
+open and the buyer's email filled in. One request per buyer per gecko a day,
+at most 10 an hour per buyer, and blocking stops it both ways.
+
+Functions: `send-email` and `send-push` (both declared) map
+`transfer_request` to the "new message" preference.
+
+Regression file: `supabase/tests/passport_transfer_request_regressions.sql`.
+Nothing waits on Tennyson.

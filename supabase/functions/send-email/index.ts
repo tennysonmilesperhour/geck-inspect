@@ -159,6 +159,9 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   // An admin answered the member's support ticket. Rides the messages
   // preference, since it is a reply to something they wrote.
   support_reply: "new_message",
+  // A buyer who scanned a passport QR code asking the owner to transfer
+  // the gecko (request_passport_transfer). It is a message to the owner.
+  transfer_request: "new_message",
   // New-member emails in the first two weeks. Welcome, "add a gecko" and
   // the lineage email are product news to a new member; the two weigh-in
   // emails are care reminders, so they follow the care switch.
