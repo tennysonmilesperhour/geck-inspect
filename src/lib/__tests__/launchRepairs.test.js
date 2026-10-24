@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { buildMorphMarketCSV } from '../morphmarketSync';
+import { formatMorphMarketCSV } from '../morphmarketSync';
 
 const native = vi.hoisted(() => ({
   configure: vi.fn(), setLogLevel: vi.fn(), getAppUserID: vi.fn(), logIn: vi.fn(),
@@ -13,12 +13,12 @@ afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.resetModules(); 
 describe('launch repair regressions', () => {
   it('neutralizes spreadsheet formulas in exported descriptions', () => {
     for (const value of ['=1+1', '+SUM(1,2)', '@SUM(1,2)', '-cmd', '  =HYPERLINK("https://example.com")', '\t=1+1']) {
-      const csv = buildMorphMarketCSV([{ marketplace_description: value }]);
+      const csv = formatMorphMarketCSV([{ marketplace_description: value }]);
       expect(csv).toContain("'" + value.replaceAll('"', '""'));
     }
   });
   it('retains ordinary exported text and numeric prices', () => {
-    const csv = buildMorphMarketCSV([{ marketplace_description: 'Healthy Lilly White', asking_price: 250 }]);
+    const csv = formatMorphMarketCSV([{ marketplace_description: 'Healthy Lilly White', asking_price: 250 }]);
     expect(csv).toContain('Healthy Lilly White');
     expect(csv).toContain(',250,');
   });

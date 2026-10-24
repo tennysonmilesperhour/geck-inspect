@@ -167,6 +167,8 @@ export function morphMarketAnimalId(gecko) {
 
 // ─── Export ─────────────────────────────────────────────────────────────────
 
+export const MORPHMARKET_EXPORT_BLOCKED_REASON = 'MorphMarket export is paused because uploads can erase existing listing details, even when columns are omitted. Export will return after we can preserve those details.';
+
 /**
  * Export an array of gecko objects as a MorphMarket-compatible CSV and
  * trigger a browser download.
@@ -183,13 +185,13 @@ export function exportMorphMarketCSV(geckos, { filename } = {}) {
   return name;
 }
 
-/**
- * Build the MorphMarket CSV text for the given geckos. Exposed so the
- * batch builder can preview the file in the UI and copy it to the
- * clipboard without forcing a download. Includes a UTF-8 BOM so Excel
- * opens it cleanly.
- */
-export function buildMorphMarketCSV(geckos) {
+/** Block both download and clipboard callers until preservation is proven. */
+export function buildMorphMarketCSV() {
+  throw new Error(MORPHMARKET_EXPORT_BLOCKED_REASON);
+}
+
+/** Pure formatter for regression checks, not a production export entry point. */
+export function formatMorphMarketCSV(geckos) {
   const headers = morphMarketHeaders(geckos);
   const header = headers.map(csvEscape).join(',');
   const rows = geckos.map((g) => {

@@ -860,7 +860,7 @@ const PRICING_LINKS = [
   { page: 'MarketplaceSell', title: 'Price a listing', Icon: Tag,
     body: 'Edit a gecko on Sell Geckos to see where your price sits in the range for geckos like it.' },
   { page: 'MorphMarketExport', title: 'Export to MorphMarket', Icon: Package,
-    body: 'Pick the geckos to list and download a file for MorphMarket bulk import, so you do not retype each listing.' },
+    body: 'CSV export is paused while we add protection for existing MorphMarket listing details.' },
 ];
 
 function PricingTab() {

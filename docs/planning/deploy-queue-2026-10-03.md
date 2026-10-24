@@ -391,6 +391,22 @@ import of the same file is refused row by row instead of duplicating geckos.
 The original build session could not reach MorphMarket. The live two-row
 check below now supplies that proof.
 
+### 24 October safety follow-up: export paused
+
+Tennyson superseded warning-only: do not allow export if it could erase existing
+MorphMarket data. Both export screens now disable every CSV download and copy
+control, and the shared production CSV builder rejects export even for complete
+records. Import is still available. Two regression cases prove rejection before
+any download is created; the existing formatter and formula-safety tests remain.
+Validation: all 3,484 tests in 296 files pass; lint has 0 errors and 75 existing
+warnings.
+
+The current export has 14 of 33 supported fields. The reference below now lists
+the missing 19, existing lossy mappings, and the proposed private listing-field
+workflow. Full field matching is not implemented or preservation-tested yet.
+The earlier successful create/update test remains valid historical evidence,
+not permission to re-enable a potentially destructive export.
+
 ### 24 October follow-up: badge and CSV round trip proven
 
 Read all 33 Supported Fields on the signed-in MorphMarket Import Animals
@@ -452,8 +468,8 @@ MorphMarket listings are now archived; permanent deletion remains with Tennyson.
 Data-loss finding: a separate upload with Price, DOB and Weight columns removed
 still cleared both dates and weights and changed both prices to $0. The importer
 adds missing fields as blank. Restored all values with the full file. Warnings
-now explain this directly. Tennyson chose to keep export available with a
-clear warning on 24 October, without blocking incomplete files. See the
+now explain this directly. Tennyson initially chose warning-only, then
+superseded that choice with the export pause above. See the
 reference for exact test values and scope. For Sale shipping, payments and
 sold-state flows were not exercised.
 

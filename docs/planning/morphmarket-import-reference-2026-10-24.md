@@ -44,7 +44,31 @@ Names below are the canonical spellings displayed by the importer. Boolean field
 | Enable 'Buy Now' | Boolean. Requires an eligible store with connected payments, a set price, fixed/free shipping or local pickup, and individual or group sales. Wholesale-only excluded. |
 | Private_Notes | Internal animal notes, not public listing text. |
 
-## Geck Inspect mapping and data preservation
+## Current safety decision
+
+On 24 October Tennyson superseded the earlier warning-only choice: do not allow exports that could erase MorphMarket data. CSV download and copy are now paused in both screens and in the shared production CSV builder, including for otherwise complete geckos. Import remains available. The formatter remains covered by header, round-trip and formula-neutralization tests, but it is not a production export entry point.
+
+The current exporter has 14 columns, not the 15 initially counted in conversation. MorphMarket supports 33. A full matching workflow is being scoped; it is not implemented or proven by this pause.
+
+### Missing fields to support
+
+| Area | MorphMarket fields absent from the current export |
+| --- | --- |
+| Visibility and activity | Visibility, Enabled |
+| Groups | Group_Id, Is_Group |
+| Media | Video_Url, Is_Rep_Photo |
+| Measurements and breeding | Length, Length_Type, Proven_Breeder |
+| Wholesale | Wholesale_Price, Wholesale_Only, Wholesale_Description |
+| Food | Diet |
+| Shipping | Min_Shipping, Max_Shipping |
+| Sale preferences | Is_Negotiable, Is_For_Trade, Enable 'Buy Now' |
+| Private information | Private_Notes |
+
+Existing columns also need exact preservation: title is generated, State collapses several MorphMarket states to Not For Sale, Quantity is fixed at one, Origin defaults to Captive Bred, and unknown sex becomes Unsexed. An Animal_ID can be sanitized differently, and partial birth dates cannot be represented by Geck Inspect's full hatch date. Filling three missing values alone cannot prove that all existing data survives.
+
+Proposed full matching workflow: retain all original supported fields from a fresh MorphMarket export in owner-only listing storage, expose those values for editing, match existing animals by exact seller Animal_ID, and apply only explicit edits. Keep Private_Notes and wholesale details out of public gecko payloads. Preserve unsupported read-only columns in the source reference, without pretending they are writable. Validate MorphMarket's own export spellings and allowed values before re-import. Re-enable downloads only after disposable listings prove that all populated fields survive an update. A current source file is needed because Geck Inspect cannot see later MorphMarket edits automatically.
+
+## Earlier Geck Inspect mapping and data preservation
 
 - Export `State`, `Desc`, and `Photo_Urls`, remove the unsupported Currency column, and use `Subadult`.
 - Retain `Animal_ID` first, the existing stable ID mapping, ISO full dates, comma-separated photos, one animal per row, and Captive Bred origin. Do not change a gecko's ID between uploads. IDs must be distinct after punctuation cleanup.
@@ -107,4 +131,4 @@ Downloaded those two Animal Records from MorphMarket. Its 42-column CSV uses sta
 
 The separate missing-column test cleared prices, dates and weights as described above; the full CSV restored them. All four Geck Inspect test records and both MorphMarket test listings are now archived. Permanent deletion was left to Tennyson. Existing real animals were not changed.
 
-Scope: live acceptance covers Not For Sale creation and update, the hand-check badge and return import. For Sale shipping, payment and sold-state workflows were not exercised. Tennyson chose on 24 October to keep export available with a clear data-loss warning, without blocking incomplete exports.
+Scope: live acceptance covers Not For Sale creation and update, the hand-check badge and return import. For Sale shipping, payment and sold-state workflows were not exercised. Tennyson initially chose warning-only, then superseded that choice with the safety pause described above.

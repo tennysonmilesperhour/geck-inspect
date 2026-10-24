@@ -42,6 +42,7 @@ import { createPageUrl } from '@/utils';
 import PageHeader from '@/components/shared/PageHeader';
 import {
   buildMorphMarketCSV,
+  MORPHMARKET_EXPORT_BLOCKED_REASON,
   buildMorphMarketRow,
   exportMorphMarketCSV,
   morphMarketHeaders,
@@ -719,7 +720,7 @@ export default function MorphMarketExport() {
                 setBatchIds((prev) => [...new Set([...prev, ...ids])]);
                 toast({
                   title: ids.length === 1 ? 'Added to the MorphMarket batch' : `Added ${ids.length} to the MorphMarket batch`,
-                  description: 'Check the fields, then download the CSV and upload it on MorphMarket.',
+                  description: 'Your selection is saved. Export is paused to protect existing MorphMarket details.',
                 });
               }
               if (params.has('add')) {
@@ -909,11 +910,12 @@ export default function MorphMarketExport() {
       toast({ title: 'Batch is empty', description: 'Add some geckos first.', variant: 'destructive' });
       return;
     }
-    const filename = exportMorphMarketCSV(batchGeckos);
-    toast({
-      title: 'CSV downloaded',
-      description: `${batchGeckos.length} listing${batchGeckos.length === 1 ? '' : 's'} saved to ${filename}.`,
-    });
+    try {
+      const filename = exportMorphMarketCSV(batchGeckos);
+      toast({ title: 'CSV downloaded', description: filename });
+    } catch (error) {
+      toast({ title: 'Export unavailable', description: error.message, variant: 'destructive' });
+    }
   };
 
   const handleCopy = async () => {
@@ -922,10 +924,10 @@ export default function MorphMarketExport() {
       await navigator.clipboard.writeText(buildMorphMarketCSV(batchGeckos));
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
-    } catch {
+    } catch (error) {
       toast({
-        title: 'Copy failed',
-        description: 'Your browser blocked clipboard access. Use Download instead.',
+        title: 'Copy unavailable',
+        description: error.message,
         variant: 'destructive',
       });
     }
@@ -976,7 +978,7 @@ export default function MorphMarketExport() {
           title="MorphMarket Bulk Export"
           description={
             <>
-              Filter your collection, batch the geckos you want to list, and download a CSV that drops straight into{' '}
+              Review your saved batch for{' '}
               <a
                 href="https://www.morphmarket.com/inventory/import"
                 target="_blank"
@@ -986,7 +988,7 @@ export default function MorphMarketExport() {
                 MorphMarket Bulk Import
                 <ExternalLink className="w-3 h-3 inline ml-0.5" />
               </a>
-              . Selecting a gecko and adding it to the batch removes it from the pool, so you can keep filtering for the next group.
+              . CSV download and copy are paused to protect existing listing data.
             </>
           }
         >
@@ -997,6 +999,9 @@ export default function MorphMarketExport() {
           </Link>
         </PageHeader>
 
+        <p role="alert" className="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
+          {MORPHMARKET_EXPORT_BLOCKED_REASON}
+        </p>
         <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)] gap-6">
           <div className="space-y-4 min-w-0">
             <FilterPanel
@@ -1146,7 +1151,7 @@ export default function MorphMarketExport() {
                   {batchMissingCount > 0 && (
                     <p className="text-xs text-amber-300 flex items-center gap-1.5 mt-0.5">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      {batchMissingCount} gecko{batchMissingCount === 1 ? '' : 's'} missing required MorphMarket fields. They'll still export, but the upload may reject them.
+                      {batchMissingCount} gecko{batchMissingCount === 1 ? '' : 's'} missing required MorphMarket fields. Export is currently paused.
                     </p>
                   )}
                 </div>
@@ -1155,7 +1160,7 @@ export default function MorphMarketExport() {
                     variant="outline"
                     size="sm"
                     onClick={handleCopy}
-                    disabled={batchGeckos.length === 0}
+                    disabled
                     className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
@@ -1164,7 +1169,7 @@ export default function MorphMarketExport() {
                   <Button
                     size="sm"
                     onClick={handleDownload}
-                    disabled={batchGeckos.length === 0}
+                    disabled
                     className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
                   >
                     <Download className="w-3.5 h-3.5 mr-1" />
@@ -1195,6 +1200,7 @@ export default function MorphMarketExport() {
                     variant="outline"
                     size="sm"
                     onClick={handleCopy}
+                    disabled
                     className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
@@ -1203,6 +1209,7 @@ export default function MorphMarketExport() {
                   <Button
                     size="sm"
                     onClick={handleDownload}
+                    disabled
                     className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
                   >
                     <Download className="w-3.5 h-3.5 mr-1" />
@@ -1267,6 +1274,7 @@ export default function MorphMarketExport() {
                   variant="outline"
                   size="sm"
                   onClick={handleCopy}
+                  disabled
                   className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
@@ -1275,6 +1283,7 @@ export default function MorphMarketExport() {
                 <Button
                   size="sm"
                   onClick={handleDownload}
+                  disabled
                   className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
                 >
                   <Download className="w-3.5 h-3.5 mr-1" />
