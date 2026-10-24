@@ -18,6 +18,18 @@ updates:
       # bump it alone and check that the Vercel preview deploy is Ready.
       - dependency-name: "@vercel/og"
         versions: [">1.0.1"]
+      # Radix stays where it is until touch dismissal is fixed upstream.
+      # @radix-ui/react-dismissable-layer 1.2 stopped waiting for the click
+      # on touch screens unless a component opts back in. Dialog and Popover
+      # do; Menu 2.2 (DropdownMenu) and Select 2.4 do not. On a phone, a tap
+      # outside an open select or menu then also presses whatever is under
+      # the finger (for example a Save button). Found on 24 Oct 2026 in the
+      # npm-minor-and-patch group update; GitHub CI does not catch it. The
+      # updates are also over the startup size budget unless all Radix
+      # packages move together. Before lifting this, check that Menu and
+      # Select pass deferPointerDownOutside, then tap outside an open select
+      # in GeckoForm on a real phone.
+      - dependency-name: "@radix-ui/*"
     groups:
       # lucide-react gets its own pull request. Production builds rewrite
       # lucide's icon files (scripts/vite-plugins/lean-lucide-icons.mjs), so
