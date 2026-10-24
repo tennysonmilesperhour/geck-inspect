@@ -108,7 +108,7 @@ describe('lengths', () => {
     expect(words).toBeGreaterThanOrEqual(80);
     expect(words).toBeLessThanOrEqual(200);
     expect(wordCount(note.body)).toBe(words);
-    expect(LIMITS).toEqual({ subject: [1, 60], preview: [20, 100], cta: [1, 40], words: [80, 200] });
+    expect(LIMITS).toEqual({ subject: [1, 60], preview: [20, 100], lead: [20, 200], cta: [1, 40], words: [80, 200] });
   });
 });
 
@@ -473,7 +473,8 @@ function setup({ profile = {}, rpc = {}, env = { EMAIL_POSTAL_ADDRESS: POSTAL } 
     if (call.rpc === 'email_has_login') return { data: true, error: null };
     if (call.rpc === 'email_is_suppressed') return { data: false, error: null };
     if (call.rpc === 'email_unsubscribe_token') return { data: 'p1.sig', error: null };
-    if (call.rpc === 'claim_weekly_note') return { data: { slug: NOTE_1.slug, step: 1, has_gecko: true }, error: null };
+    if (call.rpc === 'claim_weekly_note_from') return { data: { slug: NOTE_1.slug, step: 1, has_gecko: true }, error: null };
+    if (call.rpc === 'weekly_note_facts') return { data: FACTS, error: null };
     if (call.rpc === 'record_email_event') return { data: true, error: null };
     return undefined;
   });
@@ -489,6 +490,11 @@ function setup({ profile = {}, rpc = {}, env = { EMAIL_POSTAL_ADDRESS: POSTAL } 
   return { db, net, send };
 }
 
+// A keeper with no weights yet and no female: fits the everyone and
+// keepers notes, and gets the leads that need no weight.
+const FACTS = { gecko_count: 1, stale: { id: 'g1', name: 'Mango', last_weight_grams: null, last_weight_date: null }, female: null, breeder: false };
+const MONTH = new Date().getUTCMonth() + 1;
+
 const WEEKLY = { user_email: 'Sam@Example.com', type: 'weekly_notes', weekly: { run_at: '2026-10-18T00:50:00Z' } };
 
 describe('send-email sends Weekly Gecko Notes', () => {
@@ -496,7 +502,8 @@ describe('send-email sends Weekly Gecko Notes', () => {
     const { db, net, send } = setup();
     const out = await send(WEEKLY);
     expect(out).toMatchObject({ delivered: 1, id: 'email-1' });
-    expect(db.rpcCalls('claim_weekly_note')[0].args).toEqual({ p_email: 'sam@example.com', p_slugs: weeklyNotes.weeklyNoteSlugs() });
+    const plan = weeklyNotes.weeklyNoteMemberPlan(FACTS, MONTH);
+    expect(db.rpcCalls('claim_weekly_note_from')[0].args).toEqual({ p_email: 'sam@example.com', p_slugs: plan.slugs, p_steps: plan.steps });
     const mail = net.requests[0].body;
     expect(mail.subject).toBe(NOTE_1.subject);
     expect(mail.text.startsWith(NOTE_1.body)).toBe(true);
@@ -517,7 +524,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
 
   it('a member with no gecko gets the no-gecko button', async () => {
     const { net, send } = setup({
-      rpc: { claim_weekly_note: () => ({ data: { slug: NO_GECKO_NOTE.slug, step: NO_GECKO_NOTE.step, has_gecko: false }, error: null }) },
+      rpc: { claim_weekly_note_from: () => ({ data: { slug: NO_GECKO_NOTE.slug, step: NO_GECKO_NOTE.step, has_gecko: false }, error: null }) },
     });
     await send(WEEKLY);
     const mail = net.requests[0].body;
@@ -540,7 +547,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
       const { db, net, send } = setup();
       expect(await send({ user_email: 'sam@example.com', type: 'weekly_notes', title: 'Hi', body: 'Hi', weekly }))
         .toEqual({ delivered: 0, skipped: 'weekly-notes-without-run' });
-      expect(db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+      expect(db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
       expect(net.requests).toHaveLength(0);
     }
   });
@@ -549,7 +556,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
     for (const env of [{}, { EMAIL_POSTAL_ADDRESS: '   ' }]) {
       const { db, net, send } = setup({ env });
       expect(await send(WEEKLY)).toEqual({ delivered: 0, skipped: 'weekly-notes-no-postal-address' });
-      expect(db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+      expect(db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
       expect(db.calls).toHaveLength(0);
       expect(net.requests).toHaveLength(0);
     }
@@ -558,7 +565,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
   it('skips a member with email switched off, before any claim', async () => {
     const { db, net, send } = setup({ profile: { email_notifications_enabled: false } });
     expect(await send(WEEKLY)).toEqual({ delivered: 0, skipped: 'master-off' });
-    expect(db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+    expect(db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
     expect(net.requests).toHaveLength(0);
   });
 
@@ -572,7 +579,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
     const { db, net, send } = setup({ rpc: { email_unsubscribe_token: () => ({ data: null, error: { message: 'no secret' } }) } });
     expect(await send(WEEKLY)).toEqual({ delivered: 0, skipped: 'weekly-notes-no-token' });
     expect(db.rpcCalls('email_unsubscribe_token')).toHaveLength(2);
-    expect(db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+    expect(db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
     expect(net.requests).toHaveLength(0);
   });
 
@@ -583,7 +590,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
     ]) {
       const { db, net, send } = setup({ rpc });
       expect(await send(WEEKLY)).toEqual({ delivered: 0, skipped: 'weekly-notes-check-failed' });
-      expect(db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+      expect(db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
       expect(net.requests).toHaveLength(0);
     }
   });
@@ -593,8 +600,8 @@ describe('send-email sends Weekly Gecko Notes', () => {
     expect(await noLogin.send(WEEKLY)).toEqual({ delivered: 0, skipped: 'no-login' });
     const suppressed = setup({ rpc: { email_is_suppressed: () => ({ data: true, error: null }) } });
     expect(await suppressed.send(WEEKLY)).toEqual({ delivered: 0, skipped: 'suppressed' });
-    expect(noLogin.db.rpcCalls('claim_weekly_note')).toHaveLength(0);
-    expect(suppressed.db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+    expect(noLogin.db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
+    expect(suppressed.db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
   });
 
   it('sends nothing when the claim says caught-up, not-eligible or fails', async () => {
@@ -605,7 +612,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
       [{ data: null, error: { message: 'function does not exist' } }, 'weekly-notes-claim-failed'],
       [{ data: { slug: 'not-in-the-catalog', step: 99 }, error: null }, 'weekly-notes-unknown-slug'],
     ]) {
-      const { net, send } = setup({ rpc: { claim_weekly_note: () => answer } });
+      const { net, send } = setup({ rpc: { claim_weekly_note_from: () => answer } });
       expect(await send(WEEKLY)).toEqual({ delivered: 0, skipped });
       expect(net.requests).toHaveLength(0);
     }
@@ -619,7 +626,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
     expect(lifeMail.text).toContain(`Unsubscribe from these emails: ${SITE}/Unsubscribe?t=p1.sig\n`);
     expect(lifeMail.html).toContain('>unsubscribe from these emails</a>');
     expect(lifeMail.html).not.toContain('scope=');
-    expect(life.db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+    expect(life.db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
 
     const note = setup();
     await note.send({ user_email: 'sam@example.com', type: 'new_reply', title: 'New reply', body: 'Bob replied.', url: '/Forum' });
@@ -628,7 +635,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
     expect(mail.headers['List-Unsubscribe']).not.toContain('scope=');
     expect(mail.text).not.toContain('Weekly Gecko Notes');
     expect(mail.tags).toEqual([{ name: 'type', value: 'new_reply' }]);
-    expect(note.db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+    expect(note.db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
   });
 });
 

@@ -146,6 +146,7 @@ const About                 = lazy(() => import('./pages/About'));
 const Contact               = lazy(() => import('./pages/Contact'));
 // Signed-out unsubscribe from notification emails (link in every email).
 const Unsubscribe           = lazy(() => import('./pages/Unsubscribe'));
+const KeepNotes             = lazy(() => import('./pages/KeepNotes'));
 const WeeklyNotes           = lazy(() => import('./pages/WeeklyNotes'));
 const Terms                 = lazy(() => import('./pages/Terms'));
 const MarketplaceVerification = lazy(() => import('./pages/MarketplaceVerification'));
@@ -399,6 +400,7 @@ const AuthenticatedApp = () => {
           <Route path="/About" element={<About />} />
           <Route path="/Contact" element={<Contact />} />
           <Route path="/Unsubscribe" element={<Unsubscribe />} />
+          <Route path="/KeepNotes" element={<KeepNotes />} />
           <Route path="/WeeklyNotes" element={<WeeklyNotes />} />
           <Route path="/Terms" element={<Terms />} />
           <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
@@ -500,6 +502,7 @@ const AuthenticatedApp = () => {
         <Route path="/Breeder/:slug" element={<Breeder />} />
         <Route path="/About" element={<About />} />
         <Route path="/Unsubscribe" element={<Unsubscribe />} />
+        <Route path="/KeepNotes" element={<KeepNotes />} />
         <Route path="/WeeklyNotes" element={<WeeklyNotes />} />
         <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
         <Route path="/pedigree-tracker" element={<PedigreeTracker />} />

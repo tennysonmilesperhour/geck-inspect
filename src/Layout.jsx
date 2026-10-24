@@ -188,6 +188,16 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   // The Log tab's sheet (feeding, weigh-in, shed or Field Mode).
   const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const bottomNavAway = bottomNavHidden && !logSheetOpen && !isMobileOpen;
+
+  // Floating notices and the feedback button sit just above the bar, so they
+  // follow it down (see [data-follows-bottom-bar] in layout-theme.css).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (bottomNavAway) root.dataset.bottomBarAway = '';
+    else delete root.dataset.bottomBarAway;
+    return () => { delete root.dataset.bottomBarAway; };
+  }, [bottomNavAway]);
 
   // The phone header is glass that floats over the page, so the page pads
   // its top by the header's height (--top-bar-h, read in index.css). It is
@@ -1353,7 +1363,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         {/* Phone bottom bar (review item E3 25): Today, Geckos, Log, More.
             Log opens a short sheet; More opens the full menu. */}
         <nav
-          className={`gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex ${bottomNavHidden && !logSheetOpen && !isMobileOpen ? 'is-scrolled-away' : ''}`}
+          className={`gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex ${bottomNavAway ? 'is-scrolled-away' : ''}`}
           aria-label="Main"
           onFocus={() => setBottomNavHidden(false)}
         >

@@ -24,7 +24,7 @@ import {
     Egg,
     Utensils,
     Scale,
-    Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope, UserX, Loader2, LifeBuoy, ListChecks,
+    Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope, UserX, Loader2, LifeBuoy, ListChecks, ArrowRightLeft,
 } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
@@ -74,6 +74,7 @@ const notificationIcons = {
     new_breeding_plan: <Star className="w-5 h-5 text-purple-400" />,
     future_breeding_ready: <Star className="w-5 h-5 text-emerald-400" />,
     marketplace_inquiry: <ShoppingCart className="w-5 h-5 text-amber-400" />,
+    transfer_request: <ArrowRightLeft className="w-5 h-5 text-emerald-400" />,
     gecko_of_the_day: <Star className="w-5 h-5 text-yellow-400" />,
     // The four most common types in production had no icon or label and
     // showed a generic bell with the raw type name (added 29 Sep 2026).
@@ -106,6 +107,7 @@ const typeLabels = {
     new_breeding_plan: 'Breeding',
     future_breeding_ready: 'Breeding Ready',
     marketplace_inquiry: 'Inquiry',
+    transfer_request: 'Transfer request',
     gecko_of_the_day: 'Gecko of the Day',
     hatch_alert: 'Hatch Alert',
     feeding_due: 'Feeding',
