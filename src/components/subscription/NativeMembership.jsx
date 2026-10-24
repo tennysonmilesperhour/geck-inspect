@@ -7,9 +7,12 @@ import { resolveTier, TIER_LIMITS } from '@/lib/tierLimits';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
+import OutcomeHeadline from '@/components/subscription/OutcomeHeadline';
+import { captureEvent } from '@/lib/posthog';
+import { currentOutcomeVariant } from '@/lib/outcomePromise';
 
 // Product identity is configured in RevenueCat; localized prices come from Apple.
-export default function NativeMembership({ user }) {
+export default function NativeMembership({ user, userChecked = true }) {
   const { offerings, isReady, sync, customerInfo, storeTier } = useRevenueCat();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
@@ -35,8 +38,14 @@ export default function NativeMembership({ user }) {
     } finally { setBusy(false); }
   };
   return <section className="mx-auto max-w-xl p-6 space-y-5">
-    <h1 className="text-3xl font-semibold">Geck Inspect membership</h1>
-    <p>Collection care, breeding records, morph identification, and tools that grow with your geckos.</p>
+    <OutcomeHeadline
+      surface="ios"
+      pending={!userChecked || (signedIn && !isReady)}
+      enabled={existingTier === 'free' && !hasDirectMembership}
+      controlHeading="Geck Inspect membership"
+      controlLead="Collection care, breeding records, morph identification, and tools that grow with your geckos."
+      headingClassName="text-3xl font-semibold"
+    />
     {existingTier !== 'free' && <p role="status">Your {TIER_LIMITS[existingTier].label} access is active. Manage an existing plan through its original billing provider.</p>}
     <p>Prices below are the full recurring store price. Your store will show any eligible introductory offer before you confirm.</p>
     {!signedIn && <Button onClick={() => { window.location.href = '/AuthPortal'; }}>Sign in to view store plans</Button>}
@@ -50,7 +59,11 @@ export default function NativeMembership({ user }) {
         <p>{limits.maxGeckos == null ? 'Unlimited geckos' : `Up to ${limits.maxGeckos} geckos`}, {limits.monthlyMorphIDCredits} AI Morph IDs per month, and {plan.tier === 'breeder' ? 'breeding, lineage, and export tools' : 'expanded care and collection tools'}.</p>
         <p>{pkg.product.priceString} {plan.period}</p>
         <Button disabled={busy || alreadyCovered || hasDirectMembership} onClick={() => act(async () => {
+          const funnel = { tier: plan.tier, interval: plan.period === 'per year' ? 'annual' : 'monthly', paywall_outcome: currentOutcomeVariant() };
+          captureEvent('native_purchase_started', funnel);
           await purchasePackage(pkg);
+          // Store success is independent of the entitlement refresh.
+          captureEvent('native_purchase_completed', funnel);
           const tier = await sync();
           toast({ title: tier && tier !== 'free' ? `${TIER_LIMITS[tier].label} access is active` : 'Purchase received', description: tier && tier !== 'free' ? 'Your membership features are ready.' : 'Your store may still be processing this purchase. Refresh access shortly.' });
         })}>{alreadyCovered ? 'Included in your current access' : hasDirectMembership ? 'Manage your existing membership' : `Continue for ${pkg.product.priceString} ${plan.period}`}</Button>

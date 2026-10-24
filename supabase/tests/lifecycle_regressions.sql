@@ -1,5 +1,6 @@
 -- Lifecycle emails, the email delivery log and suppressions.
--- Regression checks for supabase/migrations/20261015151200_lifecycle_emails.sql.
+-- Regression checks for supabase/migrations/20261015151200_lifecycle_emails.sql
+-- and 20261024183300_lifecycle_spacing_allowance.sql (section 8).
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members, moves the clock with the p_now argument the
@@ -535,6 +536,41 @@ begin
   end if;
   if not public.email_is_suppressed(v_e) then
     raise exception 'FAIL: a complaint after erasure did not suppress the address';
+  end if;
+end $$;
+
+-- 8. The 20-hour spacing allows for the run's clock (20261024183300) ------
+--    Each ledger row is stamped with its run's start, which moves by a
+--    fraction of a second from hour to hour. A run that starts 0.2 seconds
+--    earlier in its minute than the one 20 hours before still sends the
+--    next step; the run 19 hours 45 minutes on does not.
+do $$
+declare
+  v_t0 timestamptz := (select t0 from _t0);
+  v_stamp timestamptz := (select t0 from _t0) + interval '50 minutes 0.306 seconds';
+  v_early timestamptz := (select t0 from _t0) + interval '50 minutes 0.306 seconds'
+                         + interval '20 hours' - interval '0.2 seconds';
+begin
+  -- Joined four hours before t0, no gecko: day0 now, day1 from a day old.
+  perform pg_temp.mk('clock', v_t0 - interval '4 hours');
+  perform public.enqueue_lifecycle_emails(v_stamp);
+  if (select l.created_date from public.lifecycle_email_sends l
+       where l.email = pg_temp.em('clock') and l.step = 'day0') is distinct from v_stamp then
+    raise exception 'FAIL: day0 was not stamped with the run''s start';
+  end if;
+
+  if pg_temp.step_for('clock', v_stamp + interval '20 hours' - interval '15 minutes') is not null then
+    raise exception 'FAIL: day1 is due 19 hours 45 minutes after day0';
+  end if;
+  if pg_temp.step_for('clock', v_early) is distinct from 'day1' then
+    raise exception 'FAIL: a run 0.2 seconds early in its minute leaves day1 for the next hour';
+  end if;
+
+  -- The job sends it in that run, stamped with that run's start.
+  perform public.enqueue_lifecycle_emails(v_early);
+  if (select l.created_date from public.lifecycle_email_sends l
+       where l.email = pg_temp.em('clock') and l.step = 'day1') is distinct from v_early then
+    raise exception 'FAIL: the job did not send day1 in the run 0.2 seconds early';
   end if;
 end $$;
 

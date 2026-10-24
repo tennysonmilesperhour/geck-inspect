@@ -17,7 +17,7 @@ import { useToast } from '@/components/ui/use-toast';
 const SEX_OPTIONS = ['Male', 'Female', 'Unsexed'];
 
 /**
- * Minimal editor that surfaces ONLY the four fields MorphMarket requires.
+ * Editor for the fields needed to prepare a MorphMarket export.
  * Lets a breeder fix a gecko mid-export without leaving the page and
  * losing their batch state. Persists straight to Gecko.update and returns
  * the patched gecko via onSaved so the export page can refresh in place.
@@ -27,6 +27,7 @@ export default function QuickFixModal({ gecko, open, onClose, onSaved, missing =
   const [sex, setSex] = useState(gecko?.sex || '');
   const [traits, setTraits] = useState(gecko?.morphs_traits || '');
   const [price, setPrice] = useState(gecko?.asking_price ?? '');
+  const [hatchDate, setHatchDate] = useState(gecko?.hatch_date || '');
   const [imageUrls, setImageUrls] = useState(Array.isArray(gecko?.image_urls) ? gecko.image_urls : []);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -36,6 +37,7 @@ export default function QuickFixModal({ gecko, open, onClose, onSaved, missing =
     setSex(gecko.sex || '');
     setTraits(gecko.morphs_traits || (Array.isArray(gecko.morph_tags) ? gecko.morph_tags.join(', ') : ''));
     setPrice(gecko.asking_price ?? '');
+    setHatchDate(gecko.hatch_date || '');
     setImageUrls(Array.isArray(gecko.image_urls) ? gecko.image_urls : []);
   }, [gecko]);
 
@@ -105,6 +107,7 @@ export default function QuickFixModal({ gecko, open, onClose, onSaved, missing =
       const patch = {};
       if (sex && sex !== gecko.sex) patch.sex = sex;
       if (traits !== (gecko.morphs_traits || '')) patch.morphs_traits = traits;
+      if (hatchDate !== (gecko.hatch_date || '')) patch.hatch_date = hatchDate || null;
       const priceNum = price === '' ? null : Number(price);
       if (priceNum !== (gecko.asking_price ?? null)) patch.asking_price = priceNum;
       if (JSON.stringify(imageUrls) !== JSON.stringify(gecko.image_urls || [])) {
@@ -189,6 +192,16 @@ export default function QuickFixModal({ gecko, open, onClose, onSaved, missing =
             )}
             <p className="text-[10px] text-slate-500 mt-1">
               MorphMarket reads its trait tags from this text. Use the same labels you'd put in a listing.
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="mm-hatch-date" className="text-xs uppercase tracking-wide text-slate-400">
+              Hatch date
+            </Label>
+            <Input id="mm-hatch-date" type="date" value={hatchDate} onChange={(e) => setHatchDate(e.target.value)} />
+            <p className="text-[10px] text-slate-500 mt-1">
+              Used to estimate maturity. If the date is unknown, choose maturity on MorphMarket before importing.
             </p>
           </div>
 

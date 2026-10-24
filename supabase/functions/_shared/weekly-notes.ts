@@ -70,14 +70,124 @@ export function weeklyNoteSlugs(): string[] {
 // The visitor order: every note visitors may get, in step order. A visitor
 // who later makes an account carries on through weeklyNoteSlugs(), and the
 // shared ledger skips the notes they already had.
-export function weeklyNoteVisitorSlugs(): string[] {
-  return [...WEEKLY_NOTES].filter((note) => note.visitors).sort((a, b) => a.step - b.step).map((note) => note.slug);
+export function weeklyNoteVisitorSlugs(month?: number): string[] {
+  return visitorNotes(month).map((note) => note.slug);
+}
+
+// A visitor's notes in step order: every note marked for visitors that is
+// in season (when a month is given). The audience does not apply: a
+// visitor has no record to read.
+function visitorNotes(month?: number) {
+  return [...WEEKLY_NOTES]
+    .filter((note) => note.visitors && inSeason(note, month))
+    .sort((a, b) => a.step - b.step);
+}
+
+// Months are UTC calendar months, read as the northern hemisphere's
+// seasons, where nearly every member lives. No month given: every note.
+function inSeason(note: { months: readonly number[] | null }, month?: number): boolean {
+  if (!month || !note.months) return true;
+  return note.months.includes(month);
 }
 
 // The catalog step of each note in weeklyNoteVisitorSlugs(), in the same
 // order, so a visitor's ledger row records the same step a member's would.
-export function weeklyNoteVisitorSteps(): number[] {
-  return [...WEEKLY_NOTES].filter((note) => note.visitors).sort((a, b) => a.step - b.step).map((note) => note.step);
+export function weeklyNoteVisitorSteps(month?: number): number[] {
+  return visitorNotes(month).map((note) => note.step);
+}
+
+// What weekly_note_facts returns for a member: their record, read to pick
+// the notes that fit and to fill a note's lead.
+export type WeeklyNoteFacts = {
+  gecko_count?: number | null;
+  // The gecko waiting longest for a weigh-in (never weighed first).
+  stale?: { id?: string | null; name?: string | null; last_weight_grams?: number | string | null; last_weight_date?: string | null } | null;
+  // A female, an adult one first.
+  female?: { id?: string | null; name?: string | null; adult?: boolean | null } | null;
+  // Has a breeding plan, an egg or a clutch on record.
+  breeder?: boolean | null;
+};
+
+// Does a note's audience fit this member's record?
+function fitsMember(audience: string, facts: WeeklyNoteFacts): boolean {
+  switch (audience) {
+    case "everyone":
+      return true;
+    case "keepers":
+      return Number(facts.gecko_count) > 0;
+    case "female":
+      return Boolean(facts.female && cleanName(facts.female.name));
+    case "adult-female":
+      return Boolean(facts.female && facts.female.adult === true && cleanName(facts.female.name));
+    case "breeders":
+      return facts.breeder === true;
+    default:
+      return false;
+  }
+}
+
+// The notes a member may get this month, in step order, with each note's
+// catalog step. send-email hands both to claim_weekly_note_from, which
+// picks the first one the member has not had. A note left out (out of
+// season, or not for this member yet) stays unsent, so it can still come
+// later: in its season, or once the member's record fits.
+export function weeklyNoteMemberPlan(facts: WeeklyNoteFacts, month?: number): { slugs: string[]; steps: number[] } {
+  const notes = [...WEEKLY_NOTES]
+    .filter((note) => inSeason(note, month) && fitsMember(note.audience, facts))
+    .sort((a, b) => a.step - b.step);
+  return { slugs: notes.map((n) => n.slug), steps: notes.map((n) => n.step) };
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// A gecko's name as members typed it, safe for one line of an email.
+function cleanName(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+}
+
+function possessive(name: string): string {
+  return /s$/i.test(name) ? `${name}'` : `${name}'s`;
+}
+
+// The values a lead's placeholders take for this member. A missing value
+// is left out, so any lead alternative that needs it is skipped.
+function leadValues(facts: WeeklyNoteFacts): Record<string, string> {
+  const out: Record<string, string> = {};
+  const gecko = cleanName(facts.stale?.name);
+  if (gecko) {
+    out.gecko = gecko;
+    out.gecko_s = possessive(gecko);
+    const grams = Number(facts.stale?.last_weight_grams);
+    if (Number.isFinite(grams) && grams > 0) out.gecko_weight = `${Math.round(grams * 10) / 10} g`;
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(facts.stale?.last_weight_date ?? ""));
+    if (m && MONTHS[Number(m[2]) - 1]) out.gecko_weighed = `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}`;
+  }
+  const female = cleanName(facts.female?.name);
+  if (female) {
+    out.female = female;
+    out.female_s = possessive(female);
+  }
+  return out;
+}
+
+// The first lead alternative whose placeholders all fill, filled in; null
+// when none does (the note then starts with its usual first paragraph).
+export function weeklyNoteLead(lead: readonly string[], facts: WeeklyNoteFacts | null | undefined): string | null {
+  if (!facts || !lead.length) return null;
+  const values = leadValues(facts);
+  for (const alt of lead) {
+    let missing = false;
+    const filled = alt.replace(/\{([a-z_]+)\}/g, (_, key: string) => {
+      if (!(key in values)) missing = true;
+      return values[key] ?? "";
+    });
+    if (!missing) return filled;
+  }
+  return null;
 }
 
 // The email for one slug, or null for a slug the catalog does not have. A
@@ -86,7 +196,7 @@ export function weeklyNoteVisitorSteps(): number[] {
 // signed out), and null for a members-only note.
 export function weeklyNoteEmail(
   slug: string,
-  { hasGecko, visitor = false }: { hasGecko: boolean; visitor?: boolean } = { hasGecko: true },
+  { hasGecko, visitor = false, facts = null }: { hasGecko: boolean; visitor?: boolean; facts?: WeeklyNoteFacts | null } = { hasGecko: true },
 ): WeeklyNoteEmail | null {
   const note = WEEKLY_NOTES.find((n) => n.slug === slug);
   if (!note) return null;
@@ -101,11 +211,41 @@ export function weeklyNoteEmail(
     };
   }
   const noGecko = hasGecko === false && Boolean(note.pathNoGecko && note.ctaNoGecko);
+  const lead = weeklyNoteLead(note.lead, facts);
   return {
     title: note.subject,
     preheader: note.preview,
-    body: note.body,
+    body: lead ? `${lead}\n\n${note.body}` : note.body,
     url: noGecko ? (note.pathNoGecko as string) : note.path,
     cta: noGecko ? (note.ctaNoGecko as string) : note.cta,
+  };
+}
+
+// The re-permission email: sent once to a member the relevance gate leaves
+// out (no gecko on record, no sign-in in 60 days, no recent yes), asking
+// whether they still want the notes. The button opens /KeepNotes, which
+// asks for one press before recording a yes (mail scanners open links).
+// docs/marketing/email-brain.md, section 5.
+export const REPERMISSION_TYPE = "weekly_notes_repermission";
+
+export const REPERMISSION_REASON =
+  "This is a one-time email from Geck Inspect about Weekly Gecko Notes. You are getting it because the notes are on for your Geck Inspect account.";
+
+export function isRepermissionType(type: string): boolean {
+  return type === REPERMISSION_TYPE;
+}
+
+export function repermissionEmail(): WeeklyNoteEmail {
+  return {
+    title: "Still keeping crested geckos?",
+    preheader: "One press keeps Weekly Gecko Notes coming. Do nothing and they stop.",
+    body: [
+      "Hi,",
+      "Tennyson here, from Geck Inspect. You have been getting Weekly Gecko Notes, one short crested gecko tip a week. You have not signed in for a couple of months and there is no gecko in your collection yet, so I would rather ask than keep filling your inbox.",
+      "If you still want them, press the button below. That is all it takes.",
+      "If not, do nothing. The notes stop here, and nothing else about your account changes. Sign in or add a gecko any time and they start again.",
+    ].join("\n\n"),
+    url: "/KeepNotes",
+    cta: "Yes, keep them coming",
   };
 }

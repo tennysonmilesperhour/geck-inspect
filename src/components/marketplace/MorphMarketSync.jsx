@@ -158,7 +158,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
           <p className="text-xs text-slate-400 leading-relaxed">
             Build a curated CSV you can upload directly to{' '}
             <a
-              href="https://www.morphmarket.com/me/ads/import/"
+              href="https://www.morphmarket.com/inventory/import"
               target="_blank"
               rel="noopener noreferrer"
               className="text-emerald-400 underline underline-offset-2"
@@ -167,6 +167,12 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
               <ExternalLink className="w-3 h-3 inline ml-0.5" />
             </a>
             . Open the batch builder to filter by weight, hatch date, sex, and status, then add picks to the export. Or quick-export every "For Sale" gecko at once, or import a MorphMarket CSV back into Geck Inspect.
+          </p>
+
+          <p className="text-xs text-amber-200">
+            Before uploading, check maturity, shipping, and your MorphMarket Seller Profile currency.
+            Keep Animal_ID unchanged and Synchronize/Replace off for a partial batch.
+            Re-importing can erase existing values even when columns are omitted. Fill missing prices, hatch dates and weights before uploading updates.
           </p>
 
           <Link to={createPageUrl('MorphMarketExport')} className="block">

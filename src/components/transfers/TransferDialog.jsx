@@ -24,8 +24,10 @@ import {
  * Seller's transfer form. Replaces the three browser pop-ups the gecko and
  * reptile records used to show. On send it creates the transfer, emails the
  * buyer their claim link, and shows the link so the seller can copy it too.
+ * initialEmail fills the buyer's address when the owner arrives from a
+ * buyer's transfer request (the passport page's "ask the owner" button).
  */
-export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', onTransferred }) {
+export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', initialEmail = '', onTransferred }) {
   const [email, setEmail] = useState('');
   const [price, setPrice] = useState('');
   const [message, setMessage] = useState('');
@@ -37,7 +39,7 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
   // Start fresh each time the dialog opens.
   useEffect(() => {
     if (open) {
-      setEmail('');
+      setEmail(initialEmail || '');
       setPrice(animal?.asking_price != null ? String(animal.asking_price) : '');
       setMessage('');
       setErrors({});
@@ -45,7 +47,7 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
       setResult(null);
       setCopied(false);
     }
-  }, [open, animal?.id]);
+  }, [open, animal?.id, initialEmail]);
 
   const animalName = animal?.name || (animalType === 'gecko' ? 'this gecko' : 'this animal');
 

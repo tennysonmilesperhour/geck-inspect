@@ -146,6 +146,7 @@ const About                 = lazy(() => import('./pages/About'));
 const Contact               = lazy(() => import('./pages/Contact'));
 // Signed-out unsubscribe from notification emails (link in every email).
 const Unsubscribe           = lazy(() => import('./pages/Unsubscribe'));
+const KeepNotes             = lazy(() => import('./pages/KeepNotes'));
 const WeeklyNotes           = lazy(() => import('./pages/WeeklyNotes'));
 const Terms                 = lazy(() => import('./pages/Terms'));
 const MarketplaceVerification = lazy(() => import('./pages/MarketplaceVerification'));
@@ -165,6 +166,7 @@ const RecognitionPublic     = lazy(() => import('./pages/Recognition'));
 const PedigreeTracker       = lazy(() => import('./pages/PedigreeTracker'));
 const BreedingRecords       = lazy(() => import('./pages/BreedingRecords'));
 const CrestedGeckoPrice     = lazy(() => import('./pages/CrestedGeckoPrice'));
+const Compare               = lazy(() => import('./pages/Compare'));
 const OpenData              = lazy(() => import('./pages/OpenData'));
 // The one-tap log reminder links open (/log?type=...&gecko=...).
 const QuickLog              = lazy(() => import('./pages/QuickLog'));
@@ -398,6 +400,7 @@ const AuthenticatedApp = () => {
           <Route path="/About" element={<About />} />
           <Route path="/Contact" element={<Contact />} />
           <Route path="/Unsubscribe" element={<Unsubscribe />} />
+          <Route path="/KeepNotes" element={<KeepNotes />} />
           <Route path="/WeeklyNotes" element={<WeeklyNotes />} />
           <Route path="/Terms" element={<Terms />} />
           <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
@@ -415,6 +418,8 @@ const AuthenticatedApp = () => {
           <Route path="/breeding-records" element={<BreedingRecords />} />
           <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
           <Route path="/data" element={<OpenData />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/compare/:slug" element={<Compare />} />
           <Route path="/Today" element={<PublicPageShell><TodayPublic /></PublicPageShell>} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           {/* Breeder is indexable under both /Breeder?slug= (legacy) and
@@ -497,12 +502,15 @@ const AuthenticatedApp = () => {
         <Route path="/Breeder/:slug" element={<Breeder />} />
         <Route path="/About" element={<About />} />
         <Route path="/Unsubscribe" element={<Unsubscribe />} />
+        <Route path="/KeepNotes" element={<KeepNotes />} />
         <Route path="/WeeklyNotes" element={<WeeklyNotes />} />
         <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
         <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
         <Route path="/breeding-records" element={<BreedingRecords />} />
         <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
         <Route path="/data" element={<OpenData />} />
+        <Route path="/compare" element={<Compare />} />
+        <Route path="/compare/:slug" element={<Compare />} />
         {/* Reminder notifications link here: a short form for the named
             geckos, prefilled, that saves in one tap (works offline). */}
         <Route path="/log" element={<QuickLog />} />
