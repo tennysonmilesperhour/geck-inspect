@@ -4,6 +4,7 @@ import path from 'path'
 import { execSync } from 'child_process'
 import { fileURLToPath } from 'url'
 import directBarrelImports from './scripts/vite-plugins/direct-barrel-imports.mjs'
+import leanLucideIcons from './scripts/vite-plugins/lean-lucide-icons.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const srcDir = path.resolve(__dirname, 'src')
@@ -105,6 +106,9 @@ export default defineConfig({
     // One import per icon and date function in the build, so the shared
     // chunks below hold only what the shared code uses (see the plugin).
     directBarrelImports({ root: __dirname }),
+    // A smaller drawing function for those icons than lucide-react 1's
+    // own, which kept the main script under its budget (see the plugin).
+    leanLucideIcons({ root: __dirname }),
   ],
   resolve: {
     alias: {
