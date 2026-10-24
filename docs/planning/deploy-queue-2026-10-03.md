@@ -434,7 +434,8 @@ Admin > Breeder verification > Code is there saved `verified by an admin`.
 Saved the breeder profile and confirmed the public badge at
 https://geckinspect.com/Breeder/thegeckogarden links to the correct store.
 The card now explains the hand check and retaining the code until verified.
-The code remains in About pending Tennyson's permission to remove it.
+Tennyson approved removing the code on 24 October. Removed only that paragraph
+and confirmed it is absent from the public About text.
 
 Live CSV proof: created two disposable Pet records, exported them through the
 production batch builder and uploaded the unchanged CSV with Synchronize/Replace
@@ -451,8 +452,8 @@ MorphMarket listings are now archived; permanent deletion remains with Tennyson.
 Data-loss finding: a separate upload with Price, DOB and Weight columns removed
 still cleared both dates and weights and changed both prices to $0. The importer
 adds missing fields as blank. Restored all values with the full file. Warnings
-now explain this directly. Export remains available; the choice to block
-incomplete exports instead was put to Tennyson and remains pending. See the
+now explain this directly. Tennyson chose to keep export available with a
+clear warning on 24 October, without blocking incomplete files. See the
 reference for exact test values and scope. For Sale shipping, payments and
 sold-state flows were not exercised.
 

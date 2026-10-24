@@ -90,7 +90,7 @@ Completed on 24 October 2026 in Tennyson's signed-in accounts, with his permissi
 - Edge logs show successful function requests at 18:55:45 and 18:56:18 UTC. The HTTP 200 is the function response; the saved row records the blocked outbound read.
 - Admin > Breeder verification > Code is there completed the hand check. Row became `verified`, `needs_review=false`, `last_check_result="verified by an admin"`.
 - Saved My Store to publish the breeder profile and correct its older external store link. https://geckinspect.com/Breeder/thegeckogarden visibly shows Verified MorphMarket seller, linking to the supplied store.
-- Hand review is the documented process when blocked. Leave the code until verified. Tennyson was asked before removing it; it remains in About pending his answer.
+- Hand review is the documented process when blocked. Leave the code until verified. Tennyson approved removal on 24 October. Removed only the code paragraph and confirmed it is absent from the public About text.
 
 ### CSV create, update and return
 
@@ -107,4 +107,4 @@ Downloaded those two Animal Records from MorphMarket. Its 42-column CSV uses sta
 
 The separate missing-column test cleared prices, dates and weights as described above; the full CSV restored them. All four Geck Inspect test records and both MorphMarket test listings are now archived. Permanent deletion was left to Tennyson. Existing real animals were not changed.
 
-Scope: live acceptance covers Not For Sale creation and update, the hand-check badge and return import. For Sale shipping, payment and sold-state workflows were not exercised. Export remains available with a clear data-loss warning; Tennyson's preference between warning and blocking incomplete exports was requested and remains pending.
+Scope: live acceptance covers Not For Sale creation and update, the hand-check badge and return import. For Sale shipping, payment and sold-state workflows were not exercised. Tennyson chose on 24 October to keep export available with a clear data-loss warning, without blocking incomplete exports.
