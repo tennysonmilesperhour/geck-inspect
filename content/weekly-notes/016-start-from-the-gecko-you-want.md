@@ -1,7 +1,8 @@
 ---
 step: 16
 slug: start-from-the-gecko-you-want
-subject: Start from the gecko you want
+subject: Plan a pairing backward, from the gecko you want
+preview: The reverse calculator lists the pairings that produce it, ranked by odds.
 cta: Plan backward
 path: /calculator/reverse
 sources: src/pages/ReverseCalculator.jsx:34-42; src/pages/ReverseCalculator.jsx:176-184; src/pages/ReverseCalculator.jsx:264-295; src/lib/genetics/reverseSolver.js:163-170; src/lib/genetics/reverseSolver.js:357; src/lib/genetics/reverseSolver.js:466-471; src/lib/genetics/reverseSolver.js:531-543; src/lib/genetics/calculatorCatalog.js:586-592; scripts/lib/accepted-facts.mjs:34-35

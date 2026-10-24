@@ -48,11 +48,35 @@ export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export const SLUG_MAX = 64;
 
 // The front matter keys, in the order the docs list them.
-export const KEYS = ['step', 'slug', 'subject', 'cta', 'path', 'cta_no_gecko', 'path_no_gecko', 'visitor_cta', 'visitor_path', 'visitors', 'sources'];
-const REQUIRED = ['step', 'slug', 'subject', 'cta', 'path', 'sources'];
+export const KEYS = ['step', 'slug', 'subject', 'preview', 'lead', 'audience', 'months', 'cta', 'path', 'cta_no_gecko', 'path_no_gecko', 'visitor_cta', 'visitor_path', 'visitors', 'sources'];
+
+// Which members a note is for (front matter "audience"; leave it out for
+// everyone). send-email reads the member's record (weekly_note_facts) to
+// decide. Visitors have no record, so the audience does not apply to them:
+// they signed up for the tips and get every note marked for visitors.
+export const AUDIENCES = ['everyone', 'keepers', 'female', 'adult-female', 'breeders'];
+
+// The placeholders a lead may use, with the sample values the checks fill
+// in. send-email fills them from the member's record; a lead alternative
+// with any placeholder it cannot fill is skipped.
+export const LEAD_PLACEHOLDERS = {
+  gecko: 'Mango',
+  gecko_s: "Mango's",
+  gecko_weight: '12.4 g',
+  gecko_weighed: 'Oct 2',
+  female: 'Peach',
+  female_s: "Peach's",
+};
+// Alternatives in a lead are separated by this, tried in order.
+export const LEAD_SEPARATOR = ' || ';
+const REQUIRED = ['step', 'slug', 'subject', 'preview', 'cta', 'path', 'sources'];
 
 export const LIMITS = {
   subject: [1, 60],
+  // The inbox line after the subject; most apps show 40 to 90 characters.
+  preview: [20, 100],
+  // One lead sentence or two, filled in.
+  lead: [20, 200],
   cta: [1, 40],
   words: [80, 200],
 };
@@ -65,7 +89,7 @@ const rel = (path) => path.slice(REPO_ROOT.length + 1);
  * One note file, parsed. Never throws: anything that does not fit the
  * format goes into `errors`, which noteProblems reports.
  *
- * Returns { fileName, step, slug, subject, cta, path, ctaNoGecko,
+ * Returns { fileName, step, slug, subject, preview, cta, path, ctaNoGecko,
  * pathNoGecko, visitorCta, visitorPath, visitors, sources, body,
  * paragraphs, bodyStartLine, errors }. visitors is false only for a note
  * marked "visitors: no" (it goes to members only).
@@ -80,6 +104,10 @@ export function parseNote(fileName, text) {
     step: null,
     slug: null,
     subject: null,
+    preview: null,
+    lead: [],
+    audience: 'everyone',
+    months: null,
     cta: null,
     path: null,
     ctaNoGecko: null,
@@ -149,6 +177,23 @@ export function parseNote(fileName, text) {
   if (front.visitors === 'no' && 'visitor_path' in front) {
     errors.push('a note with visitors: no has no visitor button; drop visitor_cta and visitor_path');
   }
+  if ('audience' in front && !AUDIENCES.includes(front.audience)) {
+    errors.push(`audience "${front.audience}" must be one of ${AUDIENCES.join(', ')}`);
+  }
+  if ('months' in front) {
+    const mm = /^([1-9]|1[0-2])(?:-([1-9]|1[0-2]))?$/.exec(front.months);
+    if (!mm) errors.push(`months "${front.months}" must be one month (5) or a run of months (5-9, or 11-2 across the new year)`);
+    else {
+      const from = Number(mm[1]);
+      const to = mm[2] ? Number(mm[2]) : from;
+      const list = [];
+      for (let m = from; ; m = (m % 12) + 1) {
+        list.push(m);
+        if (m === to) break;
+      }
+      note.months = list;
+    }
+  }
 
   if ('step' in front) {
     if (/^[1-9]\d*$/.test(front.step)) note.step = Number(front.step);
@@ -156,6 +201,9 @@ export function parseNote(fileName, text) {
   }
   note.slug = front.slug ?? null;
   note.subject = front.subject ?? null;
+  note.preview = front.preview ?? null;
+  note.lead = front.lead ? front.lead.split(LEAD_SEPARATOR).map((t) => t.trim()) : [];
+  note.audience = front.audience ?? 'everyone';
   note.cta = front.cta ?? null;
   note.path = front.path ?? null;
   note.ctaNoGecko = front.cta_no_gecko ?? null;
@@ -469,6 +517,19 @@ export function noteProblems(note, { live = liveRoutes() } = {}) {
     if (n < lo || n > hi) out.push(`${label} is ${n} characters; it must be ${lo} to ${hi}`);
   };
   length('subject', note.subject, LIMITS.subject);
+  length('preview', note.preview, LIMITS.preview);
+  for (const [i, alt] of note.lead.entries()) {
+    const label = `lead ${i + 1}`;
+    const unknown = [...alt.matchAll(/\{([^{}]*)\}/g)].map((x) => x[1]).filter((k) => !(k in LEAD_PLACEHOLDERS));
+    if (unknown.length) out.push(`${label} has unknown placeholders ${unknown.map((k) => `{${k}}`).join(', ')} (allowed: ${Object.keys(LEAD_PLACEHOLDERS).map((k) => `{${k}}`).join(', ')})`);
+    const filled = alt.replace(/\{([a-z_]+)\}/g, (_, k) => LEAD_PLACEHOLDERS[k] ?? '');
+    if (/[{}]/.test(filled)) out.push(`${label} has a stray brace`);
+    length(label, filled, LIMITS.lead);
+    for (const why of writingProblems(filled)) out.push(`${label} ${why}`);
+  }
+  if (note.preview && note.subject && note.preview.toLowerCase().startsWith(note.subject.toLowerCase())) {
+    out.push('preview repeats the subject; it should add to it');
+  }
   length('cta', note.cta, LIMITS.cta);
   if (note.ctaNoGecko !== null) length('cta_no_gecko', note.ctaNoGecko, LIMITS.cta);
   if (note.visitorCta !== null) length('visitor_cta', note.visitorCta, LIMITS.cta);
@@ -476,7 +537,7 @@ export function noteProblems(note, { live = liveRoutes() } = {}) {
   if (words < LIMITS.words[0] || words > LIMITS.words[1]) {
     out.push(`body is ${words} words; it must be ${LIMITS.words[0]} to ${LIMITS.words[1]}`);
   }
-  const fields = [['subject', note.subject], ['cta', note.cta], ['cta_no_gecko', note.ctaNoGecko], ['visitor_cta', note.visitorCta], ['body', note.body]];
+  const fields = [['subject', note.subject], ['preview', note.preview], ['cta', note.cta], ['cta_no_gecko', note.ctaNoGecko], ['visitor_cta', note.visitorCta], ['body', note.body]];
   for (const [label, value] of fields) {
     if (value === null) continue;
     for (const why of writingProblems(value)) out.push(`${label} ${why}`);

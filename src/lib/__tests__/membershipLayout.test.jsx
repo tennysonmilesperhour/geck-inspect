@@ -21,7 +21,7 @@ vi.mock('@/entities/all', () => ({
   User: { me: async () => fx.member },
   PageConfig: { filter: async () => [] },
 }));
-vi.mock('@/lib/posthog', () => ({ captureEvent: () => {} }));
+vi.mock('@/lib/posthog', () => ({ captureEvent: () => {}, ensurePostHog: async () => null }));
 vi.mock('@/lib/telemetry', () => ({ reportError: () => {} }));
 vi.mock('@/lib/billingPortal', () => ({ openBillingPortal: vi.fn() }));
 vi.mock('@/lib/revenuecat', () => ({ isNativePlatform: () => false }));

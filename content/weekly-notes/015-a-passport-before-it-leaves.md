@@ -2,6 +2,8 @@
 step: 15
 slug: a-passport-before-it-leaves
 subject: Give your gecko a passport before it leaves
+preview: A public page and a QR card with the lineage and weights you logged.
+audience: keepers
 cta: Make a passport
 path: /MyGeckos
 cta_no_gecko: Read about hatchling records

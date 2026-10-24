@@ -81,7 +81,7 @@ describe('visitor buttons in the notes', () => {
     expect(weeklyNoteSlugs()).toContain('today-tells-you-what-is-due');
     const withButton = NOTES.find((n) => n.visitorPath);
     expect(weeklyNoteEmail(withButton.slug, { hasGecko: true, visitor: true })).toEqual({
-      title: withButton.subject, body: withButton.body, url: withButton.visitorPath, cta: withButton.visitorCta,
+      title: withButton.subject, preheader: withButton.preview, body: withButton.body, url: withButton.visitorPath, cta: withButton.visitorCta,
     });
     const own = NOTES.find((n) => n.visitors && !n.visitorPath);
     expect(weeklyNoteEmail(own.slug, { hasGecko: true, visitor: true })).toMatchObject({ url: own.path, cta: own.cta });
@@ -128,10 +128,10 @@ describe('send-email sends a visitor their note', () => {
     expect(db.table('profiles')).toHaveLength(0);
     expect(db.rpcCalls('email_has_login')).toHaveLength(0);
     expect(db.rpcCalls('email_unsubscribe_token')).toHaveLength(0);
-    expect(db.rpcCalls('claim_weekly_note')).toHaveLength(0);
+    expect(db.rpcCalls('claim_weekly_note_from')).toHaveLength(0);
     expect(db.rpcCalls('weekly_notes_subscriber_token')[0].args).toEqual({ p_email: 'ana@example.com' });
     expect(db.rpcCalls('claim_weekly_note_subscriber')[0].args).toEqual({
-      p_email: 'ana@example.com', p_slugs: weeklyNotes.weeklyNoteVisitorSlugs(), p_steps: weeklyNotes.weeklyNoteVisitorSteps(),
+      p_email: 'ana@example.com', p_slugs: weeklyNotes.weeklyNoteVisitorSlugs(new Date().getUTCMonth() + 1), p_steps: weeklyNotes.weeklyNoteVisitorSteps(new Date().getUTCMonth() + 1),
     });
 
     const note = NOTES.find((n) => n.slug === weeklyNotes.weeklyNoteVisitorSlugs()[1]);
@@ -142,7 +142,7 @@ describe('send-email sends a visitor their note', () => {
     expect(mail.text).toContain(weeklyNotes.WEEKLY_NOTES_VISITOR_REASON);
     expect(mail.text).toContain(`Stop Weekly Gecko Notes: ${SITE}/Unsubscribe?t=sub1.sig&scope=visitor`);
     expect(mail.text).toContain(`Geck Inspect, ${POSTAL}`);
-    expect(mail.html).toContain(`href="${SITE}/Unsubscribe?t=sub1.sig&amp;scope=visitor" style="color:#86efac;">Stop Weekly Gecko Notes</a>`);
+    expect(mail.html).toContain(`href="${SITE}/Unsubscribe?t=sub1.sig&amp;scope=visitor" style="color:#047857;">Stop Weekly Gecko Notes</a>`);
     // A visitor has no Settings page.
     expect(mail.html).not.toContain('Change preferences');
     expect(mail.html).not.toContain('/Settings');

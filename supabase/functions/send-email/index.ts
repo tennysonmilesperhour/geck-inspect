@@ -103,8 +103,8 @@
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
-import { isLifecycleType, lifecycleEmail, lifecycleReason } from "../_shared/lifecycle-copy.ts";
-import { isWeeklyNotesType, weeklyNoteEmail, weeklyNoteSlugs, weeklyNoteVisitorSlugs, weeklyNoteVisitorSteps, WEEKLY_NOTES_REASON, WEEKLY_NOTES_STOP_WORDS, WEEKLY_NOTES_VISITOR_REASON } from "../_shared/weekly-notes.ts";
+import { isLifecycleType, LIFECYCLE_SIGNOFF, lifecycleEmail, lifecycleReason } from "../_shared/lifecycle-copy.ts";
+import { isRepermissionType, isWeeklyNotesType, REPERMISSION_REASON, repermissionEmail, weeklyNoteEmail, weeklyNoteMemberPlan, weeklyNoteSlugs, weeklyNoteVisitorSlugs, weeklyNoteVisitorSteps, WEEKLY_NOTES_REASON, WEEKLY_NOTES_STOP_WORDS, WEEKLY_NOTES_VISITOR_REASON } from "../_shared/weekly-notes.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Geck Inspect <alerts@geckinspect.com>";
@@ -113,6 +113,13 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://geckinspect.com";
 const EMAIL_POSTAL_ADDRESS = (Deno.env.get("EMAIL_POSTAL_ADDRESS") || "").trim();
 const UNSUBSCRIBE_MAILTO = (Deno.env.get("UNSUBSCRIBE_MAILTO") || "").trim();
+// The getting-started emails and Weekly Gecko Notes are letters from a
+// person, so they can come from one ("Tennyson at Geck Inspect
+// <tennyson@geckinspect.com>") with replies going to a mailbox someone
+// reads. Both are optional: unset, those emails use EMAIL_FROM and no
+// Reply-To, as before. docs/marketing/email-brain.md says why.
+const EMAIL_FROM_PERSONAL = (Deno.env.get("EMAIL_FROM_PERSONAL") || "").trim();
+const EMAIL_REPLY_TO = (Deno.env.get("EMAIL_REPLY_TO") || "").trim();
 
 // Notification.type -> legacy email preference key.
 // See src/pages/Settings.jsx notificationTypes list for the keys the
@@ -152,6 +159,9 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   // An admin answered the member's support ticket. Rides the messages
   // preference, since it is a reply to something they wrote.
   support_reply: "new_message",
+  // A buyer who scanned a passport QR code asking the owner to transfer
+  // the gecko (request_passport_transfer). It is a message to the owner.
+  transfer_request: "new_message",
   // New-member emails in the first two weeks. Welcome, "add a gecko" and
   // the lineage email are product news to a new member; the two weigh-in
   // emails are care reminders, so they follow the care switch.
@@ -375,6 +385,15 @@ type RenderOptions = {
   unsubscribeWords?: string;
   // false leaves out "Change preferences" (a visitor has no Settings page).
   settingsLink?: boolean;
+  // The line the inbox shows after the subject. Without it, mail apps
+  // show the first words of the email instead.
+  preheader?: string;
+  // A plain letter (light page, no heading, signed by a person) instead
+  // of the dark notification card. Used by the getting-started emails and
+  // Weekly Gecko Notes, which also come from EMAIL_FROM_PERSONAL.
+  letter?: boolean;
+  // The letter's sign-off, one line per entry.
+  signoff?: string[];
 };
 
 const DEFAULT_REASON = "You\u2019re getting this because email notifications are enabled in your Geck Inspect settings.";
@@ -387,23 +406,59 @@ function renderHtml(
   options: RenderOptions = {},
 ): string {
   const safeTitle = escapeHtml(title);
-  const safeBody = escapeHtml(body).replace(/\n/g, "<br>");
   const safeCta = escapeHtml(options.cta || "Open in Geck Inspect");
   const safeReason = escapeHtml(options.reason || DEFAULT_REASON);
   const words = options.unsubscribeWords || (unsubscribe.oneClick ? "unsubscribe from these emails" : "turn these emails off");
   const settings = options.settingsLink !== false;
   const unsubscribeWords = escapeHtml(settings ? words : `${words.charAt(0).toUpperCase()}${words.slice(1)}`);
-  const preferences = settings
-    ? `<a href="${SETTINGS_EMAIL_URL}" style="color:#86efac;">Change preferences</a> or `
-    : "";
   const postal = EMAIL_POSTAL_ADDRESS
     ? `<br>Geck Inspect, ${escapeHtml(EMAIL_POSTAL_ADDRESS)}`
     : "";
   // Escaped for the href attribute: a quote or bracket in the link can
   // never end the attribute and add markup to the email.
   const safeUrl = escapeHtml(absoluteLink(linkUrl));
+  // Hidden text the inbox shows after the subject, padded with
+  // zero-width spaces so the mail app does not pull body text in after it.
+  const preheader = options.preheader
+    ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:transparent;opacity:0;">${escapeHtml(options.preheader)}${"&#8203;&#160;".repeat(60)}</div>`
+    : "";
+
+  if (options.letter) {
+    const linkColor = "#047857";
+    const paragraphs = body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
+      .map((p) => `<p style="margin:0 0 16px 0;">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`).join("\n          ");
+    const signoff = (options.signoff || []).length
+      ? `<p style="margin:24px 0 0 0;">${options.signoff!.map(escapeHtml).join("<br>")}</p>`
+      : "";
+    const preferences = settings
+      ? `<a href="${SETTINGS_EMAIL_URL}" style="color:#6b7280;">Change preferences</a> or `
+      : "";
+    return `<!doctype html>
+<html><head><meta name="color-scheme" content="light"><title>${safeTitle}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+  ${preheader}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+    <tr><td align="center" style="padding:24px 16px;">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+        <tr><td style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1f2937;text-align:left;">
+          ${paragraphs}
+          <p style="margin:8px 0 16px 0;"><a href="${safeUrl}" style="display:inline-block;background:#047857;color:#ffffff;padding:12px 20px;border-radius:6px;font-weight:600;text-decoration:none;">${safeCta}</a></p>
+          ${signoff}
+          <p style="margin:40px 0 0 0;padding-top:16px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;line-height:1.5;">${safeReason} ${preferences}<a href="${escapeHtml(unsubscribe.page)}" style="color:${linkColor};">${unsubscribeWords}</a>.${postal}</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+  }
+
+  const safeBody = escapeHtml(body).replace(/\n/g, "<br>");
+  const preferences = settings
+    ? `<a href="${SETTINGS_EMAIL_URL}" style="color:#86efac;">Change preferences</a> or `
+    : "";
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#0d1f17;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  ${preheader}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d1f17;padding:24px 0;">
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#163026;border:1px solid rgba(134,239,172,0.2);border-radius:12px;">
@@ -455,6 +510,8 @@ function typeTag(type: string): string {
   return type.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 64) || "other";
 }
 
+type Envelope = { from?: string; replyTo?: string };
+
 async function sendEmail(
   to: string,
   subject: string,
@@ -462,6 +519,7 @@ async function sendEmail(
   html: string,
   headers?: Record<string, string>,
   tags?: Array<{ name: string; value: string }>,
+  envelope: Envelope = {},
 ) {
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
   const res = await fetch("https://api.resend.com/emails", {
@@ -471,7 +529,8 @@ async function sendEmail(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: EMAIL_FROM,
+      from: envelope.from || EMAIL_FROM,
+      ...(envelope.replyTo ? { reply_to: envelope.replyTo } : {}),
       to,
       subject,
       text,
@@ -505,11 +564,12 @@ async function sendWithRetry(
   html: string,
   headers?: Record<string, string>,
   tags?: Array<{ name: string; value: string }>,
+  envelope: Envelope = {},
 ) {
   await sleep(Math.random() * 8_000);
   for (let attempt = 1; ; attempt += 1) {
     try {
-      return await sendEmail(to, subject, text, html, headers, tags);
+      return await sendEmail(to, subject, text, html, headers, tags, envelope);
     } catch (err) {
       if (!(err instanceof RateLimited) || attempt >= 6) throw err;
       await sleep(Math.max(err.retryAfterMs, 1_000 * 2 ** attempt) + Math.random() * 2_000);
@@ -564,24 +624,39 @@ serve(async (req) => {
       return json({ delivered: 0, skipped: "lifecycle-without-facts" });
     }
     const facts = payload.facts as Record<string, unknown>;
-    const email = lifecycleEmail(type, facts);
+    const email = lifecycleEmail(type, facts, { canReply: Boolean(EMAIL_REPLY_TO) });
     if (!email) return json({ delivered: 0, skipped: "lifecycle-not-applicable" });
     title = email.title;
     body = email.body;
     url = email.url;
     render.cta = email.cta;
     render.reason = lifecycleReason(facts);
+    render.preheader = email.preheader;
+    render.letter = true;
+    render.signoff = LIFECYCLE_SIGNOFF;
   }
 
   // Weekly Gecko Notes: see the order in the header. Nothing in this block
   // or the checks after it writes anything; only the claim further down does.
-  const weekly = isWeeklyNotesType(type);
+  // The re-permission email goes through the same checks as a weekly note
+  // (its own switch, the postal address, a stop link that works signed
+  // out) and is claimed once per inbox, after every check.
+  const repermission = isRepermissionType(type);
+  if (repermission) {
+    if (!payload.repermission || typeof payload.repermission !== "object" || Array.isArray(payload.repermission)) {
+      return json({ delivered: 0, skipped: "repermission-without-run" });
+    }
+    if (!EMAIL_POSTAL_ADDRESS) {
+      return json({ delivered: 0, skipped: "repermission-no-postal-address" });
+    }
+  }
+  const weekly = isWeeklyNotesType(type) || repermission;
   if (weekly) {
     // Only enqueue_weekly_notes() sends this type, always with a run
     // marker. A notification row a member writes for themselves reaches
     // this function through the dispatcher with no weekly field, so it can
     // never send one (the same rule as lifecycle-without-facts).
-    if (!payload.weekly || typeof payload.weekly !== "object" || Array.isArray(payload.weekly)) {
+    if (!repermission && (!payload.weekly || typeof payload.weekly !== "object" || Array.isArray(payload.weekly))) {
       return json({ delivered: 0, skipped: "weekly-notes-without-run" });
     }
     if (!EMAIL_POSTAL_ADDRESS) {
@@ -600,7 +675,7 @@ serve(async (req) => {
     auth: { persistSession: false },
   });
 
-  if (weekly && (payload.weekly as Record<string, unknown>).audience === "visitor") {
+  if (weekly && !repermission && (payload.weekly as Record<string, unknown>).audience === "visitor") {
     return await sendVisitorNote(supabase, userEmail);
   }
 
@@ -675,13 +750,49 @@ serve(async (req) => {
       return json({ delivered: 0, skipped: "weekly-notes-no-token" });
     }
 
+    if (repermission) {
+      let claimed = false;
+      try {
+        const { data, error } = await supabase.rpc("claim_weekly_notes_repermission", { p_email: userEmail });
+        if (error) console.warn("send-email: re-permission claim failed", error.message);
+        else claimed = Boolean(data && typeof data === "object" && (data as Record<string, unknown>).claimed === true);
+      } catch (err) {
+        console.warn("send-email: re-permission claim threw", err);
+      }
+      if (!claimed) return json({ delivered: 0, skipped: "repermission-not-claimed" });
+      const email = repermissionEmail();
+      return deliver(supabase, userEmail, type, email.title, email.body, `${email.url}?t=${encodeURIComponent(token)}`, {
+        cta: email.cta,
+        reason: REPERMISSION_REASON,
+        unsubscribeWords: WEEKLY_NOTES_STOP_WORDS,
+        preheader: email.preheader,
+        letter: true,
+        signoff: LIFECYCLE_SIGNOFF,
+      }, unsubscribeLinks(token, "weekly"));
+    }
+
+    // The member's record: which notes fit them, and the lead that opens
+    // the note. Without it the member waits for the next run, so a note
+    // for breeders or keepers is never skipped over by mistake.
+    let facts: Record<string, unknown> | null = null;
+    try {
+      const { data, error } = await supabase.rpc("weekly_note_facts", { p_email: userEmail });
+      if (error) console.warn("send-email: weekly note facts failed", error.message);
+      else if (data && typeof data === "object" && !Array.isArray(data)) facts = data as Record<string, unknown>;
+    } catch (err) {
+      console.warn("send-email: weekly note facts threw", err);
+    }
+    if (!facts) return json({ delivered: 0, skipped: "weekly-notes-facts-failed" });
+    const plan = weeklyNoteMemberPlan(facts, new Date().getUTCMonth() + 1);
+
     // The claim: the last step before sending, after every check that can
     // skip. It is the only write, and it is what makes a note go once.
     let claim: Record<string, unknown> = {};
     try {
-      const { data, error } = await supabase.rpc("claim_weekly_note", {
+      const { data, error } = await supabase.rpc("claim_weekly_note_from", {
         p_email: userEmail,
-        p_slugs: weeklyNoteSlugs(),
+        p_slugs: plan.slugs,
+        p_steps: plan.steps,
       });
       if (error) {
         console.warn("send-email: weekly note claim failed", error.message);
@@ -703,7 +814,7 @@ serve(async (req) => {
 
     // The slugs came from the same catalog, so this is never null in
     // practice; it is checked so a bad answer can never send an empty email.
-    const note = weeklyNoteEmail(claimedSlug, { hasGecko: claim.has_gecko === true });
+    const note = weeklyNoteEmail(claimedSlug, { hasGecko: claim.has_gecko === true, facts });
     if (!note) {
       return json({ delivered: 0, skipped: "weekly-notes-unknown-slug" });
     }
@@ -713,6 +824,9 @@ serve(async (req) => {
     render.cta = note.cta;
     render.reason = WEEKLY_NOTES_REASON;
     render.unsubscribeWords = WEEKLY_NOTES_STOP_WORDS;
+    render.preheader = note.preheader;
+    render.letter = true;
+    render.signoff = LIFECYCLE_SIGNOFF;
   }
 
   return deliver(supabase, userEmail, type, title, body, url, render, unsubscribeLinks(token, weekly ? "weekly" : undefined));
@@ -736,12 +850,17 @@ async function deliver(
     : unsubscribe.oneClick
     ? `\nUnsubscribe from these emails: ${unsubscribe.page}`
     : `\nTurn these emails off in Settings: ${unsubscribe.page}`;
+  const signoff = render.letter && render.signoff?.length ? `\n\n${render.signoff.join("\n")}` : "";
   const text = `${body}\n\n${render.cta ? `${render.cta}: ` : ""}${textLink(absoluteLink(url))}` +
+    signoff +
     `\n\n${render.reason || DEFAULT_REASON}` +
     stopLine +
     (EMAIL_POSTAL_ADDRESS ? `\nGeck Inspect, ${EMAIL_POSTAL_ADDRESS}` : "");
   const tags = [{ name: "type", value: typeTag(type) }];
-  const delivery = sendWithRetry(userEmail, title, text, html, unsubscribeHeaders(unsubscribe), tags)
+  const envelope: Envelope = render.letter
+    ? { from: EMAIL_FROM_PERSONAL || EMAIL_FROM, replyTo: EMAIL_REPLY_TO || undefined }
+    : {};
+  const delivery = sendWithRetry(userEmail, title, text, html, unsubscribeHeaders(unsubscribe), tags, envelope)
     .then(async (result) => {
       await recordSent(supabase, result?.id, userEmail, typeTag(type));
       return { delivered: 1, id: result?.id };
@@ -761,6 +880,8 @@ async function deliver(
 // A visitor's Weekly Gecko Note (see the header). Every check that can skip
 // comes before the claim, and the claim is the only write.
 async function sendVisitorNote(supabase: RpcClient, userEmail: string): Promise<Response> {
+  // Seasonal notes wait for their months (weekly-notes.ts, inSeason).
+  const month = new Date().getUTCMonth() + 1;
   const suppressed = await isSuppressed(supabase, userEmail);
   if (suppressed === true) return json({ delivered: 0, skipped: "suppressed" });
   if (suppressed === null) return json({ delivered: 0, skipped: "weekly-notes-check-failed" });
@@ -781,10 +902,10 @@ async function sendVisitorNote(supabase: RpcClient, userEmail: string): Promise<
   try {
     const { data, error } = await supabase.rpc("claim_weekly_note_subscriber", {
       p_email: userEmail,
-      p_slugs: weeklyNoteVisitorSlugs(),
+      p_slugs: weeklyNoteVisitorSlugs(month),
       // The catalog step of each slug, so the ledger row says the same
       // step a member's would.
-      p_steps: weeklyNoteVisitorSteps(),
+      p_steps: weeklyNoteVisitorSteps(month),
     });
     if (error) {
       console.warn("send-email: visitor note claim failed", error.message);
@@ -810,5 +931,8 @@ async function sendVisitorNote(supabase: RpcClient, userEmail: string): Promise<
     reason: WEEKLY_NOTES_VISITOR_REASON,
     unsubscribeWords: WEEKLY_NOTES_STOP_WORDS,
     settingsLink: false,
+    preheader: note.preheader,
+    letter: true,
+    signoff: LIFECYCLE_SIGNOFF,
   }, unsubscribeLinks(token, "visitor"));
 }

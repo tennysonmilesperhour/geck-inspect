@@ -45,6 +45,9 @@ To reverse it:
 
 ## 2. The rules
 
+- **Relevance (since 20 October 2026).** Only members with at least one gecko on record, or who signed in within the last 60 days, are candidates (`20261020230000_email_relevance_and_outcomes.sql`). Their switch is untouched; signing in or adding a gecko makes them eligible again. Why: `docs/marketing/email-brain.md`, section 2.
+- **Every note has a `preview:` line** (20 to 100 characters, the grey text after the subject in the inbox), which must add to the subject, not repeat it. The build fails without one.
+
 - **Never twice.** A member never gets the same note twice, and a repeated or overlapping run cannot double-send.
 - **Spacing.** At most one weekly note per member in any 7 days, and none while the member is inside the 16-day getting-started window. At most one email of either kind (getting-started or weekly) per member in any 20 hours.
 - **Who.** Only members who can sign in (a confirmed, not deleted, not anonymous, not banned account, the same rules as the getting-started emails), with the master email switch on, the Weekly Gecko Notes switch on, and an address that has not bounced or reported spam.
@@ -224,13 +227,17 @@ Front matter: one `key: value` per line. Everything after the first `: ` is the 
 
 - `step` (required): an integer equal to NNN. Steps run 1 to N with no gaps.
 - `slug` (required): the file name after `NNN-`. Never renamed once published.
-- `subject` (required): the subject line and the email heading, 1 to 60 characters.
+- `subject` (required): the subject line, 1 to 60 characters. Say what is inside, with a number or a crested gecko term where it fits (clear beats clever; `docs/marketing/email-brain.md`).
+- `preview` (required, since 20 October 2026): the grey line the inbox shows after the subject, 20 to 100 characters. It adds to the subject (the useful number, the payoff) and never repeats it.
+- `lead` (optional, since 24 October 2026): an opening sentence or two from the member's record, put before the body. Placeholders: `{gecko}` and `{gecko_s}` (the gecko waiting longest for a weigh-in, and its possessive), `{gecko_weight}` and `{gecko_weighed}` (its last weight and date), `{female}` and `{female_s}` (a female, an adult one first). Give alternatives separated by ` || `; send-email uses the first one whose placeholders all fill, or none. Filled with sample values, each must pass the writing rules and run 20 to 200 characters. Members only.
+- `audience` (optional): `everyone` (the default), `keepers` (a gecko on record), `female`, `adult-female` (35 g or 18 months) or `breeders` (a breeding plan, an egg or a clutch). Members whose record does not fit skip the note until it does. Visitors are not affected.
+- `months` (optional): the months the note may go in, `5` or a run such as `5-9` or `11-2` (UTC, northern hemisphere seasons). Out of season, the note waits; members and visitors get the next note instead.
 - `cta` (required): the button words, 1 to 40 characters.
 - `path` (required): an in-app path from the live pages, starting with a single `/`. Not `/log`, not a bare `/Pedigree` or `/GeckoDetail`, not `/blog`, not a retired page, not an admin or internal page (`NOT_FOR_NOTES` in `scripts/lib/weekly-notes.mjs`: the Admin panel, Image Import, Training, the sign-in page, a bare forum post or profile, the marketplace export), no query string. A `#anchor` only on `/Settings`, and only one that exists there.
 - `cta_no_gecko` and `path_no_gecko` (optional, both or neither): the button for members with no gecko in their collection.
 - `sources` (required): `; `-separated `file:line` or `file:start-end` references to the repo lines behind every fact in the note. For reviewers and the scheduled writer; never sent.
 
-Body: plain text paragraphs separated by one blank line; lines inside a paragraph are joined with a space. 80 to 200 words. No greeting and no sign-off, no links, URLs or paths, no markdown or HTML characters (# * _ ` [ ] < >). Each note makes one practical point and asks for one action, which matches the button. send-email escapes the body, turns line breaks into line breaks in the HTML, and adds the button and the footer.
+Body: plain text paragraphs separated by one blank line; lines inside a paragraph are joined with a space. 80 to 200 words. No greeting and no sign-off (send-email signs it "Tennyson"), no links, URLs or paths, no markdown or HTML characters (# * _ ` [ ] < >). Each note makes one practical point and asks for one action, which matches the button. send-email escapes the body, turns line breaks into line breaks in the HTML, and adds the button and the footer.
 
 Example, `content/weekly-notes/001-heat-is-the-bigger-risk.md`:
 
@@ -238,7 +245,8 @@ Example, `content/weekly-notes/001-heat-is-the-bigger-risk.md`:
 ---
 step: 1
 slug: heat-is-the-bigger-risk
-subject: Heat is the bigger risk for a crested gecko
+subject: 82°F: the heat line for a crested gecko
+preview: Days of 72 to 78°F, nights a little cooler. Most homes never need extra heat.
 cta: Open the temperature guide
 path: /CareGuide/temperature
 sources: src/data/husbandry-facts.js:67-75; src/data/care-guide.js:240-266
@@ -251,7 +259,13 @@ The number to remember is 82°F. ...
 
 ## 7. Reading the numbers (read-only queries)
 
-Delivery, opens and clicks for the whole series, by week (the same view the admin scoreboard reads):
+What each note made members do (came back to the app, recorded something, turned the notes off), the number that counts (`docs/marketing/email-brain.md`, section 4):
+
+```sql
+select * from public.email_outcomes(60) where kind like 'weekly%';
+```
+
+Delivery, opens and clicks for the whole series, by week (the same view the admin scoreboard reads; empty until Resend's webhook is connected):
 
 ```sql
 select * from public.email_delivery_stats where email_type = 'weekly_notes' order by week desc;

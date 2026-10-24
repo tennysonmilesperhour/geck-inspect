@@ -81,6 +81,10 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       identifyUser(basic);
       if (event === 'SIGNED_IN') captureEvent('login_completed');
+      // No email yet (a Facebook account made with only a phone number).
+      // Profiles are keyed by email, so there is nothing to load until the
+      // member adds and confirms one (AddEmailGate).
+      if (!session.user.email) return;
       // Defer I/O outside Supabase's synchronous auth callback. A completed
       // profile read must still belong to the current session before applying.
       Promise.resolve().then(() => loadUserProfile(session.user)).then((enriched) => {
@@ -264,6 +268,7 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       isGuest,
       isLoadingAuth,
+      needsEmail: isAuthenticated && !!user && !user.is_guest && !user.email,
       // Kept for API compatibility with components that destructure these
       isLoadingPublicSettings: false,
       authError: null,

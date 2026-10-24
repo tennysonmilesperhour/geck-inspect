@@ -1,6 +1,6 @@
 -- Lifecycle emails, the email delivery log and suppressions.
 -- Regression checks for supabase/migrations/20261015151200_lifecycle_emails.sql
--- and 20261019001200_lifecycle_spacing_allowance.sql (section 8).
+-- and 20261024183300_lifecycle_spacing_allowance.sql (section 8).
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members, moves the clock with the p_now argument the
@@ -539,7 +539,7 @@ begin
   end if;
 end $$;
 
--- 8. The 20-hour spacing allows for the run's clock (20261019001200) ------
+-- 8. The 20-hour spacing allows for the run's clock (20261024183300) ------
 --    Each ledger row is stamped with its run's start, which moves by a
 --    fraction of a second from hour to hour. A run that starts 0.2 seconds
 --    earlier in its minute than the one 20 hours before still sends the

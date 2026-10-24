@@ -76,6 +76,7 @@ import {
 // works with no signal (the dialog code is already here for the command
 // palette).
 import LogSheet from '@/components/navigation/LogSheet';
+import { useHideOnScroll } from '@/lib/useHideOnScroll';
 import { NOT_QUIET_FILTER, isQuietNotification, markAllNotificationsRead } from '@/lib/notificationsApi';
 import { listenForPushRotation, syncPushSubscription } from '@/lib/webPush';
 
@@ -170,6 +171,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   const { toggleSidebar, isMobileOpen } = useSidebar();
 
+  // The phone bottom bar slides off the bottom while scrolling down and
+  // comes back on the first scroll up. A new page starts with it showing.
+  const [mainScrollEl, setMainScrollEl] = useState(null);
+  const [bottomNavHidden, setBottomNavHidden] = useHideOnScroll(mainScrollEl, { resetKey: location.pathname });
+
   // Phones open on Today, the first tab (review item E3 25). Only the bare
   // "/" a cold open, a sign-in or the phone app lands on is moved; the
   // Dashboard stays one tap away in the menu, and wider screens keep it as
@@ -182,6 +188,16 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   // The Log tab's sheet (feeding, weigh-in, shed or Field Mode).
   const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const bottomNavAway = bottomNavHidden && !logSheetOpen && !isMobileOpen;
+
+  // Floating notices and the feedback button sit just above the bar, so they
+  // follow it down (see [data-follows-bottom-bar] in layout-theme.css).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (bottomNavAway) root.dataset.bottomBarAway = '';
+    else delete root.dataset.bottomBarAway;
+    return () => { delete root.dataset.bottomBarAway; };
+  }, [bottomNavAway]);
 
   // The phone header is glass that floats over the page, so the page pads
   // its top by the header's height (--top-bar-h, read in index.css). It is
@@ -1331,7 +1347,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           {/* Bottom padding leaves room for the tab bar (phones) and for
               the floating notices, so the end of a page can scroll clear. */}
-          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(var(--bottom-bar-h)+0.5rem+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
+          <div ref={setMainScrollEl} className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(var(--bottom-bar-h)+0.5rem+var(--floating-notices-h,0px))] md:pb-[var(--floating-notices-h,0px)]">
             <PaymentIssueBanner user={user} />
             <AppShellContext.Provider value={true}>
               {/* Keyed by path so moving to another page clears a crashed one. */}
@@ -1347,8 +1363,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         {/* Phone bottom bar (review item E3 25): Today, Geckos, Log, More.
             Log opens a short sheet; More opens the full menu. */}
         <nav
-          className="gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
+          className={`gecko-bottom-nav gecko-bottom-nav--bar liquid-glass liquid-glass--bottom fixed bottom-0 left-0 right-0 z-40 md:hidden flex ${bottomNavAway ? 'is-scrolled-away' : ''}`}
           aria-label="Main"
+          onFocus={() => setBottomNavHidden(false)}
         >
           {PHONE_TABS.map((tab) => {
             const Icon = NAV_ICON_MAP[tab.icon] || Menu;

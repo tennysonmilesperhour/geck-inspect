@@ -2,6 +2,7 @@
 step: 11
 slug: reading-het-labels
 subject: What "100% het" and "possible het" really mean
+preview: Both are claims about the parents. Only one is guaranteed.
 cta: Open your family trees
 path: /Lineage
 cta_no_gecko: Open the Genetics Guide

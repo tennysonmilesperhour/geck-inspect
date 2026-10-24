@@ -1,7 +1,9 @@
 ---
 step: 1
 slug: heat-is-the-bigger-risk
-subject: Heat is the bigger risk for a crested gecko
+subject: 82°F: the heat line for a crested gecko
+preview: Days of 72 to 78°F, nights a little cooler. Most homes never need extra heat.
+months: 5-9
 cta: Open the temperature guide
 path: /CareGuide/temperature
 sources: src/data/husbandry-facts.js:67-75; src/data/care-guide.js:240-266

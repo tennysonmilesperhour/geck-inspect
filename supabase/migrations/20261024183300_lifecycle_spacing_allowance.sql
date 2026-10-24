@@ -1,8 +1,10 @@
 -- Getting-started emails: the 20-hour spacing allows for the run's clock
 -- (19 Oct 2026; docs/planning/lifecycle-emails-2026-10.md). Safe to run
--- more than once: one create or replace. Dated after 20261018152154, the
--- newest file in production when this was written, and after
--- 20261018172000 (Weekly Gecko Notes, sixth round, waiting in a draft PR).
+-- more than once: one create or replace. Written on 19 Oct as
+-- 20261019001200 and held while deployments were paused; re-dated on 24
+-- Oct to sort after the files that went live in between, the last being
+-- 20261024182000 (Weekly Gecko Notes, sixth round). None of them changes
+-- lifecycle_email_candidates.
 --
 -- What it fixes, in plain words:
 --
@@ -35,7 +37,9 @@
 -- Not changed: the rule in weekly_notes_candidates (no weekly note within
 -- 20 hours of a getting-started email) compares a stamp from 35 past with
 -- a weekly run at 50 past, so its boundary is always 15 minutes from any
--- run and a fraction of a second cannot move a member across it.
+-- run and a fraction of a second cannot move a member across it. The same
+-- rule in weekly_notes_repermission_candidates (20261024150000) runs at 55
+-- past, 20 minutes from the boundary.
 
 -- 7. Who is due a lifecycle email ------------------------------------------
 --
@@ -43,7 +47,7 @@
 -- (select * from public.lifecycle_email_candidates();) whether the switch
 -- is on or not. At most one row per member: the earliest step that is due.
 -- At most one lifecycle email per member in any 20 hours, with 10 minutes
--- allowed for the hourly run's clock (from 20261019001200).
+-- allowed for the hourly run's clock (from 20261024183300).
 
 create or replace function public.lifecycle_email_candidates(p_now timestamptz default now())
 returns table (email text, step text, gecko_id text, facts jsonb)
@@ -73,7 +77,7 @@ as $function$
        )
        -- One lifecycle email per member in any 20 hours, so a member who
        -- is due two steps at once (the switch was just turned on) gets them
-       -- a day apart, not in the same minute. Changed in 20261019001200:
+       -- a day apart, not in the same minute. Changed in 20261024183300:
        -- 10 minutes are allowed for the run's clock. Each stamp is the
        -- start of an hourly run, which moves by a fraction of a second, and
        -- an exact 20 hours left a member out when a run started that much

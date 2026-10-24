@@ -14,7 +14,7 @@ import * as weeklyNotes from '../../../supabase/functions/_shared/weekly-notes.t
 import { WEIGH_IN_DAYS } from '../../data/husbandry-facts.js';
 import { fakeFetch, fakeSupabase, loadFunction, postJson } from './edgeHarness';
 
-const { lifecycleEmail, lifecycleReason, LIFECYCLE_TYPES } = lifecycleCopy;
+const { lifecycleEmail, lifecycleReason, LIFECYCLE_SIGNOFF, LIFECYCLE_TYPES } = lifecycleCopy;
 
 const ENV = {
   SUPABASE_URL: 'https://project.supabase.co',
@@ -53,16 +53,19 @@ const SAMPLES = [
 const SITE = 'https://geckinspect.com';
 
 function previewOf(title, type, facts) {
-  const email = lifecycleEmail(type, facts);
+  const email = lifecycleEmail(type, facts, { canReply: true });
   return [
     `### ${title}`,
     '',
     `Subject: ${email.title}`,
+    `Preview: ${email.preheader}`,
     '',
     '```text',
     email.body,
     '',
     `[ ${email.cta} ]  ${SITE}${email.url}`,
+    '',
+    ...LIFECYCLE_SIGNOFF,
     '',
     lifecycleReason(facts),
     'Change preferences or unsubscribe from these emails.',
@@ -145,7 +148,7 @@ describe('lifecycle copy', () => {
 
   it('copes with no name, an address in the name field, and a gecko with no name', () => {
     expect(lifecycleEmail('lifecycle_day1', { first_name: null }).body.startsWith('Hi,')).toBe(true);
-    expect(lifecycleEmail('lifecycle_day0', { first_name: 'sam@example.com', gecko_count: 0 }).title).toBe('Welcome to Geck Inspect');
+    expect(lifecycleEmail('lifecycle_day0', { first_name: 'sam@example.com', gecko_count: 0 }).title).toBe('Start with one gecko');
     const unnamed = lifecycleEmail('lifecycle_day7', { ...MANGO, gecko_name: '  ' });
     expect(unnamed.title).toBe('Time to weigh your gecko');
     expect(unnamed.cta).toBe("Log your gecko's weight");
@@ -208,10 +211,44 @@ describe('send-email sends lifecycle emails', () => {
     });
   });
 
+  it('is a letter from Tennyson with its own preview line', async () => {
+    const { net, send } = setup();
+    await send({ user_email: 'sam@example.com', type: 'lifecycle_day3', facts: MANGO });
+    const mail = net.requests[0].body;
+    const preheader = lifecycleEmail('lifecycle_day3', MANGO).preheader;
+    expect(mail.html).toContain(`opacity:0;">${preheader.replace(/'/g, '&#39;')}`);
+    expect(mail.html).not.toContain('<h1');
+    expect(mail.html).toContain('Tennyson<br>Geck Inspect');
+    expect(mail.text).toContain('\n\nTennyson\nGeck Inspect\n\n');
+    // No personal sender set: the usual From and no Reply-To.
+    expect(mail.from).toBe('Geck Inspect <alerts@geckinspect.com>');
+    expect(mail.reply_to).toBeUndefined();
+    expect(mail.text).not.toContain('Hit reply');
+  });
+
+  it('comes from a person, and asks a question, once replies reach one', async () => {
+    const { net, send } = setup({ env: { EMAIL_FROM_PERSONAL: 'Tennyson at Geck Inspect <tennyson@geckinspect.com>', EMAIL_REPLY_TO: 'inbox@example.com' } });
+    await send({ user_email: 'sam@example.com', type: 'lifecycle_day0', facts: MANGO });
+    const mail = net.requests[0].body;
+    expect(mail.from).toBe('Tennyson at Geck Inspect <tennyson@geckinspect.com>');
+    expect(mail.reply_to).toBe('inbox@example.com');
+    expect(mail.text).toContain('Hit reply and tell me.');
+  });
+
+  it('every variant has a preview line that adds to the subject', () => {
+    for (const [, type, facts] of SAMPLES) {
+      const email = lifecycleEmail(type, facts, { canReply: true });
+      expect(email.preheader.length).toBeGreaterThanOrEqual(20);
+      expect(email.preheader.length).toBeLessThanOrEqual(100);
+      expect(email.preheader.toLowerCase().startsWith(email.title.toLowerCase())).toBe(false);
+      expect(`${email.preheader}\n${email.body}`).not.toMatch(/\u2014|\u2013|--/);
+    }
+  });
+
   it('ignores a title or body in the payload, so only the approved copy goes out', async () => {
     const { net, send } = setup();
     await send({ user_email: 'sam@example.com', type: 'lifecycle_day1', title: 'Buy now', body: 'spam', facts: { first_name: 'Sam' } });
-    expect(net.requests[0].body.subject).toBe('Start with the gecko you know best');
+    expect(net.requests[0].body.subject).toBe('The two-minute way to add your first gecko');
     expect(net.requests[0].body.text).not.toContain('spam');
   });
 

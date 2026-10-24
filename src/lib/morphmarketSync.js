@@ -50,6 +50,14 @@ function timestampSlug() {
  */
 const MM_COLUMNS = [
   {
+    // Bulk Import 2.0 requires an Animal ID and matches rows on it, so
+    // uploading the file again updates the listings instead of adding
+    // copies. MorphMarket allows letters, numbers and - / . _ (no spaces).
+    header: 'Animal_ID',
+    exportFn: (g) => morphMarketAnimalId(g),
+    importKey: 'gecko_id_code',
+  },
+  {
     header: 'Title',
     exportFn: (g) => {
       // MorphMarket extracts traits from the title, so we combine
@@ -144,11 +152,21 @@ const MM_COLUMNS = [
     importKey: 'marketplace_description',
   },
   {
-    header: 'Images',
+    // MorphMarket's help pages call this field "Photo URLs".
+    header: 'Photo URLs',
     exportFn: (g) => (Array.isArray(g.image_urls) ? g.image_urls.join(',') : ''),
     importKey: 'image_urls',
   },
 ];
+
+/**
+ * The Animal ID for a gecko: its Geck Inspect ID code with anything
+ * MorphMarket does not allow taken out, or the record id when it has none.
+ */
+export function morphMarketAnimalId(gecko) {
+  const clean = (v) => String(v || '').trim().replace(/\s+/g, '-').replace(/[^A-Za-z0-9\-/._]/g, '');
+  return clean(gecko.gecko_id_code) || clean(gecko.id);
+}
 
 // ─── Export ─────────────────────────────────────────────────────────────────
 
@@ -228,7 +246,7 @@ export function parseMorphMarketCSV(csvText) {
   // Build column index map
   const colIndex = {};
   headers.forEach((h, i) => {
-    colIndex[h.toLowerCase()] = i;
+    colIndex[headerKey(h)] = i;
   });
 
   const records = [];
@@ -236,12 +254,22 @@ export function parseMorphMarketCSV(csvText) {
     const fields = parseCSVLine(records_raw[i]);
     if (fields.length === 0) continue;
 
-    const get = (name) => {
-      const idx = colIndex[name.toLowerCase()];
-      return idx != null ? (fields[idx] || '').trim() : '';
+    // MorphMarket's own export and older files spell some headers
+    // differently ("Photo Urls", "Birth Date", "Animal Id"), so each field
+    // takes the first of its names present. Case, spaces and underscores
+    // do not matter.
+    const get = (...names) => {
+      for (const name of names) {
+        const idx = colIndex[headerKey(name)];
+        if (idx != null) return (fields[idx] || '').trim();
+      }
+      return '';
     };
 
     const record = {};
+
+    const animalId = get('Animal_ID', 'Animal ID', 'AnimalID');
+    if (animalId) record.gecko_id_code = animalId;
 
     // Name: derive from Title or Traits
     const title = get('Title');
@@ -274,7 +302,7 @@ export function parseMorphMarketCSV(csvText) {
     }
 
     // DOB / hatch date
-    const dob = get('DOB');
+    const dob = get('DOB', 'Birth Date', 'Birthdate', 'Hatch Date');
     if (dob) record.hatch_date = dob;
 
     // Weight
@@ -285,11 +313,11 @@ export function parseMorphMarketCSV(csvText) {
     }
 
     // Description
-    const desc = get('Description');
+    const desc = get('Description', 'Desc');
     if (desc) record.notes = desc;
 
     // Images
-    const images = get('Images');
+    const images = get('Images', 'Photo URLs', 'Photos');
     if (images) {
       record.image_urls = images.split(',').map((u) => u.trim()).filter(Boolean);
     }
@@ -302,6 +330,10 @@ export function parseMorphMarketCSV(csvText) {
   }
 
   return { records, warnings };
+}
+
+function headerKey(name) {
+  return String(name).replace(/^\uFEFF/, '').toLowerCase().replace(/[\s_]+/g, '');
 }
 
 /**
