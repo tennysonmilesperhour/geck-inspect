@@ -238,12 +238,12 @@ export function isRepermissionType(type: string): boolean {
 export function repermissionEmail(): WeeklyNoteEmail {
   return {
     title: "Still keeping crested geckos?",
-    preheader: "One press keeps Weekly Gecko Notes coming. Do nothing and they stop.",
+    preheader: "Tell me if you want Weekly Gecko Notes to keep coming. Do nothing and they stop.",
     body: [
       "Hi,",
-      "Tennyson here, from Geck Inspect. You have been getting Weekly Gecko Notes, one short crested gecko tip a week. You have not signed in for a couple of months and there is no gecko in your collection yet, so I would rather ask than keep filling your inbox.",
-      "If you still want them, press the button below. That is all it takes.",
-      "If not, do nothing. The notes stop here, and nothing else about your account changes. Sign in or add a gecko any time and they start again.",
+      "Tennyson here, from Geck Inspect. You have been getting Weekly Gecko Notes, one short crested gecko tip a week. You have not opened Geck Inspect for a couple of months and there is no gecko in your collection yet, so I would rather ask than keep filling your inbox.",
+      "If you still want them, press the button below, then press Yes on the page it opens.",
+      "If not, do nothing. The notes stop here, and nothing else about your account changes. Open Geck Inspect or add a gecko any time and they start again.",
     ].join("\n\n"),
     url: "/KeepNotes",
     cta: "Yes, keep them coming",

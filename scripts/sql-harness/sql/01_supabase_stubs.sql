@@ -91,6 +91,24 @@ alter table auth.users owner to supabase_auth_admin;
 alter table auth.users enable row level security;  -- prod: RLS on, no policies, no API grants
 grant all on auth.users to postgres, dashboard_user;
 
+-- The columns of auth.sessions the Weekly Gecko Notes activity rule reads
+-- (types as in production: refreshed_at has no time zone). A saved session
+-- that refreshes updates these, while last_sign_in_at stays put.
+create table if not exists auth.sessions (
+  id uuid not null primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz,
+  updated_at timestamptz,
+  not_after timestamptz,
+  refreshed_at timestamp,
+  user_agent text,
+  ip inet
+);
+create index if not exists sessions_user_id_idx on auth.sessions (user_id);
+alter table auth.sessions owner to supabase_auth_admin;
+alter table auth.sessions enable row level security;
+grant all on auth.sessions to postgres, dashboard_user;
+
 -- Bodies copied verbatim from production pg_get_functiondef.
 create or replace function auth.uid() returns uuid language sql stable as $function$
   select

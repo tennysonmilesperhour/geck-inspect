@@ -45,7 +45,7 @@ To reverse it:
 
 ## 2. The rules
 
-- **Relevance (since 20 October 2026).** Only members with at least one gecko on record, or who signed in within the last 60 days, are candidates (`20261020230000_email_relevance_and_outcomes.sql`). Their switch is untouched; signing in or adding a gecko makes them eligible again. Why: `docs/marketing/email-brain.md`, section 2.
+- **Relevance (since 20 October 2026).** Only members with at least one gecko on record, or who used the app within the last 60 days, are candidates (`20261020230000_email_relevance_and_outcomes.sql`; since `20261024150000` also a yes on purpose within a year; since `20261024210200` "used the app" counts a saved session refreshing and app activity, not only a typed sign-in). Their switch is untouched; opening the app or adding a gecko makes them eligible again. Why: `docs/marketing/email-brain.md`, section 2.
 - **Every note has a `preview:` line** (20 to 100 characters, the grey text after the subject in the inbox), which must add to the subject, not repeat it. The build fails without one.
 
 - **Never twice.** A member never gets the same note twice, and a repeated or overlapping run cannot double-send.

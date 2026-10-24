@@ -2,7 +2,8 @@
 -- it, the claim's per-inbox lock, once per inbox, the keep button, the
 -- hourly job and its switch, and account erasure. Regression checks for
 -- supabase/migrations/20261024150000_weekly_notes_personal_and_repermission.sql
--- and 20261024201200_weekly_notes_repermission_fixes.sql.
+-- 20261024201200_weekly_notes_repermission_fixes.sql and
+-- 20261024210200_weekly_notes_activity_and_erasure.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser,
 -- the same way as supabase/tests/weekly_notes_regressions.sql. It moves the
@@ -162,6 +163,12 @@ begin
     raise exception 'FAIL: the re-permission job asked with its switch off';
   end if;
   update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_repermission_enabled';
+  -- Never while the weekly notes themselves are paused.
+  update public.app_settings set value = 'false'::jsonb where key = 'weekly_notes_enabled';
+  if public.enqueue_weekly_notes_repermission(now(), 1000) <> 0 then
+    raise exception 'FAIL: the re-permission job asked while the weekly notes were paused';
+  end if;
+  update public.app_settings set value = 'true'::jsonb where key = 'weekly_notes_enabled';
   v_n := public.enqueue_weekly_notes_repermission(now(), 1000);
   if not exists (
     select 1 from net.http_request_queue q
@@ -191,6 +198,73 @@ begin
   perform public.admin_erase_account('gone.keeper@example.com');
   if exists (select 1 from public.weekly_notes_repermission_sends where email = 'gone.keeper@example.com') then
     raise exception 'FAIL: account erasure left the re-permission record';
+  end if;
+end $$;
+
+-- 6. "Used the app" is last use, not last typed sign-in --------------------------------------------
+do $$
+declare
+  v_old timestamptz := now() - interval '120 days';
+  v_uid uuid;
+begin
+  -- A saved session that refreshed 10 days ago: the member is active.
+  perform pg_temp.mk('saved.session@example.com', v_old, v_old);
+  select id into v_uid from auth.users where email = 'saved.session@example.com';
+  insert into auth.sessions (id, user_id, created_at, updated_at, refreshed_at)
+  values (gen_random_uuid(), v_uid, v_old, now() - interval '10 days', (now() - interval '10 days') at time zone 'UTC');
+  if not pg_temp.wcand('saved.session@example.com') then
+    raise exception 'FAIL: a member whose saved session refreshed 10 days ago gets no weekly notes';
+  end if;
+  if pg_temp.rcand('saved.session@example.com') then
+    raise exception 'FAIL: a member whose saved session refreshed 10 days ago was asked whether they still want the notes';
+  end if;
+  -- Something they did in the app 10 days ago counts the same way.
+  perform pg_temp.mk('app.event@example.com', v_old, v_old);
+  insert into public.user_events (event_name, user_email, page, created_date)
+  values ('page_view', 'app.event@example.com', 'MyGeckos', now() - interval '10 days');
+  if not pg_temp.wcand('app.event@example.com') or pg_temp.rcand('app.event@example.com') then
+    raise exception 'FAIL: a member who used the app 10 days ago is treated as dormant';
+  end if;
+  -- A session last refreshed 90 days ago is not recent use.
+  perform pg_temp.mk('stale.session@example.com', v_old, v_old);
+  select id into v_uid from auth.users where email = 'stale.session@example.com';
+  insert into auth.sessions (id, user_id, created_at, updated_at, refreshed_at)
+  values (gen_random_uuid(), v_uid, v_old, now() - interval '90 days', (now() - interval '90 days') at time zone 'UTC');
+  if pg_temp.wcand('stale.session@example.com') or not pg_temp.rcand('stale.session@example.com') then
+    raise exception 'FAIL: a session last refreshed 90 days ago counted as recent use';
+  end if;
+end $$;
+
+-- 7. Not when another account on the inbox gets the notes ------------------------------------------
+do $$
+declare
+  v_old timestamptz := now() - interval '120 days';
+begin
+  perform pg_temp.mk('twin.ac8@gmail.com', v_old, v_old);
+  perform pg_temp.mk('twinac8+app@gmail.com', v_old, v_old);
+  insert into public.geckos (name, created_by) values ('Mango', 'twinac8+app@gmail.com');
+  if not pg_temp.wcand('twinac8+app@gmail.com') then
+    raise exception 'FAIL: setup, the account with a gecko should get the notes';
+  end if;
+  if pg_temp.rcand('twin.ac8@gmail.com') then
+    raise exception 'FAIL: an inbox whose other account gets the notes was asked whether it still wants them';
+  end if;
+end $$;
+
+-- 8. Account erasure clears a free-plan grant --------------------------------------------------------
+do $$
+declare
+  v_old timestamptz := now() - interval '120 days';
+begin
+  perform pg_temp.mk('comped.breeder@example.com', v_old, now());
+  insert into public.membership_comps (email, tier, starts_at, ends_at, reason)
+  values ('comped.breeder@example.com', 'breeder', now() - interval '10 days', now() + interval '60 days', 'founding breeder');
+  perform public.admin_erase_account('comped.breeder@example.com');
+  if exists (select 1 from public.membership_comps where lower(email) = 'comped.breeder@example.com') then
+    raise exception 'FAIL: account erasure left the address on a free-plan grant';
+  end if;
+  if exists (select 1 from public.membership_comps where reason = 'founding breeder') then
+    raise exception 'FAIL: account erasure left the reason on a free-plan grant';
   end if;
 end $$;
 
