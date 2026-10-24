@@ -2,6 +2,7 @@
 step: 6
 slug: humidity-rises-at-night
 subject: Humidity should rise at night and fall by day
+preview: 80 to 100% at night, 50 to 70% by day, and when to mist so it works.
 cta: Open the humidity guide
 path: /CareGuide/humidity
 sources: src/data/care-guide.js:269-295; src/data/care-guide.js:639-643

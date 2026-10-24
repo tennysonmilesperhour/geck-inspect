@@ -108,13 +108,13 @@ describe('lengths', () => {
     expect(words).toBeGreaterThanOrEqual(80);
     expect(words).toBeLessThanOrEqual(200);
     expect(wordCount(note.body)).toBe(words);
-    expect(LIMITS).toEqual({ subject: [1, 60], cta: [1, 40], words: [80, 200] });
+    expect(LIMITS).toEqual({ subject: [1, 60], preview: [20, 100], cta: [1, 40], words: [80, 200] });
   });
 });
 
 describe('writing rules', () => {
   it.each(NOTES.map((n) => [n.fileName, n]))('%s: subject, button and body follow the rules', (_name, note) => {
-    for (const text of [note.subject, note.cta, note.ctaNoGecko, note.body].filter((t) => t !== null)) {
+    for (const text of [note.subject, note.preview, note.cta, note.ctaNoGecko, note.body].filter((t) => t !== null)) {
       expect(writingProblems(text), text.slice(0, 60)).toEqual([]);
       expect(text).not.toMatch(/\u2014|\u2013|--| - |\d-\d/);
       expect(text).not.toMatch(/[#*_`[\]<>]/);
@@ -377,6 +377,7 @@ describe('the note file format', () => {
     'step: 1',
     'slug: heat-is-the-bigger-risk',
     'subject: Heat is the bigger risk',
+    'preview: Days of 72 to 78°F, nights a little cooler.',
     'cta: Open the temperature guide',
     'path: /CareGuide/temperature',
     'sources: src/data/husbandry-facts.js:68-75',
@@ -392,7 +393,7 @@ describe('the note file format', () => {
     const note = parseNote('001-heat-is-the-bigger-risk.md', good);
     expect(note.errors).toEqual([]);
     expect(note.body).toBe('Line one of a paragraph continues here.\n\nA second paragraph.');
-    expect(note.paragraphs.map((p) => p.line)).toEqual([9, 12]);
+    expect(note.paragraphs.map((p) => p.line)).toEqual([10, 13]);
   });
 
   it('is strict: unknown or repeated keys, a lone no-gecko key, CRLF and a missing fence are problems', () => {
@@ -433,7 +434,7 @@ describe('weekly-notes.ts', () => {
     const withButton = NOTES.find((n) => n.pathNoGecko);
     const withoutButton = NOTES.find((n) => !n.pathNoGecko);
     expect(weeklyNoteEmail(withButton.slug, { hasGecko: true })).toEqual({
-      title: withButton.subject, body: withButton.body, url: withButton.path, cta: withButton.cta,
+      title: withButton.subject, preheader: withButton.preview, body: withButton.body, url: withButton.path, cta: withButton.cta,
     });
     expect(weeklyNoteEmail(withButton.slug, { hasGecko: false })).toMatchObject({
       url: withButton.pathNoGecko, cta: withButton.ctaNoGecko,
@@ -504,7 +505,7 @@ describe('send-email sends Weekly Gecko Notes', () => {
     expect(mail.text).toContain(weeklyNotes.WEEKLY_NOTES_REASON);
     expect(mail.text).toContain(`Stop Weekly Gecko Notes: ${SITE}/Unsubscribe?t=p1.sig&scope=weekly`);
     expect(mail.text).toContain(`Geck Inspect, ${POSTAL}`);
-    expect(mail.html).toContain(`href="${SITE}/Unsubscribe?t=p1.sig&amp;scope=weekly" style="color:#86efac;">stop Weekly Gecko Notes</a>`);
+    expect(mail.html).toContain(`href="${SITE}/Unsubscribe?t=p1.sig&amp;scope=weekly" style="color:#047857;">stop Weekly Gecko Notes</a>`);
     expect(mail.html).toContain(weeklyNotes.WEEKLY_NOTES_REASON);
     expect(mail.html).toContain(`Geck Inspect, ${POSTAL}`);
     // One-click from the mail app stops only these too.

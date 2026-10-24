@@ -2,6 +2,7 @@
 step: 10
 slug: fire-it-up-before-the-photo
 subject: Fire it up before you take the photo
+preview: A fired-down gecko looks like a different animal. Mist first, then shoot.
 cta: Try Morph ID
 path: /Recognition
 sources: src/data/care-guide.js:580-587; src/data/genetics-sections.jsx:408-409; src/data/morph-guide.js:1399; src/data/morph-guide.js:858; src/data/morph-guide.js:862; src/components/morph-id/ViewPhotoUploader.jsx:177; src/pages/Recognition.jsx:307; src/pages/Recognition.jsx:317; src/pages/Recognition.jsx:639; src/pages/Recognition.jsx:357; src/lib/tierLimits.js:48; docs/specs/morph-id.md:28

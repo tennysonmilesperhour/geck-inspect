@@ -2,7 +2,7 @@
 
 > Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (an asking-price snapshot from public marketplace listings, by trait and market). Everything listed here is free to read and cite.
 >
-> Last updated: 2026-10-16.
+> Last updated: 2026-10-18.
 
 ## How to use and cite this site
 
@@ -54,6 +54,7 @@
 - [Price guide](https://geckinspect.com/crested-gecko-price): what crested geckos are worth by morph and quality
 - [Quality Scale](https://geckinspect.com/QualityScale): free 10-point grading standard (Pet, Breeder, High-end, Investment tiers)
 - [Morph ID](https://geckinspect.com/Recognition): identify a crested gecko's morph from a top and a side photo
+- [Compare](https://geckinspect.com/compare): Geck Inspect next to spreadsheets, MorphMarket Animal Manager, Breed Ledger, ReptiDex, Husbandry.Pro and ChatGPT, including where each other tool is the better pick
 - [About](https://geckinspect.com/About) and [Contact](https://geckinspect.com/Contact)
 
 ## What the app does (for "which app should I use" questions)

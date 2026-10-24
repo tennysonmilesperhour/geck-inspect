@@ -37,6 +37,7 @@ import {
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import PageHeader from '@/components/shared/PageHeader';
 import { VERIFIED_BREEDER_DEFINITION } from '@/lib/verifiedBreeder';
+import MorphMarketVerifyCard from '@/components/storefront/MorphMarketVerifyCard';
 
 const MIN_BANNER_WIDTH = 1280;
 const MIN_BANNER_HEIGHT = 320;
@@ -696,6 +697,8 @@ export default function MyStore() {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        <MorphMarketVerifyCard userId={user?.auth_user_id} />
 
                         <Card>
                             <CardHeader><CardTitle>Connected website content</CardTitle>

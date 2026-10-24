@@ -2,6 +2,7 @@
 step: 12
 slug: forty-grams-and-eighteen-months
 subject: 40 g and 18 months: both, not either
+preview: The minimums for a female's first season, and why the female sets the pace.
 cta: Check your females
 path: /MyGeckos
 cta_no_gecko: Read about breeding readiness

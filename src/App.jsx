@@ -124,6 +124,7 @@ const MorphInheritanceHub  = lazy(() =>
   import('./pages/MorphTaxonomyHub').then((m) => ({ default: m.MorphInheritanceHub })),
 );
 const PrivacyPolicy        = lazy(() => import('./pages/PrivacyPolicy'));
+const AddEmailGate         = lazy(() => import('@/components/auth/AddEmailGate'));
 // Content pages that were previously auth-gated despite being in the
 // sitemap, moved public so crawlers (and humans without an account) can
 // actually read them. The pages render their own public header/footer
@@ -164,6 +165,7 @@ const RecognitionPublic     = lazy(() => import('./pages/Recognition'));
 const PedigreeTracker       = lazy(() => import('./pages/PedigreeTracker'));
 const BreedingRecords       = lazy(() => import('./pages/BreedingRecords'));
 const CrestedGeckoPrice     = lazy(() => import('./pages/CrestedGeckoPrice'));
+const Compare               = lazy(() => import('./pages/Compare'));
 const OpenData              = lazy(() => import('./pages/OpenData'));
 // The one-tap log reminder links open (/log?type=...&gecko=...).
 const QuickLog              = lazy(() => import('./pages/QuickLog'));
@@ -273,7 +275,7 @@ const PostAuthRedirect = () => {
 };
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isAuthenticated, isGuest } = useAuth();
+  const { isLoadingAuth, isAuthenticated, isGuest, needsEmail } = useAuth();
   const [disabledPages, setDisabledPages] = useState(new Set());
 
   // Load page configs to enforce is_enabled at the router level.
@@ -337,6 +339,16 @@ const AuthenticatedApp = () => {
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
       </div>
+    );
+  }
+
+  // Signed in without an email (Facebook with only a phone number): the
+  // app needs one before anything else works.
+  if (needsEmail) {
+    return (
+      <Suspense fallback={LazyFallback}>
+        <AddEmailGate />
+      </Suspense>
     );
   }
 
@@ -404,6 +416,8 @@ const AuthenticatedApp = () => {
           <Route path="/breeding-records" element={<BreedingRecords />} />
           <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
           <Route path="/data" element={<OpenData />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/compare/:slug" element={<Compare />} />
           <Route path="/Today" element={<PublicPageShell><TodayPublic /></PublicPageShell>} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           {/* Breeder is indexable under both /Breeder?slug= (legacy) and
@@ -492,6 +506,8 @@ const AuthenticatedApp = () => {
         <Route path="/breeding-records" element={<BreedingRecords />} />
         <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
         <Route path="/data" element={<OpenData />} />
+        <Route path="/compare" element={<Compare />} />
+        <Route path="/compare/:slug" element={<Compare />} />
         {/* Reminder notifications link here: a short form for the named
             geckos, prefilled, that saves in one tap (works offline). */}
         <Route path="/log" element={<QuickLog />} />

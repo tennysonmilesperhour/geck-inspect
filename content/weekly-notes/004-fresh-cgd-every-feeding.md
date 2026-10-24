@@ -2,6 +2,7 @@
 step: 4
 slug: fresh-cgd-every-feeding
 subject: Fresh CGD, every feeding
+preview: 1 part powder to 2 parts water, thrown out after 24 to 36 hours.
 cta: Open Today
 path: /Today
 cta_no_gecko: Read the CGD basics

@@ -2,6 +2,8 @@ import { authRedirect } from '@/lib/nativeAuth';
 import { memberHome } from '@/lib/pwaLaunch';
 import { redirectFromSearch, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { isNativePlatform, detectPlatform } from '@/lib/revenuecat';
+import { signInWithApple, isAppleCancel } from '@/lib/appleSignIn';
+import { readSignInEmail, clearSignInEmail } from '@/lib/signInEmail';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { APP_LOGO_ICON_URL } from '@/lib/constants';
@@ -49,6 +51,40 @@ function GoogleIcon() {
   );
 }
 
+function FacebookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+      <path
+        fill="#ffffff"
+        d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"
+      />
+    </svg>
+  );
+}
+
+// Facebook sign-in stays off until the Facebook provider is enabled in
+// Supabase (Auth > Providers > Facebook). With it off, the button would
+// only show a "provider is not enabled" error.
+const FACEBOOK_SIGNIN_ENABLED = false;
+
+// Sign in with Apple (iPhone app only) stays off until the Apple provider
+// is enabled in Supabase with com.geckinspect.app as a client ID and a
+// build with the Sign in with Apple capability is on the device. App Store
+// Guideline 4.8 asks for it before Google or Facebook can show on iOS, so
+// those two follow this switch on iOS.
+const APPLE_SIGNIN_ENABLED = false;
+
+function AppleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M16.37 12.6c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.48.83-.72 0-1.82-.81-3-.79-1.54.02-2.96.9-3.76 2.28-1.6 2.78-.41 6.9 1.15 9.16.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.78.74 2.99.72 1.24-.02 2.02-1.12 2.77-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.42-3.65zM14.1 5.86c.63-.77 1.06-1.83.94-2.89-.91.04-2.02.61-2.67 1.37-.58.67-1.1 1.76-.96 2.8 1.02.08 2.06-.52 2.69-1.28z"
+      />
+    </svg>
+  );
+}
+
 // Where email links bring people back. Confirmation lands in the app;
 // password resets land on the "choose a new password" form.
 
@@ -66,7 +102,9 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     if (target) rememberPostAuthRedirect(target);
   }, []);
 
-  const [email, setEmail] = useState('');
+  // Prefilled after "Use my existing account" (AddEmailGate), used once.
+  const [email, setEmail] = useState(readSignInEmail);
+  useEffect(() => { clearSignInEmail(); }, []);
   const [password, setPassword] = useState('');
   // Asked at sign-up so new members are not shown as "Geck Inspect
   // member" everywhere until they find Settings (audit step 32). The
@@ -76,7 +114,10 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   // confirmed yet, so the form can offer to send the link again.
   const [unconfirmed, setUnconfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  // Which social sign-in is opening ('google' or 'facebook'), so only that
+  // button spins.
+  const [oauthLoading, setOauthLoading] = useState(null);
+  const onIos = detectPlatform() === 'ios';
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
   const [isForgot, setIsForgot] = useState(initialMode === 'forgot');
   const [signUpSent, setSignUpSent] = useState(false);
@@ -131,22 +172,40 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     }
   }, [initialMode]);
 
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
+  const handleAppleSignIn = async () => {
+    setOauthLoading('apple');
+    try {
+      await signInWithApple();
+      // On success, onAuthStateChange in AuthContext re-renders the app.
+    } catch (error) {
+      if (!isAppleCancel(error)) {
+        toast({ title: 'Apple sign-in failed', description: error.message, variant: 'destructive' });
+      }
+    } finally { setOauthLoading(null); }
+  };
+
+  const handleOAuthSignIn = async (provider) => {
+    const label = provider === 'facebook' ? 'Facebook' : 'Google';
+    setOauthLoading(provider);
     try {
       const native = isNativePlatform();
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google', options: { redirectTo: authRedirect(memberHome()), skipBrowserRedirect: native },
+        provider,
+        options: {
+          redirectTo: authRedirect(memberHome()),
+          skipBrowserRedirect: native,
+          ...(provider === 'facebook' ? { scopes: 'email' } : {}),
+        },
       });
       if (error) throw error;
       if (native) {
-        if (!data?.url) throw new Error('Google sign-in did not return a URL.');
+        if (!data?.url) throw new Error(`${label} sign-in did not return a URL.`);
         const { Browser } = await import('@capacitor/browser');
         await Browser.open({ url: data.url });
       }
     } catch (error) {
-      toast({ title: 'Google sign-in failed', description: error.message, variant: 'destructive' });
-    } finally { setIsGoogleLoading(false); }
+      toast({ title: `${label} sign-in failed`, description: error.message, variant: 'destructive' });
+    } finally { setOauthLoading(null); }
   };
 
   const handleSubmit = async (e) => {
@@ -419,20 +478,48 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                   </button>
                 </div>
 
-                {detectPlatform() !== "ios" && <>
+                {(!onIos || APPLE_SIGNIN_ENABLED) && <>
+                {onIos && (
+                  <Button
+                    type="button"
+                    onClick={handleAppleSignIn}
+                    disabled={!!oauthLoading || isLoading}
+                    className="w-full bg-white hover:bg-slate-100 text-black font-medium gap-2"
+                  >
+                    {oauthLoading === 'apple'
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <AppleIcon />}
+                    Continue with Apple
+                  </Button>
+                )}
+
                 {/* Google OAuth */}
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleGoogleSignIn}
-                  disabled={isGoogleLoading || isLoading}
+                  onClick={() => handleOAuthSignIn('google')}
+                  disabled={!!oauthLoading || isLoading}
                   className="w-full bg-white hover:bg-slate-100 text-slate-900 border-slate-300 font-medium gap-2"
                 >
-                  {isGoogleLoading
+                  {oauthLoading === 'google'
                     ? <Loader2 className="w-4 h-4 animate-spin" />
                     : <GoogleIcon />}
                   Continue with Google
                 </Button>
+
+                {FACEBOOK_SIGNIN_ENABLED && (
+                  <Button
+                    type="button"
+                    onClick={() => handleOAuthSignIn('facebook')}
+                    disabled={!!oauthLoading || isLoading}
+                    className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white font-medium gap-2"
+                  >
+                    {oauthLoading === 'facebook'
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <FacebookIcon />}
+                    Continue with Facebook
+                  </Button>
+                )}
 
                 {/* Divider */}
                 <div className="flex items-center gap-3">
@@ -554,7 +641,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
 
                   <Button
                     type="submit"
-                    disabled={isLoading || isGoogleLoading}
+                    disabled={isLoading || !!oauthLoading}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
                   >
                     {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}

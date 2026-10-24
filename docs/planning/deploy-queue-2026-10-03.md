@@ -309,3 +309,104 @@ owner, another member, anonymous visitor and admin. All 29 SQL regression files
 passed after the visual-search fixture explicitly marked its photos approved.
 The iOS release build passed all 3,419 unit tests, lint and the 172-route SEO audit.
 Physical-device testing of this new admin flow and TestFlight build remains pending.
+
+## 19 October: profile for members who add an email later
+
+Facebook sign-in (still switched off) can produce an account with no email
+when the Facebook account was made with a phone number. Profiles are keyed by
+email, so the signup trigger skips them. The app now shows an "Add your email"
+screen (`src/components/auth/AddEmailGate.jsx`) instead of loading, and a new
+trigger runs `handle_new_auth_user` when an account's email goes from empty to
+set, so confirming the email creates the profile.
+
+Migration: `20261019214000_profile_when_email_added.sql`. Additive (a new
+trigger only). Checked against production inside a rolled-back transaction.
+No current account lacks an email (73 of 73 have one), so nobody is affected
+until Facebook is switched on.
+
+Same day, the one case left: the email typed already has an account. The
+screen now offers "Use my existing account", which calls the new
+`discard-empty-account` edge function (declared in `supabase/config.toml`,
+verify_jwt true) to delete the caller's login, signs out, and opens sign-in
+with the email filled in. The function deletes only the caller, and only when
+that login has no email, no phone and nothing but social identities
+(`supabase/functions/_shared/empty-account.ts`). Passed `deno check`.
+## 19 October: automatic approval for public content
+
+The approval queue from 18 October now only gets the items that need a person.
+The database decides on each new post, comment, gallery photo and edit:
+
+- A held word (slurs, explicit words, threats, off-platform contact such as
+  WhatsApp or Telegram, scam payment phrases) always waits for an admin.
+- A member with rejected content, or approved content a moderator later hid,
+  always waits.
+- A member with at least 2 approved, visible items is approved at once.
+- Anyone else is approved at once for text with no photo or link; a photo or a
+  link waits.
+- An edit of something live follows the same rules. An edit of something
+  pending or rejected waits.
+
+The reason is stored in `approval_hold_reason` and shown in the admin queue.
+Held words live in `public.moderation_held_terms` (admin-only), so a word can be
+added in the SQL editor without a migration. No third-party service sees the
+content. Reports, blocking and moderator hide/remove are unchanged, and a
+moderator's hide survives the author's edit.
+
+Migration: `20261019230000_public_content_auto_approval.sql`. Additive, so the
+app version open in browsers keeps working. Verified on a fresh Postgres 16
+build of all migrations, applied twice safely; all 29 SQL regression files pass,
+including the rewritten `public_content_approval.sql`. 3,423 unit tests pass.
+The rule runs in the database, so the iOS build already uses it with no rebuild.
+
+## 19 October: Verified MorphMarket seller and the MorphMarket CSV
+
+MorphMarket has no "sign in with MorphMarket" and no public API, so a member
+proves they own a store with a code. On My Store, the MorphMarket store card
+gives a code like `GI-7K3P9Q`; the member pastes it into their MorphMarket
+About text and presses Check my store. The new `verify-morphmarket-store`
+function reads the public store page and, when the code is there, their
+breeder page shows "Verified MorphMarket seller" linking to the store. If
+MorphMarket blocks the automatic read, the store appears at the top of Admin >
+Breeder verification for a check by hand ("Code is there" or "Not there").
+
+Migration: `20261019233000_morphmarket_store_links.sql` (a new table and two
+admin functions, additive). Checked against production inside a block that
+rolled back: the table and grants apply, a second member cannot verify a store
+already verified to someone else, and signed-out visitors cannot run the admin
+functions. Function: `verify-morphmarket-store`, declared in
+`supabase/config.toml` with `verify_jwt = true`, so the merge deploys it. No
+secrets needed.
+
+Not yet known: whether MorphMarket lets a Supabase server read store pages.
+If every check lands in the admin queue, the automatic path is blocked and
+the hand check is the process.
+
+The MorphMarket CSV export now starts with an `Animal_ID` column (the Geck
+Inspect ID code, or the record id), which Bulk Import 2.0 requires and uses to
+update listings on a second upload instead of adding copies. The photo column
+is now `Photo URLs`, the name MorphMarket's help pages use. The importer reads
+MorphMarket's own header spellings (`Animal Id`, `Birth Date`, `Desc`,
+`Photo Urls`) and keeps the Animal ID as the gecko's ID code, so a second
+import of the same file is refused row by row instead of duplicating geckos.
+MorphMarket's site could not be reached from the build session, so the other
+column names are still unconfirmed; step 19 of the feature audit (the two-row
+test import) is still the proof.
+
+## 20 October: email overhaul (letters, preview lines, relevance gate)
+
+Migration: `20261020230000_email_relevance_and_outcomes.sql`. It replaces
+`weekly_notes_candidates` with the same signature (grants kept), adding one
+condition: a member needs a gecko on record or a sign-in within 60 days. It
+adds the admin-only `email_outcomes(p_days)`. No table or column changes. The
+gate was checked against production read-only: next week's list goes from 57
+members to 35.
+
+Function: `send-email` (already declared, so the merge deploys it). The
+getting-started emails and Weekly Gecko Notes are now plain letters signed by
+Tennyson, with a preview line, and use two new optional secrets,
+`EMAIL_FROM_PERSONAL` and `EMAIL_REPLY_TO`. Unset, they send from
+`EMAIL_FROM` as before and ask no reply question.
+
+Waiting on Tennyson: the Resend webhook (never connected; no open, click,
+bounce or complaint has ever been recorded) and the two secrets.
+`docs/marketing/email-brain.md`, section 1, has the links and values.

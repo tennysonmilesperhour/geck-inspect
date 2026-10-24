@@ -2,6 +2,7 @@
 step: 2
 slug: watch-the-weight-trend
 subject: One weight is a snapshot. The trend is the story.
+preview: Weigh the same way each time, and look into any drop of 5% in a month.
 cta: Open your geckos
 path: /MyGeckos
 cta_no_gecko: Add a gecko

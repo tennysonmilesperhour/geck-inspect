@@ -12,7 +12,7 @@ overrides:
   brace-expansion@^1: 1.1.18
   brace-expansion@^5: 5.0.9
   browserslist: 4.28.7
-  dompurify: 3.4.16
+  dompurify: 3.4.17
   inline-style-parser: 0.2.9
   js-yaml: 4.3.1
   lodash: 4.18.1
@@ -134,6 +134,9 @@ importers:
       framer-motion:
         specifier: ^11.16.4
         version: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      geck-apple-sign-in:
+        specifier: file:native/apple-sign-in
+        version: file:native/apple-sign-in(@capacitor/core@8.5.3)
       heic-to:
         specifier: 1.5.2
         version: 1.5.2
@@ -2362,8 +2365,8 @@ packages:
   dom-helpers@5.2.1:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
 
-  dompurify@3.4.16:
-    resolution: {integrity: sha512-sqo+pNp3qRhCIpbgRi1y8Tgk27Bo2Ry7w0dC1NBeNTdZChWjz9Xb/KOoZbRP/R6pQZ80Qw8YhXw13hWWBbMRnQ==}
+  dompurify@3.4.17:
+    resolution: {integrity: sha512-B/pSlYVHQ58kqISD/yDjuJ1yfzI34m1gF4lAod2bwSRhiN4K5Cl3H8Af7hqB2PmTL911tdEudnnXn5FnhRoz0w==}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -2633,6 +2636,11 @@ packages:
 
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
+
+  geck-apple-sign-in@file:native/apple-sign-in:
+    resolution: {directory: native/apple-sign-in, type: directory}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   generator-function@2.0.1:
     resolution: {integrity: sha512-SFdFmIJi+ybC0vjlHN0ZGVGHc3lgE0DxPAT0djjVg+kjOnSqclqmj0KQ7ykTOLP6YxoqOvuAODGdcHJn+43q3g==}
@@ -6199,7 +6207,7 @@ snapshots:
       '@babel/runtime': 7.29.7
       csstype: 3.2.3
 
-  dompurify@3.4.16:
+  dompurify@3.4.17:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
@@ -6586,6 +6594,10 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
+  geck-apple-sign-in@file:native/apple-sign-in(@capacitor/core@8.5.3):
+    dependencies:
+      '@capacitor/core': 8.5.3
+
   generator-function@2.0.1: {}
 
   gensync@1.0.0-beta.2: {}
@@ -6955,7 +6967,7 @@ snapshots:
     optionalDependencies:
       canvg: 3.0.11
       core-js: 3.50.0
-      dompurify: 3.4.16
+      dompurify: 3.4.17
       html2canvas: 1.4.1
 
   jsx-ast-utils@3.3.5:
@@ -7500,7 +7512,7 @@ snapshots:
       '@posthog/core': 1.51.0
       '@posthog/types': 1.409.2
       core-js: 3.50.0
-      dompurify: 3.4.16
+      dompurify: 3.4.17
       fflate: 0.4.9
       preact: 10.29.8
       query-selector-shadow-dom: 1.0.1

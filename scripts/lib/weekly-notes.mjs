@@ -48,11 +48,13 @@ export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export const SLUG_MAX = 64;
 
 // The front matter keys, in the order the docs list them.
-export const KEYS = ['step', 'slug', 'subject', 'cta', 'path', 'cta_no_gecko', 'path_no_gecko', 'visitor_cta', 'visitor_path', 'visitors', 'sources'];
-const REQUIRED = ['step', 'slug', 'subject', 'cta', 'path', 'sources'];
+export const KEYS = ['step', 'slug', 'subject', 'preview', 'cta', 'path', 'cta_no_gecko', 'path_no_gecko', 'visitor_cta', 'visitor_path', 'visitors', 'sources'];
+const REQUIRED = ['step', 'slug', 'subject', 'preview', 'cta', 'path', 'sources'];
 
 export const LIMITS = {
   subject: [1, 60],
+  // The inbox line after the subject; most apps show 40 to 90 characters.
+  preview: [20, 100],
   cta: [1, 40],
   words: [80, 200],
 };
@@ -65,7 +67,7 @@ const rel = (path) => path.slice(REPO_ROOT.length + 1);
  * One note file, parsed. Never throws: anything that does not fit the
  * format goes into `errors`, which noteProblems reports.
  *
- * Returns { fileName, step, slug, subject, cta, path, ctaNoGecko,
+ * Returns { fileName, step, slug, subject, preview, cta, path, ctaNoGecko,
  * pathNoGecko, visitorCta, visitorPath, visitors, sources, body,
  * paragraphs, bodyStartLine, errors }. visitors is false only for a note
  * marked "visitors: no" (it goes to members only).
@@ -80,6 +82,7 @@ export function parseNote(fileName, text) {
     step: null,
     slug: null,
     subject: null,
+    preview: null,
     cta: null,
     path: null,
     ctaNoGecko: null,
@@ -156,6 +159,7 @@ export function parseNote(fileName, text) {
   }
   note.slug = front.slug ?? null;
   note.subject = front.subject ?? null;
+  note.preview = front.preview ?? null;
   note.cta = front.cta ?? null;
   note.path = front.path ?? null;
   note.ctaNoGecko = front.cta_no_gecko ?? null;
@@ -469,6 +473,10 @@ export function noteProblems(note, { live = liveRoutes() } = {}) {
     if (n < lo || n > hi) out.push(`${label} is ${n} characters; it must be ${lo} to ${hi}`);
   };
   length('subject', note.subject, LIMITS.subject);
+  length('preview', note.preview, LIMITS.preview);
+  if (note.preview && note.subject && note.preview.toLowerCase().startsWith(note.subject.toLowerCase())) {
+    out.push('preview repeats the subject; it should add to it');
+  }
   length('cta', note.cta, LIMITS.cta);
   if (note.ctaNoGecko !== null) length('cta_no_gecko', note.ctaNoGecko, LIMITS.cta);
   if (note.visitorCta !== null) length('visitor_cta', note.visitorCta, LIMITS.cta);
@@ -476,7 +484,7 @@ export function noteProblems(note, { live = liveRoutes() } = {}) {
   if (words < LIMITS.words[0] || words > LIMITS.words[1]) {
     out.push(`body is ${words} words; it must be ${LIMITS.words[0]} to ${LIMITS.words[1]}`);
   }
-  const fields = [['subject', note.subject], ['cta', note.cta], ['cta_no_gecko', note.ctaNoGecko], ['visitor_cta', note.visitorCta], ['body', note.body]];
+  const fields = [['subject', note.subject], ['preview', note.preview], ['cta', note.cta], ['cta_no_gecko', note.ctaNoGecko], ['visitor_cta', note.visitorCta], ['body', note.body]];
   for (const [label, value] of fields) {
     if (value === null) continue;
     for (const why of writingProblems(value)) out.push(`${label} ${why}`);
