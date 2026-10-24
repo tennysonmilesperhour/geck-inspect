@@ -295,7 +295,7 @@ describe('Privacy Policy: the free guides form', () => {
   const GUIDES_FN = readFileSync(new URL('../../../supabase/functions/subscribe-and-send-guides/index.ts', import.meta.url), 'utf8');
   it('says what the homepage guide form keeps, for how long, and who it never emails', () => {
     expect(PAGE).toContain('If you ask for the free Care and Genetics Guides on our homepage, we collect your email address, email you the guides and keep your address in our list of email sign-ups.');
-    expect(PAGE).toContain('We keep a record of each request, with a scrambled form of your network address, for 30 days');
+    expect(PAGE).toContain('We keep a record of each request, with your address in a simplified form used only to count them and a scrambled form of your network address, for 30 days');
     expect(FIXES4_SQL).toContain("delete from public.guide_email_sends where created_at < p_now - interval '30 days';");
     expect(PAGE).toContain('We do not email an address that unsubscribed or is on our do-not-email list (section 8).');
     expect(GUIDES_FN).toContain('supabase.rpc("email_inbox_suppressed", { p_email: email })');

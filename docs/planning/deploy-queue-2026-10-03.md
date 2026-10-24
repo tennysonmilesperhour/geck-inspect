@@ -189,6 +189,8 @@ An email sign-up for people without an account, feeding the same weekly notes. D
 
 **Fifth review round, 18 October (`20261018150400_weekly_notes_visitor_fixes_5.sql`):** the member rule had become slow with many members (it read every profile once per member: about 65 s at 10,000 members, paid again by every member claim); it now reads a member's last choice only when the inbox has a visitor stop (3,000 members: about 0.4 s). "Already signed up" counts only a spelling that gets the notes now (`weekly_notes_inbox_signed_up`), so a bounced spelling cannot lock an inbox out. The stop link stops every spelling of the inbox and kills every pending link for it; the confirm button takes the form's per-inbox lock (two clicks at the same moment: the second answers "already", checked with two connections); visitor candidates pick one spelling per inbox. Both claims and both 7-day rules count the whole inbox, so moving between spellings repeats nothing. `email_is_suppressed` (send-email's check before every member email) and the member candidates match the do-not-email list by inbox. Account erasure removes visitor rows, ledger and polls for every spelling; a visitor erasure is refused when any spelling has an account. The guide form's daily limit counts the inbox (new generated column `guide_email_sends.inbox_key`). One-time data fixes stop spellings left confirmed beside a newer stop and turn off profiles whose last choice is older than a visitor stop. `/WeeklyNotes`: the member answer reads "You have a Geck Inspect account".
 
+**Sixth review round, 18 October, merged 24 October (`20261024182000_weekly_notes_visitor_fixes_6.sql`).** Deployments were paused on 18 Oct, so it waited in a draft PR. It was written as `20261018172000` and re-dated on 24 Oct to sort after `20261020230000_email_relevance_and_outcomes.sql`, which had rewritten `weekly_notes_candidates` in the meantime; the member rule in this file is built on that newer body, so the relevance gate (a gecko on record or a sign-in within 60 days) stays. The same merge fixed two CI failures already red on main: the Weekly Gecko Notes SQL tests (their members had no gecko and no sign-in, so the 20 Oct gate left them out) and the browser test job (pinned to Ubuntu 24.04, because Playwright 1.56 cannot install Chromium on the Ubuntu 26.04 runners). Both claims lock the inbox instead of the spelling (two accounts on one inbox could otherwise claim at the same moment and get the same note twice; production had one such inbox due on 18 Oct, the owner's own test accounts). Account erasure keeps another live account's rows on the same inbox; erasure scrubs every spelling from the delivery log; an index on `profiles (lower(email))` keeps the member rule fast when inboxes have visitor stops; a spelling that never confirmed only loses its link when the inbox stops; a visitor erasure is not blocked by an unconfirmed sign-up; and the 7-day and 20-hour rules allow 10 minutes, so the hourly run 7 days or 20 hours later counts even when it starts a fraction of a second earlier than the last one did (on 18 Oct the 22:50 run skipped 20 members polled at 02:50:00.306 because it started at 22:50:00.098). The erasure fix showed up live the same evening: deleting a test account at 23:10 wiped the poll rows of the owner's two other accounts on the same inbox. Merging it applies the migration; nothing else is needed.
+
 ## Done on 3 October
 
 **Edge functions deployed** (all from the repo copy):
@@ -389,6 +391,48 @@ import of the same file is refused row by row instead of duplicating geckos.
 MorphMarket's site could not be reached from the build session, so the other
 column names are still unconfirmed; step 19 of the feature audit (the two-row
 test import) is still the proof.
+
+### 24 October follow-up: live field reference checked, round trip pending
+
+Read all 33 Supported Fields on the signed-in MorphMarket Import Animals
+page. The full list and allowed values are saved in
+[morphmarket-import-reference-2026-10-24.md](morphmarket-import-reference-2026-10-24.md).
+Corrected export headers to State, Desc and Photo_Urls, removed Currency
+(MorphMarket uses Seller Profile currency), corrected Subadult, used spaces
+between traits and rounded weights to whole grams. ISO dates and comma-separated
+photos match the published field rules. Empty optional columns are omitted;
+the preview matches the file. Both export screens warn about blank cells in
+mixed columns, currency, shipping and keeping Animal_ID unchanged.
+
+A real six-row MorphMarket export exposed starred required headers and
+M/D/YYYY birth dates, which the parser now reads. It skips the Leachianus
+row with a warning, keeps five crested rows, warns about partial dates and
+blank seller IDs, and has a redacted regression fixture. It also reads
+State, M/F sex initials and space-separated photos, and
+no longer mistakes Not For Sale for For Sale. It keeps private, unlisted,
+inactive and expired listings private, and warns when a partial birth date
+cannot be stored as a full hatch date.
+
+Validation: `pnpm lint` passed with 0 errors and 75 existing warnings;
+`pnpm test` passed all 3,479 tests in 295 files. The real downloaded CSV
+also passed assertions for titles, dates, photo counts and species filtering.
+Commit `63994ac0` was pushed directly to main and Vercel reported a successful
+production deployment. The live Import CSV dialog then showed the five
+crested records with correct names, sexes, traits and prices and all eight
+expected warnings. Cancelled without creating records. Separate GitHub
+member-flow and database checks also failed on the preceding commit: the
+browser installer does not support the runner's Ubuntu version, and two
+weekly-email SQL fixtures fail. The main checks job was cancelled when a
+newer unrelated commit arrived.
+
+Not yet proven: Tennyson has been asked for his actual store link and to run
+Check my store. The initial production query returned no rows. There is no
+curl result or Supabase fetch result yet, so automatic access versus hand
+review remains undecided. No About code was removed.
+
+The two disposable listings still need to be created, updated without
+duplicates, exported back into Geck Inspect and deleted by Tennyson. Neither
+feature is marked complete from unit tests or field documentation alone.
 
 ## 20 October: email overhaul (letters, preview lines, relevance gate)
 

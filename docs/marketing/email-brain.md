@@ -2,22 +2,24 @@
 
 How Geck Inspect writes, sends and judges email. Read this before writing or changing any email: the getting-started emails (`supabase/functions/_shared/lifecycle-copy.ts`), Weekly Gecko Notes (`content/weekly-notes/`), reminders or anything new. Every rule here has a reason, and most reasons have a source (section 7).
 
-## 1. What Tennyson needs to do
+## 1. Setup status and replies
 
-Three dashboard steps. Until step 1 is done, nobody can see whether any email works.
+Dashboard setup completed on 24 October 2026, around 12:35 MDT (18:35 UTC). End-to-end verification passed at 12:54 MDT (18:54 UTC) with one approved getting-started test email to Tennyson.
 
-1. **Connect Resend's webhook (opens, clicks, bounces, complaints).** Not done: `email_deliveries` holds 97 "sent" rows and not one other event, and `resend-webhook` has not been called once.
-   - https://resend.com/webhooks, Add endpoint
+1. **Resend webhook connected.** Endpoint `6e56f06c-541f-4717-a3ef-52e9a8137bbd` is enabled at https://resend.com/webhooks/6e56f06c-541f-4717-a3ef-52e9a8137bbd.
    - URL: `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/resend-webhook`
    - Events: `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.opened`, `email.clicked`, `email.bounced`, `email.complained`
-   - Copy the signing secret (starts with `whsec_`) into https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/functions/secrets as `RESEND_WEBHOOK_SECRET`
-   - https://resend.com/domains, the geckinspect.com domain, turn on **Click tracking** (open tracking too, but section 4 explains why opens barely count)
-2. **Send as a person, and let replies reach you.** Same secrets page:
-   - `EMAIL_FROM_PERSONAL` = `Tennyson at Geck Inspect <tennyson@geckinspect.com>` (any address on the verified geckinspect.com domain works for sending)
-   - `EMAIL_REPLY_TO` = an inbox you actually read
-   - Only the getting-started emails and Weekly Gecko Notes use these. Reminders, digests and alerts keep `EMAIL_FROM`.
-   - The day 0 and day 1 emails ask a question to reply to **only when `EMAIL_REPLY_TO` is set**, so nobody is asked something no one will read.
-3. **Answer the replies.** At this list size a reply is the best signal there is (section 4), and Godin's strongest kind of permission is a personal relationship. A two-line answer is enough.
+   - Its signing secret is saved as `RESEND_WEBHOOK_SECRET` in Supabase; the saved SHA-256 digest matches the endpoint secret exactly. Never put the value in this document.
+   - **Click and open tracking enabled.** Resend now requires a tracking subdomain. GoDaddy added `links.geckinspect.com` CNAME `links2.resend-dns.com`; public DNS resolves it. Resend reports the tracking CNAME as Verified.
+   - **Verified end to end:** test email `01a16f42-fa0b-7ca8-bfa5-c8effb34d03b` produced `delivered` at 18:53:43 UTC, `clicked` at 18:54:27 UTC and `opened` at 18:54:33 UTC in `public.email_deliveries`. The tracked button redirected to `https://geckinspect.com/MyGeckos`; the click and pixel fetch were deliberate test actions, not member engagement. The earlier HTTP 401 was the deliberately unsigned probe, not a failed Resend signature.
+2. **Personal sender and reply inbox configured.** Both secrets are saved:
+   - `EMAIL_FROM_PERSONAL` = `Tennyson at Geck Inspect <tennyson@geckinspect.com>`
+   - `EMAIL_REPLY_TO` = `tennysontaggart@gmail.com`
+   - Getting-started emails, Weekly Gecko Notes and re-permission letters use these. Reminders, digests and alerts keep `EMAIL_FROM`.
+   - Day 0 and day 1 reply questions are enabled by `EMAIL_REPLY_TO`.
+   - **Verified actual sender and reply-to:** Resend and the received Gmail MIME headers both show the values above on the day 0 test, subject "Tennyson (setup test), start with one gecko". The reply question is present. Gmail placed it in the Promotions inbox, with SPF, DKIM and DMARC passing.
+   - Sending DNS records are verified. Resend's existing inbound MX conflict remains; replies use Gmail and do not depend on Resend receiving mail for the domain.
+3. **Answer the replies.** This remains Tennyson's ongoing task. At this list size a reply is the best signal there is (section 4), and Godin's strongest kind of permission is a personal relationship. A two-line answer is enough.
 
 ## 2. What the data said on 20 October
 
@@ -94,7 +96,7 @@ Targets for now (to revise once there are 4 weeks of data):
 
 ## 6. What is next, in order
 
-1. **Connect the webhook** (section 1). Without it, no click, bounce or complaint is known.
+1. **Watch real delivery and engagement** (section 1 setup and verification are complete). Exclude the documented setup test when judging member clicks or opens.
 2. **Read `email_outcomes(60)` every Monday** for four weeks, and add a line to the log below.
 3. **Read the re-permission result** two weeks after it goes out: `select * from public.email_outcomes(60) where kind = 're-permission';` and `select count(*) filter (where kept_at is not null) as kept, count(*) as sent from public.weekly_notes_repermission_sends;`. A keep rate under 10% says the list was mostly people who signed up once and moved on, which is fine: they stop getting mail.
 4. **More personal notes.** New notes should use `audience` and `lead` where the record makes them sharper, for example a shed note for keepers that names a gecko with no shed logged.
@@ -126,3 +128,5 @@ Weak or vendor-only claims left out on purpose: "a single call to action lifts c
 |---|---|---|
 | 20 Oct 2026 | Letter format, preview lines, personal sender (waiting on secrets), new getting-started subjects, reply questions, weekly-notes relevance gate, `email_outcomes` | Baseline in section 2 |
 | 24 Oct 2026 | Weekly notes by audience and season with a personal lead; one-time re-permission email (24 members) and `/KeepNotes`. Webhook still not connected: no click data yet | Read 7 Nov |
+| 24 Oct 2026 (setup check) | Enabled the seven-event Resend webhook; saved webhook, personal-sender and reply-to secrets; enabled click/open tracking and added the tracking CNAME. Tracking DNS is verified; the first post-setup email remains pending | `email_outcomes(60)`: day 0 sent/returned/recorded 11/5/1; day 1 8/1/0; day 3 3/0/0; day 7 1/1/0; day 14 1/0/0; weekly heat 54/0/0; weekly weight trend 1/0/0. All stops 0. `email_delivery_stats`: 108 sent across 15 type/week rows; delivered/opened/clicked/bounced/complained all 0. These are pre-setup counts, not evidence of zero engagement or complaints. No test email sent during this check. |
+| 24 Oct 2026 (12:54 MDT verification) | One approved day 0 test to Tennyson through production `send-email`. Personal From, Gmail Reply-To and reply question verified in the received message; SPF/DKIM/DMARC pass. Signed delivered, clicked and opened events reached Supabase | `email_outcomes(60)` unchanged from the setup check: the test did not add a lifecycle send-ledger row. `email_delivery_stats`: 109 unique sent, 1 delivered, 1 clicked, 1 opened, 0 bounced/complained. The week of 19 Oct `lifecycle_day0` row is 6 sent / 1 delivered / 1 clicked / 1 opened. All three non-sent events belong to test `01a16f42-fa0b-7ca8-bfa5-c8effb34d03b`; exclude them from engagement conclusions. Two raw sent rows for this email (application and webhook) are deduplicated by the stats view. No bounce or complaint was simulated. |
