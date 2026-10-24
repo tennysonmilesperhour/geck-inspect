@@ -167,7 +167,7 @@ export function morphMarketAnimalId(gecko) {
 
 // ─── Export ─────────────────────────────────────────────────────────────────
 
-export const MORPHMARKET_EXPORT_BLOCKED_REASON = 'MorphMarket export is paused because uploads can erase existing listing details, even when columns are omitted. Export will return after we can preserve those details.';
+export const MORPHMARKET_EXPORT_BLOCKED_REASON = 'Quick export is unavailable because it cannot preserve existing MorphMarket details. Open MorphMarket listings and load a fresh Animal Records CSV to prepare a reviewed update.';
 
 /**
  * Export an array of gecko objects as a MorphMarket-compatible CSV and

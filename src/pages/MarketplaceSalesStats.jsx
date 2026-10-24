@@ -859,8 +859,8 @@ const PRICING_LINKS = [
     body: 'Low, median and high asking prices for each trait, by age and sex, from thousands of crested gecko listings.' },
   { page: 'MarketplaceSell', title: 'Price a listing', Icon: Tag,
     body: 'Edit a gecko on Sell Geckos to see where your price sits in the range for geckos like it.' },
-  { page: 'MorphMarketExport', title: 'Export to MorphMarket', Icon: Package,
-    body: 'CSV export is paused while we add protection for existing MorphMarket listing details.' },
+  { page: 'MorphMarketExport', title: 'MorphMarket listings', Icon: Package,
+    body: 'Load a fresh MorphMarket CSV, edit all listing fields and review updates without blanking saved values.' },
 ];
 
 function PricingTab() {

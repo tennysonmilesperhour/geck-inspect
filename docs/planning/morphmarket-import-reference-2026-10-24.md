@@ -95,6 +95,19 @@ reported 0 created and 2 existing listings matched. SQL confirmed A's saved 128
 draft survived the fresh 127 source, its native collection price remained 126,
 and both native records remained archived and private.
 
+After `9d8fb4b` reached production, completed the actual browser download and
+upload path. The live workspace required a fresh source and review before
+creating `morphmarket-update-2026-10-24.csv`. Uploaded that unchanged file with
+Synchronize/Replace off. A changed 127 to 128; the next MorphMarket export kept
+its other 32 supported fields and every field on B unchanged after documented
+format normalization. Both listing URLs retained their original numbers, with
+no duplicates. Loaded that final return file into the workspace, chose the
+MorphMarket spelling `128.0` over the saved `128`, and saved with no pending
+field changes. Numeric spelling differences currently ask for a conservative
+conflict choice even when the amounts are equal. Both listings and all four
+Geck Inspect test records remain archived. The repeat return import also
+reported zero created and two matched, preserving existing native records.
+
 Final local checks: 3,564 tests in 302 files passed; lint had 0 errors and 71
 existing warnings. The production build passed before deployment.
 
@@ -122,7 +135,7 @@ Implemented full matching workflow: retain all original supported fields from a 
 - Retain `Animal_ID` first, the existing stable ID mapping, ISO full dates, comma-separated photos, one animal per row, and Captive Bred origin. Do not change a gecko's ID between uploads. IDs must be distinct after punctuation cleanup.
 - Use spaces between exported traits and whole grams for weight. Do not invent maturity for an unknown hatch date. The seller must add a hatch date in Geck Inspect or choose maturity in MorphMarket before importing.
 - Omit optional Price, DOB, Weight, Traits, Desc and Photo_Urls columns when every exported cell is empty. The preview uses the same columns as the file.
-- Live data-loss check: omitting Price, DOB and Weight entirely did not preserve them. The new spreadsheet importer added the missing fields as blank; both prices became $0, and both birth dates and weights were cleared. Restored all test values with the full CSV. Empty-column omission is only presentation, not protection. Both export screens warn to fill missing values before uploading updates.
+- Live data-loss check: omitting Price, DOB and Weight entirely did not preserve them. The new spreadsheet importer added the missing fields as blank; both prices became $0, and both birth dates and weights were cleared. Restored all test values with the full CSV. Empty-column omission is only presentation, not protection. That warning-only behavior was superseded by the blocked quick export and full-field workspace described above.
 - The field reference says blank Photo_Urls preserves photos, blank Traits uses Title, and blank State becomes For Sale. Do not assume other omitted fields preserve existing data. Review the complete MorphMarket spreadsheet before importing, including fields Geck Inspect does not export.
 - MorphMarket takes currency from Seller Profile, not the file. Check that it matches Geck Inspect prices. Shipping must be reviewed on MorphMarket; Geck Inspect does not invent a shipping charge.
 - Import accepts State as well as old Status, exact sale-state matching, M/F sex abbreviations, and space/comma-separated photos. Private, unlisted, inactive and expired rows must not become public through import.

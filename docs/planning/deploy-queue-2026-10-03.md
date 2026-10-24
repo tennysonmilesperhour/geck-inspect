@@ -401,8 +401,8 @@ any download is created; the existing formatter and formula-safety tests remain.
 Validation: all 3,484 tests in 296 files pass; lint has 0 errors and 75 existing
 warnings.
 
-The current export has 14 of 33 supported fields. The reference below now lists
-the missing 19, existing lossy mappings, and the proposed private listing-field
+At the safety pause, the old export had 14 of 33 supported fields. The reference
+below records the missing 19, lossy mappings and replacement listing-field
 workflow. The later full-field workspace and preservation proof below supersede this pause.
 The earlier successful create/update test remains valid historical evidence,
 not permission to re-enable a potentially destructive export.
@@ -431,6 +431,16 @@ diet and length units. The deployed editor saved both full private records and
 visibly refused clearing price. Guarded downloads require a fresh source and
 review; the old quick-export builder stays blocked. See the reference for proof
 scope and the final UI checks.
+
+Final production UI proof on `9d8fb4b`: downloaded the reviewed two-row file
+from Geck Inspect, uploaded it unchanged to MorphMarket, then exported the same
+pair again. A changed 127 to 128 and retained the other 32 supported fields;
+B retained all 33. Listing numbers stayed 4174375 and 4174376, with no duplicates.
+Refreshed and saved the returned source with no pending changes. The live return
+import reported zero created and two matched. All disposable records remain
+archived. Final checks: 3,564 tests in 302 files pass, lint 0 errors and 71
+existing warnings, production deployment READY. Active sale/payment,
+wholesale-only and populated-video behavior remain outside the live proof.
 
 ### 24 October follow-up: badge and CSV round trip proven
 
