@@ -1,6 +1,6 @@
 # MorphMarket import reference, 24 October 2026
 
-Source: the signed-in [Import Animals page](https://www.morphmarket.com/inventory/import), Supported Fields section, read on 24 October 2026. Both the new spreadsheet and Old Import show this list. This is a reference check, not proof of a successful upload.
+Source: the signed-in [Import Animals page](https://www.morphmarket.com/inventory/import), Supported Fields section, read on 24 October 2026. Both the new spreadsheet and Old Import show this list. The completed live checks below also prove creation, updates and return import for two disposable Not For Sale records.
 
 The [Seller's Guide](https://support.morphmarket.com/article/123-importing-exporting-animals), updated 15 October 2026, confirms CSV, TSV and JSON input, a 1,000-row spreadsheet limit, matching updates by Animal_ID, and the Synchronize/Replace option. Leave that option off for partial batches: it archives animals missing from the upload. Hidden spreadsheet columns still participate in an import.
 
@@ -10,7 +10,7 @@ Names below are the canonical spellings displayed by the importer. Boolean field
 
 | Field | Accepted values and constraints |
 | --- | --- |
-| Category | Required species category. The real export uses Crested Geckos. Creation acceptance still needs the test upload. |
+| Category | Required species category. The real export uses Crested Geckos. Accepted for both disposable listings in the live upload. |
 | Title | Required text, maximum 200 characters. Traits are inferred from it unless Traits is supplied. |
 | Animal_Id | Required unique seller ID, maximum 100 characters. Letters, numbers, hyphen, slash, dot, underscore. Spaces become underscores. Existing ID updates; new ID creates. |
 | Maturity | Required for animals. Baby, Juvenile, Subadult, Adult, Not Ready. Hatchling also means Baby. |
@@ -50,8 +50,8 @@ Names below are the canonical spellings displayed by the importer. Boolean field
 - Retain `Animal_ID` first, the existing stable ID mapping, ISO full dates, comma-separated photos, one animal per row, and Captive Bred origin. Do not change a gecko's ID between uploads. IDs must be distinct after punctuation cleanup.
 - Use spaces between exported traits and whole grams for weight. Do not invent maturity for an unknown hatch date. The seller must add a hatch date in Geck Inspect or choose maturity in MorphMarket before importing.
 - Omit optional Price, DOB, Weight, Traits, Desc and Photo_Urls columns when every exported cell is empty. The preview uses the same columns as the file.
-- A mixed column can still contain blank cells. These can clear seller-entered values on re-import. The export screens disclose this. Omission is a precaution, not proof that MorphMarket preserves every omitted field. Confirm this on disposable listings before updating real inventory.
-- The field reference explicitly confirms blank Photo_Urls preserves photos, blank Traits uses Title, and blank State becomes For Sale. It does not fully specify omitted-column behavior for Price, DOB or Weight.
+- Live data-loss check: omitting Price, DOB and Weight entirely did not preserve them. The new spreadsheet importer added the missing fields as blank; both prices became $0, and both birth dates and weights were cleared. Restored all test values with the full CSV. Empty-column omission is only presentation, not protection. Both export screens warn to fill missing values before uploading updates.
+- The field reference says blank Photo_Urls preserves photos, blank Traits uses Title, and blank State becomes For Sale. Do not assume other omitted fields preserve existing data. Review the complete MorphMarket spreadsheet before importing, including fields Geck Inspect does not export.
 - MorphMarket takes currency from Seller Profile, not the file. Check that it matches Geck Inspect prices. Shipping must be reviewed on MorphMarket; Geck Inspect does not invent a shipping charge.
 - Import accepts State as well as old Status, exact sale-state matching, M/F sex abbreviations, and space/comma-separated photos. Private, unlisted, inactive and expired rows must not become public through import.
 - Geck Inspect stores a full hatch date. Partial or unrecognized dates are left unset with a row warning rather than inventing a day.
@@ -80,6 +80,31 @@ file selection and preview path, not a completed import into the account.
 
 ## Live proof record
 
-Pending: Tennyson's supplied store link, exact curl result with the function's User-Agent, his Check my store result, server logs, and public badge check. The initial production query on 24 October returned no store-link rows.
+Completed on 24 October 2026 in Tennyson's signed-in accounts, with his permission to perform the steps.
 
-Pending: two disposable animals exported through Business Tools, created on MorphMarket, then updated by a second export without duplicates; their MorphMarket export imported through Geck Inspect; cleanup by Tennyson. Do not mark either feature proven until those checks have actually completed.
+### Store verification
+
+- Store supplied by Tennyson: https://www.morphmarket.com/stores/tennyson_miles/.
+- Local curl with `GeckInspectStoreCheck/1.0 (+https://geckinspect.com)` returned HTTP 403, a `Just a moment...` page and Cloudflare `challenge-platform` markers. No bypass attempted.
+- My Store generated a code, which was saved in the store's About text and visibly confirmed on the public About tab. Pressed Check my store. Supabase row: `pending`, `needs_review=true`, `last_check_result="MorphMarket answered 403"`.
+- Edge logs show successful function requests at 18:55:45 and 18:56:18 UTC. The HTTP 200 is the function response; the saved row records the blocked outbound read.
+- Admin > Breeder verification > Code is there completed the hand check. Row became `verified`, `needs_review=false`, `last_check_result="verified by an admin"`.
+- Saved My Store to publish the breeder profile and correct its older external store link. https://geckinspect.com/Breeder/thegeckogarden visibly shows Verified MorphMarket seller, linking to the supplied store.
+- Hand review is the documented process when blocked. Leave the code until verified. Tennyson was asked before removing it; it remains in About pending his answer.
+
+### CSV create, update and return
+
+| Seller ID | MorphMarket listing | Initial / updated price | DOB | Exported weight | Photos |
+| --- | --- | --- | --- | --- | --- |
+| GI-MM-20261024-A | 4174375 | 125 / 126 | 2025-06-08 | 35 g | 1 |
+| GI-MM-20261024-B | 4174376 | 175 / 175 | 2026-01-15 | 20 g | 2 |
+
+Created two private Pet records through Add Gecko with test-only descriptions and images. Exported the selected pair through the production MorphMarket Export batch builder. Uploaded the unchanged download with Synchronize/Replace off. Both listings were created correctly as Not For Sale, with Crested Geckos, male/female, Lilly White/Harlequin, Adult/Subadult, Captive Bred, quantity one, descriptions, full dates and all three photos.
+
+Changed A's price in Geck Inspect to 126, downloaded again, and uploaded the unchanged second file. The filtered MorphMarket list still contained exactly two animals with the same listing numbers and the updated price. No duplicates.
+
+Downloaded those two Animal Records from MorphMarket. Its 42-column CSV uses starred required headers, M/D/YYYY dates and space-separated photos. Geck Inspect's live Import CSV preview read both without warnings. An initial save correctly refused the two duplicate seller IDs. Archived the original disposable source records and gave their IDs a `-SOURCE` suffix to free the original IDs, then imported again: two records created. Database checks confirmed IDs, sexes, prices, dates, weights, all three photos, private Pet status and multiline descriptions retained as notes. No further parser header fix was needed.
+
+The separate missing-column test cleared prices, dates and weights as described above; the full CSV restored them. All four Geck Inspect test records and both MorphMarket test listings are now archived. Permanent deletion was left to Tennyson. Existing real animals were not changed.
+
+Scope: live acceptance covers Not For Sale creation and update, the hand-check badge and return import. For Sale shipping, payment and sold-state workflows were not exercised. Export remains available with a clear data-loss warning; Tennyson's preference between warning and blocking incomplete exports was requested and remains pending.

@@ -377,22 +377,21 @@ functions. Function: `verify-morphmarket-store`, declared in
 `supabase/config.toml` with `verify_jwt = true`, so the merge deploys it. No
 secrets needed.
 
-Not yet known: whether MorphMarket lets a Supabase server read store pages.
-If every check lands in the admin queue, the automatic path is blocked and
-the hand check is the process.
+Proven 24 October: MorphMarket returned 403 to both the exact local User-Agent
+and the Supabase function. Use the hand-check process below when blocked.
 
 The MorphMarket CSV export now starts with an `Animal_ID` column (the Geck
 Inspect ID code, or the record id), which Bulk Import 2.0 requires and uses to
-update listings on a second upload instead of adding copies. The photo column
-is now `Photo URLs`, the name MorphMarket's help pages use. The importer reads
+update listings on a second upload instead of adding copies. The original photo
+column was `Photo URLs`; the 24 October live check below
+corrected it to `Photo_Urls`. The importer reads
 MorphMarket's own header spellings (`Animal Id`, `Birth Date`, `Desc`,
 `Photo Urls`) and keeps the Animal ID as the gecko's ID code, so a second
 import of the same file is refused row by row instead of duplicating geckos.
-MorphMarket's site could not be reached from the build session, so the other
-column names are still unconfirmed; step 19 of the feature audit (the two-row
-test import) is still the proof.
+The original build session could not reach MorphMarket. The live two-row
+check below now supplies that proof.
 
-### 24 October follow-up: live field reference checked, round trip pending
+### 24 October follow-up: badge and CSV round trip proven
 
 Read all 33 Supported Fields on the signed-in MorphMarket Import Animals
 page. The full list and allowed values are saved in
@@ -400,9 +399,11 @@ page. The full list and allowed values are saved in
 Corrected export headers to State, Desc and Photo_Urls, removed Currency
 (MorphMarket uses Seller Profile currency), corrected Subadult, used spaces
 between traits and rounded weights to whole grams. ISO dates and comma-separated
-photos match the published field rules. Empty optional columns are omitted;
-the preview matches the file. Both export screens warn about blank cells in
-mixed columns, currency, shipping and keeping Animal_ID unchanged.
+photos match the published field rules. Empty optional columns are omitted
+and the preview matches the file, but
+live testing proved omission does not protect existing values. Both export
+screens warn that missing values can erase data, including omitted columns,
+and explain currency, shipping and keeping Animal_ID unchanged.
 
 A real six-row MorphMarket export exposed starred required headers and
 M/D/YYYY birth dates, which the parser now reads. It skips the Leachianus
@@ -425,14 +426,39 @@ browser installer does not support the runner's Ubuntu version, and two
 weekly-email SQL fixtures fail. The main checks job was cancelled when a
 newer unrelated commit arrived.
 
-Not yet proven: Tennyson has been asked for his actual store link and to run
-Check my store. The initial production query returned no rows. There is no
-curl result or Supabase fetch result yet, so automatic access versus hand
-review remains undecided. No About code was removed.
+Live store proof: Tennyson supplied `tennyson_miles`. Curl with the exact
+function User-Agent returned 403 and a Cloudflare challenge page. The real
+My Store check saved `pending`, `needs_review=true`, and `MorphMarket answered
+403`; edge logs confirm the check ran. After reading the visible About code,
+Admin > Breeder verification > Code is there saved `verified by an admin`.
+Saved the breeder profile and confirmed the public badge at
+https://geckinspect.com/Breeder/thegeckogarden links to the correct store.
+The card now explains the hand check and retaining the code until verified.
+The code remains in About pending Tennyson's permission to remove it.
 
-The two disposable listings still need to be created, updated without
-duplicates, exported back into Geck Inspect and deleted by Tennyson. Neither
-feature is marked complete from unit tests or field documentation alone.
+Live CSV proof: created two disposable Pet records, exported them through the
+production batch builder and uploaded the unchanged CSV with Synchronize/Replace
+off. MorphMarket created listings 4174375 and 4174376 with the correct fields
+and all three photos. Changed A's price from 125 to 126 in Geck Inspect,
+exported and uploaded again: the same two listing numbers remained, with no
+duplicates. Exported the pair from MorphMarket and imported through the live
+Geck Inspect dialog: two records created, with IDs, dates, sexes, prices,
+weights, descriptions as notes and photos retained. Existing seller IDs were
+correctly refused first; only the disposable originals were renamed and
+archived to permit the return test. All four Geck Inspect records and both
+MorphMarket listings are now archived; permanent deletion remains with Tennyson.
+
+Data-loss finding: a separate upload with Price, DOB and Weight columns removed
+still cleared both dates and weights and changed both prices to $0. The importer
+adds missing fields as blank. Restored all values with the full file. Warnings
+now explain this directly. Export remains available; the choice to block
+incomplete exports instead was put to Tennyson and remains pending. See the
+reference for exact test values and scope. For Sale shipping, payments and
+sold-state flows were not exercised.
+
+Final validation on current main: `pnpm lint` passed with 0 errors and 75
+existing warnings; `pnpm test` passed 3,479 tests in 295 files. The exact
+lockfile installed successfully. No formula-neutralization behavior changed.
 
 ## 20 October: email overhaul (letters, preview lines, relevance gate)
 

@@ -1012,7 +1012,7 @@ export default function MorphMarketExport() {
                 <p>Geckos missing required MorphMarket fields show an amber badge. Open the gecko to fill them in before exporting.</p>
                 <p>Upload the CSV on MorphMarket, review its checks, and leave Synchronize/Replace off for a partial batch. Keep Animal_ID unchanged on later uploads to update the same listings.</p>
                 <p>MorphMarket uses your Seller Profile currency. Check it matches your prices, and choose shipping there for For Sale listings.</p>
-                <p>Optional columns with no values are omitted. Blank cells in included columns can erase existing MorphMarket values. Review them before re-importing. Weights are rounded to whole grams. If maturity is blank, add a hatch date here or choose maturity on MorphMarket.</p>
+                <p>Re-importing can erase existing MorphMarket values, even when a column is omitted. Missing prices became $0 and missing hatch dates and weights were cleared in our live test. Fill those values before uploading updates. Weights are rounded to whole grams. If maturity is blank, add a hatch date here or choose maturity on MorphMarket.</p>
               </CardContent>
             </Card>
           </div>

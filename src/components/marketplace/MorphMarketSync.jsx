@@ -172,7 +172,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
           <p className="text-xs text-amber-200">
             Before uploading, check maturity, shipping, and your MorphMarket Seller Profile currency.
             Keep Animal_ID unchanged and Synchronize/Replace off for a partial batch.
-            Empty optional columns are omitted, but blank cells in included columns can erase existing values.
+            Re-importing can erase existing values even when columns are omitted. Fill missing prices, hatch dates and weights before uploading updates.
           </p>
 
           <Link to={createPageUrl('MorphMarketExport')} className="block">
