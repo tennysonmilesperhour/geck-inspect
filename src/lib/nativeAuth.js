@@ -1,9 +1,16 @@
 import { isNativePlatform } from './revenuecat';
+import { authContinuationPath, redirectFromSearch, safeRedirectPath } from './postAuthRedirect';
 import { getSupabase } from './supabaseLazy';
 
 export const NATIVE_AUTH_CALLBACK = 'com.geckinspect.app://auth/callback';
 export function authRedirect(path = '/MyGeckos') {
-  if (isNativePlatform()) return NATIVE_AUTH_CALLBACK + (path.includes('mode=reset') ? '?mode=reset' : '');
+  if (isNativePlatform()) {
+    const target = path.startsWith('/AuthPortal') ? redirectFromSearch(path.split('?')[1]) : safeRedirectPath(path);
+    const params = new URLSearchParams();
+    if (path.includes('mode=reset')) params.set('mode', 'reset');
+    if (target && target !== '/MyGeckos') params.set('redirect', target);
+    return NATIVE_AUTH_CALLBACK + (params.size ? `?${params}` : '');
+  }
   return `${window.location.origin}${path}`;
 }
 
@@ -14,6 +21,7 @@ export function parseNativeAuthCallback(value) {
     code: url.searchParams.get('code'),
     recovery: url.searchParams.get('mode') === 'reset',
     failed: url.searchParams.has('error'),
+    target: redirectFromSearch(url.search),
     // An email token link the website passed on to the app
     // (completeEmailLink in src/lib/emailLinkAuth.js).
     tokenHash: url.searchParams.get('token_hash'),
@@ -30,14 +38,14 @@ function navigateAfterAuth(path) {
 
 // Check an email token link inside the app, so the session lands here and
 // not in the phone's browser. Throws when the link is expired or used.
-async function completeNativeTokenLink({ tokenHash, type }, Browser) {
+async function completeNativeTokenLink({ tokenHash, type, target }, Browser) {
   if (handledCodes.has(tokenHash)) return;
   handledCodes.add(tokenHash);
   const { supabase: client } = await import('./supabaseClient');
   const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type });
   if (error) { handledCodes.delete(tokenHash); throw error; }
   await Browser.close().catch(() => {});
-  navigateAfterAuth(type === 'recovery' || type === 'invite' ? '/AuthPortal?mode=reset' : '/MyGeckos');
+  navigateAfterAuth(type === 'recovery' || type === 'invite' ? authContinuationPath(target, { reset: true }) : target || '/MyGeckos');
 }
 
 let installed = false;
@@ -48,8 +56,9 @@ export async function installNativeAuth() {
   const { App } = await import('@capacitor/app');
   const { Browser } = await import('@capacitor/browser');
   const handle = async ({ url }) => {
+    let callback;
     try {
-      const callback = parseNativeAuthCallback(url);
+      callback = parseNativeAuthCallback(url);
       if (!callback) return;
       if (!callback.failed && callback.tokenHash) return await completeNativeTokenLink(callback, Browser);
       if (callback.failed || !callback.code) throw new Error('Invalid sign-in callback');
@@ -59,11 +68,11 @@ export async function installNativeAuth() {
       const { error } = await supabase.auth.exchangeCodeForSession(callback.code);
       if (error) { handledCodes.delete(callback.code); throw error; }
       await Browser.close().catch(() => {});
-      navigateAfterAuth(callback.recovery ? '/AuthPortal?mode=reset' : '/MyGeckos');
+      navigateAfterAuth(callback.recovery ? authContinuationPath(callback.target, { reset: true }) : callback.target || '/MyGeckos');
     } catch {
       // Never log the callback URL or authorization code.
       await Browser.close().catch(() => {});
-      navigateAfterAuth('/AuthPortal?authError=callback');
+      navigateAfterAuth(`/AuthPortal?authError=callback${callback?.target ? `&redirect=${encodeURIComponent(callback.target)}` : ''}`);
     }
   };
   await App.addListener('appUrlOpen', handle);

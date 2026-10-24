@@ -1,5 +1,6 @@
 import { getSupabaseWhenIdle } from '@/lib/supabaseLazy';
 import { isGuestMode } from '@/lib/guestMode';
+import { sanitizeUrl } from '@/lib/ga';
 
 /**
  * Telemetry, lightweight event + error logging into Supabase.
@@ -46,7 +47,7 @@ async function getCurrentEmail(supabase) {
 
 function getPagePath() {
   try {
-    return window.location.pathname.replace(/^\//, '') || 'Home';
+    return sanitizeUrl(window.location.pathname).replace(/^\//, '') || 'Home';
   } catch {
     return null;
   }
@@ -136,8 +137,8 @@ export async function reportError(error, info = {}) {
       level: info.level || 'error',
       message: message.slice(0, 1000),
       stack: stack ? stack.slice(0, 4000) : null,
-      // Path only: query strings and hashes can hold emails and link tokens.
-      url: typeof window !== 'undefined' ? window.location.origin + window.location.pathname : null,
+      // Drop query/hash and redact bearer tokens carried in claim/invite paths.
+      url: typeof window !== 'undefined' ? sanitizeUrl(window.location.origin + window.location.pathname) : null,
       user_email: email,
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
       context: {

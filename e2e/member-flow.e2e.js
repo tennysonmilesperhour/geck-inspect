@@ -5,6 +5,7 @@
 // wrote: the gecko, the feeding row and the transfer request.
 import { expect, test } from '@playwright/test';
 import { createFakeSupabase } from './support/fake-supabase.js';
+import { openGeckoRecord, transferRpcHandlers } from './support/transfer-fixture.js';
 
 const MEMBER = { name: 'Sam Keeper', email: 'sam@example.com', password: 'correct-horse-battery' };
 const BUYER = 'riley@example.com';
@@ -28,7 +29,7 @@ function watchConsole(page) {
 }
 
 test('a new member signs up, adds a gecko, logs a feeding and starts a transfer', async ({ context, page }) => {
-  const fake = createFakeSupabase();
+  const fake = createFakeSupabase({ rpc: transferRpcHandlers() });
   await fake.install(context);
   await keepOffline(context);
   const problems = watchConsole(page);
@@ -104,12 +105,13 @@ test('a new member signs up, adds a gecko, logs a feeding and starts a transfer'
 
   await test.step('start a transfer to a buyer', async () => {
     await page.goto('/MyGeckos');
-    await page.getByRole('button', { name: 'View Mango' }).click();
+    await openGeckoRecord(page, 'Mango');
     // "Transfer Ownership" on the record window; the one-record rework
     // (October 2026) calls it "Transfer to a new owner".
     await page.getByRole('button', { name: /^Transfer (Ownership|to a new owner)$/ }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Transfer Mango' });
+    await dialog.getByRole('button', { name: 'Email a buyer' }).click();
     await dialog.getByLabel("Buyer's email").fill(BUYER);
     await dialog.getByLabel('Sale price (optional)').fill('250');
     await dialog.getByLabel('Message for the buyer (optional)').fill('Eating Pangea well, last weighed at 18.5 g.');

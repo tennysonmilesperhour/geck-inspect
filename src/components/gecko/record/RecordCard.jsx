@@ -11,7 +11,7 @@ import { sectionId } from './recordModel';
  */
 export default function RecordCard({ id, icon: Icon, title = null, headingAs: Heading = 'h3', action = null, className = '', contentClassName = '', children }) {
   return (
-    <Card id={id ? sectionId(id) : undefined} className={cn('scroll-mt-28', className)} data-record-section={id || undefined}>
+    <Card id={id ? sectionId(id) : undefined} tabIndex={id ? -1 : undefined} className={cn('scroll-mt-28', className)} data-record-section={id || undefined}>
       {title && (
         <CardHeader className="pb-2 pt-4 px-4 flex-row items-center gap-2 space-y-0">
           <Heading className="text-base font-semibold flex items-center gap-2 text-slate-100">

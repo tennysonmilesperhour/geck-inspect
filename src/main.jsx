@@ -1,4 +1,4 @@
-import { installNativeAuth } from '@/lib/nativeAuth';
+import { isNativePlatform } from '@/lib/revenuecat';
 import { installNativeShell } from '@/lib/nativeShell';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
@@ -27,7 +27,11 @@ installGlobalErrorHandlers();
 // permission from an installed PWA, so we don't defer this to the
 // moment the user flips the Settings toggle.
 registerServiceWorker();
-installNativeAuth().catch(() => console.warn('Native sign-in listener could not start.'));
+if (isNativePlatform()) {
+  import('@/lib/nativeAuth')
+    .then(({ installNativeAuth }) => installNativeAuth())
+    .catch(() => console.warn('Native sign-in listener could not start.'));
+}
 installNativeShell().catch(() => console.warn('Native shell chrome could not start.'));
 
 // Keep the app alive when a visitor uses the browser's page translation.

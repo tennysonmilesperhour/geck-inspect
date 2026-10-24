@@ -92,21 +92,21 @@ describe('recordSections', () => {
 
   it('gives a keeper a jump link to every part of the history', () => {
     const ids = recordSections({ access: keeper, hasMorePhotos: true, isFemale: true }).map((s) => s.id);
-    expect(ids).toEqual(['weights', 'care', 'vet', 'family', 'passport', 'breeding', 'photos']);
-    expect(recordSections({ access: keeper, isFemale: true }).find((s) => s.id === 'breeding').label).toBe('Breeding and eggs');
+    expect(ids).toEqual(['overview', 'care-history', 'breeding', 'sharing', 'more']);
+    expect(recordSections({ access: keeper, isFemale: true }).find((s) => s.id === 'breeding').label).toBe('Breeding');
   });
 
   it('gives a read-only member no link to an empty weights or passport section', () => {
     const viewer = recordAccess({ gecko, user: editor, canEdit: false, isMember: true });
-    expect(recordSections({ access: viewer }).map((s) => s.id)).toEqual(['care', 'vet', 'family', 'breeding']);
+    expect(recordSections({ access: viewer }).map((s) => s.id)).toEqual(['overview', 'care-history', 'breeding', 'more']);
     expect(recordSections({ access: viewer, hasWeights: true, hasPassport: true }).map((s) => s.id))
-      .toEqual(['weights', 'care', 'vet', 'family', 'passport', 'breeding']);
+      .toEqual(['overview', 'care-history', 'breeding', 'sharing', 'more']);
   });
 
   it('gives a visitor links only to what is public and on the page', () => {
-    expect(recordSections({ access: visitor }).map((s) => s.id)).toEqual(['family']);
+    expect(recordSections({ access: visitor }).map((s) => s.id)).toEqual(['overview', 'more']);
     expect(recordSections({ access: visitor, hasWeights: true, hasShedForecast: true, hasPassport: true }).map((s) => s.label))
-      .toEqual(['Weights', 'Next shed', 'Lineage', 'Passport']);
+      .toEqual(['Overview', 'Care history', 'Sharing', 'More']);
   });
 
   it('names each section element the way its link points', () => {

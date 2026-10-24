@@ -49,7 +49,7 @@ const isHusbandryType = (type) => type === 'shed' || type === 'feeding' || type 
  * its feeding group; optional), onHusbandryLogged(kind) (called after a
  * gecko feeding or shed is logged).
  */
-export default function EventTracker({ entityId, entityType = 'gecko', onEventAdded, EventEntity, gecko = null, onHusbandryLogged }) {
+export default function EventTracker({ entityId, entityType = 'gecko', onEventAdded, EventEntity, gecko = null, onHusbandryLogged, triggerVariant = 'outline', triggerLabel = 'Event' }) {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedType, setSelectedType] = useState(null);
     const [customName, setCustomName] = useState('');
@@ -149,12 +149,11 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
                 <DropdownMenuTrigger asChild>
                     <Button 
                         size="sm" 
-                        variant="outline" 
-                        className="border-emerald-600 text-emerald-400 hover:bg-emerald-800 h-7 bg-emerald-900/80 px-2"
+                        variant={triggerVariant}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Event
+                        <Plus className="w-4 h-4" />
+                        {triggerLabel}
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-emerald-900/95 border-emerald-600 z-[99999]" onClick={(e) => e.stopPropagation()}>
@@ -187,19 +186,16 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
                                 <Label>How did it come off?</Label>
                                 <div className="mt-2 flex flex-wrap gap-2">
                                     {SHED_QUALITY_OPTIONS.map((q) => (
-                                        <button
+                                        <Button
                                             key={q.value}
                                             type="button"
                                             onClick={() => setShedQuality(q.value)}
                                             aria-pressed={shedQuality === q.value}
-                                            className={`touch:min-h-11 px-3 py-1.5 rounded-full text-sm border ${
-                                                shedQuality === q.value
-                                                    ? 'bg-emerald-600 border-emerald-400 text-white'
-                                                    : 'bg-slate-800 border-slate-600 text-slate-300'
-                                            }`}
+                                            size="sm"
+                                            variant={shedQuality === q.value ? 'default' : 'outline'}
                                         >
                                             {q.label}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             </div>
@@ -210,19 +206,16 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
                                 <Label>Did it eat?</Label>
                                 <div className="mt-2 flex gap-2">
                                     {[{ v: true, l: 'Ate' }, { v: false, l: 'Refused' }].map((o) => (
-                                        <button
+                                        <Button
                                             key={o.l}
                                             type="button"
                                             onClick={() => setAccepted(o.v)}
                                             aria-pressed={accepted === o.v}
-                                            className={`touch:min-h-11 px-4 py-1.5 rounded-full text-sm border ${
-                                                accepted === o.v
-                                                    ? 'bg-emerald-600 border-emerald-400 text-white'
-                                                    : 'bg-slate-800 border-slate-600 text-slate-300'
-                                            }`}
+                                            size="sm"
+                                            variant={accepted === o.v ? 'default' : 'outline'}
                                         >
                                             {o.l}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             </div>

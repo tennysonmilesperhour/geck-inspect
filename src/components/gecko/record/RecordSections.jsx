@@ -106,23 +106,36 @@ export function JumpLinks({ sections }) {
     event.preventDefault();
     const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    // Move keyboard focus with the jump, so the next Tab continues here.
+    target.focus({ preventScroll: true });
   };
   return (
-    <nav aria-label="Parts of this record" className="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto">
-      <ul className="flex gap-2 w-max sm:w-auto sm:flex-wrap">
+    <nav aria-label="Parts of this record" className="border-y border-slate-800 py-3">
+      <ul className="flex flex-wrap gap-2">
         {sections.map((s) => (
           <li key={s.id}>
-            <a
-              href={`#${sectionId(s.id)}`}
-              onClick={go(s.id)}
-              className="inline-flex items-center min-h-9 touch:min-h-11 px-3 rounded-full border border-slate-700 bg-slate-800/60 text-sm text-slate-200 hover:bg-slate-700 whitespace-nowrap"
-            >
-              {s.label}
-            </a>
+            <Button asChild variant="outline" size="sm">
+              <a href={`#${sectionId(s.id)}`} onClick={go(s.id)}>{s.label}</a>
+            </Button>
           </li>
         ))}
       </ul>
     </nav>
+  );
+}
+
+/** Groups related cards without hiding forms or resetting unfinished entries. */
+export function RecordGroup({ id, title, headingAs: Heading = 'h3', columns = true, children }) {
+  return (
+    <section
+      id={sectionId(id)}
+      aria-labelledby={sectionId(`${id}-heading`)}
+      tabIndex={-1}
+      className="scroll-mt-24 space-y-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Heading id={sectionId(`${id}-heading`)} className="text-lg font-semibold text-slate-100">{title}</Heading>
+      <div className={columns ? 'grid gap-4 lg:grid-cols-2 items-start' : 'space-y-4'}>{children}</div>
+    </section>
   );
 }
 
@@ -327,7 +340,7 @@ export function HistorySection({ gecko, events, currentUserEmail, guest, heading
           })}
         </ul>
       ) : (
-        <p className="text-slate-400 text-sm">No events logged yet. Use + Event at the top to add one.</p>
+        <p className="text-slate-400 text-sm">No events logged yet. Use Log event at the top to add one.</p>
       )}
       {/* Who did what, when this gecko sits in a shared collection.
           Renders nothing for geckos that were never shared. */}
@@ -345,7 +358,7 @@ export function HistorySection({ gecko, events, currentUserEmail, guest, heading
  */
 export function MoreSection({ gecko, weights, currentUser, headingAs: Heading = 'h3' }) {
   return (
-    <section aria-labelledby={sectionId('more-heading')} id={sectionId('more')} className="scroll-mt-28 space-y-4">
+    <section aria-labelledby={sectionId('more-heading')} id={sectionId('more')} tabIndex={-1} className="scroll-mt-28 space-y-4">
       <Heading id={sectionId('more-heading')} className="text-base font-semibold text-slate-100 flex items-center gap-2">
         <Sparkles className={ICON_CLASS} aria-hidden="true" /> More about {gecko.name || 'this gecko'}
       </Heading>

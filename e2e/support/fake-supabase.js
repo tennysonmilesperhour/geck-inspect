@@ -174,7 +174,7 @@ function applyOrderAndLimit(rows, params) {
  * Builds the fake. `seed` pre-fills tables, `rpc` adds or replaces RPC
  * handlers (name -> (args, db) => result).
  */
-export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
+export function createFakeSupabase({ seed = {}, rpc = {}, confirmOnPasswordSignIn = true } = {}) {
   const tables = new Map(Object.entries(seed).map(([name, rows]) => [name, rows.map((r) => ({ ...r }))]));
   const table = (name) => {
     if (!tables.has(name)) tables.set(name, []);
@@ -185,6 +185,29 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
   let currentUser = null;
 
   const nowIso = () => new Date().toISOString();
+
+  function addAccount({ email, password = 'correct-horse-battery', name = 'Fixture Keeper', confirmed = true, id = uuid() }) {
+    const user = {
+      id, email: email.toLowerCase(), aud: 'authenticated', role: 'authenticated',
+      email_confirmed_at: confirmed ? nowIso() : null,
+      app_metadata: { provider: 'email', providers: ['email'] },
+      user_metadata: { full_name: name },
+      identities: [{ id: uuid(), provider: 'email' }], created_at: nowIso(),
+    };
+    accounts.set(user.email, { user, password });
+    if (confirmed) profileFor(user);
+    return user;
+  }
+
+  function userForRequest(request) {
+    const token = request.headers().authorization?.replace(/^Bearer /i, '');
+    try {
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+      return [...accounts.values()].find(({ user }) => user.id === payload.sub)?.user || null;
+    } catch {
+      return null;
+    }
+  }
 
   function sessionFor(user) {
     const expiresAt = Math.floor(Date.now() / 1000) + 3600;
@@ -218,7 +241,7 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
 
   const rpcHandlers = {
     // The atomic gecko save (GeckoForm, Quick Add, the first gecko flow).
-    save_gecko_record: (args) => {
+    save_gecko_record: (args, { currentUser }) => {
       const record = { ...(args.p_record || {}) };
       const rows = table('geckos');
       if (args.p_gecko_id) {
@@ -261,13 +284,16 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
     const method = request.method();
     const path = url.pathname;
     const params = url.searchParams;
+    // Authenticate each request, not the last browser that signed in. This
+    // permits independent sender/recipient contexts and cross-device links.
+    const requestUser = userForRequest(request);
     let body = null;
     try {
       body = request.postDataJSON();
     } catch {
       body = request.postData();
     }
-    calls.push({ method, path, search: url.search, body });
+    calls.push({ method, path, search: url.search, body, userId: requestUser?.id || null });
 
     const json = (payload, status = 200, headers = {}) =>
       route.fulfill({
@@ -291,18 +317,7 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
     // ---- Auth ----
     if (path === '/auth/v1/signup') {
       const email = String(body?.email || '').toLowerCase();
-      const user = {
-        id: uuid(),
-        aud: 'authenticated',
-        role: 'authenticated',
-        email,
-        email_confirmed_at: null,
-        app_metadata: { provider: 'email', providers: ['email'] },
-        user_metadata: body?.data || {},
-        identities: [{ id: uuid(), provider: 'email' }],
-        created_at: nowIso(),
-      };
-      accounts.set(email, { user, password: body?.password });
+      const user = addAccount({ email, password: body?.password, name: body?.data?.full_name, confirmed: false });
       // Email confirmation is on, as in production: no session yet.
       return json(user);
     }
@@ -316,18 +331,30 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
         }
         // Treat the account as confirmed once it signs in (the test stands
         // in for the click on the confirmation email).
+        if (!confirmOnPasswordSignIn && !account.user.email_confirmed_at) {
+          return json({ error: 'email_not_confirmed', error_description: 'Email not confirmed', code: 'email_not_confirmed' }, 400);
+        }
         account.user.email_confirmed_at ||= nowIso();
         currentUser = account.user;
         profileFor(currentUser);
         return json(sessionFor(currentUser));
       }
-      if (grant === 'refresh_token' && currentUser) return json(sessionFor(currentUser));
+      const refreshed = [...accounts.values()].find(({ user }) => body?.refresh_token === `refresh-${user.id}`)?.user;
+      if (grant === 'refresh_token' && refreshed) return json(sessionFor(refreshed));
       return json({ error: 'invalid_grant', error_description: 'Invalid refresh token' }, 400);
     }
+    if (path === '/auth/v1/verify') {
+      const account = [...accounts.values()].find(({ user }) => body?.token_hash === `confirmation-${user.id}`);
+      if (!account) return json({ code: 'otp_expired', msg: 'Email link is invalid or has expired' }, 403);
+      account.user.email_confirmed_at ||= nowIso();
+      currentUser = account.user;
+      profileFor(currentUser);
+      return json(sessionFor(currentUser));
+    }
     if (path === '/auth/v1/user') {
-      if (!currentUser) return json({ msg: 'not signed in', code: 401 }, 401);
-      if (method === 'PUT') Object.assign(currentUser.user_metadata, body?.data || {});
-      return json(currentUser);
+      if (!requestUser) return json({ msg: 'not signed in', code: 401 }, 401);
+      if (method === 'PUT') Object.assign(requestUser.user_metadata, body?.data || {});
+      return json(requestUser);
     }
     if (path === '/auth/v1/logout') {
       currentUser = null;
@@ -353,7 +380,12 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
       const name = path.slice('/rest/v1/rpc/'.length);
       const handler = rpcHandlers[name];
       const args = method === 'GET' ? Object.fromEntries(params) : body || {};
-      const result = handler ? await handler(args, { table, currentUser }) : null;
+      let result;
+      try {
+        result = handler ? await handler(args, { table, currentUser: requestUser }) : null;
+      } catch (error) {
+        return json({ code: error.code || 'P0001', message: error.message, hint: error.hint }, error.status || 400);
+      }
       // A set-returning RPC can be filtered and shaped like a table.
       if (Array.isArray(result)) return json(applyOrderAndLimit(applyFilters(result, params), params));
       return json(result);
@@ -390,7 +422,7 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
             const existing = rows.find((r) => conflict.every((c) => values[c] !== undefined && r[c] === values[c]));
             if (existing) return Object.assign(existing, values);
           }
-          const row = { id: uuid(), created_date: nowIso(), created_by: currentUser?.email, ...values };
+          const row = { id: uuid(), created_date: nowIso(), created_by: requestUser?.email, ...values };
           rows.push(row);
           return row;
         });
@@ -444,6 +476,22 @@ export function createFakeSupabase({ seed = {}, rpc = {} } = {}) {
   return {
     calls,
     table,
+    addAccount,
+    account: (email) => accounts.get(email.toLowerCase())?.user,
+    sessionFor,
+    confirmAccount(email) {
+      const user = accounts.get(email.toLowerCase())?.user;
+      if (!user) throw new Error('Fixture account does not exist');
+      user.email_confirmed_at ||= nowIso();
+      profileFor(user);
+      return sessionFor(user);
+    },
+    async signIn(context, user) {
+      const session = sessionFor(user);
+      await context.addInitScript(({ key, session }) => {
+        localStorage.setItem(key, JSON.stringify(session));
+      }, { key: FAKE_STORAGE_KEY, session });
+    },
     get currentUser() {
       return currentUser;
     },
