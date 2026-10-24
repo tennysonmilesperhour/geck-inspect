@@ -2,7 +2,7 @@
  * MorphMarket CSV export / import utilities.
  *
  * MorphMarket's Bulk Import 2.0 accepts CSV/TSV with a header row.
- * Columns can be in any order; only included columns are processed.
+ * Columns can be in any order; the live importer can clear omitted fields.
  *
  * Reference:
  *   https://support.morphmarket.com/article/123-importing-exporting-animals
@@ -205,7 +205,7 @@ export function buildMorphMarketCSV(geckos) {
  */
 export const MM_HEADERS = MM_COLUMNS.map((c) => c.header);
 
-/** Omit empty optional columns so an empty batch field is not sent as a replacement. */
+/** Omit empty optional columns for readability; MorphMarket can still clear those fields. */
 export function morphMarketHeaders(geckos) {
   const optional = new Set(['Price', 'DOB', 'Weight', 'Traits', 'Desc', 'Photo_Urls']);
   return MM_COLUMNS.filter((c) => !optional.has(c.header) || geckos.some((g) => c.exportFn(g) !== ''))

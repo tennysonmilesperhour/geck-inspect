@@ -189,6 +189,8 @@ An email sign-up for people without an account, feeding the same weekly notes. D
 
 **Fifth review round, 18 October (`20261018150400_weekly_notes_visitor_fixes_5.sql`):** the member rule had become slow with many members (it read every profile once per member: about 65 s at 10,000 members, paid again by every member claim); it now reads a member's last choice only when the inbox has a visitor stop (3,000 members: about 0.4 s). "Already signed up" counts only a spelling that gets the notes now (`weekly_notes_inbox_signed_up`), so a bounced spelling cannot lock an inbox out. The stop link stops every spelling of the inbox and kills every pending link for it; the confirm button takes the form's per-inbox lock (two clicks at the same moment: the second answers "already", checked with two connections); visitor candidates pick one spelling per inbox. Both claims and both 7-day rules count the whole inbox, so moving between spellings repeats nothing. `email_is_suppressed` (send-email's check before every member email) and the member candidates match the do-not-email list by inbox. Account erasure removes visitor rows, ledger and polls for every spelling; a visitor erasure is refused when any spelling has an account. The guide form's daily limit counts the inbox (new generated column `guide_email_sends.inbox_key`). One-time data fixes stop spellings left confirmed beside a newer stop and turn off profiles whose last choice is older than a visitor stop. `/WeeklyNotes`: the member answer reads "You have a Geck Inspect account".
 
+**Sixth review round, 18 October, merged 24 October (`20261024182000_weekly_notes_visitor_fixes_6.sql`).** Deployments were paused on 18 Oct, so it waited in a draft PR. It was written as `20261018172000` and re-dated on 24 Oct to sort after `20261020230000_email_relevance_and_outcomes.sql`, which had rewritten `weekly_notes_candidates` in the meantime; the member rule in this file is built on that newer body, so the relevance gate (a gecko on record or a sign-in within 60 days) stays. The same merge fixed two CI failures already red on main: the Weekly Gecko Notes SQL tests (their members had no gecko and no sign-in, so the 20 Oct gate left them out) and the browser test job (pinned to Ubuntu 24.04, because Playwright 1.56 cannot install Chromium on the Ubuntu 26.04 runners). Both claims lock the inbox instead of the spelling (two accounts on one inbox could otherwise claim at the same moment and get the same note twice; production had one such inbox due on 18 Oct, the owner's own test accounts). Account erasure keeps another live account's rows on the same inbox; erasure scrubs every spelling from the delivery log; an index on `profiles (lower(email))` keeps the member rule fast when inboxes have visitor stops; a spelling that never confirmed only loses its link when the inbox stops; a visitor erasure is not blocked by an unconfirmed sign-up; and the 7-day and 20-hour rules allow 10 minutes, so the hourly run 7 days or 20 hours later counts even when it starts a fraction of a second earlier than the last one did (on 18 Oct the 22:50 run skipped 20 members polled at 02:50:00.306 because it started at 22:50:00.098). The erasure fix showed up live the same evening: deleting a test account at 23:10 wiped the poll rows of the owner's two other accounts on the same inbox. Merging it applies the migration; nothing else is needed.
+
 ## Done on 3 October
 
 **Edge functions deployed** (all from the repo copy):
@@ -375,22 +377,21 @@ functions. Function: `verify-morphmarket-store`, declared in
 `supabase/config.toml` with `verify_jwt = true`, so the merge deploys it. No
 secrets needed.
 
-Not yet known: whether MorphMarket lets a Supabase server read store pages.
-If every check lands in the admin queue, the automatic path is blocked and
-the hand check is the process.
+Proven 24 October: MorphMarket returned 403 to both the exact local User-Agent
+and the Supabase function. Use the hand-check process below when blocked.
 
 The MorphMarket CSV export now starts with an `Animal_ID` column (the Geck
 Inspect ID code, or the record id), which Bulk Import 2.0 requires and uses to
-update listings on a second upload instead of adding copies. The photo column
-is now `Photo URLs`, the name MorphMarket's help pages use. The importer reads
+update listings on a second upload instead of adding copies. The original photo
+column was `Photo URLs`; the 24 October live check below
+corrected it to `Photo_Urls`. The importer reads
 MorphMarket's own header spellings (`Animal Id`, `Birth Date`, `Desc`,
 `Photo Urls`) and keeps the Animal ID as the gecko's ID code, so a second
 import of the same file is refused row by row instead of duplicating geckos.
-MorphMarket's site could not be reached from the build session, so the other
-column names are still unconfirmed; step 19 of the feature audit (the two-row
-test import) is still the proof.
+The original build session could not reach MorphMarket. The live two-row
+check below now supplies that proof.
 
-### 24 October follow-up: live field reference checked, round trip pending
+### 24 October follow-up: badge and CSV round trip proven
 
 Read all 33 Supported Fields on the signed-in MorphMarket Import Animals
 page. The full list and allowed values are saved in
@@ -398,9 +399,11 @@ page. The full list and allowed values are saved in
 Corrected export headers to State, Desc and Photo_Urls, removed Currency
 (MorphMarket uses Seller Profile currency), corrected Subadult, used spaces
 between traits and rounded weights to whole grams. ISO dates and comma-separated
-photos match the published field rules. Empty optional columns are omitted;
-the preview matches the file. Both export screens warn about blank cells in
-mixed columns, currency, shipping and keeping Animal_ID unchanged.
+photos match the published field rules. Empty optional columns are omitted
+and the preview matches the file, but
+live testing proved omission does not protect existing values. Both export
+screens warn that missing values can erase data, including omitted columns,
+and explain currency, shipping and keeping Animal_ID unchanged.
 
 A real six-row MorphMarket export exposed starred required headers and
 M/D/YYYY birth dates, which the parser now reads. It skips the Leachianus
@@ -414,15 +417,49 @@ cannot be stored as a full hatch date.
 Validation: `pnpm lint` passed with 0 errors and 75 existing warnings;
 `pnpm test` passed all 3,479 tests in 295 files. The real downloaded CSV
 also passed assertions for titles, dates, photo counts and species filtering.
+Commit `63994ac0` was pushed directly to main and Vercel reported a successful
+production deployment. The live Import CSV dialog then showed the five
+crested records with correct names, sexes, traits and prices and all eight
+expected warnings. Cancelled without creating records. Separate GitHub
+member-flow and database checks also failed on the preceding commit: the
+browser installer does not support the runner's Ubuntu version, and two
+weekly-email SQL fixtures fail. The main checks job was cancelled when a
+newer unrelated commit arrived.
 
-Not yet proven: Tennyson has been asked for his actual store link and to run
-Check my store. The initial production query returned no rows. There is no
-curl result or Supabase fetch result yet, so automatic access versus hand
-review remains undecided. No About code was removed.
+Live store proof: Tennyson supplied `tennyson_miles`. Curl with the exact
+function User-Agent returned 403 and a Cloudflare challenge page. The real
+My Store check saved `pending`, `needs_review=true`, and `MorphMarket answered
+403`; edge logs confirm the check ran. After reading the visible About code,
+Admin > Breeder verification > Code is there saved `verified by an admin`.
+Saved the breeder profile and confirmed the public badge at
+https://geckinspect.com/Breeder/thegeckogarden links to the correct store.
+The card now explains the hand check and retaining the code until verified.
+Tennyson approved removing the code on 24 October. Removed only that paragraph
+and confirmed it is absent from the public About text.
 
-The two disposable listings still need to be created, updated without
-duplicates, exported back into Geck Inspect and deleted by Tennyson. Neither
-feature is marked complete from unit tests or field documentation alone.
+Live CSV proof: created two disposable Pet records, exported them through the
+production batch builder and uploaded the unchanged CSV with Synchronize/Replace
+off. MorphMarket created listings 4174375 and 4174376 with the correct fields
+and all three photos. Changed A's price from 125 to 126 in Geck Inspect,
+exported and uploaded again: the same two listing numbers remained, with no
+duplicates. Exported the pair from MorphMarket and imported through the live
+Geck Inspect dialog: two records created, with IDs, dates, sexes, prices,
+weights, descriptions as notes and photos retained. Existing seller IDs were
+correctly refused first; only the disposable originals were renamed and
+archived to permit the return test. All four Geck Inspect records and both
+MorphMarket listings are now archived; permanent deletion remains with Tennyson.
+
+Data-loss finding: a separate upload with Price, DOB and Weight columns removed
+still cleared both dates and weights and changed both prices to $0. The importer
+adds missing fields as blank. Restored all values with the full file. Warnings
+now explain this directly. Tennyson chose to keep export available with a
+clear warning on 24 October, without blocking incomplete files. See the
+reference for exact test values and scope. For Sale shipping, payments and
+sold-state flows were not exercised.
+
+Final validation on current main: `pnpm lint` passed with 0 errors and 75
+existing warnings; `pnpm test` passed 3,479 tests in 295 files. The exact
+lockfile installed successfully. No formula-neutralization behavior changed.
 
 ## 20 October: email overhaul (letters, preview lines, relevance gate)
 
@@ -480,3 +517,16 @@ Functions: `send-email` and `send-push` (both declared) map
 
 Regression file: `supabase/tests/passport_transfer_request_regressions.sql`.
 Nothing waits on Tennyson.
+
+## 24 October: getting-started email spacing (written 19 October)
+
+Written on 19 October as `20261019001200` and held while deployments were paused; merged on 24 October as `20261024183300_lifecycle_spacing_allowance.sql`, re-dated to sort after the migrations that went live in between (the last is the Weekly Gecko Notes sixth round, `20261024182000`). Merging it applies the migration; nothing else is needed. It restates `lifecycle_email_candidates` (the body matched production by checksum on 19 and 24 October) with one change: the 20-hour spacing allows 10 minutes for the hourly run's clock. Each `lifecycle_email_sends` row is stamped with its run's start, which moves by a fraction of a second, so an exact 20 hours could leave a member for the next hour (the same pattern skipped 20 Weekly Gecko Notes members in the 22:50 run on 18 Oct). Only day 0 and day 1 can meet the rule, and in production no member had reached it by 19 October. The weekly notes rule against a recent getting-started email needs no change: its stamps are at 35 past and weekly runs at 50 past. Test: section 8 of `supabase/tests/lifecycle_regressions.sql`, which fails with the exact comparison put back.
+
+## 24 October: re-permission email fixes
+
+Migration: `20261024201200_weekly_notes_repermission_fixes.sql`, dated after `20261024183300`, production's newest when it was pushed. Two fixes, found while finishing the sixth Weekly Gecko Notes review:
+
+- `claim_weekly_notes_repermission` locks the inbox, not the spelling, as the weekly notes claims do since `20261024182000`. Two accounts on one inbox are asked about in the same hourly run; with a lock per spelling both claims could pass the once-per-inbox check and the person would get the email twice. The email is still switched off (`weekly_notes_repermission_enabled`).
+- `admin_erase_account` deletes the re-permission record (`weekly_notes_repermission_sends`), which `20261024150000` added after the function was last written. The erased address's own row goes, and every spelling of the inbox when no other account that can sign in remains, the same rule as the weekly notes ledger.
+
+New test file: `supabase/tests/weekly_notes_repermission_regressions.sql` (who is due it, the lock, once per inbox, the keep button, the job and its switch, erasure). Production's copies of both functions matched main's migrations before the push. Nothing waits on Tennyson.
