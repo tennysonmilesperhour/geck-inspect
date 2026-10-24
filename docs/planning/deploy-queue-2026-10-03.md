@@ -521,3 +521,12 @@ Nothing waits on Tennyson.
 ## 24 October: getting-started email spacing (written 19 October)
 
 Written on 19 October as `20261019001200` and held while deployments were paused; merged on 24 October as `20261024183300_lifecycle_spacing_allowance.sql`, re-dated to sort after the migrations that went live in between (the last is the Weekly Gecko Notes sixth round, `20261024182000`). Merging it applies the migration; nothing else is needed. It restates `lifecycle_email_candidates` (the body matched production by checksum on 19 and 24 October) with one change: the 20-hour spacing allows 10 minutes for the hourly run's clock. Each `lifecycle_email_sends` row is stamped with its run's start, which moves by a fraction of a second, so an exact 20 hours could leave a member for the next hour (the same pattern skipped 20 Weekly Gecko Notes members in the 22:50 run on 18 Oct). Only day 0 and day 1 can meet the rule, and in production no member had reached it by 19 October. The weekly notes rule against a recent getting-started email needs no change: its stamps are at 35 past and weekly runs at 50 past. Test: section 8 of `supabase/tests/lifecycle_regressions.sql`, which fails with the exact comparison put back.
+
+## 24 October: re-permission email fixes
+
+Migration: `20261024201200_weekly_notes_repermission_fixes.sql`, dated after `20261024183300`, production's newest when it was pushed. Two fixes, found while finishing the sixth Weekly Gecko Notes review:
+
+- `claim_weekly_notes_repermission` locks the inbox, not the spelling, as the weekly notes claims do since `20261024182000`. Two accounts on one inbox are asked about in the same hourly run; with a lock per spelling both claims could pass the once-per-inbox check and the person would get the email twice. The email is still switched off (`weekly_notes_repermission_enabled`).
+- `admin_erase_account` deletes the re-permission record (`weekly_notes_repermission_sends`), which `20261024150000` added after the function was last written. The erased address's own row goes, and every spelling of the inbox when no other account that can sign in remains, the same rule as the weekly notes ledger.
+
+New test file: `supabase/tests/weekly_notes_repermission_regressions.sql` (who is due it, the lock, once per inbox, the keep button, the job and its switch, erasure). Production's copies of both functions matched main's migrations before the push. Nothing waits on Tennyson.
