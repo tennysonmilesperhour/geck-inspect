@@ -35,6 +35,7 @@ import { membershipMetaDescription } from '../src/lib/membershipSeo.js';
 // The morph dataset is a plain, dependency-free ES module, so Node imports
 // it directly. Hub titles, counts and the morph route list come from it.
 import { MORPHS, INHERITANCE, MORPH_CATEGORIES } from '../src/data/morph-guide.js';
+import { COMPARISONS } from '../src/data/comparisons.js';
 import { CATEGORY_NOUNS, HIGH_VALUE_MORPH_SLUGS, categoryHubSeo, inheritanceHubSeo } from '../src/lib/morphMeta.js';
 import { GENETICS_GUIDE_DESCRIPTION, GENETICS_GUIDE_TITLE } from '../src/lib/geneticsGuideSeo.js';
 
@@ -437,6 +438,28 @@ export const STATIC_ROUTES = [
         'Free crested gecko datasets from Geck Inspect: the Geck Inspect Price Index of asking prices by trait and market, every morph, the genetics engine data and the care guide, as JSON, CSV and markdown, plus an MCP server for AI agents.',
     },
   },
+  {
+    // Comparison pages (src/pages/Compare.jsx, src/data/comparisons.js):
+    // Geck Inspect next to the tools people weigh it against. One page per
+    // comparison so the per-page numbers show which ones earn sign-ups
+    // (docs/planning/launch-offer-tests-2026-10.md).
+    path: '/compare',
+    priority: 0.6,
+    changefreq: 'monthly',
+    lastmod: dateOf('src/pages/Compare.jsx', 'src/data/comparisons.js'),
+    meta: {
+      title: 'Compare Crested Gecko Apps and Record Keeping Tools',
+      description:
+        'How Geck Inspect compares with spreadsheets, MorphMarket Animal Manager, Breed Ledger, ReptiDex, Husbandry.Pro and asking ChatGPT, for crested gecko keepers and breeders. Where each one is the better pick.',
+    },
+  },
+  ...COMPARISONS.map((c) => ({
+    path: `/compare/${c.slug}`,
+    priority: 0.6,
+    changefreq: 'monthly',
+    lastmod: dateOf('src/pages/Compare.jsx', 'src/data/comparisons.js'),
+    meta: { title: c.metaTitle, description: c.metaDescription },
+  })),
   {
     // Public front door for Morph ID (audit step 29). Signed-out visitors
     // see the page and are asked to sign in before uploading; the first
