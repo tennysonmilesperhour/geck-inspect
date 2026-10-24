@@ -19,7 +19,8 @@ const product = {
 describe('affiliate shopping links', () => {
   it('renders a working tagged link without waiting for click tracking', () => {
     const html = renderToStaticMarkup(<AddToCartButton product={product} compact />);
-    expect(html).toContain(`href="${product.vendor_product_url}"`);
+    expect(html).toContain('href="https://www.amazon.com/dp/B0HBBF8KRV?tag=geckinspect-20"');
+    expect(html).not.toContain('geckinspect09-20');
     expect(html).toContain('rel="noopener noreferrer sponsored"');
     expect(html).not.toContain(' disabled=');
     expect(html).toContain('Buy at vendor');
