@@ -48,7 +48,7 @@ export default function CalculatorResultSummary({ sire, dam, resultsId, classNam
         <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-slate-100">
           {shown.map((item) => (
             <li key={item.label} className={item.lethal ? 'text-red-200' : undefined}>
-              <span className="font-semibold">{pct(item.probability)}</span> {item.label}
+              <span className="font-semibold font-mono tabular-nums">{pct(item.probability)}</span> {item.label}
               {item.lethal ? ' (dies in the egg)' : ''}
             </li>
           ))}
@@ -57,7 +57,7 @@ export default function CalculatorResultSummary({ sire, dam, resultsId, classNam
         {summary.lethal.length > 0 && !shown.some((i) => i.lethal) && (
           <p className="mt-1 text-xs text-red-200 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
-            {pct(summary.lethal.reduce((s, l) => s + l.probability, 0))} of eggs carry a lethal combination. See the full odds.
+            <span className="font-mono tabular-nums">{pct(summary.lethal.reduce((s, l) => s + l.probability, 0))}</span> of eggs carry a lethal combination. See the full odds.
           </p>
         )}
       </div>

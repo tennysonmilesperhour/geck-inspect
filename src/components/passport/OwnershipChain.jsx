@@ -15,16 +15,6 @@ import { format } from 'date-fns';
 import { ShieldCheck } from 'lucide-react';
 import { TRANSFER_METHOD_LABELS } from '@/lib/passportUtils';
 
-const C = {
-  forest:   '#e2e8f0',
-  sage:     '#10b981',
-  paleSage: 'rgba(16,185,129,0.1)',
-  slate:    '#cbd5e1',
-  muted:    '#64748b',
-  cardBg:   '#0f172a',
-  border:   'rgba(51,65,85,0.5)',
-};
-
 /**
  * Mask anything that looks like an email. The public passport should
  * never expose a raw address, even if older records stored one in
@@ -53,14 +43,8 @@ export default function OwnershipChain({ records }) {
   const chain = sortRecords(records);
 
   return (
-    <div
-      className="rounded-xl border p-6"
-      style={{ borderColor: C.border, backgroundColor: C.cardBg }}
-    >
-      <h2
-        className="text-xl mb-4"
-        style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-      >
+    <div className="rounded-xl border border-slate-700/50 bg-slate-900 p-6">
+      <h2 className="text-xl font-bold text-slate-100 mb-4 tracking-tight">
         Chain of Custody
       </h2>
 
@@ -75,64 +59,54 @@ export default function OwnershipChain({ records }) {
             <div key={r.id || i} className="flex gap-4 items-start">
               <div className="flex flex-col items-center self-stretch">
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 border"
-                  style={{
-                    backgroundColor: isOrigin ? C.sage : C.paleSage,
-                    color: isOrigin ? '#022c22' : C.forest,
-                    borderColor: isOrigin ? C.sage : 'transparent',
-                  }}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 border ${
+                    isOrigin
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-500'
+                      : 'bg-emerald-500/10 text-slate-100 border-transparent'
+                  }`}
                   title={isOrigin ? 'Origin of this chain' : `Owner ${i + 1}`}
                 >
                   {displayName[0].toUpperCase()}
                 </div>
                 {i < chain.length - 1 && (
-                  <div className="w-px flex-1 my-1" style={{ backgroundColor: 'rgba(16,185,129,0.25)' }} />
+                  <div className="w-px flex-1 my-1 bg-emerald-500/25" />
                 )}
               </div>
               <div className="pb-6 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold" style={{ color: C.slate }}>{displayName}</p>
+                  <p className="text-sm font-semibold text-slate-200">{displayName}</p>
                   {isOrigin && (
-                    <span
-                      className="text-[10px] uppercase tracking-wider rounded-full px-2 py-0.5 font-semibold"
-                      style={{ backgroundColor: C.paleSage, color: C.sage }}
-                    >
+                    <span className="text-[10px] uppercase tracking-wider rounded-full px-2 py-0.5 font-semibold bg-emerald-500/10 text-emerald-400">
                       Origin
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="text-xs" style={{ color: C.muted }}>
+                  <span className="text-xs text-slate-400 tabular-nums">
                     {r.acquired_date
                       ? format(new Date(r.acquired_date), 'MMM d, yyyy')
                       : 'Date not recorded'}
                   </span>
                   {methodLabel && (
-                    <span
-                      className="text-xs rounded-full px-2 py-0.5"
-                      style={{ backgroundColor: C.paleSage, color: C.forest }}
-                    >
+                    <span className="text-xs rounded-full px-2 py-0.5 bg-emerald-500/10 text-slate-200">
                       {methodLabel}
                     </span>
                   )}
                 </div>
-                {r.notes && <p className="text-xs mt-1" style={{ color: C.muted }}>{r.notes}</p>}
+                {r.notes && <p className="text-xs mt-1 text-slate-400">{r.notes}</p>}
               </div>
             </div>
           );
         })}
       </div>
 
-      <div
-        className="flex items-start gap-2.5 rounded-lg px-3 py-2.5 mt-2"
-        style={{ backgroundColor: C.paleSage }}
-      >
-        <ShieldCheck size={16} className="shrink-0 mt-0.5" style={{ color: C.sage }} />
-        <p className="text-xs leading-relaxed" style={{ color: C.muted }}>
-          <span style={{ color: C.forest, fontWeight: 600 }}>Verified on Geck Inspect.</span>{' '}
+      <div className="flex items-start gap-2.5 rounded-lg px-3 py-2.5 mt-2 bg-emerald-500/10">
+        <ShieldCheck size={16} className="shrink-0 mt-0.5 text-emerald-400" />
+        <p className="text-xs leading-relaxed text-slate-400">
+          <span className="text-slate-100 font-semibold">Verified on Geck Inspect.</span>{' '}
           Each entry above was timestamped in the Geck Inspect database the moment it
           was created. Later owners cannot backdate or rewrite earlier entries, so this
-          chain reflects the animal's real history of custody.
+          chain reflects the animal&apos;s real history of custody.
         </p>
       </div>
     </div>

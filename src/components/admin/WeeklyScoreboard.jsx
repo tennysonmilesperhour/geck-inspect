@@ -431,12 +431,12 @@ export function EntryForm({ onSaved }) {
 
 function EntryList({ entries, error, onChanged }) {
   const [busy, setBusy] = useState(null);
+  const [confirmId, setConfirmId] = useState(null);
   const [failure, setFailure] = useState(null);
 
   async function remove(entry) {
-    const what = entry.breeder_name ? `${KIND_LABELS[entry.kind]} with ${entry.breeder_name}` : KIND_LABELS[entry.kind];
-    if (typeof window !== 'undefined' && window.confirm && !window.confirm(`Delete "${what}" from ${entry.entry_date}?`)) return;
     setBusy(entry.id);
+    setConfirmId(null);
     setFailure(null);
     const { error: err } = await supabase.from('scoreboard_entries').delete().eq('id', entry.id);
     setBusy(null);
@@ -457,7 +457,7 @@ function EntryList({ entries, error, onChanged }) {
   const recent = entries.slice(0, 10);
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">
+      <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">
         Latest entries ({entries.length} in all)
       </p>
       {failure ? <p className="text-xs text-red-300 mb-1">{failure}</p> : null}
@@ -467,23 +467,47 @@ function EntryList({ entries, error, onChanged }) {
         <ul className="divide-y divide-slate-800">
           {recent.map((e) => (
             <li key={e.id} className="py-1.5 flex items-start gap-2 text-sm text-slate-200">
-              <span className="text-xs text-slate-500 tabular-nums shrink-0 pt-0.5">{e.entry_date}</span>
+              <span className="text-xs text-slate-500 font-mono tabular-nums shrink-0 pt-0.5">{e.entry_date}</span>
               <span className="flex-1 min-w-0">
                 {KIND_LABELS[e.kind] || e.kind}
                 {e.kind === 'monthly_cost' ? `: ${formatUsd(e.amount_usd)}` : e.breeder_name ? `: ${e.breeder_name}` : ''}
                 {e.notes ? <span className="block text-xs text-slate-500 break-words">{e.notes}</span> : null}
               </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-slate-500 hover:text-red-300"
-                disabled={busy === e.id}
-                onClick={() => remove(e)}
-                aria-label={`Delete ${KIND_LABELS[e.kind] || e.kind} from ${e.entry_date}`}
-              >
-                {busy === e.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
-              </Button>
+              {confirmId === e.id ? (
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 px-2 text-xs bg-red-600 hover:bg-red-500 text-white"
+                    disabled={busy === e.id}
+                    onClick={() => remove(e)}
+                  >
+                    {busy === e.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Confirm'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-slate-400 hover:text-slate-200"
+                    onClick={() => setConfirmId(null)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-slate-500 hover:text-red-300"
+                  disabled={busy === e.id}
+                  onClick={() => setConfirmId(e.id)}
+                  aria-label={`Delete ${KIND_LABELS[e.kind] || e.kind} from ${e.entry_date}`}
+                >
+                  {busy === e.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                </Button>
+              )}
             </li>
           ))}
         </ul>

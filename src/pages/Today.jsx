@@ -249,15 +249,48 @@ export default function Today() {
     <div className="mx-auto max-w-3xl px-4 py-4 md:p-8 text-slate-100">
       <Seo title="Today" description="What your crested geckos need today: feedings, weigh-ins, eggs and vet follow-ups." path="/Today" noIndex />
 
-      <header className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Today</h1>
-          <p className="text-sm text-slate-400">{dateLine}</p>
+      <header className="mb-5 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Today</h1>
+            <p className="text-sm text-slate-400">{dateLine}</p>
+          </div>
+          <div className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/90 p-1 text-xs font-semibold">
+            <span className="rounded-full bg-emerald-600 px-3 py-1.5 text-white shadow-sm">
+              Daily Care
+            </span>
+            <Link
+              to="/Dashboard"
+              className="rounded-full px-3 py-1.5 text-slate-400 transition-colors hover:text-slate-100"
+            >
+              Overview
+            </Link>
+          </div>
         </div>
         {signedIn && (
-          <Button asChild variant="outline" className="min-h-11 border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800">
-            <Link to="/FieldMode"><Wrench className="mr-2 h-4 w-4" aria-hidden="true" /> Field Mode</Link>
-          </Button>
+          <nav aria-label="Husbandry tools" className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <Link
+              to="/FieldMode"
+              className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+            >
+              <Wrench className="mr-1.5 h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+              Field Mode
+            </Link>
+            <Link
+              to="/BatchHusbandry"
+              className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+            >
+              <ListChecks className="mr-1.5 h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+              Batch Care
+            </Link>
+            <Link
+              to="/PrintableWorksheets"
+              className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+            >
+              <CalendarCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+              Worksheets
+            </Link>
+          </nav>
         )}
       </header>
 

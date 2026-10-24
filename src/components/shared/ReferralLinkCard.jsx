@@ -20,6 +20,7 @@ import { buildReferralLink } from '@/lib/referral';
 export default function ReferralLinkCard({ className = '' }) {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [showManualCopy, setShowManualCopy] = useState(false);
 
   if (!user?.referral_code) return null;
 
@@ -32,9 +33,28 @@ export default function ReferralLinkCard({ className = '' }) {
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
+      setShowManualCopy(false);
       setTimeout(() => setCopied(false), 1500);
+      return;
     } catch {
-      window.prompt('Copy your referral link:', link);
+      try {
+        const el = document.createElement('textarea');
+        el.value = link;
+        el.setAttribute('readonly', '');
+        el.style.position = 'fixed';
+        el.style.opacity = '0';
+        document.body.appendChild(el);
+        el.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(el);
+        if (ok) {
+          setCopied(true);
+          setShowManualCopy(false);
+          setTimeout(() => setCopied(false), 1500);
+          return;
+        }
+      } catch {}
+      setShowManualCopy(true);
     }
   };
 
@@ -63,9 +83,22 @@ export default function ReferralLinkCard({ className = '' }) {
             </p>
           )}
           {paidReferrals > 0 && (
-            <p className="mt-1.5 text-xs text-emerald-300/80">
+            <p className="mt-1.5 text-xs text-emerald-300/80 tabular-nums">
               {paidReferrals} paid {paidReferrals === 1 ? 'referral' : 'referrals'} so far
             </p>
+          )}
+          {showManualCopy && (
+            <div className="mt-3">
+              <input
+                type="text"
+                readOnly
+                value={link}
+                onFocus={(e) => e.target.select()}
+                onClick={(e) => e.target.select()}
+                aria-label="Your referral link"
+                className="w-full rounded-lg border border-emerald-700/60 bg-slate-950/80 px-3 py-1.5 text-xs font-mono text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              />
+            </div>
           )}
         </div>
         <Button

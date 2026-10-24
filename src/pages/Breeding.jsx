@@ -32,6 +32,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -97,6 +107,7 @@ export default function BreedingPage() {
     const [showPairLimitModal, setShowPairLimitModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [pendingDeletePlanId, setPendingDeletePlanId] = useState(null);
     const [expandedPlanIds, setExpandedPlanIds] = useState(new Set());
     const [activeTab, setActiveTab] = useState(breedingPrefs.defaultTab);
     // ?tab=hatchery (the guided demo links here) opens that tab directly.
@@ -233,10 +244,16 @@ export default function BreedingPage() {
         }
     };
 
-    const handleDeletePlan = async (planId) => {
+    const handleDeletePlan = (planId) => {
         // The Delete Plan button sits right above Save Changes on phones, and
         // this removes every egg too, so ask first.
-        if (!window.confirm('Delete this breeding plan and all of its eggs? This cannot be undone.')) return;
+        setPendingDeletePlanId(planId);
+    };
+
+    const confirmDeletePlan = async () => {
+        const planId = pendingDeletePlanId;
+        if (!planId) return;
+        setPendingDeletePlanId(null);
         try {
             const eggsToDelete = await Egg.filter({ breeding_plan_id: planId });
             for (const egg of eggsToDelete) {
@@ -524,20 +541,24 @@ export default function BreedingPage() {
                     </Button>
                 </PageHeader>
 
-                {/* The planners left the sidebar on 16 Oct 2026 (review item
-                    E3 23, at most 12 sidebar destinations), so they open
-                    from here. */}
-                <nav aria-label="Breeding planners" className="-mt-3 mb-5 flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-                    <span className="text-slate-400 mr-1">Plan ahead:</span>
+                <nav
+                    aria-label="Breeding planners"
+                    className="-mt-2 mb-6 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none"
+                >
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 mr-1 shrink-0">
+                        Breeding Tools
+                    </span>
                     {[
                         ['/PairingPlanner', 'Pairing Planner'],
                         ['/ProjectManager', 'Season Planner'],
                         ['/BreedingSeason', 'Season Timeline'],
+                        ['/ClutchLab', 'Clutch Lab'],
+                        ['/Pedigree', 'Pedigree Chart'],
                     ].map(([to, label]) => (
                         <Link
                             key={to}
                             to={to}
-                            className="inline-flex min-h-11 items-center rounded-md px-2 text-emerald-300 underline-offset-4 hover:underline hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+                            className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3.5 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
                         >
                             {label}
                         </Link>
@@ -949,6 +970,34 @@ export default function BreedingPage() {
                     limitType="breeding_pairs"
                     currentCount={breedingPlans.filter(p => !p.archived).length}
                 />
+                <AlertDialog
+                    open={Boolean(pendingDeletePlanId)}
+                    onOpenChange={(open) => {
+                        if (!open) setPendingDeletePlanId(null);
+                    }}
+                >
+                    <AlertDialogContent className="border-slate-700 bg-slate-900 text-slate-100">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="text-slate-100">
+                                Delete this breeding plan?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-300">
+                                This permanently deletes the breeding plan and all of its recorded eggs. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel className="border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700">
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={confirmDeletePlan}
+                                className="bg-red-600 text-white hover:bg-red-500"
+                            >
+                                Delete plan and eggs
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </div>
     );

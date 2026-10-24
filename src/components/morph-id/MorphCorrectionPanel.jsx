@@ -306,7 +306,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
             <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {VISUAL_PROFILE_AXES.map((axis) => (
                 <div key={axis.key} className="rounded-md bg-slate-800/70 border border-slate-700 p-3">
-                  <dt className="text-[11px] uppercase tracking-wide text-slate-500">{axis.label}</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">{axis.label}</dt>
                   <dd className="text-sm font-medium text-slate-100 mt-1">
                     {visualAxisLabel(visualProfile[axis.key])}
                   </dd>
@@ -315,7 +315,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
             </dl>
             {visualProfile.white_cream_traits?.length > 0 && (
               <div className="mt-3 pt-3 border-t border-slate-700">
-                <p className="text-[11px] uppercase tracking-wide text-slate-500 mb-2">White and cream placement</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500 mb-2">White and cream placement</p>
                 <div className="flex flex-wrap gap-2">
                   {visualProfile.white_cream_traits.map((trait) => (
                     <Badge key={trait} variant="secondary" className="bg-slate-700 text-slate-200">
@@ -337,22 +337,32 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
               </p>
             </div>
             <div className="space-y-2">
-              {candidates.map((candidate, index) => (
+              {candidates.map((candidate, index) => {
+                const rawScore = Number(candidate.score ?? 0);
+                const pctWidth = rawScore > 1 ? Math.min(100, Math.max(12, rawScore)) : Math.min(100, Math.max(12, Math.round(rawScore * 100)));
+                return (
                 <div key={candidate.morph} className="rounded-lg border border-slate-700 bg-slate-800/40 p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-6 h-6 rounded-full bg-slate-700 text-slate-200 text-xs grid place-items-center shrink-0">
+                      <span className="w-6 h-6 rounded-full bg-slate-700 text-slate-200 text-xs font-mono tabular-nums grid place-items-center shrink-0">
                         {index + 1}
                       </span>
                       <p className="font-medium text-slate-100 truncate">{labelFor(candidate.morph)}</p>
                     </div>
-                    <span className="text-xs text-slate-400 shrink-0">
+                    <span className="text-xs text-slate-400 shrink-0 font-mono tabular-nums">
                       {candidate.source === 'photo_lookup' ? 'reference photos' : `${ESTIMATE_PREFIX}: ${fitWord(candidate.score)}`}
                     </span>
                   </div>
+                  <div className="mt-2 ml-8 h-1.5 rounded-full bg-slate-900/80 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-700 ease-out"
+                      style={{ width: `${pctWidth}%` }}
+                    />
+                  </div>
                   {candidate.why && <p className="text-xs text-slate-400 mt-2 ml-8">{candidate.why}</p>}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

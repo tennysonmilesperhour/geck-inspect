@@ -139,8 +139,8 @@ const StatPill = ({ label, value, tone = 'default', tooltip }) => {
     const t = STAT_TONES[tone] || STAT_TONES.default;
     const inner = (
         <div className={`flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/60 border ${t.border}`}>
-            <span className="text-[11px] uppercase tracking-wide text-slate-400">{label}</span>
-            <span className={`text-sm font-bold ${t.value}`}>{value}</span>
+            <span className="text-xs uppercase tracking-wide text-slate-400">{label}</span>
+            <span className={`text-sm font-bold font-mono tabular-nums ${t.value}`}>{value}</span>
         </div>
     );
     if (!tooltip) return inner;
@@ -1171,7 +1171,7 @@ export default function Lineage() {
                                             />
                                             <span className="font-medium">{gecko.name}</span>
                                             {gecko.gecko_id_code && (
-                                                <span className="text-slate-400 text-xs ml-auto">{gecko.gecko_id_code}</span>
+                                                <span className="text-slate-400 text-xs font-mono tabular-nums ml-auto">{gecko.gecko_id_code}</span>
                                             )}
                                         </button>
                                     ))}
@@ -1313,7 +1313,7 @@ export default function Lineage() {
                                         {selectedGecko.sex === 'Male' ? '♂' : selectedGecko.sex === 'Female' ? '♀' : '?'}
                                     </span>
                                     {selectedGecko.gecko_id_code && (
-                                        <span className="text-xs font-mono text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">
+                                        <span className="text-xs font-mono tabular-nums text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">
                                             {selectedGecko.gecko_id_code}
                                         </span>
                                     )}
@@ -1325,14 +1325,14 @@ export default function Lineage() {
                                 </div>
                                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-400">
                                     {formatHatchDate(selectedGecko.hatch_date) && (
-                                        <span className="flex items-center gap-1">
+                                        <span className="flex items-center gap-1 tabular-nums">
                                             <Calendar className="w-3 h-3 text-amber-400" />
                                             {formatHatchDate(selectedGecko.hatch_date)}
                                             {formatAge(selectedGecko.hatch_date) && ` · ${formatAge(selectedGecko.hatch_date)}`}
                                         </span>
                                     )}
                                     {selectedGecko.weight_grams != null && selectedGecko.weight_grams !== '' && (
-                                        <span className="flex items-center gap-1">
+                                        <span className="flex items-center gap-1 font-mono tabular-nums">
                                             <Scale className="w-3 h-3 text-cyan-400" />
                                             {selectedGecko.weight_grams}g
                                         </span>
@@ -1343,7 +1343,7 @@ export default function Lineage() {
                                         {selectedGecko.morph_tags.filter(Boolean).map((tag) => (
                                             <span
                                                 key={tag}
-                                                className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 text-[10px] font-semibold"
+                                                className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 text-xs font-semibold"
                                             >
                                                 {formatHetTag(tag)}
                                             </span>
@@ -1377,7 +1377,7 @@ export default function Lineage() {
                         {/* Recently viewed breadcrumb */}
                         {recentGeckos.length > 1 && (
                             <div className="max-w-7xl mx-auto px-3 md:px-6 pb-2 flex items-center gap-2 overflow-x-auto">
-                                <span className="text-[10px] uppercase tracking-wide text-slate-500 flex-shrink-0">
+                                <span className="text-xs uppercase tracking-wide text-slate-500 flex-shrink-0">
                                     Recent
                                 </span>
                                 {recentGeckos.map((g, i) => (

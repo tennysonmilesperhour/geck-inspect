@@ -8,10 +8,16 @@
 
 html, body, #root {
             width: 100%;
-            height: 100%;
+            min-height: 100%;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+          }
+
+          @supports (overflow: clip) {
+            html, body, #root {
+              overflow-x: clip;
+            }
           }
 
           .app-container-outline {
@@ -19,7 +25,7 @@ html, body, #root {
             min-height: 100vh;
             min-height: 100dvh; /* visible height on phones; 100vh falls back on older engines */
             display: flex;
-            background: linear-gradient(135deg, #0a0f0a 0%, #1a2920 100%);
+            background: linear-gradient(135deg, hsl(var(--slate-950)) 0%, hsl(var(--slate-900)) 100%);
             font-family: 'Inter', system-ui, sans-serif;
           }
 
@@ -94,33 +100,18 @@ html, body, #root {
             background-position: 0 0, 15px 15px, 5px 10px, 25px 5px;
             }
 
-            .safe-area-bottom {
-            padding-bottom: env(safe-area-inset-bottom);
-            }
-
           :root {
-            --gecko-primary: #86efac;
-            --gecko-secondary: #a7f3d0;
-            --gecko-accent: #4ade80;
-            --gecko-dark: #064e3b;
-            --gecko-darker: #022c22;
-            --gecko-surface: rgba(20, 83, 45, 0.4);
-            --gecko-surface-light: rgba(134, 239, 172, 0.1);
-            --gecko-text: #d1fae5;
-            --gecko-text-muted: #a7f3d0;
-            --gecko-border: rgba(134, 239, 172, 0.2);
-            --gecko-hover: rgba(134, 239, 172, 0.15);
-            
-            --sage-50: #ecfdf5;
-            --sage-100: #d1fae5;
-            --sage-200: #a7f3d0;
-            --sage-300: #6ee7b7;
-            --sage-400: #34d399;
-            --sage-500: #10b981;
-            --sage-600: #059669;
-            --sage-700: #047857;
-            --sage-800: #065f46;
-            --sage-900: #064e3b;
+            --gecko-primary: hsl(var(--emerald-300));
+            --gecko-secondary: hsl(var(--emerald-200));
+            --gecko-accent: hsl(var(--emerald-400));
+            --gecko-dark: hsl(var(--emerald-900));
+            --gecko-darker: hsl(var(--emerald-950));
+            --gecko-surface: hsl(var(--emerald-900) / 0.4);
+            --gecko-surface-light: hsl(var(--emerald-300) / 0.1);
+            --gecko-text: hsl(var(--slate-100));
+            --gecko-text-muted: hsl(var(--emerald-200));
+            --gecko-border: hsl(var(--emerald-300) / 0.2);
+            --gecko-hover: hsl(var(--emerald-300) / 0.15);
 
             --earth-50: #fef7f0;
             --earth-100: #fdeee0;
@@ -135,17 +126,6 @@ html, body, #root {
           }
 
           .dark {
-            --sage-50: #064e3b;
-            --sage-100: #065f46;
-            --sage-200: #047857;
-            --sage-300: #059669;
-            --sage-400: #10b981;
-            --sage-500: #34d399;
-            --sage-600: #6ee7b7;
-            --sage-700: #a7f3d0;
-            --sage-800: #d1fae5;
-            --sage-900: #ecfdf5;
-
             --earth-50: #6f2e0c;
             --earth-100: #8e3a16;
             --earth-200: #b7472a;
@@ -163,7 +143,7 @@ html, body, #root {
              note in index.html) still have a strip under the app that
              only this color reaches, so it reads as part of the bar. */
           body {
-            background: #061f1e;
+            background: hsl(var(--slate-950));
             color: var(--gecko-text);
             font-weight: 400;
           }
@@ -497,23 +477,22 @@ html, body, #root {
              Curve is ease-out so expansion starts immediately instead
              of easing in (which read as "loading" before movement). */
           .desktop-sidebar-inner {
-            width: 16rem;
+            width: 13.6rem;
             overflow: hidden;
-            zoom: 0.85;
             transition: width 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-inner {
-            width: 4rem;
+            width: 3.4rem;
           }
-          /* Keep the inner content laid out at full 16rem so icons
+          /* Keep the inner content laid out at full 13.6rem so icons
              stay in their original positions even when the rail is
              collapsed. Use min-width (NOT flex-shrink:0) because this
              is a flex-col child, flex-shrink:0 on the main axis would
              prevent the scroll container from shrinking to parent
              height, which silently kills overflow-y: auto. */
           .desktop-sidebar-wrapper .desktop-sidebar-inner > div {
-            width: 16rem;
-            min-width: 16rem;
+            width: 13.6rem;
+            min-width: 13.6rem;
             min-height: 0;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > span,
@@ -555,7 +534,7 @@ html, body, #root {
                         padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
           /* Section titles ("Collection", "Tools", "Admin") render
-             via renderNavSection with text-sage-700 -- scope the hide
+             via renderNavSection with text-sage-700, scope the hide
              specifically to those headers. Also collapse their height
              so the rail reads as a clean icon stack when closed. */
           .desktop-sidebar-wrapper.is-collapsed .uppercase.tracking-wider {
@@ -575,19 +554,10 @@ html, body, #root {
                         max-height 0.22s cubic-bezier(0, 0, 0.2, 1),
                         padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
-          /* Collapsed rail centering strategy
-             -----------------------------------
-             The inner sidebar content is forced to width: 16rem (so
+          /* Collapsed rail centering strategy:
+             The inner sidebar content is forced to width: 13.6rem (so
              the expand/collapse transition is smooth, no reflow), but
-             the visible rail is only 4rem (64px) wide and clips the
-             rest. To get every icon to land on the rail's vertical
-             centerline (x = 2rem from rail-left) without per-wrapper
-             padding math, every section wrapper is constrained to
-             width: 4rem with zero horizontal padding, then each child
-             item uses margin-left/right: auto so it auto-centers in
-             that 4rem parent. Children whose width is uneven (logo
-             42px, avatar+ring ~42px, nav circles 32px, footer circles
-             32px) all land at x = 2rem center regardless. */
+             the visible rail is 3.4rem wide and clips the rest. */
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-user-block,
           .desktop-sidebar-wrapper.is-collapsed nav.space-y-1,
@@ -596,8 +566,8 @@ html, body, #root {
           .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3,
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-inner > div > div,
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-inner > div > nav {
-            width: 4rem !important;
-            max-width: 4rem !important;
+            width: 3.4rem !important;
+            max-width: 3.4rem !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
             display: flex !important;
@@ -606,9 +576,7 @@ html, body, #root {
           }
 
           /* Section headers (Collection / Tools / Admin titles) get
-             completely hidden in collapsed mode -- max-height: 0 left
-             them in flow with their horizontal padding intact, which
-             could nudge sibling positioning. */
+             completely hidden in collapsed mode. */
           .desktop-sidebar-wrapper.is-collapsed .uppercase.tracking-wider {
             display: none !important;
           }
@@ -620,7 +588,7 @@ html, body, #root {
           }
 
           /* Nav items: 2rem (32px) circles, auto-centered in their
-             4rem-wide parent <nav>. Use !important on every layout
+             3.4rem-wide parent <nav>. Use !important on every layout
              property so leftover Tailwind utilities on the original
              Link (px-2 py-2, etc.) can't shift the icon off-axis. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item {
@@ -642,10 +610,7 @@ html, body, #root {
           }
 
           /* Active state: 3px emerald bar at the rail's left edge,
-             mirroring the expanded sidebar's left-border highlight.
-             The link itself is centered at x=1rem inside the 4rem
-             nav, so the ::before pseudo is shifted left by 1rem to
-             land flush against the rail's left edge. */
+             mirroring the expanded sidebar's left-border highlight. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active {
             background: transparent !important;
             border-left: 0 !important;
@@ -655,7 +620,7 @@ html, body, #root {
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active::before {
             display: block !important;
             opacity: 1 !important;
-            left: -1rem !important;
+            left: -0.7rem !important;
             top: 0 !important;
             bottom: 0 !important;
             width: 3px !important;
@@ -690,20 +655,9 @@ html, body, #root {
             height: 1.25rem !important;
           }
 
-          /* Footer items: 2rem circles, auto-centered in their 4rem
-             parent. Vertical spacing tightened from space-y-3 (12px)
-             to 6px so the icon column reads cohesively.
-
-             Tricky: the footer contains a NESTED `<div className="space-y-3">`
-             that wraps Settings + Logout. Both the outer and the
-             nested .space-y-3 must stay 4rem-wide flex columns; only
-             the leaf wrappers (the Tutorial-button-wrapping div, the
-             links around Membership/Settings) get the 2rem treatment.
-             :not(.space-y-3) on the div selector keeps the nested
-             container from being crushed into a 2rem row. */
           .desktop-sidebar-wrapper.is-collapsed .mt-auto .space-y-3 {
-            width: 4rem !important;
-            max-width: 4rem !important;
+            width: 3.4rem !important;
+            max-width: 3.4rem !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
             display: flex !important;
@@ -1262,6 +1216,11 @@ html.glass-warp .liquid-glass::before {
   -webkit-backdrop-filter: url(#gi-glass-warp) blur(2px) saturate(180%) brightness(1.08);
   backdrop-filter: url(#gi-glass-warp) blur(2px) saturate(180%) brightness(1.08);
 }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .liquid-glass::before {
+    background: hsl(var(--slate-900) / 0.94);
+  }
+}
 
 /* Layer 2, the rim: a thin band along the edge that faces the page, with
    a little more blur and light and a bright line where light catches it.
@@ -1393,5 +1352,34 @@ select.glass-field option { background: rgb(15 23 42); color: rgb(226 232 240); 
   .gecko-bottom-nav--bar,
   [data-follows-bottom-bar] {
     transition: none;
+  }
+}
+
+@keyframes morphScanPass {
+  0% {
+    top: -4rem;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.morph-scan-line {
+  animation: morphScanPass 2.6s cubic-bezier(0.4, 0.2, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-scan-line {
+    animation: none;
+    top: 50%;
+    opacity: 0.5;
   }
 }
