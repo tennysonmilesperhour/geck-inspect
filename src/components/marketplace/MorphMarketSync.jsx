@@ -62,7 +62,7 @@ export default function MorphMarketSync({ user, onImportComplete }) {
             <Crown className="w-8 h-8 text-emerald-400 mx-auto" />
             <p className="text-sm text-slate-300 font-semibold">MorphMarket Sync</p>
             <p className="text-xs text-slate-500">
-              Import MorphMarket listings. CSV export is currently paused. Available on the Breeder tier.
+              Import MorphMarket listings and review complete listing updates. Available on the Breeder tier.
             </p>
           </div>
           {/* inline-block so the top margin applies (a bare link is

@@ -65,7 +65,10 @@ describe('full MorphMarket listing preservation', () => {
     expect(geckoListingSuggestions({ notes: 'secret', sex: 'Unknown' })).toEqual({});
     expect(geckoListingSuggestions({ asking_price: 175, weight_grams: 20, marketplace_description: 'Public' })).toEqual({ Price: '175', Weight: '20', Desc: 'Public' });
   });
-  it('keeps production downloads blocked pending live preservation proof', () => {
-    expect(() => exportPreservedMorphMarketCSV([{ source: fields(), draft: fields() }], { loadedAt: Date.now(), reviewed: true })).toThrow('paused');
+  it('requires a fresh session source and explicit review at the production export boundary', () => {
+    const rows = [{ source: fields(), draft: fields() }];
+    for (const loadedAt of [null, NaN, Infinity, Date.now() + 1000, Date.now() - 31 * 60 * 1000]) expect(() => exportPreservedMorphMarketCSV(rows, { loadedAt, reviewed: true })).toThrow('fresh');
+    expect(() => exportPreservedMorphMarketCSV(rows, { loadedAt: Date.now(), reviewed: false })).toThrow('Review');
+    expect(readMorphMarketSource(exportPreservedMorphMarketCSV(rows, { loadedAt: Date.now(), reviewed: true }))[0].fields).toEqual(fields());
   });
 });

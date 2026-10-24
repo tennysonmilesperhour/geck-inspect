@@ -403,11 +403,11 @@ warnings.
 
 The current export has 14 of 33 supported fields. The reference below now lists
 the missing 19, existing lossy mappings, and the proposed private listing-field
-workflow. Full field matching is not implemented or preservation-tested yet.
+workflow. The later full-field workspace and preservation proof below supersede this pause.
 The earlier successful create/update test remains valid historical evidence,
 not permission to re-enable a potentially destructive export.
 
-### 24 October: full listing workspace, downloads still gated
+### 24 October: full listing workspace and preservation proof
 
 Added private storage for all 33 supported fields, the original source and draft,
 with owner-only access even when the gecko is public. The workspace at
@@ -423,8 +423,14 @@ Migration `20261024204147_morphmarket_listing_details.sql` applied in the local
 311-migration PostgreSQL harness. Regression checks passed for owner privacy,
 anonymous access denial, stale saves, identity, blanking and atomic rollback.
 All 3,544 tests in 301 files pass; lint has 0 errors and 73 existing warnings.
-Production downloads remain gated until the expanded live preservation test
-passes. The old quick-export builder stays blocked.
+The expanded live preservation test passed with the shared formatter: A changed
+126 to 127 and retained its other 32 supported fields; B retained all 33. Private
+notes, wholesale details, shipping, diet, length, proven breeder, group ID and
+sale preferences were populated and retained. Fixed real export spellings for
+diet and length units. The deployed editor saved both full private records and
+visibly refused clearing price. Guarded downloads require a fresh source and
+review; the old quick-export builder stays blocked. See the reference for proof
+scope and the final UI checks.
 
 ### 24 October follow-up: badge and CSV round trip proven
 

@@ -13,7 +13,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { resolveTier } from '@/lib/tierLimits';
 import { createPageUrl } from '@/utils';
 import { downloadBlob } from '@/lib/morphmarketSync';
-import { MORPHMARKET_FIELDS, readMorphMarketSource, matchMorphMarketSource, refreshMorphMarketDraft, morphMarketChanges, morphMarketListingErrors, geckoListingSuggestions, exportPreservedMorphMarketCSV, MORPHMARKET_PRESERVATION_PROVEN } from '@/lib/morphmarketListing';
+import { MORPHMARKET_FIELDS, readMorphMarketSource, matchMorphMarketSource, refreshMorphMarketDraft, morphMarketChanges, morphMarketListingErrors, geckoListingSuggestions, exportPreservedMorphMarketCSV } from '@/lib/morphmarketListing';
 import { loadMorphMarketListings, saveMorphMarketListing } from '@/lib/morphmarketListingApi';
 
 const groups = [...new Set(MORPHMARKET_FIELDS.map(f => f.group))];
@@ -29,6 +29,7 @@ export default function MorphMarketExport() {
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
   const fileRef = useRef(null);
+  const [requestedIds] = useState(() => (new URLSearchParams(window.location.search).get('add') || '').split(',').filter(Boolean));
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function MorphMarketExport() {
         const persisted = details.find(d => d.gecko_id === row.gecko?.id);
         const local = rows.find(r => r.gecko?.id === row.gecko?.id && r.dirty);
         const previous = local ? { source_fields: local.fields, draft_fields: local.draft } : persisted;
-        return { ...row, ...refreshMorphMarketDraft(row.fields, previous), selected: !row.issue, version: persisted?.updated_date, sourceName: file.name, dirty: Boolean(row.gecko) };
+        return { ...row, ...refreshMorphMarketDraft(row.fields, previous), selected: !row.issue && (!requestedIds.length || requestedIds.includes(row.gecko?.id)), version: persisted?.updated_date, sourceName: file.name, dirty: Boolean(row.gecko) };
       });
       // Keep unsaved animals absent from this file visible, but never include them in this export.
       const absent = rows.filter(r => r.dirty && !matched.some(m => m.gecko?.id === r.gecko?.id)).map(r => ({ ...r, selected: false, issue: 'Not in the current source file. Save these edits, then load a fresh file containing this animal.' }));
@@ -171,10 +172,9 @@ export default function MorphMarketExport() {
       })}
 
       <Card><CardHeader><CardTitle>3. Review the update file</CardTitle></CardHeader><CardContent className="space-y-4">
-        {!MORPHMARKET_PRESERVATION_PROVEN && <p className="text-amber-200">Downloads are paused while we test the full field preservation on real MorphMarket listings. You can save and edit private listing details now.</p>}
         <p>Blanking an existing value, changing an Animal ID, incomplete files and unrecognized fields block export. MorphMarket changes made after your source file cannot be detected here. Export and upload promptly, with Synchronize/Replace off.</p>
         <div className="flex gap-3 items-start"><Checkbox id="reviewed-update" checked={reviewed} disabled={busy || !loadedAt} onCheckedChange={v => setReviewed(Boolean(v))} /><Label htmlFor="reviewed-update">I just exported this source from MorphMarket, have made no changes there since, and reviewed all selected listing changes. My MorphMarket currency matches these prices.</Label></div>
-        <Button disabled={busy || !MORPHMARKET_PRESERVATION_PROVEN || !loadedAt || !reviewed || !selected.length || blocked} onClick={download}>Download {selected.length} listing updates</Button>
+        <Button disabled={busy || !loadedAt || !reviewed || !selected.length || blocked} onClick={download}>Download {selected.length} listing updates</Button>
         <p className="text-xs text-slate-400">A new source file is required after each download or after 30 minutes. Read-only MorphMarket history, parent links and counters are retained as reference and are not sent to the importer.</p>
       </CardContent></Card>
     </div>

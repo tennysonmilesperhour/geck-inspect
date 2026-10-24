@@ -212,11 +212,9 @@ export function geckoListingSuggestions(gecko) {
   return suggestions;
 }
 
-// Keep downloads closed until a real MorphMarket preservation test is recorded.
-export const MORPHMARKET_PRESERVATION_PROVEN = false;
+// Live preservation proof: docs/planning/morphmarket-import-reference-2026-10-24.md.
 export function exportPreservedMorphMarketCSV(listings, { loadedAt, reviewed } = {}) {
-  if (!MORPHMARKET_PRESERVATION_PROVEN) throw new Error('Downloads are paused until the full field preservation test passes.');
-  if (!loadedAt || Date.now() - loadedAt > 30 * 60 * 1000 || loadedAt > Date.now()) throw new Error('Load a fresh MorphMarket CSV before exporting.');
+  if (!Number.isFinite(loadedAt) || !loadedAt || Date.now() - loadedAt > 30 * 60 * 1000 || loadedAt > Date.now()) throw new Error('Load a fresh MorphMarket CSV before exporting.');
   if (!reviewed) throw new Error('Review and confirm the listing changes before exporting.');
   return buildPreservedMorphMarketCSV(listings);
 }

@@ -44,15 +44,63 @@ Names below are the canonical spellings displayed by the importer. Boolean field
 | Enable 'Buy Now' | Boolean. Requires an eligible store with connected payments, a set price, fixed/free shipping or local pickup, and individual or group sales. Wholesale-only excluded. |
 | Private_Notes | Internal animal notes, not public listing text. |
 
-## Current safety decision
+## Current workflow and safety decision
 
-On 24 October Tennyson superseded the earlier warning-only choice: do not allow exports that could erase MorphMarket data. CSV download and copy are now paused in both screens and in the shared production CSV builder, including for otherwise complete geckos. Import remains available. The formatter remains covered by header, round-trip and formula-neutralization tests, but it is not a production export entry point.
+Tennyson superseded warning-only with a requirement to prevent data loss, then
+approved the full matching workflow. The listing workspace now retains all 33
+supported fields in owner-only storage. Load a fresh complete MorphMarket Animal
+Records CSV, match exact seller IDs, make explicit edits, review the differences
+and download a complete update file. Saved edits survive refresh; conflicting
+MorphMarket edits require a choice. A populated value cannot be blanked, and an
+existing ID or category cannot change. Unknown columns, invalid values, formula
+transformations and sex-count quantities block download. Each download requires
+a newly loaded source, review confirmation and a 30-minute session window.
 
-The current exporter has 14 columns, not the 15 initially counted in conversation. MorphMarket supports 33. The full matching workspace now stores all 33 fields privately and shows changes against a fresh source file. Downloads remain gated pending expanded live preservation proof.
+The old 14-column quick export remains blocked. New MorphMarket listings must
+first be created on MorphMarket and given seller IDs. This workspace updates
+existing listings. It cannot detect MorphMarket edits made after the supplied
+file; users must export immediately before each update, avoid intervening edits
+and leave Synchronize/Replace off. All 33 fields are retained on complete reverse
+imports; existing exact matches keep their native collection details, while new
+animals and private listing data save atomically. Basic older CSVs still import
+with an explicit warning that full listing fields were not retained.
 
-### Missing fields to support
+### Expanded live preservation proof, 24 October
 
-| Area | MorphMarket fields absent from the current export |
+Deployed workspace and private storage in `53d9b00`; real export normalization in
+`ad05f58`. Downloads stayed locked during testing. Seeded optional fields on the
+same two archived disposable listings, then downloaded a fresh 42-column Animal
+Records file. Real exported diet names are lowercase and Length_Type uses labels
+such as `cm (total length)`; those are now translated to accepted importer values.
+The source reference retains the original spellings. These cases have tests.
+
+Generated a 33-column price-only update with the shared preservation formatter.
+With Synchronize/Replace off, A changed 126 to 127. MorphMarket's next export
+retained the other 32 supported fields exactly after format normalization; B
+retained all 33. Specifically populated and retained: private multiline notes,
+wholesale price and description, shipping range, diet, length and unit, proven
+breeder, group ID, price flexibility, trades, visibility, dates, weight, traits,
+public descriptions and all photos. IDs still identify listings 4174375 and
+4174376. Buy Now and wholesale-only were No; video was blank. Payment, active
+sale, wholesale-only and populated-video behavior were not exercised.
+
+The deployed workspace loaded both exact matches and saved all 33 fields each.
+SQL confirmed private notes in the separate table and unchanged source/draft.
+Clearing A's price visibly produced "cannot erase the existing MorphMarket
+value" and kept download disabled. Saved an explicit price edit for the final
+end-to-end UI check. Local PostgreSQL regression tests cover private access on a
+public gecko, anonymous denial, stale saves, identity, erasure, matching and
+atomic rollback. The migration applies twice safely. The live Seller Console return import then
+reported 0 created and 2 existing listings matched. SQL confirmed A's saved 128
+draft survived the fresh 127 source, its native collection price remained 126,
+and both native records remained archived and private.
+
+Final local checks: 3,564 tests in 302 files passed; lint had 0 errors and 71
+existing warnings. The production build passed before deployment.
+
+### Formerly missing fields, now supported
+
+| Area | Fields now retained and editable |
 | --- | --- |
 | Visibility and activity | Visibility, Enabled |
 | Groups | Group_Id, Is_Group |
@@ -64,9 +112,9 @@ The current exporter has 14 columns, not the 15 initially counted in conversatio
 | Sale preferences | Is_Negotiable, Is_For_Trade, Enable 'Buy Now' |
 | Private information | Private_Notes |
 
-Existing columns also need exact preservation: title is generated, State collapses several MorphMarket states to Not For Sale, Quantity is fixed at one, Origin defaults to Captive Bred, and unknown sex becomes Unsexed. An Animal_ID can be sanitized differently, and partial birth dates cannot be represented by Geck Inspect's full hatch date. Filling three missing values alone cannot prove that all existing data survives.
+Why the old export remains blocked: title is generated, State collapses several MorphMarket states to Not For Sale, Quantity is fixed at one, Origin defaults to Captive Bred, and unknown sex becomes Unsexed. An Animal_ID can be sanitized differently, and partial birth dates cannot be represented by Geck Inspect's full hatch date. Filling three missing values alone cannot prove that all existing data survives.
 
-Implemented full matching workflow: retain all original supported fields from a fresh MorphMarket export in owner-only listing storage, expose those values for editing, match existing animals by exact seller Animal_ID, and apply only explicit edits. Keep Private_Notes and wholesale details out of public gecko payloads. Preserve unsupported read-only columns in the source reference, without pretending they are writable. Validate MorphMarket's own export spellings and allowed values before re-import. Re-enable downloads only after disposable listings prove that all populated fields survive an update. A current source file is needed because Geck Inspect cannot see later MorphMarket edits automatically.
+Implemented full matching workflow: retain all original supported fields from a fresh MorphMarket export in owner-only listing storage, expose those values for editing, match existing animals by exact seller Animal_ID, and apply only explicit edits. Keep Private_Notes and wholesale details out of public gecko payloads. Preserve unsupported read-only columns in the source reference, without pretending they are writable. Validate MorphMarket's own export spellings and allowed values before re-import. The disposable preservation check above passed before guarded downloads were enabled. A current source file is needed because Geck Inspect cannot see later MorphMarket edits automatically.
 
 ## Earlier Geck Inspect mapping and data preservation
 
