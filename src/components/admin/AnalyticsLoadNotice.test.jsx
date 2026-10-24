@@ -8,6 +8,8 @@ vi.hoisted(() => {
   globalThis.window = globalThis.window || { self: null, top: null, addEventListener() {}, removeEventListener() {} };
   globalThis.requestAnimationFrame = globalThis.requestAnimationFrame || ((fn) => setTimeout(fn, 0));
   globalThis.cancelAnimationFrame = globalThis.cancelAnimationFrame || ((id) => clearTimeout(id));
+  // Radix Select checks `instanceof HTMLFormElement` after it mounts.
+  globalThis.HTMLFormElement = globalThis.HTMLFormElement || class HTMLFormElement {};
 });
 
 const reads = vi.hoisted(() => ({ fail: new Set() }));

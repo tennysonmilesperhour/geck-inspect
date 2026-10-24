@@ -5,6 +5,8 @@ import { HelmetProvider } from 'react-helmet-async';
 
 const fixture = vi.hoisted(() => {
   vi.stubGlobal('window', { self: null, top: null });
+  // Radix Select checks `instanceof HTMLFormElement` after it mounts.
+  vi.stubGlobal('HTMLFormElement', class HTMLFormElement {});
   return { builder: null, saved: null, fail: false, toast: vi.fn(), row: null, builderRetired: false };
 });
 afterAll(() => vi.unstubAllGlobals());

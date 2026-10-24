@@ -198,6 +198,9 @@ function buildConfig() {
   // in this file and in scripts/seo-routes.mjs instead.
   return {
     $schema: 'https://openapi.vercel.sh/vercel.json',
+    // This review branch must not publish an ownership flow against an
+    // unverified hosted backend. Enable a fixture-only preview after approval.
+    git: { deploymentEnabled: { 'codex/qr-transfer-detail': false } },
     // Keep Vercel on the package manager and lockfile used by CI and local
     // development. The project-level install command was previously set to
     // `npm install`, which ignored pnpm-lock.yaml and failed while resolving
@@ -390,6 +393,15 @@ function buildConfig() {
           { key: 'Access-Control-Allow-Origin', value: '*' },
         ],
       },
+      // Claim and auth callback URLs carry private continuation tokens.
+      ...['/claim/:path*', '/AuthPortal'].map((source) => ({
+        source,
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-store' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      })),
       ...NOINDEX_PAGES.map((source) => ({
         source,
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],

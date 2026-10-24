@@ -51,7 +51,7 @@ describe('Privacy Policy: email records and deletion', () => {
 
   it('shows the same last-updated date everywhere', () => {
     const iso = PAGE.match(/const LAST_UPDATED = '(\d{4}-\d{2}-\d{2})'/)?.[1];
-    expect(iso).toBe('2026-10-18');
+    expect(iso).toBe('2026-10-24');
     const [y, m, d] = iso.split('-').map(Number);
     expect(PAGE).toContain(`Last updated: ${MONTHS[m - 1]} ${d}, ${y}`);
     expect(editorialFor('/PrivacyPolicy').modified).toBe(iso);
@@ -295,7 +295,9 @@ describe('Privacy Policy: the free guides form', () => {
   const GUIDES_FN = readFileSync(new URL('../../../supabase/functions/subscribe-and-send-guides/index.ts', import.meta.url), 'utf8');
   it('says what the homepage guide form keeps, for how long, and who it never emails', () => {
     expect(PAGE).toContain('If you ask for the free Care and Genetics Guides on our homepage, we collect your email address, email you the guides and keep your address in our list of email sign-ups.');
-    expect(PAGE).toContain('We keep a record of each request, with your address in a simplified form used only to count them and a scrambled form of your network address, for 30 days');
+    expect(PAGE).toContain('We keep a record of each request, with your address, a simplified form of it used to count requests to the same inbox and a scrambled form of your network address, for 30 days');
+    // Both the address and its inbox key are stored (inbox_key is generated from email).
+    expect(GUIDES_FN).toContain('.insert({ email, ip_hash: ipKey })');
     expect(FIXES4_SQL).toContain("delete from public.guide_email_sends where created_at < p_now - interval '30 days';");
     expect(PAGE).toContain('We do not email an address that unsubscribed or is on our do-not-email list (section 8).');
     expect(GUIDES_FN).toContain('supabase.rpc("email_inbox_suppressed", { p_email: email })');
@@ -327,7 +329,7 @@ describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
     expect(log.sort()).toEqual(['created_at', 'email', 'id', 'ip_hash', 'kind'].sort());
     // Added by the fixes migration: the inbox key the limits count.
     expect([...FIXES_SQL.matchAll(/add column if not exists ([a-z_]+)/g)].map((m) => m[1])).toEqual(['inbox_key']);
-    expect(VISITOR_PARAGRAPH).toContain('a record of each request the sign-up form received for your address (including any it answered without sending an email, for example to an address that bounced), with your address in a simplified form used only to count them (kept 30 days');
+    expect(VISITOR_PARAGRAPH).toContain('a record of each request the sign-up form received for your address (including any it answered without sending an email, for example to an address that bounced), with your address and a simplified form of it used to count requests to the same inbox (kept 30 days');
     // Quiet requests (nothing sent) are logged too, members with all email off included.
     expect(FIXES3_SQL).toMatch(/insert into public\.weekly_notes_signup_sends \(email, inbox_key, ip_hash, kind, created_at\)\s+values \(v_email, v_inbox, v_ip, v_kind, p_now\);/);
     expect(VISITOR_PARAGRAPH).toContain("If someone uses the form with your account's address, we keep the same record, even if you have turned all email off and nothing is sent.");
@@ -356,5 +358,47 @@ describe('Privacy Policy: Weekly Gecko Notes for visitors', () => {
     expect(FIXES_SQL).toContain('create or replace function public.admin_erase_weekly_notes_visitor(p_email text)');
     expect(FIXES_SQL).toMatch(/update public\.email_deliveries x\s+set email = null,/);
     expect(VISITOR_PARAGRAPH).toContain('If you later make an account with the same address and keep the notes on, they carry on as a member\'s, without repeats.');
+  });
+});
+
+// The relevance gate (20261020230000, extended in 20261024150000 and
+// 20261024210200) and the one-time re-permission email with its record,
+// weekly_notes_repermission_sends (20261024150000). The record's columns are
+// read from the migration, so a column added later fails here until the
+// policy describes it.
+const REPERMISSION_SQL = readFileSync(
+  new URL('../../../supabase/migrations/20261024150000_weekly_notes_personal_and_repermission.sql', import.meta.url),
+  'utf8',
+);
+const ACTIVITY_SQL = readFileSync(
+  new URL('../../../supabase/migrations/20261024210200_weekly_notes_activity_and_erasure.sql', import.meta.url),
+  'utf8',
+);
+
+describe('Privacy Policy: when Weekly Gecko Notes pause, and the email that asks', () => {
+  it('says the notes pause for an unused account and what decides it', () => {
+    expect(PAGE).toContain('They pause while your account looks unused, and we then send one email asking whether you want them to keep coming (section 8).');
+    expect(WEEKLY_PARAGRAPH).toContain('no gecko on record, no use of Geck Inspect in the last 60 days and no choice to get them in the last year');
+    expect(ACTIVITY_SQL).toContain("m.last_active_at > p_now - interval '60 days'");
+    expect(ACTIVITY_SQL).toContain("p4.email_weekly_notes_choice_at > p_now - interval '365 days'");
+    // What "used Geck Inspect" is read from: the sign-in, a saved session's
+    // renewal, and the member's own rows in the count of pages and features.
+    expect(WEEKLY_PARAGRAPH).toContain('from your last sign-in, the last time a saved sign-in on your device was renewed and our own count of pages and features used (section 5)');
+    expect(ACTIVITY_SQL).toContain('from auth.sessions s where s.user_id = p_uid');
+    expect(ACTIVITY_SQL).toContain('from public.user_events e where e.user_email = p_email');
+  });
+
+  it('describes every column the re-permission record keeps', () => {
+    const wording = {
+      email: 'For that email we keep your address',
+      created_date: 'when we sent it',
+      kept_at: 'when you pressed the button to keep them',
+    };
+    expect(tableColumns(REPERMISSION_SQL, 'weekly_notes_repermission_sends')).toEqual(Object.keys(wording));
+    for (const phrase of Object.values(wording)) expect(WEEKLY_PARAGRAPH).toContain(phrase);
+    expect(WEEKLY_PARAGRAPH).toContain('once for each inbox');
+    // Deleting the account erases it (the paragraph's last sentence).
+    expect(WEEKLY_PARAGRAPH).toContain('Deleting your account erases these records.');
+    expect(ACTIVITY_SQL).toContain('delete from public.weekly_notes_repermission_sends x');
   });
 });

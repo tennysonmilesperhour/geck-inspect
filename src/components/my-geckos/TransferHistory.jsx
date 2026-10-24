@@ -1,7 +1,10 @@
 import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { ArrowRightLeft, ArrowUpRight, ArrowDownLeft, ExternalLink, Clock, Check, Ban, Hourglass, Copy, Mail, Loader2 } from 'lucide-react';
+import { ArrowRightLeft, ArrowUpRight, ArrowDownLeft, ExternalLink, Clock, Check, Ban, Hourglass, Copy, Mail, Loader2, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import EmptyState from '../shared/EmptyState';
@@ -46,6 +49,7 @@ function StatusBadge({ status, expiresAt }) {
 // the signed-in user sent.
 function PendingActions({ transfer, onCancelled }) {
   const [busy, setBusy] = useState(null);
+  const [showQr, setShowQr] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const claimUrl = claimUrlFor(transfer.token);
 
@@ -53,7 +57,7 @@ function PendingActions({ transfer, onCancelled }) {
     const ok = await copyText(claimUrl);
     toast({
       title: ok ? 'Claim link copied' : 'Copy this link',
-      description: ok ? `Send it to ${transfer.to_email}.` : claimUrl,
+      description: ok ? (transfer.to_email ? `Send it to ${transfer.to_email}.` : 'Share it only with the new owner.') : claimUrl,
     });
   };
 
@@ -79,27 +83,29 @@ function PendingActions({ transfer, onCancelled }) {
     }
   };
 
-  const btn = 'touch:min-h-11 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border disabled:opacity-50';
   return (
     <div className="flex flex-wrap gap-2 mt-2">
-      <button type="button" onClick={handleCopy} className={`${btn} border-slate-600 text-slate-300 hover:bg-slate-800`}>
-        <Copy className="w-3.5 h-3.5" />
-        Copy link
-      </button>
-      <button type="button" onClick={handleResend} disabled={!!busy} className={`${btn} border-sky-700/60 text-sky-300 hover:bg-sky-900/20`}>
-        {busy === 'resend' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
-        Resend email
-      </button>
-      <button type="button" onClick={() => setConfirmCancel(true)} disabled={!!busy} className={`${btn} border-red-800/60 text-red-300 hover:bg-red-900/20`}>
-        {busy === 'cancel' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />}
-        Cancel transfer
-      </button>
+      <Button type="button" variant="outline" size="sm" onClick={() => setShowQr(true)}><QrCode className="w-3.5 h-3.5 mr-1.5" />Show QR code</Button>
+      <Button type="button" variant="outline" size="sm" onClick={handleCopy}><Copy className="w-3.5 h-3.5 mr-1.5" />Copy link</Button>
+      {transfer.to_email && <Button type="button" variant="outline" size="sm" onClick={handleResend} disabled={!!busy}>
+        {busy === 'resend' ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Mail className="w-3.5 h-3.5 mr-1.5" />}Resend email
+      </Button>}
+      <Button type="button" variant="outline" size="sm" onClick={() => setConfirmCancel(true)} disabled={!!busy}>
+        <Ban className="w-3.5 h-3.5 mr-1.5" />Cancel transfer
+      </Button>
+      <Dialog open={showQr} onOpenChange={setShowQr}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Transfer QR code</DialogTitle><DialogDescription>{transfer.to_email ? `Only ${transfer.to_email} can accept this link.` : 'Share this only with the new owner. The first verified account to accept becomes the owner.'}</DialogDescription></DialogHeader>
+          <div className="mx-auto w-fit rounded-lg bg-white p-4"><QRCodeSVG value={claimUrl} size={192} level="M" role="img" aria-label="Transfer QR code" /></div>
+          <p className="text-xs text-slate-400">Expires {new Date(transfer.expires_at).toLocaleString()}</p>
+        </DialogContent>
+      </Dialog>
       <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
         <AlertDialogContent className="bg-slate-900 border-slate-700">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-slate-100">Cancel this transfer?</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
-              The claim link sent to {transfer.to_email} stops working. The animal stays in your collection.
+              The claim link stops working. The animal stays in your collection.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -114,10 +120,10 @@ function PendingActions({ transfer, onCancelled }) {
   );
 }
 
-function TransferRow({ transfer, animal, direction, onChanged }) {
+function TransferRow({ transfer, animal, direction, onChanged, privateNotes }) {
   const isOutgoing = direction === 'outgoing';
   const counterparty = isOutgoing
-    ? transfer.to_email
+    ? (transfer.to_email || 'QR link recipient')
     : (transfer.from_email || 'Previous owner');
   const dateStr = transfer.claimed_at || transfer.created_date;
   const img = animal?.image_urls?.[0];
@@ -145,6 +151,12 @@ function TransferRow({ transfer, animal, direction, onChanged }) {
             </span>
           )}
         </div>
+        {isOutgoing && privateNotes && (
+          <details className="mt-3 text-sm">
+            <summary className="cursor-pointer text-slate-300 touch:min-h-11">Your private notes</summary>
+            <p className="mt-2 whitespace-pre-wrap break-words text-slate-400">{privateNotes}</p>
+          </details>
+        )}
         {isOutgoing && transfer.token && effectiveTransferStatus(transfer) === 'pending' && (
           <PendingActions transfer={transfer} onCancelled={onChanged} />
         )}
@@ -172,6 +184,8 @@ export default function TransferHistory({ user }) {
   const [incoming, setIncoming] = useState([]);
   const [animalsById, setAnimalsById] = useState({});
   const [error, setError] = useState(false);
+  const [notesByTransfer, setNotesByTransfer] = useState({});
+  const [notesError, setNotesError] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -205,6 +219,11 @@ export default function TransferHistory({ user }) {
 
       setOutgoing(outRows);
       setIncoming(inRows);
+      const notes = outRows.length
+        ? await supabase.from('gecko_transfer_private_notes').select('transfer_id, notes').in('transfer_id', outRows.map((row) => row.id))
+        : { data: [] };
+      setNotesError(Boolean(notes.error));
+      setNotesByTransfer(Object.fromEntries((notes.data || []).map((row) => [row.transfer_id, row.notes])));
 
       // Fetch the animals referenced by either list. animal_id can point at
       // either the geckos or the other_reptiles table, split by animal_type,
@@ -267,6 +286,7 @@ export default function TransferHistory({ user }) {
 
   return (
     <div className="space-y-8">
+      {notesError && <p className="text-sm text-amber-300" role="alert">Your saved private notes could not be loaded. Refresh to try again.</p>}
       {outgoing.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
@@ -274,11 +294,11 @@ export default function TransferHistory({ user }) {
             Transferred out ({outgoing.length})
           </h2>
           <p className="text-xs text-slate-500 mb-3">
-            These animals have left your collection. Open a passport to see the animal's current details, including anything the new owner has changed.
+            Pending animals stay in your collection until accepted. Completed transfers keep your private notes here. Passports show the animal's current shared details.
           </p>
           <div className="space-y-2">
             {outgoing.map((t) => (
-              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="outgoing" onChanged={load} />
+              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="outgoing" onChanged={load} privateNotes={notesByTransfer[t.id]} />
             ))}
           </div>
         </section>

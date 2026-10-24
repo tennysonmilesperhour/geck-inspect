@@ -85,23 +85,19 @@ export function isNewestDay(records = [], day) {
 }
 
 /**
- * The jump links under the record's header, one per section that is on the
- * page for this viewer, so every part of the history is one tap away on a
- * phone. Ids match the section elements (`record-<id>`).
+ * The jump links under the record's header, one per group that is on the
+ * page for this viewer. Care forms stay mounted while moving between
+ * groups, so unfinished entries are kept. Ids match `record-<id>`.
  */
-export function recordSections({ access, hasWeights = false, hasShedForecast = false, hasPassport = false, hasMorePhotos = false, isFemale = false } = {}) {
+export function recordSections({ access, hasWeights = false, hasShedForecast = false, hasPassport = false } = {}) {
   const keeper = Boolean(access?.keeper);
-  // Weights and Passport show an empty section only to someone who can
-  // fill it (the weigh-in form, Make a passport).
   const canEdit = Boolean(access?.canEdit);
   return [
-    (canEdit || hasWeights) && { id: 'weights', label: 'Weights' },
-    keeper ? { id: 'care', label: 'Feeding and sheds' } : hasShedForecast && { id: 'care', label: 'Next shed' },
-    keeper && { id: 'vet', label: 'Vet visits' },
-    { id: 'family', label: 'Lineage' },
-    (canEdit || hasPassport) && { id: 'passport', label: 'Passport' },
-    keeper && { id: 'breeding', label: isFemale ? 'Breeding and eggs' : 'Breeding' },
-    hasMorePhotos && { id: 'photos', label: 'Photos' },
+    { id: 'overview', label: 'Overview' },
+    (keeper || canEdit || hasWeights || hasShedForecast) && { id: 'care-history', label: 'Care history' },
+    keeper && { id: 'breeding', label: 'Breeding' },
+    (canEdit || hasPassport) && { id: 'sharing', label: 'Sharing' },
+    { id: 'more', label: 'More' },
   ].filter(Boolean);
 }
 

@@ -1354,6 +1354,7 @@ declare
   v_at timestamptz := (select t0 from _t0) + interval '170 days';
   v_token text;
   v_id uuid;
+  v jsonb;
 begin
   -- Both claims lock the inbox, so two accounts on one inbox cannot claim
   -- at the same moment.
@@ -1449,15 +1450,34 @@ begin
     raise exception 'FAIL: erasure left another spelling in the delivery log';
   end if;
 
-  -- A visitor erasure is not refused because of an unconfirmed sign-up.
+  -- An unconfirmed sign-up on the inbox holds the address too (its login
+  -- and its profile), so a visitor erasure is refused and names it
+  -- (changed in 20261024210200; 20261024182000 let it through and left
+  -- both behind). admin_erase_account for that spelling then removes the
+  -- profile and the visitor rows together.
   insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
                           raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'erasme6+shop@gmail.com',
           'x', null, '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, v_old, v_old);
   insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
   values ('er.asme6@gmail.com', 'notes:care', v_at - interval '20 days', v_at - interval '20 days');
-  if (public.admin_erase_weekly_notes_visitor('er.asme6@gmail.com'))->>'erased' is distinct from 'true' then
-    raise exception 'FAIL: an unconfirmed sign-up blocked a visitor erasure';
+  v := public.admin_erase_weekly_notes_visitor('er.asme6@gmail.com');
+  if v->>'reason' is distinct from 'has-account' or v->'spellings' <> '["erasme6+shop@gmail.com"]'::jsonb then
+    raise exception 'FAIL: a visitor erasure ran past an unconfirmed sign-up on the inbox, got %', v;
+  end if;
+  perform public.admin_erase_account('erasme6+shop@gmail.com');
+  if exists (select 1 from public.newsletter_subscribers where email = 'er.asme6@gmail.com')
+     or exists (select 1 from public.profiles where lower(email) = 'erasme6+shop@gmail.com') then
+    raise exception 'FAIL: account erasure for the unconfirmed sign-up left its profile or the visitor row';
+  end if;
+
+  -- A legacy profile with no login is refused the same way.
+  insert into public.profiles (id, email, full_name) values (gen_random_uuid()::text, 'old.keeper6@example.com', 'Old Keeper');
+  insert into public.newsletter_subscribers (email, source, weekly_notes_requested_at, confirmed_at)
+  values ('old.keeper6@example.com', 'notes:care', v_at - interval '20 days', v_at - interval '20 days');
+  v := public.admin_erase_weekly_notes_visitor('old.keeper6@example.com');
+  if v->>'reason' is distinct from 'has-account' or v->'spellings' <> '["old.keeper6@example.com"]'::jsonb then
+    raise exception 'FAIL: a visitor erasure ran past a profile on the inbox, got %', v;
   end if;
 end $$;
 

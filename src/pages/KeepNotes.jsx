@@ -79,8 +79,8 @@ export default function KeepNotes() {
                                 <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-400" />
                                 <h1 className="text-2xl font-bold text-slate-100">Thanks, they will keep coming</h1>
                                 <p className="text-slate-400">
-                                    The next Weekly Gecko Note arrives within a week. Every note has a link to
-                                    stop them if that changes.
+                                    The next Weekly Gecko Note arrives within a week, as long as email is on in
+                                    Settings. Every note has a link to stop them if that changes.
                                 </p>
                             </>
                         )}

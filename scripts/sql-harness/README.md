@@ -40,7 +40,14 @@ export PGHOST=localhost PGPORT=54329 PGUSER=postgres PGPASSWORD=postgres
 bash scripts/sql-harness/build.sh            # build the template geck_harness (about 20 s)
 bash scripts/sql-harness/run-tests.sh        # every supabase/tests/*.sql (about 10 s)
 bash scripts/sql-harness/run-tests.sh geck_harness supabase/tests/ownership_regressions.sql
+bash scripts/sql-harness/transfer-concurrency.sh geck_harness
 ```
+
+`transfer-concurrency.sh` checks real simultaneous database connections for
+QR ownership claims: one shared token, sibling offers for the same animal,
+revocation while a claim waits, and expiry while a claim waits. It creates
+its own fixture copy and drops that copy on exit. It refuses a non-local
+`PGHOST`. CI runs these checks after the SQL regression files.
 
 `build.sh` applies every migration in filename order and fails if any file
 has an error other than the three expected ones (below). `run-tests.sh`

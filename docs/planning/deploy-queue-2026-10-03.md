@@ -401,11 +401,46 @@ any download is created; the existing formatter and formula-safety tests remain.
 Validation: all 3,484 tests in 296 files pass; lint has 0 errors and 75 existing
 warnings.
 
-The current export has 14 of 33 supported fields. The reference below now lists
-the missing 19, existing lossy mappings, and the proposed private listing-field
-workflow. Full field matching is not implemented or preservation-tested yet.
+At the safety pause, the old export had 14 of 33 supported fields. The reference
+below records the missing 19, lossy mappings and replacement listing-field
+workflow. The later full-field workspace and preservation proof below supersede this pause.
 The earlier successful create/update test remains valid historical evidence,
 not permission to re-enable a potentially destructive export.
+
+### 24 October: full listing workspace and preservation proof
+
+Added private storage for all 33 supported fields, the original source and draft,
+with owner-only access even when the gecko is public. The workspace at
+`/MorphMarketExport` loads a complete fresh Animal Records CSV, matches exact
+seller IDs, exposes every field, shows explicit changes and resolves conflicts
+with saved edits. It blocks erasing populated values, changing identity,
+unknown columns, invalid values and spreadsheet formula transformations.
+Collection values are optional suggestions, never automatic replacements.
+Complete reverse imports atomically save the private fields and create private
+animals, or match an existing ID without overwriting collection details.
+
+Migration `20261024204147_morphmarket_listing_details.sql` applied in the local
+311-migration PostgreSQL harness. Regression checks passed for owner privacy,
+anonymous access denial, stale saves, identity, blanking and atomic rollback.
+All 3,544 tests in 301 files pass; lint has 0 errors and 73 existing warnings.
+The expanded live preservation test passed with the shared formatter: A changed
+126 to 127 and retained its other 32 supported fields; B retained all 33. Private
+notes, wholesale details, shipping, diet, length, proven breeder, group ID and
+sale preferences were populated and retained. Fixed real export spellings for
+diet and length units. The deployed editor saved both full private records and
+visibly refused clearing price. Guarded downloads require a fresh source and
+review; the old quick-export builder stays blocked. See the reference for proof
+scope and the final UI checks.
+
+Final production UI proof on `9d8fb4b`: downloaded the reviewed two-row file
+from Geck Inspect, uploaded it unchanged to MorphMarket, then exported the same
+pair again. A changed 127 to 128 and retained the other 32 supported fields;
+B retained all 33. Listing numbers stayed 4174375 and 4174376, with no duplicates.
+Refreshed and saved the returned source with no pending changes. The live return
+import reported zero created and two matched. All disposable records remain
+archived. Final checks: 3,564 tests in 302 files pass, lint 0 errors and 71
+existing warnings, production deployment READY. Active sale/payment,
+wholesale-only and populated-video behavior remain outside the live proof.
 
 ### 24 October follow-up: badge and CSV round trip proven
 
@@ -542,7 +577,20 @@ Written on 19 October as `20261019001200` and held while deployments were paused
 
 Migration: `20261024201200_weekly_notes_repermission_fixes.sql`, dated after `20261024183300`, production's newest when it was pushed. Two fixes, found while finishing the sixth Weekly Gecko Notes review:
 
-- `claim_weekly_notes_repermission` locks the inbox, not the spelling, as the weekly notes claims do since `20261024182000`. Two accounts on one inbox are asked about in the same hourly run; with a lock per spelling both claims could pass the once-per-inbox check and the person would get the email twice. The email is still switched off (`weekly_notes_repermission_enabled`).
+- `claim_weekly_notes_repermission` locks the inbox, not the spelling, as the weekly notes claims do since `20261024182000`. Two accounts on one inbox are asked about in the same hourly run; with a lock per spelling both claims could pass the once-per-inbox check and the person would get the email twice. (This entry first said the email was still switched off. Tennyson switched `weekly_notes_repermission_enabled` on at 18:26 UTC on 24 Oct; the first hourly run that can send is 23:55 UTC on 25 Oct, 7 days after the 18 Oct weekly notes.)
 - `admin_erase_account` deletes the re-permission record (`weekly_notes_repermission_sends`), which `20261024150000` added after the function was last written. The erased address's own row goes, and every spelling of the inbox when no other account that can sign in remains, the same rule as the weekly notes ledger.
+
+## 24 October: last use of the app, the re-permission email, erasure
+
+Migration: `20261024210200_weekly_notes_activity_and_erasure.sql`, dated after `20261024204147`, production's newest when it was pushed. Merging it applies the migration and deploys `send-email` (new wording in the re-permission email); nothing waits on Tennyson. Each function it replaces matched production by checksum before the push. From a review of every email path on 24 Oct:
+
+- "Signed in within 60 days" now means "used the app within 60 days". The gate read `auth.users.last_sign_in_at`, which only a typed sign-in moves, so a member with a saved session (the web app left signed in, the phone apps) looked dormant. The new `weekly_notes_last_active` takes the latest of the sign-in, a saved session's refresh (`auth.sessions`) and the member's own `user_events`. The weekly notes gate and the re-permission email both use it. On 24 Oct this took one member (in the app on 9 Oct) off the re-permission list and back onto the weekly notes: 22 members are due the email from the 25 Oct 23:55 run, not 23.
+- The re-permission email skips an inbox where another account passes the gate (that account already gets the notes).
+- The re-permission job does nothing while the weekly notes are paused (`weekly_notes_enabled`), so it never offers notes that cannot come.
+- Account erasure removes the address and the reason from a free-plan grant (`membership_comps`): the row stays under the tombstone address for the counts, and the plan cannot come back on a new sign-up with the same address. Production had one grant.
+- A visitor erasure is refused again when any login (confirmed or not) or any profile is on the inbox, and the reply lists those spellings so `admin_erase_account` can run for each. Round 6 (`20261024182000`) let an unconfirmed sign-up through, which left that login and its profile behind. Production had no unconfirmed logins.
+- Not a migration, same push: the re-permission email says "opened Geck Inspect", not "signed in"; `/KeepNotes` says the next note arrives within a week as long as email is on in Settings; the Privacy Policy (dated 24 Oct) describes the pause, the email and its record, and says the form logs keep the address as well as its simplified form.
+
+Tests: sections 6 to 8 of `supabase/tests/weekly_notes_repermission_regressions.sql` and the visitor erasure block in `weekly_notes_visitors_regressions.sql`, each checked by putting the old rule back; `src/lib/__tests__/privacyPolicy.test.js` reads the re-permission table's columns from its migration.
 
 New test file: `supabase/tests/weekly_notes_repermission_regressions.sql` (who is due it, the lock, once per inbox, the keep button, the job and its switch, erasure). Production's copies of both functions matched main's migrations before the push. Nothing waits on Tennyson.
