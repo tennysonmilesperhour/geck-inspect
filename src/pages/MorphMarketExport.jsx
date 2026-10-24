@@ -1,1299 +1,182 @@
-import GeckoImage from '@/components/shared/GeckoImage';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Gecko, User } from '@/entities/all';
-import BulkEditModal from '@/components/morph-market/BulkEditModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
-import { parseLocalDate } from '@/lib/dateUtils';
-import {
-  Download,
-  Copy,
-  Check,
-  ExternalLink,
-  Filter,
-  Search,
-  Plus,
-  X,
-  AlertTriangle,
-  Crown,
-  Loader2,
-  ArrowRight,
-  LayoutGrid,
-  List,
-  Pencil,
-  Wrench,
-  Layers,
-  CheckCircle2,
-  Upload,
-} from 'lucide-react';
-import { createPageUrl } from '@/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PageHeader from '@/components/shared/PageHeader';
-import {
-  buildMorphMarketCSV,
-  MORPHMARKET_EXPORT_BLOCKED_REASON,
-  buildMorphMarketRow,
-  exportMorphMarketCSV,
-  morphMarketHeaders,
-} from '@/lib/morphmarketSync';
-import QuickFixModal from '@/components/morph-market/QuickFixModal';
+import { useToast } from '@/components/ui/use-toast';
 import { resolveTier } from '@/lib/tierLimits';
+import { createPageUrl } from '@/utils';
+import { downloadBlob } from '@/lib/morphmarketSync';
+import { MORPHMARKET_FIELDS, readMorphMarketSource, matchMorphMarketSource, refreshMorphMarketDraft, morphMarketChanges, morphMarketListingErrors, geckoListingSuggestions, exportPreservedMorphMarketCSV, MORPHMARKET_PRESERVATION_PROVEN } from '@/lib/morphmarketListing';
+import { loadMorphMarketListings, saveMorphMarketListing } from '@/lib/morphmarketListingApi';
 
-/**
- * MorphMarket Bulk Export Builder.
- *
- * Replaces the "single click, dump every For Sale gecko" CSV export
- * with a staging surface the breeder can curate. Pick from filtered
- * lists (weight ranges, hatch-month windows, sex, status, etc.),
- * batch them in, and download a CSV that matches MorphMarket's
- * Bulk Import 2.0 column spec exactly.
- *
- * Geckos that are already in the batch get pulled out of the pool so
- * the breeder can keep filtering and selecting without re-seeing them.
- */
-
-const STATUS_OPTIONS = ['For Sale', 'Pet', 'Future Breeder', 'Holdback', 'Ready to Breed', 'Proven', 'Sold'];
-const SEX_OPTIONS = ['Male', 'Female', 'Unsexed'];
-
-const MONTHS = [
-  { value: '1', label: 'January' },
-  { value: '2', label: 'February' },
-  { value: '3', label: 'March' },
-  { value: '4', label: 'April' },
-  { value: '5', label: 'May' },
-  { value: '6', label: 'June' },
-  { value: '7', label: 'July' },
-  { value: '8', label: 'August' },
-  { value: '9', label: 'September' },
-  { value: '10', label: 'October' },
-  { value: '11', label: 'November' },
-  { value: '12', label: 'December' },
-];
-
-const REQUIRED_FIELDS = [
-  { key: 'sex', label: 'Sex', test: (g) => g.sex && g.sex !== 'Unknown' },
-  { key: 'morphs_traits', label: 'Traits', test: (g) => Boolean((g.morphs_traits && g.morphs_traits.trim()) || (Array.isArray(g.morph_tags) && g.morph_tags.length > 0)) },
-  { key: 'asking_price', label: 'Price', test: (g) => !['For Sale', 'Sold'].includes(g.status) || Number(g.asking_price) > 0 },
-  { key: 'hatch_date', label: 'Hatch date for maturity', test: (g) => Boolean(buildMorphMarketRow(g).Maturity) },
-  { key: 'image_urls', label: 'At least 1 image', test: (g) => Array.isArray(g.image_urls) && g.image_urls.length > 0 },
-];
-
-function missingFields(gecko) {
-  return REQUIRED_FIELDS.filter((f) => !f.test(gecko)).map((f) => f.label);
-}
-
-function ageMonths(hatchDate) {
-  if (!hatchDate) return null;
-  const d = new Date(hatchDate);
-  if (isNaN(d.getTime())) return null;
-  return (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
-}
-
-function maturityLabel(months) {
-  if (months == null) return 'Unknown';
-  if (months < 3) return 'Baby';
-  if (months < 8) return 'Juvenile';
-  if (months < 14) return 'Subadult';
-  return 'Adult';
-}
-
-function FilterPanel({ filters, setFilters, onReset }) {
-  const update = (patch) => setFilters((f) => ({ ...f, ...patch }));
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
-          <Filter className="w-4 h-4 text-emerald-400" />
-          Filter geckos
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <Input
-            placeholder="Search by name, ID, or trait..."
-            value={filters.search}
-            onChange={(e) => update({ search: e.target.value })}
-            className="pl-10 bg-slate-800 border-slate-700 text-slate-100"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs text-slate-400">Status</Label>
-            <Select value={filters.status} onValueChange={(v) => update({ status: v })}>
-              <SelectTrigger className="h-9 bg-slate-800 border-slate-700 text-slate-100">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700 text-slate-100 z-[99999]">
-                <SelectItem value="any" className="focus:bg-slate-700">Any status</SelectItem>
-                {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s} className="focus:bg-slate-700">{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs text-slate-400">Sex</Label>
-            <Select value={filters.sex} onValueChange={(v) => update({ sex: v })}>
-              <SelectTrigger className="h-9 bg-slate-800 border-slate-700 text-slate-100">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700 text-slate-100 z-[99999]">
-                <SelectItem value="any" className="focus:bg-slate-700">Any</SelectItem>
-                {SEX_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s} className="focus:bg-slate-700">{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs text-slate-400">Min weight (g)</Label>
-            <Input
-              type="number"
-              step="0.1"
-              value={filters.weightMin}
-              onChange={(e) => update({ weightMin: e.target.value })}
-              placeholder="e.g. 30"
-              className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-            />
-          </div>
-          <div>
-            <Label className="text-xs text-slate-400">Max weight (g)</Label>
-            <Input
-              type="number"
-              step="0.1"
-              value={filters.weightMax}
-              onChange={(e) => update({ weightMax: e.target.value })}
-              placeholder="e.g. 50"
-              className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Hatched between</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-[10px] uppercase tracking-wide text-slate-500">From</Label>
-              <Input
-                type="date"
-                value={filters.bornAfter}
-                onChange={(e) => update({ bornAfter: e.target.value })}
-                className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-              />
-            </div>
-            <div>
-              <Label className="text-[10px] uppercase tracking-wide text-slate-500">To</Label>
-              <Input
-                type="date"
-                value={filters.bornBefore}
-                onChange={(e) => update({ bornBefore: e.target.value })}
-                className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-[10px] uppercase tracking-wide text-slate-500">Born in month</Label>
-              <Select value={filters.bornMonth} onValueChange={(v) => update({ bornMonth: v })}>
-                <SelectTrigger className="h-9 bg-slate-800 border-slate-700 text-slate-100">
-                  <SelectValue placeholder="Any month" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-slate-100 z-[99999]">
-                  <SelectItem value="any" className="focus:bg-slate-700">Any month</SelectItem>
-                  {MONTHS.map((m) => (
-                    <SelectItem key={m.value} value={m.value} className="focus:bg-slate-700">{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-[10px] uppercase tracking-wide text-slate-500">Born in year</Label>
-              <Input
-                type="number"
-                value={filters.bornYear}
-                onChange={(e) => update({ bornYear: e.target.value })}
-                placeholder="e.g. 2025"
-                className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs text-slate-400">MorphMarket readiness</Label>
-          <Select value={filters.completeness} onValueChange={(v) => update({ completeness: v })}>
-            <SelectTrigger className="h-9 bg-slate-800 border-slate-700 text-slate-100">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-slate-800 border-slate-700 text-slate-100 z-[99999]">
-              <SelectItem value="any" className="focus:bg-slate-700">Any</SelectItem>
-              <SelectItem value="ready" className="focus:bg-slate-700">Ready to export</SelectItem>
-              <SelectItem value="missing" className="focus:bg-slate-700">Missing required fields</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-          <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-            <Checkbox
-              checked={filters.requirePrice}
-              onCheckedChange={(v) => update({ requirePrice: !!v })}
-            />
-            Has asking price
-          </label>
-          <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-            <Checkbox
-              checked={filters.requireImage}
-              onCheckedChange={(v) => update({ requireImage: !!v })}
-            />
-            Has at least 1 image
-          </label>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onReset}
-          className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 w-full"
-        >
-          Reset filters
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function GeckoTile({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
-  const thumb = Array.isArray(gecko.image_urls) && gecko.image_urls[0];
-  const missing = missingFields(gecko);
-  return (
-    <div
-      className={`relative rounded-xl border bg-slate-900/60 transition overflow-hidden ${
-        selected
-          ? 'border-emerald-500 ring-1 ring-emerald-500/40'
-          : 'border-slate-800 hover:border-slate-700'
-      }`}
-    >
-      <button
-        type="button"
-        onClick={() => onToggle(gecko.id)}
-        className="touch:min-h-11 text-left w-full focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-xl"
-      >
-        <div className="relative aspect-square bg-slate-950">
-          <GeckoImage src={thumb} alt={gecko.name || ""} className="w-full h-full object-cover" />
-          <div className="absolute top-2 left-2">
-            <Checkbox
-              checked={selected}
-              onCheckedChange={() => onToggle(gecko.id)}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-slate-900/80 border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-            />
-          </div>
-          {missing.length > 0 && (
-            <div
-              className="absolute top-2 right-2 bg-amber-500/90 text-amber-950 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1"
-              title={`Missing: ${missing.join(', ')}`}
-            >
-              <AlertTriangle className="w-3 h-3" />
-              {missing.length}
-            </div>
-          )}
-        </div>
-        <div className="p-2.5 space-y-1">
-          <p className="text-sm font-semibold text-slate-100 truncate">{gecko.name || 'Unnamed'}</p>
-          <p className="text-[11px] text-slate-500 truncate">
-            {gecko.gecko_id_code || 'No ID'} · {gecko.sex || 'Unsexed'}
-          </p>
-          <div className="flex items-center justify-between gap-2 text-[11px]">
-            <span className="text-slate-400">
-              {gecko.weight_grams != null ? `${gecko.weight_grams}g` : 'No weight'}
-            </span>
-            <span className="text-emerald-300 font-semibold">
-              {gecko.asking_price != null ? `$${gecko.asking_price}` : 'No price'}
-            </span>
-          </div>
-          <p className="text-[10px] text-slate-500 truncate">
-            {gecko.morphs_traits || (Array.isArray(gecko.morph_tags) ? gecko.morph_tags.join(', ') : '')}
-          </p>
-          {missing.length > 0 && (
-            <p className="text-[10px] text-amber-300/80 truncate" title={missing.join(', ')}>
-              Missing: {missing.join(', ')}
-            </p>
-          )}
-        </div>
-      </button>
-      <div className="absolute bottom-2 right-2 flex items-center gap-1">
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onAddOne(gecko.id); }}
-          className="touch:min-h-11 touch:min-w-11 inline-flex items-center gap-1 rounded bg-emerald-600/90 hover:bg-emerald-500 text-white text-[10px] px-1.5 py-0.5"
-          title="Add this gecko straight to the batch"
-        >
-          <Plus className="w-3 h-3" />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
-          className="touch:min-h-11 inline-flex items-center gap-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-[10px] px-1.5 py-0.5 border border-slate-700"
-          title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
-        >
-          {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
-          {missing.length > 0 ? 'Fix' : 'Edit'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
-  const thumb = Array.isArray(gecko.image_urls) && gecko.image_urls[0];
-  const missing = missingFields(gecko);
-  return (
-    <div
-      className={`flex items-center gap-3 px-2 py-1.5 rounded-lg border transition ${
-        selected
-          ? 'border-emerald-500 bg-emerald-950/20'
-          : 'border-slate-800 bg-slate-900/40 hover:border-slate-700'
-      }`}
-    >
-      <Checkbox
-        checked={selected}
-        onCheckedChange={() => onToggle(gecko.id)}
-        className="border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-      />
-      <button
-        type="button"
-        onClick={() => onToggle(gecko.id)}
-        className="touch:min-h-11 flex items-center gap-3 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-md"
-      >
-        <div className="w-10 h-10 rounded bg-slate-950 shrink-0 overflow-hidden">
-          <GeckoImage src={thumb} alt={gecko.name || ""} className="w-full h-full object-cover" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-slate-100 truncate">{gecko.name || 'Unnamed'}</p>
-            <p className="text-[11px] text-slate-500 truncate">
-              {gecko.gecko_id_code || 'No ID'}
-            </p>
-          </div>
-          <p className="text-[11px] text-slate-400 truncate">
-            {[gecko.sex || 'Unsexed',
-              gecko.weight_grams != null ? `${gecko.weight_grams}g` : null,
-              gecko.morphs_traits || (Array.isArray(gecko.morph_tags) ? gecko.morph_tags.join(', ') : null),
-            ].filter(Boolean).join(' · ')}
-          </p>
-          {missing.length > 0 && (
-            <p className="text-[10px] text-amber-300/80 truncate" title={missing.join(', ')}>
-              Missing: {missing.join(', ')}
-            </p>
-          )}
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-sm text-emerald-300 font-semibold">
-            {gecko.asking_price != null ? `$${gecko.asking_price}` : '-'}
-          </p>
-          {missing.length > 0 && (
-            <div className="text-[10px] text-amber-300 inline-flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" />
-              {missing.length}
-            </div>
-          )}
-        </div>
-      </button>
-      <div className="flex items-center gap-1 shrink-0">
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onAddOne(gecko.id); }}
-          className="touch:min-h-11 touch:min-w-11 inline-flex items-center gap-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] px-2 py-1"
-          title="Add this gecko straight to the batch"
-        >
-          <Plus className="w-3 h-3" />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
-          className="touch:min-h-11 inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-1 border border-slate-700"
-          title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
-        >
-          {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
-          {missing.length > 0 ? 'Fix' : 'Edit'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Editable-cell metadata: which MorphMarket header maps to which Gecko
-// field, and what input to render. Only fields that are safe to edit
-// inline (single value, no upload, no validation interplay) are listed
-// here. Title / Maturity / etc. are derived; Images is multi-step. Use
-// the QuickFix modal for those.
-const EDITABLE_HEADERS = {
-  Sex:    { field: 'sex',           type: 'select', options: ['Male', 'Female', 'Unsexed'] },
-  State:  { field: 'status',        type: 'select', options: STATUS_OPTIONS },
-  Traits: { field: 'morphs_traits', type: 'text' },
-  Price:  { field: 'asking_price',  type: 'number' },
-  Weight: { field: 'weight_grams',  type: 'number' },
-};
-
-function EditableCell({ value, displayValue, config, onCommit }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value == null ? '' : String(value));
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => { setDraft(value == null ? '' : String(value)); }, [value]);
-
-  const commit = async (next) => {
-    if (next === draft && !editing) return;
-    let parsed = next;
-    if (config.type === 'number') {
-      if (next === '' || next == null) parsed = null;
-      else {
-        const n = Number(next);
-        if (Number.isNaN(n)) { setEditing(false); return; }
-        parsed = n;
-      }
-    }
-    const currentNorm = value == null ? null : (config.type === 'number' ? Number(value) : String(value));
-    const nextNorm = parsed == null ? null : (config.type === 'number' ? Number(parsed) : String(parsed));
-    if (currentNorm === nextNorm) { setEditing(false); return; }
-    setIsSaving(true);
-    try {
-      await onCommit(parsed);
-    } finally {
-      setIsSaving(false);
-      setEditing(false);
-    }
-  };
-
-  if (!editing) {
-    return (
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className="touch:min-h-11 text-left w-full truncate hover:bg-slate-800/60 rounded px-1 -mx-1 py-0.5 -my-0.5"
-        title="Click to edit"
-      >
-        {displayValue || <span className="text-slate-500 italic">empty</span>}
-      </button>
-    );
-  }
-
-  if (config.type === 'select') {
-    return (
-      <select
-        autoFocus
-        value={draft}
-        onChange={(e) => { setDraft(e.target.value); commit(e.target.value); }}
-        onBlur={() => setEditing(false)}
-        disabled={isSaving}
-        className="bg-slate-800 border border-slate-600 text-slate-100 text-xs rounded px-1 py-0.5 w-full"
-      >
-        <option value="">-</option>
-        {config.options.map((o) => (
-          <option key={o} value={o}>{o}</option>
-        ))}
-      </select>
-    );
-  }
-
-  return (
-    <input
-      autoFocus
-      type={config.type === 'number' ? 'number' : 'text'}
-      value={draft}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={() => commit(draft)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') { e.preventDefault(); commit(draft); }
-        if (e.key === 'Escape') { e.preventDefault(); setEditing(false); }
-      }}
-      disabled={isSaving}
-      className="bg-slate-800 border border-slate-600 text-slate-100 text-xs rounded px-1 py-0.5 w-full"
-    />
-  );
-}
-
-function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
-  const headers = morphMarketHeaders(geckos);
-  if (geckos.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-6 text-center">
-        <p className="text-sm text-slate-400">No geckos in the batch yet.</p>
-        <p className="text-xs text-slate-500 mt-1">
-          Filter and select on the left, then click "Add to batch" to stage them for export.
-        </p>
-      </div>
-    );
-  }
-  return (
-    <div className="space-y-1">
-      <p className="text-[11px] text-slate-500 flex items-center gap-1">
-        <ArrowRight className="w-3 h-3" /> Scroll horizontally for all {headers.length} columns. Click any Sex / State / Traits / Price / Weight cell to edit it inline.
-      </p>
-      <div className="relative rounded-xl border border-slate-800 bg-slate-950/40">
-        <div className="overflow-x-scroll rounded-xl">
-          <table className="w-full text-xs">
-            <thead className="bg-slate-900 text-slate-400 sticky top-0">
-              <tr>
-                <th className="text-left px-2 py-2 font-medium">#</th>
-                <th className="text-left px-2 py-2 font-medium">Fix</th>
-                {headers.map((h) => (
-                  <th key={h} className="text-left px-2 py-2 font-medium whitespace-nowrap">
-                    {h}
-                    {EDITABLE_HEADERS[h] && <span className="ml-1 text-emerald-500/70" title="Editable">✎</span>}
-                  </th>
-                ))}
-                <th className="text-right px-2 py-2 font-medium">Remove</th>
-              </tr>
-            </thead>
-            <tbody>
-              {geckos.map((g, i) => {
-                const row = buildMorphMarketRow(g);
-                const missing = missingFields(g);
-                return (
-                  <tr
-                    key={g.id}
-                    className={`border-t border-slate-800 hover:bg-slate-900/60 ${
-                      missing.length > 0 ? 'bg-amber-500/5' : ''
-                    }`}
-                  >
-                    <td className="px-2 py-2 text-slate-500">{i + 1}</td>
-                    <td className="px-2 py-2">
-                      <button
-                        type="button"
-                        onClick={() => onQuickFix(g)}
-                        className="touch:min-h-11 inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-0.5 border border-slate-700"
-                        title={missing.length > 0 ? `Fix: ${missing.join(', ')}` : 'Edit MorphMarket fields'}
-                      >
-                        {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
-                        {missing.length > 0 ? 'Fix' : 'Edit'}
-                      </button>
-                    </td>
-                    {headers.map((h) => {
-                      const config = EDITABLE_HEADERS[h];
-                      if (!config) {
-                        return (
-                          <td key={h} className="px-2 py-2 text-slate-200 align-top max-w-[12rem]">
-                            <div className="truncate" title={String(row[h] ?? '')}>{String(row[h] ?? '')}</div>
-                          </td>
-                        );
-                      }
-                      const raw = g[config.field];
-                      return (
-                        <td key={h} className="px-2 py-2 text-slate-200 align-top max-w-[12rem]">
-                          <EditableCell
-                            value={raw}
-                            displayValue={String(row[h] ?? '')}
-                            config={config}
-                            onCommit={(next) => onCellSave(g.id, config.field, next)}
-                          />
-                        </td>
-                      );
-                    })}
-                    <td className="px-2 py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => onRemove(g.id)}
-                        className="touch:min-h-11 touch:min-w-11 text-slate-500 hover:text-rose-400 inline-flex items-center"
-                        title="Remove from batch"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute top-0 right-0 h-full w-8 rounded-r-xl bg-gradient-to-l from-slate-950/80 to-transparent"
-        />
-      </div>
-    </div>
-  );
-}
-
-const DEFAULT_FILTERS = {
-  search: '',
-  status: 'any',
-  sex: 'any',
-  weightMin: '',
-  weightMax: '',
-  bornAfter: '',
-  bornBefore: '',
-  bornMonth: 'any',
-  bornYear: '',
-  requirePrice: false,
-  requireImage: false,
-  completeness: 'any', // any | ready | missing
-};
-
-const BATCH_STORAGE_KEY = 'mm-export-batch-ids-v1';
-const VIEW_MODE_STORAGE_KEY = 'mm-export-view-mode-v1';
-
-function loadStoredArray(key) {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function loadStoredString(key, fallback) {
-  if (typeof window === 'undefined') return fallback;
-  try {
-    return window.localStorage.getItem(key) || fallback;
-  } catch {
-    return fallback;
-  }
-}
+const groups = [...new Set(MORPHMARKET_FIELDS.map(f => f.group))];
 
 export default function MorphMarketExport() {
   const [user, setUser] = useState(null);
-  const [allGeckos, setAllGeckos] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [selected, setSelected] = useState(() => new Set());
-  const [batchIds, setBatchIds] = useState(() => loadStoredArray(BATCH_STORAGE_KEY));
-  const [copied, setCopied] = useState(false);
-  const [viewMode, setViewMode] = useState(() => loadStoredString(VIEW_MODE_STORAGE_KEY, 'grid'));
-  const [quickFixGecko, setQuickFixGecko] = useState(null);
-  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const [geckos, setGeckos] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [saved, setSaved] = useState([]);
+  const [filename, setFilename] = useState('');
+  const [loadedAt, setLoadedAt] = useState(null);
+  const [reviewed, setReviewed] = useState(false);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState('');
+  const fileRef = useRef(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try { window.localStorage.setItem(BATCH_STORAGE_KEY, JSON.stringify(batchIds)); }
-    catch { /* ignore quota errors */ }
-  }, [batchIds]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try { window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode); }
-    catch { /* ignore */ }
-  }, [viewMode]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setIsLoading(true);
       try {
         const me = await User.me();
         if (cancelled) return;
         setUser(me);
-        if (me) {
-          const list = await Gecko.filter({ created_by: me.email }, '-created_date');
-          if (!cancelled) {
-            const usable = (list || []).filter((g) => !g.archived && !g.notes?.startsWith('[Manual sale]'));
-            setAllGeckos(usable);
-            // Sell Geckos hands a listing over as /MorphMarketExport?add=<id>.
-            // Put it straight into the batch so the breeder lands one click
-            // from the CSV, then drop the parameter so a reload does not
-            // add it twice.
-            if (typeof window !== 'undefined') {
-              const params = new URLSearchParams(window.location.search);
-              const wanted = (params.get('add') || '').split(',').filter(Boolean);
-              const ids = wanted.filter((id) => usable.some((g) => g.id === id));
-              if (ids.length) {
-                setBatchIds((prev) => [...new Set([...prev, ...ids])]);
-                toast({
-                  title: ids.length === 1 ? 'Added to the MorphMarket batch' : `Added ${ids.length} to the MorphMarket batch`,
-                  description: 'Your selection is saved. Export is paused to protect existing MorphMarket details.',
-                });
-              }
-              if (params.has('add')) {
-                params.delete('add');
-                const rest = params.toString();
-                window.history.replaceState({}, '', window.location.pathname + (rest ? `?${rest}` : ''));
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load geckos for MorphMarket export:', err);
-      }
-      if (!cancelled) setIsLoading(false);
+        if (!['breeder', 'enterprise'].includes(resolveTier(me))) return;
+        const [animals, details] = await Promise.all([Gecko.filter({ created_by: me.email }, '-created_date'), loadMorphMarketListings()]);
+        if (cancelled) return;
+        setGeckos(animals);
+        setSaved(details);
+        setRows(details.map(d => ({ fields: d.source_fields, draft: d.draft_fields, extra: d.source_extra, gecko: animals.find(g => g.id === d.gecko_id), conflicts: [], selected: false, issue: '', version: d.updated_date, sourceName: d.source_name })));
+      } catch (e) { if (!cancelled) setError(e.message); }
+      finally { if (!cancelled) setBusy(false); }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  const tier = resolveTier(user);
-  const hasAccess = tier === 'breeder' || tier === 'enterprise';
+  const dirty = rows.some(r => r.dirty);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = e => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
 
-  const batchSet = useMemo(() => new Set(batchIds), [batchIds]);
-  const batchGeckos = useMemo(
-    () => batchIds.map((id) => allGeckos.find((g) => g.id === id)).filter(Boolean),
-    [batchIds, allGeckos],
-  );
-
-  const pool = useMemo(
-    () => allGeckos.filter((g) => !batchSet.has(g.id)),
-    [allGeckos, batchSet],
-  );
-
-  const filtered = useMemo(() => {
-    const q = filters.search.trim().toLowerCase();
-    const wMin = filters.weightMin === '' ? null : Number(filters.weightMin);
-    const wMax = filters.weightMax === '' ? null : Number(filters.weightMax);
-    const after = filters.bornAfter ? new Date(filters.bornAfter) : null;
-    const before = filters.bornBefore ? new Date(filters.bornBefore) : null;
-    const month = filters.bornMonth === 'any' ? null : Number(filters.bornMonth);
-    const year = filters.bornYear === '' ? null : Number(filters.bornYear);
-
-    return pool.filter((g) => {
-      if (q) {
-        const hay = [g.name, g.gecko_id_code, g.morphs_traits, ...(g.morph_tags || [])]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      if (filters.status !== 'any' && g.status !== filters.status) return false;
-      if (filters.sex !== 'any') {
-        if (filters.sex === 'Unsexed' && g.sex && g.sex !== 'Unsexed' && g.sex !== 'Unknown') return false;
-        if (filters.sex !== 'Unsexed' && g.sex !== filters.sex) return false;
-      }
-      if (wMin != null && (g.weight_grams == null || Number(g.weight_grams) < wMin)) return false;
-      if (wMax != null && (g.weight_grams == null || Number(g.weight_grams) > wMax)) return false;
-      if (after || before || month != null || year != null) {
-        if (!g.hatch_date) return false;
-        const d = parseLocalDate(g.hatch_date);
-        if (!d || isNaN(d.getTime())) return false;
-        if (after && d < after) return false;
-        if (before && d > before) return false;
-        if (month != null && d.getMonth() + 1 !== month) return false;
-        if (year != null && d.getFullYear() !== year) return false;
-      }
-      if (filters.requirePrice && (g.asking_price == null || g.asking_price === '')) return false;
-      if (filters.requireImage && !(Array.isArray(g.image_urls) && g.image_urls.length > 0)) return false;
-      if (filters.completeness === 'ready' && missingFields(g).length > 0) return false;
-      if (filters.completeness === 'missing' && missingFields(g).length === 0) return false;
-      return true;
-    });
-  }, [pool, filters]);
-
-  const toggleSelected = (id) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const change = (index, patch) => {
+    setRows(current => current.map((r, i) => i === index ? { ...r, ...patch } : r));
+    setReviewed(false);
+  };
+  const edit = (index, key, value) => {
+    const row = rows[index];
+    change(index, { draft: { ...row.draft, [key]: value }, conflicts: row.conflicts.filter(k => k !== key), dirty: true });
   };
 
-  const visibleSelectedCount = filtered.reduce((acc, g) => acc + (selected.has(g.id) ? 1 : 0), 0);
-  const allVisibleSelected = filtered.length > 0 && visibleSelectedCount === filtered.length;
-
-  const toggleSelectAllVisible = () => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (allVisibleSelected) {
-        for (const g of filtered) next.delete(g.id);
-      } else {
-        for (const g of filtered) next.add(g.id);
-      }
-      return next;
-    });
-  };
-
-  const addSelectedToBatch = () => {
-    const ids = Array.from(selected).filter((id) => !batchSet.has(id));
-    if (ids.length === 0) {
-      toast({
-        title: 'Nothing to add',
-        description: 'Select one or more geckos in the pool first.',
-      });
-      return;
-    }
-    setBatchIds((prev) => [...prev, ...ids]);
-    setSelected(new Set());
-    toast({
-      title: `Added ${ids.length} to batch`,
-      description: 'They\'ve been moved out of the pool. Keep filtering to add more.',
-    });
-  };
-
-  const removeFromBatch = (id) => {
-    setBatchIds((prev) => prev.filter((x) => x !== id));
-  };
-
-  const openQuickFix = (gecko) => setQuickFixGecko(gecko);
-  const handleQuickFixSaved = (updated) => {
-    setAllGeckos((prev) => prev.map((g) => (g.id === updated.id ? { ...g, ...updated } : g)));
-    setQuickFixGecko(null);
-  };
-
-  const handleBulkSaved = (updatedList) => {
-    if (!Array.isArray(updatedList) || updatedList.length === 0) {
-      setIsBulkEditOpen(false);
-      return;
-    }
-    const byId = new Map(updatedList.map((u) => [u.id, u]));
-    setAllGeckos((prev) => prev.map((g) => (byId.has(g.id) ? { ...g, ...byId.get(g.id) } : g)));
-    setIsBulkEditOpen(false);
-    setSelected(new Set());
-  };
-
-  const handleCellSave = async (id, field, value) => {
+  const loadFile = async event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setBusy(true);
+    setReviewed(false);
+    setLoadedAt(null);
+    setError('');
     try {
-      const patch = { [field]: value };
-      const saved = await Gecko.update(id, patch);
-      setAllGeckos((prev) => prev.map((g) => (g.id === id ? { ...g, ...patch, ...saved } : g)));
-    } catch (err) {
-      toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
-    }
-  };
-
-  const addOneToBatch = (id) => {
-    if (batchSet.has(id)) return;
-    setBatchIds((prev) => [...prev, id]);
-  };
-
-  const addAllReadyToBatch = () => {
-    const ready = filtered.filter((g) => missingFields(g).length === 0);
-    const ids = ready.map((g) => g.id).filter((id) => !batchSet.has(id));
-    if (ids.length === 0) {
-      toast({
-        title: 'Nothing ready in this filter',
-        description: 'No geckos in the current filter pass MorphMarket\'s required-field check.',
+      if (file.size > 10_000_000) throw new Error('Choose a file smaller than 10 MB.');
+      const source = readMorphMarketSource(await file.text());
+      const details = await loadMorphMarketListings();
+      const matched = matchMorphMarketSource(source, geckos).map(row => {
+        const persisted = details.find(d => d.gecko_id === row.gecko?.id);
+        const local = rows.find(r => r.gecko?.id === row.gecko?.id && r.dirty);
+        const previous = local ? { source_fields: local.fields, draft_fields: local.draft } : persisted;
+        return { ...row, ...refreshMorphMarketDraft(row.fields, previous), selected: !row.issue, version: persisted?.updated_date, sourceName: file.name, dirty: Boolean(row.gecko) };
       });
-      return;
-    }
-    setBatchIds((prev) => [...prev, ...ids]);
-    setSelected((prev) => {
-      const next = new Set(prev);
-      ids.forEach((id) => next.delete(id));
-      return next;
-    });
-    toast({
-      title: `Added ${ids.length} ready listing${ids.length === 1 ? '' : 's'}`,
-      description: 'All export-ready geckos in the current filter were staged.',
-    });
+      // Keep unsaved animals absent from this file visible, but never include them in this export.
+      const absent = rows.filter(r => r.dirty && !matched.some(m => m.gecko?.id === r.gecko?.id)).map(r => ({ ...r, selected: false, issue: 'Not in the current source file. Save these edits, then load a fresh file containing this animal.' }));
+      setRows([...matched, ...absent]);
+      setSaved(details);
+      setFilename(file.name);
+      setLoadedAt(Date.now());
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
   };
 
-  const selectedGeckos = useMemo(
-    () => Array.from(selected).map((id) => allGeckos.find((g) => g.id === id)).filter(Boolean),
-    [selected, allGeckos],
-  );
-
-  const clearBatch = () => {
-    setBatchIds([]);
-    setSelected(new Set());
+  const saveRows = async targets => {
+    for (const row of targets) {
+      const problems = morphMarketListingErrors(row.fields, row.draft);
+      if (row.conflicts.length || problems.length || !row.gecko) throw new Error(problems[0] || 'Resolve matching conflicts before saving.');
+      const result = await saveMorphMarketListing(row.gecko.id, row.fields, row.draft, { ...row.extra, ...(row.raw ? { original_fields: row.raw } : {}) }, row.sourceName, row.version);
+      setRows(current => current.map(r => r === row ? { ...r, version: result.updated_date, dirty: false } : r));
+      setSaved(current => [...current.filter(d => d.gecko_id !== row.gecko.id), result]);
+    }
   };
 
-  const handleDownload = () => {
-    if (batchGeckos.length === 0) {
-      toast({ title: 'Batch is empty', description: 'Add some geckos first.', variant: 'destructive' });
-      return;
-    }
+  const save = async () => {
+    setBusy(true); setError('');
+    try { await saveRows(rows.filter(r => r.dirty)); toast({ title: 'Private listing details saved' }); }
+    catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const selected = rows.filter(r => r.selected);
+  const blocked = selected.some(r => r.issue || r.conflicts.length || morphMarketListingErrors(r.fields, r.draft).length);
+  const download = async () => {
+    setBusy(true); setError('');
     try {
-      const filename = exportMorphMarketCSV(batchGeckos);
-      toast({ title: 'CSV downloaded', description: filename });
-    } catch (error) {
-      toast({ title: 'Export unavailable', description: error.message, variant: 'destructive' });
-    }
+      if (blocked) throw new Error('Resolve the listed problems first.');
+      const csv = exportPreservedMorphMarketCSV(selected.map(r => ({ source: r.fields, draft: r.draft })), { loadedAt, reviewed });
+      await saveRows(selected);
+      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `morphmarket-update-${new Date().toISOString().slice(0, 10)}.csv`);
+      setLoadedAt(null); setReviewed(false);
+      toast({ title: 'Update CSV downloaded', description: 'Leave Synchronize/Replace off. Review every column on MorphMarket before importing.' });
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
   };
 
-  const handleCopy = async () => {
-    if (batchGeckos.length === 0) return;
-    try {
-      await navigator.clipboard.writeText(buildMorphMarketCSV(batchGeckos));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch (error) {
-      toast({
-        title: 'Copy unavailable',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const batchMissingCount = batchGeckos.filter((g) => missingFields(g).length > 0).length;
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto flex justify-center py-20">
-          <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-        <div className="max-w-2xl mx-auto">
-          <PageHeader
-            icon={Upload}
-            title="MorphMarket Bulk Export"
-            description="Build a curated MorphMarket CSV from your collection."
-          />
-          <Card>
-            <CardContent className="p-6 md:p-8 text-center">
-              <Crown className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
-              <p className="text-sm md:text-base text-slate-300">
-                Available on the Breeder tier.
-              </p>
-              <Button asChild className="mt-4">
-                <Link to={createPageUrl('Membership')}>Upgrade</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  if (!user && busy) return <p className="p-6">Loading listing details...</p>;
+  if (!['breeder', 'enterprise'].includes(resolveTier(user))) return <div className="p-6"><p>MorphMarket listing tools are available on the Breeder plan.</p><Link to={createPageUrl('Membership')}>View plans</Link></div>;
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6 pb-28">
-        <PageHeader
-          icon={Upload}
-          title="MorphMarket Bulk Export"
-          description={
-            <>
-              Review your saved batch for{' '}
-              <a
-                href="https://www.morphmarket.com/inventory/import"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-400 underline underline-offset-2"
-              >
-                MorphMarket Bulk Import
-                <ExternalLink className="w-3 h-3 inline ml-0.5" />
-              </a>
-              . CSV download and copy are paused to protect existing listing data.
-            </>
-          }
-        >
-          <Link to={createPageUrl('MarketplaceSell')}>
-            <Button variant="outline">
-              Back to Seller Console
-            </Button>
-          </Link>
-        </PageHeader>
+    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6 text-slate-100">
+      <PageHeader title="MorphMarket listings" description="Keep the full listing, review your changes, then update MorphMarket." />
+      {error && <p role="alert" className="rounded-lg border border-red-500 p-4 text-red-200">{error}</p>}
+      <Card><CardHeader><CardTitle>1. Start with a fresh MorphMarket export</CardTitle></CardHeader><CardContent className="space-y-4">
+        <p>In <a className="text-emerald-400 underline" href="https://www.morphmarket.com/inventory/" target="_blank" rel="noreferrer">MorphMarket Animal Manager</a>, export Animal Records for the listings you want to update. Load that complete CSV here immediately before each update.</p>
+        <p className="text-sm text-slate-400">All 33 supported fields stay in private listing storage, including wholesale prices and private notes. Collection values are suggestions you can choose individually. New animals must first have an Animal ID on MorphMarket and a matching ID in Geck Inspect.</p>
+        <Button disabled={busy} onClick={() => fileRef.current?.click()}>Load fresh MorphMarket CSV</Button>
+        <input ref={fileRef} className="hidden" type="file" accept=".csv" onChange={loadFile} aria-label="Fresh MorphMarket CSV" />
+        <p className="text-sm">{filename ? `Loaded: ${filename}` : `${saved.length} saved listing records. Load a fresh file to prepare an export.`}</p>
+        <p className="text-sm text-slate-400">Need to add matching animals? Use <Link className="text-emerald-400 underline" to={createPageUrl('MarketplaceSell')}>Seller Console &gt; Import CSV</Link>. Existing exact IDs keep their collection details; new animals import privately.</p>
+      </CardContent></Card>
 
-        <p role="alert" className="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
-          {MORPHMARKET_EXPORT_BLOCKED_REASON}
-        </p>
-        <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)] gap-6">
-          <div className="space-y-4 min-w-0">
-            <FilterPanel
-              filters={filters}
-              setFilters={setFilters}
-              onReset={() => setFilters(DEFAULT_FILTERS)}
-            />
+      <div className="flex flex-wrap gap-3 items-center"><h2 className="text-lg font-semibold">2. Edit and review listing fields</h2><Button variant="outline" disabled={busy || !dirty} onClick={save}>Save private listing details</Button></div>
+      {rows.map((row, index) => {
+        const suggestions = row.gecko ? geckoListingSuggestions(row.gecko) : {};
+        const changes = morphMarketChanges(row.fields, row.draft);
+        const problems = morphMarketListingErrors(row.fields, row.draft);
+        return <Card key={`${row.fields.Animal_ID}-${index}`}><CardHeader>
+          <div className="flex gap-3 items-start"><Checkbox id={`include-${index}`} checked={row.selected} disabled={busy || !loadedAt || Boolean(row.issue)} onCheckedChange={value => change(index, { selected: Boolean(value) })} /><div><Label htmlFor={`include-${index}`} className="text-lg">{row.fields.Title}</Label><p className="text-sm text-slate-400">{row.fields.Animal_ID || 'Missing Animal ID'}{row.gecko?.archived ? ' · Archived collection record' : ''}{row.dirty ? ' · Unsaved' : ''}</p></div></div>
+          {row.issue && <p className="text-amber-200">{row.issue}</p>}
+        </CardHeader><CardContent className="space-y-4">
+          {row.conflicts.length > 0 && <div role="alert" className="space-y-2 text-amber-200"><p>These fields changed on MorphMarket while you had saved edits. Choose which value to keep:</p>{row.conflicts.map(key => <div key={key}><p>{key}: MorphMarket "{row.fields[key]}"; saved edit "{row.draft[key]}"</p><Button variant="outline" disabled={busy} onClick={() => edit(index, key, row.fields[key])}>Keep MorphMarket value</Button>{' '}<Button variant="outline" disabled={busy} onClick={() => edit(index, key, row.draft[key])}>Keep saved edit</Button></div>)}</div>}
+          {groups.map(group => <details key={group} className="rounded-lg border border-slate-700 p-3"><summary className="cursor-pointer font-medium">{group}</summary><div className="grid md:grid-cols-2 gap-4 mt-4">{MORPHMARKET_FIELDS.filter(f => f.group === group).map(field => {
+            const id = `listing-${index}-${field.key}`;
+            const value = row.draft[field.key];
+            return <div key={field.key} className={field.multiline ? 'md:col-span-2 space-y-2' : 'space-y-2'}><Label htmlFor={id}>{field.label}</Label>
+              {field.options ? <Select value={value || '__blank'} disabled={busy || !row.gecko} onValueChange={v => edit(index, field.key, v === '__blank' ? '' : v)}><SelectTrigger id={id}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__blank">Not set</SelectItem>{!field.options.includes(value) && value && <SelectItem value={value}>{value} (unrecognized)</SelectItem>}{field.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent></Select>
+                : field.multiline ? <Textarea id={id} disabled={busy || !row.gecko} value={value} onChange={e => edit(index, field.key, e.target.value)} />
+                  : <Input id={id} readOnly={field.locked} disabled={busy || !row.gecko} value={value} onChange={e => edit(index, field.key, e.target.value)} />}
+              {field.hint && <p className="text-xs text-slate-400">{field.hint}</p>}
+              {suggestions[field.key] !== undefined && suggestions[field.key] !== value && <Button variant="outline" size="sm" disabled={busy} onClick={() => edit(index, field.key, suggestions[field.key])}>Use collection value: {suggestions[field.key].slice(0, 70)}</Button>}
+            </div>;
+          })}</div></details>)}
+          {problems.length > 0 && <ul className="text-sm text-amber-200 list-disc pl-5">{problems.map(problem => <li key={problem}>{problem}</li>)}</ul>}
+          <h3 className="font-medium">Changes from the loaded MorphMarket file ({changes.length})</h3>
+          {changes.length ? <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr><th className="text-left p-2">Field</th><th className="text-left p-2">MorphMarket</th><th className="text-left p-2">Update</th></tr></thead><tbody>{changes.map(c => <tr key={c.key} className="border-t border-slate-700"><th className="text-left p-2">{c.label}</th><td className="p-2 whitespace-pre-wrap break-all">{c.before || '(empty)'}</td><td className="p-2 whitespace-pre-wrap break-all">{c.after || '(empty)'}</td></tr>)}</tbody></table></div> : <p className="text-sm text-slate-400">No field changes.</p>}
+        </CardContent></Card>;
+      })}
 
-            <Card>
-              <CardContent className="p-4 md:p-6 space-y-2 text-xs text-slate-400">
-                <p className="text-base font-semibold text-slate-100">Tips</p>
-                <p>Click a tile to select it. Click again to deselect. Use "Select all" to grab everything matching the current filter.</p>
-                <p>Geckos missing required MorphMarket fields show an amber badge. Open the gecko to fill them in before exporting.</p>
-                <p>Upload the CSV on MorphMarket, review its checks, and leave Synchronize/Replace off for a partial batch. Keep Animal_ID unchanged on later uploads to update the same listings.</p>
-                <p>MorphMarket uses your Seller Profile currency. Check it matches your prices, and choose shipping there for For Sale listings.</p>
-                <p>Re-importing can erase existing MorphMarket values, even when a column is omitted. Missing prices became $0 and missing hatch dates and weights were cleared in our live test. Fill those values before uploading updates. Weights are rounded to whole grams. If maturity is blank, add a hatch date here or choose maturity on MorphMarket.</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6 min-w-0">
-            {/* Pool */}
-            <section className="space-y-3 min-w-0">
-              <div className="flex items-end justify-between gap-3 flex-wrap">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-100">
-                    Pool <span className="text-slate-500 font-normal">({filtered.length} of {pool.length})</span>
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    {selected.size} selected{selected.size > 0 ? ' across all filters' : ''}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="inline-flex rounded-md border border-slate-700 bg-slate-800 overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('grid')}
-                      className={`touch:min-h-11 px-2 h-9 text-xs inline-flex items-center gap-1 ${
-                        viewMode === 'grid' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                      title="Tile view"
-                    >
-                      <LayoutGrid className="w-3.5 h-3.5" />
-                      Tiles
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('list')}
-                      className={`touch:min-h-11 px-2 h-9 text-xs inline-flex items-center gap-1 border-l border-slate-700 ${
-                        viewMode === 'list' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                      title="List view"
-                    >
-                      <List className="w-3.5 h-3.5" />
-                      List
-                    </button>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleSelectAllVisible}
-                    disabled={filtered.length === 0}
-                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-                  >
-                    {allVisibleSelected ? 'Deselect all visible' : 'Select all visible'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsBulkEditOpen(true)}
-                    disabled={selected.size === 0}
-                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-                    title="Apply a single edit (price, status, sex, traits) to every selected gecko"
-                  >
-                    <Layers className="w-3.5 h-3.5 mr-1" />
-                    Bulk edit{selected.size > 0 ? ` ${selected.size}` : ''}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addAllReadyToBatch}
-                    disabled={filtered.length === 0}
-                    className="border-emerald-700/60 bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-200 text-xs h-9"
-                    title="Add every gecko in the current filter that already has all required MorphMarket fields"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                    Add all ready in filter
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={addSelectedToBatch}
-                    disabled={selected.size === 0}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
-                  >
-                    <Plus className="w-3.5 h-3.5 mr-1" />
-                    Add {selected.size > 0 ? `${selected.size} ` : ''}to batch
-                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                  </Button>
-                </div>
-              </div>
-
-              {filtered.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
-                  <p className="text-slate-300 font-semibold">No geckos match these filters</p>
-                  <p className="text-sm text-slate-500 mt-1">
-                    {pool.length === 0
-                      ? 'Every gecko in your collection is already in the batch.'
-                      : 'Try widening the weight range, hatch dates, or status.'}
-                  </p>
-                </div>
-              ) : viewMode === 'list' ? (
-                <div className="space-y-1.5">
-                  {filtered.map((g) => (
-                    <GeckoRow
-                      key={g.id}
-                      gecko={g}
-                      selected={selected.has(g.id)}
-                      onToggle={toggleSelected}
-                      onQuickFix={openQuickFix}
-                      onAddOne={addOneToBatch}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                  {filtered.map((g) => (
-                    <GeckoTile
-                      key={g.id}
-                      gecko={g}
-                      selected={selected.has(g.id)}
-                      onToggle={toggleSelected}
-                      onQuickFix={openQuickFix}
-                      onAddOne={addOneToBatch}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Batch */}
-            <section className="space-y-3 min-w-0">
-              <div className="flex items-end justify-between gap-3 flex-wrap">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-100">
-                    Batch <span className="text-slate-500 font-normal">({batchGeckos.length})</span>
-                  </h2>
-                  {batchMissingCount > 0 && (
-                    <p className="text-xs text-amber-300 flex items-center gap-1.5 mt-0.5">
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      {batchMissingCount} gecko{batchMissingCount === 1 ? '' : 's'} missing required MorphMarket fields. Export is currently paused.
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopy}
-                    disabled
-                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                    {copied ? 'Copied' : 'Copy CSV'}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleDownload}
-                    disabled
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
-                  >
-                    <Download className="w-3.5 h-3.5 mr-1" />
-                    Download CSV ({batchGeckos.length})
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearBatch}
-                    disabled={batchGeckos.length === 0}
-                    className="border-rose-900/40 bg-rose-950/30 hover:bg-rose-950/50 text-rose-300 text-xs h-9"
-                  >
-                    Clear batch
-                  </Button>
-                </div>
-              </div>
-
-              <BatchTable
-                geckos={batchGeckos}
-                onRemove={removeFromBatch}
-                onQuickFix={openQuickFix}
-                onCellSave={handleCellSave}
-              />
-
-              {batchGeckos.length > 0 && (
-                <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopy}
-                    disabled
-                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                    {copied ? 'Copied' : 'Copy CSV'}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleDownload}
-                    disabled
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
-                  >
-                    <Download className="w-3.5 h-3.5 mr-1" />
-                    Download CSV ({batchGeckos.length})
-                  </Button>
-                </div>
-              )}
-
-              {batchGeckos.length > 0 && (
-                <details className="rounded-xl border border-slate-800 bg-slate-950/40">
-                  <summary className="cursor-pointer px-3 py-2 text-xs text-slate-400 hover:text-slate-200">
-                    Show summary by maturity
-                  </summary>
-                  <div className="p-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    {['Baby', 'Juvenile', 'Subadult', 'Adult'].map((label) => {
-                      const count = batchGeckos.filter((g) => maturityLabel(ageMonths(g.hatch_date)) === label).length;
-                      return (
-                        <div key={label} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-center">
-                          <p className="text-slate-500 uppercase tracking-wider text-[10px]">{label}</p>
-                          <p className="text-slate-100 text-lg font-bold">{count}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </details>
-              )}
-            </section>
-          </div>
-        </div>
-
-        <QuickFixModal
-          gecko={quickFixGecko}
-          open={!!quickFixGecko}
-          onClose={() => setQuickFixGecko(null)}
-          onSaved={handleQuickFixSaved}
-          missing={quickFixGecko ? missingFields(quickFixGecko) : []}
-          allGeckos={allGeckos}
-        />
-
-        <BulkEditModal
-          geckos={selectedGeckos}
-          open={isBulkEditOpen}
-          onClose={() => setIsBulkEditOpen(false)}
-          onSaved={handleBulkSaved}
-        />
-
-        {batchGeckos.length > 0 && (
-          <div className="fixed bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur-sm">
-            <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-              <div className="text-sm text-slate-200">
-                <span className="font-semibold">{batchGeckos.length}</span>
-                <span className="text-slate-400"> listing{batchGeckos.length === 1 ? '' : 's'} staged for MorphMarket</span>
-                {batchMissingCount > 0 && (
-                  <span className="ml-3 text-amber-300 inline-flex items-center gap-1 text-xs">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    {batchMissingCount} missing required fields
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopy}
-                  disabled
-                  className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                  {copied ? 'Copied' : 'Copy CSV'}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleDownload}
-                  disabled
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
-                >
-                  <Download className="w-3.5 h-3.5 mr-1" />
-                  Download CSV ({batchGeckos.length})
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <Card><CardHeader><CardTitle>3. Review the update file</CardTitle></CardHeader><CardContent className="space-y-4">
+        {!MORPHMARKET_PRESERVATION_PROVEN && <p className="text-amber-200">Downloads are paused while we test the full field preservation on real MorphMarket listings. You can save and edit private listing details now.</p>}
+        <p>Blanking an existing value, changing an Animal ID, incomplete files and unrecognized fields block export. MorphMarket changes made after your source file cannot be detected here. Export and upload promptly, with Synchronize/Replace off.</p>
+        <div className="flex gap-3 items-start"><Checkbox id="reviewed-update" checked={reviewed} disabled={busy || !loadedAt} onCheckedChange={v => setReviewed(Boolean(v))} /><Label htmlFor="reviewed-update">I just exported this source from MorphMarket, have made no changes there since, and reviewed all selected listing changes. My MorphMarket currency matches these prices.</Label></div>
+        <Button disabled={busy || !MORPHMARKET_PRESERVATION_PROVEN || !loadedAt || !reviewed || !selected.length || blocked} onClick={download}>Download {selected.length} listing updates</Button>
+        <p className="text-xs text-slate-400">A new source file is required after each download or after 30 minutes. Read-only MorphMarket history, parent links and counters are retained as reference and are not sent to the importer.</p>
+      </CardContent></Card>
     </div>
   );
 }

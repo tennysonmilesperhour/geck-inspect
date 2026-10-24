@@ -11,19 +11,19 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import {
-  Download,
   Upload,
   FileSpreadsheet,
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  ExternalLink,
   Crown,
   Layers,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { exportMorphMarketCSV, parseMorphMarketCSV, MORPHMARKET_EXPORT_BLOCKED_REASON } from '@/lib/morphmarketSync';
+import { parseMorphMarketCSV } from '@/lib/morphmarketSync';
+import { readMorphMarketSource } from '@/lib/morphmarketListing';
+import { importMorphMarketListing } from '@/lib/morphmarketListingApi';
 import { Gecko } from '@/entities/all';
 import { recordGeckoAdded } from '@/lib/activation';
 import { resolveTier } from '@/lib/tierLimits';
@@ -32,20 +32,21 @@ import { resolveTier } from '@/lib/tierLimits';
  * MorphMarket CSV sync panel, shown on the Seller Console for
  * Breeder and Enterprise tier users.
  *
- * Export: generates a MorphMarket-compatible CSV from the user's
- *   "For Sale" geckos and triggers a download.
+ * Export: opens the full listing preservation workspace.
  *
  * Import: accepts a MorphMarket CSV export, parses it, previews
  *   the records, and creates gecko entries in Geck Inspect.
  */
 
-export default function MorphMarketSync({ geckos, user, onImportComplete }) {
+export default function MorphMarketSync({ user, onImportComplete }) {
   const [importOpen, setImportOpen] = useState(false);
   const [importRecords, setImportRecords] = useState([]);
   const [importWarnings, setImportWarnings] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const fileRef = useRef(null);
+  const [sourceRows, setSourceRows] = useState(null);
+  const [sourceName, setSourceName] = useState('');
   const { toast } = useToast();
 
   // One plan resolver for the app: Stripe, app store, grandfathered and
@@ -77,30 +78,10 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
     );
   }
 
-  const forSaleGeckos = geckos.filter(
-    (g) => g.status === 'For Sale' && !g.archived
-  );
-
-  const handleExport = () => {
-    if (forSaleGeckos.length === 0) {
-      toast({
-        title: 'No listings to export',
-        description: 'Mark some geckos as "For Sale" first.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    try {
-      const filename = exportMorphMarketCSV(forSaleGeckos);
-      toast({ title: 'CSV exported', description: filename });
-    } catch (error) {
-      toast({ title: 'Export unavailable', description: error.message, variant: 'destructive' });
-    }
-  };
-
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 10_000_000) { toast({ title: 'Choose a file smaller than 10 MB', variant: 'destructive' }); return; }
 
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -108,7 +89,20 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
       if (typeof text !== 'string') return;
 
       const { records, warnings } = parseMorphMarketCSV(text);
-      setImportRecords(records);
+      let fullSource = null;
+      try { fullSource = readMorphMarketSource(text); }
+      catch (error) { warnings.push(`Basic collection import only: ${error.message} Full listing details will not be saved.`); }
+      if (fullSource) {
+        const missingIds = fullSource.filter(r => r.fields.Category === 'Crested Geckos' && !r.fields.Animal_ID.trim());
+        if (missingIds.length) {
+          toast({ title: 'Set Animal IDs on MorphMarket first', description: 'Every imported animal needs its own seller Animal ID so repeat imports can match safely.', variant: 'destructive' });
+          return;
+        }
+        warnings.push('All 33 listing fields will be saved privately. Existing exact Animal IDs keep their collection details. New animals are private.');
+      }
+      setSourceRows(fullSource);
+      setSourceName(file.name);
+      setImportRecords(records.map(record => ({ ...record, is_public: false })));
       setImportWarnings(warnings);
       setImportResult(null);
       setImportOpen(true);
@@ -123,17 +117,27 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
     setIsImporting(true);
     let created = 0;
     let failed = 0;
+    let linked = 0;
+    const errors = [];
 
     for (const record of importRecords) {
       try {
-        await Gecko.create(record);
-        created++;
-      } catch {
+        if (sourceRows) {
+          const source = sourceRows.find(r => r.fields.Animal_ID === record.gecko_id_code);
+          if (!source) throw new Error('The Animal ID does not exactly match the source file.');
+          const result = await importMorphMarketListing(record, source, sourceName, crypto.randomUUID());
+          if (result.created) created++; else linked++;
+        } else {
+          await Gecko.create(record);
+          created++;
+        }
+      } catch (error) {
+        errors.push(`${record.name}: ${error.message}`);
         failed++;
       }
     }
 
-    setImportResult({ created, failed });
+    setImportResult({ created, linked, failed, errors });
     setIsImporting(false);
     if (created > 0) {
       recordGeckoAdded('morphmarket_sync', created);
@@ -157,21 +161,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-slate-400 leading-relaxed">
-            Build a curated CSV you can upload directly to{' '}
-            <a
-              href="https://www.morphmarket.com/inventory/import"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-400 underline underline-offset-2"
-            >
-              MorphMarket Bulk Import
-              <ExternalLink className="w-3 h-3 inline ml-0.5" />
-            </a>
-            . You can still import a MorphMarket CSV into Geck Inspect.
-          </p>
-
-          <p className="text-xs text-amber-200">
-            {MORPHMARKET_EXPORT_BLOCKED_REASON}
+            Import a complete MorphMarket Animal Records CSV to keep all 33 listing fields privately. Use the listing workspace to review updates against a fresh source file.
           </p>
 
           <Link to={createPageUrl('MorphMarketExport')} className="block">
@@ -180,21 +170,11 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
               className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9 w-full"
             >
               <Layers className="w-3.5 h-3.5 mr-1.5" />
-              Open batch builder
+              Open listing workspace
             </Button>
           </Link>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleExport}
-              disabled
-              className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-            >
-              <Download className="w-3.5 h-3.5 mr-1.5" />
-              Quick export ({forSaleGeckos.length})
-            </Button>
+          <div>
             <Button
               size="sm"
               variant="outline"
@@ -245,13 +225,14 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
               <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
               <p className="text-lg font-semibold text-white">Import complete</p>
               <p className="text-sm text-slate-300">
-                {importResult.created} gecko{importResult.created === 1 ? '' : 's'} created
+                {importResult.created} gecko{importResult.created === 1 ? '' : 's'} created, {importResult.linked} existing listings matched
                 {importResult.failed > 0 && (
                   <span className="text-amber-400">
                     , {importResult.failed} failed
                   </span>
                 )}
               </p>
+              {importResult.errors.map(message => <p key={message} className="text-sm text-amber-200">{message}</p>)}
               <Button
                 onClick={() => setImportOpen(false)}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white"

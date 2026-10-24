@@ -407,6 +407,25 @@ workflow. Full field matching is not implemented or preservation-tested yet.
 The earlier successful create/update test remains valid historical evidence,
 not permission to re-enable a potentially destructive export.
 
+### 24 October: full listing workspace, downloads still gated
+
+Added private storage for all 33 supported fields, the original source and draft,
+with owner-only access even when the gecko is public. The workspace at
+`/MorphMarketExport` loads a complete fresh Animal Records CSV, matches exact
+seller IDs, exposes every field, shows explicit changes and resolves conflicts
+with saved edits. It blocks erasing populated values, changing identity,
+unknown columns, invalid values and spreadsheet formula transformations.
+Collection values are optional suggestions, never automatic replacements.
+Complete reverse imports atomically save the private fields and create private
+animals, or match an existing ID without overwriting collection details.
+
+Migration `20261024204147_morphmarket_listing_details.sql` applied in the local
+311-migration PostgreSQL harness. Regression checks passed for owner privacy,
+anonymous access denial, stale saves, identity, blanking and atomic rollback.
+All 3,544 tests in 301 files pass; lint has 0 errors and 73 existing warnings.
+Production downloads remain gated until the expanded live preservation test
+passes. The old quick-export builder stays blocked.
+
 ### 24 October follow-up: badge and CSV round trip proven
 
 Read all 33 Supported Fields on the signed-in MorphMarket Import Animals
