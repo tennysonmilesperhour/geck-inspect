@@ -19,6 +19,14 @@ updates:
       - dependency-name: "@vercel/og"
         versions: [">1.0.1"]
     groups:
+      # lucide-react gets its own pull request. Production builds rewrite
+      # lucide's icon files (scripts/vite-plugins/lean-lucide-icons.mjs), so
+      # a lucide release that changes their format fails CI on purpose.
+      # Kept apart, that failure holds up only lucide, not every other minor
+      # and patch update. A dependency goes to the first group it matches.
+      lucide:
+        patterns:
+          - lucide-react
       npm-minor-and-patch:
         update-types:
           - minor
