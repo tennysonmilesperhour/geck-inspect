@@ -4,16 +4,20 @@
 -- or replace, create index if not exists, and a one-time data fix that
 -- changes nothing on a second run. Written on 18 Oct as 20261018172000 and
 -- never applied (deployments were paused); re-dated on 24 Oct to sort after
--- 20261020230000, the newest file in production then. Its member rule is
--- built on that file's body, so the relevance gate stays.
+-- 20261024181000, the newest file in production then. Its member rule is
+-- built on the 20261024150000 body (the relevance gate and its yes-within-
+-- a-year rule stay), and the inbox lock also goes into that file's
+-- claim_weekly_note_from, which send-email now uses for members.
 --
 -- What it fixes, in plain words:
 --
--- 1. Both claims lock the inbox, not the spelling. Two accounts on one
---    inbox (a plus-tag or dotted Gmail test account, say) are asked about
---    in the same hourly run; with a lock per spelling their two claims
---    could run at once, both pass the inbox-wide 7-day rule and send the
---    same note twice.
+-- 1. The claims lock the inbox, not the spelling: claim_weekly_note, the
+--    visitor claim, and claim_weekly_note_from (20261024150000), which
+--    send-email uses for members now. Two accounts on one inbox (a
+--    plus-tag or dotted Gmail test account, say) are asked about in the
+--    same hourly run; with a lock per spelling their two claims could run
+--    at once, both pass the inbox-wide 7-day rule and send two notes (it
+--    happened on 18 Oct to the owner's own inbox).
 --
 -- 2. Account erasure removes the other spellings' rows only when no other
 --    account that can sign in remains on the inbox. Erasing a duplicate or
@@ -111,7 +115,7 @@ begin
     return jsonb_build_object('reason', 'bad-catalog');
   end if;
 
-  -- One claim per inbox at a time (changed in 20261024180000: the lock
+  -- One claim per inbox at a time (changed in 20261024182000: the lock
   -- was per spelling, so two accounts on one inbox could both pass the
   -- inbox-wide 7-day rule and get the same note); the second waits, then
   -- sees the first one's row in the check below.
@@ -213,7 +217,7 @@ begin
   end if;
 
   -- The same per-inbox lock as claim_weekly_note (changed in
-  -- 20261024180000), so no two claims for one inbox can both pass the
+  -- 20261024182000), so no two claims for one inbox can both pass the
   -- 7-day rule.
   perform pg_advisory_xact_lock(hashtextextended('weekly_notes:' || public.email_inbox_key(v_email), 0));
 
@@ -303,7 +307,7 @@ begin
   -- notes row of the inbox stops and loses its confirmation link, so a
   -- pending link on another spelling cannot start them again.
   perform pg_advisory_xact_lock(hashtextextended('weekly_notes_signup:' || public.email_inbox_key(v_email), 0));
-  -- Changed in 20261024180000: a spelling that never confirmed is not
+  -- Changed in 20261024182000: a spelling that never confirmed is not
   -- marked stopped (it only loses its link), so the daily cleanup still
   -- drops it 30 days after its last link.
   update public.newsletter_subscribers
@@ -365,7 +369,7 @@ begin
     return jsonb_build_object('erased', false, 'reason', 'no-email');
   end if;
   -- An account that can sign in on any spelling of the inbox (changed in
-  -- 20261024180000: an unconfirmed sign-up or a deleted login does not
+  -- 20261024182000: an unconfirmed sign-up or a deleted login does not
   -- count, as everywhere else); admin_erase_account then erases the
   -- visitor rows too.
   if exists (select 1 from auth.users u
@@ -393,7 +397,7 @@ begin
   -- As account erasure does: the address and its details leave the
   -- delivery log; the anonymous counts stay. email_suppressions is kept on
   -- purpose (an address that bounced or complained is never mailed again).
-  -- Every spelling of the inbox (changed in 20261024180000).
+  -- Every spelling of the inbox (changed in 20261024182000).
   update public.email_deliveries x
      set email = null,
          detail = '{}'::jsonb
@@ -873,7 +877,7 @@ begin
   -- spelling of the inbox go too (20261018150400), so a visitor series
   -- under another spelling cannot start again once the account is gone,
   -- but only when no other account that can sign in remains on the inbox
-  -- (20261024180000): its own rows stay, or that member would get the
+  -- (20261024182000): its own rows stay, or that member would get the
   -- series again from the first note.
   v_whole_inbox := not exists (
     select 1 from auth.users u
@@ -1026,9 +1030,9 @@ comment on function public.admin_erase_account(text) is
 
 -- 7. The member rule: a run that starts a moment early still counts --------------------------------
 --
--- The 20261020230000 body (with its relevance gate: a gecko on record or a
--- sign-in within 60 days) with the 7-day and 20-hour comparisons changed
--- (marked).
+-- The 20261024150000 body (with its relevance gate: a gecko on record, a
+-- sign-in within 60 days or a yes on purpose within a year) with the 7-day
+-- and 20-hour comparisons changed (marked).
 
 create or replace function public.weekly_notes_candidates(
   p_now timestamp with time zone default now(),
@@ -1065,12 +1069,16 @@ as $function$
     from members m
     left join public.weekly_notes_polls w on w.email = m.email
    where not public.email_inbox_suppressed(m.email)
-     -- New in 20261020230000: only members the notes can help, someone
-     -- with a gecko on record (the ownership rule claim_weekly_note uses)
-     -- or who signed in within 60 days.
+     -- Only members the notes can help (20261020230000): a gecko on
+     -- record or a sign-in within 60 days. New in 20261024150000: or a yes
+     -- on purpose within a year (Settings, sign-up box, the keep button).
      and (
            m.last_sign_in_at > p_now - interval '60 days'
            or exists (select 1 from public.geckos g where lower(g.created_by) = m.email)
+           or exists (select 1 from public.profiles p4
+                       where lower(p4.email) = m.email
+                         and p4.email_weekly_notes_enabled is true
+                         and p4.email_weekly_notes_choice_at > p_now - interval '365 days')
          )
      -- At most one marketing email in any 20 hours: no weekly note within
      -- 20 hours of a lifecycle email (a day 14 email sent late).
@@ -1088,7 +1096,7 @@ as $function$
                     where lower(p3.email) = m.email), '-infinity'::timestamptz)
           end)
      -- At most one weekly note in any 7 days, to any spelling of the inbox.
-     -- Changed in 20261024180000: 10 minutes' allowance, so the run 7 days
+     -- Changed in 20261024182000: 10 minutes' allowance, so the run 7 days
      -- later counts even when it starts a moment earlier than the last one.
      and not exists (
            select 1 from public.weekly_notes_sends n
@@ -1096,7 +1104,7 @@ as $function$
               and n.created_date > p_now - (interval '7 days' - interval '10 minutes')
          )
      -- Asked about at most once in any 20 hours, with the same allowance
-     -- (changed in 20261024180000).
+     -- (changed in 20261024182000).
      and (p_ignore_polls
           or w.polled_at is null
           or w.polled_at <= p_now - (interval '20 hours' - interval '10 minutes'));
@@ -1106,7 +1114,7 @@ revoke all on function public.weekly_notes_candidates(timestamptz, boolean) from
 grant execute on function public.weekly_notes_candidates(timestamptz, boolean) to service_role;
 
 comment on function public.weekly_notes_candidates(timestamptz, boolean) is
-  'Members who may get a Weekly Gecko Note at p_now: can sign in, account at least 16 days old, email and weekly switches on (the weekly one on every profile row for the address), not suppressed (email_inbox_suppressed), no lifecycle email in 20 hours, a gecko on record or a sign-in within 60 days (the relevance gate from 20261020230000), no weekly note to the inbox in 7 days, no visitor stop on their inbox (weekly_notes_visitor_stop_at) newer than the member''s last choice, and (unless p_ignore_polls) not asked about in 20 hours. The 7-day and 20-hour rules allow 10 minutes, so the hourly run that comes 7 days or 20 hours later always counts. Read-only; service role only.';
+  'Members who may get a Weekly Gecko Note at p_now: can sign in, account at least 16 days old, email and weekly switches on (the weekly one on every profile row for the address), not suppressed (email_inbox_suppressed), no lifecycle email in 20 hours, a gecko on record, a sign-in within 60 days or a yes on purpose within a year (the relevance gate from 20261020230000 and 20261024150000), no weekly note to the inbox in 7 days, no visitor stop on their inbox (weekly_notes_visitor_stop_at) newer than the member''s last choice, and (unless p_ignore_polls) not asked about in 20 hours. The 7-day and 20-hour rules allow 10 minutes, so the hourly run that comes 7 days or 20 hours later always counts. Read-only; service role only.';
 
 -- 7. The visitor rule: the same allowance ----------------------------------------------------------
 --
@@ -1151,7 +1159,7 @@ as $function$
     left join public.weekly_notes_polls w on w.email = e.email
    -- At most one note in any 7 days to any spelling of the inbox, and
    -- asked about at most once in any 20 hours, each with 10 minutes'
-   -- allowance (changed in 20261024180000).
+   -- allowance (changed in 20261024182000).
    where not exists (
            select 1 from public.weekly_notes_sends n
             where public.email_inbox_key(n.email) = public.email_inbox_key(e.email)
@@ -1220,7 +1228,7 @@ begin
     values (r.email, p_now)
     on conflict (email) do update
       set polled_at = excluded.polled_at
-      -- Changed in 20261024180000: the same 10 minutes' allowance as the
+      -- Changed in 20261024182000: the same 10 minutes' allowance as the
       -- candidate rules, so the run 20 hours later can take the address.
       where w.polled_at <= p_now - (interval '20 hours' - interval '10 minutes');
     get diagnostics v_rows = row_count;
@@ -1262,3 +1270,100 @@ grant execute on function public.enqueue_weekly_notes(timestamptz, integer) to s
 
 comment on function public.enqueue_weekly_notes(timestamptz, integer) is
   'Hourly Weekly Gecko Notes job (weekly-notes-hourly): while app_settings weekly_notes_enabled is true, asks send-email about up to p_limit addresses, members first and then confirmed visitors (weekly.audience visitor), oldest poll first, each at most once in 20 hours (with 10 minutes'' allowance, so the run 20 hours later counts). send-email claims and sends. Returns how many it asked about.';
+
+-- 1. The member claim send-email uses now locks the inbox too ----------------------------------------
+--
+-- claim_weekly_note_from (20261024150000) is the claim send-email calls for
+-- members since the personal notes; claim_weekly_note stays for a rollback.
+-- The 20261024150000 body with the lock key changed (marked).
+
+create or replace function public.claim_weekly_note_from(
+  p_email text,
+  p_slugs text[],
+  p_steps integer[],
+  p_now timestamp with time zone default now()
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  v_email text := lower(trim(coalesce(p_email, '')));
+  v_slug text;
+  v_step integer;
+  v_has_gecko boolean;
+  v_polled timestamptz;
+  v_stamp timestamptz;
+begin
+  if v_email = '' then
+    return jsonb_build_object('reason', 'no-email');
+  end if;
+
+  -- An empty list is a member with nothing in season or for them yet.
+  if p_slugs is not null and coalesce(cardinality(p_slugs), 0) = 0
+     and coalesce(cardinality(p_steps), 0) = 0 then
+    return jsonb_build_object('reason', 'caught-up');
+  end if;
+
+  if p_slugs is null or p_steps is null
+     or cardinality(p_slugs) > 1000
+     or array_ndims(p_slugs) <> 1
+     or array_ndims(p_steps) <> 1
+     or cardinality(p_steps) <> cardinality(p_slugs)
+     or exists (
+          select 1 from unnest(p_slugs) s(slug)
+           where s.slug is null
+              or length(s.slug) > 64
+              or s.slug !~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+        )
+     or exists (select 1 from unnest(p_steps) t(step) where t.step is null or t.step < 1)
+     or (select count(distinct s.slug) from unnest(p_slugs) s(slug)) <> cardinality(p_slugs) then
+    return jsonb_build_object('reason', 'bad-catalog');
+  end if;
+
+  -- One claim per inbox at a time (changed in 20261024182000: the lock key
+  -- is the inbox, as in claim_weekly_note), so two accounts on one inbox
+  -- cannot both pass the 7-day rule and get two notes in one run.
+  perform pg_advisory_xact_lock(hashtextextended('weekly_notes:' || public.email_inbox_key(v_email), 0));
+
+  if not exists (
+    select 1 from public.weekly_notes_candidates(p_now, true) c where c.email = v_email
+  ) then
+    return jsonb_build_object('reason', 'not-eligible');
+  end if;
+
+  select s.slug, p_steps[s.ord::integer]
+    into v_slug, v_step
+    from unnest(p_slugs) with ordinality as s(slug, ord)
+   where not exists (
+     select 1 from public.weekly_notes_sends w
+      where public.email_inbox_key(w.email) = public.email_inbox_key(v_email) and w.slug = s.slug
+   )
+   order by s.ord
+   limit 1;
+  if v_slug is null then
+    return jsonb_build_object('reason', 'caught-up');
+  end if;
+
+  select w.polled_at into v_polled from public.weekly_notes_polls w where w.email = v_email;
+  v_stamp := case
+    when v_polled is not null and v_polled <= p_now and v_polled > p_now - interval '1 hour' then v_polled
+    else p_now
+  end;
+
+  insert into public.weekly_notes_sends (email, step, slug, created_date)
+  values (v_email, v_step, v_slug, v_stamp)
+  on conflict (email, slug) do nothing;
+  if not found then
+    return jsonb_build_object('reason', 'already-sent');
+  end if;
+
+  v_has_gecko := exists (select 1 from public.geckos g where lower(g.created_by) = v_email);
+
+  return jsonb_build_object('slug', v_slug, 'step', v_step, 'has_gecko', v_has_gecko);
+end;
+$function$;
+
+revoke all on function public.claim_weekly_note_from(text, text[], integer[], timestamp with time zone) from public, anon, authenticated;
+grant execute on function public.claim_weekly_note_from(text, text[], integer[], timestamp with time zone) to service_role;

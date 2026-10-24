@@ -20,7 +20,7 @@
 -- 20261018150200_weekly_notes_visitor_fixes_3.sql; section 12 covers
 -- 20261018150300_weekly_notes_visitor_fixes_4.sql; section 13 covers
 -- 20261018150400_weekly_notes_visitor_fixes_5.sql; section 14 covers
--- 20261024180000_weekly_notes_visitor_fixes_6.sql (the reviews of 18 Oct
+-- 20261024182000_weekly_notes_visitor_fixes_6.sql (the reviews of 18 Oct
 -- 2026).
 --
 -- Each block raises "FAIL: ..." when a rule is broken. The last line
@@ -1123,7 +1123,7 @@ begin
   if not public.unsubscribe_weekly_notes_subscriber(v_token) then
     raise exception 'FAIL: the visitor stop link did not work';
   end if;
-  -- (A spelling that never confirmed only loses its link: 20261024180000.)
+  -- (A spelling that never confirmed only loses its link: 20261024182000.)
   if public.confirm_weekly_notes_signup_at(pg_temp.tok('sa2'), v_at) <> 'invalid'
      or exists (select 1 from public.newsletter_subscribers
                  where public.email_inbox_key(email) = 'stopall@gmail.com'
@@ -1239,7 +1239,7 @@ begin
   raise notice 'member candidates with 3,000 members: % ms', round(v_ms);
 end $$;
 
--- 14. The sixth review (20261024180000) ------------------------------------------------------------
+-- 14. The sixth review (20261024182000) ------------------------------------------------------------
 do $$
 declare
   v_old timestamptz := now() - interval '40 days';
@@ -1254,6 +1254,13 @@ begin
                   where l.locktype = 'advisory' and l.pid = pg_backend_pid() and l.objsubid = 1
                     and ((l.classid::bigint << 32) | l.objid::bigint) = hashtextextended('weekly_notes:lockmember6@gmail.com', 0)) then
     raise exception 'FAIL: the member claim did not lock the inbox';
+  end if;
+  -- The same for claim_weekly_note_from, the member claim send-email uses.
+  perform public.claim_weekly_note_from('lock.from6@gmail.com', array['a-note'], array[1], now());
+  if not exists (select 1 from pg_locks l
+                  where l.locktype = 'advisory' and l.pid = pg_backend_pid() and l.objsubid = 1
+                    and ((l.classid::bigint << 32) | l.objid::bigint) = hashtextextended('weekly_notes:lockfrom6@gmail.com', 0)) then
+    raise exception 'FAIL: the member claim send-email uses did not lock the inbox';
   end if;
   perform public.claim_weekly_note_subscriber('lock.visitor6+x@gmail.com', array['a-note'], now(), array[1]);
   if not exists (select 1 from pg_locks l
@@ -1417,7 +1424,7 @@ begin
 end $$;
 
 -- The relevance gate from 20261020230000 stays in the member rule that
--- 20261024180000 rewrites: a gecko on record or a sign-in within 60 days.
+-- 20261024182000 rewrites: a gecko on record or a sign-in within 60 days.
 do $$
 declare
   v_old timestamptz := now() - interval '90 days';
@@ -1501,7 +1508,7 @@ values ('old-trigger@example.com', 'notes:care', now() - interval '20 days', now
 \ir ../migrations/20261018150200_weekly_notes_visitor_fixes_3.sql
 \ir ../migrations/20261018150300_weekly_notes_visitor_fixes_4.sql
 \ir ../migrations/20261018150400_weekly_notes_visitor_fixes_5.sql
-\ir ../migrations/20261024180000_weekly_notes_visitor_fixes_6.sql
+\ir ../migrations/20261024182000_weekly_notes_visitor_fixes_6.sql
 do $$
 begin
   if not exists (select 1 from public.newsletter_subscribers where email = 'rerun@example.com' and confirmed_at is not null) then
