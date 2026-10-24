@@ -20,12 +20,18 @@
 -- 20261018150200_weekly_notes_visitor_fixes_3.sql; section 12 covers
 -- 20261018150300_weekly_notes_visitor_fixes_4.sql; section 13 covers
 -- 20261018150400_weekly_notes_visitor_fixes_5.sql; section 14 covers
--- 20261018172000_weekly_notes_visitor_fixes_6.sql (the reviews of 18 Oct
+-- 20261024180000_weekly_notes_visitor_fixes_6.sql (the reviews of 18 Oct
 -- 2026).
 --
 -- Each block raises "FAIL: ..." when a rule is broken. The last line
 -- prints "weekly notes visitor regressions: all passed".
 begin;
+
+-- Test members count as signed in now, so the relevance gate from
+-- 20261020230000 (a gecko on record or a sign-in within 60 days) lets them
+-- through. The gate's own checks set last_sign_in_at themselves. Rolled
+-- back with everything else.
+alter table auth.users alter column last_sign_in_at set default now();
 
 create temp table _t0 on commit drop as
   select date_trunc('hour', now()) - interval '200 days' as t0,
@@ -1117,7 +1123,7 @@ begin
   if not public.unsubscribe_weekly_notes_subscriber(v_token) then
     raise exception 'FAIL: the visitor stop link did not work';
   end if;
-  -- (A spelling that never confirmed only loses its link: 20261018172000.)
+  -- (A spelling that never confirmed only loses its link: 20261024180000.)
   if public.confirm_weekly_notes_signup_at(pg_temp.tok('sa2'), v_at) <> 'invalid'
      or exists (select 1 from public.newsletter_subscribers
                  where public.email_inbox_key(email) = 'stopall@gmail.com'
@@ -1233,7 +1239,7 @@ begin
   raise notice 'member candidates with 3,000 members: % ms', round(v_ms);
 end $$;
 
--- 14. The sixth review (20261018172000) ------------------------------------------------------------
+-- 14. The sixth review (20261024180000) ------------------------------------------------------------
 do $$
 declare
   v_old timestamptz := now() - interval '40 days';
@@ -1410,6 +1416,36 @@ begin
   end if;
 end $$;
 
+-- The relevance gate from 20261020230000 stays in the member rule that
+-- 20261024180000 rewrites: a gecko on record or a sign-in within 60 days.
+do $$
+declare
+  v_old timestamptz := now() - interval '90 days';
+begin
+  perform pg_temp.mk_member('gate.six@example.com', v_old);
+  update public.profiles set email_weekly_notes_enabled = true where email = 'gate.six@example.com';
+  update auth.users set last_sign_in_at = null where email = 'gate.six@example.com';
+  if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'gate.six@example.com') then
+    raise exception 'FAIL: a member with no gecko who never signed in got a note';
+  end if;
+  update auth.users set last_sign_in_at = now() - interval '61 days' where email = 'gate.six@example.com';
+  if exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'gate.six@example.com') then
+    raise exception 'FAIL: a member with no gecko who last signed in 61 days ago got a note';
+  end if;
+  if (public.claim_weekly_note('gate.six@example.com', array['a-note'], now()))->>'reason' is distinct from 'not-eligible' then
+    raise exception 'FAIL: the claim let through a member the relevance gate leaves out';
+  end if;
+  update auth.users set last_sign_in_at = now() - interval '59 days' where email = 'gate.six@example.com';
+  if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'gate.six@example.com') then
+    raise exception 'FAIL: a member who signed in 59 days ago was left out';
+  end if;
+  update auth.users set last_sign_in_at = now() - interval '61 days' where email = 'gate.six@example.com';
+  insert into public.geckos (name, created_by) values ('Juniper', 'gate.six@example.com');
+  if not exists (select 1 from public.weekly_notes_candidates(now(), true) c where c.email = 'gate.six@example.com') then
+    raise exception 'FAIL: a member with a gecko on record was left out';
+  end if;
+end $$;
+
 -- A rough cost check with visitor stops: 3,000 members, 600 of them on an
 -- inbox with a visitor stop (the branch that reads the member's last
 -- choice, through profiles_email_lower_idx).
@@ -1465,7 +1501,7 @@ values ('old-trigger@example.com', 'notes:care', now() - interval '20 days', now
 \ir ../migrations/20261018150200_weekly_notes_visitor_fixes_3.sql
 \ir ../migrations/20261018150300_weekly_notes_visitor_fixes_4.sql
 \ir ../migrations/20261018150400_weekly_notes_visitor_fixes_5.sql
-\ir ../migrations/20261018172000_weekly_notes_visitor_fixes_6.sql
+\ir ../migrations/20261024180000_weekly_notes_visitor_fixes_6.sql
 do $$
 begin
   if not exists (select 1 from public.newsletter_subscribers where email = 'rerun@example.com' and confirmed_at is not null) then

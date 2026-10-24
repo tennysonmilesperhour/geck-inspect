@@ -2,8 +2,10 @@
 -- docs/planning/weekly-notes-2026-10.md, section 9). A sixth independent
 -- check of 20261018150400 found these. Safe to run more than once: create
 -- or replace, create index if not exists, and a one-time data fix that
--- changes nothing on a second run. Dated after 20261018152154, the newest
--- file in production when this was written.
+-- changes nothing on a second run. Written on 18 Oct as 20261018172000 and
+-- never applied (deployments were paused); re-dated on 24 Oct to sort after
+-- 20261020230000, the newest file in production then. Its member rule is
+-- built on that file's body, so the relevance gate stays.
 --
 -- What it fixes, in plain words:
 --
@@ -109,7 +111,7 @@ begin
     return jsonb_build_object('reason', 'bad-catalog');
   end if;
 
-  -- One claim per inbox at a time (changed in 20261018172000: the lock
+  -- One claim per inbox at a time (changed in 20261024180000: the lock
   -- was per spelling, so two accounts on one inbox could both pass the
   -- inbox-wide 7-day rule and get the same note); the second waits, then
   -- sees the first one's row in the check below.
@@ -211,7 +213,7 @@ begin
   end if;
 
   -- The same per-inbox lock as claim_weekly_note (changed in
-  -- 20261018172000), so no two claims for one inbox can both pass the
+  -- 20261024180000), so no two claims for one inbox can both pass the
   -- 7-day rule.
   perform pg_advisory_xact_lock(hashtextextended('weekly_notes:' || public.email_inbox_key(v_email), 0));
 
@@ -301,7 +303,7 @@ begin
   -- notes row of the inbox stops and loses its confirmation link, so a
   -- pending link on another spelling cannot start them again.
   perform pg_advisory_xact_lock(hashtextextended('weekly_notes_signup:' || public.email_inbox_key(v_email), 0));
-  -- Changed in 20261018172000: a spelling that never confirmed is not
+  -- Changed in 20261024180000: a spelling that never confirmed is not
   -- marked stopped (it only loses its link), so the daily cleanup still
   -- drops it 30 days after its last link.
   update public.newsletter_subscribers
@@ -363,7 +365,7 @@ begin
     return jsonb_build_object('erased', false, 'reason', 'no-email');
   end if;
   -- An account that can sign in on any spelling of the inbox (changed in
-  -- 20261018172000: an unconfirmed sign-up or a deleted login does not
+  -- 20261024180000: an unconfirmed sign-up or a deleted login does not
   -- count, as everywhere else); admin_erase_account then erases the
   -- visitor rows too.
   if exists (select 1 from auth.users u
@@ -391,7 +393,7 @@ begin
   -- As account erasure does: the address and its details leave the
   -- delivery log; the anonymous counts stay. email_suppressions is kept on
   -- purpose (an address that bounced or complained is never mailed again).
-  -- Every spelling of the inbox (changed in 20261018172000).
+  -- Every spelling of the inbox (changed in 20261024180000).
   update public.email_deliveries x
      set email = null,
          detail = '{}'::jsonb
@@ -871,7 +873,7 @@ begin
   -- spelling of the inbox go too (20261018150400), so a visitor series
   -- under another spelling cannot start again once the account is gone,
   -- but only when no other account that can sign in remains on the inbox
-  -- (20261018172000): its own rows stay, or that member would get the
+  -- (20261024180000): its own rows stay, or that member would get the
   -- series again from the first note.
   v_whole_inbox := not exists (
     select 1 from auth.users u
@@ -1024,22 +1026,23 @@ comment on function public.admin_erase_account(text) is
 
 -- 7. The member rule: a run that starts a moment early still counts --------------------------------
 --
--- The 20261018150400 body with the 7-day and 20-hour comparisons changed
+-- The 20261020230000 body (with its relevance gate: a gecko on record or a
+-- sign-in within 60 days) with the 7-day and 20-hour comparisons changed
 -- (marked).
 
 create or replace function public.weekly_notes_candidates(
-  p_now timestamptz default now(),
+  p_now timestamp with time zone default now(),
   p_ignore_polls boolean default false
 )
-returns table (email text, last_polled_at timestamptz)
+returns table(email text, last_polled_at timestamp with time zone)
 language sql
-stable
-security definer
+stable security definer
 set search_path to 'public'
 as $function$
   with members as (
     select distinct on (lower(u.email))
-           lower(u.email) as email
+           lower(u.email) as email,
+           u.last_sign_in_at
       from auth.users u
       join public.profiles p on lower(p.email) = lower(u.email)
      where u.email is not null
@@ -1061,9 +1064,14 @@ as $function$
   select m.email, w.polled_at as last_polled_at
     from members m
     left join public.weekly_notes_polls w on w.email = m.email
-   -- The inbox match (email_inbox_suppressed), so a spam report under
-   -- another spelling of the inbox stops these too.
    where not public.email_inbox_suppressed(m.email)
+     -- New in 20261020230000: only members the notes can help, someone
+     -- with a gecko on record (the ownership rule claim_weekly_note uses)
+     -- or who signed in within 60 days.
+     and (
+           m.last_sign_in_at > p_now - interval '60 days'
+           or exists (select 1 from public.geckos g where lower(g.created_by) = m.email)
+         )
      -- At most one marketing email in any 20 hours: no weekly note within
      -- 20 hours of a lifecycle email (a day 14 email sent late).
      and not exists (
@@ -1072,12 +1080,7 @@ as $function$
               and l.created_date > p_now - interval '20 hours'
          )
      -- A stop from a visitor note holds for the inbox once it has an
-     -- account, unless the member turned the notes on again afterwards
-     -- (the Settings switch: email_weekly_notes_choice_at is newer).
-     -- weekly_notes_visitor_stop_at decides what counts as a stop (any
-     -- spelling of the inbox, after a request, not followed by a new
-     -- sign-up). The member's last choice is read only when there is a
-     -- stop, so this costs one index lookup per member.
+     -- account, unless the member turned the notes on again afterwards.
      and (case
             when public.weekly_notes_visitor_stop_at(m.email) is null then true
             else public.weekly_notes_visitor_stop_at(m.email) < coalesce((
@@ -1085,7 +1088,7 @@ as $function$
                     where lower(p3.email) = m.email), '-infinity'::timestamptz)
           end)
      -- At most one weekly note in any 7 days, to any spelling of the inbox.
-     -- Changed in 20261018172000: 10 minutes' allowance, so the run 7 days
+     -- Changed in 20261024180000: 10 minutes' allowance, so the run 7 days
      -- later counts even when it starts a moment earlier than the last one.
      and not exists (
            select 1 from public.weekly_notes_sends n
@@ -1093,7 +1096,7 @@ as $function$
               and n.created_date > p_now - (interval '7 days' - interval '10 minutes')
          )
      -- Asked about at most once in any 20 hours, with the same allowance
-     -- (changed in 20261018172000).
+     -- (changed in 20261024180000).
      and (p_ignore_polls
           or w.polled_at is null
           or w.polled_at <= p_now - (interval '20 hours' - interval '10 minutes'));
@@ -1103,7 +1106,7 @@ revoke all on function public.weekly_notes_candidates(timestamptz, boolean) from
 grant execute on function public.weekly_notes_candidates(timestamptz, boolean) to service_role;
 
 comment on function public.weekly_notes_candidates(timestamptz, boolean) is
-  'Members who may get a Weekly Gecko Note at p_now: can sign in, account at least 16 days old, email and weekly switches on (the weekly one on every profile row for the address), not suppressed (email_inbox_suppressed), no lifecycle email in 20 hours, no weekly note to the inbox in 7 days, no visitor stop on their inbox (weekly_notes_visitor_stop_at) newer than the member''s last choice, and (unless p_ignore_polls) not asked about in 20 hours. The 7-day and 20-hour rules allow 10 minutes, so the hourly run that comes 7 days or 20 hours later always counts. Read-only; service role only.';
+  'Members who may get a Weekly Gecko Note at p_now: can sign in, account at least 16 days old, email and weekly switches on (the weekly one on every profile row for the address), not suppressed (email_inbox_suppressed), no lifecycle email in 20 hours, a gecko on record or a sign-in within 60 days (the relevance gate from 20261020230000), no weekly note to the inbox in 7 days, no visitor stop on their inbox (weekly_notes_visitor_stop_at) newer than the member''s last choice, and (unless p_ignore_polls) not asked about in 20 hours. The 7-day and 20-hour rules allow 10 minutes, so the hourly run that comes 7 days or 20 hours later always counts. Read-only; service role only.';
 
 -- 7. The visitor rule: the same allowance ----------------------------------------------------------
 --
@@ -1148,7 +1151,7 @@ as $function$
     left join public.weekly_notes_polls w on w.email = e.email
    -- At most one note in any 7 days to any spelling of the inbox, and
    -- asked about at most once in any 20 hours, each with 10 minutes'
-   -- allowance (changed in 20261018172000).
+   -- allowance (changed in 20261024180000).
    where not exists (
            select 1 from public.weekly_notes_sends n
             where public.email_inbox_key(n.email) = public.email_inbox_key(e.email)
@@ -1217,7 +1220,7 @@ begin
     values (r.email, p_now)
     on conflict (email) do update
       set polled_at = excluded.polled_at
-      -- Changed in 20261018172000: the same 10 minutes' allowance as the
+      -- Changed in 20261024180000: the same 10 minutes' allowance as the
       -- candidate rules, so the run 20 hours later can take the address.
       where w.polled_at <= p_now - (interval '20 hours' - interval '10 minutes');
     get diagnostics v_rows = row_count;
