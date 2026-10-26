@@ -16,6 +16,28 @@ Could not check from the cloud session: whether the website pages open (the sess
 
 ## Your steps, in order
 
+### 0. Fix the EULA rejection in the listing (5 minutes, no new build)
+
+Apple's automated check stopped build 13 again on 26 October because the App Store product page still had no working Terms of Use (EULA) link. The cloud session cannot open App Store Connect, so this is by hand.
+
+https://appstoreconnect.apple.com/apps/6801304123/distribution
+
+1. Open the 1.0 version page (left column, under iOS App). At the top right, open the language menu and repeat steps 2 and 3 for **every** language listed there, including any extra English (U.K., Australia, Canada).
+2. Scroll to **Description** and paste this at the very end, on its own lines:
+
+   ```
+   Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your Apple Account settings.
+   Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+   Privacy Policy: https://geckinspect.com/PrivacyPolicy
+   ```
+
+   It goes in **Description**, not Promotional Text (promotional text does not count) and not the review notes. Type the URL in full, starting with `https://`.
+3. Press **Save** (top right) before switching language.
+4. Open **App Information** (left column). Under **License Agreement** it should read "Apple's Standard License Agreement". If it shows a custom agreement, choose Edit and switch back to the standard one, because a blank or broken custom EULA fails the same check.
+5. In **App Privacy**, confirm the Privacy Policy URL is `https://geckinspect.com/PrivacyPolicy`.
+
+The in-app half is in code too: from build 14, the iPhone Membership screen also links Apple's standard Terms of Use (EULA) next to Terms and Privacy (guideline 3.1.2 asks for both). Build 13 already shows Terms and Privacy links, so if you resubmit before build 14 is ready, steps 1 to 5 are enough for this automated check.
+
 ### 1. Turn on Sign in with Apple for the app ID (2 minutes)
 
 The iOS project now asks for this permission, so build 14 will not sign without it, even though the button stays hidden.
