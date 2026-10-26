@@ -9,7 +9,7 @@ Everything that can be done without the iPhone, Xcode or App Store Connect is do
 - **Account deletion** (`delete-my-account`) is deployed with sign-in required.
 - **Reviewer accounts exist and are confirmed:** `morphiclabsdata+geckreview-breeder@gmail.com` (Breeder plan, 3 geckos) and `morphiclabsdata+geckreview-free@gmail.com` (free plan, 2 geckos). Passwords are the ones already in App Store Connect.
 - **Sign-in rules** (guideline 4.8): on iPhone only email and password show. Google and Facebook stay hidden until Sign in with Apple is switched on. Nothing to change.
-- **Build number** in the Xcode project is now 8 (it was 1, and build 7 was numbered by hand).
+- **Build number** in the Xcode project is now 14. The last submission used build 13 (builds 8 to 13 were numbered by hand in Xcode and never recorded here), and Apple only accepts a number higher than every earlier upload.
 - On `main`: lint has 0 errors, typecheck passes, 3,575 unit tests pass.
 
 Could not check from the cloud session: whether the website pages open (the session cannot reach geckinspect.com), and anything in App Store Connect.
@@ -18,13 +18,13 @@ Could not check from the cloud session: whether the website pages open (the sess
 
 ### 1. Turn on Sign in with Apple for the app ID (2 minutes)
 
-The iOS project now asks for this permission, so build 8 will not sign without it, even though the button stays hidden.
+The iOS project now asks for this permission, so build 14 will not sign without it, even though the button stays hidden.
 
 https://developer.apple.com/account/resources/identifiers/list
 
 Open `com.geckinspect.app`, tick **Sign in with Apple**, Save. If Xcode uses automatic signing, it refreshes the profile on its own; otherwise download a new App Store profile.
 
-### 2. Build and upload build 8
+### 2. Build and upload build 14
 
 On the Mac, from the repo on the latest `main`:
 
@@ -32,13 +32,13 @@ On the Mac, from the repo on the latest `main`:
 NATIVE_AUTH_REDIRECT_VERIFIED=true NATIVE_BILLING_WEBHOOK_VERIFIED=true pnpm ios:release
 ```
 
-In Xcode: confirm Version 1.0, Build 8 (raise it if App Store Connect already has an 8), then Product > Archive > Distribute App > App Store Connect.
+In Xcode: confirm Version 1.0, Build 14 (raise it if App Store Connect already has a 14 or higher), then Product > Archive > Distribute App > App Store Connect.
 
-Build 7 is missing the design overhaul, the purchase fix from 24 October and everything else since 18 October, so do not resubmit it.
+Build 13 does not have the purchase fix from 24 October or the other changes merged since the last submission, so do not resubmit it.
 
 ### 3. Record the walkthrough Apple asked for
 
-On a phone running the **newest iOS** (the iPhone 11 on 18.5 does not qualify). Install build 8 from TestFlight, start screen recording, then in one take:
+On a phone running the **newest iOS** (the iPhone 11 on 18.5 does not qualify). Install build 14 from TestFlight, start screen recording, then in one take:
 
 1. Launch the app from the home screen.
 2. Sign in with the Breeder reviewer account.
@@ -53,13 +53,13 @@ On a phone running the **newest iOS** (the iPhone 11 on 18.5 does not qualify). 
 
 Steps 4, 7 and 8 are the device features that answer "is this just a website" (guideline 4.2), so make them clear.
 
-### 4. Sandbox purchase on build 8
+### 4. Sandbox purchase on build 14
 
 Sign in with the **free** reviewer account, buy Keeper monthly with a sandbox tester, delete the app, reinstall, Restore purchases. The plan should come back. RevenueCat delivery is already proven, so this checks the new build only.
 
 ### 5. Screenshots
 
-The app ships on iPhone and iPad, so both sizes are needed. Take them from build 8 (the design changed on 17 October). Do not show the Morph Visualizer, Promote, the AI Consultant or the supplies store; those are retired.
+The app ships on iPhone and iPad, so both sizes are needed. Take them from build 14 (the design changed in the 17 October overhaul). Do not show the Morph Visualizer, Promote, the AI Consultant or the supplies store; those are retired.
 
 ### 6. App Store Connect
 
@@ -67,9 +67,9 @@ https://appstoreconnect.apple.com/apps/6801304123/distribution
 
 - **Description:** make sure it ends with the block in "Description footer" below, in every language.
 - **App Review Information:** both reviewer accounts, your contact details, and the notes in "Review notes" below. Attach the recording.
-- **Build:** select build 8.
+- **Build:** select build 14.
 - **Subscriptions:** all four (Keeper monthly and annual, Breeder monthly and annual) attached to this version.
-- **Age rating and App Privacy:** re-answer if anything changed. Nothing in build 8 adds new data collection.
+- **Age rating and App Privacy:** re-answer if anything changed. Nothing in build 14 adds new data collection.
 - **Reply to Apple** in the Resolution Center with the text in "Reply to App Review" below, then Submit for Review. Keep release on manual.
 
 ## Description footer
@@ -108,7 +108,7 @@ New posts and photos are screened automatically against a list of objectionable 
 A screen recording on a physical device, from launch through each of these features, is attached.
 ```
 
-The support address matches the one the app shows (`SUPPORT_EMAIL` in the code). Check the "side menu > Membership" path against build 8 before pasting.
+The support address matches the one the app shows (`SUPPORT_EMAIL` in the code). Check the "side menu > Membership" path against build 14 before pasting.
 
 ## Reply to App Review
 
@@ -123,7 +123,7 @@ Thank you for the review. In response to the request for more information:
 
 3. The App Store description now includes the Terms of Use (EULA) and Privacy Policy links, and the subscription screen in the app shows the price, renewal period, Restore purchases, Terms and Privacy.
 
-4. Build 8 replaces build 6. It adds automatic filtering and manual approval of member content, a confirmation before any photo is sent to an AI service, and in-app account deletion.
+4. Build 14 is the current build. It includes automatic filtering and manual approval of member content, a confirmation before any photo is sent to an AI service, and in-app account deletion.
 
 The review notes describe where each feature is. Please let us know if anything else is needed.
 

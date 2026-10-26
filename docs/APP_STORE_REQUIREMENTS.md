@@ -120,7 +120,7 @@ Check each item in App Store Connect before pressing Submit:
 - Screenshots are from the current build, show no retired features, and include iPad sizes if the app ships on iPad.
 - Description, keywords and screenshots do not mention Android, Google Play or other platforms, and do not quote prices that differ from the store.
 - Age rating questionnaire, App Privacy answers and the encryption question match the build.
-- The build selected is the newest upload (build 7 or later), not build 6.
+- The build selected is the newest upload (build 14 or later as of 26 October), not an older one.
 
 ## Member content filtering, 19 October 2026
 
@@ -130,6 +130,6 @@ Guideline 1.2 asks for a way to filter objectionable material before it is poste
 
 - Apple-to-RevenueCat delivery is now observed: a sandbox Breeder annual purchase on 18 October and 8 renewals since, with the `breeder` entitlement active. `NATIVE_BILLING_WEBHOOK_VERIFIED=true` can be set for the store build.
 - Content filtering migrations are applied in production with 48 held terms; the approval queue is empty.
-- The Xcode project build number is now 8. Build 7 predates the design overhaul, the native purchase-completion fix and Sign in with Apple, so it should not be resubmitted.
-- The Sign in with Apple entitlement is in the project, so the app ID needs that capability before build 8 will sign.
+- The Xcode project build number is now 14. The last submission used build 13 (builds 8 to 13 were numbered by hand and not recorded in this file). Build 13 predates the native purchase-completion fix of 24 October and other changes merged since, so it should not be resubmitted.
+- The Sign in with Apple entitlement is in the project, so the app ID needs that capability before build 14 will sign.
 - Remaining steps and paste-ready review notes, reply and description footer: [app-store-resubmission-2026-10-26.md](planning/app-store-resubmission-2026-10-26.md).
