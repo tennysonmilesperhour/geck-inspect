@@ -10,6 +10,7 @@ import SmartImage from '@/components/shared/SmartImage';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { parseLocalDate, formatAge } from '@/lib/dateUtils';
+import { formatHetTag } from '@/lib/hetUtils';
 import { readinessFor, showReadinessOnCard } from '@/lib/breedingReadiness';
 import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
 import ArchiveStatusChip from '@/components/my-geckos/ArchiveStatusChip';
@@ -59,10 +60,24 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
   }, [gecko.id, weightRecords]);
 
   const hetTraitsList = React.useMemo(() => {
-    if (Array.isArray(gecko.het_traits) && gecko.het_traits.length > 0) return gecko.het_traits.slice(0, 3);
-    if (Array.isArray(gecko.secondary_traits) && gecko.secondary_traits.length > 0) return gecko.secondary_traits.slice(0, 3);
-    return [];
-  }, [gecko.het_traits, gecko.secondary_traits]);
+    const raw = [
+      ...(Array.isArray(gecko.het_traits) ? gecko.het_traits : []),
+      ...(Array.isArray(gecko.secondary_traits) ? gecko.secondary_traits : []),
+      ...(Array.isArray(gecko.morph_tags) ? gecko.morph_tags : []),
+    ];
+    const seen = new Set();
+    const primaryLower = typeof gecko.morph === 'string' ? gecko.morph.trim().toLowerCase() : '';
+    const out = [];
+    for (const item of raw) {
+      if (!item || typeof item !== 'string') continue;
+      const formatted = formatHetTag(item.trim());
+      const key = formatted.toLowerCase();
+      if (!key || key === primaryLower || seen.has(key)) continue;
+      seen.add(key);
+      out.push(formatted);
+    }
+    return out;
+  }, [gecko.het_traits, gecko.secondary_traits, gecko.morph_tags, gecko.morph]);
 
   const primaryImage = gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE;
   const demoPhotoUnavailable = gecko.photo_is_illustrative && !gecko.image_urls?.[0];
@@ -206,9 +221,9 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
               {getSexIcon(gecko.sex)}
             </span>
           </div>
-          {gecko.morph && (
+          {(gecko.morph || (!hetTraitsList.length && gecko.morphs_traits)) && (
             <p className="mt-0.5 text-xs font-semibold text-emerald-300/90 truncate">
-              {gecko.morph}
+              {gecko.morph || gecko.morphs_traits}
             </p>
           )}
           {gecko.gecko_id_code && (
@@ -217,17 +232,15 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             </p>
           )}
           {hetTraitsList.length > 0 && (
-            <div className="max-h-0 opacity-0 group-hover:max-h-16 group-hover:opacity-100 group-focus-within:max-h-16 group-focus-within:opacity-100 overflow-hidden transition-all duration-300">
-              <div className="flex flex-wrap gap-1 pt-1.5">
-                {hetTraitsList.map((trait) => (
-                  <span
-                    key={trait}
-                    className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
-                  >
-                    {trait}
-                  </span>
-                ))}
-              </div>
+            <div className="flex flex-wrap gap-1 pt-1.5">
+              {hetTraitsList.map((trait) => (
+                <span
+                  key={trait}
+                  className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
+                >
+                  {trait}
+                </span>
+              ))}
             </div>
           )}
         </div>
