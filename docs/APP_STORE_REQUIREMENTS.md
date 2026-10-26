@@ -125,3 +125,11 @@ Check each item in App Store Connect before pressing Submit:
 ## Member content filtering, 19 October 2026
 
 Guideline 1.2 asks for a way to filter objectionable material before it is posted, a way to report it, a way to block users, and a way to contact the developer. Filtering is now automatic in the database (`20261019230000_public_content_auto_approval.sql`): held words, photos and links from new members, and anything from members with rejected or hidden content wait in Admin Panel > Reports > Publication approvals; everything else is published at once. Reporting, blocking and the support address were already in place. For the review notes: "New posts and photos are screened automatically against a list of objectionable terms; photos and links from new members, and all content from members with prior removals, are held for manual approval. Members can report any post, comment or photo and block other members. Reports are reviewed within 24 hours."
+
+## Status, 26 October 2026
+
+- Apple-to-RevenueCat delivery is now observed: a sandbox Breeder annual purchase on 18 October and 8 renewals since, with the `breeder` entitlement active. `NATIVE_BILLING_WEBHOOK_VERIFIED=true` can be set for the store build.
+- Content filtering migrations are applied in production with 48 held terms; the approval queue is empty.
+- The Xcode project build number is now 8. Build 7 predates the design overhaul, the native purchase-completion fix and Sign in with Apple, so it should not be resubmitted.
+- The Sign in with Apple entitlement is in the project, so the app ID needs that capability before build 8 will sign.
+- Remaining steps and paste-ready review notes, reply and description footer: [app-store-resubmission-2026-10-26.md](planning/app-store-resubmission-2026-10-26.md).
