@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-10-19T17:15:22.471Z",
+  "lastUpdated": "2026-10-26T17:03:45.657Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -1421,6 +1421,134 @@
         "Direct-answer post titled to match the query phrasing: \"crested gecko morph list\"",
         "Foundation Genetics framing: what allele(s) underlie \"crested gecko morph list\", inheritance pattern, and breeding implications",
         "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko morph list\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20261026-gecko-morph-calculator",
+      "title": "Gecko morph calculator",
+      "slug": "gecko-morph-calculator",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 11,
+        "demand": 2,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-10-26T17:03:45.657Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"gecko morph calculator\" drove 28 impressions in the last 28 days at average position 14.5 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-10-26T17:03:45.657Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"gecko morph calculator\"",
+        "Foundation Genetics framing: what allele(s) underlie \"gecko morph calculator\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"gecko morph calculator\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20261026-crested-gecko-genetic-calculator",
+      "title": "Crested gecko genetic calculator",
+      "slug": "crested-gecko-genetic-calculator",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 10,
+        "demand": 3,
+        "originality": 6,
+        "accuracyRisk": 6,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-10-26T17:03:45.657Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"crested gecko genetic calculator\" drove 23 impressions in the last 28 days at average position 6.2 (CTR 4.35%, 1 clicks) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-10-26T17:03:45.657Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"crested gecko genetic calculator\"",
+        "Foundation Genetics framing: what allele(s) underlie \"crested gecko genetic calculator\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko genetic calculator\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20261026-gecko-calculator",
+      "title": "Gecko calculator",
+      "slug": "gecko-calculator",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 10,
+        "demand": 1,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-10-26T17:03:45.657Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"gecko calculator\" drove 22 impressions in the last 28 days at average position 7.4 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-10-26T17:03:45.657Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"gecko calculator\"",
+        "Foundation Genetics framing: what allele(s) underlie \"gecko calculator\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"gecko calculator\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20261026-crested-gecko-morphs-guide",
+      "title": "Crested gecko morphs guide",
+      "slug": "crested-gecko-morphs-guide",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 10,
+        "demand": 1,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-10-26T17:03:45.657Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"crested gecko morphs guide\" drove 21 impressions in the last 28 days at average position 22.6 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-10-26T17:03:45.657Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"crested gecko morphs guide\"",
+        "Foundation Genetics framing: what allele(s) underlie \"crested gecko morphs guide\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko morphs guide\" and related long-tails, then long-form explanation"
       ],
       "rejectionReason": null,
       "prUrl": null
