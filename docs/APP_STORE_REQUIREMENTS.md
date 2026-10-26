@@ -134,3 +134,4 @@ Guideline 1.2 asks for a way to filter objectionable material before it is poste
 - The Sign in with Apple entitlement is in the project, so the app ID needs that capability before build 14 will sign.
 - Remaining steps and paste-ready review notes, reply and description footer: [app-store-resubmission-2026-10-26.md](planning/app-store-resubmission-2026-10-26.md).
 - 26 October: Apple's automated check stopped the build 13 submission again for the missing Terms of Use (EULA) link, so the listing text from 19 October was not in place on every localization. The step-by-step fix is step 0 of the resubmission kit. The iPhone Membership screen now also links Apple's standard EULA (ships in build 14).
+- 26 October, later: Tennyson added the EULA lines to the Description and resubmitted build 13. Waiting on Apple. Build 14 and the 2.1 device recording are still to do (resubmission kit, steps 1 to 6).

@@ -16,7 +16,7 @@ Could not check from the cloud session: whether the website pages open (the sess
 
 ## Your steps, in order
 
-### 0. Fix the EULA rejection in the listing (5 minutes, no new build)
+### 0. Fix the EULA rejection in the listing (done 26 October, build 13 resubmitted)
 
 Apple's automated check stopped build 13 again on 26 October because the App Store product page still had no working Terms of Use (EULA) link. The cloud session cannot open App Store Connect, so this is by hand.
 
