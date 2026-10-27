@@ -3,7 +3,6 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { DATA_SOURCES, getSource } from '../marketAnalytics/sources';
 import { scoreConfidence } from '../marketAnalytics/confidence';
@@ -13,7 +12,7 @@ vi.mock('@/lib/supabaseClient', () => ({ supabase: { rpc: vi.fn() } }));
 import ListingCard from '@/components/market/ListingCard';
 
 const SOURCE_NAMES = /morph ?market|pangea|facebook|terraristik|snakebuddies|kleinanzeigen|geck data/i;
-const SRC = fileURLToPath(new URL('../../', import.meta.url));
+const SRC = resolve('src');
 
 describe('market source privacy', () => {
   it('keeps the source registry and demo generic without changing pricing confidence', () => {
@@ -52,9 +51,9 @@ describe('market source privacy', () => {
       expect(readFileSync(resolve(SRC, file), 'utf8'), file)
         .not.toMatch(SOURCE_NAMES);
     }
-    const review = readFileSync(new URL('../../components/admin/ScrapedDataReview.jsx', import.meta.url), 'utf8');
+    const review = readFileSync(resolve(SRC, 'components/admin/ScrapedDataReview.jsx'), 'utf8');
     expect(review).not.toContain('record.source_website');
-    const seller = readFileSync(new URL('../../components/market/SellerPanel.jsx', import.meta.url), 'utf8');
+    const seller = readFileSync(resolve(SRC, 'components/market/SellerPanel.jsx'), 'utf8');
     expect(seller).not.toContain('r.listing_url');
   });
 });
