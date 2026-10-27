@@ -11,10 +11,10 @@ import GeckoImage from '@/components/shared/GeckoImage';
  *   1. listing_price                       basis: 'listing'
  *   2. asking_price                        basis: 'asking'
  *   3. market_price_estimate.average       basis: 'ai_estimate'
- *   4. Geck Data trait value table: the gecko's selected morph traits
+ *   4. Market trait value table: the gecko's selected morph traits
  *      (morph_tags, or the free-text morphs_traits field) are matched
  *      against public.trait_value_table(), which holds asking-price
- *      bands per crested trait from Geck Data listings, split by age
+ *      bands per crested trait from marketplace listings, split by age
  *      and sex. The most valuable matched trait sets the price, and the
  *      quality tier picks a point in its band (pet p25, breeder median,
  *      high-end halfway to p75, investment p75). See
@@ -66,7 +66,7 @@ const BASIS_META = {
   listing: { label: 'Listing price', className: 'bg-emerald-900/40 border-emerald-700 text-emerald-200' },
   asking: { label: 'Asking price', className: 'bg-sky-900/40 border-sky-700 text-sky-200' },
   ai_estimate: { label: 'AI estimate', className: 'bg-amber-900/40 border-amber-700 text-amber-200' },
-  geck_data: { label: 'Geck Data', className: 'bg-teal-900/40 border-teal-700 text-teal-200' },
+  geck_data: { label: 'Market', className: 'bg-teal-900/40 border-teal-700 text-teal-200' },
   morph_comp: { label: 'Morph comp', className: 'bg-slate-800/60 border-slate-600 text-slate-200' },
   unpriced: { label: 'No data', className: 'bg-slate-900/60 border-slate-700 text-slate-500' },
 };
@@ -87,13 +87,13 @@ function BasisChip({ valuation }) {
     title = `${valuation.compMorph} community average ${formatCurrency(valuation.compAverage)} x ${valuation.multiplier} (${valuation.tier.replace('_', ' ')} tier)`;
   } else if (valuation.basis === 'geck_data') {
     const { band } = valuation;
-    title = `${valuation.trait}, ${valuation.levelLabel}: median ${formatCurrency(band.p50)}, typical ${formatCurrency(band.p25)} to ${formatCurrency(band.p75)} across ${band.n} Geck Data listings. `
+    title = `${valuation.trait}, ${valuation.levelLabel}: median ${formatCurrency(band.p50)}, typical ${formatCurrency(band.p25)} to ${formatCurrency(band.p75)} across ${band.n} marketplace listings. `
       + `${valuation.tier.replace('_', ' ')} grade priced at ${valuation.positionLabel}.`;
     if (valuation.matchedTraits.length > 1) {
       title += ` Matched traits: ${valuation.matchedTraits.join(', ')}.`;
     }
   } else if (valuation.basis === 'unpriced') {
-    title = 'None of this gecko\'s traits matched the Geck Data value table. Add traits like Lilly White or Harlequin to get an estimate.';
+    title = 'None of this gecko\'s traits matched the market value table. Add traits like Lilly White or Harlequin to get an estimate.';
   }
   return (
     <Badge variant="outline" className={`text-xs whitespace-nowrap ${meta.className}`} title={title}>
@@ -236,7 +236,7 @@ export default function Portfolio() {
       description={
         <>
           <Info className="inline-block w-3.5 h-3.5 mr-1.5 align-[-0.125em]" aria-hidden="true" />
-          Values are estimates from Geck Data market listings and your own listed prices, not formal appraisals.
+          Values are estimates from public marketplace listings and your own listed prices, not formal appraisals.
         </>
       }
     />
@@ -404,7 +404,7 @@ export default function Portfolio() {
               </div>
             ) : (
               <p className="text-sm text-slate-500 py-4 text-center">
-                No valued animals yet. Add morph traits like Lilly White or Axanthic to your geckos and the Geck Data estimates will fill this in.
+                No valued animals yet. Add morph traits like Lilly White or Axanthic to your geckos and the market estimates will fill this in.
               </p>
             )}
           </CardContent>
@@ -460,14 +460,14 @@ export default function Portfolio() {
               </tbody>
             </table>
             <p className="text-xs text-slate-500 mt-3">
-              Geck Data estimates match each gecko&apos;s morph traits against asking prices on crested gecko listings,
+              Market estimates match each gecko&apos;s morph traits against asking prices on crested gecko listings,
               narrowed to the same age and sex when there are enough listings. The most valuable trait sets the price:
               pet grade at the low end of the typical range, breeder grade at the median, high-end and investment grade toward the top.
               Set a listing or asking price on a gecko to override the estimate.
             </p>
             {!traitIndex && (
               <p className="text-xs text-amber-400/80 mt-2">
-                The Geck Data value table did not load, so trait-based estimates are missing. Refresh to try again.
+                The market value table did not load, so trait-based estimates are missing. Refresh to try again.
               </p>
             )}
           </CardContent>

@@ -40,6 +40,10 @@ describe('market source privacy', () => {
   it('keeps source names out of price, breeding, feed and analytics copy', () => {
     for (const file of [
       'pages/MarketPricing.jsx',
+      'pages/Portfolio.jsx',
+      'components/gecko/MarketValueCard.jsx',
+      'components/market/DemoMarketBrief.jsx',
+      'components/dashboard/HomeValues.jsx',
       'components/innovations/MorphPriceIndex.jsx',
       'components/breeding/PairingValuePanel.jsx',
       'components/breeding/SeasonProjectionPanel.jsx',

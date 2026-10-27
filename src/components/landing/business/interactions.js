@@ -145,7 +145,7 @@ export function mountBusinessHome(root, track) {
   // Real, publicly shipped product screens. The visitor controls the pace.
   const screenSources = {
     record: {
-      image: "/screenshots/gecko-record-real.webp",
+      image: "/screenshots/gecko-record-market.webp",
       mobile: "/screenshots/gecko-record-real-phone.webp",
       label: 'Gecko records',
       title: 'Every gecko, with its whole story.',
@@ -177,7 +177,7 @@ export function mountBusinessHome(root, track) {
       alt: 'Real Geck Inspect breeding management screen showing animal photos, active pairings and egg tracking'
     },
     portfolio: {
-      image: "/screenshots/portfolio.webp",
+      image: "/screenshots/portfolio-market.webp",
       mobile: "/screenshots/portfolio-phone.webp",
       label: 'Portfolio',
       title: 'Step back. See the whole collection.',

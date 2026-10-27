@@ -13,7 +13,7 @@ import SellTimeEstimate from '@/components/market/SellTimeEstimate';
 /**
  * "Estimated value" card for the gecko detail page.
  *
- * Cross-references the gecko's selected morph traits with the Geck Data
+ * Cross-references the gecko's selected morph traits with the market
  * trait value table (asking prices on crested gecko listings, by age and
  * sex) and shows an estimate, the typical range, and where the owner's
  * asking price sits in it. Same model as the Collection Portfolio, see
@@ -85,7 +85,7 @@ export default function MarketValueCard({ gecko, showSellTime = true }) {
       <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
         <Wallet className="w-4 h-4 text-emerald-400" /> Estimated Value
         <Badge variant="outline" className="ml-auto text-[10px] font-medium bg-teal-900/40 border-teal-700 text-teal-200">
-          Geck Data
+          Market
         </Badge>
       </CardTitle>
     </CardHeader>
@@ -214,7 +214,7 @@ export default function MarketValueCard({ gecko, showSellTime = true }) {
         )}
 
         <p className="text-[11px] text-slate-500">
-          Based on asking prices from crested gecko listings tracked by Geck Data. An estimate, not an appraisal.
+          Based on asking prices from public crested gecko listings. An estimate, not an appraisal.
           {isGuestMode() && ' Demo: prices from a snapshot taken 5 Oct 2026; members see them updated with each market check.'}
         </p>
       </CardContent>
