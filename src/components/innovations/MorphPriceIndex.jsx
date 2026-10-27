@@ -1,9 +1,9 @@
 /**
  * List-price helper for the Sell page: where a seller's asking price sits
  * in the asking-price range for geckos like theirs (same leading trait, age
- * and sex) on MorphMarket listings.
+ * and sex) on public marketplace listings.
  *
- * Uses the Geck Data trait value table, like the Portfolio and the gecko
+ * Uses the market trait value table, like the Portfolio and the gecko
  * value estimate, so all three agree. Until 28 Sep 2026 this read a price
  * cache holding one row (Tiger, $420) and called it "recent sales".
  *
@@ -81,7 +81,7 @@ export default function MorphPriceIndex({ gecko, sellerPrice }) {
             {band.n} listings
           </Badge>
         </CardTitle>
-        <p className="text-xs text-slate-500">MorphMarket listings, {priced.levelLabel}. Animals often sell for less than they are listed for.</p>
+        <p className="text-xs text-slate-500">public marketplace listings, {priced.levelLabel}. Animals often sell for less than they are listed for.</p>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-3 gap-3 text-center">

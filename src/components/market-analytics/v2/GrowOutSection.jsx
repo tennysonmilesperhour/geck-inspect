@@ -99,7 +99,7 @@ export default function GrowOutSection({ agg, onOpenTrait }) {
                 </td>
                 <td className="text-right px-2 py-2">
                   <span onClick={(e) => e.stopPropagation()}>
-                    <ConfidenceChip confidence={r.confidence} sampleSize={Math.min(r.n_from, r.n_adult)} sources={['external.morphmarket']} size="xs" />
+                    <ConfidenceChip confidence={r.confidence} sampleSize={Math.min(r.n_from, r.n_adult)} sources={['external.marketplace']} size="xs" />
                   </span>
                 </td>
               </tr>

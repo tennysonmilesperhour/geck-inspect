@@ -47,7 +47,7 @@ export function dayLabel(iso) {
 export const weekLabel = dayLabel;
 
 export function traitConfidence(sampleSize) {
-  const base = scoreConfidence({ sourceId: 'external.morphmarket', sampleSize });
+  const base = scoreConfidence({ sourceId: 'external.marketplace', sampleSize });
   return +(base * ASK_BASIS_SCALE).toFixed(3);
 }
 

@@ -41,7 +41,7 @@ export default function SellTimeEstimate({ gecko, traitIndex, price = null, medi
         <p className="text-xs text-slate-400 flex items-start gap-1.5">
           <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
           <span>
-            How long geckos like this take to sell, from real MorphMarket sales, is part of Enterprise.{' '}
+            How long geckos like this take to sell, from observed marketplace sales, is part of Enterprise.{' '}
             <UpgradePlansLink
               limitType="market_intelligence"
               surface={surface || 'sell_time'}
@@ -116,7 +116,7 @@ export default function SellTimeEstimate({ gecko, traitIndex, price = null, medi
         <p className="text-[11px] text-slate-500">Set an asking price to see how your price changes this.</p>
       )}
       <p className="text-[11px] text-slate-500 leading-relaxed">
-        From {Number(model.listings).toLocaleString()} crested gecko listings on MorphMarket whose sales were
+        From {Number(model.listings).toLocaleString()} crested gecko marketplace listings whose sales were
         tracked {shortDate(model.window.from)} to {shortDate(model.window.to)} ({Number(model.sold).toLocaleString()} sold).
         Times past a month are projected from that pace. An estimate, not a promise.
       </p>

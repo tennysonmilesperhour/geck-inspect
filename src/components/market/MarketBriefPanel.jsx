@@ -130,7 +130,7 @@ export default function MarketBriefPanel({ user }) {
         <CardHeader className="pb-2">
           <CardTitle className="text-slate-100 text-base flex items-center gap-2">
             <Sunrise className="w-4 h-4 text-amber-300" />
-            {us.day ? `MorphMarket, ${shortDay(us.day)} check` : 'MorphMarket'}
+            {us.day ? `US market, ${shortDay(us.day)} check` : 'US market'}
           </CardTitle>
           {dayWord && <p className="text-sm text-slate-400">{dayWord}.</p>}
         </CardHeader>

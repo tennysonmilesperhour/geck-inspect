@@ -1,5 +1,4 @@
 import GeckoImage from '@/components/shared/GeckoImage';
-import { ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import PriceBandBar from '@/components/market/PriceBandBar';
 import { formatUsd, morphLabel, positionLabel, sexAgeLabel } from '@/lib/marketHabit';
@@ -12,15 +11,14 @@ const POSITION_STYLES = {
 
 /**
  * One listing: photo, morphs, sex and age, asking price, and where the
- * price sits among similar geckos. The whole card opens the listing on
- * the marketplace it came from.
+ * price sits among similar geckos.
  */
 export default function ListingCard({ listing, meta = null, badge = null, showBand = true }) {
   const {
     title, morphs, sex_class: sex, age_class: age, weight_grams: weight,
     price, was_price: wasPrice, price_position: pricePosition, position,
     similar_p25: p25, similar_p50: p50, similar_p75: p75,
-    image_url: image, listing_url: url, currency, price_local: priceLocal,
+    image_url: image, currency, price_local: priceLocal,
   } = listing;
   const pos = pricePosition || position;
   const local = currency && currency !== 'USD' && Number(priceLocal) > 0
@@ -62,20 +60,5 @@ export default function ListingCard({ listing, meta = null, badge = null, showBa
     </div>
   );
 
-  if (!url) {
-    return <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">{body}</div>;
-  }
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group block rounded-xl border border-slate-800 bg-slate-900/60 p-3 hover:border-emerald-500/40 hover:bg-slate-900 transition-colors"
-    >
-      {body}
-      <p className="mt-2 text-[10px] text-slate-600 group-hover:text-emerald-400 flex items-center gap-1">
-        Open the listing <ExternalLink className="w-3 h-3" />
-      </p>
-    </a>
-  );
+  return <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">{body}</div>;
 }

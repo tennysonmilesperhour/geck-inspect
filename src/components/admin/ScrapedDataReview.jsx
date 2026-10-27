@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { 
     CheckCircle, 
     XCircle, 
-    ExternalLink, 
     Eye,
     RefreshCw,
     AlertTriangle
@@ -42,7 +41,7 @@ export default function ScrapedDataReview() {
                 secondary_traits: record.secondary_traits || [],
                 base_color: record.base_color,
                 confidence_score: Math.min(95, Math.max(60, record.confidence_score * 10)),
-                notes: `Auto-imported from ${record.source_website}. Original description: ${record.description || 'None'}`,
+                notes: record.description || 'Imported training image',
                 verified: true
             };
 
@@ -142,15 +141,6 @@ export default function ScrapedDataReview() {
                                                         <div>Image failed to load</div>
                                                     </div>
                                                 </div>
-                                                <a 
-                                                    href={record.source_website} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="touch:min-h-11 text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 transition-colors"
-                                                >
-                                                    <ExternalLink className="w-3 h-3" />
-                                                    View Original Source
-                                                </a>
                                             </div>
 
                                             {/* Classification Details */}
@@ -207,7 +197,6 @@ export default function ScrapedDataReview() {
                                                 )}
 
                                                 <div className="text-xs text-slate-500 pt-2 border-t border-slate-600">
-                                                    <p>Source: {record.source_website}</p>
                                                     <p>Scraped: {new Date(record.created_date).toLocaleString()}</p>
                                                 </div>
                                             </div>
@@ -291,7 +280,6 @@ export default function ScrapedDataReview() {
                                             />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium text-white truncate">{record.primary_morph}</p>
-                                                <p className="text-xs text-slate-400 truncate">{record.source_website}</p>
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <Badge 
                                                         className={record.status === 'approved' 
