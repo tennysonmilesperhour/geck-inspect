@@ -3,7 +3,7 @@
  *
  * Same look as v1 (dark cards, emerald accents, confidence chips,
  * methodology popovers, pinnable cards), with every tool re-aimed at the
- * data that actually exists: US MorphMarket listings, trait-level depth,
+ * data that actually exists: US marketplace listings, trait-level depth,
  * age splits and a four-week window of observed sales. The v1 tools that
  * need data we do not have (regions, expo calendar, supply forecasts from
  * other breeders) are replaced, not left empty:
@@ -98,7 +98,7 @@ function FreshnessBanner({ coverage, now }) {
         <span className={`font-semibold ${stale ? 'text-amber-300' : 'text-emerald-300'}`}>
           {stale ? `Last collected ${fmt(coverage.last_seen)}, ${days} days ago.` : `Updated ${fmt(coverage.last_seen)}.`}
         </span>{' '}
-        Prices are asking prices from US MorphMarket listings.{' '}
+        Prices are asking prices from US marketplace listings.{' '}
         {coverage.sold_window
           ? `Sales were observed from ${fmt(coverage.sold_window.from)} to ${fmt(coverage.sold_window.to)} only, so sell-through and days-to-sell describe that window.`
           : 'No sales have been observed yet, so sell-through and days-to-sell are blank.'}
@@ -146,7 +146,7 @@ function FilterBar({ filters, setFilters, coverage }) {
         />
       </label>
 
-      <SourceBadge sourceId="external.morphmarket" />
+      <SourceBadge sourceId="external.marketplace" />
 
       {any && (
         <button

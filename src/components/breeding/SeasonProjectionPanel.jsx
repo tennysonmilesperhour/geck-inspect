@@ -216,7 +216,7 @@ export default function SeasonProjectionPanel({ phenotypes, priceIndex, seed, se
           <p className="text-xs text-slate-400 flex items-start gap-1.5">
             <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
             <span>
-              How long a season like this takes to sell, from real MorphMarket sales, is part of Enterprise.{' '}
+              How long a season like this takes to sell, from observed marketplace sales, is part of Enterprise.{' '}
               <UpgradePlansLink
                 limitType="market_intelligence"
                 surface="season_projection"
@@ -273,7 +273,7 @@ export default function SeasonProjectionPanel({ phenotypes, priceIndex, seed, se
 
       <p className="text-[11px] text-slate-500 leading-relaxed">
         Played out {sim.totals.length.toLocaleString()} times from the genetics odds: each egg hatches or not, then
-        becomes one outcome, priced at the median MorphMarket asking price for its traits at that age. Upkeep
+        becomes one outcome, priced at the median marketplace asking price for its traits at that age. Upkeep
         {enterprise ? ' includes the typical wait for a buyer. ' : ' covers the months you keep each one. '}
         Asking prices, not sale prices, and pattern quality moves the price most.
       </p>

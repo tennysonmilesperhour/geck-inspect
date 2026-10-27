@@ -155,7 +155,7 @@ function TraitDetail({ t, axis, periods }) {
         <ConfidenceChip
           confidence={t.confidence}
           sampleSize={t.n}
-          sources={['external.morphmarket']}
+          sources={['external.marketplace']}
           methodology="Built on asking prices, so confidence tops out at Medium until sold prices are collected again."
         />
       </div>
