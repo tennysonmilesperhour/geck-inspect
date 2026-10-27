@@ -1,3 +1,4 @@
+import { safeExternalUrl } from '@/lib/safeExternalUrl';
 import GeckoImage from '@/components/shared/GeckoImage';
 import { Badge } from '@/components/ui/badge';
 import PriceBandBar from '@/components/market/PriceBandBar';
@@ -20,6 +21,7 @@ export default function ListingCard({ listing, meta = null, badge = null, showBa
     similar_p25: p25, similar_p50: p50, similar_p75: p75,
     image_url: image, currency, price_local: priceLocal,
   } = listing;
+  const listingUrl = safeExternalUrl(listing.listing_url);
   const pos = pricePosition || position;
   const local = currency && currency !== 'USD' && Number(priceLocal) > 0
     ? `${Number(priceLocal).toLocaleString('en-US')} ${currency}`
@@ -56,6 +58,11 @@ export default function ListingCard({ listing, meta = null, badge = null, showBa
           {meta && <span className="text-[11px] text-slate-500">{meta}</span>}
         </div>
         {showBand && <PriceBandBar price={price} p25={p25} p50={p50} p75={p75} compact />}
+        {listingUrl && (
+          <a href={listingUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center min-h-11 text-xs text-sky-400 hover:underline">
+            View listing
+          </a>
+        )}
       </div>
     </div>
   );

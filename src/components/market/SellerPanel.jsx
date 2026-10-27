@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { User } from '@/entities/User';
 import ListingCard from '@/components/market/ListingCard';
+import { safeExternalUrl } from '@/lib/safeExternalUrl';
 import { createPageUrl } from '@/utils';
 import { findStores, formatUsd, loadSellerView, sexAgeLabel, shortDay, storeSlugFromUrl } from '@/lib/marketHabit';
 
@@ -144,14 +145,19 @@ function RivalNote({ l }) {
           : `${week} similar ${kind || 'gecko'} ${week === 1 ? 'listing' : 'listings'} for less this week.`}
       </p>
       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-        {(l.cheapest_new || []).map((r) => (
-          <span
-            key={r.listing_id}
-            className="text-[11px] text-slate-400"
-          >
-            {formatUsd(r.price)} {r.title ? `(${r.title.slice(0, 40)})` : ''}
-          </span>
-        ))}
+        {(l.cheapest_new || []).map((r) => {
+          const listingUrl = safeExternalUrl(r.listing_url);
+          return (
+            <span key={r.listing_id} className="text-[11px] text-slate-400">
+              {formatUsd(r.price)} {r.title ? `(${r.title.slice(0, 40)})` : ''}
+              {listingUrl && (
+                <a href={listingUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center min-h-11 ml-1 text-sky-400 hover:underline">
+                  View listing
+                </a>
+              )}
+            </span>
+          );
+        })}
       </div>
     </div>
   );

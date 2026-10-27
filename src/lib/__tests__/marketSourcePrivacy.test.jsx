@@ -1,15 +1,21 @@
 // @vitest-environment jsdom
 import React from 'react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DATA_SOURCES, getSource } from '../marketAnalytics/sources';
 import { scoreConfidence } from '../marketAnalytics/confidence';
 import demo from '../marketAnalytics/v2/demoSnapshot.json';
 
 vi.mock('@/lib/supabaseClient', () => ({ supabase: { rpc: vi.fn() } }));
+vi.mock('@/entities/User', () => ({ User: {} }));
+import { supabase } from '@/lib/supabaseClient';
 import ListingCard from '@/components/market/ListingCard';
+import SellerPanel from '@/components/market/SellerPanel';
+
+afterEach(cleanup);
 
 const SOURCE_NAMES = /morph ?market|pangea|facebook|terraristik|snakebuddies|kleinanzeigen|geck data/i;
 const SRC = resolve('src');
@@ -26,7 +32,7 @@ describe('market source privacy', () => {
     expect(unknown.short).toBe('Market');
   });
 
-  it('does not link market cards to the scraped listing', () => {
+  it('links to the original listing with generic visible text', () => {
     const html = renderToStaticMarkup(<ListingCard listing={{
       title: 'Harlequin', morphs: ['Harlequin'], price: 250,
       listing_url: 'https://www.morphmarket.com/us/c/reptiles/crested-geckos/123',
@@ -34,7 +40,39 @@ describe('market source privacy', () => {
     }} />);
     expect(html).toContain('Harlequin');
     expect(html).toContain('$250');
-    expect(html).not.toMatch(/<a\b|morphmarket|Open the listing/);
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    const link = container.querySelector('a');
+    expect(link.textContent).toBe('View listing');
+    expect(link.href).toBe('https://www.morphmarket.com/us/c/reptiles/crested-geckos/123');
+    expect(link.target).toBe('_blank');
+    expect(link.rel).toBe('noopener noreferrer');
+    expect(container.textContent).not.toMatch(SOURCE_NAMES);
+  });
+
+  it.each([undefined, '', 'javascript:alert(1)', 'https://user:password@example.com/listing'])('does not link missing or unsafe metadata: %s', (listing_url) => {
+    const html = renderToStaticMarkup(<ListingCard listing={{ title: 'Harlequin', price: 250, listing_url }} />);
+    expect(html).toContain('Harlequin');
+    expect(html).not.toContain('<a ');
+  });
+
+  it('preserves neutral links to cheaper similar listings', async () => {
+    const url = 'https://www.morphmarket.com/us/c/reptiles/crested-geckos/456';
+    supabase.rpc.mockResolvedValueOnce({ data: {
+      slug: 'demo-store', listings: [{
+        listing_id: 'own', title: 'Harlequin', price: 250, under_7d: 2,
+        cheapest_new: [
+          { listing_id: 'rival', title: 'Harlequin', price: 200, listing_url: url },
+          { listing_id: 'unsafe', title: 'Harlequin', price: 190, listing_url: 'javascript:alert(1)' },
+        ],
+      }],
+    }, error: null });
+    const { container } = render(<SellerPanel />);
+    const link = await screen.findByRole('link', { name: 'View listing' });
+    expect(link.getAttribute('href')).toBe(url);
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(container.textContent).not.toMatch(SOURCE_NAMES);
   });
 
   it('keeps source names out of price, breeding, feed and analytics copy', () => {
@@ -57,7 +95,5 @@ describe('market source privacy', () => {
     }
     const review = readFileSync(resolve(SRC, 'components/admin/ScrapedDataReview.jsx'), 'utf8');
     expect(review).not.toContain('record.source_website');
-    const seller = readFileSync(resolve(SRC, 'components/market/SellerPanel.jsx'), 'utf8');
-    expect(seller).not.toContain('r.listing_url');
   });
 });
