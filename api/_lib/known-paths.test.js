@@ -157,7 +157,7 @@ describe('middleware 404', () => {
     expect(unknown.headers.get('cache-control')).toBe('public, max-age=0, must-revalidate');
     const body = await unknown.text();
     expect(body).toContain('Page not found');
-    expect(body).not.toMatch(/geck-data\.vercel\.app|Geck Intellect/);
+    expect(body).not.toMatch(/geck-data\.vercel\.app|Geck Intellect|href="undefined"/);
     expect(body).toContain('by Tennyson Taggart');
     expect(body).not.toMatch(/\u2014/);
 

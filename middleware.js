@@ -31,8 +31,6 @@ import { isLinkPreviewBot, loadShareCard, renderShareCard, shareTargetFor } from
 import {
   FOUNDER_NAME,
   FOUNDER_URL,
-  GECK_INTELLECT_LABEL,
-  GECK_INTELLECT_URL,
 } from './src/data/public-links.js';
 
 const NOT_FOUND_HTML = `<!doctype html>
@@ -59,7 +57,6 @@ const NOT_FOUND_HTML = `<!doctype html>
   <p>That address is not a page on Geck Inspect.</p>
   <p><a href="/">Back to the homepage</a></p>
   <footer>
-    <a href="${GECK_INTELLECT_URL}">${GECK_INTELLECT_LABEL}</a>
     <a href="${FOUNDER_URL}">by ${FOUNDER_NAME}</a>
   </footer>
 </main>
