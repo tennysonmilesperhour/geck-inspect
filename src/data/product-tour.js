@@ -23,13 +23,13 @@
 
 export const PRODUCT_TOUR_SLIDES = [
   // Shipped October 2026, captured from the guest demo collection (sample
-  // geckos) with value estimates from the real Geck Data listings table.
+  // geckos) with value estimates from the market listings table.
   // Each has a 1600 x 1000 laptop file and a 390 x 488 (4:5) phone file.
   // Recaptured October 14 with owner-authorized photos and reviewed morph
   // labels from demo-gecko-portraits.js; no external photo hosts needed.
   {
     id: 'gecko-record',
-    file: 'gecko-record-matched.webp',
+    file: 'gecko-record-market.webp',
     mobileFile: 'gecko-record-matched-phone.webp',
     title: 'One record per gecko',
     caption: 'Morph, weigh-ins against the typical range for its age, and a value estimate from real crested gecko listings.',
@@ -65,8 +65,8 @@ export const PRODUCT_TOUR_SLIDES = [
   },
   {
     id: 'portfolio',
-    file: 'portfolio-matched.webp',
-    mobileFile: 'portfolio-matched-phone.webp',
+    file: 'portfolio-market.webp',
+    mobileFile: 'portfolio-market-phone.webp',
     title: 'Collection value',
     caption: 'Automatic value estimates for every gecko from real crested gecko listings, with your collection total tracked over time.',
     captureUrl: '/Portfolio (demo)',

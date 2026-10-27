@@ -70,8 +70,6 @@ import {
 import {
   FOUNDER_NAME,
   FOUNDER_URL,
-  GECK_INTELLECT_LABEL,
-  GECK_INTELLECT_URL,
 } from '../src/data/public-links.js';
 import { loadAppModule } from './lib/load-app-module.mjs';
 import { morphBreedingFact, morphGeneralLinks } from './lib/morph-page-links.mjs';
@@ -1506,7 +1504,6 @@ function injectNoscriptBody(html, route) {
             &copy; ${new Date().getFullYear()} Geck Inspect. geckOS.
             <a href="/Terms">Terms</a>, <a href="/PrivacyPolicy">Privacy</a>,
             <a href="/Contact">Contact</a>,
-            <a href="${GECK_INTELLECT_URL}">${GECK_INTELLECT_LABEL}</a>,
             <a href="${FOUNDER_URL}">by ${FOUNDER_NAME}</a>
           </footer>
         </main>

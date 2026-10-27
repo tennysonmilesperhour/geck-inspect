@@ -3,7 +3,7 @@ import { APP_LOGO_ICON_URL } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import { useInAppShell } from '@/lib/appShell';
-import { FounderCredit, GeckIntellectLink } from '@/components/public/SiteCredits';
+import { FounderCredit } from '@/components/public/SiteCredits';
 import PublicMobileMenu from '@/components/public/PublicMobileMenu';
 
 /**
@@ -102,7 +102,6 @@ export function PublicFooter() {
             <li><Link to="/compare" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Compare</Link></li>
             <li><Link to="/Terms" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Terms</Link></li>
             <li><Link to="/PrivacyPolicy" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Privacy</Link></li>
-            <li><GeckIntellectLink className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white" /></li>
           </ul>
         </div>
       </div>

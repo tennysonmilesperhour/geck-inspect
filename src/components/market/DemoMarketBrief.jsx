@@ -15,10 +15,10 @@ const usd = (n) => `$${Math.round(Number(n) || 0).toLocaleString('en-US')}`;
 const SHOWN_MORPHS = ['Sable', 'Axanthic', 'Lilly White', 'Cappuccino', 'Extreme Harlequin', 'Phantom', 'Dalmatian', 'Harlequin', 'Pinstripe'];
 
 /**
- * The Market page in the guest demo. The live brief is members-only (it
+ * The market page in the guest demo. The live brief is members-only (it
  * reads today's listings and the member's own geckos), so the demo shows
  * the part the landing page promises, "see what every gecko is worth":
- * each sample gecko priced from a dated snapshot of the Geck Data trait
+ * each sample gecko priced from a dated snapshot of the market trait
  * table, plus the middle asking price by morph. Everything is labelled as
  * a sample; nothing here pretends to be today's market.
  */
@@ -103,7 +103,7 @@ export default function DemoMarketBrief() {
           <CardTitle className="text-slate-100 text-base flex items-center gap-2">
             <Sunrise className="w-4 h-4 text-amber-300" /> Middle asking price by morph
           </CardTitle>
-          <p className="text-xs text-slate-500">All ages and sexes, crested gecko listings tracked by Geck Data, {asOf}.</p>
+          <p className="text-xs text-slate-500">All ages and sexes, public crested gecko listings, {asOf}.</p>
         </CardHeader>
         <CardContent>
           {morphs.map(([trait, , n, p25, p50, p75]) => (

@@ -109,7 +109,7 @@ function PaidHomeValues({ user }) {
           </label>)}
         </div>
         <p className="text-xs text-slate-300">{assumptions.averageValue == null
-          ? 'Starting hatchling value uses the lower end of the least expensive well-sampled Geck Data hatchling trait. Replace it with an average appropriate to your pairings.'
+          ? 'Starting hatchling value uses the lower end of the least expensive well-sampled market hatchling trait. Replace it with an average appropriate to your pairings.'
           : 'Using your average hatchling value. Assumptions are saved on this device for this account and season.'}</p>
         <div className="border-t border-slate-700 pt-4 space-y-2" aria-live="polite">
           <p className="text-2xl font-semibold tabular-nums">{projection == null ? 'Enter a hatchling value' : `≈ ${money(projection)}`}</p>

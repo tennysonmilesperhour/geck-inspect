@@ -26,7 +26,7 @@ import {
   X,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
-import { FounderCredit, GeckIntellectLink } from '@/components/public/SiteCredits';
+import { FounderCredit } from '@/components/public/SiteCredits';
 import Testimonials from '@/components/landing/Testimonials';
 import LiveStats from '@/components/landing/LiveStats';
 import ProductTour from '@/components/landing/ProductTour';
@@ -440,7 +440,7 @@ function HeroProductShot() {
               and tablets from downloading the screenshot at all. */}
           <source media="(max-width: 1023px)" srcSet="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
         <img
-          src="/screenshots/hero-gecko-record-matched.webp"
+          src="/screenshots/hero-gecko-record-market.webp"
           width="1040"
           height="844"
           decoding="async"
@@ -1152,7 +1152,6 @@ export default function Home() {
                 <li><Link to="/MarketplaceVerification" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Marketplace Trust</Link></li>
                 <li><Link to="/Terms" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Terms</Link></li>
                 <li><Link to="/PrivacyPolicy" className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Privacy</Link></li>
-                <li><GeckIntellectLink className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white" /></li>
                 <li><Link to={createPageUrl('AuthPortal')} className="inline-flex items-center touch:min-h-11 touch:min-w-11 hover:text-white">Sign in</Link></li>
               </ul>
             </div>
