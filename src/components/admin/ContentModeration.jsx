@@ -24,7 +24,28 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { withOwnerEmailsFetched } from '@/lib/ownerEmails';
+
+// The author's email for each post or comment, from read_profiles by
+// owner_profile_id (rows no longer carry another member's address). The
+// same lookup as withOwnerEmailsFetched in src/lib/ownerEmails.js, written
+// out here because importing that module from this lazy tab turned
+// AdminPanel into a shared chunk that the size budget does not check.
+async function withAuthorEmails(rows) {
+  const ids = [...new Set((rows || []).map((r) => r?.owner_profile_id).filter((v) => v != null).map(String))];
+  const emailById = new Map();
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data, error } = await supabase.rpc('read_profiles').select('id, email').in('id', ids.slice(i, i + 100));
+    if (error) throw error;
+    for (const p of data || []) if (p?.id != null && p.email) emailById.set(String(p.id), p.email);
+  }
+  const out = (rows || []).map((r) => ({
+    ...r,
+    created_by: r?.owner_profile_id != null ? emailById.get(String(r.owner_profile_id)) ?? null : null,
+  }));
+  if (rows?.truncated) out.truncated = rows.truncated;
+  return out;
+}
+import { supabase } from '@/lib/supabaseClient';
 
 /**
  * Content moderation surface, browse and delete user-generated content
@@ -201,7 +222,7 @@ export default function ContentModeration() {
               entity={ForumPost}
               // The author's email comes from their profile (admins can read
               // every profile's address), not from the post row.
-              loadFn={() => ForumPost.list('-created_date').then((rows) => withOwnerEmailsFetched(rows))}
+              loadFn={() => ForumPost.list('-created_date').then((rows) => withAuthorEmails(rows))}
               searchKeys={['title', 'content', 'created_by', 'author_name']}
               emptyText="No forum posts."
               renderItem={(p) => (
@@ -223,7 +244,7 @@ export default function ContentModeration() {
           <TabsContent value="comments" className="mt-5">
             <ModerationList
               entity={ForumComment}
-              loadFn={() => ForumComment.list('-created_date').then((rows) => withOwnerEmailsFetched(rows))}
+              loadFn={() => ForumComment.list('-created_date').then((rows) => withAuthorEmails(rows))}
               searchKeys={['content', 'created_by', 'author_name']}
               emptyText="No comments."
               renderItem={(c) => (
