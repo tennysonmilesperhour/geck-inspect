@@ -57,7 +57,8 @@ import { isGuestMode } from '@/lib/guestMode';
  *             collapsed to six lines with "Show all"
  *   KEEPER    50 geckos, 5 active breeding pairs, more Morph IDs
  *   BREEDER   unlimited geckos and pairs, marketplace sync, waitlists
- *   ENTERPRISE a row below the three, a waitlist while off sale
+ *   ENTERPRISE a row below the three, hidden while off sale except
+ *             for members who already hold it
  *
  * Three billing cadences are surfaced through a top-of-page toggle:
  *
@@ -154,7 +155,7 @@ const tiers = [
     icon: Sparkles,
     description: 'For breeders who price by the market.',
     // Off sale while ENTERPRISE_ON_SALE is false (see stripe-config.js):
-    // the row shows a waitlist button instead of checkout.
+    // the row is hidden, except for a member who already holds the plan.
     comingSoon: !ENTERPRISE_ON_SALE,
     features: [
       'Everything in Breeder',
@@ -805,7 +806,7 @@ export default function MembershipPage() {
         description={membershipMetaDescription()}
         path="/Membership"
         type="website"
-        imageAlt="Geck Inspect membership plans, Free, Keeper, Breeder, and Enterprise tiers"
+        imageAlt="Geck Inspect membership plans, Free, Keeper, and Breeder tiers"
         keywords={[
           'crested gecko app pricing',
           'gecko breeding software cost',
@@ -927,7 +928,8 @@ export default function MembershipPage() {
 
         {/* Plans: three columns (Free, Keeper, Breeder), each saying who
             it is for with the numbers that decide it, and Enterprise as a
-            row underneath. */}
+            row underneath. While Enterprise is off sale (retired 28 Oct
+            2026) only a member who already holds it sees that row. */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto w-full">
           {PLAN_COLUMNS.map((key) => (
             <PlanCard
@@ -940,7 +942,9 @@ export default function MembershipPage() {
           ))}
         </div>
 
-        <EnterpriseRow plan={planState(tiers.find((t) => t.key === 'enterprise'))} onChoose={handleCTA} />
+        {(ENTERPRISE_ON_SALE || currentTier === 'enterprise') && (
+          <EnterpriseRow plan={planState(tiers.find((t) => t.key === 'enterprise'))} onChoose={handleCTA} />
+        )}
 
         {/* Visible FAQ, the same list as the FAQPage structured data. */}
         <section aria-labelledby="membership-faq-heading" className="max-w-3xl mx-auto w-full">

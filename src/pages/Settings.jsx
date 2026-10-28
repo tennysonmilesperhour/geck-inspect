@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 import { resolveTier } from '@/lib/tierLimits';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
-import UpgradePlansButton, { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
@@ -1085,14 +1085,7 @@ export default function SettingsPage() {
                               </>
                           ) : (
                               <p className="text-sm text-slate-400">
-                                  The Morning Market Brief and watchlist alerts are part of Market Intelligence on the Enterprise plan.{' '}
-                                  <UpgradePlansLink
-                                    limitType="market_intelligence"
-                                    surface="market_alerts_locked"
-                                    className="text-emerald-400 hover:text-emerald-300"
-                                  >
-                                    See plans
-                                  </UpgradePlansLink>
+                                  The Morning Market Brief and watchlist alerts are part of Market Intelligence, which is not open to new members right now.
                               </p>
                           )}
                      </CardContent>

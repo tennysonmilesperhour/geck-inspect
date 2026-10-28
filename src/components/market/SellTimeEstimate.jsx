@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import { estimateSellTime, formatSellDays, loadSellTimeModel } from '@/lib/sellTime';
 import { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
+import { ENTERPRISE_ON_SALE } from '@/lib/stripe-config';
 
 const pct = (p) => `${Math.round(p * 100)}%`;
 const shortDate = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -41,14 +42,20 @@ export default function SellTimeEstimate({ gecko, traitIndex, price = null, medi
         <p className="text-xs text-slate-400 flex items-start gap-1.5">
           <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
           <span>
-            How long geckos like this take to sell, from observed marketplace sales, is part of Enterprise.{' '}
-            <UpgradePlansLink
-              limitType="market_intelligence"
-              surface={surface || 'sell_time'}
-              className="text-amber-300 hover:text-amber-200 font-medium"
-            >
-              See Enterprise
-            </UpgradePlansLink>
+            {ENTERPRISE_ON_SALE ? (
+              <>
+                How long geckos like this take to sell, from observed marketplace sales, is part of Enterprise.{' '}
+                <UpgradePlansLink
+                  limitType="market_intelligence"
+                  surface={surface || 'sell_time'}
+                  className="text-amber-300 hover:text-amber-200 font-medium"
+                >
+                  See Enterprise
+                </UpgradePlansLink>
+              </>
+            ) : (
+              'How long geckos like this take to sell is not open to new members right now.'
+            )}
           </span>
         </p>
       </div>

@@ -444,7 +444,7 @@ export default function MyStore() {
                                 <Crown className="w-4 h-4 text-emerald-400" /> Store pages are a Breeder perk
                             </CardTitle>
                             <CardDescription className="text-slate-300">
-                                Breeder and Enterprise members can publish a dedicated store page on Geck Inspect,
+                                Breeder members can publish a dedicated store page on Geck Inspect,
                                 with a custom URL like <code className="text-emerald-300">geckinspect.com/store/your-name</code>,
                                 a featured stock grid, policies, and one-click links to MorphMarket, PalmStreet, and your socials.
                             </CardDescription>

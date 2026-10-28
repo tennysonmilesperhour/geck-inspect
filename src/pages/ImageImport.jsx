@@ -116,7 +116,7 @@ export default function ImageImport() {
                         <CardContent className="p-6 md:p-8 text-center">
                             <Lock className="w-10 h-10 text-amber-400 mx-auto mb-4" />
                             <p className="text-sm md:text-base text-slate-300">
-                                This feature is included with the Breeder and Enterprise plans.
+                                This feature is included with the Breeder plan.
                             </p>
                             <UpgradePlansButton
                                 limitType="image_import"
