@@ -18,6 +18,7 @@ import {
   USER_EVENT_COLUMNS,
   withoutAdminEvents,
   withoutAdminRows,
+  withOwnerEmails,
 } from '@/lib/adminData';
 import {
   Area,
@@ -190,16 +191,23 @@ export default function AnalyticsDashboard() {
         return [];
       };
       const owned = 'id,created_by,created_date';
-      const [users, geckos, images, posts, comments, plans, messages, events] = await Promise.all([
+      // Photos and forum rows say who owns them by profile id; the email
+      // comes from the profiles list below (signed-in accounts, admins
+      // included, cannot read created_by on those tables).
+      const ownedById = 'id,owner_profile_id,created_date';
+      const [users, geckos, imageRows, postRows, commentRows, plans, messages, events] = await Promise.all([
         fetchAllProfiles('id,email,role,full_name,breeder_name,created_date').catch(orEmpty('profiles')),
         fetchAdminTable('geckos', owned).catch(orEmpty('geckos')),
-        fetchAdminTable('gecko_images', owned).catch(orEmpty('gecko_images')),
-        fetchAdminTable('forum_posts', owned).catch(orEmpty('forum_posts')),
-        fetchAdminTable('forum_comments', owned).catch(orEmpty('forum_comments')),
+        fetchAdminTable('gecko_images', ownedById).catch(orEmpty('gecko_images')),
+        fetchAdminTable('forum_posts', ownedById).catch(orEmpty('forum_posts')),
+        fetchAdminTable('forum_comments', ownedById).catch(orEmpty('forum_comments')),
         fetchAdminTable('breeding_plans', owned).catch(orEmpty('breeding_plans')),
         fetchAdminTable('direct_messages', 'id,sender_email,created_date').catch(orEmpty('direct_messages')),
         fetchAdminTable('user_events', USER_EVENT_COLUMNS, { since: sinceIso }).catch(orEmpty('user_events')),
       ]);
+      const images = withOwnerEmails(imageRows, users);
+      const posts = withOwnerEmails(postRows, users);
+      const comments = withOwnerEmails(commentRows, users);
       const truncated = [users, geckos, images, posts, comments, plans, messages, events].some((rows) => rows.truncated);
       if (truncated) {
         console.warn('Analytics: a table passed the row ceiling, so the numbers are a lower bound.');

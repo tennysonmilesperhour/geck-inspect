@@ -374,11 +374,27 @@ export function applyFilter(query, filterObj) {
   return query;
 }
 
+// Tables where another member's email sits on the row. Members read them
+// with named columns too: the signed-out list, plus approval_status on
+// photos and forum rows (an author sees "Awaiting approval" on their own).
+// src/lib/memberColumns.js lists the result; a test keeps the two in step.
+const APPROVAL = ',approval_status';
+export const MEMBER_COLUMN_EXTRAS = {
+  GeckoImage: APPROVAL, ForumPost: APPROVAL, ForumComment: APPROVAL,
+  ForumLike: '', BreederProfile: '', BreederReview: '', MorphPriceEntry: '',
+};
+
+/** The columns a signed-in member reads (and reads a saved row back with). */
+export function memberReadColumns(entityName) {
+  const extra = MEMBER_COLUMN_EXTRAS[entityName];
+  return extra == null ? '*' : PUBLIC_READ_COLUMNS[entityName] + extra;
+}
+
 /**
  * The select list for a read. Signed-out visitors get an explicit column
- * list on tables whose rows carry the owner's email (see publicColumns.js);
- * everyone else gets every column, except on the few tables where members
- * lose the email columns too.
+ * list on tables whose rows carry the owner's email (see publicColumns.js).
+ * Signed-in members get a named list too on the tables where another
+ * member's email sits on the row, and every column elsewhere.
  */
 export async function readColumns(entityName) {
   if (EVERYONE_READ_COLUMNS[entityName]) return EVERYONE_READ_COLUMNS[entityName];
@@ -386,7 +402,7 @@ export async function readColumns(entityName) {
   if (!publicColumns) return '*';
   const supabase = await getSupabase();
   const { data } = await supabase.auth.getSession();
-  return data?.session ? '*' : publicColumns;
+  return data?.session ? memberReadColumns(entityName) : publicColumns;
 }
 
 function createEntityClient(entityName) {
@@ -481,7 +497,7 @@ function createEntityClient(entityName) {
         supabase
           .from(tableName)
           .insert(insertRecord)
-          .select()
+          .select(memberReadColumns(entityName))
           .single()
       );
       if (error) throw error;
@@ -498,7 +514,7 @@ function createEntityClient(entityName) {
           .from(tableName)
           .update(patch)
           .eq('id', id)
-          .select()
+          .select(memberReadColumns(entityName))
           .single()
       );
       if (error) throw error;
@@ -509,7 +525,7 @@ function createEntityClient(entityName) {
       blockIfGuest('delete records');
       const supabase = await getSupabase();
       const { data, error } = await withAuthRetry(() =>
-        supabase.from(tableName).delete().eq('id', id).select().single()
+        supabase.from(tableName).delete().eq('id', id).select(memberReadColumns(entityName)).single()
       );
       if (error) throw error;
       return data;

@@ -1,4 +1,4 @@
-import { useBlockedAuthors } from '@/hooks/useBlockedAuthors';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import { useEffect, useMemo, useState } from 'react';
 import Seo from '@/components/seo/Seo';
 import { ForumCategory, ForumPost, User } from '@/entities/all';
@@ -53,7 +53,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 const EMPTY_POST = { title: '', content: '', category_id: '', image_urls: [] };
 
 export default function ForumPage() {
-    const blockedAuthors = useBlockedAuthors();
+    // Matched on the author's profile id: members cannot read another
+    // member's created_by (an email address).
+    const blocked = useBlockedMembers();
     const { toast } = useToast();
     // Demo posts are labelled "Sample" on each row, so a guest never takes
     // them for real members.
@@ -138,7 +140,7 @@ export default function ForumPage() {
     };
 
     const filteredPosts = useMemo(() => {
-        let list = posts.filter(post => !blockedAuthors.has(post.created_by));
+        let list = posts.filter(post => !blocked.isBlocked(post));
         if (search.trim()) {
             const q = search.toLowerCase();
             list = list.filter(
@@ -158,7 +160,7 @@ export default function ForumPage() {
             return new Date(b.created_date) - new Date(a.created_date);
         });
         return list;
-    }, [posts, blockedAuthors, search, forumPrefs.sortOrder, forumPrefs.showPinnedFirst]);
+    }, [posts, blocked, search, forumPrefs.sortOrder, forumPrefs.showPinnedFirst]);
 
     if (isLoading) {
         return (

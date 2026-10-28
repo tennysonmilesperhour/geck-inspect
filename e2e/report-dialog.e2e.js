@@ -42,4 +42,12 @@ test('a member can focus and type a report without dismissing its dialog', async
   await report.click();
   await page.getByRole('button', {name:'Close', exact:true}).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  // The signed-in forum page names its columns and never asks for the
+  // author's email (Part E item E1 4); likes come from forum_like_state.
+  const forumReads = fake.calls.filter((c) => c.method === 'GET' && /^\/rest\/v1\/forum_(posts|comments|likes)$/.test(c.path));
+  expect(forumReads.length).toBeGreaterThan(0);
+  for (const read of forumReads) {
+    expect(new URLSearchParams(read.search).get('select')).not.toMatch(/^\*$|created_by|user_email/);
+  }
+  expect(fake.calls.some((c) => c.path === '/rest/v1/rpc/forum_like_state')).toBe(true);
 });

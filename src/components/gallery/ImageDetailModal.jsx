@@ -113,7 +113,6 @@ export default function ImageDetailModal({ data, onClose }) {
                             <ReportContent
                                 targetType="gecko_image"
                                 targetId={image.id}
-                                authorEmail={image.created_by}
                                 authorProfileId={image.owner_profile_id}
                                 excerpt={[image.image_url, image.notes].filter(Boolean).join('\n')}
                             />

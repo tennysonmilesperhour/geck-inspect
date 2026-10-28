@@ -108,6 +108,10 @@ export default function Breeder() {
   // (verify-morphmarket-store). Anyone can read verified rows.
   const [morphmarketSlug, setMorphmarketSlug] = useState(null);
   const [storePolicy, setStorePolicy] = useState('');
+  // The owner's profile id (breeder_page_owner), used to hide a breeder the
+  // visitor blocked and to name the author on a report. The page never
+  // reads the owner's email.
+  const [ownerProfileId, setOwnerProfileId] = useState(null);
   const [inferredGeckos, setInferredGeckos] = useState([]);
   const [uniqueOwners, setUniqueOwners] = useState(0);
   // True once the inferred lookup has finished, so a slug nobody's geckos
@@ -140,6 +144,7 @@ export default function Breeder() {
     setCuratedGeckos([]);
     setWaitlist(null);
     setStoreSettings(DEFAULT_STORE_SETTINGS);
+    setOwnerProfileId(null);
     if (!slug) {
       setMode('inferred');
       return;
@@ -173,6 +178,7 @@ export default function Breeder() {
           // owner's email (signed-out visitors cannot read emails).
           const ownerProf = await loadBreederPageOwner(slug, bp.created_by);
           if (cancelled) return;
+          setOwnerProfileId(ownerProf?.id || null);
           if (ownerProf || bp.user_id) {
             const [{ data: geckos }, { data: revs }, { data: storePage }] = await Promise.all([
               ownerProf?.id
@@ -350,7 +356,7 @@ export default function Breeder() {
 
   const breederUrl = `https://geckinspect.com/Breeder/${slug}`;
   const isCurated = mode === 'curated' && profile;
-  if (isCurated && blocked.isBlocked({ created_by: profile.created_by })) {
+  if (isCurated && blocked.isBlocked({ created_by: profile.created_by, owner_profile_id: ownerProfileId })) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-8">
         <div className="text-center max-w-md space-y-3">
@@ -508,7 +514,7 @@ export default function Breeder() {
               trust={<TrustPanel breederSlug={profile.custom_slug || slug} email={profile.created_by || undefined} variant="full" />}
               reviews={<BreederReviews reviews={reviews} breederUserId={profile.user_id} breederName={displayName} onReviewsChanged={reloadReviews} />} />
             <div className="max-w-5xl mx-auto px-6 py-4">
-              <ReportContent targetType="breeder_page" targetId={profile.id} authorEmail={profile.created_by}
+              <ReportContent targetType="breeder_page" targetId={profile.id} authorProfileId={ownerProfileId || undefined}
                 excerpt={[profile.display_name, profile.bio].filter(Boolean).join('\n')} />
             </div>
           </>

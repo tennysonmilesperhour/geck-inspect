@@ -24,6 +24,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { withOwnerEmailsFetched } from '@/lib/adminData';
 
 /**
  * Content moderation surface, browse and delete user-generated content
@@ -198,8 +199,10 @@ export default function ContentModeration() {
           <TabsContent value="posts" className="mt-5">
             <ModerationList
               entity={ForumPost}
-              loadFn={() => ForumPost.list('-created_date')}
-              searchKeys={['title', 'content', 'created_by']}
+              // The author's email comes from their profile (admins can read
+              // every profile's address), not from the post row.
+              loadFn={() => ForumPost.list('-created_date').then((rows) => withOwnerEmailsFetched(rows))}
+              searchKeys={['title', 'content', 'created_by', 'author_name']}
               emptyText="No forum posts."
               renderItem={(p) => (
                 <>
@@ -208,7 +211,7 @@ export default function ContentModeration() {
                   </p>
                   <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">{p.content}</p>
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[11px] text-slate-500">{p.created_by}</span>
+                    <span className="text-[11px] text-slate-500">{p.created_by || p.author_name || 'Unknown author'}</span>
                     <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(p.created_date)}</span>
                   </div>
@@ -220,14 +223,14 @@ export default function ContentModeration() {
           <TabsContent value="comments" className="mt-5">
             <ModerationList
               entity={ForumComment}
-              loadFn={() => ForumComment.list('-created_date')}
-              searchKeys={['content', 'created_by']}
+              loadFn={() => ForumComment.list('-created_date').then((rows) => withOwnerEmailsFetched(rows))}
+              searchKeys={['content', 'created_by', 'author_name']}
               emptyText="No comments."
               renderItem={(c) => (
                 <>
                   <p className="text-sm text-slate-200 line-clamp-3">{c.content}</p>
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[11px] text-slate-500">{c.created_by}</span>
+                    <span className="text-[11px] text-slate-500">{c.created_by || c.author_name || 'Unknown author'}</span>
                     <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(c.created_date)}</span>
                   </div>
