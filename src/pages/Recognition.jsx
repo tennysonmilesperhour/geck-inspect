@@ -20,9 +20,11 @@ import { buildGeckoDraftFromAnalysis, applyCorrections } from '@/lib/morphIdDraf
 import { captureEvent } from '@/lib/posthog';
 import { upgradePromptShown } from '@/lib/upgradePrompt';
 import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
-import { onPhotoPath } from '@/lib/firstGeckoFlow';
+import { flowEvent, onPhotoPath } from '@/lib/firstGeckoFlow';
+import { grantAiConsent, hasAiConsent } from '@/lib/aiConsent';
 import { warmMorphId } from '@/lib/morphIdWarmup';
 
+import AiConsentPanel from '../components/morph-id/AiConsentPanel';
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
 import MorphIdCoverageCard from '../components/morph-id/MorphIdCoverageCard';
@@ -32,6 +34,7 @@ import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
 import ViewPhotoUploader from '../components/morph-id/ViewPhotoUploader';
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
 import { AGE_STAGES, FIRED_STATES } from '../components/morph-id/morphTaxonomy';
+import { morphHeadline } from '../components/morph-id/morphHeadline';
 import { morphIdErrorSettledQuota, presentMorphIdError } from '@/lib/morphIdErrors';
 import { creditResetWhen } from '@/lib/creditReset';
 
@@ -108,6 +111,13 @@ export default function Recognition() {
   // the server from the answer stored under this key.
   const [analysisKey, setAnalysisKey] = useState(null);
   const resultRef = useRef(null);
+  // The permission step (AiConsentPanel). consentAsk shows it; consentRef
+  // holds the member's yes, a grant for one request key, so a retry of the
+  // same photos does not ask again and new photos do. Nothing is sent to
+  // an AI provider without it, and it is never stored.
+  const [consentAsk, setConsentAsk] = useState(false);
+  const [consentDeclined, setConsentDeclined] = useState(false);
+  const consentRef = useRef(null);
 
   useEffect(() => {
     if (!isAnalyzing) return undefined;
@@ -149,6 +159,13 @@ export default function Recognition() {
   });
   const gate = quotaQuery.data ?? morphIdGate({ isFreeTier });
   const morphIdLocked = gate.locked;
+  // The locked card is for a member who arrives with no scans left. Right
+  // after their last scan the answer is what they came for, so the card
+  // waits while a result (or the scan itself) is on screen; the line under
+  // the result says when the next one arrives. Until 28 Oct 2026 the
+  // scans-left refresh flipped the lock before the answer showed, so every
+  // free member's result sat under a "See plans" card.
+  const showLockedCard = morphIdLocked && !analysis && !isAnalyzing;
   const showFirstFreeBanner = isFreeTier && (
     quotaQuery.isSuccess ? gate.showFirstFreeBanner : !quotaQuery.isError
   );
@@ -156,8 +173,8 @@ export default function Recognition() {
 
   // Funnel: the locked card is an upgrade prompt.
   useEffect(() => {
-    if (morphIdLocked) upgradePromptShown('morph_id', 'morph_id_locked');
-  }, [morphIdLocked]);
+    if (showLockedCard) upgradePromptShown('morph_id', 'morph_id_locked');
+  }, [showLockedCard]);
 
   // Wake the photo-matching model while the member picks photos, so it is
   // not still booting when they tap Identify. Only for a signed-in member
@@ -203,6 +220,9 @@ export default function Recognition() {
     setAnalysisKey(null);
     setIsUploadingPhotos(false);
     requestKeyRef.current = { signature: null, key: null };
+    consentRef.current = null;
+    setConsentAsk(false);
+    setConsentDeclined(false);
   };
 
   // The headline funnel: turn the AI result into a pre-filled new gecko
@@ -229,6 +249,8 @@ export default function Recognition() {
     }
   };
 
+  const requestSignature = () => JSON.stringify([imageUrls, ageStage, firedState]);
+
   const analyze = async () => {
     if (!user || isGuest) {
       setError({ code: 'auth_required', message: 'Please sign in before uploading or analyzing photos.' });
@@ -241,15 +263,33 @@ export default function Recognition() {
     // A second tap before React re-renders the disabled button would
     // start a second paid analysis.
     if (analyzingRef.current) return;
+    const requestKey = requestKeyFor(requestSignature());
+    // Ask first, on the page: nothing goes to an AI provider until the
+    // member says yes for these photos. A retry of the same photos (same
+    // request key) keeps that yes.
+    if (!hasAiConsent(consentRef.current, 'recognize-gecko-morph', requestKey)) {
+      setConsentDeclined(false);
+      if (!consentAsk) {
+        captureEvent('morph_id_consent', { action: 'shown', photo_count: imageUrls.length, first_gecko: firstGeckoPath });
+      }
+      setConsentAsk(true);
+      return;
+    }
     analyzingRef.current = true;
+    setConsentAsk(false);
     setIsAnalyzing(true);
     setError(null);
     setAnalysis(null);
     setMeta(null);
     setCorrected(null);
-    const requestKey = requestKeyFor(JSON.stringify([imageUrls, ageStage, firedState]));
     try {
-      const { data, error: funcError, meta: respMeta } = await recognizeGeckoMorph({ imageUrls, ageStage, firedState, requestKey });
+      const { data, error: funcError, meta: respMeta } = await recognizeGeckoMorph({
+        imageUrls,
+        ageStage,
+        firedState,
+        requestKey,
+        consent: consentRef.current,
+      });
       if (funcError) {
         captureEvent('morph_id_analysis_failed', {
           error_code: funcError.code || 'unknown',
@@ -261,6 +301,9 @@ export default function Recognition() {
           photo_count: imageUrls.length,
           free_tier: isFreeTier,
         });
+        if (firstGeckoPath) {
+          flowEvent('add', 'morph_id_result', { outcome: 'error', error_code: funcError.code || 'unknown' });
+        }
         if (funcError.code === 'morph_id_credits_exhausted') {
           upgradePromptShown('morph_id', 'morph_id_exhausted');
         }
@@ -281,6 +324,14 @@ export default function Recognition() {
           replayed: respMeta?.replayed === true,
           top_morph: data?.primary_morph || null,
         });
+        // The guided first gecko, by photo: one funnel from the choice to
+        // the saved gecko (choose_photo, morph_id_result, shown, saved).
+        if (firstGeckoPath) {
+          flowEvent('add', 'morph_id_result', {
+            outcome: data?.assessment_status === 'insufficient_evidence' ? 'insufficient' : 'success',
+            top_morph: data?.primary_morph || null,
+          });
+        }
         // Refresh before showing the result, so "scans left" and the lock
         // match the scan that just finished (including a refund).
         if (!isAdmin && user?.auth_user_id) await quotaQuery.refetch();
@@ -292,11 +343,75 @@ export default function Recognition() {
       console.error('Analysis error:', err);
       setError({ code: 'internal_error', message: err.message || 'AI analysis failed.' });
       captureEvent('morph_id_result', { outcome: 'error', error_code: 'client_exception', photo_count: imageUrls.length, free_tier: isFreeTier });
+      if (firstGeckoPath) flowEvent('add', 'morph_id_result', { outcome: 'error', error_code: 'client_exception' });
     } finally {
       analyzingRef.current = false;
       setIsAnalyzing(false);
     }
   };
+
+  // "Allow and identify": a yes for exactly these photos and details, then
+  // the identification itself, in one tap.
+  const allowAndIdentify = () => {
+    if (!viewsComplete || isUploadingPhotos || analyzingRef.current) return;
+    consentRef.current = grantAiConsent('recognize-gecko-morph', requestKeyFor(requestSignature()));
+    captureEvent('morph_id_consent', { action: 'allowed', photo_count: imageUrls.length, first_gecko: firstGeckoPath });
+    analyze();
+  };
+
+  // "Not now": nothing is sent and no scan is used. The same morph_id_result
+  // row a cancelled confirm box wrote before 28 Oct 2026, so the funnel
+  // reads the same across the change.
+  const declineConsent = () => {
+    setConsentAsk(false);
+    setConsentDeclined(true);
+    captureEvent('morph_id_consent', { action: 'declined', photo_count: imageUrls.length, first_gecko: firstGeckoPath });
+    captureEvent('morph_id_result', { outcome: 'error', error_code: 'ai_consent_declined', photo_count: imageUrls.length, free_tier: isFreeTier });
+    if (firstGeckoPath) flowEvent('add', 'morph_id_result', { outcome: 'error', error_code: 'ai_consent_declined' });
+  };
+
+  // The analysis with the member's corrections, for the add card's name.
+  const effectiveAnalysis = analysis ? applyCorrections(analysis, corrected) : null;
+  const topMorphName = effectiveAnalysis
+    ? morphHeadline(effectiveAnalysis.primary_morph, effectiveAnalysis.genetic_traits || effectiveAnalysis.genetics || []).name
+    : '';
+  const canAddResult = Boolean(analysis) && analysis.assessment_status !== 'insufficient_evidence';
+  // Arrived from the guided first gecko: the add card leads the result,
+  // since saving it is step 1. Everyone else keeps it after the evidence.
+  const addCardFirst = firstGeckoPath && Boolean(user) && !isGuest;
+
+  const addCard = canAddResult && (addCardFirst ? (
+    <Card className="bg-emerald-950/40 border-emerald-600" data-testid="morph-id-add-card">
+      <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-wider font-semibold text-emerald-300">Your first gecko, step 1 of 3</p>
+          <p className="font-semibold text-emerald-100 mt-1">
+            {topMorphName ? `Add this ${topMorphName} to your collection` : 'Add this gecko to your collection'}
+          </p>
+          <p className="text-sm text-emerald-200/80 mt-1">
+            The photos and the morph are filled in for you. Type a name and step 1 is done. The evidence is below.
+          </p>
+        </div>
+        <Button size="lg" onClick={handleAddToCollection} className="bg-emerald-600 hover:bg-emerald-500 shrink-0">
+          <PlusCircle className="w-5 h-5 mr-2" /> Add to my collection
+        </Button>
+      </CardContent>
+    </Card>
+  ) : (
+    <Card className="bg-emerald-950/30 border-emerald-700" data-testid="morph-id-add-card">
+      <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p className="font-semibold text-emerald-100">Add this gecko to your collection</p>
+          <p className="text-sm text-emerald-200/80 mt-1">
+            We will pre-fill the photos and suggested visual labels. Review every field before saving.
+          </p>
+        </div>
+        <Button size="lg" onClick={handleAddToCollection} className="bg-emerald-600 hover:bg-emerald-500 shrink-0">
+          <PlusCircle className="w-5 h-5 mr-2" /> Add to my collection
+        </Button>
+      </CardContent>
+    </Card>
+  ));
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
@@ -354,7 +469,7 @@ export default function Recognition() {
           <div className="mt-4 space-y-4"><PhotoTipsCard /><MorphIdCoverageCard /></div>
         </details>
 
-        {morphIdLocked && (
+        {showLockedCard && (
           <Card className="bg-amber-950/40 border-amber-800">
             <CardContent className="p-4 md:p-6 flex flex-col items-center text-center gap-3">
               <Lock className="w-6 h-6 text-amber-300" />
@@ -416,6 +531,8 @@ export default function Recognition() {
                   setAnalysis(null);
                   setError(null);
                   setSavedOnce(false);
+                  setConsentAsk(false);
+                  setConsentDeclined(false);
                 }}
               />
               </>
@@ -489,6 +606,13 @@ export default function Recognition() {
                   <p className="text-xs text-slate-500 max-w-xl">
                     These details now travel with the photos and help distinguish age and fire-state effects from morph traits.
                   </p>
+                  {consentAsk && !isAnalyzing ? (
+                    <AiConsentPanel
+                      onAllow={allowAndIdentify}
+                      onDecline={declineConsent}
+                      disabled={isUploadingPhotos || !viewsComplete}
+                    />
+                  ) : (
                   <div className="flex flex-wrap gap-2">
                     <Button
                       size="lg"
@@ -506,6 +630,12 @@ export default function Recognition() {
                       <Camera className="mr-2 h-4 w-4" /> Start over
                     </Button>
                   </div>
+                  )}
+                  {consentDeclined && !consentAsk && (
+                    <p className="text-sm text-slate-300" role="status">
+                      Nothing was sent and no scan was used. Tap Identify morph when you are ready.
+                    </p>
+                  )}
                   <p className="text-xs text-slate-500">
                     {isFreeTier && gate.bonus === 0
                       ? 'Your free identification is used only when we can give you an answer. If the photos are not clear enough, you keep it and can try again with better photos.'
@@ -521,6 +651,8 @@ export default function Recognition() {
         <div ref={resultRef} className="scroll-mt-20" />
 
         {isAnalyzing && <AnalysisProgress seconds={elapsed} />}
+
+        {addCardFirst && addCard}
 
         {error && (() => {
           // Admins get the raw upstream message so they can debug 429s,
@@ -603,6 +735,15 @@ export default function Recognition() {
             That was this month&rsquo;s free identification. The next one arrives {creditResetWhen()}, or Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
           </p>
         )}
+        {/* The locked card waits while a result is on screen, so a paid
+            plan (or extra scans) that just ran out says so here instead. */}
+        {meta && !meta.is_admin && !meta.credit_refunded && gate.known && gate.remaining === 0 && !(isFreeTier && gate.bonus === 0) && (
+          <p className="text-xs text-slate-500 text-center">
+            {isFreeTier
+              ? <>That was your last Morph ID scan for now. Your next free identification arrives {creditResetWhen()}.</>
+              : <>That was your last Morph ID scan this month. Your scans reset {creditResetWhen()}.</>}
+          </p>
+        )}
         {meta && !meta.is_admin && showScansLeft && (
           <p className="text-xs text-slate-500 text-center">
             {morphIdScansLeftLabel(gate.remaining)}
@@ -649,21 +790,7 @@ export default function Recognition() {
           <SimilarGeckosStrip imageUrl={primaryUrl} evidence={analysis.visual_evidence} />
         )}
 
-        {analysis && analysis.assessment_status !== 'insufficient_evidence' && (
-          <Card className="bg-emerald-950/30 border-emerald-700">
-            <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-emerald-100">Add this gecko to your collection</p>
-                <p className="text-sm text-emerald-200/80 mt-1">
-                  We will pre-fill the photos and suggested visual labels. Review every field before saving.
-                </p>
-              </div>
-              <Button size="lg" onClick={handleAddToCollection} className="bg-emerald-600 hover:bg-emerald-500 shrink-0">
-                <PlusCircle className="w-5 h-5 mr-2" /> Add to my collection
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        {!addCardFirst && addCard}
 
         {analysis && primaryUrl && user && !isGuest && (
           <MorphShareCard

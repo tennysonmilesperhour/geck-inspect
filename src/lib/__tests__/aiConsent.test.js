@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { presentMorphIdError } from '../morphIdErrors';
-import { requireAiConsent } from '../aiConsent';
+import { grantAiConsent, hasAiConsent, requireAiConsent } from '../aiConsent';
 import { recognizeGeckoMorph } from '../../functions/recognizeGeckoMorph';
 import { runHealthScreen } from '../healthScreen';
 import { InvokeLLM } from '../invokeLlm';
@@ -50,6 +50,34 @@ describe('AI data sharing permission', () => {
   });
   it('shows cancellation without claiming an analyzer failure', () => {
     expect(presentMorphIdError({ code: 'ai_consent_declined' })).toMatchObject({ title: 'AI request canceled', retryable: false });
+  });
+  it('an in-page yes covers its own feature and request only, and never asks the browser', () => {
+    const grant = grantAiConsent('recognize-gecko-morph', 'key-1');
+    expect(hasAiConsent(grant, 'recognize-gecko-morph', 'key-1')).toBe(true);
+    expect(hasAiConsent(grant, 'recognize-gecko-morph', 'key-2')).toBe(false);
+    expect(hasAiConsent(grant, 'health-screen', 'key-1')).toBe(false);
+    // Only grants made here count, so a look-alike object fails closed.
+    expect(hasAiConsent({ feature: 'recognize-gecko-morph', scope: 'key-1' }, 'recognize-gecko-morph', 'key-1')).toBe(false);
+    expect(() => requireAiConsent('recognize-gecko-morph', { grant, scope: 'key-1' })).not.toThrow();
+    expect(() => requireAiConsent('recognize-gecko-morph', { grant, scope: 'key-2' })).toThrow('Nothing was sent');
+    expect(() => requireAiConsent('recognize-gecko-morph', { grant: null, scope: 'key-1' })).toThrow('Nothing was sent');
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(() => grantAiConsent('unknown', 'key-1')).toThrow('Unknown AI');
+    expect(() => grantAiConsent('recognize-gecko-morph', '')).toThrow();
+  });
+  it('Morph ID with an in-page yes sends only the request it was given for', async () => {
+    supabase.functions.invoke.mockResolvedValue({ data: { analysis: { morph: 'Harlequin' } }, error: null });
+    const grant = grantAiConsent('recognize-gecko-morph', 'key-1');
+    const refused = await recognizeGeckoMorph({ imageUrl: 'https://example.com/gecko.jpg', requestKey: 'key-2', consent: grant });
+    expect(refused.error.code).toBe('ai_consent_declined');
+    const noYes = await recognizeGeckoMorph({ imageUrl: 'https://example.com/gecko.jpg', requestKey: 'key-1', consent: null });
+    expect(noYes.error.code).toBe('ai_consent_declined');
+    expect(supabase.functions.invoke).not.toHaveBeenCalled();
+    const sent = await recognizeGeckoMorph({ imageUrl: 'https://example.com/gecko.jpg', requestKey: 'key-1', consent: grant });
+    expect(sent.data.morph).toBe('Harlequin');
+    expect(supabase.functions.invoke).toHaveBeenCalledTimes(1);
+    // The in-page step replaces the confirm box; it is never shown on top.
+    expect(window.confirm).not.toHaveBeenCalled();
   });
   it('sends the unchanged payload only after approval', async () => {
     window.confirm.mockReturnValue(true);

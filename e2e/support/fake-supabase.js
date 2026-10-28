@@ -172,9 +172,10 @@ function applyOrderAndLimit(rows, params) {
 
 /**
  * Builds the fake. `seed` pre-fills tables, `rpc` adds or replaces RPC
- * handlers (name -> (args, db) => result).
+ * handlers (name -> (args, db) => result), and `functions` answers edge
+ * functions by name (name -> (body, db) => JSON payload).
  */
-export function createFakeSupabase({ seed = {}, rpc = {}, confirmOnPasswordSignIn = true } = {}) {
+export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confirmOnPasswordSignIn = true } = {}) {
   const tables = new Map(Object.entries(seed).map(([name, rows]) => [name, rows.map((r) => ({ ...r }))]));
   const table = (name) => {
     if (!tables.has(name)) tables.set(name, []);
@@ -365,6 +366,7 @@ export function createFakeSupabase({ seed = {}, rpc = {}, confirmOnPasswordSignI
     // ---- Edge functions ----
     if (path.startsWith('/functions/v1/')) {
       const name = path.slice('/functions/v1/'.length);
+      if (functions[name]) return json(await functions[name](body, { table, currentUser: requestUser }));
       if (name === 'send-collection-invite') return json({ delivered: 1 });
       return json({ ok: true });
     }
