@@ -9,7 +9,9 @@ import {
   SCOREBOARD_TARGETS,
   denverToday,
   emailDeliveryTable,
+  entryIsComplete,
   formatUsd,
+  leftOutCounts,
   meetsTarget,
   nextCheckpoint,
   percent,
@@ -21,12 +23,24 @@ import {
 const KIND_LABELS = {
   conversation: 'Breeder conversation',
   import: 'Collection imported',
+  prepaid: 'Prepaid year (Founding Breeder)',
   monthly_cost: 'Monthly cost',
 };
 
 function isMissing(error) {
   const text = `${error?.code || ''} ${error?.message || ''}`;
   return /PGRST202|PGRST205|42883|42P01|could not find|does not exist/i.test(text);
+}
+
+// A database that predates prepaid years refuses the kind with one of the
+// scoreboard_entries checks (Postgres code 23514).
+function isPrepaidRefused(error) {
+  const text = `${error?.code || ''} ${error?.message || ''}`;
+  return /23514|scoreboard_entries_(kind|amount)_check/i.test(text);
+}
+
+function plural(count, one, many = `${one}s`) {
+  return `${count} ${count === 1 ? one : many}`;
 }
 
 function n(v) {
@@ -42,7 +56,11 @@ function n(v) {
  * saying which was which (C15 item 13). Computed numbers come from
  * public.admin_scoreboard(); conversations, imports and cost come from
  * public.scoreboard_entries, which Tennyson fills in with the form below.
- * Both answer admins only (migration 20261015151500_scoreboard.sql).
+ * Both answer admins only (migration 20261015151500_scoreboard.sql). Since
+ * the scoreboard_honest_counts migration the function leaves App Store
+ * sandbox purchases and internal accounts out of every number, says how
+ * many it left out (left_out), and counts the prepaid years recorded in
+ * the form as paying breeders.
  */
 export default function WeeklyScoreboard() {
   const [board, setBoard] = useState(null);
@@ -78,6 +96,7 @@ export default function WeeklyScoreboard() {
   const today = denverToday();
   const next = nextCheckpoint(today);
   const money = useMemo(() => summarizePaidPlans(board?.paid_plans), [board]);
+  const leftOut = useMemo(() => leftOutCounts(board), [board]);
   const manual = useMemo(() => summarizeEntries(entries || [], today), [entries, today]);
 
   if (boardError && isMissing(boardError)) {
@@ -105,7 +124,17 @@ export default function WeeklyScoreboard() {
         <p className="text-sm text-red-300">Could not load the computed numbers: {boardError.message}</p>
       ) : board === null ? (
         <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-slate-400" /></div>
-      ) : null}
+      ) : leftOut.known ? (
+        <p className="text-xs text-slate-400">
+          Left out of every number: you, and {plural(leftOut.internal, 'internal account')} (accounts flagged
+          internal, such as the QA and App Review accounts, and the Morph ID test account).
+        </p>
+      ) : (
+        <p className="text-xs text-amber-200/90">
+          The database is still on the older scoreboard. Until the scoreboard_honest_counts migration is applied,
+          App Store sandbox purchases and internal accounts may be counted here, and prepaid years are not.
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Metric
@@ -128,13 +157,17 @@ export default function WeeklyScoreboard() {
           label="Paying breeders"
           value={board ? money.payingBreeders : null}
           detail={[
-            `${money.payingKeepers} paying keeper${money.payingKeepers === 1 ? '' : 's'} not included`,
+            money.prepaid ? `Includes ${plural(money.prepaid, 'prepaid Founding Breeder year')} recorded below` : null,
+            `${plural(money.payingKeepers, 'paying keeper')} not included`,
             money.compedPayers ? `${money.compedPayers} more pay but also hold a comp, so are left out` : null,
+            leftOut.sandbox
+              ? `${plural(leftOut.sandbox, 'App Store sandbox purchase')} (TestFlight or App Review) left out`
+              : null,
             n(board?.unverified_lifetime)
               ? `${n(board.unverified_lifetime)} lifetime plan${n(board.unverified_lifetime) === 1 ? '' : 's'} with no lifetime payment on record, left out`
               : null,
           ].filter(Boolean).join('. ')}
-          definition="Members on Breeder or Enterprise who pay: a live Stripe subscription (active or past due, not a trial, not grandfathered), a lifetime plan with a lifetime payment on record (an older monthly payment does not count), or an App Store subscription. Anyone with a current comp, and the admin, are left out."
+          definition="Members on Breeder or Enterprise who pay: a live Stripe subscription (active or past due, not a trial, not grandfathered), a lifetime plan with a lifetime payment on record (an older monthly payment does not count), or an App Store subscription bought with real money. App Store sandbox purchases (TestFlight, App Review) still unlock the plan but are not money, so they are left out. A prepaid Founding Breeder year recorded below counts for 12 months from its date, even when the breeder's access comes from a comp. Anyone else with a current comp, the admin and internal accounts are left out."
           targets={SCOREBOARD_TARGETS.payingBreeders}
           next={next}
         />
@@ -144,34 +177,43 @@ export default function WeeklyScoreboard() {
           targetValue={board ? money.mrr : null}
           detail={[
             `From ${money.payingAll} paying member${money.payingAll === 1 ? '' : 's'} on any plan${money.lifetime ? `, ${money.lifetime} of them lifetime` : ''}`,
+            money.prepaid ? `${formatUsd(money.prepaidMrr)} of it from prepaid years` : null,
             money.compedPayers
               ? `Plus ${formatUsd(money.compedMrr)} from ${money.compedPayers} comped payer${money.compedPayers === 1 ? '' : 's'}, which the Revenue card on Overview counts`
               : null,
           ].filter(Boolean).join('. ')}
-          definition="Each paying, non-comped member's plan price per month at today's list prices. Annual plans count a twelfth of the year; lifetime plans count nothing, because they do not recur. Lower than the Revenue card's Monthly recurring whenever a payer also holds a comp, because a comped account is not evidence of a paying breeder."
+          definition="Each paying, non-comped member's plan price per month at today's list prices. Annual plans count a twelfth of the year; a prepaid year counts a twelfth of what was paid, for 12 months from its date; lifetime plans count nothing, because they do not recur. Sandbox purchases and internal accounts add nothing. Lower than the Revenue card's Monthly recurring whenever a payer also holds a comp, because a comped account is not evidence of a paying breeder."
           targets={SCOREBOARD_TARGETS.mrr}
           next={next}
         />
         <Metric
           label="Passports issued"
           value={board ? n(passports.issued) : null}
-          detail={`Plus ${n(passports.issued_admin)} on your own geckos`}
-          definition="Geckos with a passport code, owned by members other than the admin."
+          detail={[
+            `Plus ${n(passports.issued_admin)} on your own geckos`,
+            n(passports.issued_internal) ? `and ${n(passports.issued_internal)} on internal accounts` : null,
+          ].filter(Boolean).join(' ')}
+          definition="Geckos with a passport code, owned by members other than the admin and internal accounts."
           targets={SCOREBOARD_TARGETS.passportsIssued}
           next={next}
         />
         <Metric
           label="Passports claimed"
           value={board ? n(passports.claimed) : null}
-          detail={`${n(passports.claimed_7d)} in the last 7 days. Plus ${n(passports.claimed_admin)} from your own sales`}
-          definition="Transfers a buyer accepted, from a seller other than the admin."
+          detail={[
+            `${n(passports.claimed_7d)} in the last 7 days. Plus ${n(passports.claimed_admin)} from your own sales`,
+            n(passports.claimed_internal)
+              ? `${plural(n(passports.claimed_internal), 'more claim')} with an internal seller or buyer, left out`
+              : null,
+          ].filter(Boolean).join('. ')}
+          definition="Transfers a buyer accepted, where neither the seller nor the buyer is the admin or an internal account."
           targets={SCOREBOARD_TARGETS.passportsClaimed}
           next={next}
         />
         <Metric
           label="Claimers still active 2 weeks on"
           value={board ? n(passports.claimers_active_after_14d) : null}
-          detail={`Out of ${n(passports.claimers_eligible_14d)} buyers who claimed at least 14 days ago (buyers of your own sales left out)`}
+          detail={`Out of ${n(passports.claimers_eligible_14d)} buyers who claimed at least 14 days ago (buyers of your own sales and internal accounts left out)`}
           definition="Buyers who signed in or used the app 14 days or more after their claim."
           targets={SCOREBOARD_TARGETS.claimersActive}
           next={next}
@@ -180,7 +222,7 @@ export default function WeeklyScoreboard() {
           label="Signups, last 7 days"
           value={board ? n(signups.signups_7d) : null}
           detail={`Day-one first gecko: ${n(signups.first_gecko_1d)} of ${n(signups.first_gecko_eligible)} (${percent(signups.first_gecko_1d, signups.first_gecko_eligible)})`}
-          definition="New accounts, admin and the Morph ID test account left out. The first gecko rate uses accounts made 1 to 8 days ago, so each one had a full first day to add a gecko."
+          definition="New accounts, the admin and internal accounts (QA, App Review, the Morph ID test account) left out. The first gecko rate uses accounts made 1 to 8 days ago, so each one had a full first day to add a gecko."
           next={next}
         />
         <Metric
@@ -211,7 +253,7 @@ export default function WeeklyScoreboard() {
                 ))}
               </span>
             ) : null}
-            definition="Members who logged a weigh-in, feeding, shed, vet visit or event on a gecko they own in the last 7 days. Admin left out. This is the E5 number."
+            definition="Members who logged a weigh-in, feeding, shed, vet visit or event on a gecko they own in the last 7 days. The admin and internal accounts left out. This is the E5 number."
             targets={SCOREBOARD_TARGETS.weeklyActiveBreeders}
             next={next}
           />
@@ -219,7 +261,7 @@ export default function WeeklyScoreboard() {
             label="Weekly active members (signed in)"
             value={board ? n(activity.weekly_active_signed_in) : null}
             detail={`Out of ${n(activity.members)} member accounts`}
-            definition="Members who signed in, or used the app while signed in, in the last 7 days. Admin left out. Larger than the number beside it because looking is not logging."
+            definition="Members who signed in, or used the app while signed in, in the last 7 days. The admin and internal accounts left out. Larger than the number beside it because looking is not logging."
             next={next}
           />
         </div>
@@ -356,8 +398,11 @@ export function EntryForm({ onSaved }) {
   const [message, setMessage] = useState(null);
 
   const isCost = kind === 'monthly_cost';
+  const isPrepaid = kind === 'prepaid';
+  const hasBreeder = !isCost;
+  const hasAmount = isCost || isPrepaid;
   const amountNumber = Number(amount);
-  const canSave = !saving && entryDate && (isCost ? amount !== '' && Number.isFinite(amountNumber) && amountNumber >= 0 : true);
+  const canSave = !saving && entryIsComplete({ kind, entryDate, breederName, amount });
 
   async function save(e) {
     e.preventDefault();
@@ -367,14 +412,19 @@ export function EntryForm({ onSaved }) {
     const row = {
       kind,
       entry_date: entryDate,
-      breeder_name: isCost ? null : breederName.trim() || null,
-      amount_usd: isCost ? Math.round(amountNumber * 100) / 100 : null,
+      breeder_name: hasBreeder ? breederName.trim() || null : null,
+      amount_usd: hasAmount ? Math.round(amountNumber * 100) / 100 : null,
       notes: notes.trim() || null,
     };
     const { error } = await supabase.from('scoreboard_entries').insert(row);
     setSaving(false);
     if (error) {
-      setMessage({ tone: 'error', text: `Could not save: ${error.message}` });
+      setMessage({
+        tone: 'error',
+        text: isPrepaid && isPrepaidRefused(error)
+          ? 'Could not save: the database does not take prepaid years yet. The scoreboard_honest_counts migration has not been applied.'
+          : `Could not save: ${error.message}`,
+      });
       return;
     }
     setBreederName('');
@@ -393,29 +443,37 @@ export function EntryForm({ onSaved }) {
           <select className={fieldClass} value={kind} onChange={(e) => setKind(e.target.value)}>
             <option value="conversation">{KIND_LABELS.conversation}</option>
             <option value="import">{KIND_LABELS.import}</option>
+            <option value="prepaid">{KIND_LABELS.prepaid}</option>
             <option value="monthly_cost">{KIND_LABELS.monthly_cost}</option>
           </select>
         </label>
         <label className="text-xs text-slate-400 space-y-1">
-          <span>Date</span>
+          <span>{isPrepaid ? 'Date paid' : 'Date'}</span>
           <Input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} className="bg-slate-900 border-slate-700 text-slate-100" required />
         </label>
-        {isCost ? (
+        {hasBreeder ? (
           <label className="text-xs text-slate-400 space-y-1">
-            <span>Amount in US dollars</span>
-            <Input type="number" min="0" step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className="bg-slate-900 border-slate-700 text-slate-100" required />
+            <span>{isPrepaid ? 'Breeder who paid' : 'Breeder'}</span>
+            <Input value={breederName} maxLength={200} onChange={(e) => setBreederName(e.target.value)} placeholder="Name or business" className="bg-slate-900 border-slate-700 text-slate-100" required={isPrepaid} />
           </label>
-        ) : (
+        ) : null}
+        {hasAmount ? (
           <label className="text-xs text-slate-400 space-y-1">
-            <span>Breeder</span>
-            <Input value={breederName} maxLength={200} onChange={(e) => setBreederName(e.target.value)} placeholder="Name or business" className="bg-slate-900 border-slate-700 text-slate-100" />
+            <span>{isPrepaid ? 'Amount paid for the year, US dollars' : 'Amount in US dollars'}</span>
+            <Input type="number" min={isPrepaid ? '0.01' : '0'} step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className="bg-slate-900 border-slate-700 text-slate-100" required />
           </label>
-        )}
+        ) : null}
         <label className="text-xs text-slate-400 space-y-1">
           <span>Note (optional)</span>
-          <Input value={notes} maxLength={2000} onChange={(e) => setNotes(e.target.value)} placeholder={isCost ? 'What it covers' : 'How it went'} className="bg-slate-900 border-slate-700 text-slate-100" />
+          <Input value={notes} maxLength={2000} onChange={(e) => setNotes(e.target.value)} placeholder={isCost ? 'What it covers' : isPrepaid ? 'How they paid' : 'How it went'} className="bg-slate-900 border-slate-700 text-slate-100" />
         </label>
       </div>
+      {isPrepaid ? (
+        <p className="text-[11px] text-slate-500">
+          For a year paid outside the app, such as a Payment Link. It counts as a paying breeder, and a twelfth of the
+          amount as recurring revenue, for 12 months from the date paid, even though their access comes from a comp.
+        </p>
+      ) : null}
       <div className="flex items-center gap-3">
         <Button type="submit" size="sm" disabled={!canSave}>
           {saving ? <Loader2 className="animate-spin" /> : <Plus />}
@@ -470,7 +528,11 @@ function EntryList({ entries, error, onChanged }) {
               <span className="text-xs text-slate-500 font-mono tabular-nums shrink-0 pt-0.5">{e.entry_date}</span>
               <span className="flex-1 min-w-0">
                 {KIND_LABELS[e.kind] || e.kind}
-                {e.kind === 'monthly_cost' ? `: ${formatUsd(e.amount_usd)}` : e.breeder_name ? `: ${e.breeder_name}` : ''}
+                {e.kind === 'monthly_cost'
+                  ? `: ${formatUsd(e.amount_usd)}`
+                  : e.kind === 'prepaid'
+                    ? `: ${e.breeder_name || 'breeder not named'}, ${formatUsd(e.amount_usd)}`
+                    : e.breeder_name ? `: ${e.breeder_name}` : ''}
                 {e.notes ? <span className="block text-xs text-slate-500 break-words">{e.notes}</span> : null}
               </span>
               {confirmId === e.id ? (

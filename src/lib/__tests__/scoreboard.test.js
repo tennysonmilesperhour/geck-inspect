@@ -3,6 +3,8 @@ import {
   SCOREBOARD_CHECKPOINTS,
   SCOREBOARD_TARGETS,
   denverToday,
+  entryIsComplete,
+  leftOutCounts,
   meetsTarget,
   monthlyValue,
   nextCheckpoint,
@@ -60,6 +62,68 @@ describe('summarizePaidPlans', () => {
 
   it('says the cost tripwire is judged on the Revenue card, not on this figure', () => {
     expect(SCOREBOARD_TARGETS.mrr.day60.note).toContain("Revenue card's Monthly recurring");
+  });
+
+  it('counts a prepaid year as a paying breeder at a twelfth of what was paid, not at the list price', () => {
+    // Two Founding Breeders paid $120 for the year, outside the app: their
+    // access comes from a comp, but the money makes them paying breeders.
+    const s = summarizePaidPlans([
+      { tier: 'breeder', cycle: 'monthly', source: 'stripe', comped: true, n: 1 },
+      { tier: 'breeder', cycle: 'annual', source: 'prepaid', comped: false, n: 2, monthly_usd: 20 },
+    ]);
+    expect(s.payingBreeders).toBe(2);
+    expect(s.prepaid).toBe(2);
+    expect(s.payingAll).toBe(2);
+    // $20 a month (2 x $120 / 12), not 2 x $60 / 12 from the Breeder annual list price.
+    expect(s.mrr).toBeCloseTo(20, 2);
+    expect(s.prepaidMrr).toBeCloseTo(20, 2);
+    expect(s.compedPayers).toBe(1);
+  });
+
+  it('prices a row from the list when it carries no monthly amount of its own', () => {
+    const s = summarizePaidPlans([{ tier: 'breeder', cycle: 'annual', source: 'stripe', comped: false, n: 2, monthly_usd: null }]);
+    expect(s.mrr).toBeCloseTo(2 * (60 / 12), 2);
+    expect(s.prepaid).toBe(0);
+  });
+
+  it('matches production on 28 October 2026: the TestFlight Breeder annual is not a paying breeder', () => {
+    // The old function returned the sandbox purchase as an App Store
+    // Breeder annual payer. The new one leaves it out and says so.
+    const board = {
+      paid_plans: [
+        { tier: 'breeder', cycle: 'monthly', source: 'stripe', comped: true, n: 1 },
+        { tier: 'keeper', cycle: 'monthly', source: 'stripe', comped: false, n: 1 },
+      ],
+      left_out: { sandbox_store: 1, internal_accounts: 5 },
+    };
+    const s = summarizePaidPlans(board.paid_plans);
+    expect(s.payingBreeders).toBe(0);
+    expect(s.mrr).toBeCloseTo(2.99, 2);
+    expect(leftOutCounts(board)).toEqual({ known: true, sandbox: 1, internal: 5 });
+  });
+});
+
+describe('leftOutCounts', () => {
+  it('says when the database function is too old to report what it left out', () => {
+    expect(leftOutCounts({ paid_plans: [] })).toEqual({ known: false, sandbox: 0, internal: 0 });
+    expect(leftOutCounts(null)).toEqual({ known: false, sandbox: 0, internal: 0 });
+    expect(leftOutCounts({ left_out: { sandbox_store: '2', internal_accounts: null } })).toEqual({ known: true, sandbox: 2, internal: 0 });
+  });
+});
+
+describe('entryIsComplete', () => {
+  const day = '2026-10-28';
+  it('needs a breeder and an amount over zero for a prepaid year', () => {
+    expect(entryIsComplete({ kind: 'prepaid', entryDate: day, breederName: 'Crested Co', amount: '120' })).toBe(true);
+    expect(entryIsComplete({ kind: 'prepaid', entryDate: day, breederName: '   ', amount: '120' })).toBe(false);
+    expect(entryIsComplete({ kind: 'prepaid', entryDate: day, breederName: 'Crested Co', amount: '' })).toBe(false);
+    expect(entryIsComplete({ kind: 'prepaid', entryDate: day, breederName: 'Crested Co', amount: '0' })).toBe(false);
+  });
+  it('keeps the other kinds as they were', () => {
+    expect(entryIsComplete({ kind: 'monthly_cost', entryDate: day, amount: '0' })).toBe(true);
+    expect(entryIsComplete({ kind: 'monthly_cost', entryDate: day, amount: '' })).toBe(false);
+    expect(entryIsComplete({ kind: 'conversation', entryDate: day, breederName: '' })).toBe(true);
+    expect(entryIsComplete({ kind: 'import', entryDate: '' })).toBe(false);
   });
 });
 
