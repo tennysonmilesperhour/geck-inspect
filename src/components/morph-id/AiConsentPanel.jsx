@@ -1,10 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-// An absolute address, so the link also opens the policy from the iPhone
-// app, where the page itself is not served from geckinspect.com.
-const PRIVACY_URL = 'https://geckinspect.com/PrivacyPolicy';
 
 /**
  * Morph ID's permission step, on the page, before anything is sent to an
@@ -47,14 +44,15 @@ export default function AiConsentPanel({ onAllow, onDecline, disabled = false })
       </ul>
       <p className="text-xs text-slate-400">
         Nothing is sent until you tap Allow and identify, and we ask again for every new set of photos.{' '}
-        <a
-          href={PRIVACY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+        {/* The in-app route, as the iPhone app's membership screen links
+            it, so the policy opens inside the app instead of sending the
+            member out to Safari in the middle of this step. */}
+        <Link
+          to="/PrivacyPolicy"
           className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
         >
           Privacy Policy, Third-Party Services
-        </a>
+        </Link>
       </p>
       <div className="flex flex-wrap gap-2">
         <Button size="lg" onClick={onAllow} disabled={disabled} className="bg-emerald-600 hover:bg-emerald-700">

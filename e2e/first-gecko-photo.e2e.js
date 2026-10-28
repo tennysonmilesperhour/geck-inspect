@@ -3,8 +3,9 @@
 // and a side photo, says yes on Morph ID's permission step (on the page,
 // not a browser pop-up), gets "Add this gecko" straight under the answer
 // with no plans card on top, and saves the gecko from the short form with
-// one name and "Save and continue". Supabase and Morph ID are the
-// in-browser fake in support/fake-supabase.js.
+// one name and "Save and continue". A second member picks "Add by photo",
+// types the gecko in instead, and a later Morph ID visit is not step 1.
+// Supabase and Morph ID are the in-browser fake in support/fake-supabase.js.
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import { createFakeSupabase } from './support/fake-supabase.js';
@@ -52,7 +53,9 @@ async function addPhoto(page, slot) {
   await (await chooser).setFiles(PHOTO);
 }
 
-test('a new member adds a first gecko by photo with one name and one tap', async ({ context, page }) => {
+// The fake with one free scan, the network kept on the machine, and the
+// first-run tours out of the way.
+async function setUp(context, page) {
   const quota = { remaining: 1 };
   const fake = createFakeSupabase({
     rpc: { morph_id_scans_remaining: () => ({ remaining: quota.remaining, bonus: 0 }) },
@@ -79,24 +82,36 @@ test('a new member adds a first gecko by photo with one name and one tap', async
     localStorage.setItem('geck_inspect_tutorial_seen', '1');
     localStorage.setItem('geck_inspect_role_chosen', '1');
   });
-  const problems = watchConsole(page);
+  return { fake, problems: watchConsole(page) };
+}
+
+// Sign up, then "Add by photo" on the empty My Geckos page, which lands on
+// Morph ID at step 1 of the guided first gecko.
+async function signUpAndChoosePhoto(page) {
+  await page.goto('/AuthPortal?mode=signup');
+  await page.getByLabel('Display name').fill(MEMBER.name);
+  await page.getByLabel('Email').fill(MEMBER.email);
+  await page.getByLabel('Password').fill(MEMBER.password);
+  await page.getByRole('button', { name: 'Create free account' }).click();
+  await page.getByRole('button', { name: 'Back to sign in' }).click();
+  await page.getByLabel('Email').fill(MEMBER.email);
+  await page.getByLabel('Password').fill(MEMBER.password);
+  await page.getByRole('button', { name: 'Sign In', exact: true }).last().click();
+  await expect(page).toHaveURL(/\/(MyGeckos|Today)/);
+  await page.goto('/MyGeckos');
+  await expect(page.getByRole('heading', { name: 'Add your first gecko' })).toBeVisible();
+  await page.getByRole('link', { name: /Add by photo/ }).click();
+  await expect(page).toHaveURL(/\/Recognition/);
+  await expect(page.getByText('Your first gecko, step 1 of 3')).toBeVisible();
+}
+
+const photoPathFlag = (page) => page.evaluate(() => sessionStorage.getItem('geck_first_gecko_photo_path'));
+
+test('a new member adds a first gecko by photo with one name and one tap', async ({ context, page }) => {
+  const { fake, problems } = await setUp(context, page);
 
   await test.step('sign up and land on the first gecko starter', async () => {
-    await page.goto('/AuthPortal?mode=signup');
-    await page.getByLabel('Display name').fill(MEMBER.name);
-    await page.getByLabel('Email').fill(MEMBER.email);
-    await page.getByLabel('Password').fill(MEMBER.password);
-    await page.getByRole('button', { name: 'Create free account' }).click();
-    await page.getByRole('button', { name: 'Back to sign in' }).click();
-    await page.getByLabel('Email').fill(MEMBER.email);
-    await page.getByLabel('Password').fill(MEMBER.password);
-    await page.getByRole('button', { name: 'Sign In', exact: true }).last().click();
-    await expect(page).toHaveURL(/\/(MyGeckos|Today)/);
-    await page.goto('/MyGeckos');
-    await expect(page.getByRole('heading', { name: 'Add your first gecko' })).toBeVisible();
-    await page.getByRole('link', { name: /Add by photo/ }).click();
-    await expect(page).toHaveURL(/\/Recognition/);
-    await expect(page.getByText('Your first gecko, step 1 of 3')).toBeVisible();
+    await signUpAndChoosePhoto(page);
   });
 
   await test.step('photos, then the permission step on the page', async () => {
@@ -111,7 +126,8 @@ test('a new member adds a first gecko by photo with one name and one tap', async
     expect(identified()).toHaveLength(0);
 
     await ask.getByRole('button', { name: /Allow and identify/ }).click();
-    await expect(page.getByText('Add this Lilly White to your collection')).toBeVisible();
+    // Ahead of the evidence, the morph is named as Morph ID's suggestion.
+    await expect(page.getByText('Add this gecko. Morph ID suggests Lilly White')).toBeVisible();
     expect(identified()).toHaveLength(1);
     expect(identified()[0].body.imageUrls).toHaveLength(2);
     // The answer is not covered by the plans card for the scan just used;
@@ -126,6 +142,7 @@ test('a new member adds a first gecko by photo with one name and one tap', async
     const form = page.getByRole('dialog');
     await expect(form.getByText('Name your gecko')).toBeVisible();
     await expect(form.getByText('Lilly White', { exact: true })).toBeVisible();
+    await expect(form.getByText(/A suggestion from the photos, not proven genetics\. You can change it/)).toBeVisible();
     // The name field is the only one to fill, and it has the focus.
     await expect(form.getByLabel('Name')).toBeFocused();
     await expect(form.getByLabel('Weight today (g)')).toHaveCount(0);
@@ -139,8 +156,37 @@ test('a new member adds a first gecko by photo with one name and one tap', async
     expect(geckos[0]).toMatchObject({ name: 'Mango', morphs_traits: 'Lilly White', created_by: MEMBER.email });
     expect(geckos[0].morph_tags).toEqual(expect.arrayContaining(['Lilly White', 'Harlequin']));
     expect(geckos[0].image_urls).toHaveLength(2);
+    // The saved gecko ends the photo path for this tab.
+    expect(await photoPathFlag(page)).toBeNull();
   });
 
   // No browser pop-up, console error or uncaught error on the way.
+  expect(problems).toEqual([]);
+});
+
+test('a member who picks Add by photo and then types the gecko in is not sent back to step 1', async ({ context, page }) => {
+  const { fake, problems } = await setUp(context, page);
+
+  await test.step('choose Add by photo, then go back and type the gecko in', async () => {
+    await signUpAndChoosePhoto(page);
+    expect(await photoPathFlag(page)).toBe('1');
+    await page.goBack();
+    await expect(page.getByRole('heading', { name: 'Add your first gecko' })).toBeVisible();
+    await page.getByRole('button', { name: /Type a name and morph/ }).click();
+    const form = page.getByRole('dialog');
+    await form.getByLabel('Name').fill('Pip');
+    await form.getByRole('button', { name: 'Save and continue' }).click();
+    await expect(page.getByText('Do you know Pip’s parents?')).toBeVisible();
+    expect(fake.table('geckos')).toHaveLength(1);
+    // Any saved first gecko ends the photo path, not only a Morph ID one.
+    expect(await photoPathFlag(page)).toBeNull();
+  });
+
+  await test.step('a later Morph ID visit is plain Morph ID', async () => {
+    await page.goto('/Recognition');
+    await expect(page.getByRole('heading', { name: 'Crested Gecko Morph ID' })).toBeVisible();
+    await expect(page.getByText('Your first gecko, step 1 of 3')).toHaveCount(0);
+  });
+
   expect(problems).toEqual([]);
 });

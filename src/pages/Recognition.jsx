@@ -16,11 +16,12 @@ import PageHeader from '@/components/shared/PageHeader';
 import { tierOf, TIER_LIMITS } from '@/lib/tierLimits';
 import { loadMorphIdQuota, morphIdGate, morphIdScansLeftLabel } from '@/lib/morphIdQuota';
 import { TIER_PRICING } from '@/lib/stripe-config';
-import { buildGeckoDraftFromAnalysis, applyCorrections } from '@/lib/morphIdDraft';
+import { buildGeckoDraftFromAnalysis, applyCorrections, morphNeedsChecking } from '@/lib/morphIdDraft';
 import { captureEvent } from '@/lib/posthog';
 import { upgradePromptShown } from '@/lib/upgradePrompt';
 import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
-import { flowEvent, onPhotoPath } from '@/lib/firstGeckoFlow';
+import { flowEvent, markPhotoPath, onPhotoPath } from '@/lib/firstGeckoFlow';
+import { countLiveGeckos } from '@/lib/liveGeckoCount';
 import { grantAiConsent, hasAiConsent } from '@/lib/aiConsent';
 import { warmMorphId } from '@/lib/morphIdWarmup';
 
@@ -88,8 +89,32 @@ function AnalysisProgress({ seconds }) {
 export default function Recognition() {
   const { user, isGuest, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
-  // Arrived from the guided first gecko's "Add it by photo".
-  const [firstGeckoPath] = useState(() => onPhotoPath() || new URLSearchParams(window.location.search).get('first_gecko') === '1');
+  // Arrived from the guided first gecko's "Add it by photo": the tab's
+  // photo path flag or ?first_gecko=1.
+  const [photoPathMarked] = useState(() => onPhotoPath() || new URLSearchParams(window.location.search).get('first_gecko') === '1');
+  // The flag lasts the whole tab session (in the iPhone app, often the
+  // whole app session), so it counts only while the collection is still
+  // empty, checked once when the page opens. Until that count is in, or if
+  // it fails, the page is not on the first gecko path, so a member with
+  // geckos never sees "step 1 of 3" and the photo path funnel counts only
+  // real first geckos. A collection that is not empty clears the flag.
+  const [liveGeckos, setLiveGeckos] = useState(null);
+  const signedInEmail = user && !isGuest ? user.email : null;
+  useEffect(() => {
+    if (!photoPathMarked || !signedInEmail) return undefined;
+    let cancelled = false;
+    countLiveGeckos(supabase, signedInEmail)
+      .then((count) => {
+        if (cancelled) return;
+        setLiveGeckos(count);
+        if (count > 0) markPhotoPath(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLiveGeckos(null);
+      });
+    return () => { cancelled = true; };
+  }, [photoPathMarked, signedInEmail]);
+  const firstGeckoPath = photoPathMarked && liveGeckos === 0;
   const isAdmin = user?.role === 'admin';
   const [imageUrls, setImageUrls] = useState([]);
   const [ageStage, setAgeStage] = useState('unknown');
@@ -370,6 +395,18 @@ export default function Recognition() {
     if (firstGeckoPath) flowEvent('add', 'morph_id_result', { outcome: 'error', error_code: 'ai_consent_declined' });
   };
 
+  // The line under a result that used the member's last scan. The locked
+  // card waits while a result is on screen, so this says when the next
+  // scan comes. gate.bonus is the extra scans granted and not yet expired,
+  // used or not (morph_id_scans_remaining), so a free member who used the
+  // monthly scan and every extra one reads 0 left with a bonus above 0.
+  const lastScanLine = (() => {
+    if (!meta || meta.is_admin || meta.credit_refunded || !gate.known || gate.remaining !== 0) return null;
+    if (!isFreeTier) return `That was your last Morph ID scan this month. Your scans reset ${creditResetWhen()}.`;
+    if (gate.bonus > 0) return `That was your last Morph ID scan for now. Your next free identification arrives ${creditResetWhen()}.`;
+    return `That was this month’s free identification. The next one arrives ${creditResetWhen()}, or Keeper includes ${TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.`;
+  })();
+
   // The analysis with the member's corrections, for the add card's name.
   const effectiveAnalysis = analysis ? applyCorrections(analysis, corrected) : null;
   const topMorphName = effectiveAnalysis
@@ -379,6 +416,10 @@ export default function Recognition() {
   // Arrived from the guided first gecko: the add card leads the result,
   // since saving it is step 1. Everyone else keeps it after the evidence.
   const addCardFirst = firstGeckoPath && Boolean(user) && !isGuest;
+  // The card comes before the evidence, so it names the morph as Morph
+  // ID's suggestion, never as the gecko's morph, and says so when Morph ID
+  // was unsure (the short form then shows the morph to check).
+  const morphUnsure = canAddResult && morphNeedsChecking(effectiveAnalysis);
 
   const addCard = canAddResult && (addCardFirst ? (
     <Card className="bg-emerald-950/40 border-emerald-600" data-testid="morph-id-add-card">
@@ -386,10 +427,12 @@ export default function Recognition() {
         <div>
           <p className="text-xs uppercase tracking-wider font-semibold text-emerald-300">Your first gecko, step 1 of 3</p>
           <p className="font-semibold text-emerald-100 mt-1">
-            {topMorphName ? `Add this ${topMorphName} to your collection` : 'Add this gecko to your collection'}
+            {topMorphName ? `Add this gecko. Morph ID suggests ${topMorphName}` : 'Add this gecko to your collection'}
           </p>
           <p className="text-sm text-emerald-200/80 mt-1">
-            The photos and the morph are filled in for you. Type a name and step 1 is done. The evidence is below.
+            {morphUnsure
+              ? 'Morph ID was not sure about this one, so check the morph before you save. The evidence is below.'
+              : 'The photos and the suggested morph are filled in, and you can change the morph on the gecko’s record. Type a name and step 1 is done. The evidence is below.'}
           </p>
         </div>
         <Button size="lg" onClick={handleAddToCollection} className="bg-emerald-600 hover:bg-emerald-500 shrink-0">
@@ -443,7 +486,9 @@ export default function Recognition() {
                 Add a top and a side photo and run Morph ID. Then tap &ldquo;Add to my collection&rdquo; and the morph and photos are filled in for you.
               </p>
             </div>
-            <Link to="/MyGeckos?add=1&how=type" className="touch:min-h-11 inline-flex items-center text-sm text-emerald-300 hover:text-emerald-200 underline underline-offset-4 shrink-0">
+            {/* Leaving the photo path: the flag goes, so a later Morph ID
+                visit does not open on step 1 again. */}
+            <Link to="/MyGeckos?add=1&how=type" onClick={() => markPhotoPath(false)} className="touch:min-h-11 inline-flex items-center text-sm text-emerald-300 hover:text-emerald-200 underline underline-offset-4 shrink-0">
               Type it in instead
             </Link>
           </div>
@@ -730,19 +775,8 @@ export default function Recognition() {
               : 'We need clearer photos for this one, so no credit was used. Retake the top and side views and try again.'}
           </p>
         )}
-        {meta && !meta.is_admin && !meta.credit_refunded && isFreeTier && gate.known && gate.remaining === 0 && gate.bonus === 0 && (
-          <p className="text-xs text-slate-500 text-center">
-            That was this month&rsquo;s free identification. The next one arrives {creditResetWhen()}, or Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
-          </p>
-        )}
-        {/* The locked card waits while a result is on screen, so a paid
-            plan (or extra scans) that just ran out says so here instead. */}
-        {meta && !meta.is_admin && !meta.credit_refunded && gate.known && gate.remaining === 0 && !(isFreeTier && gate.bonus === 0) && (
-          <p className="text-xs text-slate-500 text-center">
-            {isFreeTier
-              ? <>That was your last Morph ID scan for now. Your next free identification arrives {creditResetWhen()}.</>
-              : <>That was your last Morph ID scan this month. Your scans reset {creditResetWhen()}.</>}
-          </p>
+        {lastScanLine && (
+          <p className="text-xs text-slate-500 text-center">{lastScanLine}</p>
         )}
         {meta && !meta.is_admin && showScansLeft && (
           <p className="text-xs text-slate-500 text-center">
