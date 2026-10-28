@@ -4,19 +4,21 @@ What Geck Inspect runs on, what it costs, where the secrets live, what is backed
 
 How this was checked: the repository (code, workflows, function source) and read-only queries against the production database on 15 October 2026. Nothing in the Stripe, Vercel, Resend, Anthropic, Replicate, PostHog or RevenueCat dashboards was looked at, so plans and bills from those services are marked **unknown** until Tennyson fills them in. Secret values never go in this file; only their names.
 
+Re-checked on 28 October 2026 (read-only): the Supabase plan, the edge function count, every scheduled job and its last 7 days, the newest migration, the secret names the function code reads, and the backup workflow's last run.
+
 Keep it true: when a service, secret, job or price changes, change this file in the same commit.
 
 ## 1. Services
 
 | Service | What Geck Inspect uses it for | Plan | Monthly cost |
 |---|---|---|---|
-| **Supabase** (project `mmuglfphhwlaluyfyxsp`) | The database (members, geckos, records, market data in `geck_data`), sign-in, photo storage, the edge functions (35 in `supabase/functions`; 33 were deployed on 15 October, and which ones deploy on merge is in `docs/planning/deploy-queue-2026-10-03.md`), scheduled jobs (pg_cron) and the secret store (Vault). Merging to `main` applies new migrations and deploys the functions declared in `supabase/config.toml` (`docs/MIGRATIONS.md`) | **Paid, tier unknown.** Storage holds about 8.2 GB, which is above the Free plan's 1 GB, so it cannot be the Free plan | **Unknown.** Check Billing in the Supabase dashboard |
+| **Supabase** (project `mmuglfphhwlaluyfyxsp`) | The database (members, geckos, records, market data in `geck_data`), sign-in, photo storage, the edge functions (38 folders in `supabase/functions`; on 28 October production ran 37 functions, 33 of them declared in `supabase/config.toml`, and `docs/INFRASTRUCTURE.md` section 2 lists each one), scheduled jobs (pg_cron) and the secret store (Vault). Merging to `main` applies new migrations and deploys the functions declared in `supabase/config.toml` (`docs/MIGRATIONS.md`) | **Pro** (the organization's plan, read on 28 October). Storage held about 12.5 GB on 28 October, mostly market listing photos | **Unknown.** Pro lists at $25 a month before usage. Check Billing in the Supabase dashboard for the real bill |
 | **Vercel** | Hosts geckinspect.com: the app, prerendered pages, `middleware.js`, and four serverless routes in `api/` (`mcp.js`, `share.js`, `og-pairing.js`, and `morph-share.js` for shared Morph ID cards at `/morph-id/r/<id>`). Every push to `main` that changes more than `docs/` and top-level Markdown files deploys production (the `ignoreCommand` in `vercel.json` skips docs-only pushes). A second Vercel project hosts Geck Intellect (geck-data) | **Unknown** | **Unknown** |
 | **Stripe** | Website memberships: checkout, the billing portal, the membership webhook. The supplies store has its own checkout and webhook functions in the repo, but they are not deployed and store checkout is switched off (`src/lib/store/checkoutFlags.js`) | Pay as you go | No monthly fee. About 2.9% plus $0.30 a charge (about 12.9% of a $2.99 charge). Stripe Tax is not turned on in checkout |
 | **RevenueCat** (project `20585b81`) | Store purchases inside the iPhone app; mirrors App Store entitlements into `revenuecat_entitlements` (`docs/BILLING.md`) | **Unknown** | **Unknown** |
 | **Apple Developer Program** | Needed to ship the iPhone app | $99 a year (`docs/native-shell-plan.md`) | About $8 a month, if enrolled (enrolment status not recorded) |
 | **Google Play Console** | Needed to ship the Android app | $25 once | None after sign-up (sign-up status not recorded) |
-| **Resend** | All email: reminders, digests, lifecycle emails, Weekly Gecko Notes, invites, inquiries, guide downloads, waitlist, the weekly reports. Senders seen in code: alerts@, invites@, hi@, system@, admin@ geckinspect.com. Resend reports each email's delivery, opens, clicks, bounces and spam complaints back to the `resend-webhook` function, which records them in `email_deliveries` and stops mail to addresses that hard bounced or complained (`email_suppressions`). That needs the webhook set up in Resend (section 2) | **Unknown** | **Unknown** |
+| **Resend** | All email: reminders, digests, lifecycle emails, Weekly Gecko Notes, invites, inquiries, guide downloads, waitlist, the weekly reports. Senders seen in code: alerts@, invites@, hi@, system@, admin@ geckinspect.com, plus the personal sender in `EMAIL_FROM_PERSONAL` for the letters (section 2). Resend reports each email's delivery, opens, clicks, bounces and spam complaints back to the `resend-webhook` function, which records them in `email_deliveries` and stops mail to addresses that hard bounced or complained (`email_suppressions`). That needs the webhook set up in Resend (section 2) | **Unknown** | **Unknown** |
 | **Anthropic** (Claude API) | Morph ID, health screen, AI Consultant, Promote drafting, spreadsheet and photo import, the weekly changelog, the error-triage agent, Morph ID evaluation | Pay as you go (prepaid credit; it has run out once) | Usage based. Recorded: Morph ID about 3 cents a call; a full evaluation run about $6; the daily canary about 6 cents a day. Evaluation runs cost $23.84 in the 30 days before 14 October against $0.59 of member Morph ID use |
 | **Replicate** | Photo fingerprints (embeddings) that Morph ID uses to find similar reference photos, plus the Morph ID page's warm-up (at most one a minute, a fraction of a cent each; it wakes the model before a member taps Identify, see `supabase/functions/recognize-gecko-morph/README.md`) | Pay as you go | Usage based, small. **Keep the credit at $5 or more.** Under $5, Replicate allows one request at a time, which slows evaluation runs and can make a warm-up and a member's identification wait on each other |
 | **PostHog** | Product analytics (the production build requires its key). Members are identified by account id, never email; EEA and UK visitors are asked first (section 7) | **Unknown** | **Unknown** |
@@ -46,6 +48,7 @@ These are shared by every function in the project.
 | `STRIPE_WEBHOOK_SECRET` | `stripe-webhook`, and `store-stripe-webhook` once it is deployed (it is not today). Both read the same name, so when the store webhook goes live, either both Stripe endpoints share one signing secret or one of the two cannot verify its events. Check in Stripe how many endpoints exist (review, production check 9) |
 | `STRIPE_KEEPER_PRICE_ID`, `STRIPE_BREEDER_PRICE_ID`, `STRIPE_ENTERPRISE_PRICE_ID`, `STRIPE_OVERAGE_PRICE_ID`, `STRIPE_OVERAGE_ENABLED` | Optional price overrides and the paused social-post overage |
 | `RESEND_API_KEY`, `EMAIL_FROM`, `SITE_URL` | `send-email`, `send-collection-invite`, `send-breeder-inquiry`, `subscribe-and-send-guides`, `waitlist-signup` (and `SITE_URL` also in `email-unsubscribe`, `store-checkout`) |
+| `EMAIL_FROM_PERSONAL`, `EMAIL_REPLY_TO` | `send-email`. The personal sender and the reply inbox for the letters: getting-started emails, Weekly Gecko Notes and the re-permission email. Reminders, digests and alerts keep `EMAIL_FROM`. Without `EMAIL_FROM_PERSONAL` the letters fall back to `EMAIL_FROM`; without `EMAIL_REPLY_TO` they carry no Reply-To and the day 0 and day 1 reply questions are left out. Both were set on 24 October (`docs/marketing/email-brain.md`, section 1) |
 | `RESEND_WEBHOOK_SECRET` | `resend-webhook`. The signing secret Resend shows for the webhook endpoint (it starts with `whsec_`). Without it the function refuses every call, so no delivery events are recorded |
 | `EMAIL_POSTAL_ADDRESS`, `UNSUBSCRIBE_MAILTO` | `send-email`. The postal address goes in the email footer (US law expects one in commercial email) and is **required for Weekly Gecko Notes**: while it is empty, send-email skips every weekly note (and uses up nothing). Use a street address, or a registered PO box or mail receiving agency. The mailto address is optional and goes in the List-Unsubscribe header only when a signed unsubscribe link could not be made |
 | `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `HEALTH_SCREEN_MODEL`, `INVOKE_LLM_MODEL` | `recognize-gecko-morph`, `health-screen`, `invoke-llm`, `generate-social-post`, `recognize-import-data`. The three model names are optional overrides; which model each feature uses by default is in section 8 |
@@ -60,7 +63,7 @@ These are shared by every function in the project.
 
 ### Supabase Vault (read by SQL, for the scheduled jobs)
 
-Present on 15 October 2026: `email_unsubscribe_secret`, `notification_service_role_key`.
+Present on 15 October 2026, and still the only two on 28 October: `email_unsubscribe_secret`, `notification_service_role_key`.
 
 To be created by Tennyson (round 2): `morph_share_view_key`, 32 or more random characters. The same value goes in the Vercel setting `MORPH_SHARE_VIEW_KEY` (below), then redeploy production in Vercel (Deployments, the latest production deployment, Redeploy), because a changed setting reaches only new deployments. The database counts a view of a shared Morph ID card only when the share page sends this key, so until both exist and that redeploy is done every card's view count stays 0. The cards themselves work without it.
 
@@ -83,6 +86,7 @@ Almost all are `VITE_` variables, which Vite builds into the public JavaScript. 
 | `RESEND_API_KEY`, `BLOG_REPORT_EMAIL`, `BLOG_FROM_EMAIL` | `weekly-changelog`, `blog-pipeline` (paused) |
 | `GOOGLE_SERVICE_ACCOUNT_JSON`, `GA4_PROPERTY_ID`, `GSC_SITE_URL` | `growth-report` |
 | `PAGESPEED_API_KEY` | `seo-audit` |
+| `SUPABASE_DB_URL`, `BACKUP_PASSPHRASE` | `db-backup` (section 3). **Not set yet:** the runs on 18 and 25 October printed "Database backups are skipped until both secrets SUPABASE_DB_URL and BACKUP_PASSPHRASE are set." and stopped. `SUPABASE_DB_URL` is the Session pooler connection string (port 5432, password filled in) from https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp?showConnect=true. Not the direct `db.` address (GitHub's runners cannot reach it) and not the transaction pooler. `BACKUP_PASSPHRASE` is a long random passphrase that encrypts the dump. Keep a copy of it outside GitHub: without it no backup can be opened. Add both at https://github.com/tennysonmilesperhour/geck-inspect/settings/secrets/actions/new, then press Run workflow on `db-backup`; a real run takes minutes, not seconds, and leaves a `db-backup-<date>` artifact |
 | `GITHUB_TOKEN` | Provided automatically by GitHub |
 
 ### Outside the repository
@@ -97,7 +101,7 @@ Almost all are `VITE_` variables, which Vite builds into the public JavaScript. 
 | What | Backed up? |
 |---|---|
 | Code, migrations, docs | Yes: git and GitHub. Production can be rebuilt from `main` |
-| Database (members, records, `geck_data`) | Supabase's own backups, at whatever the plan includes. **Not confirmed:** the backup tier, how many days are kept, and whether point-in-time recovery is on (review, production check 8). No restore has ever been tried. Database size on 15 October: 361 MB |
+| Database (members, records, `geck_data`) | Supabase's own backups. The plan is Pro (28 October), which includes daily backups kept 7 days. **Not confirmed:** whether point-in-time recovery (a paid add-on) is on (review, production check 8). No restore has ever been tried. Database size: 361 MB on 15 October, 391 MB on 28 October. **A weekly copy off Supabase is built but not running:** the `db-backup` workflow (Sundays 10:00 UTC) pipes `pg_dump` straight into `gpg`, so only the encrypted file is kept, as a 30-day Actions artifact. It skips with a notice until the Actions secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` are both set (section 2); the 18 and 25 October runs skipped |
 | Photos in Storage | **No copy off the platform.** On 15 October: `listing-images` 10,903 files, about 6.7 GB (public); `geck-inspect-media` 817 files, about 1.5 GB (public); `promote-images` empty (public); `archive-listing-images` and `raw-uploads` private and nearly empty. Supabase database backups do not include the files themselves |
 | Edge function secrets, Vault, dashboard settings | No copy. Section 2 lists the names so they can be recreated |
 | A member's own data | Members can export their collection from the app; it is a collection archive, not a full account backup (`docs/launch-repairs-2026-09-06.md`, A13) |
@@ -114,27 +118,28 @@ Plan item E1 11 asks for: the backup tier confirmed and written into `docs/MIGRA
 
 ### Email records and account deletion
 
-Five tables hold email addresses: three from migration `20261015151200_lifecycle_emails.sql` and two from `20261018002200_weekly_notes.sql`. Admins can read them; only the server adds rows.
+Six tables hold email records: three from migration `20261015151200_lifecycle_emails.sql`, two from `20261018002200_weekly_notes.sql` and one from `20261024150000_weekly_notes_personal_and_repermission.sql`. Admins can read them; only the server adds rows.
 
 - `email_deliveries`, one row per email event (sent, delivered, opened, clicked, bounced, complained). It keeps the address only when the address belongs to someone who can sign in (`email_has_login`); events for anyone else are counted with no address.
 - `lifecycle_email_sends`, which getting-started email went to which address, so each one is sent once.
 - `email_suppressions`, addresses that hard bounced or marked our email as spam. Notifications, digests, reminders, lifecycle emails and weekly notes are not sent to them. An admin can delete a row to lift it.
 - `weekly_notes_sends`, which Weekly Gecko Note (by slug, with its step) went to which address and when, so each one is sent once.
 - `weekly_notes_polls`, when the hourly job last asked send-email about each address.
+- `weekly_notes_repermission_sends`, who got the one-time "Still keeping crested geckos?" email and when they pressed keep (`kept_at`), so it goes once per inbox.
 
-Deleting an account (`admin_erase_account`, migration `20261015151600_erase_email_logs.sql`) clears the address and the event detail from that member's `email_deliveries` rows (the counts stay), deletes their `lifecycle_email_sends` rows (and, from `20261018002300_erase_weekly_notes.sql`, their `weekly_notes_sends` and `weekly_notes_polls` rows), and clears any comment they typed when cancelling a subscription. `email_suppressions` is kept on purpose: an address that bounced or complained must never be mailed again, even after the account is gone.
+Deleting an account (`admin_erase_account`, migration `20261015151600_erase_email_logs.sql`) clears the address and the event detail from that member's `email_deliveries` rows (the counts stay), deletes their `lifecycle_email_sends` rows (and, from `20261018002300_erase_weekly_notes.sql`, their `weekly_notes_sends` and `weekly_notes_polls` rows; from `20261024201200`, their `weekly_notes_repermission_sends` rows), and clears any comment they typed when cancelling a subscription. `email_suppressions` is kept on purpose: an address that bounced or complained must never be mailed again, even after the account is gone.
 
 ## 5. Scheduled jobs and bots
 
-### In the database (pg_cron), as found on 15 October 2026
+### In the database (pg_cron), as found on 28 October 2026
 
-Times are UTC. "Last 7 days" is the run history the database keeps (section 3).
+Times are UTC. "Last 7 days" is the run history the database keeps (section 3); on 28 October it ran from 20 October, so a daily job shows 8 runs. 22 jobs, 20 active, and not one failed run in that history.
 
 | Job | When | What it does | Last 7 days |
 |---|---|---|---|
-| `market-after-scrape-requests` | every 5 minutes | Follow-up work after a market scrape | 2,026 ok, 106 failed |
-| `refresh-market-matviews` | hourly at :20 | Rebuilds the market summary views | 74 ok, **104 failed** |
-| `market-brief-morning` | :35 past each hour, 13:00 to 20:00 | The Market page's daily brief | 58 ok |
+| `market-after-scrape-requests` | every 5 minutes | Follow-up work after a market scrape | 2,281 ok |
+| `refresh-market-matviews` | hourly at :20 | Rebuilds the market summary views | 190 ok, 0 failed (104 failed in the week to 15 October) |
+| `market-brief-morning` | :35 past each hour, 13:00 to 20:00 | The Market page's daily brief | 64 ok |
 | `market-value-daily` | 12:40 | Value estimate snapshot | 8 ok |
 | `hatch-alerts-daily` | 13:00 | Hatch window alerts (from round 2: one alert a day per member while an egg is near its date, one every 6 days otherwise) | 8 ok |
 | `feeding-reminders-daily` | 14:10 | Feeding reminders | 8 ok |
@@ -147,12 +152,15 @@ Times are UTC. "Last 7 days" is the run history the database keeps (section 3).
 | `clear-lapsed-featured-breeders` | 04:50 | Removes expired featured breeder slots | 8 ok |
 | `prune-stale-push-subscriptions` | 03:17 | Drops dead web push subscriptions | 7 ok |
 | `purge-cron-run-details` | 03:47 | Deletes job history older than about 7 days | 8 ok |
-| `monthly-overage-billing` | 02:00 on the 1st | Social post overage billing. **Unscheduled by round 3** (`20261016090600_retire_overage_billing.sql`) with Promote retired; it never ran | removed |
 | `process-scheduled-blog-posts` | every 5 minutes | **Inactive** (blog shelved) | |
 | `promote_drain_scheduled` | every 5 minutes | **Inactive** (scheduled social posts) | |
-| `privacy-retention-daily` | 04:05 | `apply_privacy_retention(90)`: deletes `error_logs`, `geck_data.error_logs` and `agent_hits` rows older than 90 days; empties old Stripe, payment ledger and RevenueCat webhook payloads but keeps the rows. **Added by round 3** (`20261016090000_privacy.sql`) | new |
-| `lifecycle-emails-hourly` | :35 past each hour (`35 * * * *`) | The getting-started emails (day 0 to day 14). **Added by round 2.** It sends nothing until `app_settings` `lifecycle_emails_enabled` is true, which waits on Tennyson approving the copy in `docs/planning/lifecycle-emails-2026-10.md` | new |
-| `weekly-notes-hourly` | :50 past each hour (`50 * * * *`) | Weekly Gecko Notes, one short email a week after the first two weeks. **Added 18 October** (`20261018002200_weekly_notes.sql`). On since 18 October (`app_settings` `weekly_notes_enabled` true, `EMAIL_POSTAL_ADDRESS` set); setting the switch to false makes it one lookup an hour (`docs/planning/weekly-notes-2026-10.md`) | new |
+| `privacy-retention-daily` | 04:05 | `apply_privacy_retention(90)`: deletes `error_logs`, `geck_data.error_logs` and `agent_hits` rows older than 90 days; empties old Stripe, payment ledger and RevenueCat webhook payloads but keeps the rows (`20261016090000_privacy.sql`) | 8 ok |
+| `weekly-notes-visitor-cleanup` | 04:25 | `weekly_notes_visitor_cleanup()`: drops visitor sign-ups for Weekly Gecko Notes that were never confirmed after 30 days, and form log rows older than 30 days (`20261018120000_weekly_notes_visitors.sql`) | 8 ok |
+| `lifecycle-emails-hourly` | :35 past each hour (`35 * * * *`) | The getting-started emails (day 0 to day 14). **On since 15:50 UTC on 17 October** (`app_settings` `lifecycle_emails_enabled` true). Setting it to false stops the next run (`docs/planning/lifecycle-emails-2026-10.md`, section 1) | 190 ok |
+| `weekly-notes-hourly` | :50 past each hour (`50 * * * *`) | Weekly Gecko Notes, one short email a week after the first two weeks. **Added 18 October** (`20261018002200_weekly_notes.sql`). On since 18 October (`app_settings` `weekly_notes_enabled` true, `EMAIL_POSTAL_ADDRESS` set); setting the switch to false makes it one lookup an hour (`docs/planning/weekly-notes-2026-10.md`) | 191 ok |
+| `weekly-notes-repermission-hourly` | :55 past each hour (`55 * * * *`) | `enqueue_weekly_notes_repermission()`: the one-time "Still keeping crested geckos?" email to members the weekly notes gate leaves out, 20 a run (`20261024150000_weekly_notes_personal_and_repermission.sql`). On since 18:26 UTC on 24 October (`app_settings` `weekly_notes_repermission_enabled` true); 22 went out on 25 and 26 October (`docs/marketing/email-brain.md`, section 5) | 79 ok (since 24 October) |
+
+`monthly-overage-billing` (social post overage billing) is gone: `20261016090600_retire_overage_billing.sql` unscheduled it on 16 October with Promote retired, and it never ran.
 
 Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no time zone (review C15 item 3). Round 2 also changes what the reminder and digest jobs send (defaults by life stage, `/log` links, nothing for addresses that cannot sign in) without changing their schedules. Re-run the query in section 6 rather than trusting this table.
 
@@ -163,13 +171,14 @@ Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no
 | `ci` | Every push to `main` and every pull request | Lint, typecheck, tests, the same tests at other dates, genetics drift check, full build, size budget (section 7) |
 | `integration` | Every pull request | The Playwright member flow against a fake Supabase in the browser (`member-flow`), and every migration replayed on a fresh Postgres 16 followed by every `supabase/tests/*.sql` (`database`, `scripts/sql-harness/README.md`) |
 | `deploy-watch` | When Vercel reports a failed production deploy | Opens or updates a `ci-failure` issue that emails Tennyson |
-| `daily-canary` | Daily 14:07 | Signs in as the evaluation account, checks the value estimates, runs two real Morph IDs; a failure emails the repo owner |
+| `daily-canary` | Daily 14:07 | Signs in as the evaluation account, checks the value estimates, runs two real Morph IDs; a failure emails the repo owner. Once `20261028015600_market_health_full_pass.sql` lands it also fails while the last full US market pass, or the Price Index's last full US day, is more than 9 days old |
 | `growth-report` | Monday 11:00 | GA4 and Search Console report, committed to `docs/growth-reports/` |
 | `weekly-changelog` | Monday 13:00 | Summarizes the week's commits into the in-app "What's New" (`change_logs`), and emails it when the email secrets are set |
 | `seo-audit-weekly` | Monday 13:00 | Strict SEO audit |
 | `agent-traffic` | Monday 15:20 | Exports AI crawler traffic to `docs/agent-review/` for the agent review session |
 | `seo-audit` | 1st and 15th, 09:00 | SEO audit with PageSpeed, committed to `docs/seo-audits/` |
 | `indexnow-submit` | When `public/sitemap.xml` changes on `main` | Tells Bing and others about new pages |
+| `db-backup` | Sunday 10:00 (GitHub often starts it hours late) | Weekly encrypted database dump, kept 30 days as an Actions artifact (section 3). **Skips with a notice** until the secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` are both set; the 18 and 25 October runs skipped |
 | `morph-id-eval` | By hand only | Grades Morph ID on 220 held-out geckos (about $6) |
 | `error-triage` | By hand only since 15 October | AI triage of logged errors; its nightly schedule was switched off |
 | `blog-pipeline` | By hand only, paused since 15 July | Blog research and publishing (shelved; do not re-enable) |
@@ -178,7 +187,7 @@ Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no
 ### Elsewhere
 
 - A scheduled "Weekly agent review" Claude session on Mondays after `agent-traffic` (`docs/planning/agent-access-2026-10.md`). The review recommends running it monthly.
-- The geck-data scraper (separate repository) that fills `geck_data`. The US full sweep has been blocked since early September; the failing `refresh-market-matviews` runs above are part of the same picture.
+- The geck-data scraper (separate repository) that fills `geck_data`. `refresh-market-matviews` has run clean since 20 October, but the full US pass has stalled: on 28 October the last complete pass was 19 October (0.4% of live listings seen again in 48 hours) and the US Price Index's last full day was 6 October. Since `20261028015600_market_health_full_pass.sql` (applied 28 October), `daily-canary` fails every day until the feed runs again; restarting it is Tennyson's call (`docs/planning/market-habit-2026-09-30.md`).
 
 ## 6. Weekly checklist (Mondays, about 30 minutes)
 
