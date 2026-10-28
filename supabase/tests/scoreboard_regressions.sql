@@ -1,5 +1,8 @@
 -- The weekly scoreboard (admin Funnel card).
--- Regression checks for supabase/migrations/20261015151500_scoreboard.sql.
+-- Regression checks for supabase/migrations/20261015151500_scoreboard.sql,
+-- 20261016090500_revenue_counts.sql and
+-- 20261028020100_scoreboard_honest_counts.sql (section 6: App Store sandbox
+-- purchases, internal accounts and prepaid years).
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members and switches roles the way the API does
@@ -529,6 +532,275 @@ begin
   if (s #>> '{activity,weekly_active_signed_in}')::int <> v_before + 1 then
     raise exception 'FAIL: weekly active signed in went from % to %', v_before, s #>> '{activity,weekly_active_signed_in}';
   end if;
+end
+$t$;
+
+-- 6. Sandbox purchases, internal accounts and prepaid years
+--    (20261028020100_scoreboard_honest_counts.sql) -------------------------
+--
+-- These checks write each failure to _fails and report them together at
+-- the end, so one run against an older function body lists every rule it
+-- breaks instead of stopping at the first.
+
+create temp table _fails (msg text) on commit drop;
+create temp table _snap (k text primary key, s jsonb) on commit drop;
+grant all on _fails, _snap to public;
+
+-- The scoreboard before this section's cast exists.
+do $t$
+begin
+  perform pg_temp.as_member('admin');
+  insert into _snap values ('before', public.admin_scoreboard());
+  perform pg_temp.as_postgres();
+end
+$t$;
+
+select pg_temp.mk('sandbox');   -- App Store Breeder bought in the sandbox (TestFlight): keeps access, never paying
+select pg_temp.mk('qa');        -- flagged internal: pays on Stripe, logs, sells, signs in. Never counted
+select pg_temp.mk('qastr');     -- flagged internal with the string "true", on a real App Store plan: never counted
+select pg_temp.mk('evalpay');   -- the Morph ID test account on a paid plan: never counted as paying
+select pg_temp.mk('qabuyer');   -- internal account that claims a real breeder's transfer
+select pg_temp.mk('rcuser');    -- rows written through apply_revenuecat_event
+
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"internal": true}'::jsonb
+ where email in (pg_temp.who('qa'), pg_temp.who('qabuyer'));
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"internal": "true"}'::jsonb
+ where email = pg_temp.who('qastr');
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"morph_eval": true}'::jsonb
+ where email = pg_temp.who('evalpay');
+
+update public.profiles set membership_tier = 'breeder', membership_billing_cycle = 'monthly',
+       subscription_status = 'active', stripe_subscription_id = 'sub_qa'
+ where email = pg_temp.who('qa');
+update public.profiles set membership_tier = 'breeder', membership_billing_cycle = 'annual',
+       subscription_status = 'active', stripe_subscription_id = 'sub_evalpay'
+ where email = pg_temp.who('evalpay');
+insert into public.revenuecat_entitlements
+  (app_user_id, entitlement_identifier, is_active, period_type, store, product_identifier, expires_at, is_sandbox, updated_at)
+values
+  ((select uid from _who where tag = 'sandbox'), 'breeder', true, 'normal', 'app_store', 'com.geckinspect.breeder.annual', now() + interval '1 day', true, now()),
+  ((select uid from _who where tag = 'qastr'), 'keeper', true, 'normal', 'app_store', 'com.geckinspect.keeper.monthly', now() + interval '20 days', false, now());
+
+-- qa logs a weigh-in on its own gecko, has a passport on it, and signs in.
+select pg_temp.gecko('qa1', 'qa', 'PASS-QA-1');
+insert into public.weight_records (id, gecko_id, weight_grams, record_date, created_by)
+values ('score-w-qa', 'score-gecko-qa1', 41, current_date, pg_temp.who('qa'));
+update auth.users set last_sign_in_at = now() where email in (pg_temp.who('qa'), pg_temp.who('qabuyer'));
+-- payer sells a gecko to qabuyer, and qa sells one to the real buyer, both
+-- 20 days ago, and both buyers come back: neither claim is real use.
+select pg_temp.gecko('payer3', 'payer');
+insert into public.transfer_requests (animal_id, animal_type, from_user_id, to_email, token, status, created_by, claimed_at, expires_at)
+values ('score-gecko-payer3', 'gecko', (select uid from _who where tag = 'payer'), pg_temp.who('qabuyer'), 'score-tok-qa1', 'claimed',
+        pg_temp.who('payer'), now() - interval '20 days', now() + interval '3 days'),
+       ('score-gecko-qa1', 'gecko', (select uid from _who where tag = 'qa'), pg_temp.who('buyer'), 'score-tok-qa2', 'claimed',
+        pg_temp.who('qa'), now() - interval '20 days', now() + interval '3 days');
+
+-- 6a. apply_revenuecat_event stores whether a purchase is a sandbox one.
+do $t$
+declare
+  u uuid := (select uid from _who where tag = 'rcuser');
+  v boolean;
+begin
+  perform pg_temp.as_postgres();
+
+  -- A TestFlight purchase: the webhook says SANDBOX, the row says nothing.
+  perform public.apply_revenuecat_event(
+    '{"event": {"id": "score-rc-1", "type": "INITIAL_PURCHASE", "environment": "SANDBOX"}}'::jsonb,
+    jsonb_build_array(jsonb_build_object('app_user_id', u, 'entitlement_identifier', 'breeder', 'is_active', true,
+      'will_renew', true, 'period_type', 'normal', 'store', 'app_store', 'product_identifier', 'com.geckinspect.breeder.annual',
+      'expires_at', now() + interval '1 day', 'last_event_id', 'score-rc-1', 'last_event_at', now() - interval '10 minutes')));
+  select is_sandbox into v from public.revenuecat_entitlements where app_user_id = u and entitlement_identifier = 'breeder';
+  if v is distinct from true then insert into _fails values ('a SANDBOX webhook did not mark the entitlement as sandbox (got ' || coalesce(v::text, 'null') || ')'); end if;
+  -- Sandbox purchases still unlock the plan, so App Review can test it.
+  if public.effective_tier_for_email(pg_temp.who('rcuser')) <> 'breeder' then
+    insert into _fails values ('a sandbox purchase no longer unlocks Breeder');
+  end if;
+
+  -- A purchase sync carries no environment: the stored flag stays, and a
+  -- row seen for the first time starts as not sandbox.
+  perform public.apply_revenuecat_event(
+    jsonb_build_object('event', jsonb_build_object('id', 'score-rc-2', 'type', 'CUSTOMER_SYNC', 'app_user_id', u)),
+    jsonb_build_array(
+      jsonb_build_object('app_user_id', u, 'entitlement_identifier', 'breeder', 'is_active', true, 'will_renew', true,
+        'store', 'app_store', 'expires_at', now() + interval '1 day', 'last_event_id', 'score-rc-2', 'last_event_at', now() - interval '9 minutes'),
+      jsonb_build_object('app_user_id', u, 'entitlement_identifier', 'keeper', 'is_active', false, 'will_renew', false,
+        'last_event_id', 'score-rc-2', 'last_event_at', now() - interval '9 minutes')));
+  select is_sandbox into v from public.revenuecat_entitlements where app_user_id = u and entitlement_identifier = 'breeder';
+  if v is distinct from true then insert into _fails values ('a purchase sync without an environment cleared the sandbox flag'); end if;
+  select is_sandbox into v from public.revenuecat_entitlements where app_user_id = u and entitlement_identifier = 'keeper';
+  if v is distinct from false then insert into _fails values ('a new row with no environment should start as not sandbox, got ' || coalesce(v::text, 'null')); end if;
+
+  -- A PRODUCTION webhook with no row flag clears it.
+  perform public.apply_revenuecat_event(
+    '{"event": {"id": "score-rc-3", "type": "RENEWAL", "environment": "PRODUCTION"}}'::jsonb,
+    jsonb_build_array(jsonb_build_object('app_user_id', u, 'entitlement_identifier', 'breeder', 'is_active', true, 'will_renew', true,
+      'store', 'app_store', 'expires_at', now() + interval '1 day', 'last_event_id', 'score-rc-3', 'last_event_at', now() - interval '8 minutes')));
+  select is_sandbox into v from public.revenuecat_entitlements where app_user_id = u and entitlement_identifier = 'breeder';
+  if v is distinct from false then insert into _fails values ('a PRODUCTION webhook did not clear the sandbox flag'); end if;
+
+  -- The row's own flag (the purchase in the customer snapshot) wins over
+  -- the event, on a sync and on a webhook.
+  perform public.apply_revenuecat_event(
+    jsonb_build_object('event', jsonb_build_object('id', 'score-rc-4', 'type', 'CUSTOMER_SYNC', 'app_user_id', u)),
+    jsonb_build_array(jsonb_build_object('app_user_id', u, 'entitlement_identifier', 'breeder', 'is_active', true, 'will_renew', true,
+      'store', 'app_store', 'is_sandbox', true, 'expires_at', now() + interval '1 day', 'last_event_id', 'score-rc-4', 'last_event_at', now() - interval '7 minutes')));
+  select is_sandbox into v from public.revenuecat_entitlements where app_user_id = u and entitlement_identifier = 'breeder';
+  if v is distinct from true then insert into _fails values ('a sync row with is_sandbox true was not stored as sandbox'); end if;
+  perform public.apply_revenuecat_event(
+    '{"event": {"id": "score-rc-5", "type": "RENEWAL", "environment": "SANDBOX"}}'::jsonb,
+    jsonb_build_array(jsonb_build_object('app_user_id', u, 'entitlement_identifier', 'breeder', 'is_active', true, 'will_renew', true,
+      'store', 'app_store', 'is_sandbox', false, 'expires_at', now() + interval '1 day', 'last_event_id', 'score-rc-5', 'last_event_at', now() - interval '6 minutes')));
+  select is_sandbox into v from public.revenuecat_entitlements where app_user_id = u and entitlement_identifier = 'breeder';
+  if v is distinct from false then insert into _fails values ('the row''s is_sandbox false did not win over a SANDBOX webhook'); end if;
+
+  -- Back to sandbox, then an older snapshot arrives late: it changes
+  -- nothing, the flag included.
+  perform public.apply_revenuecat_event(
+    '{"event": {"id": "score-rc-6", "type": "RENEWAL", "environment": "sandbox"}}'::jsonb,
+    jsonb_build_array(jsonb_build_object('app_user_id', u, 'entitlement_identifier', 'breeder', 'is_active', true, 'will_renew', true,
+      'store', 'app_store', 'expires_at', now() + interval '1 day', 'last_event_id', 'score-rc-6', 'last_event_at', now() - interval '5 minutes')));
+  perform public.apply_revenuecat_event(
+    '{"event": {"id": "score-rc-7", "type": "RENEWAL", "environment": "PRODUCTION"}}'::jsonb,
+    jsonb_build_array(jsonb_build_object('app_user_id', u, 'entitlement_identifier', 'breeder', 'is_active', true, 'will_renew', true,
+      'store', 'app_store', 'is_sandbox', false, 'expires_at', now() + interval '1 day', 'last_event_id', 'score-rc-7', 'last_event_at', now() - interval '1 hour')));
+  select is_sandbox into v from public.revenuecat_entitlements where app_user_id = u and entitlement_identifier = 'breeder';
+  if v is distinct from true then insert into _fails values ('an older snapshot changed the sandbox flag, or a lower-case environment was not read'); end if;
+end
+$t$;
+
+-- 6b. Prepaid years: what the table accepts.
+do $t$
+declare
+  v_today date := (now() at time zone 'America/Denver')::date;
+  ok boolean;
+begin
+  perform pg_temp.as_member('admin');
+  begin
+    insert into public.scoreboard_entries (kind, breeder_name, amount_usd, entry_date, notes) values
+      ('prepaid', 'Crested Co Founding Breeder', 120, v_today - 30, 'Payment Link'),
+      -- The same breeder again (a top-up), named with other capitals and spaces.
+      ('prepaid', '  crested co founding breeder ', 60, v_today - 10, null),
+      -- Exactly 12 months ago: the year is over.
+      ('prepaid', 'Year Over Geckos', 120, (v_today - interval '12 months')::date, null),
+      -- 12 months ago tomorrow: its last day is today.
+      ('prepaid', 'Last Day Geckos', 120, (v_today - interval '12 months')::date + 1, null),
+      -- Dated next week: not yet.
+      ('prepaid', 'Next Week Geckos', 120, v_today + 7, null);
+  exception when others then
+    insert into _fails values ('the admin could not record prepaid years: ' || sqlerrm);
+  end;
+
+  ok := false;
+  begin
+    insert into public.scoreboard_entries (kind, amount_usd) values ('prepaid', 120);
+  exception when check_violation then ok := true;
+  end;
+  if not ok then insert into _fails values ('a prepaid year without a breeder name was accepted'); end if;
+  ok := false;
+  begin
+    insert into public.scoreboard_entries (kind, breeder_name, amount_usd) values ('prepaid', '   ', 120);
+  exception when check_violation then ok := true;
+  end;
+  if not ok then insert into _fails values ('a prepaid year with a blank breeder name was accepted'); end if;
+  ok := false;
+  begin
+    insert into public.scoreboard_entries (kind, breeder_name) values ('prepaid', 'No Amount Geckos');
+  exception when check_violation then ok := true;
+  end;
+  if not ok then insert into _fails values ('a prepaid year without an amount was accepted'); end if;
+  ok := false;
+  begin
+    insert into public.scoreboard_entries (kind, breeder_name, amount_usd) values ('prepaid', 'Free Year Geckos', 0);
+  exception when check_violation then ok := true;
+  end;
+  if not ok then insert into _fails values ('a prepaid year of $0 was accepted'); end if;
+  perform pg_temp.as_postgres();
+end
+$t$;
+
+-- 6c. Every number leaves the sandbox and internal accounts out and
+--     counts the prepaid years.
+do $t$
+declare
+  s0 jsonb := (select s from _snap where k = 'before');
+  s jsonb;
+  pre jsonb;
+  n integer;
+  n0 integer;
+begin
+  perform pg_temp.as_member('admin');
+  s := public.admin_scoreboard();
+  perform pg_temp.as_postgres();
+
+  -- Paying through Stripe or the App Store: nobody new. qa and evalpay
+  -- pay on Stripe, qastr on the App Store, sandbox and rcuser in the
+  -- sandbox, and none of that is a paying breeder.
+  select coalesce(sum((r ->> 'n')::int), 0) into n from jsonb_array_elements(s -> 'paid_plans') r where r ->> 'source' <> 'prepaid';
+  select coalesce(sum((r ->> 'n')::int), 0) into n0 from jsonb_array_elements(s0 -> 'paid_plans') r where r ->> 'source' <> 'prepaid';
+  if n <> n0 then insert into _fails values (format('sandbox or internal payers counted: Stripe and App Store payers went from %s to %s (%s)', n0, n, s -> 'paid_plans')); end if;
+  select coalesce(sum((r ->> 'n')::int), 0) into n from jsonb_array_elements(s -> 'paid_plans') r
+   where r ->> 'source' = 'app_store' and r ->> 'cycle' = 'annual' and r ->> 'tier' = 'breeder';
+  if n <> 0 then insert into _fails values ('the sandbox Breeder annual counted as an App Store payer'); end if;
+  if public.effective_tier_for_email(pg_temp.who('sandbox')) <> 'breeder' then
+    insert into _fails values ('the sandbox Breeder lost access');
+  end if;
+
+  -- What was left out, for the card.
+  if (s #>> '{left_out,sandbox_store}') is distinct from '2' then
+    insert into _fails values ('left_out.sandbox_store should be 2 (sandbox, rcuser), got ' || coalesce(s #>> '{left_out,sandbox_store}', 'null'));
+  end if;
+  if (s #>> '{left_out,internal_accounts}') is distinct from '4' then
+    insert into _fails values ('left_out.internal_accounts should be 4 (qa, qastr, evalpay, qabuyer), got ' || coalesce(s #>> '{left_out,internal_accounts}', 'null'));
+  end if;
+
+  -- Prepaid: Crested Co (two entries, one breeder) and Last Day Geckos.
+  select r into pre from jsonb_array_elements(s -> 'paid_plans') r where r ->> 'source' = 'prepaid';
+  if pre is null then
+    insert into _fails values ('no prepaid row in paid_plans: ' || (s -> 'paid_plans')::text);
+  else
+    if (pre ->> 'n')::int <> 2 then insert into _fails values ('prepaid breeders should be 2, got ' || pre::text); end if;
+    if (pre ->> 'monthly_usd')::numeric <> 25.00 then insert into _fails values ('prepaid recurring should be (120 + 60 + 120) / 12 = 25.00, got ' || pre::text); end if;
+    if pre ->> 'tier' <> 'breeder' or (pre ->> 'comped')::boolean then insert into _fails values ('a prepaid year should be a non-comped Breeder: ' || pre::text); end if;
+  end if;
+
+  -- Passports: qa's passport and both of this section's claims sit apart.
+  if (s #>> '{passports,issued}')::int <> (s0 #>> '{passports,issued}')::int then
+    insert into _fails values ('an internal account''s passport counted as issued: ' || (s -> 'passports')::text);
+  end if;
+  if (s #>> '{passports,issued_internal}') is distinct from '1' then
+    insert into _fails values ('issued_internal should be 1, got ' || coalesce(s #>> '{passports,issued_internal}', 'null'));
+  end if;
+  if (s #>> '{passports,claimed}')::int <> (s0 #>> '{passports,claimed}')::int
+     or (s #>> '{passports,claimers_eligible_14d}')::int <> (s0 #>> '{passports,claimers_eligible_14d}')::int
+     or (s #>> '{passports,claimers_active_after_14d}')::int <> (s0 #>> '{passports,claimers_active_after_14d}')::int then
+    insert into _fails values ('a claim with an internal seller or buyer counted: before ' || (s0 -> 'passports')::text || ', after ' || (s -> 'passports')::text);
+  end if;
+  if (s #>> '{passports,claimed_internal}') is distinct from '2' then
+    insert into _fails values ('claimed_internal should be 2, got ' || coalesce(s #>> '{passports,claimed_internal}', 'null'));
+  end if;
+
+  -- Activity: qa logged and signed in, qabuyer signed in; neither counts.
+  -- sandbox and rcuser are new members but did nothing.
+  if (s #>> '{activity,weekly_active_breeders}')::int <> (s0 #>> '{activity,weekly_active_breeders}')::int then
+    insert into _fails values ('an internal account counted as a weekly active breeder: ' || (s -> 'activity')::text);
+  end if;
+  if (s #>> '{activity,weekly_active_signed_in}')::int <> (s0 #>> '{activity,weekly_active_signed_in}')::int then
+    insert into _fails values ('an internal account counted as weekly active signed in: ' || (s -> 'activity')::text);
+  end if;
+  if (s #>> '{activity,members}')::int <> (s0 #>> '{activity,members}')::int + 2 then
+    insert into _fails values ('members should grow by 2 (sandbox, rcuser), not by the internal accounts: ' || (s -> 'activity')::text);
+  end if;
+  if (s #>> '{signups,signups_7d}')::int <> (s0 #>> '{signups,signups_7d}')::int + 2 then
+    insert into _fails values ('signups should grow by 2 (sandbox, rcuser), not by the internal accounts: ' || (s -> 'signups')::text);
+  end if;
+end
+$t$;
+
+do $t$
+declare v text;
+begin
+  select string_agg(msg, '; ') into v from _fails;
+  if v is not null then raise exception 'FAIL: %', v; end if;
 end
 $t$;
 
