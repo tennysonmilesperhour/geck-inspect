@@ -1,5 +1,6 @@
 import { act, create } from 'react-test-renderer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { isPageRetired } from '@/lib/retiredPages';
 
 // Shared state the mocks read and write.
 const state = vi.hoisted(() => ({
@@ -255,8 +256,15 @@ describe('the gecko record, for its owner', () => {
     expect(at('Estimated value')).toBeLessThan(at('weights'));
     expect(at('weights')).toBeLessThan(at('passport'));
     expect(at('manage')).toBeLessThan(at('Make a sticker'));
-    expect(order.at(-1)).toBe('Supplies');
-    expect(at('Make a sticker')).toBe(order.length - 2);
+    // The supplies picks show only while the store is live; it was retired
+    // on 16 Oct 2026, so the sticker offer is last.
+    if (isPageRetired('Store')) {
+      expect(order).not.toContain('Supplies');
+      expect(order.at(-1)).toBe('Make a sticker');
+    } else {
+      expect(order.at(-1)).toBe('Supplies');
+      expect(at('Make a sticker')).toBe(order.length - 2);
+    }
   });
 
   it('groups care records together and keeps transfer and housekeeping in sharing', async () => {

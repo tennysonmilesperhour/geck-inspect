@@ -43,6 +43,7 @@ import { getMorphReferenceImages } from '@/lib/geckDataClient';
 import { licenseLabel } from '@/lib/imageLicenses';
 import { fetchMorphCommunityPhotos } from '@/lib/morphPhotoSubmissions';
 import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import ContentSignupPrompt, { possessive } from '@/components/public/ContentSignupPrompt';
@@ -760,9 +761,15 @@ export default function MorphDetail() {
               )}
               {localMorph?.sources?.length > 0 && <div className="mt-4 rounded-xl border border-neutral-800 p-4"><h3 className="text-sm font-semibold text-white">Specimens and breeder references</h3><ul className="mt-2 space-y-2 text-sm">{morphSourceLinks(localMorph.sources).map(({ url, label }) => <li key={url}><a href={url} target="_blank" rel="noreferrer" className="text-emerald-300 underline">{label}</a></li>)}</ul></div>}
               {spectrumPositionFor(slug) !== null && (
-                <Suspense fallback={null}>
-                  <PatternSpectrum key={slug} focusSlug={slug} className="mt-8" />
-                </Suspense>
+                <ErrorBoundary
+                  key={slug}
+                  scope="PatternSpectrum"
+                  fallback={<p className="mt-8 text-sm text-neutral-400">The pattern study could not load. The rest of this page still works.</p>}
+                >
+                  <Suspense fallback={null}>
+                    <PatternSpectrum key={slug} focusSlug={slug} className="mt-8" />
+                  </Suspense>
+                </ErrorBoundary>
               )}
               {/* No "is your gecko one?" check on a super breeders avoid
                   making: lineage, not a photo, says whether one hatched. */}

@@ -17,6 +17,7 @@ import HusbandryHistory from '@/components/gecko/HusbandryHistory';
 import VetRecordsSection from '@/components/gecko/VetRecordsSection';
 import CollectionActivity from '@/components/settings/CollectionActivity';
 import StickerGeckoActions from '@/components/store/StickerGeckoActions';
+import { isPageRetired } from '@/lib/retiredPages';
 import { RecordPhoto } from './RecordPhotos';
 import RecordCard from './RecordCard';
 import { calculatorLink, sectionId } from './recordModel';
@@ -385,11 +386,15 @@ export function BottomOffers({ gecko, canEdit }) {
   return (
     <div className="space-y-4" data-record-offers>
       {canEdit && <StickerGeckoActions gecko={gecko} />}
-      <DeferUntilVisible minHeight={1}>
-        <Suspense fallback={null}>
-          <RecommendedKitForGecko gecko={gecko} />
-        </Suspense>
-      </DeferUntilVisible>
+      {/* The supplies store is retired (src/lib/retiredPages.js); its picks
+          come back with it. */}
+      {!isPageRetired('Store') && (
+        <DeferUntilVisible minHeight={1}>
+          <Suspense fallback={null}>
+            <RecommendedKitForGecko gecko={gecko} />
+          </Suspense>
+        </DeferUntilVisible>
+      )}
     </div>
   );
 }
