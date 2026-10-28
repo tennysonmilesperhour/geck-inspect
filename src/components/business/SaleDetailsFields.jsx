@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { REVENUE_CATEGORIES } from '@/lib/businessLedger';
@@ -29,11 +30,14 @@ export function saleDetailsPatch(details) {
 
 export default function SaleDetailsFields({ value, onChange }) {
   const set = (patch) => onChange({ ...value, ...patch });
+  // Each label names its box, so screen readers (and tests) find them.
+  const id = useId();
   return (
     <div className="grid grid-cols-2 gap-3">
       <div>
-        <Label className="text-xs text-slate-400">Sold for ($)</Label>
+        <Label htmlFor={`${id}-price`} className="text-xs text-slate-400">Sold for ($)</Label>
         <Input
+          id={`${id}-price`}
           type="number"
           step="0.01"
           min="0"
@@ -44,8 +48,9 @@ export default function SaleDetailsFields({ value, onChange }) {
         />
       </div>
       <div>
-        <Label className="text-xs text-slate-400">Sale type</Label>
+        <Label htmlFor={`${id}-type`} className="text-xs text-slate-400">Sale type</Label>
         <select
+          id={`${id}-type`}
           value={value.sale_category}
           onChange={(e) => set({ sale_category: e.target.value })}
           className="w-full h-9 mt-1 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-sm px-2"
@@ -55,8 +60,9 @@ export default function SaleDetailsFields({ value, onChange }) {
         </select>
       </div>
       <div className="col-span-2">
-        <Label className="text-xs text-slate-400">Sale date</Label>
+        <Label htmlFor={`${id}-date`} className="text-xs text-slate-400">Sale date</Label>
         <Input
+          id={`${id}-date`}
           type="date"
           value={value.sale_date}
           onChange={(e) => set({ sale_date: e.target.value })}

@@ -58,8 +58,21 @@ import { useGeckoFilters } from '@/hooks/useGeckoFilters';
 import { retryApiCall } from '@/lib/layoutCache';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { swapToFallback } from '@/lib/imgFallback';
+import { shouldOfferSoldTransfer } from '@/lib/transfers';
+import { isGuestMode } from '@/lib/guestMode';
+import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
+// "Send <name> to the buyer", offered after "Archive as sold". Loaded only
+// then. It is optional, so if its file cannot be downloaded the step is
+// simply skipped and the archive stands.
+const SoldTransferStep = lazyOptional(
+    () => import('../components/transfers/SoldTransferStep'),
+    function SoldStepUnavailable({ onClose }) {
+        useEffect(() => { onClose?.(); }, [onClose]);
+        return null;
+    },
+);
 
 export default function MyGeckosPage() {
     const [geckos, setGeckos] = useState([]);
@@ -123,6 +136,8 @@ export default function MyGeckosPage() {
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     // 'sold' when the dialog was opened by choosing Sold in the gecko form.
     const [archiveDialogReason, setArchiveDialogReason] = useState(null);
+    // The gecko just archived as sold, while "Send <name> to the buyer" shows.
+    const [soldFollowUp, setSoldFollowUp] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
     const [idSettings] = usePageSettings('gecko_id_settings', {
         founderFormat: '{PREFIX}{NUM}-{YY}',
@@ -317,6 +332,7 @@ export default function MyGeckosPage() {
         }
 
         try {
+            const current = geckos.find((g) => g.id === geckoId) || null;
             // Archiving as sold also saves the sold price and sale type
             // (see ArchiveReasonDialog). Unarchiving clears them, since the
             // gecko is back in the collection and no longer counts as a sale.
@@ -334,6 +350,12 @@ export default function MyGeckosPage() {
             setIsDetailModalOpen(false);
             setIsFormOpen(false);
             setSelectedGecko(null);
+
+            // A sale is the moment the buyer can get the gecko's records:
+            // offer the transfer (the owner only; skippable).
+            if (shouldArchive && shouldOfferSoldTransfer({ gecko: current, user, reason, guest: isGuestMode() })) {
+                setSoldFollowUp({ ...current, ...updateData });
+            }
 
             await loadGeckos();
 
@@ -1439,6 +1461,17 @@ export default function MyGeckosPage() {
                     onConfirm={handleArchiveReasonConfirm}
                     onCancel={() => { setArchiveDialogGeckoId(null); setArchiveDialogReason(null); }}
                 />
+
+                {soldFollowUp && (
+                    <React.Suspense fallback={null}>
+                        <SoldTransferStep
+                            key={soldFollowUp.id}
+                            gecko={soldFollowUp}
+                            onClose={() => setSoldFollowUp(null)}
+                            onPassportMade={() => loadGeckos()}
+                        />
+                    </React.Suspense>
+                )}
 
                 {/* Plan Limit Modal */}
                 <PlanLimitModal

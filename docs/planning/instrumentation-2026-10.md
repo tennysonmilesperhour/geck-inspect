@@ -116,3 +116,106 @@ After deploying, check: a normal Morph ID still returns a result and shows the r
 - Events: `src/App.jsx`, `src/lib/AuthContext.jsx`, `src/lib/telemetry.js`, `src/lib/posthog.js`, `src/api/supabaseEntities.js`, `src/pages/MyGeckos.jsx`, `src/components/my-geckos/GeckoForm.jsx`, `src/components/my-geckos/QuickAddGecko.jsx`, `src/components/my-geckos/CSVImportModal.jsx`, `src/lib/hatchEgg.js`, `src/pages/ClaimAnimal.jsx`, `src/pages/ImageImport.jsx`, `src/components/marketplace/MorphMarketSync.jsx`, `src/components/subscription/PlanLimitChecker.jsx`, `src/pages/Membership.jsx`, `src/pages/Recognition.jsx`.
 - Admin: `src/lib/adminData.js`, `src/components/admin/AdminOverview.jsx`, `src/components/admin/AnalyticsDashboard.jsx`, `src/components/admin/ProductAnalytics.jsx` (also a new Activation funnel: signed up, first gecko, first husbandry log).
 - Morph ID: `supabase/functions/recognize-gecko-morph/index.ts`, `src/functions/recognizeGeckoMorph.js`, `src/pages/Recognition.jsx`.
+
+## Passports and transfers (added 28 October 2026)
+
+The distribution loop in `growth-plan-2026-10.md` (every gecko a breeder sells carries Geck Inspect to the buyer) had no events of its own: only page views showed that a passport was opened. These events measure each step, from the passport to the buyer's claim. They go through `captureEvent` like every other event (so they land in `public.user_events` and in PostHog when it is on, admin events marked `is_admin`). `user_events` takes any event name (its insert rule is `with check (true)` and the only trigger stamps the caller's email), so no migration is needed.
+
+None of them carries personal data: no email, name, passport code, token, price or message. The `page` column already says which passport was opened (claim tokens are redacted from it, see `src/lib/ga.js`).
+
+| Event | When | Properties |
+|---|---|---|
+| `passport_created` | A passport is made (`src/lib/makePassport.js`, used by the gecko record and the sold step) | `surface`: `record` or `sold_step`; `was_public` (the gecko was already public before) |
+| `passport_card_downloaded` | Download PNG on the passport QR page (`src/pages/PassportQR.jsx`) | `format`: `png` |
+| `passport_card_printed` | Print QR Sticker on the same page (counts presses, not printed sheets) | `surface`: `qr_page` |
+| `passport_viewed` | A passport page answers, once per passport and visitor while it is open (`src/pages/AnimalPassport.jsx`) | `state`: `shown`, `private` or `not_found`; `signed_in`; `is_owner`; `for_sale` (on `shown`) |
+| `passport_transfer_requested` | A buyer presses "Ask the owner to transfer this gecko to me" (`src/lib/transfers.js`, `requestPassportTransfer`) | `outcome`: `sent`, `already_requested`, `unavailable`, `failed`, or `sign_in_needed` (signed out, sent to sign in) |
+| `sold_transfer_step` | The step after "Archive as sold" (My Geckos, the form's Sold status, the record's Sold action) and after "Mark sold" on Sell Geckos | `action`: `shown`, `skipped` or `send`; `has_passport`; `has_price` |
+| `transfer_started` | A transfer link is made (`startTransfer` in `src/lib/transfers.js`) | `method`: `link` or `email`; `has_price`; `animal_type`; `surface`: `record`, `request` (opened from a buyer's request) or `sold_step`; `emailed` (email transfers) |
+| `claim_viewed` | A claim link answers, once per account and answer while it is open (`src/pages/ClaimAnimal.jsx`) | `state`: `open`, `claimed_by_you`, `already_claimed`, `cancelled`, `expired`, `not_found` or `error`; `signed_in`; `claim_mode`; `authorized` |
+
+A finished claim is the existing `gecko_added` event with `source: claim` (recorded by the claim page since 5 October), so there is no separate `claim_completed`. A signup that began on a passport or claim link is credited by the existing first touch: `entry` is `passport` or `claim` (`src/lib/attribution.js`), copied to `profiles.extra_data.first_touch` and onto `signup_completed` as `ft_entry`.
+
+### The step after "Archive as sold"
+
+When the owner archives a gecko as sold, a skippable step follows: "Send Mango to the buyer". "Send to the buyer" opens the usual transfer form with the sold price already in the price box (the sold price, else the asking price). That price matters: when the buyer accepts, the gecko row and its sold price move to them, so the transfer's price is the only record of the sale left in the seller's Business Tools. If the gecko has no passport, the step and the form both say that sending makes one and turns on Public display, so its passport page becomes public; the passport is made only when the member presses send, just before the transfer. Only the owner sees the step (the database refuses a transfer from anyone else), never in the guest demo, and only for geckos. Code: `src/components/transfers/SoldTransferStep.jsx`, wired in `src/pages/MyGeckos.jsx` and `src/pages/MarketplaceSell.jsx`.
+
+### The funnel query
+
+Read only; paste into the Supabase SQL editor. One row per week (Monday, Denver time, the same weeks as the Funnel card), last 12 weeks. Events from admin accounts, events marked `is_admin` and every event in a browser session that ever carried one are left out, the rule Product Analytics uses. The last three columns come from the tables, not from events, so they are right even for weeks before these events existed.
+
+```sql
+with admin_emails as (
+  select lower(p.email) as email from public.profiles p
+  where p.role = 'admin' and p.email is not null
+),
+admin_sessions as (
+  select distinct e.session_id from public.user_events e
+  where e.created_date >= now() - interval '13 weeks'
+    and e.session_id is not null
+    and (coalesce(e.properties->>'is_admin', 'false') = 'true'
+         or lower(coalesce(e.user_email, '')) in (select email from admin_emails))
+),
+ev as (
+  select date_trunc('week', e.created_date at time zone 'America/Denver')::date as week,
+         e.event_name, e.properties, e.session_id
+  from public.user_events e
+  where e.created_date >= now() - interval '12 weeks'
+    and e.event_name in ('passport_created', 'passport_card_downloaded', 'passport_card_printed',
+      'passport_viewed', 'passport_transfer_requested', 'sold_transfer_step', 'transfer_started',
+      'claim_viewed', 'gecko_added')
+    and coalesce(e.properties->>'is_admin', 'false') <> 'true'
+    and lower(coalesce(e.user_email, '')) not in (select email from admin_emails)
+    and (e.session_id is null or e.session_id not in (select session_id from admin_sessions))
+),
+events as (
+  select week,
+    count(*) filter (where event_name = 'passport_created') as passports_made,
+    count(*) filter (where event_name in ('passport_card_downloaded', 'passport_card_printed')) as cards_made,
+    count(distinct session_id) filter (where event_name = 'passport_viewed'
+      and properties->>'state' = 'shown' and properties->>'is_owner' = 'false') as passport_visits,
+    count(*) filter (where event_name = 'passport_transfer_requested'
+      and properties->>'outcome' in ('sent', 'sign_in_needed')) as transfer_asks,
+    count(*) filter (where event_name = 'sold_transfer_step' and properties->>'action' = 'shown') as sold_offers,
+    count(*) filter (where event_name = 'sold_transfer_step' and properties->>'action' = 'send') as sold_send_taps,
+    count(*) filter (where event_name = 'transfer_started') as transfers_started,
+    count(*) filter (where event_name = 'transfer_started' and properties->>'surface' = 'sold_step') as from_sold_step,
+    count(distinct session_id) filter (where event_name = 'claim_viewed' and properties->>'state' = 'open') as claim_visits,
+    count(*) filter (where event_name = 'gecko_added' and properties->>'source' = 'claim') as claims_in_app
+  from ev group by week
+),
+truth as (
+  select week,
+    sum(made) as transfers_made, sum(claimed) as transfers_claimed, sum(signups) as signups_from_passport_or_claim
+  from (
+    select date_trunc('week', t.created_date at time zone 'America/Denver')::date as week, 1 as made, 0 as claimed, 0 as signups
+    from public.transfer_requests t
+    where t.created_date >= now() - interval '12 weeks'
+      and lower(coalesce(t.created_by, '')) not in (select email from admin_emails)
+    union all
+    select date_trunc('week', t.claimed_at at time zone 'America/Denver')::date, 0, 1, 0
+    from public.transfer_requests t
+    where t.status = 'claimed' and t.claimed_at >= now() - interval '12 weeks'
+      and lower(coalesce(t.created_by, '')) not in (select email from admin_emails)
+    union all
+    select date_trunc('week', p.created_date at time zone 'America/Denver')::date, 0, 0, 1
+    from public.profiles p
+    where p.created_date >= now() - interval '12 weeks'
+      and coalesce(p.role, 'user') <> 'admin'
+      and p.extra_data->'first_touch'->>'entry' in ('passport', 'claim')
+  ) x group by week
+)
+select coalesce(e.week, t.week) as week, e.passports_made, e.cards_made, e.passport_visits, e.transfer_asks,
+  e.sold_offers, e.sold_send_taps, e.transfers_started, e.from_sold_step, e.claim_visits, e.claims_in_app,
+  t.transfers_made, t.transfers_claimed, t.signups_from_passport_or_claim
+from events e full join truth t on t.week = e.week
+order by week desc;
+```
+
+How to read it, in loop order: passports made and cards made (the seller's side), passport visits by people who do not own the gecko and their transfer asks (the buyer finds the gecko), sold offers, taps on send and transfers started from the sold step (the new step at work), claim visits on open links, and claims. `transfers_made`, `transfers_claimed` and `signups_from_passport_or_claim` are the ground truth from `transfer_requests` and `profiles`; the scoreboard's passports issued and claimed (`admin_scoreboard()`) count the same tables. Run on 28 October before release: every event column is 0 (the events did not exist), and every table column is empty, because all 3 claimed transfers so far are sales by the admin account.
+
+Visits are counted by browser session, not by account: a buyer who opens a claim link signed out, creates an account and comes back counts once per session. The seller's columns and the buyer's columns are different people, so this is a count per step, not a per-person funnel.
+
+**In PostHog** (when `VITE_POSTHOG_KEY` is set), the seller's side is a per-person funnel: `sold_transfer_step` where `action = shown`, then `sold_transfer_step` where `action = send`, then `transfer_started` where `surface = sold_step`, within one day. The buyer's side: `passport_viewed` where `state = shown` and `is_owner = false`, then `passport_transfer_requested`, then `signup_completed`, then `gecko_added` where `source = claim`, within 14 days.
+
+**Not counted:** QR codes on rack labels, expo tags and the buyer packet (Printable Worksheets and the record's papers), and anything printed with the browser's own print command.

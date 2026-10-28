@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import MorphPriceIndex from '@/components/innovations/MorphPriceIndex';
 import { Gecko, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
@@ -47,6 +47,19 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { createPageUrl } from '@/utils';
 import { UNLISTED_STATUSES, statusAfterUnlist, unlistPatch } from '@/lib/unlist';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { shouldOfferSoldTransfer } from '@/lib/transfers';
+import { isGuestMode } from '@/lib/guestMode';
+import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
+
+// "Send <name> to the buyer" after Mark sold, the same step My Geckos shows
+// after "Archive as sold". Optional: if it cannot load, the sale stands.
+const SoldTransferStep = lazyOptional(
+  () => import('@/components/transfers/SoldTransferStep'),
+  function SoldStepUnavailable({ onClose }) {
+    useEffect(() => { onClose?.(); }, [onClose]);
+    return null;
+  },
+);
 
 /**
  * MarketplaceSell, April 2026 professional classifieds-style redesign.
@@ -500,6 +513,8 @@ export default function MarketplaceSellPage() {
   const [soldTarget, setSoldTarget] = useState(null);
   const [soldDetails, setSoldDetails] = useState(() => initialSaleDetails(null));
   const [isMarkingSold, setIsMarkingSold] = useState(false);
+  // The gecko just marked sold, while "Send <name> to the buyer" shows.
+  const [soldFollowUp, setSoldFollowUp] = useState(null);
 
   const handleMarkSold = (gecko) => {
     setSoldDetails(initialSaleDetails(gecko, saleCategoryFor(gecko, bredInHouseIds({ geckos: allGeckos })) || ''));
@@ -522,6 +537,9 @@ export default function MarketplaceSellPage() {
       setAllGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, ...patch } : g)));
       setSoldTarget(null);
       toast({ title: 'Marked as sold' });
+      if (shouldOfferSoldTransfer({ gecko, user, reason: 'sold', guest: isGuestMode() })) {
+        setSoldFollowUp({ ...gecko, ...patch });
+      }
     } catch (err) {
       toast({ title: 'Failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -1082,6 +1100,19 @@ export default function MarketplaceSellPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {soldFollowUp && (
+        <Suspense fallback={null}>
+          <SoldTransferStep
+            key={soldFollowUp.id}
+            gecko={soldFollowUp}
+            onClose={() => setSoldFollowUp(null)}
+            onPassportMade={(fields) => {
+              setAllGeckos((prev) => prev.map((g) => (g.id === soldFollowUp.id ? { ...g, ...fields } : g)));
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
