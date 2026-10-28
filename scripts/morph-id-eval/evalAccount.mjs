@@ -6,7 +6,8 @@
 // flag to skip credit use for this account. It grants nothing else: not
 // admin, not a tier. Sign-in needs no password: the service role asks for a
 // one-time sign-in link and exchanges it for a session on the spot. No email
-// is sent.
+// is sent. Its address has no mailbox, so the account keeps every email
+// switch off (ensureEvalAccount sets them on each run).
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -29,6 +30,17 @@ export function evalAccount({ supabaseUrl, serviceKey, anonKey, email = 'morph-e
     return null;
   }
 
+  // Weekly Gecko Notes and notification emails to this address only bounce
+  // (26 Oct 2026: hours of retries, then a bounce). A failure here is
+  // reported and does not stop the test.
+  async function keepEmailOff() {
+    const { error } = await admin
+      .from('profiles')
+      .update({ email_weekly_notes_enabled: false, email_notifications_enabled: false })
+      .ilike('email', EVAL_EMAIL);
+    if (error) console.error(`Could not turn off email for ${EVAL_EMAIL}: ${error.message}`);
+  }
+
   async function ensureEvalAccount() {
     const existing = await findUser(EVAL_EMAIL);
     if (existing) {
@@ -36,16 +48,19 @@ export function evalAccount({ supabaseUrl, serviceKey, anonKey, email = 'morph-e
       if (existing.app_metadata?.morph_eval !== true) {
         throw new Error(`${EVAL_EMAIL} already exists without the evaluation flag. Refusing to use it.`);
       }
+      await keepEmailOff();
       return existing;
     }
     const { data, error } = await admin.auth.admin.createUser({
       email: EVAL_EMAIL,
       email_confirm: true,
       app_metadata: { morph_eval: true },
-      user_metadata: { full_name: 'Morph ID evaluation (internal)' },
+      // The sign-up box answer the new profile reads: no Weekly Gecko Notes.
+      user_metadata: { full_name: 'Morph ID evaluation (internal)', weekly_notes_at_signup: false },
     });
     if (error) throw new Error(`Could not create the evaluation account: ${error.message}`);
     console.error(`Created evaluation account ${EVAL_EMAIL}.`);
+    await keepEmailOff();
     return data.user;
   }
 
