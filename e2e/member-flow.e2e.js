@@ -201,4 +201,18 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
   // The whole run, from the sign-up form to the transfer, logged nothing
   // to the console as an error and threw nothing uncaught.
   expect(problems).toEqual([]);
+
+  // After the console check, because requests fail with no signal.
+  await test.step('with no signal the signed-in member sees the offline badge', async () => {
+    // The badge loads after sign-in, not with the startup script
+    // (src/components/shared/MemberOfflineSync.jsx).
+    // Close the transfer window first; while it is open the rest of the
+    // page is hidden from screen readers, the badge included.
+    await page.getByRole('dialog', { name: 'Transfer started' }).getByRole('button', { name: 'Done' }).click();
+    const badge = page.getByRole('status').filter({ hasText: /^Offline$/ });
+    await context.setOffline(true);
+    await expect(badge).toBeVisible();
+    await context.setOffline(false);
+    await expect(badge).toHaveCount(0);
+  });
 });
