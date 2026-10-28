@@ -20,6 +20,7 @@ const state = vi.hoisted(() => ({
   failCreate: false,
   loaded: { certificates: false, packet: false },
   certificateCalls: [],
+  captured: [],
 }));
 
 // Plain stand-ins for the UI kit: Radix needs a browser, and these keep
@@ -50,6 +51,7 @@ vi.mock('@/components/ui/use-toast', () => ({ toast: (t) => state.toasts.push(t)
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={typeof to === 'string' ? to : to?.pathname}>{children}</a> }));
 vi.mock('@/api/appClient', () => ({ api: { auth: { redirectToLogin: vi.fn() } } }));
 vi.mock('@/lib/guestMode', () => ({ isGuestMode: () => false }));
+vi.mock('@/lib/posthog', () => ({ captureEvent: (name, props) => state.captured.push([name, props]) }));
 
 // Pieces with their own data or tests: stubs that show they are there.
 const stub = vi.hoisted(() => (label) => () => ({
@@ -227,6 +229,7 @@ beforeEach(() => {
   state.deleted.length = 0;
   state.failCreate = false;
   state.certificateCalls.length = 0;
+  state.captured.length = 0;
 });
 
 describe('the gecko record, for its owner', () => {
@@ -359,6 +362,8 @@ describe('the gecko record, for its owner', () => {
     expect(update[2].passport_code).toMatch(/\S/);
     expect(onUpdate).toHaveBeenCalled();
     expect(textOf(tree)).toContain('View passport');
+    // Counted for the passport funnel, with no code or name.
+    expect(state.captured).toContainEqual(['passport_created', { surface: 'record', was_public: true }]);
   });
 
   it('shows the owner transfer, archive and edit, and delete once archived', async () => {

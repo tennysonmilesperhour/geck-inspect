@@ -181,6 +181,19 @@ const EVENT_REFERENCE = [
     ],
   },
   {
+    category: 'Passports and transfers',
+    events: [
+      { name: 'passport_created', what: 'A passport was made; surface record (Make a passport) or sold_step (sent from the step after Archive as sold).' },
+      { name: 'passport_card_downloaded', what: 'The QR card was downloaded as a picture from the passport QR page.' },
+      { name: 'passport_card_printed', what: 'Print was pressed on the passport QR page.' },
+      { name: 'passport_viewed', what: 'A passport page opened; state shown, private or not_found, with is_owner and signed_in.' },
+      { name: 'passport_transfer_requested', what: 'A buyer asked the owner for a transfer from a passport; outcome sent, already_requested, sign_in_needed, unavailable or failed.' },
+      { name: 'sold_transfer_step', what: 'The step after Archive as sold or Mark sold; action shown, skipped or send.' },
+      { name: 'transfer_started', what: 'A transfer link was made; method link or email, has_price, surface record, request or sold_step.' },
+      { name: 'claim_viewed', what: 'A claim link opened; state open, claimed_by_you, already_claimed, cancelled, expired, not_found or error, with signed_in. A finished claim is gecko_added with source claim.' },
+    ],
+  },
+  {
     category: 'Monetization',
     events: [
       { name: 'upgrade_prompt_shown', what: 'Plan-limit upgrade prompt rendered.' },

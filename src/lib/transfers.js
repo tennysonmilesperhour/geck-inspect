@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import { captureEvent } from '@/lib/posthog';
 
 /**
  * Ownership transfers: the owner creates a QR or email claim link, and the
@@ -32,6 +33,36 @@ export function parseSalePrice(raw) {
   const n = Number(text);
   if (!Number.isFinite(n) || n < 0) return { ok: false };
   return { ok: true, value: Math.round(n * 100) / 100 };
+}
+
+/**
+ * What the transfer form's sale price box starts with: the price the gecko
+ * was archived as sold for, else its asking price, else blank. The sold
+ * price matters most: when the buyer accepts, the gecko row (and its sold
+ * price) moves to them, so the transfer's sale price is the seller's only
+ * record of the sale in Business Tools.
+ */
+export function transferPriceDefault(animal) {
+  for (const value of [animal?.sold_price, animal?.asking_price]) {
+    if (value === null || value === undefined || value === '') continue;
+    const n = Number(value);
+    if (Number.isFinite(n) && n >= 0) return String(n);
+  }
+  return '';
+}
+
+const sameEmail = (a, b) =>
+  Boolean(a) && Boolean(b) && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+
+/**
+ * Whether to offer "Send <name> to the buyer" right after a gecko is
+ * archived as sold. Only the owner can transfer (the database refuses
+ * anyone else, including collection editors), and the guest demo cannot
+ * save anything.
+ */
+export function shouldOfferSoldTransfer({ gecko, user, reason, guest = false } = {}) {
+  if (guest || reason !== 'sold' || !gecko?.id || !user?.email || user.is_guest) return false;
+  return sameEmail(gecko.created_by, user.email);
 }
 
 export function claimUrlFor(token, origin) {
@@ -82,6 +113,19 @@ export function claimErrorKind(error) {
   if (msg.includes('not found')) return 'not_found';
   if (msg.includes('intended recipient')) return 'wrong_account';
   return 'claim_failed';
+}
+
+/**
+ * What a transfer preview means for the claim page: 'open' (it can be
+ * accepted), 'claimed_by_you', or the error key for a closed link
+ * ('already_claimed', 'cancelled', 'expired').
+ */
+export function claimViewState(data, now = new Date()) {
+  if (data?.claimed_by_you) return 'claimed_by_you';
+  if (data?.status === 'claimed') return 'already_claimed';
+  if (data?.status === 'cancelled') return 'cancelled';
+  if (data?.status === 'expired' || (data?.expires_at && new Date(data.expires_at) <= now)) return 'expired';
+  return 'open';
 }
 
 /** A pending transfer whose link has run out counts as expired. */
@@ -135,8 +179,13 @@ export async function sendTransferEmail(token) {
 /**
  * Create a server-issued transfer, optionally emailing the buyer. Throws on failure;
  * returns { token, claimUrl, emailed }.
+ *
+ * surface says where the seller started it, for the passport and transfer
+ * funnel: 'record' (the gecko record's Transfer button, the default),
+ * 'request' (a buyer asked from the passport page) or 'sold_step' (the
+ * step shown right after archiving a gecko as sold).
  */
-export async function startTransfer({ animalId, animalType = 'gecko', toEmail, salePrice, message }) {
+export async function startTransfer({ animalId, animalType = 'gecko', toEmail, salePrice, message, surface = 'record' }) {
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData?.user?.id) {
     throw new Error('You need to be signed in to transfer ownership.');
@@ -154,8 +203,16 @@ export async function startTransfer({ animalId, animalType = 'gecko', toEmail, s
   if (error) throw error;
   if (!data?.token) throw new Error('The transfer link could not be created. Please try again.');
   const email = toEmail ? await sendTransferEmail(data.token) : { delivered: false };
+  // No address, name, price or message goes into the event: only how it
+  // was sent and whether a price was set.
+  captureEvent('transfer_started', {
+    method: toEmail ? 'email' : 'link',
+    has_price: salePrice !== null && salePrice !== undefined,
+    animal_type: animalType,
+    surface,
+    ...(toEmail ? { emailed: email.delivered } : {}),
+  });
   return { ...data, claimUrl: claimUrlFor(data.token), emailed: email.delivered };
-
 }
 
 /**
@@ -169,6 +226,13 @@ export async function startTransfer({ animalId, animalType = 'gecko', toEmail, s
  * yet), or 'failed' with a message the page can show.
  */
 export async function requestPassportTransfer(passportCode) {
+  const result = await askForPassportTransfer(passportCode);
+  // The outcome only: the passport code, the buyer and the owner stay out.
+  captureEvent('passport_transfer_requested', { outcome: result.status });
+  return result;
+}
+
+async function askForPassportTransfer(passportCode) {
   try {
     const { data, error } = await supabase.rpc('request_passport_transfer', { p_passport_code: passportCode });
     if (error) {
