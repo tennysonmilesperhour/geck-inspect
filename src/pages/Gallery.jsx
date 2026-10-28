@@ -12,6 +12,7 @@ import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
+import { isGuestMode } from '@/lib/guestMode';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -44,18 +45,22 @@ export default function Gallery() {
 
     // Build filter query for API.
     //
-    // `created_by: { $ne: null }` is the gate that keeps the community
-    // gallery to genuine user uploads. Images imported by the scraper or
-    // by URL backfills land in gecko_images with `created_by = NULL`
-    // because no real user submitted them, and they outnumber real
-    // uploads ~100x. Filtering at the DB level (instead of client-side
-    // post-fetch) prevents pagination from returning empty batches.
+    // `owner_profile_id: { $ne: null }` is the gate that keeps the
+    // community gallery to genuine member uploads. Images imported by the
+    // scraper or by URL backfills have no owner because no member
+    // submitted them, and they outnumber real uploads ~100x. Filtering at
+    // the DB level (instead of client-side post-fetch) prevents pagination
+    // from returning empty batches. owner_profile_id is set exactly when a
+    // member uploaded the photo (the database keeps it in step with
+    // created_by, which holds the uploader's email and which members are
+    // losing). The demo's sample photos only carry created_by.
+    const guest = isGuestMode();
     const buildQuery = useCallback(() => {
-        const q = { created_by: { $ne: null } };
+        const q = guest ? { created_by: { $ne: null } } : { owner_profile_id: { $ne: null } };
         if (filters.primary_morph !== 'all') q.primary_morph = filters.primary_morph;
         if (filters.base_color !== 'all') q.base_color = filters.base_color;
         return q;
-    }, [filters]);
+    }, [filters, guest]);
 
     // Sort string for API
     const sortField = filters.sort === '-likes'
@@ -70,26 +75,26 @@ export default function Gallery() {
         // Client-side filter: exclude images with empty/missing data and secondary_traits
         const filtered = results.filter(img =>
             img.image_url && // Must have image URL
-            img.created_by && // Must have creator
+            (img.owner_profile_id || img.created_by) && // Must have an uploader
             (!filters.secondary_traits.length > 0 || filters.secondary_traits.every(t => img.secondary_traits?.includes(t)))
         );
         return { filtered, fetched: results.length };
     }, [buildQuery, sortField, filters.secondary_traits]);
 
-    // Uploader display names for the images on screen. Fetches only the
-    // profiles we have not seen yet, and only display columns, instead of
-    // downloading every profile row (emails, billing ids and all) on
-    // every Gallery visit.
-    const knownEmailsRef = useRef(new Set());
+    // Uploader display names for the images on screen, found by the
+    // photo's owner_profile_id (never by email). Fetches only the profiles
+    // we have not seen yet, and only display columns, instead of
+    // downloading every profile row on every Gallery visit.
+    const knownIdsRef = useRef(new Set());
     const ensureUsers = useCallback(async (batch) => {
-        const missing = Array.from(new Set((batch || []).map((img) => img.created_by).filter(Boolean)))
-            .filter((email) => !knownEmailsRef.current.has(email));
+        const missing = Array.from(new Set((batch || []).map((img) => img.owner_profile_id).filter(Boolean).map(String)))
+            .filter((id) => !knownIdsRef.current.has(id));
         if (missing.length === 0) return;
-        missing.forEach((email) => knownEmailsRef.current.add(email));
+        missing.forEach((id) => knownIdsRef.current.add(id));
         const { data, error } = await supabase
-            .rpc('read_profiles', { p_emails: missing })
-            .select('id, email, full_name, business_name, profile_image_url, is_expert, is_featured_breeder, show_username_on_images')
-            .in('email', missing);
+            .rpc('read_profiles')
+            .select('id, full_name, business_name, profile_image_url, is_expert, is_featured_breeder, show_username_on_images')
+            .in('id', missing);
         if (error || !data) return;
         setUsers((prev) => [...prev, ...data]);
     }, []);
@@ -133,11 +138,11 @@ export default function Gallery() {
     };
 
     const handleImageSelect = (image) => {
-        const uploader = users.find(u => u.email === image.created_by);
+        const uploader = users.find(u => String(u.id) === String(image.owner_profile_id));
         setSelectedImageData({ image, uploader });
     };
 
-    const usersMap = new Map(users.map(u => [u.email, u]));
+    const usersMap = new Map(users.map(u => [String(u.id), u]));
     const visibleImages = images.filter(img => !blocked.isBlocked(img));
 
     return (
@@ -201,7 +206,7 @@ export default function Gallery() {
                                 <ImageCard
                                     key={image.id}
                                     image={image}
-                                    uploader={usersMap.get(image.created_by)}
+                                    uploader={usersMap.get(String(image.owner_profile_id))}
                                     onImageSelect={handleImageSelect}
                                     thumbnail
                                 />

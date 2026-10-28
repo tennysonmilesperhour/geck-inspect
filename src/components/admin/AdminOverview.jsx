@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { fetchOverviewStats, fetchAccountDirectory, seriesPoints } from '@/lib/adminData';
+import { fetchOverviewStats, fetchAccountDirectory, seriesPoints, withOwnerEmailsFetched } from '@/lib/adminData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Users, Camera, MessageSquare, Database, Sparkles, Bell, Activity } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -96,11 +96,13 @@ export default function AdminOverview({ onNavigate }) {
         const [overview, directory, postsRes] = await Promise.all([
           fetchOverviewStats(),
           fetchAccountDirectory().catch(() => []),
+          // The author's email comes from their profile, not the post row.
           supabase
             .from('forum_posts')
-            .select('id, title, created_by, created_date')
+            .select('id, title, author_name, owner_profile_id, created_date')
             .order('created_date', { ascending: false })
-            .limit(5),
+            .limit(5)
+            .then(async (res) => (res.error ? res : { ...res, data: await withOwnerEmailsFetched(res.data || []) })),
         ]);
         const series = overview?.series || {};
         setStats({
@@ -314,7 +316,7 @@ export default function AdminOverview({ onNavigate }) {
                     {p.title || '(untitled)'}
                   </p>
                   <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-slate-500 truncate">{p.created_by}</p>
+                    <p className="text-xs text-slate-500 truncate">{p.created_by || p.author_name || 'Unknown author'}</p>
                     {p.created_date && (
                       <span className="text-xs text-slate-500 shrink-0 ml-3">
                         {formatDistanceToNow(new Date(p.created_date), { addSuffix: true })}

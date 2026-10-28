@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/supabaseClient', () => ({ supabase: { rpc: vi.fn() } }));
 
-import { broadcastRecipients, buildInfo, jobNeedsAttention, seriesPoints } from '../adminData';
+import { broadcastRecipients, buildInfo, jobNeedsAttention, seriesPoints, withOwnerEmails, withOwnerEmailsFetched } from '../adminData';
 
 const directory = [
   { id: '1', email: 'admin@example.test', role: 'admin', is_expert: false, has_login: true },
@@ -51,5 +51,40 @@ describe('buildInfo', () => {
   it('always returns a commit', () => {
     expect(buildInfo().commit).toBeTruthy();
     expect(buildInfo().shortCommit.length).toBeLessThanOrEqual(7);
+  });
+});
+
+// Admin screens put the author's email back from the profiles list: signed-in
+// accounts, admins included, are losing created_by on photos and forum rows
+// (supabase/pending/member_email_columns_revoke.sql).
+describe('withOwnerEmails', () => {
+  const profiles = [{ id: 'p1', email: 'lilly@example.test' }, { id: 'p2', email: null }];
+
+  it('fills created_by from owner_profile_id, null when the owner has no profile', () => {
+    const rows = [{ id: 'a', owner_profile_id: 'p1' }, { id: 'b', owner_profile_id: 'p2' }, { id: 'c', owner_profile_id: null }, { id: 'd' }];
+    expect(withOwnerEmails(rows, profiles).map((r) => r.created_by)).toEqual(['lilly@example.test', null, null, null]);
+  });
+
+  it('keeps the truncated flag the row reader sets', () => {
+    const rows = [{ id: 'a', owner_profile_id: 'p1' }];
+    rows.truncated = true;
+    expect(withOwnerEmails(rows, profiles).truncated).toBe(true);
+  });
+
+  it('looks up only the owners on the rows, 100 ids a request', async () => {
+    const asked = [];
+    const client = {
+      rpc: () => ({
+        select: () => ({
+          in: async (_col, ids) => { asked.push(ids.length); return { data: ids.map((id) => ({ id, email: `${id}@example.test` })), error: null }; },
+        }),
+      }),
+    };
+    const rows = Array.from({ length: 150 }, (_, i) => ({ id: `r${i}`, owner_profile_id: `p${i}` }));
+    const out = await withOwnerEmailsFetched(rows, { client });
+    expect(asked).toEqual([100, 50]);
+    expect(out[149].created_by).toBe('p149@example.test');
+    expect(await withOwnerEmailsFetched([], { client })).toEqual([]);
+    expect(asked).toEqual([100, 50]);
   });
 });

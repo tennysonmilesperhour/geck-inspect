@@ -174,8 +174,10 @@ export default function UserManagement() {
         try {
             const [geckos, images, posts, activity] = await Promise.all([
                 Gecko.filter({ created_by: user.email }),
-                GeckoImage.filter({ created_by: user.email }),
-                ForumPost.filter({ created_by: user.email }),
+                // Photos and posts by profile id: signed-in accounts,
+                // admins included, cannot filter on their created_by.
+                GeckoImage.filter({ owner_profile_id: user.id }),
+                ForumPost.filter({ owner_profile_id: user.id }),
                 // The member's latest product events (page views left out).
                 // The old user_activity table only ever held "added a gecko".
                 UserEvent.filter({ user_email: user.email, event_name: { $ne: 'page_view' } }, '-created_date', 10)

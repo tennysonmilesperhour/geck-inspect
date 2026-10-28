@@ -275,6 +275,36 @@ export function createFakeSupabase({ seed = {}, rpc = {}, confirmOnPasswordSignI
       return row;
     },
     read_profiles: () => table('profiles').map(({ id, full_name, business_name, profile_image_url, email }) => ({ id, full_name, business_name, profile_image_url, email })),
+    // Members never read another member's email column; these answer the
+    // way supabase/migrations/20261028020000_member_email_reads.sql does.
+    forum_like_state: (args, { currentUser }) => {
+      const ids = (args.p_target_ids || []).map(String);
+      const likes = table('forum_likes').filter((l) => ids.includes(String(l.target_id)));
+      return [...new Set(likes.map((l) => String(l.target_id)))].map((id) => {
+        const rows = likes.filter((l) => String(l.target_id) === id);
+        const liked = Boolean(currentUser) && rows.some((l) => l.created_by === currentUser.email || l.user_email === currentUser.email);
+        return { target_id: id, like_count: rows.length, liked };
+      });
+    },
+    community_reaction_state: (args, { currentUser }) => {
+      const types = (args.p_event_types || []).map(String);
+      const ids = (args.p_event_ids || []).map(String);
+      const groups = new Map();
+      for (const r of table('community_event_reactions')) {
+        if (!types.includes(String(r.event_type)) || !ids.includes(String(r.event_id))) continue;
+        const key = `${r.event_type}|${r.event_id}|${r.reaction}`;
+        const g = groups.get(key) || { event_type: r.event_type, event_id: r.event_id, reaction: r.reaction, reaction_count: 0, mine: false };
+        g.reaction_count += 1;
+        g.mine = g.mine || (Boolean(currentUser) && r.user_email === currentUser.email);
+        groups.set(key, g);
+      }
+      return [...groups.values()];
+    },
+    my_row_ids: (args, { currentUser }) => {
+      const column = { user_badges: 'user_email', morph_guide_comments: 'user_email' }[args.p_table] || 'created_by';
+      return table(args.p_table).filter((r) => currentUser && r[column] === currentUser.email).map((r) => String(r.id));
+    },
+    notify_forum_thread_author: () => false,
     ...rpc,
   };
 

@@ -8,6 +8,7 @@ import { api } from '@/api/appClient';
 import { countNavNotifications } from '@/lib/navNotifications';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
+import { loadedProfileId } from '@/lib/loadedProfileId';
 import { APP_LOGO_URL } from '@/lib/constants';
 import { swapToFallback } from '@/lib/imgFallback';
 import {
@@ -506,8 +507,12 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           setPageConfigs([]);
         }
 
-        // Load user-specific data with very heavy caching
-        if (user) {
+        // Load user-specific data with very heavy caching. Photos and posts
+        // are counted by the owner's profile id (members cannot filter on
+        // created_by, an email, on those tables), so this waits until the
+        // profile has loaded.
+        const ownerId = loadedProfileId(user);
+        if (user && (isGuest || ownerId)) {
           let userContributions = dataCache.get(`user_contributions_${user.email}`);
           if (!userContributions && dataCache.canMakeRequest(`user_contributions_${user.email}`)) {
             try {
@@ -516,15 +521,15 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               // Count-only queries: the level badges need numbers, not
               // every row the user owns. Guest mode keeps the mock entity
               // path so the demo sidebar still looks populated.
-              const countOwned = (entity, table) => isGuest
+              const countOwned = (entity, table, column = 'owner_profile_id', value = ownerId) => isGuest
                 ? api.entities[entity].filter({ created_by: user.email }).then((rows) => (rows || []).length)
                 : supabase
                     .from(table)
                     .select('id', { count: 'exact', head: true })
-                    .eq('created_by', user.email)
+                    .eq(column, value)
                     .then(({ count }) => count || 0);
               const results = await Promise.allSettled([
-                retryApiCall(() => countOwned('Gecko', 'geckos')),
+                retryApiCall(() => countOwned('Gecko', 'geckos', 'created_by', user.email)),
                 retryApiCall(() => countOwned('GeckoImage', 'gecko_images')),
                 retryApiCall(() => countOwned('ForumPost', 'forum_posts'))
               ]);
