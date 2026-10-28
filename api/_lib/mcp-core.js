@@ -3738,6 +3738,31 @@ function applyPricePolicy(index) {
     monthly: (index.monthly || []).filter((row) => Number(row?.avg_listings) >= PRICE_INDEX_MIN_LISTINGS)
   };
 }
+const PRICE_INDEX_STALE_DAYS = 7;
+const DAY_MS = 864e5;
+function priceCheckDay(isoDate) {
+  const d = /* @__PURE__ */ new Date(`${isoDate}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return String(isoDate || "");
+  return `${d.getUTCDate()} ${d.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" })} ${d.getUTCFullYear()}`;
+}
+function staleMarkets(index, now = Date.now()) {
+  const at = typeof now === "number" ? now : Date.parse(now);
+  if (!Number.isFinite(at)) return [];
+  const newest = /* @__PURE__ */ new Map();
+  for (const r of index?.latest || []) {
+    if (!r?.market || !r.checked_on) continue;
+    if (!newest.has(r.market) || r.checked_on > newest.get(r.market)) newest.set(r.market, r.checked_on);
+  }
+  const out = [];
+  for (const [market, checked_on] of newest) {
+    const days = Math.floor((at - Date.parse(`${checked_on}T00:00:00Z`)) / DAY_MS);
+    if (days > PRICE_INDEX_STALE_DAYS) out.push({ market, checked_on, days });
+  }
+  return out;
+}
+function staleMarketNote(stale, name2) {
+  return `Out of date: the last full check of ${name2 || stale.market} listings was ${priceCheckDay(stale.checked_on)}, ${stale.days} days ago. These prices may have moved since.`;
+}
 const __dirname$1 = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname$1, "../..");
 const SITE_URL = "https://geckinspect.com";
@@ -3902,6 +3927,7 @@ function morphMarkdown(m, { level = 3, full = false, priceIndex: priceIndex2 = n
       out.push(
         `**Current asking prices (Geck Inspect Price Index, ${rows[0].checked_on}).** Asking prices on public crested gecko listings, converted to USD, not sale prices. ${PRICE_DATA_TERMS} Full dataset: ${SITE_URL}/data/price-index.json`,
         "",
+        ...staleMarkets(priceIndex2, priceIndex2.generated_at).filter((st) => rows.some((r) => r.market === st.market)).flatMap((st) => [staleMarketNote(st, MARKET_NAMES[st.market]), ""]),
         "| Market | Listings | 25th percentile | Median | 75th percentile |",
         "| --- | --- | --- | --- | --- |",
         ...rows.map((r) => `| ${MARKET_NAMES[r.market] || r.market} | ${listingsCell(r)} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`),
@@ -4081,9 +4107,14 @@ const HANDLERS = {
     }
     const lines = latest2.map((r) => `- ${MARKET_NAMES[r.market] || r.market}, ${r.trait || "all crested geckos"} (${r.checked_on}, ${r.listings} listings${r.thin ? ", thin sample" : ""}): median $${r.median}, middle half $${r.p25} to $${r.p75}`);
     const note = `Asking prices on public listings, converted to USD, not sale prices. ${PRICE_INDEX_SAMPLE_RULE} ${PRICE_DATA_TERMS} Source: Geck Inspect Price Index, ${SITE_URL}/data`;
+    const shownMarkets = new Set(latest2.map((r) => r.market));
+    const stale = staleMarkets(index).filter((s) => shownMarkets.has(s.market));
+    const staleText = stale.map((s) => staleMarketNote(s, MARKET_NAMES[s.market])).join(" ");
     return text(`${lines.join("\n")}
 
-${note}`, { latest: latest2, monthly: monthly2, note, generated_at: index.generated_at });
+${staleText ? `${staleText}
+
+` : ""}${note}`, { latest: latest2, monthly: monthly2, note, stale_markets: stale, generated_at: index.generated_at });
   },
   predict_pairing({ sire, dam } = {}) {
     if (!Array.isArray(sire) || !Array.isArray(dam)) return fail("Pass sire and dam as arrays of trait tags.");

@@ -50,7 +50,7 @@ Notes on today's numbers:
 
 **Draft for Tennyson to rewrite.** E0 rule 5 says he rewrites the top ten every Monday; a Claude session wrote this one from production and the work shipping on 28 October.
 
-1. **Breeder conversations.** 0 of 15 with 20 days to Day 30. Book them before anything else, offer a hand import in each (0 of 5), and record both under "Record by hand".
+1. **Breeder conversations.** 0 of 15 with 20 days to Day 30. Book them before anything else, offer a hand import in each (0 of 5), and record both under "Record by hand". The questions, the $120 offer and a block to fill in per call are in `docs/planning/breeder-interviews-2026-10.md`.
 2. **Shipping today: Pattern studio crash fixed.** The Morph Guide's Pattern studio tab no longer blanks the whole page.
 3. **Shipping today: email address exposure, step 1.** The app stops reading other members' addresses; step 2, the database lock, follows once open tabs have reloaded.
 4. **Shipping today: an honest scoreboard.** Sandbox purchases and internal accounts are left out, and a "prepaid" entry records a Founding Breeder year paid outside Stripe.

@@ -22,6 +22,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { staleMarkets } from '../src/lib/priceIndexPolicy.js';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
@@ -66,10 +67,15 @@ async function priceIndex() {
     const days = (Date.now() - new Date(data.generated_at).getTime()) / 864e5;
     const lastChecks = {};
     for (const r of data.latest || []) lastChecks[r.market] = r.checked_on;
+    // The file can be rebuilt today while one market's rows are weeks old
+    // (US on 28 Oct 2026: last full check 6 Oct), so freshness is per market.
+    const stale = staleMarkets(data);
     return {
       generated_at: data.generated_at,
       age_days: Math.round(days * 10) / 10,
-      fresh: days <= 7,
+      fresh: days <= 7 && stale.length === 0,
+      file_fresh: days <= 7,
+      stale_markets: stale,
       latest_rows: data.latest?.length || 0,
       monthly_rows: data.monthly?.length || 0,
       last_full_check_by_market: lastChecks,
@@ -113,5 +119,5 @@ writeFileSync(resolve(OUT_DIR, `${today}.json`), `${JSON.stringify(report, null,
 const t7 = report.traffic?.last7;
 console.log(
   `[agent-traffic] ${today}: ${t7 ? `${t7.total} bot hits in 7 days (previous 7: ${t7.previous_total})` : report.traffic?.error}; ` +
-    `price index ${report.priceIndex.fresh ? 'fresh' : 'stale or unreachable'}; MCP ${report.mcp.ok ? 'up' : 'down'}`,
+    `price index ${report.priceIndex.fresh ? 'fresh' : `stale or unreachable${report.priceIndex.stale_markets?.length ? ` (out of date: ${report.priceIndex.stale_markets.map((st) => `${st.market} since ${st.checked_on}`).join(', ')})` : ''}`}; MCP ${report.mcp.ok ? 'up' : 'down'}`,
 );

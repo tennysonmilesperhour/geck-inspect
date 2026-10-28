@@ -35,8 +35,8 @@ Read from production, 18 to 20 October.
 | Weekly note 1 (heat) | 52 | **0** | **0** |
 
 - **Weekly note 1 went to 53 members. 40 had no gecko on record and 38 had not signed in for a month.** None of the 53 opened the app in the next three days. That is the definition of noise: mail to people who stopped listening, about something they did not ask about (a heat warning in October).
-- **Opens and clicks are unknown**, because the webhook was never connected (section 1).
-- **No bounces or complaints have been recorded**, but that also comes from the webhook, so it proves nothing yet.
+- **Opens and clicks were unknown** when this was written, because the webhook was not connected yet. It was connected on 24 October; the weekly log (section 8) has the numbers since.
+- **No bounces or complaints had been recorded** then. The first two soft bounces came on 26 October (section 8). One soft bounce never stops mail. Since 28 October, an address that soft bounces on 3 different emails within 30 days goes on the do-not-email list as `soft_bounced` (`20261028025800_soft_bounce_suppression.sql`). It works for members only, because the delivery log keeps no visitor addresses. A hard bounce or a spam report still stops mail at once.
 - The day 0 email does bring people back (4 of 9). It rarely gets them to do the one thing it asks.
 
 ## 3. The principles

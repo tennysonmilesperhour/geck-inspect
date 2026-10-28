@@ -111,3 +111,47 @@ export function applyPricePolicy(index) {
     monthly: (index.monthly || []).filter((row) => Number(row?.avg_listings) >= PRICE_INDEX_MIN_LISTINGS),
   };
 }
+
+/**
+ * A market whose newest full catalog check is older than this many days is
+ * marked out of date wherever the index is shown. On 28 Oct 2026 the US
+ * rows still dated from 6 Oct while Europe, Japan and South Korea were
+ * checked daily, and every copy (the pages, llms files, MCP answers) showed
+ * the US numbers as current.
+ */
+export const PRICE_INDEX_STALE_DAYS = 7;
+
+const DAY_MS = 86400000;
+
+/** "6 October 2026" for a YYYY-MM-DD day. */
+export function priceCheckDay(isoDate) {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return String(isoDate || '');
+  return `${d.getUTCDate()} ${d.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' })} ${d.getUTCFullYear()}`;
+}
+
+/**
+ * Markets whose newest full check is more than PRICE_INDEX_STALE_DAYS old
+ * at `now` (milliseconds, or anything Date.parse reads, such as the index's
+ * own generated_at). Each entry: { market, checked_on, days }.
+ */
+export function staleMarkets(index, now = Date.now()) {
+  const at = typeof now === 'number' ? now : Date.parse(now);
+  if (!Number.isFinite(at)) return [];
+  const newest = new Map();
+  for (const r of index?.latest || []) {
+    if (!r?.market || !r.checked_on) continue;
+    if (!newest.has(r.market) || r.checked_on > newest.get(r.market)) newest.set(r.market, r.checked_on);
+  }
+  const out = [];
+  for (const [market, checked_on] of newest) {
+    const days = Math.floor((at - Date.parse(`${checked_on}T00:00:00Z`)) / DAY_MS);
+    if (days > PRICE_INDEX_STALE_DAYS) out.push({ market, checked_on, days });
+  }
+  return out;
+}
+
+/** The plain note for one stale market, given its display name. */
+export function staleMarketNote(stale, name) {
+  return `Out of date: the last full check of ${name || stale.market} listings was ${priceCheckDay(stale.checked_on)}, ${stale.days} days ago. These prices may have moved since.`;
+}

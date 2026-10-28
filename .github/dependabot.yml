@@ -30,6 +30,23 @@ updates:
       # Select pass deferPointerDownOutside, then tap outside an open select
       # in GeckoForm on a real phone.
       - dependency-name: "@radix-ui/*"
+      # Tailwind CSS 4 is a rewrite (CSS-first configuration, colours in
+      # oklch). #151 failed on 22 to 24 Oct 2026: the colour contrast tests
+      # read tailwindcss/colors as hex and got NaN, and the browser member
+      # flow failed. It would also restyle both arms of the homepage A/B
+      # test, which are frozen while it runs
+      # (docs/planning/homepage-ab-test-2026-10.md). Moving to 4 is its own
+      # project: port tailwind.config.js, then check every page by eye.
+      - dependency-name: tailwindcss
+        update-types: ["version-update:semver-major"]
+      # Vite 8 bundles with Rolldown. #158 failed on 24 Oct 2026 at
+      # pnpm build: the chunk naming function in vite.config.js calls
+      # getModuleIds, which Rolldown's chunk info does not provide, and
+      # those rules are what keep the startup script under its 150 kB
+      # budget. Moving needs them rewritten for Rolldown and the size
+      # budget checked again.
+      - dependency-name: vite
+        update-types: ["version-update:semver-major"]
     groups:
       # lucide-react gets its own pull request. Production builds rewrite
       # lucide's icon files (scripts/vite-plugins/lean-lucide-icons.mjs), so

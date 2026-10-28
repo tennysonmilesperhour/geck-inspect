@@ -5,6 +5,8 @@ import {
   PRICE_INDEX_THIN_LISTINGS,
   applyPricePolicy,
   priceTraitMorphSlug,
+  staleMarketNote,
+  staleMarkets,
 } from '@/lib/priceIndexPolicy';
 
 // The Geck Inspect Price Index table: current asking prices by trait for
@@ -49,6 +51,9 @@ export default function PriceIndexTable({ limit = null }) {
   const traits = rows.filter((r) => r.trait).sort((a, b) => b.listings - a.listings);
   const shown = limit ? traits.slice(0, limit) : traits;
   const available = MARKETS.filter((m) => index.latest.some((r) => r.market === m.id));
+  // A market not fully checked for over a week says so (priceIndexPolicy.js).
+  const stale = staleMarkets(index).find((st) => st.market === market);
+  const marketLabel = MARKETS.find((m) => m.id === market)?.label;
 
   return (
     <div>
@@ -70,6 +75,11 @@ export default function PriceIndexTable({ limit = null }) {
           </button>
         ))}
       </div>
+      {stale && (
+        <p className="text-amber-200 text-sm mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+          {staleMarketNote(stale, marketLabel)}
+        </p>
+      )}
       {all && (
         <p className="text-slate-300 text-sm mb-3">
           All crested geckos: median asking price <strong className="text-slate-100">{usd(all.median)}</strong> across{' '}

@@ -17,6 +17,8 @@ import {
   PRICE_INDEX_SAMPLE_RULE,
   PRICE_INDEX_WHAT,
   applyPricePolicy,
+  staleMarketNote,
+  staleMarkets,
 } from '../../src/lib/priceIndexPolicy.js';
 import { COMPLEX_OPTIONS, SIMPLE_TRAITS } from '../../src/lib/genetics/calculatorCatalog.js';
 
@@ -321,6 +323,10 @@ export function morphMarkdown(m, { level = 3, full = false, priceIndex = null, p
       out.push(
         `**Current asking prices (Geck Inspect Price Index, ${rows[0].checked_on}).** Asking prices on public crested gecko listings, converted to USD, not sale prices. ${PRICE_DATA_TERMS} Full dataset: ${SITE_URL}/data/price-index.json`,
         '',
+        // Markets not fully checked for over a week, as of the index's own date.
+        ...staleMarkets(priceIndex, priceIndex.generated_at)
+          .filter((st) => rows.some((r) => r.market === st.market))
+          .flatMap((st) => [staleMarketNote(st, MARKET_NAMES[st.market]), '']),
         '| Market | Listings | 25th percentile | Median | 75th percentile |',
         '| --- | --- | --- | --- | --- |',
         ...rows.map((r) => `| ${MARKET_NAMES[r.market] || r.market} | ${listingsCell(r)} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`),
@@ -416,8 +422,10 @@ export function priceIndexToMarkdown(index) {
     if (!byMarket.has(r.market)) byMarket.set(r.market, []);
     byMarket.get(r.market).push(r);
   }
+  const stale = new Map(staleMarkets(index, index.generated_at).map((st) => [st.market, st]));
   for (const [market, rows] of byMarket) {
     out.push(`### ${MARKET_NAMES[market] || market} (checked ${rows[0].checked_on})`, '');
+    if (stale.has(market)) out.push(`**${staleMarketNote(stale.get(market), MARKET_NAMES[market])}**`, '');
     out.push('| Trait | Listings | 25th percentile | Median | 75th percentile |', '| --- | --- | --- | --- | --- |');
     for (const r of rows) {
       out.push(`| ${r.trait || 'All crested geckos'} | ${listingsCell(r)} | ${usd(r.p25)} | ${usd(r.median)} | ${usd(r.p75)} |`);
