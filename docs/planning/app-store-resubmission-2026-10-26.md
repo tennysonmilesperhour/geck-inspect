@@ -66,7 +66,7 @@ On a phone running the **newest iOS** (the iPhone 11 on 18.5 does not qualify). 
 2. Sign in with the Breeder reviewer account.
 3. Today, then My Geckos, then open a gecko.
 4. Add a gecko and take its photo with the **camera**.
-5. Morph ID: take or pick a photo, show the AI data notice, run one scan.
+5. Morph ID: take or pick a photo, tap Identify morph, show the AI data notice (a panel on the page since 28 October, not a pop-up), tap **Allow and identify** and let the scan finish.
 6. Breeding: open a pair and show the clutch odds.
 7. Settings > **Phone reminders**: turn one on and accept the iOS notification prompt.
 8. Membership: show the store prices, **Restore purchases**, and the Terms and Privacy links.
@@ -122,7 +122,7 @@ Device features
 Where to find things
 - Membership (prices, Restore purchases, Terms, Privacy): side menu > Membership.
 - Account deletion: Settings > Delete account > Delete my account. It deletes the account in the app; no email or website step.
-- Morph ID sends the photo to our AI providers (Anthropic, Replicate) only after the member confirms a notice on each scan.
+- Morph ID sends the photo to our AI providers (Anthropic, Replicate) only after the member taps Allow and identify on a notice shown before each scan. Not now sends nothing.
 
 Member content (1.2)
 New posts and photos are screened automatically against a list of objectionable terms; photos and links from new members, and all content from members with prior removals, are held for manual approval. Members can report any post, comment or photo, and block its author from the same screen. Reports are reviewed within 24 hours. Contact: morphiclabsdata@gmail.com (also in Settings and the Privacy Policy).

@@ -110,6 +110,18 @@ describe('lifecycle copy', () => {
     expect(lifecycleEmail('lifecycle_day0', MANGO).url).toBe('/log?gecko=g_mango&type=weight');
   });
 
+  it('the no-gecko emails open step 1 of the guided first gecko', () => {
+    // /MyGeckos?add=1 opens the "by photo or by typing" choice on arrival
+    // (src/pages/MyGeckos.jsx). Plain /MyGeckos only showed the page behind
+    // it. A link change only: the words stay as approved.
+    const empty = { ...MANGO, gecko_count: 0, gecko_id: undefined, gecko_name: undefined };
+    expect(lifecycleEmail('lifecycle_day0', empty).url).toBe('/MyGeckos?add=1');
+    expect(lifecycleEmail('lifecycle_day1', empty).url).toBe('/MyGeckos?add=1');
+    // A member whose first gecko is in and weighed is asked for the rest
+    // of the collection, so that email keeps the plain list.
+    expect(lifecycleEmail('lifecycle_day0', { ...MANGO, weight_count: 1 }).url).toBe('/MyGeckos');
+  });
+
   it('the footer mentions Weekly Gecko Notes without promising them', () => {
     // They may never come (the switch is off, no postal address is set, or
     // the member turned them off, never ticked the sign-up box or is in the
@@ -250,6 +262,9 @@ describe('send-email sends lifecycle emails', () => {
     await send({ user_email: 'sam@example.com', type: 'lifecycle_day1', title: 'Buy now', body: 'spam', facts: { first_name: 'Sam' } });
     expect(net.requests[0].body.subject).toBe('The two-minute way to add your first gecko');
     expect(net.requests[0].body.text).not.toContain('spam');
+    // The button keeps the first gecko step's ?add=1 in both parts.
+    expect(net.requests[0].body.text).toContain(`Add a gecko: ${SITE}/MyGeckos?add=1`);
+    expect(net.requests[0].body.html).toContain(`href="${SITE}/MyGeckos?add=1"`);
   });
 
   it('skips a lifecycle type that arrives without facts, as a notification row would', async () => {

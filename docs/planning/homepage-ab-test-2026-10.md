@@ -80,6 +80,8 @@ Round 3 of the review fixes (`docs/planning/comprehensive-review-2026-10-14.md`,
   - Google Analytics now starts from the app instead of an inline script, the Robauto pixel is gone, and inline scripts are allowed by hash in the Content Security Policy.
   - PostHog identifies members by account id instead of email. A browser that still carries an email as its PostHog id starts afresh when PostHog loads, so a returning member who was identified by email before gets a new PostHog person; signed-out homepage visitors are unaffected.
 
+**28 October 2026, first gecko by photo and the Morph ID permission step:** after signup only, nothing on the homepage. A member who picks "Add by photo" in the guided first gecko now gets "Add this gecko" straight under their Morph ID result, a short add form (a name and "Save and continue"), and no "used this month's free Morph ID" card on top of the result. Morph ID asks for permission on the page instead of in a browser pop-up, and the day 0 and day 1 getting-started emails for members with no gecko open the first gecko step (`/MyGeckos?add=1`). These changes reach both arms equally, but they are meant to raise first geckos, so they may move the secondary metric (`signup_completed` followed by `first_gecko_added`) for both arms from this date. Compare the arms with each other, not with the weeks before.
+
 ## Queued until the test ends
 
 Apply these in one change after the decision, to whichever page wins:
