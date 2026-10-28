@@ -3,7 +3,9 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 const invoke = vi.fn();
 const getUser = vi.fn();
 const rpc = vi.fn();
+const captureEvent = vi.fn();
 vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke }, auth: { getUser }, rpc } }));
+vi.mock('@/lib/posthog', () => ({ captureEvent: (...args) => captureEvent(...args) }));
 
 const {
   startTransfer,
@@ -12,10 +14,14 @@ const {
   buildTransferRow,
   claimErrorKind,
   claimUrlFor,
+  claimViewState,
   effectiveTransferStatus,
   isValidEmail,
   parseSalePrice,
+  requestPassportTransfer,
   sendTransferEmail,
+  shouldOfferSoldTransfer,
+  transferPriceDefault,
   TRANSFER_TTL_HOURS,
 } = await import('../transfers');
 const { parentNameForSave } = await import('../parentNames');
@@ -237,5 +243,93 @@ describe('server-issued transfer links', () => {
     expect(claimErrorKind({ message: 'verified email required' })).toBe('verify_email');
     expect(claimErrorKind({ message: 'cannot transfer to yourself' })).toBe('own_animal');
     expect(claimErrorKind({ message: 'not authenticated' })).toBe('sign_in');
+  });
+});
+
+describe('the transfer form price', () => {
+  it('starts with the sold price, then the asking price, then blank', () => {
+    expect(transferPriceDefault({ sold_price: 300, asking_price: 450 })).toBe('300');
+    expect(transferPriceDefault({ sold_price: null, asking_price: 450 })).toBe('450');
+    expect(transferPriceDefault({ sold_price: '', asking_price: '125.5' })).toBe('125.5');
+    expect(transferPriceDefault({ sold_price: 0 })).toBe('0');
+    expect(transferPriceDefault({ asking_price: 'call me' })).toBe('');
+    expect(transferPriceDefault({ asking_price: -5 })).toBe('');
+    expect(transferPriceDefault(null)).toBe('');
+  });
+});
+
+describe('offering the transfer after a sale', () => {
+  const owner = { email: 'Seller@Example.com' };
+  const gecko = { id: 'g1', name: 'Mango', created_by: 'seller@example.com' };
+
+  it('offers it to the owner when a gecko is archived as sold', () => {
+    expect(shouldOfferSoldTransfer({ gecko, user: owner, reason: 'sold' })).toBe(true);
+  });
+
+  it('never offers it for another reason, to a collection editor, or in the demo', () => {
+    expect(shouldOfferSoldTransfer({ gecko, user: owner, reason: 'death' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: owner, reason: 'other' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: { email: 'editor@example.com' }, reason: 'sold' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: owner, reason: 'sold', guest: true })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: { ...owner, is_guest: true }, reason: 'sold' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko: null, user: owner, reason: 'sold' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: null, reason: 'sold' })).toBe(false);
+  });
+});
+
+describe('what a claim link shows', () => {
+  const now = new Date('2026-10-28T02:00:00Z');
+  it('names each state the claim page handles', () => {
+    expect(claimViewState({ status: 'pending', expires_at: '2026-10-29T00:00:00Z' }, now)).toBe('open');
+    expect(claimViewState({ status: 'pending', expires_at: '2026-10-27T00:00:00Z' }, now)).toBe('expired');
+    expect(claimViewState({ status: 'expired' }, now)).toBe('expired');
+    expect(claimViewState({ status: 'cancelled' }, now)).toBe('cancelled');
+    expect(claimViewState({ status: 'claimed' }, now)).toBe('already_claimed');
+    expect(claimViewState({ status: 'claimed', claimed_by_you: true }, now)).toBe('claimed_by_you');
+  });
+});
+
+describe('passport and transfer funnel events', () => {
+  beforeEach(() => {
+    getUser.mockReset(); rpc.mockReset(); invoke.mockReset(); captureEvent.mockReset();
+    getUser.mockResolvedValue({ data: { user: { id: 'owner', email: 'owner@example.com' } } });
+  });
+
+  it('records a QR transfer with its method, price flag and surface only', async () => {
+    rpc.mockResolvedValue({ data: { id: 't1', token: 'opaque-token', claim_mode: 'link' } });
+    await startTransfer({ animalId: 'g1', toEmail: null, salePrice: 300, message: 'Eating Pangea well', surface: 'sold_step' });
+    expect(captureEvent).toHaveBeenCalledWith('transfer_started', {
+      method: 'link', has_price: true, animal_type: 'gecko', surface: 'sold_step',
+    });
+  });
+
+  it('records an emailed transfer without the address, price or message', async () => {
+    rpc.mockResolvedValue({ data: { id: 't2', token: 'opaque-token', claim_mode: 'email' } });
+    invoke.mockResolvedValue({ data: { delivered: 1 }, error: null });
+    await startTransfer({ animalId: 'g1', toEmail: 'Buyer@Example.com', salePrice: null, message: 'Private note' });
+    const [name, props] = captureEvent.mock.calls[0];
+    expect(name).toBe('transfer_started');
+    expect(props).toEqual({ method: 'email', has_price: false, animal_type: 'gecko', surface: 'record', emailed: true });
+    expect(JSON.stringify(props)).not.toMatch(/buyer|example|Private|opaque|g1/i);
+  });
+
+  it('records nothing when the transfer was not made', async () => {
+    rpc.mockResolvedValue({ error: { message: 'Only the owner can transfer it.' } });
+    await expect(startTransfer({ animalId: 'g1' })).rejects.toThrow();
+    expect(captureEvent).not.toHaveBeenCalled();
+  });
+
+  it('records the outcome of a buyer asking for a transfer, without the passport code', async () => {
+    rpc.mockResolvedValue({ data: { status: 'sent' }, error: null });
+    await expect(requestPassportTransfer('GI-2026-ABCD')).resolves.toEqual({ status: 'sent' });
+    rpc.mockResolvedValue({ data: { status: 'already_requested' }, error: null });
+    await requestPassportTransfer('GI-2026-ABCD');
+    rpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Could not find the function' } });
+    await requestPassportTransfer('GI-2026-ABCD');
+    expect(captureEvent.mock.calls).toEqual([
+      ['passport_transfer_requested', { outcome: 'sent' }],
+      ['passport_transfer_requested', { outcome: 'already_requested' }],
+      ['passport_transfer_requested', { outcome: 'unavailable' }],
+    ]);
   });
 });
