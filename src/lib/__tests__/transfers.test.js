@@ -4,7 +4,19 @@ const invoke = vi.fn();
 const getUser = vi.fn();
 const rpc = vi.fn();
 const captureEvent = vi.fn();
-vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke }, auth: { getUser }, rpc } }));
+// A stand-in for supabase.from(...): it records each call in the chain and
+// answers with the result the test sets.
+const query = { calls: [], result: { data: [], error: null } };
+const from = vi.fn((table) => {
+  query.calls.push(['from', table]);
+  const chain = {};
+  for (const method of ['select', 'eq', 'gt', 'order', 'limit']) {
+    chain[method] = (...args) => { query.calls.push([method, ...args]); return chain; };
+  }
+  chain.then = (resolve, reject) => Promise.resolve(query.result).then(resolve, reject);
+  return chain;
+});
+vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke }, auth: { getUser }, rpc, from } }));
 vi.mock('@/lib/posthog', () => ({ captureEvent: (...args) => captureEvent(...args) }));
 
 const {
@@ -16,6 +28,7 @@ const {
   claimUrlFor,
   claimViewState,
   effectiveTransferStatus,
+  findPendingTransfer,
   isValidEmail,
   parseSalePrice,
   requestPassportTransfer,
@@ -251,7 +264,13 @@ describe('the transfer form price', () => {
     expect(transferPriceDefault({ sold_price: 300, asking_price: 450 })).toBe('300');
     expect(transferPriceDefault({ sold_price: null, asking_price: 450 })).toBe('450');
     expect(transferPriceDefault({ sold_price: '', asking_price: '125.5' })).toBe('125.5');
-    expect(transferPriceDefault({ sold_price: 0 })).toBe('0');
+    // A price of 0 means no money changed hands: the box stays blank, so
+    // the step shows no "$0" line and the claim records no $0 sale. The
+    // asking price does not stand in for a gecko sold for 0.
+    expect(transferPriceDefault({ sold_price: 0 })).toBe('');
+    expect(transferPriceDefault({ sold_price: 0, asking_price: 450 })).toBe('');
+    expect(transferPriceDefault({ sold_price: '0.00', asking_price: 450 })).toBe('');
+    expect(transferPriceDefault({ sold_price: null, asking_price: 0 })).toBe('');
     expect(transferPriceDefault({ asking_price: 'call me' })).toBe('');
     expect(transferPriceDefault({ asking_price: -5 })).toBe('');
     expect(transferPriceDefault(null)).toBe('');
@@ -274,6 +293,45 @@ describe('offering the transfer after a sale', () => {
     expect(shouldOfferSoldTransfer({ gecko, user: { ...owner, is_guest: true }, reason: 'sold' })).toBe(false);
     expect(shouldOfferSoldTransfer({ gecko: null, user: owner, reason: 'sold' })).toBe(false);
     expect(shouldOfferSoldTransfer({ gecko, user: null, reason: 'sold' })).toBe(false);
+  });
+});
+
+describe('a link already sent for the gecko', () => {
+  const now = new Date('2026-10-28T02:00:00Z');
+  beforeEach(() => {
+    getUser.mockReset(); from.mockClear();
+    query.calls.length = 0;
+    query.result = { data: [], error: null };
+    getUser.mockResolvedValue({ data: { user: { id: 'seller-1', email: 'seller@example.com' } } });
+  });
+
+  it("reads the seller's own pending link for this gecko that has not run out, newest first", async () => {
+    const row = { id: 't1', token: 'opaque', to_email: 'buyer@example.com', created_date: '2026-10-27T15:00:00Z', expires_at: '2026-10-30T15:00:00Z' };
+    query.result = { data: [row], error: null };
+    await expect(findPendingTransfer({ animalId: 'g1', now })).resolves.toEqual(row);
+    expect(query.calls[0]).toEqual(['from', 'transfer_requests']);
+    expect(query.calls).toEqual(expect.arrayContaining([
+      ['eq', 'from_user_id', 'seller-1'],
+      ['eq', 'animal_id', 'g1'],
+      ['eq', 'animal_type', 'gecko'],
+      ['eq', 'status', 'pending'],
+      ['gt', 'expires_at', '2026-10-28T02:00:00.000Z'],
+      ['order', 'created_date', { ascending: false }],
+      ['limit', 1],
+    ]));
+  });
+
+  it('answers null when there is none, or nobody is signed in', async () => {
+    await expect(findPendingTransfer({ animalId: 'g1', now })).resolves.toBeNull();
+    getUser.mockResolvedValue({ data: { user: null } });
+    query.calls.length = 0;
+    await expect(findPendingTransfer({ animalId: 'g1', now })).resolves.toBeNull();
+    expect(query.calls).toEqual([]);
+  });
+
+  it('throws when the read fails, so the step can say it could not check', async () => {
+    query.result = { data: null, error: { message: 'network down' } };
+    await expect(findPendingTransfer({ animalId: 'g1', now })).rejects.toMatchObject({ message: 'network down' });
   });
 });
 

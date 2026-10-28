@@ -126,12 +126,12 @@ None of them carries personal data: no email, name, passport code, token, price 
 
 | Event | When | Properties |
 |---|---|---|
-| `passport_created` | A passport is made (`src/lib/makePassport.js`, used by the gecko record and the sold step) | `surface`: `record` or `sold_step`; `was_public` (the gecko was already public before) |
+| `passport_created` | A passport is made with Make a passport on the gecko record (`src/lib/makePassport.js`). The sold step never makes one | `surface`: `record`; `was_public` (the gecko was already public before; null when the row did not say) |
 | `passport_card_downloaded` | Download PNG on the passport QR page (`src/pages/PassportQR.jsx`) | `format`: `png` |
 | `passport_card_printed` | Print QR Sticker on the same page (counts presses, not printed sheets) | `surface`: `qr_page` |
 | `passport_viewed` | A passport page answers, once per passport and visitor while it is open (`src/pages/AnimalPassport.jsx`) | `state`: `shown`, `private` or `not_found`; `signed_in`; `is_owner`; `for_sale` (on `shown`) |
 | `passport_transfer_requested` | A buyer presses "Ask the owner to transfer this gecko to me" (`src/lib/transfers.js`, `requestPassportTransfer`) | `outcome`: `sent`, `already_requested`, `unavailable`, `failed`, or `sign_in_needed` (signed out, sent to sign in) |
-| `sold_transfer_step` | The step after "Archive as sold" (My Geckos, the form's Sold status, the record's Sold action) and after "Mark sold" on Sell Geckos | `action`: `shown`, `skipped` or `send`; `has_passport`; `has_price` |
+| `sold_transfer_step` | The step after "Archive as sold" (My Geckos, the form's Sold status, the record's Sold action) and after "Mark sold" on Sell Geckos | `action`: `shown`, `skipped`, `kept_existing` (kept the link already sent) or `send`; `has_passport`; `has_price`; `has_pending` (a link sent earlier is still open; null when the check failed) |
 | `transfer_started` | A transfer link is made (`startTransfer` in `src/lib/transfers.js`) | `method`: `link` or `email`; `has_price`; `animal_type`; `surface`: `record`, `request` (opened from a buyer's request) or `sold_step`; `emailed` (email transfers) |
 | `claim_viewed` | A claim link answers, once per account and answer while it is open (`src/pages/ClaimAnimal.jsx`) | `state`: `open`, `claimed_by_you`, `already_claimed`, `cancelled`, `expired`, `not_found` or `error`; `signed_in`; `claim_mode`; `authorized` |
 
@@ -139,7 +139,11 @@ A finished claim is the existing `gecko_added` event with `source: claim` (recor
 
 ### The step after "Archive as sold"
 
-When the owner archives a gecko as sold, a skippable step follows: "Send Mango to the buyer". "Send to the buyer" opens the usual transfer form with the sold price already in the price box (the sold price, else the asking price). That price matters: when the buyer accepts, the gecko row and its sold price move to them, so the transfer's price is the only record of the sale left in the seller's Business Tools. If the gecko has no passport, the step and the form both say that sending makes one and turns on Public display, so its passport page becomes public; the passport is made only when the member presses send, just before the transfer. Only the owner sees the step (the database refuses a transfer from anyone else), never in the guest demo, and only for geckos. Code: `src/components/transfers/SoldTransferStep.jsx`, wired in `src/pages/MyGeckos.jsx` and `src/pages/MarketplaceSell.jsx`.
+When the owner archives a gecko as sold, a skippable step follows: "Send Mango to the buyer". "Send to the buyer" opens the usual transfer form with the sold price already in the price box (the sold price, else the asking price; a price of 0 leaves the box blank, so a gift is not recorded as a $0 sale). That price matters: when the buyer accepts, the gecko row and its sold price move to them, so the transfer's price is the only record of the sale left in the seller's Business Tools. Only the owner sees the step (the database refuses a transfer from anyone else), never in the guest demo, and only for geckos. Code: `src/components/transfers/SoldTransferStep.jsx`, wired in `src/pages/MyGeckos.jsx` and `src/pages/MarketplaceSell.jsx`.
+
+The step sends the transfer only. It never makes a passport and never turns on Public display, because `create_transfer` and the claim page's preview (`get_transfer_preview`) both work on a private gecko. A passport would make the gecko public, and other signed-in members can read a public gecko's sold price and owner email, so a sale must not do that on the seller's behalf. Once the buyer accepts, the gecko is theirs and they can make a passport from its record.
+
+A new link cancels every link still pending for the gecko. So before it shows, the step reads the seller's own pending link for that gecko that has not run out (`findPendingTransfer` in `src/lib/transfers.js`). When there is one, it says plainly that a new link replaces the one sent on that day (naming the buyer's email for an emailed link), offers "Keep the link I sent" (which shows that link and its QR code again) and "Send a new link", and the transfer form repeats the warning. If the check fails, the step says a new link replaces any link already sent.
 
 ### The funnel query
 
@@ -217,6 +221,6 @@ How to read it, in loop order: passports made and cards made (the seller's side)
 
 Visits are counted by browser session, not by account: a buyer who opens a claim link signed out, creates an account and comes back counts once per session. The seller's columns and the buyer's columns are different people, so this is a count per step, not a per-person funnel.
 
-**In PostHog** (when `VITE_POSTHOG_KEY` is set), the seller's side is a per-person funnel: `sold_transfer_step` where `action = shown`, then `sold_transfer_step` where `action = send`, then `transfer_started` where `surface = sold_step`, within one day. The buyer's side: `passport_viewed` where `state = shown` and `is_owner = false`, then `passport_transfer_requested`, then `signup_completed`, then `gecko_added` where `source = claim`, within 14 days.
+**In PostHog** (when `VITE_POSTHOG_KEY` is set), the seller's side is a per-person funnel: `sold_transfer_step` where `action = shown`, then `sold_transfer_step` where `action = send`, then `transfer_started` where `surface = sold_step`, within one day. A seller who taps "Keep the link I sent" (`action = kept_existing`) already sent the buyer a link, so leave those out of the drop-off. The buyer's side: `passport_viewed` where `state = shown` and `is_owner = false`, then `passport_transfer_requested`, then `signup_completed`, then `gecko_added` where `source = claim`, within 14 days.
 
 **Not counted:** QR codes on rack labels, expo tags and the buyer packet (Printable Worksheets and the record's papers), and anything printed with the browser's own print command.
