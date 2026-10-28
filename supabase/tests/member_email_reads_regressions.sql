@@ -372,4 +372,34 @@ begin
 end
 $t$;
 
+-- =====================================================================
+-- my_blocked_profile_ids: blocking a member whose profile is not public
+-- still hides what they wrote (the rows carry owner_profile_id only).
+-- =====================================================================
+do $t$
+declare v_ids text[];
+begin
+  perform pg_temp.as_postgres();
+  update public.profiles set is_public_profile = null where email = pg_temp.who('carol');
+  insert into public.user_blocks (blocker_email, blocked_email) values (pg_temp.who('alice'), pg_temp.who('carol'));
+  perform pg_temp.as_member('alice');
+  select array_agg(id) into v_ids from public.my_blocked_profile_ids();
+  if v_ids is distinct from array[pg_temp.who('carol', 'profile')] then
+    raise exception 'FAIL: my_blocked_profile_ids did not return the blocked member with a non-public profile: %', v_ids;
+  end if;
+  -- read_profiles, the old way, cannot see that profile: the reason for the helper.
+  if exists (select 1 from public.read_profiles(array[pg_temp.who('carol')])) then
+    raise exception 'FAIL: expected read_profiles to hide a non-public profile';
+  end if;
+  -- Another member's blocks are never returned.
+  perform pg_temp.as_member('bob');
+  if exists (select 1 from public.my_blocked_profile_ids()) then
+    raise exception 'FAIL: my_blocked_profile_ids returned another member''s blocks';
+  end if;
+  perform pg_temp.as_anon();
+  perform pg_temp.must_fail('anon calling my_blocked_profile_ids', 'select * from public.my_blocked_profile_ids()', '%permission denied%');
+  perform pg_temp.as_postgres();
+end
+$t$;
+
 rollback;

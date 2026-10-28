@@ -3,6 +3,9 @@ import { lazy } from '@/lib/lazyWithRetry';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 
+/** How long the sign-in code check may take before the app opens anyway. */
+export const CHECK_TIMEOUT_MS = 5000;
+
 // The code screen is only ever drawn for an account with an authenticator
 // (the admin), so members never download it.
 const MfaCodePrompt = lazy(() => import('@/components/auth/MfaCodePrompt'));
@@ -43,7 +46,14 @@ export function useCodeStep(active) {
     }
     let live = true;
     setStep((prev) => (prev === 'none' ? 'checking' : prev));
-    const check = () => supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    // At most CHECK_TIMEOUT_MS: with an expired token on a bad connection
+    // the session refresh behind this call can retry for about 30 seconds,
+    // and the admin would sit on a spinner. Past the limit the app opens as
+    // before; the database switch is what guards admin powers.
+    const check = () => Promise.race([
+      supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+      new Promise((resolve) => setTimeout(() => resolve({ data: null, error: new Error('timeout') }), CHECK_TIMEOUT_MS)),
+    ])
       .then(({ data, error }) => {
         // On an error the app opens as before. The database is what
         // guards admin powers (is_admin() with the admin_requires_mfa

@@ -269,9 +269,35 @@ AS $function$
 $function$;
 
 -- =====================================================================
+-- my_blocked_profile_ids: the profile ids of the members the caller has
+-- blocked. Rows other members read now carry owner_profile_id instead of
+-- created_by, so "hide what a blocked member wrote" (forum, comments,
+-- gallery) has to match on profile id. read_profiles(p_emails) cannot do
+-- it: it only returns public, unhidden profiles, and on 28 Oct 2026 83 of
+-- 161 profiles were not public, so blocking one of those members would have
+-- stopped hiding their posts. Returns ids only, for the caller's own blocks.
+-- =====================================================================
+create or replace function public.my_blocked_profile_ids()
+returns table(id text)
+language sql
+stable
+security definer
+set search_path to ''
+as $function$
+  select distinct p.id::text
+    from public.user_blocks b
+    join public.profiles p on lower(p.email) = lower(b.blocked_email)
+   where auth.email() is not null
+     and lower(b.blocker_email) = lower(auth.email())
+$function$;
+
+-- =====================================================================
 -- Grants (since 20261015130000 a new function runs only for the roles it
 -- is granted to). next_unvoted_id_candidates keeps its existing grants.
 -- =====================================================================
+revoke all on function public.my_blocked_profile_ids() from public, anon;
+grant execute on function public.my_blocked_profile_ids() to authenticated, service_role;
+
 revoke all on function public.my_row_ids(text) from public, anon;
 grant execute on function public.my_row_ids(text) to authenticated, service_role;
 

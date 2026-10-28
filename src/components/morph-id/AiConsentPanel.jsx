@@ -1,7 +1,17 @@
 import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+const POLICY_URL = 'https://geckinspect.com/PrivacyPolicy';
+
+/** In the iPhone app, the in-app browser sheet; on the web, the link's own new tab. */
+function openPolicyBeside(event) {
+  if (typeof window === 'undefined' || !window.Capacitor?.isNativePlatform?.()) return;
+  event.preventDefault();
+  import('@capacitor/browser')
+    .then(({ Browser }) => Browser.open({ url: POLICY_URL }))
+    .catch(() => { window.location.href = '/PrivacyPolicy'; });
+}
 
 /**
  * Morph ID's permission step, on the page, before anything is sent to an
@@ -44,15 +54,19 @@ export default function AiConsentPanel({ onAllow, onDecline, disabled = false })
       </ul>
       <p className="text-xs text-slate-400">
         Nothing is sent until you tap Allow and identify, and we ask again for every new set of photos.{' '}
-        {/* The in-app route, as the iPhone app's membership screen links
-            it, so the policy opens inside the app instead of sending the
-            member out to Safari in the middle of this step. */}
-        <Link
-          to="/PrivacyPolicy"
+        {/* Opens beside this step, so the photos the member picked are still
+            here when they come back: a new tab on the web, and the in-app
+            browser sheet in the iPhone app (it does not leave the app). An
+            in-app route would unmount Morph ID and lose the photos. */}
+        <a
+          href="/PrivacyPolicy"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={openPolicyBeside}
           className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
         >
           Privacy Policy, Third-Party Services
-        </Link>
+        </a>
       </p>
       <div className="flex flex-wrap gap-2">
         <Button size="lg" onClick={onAllow} disabled={disabled} className="bg-emerald-600 hover:bg-emerald-700">

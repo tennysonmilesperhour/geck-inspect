@@ -276,6 +276,11 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
       return row;
     },
     read_profiles: () => table('profiles').map(({ id, full_name, business_name, profile_image_url, email }) => ({ id, full_name, business_name, profile_image_url, email })),
+    // The profile ids of the members the caller blocked, public profile or not.
+    my_blocked_profile_ids: (args, { currentUser }) => {
+      const blocked = new Set(table('user_blocks').filter((b) => currentUser && b.blocker_email === currentUser.email).map((b) => b.blocked_email));
+      return table('profiles').filter((p) => blocked.has(p.email)).map((p) => ({ id: String(p.id) }));
+    },
     // Members never read another member's email column; these answer the
     // way supabase/migrations/20261028040000_member_email_reads.sql does.
     forum_like_state: (args, { currentUser }) => {

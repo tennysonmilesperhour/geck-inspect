@@ -41,9 +41,15 @@ export function useBlockedMembers() {
     (async () => {
       try {
         const supabase = await getSupabase();
-        const { data, error } = await supabase
-          .rpc('read_profiles', { p_emails: list })
-          .select('id, email');
+        // my_blocked_profile_ids (20261028040000) finds every blocked
+        // member, public profile or not. read_profiles is the fallback
+        // until that migration is live; it only returns public profiles.
+        let { data, error } = await supabase.rpc('my_blocked_profile_ids');
+        if (error && (error.code === 'PGRST202' || error.code === '42883')) {
+          ({ data, error } = await supabase
+            .rpc('read_profiles', { p_emails: list })
+            .select('id, email'));
+        }
         if (!current || error || !Array.isArray(data)) return;
         setProfileIds(new Set(data.map(row => String(row.id))));
       } catch (error) {

@@ -48,7 +48,7 @@ vi.mock('@/lib/AuthContext', () => ({ useAuth: () => ({ ...fx.auth, logout: fx.l
 vi.mock('@/lib/query-client', () => ({ queryClientInstance: { invalidateQueries: (...a) => fx.invalidate(...a) } }));
 vi.mock('@/lib/layoutCache', () => ({ dataCache: { clearAll: (...a) => fx.clearAll(...a) } }));
 
-import MfaStepUpGate, { needsCodeStep } from '@/components/auth/MfaStepUpGate';
+import MfaStepUpGate, { CHECK_TIMEOUT_MS, needsCodeStep } from '@/components/auth/MfaStepUpGate';
 
 installDomHarness();
 
@@ -175,6 +175,22 @@ describe('sign-in code step', () => {
     fx.auth = { isAuthenticated: true, user: { role: 'user' } };
     render(<App />);
     expect(screen.getByRole('heading', { name: 'Admin Panel' })).toBeTruthy();
+  });
+
+  it('opens the app for an admin when the check takes longer than the limit', async () => {
+    vi.useFakeTimers();
+    try {
+      fx.aalPending = new Promise(() => {});
+      fx.auth = { isAuthenticated: true, user: { role: 'admin' } };
+      render(<App />);
+      expect(screen.getByRole('status', { name: 'Checking your sign-in' })).toBeTruthy();
+      await act(async () => { vi.advanceTimersByTime(CHECK_TIMEOUT_MS - 100); });
+      expect(screen.queryByRole('heading', { name: 'Admin Panel' })).toBeNull();
+      await act(async () => { vi.advanceTimersByTime(200); });
+      expect(screen.getByRole('heading', { name: 'Admin Panel' })).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('does nothing for a signed-out visitor or the demo', async () => {

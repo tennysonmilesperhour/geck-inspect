@@ -392,13 +392,17 @@ describe('Add this gecko', () => {
 });
 
 describe('Morph ID permission panel', () => {
-  it('opens the Privacy Policy inside the app', async () => {
+  // Beside the step, never instead of it: an in-app route unmounts Morph ID
+  // and loses the photos the member picked. A new tab on the web; in the
+  // iPhone app the in-app browser sheet (AiConsentPanel's openPolicyBeside).
+  it('opens the Privacy Policy beside the step, so the picked photos stay', async () => {
     const user = userEvent.setup();
     renderPage();
     await choosePhotos(user);
     await identify(user);
     const link = screen.getByRole('link', { name: 'Privacy Policy, Third-Party Services' });
     expect(link.getAttribute('href')).toBe('/PrivacyPolicy');
-    expect(link.getAttribute('target')).toBeNull();
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toContain('noopener');
   });
 });
