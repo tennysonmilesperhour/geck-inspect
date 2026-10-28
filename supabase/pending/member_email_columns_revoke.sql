@@ -2,14 +2,14 @@
 --
 -- NOT A MIGRATION YET. Move this file to supabase/migrations, with a fresh
 -- version (the time you move it, after production's newest), only when
--- step 1 (supabase/migrations/20261028020000_member_email_reads.sql and the
+-- step 1 (supabase/migrations/20261028040000_member_email_reads.sql and the
 -- app change merged with it) has been live for 3 days. Members keep the app
 -- open for hours and the site can deploy before or after a migration; an
 -- open tab from before step 1 still asks for these columns, and this file
 -- makes that request fail. Check first that step 1 is live (use its
 -- re-dated version if the integrator renamed it):
 --   select version from supabase_migrations.schema_migrations
---    where version = '20261028020000';
+--    where version = '20261028040000';
 -- Move the test next to it (member_email_columns_revoke_regressions.sql)
 -- into supabase/tests in the same commit.
 --

@@ -15,7 +15,7 @@
  *     the session to "aal2".
  *   - In the database, public.is_admin() also requires aal2 once the
  *     app_settings switch 'admin_requires_mfa' is on
- *     (supabase/migrations/20261028020200_admin_mfa.sql).
+ *     (supabase/migrations/20261028040200_admin_mfa.sql).
  *
  * Members without an authenticator never see any of this.
  */

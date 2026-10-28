@@ -277,7 +277,7 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
     },
     read_profiles: () => table('profiles').map(({ id, full_name, business_name, profile_image_url, email }) => ({ id, full_name, business_name, profile_image_url, email })),
     // Members never read another member's email column; these answer the
-    // way supabase/migrations/20261028020000_member_email_reads.sql does.
+    // way supabase/migrations/20261028040000_member_email_reads.sql does.
     forum_like_state: (args, { currentUser }) => {
       const ids = (args.p_target_ids || []).map(String);
       const likes = table('forum_likes').filter((l) => ids.includes(String(l.target_id)));

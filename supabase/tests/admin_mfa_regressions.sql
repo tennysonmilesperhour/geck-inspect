@@ -1,4 +1,4 @@
--- Admin two-factor regressions (migration 20261028020200_admin_mfa.sql).
+-- Admin two-factor regressions (migration 20261028040200_admin_mfa.sql).
 --
 -- Plain SQL for a scratch copy of the harness template (never production).
 -- Runs in one transaction and rolls back. Each failed check raises
@@ -73,7 +73,7 @@ declare v_qual text;
 begin
   select qual into v_qual from pg_policies
    where schemaname = 'public' and tablename = 'agent_hits' and policyname = 'agent_hits_admin_read';
-  if v_qual is distinct from 'is_admin()' then
+  if v_qual is distinct from '( SELECT is_admin() AS is_admin)' then
     raise exception 'FAIL: agent_hits_admin_read does not use is_admin(): %', v_qual;
   end if;
 end $$;
@@ -139,7 +139,7 @@ end $$;
 
 -- 7. Running the migration again keeps a switch someone turned on ------------
 insert into public.app_settings (key, value, is_public) values ('admin_requires_mfa', 'true'::jsonb, false);
-\ir ../migrations/20261028020200_admin_mfa.sql
+\ir ../migrations/20261028040200_admin_mfa.sql
 do $$ begin
   if (select value from public.app_settings where key = 'admin_requires_mfa') <> 'true'::jsonb then
     raise exception 'FAIL: running the migration again reset the switch';

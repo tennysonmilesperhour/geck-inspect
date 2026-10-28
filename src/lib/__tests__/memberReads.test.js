@@ -1,6 +1,6 @@
 // src/lib/memberReads.js: likes, reactions, "my rows" and forum
 // notifications come from the database helpers in
-// supabase/migrations/20261028020000_member_email_reads.sql, so the browser
+// supabase/migrations/20261028040000_member_email_reads.sql, so the browser
 // never reads another member's email. Until those helpers exist (the site
 // can deploy first) each one falls back to the old read.
 import { describe, expect, it, vi } from 'vitest';

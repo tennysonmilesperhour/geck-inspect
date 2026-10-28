@@ -9,7 +9,7 @@
  * then takes those columns from the authenticated role; once it is applied
  * a signed-in `select *` on these tables fails. "Mine" is found by
  * owner_profile_id, user_id or the database helpers in
- * supabase/migrations/20261028020000_member_email_reads.sql
+ * supabase/migrations/20261028040000_member_email_reads.sql
  * (src/lib/memberReads.js).
  *
  * Each list is every column except the email ones (MEMBER_HIDDEN_COLUMNS,

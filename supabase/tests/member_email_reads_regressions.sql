@@ -1,5 +1,5 @@
 -- Members' email addresses off the rows other members read, step 1.
--- Regression checks for supabase/migrations/20261028020000_member_email_reads.sql.
+-- Regression checks for supabase/migrations/20261028040000_member_email_reads.sql.
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
 -- it creates its own members and switches roles the way the API does

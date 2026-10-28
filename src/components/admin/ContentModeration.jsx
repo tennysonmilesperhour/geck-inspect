@@ -24,7 +24,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { withOwnerEmailsFetched } from '@/lib/adminData';
+import { withOwnerEmailsFetched } from '@/lib/ownerEmails';
 
 /**
  * Content moderation surface, browse and delete user-generated content

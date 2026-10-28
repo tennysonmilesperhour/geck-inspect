@@ -33,12 +33,12 @@ export async function setGalleryDisplay(gecko, checked) {
   const imageUrls = Array.isArray(gecko.image_urls) ? gecko.image_urls.filter(Boolean) : [];
   if (imageUrls.length === 0) return 0;
   // The owner's photos, matched on owner_profile_id: members cannot read
-  // created_by (an email) on gecko_images. A gecko saved before its owner
-  // had a profile has no owner_profile_id; its photos are matched the old
-  // way.
-  const existing = await GeckoImage.filter(gecko.owner_profile_id
-    ? { owner_profile_id: gecko.owner_profile_id }
-    : { created_by: gecko.created_by }).catch(() => []);
+  // created_by (an email) on gecko_images. A gecko with no owner_profile_id
+  // (none in production on 28 Oct 2026) is left alone rather than matched on
+  // created_by, a read that fails once that column is revoked and would then
+  // add every photo again.
+  if (!gecko.owner_profile_id) return 0;
+  const existing = await GeckoImage.filter({ owner_profile_id: gecko.owner_profile_id }).catch(() => []);
   if (checked) {
     const existingUrls = new Set(existing.map((row) => row.image_url).filter(Boolean));
     for (const url of imageUrls) {

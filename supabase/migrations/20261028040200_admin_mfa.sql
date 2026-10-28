@@ -86,4 +86,5 @@ $function$;
 drop policy if exists agent_hits_admin_read on public.agent_hits;
 create policy agent_hits_admin_read on public.agent_hits
   for select to authenticated
-  using (public.is_admin());
+  -- In a select so Postgres works it out once per query, not once per row.
+  using ((select public.is_admin()));

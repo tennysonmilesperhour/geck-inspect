@@ -1,7 +1,7 @@
 -- The weekly scoreboard (admin Funnel card).
 -- Regression checks for supabase/migrations/20261015151500_scoreboard.sql,
 -- 20261016090500_revenue_counts.sql and
--- 20261028020100_scoreboard_honest_counts.sql (section 6: App Store sandbox
+-- 20261028040100_scoreboard_honest_counts.sql (section 6: App Store sandbox
 -- purchases, internal accounts and prepaid years).
 --
 -- Plain SQL for a local Postgres copy of the schema, run as a superuser:
@@ -536,7 +536,7 @@ end
 $t$;
 
 -- 6. Sandbox purchases, internal accounts and prepaid years
---    (20261028020100_scoreboard_honest_counts.sql) -------------------------
+--    (20261028040100_scoreboard_honest_counts.sql) -------------------------
 --
 -- These checks write each failure to _fails and report them together at
 -- the end, so one run against an older function body lists every rule it

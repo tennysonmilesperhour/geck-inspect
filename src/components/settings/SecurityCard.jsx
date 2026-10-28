@@ -165,7 +165,7 @@ export default function SecurityCard() {
           Two-factor sign-in asks for a 6-digit code from an authenticator app on your phone every time you sign in, as well as your password or sign-in link.
         </p>
         <p>
-          Why: this account has admin powers (member records, payments, the admin panel). With two-factor sign-in, someone who gets your password still cannot use them without your phone.
+          Why: this account has admin powers (member records, payments, the admin panel). With two-factor sign-in, Geck Inspect asks for a code from your phone every time you sign in, so a password on its own is not enough to open the app.
         </p>
         <p>
           If you lose your phone, the secret key shown during setup is how you add the account to a new authenticator app. Save it somewhere safe, such as a password manager, before you finish.

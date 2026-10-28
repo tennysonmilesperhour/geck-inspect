@@ -47,7 +47,8 @@ const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
 const PENDING = read('supabase/pending/member_email_columns_revoke.sql');
 const PENDING_TEST = read('supabase/pending/member_email_columns_revoke_regressions.sql');
-const STEP1 = read('supabase/migrations/20261028020000_member_email_reads.sql');
+// Found by its name, not its date: the date changes when the file is re-dated at merge.
+const STEP1 = read(`supabase/migrations/${readdirSync(resolve(ROOT, 'supabase/migrations')).find((f) => f.endsWith('_member_email_reads.sql'))}`);
 
 /** The ('table', array['col', ...]) rows of a SQL values list. */
 function hiddenLists(sql) {
@@ -180,7 +181,7 @@ function sourceFiles(dir) {
 }
 
 // Each one a fallback that runs only until
-// supabase/migrations/20261028020000_member_email_reads.sql is applied
+// supabase/migrations/20261028040000_member_email_reads.sql is applied
 // (the database helper is missing), so never after step 2.
 const ALLOWED = [
   ['src/lib/memberReads.js', ".from('forum_likes')"],
@@ -190,7 +191,9 @@ const ALLOWED = [
 ];
 
 const EMAIL = '(created_by|user_email|winner_emails)';
-const ENTITY_FILTER = new RegExp(`\\b(${[...Object.keys(entities.MEMBER_COLUMN_EXTRAS), 'UserBadge', 'MorphGuideComment', 'Giveaway'].join('|')})\\.filter\\(\\s*\\{[^}]*\\b${EMAIL}\\s*:`, 'g');
+// An email key anywhere in the filter's argument, conditional ones included
+// (cond ? {...} : { created_by: x }), up to the end of the statement.
+const ENTITY_FILTER = new RegExp(`\\b(${[...Object.keys(entities.MEMBER_COLUMN_EXTRAS), 'UserBadge', 'MorphGuideComment', 'Giveaway'].join('|')})\\.filter\\([^;)]{0,300}?\\b${EMAIL}\\s*:`, 'g');
 const TABLE_FROM = new RegExp(`\\.from\\(\\s*['"\`](${Object.keys(MEMBER_HIDDEN_COLUMNS).join('|')})['"\`]\\s*\\)`, 'g');
 const BAD_IN_CHAIN = [
   /\.select\(\s*\)/,
@@ -234,9 +237,10 @@ describe('no page reads another member\'s email on these tables', () => {
 
   it('still recognises the reads it is guarding against', () => {
     const sample = "const a = supabase.from('gecko_images').select('*').eq('verified', true);\n"
-      + "const b = GeckoImage.filter({ created_by: me.email });\n";
+      + "const b = GeckoImage.filter({ created_by: me.email });\n"
+      + "const c = GeckoImage.filter(id ? { owner_profile_id: id } : { created_by: me.email });\n";
     const chains = [...sample.matchAll(TABLE_FROM)].map((m) => sample.slice(m.index, sample.indexOf(';', m.index)));
     expect(chains.some((c) => BAD_IN_CHAIN.some((re) => re.test(c)))).toBe(true);
-    expect([...sample.matchAll(ENTITY_FILTER)]).toHaveLength(1);
+    expect([...sample.matchAll(ENTITY_FILTER)]).toHaveLength(2);
   });
 });

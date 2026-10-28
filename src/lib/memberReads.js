@@ -6,7 +6,7 @@
  * forum_posts.created_by and the rest; see src/lib/memberColumns.js). The
  * few features that asked "is this mine" or "who wrote this" now ask the
  * database instead, through the functions in
- * supabase/migrations/20261028020000_member_email_reads.sql, which answer
+ * supabase/migrations/20261028040000_member_email_reads.sql, which answer
  * without handing anyone's address to the browser.
  *
  * The site can deploy before that migration runs. Each helper then falls

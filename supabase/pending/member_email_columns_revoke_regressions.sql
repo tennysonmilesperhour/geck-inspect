@@ -2,7 +2,7 @@
 -- Regression checks for supabase/pending/member_email_columns_revoke.sql.
 --
 -- Run it with psql on a scratch copy of the harness template (it needs
--- step 1, supabase/migrations/20261028020000_member_email_reads.sql, which
+-- step 1, supabase/migrations/20261028040000_member_email_reads.sql, which
 -- the template already has):
 --
 --   psql -X -v ON_ERROR_STOP=1 -d <scratch copy> -f supabase/pending/member_email_columns_revoke_regressions.sql
