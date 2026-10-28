@@ -35,7 +35,6 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const QUEUE_PATH = path.join(REPO_ROOT, 'docs', 'blog-queue.json');
 
 const MIN_SCORE_TO_KEEP = 5.0; // out of 10; tune over time
-const MAX_NEW_PER_RUN = 3;
 const MAX_QUEUE_SIZE = 30; // avoid runaway queue growth
 
 const TOPIC_SCHEMA = {

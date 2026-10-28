@@ -94,7 +94,6 @@ export const DEMO_BREEDER_PHOTO_ASSIGNMENTS = Object.freeze({
   'mock-demo-gecko-2026-08': DEMO_BREEDER_ILLUSTRATIVE_PHOTOS[6],
   ...OWNER_PHOTO_ASSIGNMENTS,
 });
-const now = new Date().toISOString();
 const laidDate = (hatchDate) => {
   const d = new Date(`${hatchDate}T12:00:00.000Z`);
   d.setUTCDate(d.getUTCDate() - 82);

@@ -165,6 +165,13 @@ pnpm check:genetics
 pnpm build
 ```
 
+`pnpm lint` allows at most 57 warnings (`--max-warnings` in `package.json`).
+All 57 are `react-hooks/exhaustive-deps` from before the cap. Adding a missing
+hook dependency without reading the effect can start a render loop, so they are
+fixed one at a time. A new warning of any kind fails CI and `pnpm build` (which
+runs lint), so fix it rather than raising the number. When you fix an old one,
+lower the number.
+
 `pnpm typecheck` is a limited syntax/structure gate with `checkJs` disabled. It
 is not proof that the JSX application is fully typed. Vitest covers genetics,
 pricing evidence, saves, billing semantics, identity and regression cases.
