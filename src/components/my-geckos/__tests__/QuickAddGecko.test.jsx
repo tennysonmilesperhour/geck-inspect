@@ -197,6 +197,31 @@ describe('QuickAddGecko', () => {
     expect(state.rpcCalls[0].args.p_record.morph_tags).toEqual(['Lilly White', 'Harlequin']);
   });
 
+  it('says the morph is a suggestion the member can change on the record', async () => {
+    const { tree } = await mount({ initialDraft: MORPH_DRAFT, onContinue: vi.fn(), saveSource: 'morph_id_draft' });
+    expect(textOf(tree)).toContain('A suggestion from the photos, not proven genetics. You can change it on the gecko’s record.');
+    // A sure answer is a line to accept, not a field.
+    expect(typedFields(tree)).toEqual(['qa-name']);
+  });
+
+  it('shows the morph to check when Morph ID was unsure', async () => {
+    const onContinue = vi.fn();
+    const { tree } = await mount({ initialDraft: { ...MORPH_DRAFT, check_morph: true }, onContinue, saveSource: 'morph_id_draft' });
+    expect(textOf(tree)).toContain('Morph ID was not sure about this one. Check the morph below.');
+    // The morph sits right under the suggestion it explains, then the name.
+    expect(typedFields(tree)).toEqual(['qa-morph', 'qa-name']);
+    expect(byId(tree, 'qa-morph').props.value).toBe('Lilly White');
+    // The name still has the focus; the member checks the morph and saves.
+    expect(byId(tree, 'qa-name').props.autoFocus).toBe(true);
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
+    await act(async () => { byId(tree, 'qa-morph').props.onChange({ target: { value: 'Dalmatian' } }); });
+    await act(async () => { buttonWithText(tree, 'Save and continue').props.onClick(); });
+    expect(state.rpcCalls[0].args.p_record).toMatchObject({ name: 'Mango', morphs_traits: 'Dalmatian' });
+    // The hint is for the form only; it is never a column on the gecko.
+    expect(state.rpcCalls[0].args.p_record).not.toHaveProperty('check_morph');
+    expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the full form for a Morph ID draft outside the guided flow', async () => {
     const { tree } = await mount({ initialDraft: MORPH_DRAFT, saveSource: 'morph_id_draft' });
     expect(typedFields(tree)).toEqual(expect.arrayContaining(['qa-name', 'qa-morph', 'qa-weight']));

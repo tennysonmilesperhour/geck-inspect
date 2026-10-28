@@ -410,7 +410,6 @@ export default function MyGeckosPage() {
             setShowUpgradeModal(true);
             return;
         }
-        markPhotoPath(false);
         if (geckos.filter((g) => !g.archived).length === 0 && !user.is_guest) {
             // First gecko: the short form, prefilled, then parents and payoff.
             openQuickAdd({ flow: true, initialDraft: draft, saveSource: 'morph_id_draft' });
@@ -570,6 +569,10 @@ export default function MyGeckosPage() {
         // Activation milestone, checked against the database so archived
         // and imported geckos count the same way on every add path.
         if (isNew) recordGeckoAdded(source, 1, { skipGeckoAdded: true });
+        // A saved gecko ends the guided first gecko's photo path, however
+        // it was added (a Morph ID draft, typed in, the full form or the
+        // demo), so a later Morph ID visit does not open on step 1 again.
+        if (isNew) markPhotoPath(false);
 
         // Notify any other page listening on the gecko list (Dashboard,
         // Lineage, Breeding, etc.) so their caches can invalidate.

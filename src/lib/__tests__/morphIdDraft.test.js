@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildGeckoDraftFromAnalysis, applyCorrections } from '../morphIdDraft';
+import { buildGeckoDraftFromAnalysis, applyCorrections, morphNeedsChecking } from '../morphIdDraft';
 import { ALL_MORPHS } from '@/components/my-geckos/morphTagCatalog';
 import { PRIMARY_MORPHS, GENETIC_TRAITS, BASE_COLORS } from '@/components/morph-id/morphTaxonomy';
 
@@ -154,5 +154,47 @@ describe('applyCorrections', () => {
   it('keeps the visual profile when the morph was confirmed as is', () => {
     const corrected = applyCorrections(ai, { primary_morph: 'harlequin', genetics: [], secondary_traits: ['portholes'], base_color: 'red' });
     expect(corrected.visual_profile).toEqual(ai.visual_profile);
+  });
+});
+
+// The short add form on step 1 of the guided first gecko shows the morph as
+// a field to check when Morph ID was unsure (docs/specs/morph-id.md: no flow
+// hides uncertainty behind one definitive label). The bar is the server's:
+// best_match needs a model signal of 75 or more and no disagreement from
+// the breeder-tagged reference photos (_shared/morph-evidence.ts).
+describe('morphNeedsChecking', () => {
+  const SURE = {
+    primary_morph: 'harlequin',
+    genetic_traits: ['lily_white'],
+    assessment_status: 'best_match',
+    model_signal: 82,
+    visual_evidence: { status: 'available', neighbors: [], consensus: { primary_morph: 'harlequin' } },
+  };
+
+  it('is false for a best visual match with a strong signal', () => {
+    expect(morphNeedsChecking(SURE)).toBe(false);
+    expect(morphNeedsChecking({ ...SURE, visual_evidence: { status: 'unavailable' } })).toBe(false);
+    expect(morphNeedsChecking(null)).toBe(false);
+  });
+
+  it('is true for a tentative shortlist or a status it does not know', () => {
+    expect(morphNeedsChecking({ ...SURE, assessment_status: 'tentative' })).toBe(true);
+    expect(morphNeedsChecking({ ...SURE, assessment_status: undefined })).toBe(true);
+  });
+
+  it('is true for a low or missing model signal', () => {
+    expect(morphNeedsChecking({ ...SURE, model_signal: 74 })).toBe(true);
+    expect(morphNeedsChecking({ ...SURE, model_signal: undefined, confidence_score: 60 })).toBe(true);
+    expect(morphNeedsChecking({ ...SURE, model_signal: undefined, confidence_score: undefined })).toBe(true);
+    expect(morphNeedsChecking({ ...SURE, model_signal: 75 })).toBe(false);
+  });
+
+  it('is true when the reference photos lean to another morph', () => {
+    expect(morphNeedsChecking({ ...SURE, visual_evidence: { status: 'available', consensus: { primary_morph: 'dalmatian' } } })).toBe(true);
+  });
+
+  it('rides on the draft as check_morph', () => {
+    expect(buildGeckoDraftFromAnalysis(SURE, []).check_morph).toBe(false);
+    expect(buildGeckoDraftFromAnalysis({ ...SURE, assessment_status: 'tentative', model_signal: 58 }, []).check_morph).toBe(true);
   });
 });
