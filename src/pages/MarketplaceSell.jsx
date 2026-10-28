@@ -1107,9 +1107,6 @@ export default function MarketplaceSellPage() {
             key={soldFollowUp.id}
             gecko={soldFollowUp}
             onClose={() => setSoldFollowUp(null)}
-            onPassportMade={(fields) => {
-              setAllGeckos((prev) => prev.map((g) => (g.id === soldFollowUp.id ? { ...g, ...fields } : g)));
-            }}
           />
         </Suspense>
       )}

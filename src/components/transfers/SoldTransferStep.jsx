@@ -1,13 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRightLeft } from 'lucide-react';
+import { ArrowRightLeft, Check, Copy } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { captureEvent } from '@/lib/posthog';
-import { makePassport } from '@/lib/makePassport';
-import { transferPriceDefault } from '@/lib/transfers';
+import { claimUrlFor, copyText, findPendingTransfer, transferPriceDefault } from '@/lib/transfers';
 import TransferDialog from './TransferDialog';
 
 const money = (value) => `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+
+// "October 27", in the member's own time zone. Blank when the row has no date.
+const dayOf = (iso) => {
+  const date = iso ? new Date(iso) : null;
+  return date && !Number.isNaN(date.getTime())
+    ? date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+    : '';
+};
 
 /**
  * The step after "Archive as sold": "Send Mango to the buyer". The member
@@ -17,36 +27,66 @@ const money = (value) => `$${Number(value).toLocaleString('en-US', { maximumFrac
  * the distribution loop in docs/planning/growth-plan-2026-10.md: every
  * gecko a breeder sells carries Geck Inspect to the buyer.
  *
- * A gecko with no passport gets one when the transfer is sent, never
- * before. A passport only works while the gecko is public, so both this
- * step and the transfer form say so first.
+ * The step sends the transfer only. It never makes a passport and never
+ * turns on Public display: create_transfer and the claim page's preview
+ * both work on a private gecko. Once the buyer accepts, Mango is theirs,
+ * and they can make a passport from its record if they want one.
+ *
+ * A new link cancels any link already pending for the gecko, so the step
+ * first reads the seller's own pending link. When there is one, it says
+ * plainly that a new link replaces the one sent on that day, and lets the
+ * seller keep it (and see it again) instead.
  *
  * Props:
- *   gecko           the gecko as just saved (archived, status Sold, sold_price)
- *   onClose()       the step is finished: skipped, cancelled or sent
- *   onPassportMade  called with the changed fields when a passport is made
+ *   gecko    the gecko as just saved (archived, status Sold, sold_price)
+ *   onClose  the step is finished: skipped, kept, cancelled or sent
  */
-export default function SoldTransferStep({ gecko, onClose, onPassportMade }) {
-  const [stage, setStage] = useState('offer');
-  const madeCode = useRef(null);
+export default function SoldTransferStep({ gecko, onClose }) {
+  // checking (nothing shown yet), offer, existing (the link already sent)
+  // or transfer (the transfer form).
+  const [stage, setStage] = useState('checking');
+  // The seller's pending link for this gecko: null when there is none,
+  // undefined when the check could not be made.
+  const [pending, setPending] = useState(null);
+  const [copied, setCopied] = useState(false);
   const name = gecko?.name || 'this gecko';
   // The same, at the start of a sentence.
   const Name = gecko?.name || 'This gecko';
-  const hasPassport = Boolean(gecko?.passport_code);
   const price = transferPriceDefault({ sold_price: gecko?.sold_price });
-  const facts = { has_passport: hasPassport, has_price: price !== '' };
+  const facts = {
+    has_passport: Boolean(gecko?.passport_code),
+    has_price: price !== '',
+    has_pending: pending === undefined ? null : Boolean(pending),
+  };
+
+  useEffect(() => {
+    let live = true;
+    findPendingTransfer({ animalId: gecko?.id })
+      .then((row) => { if (live) setPending(row); })
+      .catch((error) => {
+        console.warn('Could not check for a transfer link already sent:', error);
+        if (live) setPending(undefined);
+      })
+      .finally(() => { if (live) setStage('offer'); });
+    return () => { live = false; };
+  }, [gecko?.id]);
 
   const shown = useRef(false);
   useEffect(() => {
-    if (shown.current) return;
+    if (stage !== 'offer' || shown.current) return;
     shown.current = true;
     captureEvent('sold_transfer_step', { action: 'shown', ...facts });
-    // Once per step; the facts are those of the gecko it opened for.
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Once per step, after the check; the facts are those it opened with.
+  }, [stage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const skip = () => {
     captureEvent('sold_transfer_step', { action: 'skipped', ...facts });
     onClose?.();
+  };
+
+  const keep = () => {
+    captureEvent('sold_transfer_step', { action: 'kept_existing', ...facts });
+    setStage('existing');
   };
 
   const send = () => {
@@ -54,23 +94,10 @@ export default function SoldTransferStep({ gecko, onClose, onPassportMade }) {
     setStage('transfer');
   };
 
-  // Runs inside the transfer form's Send, before the transfer is made, so
-  // closing the form without sending leaves the gecko as it was. A second
-  // try after a failed transfer does not make a second passport.
-  const ensurePassport = async () => {
-    if (hasPassport || madeCode.current) return;
-    let fields;
-    try {
-      fields = await makePassport(gecko, { surface: 'sold_step' });
-    } catch (error) {
-      console.error('Passport not made before the transfer:', error);
-      throw new Error(`The passport for ${name} could not be made, so nothing was sent. Please try again.`);
-    }
-    madeCode.current = fields.passport_code;
-    onPassportMade?.(fields);
-  };
+  if (stage === 'checking') return null;
 
-  const passportLine = `Sending makes ${name} a passport and turns on Public display, so its passport page is public.`;
+  const sentOn = dayOf(pending?.created_date);
+  const pendingTo = String(pending?.to_email || '').trim();
 
   if (stage === 'transfer') {
     return (
@@ -80,9 +107,50 @@ export default function SoldTransferStep({ gecko, onClose, onPassportMade }) {
         animal={gecko}
         animalType="gecko"
         surface="sold_step"
-        beforeSend={hasPassport ? undefined : ensurePassport}
-        notice={hasPassport ? null : passportLine}
+        notice={pending
+          ? `This replaces the link you sent${sentOn ? ` on ${sentOn}` : ''}. That link stops working.`
+          : null}
       />
+    );
+  }
+
+  if (stage === 'existing' && pending) {
+    const claimUrl = claimUrlFor(pending.token);
+    return (
+      <Dialog open onOpenChange={(open) => { if (!open) onClose?.(); }}>
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-slate-100">The link you sent for {name}</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {pendingTo
+                ? `Only ${pendingTo} can accept it.`
+                : 'Share it only with the new owner. The first verified account to accept becomes the owner.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="mx-auto w-fit rounded-lg bg-white p-4">
+              <QRCodeSVG value={claimUrl} size={192} level="M" title="Transfer QR code" role="img" aria-label="Transfer QR code" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="sold-step-existing-link">Claim link</Label>
+              <div className="flex gap-2">
+                <Input id="sold-step-existing-link" readOnly value={claimUrl} onFocus={(event) => event.target.select()} className="font-mono text-xs min-w-0" />
+                <Button type="button" variant="outline" size="icon" aria-label="Copy link" onClick={async () => setCopied(await copyText(claimUrl))}>
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-slate-400" role="status">{copied ? 'Link copied.' : 'You can select and copy the link above.'}</p>
+            </div>
+            <p className="text-xs text-slate-400">
+              {pending.expires_at ? `Expires ${new Date(pending.expires_at).toLocaleString()}. ` : ''}
+              You can find it again in the Transfers tab in My Geckos.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => onClose?.()}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -106,19 +174,38 @@ export default function SoldTransferStep({ gecko, onClose, onPassportMade }) {
               buyer accepts.
             </p>
           )}
-          {!hasPassport && (
-            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-amber-100" data-sold-step-passport>
-              {Name} has no passport yet. Sending makes one and turns on Public display, so {name}&apos;s passport page
-              is public. Anyone with the link or the QR card can see its photos, lineage and care history.
+          {pending && (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-amber-100" data-sold-step-pending>
+              {pendingTo
+                ? `You already emailed ${pendingTo} a transfer link for ${name}${sentOn ? ` on ${sentOn}` : ''}.`
+                : `You already made a QR transfer link for ${name}${sentOn ? ` on ${sentOn}` : ''}.`}
+              {' '}A new link replaces it, and the one you sent stops working. Keep it if the buyer already has it.
+            </p>
+          )}
+          {pending === undefined && (
+            <p className="text-slate-400">
+              If you already sent a transfer link for {name}, a new one replaces it and the old link stops working.
             </p>
           )}
         </div>
         <DialogFooter className="gap-2">
-          <Button type="button" variant="outline" className="border-slate-600" onClick={skip}>Not now</Button>
-          <Button type="button" onClick={send}>
-            <ArrowRightLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-            Send to the buyer
-          </Button>
+          {pending ? (
+            <>
+              <Button type="button" variant="outline" className="border-slate-600" onClick={keep}>Keep the link I sent</Button>
+              <Button type="button" onClick={send}>
+                <ArrowRightLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+                Send a new link
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button type="button" variant="outline" className="border-slate-600" onClick={skip}>Not now</Button>
+              <Button type="button" onClick={send}>
+                <ArrowRightLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+                Send to the buyer
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

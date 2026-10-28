@@ -41,12 +41,18 @@ export function parseSalePrice(raw) {
  * price matters most: when the buyer accepts, the gecko row (and its sold
  * price) moves to them, so the transfer's sale price is the seller's only
  * record of the sale in Business Tools.
+ *
+ * A price of 0 means no money changed hands, so the box stays blank: the
+ * step after a sale shows no "$0" line, and the claim records a gift (no
+ * price) rather than a $0 sale. A gecko archived as sold for 0 was given
+ * away, so its asking price does not stand in either.
  */
 export function transferPriceDefault(animal) {
   for (const value of [animal?.sold_price, animal?.asking_price]) {
     if (value === null || value === undefined || value === '') continue;
     const n = Number(value);
-    if (Number.isFinite(n) && n >= 0) return String(n);
+    if (!Number.isFinite(n) || n < 0) continue;
+    return n > 0 ? String(n) : '';
   }
   return '';
 }
@@ -63,6 +69,33 @@ const sameEmail = (a, b) =>
 export function shouldOfferSoldTransfer({ gecko, user, reason, guest = false } = {}) {
   if (guest || reason !== 'sold' || !gecko?.id || !user?.email || user.is_guest) return false;
   return sameEmail(gecko.created_by, user.email);
+}
+
+/**
+ * The signed-in seller's own pending link for this animal that has not run
+ * out yet, newest first, or null when there is none. A new link
+ * (create_transfer) cancels every pending link for the animal, so the step
+ * after a sale reads this first and says so, instead of cancelling a link
+ * the buyer may already have in their inbox.
+ *
+ * Throws when the read fails, so the caller can say it could not check.
+ */
+export async function findPendingTransfer({ animalId, animalType = 'gecko', now = new Date() } = {}) {
+  const { data: authData } = await supabase.auth.getUser();
+  const uid = authData?.user?.id;
+  if (!uid || !animalId) return null;
+  const { data, error } = await supabase
+    .from('transfer_requests')
+    .select('id, token, to_email, claim_mode, status, created_date, expires_at')
+    .eq('from_user_id', uid)
+    .eq('animal_id', animalId)
+    .eq('animal_type', animalType)
+    .eq('status', 'pending')
+    .gt('expires_at', now.toISOString())
+    .order('created_date', { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return data?.[0] || null;
 }
 
 export function claimUrlFor(token, origin) {

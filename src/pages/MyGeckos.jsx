@@ -1468,7 +1468,6 @@ export default function MyGeckosPage() {
                             key={soldFollowUp.id}
                             gecko={soldFollowUp}
                             onClose={() => setSoldFollowUp(null)}
-                            onPassportMade={() => loadGeckos()}
                         />
                     </React.Suspense>
                 )}

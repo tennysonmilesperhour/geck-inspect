@@ -55,7 +55,7 @@ Notes on today's numbers:
 3. **Shipping today: email address exposure, step 1.** The app stops reading other members' addresses; step 2, the database lock, follows once open tabs have reloaded.
 4. **Shipping today: an honest scoreboard.** Sandbox purchases and internal accounts are left out, and a "prepaid" entry records a Founding Breeder year paid outside Stripe.
 5. **Shipping today: Morph ID photo path to a first gecko.** A Morph ID result in the guided first gecko becomes a saved gecko.
-6. **Shipping today: passport funnel tracking, and Sold offers the transfer.** Marking a gecko Sold offers the passport and the transfer link to the buyer.
+6. **Shipping today: passport funnel tracking, and Sold offers the transfer.** Marking a gecko Sold offers to send the buyer a transfer link. The gecko stays private, and a link already sent is never replaced without saying so.
 7. **Shipping today: admin two-factor in Settings, Security.** Enrol an authenticator app before the 16 November reminder; requiring it for admin powers waits until you have.
 8. **Your step: backup secrets.** Add `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` at https://github.com/tennysonmilesperhour/geck-inspect/settings/secrets/actions/new (which values: `docs/OPERATIONS.md`, section 2). Until then there is no copy of member records outside Supabase.
 9. **Your step: Stripe refund and dispute events.** Add them to the endpoint at https://dashboard.stripe.com/webhooks, then resend the 17 October `charge.refunded` event.

@@ -20,13 +20,12 @@ import { TRANSFER_TTL_HOURS, copyText, isValidEmail, parseSalePrice, startTransf
  * for, else its asking price (transferPriceDefault).
  *
  * The step after "Archive as sold" (SoldTransferStep) also passes:
- *   surface     where the transfer started, for the funnel ('record' by
- *               default; 'request' when initialEmail came from a buyer)
- *   beforeSend  async work that must finish before the transfer is made
- *               (making the gecko's passport); if it throws, nothing is sent
- *   notice      a line shown above the buttons (what sending will change)
+ *   surface  where the transfer started, for the funnel ('record' by
+ *            default; 'request' when initialEmail came from a buyer)
+ *   notice   a line shown above the buttons (what sending will change,
+ *            such as replacing a link already sent)
  */
-export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', initialEmail = '', onTransferred, surface, beforeSend, notice = null }) {
+export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', initialEmail = '', onTransferred, surface, notice = null }) {
   const [mode, setMode] = useState('link');
   const [email, setEmail] = useState('');
   const [price, setPrice] = useState('');
@@ -64,7 +63,6 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
     if (Object.keys(nextErrors).length) return;
     setSubmitting(true);
     try {
-      if (beforeSend) await beforeSend();
       const res = await startTransfer({
         animalId: animal.id,
         animalType,
