@@ -72,6 +72,7 @@ import {
 import { startVisiblePolling } from '@/lib/pagePolling';
 import { AppShellContext } from '@/lib/appShell';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import MfaStepUpGate from '@/components/auth/MfaStepUpGate';
 import {
   NAV_ICON_MAP,
   FAVORITES_MAX,
@@ -1492,10 +1493,15 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     );
           }
 
-          export default function Layout({ children, currentPageName }) {
-          return (
-          <SidebarProvider>
-          <LayoutContent children={children} currentPageName={currentPageName} />
-          </SidebarProvider>
-          );
-          }
+// MfaStepUpGate: an account with an authenticator app that signed in
+// with only a password or link is asked for the app's code before any
+// page shows (src/lib/mfa.js). Members without one see no change.
+export default function Layout({ children, currentPageName }) {
+  return (
+    <MfaStepUpGate>
+      <SidebarProvider>
+        <LayoutContent currentPageName={currentPageName}>{children}</LayoutContent>
+      </SidebarProvider>
+    </MfaStepUpGate>
+  );
+}
