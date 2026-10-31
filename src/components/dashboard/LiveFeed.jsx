@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Camera, MessageSquare, GitBranch, UserPlus, Activity, Heart, Sparkles, Flame, Egg } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { startVisiblePolling } from '@/lib/pagePolling';
+import { reactionKey, reactionState } from '@/lib/memberReads';
 
 const POLL_MS = 30000;
 
@@ -23,15 +24,16 @@ const REACTION_META = {
     fire:     { icon: Flame,    label: 'Fire',     color: 'text-amber-400' },
 };
 
+// `reactions` is { [reaction]: { count, mine } } for one event. Whose
+// reactions they are never reaches the browser, only whether one is the
+// member's own (community_reaction_state).
 function EventReactions({ event, currentUserEmail, reactions, onToggle }) {
     return (
         <div className="flex items-center gap-1.5 touch:gap-2 mt-2">
             {Object.entries(REACTION_META).map(([key, meta]) => {
                 const Icon = meta.icon;
-                const count = reactions.filter((r) => r.reaction === key).length;
-                const mine = currentUserEmail && reactions.some(
-                    (r) => r.reaction === key && r.user_email === currentUserEmail
-                );
+                const count = reactions[key]?.count || 0;
+                const mine = Boolean(currentUserEmail) && reactions[key]?.mine === true;
                 return (
                     <button
                         key={key}
@@ -72,21 +74,13 @@ export default function LiveFeed({ currentUserEmail }) {
 
     const loadReactions = useCallback(async (eventList) => {
         if (!eventList?.length) return;
-        const types = [...new Set(eventList.map((e) => e.event_type))];
-        const ids = [...new Set(eventList.map((e) => e.event_id))];
-        // Whose reaction it is matters only to a signed-in member (their own
-        // highlighted); signed-out visitors cannot read user_email at all.
-        const { data } = await supabase
-            .from('community_event_reactions')
-            .select(currentUserEmail ? 'event_type, event_id, user_email, reaction' : 'event_type, event_id, reaction')
-            .in('event_type', types)
-            .in('event_id', ids);
-        const grouped = {};
-        for (const r of data || []) {
-            const key = `${r.event_type}:${r.event_id}`;
-            (grouped[key] ||= []).push(r);
+        // Counts for everyone; which ones are the member's own (to
+        // highlight) only when signed in.
+        try {
+            setReactionsByKey(await reactionState(eventList, { email: currentUserEmail || null }));
+        } catch {
+            // Reactions are a bonus; the feed still shows without them.
         }
-        setReactionsByKey(grouped);
     }, [currentUserEmail]);
 
     useEffect(() => {
@@ -105,22 +99,27 @@ export default function LiveFeed({ currentUserEmail }) {
 
     const toggleReaction = async (event, reaction, currentlyMine) => {
         if (!currentUserEmail) return;
-        const key = `${event.event_type}:${event.event_id}`;
-        const prev = reactionsByKey[key] || [];
+        const key = reactionKey(event.event_type, event.event_id);
+        const prev = reactionsByKey[key] || {};
         // Optimistic update
-        const next = currentlyMine
-            ? prev.filter((r) => !(r.reaction === reaction && r.user_email === currentUserEmail))
-            : [...prev, { event_type: event.event_type, event_id: event.event_id, user_email: currentUserEmail, reaction }];
+        const count = prev[reaction]?.count || 0;
+        const next = {
+            ...prev,
+            [reaction]: currentlyMine
+                ? { count: Math.max(0, count - 1), mine: false }
+                : { count: count + 1, mine: true },
+        };
         setReactionsByKey({ ...reactionsByKey, [key]: next });
 
         if (currentlyMine) {
+            // The row rule lets a member delete only their own reaction,
+            // so this needs no email address to pick the right row.
             await supabase
                 .from('community_event_reactions')
                 .delete()
                 .match({
                     event_type: event.event_type,
                     event_id: event.event_id,
-                    user_email: currentUserEmail,
                     reaction,
                 });
         } else {
@@ -172,7 +171,7 @@ export default function LiveFeed({ currentUserEmail }) {
                         const meta = TYPE_META[ev.event_type] || TYPE_META.upload;
                         const Icon = meta.icon;
                         const key = `${ev.event_type}:${ev.event_id}`;
-                        const reactions = reactionsByKey[key] || [];
+                        const reactions = reactionsByKey[key] || {};
                         const actorHref = ev.actor_id ? `/PublicProfile?userId=${ev.actor_id}` : ev.href;
                         return (
                             <div

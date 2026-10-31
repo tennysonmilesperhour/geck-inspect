@@ -57,7 +57,7 @@
     "test": "TZ=UTC vitest run",
     "test:clock-drift": "node scripts/test-clock-drift.mjs",
     "test:e2e": "playwright test",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 57",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
     "preview": "vite preview",

@@ -140,15 +140,10 @@ export default [
   // in the same round (October 2026). They are warnings here, for these
   // files only, so the two changes cannot collide; each is a one-line fix
   // for the file's owner, after which its entry should be deleted.
-  //   src/Layout.jsx: pass children between the LayoutContent tags.
   //   src/lib/layoutConstants.js: drop the unused Store icon import.
   //   src/data/genetics-sections.jsx: drop Subsection, TrendingUp, ArrowUp.
   //   scripts/build-agent-data.mjs: drop the unused morphsToMarkdown import.
   //   scripts/build-vercel-json.mjs: drop getAllSpaPathPatterns.
-  {
-    files: ["src/Layout.jsx"],
-    rules: { "react/no-children-prop": "warn" },
-  },
   {
     files: [
       "src/lib/layoutConstants.js",

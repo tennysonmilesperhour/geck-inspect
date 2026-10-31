@@ -283,11 +283,12 @@ describe('entity reads pick columns by sign-in state', () => {
     expect(await readColumns('WeightRecord')).toBe(WEIGHT_RECORD_PUBLIC_COLUMNS.join(','));
   });
 
-  it('reads every column when signed in', async () => {
+  it('reads every column when signed in, except where another member\'s email sits on the row', async () => {
     getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
     expect(await readColumns('Gecko')).toBe('*');
-    expect(await readColumns('GeckoImage')).toBe('*');
-    expect(await readColumns('ForumPost')).toBe('*');
+    // src/lib/memberColumns.js; see memberColumns.test.js.
+    expect(await readColumns('GeckoImage')).not.toMatch(/\*|created_by/);
+    expect(await readColumns('ForumPost')).not.toMatch(/\*|created_by/);
   });
 
   it('reads the Gecko of the Day list for everyone without checking the session', async () => {

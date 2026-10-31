@@ -141,21 +141,91 @@ describe('QuickAddGecko', () => {
     expect(byId(tree, 'qa-name')).toBeTruthy();
   });
 
-  it('prefills a Morph ID draft and saves its tags, then continues the flow', async () => {
+  // Fields the member types into (the reminder switch and the hidden
+  // file picker are not typing).
+  const typedFields = (tree) => tree.root
+    .findAll((n) => n.type === 'input' && n.props.type !== 'checkbox' && n.props.type !== 'file')
+    .map((n) => n.props.id);
+  const MORPH_DRAFT = { image_urls: ['https://x/top.webp', 'https://x/side.webp'], morph_tags: ['Lilly White', 'Harlequin'], morphs_traits: 'Lilly White', notes: 'Unverified Morph ID suggestion' };
+
+  it('opens a Morph ID result in the guided flow as one name field and Save and continue', async () => {
     const onContinue = vi.fn();
-    const draft = { image_urls: ['https://x/top.webp', 'https://x/side.webp'], morph_tags: ['Lilly White', 'Harlequin'], morphs_traits: 'Lilly White', notes: 'Unverified Morph ID suggestion' };
-    const { tree } = await mount({ initialDraft: draft, onContinue, saveSource: 'morph_id_draft' });
-    expect(byId(tree, 'qa-morph').props.value).toBe('Lilly White');
+    const { tree } = await mount({ initialDraft: MORPH_DRAFT, onContinue, saveSource: 'morph_id_draft', stepLabel: 'Step 1 of 3' });
+    // One field to fill, focused; the photo and the morph are shown, not asked.
+    expect(typedFields(tree)).toEqual(['qa-name']);
+    expect(byId(tree, 'qa-name').props.autoFocus).toBe(true);
+    expect(textOf(tree)).toContain('Step 1 of 3');
+    expect(textOf(tree)).toContain('Morph ID suggestion');
+    expect(textOf(tree)).toContain('Lilly White');
+    expect(tree.root.find((n) => n.type === 'img').props.src).toBe('https://x/top.webp');
+    // Feeding reminders stay on, and the switch stays in sight.
+    expect(byId(tree, 'qa-remind').props.checked).toBe(true);
+
     await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
     await act(async () => { buttonWithText(tree, 'Save and continue').props.onClick(); });
     const record = state.rpcCalls[0].args.p_record;
+    expect(record).toMatchObject({ name: 'Mango', morphs_traits: 'Lilly White', sex: 'Unsexed' });
     expect(record.morph_tags).toEqual(['Lilly White', 'Harlequin']);
     expect(record.image_urls).toEqual(['https://x/top.webp', 'https://x/side.webp']);
     expect(record.notes).toContain('Morph ID');
+    expect(record.feeding_group_id).toBe('group-1');
     expect(onContinue).toHaveBeenCalledTimes(1);
     expect(onContinue.mock.calls[0][0].name).toBe('Mango');
     // The flow takes over: no success screen here.
     expect(textOf(tree)).not.toContain('is in your collection');
+  });
+
+  it('saves the short form with Enter from the name field', async () => {
+    const onContinue = vi.fn();
+    const { tree } = await mount({ initialDraft: MORPH_DRAFT, onContinue, saveSource: 'morph_id_draft' });
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Pip' } }); });
+    await act(async () => { byId(tree, 'qa-name').props.onKeyDown({ key: 'Enter', preventDefault: () => {}, nativeEvent: {} }); });
+    expect(state.rpcCalls).toHaveLength(1);
+    expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens the rest of the fields from the short form on request', async () => {
+    const onContinue = vi.fn();
+    const { tree } = await mount({ initialDraft: MORPH_DRAFT, onContinue, saveSource: 'morph_id_draft' });
+    await act(async () => { buttonWithText(tree, 'Add sex, hatch date or weight').props.onClick(); });
+    expect(typedFields(tree)).toEqual(expect.arrayContaining(['qa-name', 'qa-hatch', 'qa-weight', 'qa-morph']));
+    expect(byId(tree, 'qa-morph').props.value).toBe('Lilly White');
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
+    await act(async () => { byId(tree, 'qa-weight').props.onChange({ target: { value: '12.5' } }); });
+    await act(async () => { buttonWithText(tree, 'Save and continue').props.onClick(); });
+    expect(state.rpcCalls[0].args.p_record).toMatchObject({ name: 'Mango', weight_grams: 12.5, morphs_traits: 'Lilly White' });
+    expect(state.rpcCalls[0].args.p_record.morph_tags).toEqual(['Lilly White', 'Harlequin']);
+  });
+
+  it('says the morph is a suggestion the member can change on the record', async () => {
+    const { tree } = await mount({ initialDraft: MORPH_DRAFT, onContinue: vi.fn(), saveSource: 'morph_id_draft' });
+    expect(textOf(tree)).toContain('A suggestion from the photos, not proven genetics. You can change it on the gecko’s record.');
+    // A sure answer is a line to accept, not a field.
+    expect(typedFields(tree)).toEqual(['qa-name']);
+  });
+
+  it('shows the morph to check when Morph ID was unsure', async () => {
+    const onContinue = vi.fn();
+    const { tree } = await mount({ initialDraft: { ...MORPH_DRAFT, check_morph: true }, onContinue, saveSource: 'morph_id_draft' });
+    expect(textOf(tree)).toContain('Morph ID was not sure about this one. Check the morph below.');
+    // The morph sits right under the suggestion it explains, then the name.
+    expect(typedFields(tree)).toEqual(['qa-morph', 'qa-name']);
+    expect(byId(tree, 'qa-morph').props.value).toBe('Lilly White');
+    // The name still has the focus; the member checks the morph and saves.
+    expect(byId(tree, 'qa-name').props.autoFocus).toBe(true);
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
+    await act(async () => { byId(tree, 'qa-morph').props.onChange({ target: { value: 'Dalmatian' } }); });
+    await act(async () => { buttonWithText(tree, 'Save and continue').props.onClick(); });
+    expect(state.rpcCalls[0].args.p_record).toMatchObject({ name: 'Mango', morphs_traits: 'Dalmatian' });
+    // The hint is for the form only; it is never a column on the gecko.
+    expect(state.rpcCalls[0].args.p_record).not.toHaveProperty('check_morph');
+    expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the full form for a Morph ID draft outside the guided flow', async () => {
+    const { tree } = await mount({ initialDraft: MORPH_DRAFT, saveSource: 'morph_id_draft' });
+    expect(typedFields(tree)).toEqual(expect.arrayContaining(['qa-name', 'qa-morph', 'qa-weight']));
+    expect(buttonWithText(tree, 'Save gecko')).toBeTruthy();
   });
 
   it('in the guest demo keeps the gecko for sign-up instead of saving', async () => {

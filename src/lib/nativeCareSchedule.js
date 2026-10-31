@@ -10,10 +10,6 @@ const MAX_NOTIFICATIONS = 48;
 const HORIZON_DAYS = 90;
 export const CARE_REMINDER_CHANNEL = 'care-reminders';
 
-function pad(n) {
-  return String(n).padStart(2, '0');
-}
-
 function parseYmd(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''));
   if (!match) return null;

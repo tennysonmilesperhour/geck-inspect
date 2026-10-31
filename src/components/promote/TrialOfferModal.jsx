@@ -136,7 +136,7 @@ export default function TrialOfferModal({ open, onOpenChange, tier, trialAlready
                 <div className="flex-1">
                   <div className="font-semibold text-emerald-100 mb-1">Upgrade to a paid tier</div>
                   <p className="text-sm text-emerald-200/70">
-                    Skip the trial. See pricing for Keeper, Breeder, and Enterprise.
+                    Skip the trial. See pricing for Keeper and Breeder.
                   </p>
                 </div>
               </div>

@@ -106,6 +106,11 @@ export function entitlementRow(appUserId: string, snapshot: CustomerSnapshot, ev
     expires_at: accessUntil,
     unsubscribe_detected_at: iso(purchase?.unsubscribe_detected_at),
     billing_issue_detected_at: iso(purchase?.billing_issues_detected_at),
+    // A sandbox purchase (TestFlight, App Review) unlocks access above but is
+    // not money, so the scoreboard leaves it out. null when no purchase
+    // supplies the entitlement: apply_revenuecat_event then falls back to
+    // the webhook's environment, or keeps the stored flag.
+    is_sandbox: purchase ? Boolean(purchase.is_sandbox) : null,
     last_event_id: event.id,
     last_event_type: event.type,
     // Order snapshots, not delivery times. Old webhooks fetch today's state;

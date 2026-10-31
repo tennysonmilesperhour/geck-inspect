@@ -47,6 +47,7 @@ select * from public.lifecycle_email_candidates();
 - **Preferences.** Day 0, 1 and 3 follow the member's *Platform Announcements* email switch; day 7 and 14 follow *Breeding & Care Updates*. The master email switch, the unsubscribe link and the one-click List-Unsubscribe header work exactly as for every other notification email.
 - **When.** A job runs every hour at 35 past (`lifecycle-emails-hourly`). The welcome waits until the account is an hour old, so it can mention what the member did in onboarding (a first gecko, a first weight), and goes with the next hourly run after that: one to two hours after joining. The brief asked for a daily job; hourly sends the welcome within two hours instead of up to a day later, and each later step arrives at about the time of day the member joined. While the switch is off each run is one lookup.
 - **Where the words live.** `supabase/functions/_shared/lifecycle-copy.ts`. Changing a sentence is a `send-email` deploy, not a migration. The test `src/lib/__tests__/lifecycleEmails.test.js` fails if this preview and the real copy drift apart; after a copy change, refresh the preview with `WRITE_LIFECYCLE_PREVIEW=1 pnpm vitest run src/lib/__tests__/lifecycleEmails.test.js`.
+- **The no-gecko links (28 October 2026).** Day 0 without a gecko and day 1 open `/MyGeckos?add=1`, which opens step 1 of the guided first gecko on arrival (add it by photo through Morph ID, or type a name and morph). Before, they opened plain `/MyGeckos`, the page behind that step. Only the link changed, not the words. The day 0 email for a member whose first gecko is in and weighed still opens `/MyGeckos`. Compare the day 0 and day 1 rows of `email_outcomes(60)` before and after this date.
 - **Dependency.** The weigh-in links open `/log?gecko=<id>&type=weight`, the one-tap log page built in the same round. It is live (the `/log` route in `src/App.jsx`); if it is ever removed, switch the emails off first, or day 0 and the weigh-in emails link to a page that does not exist.
 
 ## 3. The delivery log
@@ -80,7 +81,7 @@ Once a gecko is in, the weight chart, the feeding day and the family tree all ha
 
 A question while I have you: what got you into crested geckos? Hit reply and tell me. I read every answer.
 
-[ Add your first gecko ]  https://geckinspect.com/MyGeckos
+[ Add your first gecko ]  https://geckinspect.com/MyGeckos?add=1
 
 Tennyson
 Geck Inspect
@@ -153,7 +154,7 @@ Keeping more than a handful? Import a spreadsheet or a MorphMarket export and th
 
 If something stopped you, reply and tell me what it was. I fix what people trip on.
 
-[ Add a gecko ]  https://geckinspect.com/MyGeckos
+[ Add a gecko ]  https://geckinspect.com/MyGeckos?add=1
 
 Tennyson
 Geck Inspect

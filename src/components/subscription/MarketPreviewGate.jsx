@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { ArrowRight, Lock } from 'lucide-react';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
-import { getTierPricing } from '@/lib/stripe-config';
+import { ENTERPRISE_ON_SALE, getTierPricing } from '@/lib/stripe-config';
 import { upgradePromptShown } from '@/lib/upgradePrompt';
 import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 
@@ -9,7 +9,8 @@ import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
  * Market Intelligence is an Enterprise feature (decision 6 Oct 2026).
  * Everyone else sees a short, faded, read-only slice of the real panel
  * with an upgrade card on top: enough to see what it is, nothing they
- * can click, type into or scroll through.
+ * can click, type into or scroll through. While Enterprise is off sale
+ * (ENTERPRISE_ON_SALE) the card says so and offers no upgrade.
  *
  * `inert` blocks clicks, focus and screen readers inside the preview.
  * React 18 does not know the attribute, so it is set on the node.
@@ -72,6 +73,16 @@ export default function MarketPreviewGate({ user, surface, height = 360, serverG
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/15">
             <Lock className="h-5 w-5 text-amber-400" />
           </div>
+          {!ENTERPRISE_ON_SALE ? (
+            <>
+              <p className="font-semibold text-slate-100">Market Intelligence is not open to new members</p>
+              <p className="mt-1 text-sm text-slate-400 leading-relaxed">
+                The daily brief, the live feed of new listings and price cuts, watchlist alerts and the
+                pricing analytics are paused for new members right now.
+              </p>
+            </>
+          ) : (
+          <>
           <p className="font-semibold text-slate-100">Market Intelligence is part of Enterprise</p>
           <p className="mt-1 text-sm text-slate-400 leading-relaxed">
             The daily brief, the live feed of new listings and price cuts, watchlist alerts and the
@@ -85,6 +96,8 @@ export default function MarketPreviewGate({ user, surface, height = 360, serverG
           >
             See Enterprise <ArrowRight className="ml-1 h-4 w-4" />
           </UpgradePlansButton>
+          </>
+          )}
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@ import { TIER_LIMITS } from './tierLimits.js';
 
 // Enterprise is listed only while it is on sale (ENTERPRISE_ON_SALE).
 const PAID_TIERS = ENTERPRISE_ON_SALE ? ['keeper', 'breeder', 'enterprise'] : ['keeper', 'breeder'];
-const PLAN_ORDER = ['free', 'keeper', 'breeder', 'enterprise'];
+const PLAN_ORDER = ['free', ...PAID_TIERS];
 
 const PLAN_LABEL = {
   free: 'Free',
@@ -74,7 +74,7 @@ export function membershipMetaDescription() {
     : `${breeder.monthly.price}/mo or ${breeder.annual.price}/yr`;
   const enterprisePart = ENTERPRISE_ON_SALE
     ? `, and Enterprise (${enterprise.monthly.price}/mo or ${enterprise.annual.price}/yr)`
-    : ', and an Enterprise waitlist';
+    : '';
   return `Geck Inspect plans for crested gecko keepers and breeders. Free (${freeGeckos} geckos), Keeper (${keeperPrice}), Breeder (${breederPrice})${enterprisePart}. Optional ${TRIAL_DAYS}-day free trial on monthly and yearly plans. Cancel anytime.`;
 }
 
@@ -86,7 +86,7 @@ export function membershipMetaDescription() {
 export const MEMBERSHIP_FAQS = [
   {
     q: 'How much does Geck Inspect cost?',
-    a: `Geck Inspect has a Free plan (up to ${TIER_LIMITS.free.maxGeckos} geckos), Keeper at ${spokenMonthly('keeper')} or ${spokenYearly('keeper')}, and Breeder at ${spokenMonthly('breeder')} or ${spokenYearly('breeder')}. Lifetime is ${TIER_PRICING.keeper.lifetime.price} for Keeper and ${TIER_PRICING.breeder.lifetime.price} for Breeder, paid once, with no renewals. ${ENTERPRISE_ON_SALE ? `Enterprise, with Market Intelligence, is ${spokenMonthly('enterprise')} or ${spokenYearly('enterprise')}.` : 'Enterprise, with Market Intelligence, is not on sale right now; you can join its waitlist on this page.'} Subscribing bills you straight away, and each monthly or yearly paid plan also offers an optional ${TRIAL_DAYS}-day free trial. A lifetime purchase has no trial. Paying yearly saves about ${maxAnnualSavingsPercent()}%.`,
+    a: `Geck Inspect has a Free plan (up to ${TIER_LIMITS.free.maxGeckos} geckos), Keeper at ${spokenMonthly('keeper')} or ${spokenYearly('keeper')}, and Breeder at ${spokenMonthly('breeder')} or ${spokenYearly('breeder')}. Lifetime is ${TIER_PRICING.keeper.lifetime.price} for Keeper and ${TIER_PRICING.breeder.lifetime.price} for Breeder, paid once, with no renewals.${ENTERPRISE_ON_SALE ? ` Enterprise, with Market Intelligence, is ${spokenMonthly('enterprise')} or ${spokenYearly('enterprise')}.` : ''} Subscribing bills you straight away, and each monthly or yearly paid plan also offers an optional ${TRIAL_DAYS}-day free trial. A lifetime purchase has no trial. Paying yearly saves about ${maxAnnualSavingsPercent()}%.`,
   },
   {
     q: 'Can I try a paid plan before subscribing?',
@@ -110,7 +110,7 @@ export const MEMBERSHIP_FAQS = [
   },
   {
     q: 'Can I buy lifetime access?',
-    a: `Yes. Keeper lifetime is ${TIER_PRICING.keeper.lifetime.price} and Breeder lifetime is ${TIER_PRICING.breeder.lifetime.price}. Each is a one-time payment with no renewals and no free trial. If you already pay monthly or yearly, you can buy lifetime and that subscription stops right away. Unused time on the old plan is not credited. Enterprise has no lifetime option.`,
+    a: `Yes. Keeper lifetime is ${TIER_PRICING.keeper.lifetime.price} and Breeder lifetime is ${TIER_PRICING.breeder.lifetime.price}. Each is a one-time payment with no renewals and no free trial. If you already pay monthly or yearly, you can buy lifetime and that subscription stops right away. Unused time on the old plan is not credited.${ENTERPRISE_ON_SALE ? ' Enterprise has no lifetime option.' : ''}`,
   },
 ];
 
@@ -143,7 +143,7 @@ export const MEMBERSHIP_JSON_LD = [
       'Pairing waitlists with deposit tracking (Breeder tier)',
       'Genetics calculator and morph guide',
       'Community forum and marketplace',
-      'Crested gecko Market Intelligence (Enterprise tier)',
+      ...(ENTERPRISE_ON_SALE ? ['Crested gecko Market Intelligence (Enterprise tier)'] : []),
     ],
   },
   {
@@ -170,7 +170,6 @@ export const MEMBERSHIP_JSON_LD = [
 
 function listedPrice(tierKey) {
   if (tierKey === 'free') return '$0';
-  if (tierKey === 'enterprise' && !ENTERPRISE_ON_SALE) return 'Waitlist';
   const bits = [];
   const monthly = TIER_PRICING[tierKey]?.monthly;
   const annual = TIER_PRICING[tierKey]?.annual;
@@ -192,7 +191,6 @@ function includesLine(tierKey) {
   if (tierKey === 'free') return `${collectionLine('free')}. Free forever, no credit card.`;
   if (tierKey === 'keeper') return `${collectionLine('keeper')}. ${trial}`;
   if (tierKey === 'breeder') return `${collectionLine('breeder')} and breeding pairs. ${trial}`;
-  if (!ENTERPRISE_ON_SALE) return 'Everything in Breeder, plus Market Intelligence. Not on sale right now.';
   return `Everything in Breeder, plus Market Intelligence. ${trial}`;
 }
 

@@ -52,7 +52,6 @@ import { appendGapsToQueue } from './growth/blog-queue-feed.mjs';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const REPORTS_DIR = resolve(REPO_ROOT, 'docs/growth-reports');
-const SITE_URL_CONST = 'https://geckinspect.com';
 
 // ---------- detectors ----------------------------------------------------
 

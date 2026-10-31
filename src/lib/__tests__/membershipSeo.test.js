@@ -15,7 +15,7 @@ const textOf = (value) => JSON.stringify(value);
 describe('membership prerender copy', () => {
   it('describes the live plans with the prices on the Membership page', () => {
     expect(membershipMetaDescription()).toBe(
-      'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo, $30/yr, or $149 lifetime), Breeder ($5.99/mo, $60/yr, or $349 lifetime), and an Enterprise waitlist. Optional 7-day free trial on monthly and yearly plans. Cancel anytime.',
+      'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo, $30/yr, or $149 lifetime), Breeder ($5.99/mo, $60/yr, or $349 lifetime). Optional 7-day free trial on monthly and yearly plans. Cancel anytime.',
     );
     expect(membershipMetaDescription()).toContain('lifetime');
     expect(membershipMetaDescription().length).toBeGreaterThanOrEqual(60);
@@ -32,17 +32,15 @@ describe('membership prerender copy', () => {
     expect(rows.Breeder[1]).toBe(`${TIER_PRICING.breeder.monthly.price}/mo or ${TIER_PRICING.breeder.annual.price}/yr or ${TIER_PRICING.breeder.lifetime.price} one-time`);
     expect(rows.Breeder[2]).toContain('Unlimited geckos');
     expect(rows.Breeder[2]).toContain(`${TRIAL_DAYS}-day free trial`);
-    // Enterprise is off sale (ENTERPRISE_ON_SALE false): no price is published.
+    // Enterprise is off sale (ENTERPRISE_ON_SALE false): it is not listed.
     expect(ENTERPRISE_ON_SALE).toBe(false);
-    expect(rows.Enterprise[1]).toBe('Waitlist');
-    expect(rows.Enterprise[2]).toContain('Not on sale right now');
+    expect(rows.Enterprise).toBeUndefined();
   });
 
   it('lists live lifetime prices as one-time payments', () => {
     const flat = MEMBERSHIP_PLAN_TABLE.rows.flat().join(' ');
     expect(flat).toContain(`${TIER_PRICING.keeper.lifetime.price} one-time`);
     expect(flat).toContain(`${TIER_PRICING.breeder.lifetime.price} one-time`);
-    expect(MEMBERSHIP_PLAN_TABLE.rows.find((row) => row[0] === 'Enterprise')[1]).not.toContain('one-time');
   });
 
   it('answers trial, cancel, and export with the page wording', () => {

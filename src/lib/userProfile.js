@@ -2,7 +2,7 @@ import { getSupabase } from '@/lib/supabaseLazy';
 import { normalizeSupabaseUser } from '@/lib/normalizeSupabaseUser';
 import { mirroredMembershipTier } from '@/lib/nativeMembership';
 import { readCachedProfile, saveCachedProfile, isOffline, readStoredSession } from '@/lib/offlineSession';
-import { isNetworkError } from '@/lib/offlineQueue';
+import { isNetworkError } from '@/lib/networkErrors';
 
 /**
  * The signed-in auth user. getUser() asks the server, which fails with no

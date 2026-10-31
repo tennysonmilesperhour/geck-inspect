@@ -995,8 +995,10 @@ begin
       ('giveaways', 'winner_emails'), ('giveaways', 'created_by'),
       ('community_event_reactions', 'user_email'), ('morph_price_entries', 'created_by')
     ) t(tbl, col)
-   where has_column_privilege('anon', 'public.' || t.tbl, t.col, 'select')
-      or not has_column_privilege('authenticated', 'public.' || t.tbl, t.col, 'select');
+   where has_column_privilege('anon', 'public.' || t.tbl, t.col, 'select');
+  -- Signed-in members lose these too in step 2 of Part E item E1 4
+  -- (supabase/pending/member_email_columns_revoke.sql and its test), so
+  -- this no longer checks that members keep them.
   if v_bad is not null then raise exception 'FAIL: email columns wrongly granted: %', v_bad; end if;
   -- Every other column stays readable (src/lib/publicColumns.js lists them).
   select string_agg(c.relname || '.' || a.attname, ', ') into v_bad

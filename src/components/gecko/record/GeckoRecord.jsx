@@ -8,7 +8,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { Gecko, GeckoEvent, WeightRecord, BreedingPlan } from '@/entities/all';
 import { isGuestMode } from '@/lib/guestMode';
-import { generatePassportCode } from '@/lib/passportUtils';
+import { makePassport } from '@/lib/makePassport';
 import { isValidEmail } from '@/lib/transfers';
 import { predictNextShed } from '@/lib/shedPrediction';
 import { readinessFor } from '@/lib/breedingReadiness';
@@ -229,13 +229,12 @@ export default function GeckoRecord({
   };
 
   const createPassport = async () => {
-    const code = generatePassportCode();
     try {
-      await Gecko.update(view.id, { passport_code: code, is_public: true });
-      changed({ passport_code: code, is_public: true });
+      const fields = await makePassport(view, { surface: 'record' });
+      changed(fields);
       // A passport link only works for a public gecko, so this turns
       // Public display on; say so.
-      toast({ title: 'Passport made', description: `Code ${code}. ${view.name || 'The gecko'} is now public so the link works.` });
+      toast({ title: 'Passport made', description: `Code ${fields.passport_code}. ${view.name || 'The gecko'} is now public so the link works.` });
     } catch (error) {
       failed('Passport not made', error);
     }

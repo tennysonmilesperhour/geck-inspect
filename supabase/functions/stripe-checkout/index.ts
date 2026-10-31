@@ -332,6 +332,12 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: `Unknown billing cycle '${cycleRaw}'.` }, 400);
   }
   const cycle = cycleRaw as Cycle;
+  // Enterprise is off sale (ENTERPRISE_ON_SALE in src/lib/stripe-config.js,
+  // retired from view 28 Oct 2026). Existing holders keep it; nobody new
+  // can check out.
+  if (tier === "enterprise") {
+    return jsonResponse({ error: "Enterprise is not available right now." }, 400);
+  }
   const priceId = resolvePriceId(tier, cycle);
   if (!priceId) {
     return jsonResponse(

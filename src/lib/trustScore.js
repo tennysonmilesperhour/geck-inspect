@@ -47,6 +47,18 @@ const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30.44;
  *   isFeaturedBreeder: boolean,
  * }>}
  */
+/**
+ * The seller's breeder_profiles row, found from their profile id through
+ * breeder_slug_for_profile(): members cannot filter breeder_profiles on
+ * created_by (the owner's email). Before that function is reachable, the
+ * old email filter. Resolves to a list of zero or one rows.
+ */
+async function findBreederProfile(profile) {
+  const { data: slug, error } = await supabase.rpc('breeder_slug_for_profile', { p_profile_id: String(profile.id) });
+  if (!error) return slug ? BreederProfile.filter({ custom_slug: slug }, null, 1) : [];
+  return profile.email ? BreederProfile.filter({ created_by: profile.email }, null, 1) : [];
+}
+
 export async function computeTrustSignals(identifier) {
   if (!identifier) throw new Error('computeTrustSignals: identifier required');
 
@@ -61,9 +73,7 @@ export async function computeTrustSignals(identifier) {
 
   // Breeder storefront profile (optional). Reviews are keyed by the
   // breeder profile's auth user_id, so fetch this before reviews.
-  const [breederProfile] = await BreederProfile
-    .filter({ created_by: email }, null, 1)
-    .catch(() => []);
+  const [breederProfile] = await findBreederProfile(profile).catch(() => []);
   // reviewed_user_id is a uuid, but 87 of 135 profiles have an older
   // non-uuid id, and querying with one failed with HTTP 400 on every
   // trust panel. Only look reviews up by a real uuid.

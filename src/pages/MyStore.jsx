@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
+import { BREEDER_PROFILE_PUBLIC_COLUMNS } from '@/lib/publicColumns';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
@@ -48,6 +49,9 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import PageHeader from '@/components/shared/PageHeader';
 import { VERIFIED_BREEDER_DEFINITION } from '@/lib/verifiedBreeder';
 import MorphMarketVerifyCard from '@/components/storefront/MorphMarketVerifyCard';
+
+// Every breeder_profiles column except created_by (the owner's email).
+const BREEDER_PROFILE_COLUMNS = BREEDER_PROFILE_PUBLIC_COLUMNS.join(',');
 
 const MIN_BANNER_WIDTH = 1280;
 const MIN_BANNER_HEIGHT = 320;
@@ -183,10 +187,14 @@ export default function MyStore() {
                     .select('id, sire_id, dam_id, pairing_date, status, notes, is_public, archived')
                     .eq('created_by', user.email)
                     .eq('archived', false),
+                // The member's own breeder profile, by sign-in id: the
+                // database sets user_id to it on every member insert and
+                // never lets it change. Members cannot read or filter on
+                // created_by (an email), and the column list leaves it out.
                 supabase
                     .from('breeder_profiles')
-                    .select('*')
-                    .eq('created_by', user.email)
+                    .select(BREEDER_PROFILE_COLUMNS)
+                    .eq('user_id', user.auth_user_id)
                     .maybeSingle(),
                 ownerUserId
                     ? supabase
@@ -390,7 +398,7 @@ export default function MyStore() {
             updated_date: nowIso,
         };
         const profRes = profileRow?.id
-            ? await supabase.from('breeder_profiles').update(profilePayload).eq('id', profileRow.id).select().single()
+            ? await supabase.from('breeder_profiles').update(profilePayload).eq('id', profileRow.id).select(BREEDER_PROFILE_COLUMNS).single()
             : await supabase.from('breeder_profiles').insert({
                 ...profilePayload,
                 custom_slug: slug,
@@ -399,7 +407,7 @@ export default function MyStore() {
                 // to this field. See AuthContext for the id distinction.
                 user_id: user.auth_user_id || user.id,
                 created_by: user.email,
-            }).select().single();
+            }).select(BREEDER_PROFILE_COLUMNS).single();
 
         if (profRes.error) {
             toast({
@@ -436,7 +444,7 @@ export default function MyStore() {
                                 <Crown className="w-4 h-4 text-emerald-400" /> Store pages are a Breeder perk
                             </CardTitle>
                             <CardDescription className="text-slate-300">
-                                Breeder and Enterprise members can publish a dedicated store page on Geck Inspect,
+                                Breeder members can publish a dedicated store page on Geck Inspect,
                                 with a custom URL like <code className="text-emerald-300">geckinspect.com/store/your-name</code>,
                                 a featured stock grid, policies, and one-click links to MorphMarket, PalmStreet, and your socials.
                             </CardDescription>

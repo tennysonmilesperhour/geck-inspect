@@ -31,7 +31,7 @@ describe('SeasonProjectionPanel', () => {
     );
     const out = text(tree.toJSON());
     expect(out).toContain('Likely');
-    expect(out).toContain('part of Enterprise');
+    expect(out).toContain('not open to new members');
     expect(out).toContain('When to list');
     tree.unmount();
   });

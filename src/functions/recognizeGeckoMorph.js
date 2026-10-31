@@ -51,7 +51,11 @@ async function readEdgeError(error) {
   };
 }
 
-export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, firedState, requestKey } = {}) {
+// consent: the member's yes from Morph ID's in-page step
+// (grantAiConsent('recognize-gecko-morph', requestKey) in src/lib/aiConsent.js).
+// It must be for this request key; a missing or wrong one sends nothing.
+// Leave it out and the browser's confirm box asks instead.
+export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, firedState, requestKey, consent } = {}) {
   const urls = Array.isArray(imageUrls) && imageUrls.length
     ? imageUrls
     : imageUrl ? [imageUrl] : [];
@@ -67,8 +71,11 @@ export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, fired
   // credit. Ignored by a server without the morph_id_requests table.
   if (typeof requestKey === 'string' && requestKey) body.request_key = requestKey;
 
-  try { requireAiConsent('recognize-gecko-morph'); }
-  catch (error) { return { data: null, error }; }
+  try {
+    requireAiConsent('recognize-gecko-morph', consent === undefined ? undefined : { grant: consent, scope: requestKey });
+  } catch (error) {
+    return { data: null, error };
+  }
   const { data, error } = await supabase.functions.invoke('recognize-gecko-morph', {
     body,
   });

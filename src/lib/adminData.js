@@ -117,6 +117,11 @@ export function withoutAdminRows(rows, admins, field = 'created_by') {
   });
 }
 
+// The owner-email helpers live in their own module, so a lazy admin tab can
+// import them without pulling AdminPanel's own imports into a shared chunk
+// (which hid AdminPanel from the size budget).
+export { withOwnerEmails, withOwnerEmailsFetched } from '@/lib/ownerEmails';
+
 // Plain words for the product events a member's admin card lists. Events
 // not named here are shown as their own name with the underscores turned
 // into spaces ("market_view" becomes "Market view").

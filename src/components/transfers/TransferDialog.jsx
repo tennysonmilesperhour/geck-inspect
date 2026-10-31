@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { TRANSFER_TTL_HOURS, copyText, isValidEmail, parseSalePrice, startTransfer } from '@/lib/transfers';
+import { TRANSFER_TTL_HOURS, copyText, isValidEmail, parseSalePrice, startTransfer, transferPriceDefault } from '@/lib/transfers';
 
 /**
  * Seller's transfer form. Replaces the three browser pop-ups the gecko and
@@ -15,8 +15,17 @@ import { TRANSFER_TTL_HOURS, copyText, isValidEmail, parseSalePrice, startTransf
  * and shows the link so the seller can copy it too.
  * initialEmail fills the buyer's address when the owner arrives from a
  * buyer's transfer request (the passport page's "ask the owner" button).
+ *
+ * The sale price box starts with the price the gecko was archived as sold
+ * for, else its asking price (transferPriceDefault).
+ *
+ * The step after "Archive as sold" (SoldTransferStep) also passes:
+ *   surface  where the transfer started, for the funnel ('record' by
+ *            default; 'request' when initialEmail came from a buyer)
+ *   notice   a line shown above the buttons (what sending will change,
+ *            such as replacing a link already sent)
  */
-export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', initialEmail = '', onTransferred }) {
+export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', initialEmail = '', onTransferred, surface, notice = null }) {
   const [mode, setMode] = useState('link');
   const [email, setEmail] = useState('');
   const [price, setPrice] = useState('');
@@ -25,6 +34,7 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [copied, setCopied] = useState(false);
+  const defaultPrice = transferPriceDefault(animal);
 
   useEffect(() => {
     if (!open) return;
@@ -33,13 +43,13 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
     // on the QR link.
     setMode(initialEmail || animalType !== 'gecko' ? 'email' : 'link');
     setEmail(initialEmail || '');
-    setPrice(animal?.asking_price != null ? String(animal.asking_price) : '');
+    setPrice(defaultPrice);
     setMessage('');
     setErrors({});
     setSubmitting(false);
     setResult(null);
     setCopied(false);
-  }, [open, animal?.id, animal?.asking_price, animalType, initialEmail]);
+  }, [open, animal?.id, defaultPrice, animalType, initialEmail]);
 
   const animalName = animal?.name || (animalType === 'gecko' ? 'this gecko' : 'this animal');
   const handleSubmit = async (event) => {
@@ -53,7 +63,14 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
     if (Object.keys(nextErrors).length) return;
     setSubmitting(true);
     try {
-      const res = await startTransfer({ animalId: animal.id, animalType, toEmail: mode === 'email' ? email : null, salePrice: parsedPrice.value, message });
+      const res = await startTransfer({
+        animalId: animal.id,
+        animalType,
+        toEmail: mode === 'email' ? email : null,
+        salePrice: parsedPrice.value,
+        message,
+        surface: surface || (initialEmail ? 'request' : 'record'),
+      });
       setResult({ ...res, toEmail: mode === 'email' ? email.trim().toLowerCase() : null });
       onTransferred?.(res);
     } catch (error) {
@@ -100,6 +117,7 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
                 <Textarea id="transfer-message" value={message} onChange={(event) => setMessage(event.target.value)} rows={2} maxLength={1000} placeholder="Eating Pangea well, last weighed at 18 g." />
               </div>
               <p className="text-xs text-slate-400">The gecko keeps its identity and recorded history. Private gecko notes stay with you in Transfers. Shared collection and breeding records keep their existing access.</p>
+              {notice && <p className="text-sm text-amber-200" data-transfer-notice>{notice}</p>}
               {errors.form && <p className="text-sm text-red-400" role="alert">{errors.form}</p>}
             </div>
             <DialogFooter className="gap-2">

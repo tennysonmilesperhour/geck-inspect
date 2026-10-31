@@ -82,12 +82,28 @@ export function monthlyValue(tier, cycle) {
 }
 
 /**
- * Turn the function's paid_plans rows ({ tier, cycle, source, comped, n })
- * into the card's money numbers. Members who also hold a current
- * complimentary grant are counted apart and left out of both "paying" and
- * mrr: E5 says a comped account is not evidence. What they pay is still
- * real money, so it is kept in compedMrr, which is why the admin Revenue
- * card (every subscription still billing) shows more than mrr here.
+ * What a paid_plans row adds to monthly recurring revenue, in dollars. A
+ * prepaid year (source 'prepaid') carries its own monthly_usd, a twelfth of
+ * what its breeders paid, for the whole row; every other row is priced
+ * from today's list prices.
+ */
+function rowMonthly(r, n) {
+  const own = r?.monthly_usd;
+  if (own !== null && own !== undefined && own !== '' && Number.isFinite(Number(own))) return Number(own);
+  return monthlyValue(r.tier, r.cycle) * n;
+}
+
+/**
+ * Turn the function's paid_plans rows ({ tier, cycle, source, comped, n },
+ * plus monthly_usd on a prepaid row) into the card's money numbers.
+ * Members who also hold a current complimentary grant are counted apart
+ * and left out of both "paying" and mrr: E5 says a comped account is not
+ * evidence. What they pay is still real money, so it is kept in compedMrr,
+ * which is why the admin Revenue card (every subscription still billing)
+ * shows more than mrr here. A prepaid year recorded by hand counts as
+ * paying even though the breeder's access comes from a comp, because the
+ * money is the evidence. App Store sandbox purchases and internal
+ * accounts never reach these rows (admin_scoreboard() leaves them out).
  */
 export function summarizePaidPlans(rows) {
   const out = {
@@ -95,6 +111,8 @@ export function summarizePaidPlans(rows) {
     payingKeepers: 0,
     payingAll: 0,
     lifetime: 0,
+    prepaid: 0,
+    prepaidMrr: 0,
     compedPayers: 0,
     mrr: 0,
     compedMrr: 0,
@@ -102,20 +120,55 @@ export function summarizePaidPlans(rows) {
   for (const r of Array.isArray(rows) ? rows : []) {
     const n = Number(r?.n) || 0;
     if (!n || !PAID_TIERS.has(r.tier)) continue;
+    const monthly = rowMonthly(r, n);
     if (r.comped) {
       out.compedPayers += n;
-      out.compedMrr += monthlyValue(r.tier, r.cycle) * n;
+      out.compedMrr += monthly;
       continue;
     }
     out.payingAll += n;
     if (BREEDER_TIERS.has(r.tier)) out.payingBreeders += n;
     else out.payingKeepers += n;
     if (r.cycle === 'lifetime') out.lifetime += n;
-    out.mrr += monthlyValue(r.tier, r.cycle) * n;
+    if (r.source === 'prepaid') {
+      out.prepaid += n;
+      out.prepaidMrr += monthly;
+    }
+    out.mrr += monthly;
   }
   out.mrr = Math.round(out.mrr * 100) / 100;
   out.compedMrr = Math.round(out.compedMrr * 100) / 100;
+  out.prepaidMrr = Math.round(out.prepaidMrr * 100) / 100;
   return out;
+}
+
+/**
+ * What admin_scoreboard() left out of the paying numbers, for the card to
+ * say: members whose live App Store plan is a sandbox purchase (TestFlight
+ * or App Review), and accounts other than the admin that never count
+ * (flagged internal, or the Morph ID test account). `known` is false when
+ * the database function is older than the scoreboard_honest_counts
+ * migration and does not report them, which also means it may still count
+ * them.
+ */
+export function leftOutCounts(board) {
+  const lo = board?.left_out;
+  const count = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  return {
+    known: Boolean(lo && typeof lo === 'object'),
+    sandbox: count(lo?.sandbox_store),
+    internal: count(lo?.internal_accounts),
+  };
+}
+
+/** Whether a scoreboard entry form can be saved, for each kind's required fields. */
+export function entryIsComplete({ kind, entryDate, breederName, amount }) {
+  if (!entryDate) return false;
+  const value = Number(amount);
+  const hasAmount = amount !== '' && amount !== null && amount !== undefined && Number.isFinite(value);
+  if (kind === 'monthly_cost') return hasAmount && value >= 0;
+  if (kind === 'prepaid') return hasAmount && value > 0 && String(breederName ?? '').trim() !== '';
+  return true;
 }
 
 function dayNumber(isoDay) {
@@ -135,7 +188,8 @@ export function denverToday(now = new Date()) {
 /**
  * Count the hand-recorded entries: conversations and imports in total and
  * in the last 7 days (today and the six days before), and the newest
- * monthly cost entry.
+ * monthly cost entry. Prepaid years are counted by admin_scoreboard(), as
+ * paying breeders, not here.
  */
 export function summarizeEntries(entries, today = denverToday()) {
   const todayN = dayNumber(today);
