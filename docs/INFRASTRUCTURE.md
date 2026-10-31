@@ -87,13 +87,13 @@ Edge function secrets (names only) are listed in `docs/OPERATIONS.md`, section 2
 
 | Bucket | Public | Size limit | File types | Objects | Size |
 |---|---|---|---|---|---|
-| geck-inspect-media | yes | 50 MB | jpeg, png, webp, gif, avif | 817 | 1.4 GB |
-| listing-images | yes | none | any | 10,903 | 6.6 GB |
+| geck-inspect-media | yes | 50 MB | jpeg, png, webp, gif, avif | 947 (882 photos, 65 thumbnails) | 1.5 GB |
+| listing-images | yes | none | any | 12,707 | 11 GB |
 | promote-images | yes | none | any | 0 | 0 |
 | archive-listing-images | no | none | any | 0 | 0 |
 | raw-uploads | no | none | any | 1 | 6 bytes |
 
-Since 16 October 2026 each member photo in `geck-inspect-media` also has a small copy at `thumbs/<the photo's path>` (`src/lib/photoThumbnails.js`); the counts above are from before the thumbnail backfill. `listing-images` holds the market listing photos the scraper collects. A public bucket serves any file to anyone with its address, whatever the policies say about listing.
+Since 16 October 2026 each member photo in `geck-inspect-media` also has a small copy at `thumbs/<the photo's path>` (`src/lib/photoThumbnails.js`). Object counts and sizes above were read from `storage.objects` on 31 October 2026. On that day 817 of the 882 member photos still had no thumbnail: every photo uploaded since 17 October has one and no older photo does, so the backfill (Admin panel, System, Photo thumbnails, Make thumbnails) has not been run yet. `listing-images` holds the market listing photos the scraper collects. A public bucket serves any file to anyone with its address, whatever the policies say about listing.
 
 ### Policies on storage.objects
 
@@ -165,7 +165,7 @@ Jobs that call an edge function (the functions behind `market-value-daily`, the 
 | notification_service_role_key | The bearer the database's jobs and triggers send to edge functions (also `enqueue_weekly_notes`) | 7 May 2026, updated 4 Sep 2026 |
 | email_unsubscribe_secret | Signs the unsubscribe links in notification emails, including the Weekly Gecko Notes stop link (`unsubscribe_weekly_notes_by_token` checks the same signature) | 3 Oct 2026 |
 
-Not yet created on 28 October: `morph_share_view_key` (Tennyson's step, see `docs/OPERATIONS.md`). Until it exists, shared Morph ID cards count no views.
+Not yet created on 31 October (still the only two Vault secrets): `morph_share_view_key` (Tennyson's step, see `docs/OPERATIONS.md`). Until it exists, shared Morph ID cards count no views.
 
 ## 6. Database extensions
 

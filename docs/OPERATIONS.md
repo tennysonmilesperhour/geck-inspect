@@ -4,7 +4,7 @@ What Geck Inspect runs on, what it costs, where the secrets live, what is backed
 
 How this was checked: the repository (code, workflows, function source) and read-only queries against the production database on 15 October 2026. Nothing in the Stripe, Vercel, Resend, Anthropic, Replicate, PostHog or RevenueCat dashboards was looked at, so plans and bills from those services are marked **unknown** until Tennyson fills them in. Secret values never go in this file; only their names.
 
-Re-checked on 28 October 2026 (read-only): the Supabase plan, the edge function count, every scheduled job and its last 7 days, the newest migration, the secret names the function code reads, and the backup workflow's last run.
+Re-checked on 28 October 2026 (read-only): the Supabase plan, the edge function count, every scheduled job and its last 7 days, the newest migration, the secret names the function code reads, and the backup workflow's last run. Re-checked on 31 October 2026 (read-only): every scheduled job still runs with no failed run in its 7-day history, production still runs 37 functions (`rapid-api` and `admin-end-trial` among them), the Vault still holds only the two secrets in section 2, the storage counts in section 3, and the 25 October `db-backup` run still skipped for want of its secrets.
 
 Keep it true: when a service, secret, job or price changes, change this file in the same commit.
 
@@ -102,7 +102,7 @@ Almost all are `VITE_` variables, which Vite builds into the public JavaScript. 
 |---|---|
 | Code, migrations, docs | Yes: git and GitHub. Production can be rebuilt from `main` |
 | Database (members, records, `geck_data`) | Supabase's own backups. The plan is Pro (28 October), which includes daily backups kept 7 days. **Not confirmed:** whether point-in-time recovery (a paid add-on) is on (review, production check 8). No restore has ever been tried. Database size: 361 MB on 15 October, 391 MB on 28 October. **A weekly copy off Supabase is built but not running:** the `db-backup` workflow (Sundays 10:00 UTC) pipes `pg_dump` straight into `gpg`, so only the encrypted file is kept, as a 30-day Actions artifact. It skips with a notice until the Actions secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` are both set (section 2); the 18 and 25 October runs skipped |
-| Photos in Storage | **No copy off the platform.** On 15 October: `listing-images` 10,903 files, about 6.7 GB (public); `geck-inspect-media` 817 files, about 1.5 GB (public); `promote-images` empty (public); `archive-listing-images` and `raw-uploads` private and nearly empty. Supabase database backups do not include the files themselves |
+| Photos in Storage | **No copy off the platform.** On 31 October: `listing-images` 12,707 files, about 11 GB (public); `geck-inspect-media` 947 files (882 member photos and 65 thumbnails), about 1.5 GB (public); `promote-images` empty (public); `archive-listing-images` and `raw-uploads` private and nearly empty. Supabase database backups do not include the files themselves |
 | Edge function secrets, Vault, dashboard settings | No copy. Section 2 lists the names so they can be recreated |
 | A member's own data | Members can export their collection from the app; it is a collection archive, not a full account backup (`docs/launch-repairs-2026-09-06.md`, A13) |
 | Scheduled job history | `purge-cron-run-details` keeps about 7 days, so a job that fails for longer than a week leaves no trace |
