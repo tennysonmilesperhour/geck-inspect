@@ -35,6 +35,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadEnv } from 'vite';
+import { dataOpenApi } from './lib/data-openapi.mjs';
 import {
   REPO_ROOT,
   SITE_URL,
@@ -363,12 +364,25 @@ async function build() {
       ],
     },
   ];
+  // OpenAPI 3.1 description of these files (scripts/lib/data-openapi.mjs).
+  sizes['data/openapi.json'] = write('data/openapi.json', json(dataOpenApi({
+    siteUrl: SITE_URL,
+    updated: TODAY,
+    priceTerms: PRICE_DATA_TERMS,
+    priceWhat: PRICE_INDEX_WHAT,
+    sampleRule: PRICE_INDEX_SAMPLE_RULE,
+    licenseData: LICENSE_DATA,
+    morphSlugs: morphs.map((m) => m.slug),
+    careIds: care.map((c) => c.id),
+  })));
+
   sizes['data/index.json'] = write('data/index.json', json({
     publisher: { name: 'Geck Inspect', url: SITE_URL },
     description: 'Open crested gecko data from Geck Inspect. Free to use with attribution; each dataset gives its own license (the morph and genetics data are CC BY 4.0, the Price Index is free to cite with a link). Query it live through the MCP server at https://geckinspect.com/mcp.',
     contact: `${SITE_URL}/Contact`,
     updated: TODAY,
     mcp: `${SITE_URL}/mcp`,
+    openapi: `${SITE_URL}/data/openapi.json`,
     datasets,
   }));
 

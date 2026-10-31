@@ -155,3 +155,33 @@ export function staleMarkets(index, now = Date.now()) {
 export function staleMarketNote(stale, name) {
   return `Out of date: the last full check of ${name || stale.market} listings was ${priceCheckDay(stale.checked_on)}, ${stale.days} days ago. These prices may have moved since.`;
 }
+
+/** Display names of the markets the index covers, in the order pages list them. */
+export const PRICE_MARKET_NAMES = { US: 'United States', KR: 'South Korea', JP: 'Japan', EU: 'Europe' };
+const PRICE_MARKET_ORDER = Object.keys(PRICE_MARKET_NAMES);
+
+// Market trait names that differ from the morph guide's name or aliases.
+// "Phantom" needs no entry: it matches the Phantom (gene) page by name, the
+// same page priceTraitMorphSlug links it to. It used to point at Phantom
+// Pinstripe, which put the gene's asking prices on that page too.
+const MARKET_TRAIT_TO_SLUG = {
+  'tri-color': 'tricolor',
+};
+
+/**
+ * Latest asking-price rows for one morph (a Morph Guide entry with name,
+ * slug and aliases), in market order. One function for the morph page, its
+ * server HTML, the markdown files and the MCP server, so they always show
+ * the same rows.
+ */
+export function priceRowsForMorph(index, morph) {
+  if (!index || !morph) return [];
+  const names = new Set([morph.name, ...(morph.aliases || [])].filter(Boolean).map((n) => n.toLowerCase()));
+  return (index.latest || [])
+    .filter((row) => {
+      if (!row?.trait) return false;
+      const t = row.trait.toLowerCase();
+      return names.has(t) || MARKET_TRAIT_TO_SLUG[t] === morph.slug;
+    })
+    .sort((a, b) => PRICE_MARKET_ORDER.indexOf(a.market) - PRICE_MARKET_ORDER.indexOf(b.market));
+}
