@@ -27,7 +27,9 @@
 --    current_date and every "today" in the queries is the member's local
 --    day) and the setting geck.reminder_zone, then calls the unchanged
 --    reminder function. A member is reminded in the run for their own
---    zone only. Both settings are undone when run_reminders_local returns.
+--    zone only. Both settings are undone when run_reminders_local returns
+--    (the time zone by the function's SET clause, geck.reminder_zone by
+--    hand, also on an error).
 --
 -- 4. reminder_recipient_due(email): email_has_login(email), and, while
 --    geck.reminder_zone is set, "this member's zone is the one being run".
@@ -165,11 +167,13 @@ returns integer
 language plpgsql
 security definer
 set search_path to ''
--- Both settings are listed here so that what the loop sets is undone when
--- the function returns (Postgres restores a variable named in a SET
--- clause, and only those).
+-- The session time zone is listed here so that what the loop sets is
+-- undone when the function returns (Postgres restores a variable named in
+-- a SET clause). geck.reminder_zone cannot be listed: on Supabase the
+-- migration role is not a superuser, and Postgres refuses a SET clause
+-- that names a custom setting it has not registered. It is cleared by
+-- hand below instead, on the way out and on an error.
 set timezone to 'UTC'
-set geck.reminder_zone to ''
 as $function$
 declare
   v_at timestamptz := coalesce(p_at, now());
@@ -182,39 +186,48 @@ begin
     raise exception 'Unknown reminder job: %', p_job using errcode = '22023';
   end if;
 
-  for v_zone in
-    select z
-      from (select distinct p.time_zone as z
-              from public.profiles p
-             where p.time_zone is not null
-            union
-            select public.reminder_default_time_zone()) zones
-     order by z
-  loop
-    -- A stored name that Postgres stopped knowing (a tzdata change) runs
-    -- on the default zone's clock, so those members are never skipped.
-    v_clock := v_zone;
-    begin
-      v_hour := extract(hour from (v_at at time zone v_clock))::int;
-    exception when others then
-      v_clock := public.reminder_default_time_zone();
-      v_hour := extract(hour from (v_at at time zone v_clock))::int;
-    end;
-    continue when v_hour <> public.reminder_local_hour();
+  begin
+    for v_zone in
+      select z
+        from (select distinct p.time_zone as z
+                from public.profiles p
+               where p.time_zone is not null
+              union
+              select public.reminder_default_time_zone()) zones
+       order by z
+    loop
+      -- A stored name that Postgres stopped knowing (a tzdata change) runs
+      -- on the default zone's clock, so those members are never skipped.
+      v_clock := v_zone;
+      begin
+        v_hour := extract(hour from (v_at at time zone v_clock))::int;
+      exception when others then
+        v_clock := public.reminder_default_time_zone();
+        v_hour := extract(hour from (v_at at time zone v_clock))::int;
+      end;
+      continue when v_hour <> public.reminder_local_hour();
 
-    -- Undone when the function returns (its SET clause above).
-    perform pg_catalog.set_config('timezone', v_clock, true);
-    perform pg_catalog.set_config('geck.reminder_zone', v_zone, true);
+      -- The time zone is undone when the function returns (its SET clause
+      -- above); geck.reminder_zone is cleared after the loop.
+      perform pg_catalog.set_config('timezone', v_clock, true);
+      perform pg_catalog.set_config('geck.reminder_zone', v_zone, true);
 
-    v_total := v_total + case p_job
-      when 'feeding'  then public.enqueue_feeding_reminders()
-      when 'weigh_in' then public.enqueue_personal_weighin_reminders()
-      when 'hatch'    then public.enqueue_hatch_alerts()
-      when 'vet'      then public.enqueue_vet_followups()
-      when 'planner'  then public.enqueue_season_planner_reminders()
-    end;
-  end loop;
+      v_total := v_total + case p_job
+        when 'feeding'  then public.enqueue_feeding_reminders()
+        when 'weigh_in' then public.enqueue_personal_weighin_reminders()
+        when 'hatch'    then public.enqueue_hatch_alerts()
+        when 'vet'      then public.enqueue_vet_followups()
+        when 'planner'  then public.enqueue_season_planner_reminders()
+      end;
+    end loop;
+  exception when others then
+    -- Never leave a run's zone set for later statements in the same
+    -- transaction, then report the error as it was.
+    perform pg_catalog.set_config('geck.reminder_zone', '', true);
+    raise;
+  end;
 
+  perform pg_catalog.set_config('geck.reminder_zone', '', true);
   return v_total;
 end;
 $function$;
