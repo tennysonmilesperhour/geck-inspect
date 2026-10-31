@@ -25,7 +25,7 @@ import {
   syncOnboardingToBrowser,
 } from '@/lib/onboardingState';
 import CommandPalette from "@/components/command-palette/CommandPalette";
-// Lazy: it drags framer-motion (about 100 KB) into the shell otherwise.
+// Lazy: it drags framer-motion (about 145 KB, 49 kB compressed) into the shell otherwise.
 const FeedingAlertSystem = lazy(() => import("@/components/feeding/FeedingAlertSystem"));
 import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
