@@ -60,9 +60,11 @@ describe('Settings, Security section', () => {
   it('is shown to an admin, with a Security link in the section list', async () => {
     fx.me = { id: 'a1', email: 'admin@example.test', role: 'admin', membership_tier: 'free' };
     renderSettings();
-    expect(await screen.findByRole('link', { name: 'Security' })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Security' }, { timeout: 8000 })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Security' }).getAttribute('href')).toBe('#security');
-    expect(await screen.findByRole('button', { name: 'Set up an authenticator app' })).toBeTruthy();
+    // The section loads its factors after the page renders; on a busy build
+    // machine that took longer than findBy's default 1 s (31 Oct 2026).
+    expect(await screen.findByRole('button', { name: 'Set up an authenticator app' }, { timeout: 8000 })).toBeTruthy();
     expect(document.getElementById('security')).toBeTruthy();
     expect(fx.listFactors).toBeGreaterThan(0);
   });
@@ -70,7 +72,7 @@ describe('Settings, Security section', () => {
   it('is not shown to a member', async () => {
     fx.me = { id: 'm1', email: 'keeper@example.test', role: 'user', membership_tier: 'free' };
     renderSettings();
-    expect(await screen.findByRole('link', { name: 'Danger Zone' })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Danger Zone' }, { timeout: 8000 })).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Security' })).toBeNull();
     expect(document.getElementById('security')).toBeNull();
     expect(screen.queryByText(/authenticator app/i)).toBeNull();
