@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Loader2, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
 import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
 import { predictPairOutcomes } from '@/lib/genetics/pairOutcomes';
+import { Gecko } from '@/entities/all';
 import { OTHER_OUTCOME, defaultHatchlingName, hatchDateProblem, hatchEgg } from '@/lib/hatchEgg';
 
 const SKIP = '__skip__';
@@ -20,27 +21,58 @@ const SKIP = '__skip__';
  * every hatch asks for the date, adds the same gecko and can log what
  * hatched. The saving itself lives in src/lib/hatchEgg.js.
  *
- * Props: egg, plan, sire, dam, pairEggs (every egg of the plan, for the
- * ID code and the default name), defaultDate (optional), onClose,
- * onHatched(result).
+ * Props: egg, plan, sire (the plan's sire), dam, pairEggs (every egg of
+ * the plan, for the ID code and the default name), defaultDate (optional),
+ * onClose, onHatched(result).
+ *
+ * An egg can record its own sire, and a possible other sire
+ * (src/lib/eggSire.js). The dialog looks those males up, so the name, the
+ * predictions and the new gecko use the egg's father.
  */
-export default function HatchEggDialog({ egg, plan, sire, dam, pairEggs = [], defaultDate, onClose, onHatched }) {
+export default function HatchEggDialog({ egg, plan, sire: planSire, dam, pairEggs = [], defaultDate, onClose, onHatched }) {
     const { toast } = useToast();
     const today = todayLocalISO();
+    const ownSireId = egg?.sire_id && egg.sire_id !== planSire?.id ? egg.sire_id : null;
+    const [sire, setSire] = useState(ownSireId ? null : planSire);
+    const [possibleSire, setPossibleSire] = useState(null);
+    const [resolving, setResolving] = useState(Boolean(ownSireId || egg?.possible_sire_id));
     const [hatchDate, setHatchDate] = useState(defaultDate && defaultDate <= today ? defaultDate : today);
-    const [name, setName] = useState(() => defaultHatchlingName(sire, dam, pairEggs));
+    const [name, setName] = useState(() => (ownSireId ? '' : defaultHatchlingName(planSire, dam, pairEggs)));
+    const [nameTouched, setNameTouched] = useState(false);
     const [choice, setChoice] = useState(SKIP);
     const [typedOutcome, setTypedOutcome] = useState('');
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [limitReached, setLimitReached] = useState(false);
 
+    useEffect(() => {
+        if (!ownSireId && !egg?.possible_sire_id) return undefined;
+        let cancelled = false;
+        (async () => {
+            const [own, possible] = await Promise.all([
+                ownSireId ? Gecko.get(ownSireId).catch(() => null) : Promise.resolve(null),
+                egg?.possible_sire_id ? Gecko.get(egg.possible_sire_id).catch(() => null) : Promise.resolve(null),
+            ]);
+            if (cancelled) return;
+            if (ownSireId) {
+                const found = own || { id: ownSireId, name: 'Unknown' };
+                setSire(found);
+                if (!nameTouched) setName(defaultHatchlingName(found, dam, pairEggs));
+            }
+            setPossibleSire(possible || (egg?.possible_sire_id ? { id: egg.possible_sire_id, name: null } : null));
+            setResolving(false);
+        })();
+        return () => { cancelled = true; };
+        // Looked up once per egg; the name only follows while untouched.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [egg?.id, ownSireId, egg?.possible_sire_id]);
+
     const predicted = useMemo(() => predictPairOutcomes(sire, dam), [sire, dam]);
     const options = useMemo(
         () => [...new Set(predicted.filter((o) => o.health_risk !== 'lethal').map((o) => o.label).filter(Boolean))],
         [predicted],
     );
-    const parentsMissing = !sire || !dam;
+    const parentsMissing = !resolving && (!sire || !dam);
     const alreadyLinked = !!egg?.gecko_id;
     const dateProblem = hatchDateProblem(hatchDate, egg, today);
 
@@ -49,12 +81,12 @@ export default function HatchEggDialog({ egg, plan, sire, dam, pairEggs = [], de
         : typedOutcome.trim();
 
     const handleSave = async () => {
-        if (dateProblem || parentsMissing) return;
+        if (dateProblem || parentsMissing || resolving) return;
         setSaving(true);
         setError(null);
         setLimitReached(false);
         try {
-            const result = await hatchEgg({ egg, plan, sire, dam, pairEggs, hatchDate, name, observed, predicted });
+            const result = await hatchEgg({ egg, plan, sire, dam, possibleSire, pairEggs, hatchDate, name, observed, predicted });
             toast({
                 title: alreadyLinked ? 'Egg marked hatched' : `${result.gecko?.name || 'Hatchling'} added to your collection`,
                 description: result.outcomeError
@@ -94,6 +126,11 @@ export default function HatchEggDialog({ egg, plan, sire, dam, pairEggs = [], de
                     </p>
                 ) : (
                     <div className="space-y-4">
+                        {egg?.possible_sire_id && (
+                            <p className="text-xs text-amber-300">
+                                Sire not confirmed: it could also be {possibleSire?.name || 'another male'}. The hatchling&apos;s passport will say so.
+                            </p>
+                        )}
                         <div>
                             <Label htmlFor="hatch-date">Hatch date</Label>
                             <Input
@@ -118,7 +155,7 @@ export default function HatchEggDialog({ egg, plan, sire, dam, pairEggs = [], de
                                 <Input
                                     id="hatch-name"
                                     value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    onChange={(e) => { setNameTouched(true); setName(e.target.value); }}
                                     className="bg-slate-800 border-slate-600"
                                 />
                                 <p className="text-xs text-slate-500 mt-1">
@@ -186,7 +223,7 @@ export default function HatchEggDialog({ egg, plan, sire, dam, pairEggs = [], de
                     {!parentsMissing && (
                         <Button
                             onClick={handleSave}
-                            disabled={saving || !!dateProblem}
+                            disabled={saving || resolving || !!dateProblem}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
                         >
                             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

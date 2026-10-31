@@ -9,6 +9,8 @@ import { Loader2, Egg as EggIcon, Trash2 } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { eggStatusFields } from '@/lib/hatchEgg';
+import { applyClutchSire, clutchSireFields, effectiveSireId, isMissingSireColumnError, SIRE_NOT_READY_MESSAGE } from '@/lib/eggSire';
+import ClutchSireFields, { useDamPairings } from './ClutchSireFields';
 import HatchEggDialog from './HatchEggDialog';
 import DeleteEggDialog from './DeleteEggDialog';
 
@@ -31,6 +33,19 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, pairEggs 
         status: egg.status,
         grade: egg.grade || '',
     });
+    // Which male this egg's clutch came from (src/lib/eggSire.js). Empty
+    // means the plan's sire, as for every egg recorded before.
+    const [sireChoice, setSireChoice] = useState({
+        sireId: egg.sire_id || null,
+        possibleSireId: egg.possible_sire_id || null,
+    });
+    const { damPlans, sires } = useDamPairings(breedingPlan, { knownGeckos: [sire, dam] });
+    const eggSireId = effectiveSireId(egg, breedingPlan);
+    const eggSire = (eggSireId && sires[eggSireId]) || (eggSireId === sire?.id ? sire : null);
+    const possibleSire = egg.possible_sire_id ? sires[egg.possible_sire_id] || null : null;
+    const nextSireFields = clutchSireFields({ plan: breedingPlan, ...sireChoice });
+    const sireChanged = nextSireFields.sire_id !== (egg.sire_id || null)
+        || nextSireFields.possible_sire_id !== (egg.possible_sire_id || null);
 
     const becomingHatched = editData.status === 'Hatched' && egg.status !== 'Hatched';
     const daysIncubating = differenceInDays(new Date(), parseLocalDate(egg.lay_date));
@@ -50,10 +65,26 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, pairEggs 
                 grade: editData.grade || null,
             };
 
+            // The sire goes on every egg of the clutch, and hatched eggs'
+            // geckos follow (applyClutchSire). Done first, while the clutch
+            // still has its old lay date.
+            if (sireChanged) {
+                const names = Object.fromEntries(Object.entries(sires).map(([id, g]) => [id, g?.name]));
+                if (sire?.id) names[sire.id] = names[sire.id] || sire.name;
+                const moved = await applyClutchSire({
+                    egg, plan: breedingPlan, pairEggs,
+                    sireId: sireChoice.sireId, possibleSireId: sireChoice.possibleSireId,
+                    names, deps: { Egg, Gecko },
+                });
+                if (moved.skipped > 0) {
+                    console.warn(`${moved.skipped} hatchling(s) of this clutch could not be updated (no longer in your collection).`);
+                }
+            }
+
             if (becomingHatched) {
                 // Save the other edits, then hand over to the hatch dialog.
                 const saved = await Egg.update(egg.id, updatePayload);
-                setHatchingEgg({ ...egg, ...updatePayload, ...(saved || {}) });
+                setHatchingEgg({ ...egg, ...nextSireFields, ...updatePayload, ...(saved || {}) });
                 setIsSaving(false);
                 return;
             }
@@ -78,7 +109,9 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, pairEggs 
             onClose();
         } catch (error) {
             console.error("Failed to update egg:", error);
-            setSaveError(error?.message || 'Failed to save changes. Please try again.');
+            setSaveError(isMissingSireColumnError(error)
+                ? SIRE_NOT_READY_MESSAGE
+                : (error?.message || 'Failed to save changes. Please try again.'));
         }
         setIsSaving(false);
     };
@@ -98,7 +131,13 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, pairEggs 
                     {/* Parents */}
                     <div className="bg-slate-800 p-4 rounded-lg">
                         <h3 className="text-sm font-semibold text-slate-300 mb-2">Parents</h3>
-                        <p className="text-slate-200">{sire?.name || 'Unknown'} × {dam?.name || 'Unknown'}</p>
+                        <p className="text-slate-200">{eggSire?.name || 'Unknown'} x {dam?.name || 'Unknown'}</p>
+                        {egg.sire_id && egg.sire_id !== breedingPlan?.sire_id && (
+                            <p className="text-xs text-amber-300">From the dam&apos;s earlier pairing, not this plan&apos;s sire.</p>
+                        )}
+                        {egg.possible_sire_id && (
+                            <p className="text-xs text-amber-300">Sire not confirmed: could also be {possibleSire?.name || 'another male'}.</p>
+                        )}
                         {breedingPlan?.breeding_id && (
                             <p className="text-xs text-slate-400">Plan: {breedingPlan.breeding_id}</p>
                         )}
@@ -207,6 +246,20 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, pairEggs 
                             </Select>
                         </div>
                     </div>
+
+                    <ClutchSireFields
+                        plan={breedingPlan}
+                        planSire={sire}
+                        dam={dam}
+                        layDate={editData.lay_date || egg.lay_date}
+                        damPlans={damPlans}
+                        sires={sires}
+                        sireId={sireChoice.sireId}
+                        possibleSireId={sireChoice.possibleSireId}
+                        onChange={setSireChoice}
+                        disabled={!isEditing}
+                        idPrefix={`egg-${egg.id}`}
+                    />
 
                     {saveError && (
                         <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 text-sm text-red-300">

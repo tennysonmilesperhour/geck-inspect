@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { DEFAULT_INCUBATION_PROFILE_ID, getEstimatedHatchDates } from '@/lib/incubationProfiles';
+import { clutchSireFields, isMissingSireColumnError, SIRE_NOT_READY_MESSAGE } from '@/lib/eggSire';
+import ClutchSireFields, { useDamPairings } from './ClutchSireFields';
 
 const NO_GRADE = '__none__';
 
@@ -18,8 +20,12 @@ const NO_GRADE = '__none__';
  * the "add egg" form that used to live on the retired Breeding Pairs page
  * (step 8); the quick +1 and +2 buttons on the card still add eggs laid
  * today.
+ *
+ * When the dam was paired with another male before this plan, the form
+ * also asks which male the clutch is from (src/lib/eggSire.js), since a
+ * female can store sperm for months.
  */
-export default function AddEggsDialog({ plan, open, onOpenChange, onAdded }) {
+export default function AddEggsDialog({ plan, sire = null, dam = null, open, onOpenChange, onAdded }) {
     const { toast } = useToast();
     const today = todayLocalISO();
     const [layDate, setLayDate] = useState(today);
@@ -27,12 +33,15 @@ export default function AddEggsDialog({ plan, open, onOpenChange, onAdded }) {
     const [grade, setGrade] = useState(NO_GRADE);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
+    const [sireChoice, setSireChoice] = useState({ sireId: null, possibleSireId: null });
+    const { damPlans, sires } = useDamPairings(plan, { active: open, knownGeckos: [sire, dam] });
 
     const reset = () => {
         setLayDate(todayLocalISO());
         setCount('2');
         setGrade(NO_GRADE);
         setError(null);
+        setSireChoice({ sireId: null, possibleSireId: null });
     };
 
     const handleSave = async () => {
@@ -45,6 +54,9 @@ export default function AddEggsDialog({ plan, open, onOpenChange, onAdded }) {
             const profileId = currentUser?.incubation_temperature_range || DEFAULT_INCUBATION_PROFILE_ID;
             const expected = format(getEstimatedHatchDates(layDate, profileId).estimated, 'yyyy-MM-dd');
             const n = Number(count) || 1;
+            // Only a male other than the plan's is written, so a database
+            // without the egg sire columns yet still saves ordinary clutches.
+            const sireFields = clutchSireFields({ plan, ...sireChoice });
             for (let i = 0; i < n; i += 1) {
                 const egg = {
                     breeding_plan_id: plan.id,
@@ -53,6 +65,8 @@ export default function AddEggsDialog({ plan, open, onOpenChange, onAdded }) {
                     status: 'Incubating',
                 };
                 if (grade !== NO_GRADE) egg.grade = grade;
+                if (sireFields.sire_id) egg.sire_id = sireFields.sire_id;
+                if (sireFields.possible_sire_id) egg.possible_sire_id = sireFields.possible_sire_id;
                 await Egg.create(egg);
             }
             // One clutch, same as the quick add buttons.
@@ -62,7 +76,9 @@ export default function AddEggsDialog({ plan, open, onOpenChange, onAdded }) {
             onOpenChange(false);
             onAdded?.();
         } catch (err) {
-            setError(err?.message || 'The eggs could not be saved. Please try again.');
+            setError(isMissingSireColumnError(err)
+                ? SIRE_NOT_READY_MESSAGE
+                : (err?.message || 'The eggs could not be saved. Please try again.'));
         }
         setSaving(false);
     };
@@ -114,6 +130,19 @@ export default function AddEggsDialog({ plan, open, onOpenChange, onAdded }) {
                             </Select>
                         </div>
                     </div>
+                    <ClutchSireFields
+                        plan={plan}
+                        planSire={sire}
+                        dam={dam}
+                        layDate={layDate}
+                        damPlans={damPlans}
+                        sires={sires}
+                        sireId={sireChoice.sireId}
+                        possibleSireId={sireChoice.possibleSireId}
+                        onChange={setSireChoice}
+                        disabled={saving}
+                        idPrefix="add-clutch"
+                    />
                     {error && <p className="text-sm text-red-300" role="alert">{error}</p>}
                 </div>
                 <DialogFooter className="flex-col sm:flex-row gap-2">

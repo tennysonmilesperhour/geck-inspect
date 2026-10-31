@@ -564,6 +564,8 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
 
             <AddEggsDialog
                 plan={plan}
+                sire={sire}
+                dam={dam}
                 open={isAddEggsOpen}
                 onOpenChange={setIsAddEggsOpen}
                 onAdded={onPlanUpdate}

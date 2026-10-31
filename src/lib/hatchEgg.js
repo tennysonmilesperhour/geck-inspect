@@ -27,6 +27,7 @@ import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils'
 import { outcomeLogKeys } from '@/lib/genetics/pairOutcomes';
 import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
 import { recordGeckoAdded } from '@/lib/activation';
+import { effectiveSireId, unconfirmedSireNote } from '@/lib/eggSire';
 
 /** The "What hatched?" answer for a hatchling that matches no prediction. */
 export const OTHER_OUTCOME = 'other / unsure';
@@ -62,8 +63,17 @@ export function hatchDateProblem(hatchDate, egg, today = todayLocalISO()) {
   return null;
 }
 
-/** The new gecko row. Exported so tests can check every field. */
-export function buildHatchlingRecord({ egg, plan, sire, dam, pairEggs = [], hatchDate, name }) {
+/**
+ * The new gecko row. Exported so tests can check every field.
+ *
+ * `sire` is the egg's sire: the plan's, or the male recorded on the egg
+ * (eggs.sire_id, src/lib/eggSire.js). The hatchling's sire_id follows the
+ * egg first, so a clutch from a dam's earlier pairing gets the right
+ * father. `possibleSire` is the other male named on the egg when the
+ * breeder is not sure; it puts a "Sire not confirmed" line in the
+ * genetics notes, which the passport shows.
+ */
+export function buildHatchlingRecord({ egg, plan, sire, dam, possibleSire = null, pairEggs = [], hatchDate, name }) {
   const layDate = egg?.lay_date ? String(egg.lay_date).slice(0, 10) : null;
   const incubationDays = layDate
     ? differenceInDays(parseLocalDate(hatchDate), parseLocalDate(layDate))
@@ -75,7 +85,7 @@ export function buildHatchlingRecord({ egg, plan, sire, dam, pairEggs = [], hatc
     gecko_id_code: generateHatchedGeckoIdFromEgg({ sire, dam, egg, allEggsForPair: pairEggs }),
     hatch_date: hatchDate,
     sex: 'Unsexed',
-    sire_id: plan?.sire_id || sire?.id || null,
+    sire_id: effectiveSireId(egg, plan) || sire?.id || null,
     dam_id: plan?.dam_id || dam?.id || null,
     status: 'Pet',
     morphs_traits: '',
@@ -83,6 +93,9 @@ export function buildHatchlingRecord({ egg, plan, sire, dam, pairEggs = [], hatc
     notes: `Hatched ${format(parseLocalDate(hatchDate), 'MMM d, yyyy')}${laidText}. Pair: ${pairName}${plan?.breeding_id ? ` (${plan.breeding_id})` : ''}.`,
   };
   if (incubationDays != null && incubationDays >= 0) record.incubation_days = incubationDays;
+  if (egg?.possible_sire_id) {
+    record.genetics_notes = unconfirmedSireNote(sire?.name, possibleSire?.name);
+  }
   const species = dam?.species || sire?.species;
   if (species) record.species = species;
   return record;
@@ -172,7 +185,7 @@ export function eggStatusFields(status, today = todayLocalISO()) {
  * @throws the database error when the gecko or the egg cannot be saved
  *         (check it with isGeckoLimitError from '@/lib/geckoLimit').
  */
-export async function hatchEgg({ egg, plan, sire, dam, pairEggs = [], hatchDate, name, observed, predicted }) {
+export async function hatchEgg({ egg, plan, sire, dam, possibleSire = null, pairEggs = [], hatchDate, name, observed, predicted }) {
   if (!egg?.id) throw new Error('This egg could not be found.');
   const problem = hatchDateProblem(hatchDate, egg);
   if (problem) throw new Error(problem);
@@ -180,10 +193,18 @@ export async function hatchEgg({ egg, plan, sire, dam, pairEggs = [], hatchDate,
     throw new Error("This egg's breeding plan is missing its sire or dam, so the hatchling cannot be added.");
   }
 
+  // The egg may record a male other than the plan's (src/lib/eggSire.js).
+  // A caller that passed the plan's sire gets the egg's one looked up, so
+  // the name, ID code and outcome log use the right father.
+  if (egg.sire_id && sire.id !== egg.sire_id) {
+    const recorded = await Gecko.get(egg.sire_id).catch(() => null);
+    sire = recorded || { id: egg.sire_id, name: 'Unknown' };
+  }
+
   let gecko = await existingLinkedGecko(egg);
   let createdNow = false;
   if (!gecko) {
-    gecko = await createHatchling(buildHatchlingRecord({ egg, plan, sire, dam, pairEggs, hatchDate, name }));
+    gecko = await createHatchling(buildHatchlingRecord({ egg, plan, sire, dam, possibleSire, pairEggs, hatchDate, name }));
     createdNow = true;
   } else if (gecko.hatch_date !== hatchDate) {
     // Re-hatching an egg that was set back to Incubating: keep its gecko
