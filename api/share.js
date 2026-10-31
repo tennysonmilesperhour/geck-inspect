@@ -5,10 +5,9 @@
  *
  * The SPA's prerendered /calculator page cannot vary its Open Graph
  * meta by query string, so share links point here instead: this tiny
- * edge function serves HTML whose og:image is the dynamic
- * /api/og-pairing card for THIS pairing, then immediately forwards
- * humans to the real calculator with the same state. Crawlers read
- * the meta; people never notice the hop.
+ * edge function serves HTML with the static site preview image, then
+ * immediately forwards humans to the real calculator with the same
+ * state. Pairing calculations and share links remain unchanged.
  *
  * All params are untrusted text and are HTML-escaped before
  * interpolation.
@@ -31,7 +30,6 @@ export default function handler(req) {
   const p = url.searchParams;
   const sireLabel = clip(p.get('s') || 'Wild-type', 80);
   const damLabel = clip(p.get('d') || 'Wild-type', 80);
-  const outcomes = clip(p.get('o') || '', 400);
   const sireState = clip(p.get('sire') || '', 400);
   const damState = clip(p.get('dam') || '', 400);
 
@@ -41,8 +39,7 @@ export default function handler(req) {
   const calcPath = `/calculator${calcQuery.toString() ? `?${calcQuery.toString()}` : ''}`;
   const calcUrl = `${url.origin}${calcPath}`;
 
-  const ogQuery = new URLSearchParams({ s: sireLabel, d: damLabel, o: outcomes });
-  const ogImage = `${url.origin}/api/og-pairing?${ogQuery.toString()}`;
+  const ogImage = `${url.origin}/og-image.png`;
 
   const title = `${sireLabel} x ${damLabel}: Crested Gecko Odds`;
   const description =
