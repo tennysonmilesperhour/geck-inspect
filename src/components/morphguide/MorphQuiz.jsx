@@ -8,7 +8,7 @@ import MorphQuizPanel, { STILL_MOTION } from '@/components/morphguide/MorphQuizP
  * "Which features can you see?" A compact teaser card on the Morph Guide index
  * that opens, in place, into a four step picture quiz (MorphQuizPanel.jsx).
  *
- * The open quiz slides between questions with framer-motion (about 38 kB
+ * The open quiz slides between questions with framer-motion (about 49 kB
  * compressed), which nothing else on the Morph Guide uses. It downloads
  * when the teaser scrolls near the screen, or when a visitor points at,
  * focuses or presses Start, not with the page.

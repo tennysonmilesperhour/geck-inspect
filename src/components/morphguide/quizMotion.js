@@ -1,5 +1,5 @@
 /**
- * The animation library (framer-motion, about 38 kB compressed) for the
+ * The animation library (framer-motion, about 49 kB compressed since version 14) for the
  * open Morph Guide quiz. MorphQuiz.jsx loads this file when a visitor
  * shows interest in the quiz, so the Morph Guide itself draws without it.
  *
