@@ -123,32 +123,34 @@ The repo's migrations do not create these buckets or policies. The local test mi
 
 ## 4. Scheduled jobs (pg_cron)
 
-Times are UTC. As found on 28 October 2026: 22 jobs, 20 active, and no failed run in the 8 days of history the database keeps. "In the repo" says whether a runnable migration creates the job; the four marked "archive only" exist in production but only in `supabase/migrations/_pre_rebaseline_history/`, because the September schema dump does not carry `cron.job` rows.
+Times are UTC. As found on 28 October 2026: 22 jobs, 20 active, and no failed run in the 8 days of history the database keeps. "In the repo" says whether a runnable migration creates the job; the ones marked "archive only" exist in production but only in `supabase/migrations/_pre_rebaseline_history/`, because the September schema dump does not carry `cron.job` rows.
 
 | Job | Schedule | Active | Runs | In the repo |
 |---|---|---|---|---|
 | clear-lapsed-featured-breeders | 04:50 daily | yes | `clear_lapsed_featured_breeders()` | yes |
 | expire-referral-grants | 04:30 daily | yes | `expire_referral_grants()` | archive only |
-| feeding-reminders-daily | 14:10 daily | yes | `enqueue_feeding_reminders()` | yes |
-| hatch-alerts-daily | 13:00 daily | yes | `enqueue_hatch_alerts()` | archive only |
+| feeding-reminders-daily | :10 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('feeding')`, which calls `enqueue_feeding_reminders()` | yes |
+| hatch-alerts-daily | :00 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('hatch')`, which calls `enqueue_hatch_alerts()` | yes (`20261031010000_reminder_time_zones.sql`) |
 | lifecycle-emails-hourly | :35 every hour | yes | `enqueue_lifecycle_emails()` | yes |
 | market-after-scrape-requests | every 5 minutes | yes | `geck_data.run_requested_after_scrape()` | yes |
 | market-brief-morning | :35, 13:00 to 20:00 | yes | `enqueue_market_briefs()` | yes |
 | market-value-daily | 12:40 daily | yes | `request_market_value_snapshot()` | yes |
-| personal-weighin-reminders-daily | 14:20 daily | yes | `enqueue_personal_weighin_reminders()` | yes |
+| personal-weighin-reminders-daily | :20 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('weigh_in')`, which calls `enqueue_personal_weighin_reminders()` | yes |
 | privacy-retention-daily | 04:05 daily | yes | `apply_privacy_retention(90)` | yes (`20261016090000_privacy.sql`) |
 | process-scheduled-blog-posts | every 5 minutes | **no** | `process_scheduled_blog_posts()` | yes |
 | promote_drain_scheduled | every 5 minutes | **no** | `publish_due_scheduled_posts()` | yes |
 | prune-stale-push-subscriptions | 03:17 daily | yes | `prune_stale_push_subscriptions()` | archive only |
 | purge-cron-run-details | 03:47 daily | yes | `purge_cron_run_details(7)` | yes |
 | refresh-market-matviews | :20 every hour | yes | `geck_data.after_scrape('hourly')` | yes |
-| season-planner-reminders-daily | 14:20 daily | yes | `enqueue_season_planner_reminders()` | yes |
-| vet-followups-daily | 14:25 daily | yes | `enqueue_vet_followups()` | yes |
+| season-planner-reminders-daily | :20 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('planner')`, which calls `enqueue_season_planner_reminders()` | yes |
+| vet-followups-daily | :25 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('vet')`, which calls `enqueue_vet_followups()` | yes |
 | weekly-digest-sunday | 16:00 Sunday | yes | `enqueue_weekly_digest()` | yes |
 | weekly-notes-hourly | :50 every hour | yes | `enqueue_weekly_notes()` (members, then confirmed visitors) | yes (`20261018002200_weekly_notes.sql`, `20261018120000_weekly_notes_visitors.sql`) |
 | weekly-notes-repermission-hourly | :55 every hour | yes | `enqueue_weekly_notes_repermission()` (the one-time re-permission email, 20 a run) | yes (`20261024150000_weekly_notes_personal_and_repermission.sql`) |
 | weekly-notes-visitor-cleanup | 04:25 daily | yes | `weekly_notes_visitor_cleanup()` | yes (`20261018120000_weekly_notes_visitors.sql`) |
 | weighin-reminders-weekly | 15:00 Sunday | yes | `enqueue_weighin_reminders()` | archive only |
+
+**Reminders in local time** (`20261031010000_reminder_time_zones.sql`). The five daily reminder jobs keep their names but run every hour. `run_reminders_local(job)` finds the time zones where it is now 7 am (each member's `profiles.time_zone`, and `America/Los_Angeles` for members with none saved), sets the session time zone to each in turn so "today" is the member's day, and runs the reminder function for members in that zone only (`reminder_recipient_due`). A reminder function called by hand still reminds everyone on the UTC day, as before. The app saves the browser's zone on the next sign-in when none is saved, and Settings, Feeding Alerts lets the member change it.
 
 `monthly-overage-billing` is gone: round 3 (`20261016090600_retire_overage_billing.sql`) unscheduled it with Promote retired, and the same round added `privacy-retention-daily`.
 
@@ -176,7 +178,7 @@ pg_cron 1.6.4, pg_net 0.20.0, supabase_vault 0.3.1, vector 0.8.0, pg_trgm 1.6, p
 The migration chain recreates the `public` and `geck_data` schemas, their functions, policies and grants. It does not recreate:
 
 1. **Storage buckets and their policies** (section 3). Create the five buckets with the same public flags, then the policies.
-2. **Four scheduled jobs** that live only in the archive (section 4): expire-referral-grants, hatch-alerts-daily, prune-stale-push-subscriptions, weighin-reminders-weekly.
+2. **Three scheduled jobs** that live only in the archive (section 4): expire-referral-grants, prune-stale-push-subscriptions, weighin-reminders-weekly. (hatch-alerts-daily is rescheduled by `20261031010000_reminder_time_zones.sql`.)
 3. **Vault secrets** (section 5). New random values, never production's.
 4. **Edge function secrets** (names in `docs/OPERATIONS.md`, section 2).
 5. **Data**: no rows, no stored photos, no auth users. `src/lib/guestMockData.js` is the nearest thing to seed data. The `db-backup` workflow (Sundays) will keep a weekly encrypted dump of production's database for 30 days once the Actions secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` are set; until then it skips with a notice (it did on 18 and 25 October), and the only copies are Supabase's own daily backups (`docs/OPERATIONS.md`, sections 2 and 3).

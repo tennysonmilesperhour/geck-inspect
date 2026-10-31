@@ -52,6 +52,7 @@ import SignInRequired from '@/components/shared/SignInRequired';
 import PageHeader from '@/components/shared/PageHeader';
 import WeighInReminderSetting from '@/components/settings/WeighInReminderSetting';
 import WeeklyNotesSetting from '@/components/settings/WeeklyNotesSetting';
+import TimeZoneSetting from '@/components/settings/TimeZoneSetting';
 import { WEEKLY_NOTES_CHANGED_EVENT } from '@/lib/weeklyNotesConsent';
 import CollectionArtworkSetting from '@/components/settings/CollectionArtworkSetting';
 
@@ -1069,6 +1070,7 @@ export default function SettingsPage() {
                              </>
                          )}
                          <WeighInReminderSetting email={user?.email} />
+                         <TimeZoneSetting key={user?.email || 'none'} profile={user} email={user?.email} />
                          {renderSwitch('cgd-reorder-reminder', 'CGD Reorder Reminder', 'Notify me roughly 14 days before my CGD is estimated to run out. The estimate uses your collection size and your CGD orders from the Geck Inspect store, so it starts after your first store order.', formData.cgd_reorder_reminders_enabled, (checked) => handleChange('cgd_reorder_reminders_enabled', checked))}
                      </CardContent>
                  </Card>
