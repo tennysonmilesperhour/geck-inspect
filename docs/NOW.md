@@ -57,7 +57,7 @@ Notes on today's numbers:
 6. **Your step: the US market feed.** The full pass has been stalled since 19 October and the canary fails daily until it runs again (`docs/planning/market-habit-2026-09-30.md`).
 7. **Your step: sign-in link templates (PKCE).** Supabase, Authentication, Email Templates (`docs/planning/deploy-queue-2026-10-03.md`, round 3, item 2).
 8. **Your step: Morph ID card views.** Vault secret `morph_share_view_key` and the Vercel setting `MORPH_SHARE_VIEW_KEY`, then a production redeploy.
-9. **Session work: email addresses, step 2.** `supabase/pending/member_email_columns_revoke.sql` can move to `supabase/migrations` with a fresh version from 31 October on (`docs/planning/deploy-queue-2026-10-03.md`, the last 28 October section).
+9. **Done 31 October: email addresses, step 2.** `20261031061000_member_email_columns_revoke.sql` is live: signed-in accounts can no longer read other members' email addresses on photo, forum, breeder, badge, giveaway, reaction and price rows (`docs/planning/deploy-queue-2026-10-03.md`, 31 October, step 2). Left for later: `geckos.created_by` (identity migration, E4 32).
 10. **Your steps: routines access, the Geck Intellect key, monthly cost** (carried over from 28 October; the first two could not be checked from here). Give both scheduled routines the repository and connectors at https://claude.ai/code (Routines); replace the revoked Supabase key in the geck-data Vercel project, or pause it; enter last month's total under "Record by hand", Monthly cost.
 
 ## Day 90: the three outcomes
