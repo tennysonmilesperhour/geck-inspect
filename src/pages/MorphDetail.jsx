@@ -81,6 +81,9 @@ const ReportContent = lazyOptional(() => import('@/components/support/ReportCont
 // with its five siblings' text) load only on the morphs that show them,
 // and scripts/prerender.mjs starts those downloads with the page's own.
 const PatternSpectrum = lazyOptional(() => import('@/components/morphguide/PatternSpectrum'));
+// Current asking prices from the Price Index; below the first screen, so
+// it downloads after the page instead of with it.
+const MorphAskingPrices = lazyOptional(() => import('@/components/morphguide/MorphAskingPrices'));
 const MorphEyeStudyPanel = lazyOptional(() =>
   import('@/components/morphguide/MorphEyeGuide').then((m) => ({ default: m.MorphEyeStudyPanel })),
 );
@@ -888,6 +891,12 @@ export default function MorphDetail() {
                   </p>
                 </div>
               )}
+              {/* The live median from the Price Index beside the guide's range. */}
+              <ErrorBoundary key={`prices-${slug}`} scope="MorphAskingPrices" fallback={null}>
+                <Suspense fallback={null}>
+                  <MorphAskingPrices morph={localMorph} />
+                </Suspense>
+              </ErrorBoundary>
               <InlineMorphCta slug={slug} to="/crested-gecko-price" placement="price" icon={CircleDollarSign}>
                 See the full crested gecko price guide and what moves a price up or down.
               </InlineMorphCta>

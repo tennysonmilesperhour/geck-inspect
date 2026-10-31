@@ -2,7 +2,7 @@
 
 > Geck Inspect (https://geckinspect.com/) is a reference and record-keeping platform built only for crested geckos (*Correlophus ciliatus*). It publishes a morph guide, care guide, genetics guide and calculator, a quality grading standard, and the Geck Inspect Price Index (an asking-price snapshot from public marketplace listings, by trait and market). Everything listed here is free to read and cite.
 >
-> Last updated: 2026-10-18.
+> Last updated: 2026-10-28.
 
 ## How to use and cite this site
 
@@ -22,7 +22,7 @@
 
 ## Data and API
 
-- [Open data catalog](https://geckinspect.com/data) (human page) and [/data/index.json](https://geckinspect.com/data/index.json) (machine catalog)
+- [Open data catalog](https://geckinspect.com/data) (human page) and [/data/index.json](https://geckinspect.com/data/index.json) (machine catalog), described by an [OpenAPI 3.1 file](https://geckinspect.com/data/openapi.json)
 - [Price index JSON](https://geckinspect.com/data/price-index.json) and [CSV](https://geckinspect.com/data/price-index.csv): latest percentiles per trait and market, plus monthly medians since May 2026
 - [Morphs JSON](https://geckinspect.com/data/morphs.json) and [CSV](https://geckinspect.com/morphs.csv)
 - [Genetics JSON](https://geckinspect.com/data/genetics.json): the same engine data the genetics calculator uses

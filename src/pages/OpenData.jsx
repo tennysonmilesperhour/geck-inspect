@@ -102,7 +102,9 @@ export default function OpenData() {
             </li>
             <li>
               <strong className="text-slate-200">Catalog:</strong>{' '}
-              <a href="/data/index.json" className={link}>/data/index.json</a> lists every dataset and file.
+              <a href="/data/index.json" className={link}>/data/index.json</a> lists every dataset and file, and{' '}
+              <a href="/data/openapi.json" className={link}>/data/openapi.json</a> describes every file and its fields
+              (OpenAPI 3.1).
             </li>
           </ul>
         </div>

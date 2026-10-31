@@ -67,12 +67,12 @@ How much is a Lilly White crested gecko worth? Can you breed two Lilly Whites? W
 ## Backlog (for the weekly review)
 
 - Reconcile the Lilly White origin across the blog post (`src/data/blog-posts.js`, says ACR 2014), `src/data/project-lines.js` (says ACR still produces Super Lilly Whites, which are lethal) and the morph guide (Lilly Exotics, Nick Lumb, 2010). Fixed in llms.txt on 7 Oct.
-- Put each morph's current asking prices on its HTML Morph Guide page (now only in the MCP answer and the Price Index files; the morph `.md` twin and `/data/morphs.json` link the index instead of copying it, because the catalog is CC BY 4.0 and the index is not).
-- Price index by age class and sex once there is enough data, and a monthly "state of the crested gecko market" stats page (numbers only, no blog post).
+- ~~Put each morph's current asking prices on its HTML Morph Guide page.~~ Done 31 Oct: each morph page with Price Index rows shows "Current asking prices" under its price section (median, middle half, listings and check date per market, an out-of-date note for a market not fully checked in a week, and the index's terms), in the live page (`src/components/morphguide/MorphAskingPrices.jsx`) and in the server HTML crawlers read (`morphPriceBlock` in `scripts/prerender.mjs`). Both use `priceRowsForMorph` in `src/lib/priceIndexPolicy.js`, the same rows as the MCP answer. The `.md` twins and `/data/morphs.json` still link the index instead of copying it, because the catalog is CC BY 4.0 and the index is not.
+- Price index by age class and sex once there is enough data, and a monthly "state of the crested gecko market" stats page (numbers only, no blog post). The stats page is held: Part E's breadth freeze allows no new pages until weekly active breeders have grown four weeks running (`comprehensive-review-2026-10-14.md`, E3), and the US feed has not had a full check since 6 Oct.
 - Original stats from member data, aggregated and anonymous, once there are enough records: hatch rates, incubation days by temperature, weight by age. At least 50 records per number before publishing.
-- An OpenAPI description for the `/data` files.
+- ~~An OpenAPI description for the `/data` files.~~ Done 31 Oct: `/data/openapi.json` (OpenAPI 3.1, written on every build by `scripts/lib/data-openapi.mjs` through `scripts/build-agent-data.mjs`) describes every file, its fields and its license. It describes the files already published and adds no endpoint. Linked from `/data/index.json` (`openapi`), `/.well-known/api-catalog` (`service-desc` of the catalog), `/llms.txt` and the /data page. Validated with Redocly's recommended rules.
 - Re-check the MCP server card format when the proposal settles.
-- 19 Oct review: register the MCP server (decision 3 above).
+- 19 Oct review: register the MCP server (decision 3 above). On hold until counsel has looked at the data position (Part E, E6); still not done on 31 Oct.
 - When agents start paying anywhere relevant: a paid MCP tool (price history, comps) through x402 or Stripe.
 
 ## Outlook

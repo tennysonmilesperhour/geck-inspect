@@ -16,7 +16,9 @@ import {
   PRICE_DATA_TERMS,
   PRICE_INDEX_SAMPLE_RULE,
   PRICE_INDEX_WHAT,
+  PRICE_MARKET_NAMES,
   applyPricePolicy,
+  priceRowsForMorph,
   staleMarketNote,
   staleMarkets,
 } from '../../src/lib/priceIndexPolicy.js';
@@ -173,28 +175,12 @@ export function listingsCell(row) {
   return row.thin ? `${row.listings} (thin sample)` : String(row.listings);
 }
 
-export const MARKET_NAMES = { US: 'United States', KR: 'South Korea', JP: 'Japan', EU: 'Europe' };
+export const MARKET_NAMES = PRICE_MARKET_NAMES;
 const MARKET_ORDER = Object.keys(MARKET_NAMES);
 const byMarketOrder = (a, b) => MARKET_ORDER.indexOf(a.market) - MARKET_ORDER.indexOf(b.market);
 
-// Market trait names that differ from the morph guide's name or aliases.
-// "Phantom" needs no entry: it matches the Phantom (gene) page by name, the
-// same page src/lib/priceIndexPolicy.js links it to. It used to point at
-// Phantom Pinstripe, which put the gene's asking prices on that page too.
-const MARKET_TRAIT_TO_SLUG = {
-  'tri-color': 'tricolor',
-};
-
-/** Latest asking-price rows for one morph, keyed by market. */
-export function priceRowsForMorph(index, morph) {
-  if (!index) return [];
-  const names = new Set([morph.name, ...(morph.aliases || [])].map((n) => n.toLowerCase()));
-  return index.latest.filter((row) => {
-    if (!row.trait) return false;
-    const t = row.trait.toLowerCase();
-    return names.has(t) || MARKET_TRAIT_TO_SLUG[t] === morph.slug;
-  }).sort(byMarketOrder);
-}
+// Shared with the Morph Guide page (src/lib/priceIndexPolicy.js).
+export { priceRowsForMorph };
 
 /**
  * Where a morph's asking prices are, for the morph catalog (data/morphs.json,

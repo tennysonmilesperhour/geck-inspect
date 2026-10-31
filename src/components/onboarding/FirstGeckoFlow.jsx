@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { FeedingGroup, Gecko, WeightRecord } from '@/entities/all';
 import MarketValueCard from '@/components/gecko/MarketValueCard';
+import ValueEstimateLine from '@/components/onboarding/ValueEstimateLine';
 import PushAskCard from '@/components/notifications/PushAskCard';
 import { todayLocalISO } from '@/lib/dateUtils';
 import {
@@ -274,6 +275,8 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
               <div className="rounded-lg border border-emerald-500/50 bg-emerald-950/30 px-3 py-2 text-center">
                 <p className="font-semibold text-slate-100 truncate">{name}</p>
                 <p className="text-[11px] text-slate-400 truncate">{[gecko.sex === 'Unsexed' ? 'Not sexed yet' : gecko.sex, gecko.morphs_traits].filter(Boolean).join(', ')}</p>
+                {/* The value card is below the fold on a phone; this line puts the estimate where it is seen. */}
+                <ValueEstimateLine gecko={gecko} name={name} />
               </div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <Link to={`/Lineage?geckoId=${encodeURIComponent(gecko.id)}`} onClick={() => flowEvent('payoff', 'open_lineage')} className="touch:min-h-11 inline-flex items-center text-emerald-300 hover:text-emerald-200">
