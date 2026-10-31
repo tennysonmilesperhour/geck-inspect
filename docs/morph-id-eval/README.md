@@ -160,6 +160,46 @@ call self-serving.
   photos are copied to our own storage under a licence (see the corpus
   finding in the adversarial review; that is a separate decision).
 
+**Done on 31 October 2026 (no spend):**
+
+- **The split.** `scripts/morph-id-eval/seller-split-v1.csv` puts every one
+  of the 1,879 listings that have a stored photo fingerprint into one split
+  by seller: 417 sellers, none in two splits. Train 1,391 listings (312
+  sellers), validation 219 (48 sellers), test 269 (57 sellers). A seller's
+  split comes from a fixed hash of the seller's name (`md5('seller-split-v1:'
+  || lower(trim(seller name)))`, under 0.15 test, under 0.30 validation), so
+  the same rule gives the same split again. The files carry anonymous seller
+  group numbers (`s001` and so on) instead of names, and the photo links
+  point at our own `listing-images` copies, not the marketplace. The
+  database's own `geck_data_split` is not changed, so production's lookup
+  still skips the old test split.
+- **Grader manifests.** `seller-split-v1-val.jsonl` and
+  `seller-split-v1-test.jsonl` are in the format `scripts/eval-morph-id.mjs`
+  reads, with one extra field, `exclude_seller_of_listing`.
+- **Near-duplicates.** No photo in validation or test has a photo in
+  another split closer than 0.02 (cosine distance between photo
+  fingerprints), so none were removed. A smaller threshold is not useful
+  here: the median distance from a photo to the closest photo of a
+  *different* listing is about 0.05, so the fingerprint cannot tell "the same
+  photo" from "a similar gecko" above about 0.02.
+- **The lookup that leaves out the seller.** A new database function,
+  `morph_visual_neighbors_excluding_seller(query_embedding, match_count,
+  exclude_seller_of_listing)` (migration `20261031005507`), returns what
+  `morph_visual_neighbors` returns minus every photo from that listing's
+  seller (matched by seller name or slug). It is a new function, not a
+  third argument on the old one, because a second version of
+  `morph_visual_neighbors` would make the live call from
+  `recognize-gecko-morph` ambiguous. With no listing it returns the same
+  photos as the old function (checked on 20 production samples on
+  31 October: 0 differ). Production calls are unchanged.
+- **Still to do for this step.** The grader cannot use the new function
+  yet: `recognize-gecko-morph` always calls `morph_visual_neighbors`. The
+  next change is an evaluation-only option in that function (honoured only
+  for the evaluation account) that passes `exclude_seller_of_listing` from
+  the manifest through to the new function. Per-class precision and recall
+  and the McNemar comparison come with the first model run on the new
+  split.
+
 ### Step 2: the gold set (Tennyson recruits the labellers)
 
 - **Size.** Start with 50 animals for the classes sellers mislabel most
@@ -208,4 +248,62 @@ runs after it.
 
 | Date | Model, version | Split, size | Top-1 | Top-3 | Baselines (majority / shortlist / lookup) | Answered | Run id |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| 31 Oct 2026 | No model (baselines only, SQL on stored fingerprints) | Seller split v1, validation, 219 | n/a | n/a | 34.7% / 60.3% / 26.9% top-1, 58.9% top-3 | n/a | none (no model call) |
+| 31 Oct 2026 | No model (baselines only, SQL on stored fingerprints) | Seller split v1, test, 269 | n/a | n/a | 33.5% / 71.0% / 24.9% top-1, 63.2% top-3 | n/a | none (no model call) |
+
+### 31 October 2026: the three baselines on the seller split
+
+No model was called and nothing was spent: every number comes from labels
+and photo fingerprints already in the database. The score is the seller's
+tags (a guess counts when it is any pattern the seller tagged), as in
+`breeder_tag_top1` above. The 95 percent ranges assume each gecko is
+independent; geckos from one seller are not, so the true ranges are wider.
+
+| Baseline | Validation (219) | Test (269) |
+|---|---|---|
+| Most common class (always "Harlequin", the most tagged pattern in train) | 34.7% (29 to 41) | 33.5% (28 to 39) |
+| Fixed shortlist, top-3 (Harlequin, Tricolor, Extreme Harlequin: the three most tagged in train) | 60.3% (54 to 67) | 71.0% (65 to 76) |
+| Photo lookup alone, seller left out, top-1 | 26.9% (21 to 33) | 24.9% (20 to 30) |
+| Photo lookup alone, seller left out, top-3 | 58.9% (52 to 65) | 63.2% (57 to 69) |
+| For comparison: same lookup with the seller allowed, top-1 / top-3 | 32.4% / 63.5% | 29.7% / 66.5% |
+
+How the lookup was scored: `morph_visual_neighbors_excluding_seller(photo,
+48, listing)` exactly as production would run it, top-1 is the pattern of the
+closest returned photo and top-3 the first three different patterns in
+order. A stricter version (exact closest photo among the train split only)
+gives the same picture: validation 26.9% top-1 and 58.9% top-3, test 19.7%
+and 58.7%.
+
+What it says:
+
+- **With the seller left out, the free photo lookup is worse than always
+  answering Harlequin**, on both splits, and its top-3 is no better than a
+  fixed shortlist that never looks at the photo. This matches the
+  adversarial review's 28.2%. The 43.2% lookup figure on the old split was
+  mostly the lookup recognising the seller.
+- **So the model's 43.6% on the old split cannot be read as skill yet.** The
+  next model run on this split has to beat 34.7% top-1 and 60.3% top-3 on
+  validation to show it adds anything over a constant answer.
+- **Allowing the seller back in adds about 5 points** in production's
+  lookup, which keeps one photo per seller. The exact single closest photo,
+  any seller, scores 42.5% on validation and 38.3% on test, close to the old
+  43.2%: that is the leak.
+
+Caveats:
+
+- **The splits are lumpy.** Validation has 48 sellers and the largest has
+  25 listings; its class mix differs from train (Extreme Harlequin is the
+  most common primary label in train, 23%, but 9% in validation), which is
+  why the shortlist scores 60% there and 71% on test. One split is one draw;
+  quote both, and do not tune on test.
+- **Production's lookup is approximate.** Its index search looks at a
+  limited candidate list (pgvector's default search width is 40) before
+  keeping one photo per seller, so a call returns 16 to 20
+  photos on average (minimum 5), not 48. The baseline above uses it as it
+  is, because that is what Morph ID sees.
+- **The labels are still seller claims**, the photos are still 550-pixel
+  marketplace thumbnails, and Lilly White, Cappuccino, Axanthic and White
+  Wall are still not scored. Step 2 (the gold set) is what fixes those.
+- **The test split was looked at once**, for these baselines only (no model,
+  nothing tuned). The next look at test should be a release run with its
+  metric written down first.

@@ -93,6 +93,29 @@ describe('hatchEgg: one hatch path', () => {
     expect(db.logs[0].predicted).toEqual(predicted);
   });
 
+  it('gives the hatchling the sire recorded on the egg, not the plan\'s', async () => {
+    const earlier = { id: 's0', name: 'Atlas', species: 'Crested Gecko' };
+    db.geckos.push(earlier);
+    const egg = { ...db.eggs[0], sire_id: 's0' };
+    db.eggs[0] = egg;
+    // The caller passes the plan's sire; hatchEgg looks up the egg's own.
+    const { gecko } = await hatchEgg({ egg, plan, sire, dam, pairEggs: db.eggs, hatchDate: '2026-08-10', observed: 'Normal' });
+    expect(gecko.sire_id).toBe('s0');
+    expect(gecko.dam_id).toBe('d1');
+    expect(gecko.name).toBe('Atlas x Tiger #1');
+    expect(gecko.genetics_notes).toBeUndefined();
+    expect(db.logs[0].pairing_key).toBe('s0|d1');
+  });
+
+  it('notes an unconfirmed sire on the hatchling when the egg names a possible one', async () => {
+    const egg = { ...db.eggs[0], possible_sire_id: 's0' };
+    const { gecko } = await hatchEgg({
+      egg, plan, sire, dam, possibleSire: { id: 's0', name: 'Atlas' }, pairEggs: db.eggs, hatchDate: '2026-08-10',
+    });
+    expect(gecko.sire_id).toBe('s1');
+    expect(gecko.genetics_notes).toMatch(/^Sire not confirmed: Zeus or Atlas\./);
+  });
+
   it('writes no outcome log when nothing was chosen', async () => {
     await hatchEgg({ egg: db.eggs[0], plan, sire, dam, pairEggs: db.eggs, hatchDate: '2026-08-10' });
     expect(db.logs).toHaveLength(0);

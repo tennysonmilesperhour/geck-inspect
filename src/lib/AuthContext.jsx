@@ -7,6 +7,7 @@ import { applyPendingReferral } from '@/lib/referral';
 import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
 import { recordSignupIfNew } from '@/lib/activation';
 import { applyWeeklyNotesRegionDefault, weeklyNotesAfter } from '@/lib/weeklyNotesConsent';
+import { applyDetectedTimeZone } from '@/lib/memberTimeZone';
 import { setAnalyticsContext } from '@/lib/telemetry';
 import { loadUserProfile } from '@/lib/userProfile';
 import { queryClientInstance } from '@/lib/query-client';
@@ -118,6 +119,14 @@ export const AuthProvider = ({ children }) => {
           const enabled = weeklyNotesAfter(outcome, session.user);
           if (enabled === null || revision !== revisionRef.current) return;
           setUser((prev) => (prev ? { ...prev, email_weekly_notes_enabled: enabled } : prev));
+        });
+        // Reminders arrive at about 7 am in the member's time zone. A
+        // member with none saved gets this browser's zone, once, in the
+        // background (src/lib/memberTimeZone.js); a saved zone is never
+        // changed here.
+        void applyDetectedTimeZone(session.user, enriched).then((result) => {
+          if (result?.outcome !== 'saved' || revision !== revisionRef.current) return;
+          setUser((prev) => (prev ? { ...prev, time_zone: result.zone } : prev));
         });
       });
     };
