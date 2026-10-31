@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { HANDBOOK_GUIDE } from '@/data/keepers-guides/handbook';
 
 /**
  * Which Keeper's Guide each Care Guide category shows, and loading them.
@@ -9,15 +8,17 @@ import { HANDBOOK_GUIDE } from '@/data/keepers-guides/handbook';
  * without a clean mapping (Handling, Health, Life Stages) show none; the
  * long-form section cards cover them.
  *
- * The five guides are about 160 KB of text together, and the Care Guide
- * opens on Overview, which shows only the Handbook. So the Handbook comes
- * with the page and the other guides download after it has drawn (when
- * the browser is idle, or as soon as a visitor reaches for the topic
- * list). CareGuide.jsx waits up to GUIDE_WAIT_MS for a topic's guide
- * before switching to that topic, so the two normally appear together.
- * On a slow connection the topic opens after that wait with the guide's
- * space held (GUIDE_SPACE), and the guide fills it when it arrives, so
- * nothing below it jumps. The Keeper's Guide Series page
+ * The five guides are about 160 KB of text together, so none of them comes
+ * with the page. The Care Guide opens on Overview, which shows the
+ * Handbook: its download starts as soon as the page has drawn, so the
+ * hero, topic list and quick facts appear without waiting for 34 KB of
+ * slide text that sits below them (on a phone, below the first screen).
+ * The other guides download when the browser is idle, or as soon as a
+ * visitor reaches for the topic list. CareGuide.jsx waits up to
+ * GUIDE_WAIT_MS for a topic's guide before switching to that topic, so the
+ * two normally appear together. While a guide downloads, its box holds
+ * the guide's space (GUIDE_SPACE) and the guide fills it when it arrives,
+ * so nothing below it jumps. The Keeper's Guide Series page
  * (CareGuideSeries.jsx) still imports all five with the page.
  */
 export const CATEGORY_TO_GUIDE = {
@@ -31,21 +32,24 @@ export const CATEGORY_TO_GUIDE = {
 export const GUIDE_WAIT_MS = 1000;
 
 // The height of each downloaded guide's box on a phone, a small tablet
-// and wider screens (measured on 16 Oct 2026 at 375, 600 and 1280 px),
-// held while it downloads. Measure again if a guide's first slide changes.
+// and wider screens (measured on 16 Oct 2026 at 375, 600 and 1280 px; the
+// Handbook on 31 Oct 2026 at 375, 700 and 1280 px), held while it
+// downloads. Measure again if a guide's first slide changes.
 export const GUIDE_SPACE = {
+  handbook: 'min-h-[1003px] sm:min-h-[642px] md:min-h-[788px]',
   setup: 'min-h-[965px] sm:min-h-[729px] md:min-h-[788px]',
   feeding: 'min-h-[883px] sm:min-h-[676px] md:min-h-[700px]',
   breeding: 'min-h-[960px] sm:min-h-[700px] md:min-h-[728px]',
 };
 
 const LOADERS = {
+  handbook: () => import('@/data/keepers-guides/handbook').then((m) => m.HANDBOOK_GUIDE),
   setup: () => import('@/data/keepers-guides/setup').then((m) => m.SETUP_GUIDE),
   feeding: () => import('@/data/keepers-guides/feeding').then((m) => m.FEEDING_GUIDE),
   breeding: () => import('@/data/keepers-guides/breeding').then((m) => m.BREEDING_GUIDE),
 };
 
-const loaded = new Map([['handbook', HANDBOOK_GUIDE]]);
+const loaded = new Map();
 const pending = new Map();
 
 /** Whether a care category shows a Keeper's Guide at all. */

@@ -4,7 +4,21 @@ The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file r
 
 **Status 15 October: the SQL queue is cleared, and deploys go through merges.** Everything that was waiting on the SQL Editor run reached production on 8 October (details in "Cleared on 8 October" below). Merging to `main` does three things at once, through Vercel and the Supabase GitHub integration: Vercel deploys the site, Supabase applies every new file in `supabase/migrations/`, and Supabase deploys the edge functions declared in `supabase/config.toml`. The integration already did this before 15 October, alongside changes applied by hand; round 1 of the review fixes went out with nothing run by hand (below), and that is the rule now. How to write a migration for this is in `docs/MIGRATIONS.md`.
 
-What is still open in this file: the dashboard steps for rounds 2 and 3 (each round's "what still needs Tennyson"), the leftover functions under "Also for Tennyson", and the real-device checks. Round 3 went live on 16 October.
+## Still open for Tennyson (checked 31 October 2026)
+
+Everything else in this file is done, decided or kept for history. Each item below was checked read-only against production or the code on 31 October.
+
+1. **Stripe refund and dispute events** (round 3, item 8). Still open: `stripe_webhook_logs` has never received a `charge.refunded` or dispute event, and the Revenue card's refunds read $0, so the 17 October refund is still missing. Stripe, Developers, Webhooks, the `.../functions/v1/stripe-webhook` endpoint: add the eight events listed in round 3, item 8, then resend the refund's `charge.refunded` event.
+2. **Sign-in link templates (PKCE)** (round 3, item 2). Still open as far as the code shows: `WEB_AUTH_FLOW` in `src/lib/emailLinkAuth.js` is still `'implicit'`, and nothing records the templates as changed. The templates themselves cannot be read from here.
+3. **Morph ID card views** (round 2, item 3). Still open: the Vault holds only `email_unsubscribe_secret` and `notification_service_role_key`, so `morph_share_view_key` does not exist. Create it, set the same value as the Vercel setting `MORPH_SHARE_VIEW_KEY`, then redeploy production in Vercel.
+4. **Photo thumbnails for older photos** (round 3, item 6). Still open: 817 of the 882 member photos have no thumbnail; every photo uploaded since 17 October has one and no older photo does. Admin panel, System, Photo thumbnails, Make thumbnails.
+5. **Delete two dead functions** ("Also for Tennyson"). Still open: `rapid-api` (v25) and `admin-end-trial` (v15) are both still deployed, and `supabase/functions/admin-end-trial/` is still in the repo.
+6. **Admin two-factor, steps 1 to 3** of `docs/planning/admin-mfa-2026-10.md` (the last 28 October section below). Still open: no verified authenticator exists in `auth.mfa_factors`, and `admin_requires_mfa` is false (it must stay false until then).
+7. **Phone and real-email checks.** None is recorded as done: round 2, item 5 (weigh-in reminder link to `/log`, airplane-mode feeding, a Morph ID card in Messenger); round 3, items 1 and 5 (Today on a cold phone, the gecko record on an iPhone, link previews for passports and breeder pages); and the list under "Real-device and real-email checks".
+
+Could not be checked from here, so left as written below: round 3, item 3 (delete PostHog persons whose id contains "@"), and the Morph ID speed steps (Replicate credit at $5 or more; the `embed` time after a cold start).
+
+Round 2's other steps are done: the Resend webhook (24 October), the postal address (18 October) and the lifecycle emails (on since 17 October). Round 3, items 4 and 7 were decided on 16 October.
 
 Project: `mmuglfphhwlaluyfyxsp`.
 
@@ -59,13 +73,13 @@ Plan items E2 15 to 22 and E5 of `docs/planning/comprehensive-review-2026-10-14.
 
 ### Round 2: what still needs Tennyson
 
-1. **Resend webhook** (until then nothing is recorded after "sent", and bounces do not stop mail):
+1. **Resend webhook.** **Done 24 October** (`docs/marketing/email-brain.md`, section 1). What was asked:
    - In Resend, Webhooks, add the endpoint `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/resend-webhook` with the email events (sent, delivered, delivery delayed, opened, clicked, bounced, complained).
    - Copy its signing secret (it starts with `whsec_`) into the Supabase function secret `RESEND_WEBHOOK_SECRET`. Without it the function refuses every call.
    - Turn on open and click tracking for the sending domain in Resend, or opens and clicks stay at 0.
-2. **Email footer:** set the function secret `EMAIL_POSTAL_ADDRESS` (the postal address US law expects in commercial email). Optional: `UNSUBSCRIBE_MAILTO`, an address that handles unsubscribe requests by hand, used only when a signed unsubscribe link cannot be made.
+2. **Email footer.** **Done 18 October.** Set the function secret `EMAIL_POSTAL_ADDRESS` (the postal address US law expects in commercial email). Optional: `UNSUBSCRIBE_MAILTO`, an address that handles unsubscribe requests by hand, used only when a signed unsubscribe link cannot be made.
 3. **Morph ID card views:** create the Vault secret `morph_share_view_key` (32 or more random characters) and set the same value as the Vercel setting `MORPH_SHARE_VIEW_KEY`. It is a server-only setting: never give it a `VITE_` name, because `VITE_` names are for public values the build may put in the browser's JavaScript. Then redeploy production in Vercel (Deployments, the latest production deployment, Redeploy), because a changed setting reaches only new deployments, and a later merge that touches only docs does not make one. Until both values exist and that redeploy is done, cards work but every card's view count stays at 0.
-4. **Lifecycle emails:** approve the copy in `docs/planning/lifecycle-emails-2026-10.md`, then turn them on in the SQL Editor: `update public.app_settings set value = 'true'::jsonb where key = 'lifecycle_emails_enabled';`. Until then the hourly job sends nothing.
+4. **Lifecycle emails.** **Done: on since 15:50 UTC on 17 October**, without a copy review at Tennyson's request (`docs/planning/lifecycle-emails-2026-10.md`, section 1).
 5. **Phone checks:**
    - Add a gecko with no weight on or after 16 October UTC (6 pm on 15 October, Denver time), and not before the release day: the next day (the job runs at 14:20 UTC, 8:20 am Denver time) a weigh-in reminder arrives, and its link opens `/log` with that gecko. Do not test sooner. A gecko added before then gets a reminder only if its own reminder switch is on, and on the first day the defaults apply, reminders still link to the older pages, so a sooner test can look broken when nothing is wrong.
    - Airplane mode: log a feeding in Field Mode or on `/log`, go back online, and the feeding is saved once (not zero times, not twice).
@@ -215,7 +229,7 @@ An email sign-up for people without an account, feeding the same weekly notes. D
 
 ## Cleared on 8 October: the SQL script
 
-These were bundled in `docs/planning/deploy-queue-2026-10-03.sql` because the Supabase MCP tool would not run statements containing `delete`, `drop` or `revoke`. They all reached production on 8 October 2026. The versions below are what production's migration history records (the timestamp is the time it ran, in UTC); PR 107 renamed the repo files under `supabase/migrations/` to the same names. Do not run the `.sql` bundle again.
+These were bundled in a one-off SQL script (`deploy-queue-2026-10-03.sql`, retired on 31 October; git history keeps it) because the Supabase MCP tool would not run statements containing `delete`, `drop` or `revoke`. They all reached production on 8 October 2026. The versions below are what production's migration history records (the timestamp is the time it ran, in UTC); PR 107 renamed the repo files under `supabase/migrations/` to the same names.
 
 | Was queued as | Applied as (8 Oct, UTC) | Checked 15 Oct |
 |---|---|---|
@@ -261,7 +275,7 @@ The Breeder member who cancelled on 30 Sep gets a free month instead of the cred
 
 ## Added 5 October: personal weigh-in reminders (applied 8 October)
 
-- **Applied 8 October** as `20261008081343_personal_weighin_reminders` (see "Cleared on 8 October" above). What follows is the 5 October note, kept for history. Migration `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, written and not applied at the time. It adds `enqueue_personal_weighin_reminders()` (a daily job at 14:20 UTC that reads `profiles.extra_data.care_reminders`), makes the weekly 30-day weigh-in nudge skip geckos the daily job covers and members who turned weigh-in reminders off, and schedules the job. It contains `revoke` lines, so the Supabase MCP tool will wait for a confirmation; it is now included in `deploy-queue-2026-10-03.sql`, so the one SQL Editor run covers it. The app works without it (the switches save and the dates show), but no weigh-in push or email goes out for new geckos until it runs. Details in `activation-2026-10.md`.
+- **Applied 8 October** as `20261008081343_personal_weighin_reminders` (see "Cleared on 8 October" above). What follows is the 5 October note, kept for history. Migration `supabase/migrations/20261005190000_personal_weighin_reminders.sql`, written and not applied at the time. It adds `enqueue_personal_weighin_reminders()` (a daily job at 14:20 UTC that reads `profiles.extra_data.care_reminders`), makes the weekly 30-day weigh-in nudge skip geckos the daily job covers and members who turned weigh-in reminders off, and schedules the job. It contains `revoke` lines, so the Supabase MCP tool will wait for a confirmation; it was then folded into the one-off SQL script, so the one SQL Editor run covered it. The app works without it (the switches save and the dates show), but no weigh-in push or email goes out for new geckos until it runs. Details in `activation-2026-10.md`.
 
 ## Added 5 October: complimentary plans (applied)
 

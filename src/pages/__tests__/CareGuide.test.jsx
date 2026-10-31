@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-// The Care Guide opens on Overview with the Handbook, which comes with the
-// page; the other Keeper's Guides download after it has drawn
+// The Care Guide opens on Overview; its Handbook downloads as soon as the
+// page has drawn, and the other Keeper's Guides when the browser is idle
 // (src/components/careguide/keepersGuides.js). These tests check that a
 // topic still opens together with its guide when the guide arrives in
 // time, so the guide never appears late and pushes the topic down, and
@@ -21,7 +21,7 @@ vi.mock('@/lib/AuthContext', () => ({ useAuth: () => ({ user: null, isAuthentica
 vi.mock('@/lib/posthog', () => ({ captureEvent: vi.fn() }));
 
 import CareGuidePage from '@/pages/CareGuide';
-import { cachedGuideFor, hasKeepersGuide, loadGuideFor } from '@/components/careguide/keepersGuides';
+import { GUIDE_SPACE, cachedGuideFor, hasKeepersGuide, loadGuideFor } from '@/components/careguide/keepersGuides';
 
 installDomHarness();
 
@@ -40,17 +40,20 @@ const SLOW = { timeout: 15000 };
 const TEST_TIMEOUT = 30000;
 
 describe('Care Guide Keeper\'s Guides', () => {
-  it('knows which topics have a guide, and has only the Handbook before any download', async () => {
-    expect(cachedGuideFor('overview')).toBe(HANDBOOK_GUIDE);
+  it('knows which topics have a guide, and has none before any download', async () => {
+    expect(cachedGuideFor('overview')).toBeNull();
+    expect(hasKeepersGuide('overview')).toBe(true);
     expect(hasKeepersGuide('health')).toBe(false);
     expect(await loadGuideFor('health')).toBeNull();
     expect(cachedGuideFor('housing')).toBeNull();
   }, TEST_TIMEOUT);
 
-  it('shows the Handbook on the first screen, with no wait', () => {
+  it('draws the page first, then fills the Handbook into its held space', async () => {
     renderPage();
     expect(topicHeading('Overview')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: HANDBOOK_GUIDE.title })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: HANDBOOK_GUIDE.title }, SLOW)).toBeTruthy();
+    expect(cachedGuideFor('overview')).toBe(HANDBOOK_GUIDE);
+    expect(GUIDE_SPACE.handbook).toMatch(/min-h-/);
   }, TEST_TIMEOUT);
 
   it('opens a topic together with its guide, never the topic first', async () => {

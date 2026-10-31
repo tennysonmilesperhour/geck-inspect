@@ -4,25 +4,25 @@ The 90-day plan (Part E5 of `docs/planning/comprehensive-review-2026-10-14.md`) 
 
 ## Where the numbers stand
 
-Read from production on 28 October 2026 (about 02:00 UTC), from `admin_scoreboard()` and `admin_revenue_summary()` run as the admin. Admin account left out of every number, as before. The TestFlight sandbox Breeder purchase is left out too: it belongs to an internal QA test account and every App Store event behind it is a sandbox (test) event, so no money moved and real paying breeders are 0.
+Read from production on 31 October 2026 (about 00:50 UTC), from `admin_scoreboard()` and `admin_revenue_summary()` run as the admin in a read-only transaction. Since the 28 October change the card itself leaves out the admin, the Morph ID evaluation account, App Store sandbox purchases and the 5 accounts flagged internal (the QA account, a test account on the admin's address and the three App Review accounts), so the card and this page now agree.
 
 | Number | Today | Day 30, 17 Nov | Day 60, 17 Dec | Day 90, 17 Jan 2027 |
 |---|---|---|---|---|
 | Breeder conversations held | 0 recorded | 15+ | 20 | |
 | Collections hand-imported | 0 recorded | 5 | 10 | |
-| Paying breeders (not comped) | 0 (the card shows 1, the sandbox purchase) | 2 | 6 | 10+ at $10 a month or more |
-| Recurring revenue, comps left out (scoreboard) | $2.99 (the card shows $7.99 with the sandbox purchase) | | | |
-| Monthly recurring (Revenue card, matches Stripe) | $8.98 ($5.99 of it ends about 1 Nov) | | under $50 with cost over $150 is a tripwire | |
+| Paying breeders (not comped) | 0 | 2 | 6 | 10+ at $10 a month or more |
+| Recurring revenue, comps left out (scoreboard) | $2.99 | | | |
+| Monthly recurring (Revenue card, matches Stripe) | $8.98 ($5.99 of it ends at 05:11 UTC on 1 Nov) | | under $50 with cost over $150 is a tripwire | |
 | Passports issued | 4 (plus 2 on the admin's geckos) | 10 | 50 | |
 | Passports claimed | 0 (plus 3 from the admin's own sales) | | 15 | 25+ |
 | Claimers still active 2 weeks on | 0 of 0 (admin's own sales left out) | | 3 | |
-| Weekly active breeders (logging records) | 2 | | 4+ | 5+ for four straight weeks |
-| Weekly active members (signed in) | 11 of 76 (10 of 71 with internal accounts left out) | | | |
-| Signups, last 7 days | 5 | | | |
-| Day-one first gecko rate | 0 of 5 (0%) | | | |
+| Weekly active breeders (logging records) | 1 | | 4+ | 5+ for four straight weeks |
+| Weekly active members (signed in) | 8 of 73 | | | |
+| Signups, last 7 days | 4 | | | |
+| Day-one first gecko rate | 0 of 3 (0%) | | | |
 | Monthly cost | not recorded | under $100 | | |
 
-**Day 30 gaps (17 November, 20 days away):**
+**Day 30 gaps (17 November, 17 days away):**
 
 - Breeder conversations: 0 of 15.
 - Collections hand-imported: 0 of 5.
@@ -34,32 +34,31 @@ Under the Day 30 rule, fewer than 15 conversations means engineering pauses and 
 
 Notes on today's numbers:
 
-- **Paying breeders is 0; the card shows 1.** The card counts the sandbox purchase as a Breeder annual plan ($60 a year, so $5.00 a month at list price, which is why its revenue tile reads $7.99). The change that leaves sandbox purchases and internal accounts out of the card ships today; until it is live, use this page's numbers.
-- **The Stripe Breeder month.** One member paid $5.99 for one month of Breeder on 1 October (UTC) and cancelled 45 minutes later, so the plan ends about 1 November (Stripe's date is 05:11 UTC) and does not renew. A goodwill comp (given on 5 October) keeps them on Breeder until 1 December. E5 says a comped account is not evidence, so the scoreboard leaves them out of paying breeders and its revenue figure. One Keeper pays $2.99 a month, which is the whole of the scoreboard's recurring revenue. One lifetime Enterprise plan has no lifetime payment on record and is not counted (a lifetime plan counts only when the ledger holds a lifetime purchase; an older monthly payment does not make it paid).
-- **Revenue today.** The scoreboard shows $2.99 (the Keeper). The Revenue card on Admin, Overview shows $8.98: the Keeper plus the cancelled Breeder month, which shows under "Cancellations scheduled" and drops off about 1 November. From then both should read $2.99. The day 60 tripwire uses the Revenue card's figure ("Two revenue figures" below says why).
-- **The $2.99 refund (17 Oct) is still not on the Revenue card** (refunds read $0 on 28 October). Stripe sends the app only the events its webhook endpoint is subscribed to, and `charge.refunded` and the dispute events were never added there. Adding them is line 9 of the top ten below; then resend the refund's `charge.refunded` event from its page in the Stripe Dashboard.
-- **Weekly active breeders, last 8 weeks (newest first):** 2, 2, 1, 3, 0, 1, 1, 3. Each is a 7-day window ending when the card was read, then a week earlier each time (windows ending 27 Oct, 20 Oct, 13 Oct and so on back to 8 Sep, in Denver dates; computed from today's owners, see "What weekly active breeders leaves out" below). This week's 2 are both real breeders. The week to 20 October includes the internal QA account; without it that week is 1. The 17 October reading used windows ending that day, so the two series do not line up week for week.
-- **Weekly active members** is 11 of 76 on the card. Five of the 76 are internal: the QA account (active this week), a test account on the admin's own address and the three App Store review accounts. With them left out it is 10 of 71. The Morph ID evaluation account was already left out.
-- **Passports.** 4 issued, by 4 different members (3 on 17 October). None has been claimed yet; all 3 claims so far are buyers of the admin's own sales, which is also why "Claimers still active 2 weeks on" is 0 of 0.
-- **Conversations, imports and monthly cost read 0 or "not recorded"** because `scoreboard_entries` is empty: nothing has been typed into "Record by hand" yet.
-- **Signups and the first-gecko rate.** 5 signups in the last 7 days. The rate uses accounts from 8 to 1 days old, so every account in it has had a full first day: none of those 5 added a gecko on day one (1 of 5 on 17 October).
-- **App Store payers** count by their `keeper` or `breeder` entitlement, Breeder winning when a member has both. Trials, promotional grants and RevenueCat's Test Store do not count; the legacy `Geck Inspect Pro` entitlement belongs to Test Store products (`docs/BILLING.md`). Apple sandbox purchases still count on the card until today's change is live; the only active App Store entitlement on 28 October was the QA sandbox purchase.
-- **Email delivery** on the card now shows delivered, opened, clicked and bounced as well as sent, because the Resend webhook has been live since 24 October. Opens are mostly mail apps, not people (`docs/marketing/email-brain.md`, section 4). The weekly email log is section 8 of that file.
+- **Nothing moved on the money side since 28 October.** No Stripe payment since 4 October, no new subscription, no cancellation in the last 30 days, no lifetime purchase. One Keeper pays $2.99 a month, which is the whole of the scoreboard's recurring revenue.
+- **The Stripe Breeder month ends on 1 November.** One member paid $5.99 for one month of Breeder on 1 October (UTC) and cancelled 45 minutes later; Stripe ends it at 05:11 UTC on 1 November and it does not renew. A goodwill comp (given on 5 October) keeps them on Breeder until 1 December. E5 says a comped account is not evidence, so the scoreboard leaves them out. From 1 November both revenue figures should read $2.99. One lifetime Enterprise plan has no lifetime payment on record and is not counted.
+- **The $2.99 refund (17 Oct) is still not on the Revenue card** (refunds read $0). Stripe has never sent the app a `charge.refunded` or dispute event, because the webhook endpoint is not subscribed to them. Line 4 of the top ten.
+- **Weekly active breeders, last 8 weeks (newest first):** 1, 1, 2, 1, 2, 1, 1, 1 (7-day windows ending 30 Oct, 23 Oct, 16 Oct and so on back to 11 Sep, in Denver dates). This series leaves internal accounts out, so it reads lower than the 28 October page (2, 2, 1, 3, ...), which counted them in some weeks and used windows ending 27 Oct.
+- **Weekly active members** is 8 of 73, internal accounts left out (10 of 71 on 28 October, also without them).
+- **Passports.** 4 issued, by 4 different members. None claimed; all 3 claims so far are buyers of the admin's own sales.
+- **Conversations, imports and monthly cost read 0 or "not recorded"** because `scoreboard_entries` is still empty.
+- **Signups and the first-gecko rate.** 4 signups in the last 7 days. The rate uses accounts from 8 to 1 days old: none of the 3 such accounts added a gecko on day one.
+- **Email, week of 26 October (Monday start, so far):** 22 Weekly Gecko Notes sent (19 delivered, 2 bounced), 14 "Still keeping crested geckos?" emails (all delivered), 8 getting-started emails and a few reminders. Opens are mostly mail apps, not people (`docs/marketing/email-brain.md`, section 4).
+- **Market feed.** Still stalled: the last complete US pass was 19 October and the US Price Index's last full day is 6 October, so `daily-canary` has failed on 28, 29 and 30 October as designed (`docs/OPERATIONS.md`, section 5).
 
-## Top ten this week (draft, 28 Oct)
+## Top ten this week (draft, 31 Oct)
 
-**Draft for Tennyson to rewrite.** E0 rule 5 says he rewrites the top ten every Monday; a Claude session wrote this one from production and the work shipping on 28 October.
+**Draft for Tennyson to rewrite.** E0 rule 5 says he rewrites the top ten every Monday; a Claude session wrote this one from production on 31 October. Nothing new has shipped since 28 October, so the list is the steps that are waiting.
 
-1. **Breeder conversations.** 0 of 15 with 20 days to Day 30. Book them before anything else, offer a hand import in each (0 of 5), and record both under "Record by hand". The questions, the $120 offer and a block to fill in per call are in `docs/planning/breeder-interviews-2026-10.md`.
-2. **Shipping today: Pattern studio crash fixed.** The Morph Guide's Pattern studio tab no longer blanks the whole page.
-3. **Shipping today: email address exposure, step 1.** The app stops reading other members' addresses; step 2, the database lock, follows once open tabs have reloaded.
-4. **Shipping today: an honest scoreboard.** Sandbox purchases and internal accounts are left out, and a "prepaid" entry records a Founding Breeder year paid outside Stripe.
-5. **Shipping today: Morph ID photo path to a first gecko.** A Morph ID result in the guided first gecko becomes a saved gecko.
-6. **Shipping today: passport funnel tracking, and Sold offers the transfer.** Marking a gecko Sold offers to send the buyer a transfer link. The gecko stays private, and a link already sent is never replaced without saying so.
-7. **Shipping today: admin two-factor in Settings, Security.** Enrol an authenticator app before the 16 November reminder; requiring it for admin powers waits until you have.
-8. **Your step: backup secrets.** Add `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` at https://github.com/tennysonmilesperhour/geck-inspect/settings/secrets/actions/new (which values: `docs/OPERATIONS.md`, section 2). Until then there is no copy of member records outside Supabase.
-9. **Your step: Stripe refund and dispute events.** Add them to the endpoint at https://dashboard.stripe.com/webhooks, then resend the 17 October `charge.refunded` event.
-10. **Your steps: routines access, the Geck Intellect key, monthly cost.** Give both scheduled routines the repository and connectors at https://claude.ai/code (Routines); replace the revoked Supabase key in the geck-data Vercel project, or pause it; enter last month's total under "Record by hand", Monthly cost.
+1. **Breeder conversations.** 0 of 15 with 17 days to Day 30. Book them before anything else, offer a hand import in each (0 of 5), and record both under "Record by hand". The questions, the $120 offer and a block to fill in per call are in `docs/planning/breeder-interviews-2026-10.md`.
+2. **Your step: backup secrets.** Add `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` at https://github.com/tennysonmilesperhour/geck-inspect/settings/secrets/actions/new (which values: `docs/OPERATIONS.md`, section 2). The 25 October run still skipped; until both are set there is no copy of member records outside Supabase.
+3. **Your step: admin two-factor.** Enrol an authenticator app in Settings, Security (`docs/planning/admin-mfa-2026-10.md`, steps 1 to 3). None is enrolled yet.
+4. **Your step: Stripe refund and dispute events.** Add them to the endpoint at https://dashboard.stripe.com/webhooks, then resend the 17 October `charge.refunded` event.
+5. **Your step: photo thumbnails.** Admin panel, System, Photo thumbnails, Make thumbnails: 817 older photos still load full size on cards.
+6. **Your step: the US market feed.** The full pass has been stalled since 19 October and the canary fails daily until it runs again (`docs/planning/market-habit-2026-09-30.md`).
+7. **Your step: sign-in link templates (PKCE).** Supabase, Authentication, Email Templates (`docs/planning/deploy-queue-2026-10-03.md`, round 3, item 2).
+8. **Your step: Morph ID card views.** Vault secret `morph_share_view_key` and the Vercel setting `MORPH_SHARE_VIEW_KEY`, then a production redeploy.
+9. **Session work: email addresses, step 2.** `supabase/pending/member_email_columns_revoke.sql` can move to `supabase/migrations` with a fresh version from 31 October on (`docs/planning/deploy-queue-2026-10-03.md`, the last 28 October section).
+10. **Your steps: routines access, the Geck Intellect key, monthly cost** (carried over from 28 October; the first two could not be checked from here). Give both scheduled routines the repository and connectors at https://claude.ai/code (Routines); replace the revoked Supabase key in the geck-data Vercel project, or pause it; enter last month's total under "Record by hand", Monthly cost.
 
 ## Day 90: the three outcomes
 
@@ -84,4 +83,4 @@ Day 30 rule: fewer than 15 conversations means engineering pauses and the time g
 
 ## Updating this page
 
-Once a week, copy the card's numbers into the table above and change the date line. Keep the old numbers out; git keeps the history. Leave out anything the notes say to leave out (the sandbox purchase, until the card does it itself).
+Once a week, copy the card's numbers into the table above and change the date line. Keep the old numbers out; git keeps the history. Since 28 October the card leaves out sandbox purchases and internal accounts itself, so its numbers can be copied as they are.

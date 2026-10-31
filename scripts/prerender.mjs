@@ -73,7 +73,7 @@ import {
 } from '../src/data/public-links.js';
 import { loadAppModule } from './lib/load-app-module.mjs';
 import { morphBreedingFact, morphGeneralLinks } from './lib/morph-page-links.mjs';
-import { PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_INDEX_TERMS_SENTENCE, applyPricePolicy, staleMarketNote, staleMarkets } from '../src/lib/priceIndexPolicy.js';
+import { PRICE_DATA_TERMS, PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_INDEX_TERMS_SENTENCE, applyPricePolicy, priceRowsForMorph, staleMarketNote, staleMarkets } from '../src/lib/priceIndexPolicy.js';
 import { GUIDE_CALCULATOR_ALIASES } from '../src/lib/genetics/calculatorCatalog.js';
 import { spectrumPositionFor } from '../src/components/morphguide/spectrumPosition.js';
 import { eyeStudyIdForMorph } from '../src/components/morphguide/eyeStudyIndex.js';
@@ -461,9 +461,42 @@ function morphMeta(slug) {
     bodyParagraphs: paragraphs,
     bodyFacts: facts,
     bodyList: list,
+    ...morphPriceBlock(m),
     linkSections,
     faq,
     jsonLd,
+  };
+}
+
+/**
+ * The morph's current asking prices from the Price Index, as the live page
+ * shows them (src/components/morphguide/MorphAskingPrices.jsx): a table and
+ * a note with the index's terms and any out-of-date market. Empty when the
+ * index has no rows for the morph.
+ */
+function morphPriceBlock(m) {
+  const index = priceIndex();
+  const rows = priceRowsForMorph(index, m);
+  if (!rows.length) return {};
+  const traits = [...new Set(rows.map((r) => `"${r.trait}"`))].join(' and ');
+  const stale = staleMarkets(index, index.generated_at).filter((st) => rows.some((r) => r.market === st.market));
+  return {
+    table: {
+      title: `Current ${m.name} asking prices (Geck Inspect Price Index)`,
+      headers: ['Market', 'Median asking price', 'Middle half', 'Listings', 'Checked'],
+      rows: rows.map((r) => [
+        MARKET_LABEL[r.market] || r.market,
+        usd(r.median),
+        `${usd(r.p25)} to ${usd(r.p75)}`,
+        r.thin ? `${r.listings} (thin sample)` : String(r.listings),
+        r.checked_on,
+      ]),
+    },
+    tableNote: [
+      `Listings labelled ${traits}. Asking prices on public listings converted to USD, not sale prices.`,
+      ...stale.map((st) => staleMarketNote(st, MARKET_LABEL[st.market])),
+      `${PRICE_DATA_TERMS} Full index: ${SITE_URL}/crested-gecko-price`,
+    ].join(' '),
   };
 }
 
@@ -1427,7 +1460,7 @@ function injectNoscriptBody(html, route) {
         .map((h) => `<th scope="col">${escapeHtml(h)}</th>`)
         .join('')}</tr></thead><tbody>${meta.table.rows
         .map((r) => `<tr>${r.map((c, i) => (i === 0 ? `<th scope="row">${cell(c)}</th>` : `<td>${cell(c)}</td>`)).join('')}</tr>`)
-        .join('')}</tbody></table></section>`
+        .join('')}</tbody></table>${meta.tableNote ? `<p>${escapeHtml(meta.tableNote)}</p>` : ''}</section>`
     : '';
   const linkSections = (meta.linkSections || [])
     .filter((s) => s?.items?.length)

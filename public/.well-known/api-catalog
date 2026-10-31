@@ -11,6 +11,11 @@
       "anchor": "https://geckinspect.com/mcp",
       "service-desc": [{ "href": "https://geckinspect.com/.well-known/mcp/server-card.json", "type": "application/json" }],
       "service-doc": [{ "href": "https://geckinspect.com/data", "type": "text/html" }]
+    },
+    {
+      "anchor": "https://geckinspect.com/data/index.json",
+      "service-desc": [{ "href": "https://geckinspect.com/data/openapi.json", "type": "application/openapi+json" }],
+      "service-doc": [{ "href": "https://geckinspect.com/data", "type": "text/html" }]
     }
   ]
 }

@@ -3763,6 +3763,20 @@ function staleMarkets(index, now = Date.now()) {
 function staleMarketNote(stale, name2) {
   return `Out of date: the last full check of ${name2 || stale.market} listings was ${priceCheckDay(stale.checked_on)}, ${stale.days} days ago. These prices may have moved since.`;
 }
+const PRICE_MARKET_NAMES = { US: "United States", KR: "South Korea", JP: "Japan", EU: "Europe" };
+const PRICE_MARKET_ORDER = Object.keys(PRICE_MARKET_NAMES);
+const MARKET_TRAIT_TO_SLUG = {
+  "tri-color": "tricolor"
+};
+function priceRowsForMorph(index, morph) {
+  if (!index || !morph) return [];
+  const names = new Set([morph.name, ...morph.aliases || []].filter(Boolean).map((n) => n.toLowerCase()));
+  return (index.latest || []).filter((row) => {
+    if (!row?.trait) return false;
+    const t = row.trait.toLowerCase();
+    return names.has(t) || MARKET_TRAIT_TO_SLUG[t] === morph.slug;
+  }).sort((a, b) => PRICE_MARKET_ORDER.indexOf(a.market) - PRICE_MARKET_ORDER.indexOf(b.market));
+}
 const __dirname$1 = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname$1, "../..");
 const SITE_URL = "https://geckinspect.com";
@@ -3814,21 +3828,7 @@ function normalizeMorph(m) {
 function listingsCell(row) {
   return row.thin ? `${row.listings} (thin sample)` : String(row.listings);
 }
-const MARKET_NAMES = { US: "United States", KR: "South Korea", JP: "Japan", EU: "Europe" };
-const MARKET_ORDER = Object.keys(MARKET_NAMES);
-const byMarketOrder = (a, b) => MARKET_ORDER.indexOf(a.market) - MARKET_ORDER.indexOf(b.market);
-const MARKET_TRAIT_TO_SLUG = {
-  "tri-color": "tricolor"
-};
-function priceRowsForMorph(index, morph) {
-  if (!index) return [];
-  const names = new Set([morph.name, ...morph.aliases || []].map((n) => n.toLowerCase()));
-  return index.latest.filter((row) => {
-    if (!row.trait) return false;
-    const t = row.trait.toLowerCase();
-    return names.has(t) || MARKET_TRAIT_TO_SLUG[t] === morph.slug;
-  }).sort(byMarketOrder);
-}
+const MARKET_NAMES = PRICE_MARKET_NAMES;
 function priceIndexPointer(index, morph) {
   const traits = [...new Set(priceRowsForMorph(index, morph).map((r) => r.trait))];
   if (!traits.length) return null;
