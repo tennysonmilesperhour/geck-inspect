@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { User } from '@/entities/User';
 import ListingCard from '@/components/market/ListingCard';
+import { safeExternalUrl } from '@/lib/safeExternalUrl';
 import { createPageUrl } from '@/utils';
 import { findStores, formatUsd, loadSellerView, sexAgeLabel, shortDay, storeSlugFromUrl } from '@/lib/marketHabit';
 
@@ -121,7 +122,7 @@ function StoreLinkForm({ onSaved, onCancel }) {
           </div>
         )}
         {!searching && !slugFromLink && text.trim().length >= 2 && results.length === 0 && (
-          <p className="text-xs text-slate-500">No store by that name in the latest MorphMarket check. Try pasting the link.</p>
+          <p className="text-xs text-slate-500">No matching store found. Try pasting the link.</p>
         )}
         {onCancel && (
           <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
@@ -144,17 +145,19 @@ function RivalNote({ l }) {
           : `${week} similar ${kind || 'gecko'} ${week === 1 ? 'listing' : 'listings'} for less this week.`}
       </p>
       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-        {(l.cheapest_new || []).map((r) => (
-          <a
-            key={r.listing_id}
-            href={r.listing_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] text-slate-400 hover:text-emerald-300 underline-offset-2 hover:underline"
-          >
-            {formatUsd(r.price)} {r.title ? `(${r.title.slice(0, 40)})` : ''}
-          </a>
-        ))}
+        {(l.cheapest_new || []).map((r) => {
+          const listingUrl = safeExternalUrl(r.listing_url);
+          return (
+            <span key={r.listing_id} className="text-[11px] text-slate-400">
+              {formatUsd(r.price)} {r.title ? `(${r.title.slice(0, 40)})` : ''}
+              {listingUrl && (
+                <a href={listingUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center min-h-11 ml-1 text-sky-400 hover:underline">
+                  View listing
+                </a>
+              )}
+            </span>
+          );
+        })}
       </div>
     </div>
   );
@@ -241,7 +244,7 @@ export default function SellerPanel() {
 
       {listings.length === 0 ? (
         <p className="text-sm text-slate-400">
-          No crested gecko listings from {view.slug} in the latest MorphMarket check. If the store link is wrong, change it above.
+          No crested gecko listings found for {view.slug}. If the store link is wrong, change it above.
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -257,7 +260,7 @@ export default function SellerPanel() {
         </div>
       )}
       <p className="text-[11px] text-slate-500">
-        Compared with similar crested geckos for sale on MorphMarket (same main morph, age and sex where there are enough).
+        Compared with similar crested geckos in public marketplace listings (same main morph, age and sex where there are enough).
         Asking prices, not sale prices.
       </p>
     </div>

@@ -1,10 +1,7 @@
-import { requireAiConsent } from '@/lib/aiConsent';
 import GeckoImage from '@/components/shared/GeckoImage';
-import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Images } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { Images } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { labelFor } from './morphTaxonomy';
 
@@ -16,8 +13,7 @@ function friendlyEmbedError(raw) {
   return 'Visual neighbors were unavailable for this assessment.';
 }
 
-function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }) {
-  const fromRecognition = source === 'recognition';
+function EvidenceStrip({ matches, error, isAdmin }) {
   return (
     <Card>
       <CardContent className="p-5 space-y-3">
@@ -26,7 +22,6 @@ function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }
           <h3 className="text-sm uppercase tracking-wide text-slate-300">
             Visual evidence from the corpus
           </h3>
-          {isLoading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
         </div>
         {error && (
           isAdmin ? (
@@ -35,7 +30,7 @@ function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }
             <p className="text-xs text-slate-400">{friendlyEmbedError(error)}</p>
           )
         )}
-        {!isLoading && !error && matches && matches.length === 0 && (
+        {!error && matches && matches.length === 0 && (
           <p className="text-xs text-slate-500">
             The indexed corpus did not contain a close enough visual neighbor yet.
           </p>
@@ -63,9 +58,7 @@ function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }
         )}
         {matches && matches.length > 0 && (
           <p className="text-xs text-slate-500">
-            {fromRecognition
-              ? 'These are the closest reference photos, each tagged by the breeder who listed that animal. Breeder tags are good evidence for those animals, but your own photos decide.'
-              : 'These examples are ranked by general visual similarity. Their labels are comparison evidence, not proof.'}
+            These are the closest reference photos, each tagged by the breeder who listed that animal. Breeder tags are good evidence for those animals, but your own photos decide.
           </p>
         )}
       </CardContent>
@@ -73,87 +66,27 @@ function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }
   );
 }
 
-function OnDemandVisualSearch({ imageUrl, isAdmin }) {
-  const [matches, setMatches] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!imageUrl) return undefined;
-    let cancelled = false;
-
-    (async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        requireAiConsent('embed-gecko-image');
-        const embedRes = await supabase.functions.invoke('embed-gecko-image', {
-          body: { imageUrl },
-        });
-        if (embedRes.error) {
-          let detail = embedRes.error.message;
-          const ctx = embedRes.error.context;
-          if (ctx && typeof ctx.text === 'function') {
-            try {
-              const body = await ctx.text();
-              if (body) {
-                try {
-                  const parsed = JSON.parse(body);
-                  detail = parsed?.error || body;
-                } catch {
-                  detail = body;
-                }
-              }
-            } catch { /* ignore response parsing errors */ }
-          }
-          throw new Error(detail);
-        }
-        const embedding = embedRes.data?.embedding;
-        if (!Array.isArray(embedding)) throw new Error('no embedding returned');
-
-        const { data, error: rpcError } = await supabase.rpc('nearest_training_samples', {
-          query_embedding: embedding,
-          match_count: 6,
-          verified_only: true,
-        });
-        if (rpcError) throw rpcError;
-        if (!cancelled) setMatches(data || []);
-      } catch (err) {
-        if (!cancelled) setError(err.message || 'Similarity search failed');
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [imageUrl]);
-
-  return (
-    <EvidenceStrip
-      matches={matches}
-      isLoading={isLoading}
-      error={error}
-      isAdmin={isAdmin}
-    />
-  );
-}
-
+/**
+ * The closest breeder-tagged reference photos Morph ID compared the
+ * member's photos with (the answer's visual_evidence, found on the server
+ * in the same request the member said yes to).
+ *
+ * An answer without visual_evidence (only an old stored answer) shows no
+ * strip. Until 28 Oct 2026 the strip then ran its own visual search, which
+ * asked with the browser's confirm box; the iPhone app does not reliably
+ * show one, and Morph ID's permission step is now on the page
+ * (AiConsentPanel), so that second request to Replicate was removed.
+ */
 export default function SimilarGeckosStrip({ imageUrl, evidence }) {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
-  if (!imageUrl) return null;
+  if (!imageUrl || !evidence) return null;
 
-  if (evidence) {
-    return (
-      <EvidenceStrip
-        matches={evidence.neighbors || []}
-        isLoading={false}
-        error={evidence.status === 'unavailable' ? evidence.note || 'Visual evidence unavailable' : null}
-        isAdmin={isAdmin}
-        source="recognition"
-      />
-    );
-  }
-
-  return <OnDemandVisualSearch imageUrl={imageUrl} isAdmin={isAdmin} />;
+  return (
+    <EvidenceStrip
+      matches={evidence.neighbors || []}
+      error={evidence.status === 'unavailable' ? evidence.note || 'Visual evidence unavailable' : null}
+      isAdmin={isAdmin}
+    />
+  );
 }

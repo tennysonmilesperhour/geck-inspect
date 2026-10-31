@@ -3,7 +3,21 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 const invoke = vi.fn();
 const getUser = vi.fn();
 const rpc = vi.fn();
-vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke }, auth: { getUser }, rpc } }));
+const captureEvent = vi.fn();
+// A stand-in for supabase.from(...): it records each call in the chain and
+// answers with the result the test sets.
+const query = { calls: [], result: { data: [], error: null } };
+const from = vi.fn((table) => {
+  query.calls.push(['from', table]);
+  const chain = {};
+  for (const method of ['select', 'eq', 'gt', 'order', 'limit']) {
+    chain[method] = (...args) => { query.calls.push([method, ...args]); return chain; };
+  }
+  chain.then = (resolve, reject) => Promise.resolve(query.result).then(resolve, reject);
+  return chain;
+});
+vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke }, auth: { getUser }, rpc, from } }));
+vi.mock('@/lib/posthog', () => ({ captureEvent: (...args) => captureEvent(...args) }));
 
 const {
   startTransfer,
@@ -12,10 +26,15 @@ const {
   buildTransferRow,
   claimErrorKind,
   claimUrlFor,
+  claimViewState,
   effectiveTransferStatus,
+  findPendingTransfer,
   isValidEmail,
   parseSalePrice,
+  requestPassportTransfer,
   sendTransferEmail,
+  shouldOfferSoldTransfer,
+  transferPriceDefault,
   TRANSFER_TTL_HOURS,
 } = await import('../transfers');
 const { parentNameForSave } = await import('../parentNames');
@@ -237,5 +256,138 @@ describe('server-issued transfer links', () => {
     expect(claimErrorKind({ message: 'verified email required' })).toBe('verify_email');
     expect(claimErrorKind({ message: 'cannot transfer to yourself' })).toBe('own_animal');
     expect(claimErrorKind({ message: 'not authenticated' })).toBe('sign_in');
+  });
+});
+
+describe('the transfer form price', () => {
+  it('starts with the sold price, then the asking price, then blank', () => {
+    expect(transferPriceDefault({ sold_price: 300, asking_price: 450 })).toBe('300');
+    expect(transferPriceDefault({ sold_price: null, asking_price: 450 })).toBe('450');
+    expect(transferPriceDefault({ sold_price: '', asking_price: '125.5' })).toBe('125.5');
+    // A price of 0 means no money changed hands: the box stays blank, so
+    // the step shows no "$0" line and the claim records no $0 sale. The
+    // asking price does not stand in for a gecko sold for 0.
+    expect(transferPriceDefault({ sold_price: 0 })).toBe('');
+    expect(transferPriceDefault({ sold_price: 0, asking_price: 450 })).toBe('');
+    expect(transferPriceDefault({ sold_price: '0.00', asking_price: 450 })).toBe('');
+    expect(transferPriceDefault({ sold_price: null, asking_price: 0 })).toBe('');
+    expect(transferPriceDefault({ asking_price: 'call me' })).toBe('');
+    expect(transferPriceDefault({ asking_price: -5 })).toBe('');
+    expect(transferPriceDefault(null)).toBe('');
+  });
+});
+
+describe('offering the transfer after a sale', () => {
+  const owner = { email: 'Seller@Example.com' };
+  const gecko = { id: 'g1', name: 'Mango', created_by: 'seller@example.com' };
+
+  it('offers it to the owner when a gecko is archived as sold', () => {
+    expect(shouldOfferSoldTransfer({ gecko, user: owner, reason: 'sold' })).toBe(true);
+  });
+
+  it('never offers it for another reason, to a collection editor, or in the demo', () => {
+    expect(shouldOfferSoldTransfer({ gecko, user: owner, reason: 'death' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: owner, reason: 'other' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: { email: 'editor@example.com' }, reason: 'sold' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: owner, reason: 'sold', guest: true })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: { ...owner, is_guest: true }, reason: 'sold' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko: null, user: owner, reason: 'sold' })).toBe(false);
+    expect(shouldOfferSoldTransfer({ gecko, user: null, reason: 'sold' })).toBe(false);
+  });
+});
+
+describe('a link already sent for the gecko', () => {
+  const now = new Date('2026-10-28T02:00:00Z');
+  beforeEach(() => {
+    getUser.mockReset(); from.mockClear();
+    query.calls.length = 0;
+    query.result = { data: [], error: null };
+    getUser.mockResolvedValue({ data: { user: { id: 'seller-1', email: 'seller@example.com' } } });
+  });
+
+  it("reads the seller's own pending link for this gecko that has not run out, newest first", async () => {
+    const row = { id: 't1', token: 'opaque', to_email: 'buyer@example.com', created_date: '2026-10-27T15:00:00Z', expires_at: '2026-10-30T15:00:00Z' };
+    query.result = { data: [row], error: null };
+    await expect(findPendingTransfer({ animalId: 'g1', now })).resolves.toEqual(row);
+    expect(query.calls[0]).toEqual(['from', 'transfer_requests']);
+    expect(query.calls).toEqual(expect.arrayContaining([
+      ['eq', 'from_user_id', 'seller-1'],
+      ['eq', 'animal_id', 'g1'],
+      ['eq', 'animal_type', 'gecko'],
+      ['eq', 'status', 'pending'],
+      ['gt', 'expires_at', '2026-10-28T02:00:00.000Z'],
+      ['order', 'created_date', { ascending: false }],
+      ['limit', 1],
+    ]));
+  });
+
+  it('answers null when there is none, or nobody is signed in', async () => {
+    await expect(findPendingTransfer({ animalId: 'g1', now })).resolves.toBeNull();
+    getUser.mockResolvedValue({ data: { user: null } });
+    query.calls.length = 0;
+    await expect(findPendingTransfer({ animalId: 'g1', now })).resolves.toBeNull();
+    expect(query.calls).toEqual([]);
+  });
+
+  it('throws when the read fails, so the step can say it could not check', async () => {
+    query.result = { data: null, error: { message: 'network down' } };
+    await expect(findPendingTransfer({ animalId: 'g1', now })).rejects.toMatchObject({ message: 'network down' });
+  });
+});
+
+describe('what a claim link shows', () => {
+  const now = new Date('2026-10-28T02:00:00Z');
+  it('names each state the claim page handles', () => {
+    expect(claimViewState({ status: 'pending', expires_at: '2026-10-29T00:00:00Z' }, now)).toBe('open');
+    expect(claimViewState({ status: 'pending', expires_at: '2026-10-27T00:00:00Z' }, now)).toBe('expired');
+    expect(claimViewState({ status: 'expired' }, now)).toBe('expired');
+    expect(claimViewState({ status: 'cancelled' }, now)).toBe('cancelled');
+    expect(claimViewState({ status: 'claimed' }, now)).toBe('already_claimed');
+    expect(claimViewState({ status: 'claimed', claimed_by_you: true }, now)).toBe('claimed_by_you');
+  });
+});
+
+describe('passport and transfer funnel events', () => {
+  beforeEach(() => {
+    getUser.mockReset(); rpc.mockReset(); invoke.mockReset(); captureEvent.mockReset();
+    getUser.mockResolvedValue({ data: { user: { id: 'owner', email: 'owner@example.com' } } });
+  });
+
+  it('records a QR transfer with its method, price flag and surface only', async () => {
+    rpc.mockResolvedValue({ data: { id: 't1', token: 'opaque-token', claim_mode: 'link' } });
+    await startTransfer({ animalId: 'g1', toEmail: null, salePrice: 300, message: 'Eating Pangea well', surface: 'sold_step' });
+    expect(captureEvent).toHaveBeenCalledWith('transfer_started', {
+      method: 'link', has_price: true, animal_type: 'gecko', surface: 'sold_step',
+    });
+  });
+
+  it('records an emailed transfer without the address, price or message', async () => {
+    rpc.mockResolvedValue({ data: { id: 't2', token: 'opaque-token', claim_mode: 'email' } });
+    invoke.mockResolvedValue({ data: { delivered: 1 }, error: null });
+    await startTransfer({ animalId: 'g1', toEmail: 'Buyer@Example.com', salePrice: null, message: 'Private note' });
+    const [name, props] = captureEvent.mock.calls[0];
+    expect(name).toBe('transfer_started');
+    expect(props).toEqual({ method: 'email', has_price: false, animal_type: 'gecko', surface: 'record', emailed: true });
+    expect(JSON.stringify(props)).not.toMatch(/buyer|example|Private|opaque|g1/i);
+  });
+
+  it('records nothing when the transfer was not made', async () => {
+    rpc.mockResolvedValue({ error: { message: 'Only the owner can transfer it.' } });
+    await expect(startTransfer({ animalId: 'g1' })).rejects.toThrow();
+    expect(captureEvent).not.toHaveBeenCalled();
+  });
+
+  it('records the outcome of a buyer asking for a transfer, without the passport code', async () => {
+    rpc.mockResolvedValue({ data: { status: 'sent' }, error: null });
+    await expect(requestPassportTransfer('GI-2026-ABCD')).resolves.toEqual({ status: 'sent' });
+    rpc.mockResolvedValue({ data: { status: 'already_requested' }, error: null });
+    await requestPassportTransfer('GI-2026-ABCD');
+    rpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Could not find the function' } });
+    await requestPassportTransfer('GI-2026-ABCD');
+    expect(captureEvent.mock.calls).toEqual([
+      ['passport_transfer_requested', { outcome: 'sent' }],
+      ['passport_transfer_requested', { outcome: 'already_requested' }],
+      ['passport_transfer_requested', { outcome: 'unavailable' }],
+    ]);
   });
 });

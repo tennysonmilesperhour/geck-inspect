@@ -50,15 +50,20 @@ async function render(member = null) {
 const cardsGrid = () => tree.root.find((n) => n.type === 'div' && typeof n.props.className === 'string' && n.props.className.includes('md:grid-cols-3'));
 
 describe('Membership: three plans with who each is for and the numbers that decide them', () => {
-  it('shows Free, Keeper and Breeder as three columns, with Enterprise as a row below', async () => {
+  it('shows Free, Keeper and Breeder as three columns, and hides off-sale Enterprise', async () => {
     await render();
     const grid = cardsGrid();
     const titles = grid.findAll((n) => typeof n.type === 'string' && n.props?.className?.includes?.('text-2xl text-white')).map(contents);
     expect(titles.map((t) => t.trim())).toEqual(['FREE', 'KEEPER', 'BREEDER']);
+    expect(tree.root.findAll((n) => n.props?.['aria-labelledby'] === 'enterprise-plan-heading')).toHaveLength(0);
+    expect(contents(tree.root)).not.toContain('ENTERPRISE');
+  });
+
+  it('still shows Enterprise to a member who already holds it', async () => {
+    await render({ email: 'ent@example.com', membership_tier: 'enterprise', subscription_status: 'active' });
     const enterprise = tree.root.find((n) => n.props?.['aria-labelledby'] === 'enterprise-plan-heading');
     expect(contents(enterprise)).toContain('ENTERPRISE');
-    expect(contents(enterprise)).toContain('Join the waitlist');
-    expect(contents(grid)).not.toContain('ENTERPRISE');
+    expect(contents(enterprise)).toContain('Current plan');
   });
 
   it('drops the "Best for most keepers" claim and says who each plan is for', async () => {

@@ -6,7 +6,7 @@ import { breadcrumbSchema } from '@/lib/organization-schema';
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 import AnalyticsChoice from '@/components/shared/AnalyticsChoice';
 
-const LAST_UPDATED = '2026-10-24';
+const LAST_UPDATED = '2026-10-28';
 
 const Section = ({ title, children }) => (
     <div className="space-y-3">
@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
                         <Shield className="w-8 h-8 text-emerald-400 flex-shrink-0" />
                         <div>
                             <h1 className="text-2xl font-bold text-slate-100">Privacy Policy</h1>
-                            <p className="text-slate-500 text-sm">Last updated: October 24, 2026</p>
+                            <p className="text-slate-500 text-sm">Last updated: October 28, 2026</p>
                         </div>
                     </div>
 
@@ -109,7 +109,7 @@ export default function PrivacyPolicy() {
                     </Section>
 
                     <Section title="6. Third-Party Services">
-                        <p>Before an AI request, the app asks permission and names the provider and information being shared. Cancel stops that request before it reaches the AI provider. Permission is requested again for a later request; it is not stored as a permanent preference.</p>
+                        <p>Before an AI request, the app asks permission and names the provider and information being shared. Tapping Not now, or Cancel where the app asks in a pop-up, stops that request before it reaches the AI provider. Permission is requested again for a later request; it is not stored as a permanent preference.</p>
                         <p>These are the services that receive some of your data in order to run Geck Inspect, and what each one gets:</p>
                         <ul className="list-disc list-inside space-y-1 ml-2">
                             <li><strong className="text-slate-300">Supabase</strong> (database, authentication, file storage): your account, your collection, and the photos you upload.</li>

@@ -2,25 +2,31 @@
 
 Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend bounce and complaint webhook) from `comprehensive-review-2026-10-14.md`, plus two small email defects. Everything here is built and tested. **The lifecycle emails are on since 17 October 2026** (Tennyson asked for them to run without waiting on a copy review): the first day-14 email went at 16:35 UTC and the first two welcome emails that evening. The copy below is what members receive; change it in `supabase/functions/_shared/lifecycle-copy.ts`. **Rewritten 20 October 2026** as letters from Tennyson with a preview line each, new subjects and a reply question on day 0 and day 1 (shown only once `EMAIL_REPLY_TO` is set); the rules and the evidence are in `docs/marketing/email-brain.md`.
 
-## 1. What Tennyson needs to do
+## 1. Status: on since 17 October
 
-1. **Read the copy in section 4** and reply with changes or "approved". Every variant a member can receive is shown, filled in for a sample member (Sam, whose first gecko is Mango, a Lilly White Harlequin).
-2. **Apply the migration** `supabase/migrations/20261015151200_lifecycle_emails.sql` and **deploy** `send-email` and the new `resend-webhook` function (`supabase functions deploy resend-webhook --no-verify-jwt`). The migration is additive and safe to run twice.
-3. **Connect Resend's webhook.** In the Resend dashboard: Webhooks, Add endpoint, `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/resend-webhook`, tick the email events (sent, delivered, delivery delayed, opened, clicked, bounced, complained). Copy its signing secret (starts with `whsec_`) into the Supabase function secret `RESEND_WEBHOOK_SECRET`. Turn on open and click tracking for the sending domain, or opens and clicks stay at zero.
+**The getting-started emails are on.** In production, `app_settings` `lifecycle_emails_enabled` has been `true` since 15:50 UTC on 17 October 2026 (read on 28 October). Nothing here waits on Tennyson. By 28 October the job had sent 35: day 0 14, day 1 11, day 3 3, day 7 5, day 14 2. `lifecycle-emails-hourly` had run 190 times in the 8 days of job history with no failures. How each step does is read every Monday from `email_outcomes(60)` (`docs/marketing/email-brain.md`, sections 4 and 8).
+
+**To switch them off**, in the Supabase SQL editor:
+
+```sql
+update public.app_settings set value = 'false'::jsonb where key = 'lifecycle_emails_enabled';
+```
+
+The next hourly run (35 past the hour) then sends nothing; each run is one lookup while the switch is off. To switch back on, run the same line with `'true'::jsonb`. A step whose window passed while the switch was off is dropped, so switching back on never sends a late welcome.
+
+To see who would get what next (it sends nothing):
+
+```sql
+select * from public.lifecycle_email_candidates();
+```
+
+### What this section asked for on 16 October, and what happened
+
+1. **Read the copy in section 4** and reply with changes or "approved". **Skipped:** Tennyson asked for the emails to run without waiting on a copy review. The copy was rewritten as letters on 20 October (top of this file).
+2. **Apply the migration** `supabase/migrations/20261015151200_lifecycle_emails.sql` and **deploy** `send-email` and the new `resend-webhook` function. **Done:** the migration is in production's history and both functions are live and declared in `supabase/config.toml`, so a merge deploys them.
+3. **Connect Resend's webhook** (endpoint `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/resend-webhook`, the seven email events, the signing secret in `RESEND_WEBHOOK_SECRET`, open and click tracking on). **Done 24 October** (`docs/marketing/email-brain.md`, section 1).
 4. **Add a postal address** to the footer: the function secret `EMAIL_POSTAL_ADDRESS` (a PO box or registered agent address works). **Done 18 October**; the footer prints it on every email from then on. US law expects one in email that mentions upgrades. Weekly Gecko Notes do not send at all without it.
-5. **Turn the lifecycle emails on** once the copy is approved, in the SQL editor:
-
-   ```sql
-   update public.app_settings set value = 'true'::jsonb where key = 'lifecycle_emails_enabled';
-   ```
-
-   To see who would get what before switching on (it sends nothing):
-
-   ```sql
-   select * from public.lifecycle_email_candidates();
-   ```
-
-   Setting the value back to `false` stops the next run.
+5. **Turn the lifecycle emails on.** **Done at 15:50 UTC on 17 October.** The first day 14 email went at 16:35 UTC that day and the first welcome (day 0) at 21:35 UTC.
 
 ## 2. How the lifecycle emails work
 
@@ -41,7 +47,8 @@ Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend b
 - **Preferences.** Day 0, 1 and 3 follow the member's *Platform Announcements* email switch; day 7 and 14 follow *Breeding & Care Updates*. The master email switch, the unsubscribe link and the one-click List-Unsubscribe header work exactly as for every other notification email.
 - **When.** A job runs every hour at 35 past (`lifecycle-emails-hourly`). The welcome waits until the account is an hour old, so it can mention what the member did in onboarding (a first gecko, a first weight), and goes with the next hourly run after that: one to two hours after joining. The brief asked for a daily job; hourly sends the welcome within two hours instead of up to a day later, and each later step arrives at about the time of day the member joined. While the switch is off each run is one lookup.
 - **Where the words live.** `supabase/functions/_shared/lifecycle-copy.ts`. Changing a sentence is a `send-email` deploy, not a migration. The test `src/lib/__tests__/lifecycleEmails.test.js` fails if this preview and the real copy drift apart; after a copy change, refresh the preview with `WRITE_LIFECYCLE_PREVIEW=1 pnpm vitest run src/lib/__tests__/lifecycleEmails.test.js`.
-- **Dependency.** The weigh-in links open `/log?gecko=<id>&type=weight`, the one-tap log page being built in the same round. Do not turn the switch on before that page is live, or day 0 and the weigh-in emails link to a page that does not exist yet.
+- **The no-gecko links (28 October 2026).** Day 0 without a gecko and day 1 open `/MyGeckos?add=1`, which opens step 1 of the guided first gecko on arrival (add it by photo through Morph ID, or type a name and morph). Before, they opened plain `/MyGeckos`, the page behind that step. Only the link changed, not the words. The day 0 email for a member whose first gecko is in and weighed still opens `/MyGeckos`. Compare the day 0 and day 1 rows of `email_outcomes(60)` before and after this date.
+- **Dependency.** The weigh-in links open `/log?gecko=<id>&type=weight`, the one-tap log page built in the same round. It is live (the `/log` route in `src/App.jsx`); if it is ever removed, switch the emails off first, or day 0 and the weigh-in emails link to a page that does not exist.
 
 ## 3. The delivery log
 
@@ -53,7 +60,7 @@ Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend b
 - `public.email_delivery_stats` gives sent, delivered, opened, clicked, bounced and complained by email type and week, for the admin Funnel card (built by the scoreboard work).
 - Only admins can read any of it. Members and visitors cannot.
 
-## 4. The copy for approval
+## 4. The copy members receive (first shown here for approval)
 
 Each block is the plain-text version; the HTML version has the same words with the button in green. The last two lines are the footer.
 
@@ -74,7 +81,7 @@ Once a gecko is in, the weight chart, the feeding day and the family tree all ha
 
 A question while I have you: what got you into crested geckos? Hit reply and tell me. I read every answer.
 
-[ Add your first gecko ]  https://geckinspect.com/MyGeckos
+[ Add your first gecko ]  https://geckinspect.com/MyGeckos?add=1
 
 Tennyson
 Geck Inspect
@@ -147,7 +154,7 @@ Keeping more than a handful? Import a spreadsheet or a MorphMarket export and th
 
 If something stopped you, reply and tell me what it was. I fix what people trip on.
 
-[ Add a gecko ]  https://geckinspect.com/MyGeckos
+[ Add a gecko ]  https://geckinspect.com/MyGeckos?add=1
 
 Tennyson
 Geck Inspect

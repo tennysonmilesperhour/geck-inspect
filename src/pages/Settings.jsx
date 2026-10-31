@@ -1,6 +1,7 @@
 import BlockedUsersCard from '@/components/settings/BlockedUsersCard';
 import AccountDeletionCard from '@/components/settings/AccountDeletionCard';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { lazy } from '@/lib/lazyWithRetry';
 import { User } from '@/entities/User';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
@@ -41,7 +42,7 @@ import {
 } from 'lucide-react';
 import { resolveTier } from '@/lib/tierLimits';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
-import UpgradePlansButton, { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
+import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
@@ -53,6 +54,10 @@ import WeighInReminderSetting from '@/components/settings/WeighInReminderSetting
 import WeeklyNotesSetting from '@/components/settings/WeeklyNotesSetting';
 import { WEEKLY_NOTES_CHANGED_EVENT } from '@/lib/weeklyNotesConsent';
 import CollectionArtworkSetting from '@/components/settings/CollectionArtworkSetting';
+
+// Two-factor sign-in, admins only (src/lib/mfa.js), so members never
+// download it.
+const SecurityCard = lazy(() => import('@/components/settings/SecurityCard'));
 
 const STORE_POLICY_EXAMPLE = [
     "• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon-Wed only. Shipping cost is the buyer's responsibility.",
@@ -617,6 +622,7 @@ export default function SettingsPage() {
     // (Enterprise). The database only sends them on that plan, so the
     // switch is only offered there.
     const hasMarketIntelligence = canUseFeature(user, 'market_intelligence');
+    const isAdmin = user.role === 'admin';
 
     const sectionNav = [
         { id: 'appearance', label: 'Appearance' },
@@ -637,6 +643,7 @@ export default function SettingsPage() {
         { id: 'membership', label: 'Membership' },
         { id: 'morph-id', label: 'Morph ID' },
         ...(IOT_SENSORS_ENABLED ? [{ id: 'enclosure-sensors', label: 'Enclosure Sensors' }] : []),
+        ...(isAdmin ? [{ id: 'security', label: 'Security' }] : []),
         { id: 'support', label: 'Support' },
         { id: 'data-export', label: 'Your Data' },
         { id: 'danger-zone', label: 'Danger Zone' },
@@ -1078,14 +1085,7 @@ export default function SettingsPage() {
                               </>
                           ) : (
                               <p className="text-sm text-slate-400">
-                                  The Morning Market Brief and watchlist alerts are part of Market Intelligence on the Enterprise plan.{' '}
-                                  <UpgradePlansLink
-                                    limitType="market_intelligence"
-                                    surface="market_alerts_locked"
-                                    className="text-emerald-400 hover:text-emerald-300"
-                                  >
-                                    See plans
-                                  </UpgradePlansLink>
+                                  The Morning Market Brief and watchlist alerts are part of Market Intelligence, which is not open to new members right now.
                               </p>
                           )}
                      </CardContent>
@@ -1276,6 +1276,14 @@ export default function SettingsPage() {
                 {IOT_SENSORS_ENABLED && (
                     <section id="enclosure-sensors">
                         <IotSettingsCard user={user} />
+                    </section>
+                )}
+
+                {isAdmin && (
+                    <section id="security">
+                        <Suspense fallback={<div className="flex justify-center py-6"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>}>
+                            <SecurityCard />
+                        </Suspense>
                     </section>
                 )}
 

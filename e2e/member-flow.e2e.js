@@ -1,8 +1,11 @@
 // The member flow from plan item E3 30, in a real browser: sign up, sign
-// in, add a first gecko, log a feeding, and start a transfer to a buyer,
-// with no console errors along the way. Supabase is the in-browser fake
-// in support/fake-supabase.js, so the test also checks what the app
-// wrote: the gecko, the feeding row and the transfer request.
+// in, add a first gecko, log a feeding, start a transfer to a buyer, then
+// archive the gecko as sold and send it to the buyer from the step that
+// follows, with no console errors along the way. Supabase is the
+// in-browser fake in support/fake-supabase.js, so the test also checks
+// what the app wrote: the gecko, the feeding row, the transfer requests
+// and the funnel events. The sold step warns before it replaces the link
+// already emailed, and it never makes the gecko public.
 import { expect, test } from '@playwright/test';
 import { createFakeSupabase } from './support/fake-supabase.js';
 import { openGeckoRecord, transferRpcHandlers } from './support/transfer-fixture.js';
@@ -28,7 +31,7 @@ function watchConsole(page) {
   return problems;
 }
 
-test('a new member signs up, adds a gecko, logs a feeding and starts a transfer', async ({ context, page }) => {
+test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and sends a sold gecko to the buyer', async ({ context, page }) => {
   const fake = createFakeSupabase({ rpc: transferRpcHandlers() });
   await fake.install(context);
   await keepOffline(context);
@@ -131,9 +134,85 @@ test('a new member signs up, adds a gecko, logs a feeding and starts a transfer'
     // The buyer is emailed the claim link for that same transfer.
     const emailed = fake.calls.find((c) => c.path === '/functions/v1/send-collection-invite');
     expect(emailed?.body).toEqual({ kind: 'transfer', token: transfers[0].token });
+    await page.getByRole('dialog', { name: 'Transfer started' }).getByRole('button', { name: 'Done' }).click();
+  });
+
+  await test.step('mark the gecko sold and send it to the buyer from the next step', async () => {
+    // Still on Mango's record. Archive as sold, with what it sold for.
+    await page.getByRole('button', { name: 'Archive (sold, passed away or other)' }).click();
+    const archive = page.getByRole('dialog', { name: 'Archive Mango' });
+    await archive.getByRole('button', { name: 'Sold', exact: true }).click();
+    await archive.getByLabel('Sold for ($)').fill('300');
+    await archive.getByRole('button', { name: 'Archive as sold' }).click();
+
+    // The skippable step. The link emailed to the buyer a moment ago is
+    // still open, so the step says plainly that a new one replaces it and
+    // offers to keep it. It says nothing about a passport or going public.
+    const step = page.getByRole('dialog', { name: 'Send Mango to the buyer' });
+    await expect(step).toBeVisible();
+    await expect(step.getByText(new RegExp(`You already emailed ${BUYER} a transfer link for Mango on [A-Z][a-z]+ \\d{1,2}\\.`))).toBeVisible();
+    await expect(step.getByText('A new link replaces it, and the one you sent stops working.', { exact: false })).toBeVisible();
+    await expect(step.getByRole('button', { name: 'Keep the link I sent' })).toBeVisible();
+    await expect(step.getByText(/passport|public/i)).toHaveCount(0);
+    expect(mango()).toMatchObject({ archived: true, archive_reason: 'sold', status: 'Sold', sold_price: 300 });
+    // Showing the step changes nothing: the emailed link is still pending.
+    expect(fake.table('transfer_requests').map((t) => t.status)).toEqual(['pending']);
+    await step.getByRole('button', { name: 'Send a new link' }).click();
+
+    // The usual transfer form, with the sale price carried over and the
+    // warning repeated next to the button that replaces the link.
+    const transfer = page.getByRole('dialog', { name: 'Transfer Mango' });
+    await expect(transfer.getByLabel('Sale price (optional)')).toHaveValue('300');
+    await expect(transfer.getByText('This replaces the link you sent on', { exact: false })).toBeVisible();
+    await transfer.getByRole('button', { name: 'Create QR link' }).click();
+    await expect(page.getByText('Transfer started')).toBeVisible();
+
+    // Only the transfer was made: no passport, and Mango stays private.
+    expect(mango().passport_code ?? null).toBeNull();
+    expect(mango().is_public ?? false).toBe(false);
+    const latest = fake.table('transfer_requests').at(-1);
+    expect(latest).toMatchObject({ animal_id: mango().id, claim_mode: 'link', sale_price: 300, status: 'pending' });
+    // The emailed link was replaced, after the member was told and chose to.
+    expect(fake.table('transfer_requests').map((t) => t.status)).toEqual(['cancelled', 'pending']);
+
+    // The funnel events, with no email, name or code in them, and no
+    // passport_created: the step never makes one.
+    const funnel = ['sold_transfer_step', 'passport_created', 'transfer_started'];
+    // Events are written after the page is idle, so wait for the last one.
+    await expect.poll(() => fake.table('user_events')
+      .some((e) => e.event_name === 'transfer_started' && e.properties?.surface === 'sold_step')).toBe(true);
+    const events = fake.table('user_events').filter((e) => funnel.includes(e.event_name));
+    expect(events.map((e) => e.event_name)).not.toContain('passport_created');
+    expect(events.map((e) => [e.event_name, e.properties.action || e.properties.surface])).toEqual(expect.arrayContaining([
+      ['sold_transfer_step', 'shown'],
+      ['sold_transfer_step', 'send'],
+      ['transfer_started', 'sold_step'],
+    ]));
+    const shown = events.find((e) => e.event_name === 'sold_transfer_step' && e.properties.action === 'shown');
+    expect(shown.properties).toMatchObject({ has_passport: false, has_price: true, has_pending: true });
+    const started = events.find((e) => e.event_name === 'transfer_started' && e.properties.surface === 'sold_step');
+    expect(started.properties).toMatchObject({ method: 'link', has_price: true });
+    const props = JSON.stringify(events.map((e) => e.properties));
+    expect(props).not.toContain(MEMBER.email);
+    expect(props).not.toContain(BUYER);
+    expect(props).not.toContain('Mango');
   });
 
   // The whole run, from the sign-up form to the transfer, logged nothing
   // to the console as an error and threw nothing uncaught.
   expect(problems).toEqual([]);
+
+  // After the console check, because requests fail with no signal.
+  await test.step('with no signal the signed-in member sees the offline badge', async () => {
+    // The badge loads after sign-in, not with the startup script
+    // (src/components/shared/MemberOfflineSync.jsx).
+    // Close the transfer window first; while it is open the rest of the
+    // page is hidden from screen readers, the badge included.
+    await page.getByRole('dialog', { name: 'Transfer started' }).getByRole('button', { name: 'Done' }).click();
+    const badge = page.getByRole('status').filter({ hasText: /^Offline$/ });
+    await context.setOffline(true);
+    await expect(badge).toBeVisible();
+    await context.setOffline(false);
+    await expect(badge).toHaveCount(0);
+  });
 });

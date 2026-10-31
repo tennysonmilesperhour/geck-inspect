@@ -21,6 +21,11 @@ export default class ErrorBoundary extends React.Component {
     }
 
     render() {
+        // Section-level fallback: one broken widget (a study, a chart) shows
+        // the note it was given and the rest of the page keeps working.
+        if (this.state.hasError && this.props.fallback !== undefined) {
+            return this.props.fallback;
+        }
         if (this.state.hasError && this.props.inline) {
             // Page-level fallback: keeps the app shell (sidebar, header,
             // bottom nav) usable so the member can move to another page.

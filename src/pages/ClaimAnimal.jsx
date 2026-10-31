@@ -6,9 +6,10 @@ import GeckoImage from '@/components/shared/GeckoImage';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
-import { animalFromPreview, claimErrorKind } from '@/lib/transfers';
+import { animalFromPreview, claimErrorKind, claimViewState } from '@/lib/transfers';
 import { authContinuationPath, clearPostAuthRedirect, rememberPostAuthRedirect } from '@/lib/postAuthRedirect';
 import { recordGeckoAdded } from '@/lib/activation';
+import { captureEvent } from '@/lib/posthog';
 
 const card = 'rounded-xl border border-slate-700 bg-slate-900 p-5 sm:p-6';
 const messages = {
@@ -44,6 +45,8 @@ export default function ClaimAnimal() {
   const [contributePrice, setContributePrice] = useState(false);
   const [reload, setReload] = useState(0);
   const animal = animalFromPreview(transfer);
+  // One claim_viewed per account and answer while the page is open.
+  const viewLogged = useRef(new Set());
 
   useEffect(() => {
     let active = true;
@@ -53,21 +56,34 @@ export default function ClaimAnimal() {
     setClaiming(false);
     setContributePrice(false);
     setTransfer(null);
+    // For the passport and transfer funnel: what the link showed, and to
+    // whom (signed in or not). The token, the gecko and the people stay out.
+    const logView = (state, data = null) => {
+      const key = `${accountId || ''}:${state}`;
+      if (viewLogged.current.has(key)) return;
+      viewLogged.current.add(key);
+      captureEvent('claim_viewed', {
+        state,
+        signed_in: Boolean(accountId),
+        claim_mode: data?.claim_mode || null,
+        authorized: Boolean(data?.recipient_authorized),
+      });
+    };
     (async () => {
       try {
         // The server returns only status and expiry until the caller is
         // authorized. Never fetch a private animal row to fill this preview.
         const { data, error: rpcError } = await supabase.rpc('get_transfer_preview', { p_token: token });
         if (!active) return;
-        if (rpcError) { setError('error'); return; }
-        if (!data) { setError('not_found'); return; }
+        if (rpcError) { setError('error'); logView('error'); return; }
+        if (!data) { setError('not_found'); logView('not_found'); return; }
         setTransfer(data);
-        if (data.claimed_by_you) {
+        const state = claimViewState(data);
+        logView(state, data);
+        if (state === 'claimed_by_you') {
           clearPostAuthRedirect();
           setClaimed(true);
-        } else if (data.status === 'claimed') setError('already_claimed');
-        else if (data.status === 'cancelled') setError('cancelled');
-        else if (data.status === 'expired' || (data.expires_at && new Date(data.expires_at) <= new Date())) setError('expired');
+        } else if (state !== 'open') setError(state);
       } catch {
         if (active) setError('error');
       } finally {

@@ -53,10 +53,51 @@ Expired, missing, refunded, or transferred-away entitlements are written inactiv
 Every reconciliation writes all three supported entitlement identifiers, including
 absent ones. Test Store and web sandbox purchases do not unlock production.
 Validated Apple/Google sandbox receipts are accepted for store testing and review.
+Each row also stores `is_sandbox`: true when the purchase behind it was made in the
+Apple or Google sandbox (TestFlight, App Review, a developer's own phone). A sandbox
+purchase still unlocks the plan, so App Review can test Breeder, but it is not money
+and never counts as paying (see "What counts as paying" below).
+`apply_revenuecat_event` sets the flag from the row's own `is_sandbox` (read from
+the purchase in the customer snapshot) when the shared row builder sends it, else
+from the webhook's `event.environment` (`SANDBOX` or `PRODUCTION`), else (a purchase
+sync, which carries no environment) it keeps the stored value. The flag is stored
+rather than read from webhook payloads, because the privacy job empties RevenueCat
+payloads after 90 days.
 
 SDK CustomerInfo is metadata for the native purchase UI. It never independently
 grants feature access. Web clients do not initialize the large store SDK merely
 to read memberships; they read the mirror alongside their Stripe profile.
+
+## What counts as paying
+
+The weekly scoreboard (`admin_scoreboard()`, shown on the admin Funnel card) is
+where "paying breeders" and its recurring revenue are counted. Access and counting
+are separate: everything below unlocks the plan exactly as described above, and
+only the counting differs.
+
+- Counts: a live Stripe subscription (active or past due, not a trial, not
+  grandfathered), a lifetime plan with a lifetime payment on record, an App Store
+  subscription bought with real money, and a prepaid year recorded by hand on the
+  scoreboard (below).
+- Never counts: App Store sandbox purchases (`is_sandbox`), App Store trials,
+  promotional grants and the RevenueCat Test Store; and every number on the
+  scoreboard leaves out the admin, the Morph ID evaluation account (`app_metadata`
+  `morph_eval = true`) and accounts flagged internal (`app_metadata` `internal =
+  true`, such as the QA and App Review accounts). Only the service role can write
+  `app_metadata`, so a member cannot flag or unflag themselves. Flag a new test
+  account in the Supabase dashboard (Authentication, the user, raw app metadata) or
+  with SQL as the service role.
+- Comps: a member who pays and also holds a current `membership_comps` grant is
+  shown apart and left out of paying, because a comp is not evidence. The Revenue
+  card on Overview still counts their money.
+- Prepaid years: a breeder who pays for a year outside the app (for example a
+  Founding Breeder year through a Stripe Payment Link, which `stripe-webhook` does
+  not record as a membership) gets access through `membership_comps`. Record the
+  payment on the scoreboard with Record by hand, "Prepaid year (Founding Breeder)",
+  the breeder's name and the amount. For 12 months from that date the breeder counts
+  as a paying Breeder, and a twelfth of the amount counts as recurring revenue, even
+  though their access comes from the comp. Breeders are counted once by name, so a
+  second entry for the same breeder adds money but not another breeder.
 
 ## Live webhook setup
 

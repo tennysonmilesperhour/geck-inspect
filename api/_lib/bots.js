@@ -8,6 +8,7 @@
  *   assistant  fetches a page live because a person asked an assistant
  *   seo        SEO and audit tools
  *   tool       scripts and HTTP libraries (curl, python-requests)
+ *   unknown    named, but what it does is not published
  *
  * Order matters: the first match wins, so more specific names come first.
  * Add new bots here when the weekly agent review finds an unknown one.
@@ -45,7 +46,24 @@ const BOTS = [
   ['YandexBot', 'search'],
   ['Baiduspider', 'search'],
   ['DuckDuckBot', 'search'],
+  // Named from the 28 Oct 2026 review of agent_hits rows logged as
+  // 'other-bot' (about 4,600 hits in 28 days, 42% of bot traffic).
+  ['ExaUser', 'assistant'],
+  ['ExaSearchBot', 'search'],
+  ['LinkupBot', 'search'],
+  ['meta-webindexer', 'search'],
+  ['Qwantbot', 'search'],
+  ['Sogou', 'search'],
+  ['PetalBot', 'search'],
+  ['kagi-fetcher', 'assistant'],
+  ['Reflectionbot', 'training'],
+  // Purpose not published; named so it stops hiding in 'other-bot'.
+  ['ShapBot', 'unknown'],
   ['AhrefsBot', 'seo'],
+  ['serpstatbot', 'seo'],
+  // Robauto's scanners (the beacon itself was removed from the site in round 3).
+  ['JauntBrandBot', 'seo'],
+  ['Robauto', 'seo'],
   ['SemrushBot', 'seo'],
   ['MJ12bot', 'seo'],
   ['DotBot', 'seo'],

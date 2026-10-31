@@ -60,11 +60,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # vite build already builds in production mode. Setting NODE_ENV here
+      # also reached the unit tests pnpm build runs first, where React's
+      # production build refuses act(), so the 15 Sep, 1 Oct and 15 Oct
+      # scheduled audits failed in this step.
       - name: Build site
         run: pnpm build
-        env:
-          # Let the audit run against the production build shape.
-          NODE_ENV: production
 
       - name: Run static SEO audit
         run: node scripts/seo-audit.mjs

@@ -25,6 +25,28 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
+// The author's email for each post or comment, from read_profiles by
+// owner_profile_id (rows no longer carry another member's address). The
+// same lookup as withOwnerEmailsFetched in src/lib/ownerEmails.js, written
+// out here because importing that module from this lazy tab turned
+// AdminPanel into a shared chunk that the size budget does not check.
+async function withAuthorEmails(rows) {
+  const ids = [...new Set((rows || []).map((r) => r?.owner_profile_id).filter((v) => v != null).map(String))];
+  const emailById = new Map();
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data, error } = await supabase.rpc('read_profiles').select('id, email').in('id', ids.slice(i, i + 100));
+    if (error) throw error;
+    for (const p of data || []) if (p?.id != null && p.email) emailById.set(String(p.id), p.email);
+  }
+  const out = (rows || []).map((r) => ({
+    ...r,
+    created_by: r?.owner_profile_id != null ? emailById.get(String(r.owner_profile_id)) ?? null : null,
+  }));
+  if (rows?.truncated) out.truncated = rows.truncated;
+  return out;
+}
+import { supabase } from '@/lib/supabaseClient';
+
 /**
  * Content moderation surface, browse and delete user-generated content
  * across forum posts, forum comments and marketplace listings. Each tab is
@@ -198,8 +220,10 @@ export default function ContentModeration() {
           <TabsContent value="posts" className="mt-5">
             <ModerationList
               entity={ForumPost}
-              loadFn={() => ForumPost.list('-created_date')}
-              searchKeys={['title', 'content', 'created_by']}
+              // The author's email comes from their profile (admins can read
+              // every profile's address), not from the post row.
+              loadFn={() => ForumPost.list('-created_date').then((rows) => withAuthorEmails(rows))}
+              searchKeys={['title', 'content', 'created_by', 'author_name']}
               emptyText="No forum posts."
               renderItem={(p) => (
                 <>
@@ -208,7 +232,7 @@ export default function ContentModeration() {
                   </p>
                   <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">{p.content}</p>
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[11px] text-slate-500">{p.created_by}</span>
+                    <span className="text-[11px] text-slate-500">{p.created_by || p.author_name || 'Unknown author'}</span>
                     <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(p.created_date)}</span>
                   </div>
@@ -220,14 +244,14 @@ export default function ContentModeration() {
           <TabsContent value="comments" className="mt-5">
             <ModerationList
               entity={ForumComment}
-              loadFn={() => ForumComment.list('-created_date')}
-              searchKeys={['content', 'created_by']}
+              loadFn={() => ForumComment.list('-created_date').then((rows) => withAuthorEmails(rows))}
+              searchKeys={['content', 'created_by', 'author_name']}
               emptyText="No comments."
               renderItem={(c) => (
                 <>
                   <p className="text-sm text-slate-200 line-clamp-3">{c.content}</p>
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[11px] text-slate-500">{c.created_by}</span>
+                    <span className="text-[11px] text-slate-500">{c.created_by || c.author_name || 'Unknown author'}</span>
                     <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(c.created_date)}</span>
                   </div>

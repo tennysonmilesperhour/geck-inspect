@@ -12,7 +12,10 @@
 //   1. Market data: listings feeding the estimates are still arriving
 //      (public.market_data_health). This is the check that would have caught
 //      the 1 to 5 Oct 2026 freeze, when new listings were stored under a
-//      species name the price readers ignored.
+//      species name the price readers ignored. A second check fails when the
+//      last complete pass of the catalog, or the US Price Index's last full
+//      day, is more than 9 days old (marketFreshness.mjs): new listings kept
+//      arriving while the full US pass stalled after 19 Oct 2026.
 //   2. Value table: public.trait_value_table() loads, the core morphs have
 //      enough listings, and the app's own valuation code
 //      (src/lib/traitValuation.js) prices reference geckos inside sane bands.
@@ -34,6 +37,7 @@ import { buildTraitValueIndex, valueFromTraitTable } from '../../src/lib/traitVa
 import { CORE_TRAITS, REFERENCE_GECKOS } from './references.mjs';
 import { classifyMorphIdFailure } from './morphIdOutcome.mjs';
 import { describeTiming, parseServerTiming } from './serverTiming.mjs';
+import { fullPassFreshness } from './marketFreshness.mjs';
 
 const env = process.env;
 const SUPABASE_URL = env.SUPABASE_URL;
@@ -59,6 +63,8 @@ async function checkMarketData(admin) {
   record('Market data', 'health function answers', true);
   record('Market data', 'new listings arrived in the last 3 days', data.new_last_3_days > 0,
     `${data.new_last_3_days} new, newest first seen ${data.newest_first_seen}`);
+  const fresh = fullPassFreshness(data, Date.now());
+  record('Market data', 'a full US market pass in the last 9 days', fresh.ok, fresh.detail);
   const uncounted = Object.entries(data.uncounted_species || {}).reduce((sum, [, n]) => sum + Number(n), 0);
   record('Market data', 'no listings hidden by an unknown species value', uncounted < 50,
     uncounted ? JSON.stringify(data.uncounted_species) : 'none');

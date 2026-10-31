@@ -127,6 +127,12 @@ function treeLink(facts: LifecycleFacts): string {
 
 const paragraphs = (...parts: Array<string | null | false>) => parts.filter(Boolean).join("\n\n");
 
+// For a member with no gecko yet (day 0 without one, and day 1): ?add=1
+// makes My Geckos open step 1 of the guided first gecko on arrival, the
+// choice of adding it by photo (Morph ID) or by typing a name, instead of
+// the page behind it. Since 28 Oct 2026; plain /MyGeckos before.
+const FIRST_GECKO_LINK = "/MyGeckos?add=1";
+
 function day0(facts: LifecycleFacts, ask: (line: string) => string | null): LifecycleEmail {
   const name = firstName(facts);
   const hasGecko = Number(facts.gecko_count) > 0 && Boolean(clean(facts.gecko_id, 64));
@@ -142,7 +148,7 @@ function day0(facts: LifecycleFacts, ask: (line: string) => string | null): Life
         "Once a gecko is in, the weight chart, the feeding day and the family tree all hang off that record.",
         ask("A question while I have you: what got you into crested geckos? Hit reply and tell me. I read every answer."),
       ),
-      url: "/MyGeckos",
+      url: FIRST_GECKO_LINK,
       cta: "Add your first gecko",
     };
   }
@@ -189,7 +195,7 @@ function day1(facts: LifecycleFacts, ask: (line: string) => string | null): Life
       "Keeping more than a handful? Import a spreadsheet or a MorphMarket export and the whole collection comes in at once.",
       ask("If something stopped you, reply and tell me what it was. I fix what people trip on."),
     ),
-    url: "/MyGeckos",
+    url: FIRST_GECKO_LINK,
     cta: "Add a gecko",
   };
 }

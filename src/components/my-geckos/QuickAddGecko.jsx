@@ -56,6 +56,15 @@ const SEXES = ['Unsexed', 'Female', 'Male'];
  *   guest: the demo. Nothing is saved; the gecko is kept in this browser
  *     and the visitor is offered a free account to keep it, or a way back.
  *   saveSource: analytics source for the save (quick_add or morph_id_draft).
+ *
+ * A Morph ID result in the guided flow (saveSource 'morph_id_draft' with
+ * onContinue, 28 Oct 2026) opens short: the photo and the morph Morph ID
+ * filled in, one name field (focused) and "Save and continue", so one
+ * name and one tap finish step 1. Sex, hatch date and weight are one tap
+ * away ("Add sex, hatch date or weight" opens the usual form), and the
+ * payoff screen asks for the first weight anyway. The morph is labelled a
+ * suggestion the member can change on the record, and when Morph ID was
+ * unsure (the draft's check_morph) it is a field to check, not a line.
  */
 export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, onOpenRecord, onImport, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null, offerPhotoChoice = false, onChoosePhoto, initialDraft = null, stepLabel = null, onContinue, guest = false, saveSource = 'quick_add' }) {
   const { toast } = useToast();
@@ -81,6 +90,13 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
   const [saved, setSaved] = useState(null);
   // 'choose' shows the photo-or-type choice first; 'form' is the form.
   const [mode, setMode] = useState(() => (offerPhotoChoice && !initialDraft && !guest ? 'choose' : 'form'));
+  // A Morph ID result on step 1 of the guided flow: just the name (above).
+  const [short, setShort] = useState(() => Boolean(initialDraft) && saveSource === 'morph_id_draft' && Boolean(onContinue) && !guest);
+  // Morph ID was unsure of the morph (a tentative shortlist, a low model
+  // signal or reference photos that disagree; morphNeedsChecking in
+  // src/lib/morphIdDraft.js), so the short form shows it as a field to
+  // check instead of a line to accept.
+  const checkMorph = initialDraft?.check_morph === true;
   // Guest demo: the gecko the visitor typed, kept for after sign-up.
   const [guestKept, setGuestKept] = useState(null);
   // Morph ID's tags and note ride along with a draft that came from it.
@@ -92,7 +108,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
 
   useEffect(() => {
     if (!open) return;
-    flowEvent('add', 'shown', { choice: mode === 'choose', from_draft: Boolean(initialDraft), guest });
+    flowEvent('add', 'shown', { choice: mode === 'choose', from_draft: Boolean(initialDraft), guest, short });
     // Once per opening.
   }, [open]);
   const [addedCount, setAddedCount] = useState(0);
@@ -212,7 +228,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
       if (grams !== null) captureEvent('weight_logged', { via: 'quick_add', at_add: true });
       savedHereRef.current = [...savedHereRef.current, gecko];
       setAddedCount((n) => n + 1);
-      flowEvent('add', 'saved', { source: saveSource, has_photo: Boolean(photoUrl), has_morph: Boolean(morph.trim()), has_weight: grams !== null, feeding_reminders: Boolean(feedingGroupId) });
+      flowEvent('add', 'saved', { source: saveSource, has_photo: Boolean(photoUrl), has_morph: Boolean(morph.trim()), has_weight: grams !== null, feeding_reminders: Boolean(feedingGroupId), short });
       onSaved?.(gecko);
       if (onContinue) {
         onContinue(gecko, { feedingGroupId, hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });
@@ -342,6 +358,82 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               )}
               <Button variant="ghost" className="w-full min-h-11 text-slate-300" onClick={() => onClose?.()}>
                 Done
+              </Button>
+            </div>
+          </div>
+        ) : short && addedCount === 0 ? (
+          <div className="space-y-4">
+            <div>
+              {stepLabel && <p className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300">{stepLabel}</p>}
+              <DialogTitle className="text-xl text-slate-100">Name your gecko</DialogTitle>
+              <DialogDescription className="text-slate-400 mt-1">
+                Morph ID filled in the photos and a suggested morph. A name is all step 1 needs, and you can change anything later.
+              </DialogDescription>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 p-2">
+              {photoUrl ? (
+                <img src={photoUrl} alt="Your gecko" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+              ) : (
+                <Camera className="h-8 w-8 shrink-0 text-emerald-400 m-4" aria-hidden="true" />
+              )}
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wider text-slate-400">Morph ID suggestion</p>
+                {checkMorph ? (
+                  <p className="text-sm font-medium text-amber-100">Morph ID was not sure about this one. Check the morph below.</p>
+                ) : (
+                  <p className="text-sm font-medium text-slate-100 break-words">{morph.trim() || 'No morph named, add it later'}</p>
+                )}
+                <p className="text-xs text-slate-400 mt-0.5">A suggestion from the photos, not proven genetics. You can change it on the gecko&rsquo;s record.</p>
+              </div>
+            </div>
+
+            {checkMorph && (
+              <div>
+                <Label htmlFor="qa-morph" className="text-slate-200">Morph <span className="text-slate-500 font-normal">(check it, or clear it if you are not sure)</span></Label>
+                <Input id="qa-morph" value={morph} onChange={(e) => setMorph(e.target.value)} placeholder="e.g. Lilly White Harlequin" className="mt-1 bg-slate-800 border-slate-600 text-slate-100" autoComplete="off" />
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="qa-name" className="text-slate-200">Name</Label>
+              <Input
+                id="qa-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Mango"
+                className="mt-1 bg-slate-800 border-slate-600 text-slate-100"
+                autoComplete="off"
+                enterKeyHint="done"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.nativeEvent?.isComposing && !saving && !uploading) {
+                    e.preventDefault();
+                    handleSave();
+                  }
+                }}
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/60 p-3">
+              <div>
+                <Label htmlFor="qa-remind" className="text-slate-100">Remind me on feeding days</Label>
+                <p className="text-xs text-slate-400 mt-0.5">Every {DEFAULT_FEEDING_INTERVAL_DAYS} days, starting today. One message, even with the app closed.</p>
+              </div>
+              <Switch id="qa-remind" checked={remind} onCheckedChange={setRemind} />
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <Button className="min-h-11 w-full" disabled={saving || uploading} onClick={handleSave}>
+                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : 'Save and continue'}
+              </Button>
+              <Button
+                variant="ghost"
+                className="min-h-11 w-full text-slate-300"
+                disabled={saving}
+                onClick={() => { flowEvent('add', 'more_fields', { source: saveSource }); setShort(false); }}
+              >
+                Add sex, hatch date or weight
               </Button>
             </div>
           </div>

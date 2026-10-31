@@ -26,6 +26,9 @@
 
 /** @type {Record<string, (morph: { priceRange?: string }) => string>} */
 export const MORPH_META_DESCRIPTIONS = {
+  // Added 28 Oct 2026; read its Search Console window from about 25 Nov.
+  tiger: (m) =>
+    `Tiger crested geckos have dark bands across the back. How Tiger differs from Brindle, how the look is bred, and typical prices (${m.priceRange}).`,
   'extreme-harlequin': (m) =>
     `Extreme Harlequin crested geckos have extensive light pattern on the sides and legs. How to tell one from a Harlequin, and typical prices (${m.priceRange}).`,
   chocolate: (m) =>

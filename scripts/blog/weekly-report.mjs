@@ -179,7 +179,7 @@ function round(n, places) {
   return Math.round(n * f) / f;
 }
 
-function autoSuggest({ publishedLastWeek, draftedLastWeek, rejectedLastWeek, inQueue, budget, currentBudget }) {
+function autoSuggest({ publishedLastWeek, rejectedLastWeek, inQueue, budget, currentBudget }) {
   const out = [];
   if (publishedLastWeek.length === 0) {
     out.push('No posts published last week. Either the drafts weren\'t merged, or the draft agent skipped every slot. Check the blog-draft PRs, any still open?');
@@ -210,7 +210,7 @@ function autoSuggest({ publishedLastWeek, draftedLastWeek, rejectedLastWeek, inQ
 
 function renderMarkdown(ctx) {
   const {
-    weekKey, thisWeekKey, publishedLastWeek, draftedLastWeek, rejectedLastWeek,
+    weekKey, publishedLastWeek, draftedLastWeek, rejectedLastWeek,
     inQueue, budget, currentBudget, avgScore, latestResearch, biggestCalls, suggestions,
     traffic = { reportDate: null, bySlug: new Map() },
   } = ctx;

@@ -51,7 +51,7 @@ describe('Privacy Policy: email records and deletion', () => {
 
   it('shows the same last-updated date everywhere', () => {
     const iso = PAGE.match(/const LAST_UPDATED = '(\d{4}-\d{2}-\d{2})'/)?.[1];
-    expect(iso).toBe('2026-10-24');
+    expect(iso).toBe('2026-10-28');
     const [y, m, d] = iso.split('-').map(Number);
     expect(PAGE).toContain(`Last updated: ${MONTHS[m - 1]} ${d}, ${y}`);
     expect(editorialFor('/PrivacyPolicy').modified).toBe(iso);

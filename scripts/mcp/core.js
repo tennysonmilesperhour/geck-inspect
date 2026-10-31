@@ -22,6 +22,8 @@ import {
   PRICE_INDEX_SAMPLE_RULE,
   PRICE_INDEX_WHAT,
   applyPricePolicy,
+  staleMarketNote,
+  staleMarkets,
 } from '../../src/lib/priceIndexPolicy.js';
 import {
   SITE_URL,
@@ -233,7 +235,11 @@ const HANDLERS = {
     }
     const lines = latest.map((r) => `- ${MARKET_NAMES[r.market] || r.market}, ${r.trait || 'all crested geckos'} (${r.checked_on}, ${r.listings} listings${r.thin ? ', thin sample' : ''}): median $${r.median}, middle half $${r.p25} to $${r.p75}`);
     const note = `Asking prices on public listings, converted to USD, not sale prices. ${PRICE_INDEX_SAMPLE_RULE} ${PRICE_DATA_TERMS} Source: Geck Inspect Price Index, ${SITE_URL}/data`;
-    return text(`${lines.join('\n')}\n\n${note}`, { latest, monthly, note, generated_at: index.generated_at });
+    // A market not fully checked for over a week says so (priceIndexPolicy.js).
+    const shownMarkets = new Set(latest.map((r) => r.market));
+    const stale = staleMarkets(index).filter((s) => shownMarkets.has(s.market));
+    const staleText = stale.map((s) => staleMarketNote(s, MARKET_NAMES[s.market])).join(' ');
+    return text(`${lines.join('\n')}\n\n${staleText ? `${staleText}\n\n` : ''}${note}`, { latest, monthly, note, stale_markets: stale, generated_at: index.generated_at });
   },
 
   predict_pairing({ sire, dam } = {}) {

@@ -2,14 +2,18 @@
 
 What Geck Inspect runs on that the repository cannot rebuild by itself, and how the parts the repository does hold reach production.
 
-How this was checked: read-only queries against the production database (`mmuglfphhwlaluyfyxsp`) and its edge function list on 16 October 2026, plus a file-by-file comparison of each hand-deployed function's live code with the repo copy. Secret values were never read; only names. Re-run the queries in section 8 before relying on a number here.
+How this was checked: read-only queries against the production database (`mmuglfphhwlaluyfyxsp`) and its edge function list on 16 October 2026, plus a file-by-file comparison of each hand-deployed function's live code with the repo copy. Re-checked on 28 October 2026 (about 02:00 UTC): the newest migration, the edge function list and each `verify_jwt`, the scheduled jobs and the Vault secret names. Secret values were never read; only names. Re-run the queries in section 8 before relying on a number here.
 
 ## 1. How a change reaches production
 
 A merge to `main` sets off three things at once, in no guaranteed order, usually within a minute:
 
 1. **Vercel** builds and deploys the site from that commit.
-2. **The Supabase GitHub integration applies new migration files.** Every root-level file in `supabase/migrations/` whose version production's history does not have yet runs, in filename order, and is recorded under the file's own version. On 16 October 2026 the newest recorded version was `20261015233100_guard_switches`.
+2. **The Supabase GitHub integration applies new migration files.** Every root-level file in `supabase/migrations/` whose version production's history does not have yet runs, in filename order, and is recorded under the file's own version. On 28 October 2026, checked just before that day's merge (about 01:50 UTC), the newest recorded version was `20261024210200_weekly_notes_activity_and_erasure`. Two more were applied by the 28 October merge (commit `383ba6af`, recorded by 02:02 UTC):
+   - `20261028014800_quiet_morph_eval_account.sql` turns email off (Weekly Gecko Notes and notifications) for the Morph ID evaluation account, whose address has no mailbox. Data only.
+   - `20261028015600_market_health_full_pass.sql` makes `market_data_health()` report the last full market pass (`last_complete_pass_at`, `coverage_pct`, `us_last_full_day`). The daily canary then fails while that pass is more than 9 days old, so it will fail every day until the US feed runs again.
+
+   Details: `docs/planning/deploy-queue-2026-10-03.md`, 28 October. Query 8.1 shows the newest versions.
 3. **The same integration deploys the edge functions declared in `supabase/config.toml`**, each with the `verify_jwt` setting written there. A function with no `[functions.<name>]` block is never touched by a merge; it keeps whatever was last deployed by hand.
 
 Members keep old copies of the app open for hours, so every change has to work when the new database meets the old app and when the new app meets the old database (`docs/MIGRATIONS.md` explains how).
@@ -18,12 +22,12 @@ A migration file must never be dated earlier than a version production has alrea
 
 ## 2. Edge functions
 
-Production runs 34 functions. 30 are declared in `supabase/config.toml` (15 since round 1 and 2, and 15 more on 16 October 2026 after their live code was compared with the repo), so a merge deploys them. The repo also holds two functions that have never been deployed.
+On 28 October 2026 production ran 37 functions, all listed below. 33 are declared in `supabase/config.toml` (15 since round 1 and 2, 15 more on 16 October 2026 after their live code was compared with the repo, and three added since), so a merge deploys them. The four live but not declared are `admin-end-trial`, `embed-gecko-image`, `export-training-corpus` and `rapid-api`. The repo also holds two functions that have never been deployed. Every `verify_jwt` below matched production on 28 October.
 
 | Function | verify_jwt | Declared | Who calls it |
 |---|---|---|---|
 | admin-delete-account | true | yes | A signed-in admin erasing an account |
-| admin-end-trial | true | no | Admin tool; not in use. Tennyson is deleting it |
+| admin-end-trial | true | no | Admin tool; not in use. Tennyson is deleting it (still live on 28 October) |
 | csp-report | false | yes | Browsers posting Content-Security-Policy reports |
 | delete-my-account | true | yes | A member deleting their own account in Settings |
 | discard-empty-account | true | yes | "Use my existing account" on the Add your email screen: deletes the caller's login only when it is an empty social sign-in (no email, no phone) |
@@ -38,7 +42,7 @@ Production runs 34 functions. 30 are declared in `supabase/config.toml` (15 sinc
 | meta-oauth-callback | false | yes | Meta's redirect after sign-in (signed state) |
 | meta-oauth-start | true | yes | Promote: start a Meta sign-in |
 | publish-social-post | true | yes | Promote publishing |
-| rapid-api | true | no | Not in the repo. Tennyson is deleting it |
+| rapid-api | true | no | Not in the repo. Tennyson is deleting it (still live on 28 October) |
 | recognize-gecko-morph | false | yes | Morph ID (guests get a limited try; members metered) |
 | recognize-import-data | true | yes | AI image import (Breeder and Enterprise), metered |
 | reddit-oauth-callback | false | yes | Reddit's redirect after sign-in (signed state) |
@@ -119,7 +123,7 @@ The repo's migrations do not create these buckets or policies. The local test mi
 
 ## 4. Scheduled jobs (pg_cron)
 
-Times are UTC. "In the repo" says whether a runnable migration creates the job; the four marked "archive only" exist in production but only in `supabase/migrations/_pre_rebaseline_history/`, because the September schema dump does not carry `cron.job` rows.
+Times are UTC. As found on 28 October 2026: 22 jobs, 20 active, and no failed run in the 8 days of history the database keeps. "In the repo" says whether a runnable migration creates the job; the four marked "archive only" exist in production but only in `supabase/migrations/_pre_rebaseline_history/`, because the September schema dump does not carry `cron.job` rows.
 
 | Job | Schedule | Active | Runs | In the repo |
 |---|---|---|---|---|
@@ -131,8 +135,8 @@ Times are UTC. "In the repo" says whether a runnable migration creates the job; 
 | market-after-scrape-requests | every 5 minutes | yes | `geck_data.run_requested_after_scrape()` | yes |
 | market-brief-morning | :35, 13:00 to 20:00 | yes | `enqueue_market_briefs()` | yes |
 | market-value-daily | 12:40 daily | yes | `request_market_value_snapshot()` | yes |
-| monthly-overage-billing | 02:00 on the 1st | yes | posts to `report-social-overage` | yes |
 | personal-weighin-reminders-daily | 14:20 daily | yes | `enqueue_personal_weighin_reminders()` | yes |
+| privacy-retention-daily | 04:05 daily | yes | `apply_privacy_retention(90)` | yes (`20261016090000_privacy.sql`) |
 | process-scheduled-blog-posts | every 5 minutes | **no** | `process_scheduled_blog_posts()` | yes |
 | promote_drain_scheduled | every 5 minutes | **no** | `publish_due_scheduled_posts()` | yes |
 | prune-stale-push-subscriptions | 03:17 daily | yes | `prune_stale_push_subscriptions()` | archive only |
@@ -142,14 +146,15 @@ Times are UTC. "In the repo" says whether a runnable migration creates the job; 
 | vet-followups-daily | 14:25 daily | yes | `enqueue_vet_followups()` | yes |
 | weekly-digest-sunday | 16:00 Sunday | yes | `enqueue_weekly_digest()` | yes |
 | weekly-notes-hourly | :50 every hour | yes | `enqueue_weekly_notes()` (members, then confirmed visitors) | yes (`20261018002200_weekly_notes.sql`, `20261018120000_weekly_notes_visitors.sql`) |
+| weekly-notes-repermission-hourly | :55 every hour | yes | `enqueue_weekly_notes_repermission()` (the one-time re-permission email, 20 a run) | yes (`20261024150000_weekly_notes_personal_and_repermission.sql`) |
 | weekly-notes-visitor-cleanup | 04:25 daily | yes | `weekly_notes_visitor_cleanup()` | yes (`20261018120000_weekly_notes_visitors.sql`) |
 | weighin-reminders-weekly | 15:00 Sunday | yes | `enqueue_weighin_reminders()` | archive only |
 
-Round 3 of the review fixes (not merged when this was written) adds `privacy-retention-daily` (04:05 daily) and unschedules `monthly-overage-billing`.
+`monthly-overage-billing` is gone: round 3 (`20261016090600_retire_overage_billing.sql`) unscheduled it with Promote retired, and the same round added `privacy-retention-daily`.
 
-Jobs that call an edge function (`monthly-overage-billing`, and the functions behind `market-value-daily`, the notification trigger, the lifecycle emails and Weekly Gecko Notes) send the Vault secret `notification_service_role_key` as a bearer token; the functions check it with `verify_notification_dispatch_secret()`, which only the service role may run.
+Jobs that call an edge function (the functions behind `market-value-daily`, the notification trigger, the lifecycle emails, Weekly Gecko Notes and the re-permission email) send the Vault secret `notification_service_role_key` as a bearer token; the functions check it with `verify_notification_dispatch_secret()`, which only the service role may run.
 
-**Weekly Gecko Notes** (`docs/planning/weekly-notes-2026-10.md`). `weekly-notes-hourly` runs `enqueue_weekly_notes()`, which does one lookup and stops while `app_settings` `weekly_notes_enabled` is false (the default). When it is on, it asks send-email about up to 20 members a run and records each ask in `weekly_notes_polls` (one row per member, at most one ask in 20 hours). send-email claims each note with `claim_weekly_note()`, which writes `weekly_notes_sends` (unique on address and slug). `weekly_notes_candidates()` (read-only) shows who is due; `unsubscribe_weekly_notes_by_token()` (open to signed-out visitors, signature checked) turns off only `profiles.email_weekly_notes_enabled` and records the choice in `profiles.email_weekly_notes_choice_at`, and the trigger `profiles_weekly_notes_follow_email_off` turns it off whenever `email_notifications_enabled` goes from on to off. For the EEA and the UK (decision 58): `handle_new_auth_user` (the `on_auth_user_created` trigger) saves the sign-up box (`weekly_notes_at_signup` in the sign-up metadata) as the member's choice, and `weekly_notes_region_default()`, which signed-in members may run on their own profile only, turns the notes off for a member who never chose; the trigger `profiles_weekly_notes_stamp_choice` puts the database's clock on every choice. All but the unsubscribe and the region rule are service role only; admins can read both tables. The edge function secret `EMAIL_POSTAL_ADDRESS` now gates the notes: while it is empty, send-email skips every weekly note before claiming, so nothing is used up.
+**Weekly Gecko Notes** (`docs/planning/weekly-notes-2026-10.md`). `weekly-notes-hourly` runs `enqueue_weekly_notes()`, which does one lookup and stops while `app_settings` `weekly_notes_enabled` is false (the default). It has been true since 02:29 UTC on 18 October. When it is on, it asks send-email about up to 20 members a run and records each ask in `weekly_notes_polls` (one row per member, at most one ask in 20 hours). send-email claims each note with `claim_weekly_note()`, which writes `weekly_notes_sends` (unique on address and slug). `weekly_notes_candidates()` (read-only) shows who is due; `unsubscribe_weekly_notes_by_token()` (open to signed-out visitors, signature checked) turns off only `profiles.email_weekly_notes_enabled` and records the choice in `profiles.email_weekly_notes_choice_at`, and the trigger `profiles_weekly_notes_follow_email_off` turns it off whenever `email_notifications_enabled` goes from on to off. For the EEA and the UK (decision 58): `handle_new_auth_user` (the `on_auth_user_created` trigger) saves the sign-up box (`weekly_notes_at_signup` in the sign-up metadata) as the member's choice, and `weekly_notes_region_default()`, which signed-in members may run on their own profile only, turns the notes off for a member who never chose; the trigger `profiles_weekly_notes_stamp_choice` puts the database's clock on every choice. All but the unsubscribe and the region rule are service role only; admins can read both tables. The edge function secret `EMAIL_POSTAL_ADDRESS` now gates the notes: while it is empty, send-email skips every weekly note before claiming, so nothing is used up.
 
 **Weekly Gecko Notes for visitors** (section 9 of the plan, `20261018120000_weekly_notes_visitors.sql`). The form on the public guide pages posts to `subscribe-weekly-notes`, which calls `request_weekly_notes_signup()` (service role: rate limits, then a confirmation link whose sha256 is kept in `newsletter_subscribers.confirm_token_hash`; every email the form sends is logged in `weekly_notes_signup_sends`). `/WeeklyNotes?t=...` calls `confirm_weekly_notes_signup(p_token)` (open to signed-out visitors, the database's clock; `confirm_weekly_notes_signup_at` with a clock is service role only) on a button press. The per-inbox limit uses `email_inbox_key()` (`weekly_notes_signup_sends.inbox_key`). Confirmed visitors with no sign-in account are `weekly_notes_subscriber_candidates()`; the hourly job asks send-email about them with `weekly.audience = 'visitor'`, and send-email claims with `claim_weekly_note_subscriber()` (same lock and ledger as members). Their stop link is `weekly_notes_subscriber_token()` / `unsubscribe_weekly_notes_subscriber()`, which also turns off the member switch on any profile for the same inbox and records the choice. What counts as a visitor stop is one function, `weekly_notes_visitor_stop_at()` (any spelling of the inbox, after a request, not followed by a newer sign-up); the trigger `profiles_weekly_notes_visitor_stop` (before insert on profiles), `weekly_notes_region_default()`, `weekly_notes_candidates()` and the visitor candidates all use it. Suppressions are matched by `email_inbox_suppressed()` for visitors, the homepage guide form and members (`email_is_suppressed()`, send-email's check, now calls it). "Already signed up" is `weekly_notes_inbox_signed_up()`. Expression indexes on `email_inbox_key(email)` (`email_suppressions_inbox_idx`, `newsletter_subscribers_inbox_idx`, `weekly_notes_sends_inbox_idx`) and the generated column `guide_email_sends.inbox_key` keep the inbox lookups fast (with `profiles_email_lower_idx` on `profiles (lower(email))` once 20261024182000 is merged); because of them, only the service role and the database's own functions may write those tables (both can), and a change to `email_inbox_key()` needs a REINDEX and a rewrite of that column. `newsletter_subscribers` is closed to the public API (admins read it). `weekly-notes-visitor-cleanup` drops unconfirmed requests after 30 days and deletes rows older than 30 days from both form logs (`weekly_notes_signup_sends` and the homepage guide form's `guide_email_sends`). To erase a visitor on request: `select public.admin_erase_weekly_notes_visitor('name@example.com');` in the SQL console.
 
@@ -160,7 +165,7 @@ Jobs that call an edge function (`monthly-overage-billing`, and the functions be
 | notification_service_role_key | The bearer the database's jobs and triggers send to edge functions (also `enqueue_weekly_notes`) | 7 May 2026, updated 4 Sep 2026 |
 | email_unsubscribe_secret | Signs the unsubscribe links in notification emails, including the Weekly Gecko Notes stop link (`unsubscribe_weekly_notes_by_token` checks the same signature) | 3 Oct 2026 |
 
-Not yet created: `morph_share_view_key` (Tennyson's step, see `docs/OPERATIONS.md`). Until it exists, shared Morph ID cards count no views.
+Not yet created on 28 October: `morph_share_view_key` (Tennyson's step, see `docs/OPERATIONS.md`). Until it exists, shared Morph ID cards count no views.
 
 ## 6. Database extensions
 
@@ -174,7 +179,7 @@ The migration chain recreates the `public` and `geck_data` schemas, their functi
 2. **Four scheduled jobs** that live only in the archive (section 4): expire-referral-grants, hatch-alerts-daily, prune-stale-push-subscriptions, weighin-reminders-weekly.
 3. **Vault secrets** (section 5). New random values, never production's.
 4. **Edge function secrets** (names in `docs/OPERATIONS.md`, section 2).
-5. **Data**: no rows, no stored photos, no auth users. `src/lib/guestMockData.js` is the nearest thing to seed data.
+5. **Data**: no rows, no stored photos, no auth users. `src/lib/guestMockData.js` is the nearest thing to seed data. The `db-backup` workflow (Sundays) will keep a weekly encrypted dump of production's database for 30 days once the Actions secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` are set; until then it skips with a notice (it did on 18 and 25 October), and the only copies are Supabase's own daily backups (`docs/OPERATIONS.md`, sections 2 and 3).
 6. **The function URLs written into SQL.** The notification trigger and several jobs post to `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/...`; a second project needs its own address there.
 
 ## 8. Re-checking (read-only)

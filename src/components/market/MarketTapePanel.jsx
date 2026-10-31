@@ -25,7 +25,7 @@ function writeLastVisit(iso) {
 
 /**
  * The market as a feed: new listings and price cuts, newest first, from
- * MorphMarket and from Korea, Japan and Europe. Events since the member's
+ * the US, Korea, Japan and Europe. Events since the member's
  * last visit are marked New. The feed checks for new events every two
  * minutes while the page is open; how often events arrive depends on how
  * often each marketplace is checked.
@@ -169,7 +169,7 @@ export default function MarketTapePanel() {
         </div>
       )}
       <p className="text-[11px] text-slate-500">
-        MorphMarket listings arrive as often as MorphMarket is checked; Korea, Japan and Europe are checked daily.
+        Listings arrive as each market is checked; Korea, Japan and Europe are checked daily.
         Prices outside the US are converted to US dollars for comparison.
       </p>
     </div>

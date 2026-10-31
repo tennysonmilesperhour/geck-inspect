@@ -1,4 +1,4 @@
-import { useBlockedAuthors } from '@/hooks/useBlockedAuthors';
+import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import ReportContent from '@/components/support/ReportContent';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabaseClient';
 import { ForumPhotoGrid, ForumPhotoPicker, forumPhotoList } from '@/components/forum/ForumPhotos';
 import { arrangeForumComments } from '@/lib/forumThreads';
+import { forumLikeState, notifyForumThreadAuthor } from '@/lib/memberReads';
+import { isGuestMode } from '@/lib/guestMode';
 import {
     ThumbsUp,
     User as UserIcon,
@@ -61,7 +63,9 @@ import {
  *    land on a blank page.
  */
 export default function ForumPostPage() {
-    const blockedAuthors = useBlockedAuthors();
+    // Matched on the author's profile id: members cannot read another
+    // member's created_by (an email address).
+    const blocked = useBlockedMembers();
     const location = useLocation();
     const navigate = useNavigate();
     const { toast } = useToast();
@@ -112,30 +116,24 @@ export default function ForumPostPage() {
                             })
                             .catch(() => {});
                     }
-                    const [fetchedComments, fetchedCategory, allLikes] = await Promise.all([
+                    const [fetchedComments, fetchedCategory] = await Promise.all([
                         ForumComment.filter({ post_id: postId }, '-created_date'),
                         fetchedPost.category_id ? ForumCategory.get(fetchedPost.category_id).catch(() => null) : null,
-                        ForumLike.filter({ target_id: postId }).catch(() => []),
                     ]);
                     setComments(fetchedComments);
                     setCategory(fetchedCategory);
 
-                    // Initial likes data for the post + every comment
+                    // Likes for the post and every comment in one call. The
+                    // database says whether this member liked each one, so
+                    // nobody's address reaches the browser. The demo has no
+                    // likes to count.
+                    const likeState = isGuestMode()
+                        ? new Map()
+                        : await forumLikeState([postId, ...fetchedComments.map((c) => c.id)], { email: user?.email })
+                            .catch(() => new Map());
                     const next = {};
-                    next[postId] = {
-                        count: allLikes.length,
-                        userLiked: user ? allLikes.some((l) => l.user_email === user.email) : false,
-                    };
-                    if (fetchedComments.length > 0) {
-                        const commentLikes = await Promise.all(
-                            fetchedComments.map((c) => ForumLike.filter({ target_id: c.id }).catch(() => []))
-                        );
-                        fetchedComments.forEach((c, i) => {
-                            next[c.id] = {
-                                count: commentLikes[i].length,
-                                userLiked: user ? commentLikes[i].some((l) => l.user_email === user.email) : false,
-                            };
-                        });
+                    for (const [id, state] of likeState) {
+                        next[id] = { count: state.count, userLiked: Boolean(user) && state.liked };
                     }
                     setLikesData(next);
                 }
@@ -160,11 +158,10 @@ export default function ForumPostPage() {
         }));
         try {
             if (isLiked) {
-                const existing = await ForumLike.filter({
-                    target_id: item.id,
-                    user_email: currentUser.email,
-                });
-                if (existing.length > 0) await ForumLike.delete(existing[0].id);
+                // The row rule lets a member delete only their own like, so
+                // this removes this member's like and nobody else's.
+                const { error } = await supabase.from('forum_likes').delete().eq('target_id', item.id);
+                if (error) throw error;
             } else {
                 await ForumLike.create({
                     target_id: item.id,
@@ -191,17 +188,31 @@ export default function ForumPostPage() {
             };
             const createdComment = await ForumComment.create(commentData);
 
-            // The database dispatcher reads recipient preferences and handles
-            // email/push. Clients cannot read another member's private settings.
+            // The database finds the author to tell (the post's, or the
+            // comment's being answered) and writes the notification, so the
+            // browser never needs their email address. The dispatcher then
+            // reads the recipient's preferences and handles email and push.
             try {
-                const recipient = replyingTo?.created_by || post?.created_by;
-                if (createdComment.approval_status !== 'pending' && recipient && recipient !== currentUser.email) {
-                    await Notification.create({
-                        user_email: recipient,
-                        type: replyingTo ? 'new_reply' : 'new_comment',
-                        content: `${commentData.author_name} ${replyingTo ? 'replied to your comment' : 'commented on your post'}: "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
-                        link: `/ForumPost?id=${postId}`,
-                        metadata: { comment_id: createdComment.id, post_id: postId },
+                if (createdComment.approval_status !== 'pending') {
+                    await notifyForumThreadAuthor(createdComment.id, {
+                        // Until the database function exists: the old way,
+                        // reading the author's address from the row.
+                        legacy: async () => {
+                            const authorOf = async (table, id) => {
+                                const { data } = await supabase.from(table).select('created_by').eq('id', id).maybeSingle();
+                                return data?.created_by || null;
+                            };
+                            const recipient = (replyingTo && await authorOf('forum_comments', replyingTo.id))
+                                || await authorOf('forum_posts', postId);
+                            if (!recipient || recipient === currentUser.email) return;
+                            await Notification.create({
+                                user_email: recipient,
+                                type: replyingTo ? 'new_reply' : 'new_comment',
+                                content: `${commentData.author_name} ${replyingTo ? 'replied to your comment' : 'commented on your post'}: "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
+                                link: `/ForumPost?id=${postId}`,
+                                metadata: { comment_id: createdComment.id, post_id: postId },
+                            });
+                        },
                     });
                 }
             } catch (notifErr) {
@@ -374,7 +385,7 @@ export default function ForumPostPage() {
 
     const isPostLiked = likesData[post.id]?.userLiked || false;
     const postLikeCount = likesData[post.id]?.count ?? 0;
-    if (post && blockedAuthors.has(post.created_by)) {
+    if (post && blocked.isBlocked(post)) {
         return (
             <div className="min-h-screen bg-slate-950 p-4 md:p-8">
                 <div className="max-w-xl mx-auto text-center space-y-4">
@@ -386,7 +397,13 @@ export default function ForumPostPage() {
         );
     }
 
-    const isPostOwner = currentUser?.email && post?.created_by === currentUser.email;
+    // Ownership by profile id: the rows no longer carry the author's email.
+    // created_by is still checked for the demo's sample rows.
+    const isMine = (row) => Boolean(currentUser && row) && (
+        (row.owner_profile_id != null && String(row.owner_profile_id) === String(currentUser.id))
+        || Boolean(currentUser.email && row.created_by === currentUser.email)
+    );
+    const isPostOwner = isMine(post);
     const isAdmin = currentUser?.role === 'admin';
     const canDeletePost = isPostOwner || isAdmin;
 
@@ -397,13 +414,13 @@ export default function ForumPostPage() {
         replies: commentReplies,
         orphanIds,
         visibleCount: visibleCommentCount,
-    } = arrangeForumComments(comments, (c) => blockedAuthors.has(c.created_by));
+    } = arrangeForumComments(comments, (c) => blocked.isBlocked(c));
 
     const renderComment = (comment, isReply = false) => {
         const isEditingThis = editingCommentId === comment.id;
         const isCommentLiked = likesData[comment.id]?.userLiked || false;
         const commentLikeCount = likesData[comment.id]?.count ?? 0;
-        const isCommentOwner = currentUser?.email && comment?.created_by === currentUser.email;
+        const isCommentOwner = isMine(comment);
         const canDeleteComment = isCommentOwner || isAdmin;
 
         return (
@@ -494,7 +511,7 @@ export default function ForumPostPage() {
                                     Reply
                                 </Button>
                             )}
-                            <ReportContent entity="forum_comment" recordId={comment.id} authorEmail={comment.created_by} excerpt={comment.content} />
+                            <ReportContent entity="forum_comment" recordId={comment.id} authorProfileId={comment.owner_profile_id} excerpt={comment.content} />
                             {isCommentOwner && !isEditingThis && (
                                 <Button
                                     variant="ghost"
@@ -566,7 +583,7 @@ export default function ForumPostPage() {
                                 <span className="min-w-0 break-words">{post.title}</span>
                             </CardTitle>
                         )}
-                        <ReportContent entity="forum_post" recordId={post.id} authorEmail={post.created_by} excerpt={post.content} />
+                        <ReportContent entity="forum_post" recordId={post.id} authorProfileId={post.owner_profile_id} excerpt={post.content} />
                         <div className="text-sm text-slate-400 flex items-center gap-4 mt-2 flex-wrap">
                             <span className="flex items-center gap-1">
                                 <UserIcon className="w-4 h-4" />

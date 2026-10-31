@@ -185,7 +185,6 @@ class Layout {
   }
 
   callout({ tone = "info", title, items = [] }) {
-    const top = this.y;
     const pad = 10;
     const indent = PAGE.margin + pad;
     const innerWidth = PAGE.width - PAGE.margin * 2 - pad * 2;

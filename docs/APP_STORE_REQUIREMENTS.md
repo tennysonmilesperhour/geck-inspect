@@ -35,6 +35,7 @@ The manifest now also declares optional phone/address/contact details, messages,
 ## Changes made
 
 - `src/lib/aiConsent.js`: provider/data disclosures; explicit permission per request; fail closed if no confirmation UI is available. No persistent approval or new dependency.
+  - Since 28 October 2026 Morph ID asks on the page instead of with the browser's confirm box, which the iPhone app's web view does not reliably show (`src/components/morph-id/AiConsentPanel.jsx`). Tapping Identify morph opens a short panel that names what is sent and to whom (the photos, life stage and fired state to Anthropic; the photos to Replicate when visual comparison is on), with **Allow and identify** and **Not now**. The yes covers that one set of photos (a retry of the same request after a dropped connection does not ask again), lives only in the page's memory, and a new set of photos asks again. Without it the request is never sent (`grantAiConsent` and `hasAiConsent` in `aiConsent.js`). The other AI features keep the confirm box. The panel's Privacy Policy link opens the policy inside the app (the in-app route, as the membership screen links it), not in Safari. The visual comparison strip under a result no longer runs its own search with a confirm box when an answer has no visual evidence; it shows nothing then (`SimilarGeckosStrip.jsx`).
 - Covered morph recognition, health screening, text generation/consultant, social generation, image import and visual embeddings. Morph cancellation gets a specific message and does not imply that a credit was consumed.
 - Updated `PrivacyPolicy.jsx` and `PrivacyInfo.xcprivacy`; corrected stale release/billing guidance that incorrectly said the app had never been submitted and still recommended the old Pro catalog.
 - Configured both Apple server notification receivers using the URL read from the existing RevenueCat app, without changing keys or adding a new recipient.
@@ -120,8 +121,18 @@ Check each item in App Store Connect before pressing Submit:
 - Screenshots are from the current build, show no retired features, and include iPad sizes if the app ships on iPad.
 - Description, keywords and screenshots do not mention Android, Google Play or other platforms, and do not quote prices that differ from the store.
 - Age rating questionnaire, App Privacy answers and the encryption question match the build.
-- The build selected is the newest upload (build 7 or later), not build 6.
+- The build selected is the newest upload (build 14 or later as of 26 October), not an older one.
 
 ## Member content filtering, 19 October 2026
 
 Guideline 1.2 asks for a way to filter objectionable material before it is posted, a way to report it, a way to block users, and a way to contact the developer. Filtering is now automatic in the database (`20261019230000_public_content_auto_approval.sql`): held words, photos and links from new members, and anything from members with rejected or hidden content wait in Admin Panel > Reports > Publication approvals; everything else is published at once. Reporting, blocking and the support address were already in place. For the review notes: "New posts and photos are screened automatically against a list of objectionable terms; photos and links from new members, and all content from members with prior removals, are held for manual approval. Members can report any post, comment or photo and block other members. Reports are reviewed within 24 hours."
+
+## Status, 26 October 2026
+
+- Apple-to-RevenueCat delivery is now observed: a sandbox Breeder annual purchase on 18 October and 8 renewals since, with the `breeder` entitlement active. `NATIVE_BILLING_WEBHOOK_VERIFIED=true` can be set for the store build.
+- Content filtering migrations are applied in production with 48 held terms; the approval queue is empty.
+- The Xcode project build number is now 14. The last submission used build 13 (builds 8 to 13 were numbered by hand and not recorded in this file). Build 13 predates the native purchase-completion fix of 24 October and other changes merged since, so it should not be resubmitted.
+- The Sign in with Apple entitlement is in the project, so the app ID needs that capability before build 14 will sign.
+- Remaining steps and paste-ready review notes, reply and description footer: [app-store-resubmission-2026-10-26.md](planning/app-store-resubmission-2026-10-26.md).
+- 26 October: Apple's automated check stopped the build 13 submission again for the missing Terms of Use (EULA) link, so the listing text from 19 October was not in place on every localization. The step-by-step fix is step 0 of the resubmission kit. The iPhone Membership screen now also links Apple's standard EULA (ships in build 14).
+- 26 October, later: Tennyson added the EULA lines to the Description and resubmitted build 13. Waiting on Apple. Build 14 and the 2.1 device recording are still to do (resubmission kit, steps 1 to 6).

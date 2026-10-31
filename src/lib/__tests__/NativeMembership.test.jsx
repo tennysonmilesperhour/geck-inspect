@@ -33,6 +33,14 @@ describe('native membership screen', () => {
     }
     tree.unmount();
   });
+  it("links Apple's standard Terms of Use (EULA) outside the app", () => {
+    const tree = create(<MemoryRouter><NativeMembership user={null} /></MemoryRouter>);
+    const link = tree.root.findAllByType('a').find(node => contents(node) === 'Terms of Use (EULA)');
+    expect(link.props.href).toBe('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
+    expect(link.props.target).toBe('_blank');
+    tree.unmount();
+  });
+
   it('updates access after restoration even when the page account snapshot is unchanged', () => {
     const user = { membership_tier: 'free' };
     const tree = create(<MemoryRouter><NativeMembership user={user} /></MemoryRouter>);

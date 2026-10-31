@@ -92,10 +92,37 @@ function analysisIds(analysis) {
   ].filter(Boolean);
 }
 
+// The model signal the server calls strong (modelIsStrong in
+// supabase/functions/_shared/morph-evidence.ts). Below it the answer is a
+// guess the member should check, not a label to save unread.
+const STRONG_MODEL_SIGNAL = 75;
+
+/**
+ * True when Morph ID itself was unsure of the morph: anything short of a
+ * best visual match (the server's "tentative" covers a low or narrow
+ * model signal and breeder-tagged reference photos that disagree), a
+ * model signal under the server's strong mark, or reference photos that
+ * lean to another morph. The short add form then shows the morph as a
+ * field to check instead of a line to accept (docs/specs/morph-id.md: no
+ * flow hides uncertainty behind one definitive label).
+ *
+ * @param {object} analysis - the recognize-gecko-morph result
+ */
+export function morphNeedsChecking(analysis) {
+  if (!analysis) return false;
+  if (analysis.assessment_status !== 'best_match') return true;
+  const signal = Number(analysis.model_signal ?? analysis.confidence_score);
+  if (!Number.isFinite(signal) || signal < STRONG_MODEL_SIGNAL) return true;
+  const consensus = analysis.visual_evidence?.consensus?.primary_morph;
+  return Boolean(consensus) && consensus !== analysis.primary_morph;
+}
+
 /**
  * @param {object} analysis - the recognize-gecko-morph result
  * @param {string[]} imageUrls - the photos that were analyzed
- * @returns {{ image_urls: string[], morph_tags: string[], notes: string } | null}
+ * @returns {{ image_urls: string[], morph_tags: string[], morphs_traits: string, notes: string, check_morph: boolean } | null}
+ *   check_morph tells the add form to show the morph for checking; it is
+ *   not a gecko column and is never saved.
  */
 export function buildGeckoDraftFromAnalysis(analysis, imageUrls = []) {
   if (!analysis) return null;
@@ -121,6 +148,7 @@ export function buildGeckoDraftFromAnalysis(analysis, imageUrls = []) {
     // for example "Lilly White Harlequin". Editable before saving.
     morphs_traits: name || labels.join(' ') || '',
     notes,
+    check_morph: morphNeedsChecking(analysis),
   };
 }
 

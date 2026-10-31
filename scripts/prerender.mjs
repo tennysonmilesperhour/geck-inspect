@@ -70,12 +70,10 @@ import {
 import {
   FOUNDER_NAME,
   FOUNDER_URL,
-  GECK_INTELLECT_LABEL,
-  GECK_INTELLECT_URL,
 } from '../src/data/public-links.js';
 import { loadAppModule } from './lib/load-app-module.mjs';
 import { morphBreedingFact, morphGeneralLinks } from './lib/morph-page-links.mjs';
-import { PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_INDEX_TERMS_SENTENCE, applyPricePolicy } from '../src/lib/priceIndexPolicy.js';
+import { PRICE_INDEX_SAMPLE_RULE, PRICE_INDEX_WHAT, PRICE_INDEX_TERMS_SENTENCE, applyPricePolicy, staleMarketNote, staleMarkets } from '../src/lib/priceIndexPolicy.js';
 import { GUIDE_CALCULATOR_ALIASES } from '../src/lib/genetics/calculatorCatalog.js';
 import { spectrumPositionFor } from '../src/components/morphguide/spectrumPosition.js';
 import { eyeStudyIdForMorph } from '../src/components/morphguide/eyeStudyIndex.js';
@@ -1095,8 +1093,10 @@ function priceTable(limit) {
   const rows = (index?.latest || []).filter((r) => r.market === 'US' && r.trait).sort((a, b) => b.listings - a.listings);
   if (!rows.length) return null;
   const day = rows[0].checked_on;
+  // Out of date as of the index's own date (priceIndexPolicy.js), said in the title.
+  const stale = staleMarkets(index, index.generated_at).some((st) => st.market === 'US');
   return {
-    title: `Geck Inspect Price Index: United States asking prices (${day})`,
+    title: `Geck Inspect Price Index: United States asking prices (${day}${stale ? ', out of date' : ''})`,
     headers: ['Trait', 'Listings', 'Median asking price', 'Middle half'],
     rows: rows.slice(0, limit).map((r) => [r.trait, r.thin ? `${r.listings} (thin sample)` : String(r.listings), usd(r.median), `${usd(r.p25)} to ${usd(r.p75)}`]),
   };
@@ -1105,7 +1105,11 @@ function priceTable(limit) {
 function priceSummary() {
   const index = priceIndex();
   const all = (index?.latest || []).filter((r) => !r.trait);
-  return all.map((r) => `${MARKET_LABEL[r.market] || r.market}: median asking price ${usd(r.median)} across ${r.listings} listings (middle half ${usd(r.p25)} to ${usd(r.p75)}, checked ${r.checked_on}).`);
+  const stale = new Map(staleMarkets(index, index?.generated_at).map((st) => [st.market, st]));
+  return all.map((r) => {
+    const line = `${MARKET_LABEL[r.market] || r.market}: median asking price ${usd(r.median)} across ${r.listings} listings (middle half ${usd(r.p25)} to ${usd(r.p75)}, checked ${r.checked_on}).`;
+    return stale.has(r.market) ? `${line} ${staleMarketNote(stale.get(r.market), MARKET_LABEL[r.market])}` : line;
+  });
 }
 
 /** /data: the open data catalog, with Dataset markup in the server HTML. */
@@ -1506,7 +1510,6 @@ function injectNoscriptBody(html, route) {
             &copy; ${new Date().getFullYear()} Geck Inspect. geckOS.
             <a href="/Terms">Terms</a>, <a href="/PrivacyPolicy">Privacy</a>,
             <a href="/Contact">Contact</a>,
-            <a href="${GECK_INTELLECT_URL}">${GECK_INTELLECT_LABEL}</a>,
             <a href="${FOUNDER_URL}">by ${FOUNDER_NAME}</a>
           </footer>
         </main>

@@ -7,8 +7,10 @@ const bySlug = Object.fromEntries(MORPHS.map((m) => [m.slug, m]));
 const slugs = Object.keys(MORPH_META_DESCRIPTIONS);
 
 describe('hand-written morph snippets', () => {
-  it('covers the ten highest-impression morph pages, all of them real', () => {
-    expect(slugs).toHaveLength(10);
+  // The ten highest-impression morph pages, plus Tiger (28 Oct 2026).
+  it('covers the ten highest-impression morph pages and Tiger, all of them real', () => {
+    expect(slugs).toHaveLength(11);
+    expect(slugs).toContain('tiger');
     for (const slug of slugs) expect(bySlug[slug], slug).toBeTruthy();
   });
 

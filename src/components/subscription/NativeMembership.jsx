@@ -11,6 +11,10 @@ import OutcomeHeadline from '@/components/subscription/OutcomeHeadline';
 import { captureEvent } from '@/lib/posthog';
 import { currentOutcomeVariant } from '@/lib/outcomePromise';
 
+// The listing names Apple's standard EULA (App Store Connect > License
+// Agreement), and guideline 3.1.2 asks for a working link to it in the app.
+export const APPLE_STANDARD_EULA_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+
 // Product identity is configured in RevenueCat; localized prices come from Apple.
 export default function NativeMembership({ user, userChecked = true }) {
   const { offerings, isReady, sync, customerInfo, storeTier } = useRevenueCat();
@@ -80,7 +84,7 @@ export default function NativeMembership({ user, userChecked = true }) {
       {customerInfo?.managementURL && <a className="underline p-2" href={customerInfo.managementURL}>Manage store subscription</a>}
     </div>
     <p className="text-sm text-slate-400">Plans renew through your store unless canceled in its subscription settings. Changing or canceling a plan is handled by the store.</p>
-    <p className="flex gap-4 text-sm"><Link className="underline" to="/Terms">Terms</Link><Link className="underline" to="/PrivacyPolicy">Privacy</Link></p>
+    <p className="flex flex-wrap gap-4 text-sm"><a className="underline" href={APPLE_STANDARD_EULA_URL} target="_blank" rel="noopener noreferrer">Terms of Use (EULA)</a><Link className="underline" to="/Terms">Terms</Link><Link className="underline" to="/PrivacyPolicy">Privacy</Link></p>
     <p className="text-sm">Need help? <a className="underline break-all" href={SUPPORT_EMAIL_URL}>{SUPPORT_EMAIL}</a></p>
   </section>;
 }

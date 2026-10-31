@@ -33,6 +33,7 @@ import { useMorphGuideData, sanitizeImage, normMorph } from '@/components/morphg
 import ContentSignupPrompt from '@/components/public/ContentSignupPrompt';
 import MorphQuiz from '@/components/morphguide/MorphQuiz';
 import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import NearScreen from '@/components/morphguide/NearScreen';
 
 // The Field Notebook (about 18 kB) and the eye colour section (about
@@ -914,10 +915,22 @@ export default function MorphGuidePage() {
             </div>
 
             <NearScreen>
-              <Suspense fallback={null}>
-                <PatternSpectrum className="mt-12" />
-                <MorphEyeGuide className="mt-12" />
-              </Suspense>
+              <ErrorBoundary
+                scope="PatternSpectrum"
+                fallback={<p className="mt-12 text-sm text-slate-400">The pattern study could not load. The rest of this page still works.</p>}
+              >
+                <Suspense fallback={null}>
+                  <PatternSpectrum className="mt-12" />
+                </Suspense>
+              </ErrorBoundary>
+              <ErrorBoundary
+                scope="MorphEyeGuide"
+                fallback={<p className="mt-12 text-sm text-slate-400">The eye study could not load. The rest of this page still works.</p>}
+              >
+                <Suspense fallback={null}>
+                  <MorphEyeGuide className="mt-12" />
+                </Suspense>
+              </ErrorBoundary>
             </NearScreen>
 
             <MorphIndexCompareTable />

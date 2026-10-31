@@ -54,7 +54,6 @@ function slugify(query) {
 }
 
 function angleIdeasFor(query, category) {
-  const q = query.toLowerCase();
   const out = [];
   // Direct-answer angle always works
   out.push(`Direct-answer post titled to match the query phrasing: "${query}"`);

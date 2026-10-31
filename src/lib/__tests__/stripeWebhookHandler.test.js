@@ -63,6 +63,191 @@ const logStatuses = (db) => db.table('stripe_webhook_logs')
   .filter((c) => actionOf(c) === 'update')
   .map((c) => payloadOf(c).processing_status);
 
+const lifetimeDispute = (type = 'charge.dispute.closed', status = 'won', id = 'evt_lifetime_restore') => ({
+  id,
+  type,
+  data: { object: {
+    id: 'dp_synthetic',
+    status,
+    amount: 5000,
+    currency: 'usd',
+    charge: { id: 'ch_synthetic', customer: 'cus_synthetic', payment_intent: 'pi_synthetic' },
+  } },
+});
+
+function lifetimeDisputeDatabase({ subscriptionId = 'sub_replacement', paymentStatus = 'disputed', onProfileWrite } = {}) {
+  return database((call) => {
+    if (call.table === 'profiles' && actionOf(call) === 'select') {
+      return { data: {
+        id: 'profile-1', email: 'member@example.com', membership_tier: 'free',
+        membership_billing_cycle: null, stripe_subscription_id: subscriptionId,
+        subscription_status: 'disputed',
+      }, error: null };
+    }
+    if (call.table === 'payment_events' && actionOf(call) === 'select'
+      && filterValue(call, 'eq', 'id') === 'stripe-lifetime:pi_synthetic') {
+      return { data: {
+        id: 'stripe-lifetime:pi_synthetic', billing_cycle: 'lifetime', membership_tier: 'keeper',
+        status: paymentStatus, stripe_invoice_id: null,
+      }, error: null };
+    }
+    if (call.table === 'profiles' && actionOf(call) === 'upsert' && onProfileWrite) return onProfileWrite(call);
+    return undefined;
+  });
+}
+
+function subscriptionsForLifetimeRestore({ status = 200, deleteStatus = 200 } = {}) {
+  return fakeFetch((req) => {
+    if (req.url.includes('/invoice_payments?')) return { body: { data: [] } };
+    if (req.url.includes('/subscriptions?')) {
+      return { status, body: status === 200 ? { data: [{ id: 'sub_replacement', status: 'active' }] } : { error: { message: 'temporary list failure' } } };
+    }
+    if (req.url.includes('/subscriptions/sub_replacement')) {
+      return { status: deleteStatus, body: deleteStatus === 200 ? { id: 'sub_replacement', status: 'canceled' } : { error: { message: 'temporary cancel failure' } } };
+    }
+    return { body: {} };
+  });
+}
+
+describe('lifetime dispute restoration reconciles replacement subscriptions first', () => {
+  it.each([
+    ['won dispute', 'charge.dispute.closed', 'won'],
+    ['reinstated funds', 'charge.dispute.funds_reinstated', 'warning_closed'],
+  ])('cancels before restoring access for %s', async (_label, type, status) => {
+    const db = lifetimeDisputeDatabase();
+    const stripe = subscriptionsForLifetimeRestore();
+    const res = await webhook({ fetch: stripe.fetch })(signedRequest(lifetimeDispute(type, status)), db);
+    expect(res.status).toBe(200);
+    expect(stripe.requests.map((r) => r.init.method || 'GET')).toEqual(['GET', 'GET', 'DELETE']);
+    expect(stripe.requests[2].body.toString()).toBe('prorate=false&invoice_now=false');
+    const restore = db.table('profiles').find((call) => actionOf(call) === 'upsert');
+    expect(payloadOf(restore)).toMatchObject({ membership_tier: 'keeper', membership_billing_cycle: 'lifetime', stripe_subscription_id: null });
+    expect(logStatuses(db)).toEqual(['processed']);
+  });
+
+  it('returns a retryable failure and preserves profile tracking when listing fails', async () => {
+    const db = lifetimeDisputeDatabase();
+    const stripeFail = subscriptionsForLifetimeRestore({ status: 503 });
+    const first = await webhook({ fetch: stripeFail.fetch })(signedRequest(lifetimeDispute()), db);
+    expect(first.status).toBe(500);
+    expect(stripeFail.requests.some((r) => r.init.method === 'DELETE')).toBe(false);
+    expect(db.table('profiles').filter((call) => actionOf(call) === 'upsert')).toHaveLength(0);
+    expect(logStatuses(db)).toEqual(['failed']);
+
+    const stripeRetry = subscriptionsForLifetimeRestore();
+    const retry = await webhook({ fetch: stripeRetry.fetch })(signedRequest(lifetimeDispute()), db);
+    expect(retry.status).toBe(200);
+    expect(stripeRetry.requests.filter((r) => r.init.method === 'DELETE')).toHaveLength(1);
+    expect(db.table('profiles').filter((call) => actionOf(call) === 'upsert')).toHaveLength(1);
+  });
+
+  it('returns a retryable failure and preserves profile tracking when cancellation fails', async () => {
+    const db = lifetimeDisputeDatabase();
+    const stripe = subscriptionsForLifetimeRestore({ deleteStatus: 503 });
+    const res = await webhook({ fetch: stripe.fetch })(signedRequest(lifetimeDispute()), db);
+    expect(res.status).toBe(500);
+    expect(db.table('profiles').filter((call) => actionOf(call) === 'upsert')).toHaveLength(0);
+    expect(logStatuses(db)).toEqual(['failed']);
+  });
+
+  it('retries a profile failure after cancellation, accepting an already-canceled subscription', async () => {
+    let profileWrites = 0;
+    const db = lifetimeDisputeDatabase({ onProfileWrite: () => {
+      profileWrites += 1;
+      return profileWrites === 1
+        ? { data: null, error: { message: 'temporary profile failure' } }
+        : { data: [{ id: 'profile-1' }], error: null };
+    } });
+    let deleteCalls = 0;
+    const stripe = fakeFetch((req) => {
+      if (req.url.includes('/invoice_payments?')) return { body: { data: [] } };
+      if (req.url.includes('/subscriptions?')) return { body: { data: [{ id: 'sub_replacement', status: 'active' }] } };
+      if (req.url.includes('/subscriptions/sub_replacement')) {
+        deleteCalls += 1;
+        return deleteCalls === 1
+          ? { body: { id: 'sub_replacement', status: 'canceled' } }
+          : { status: 400, body: { error: { message: 'Subscription is already canceled' } } };
+      }
+      return { body: {} };
+    });
+    const handler = webhook({ fetch: stripe.fetch });
+    const first = await handler(signedRequest(lifetimeDispute()), db);
+    expect(first.status).toBe(500);
+    expect(db.table('profiles').filter((call) => actionOf(call) === 'upsert')).toHaveLength(1);
+    const retry = await handler(signedRequest(lifetimeDispute()), db);
+    expect(retry.status).toBe(200);
+    expect(deleteCalls).toBe(2);
+    expect(db.table('profiles').filter((call) => actionOf(call) === 'upsert')).toHaveLength(2);
+    expect(logStatuses(db)).toEqual(['failed', 'processed']);
+  });
+
+  it('checks customer subscriptions when there is no tracked subscription ID', async () => {
+    const db = lifetimeDisputeDatabase({ subscriptionId: null });
+    const stripe = subscriptionsForLifetimeRestore();
+    const res = await webhook({ fetch: stripe.fetch })(signedRequest(lifetimeDispute()), db);
+    expect(res.status).toBe(200);
+    expect(stripe.requests.some((r) => r.init.method === 'DELETE')).toBe(true);
+  });
+
+  it('does not cancel again after a successfully processed restore is delivered again', async () => {
+    let processed = false;
+    const db = fakeSupabase((call) => {
+      if (call.table === 'stripe_webhook_logs' && actionOf(call) === 'select'
+        && filterValue(call, 'eq', 'processing_status') === 'processed') {
+        return { data: processed ? [{ id: 'log-1' }] : [], error: null };
+      }
+      if (call.table === 'stripe_webhook_logs' && actionOf(call) === 'update'
+        && payloadOf(call).processing_status === 'processed') processed = true;
+      if (call.table === 'profiles' && actionOf(call) === 'select') return { data: {
+        id: 'profile-1', email: 'member@example.com', membership_tier: 'free',
+        membership_billing_cycle: null, stripe_subscription_id: 'sub_replacement', subscription_status: 'disputed',
+      }, error: null };
+      if (call.table === 'payment_events' && actionOf(call) === 'select'
+        && filterValue(call, 'eq', 'id') === 'stripe-lifetime:pi_synthetic') return { data: {
+        id: 'stripe-lifetime:pi_synthetic', billing_cycle: 'lifetime', membership_tier: 'keeper', status: 'disputed',
+      }, error: null };
+      if (call.table === 'profiles' && actionOf(call) === 'upsert') return { data: [{ id: 'profile-1' }], error: null };
+      return undefined;
+    });
+    const stripe = subscriptionsForLifetimeRestore();
+    const handler = webhook({ fetch: stripe.fetch });
+    expect((await handler(signedRequest(lifetimeDispute()), db)).status).toBe(200);
+    expect((await handler(signedRequest(lifetimeDispute()), db)).status).toBe(200);
+    expect(stripe.requests.filter((r) => r.init.method === 'DELETE')).toHaveLength(1);
+    expect(db.table('profiles').filter((call) => actionOf(call) === 'upsert')).toHaveLength(1);
+  });
+
+  it('does not reconcile subscriptions for an already-refunded lifetime purchase', async () => {
+    const db = lifetimeDisputeDatabase({ paymentStatus: 'refunded' });
+    const stripe = subscriptionsForLifetimeRestore();
+    const res = await webhook({ fetch: stripe.fetch })(signedRequest(lifetimeDispute()), db);
+    expect(res.status).toBe(200);
+    expect(stripe.requests).toHaveLength(1); // invoice payment lookup only
+    expect(db.table('profiles').filter((call) => actionOf(call) === 'upsert')).toHaveLength(0);
+  });
+
+  it('keeps lost-dispute and warning-inquiry behavior unchanged', async () => {
+    const lostDb = lifetimeDisputeDatabase();
+    const lostStripe = subscriptionsForLifetimeRestore();
+    const lost = await webhook({ fetch: lostStripe.fetch })(signedRequest(lifetimeDispute('charge.dispute.closed', 'lost', 'evt_lost')), lostDb);
+    expect(lost.status).toBe(200);
+    expect(lostStripe.requests).toHaveLength(1); // lifetime charge match lookup only
+    expect(payloadOf(lostDb.table('profiles').find((call) => actionOf(call) === 'upsert'))).toMatchObject({
+      membership_tier: 'free', subscription_status: 'canceled',
+    });
+
+    const inquiryDb = lifetimeDisputeDatabase();
+    const inquiryStripe = subscriptionsForLifetimeRestore();
+    const inquiry = await webhook({ fetch: inquiryStripe.fetch })(
+      signedRequest(lifetimeDispute('charge.dispute.created', 'warning_needs_response', 'evt_warning')),
+      inquiryDb,
+    );
+    expect(inquiry.status).toBe(200);
+    expect(inquiryStripe.requests).toHaveLength(0);
+    expect(inquiryDb.table('profiles').filter((call) => actionOf(call) === 'upsert')).toHaveLength(0);
+  });
+});
+
 describe('a failed profile write fails the event so Stripe retries', () => {
   it('answers 500 and marks the log failed when the membership write errors', async () => {
     const db = database((call) => (call.table === 'profiles' && actionOf(call) === 'upsert'

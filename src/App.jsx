@@ -25,7 +25,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { RevenueCatProvider } from '@/lib/RevenueCatContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
-import OfflineSyncStatus from '@/components/shared/OfflineSyncStatus';
+import MemberOfflineSync from '@/components/shared/MemberOfflineSync';
 // Sign-in, password reset and the public page shell are lazy: a visitor
 // reading the Morph Guide never needs them up front.
 const LoginPortal = lazy(() => import('@/components/auth/LoginPortal'));
@@ -205,10 +205,6 @@ const retiredRoutes = RETIRED_PAGES.flatMap(({ page, to, prefix }) => [
 ]);
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
-
-const LayoutWrapper = ({ children, currentPageName }) => Layout ?
-  <Layout currentPageName={currentPageName}>{children}</Layout>
-  : <>{children}</>;
 
 // Spinner used for the in-Layout Suspense boundary, fills whatever
 // space the page slot has rather than the whole viewport, so the
@@ -594,7 +590,7 @@ function App() {
                 </Suspense>
               )}
               <UpdateNotification />
-              <OfflineSyncStatus />
+              <MemberOfflineSync />
             </QueryClientProvider>
           </RevenueCatProvider>
         </AuthProvider>

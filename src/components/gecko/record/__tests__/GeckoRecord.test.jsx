@@ -1,5 +1,6 @@
 import { act, create } from 'react-test-renderer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { isPageRetired } from '@/lib/retiredPages';
 
 // Shared state the mocks read and write.
 const state = vi.hoisted(() => ({
@@ -19,6 +20,7 @@ const state = vi.hoisted(() => ({
   failCreate: false,
   loaded: { certificates: false, packet: false },
   certificateCalls: [],
+  captured: [],
 }));
 
 // Plain stand-ins for the UI kit: Radix needs a browser, and these keep
@@ -49,6 +51,7 @@ vi.mock('@/components/ui/use-toast', () => ({ toast: (t) => state.toasts.push(t)
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={typeof to === 'string' ? to : to?.pathname}>{children}</a> }));
 vi.mock('@/api/appClient', () => ({ api: { auth: { redirectToLogin: vi.fn() } } }));
 vi.mock('@/lib/guestMode', () => ({ isGuestMode: () => false }));
+vi.mock('@/lib/posthog', () => ({ captureEvent: (name, props) => state.captured.push([name, props]) }));
 
 // Pieces with their own data or tests: stubs that show they are there.
 const stub = vi.hoisted(() => (label) => () => ({
@@ -226,6 +229,7 @@ beforeEach(() => {
   state.deleted.length = 0;
   state.failCreate = false;
   state.certificateCalls.length = 0;
+  state.captured.length = 0;
 });
 
 describe('the gecko record, for its owner', () => {
@@ -255,8 +259,15 @@ describe('the gecko record, for its owner', () => {
     expect(at('Estimated value')).toBeLessThan(at('weights'));
     expect(at('weights')).toBeLessThan(at('passport'));
     expect(at('manage')).toBeLessThan(at('Make a sticker'));
-    expect(order.at(-1)).toBe('Supplies');
-    expect(at('Make a sticker')).toBe(order.length - 2);
+    // The supplies picks show only while the store is live; it was retired
+    // on 16 Oct 2026, so the sticker offer is last.
+    if (isPageRetired('Store')) {
+      expect(order).not.toContain('Supplies');
+      expect(order.at(-1)).toBe('Make a sticker');
+    } else {
+      expect(order.at(-1)).toBe('Supplies');
+      expect(at('Make a sticker')).toBe(order.length - 2);
+    }
   });
 
   it('groups care records together and keeps transfer and housekeeping in sharing', async () => {
@@ -351,6 +362,8 @@ describe('the gecko record, for its owner', () => {
     expect(update[2].passport_code).toMatch(/\S/);
     expect(onUpdate).toHaveBeenCalled();
     expect(textOf(tree)).toContain('View passport');
+    // Counted for the passport funnel, with no code or name.
+    expect(state.captured).toContainEqual(['passport_created', { surface: 'record', was_public: true }]);
   });
 
   it('shows the owner transfer, archive and edit, and delete once archived', async () => {

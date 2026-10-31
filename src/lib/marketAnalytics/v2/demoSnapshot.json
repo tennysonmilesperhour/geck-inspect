@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-29T00:46:04Z",
-  "source": { "id": "external.morphmarket", "label": "MorphMarket listings, United States", "collector": "Geck Data" },
+  "source": { "id": "external.marketplace", "label": "Marketplace listings, United States" },
   "coverage": {
     "first_seen": "2026-05-09",
     "last_seen": "2026-08-29",

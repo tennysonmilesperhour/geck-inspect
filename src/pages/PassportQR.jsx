@@ -5,6 +5,7 @@ import { passportUrl } from '@/lib/passportUtils';
 import { QRCodeSVG } from 'qrcode.react';
 import { Download, Copy, Check, Printer, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { captureEvent } from '@/lib/posthog';
 
 // The downloaded label is drawn on white, so its text needs dark ink
 // (the page's own light-on-dark text colors would vanish on paper).
@@ -69,7 +70,8 @@ export default function PassportQR() {
       ctx.font = '12px Inter, sans-serif';
       ctx.fillText('Scan to view full history · Geck Inspect', 400, 775);
 
-      // Download
+      // Download. The funnel counts cards made (no code or name sent).
+      captureEvent('passport_card_downloaded', { format: 'png' });
       const link = document.createElement('a');
       link.download = `${passportCode}-qr.png`;
       link.href = canvas.toDataURL('image/png');
@@ -137,7 +139,10 @@ export default function PassportQR() {
 
         <Button
           variant="outline"
-          onClick={() => window.print()}
+          onClick={() => {
+            captureEvent('passport_card_printed', { surface: 'qr_page' });
+            window.print();
+          }}
           className="w-full h-11 mt-2 print:hidden"
         >
           <Printer size={16} /> Print QR Sticker

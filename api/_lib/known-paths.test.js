@@ -1,4 +1,4 @@
-import { createElement, Fragment } from 'react';
+import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { canonicalPathFor, isKnownAppPath, normalizePath } from './known-paths.js';
 import { CANONICAL_PATH_PATTERNS, KNOWN_PATH_PATTERNS } from './known-path-patterns.js';
 import { getCanonicalPathPatterns, getEdgeAllowPatterns } from '../../scripts/seo-routes.mjs';
-import { FounderCredit, GeckIntellectLink } from '../../src/components/public/SiteCredits.jsx';
+import { FounderCredit } from '../../src/components/public/SiteCredits.jsx';
 import middleware from '../../middleware.js';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
@@ -157,7 +157,7 @@ describe('middleware 404', () => {
     expect(unknown.headers.get('cache-control')).toBe('public, max-age=0, must-revalidate');
     const body = await unknown.text();
     expect(body).toContain('Page not found');
-    expect(body).toContain('https://geck-data.vercel.app');
+    expect(body).not.toMatch(/geck-data\.vercel\.app|Geck Intellect|href="undefined"/);
     expect(body).toContain('by Tennyson Taggart');
     expect(body).not.toMatch(/\u2014/);
 
@@ -170,15 +170,9 @@ describe('middleware 404', () => {
 });
 
 describe('public credits', () => {
-  it('links Geck Intellect and the founder', () => {
-    const html = renderToStaticMarkup(createElement(
-      Fragment,
-      null,
-      createElement(GeckIntellectLink),
-      createElement(FounderCredit),
-    ));
-    expect(html).toContain('href="https://geck-data.vercel.app"');
-    expect(html).toContain('Geck Intellect');
+  it('links the founder without exposing the data collector', () => {
+    const html = renderToStaticMarkup(createElement(FounderCredit));
+    expect(html).not.toMatch(/geck-data\.vercel\.app|Geck Intellect/);
     expect(html).toContain('href="https://tennysontaggart.com"');
     expect(html).toContain('by Tennyson Taggart');
     expect(html).toContain('rel="noopener noreferrer"');
@@ -191,11 +185,11 @@ describe('public credits', () => {
       'src/components/public/PublicPageShell.jsx',
     ]) {
       const src = readFileSync(resolve(ROOT, file), 'utf8');
-      expect(src, file).toContain('GeckIntellectLink');
+      expect(src, file).not.toContain('GeckIntellectLink');
       expect(src, file).toContain('FounderCredit');
     }
     const prerender = readFileSync(resolve(ROOT, 'scripts/prerender.mjs'), 'utf8');
-    expect(prerender).toContain('GECK_INTELLECT_URL');
+    expect(prerender).not.toContain('GECK_INTELLECT_URL');
     expect(prerender).toContain('by ${FOUNDER_NAME}');
   });
 });

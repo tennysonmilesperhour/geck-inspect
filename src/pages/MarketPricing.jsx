@@ -1,8 +1,8 @@
 /**
  * Market Pricing: what crested geckos are listed for, by trait.
  *
- * The main table is the Geck Data trait value table (public.trait_value_table,
- * via lib/traitValueTable.js): asking-price bands from the scraped MorphMarket
+ * The main table is the market trait value table (public.trait_value_table,
+ * via lib/traitValueTable.js): asking-price bands from the collected marketplace
  * listings, split by age and sex. The same numbers drive the Portfolio, the
  * gecko value estimate and the Pairing Planner, so this page cannot disagree
  * with them. They are asking prices and the page says so.
@@ -146,7 +146,7 @@ export default function MarketPricing() {
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <Seo
         title="Crested Gecko Market Pricing"
-        description="Asking-price ranges for crested gecko traits from MorphMarket listings, by age and sex."
+        description="Asking-price ranges for crested gecko traits from public marketplace listings, by age and sex."
         path="/MarketPricing"
         noIndex
       />
@@ -154,7 +154,7 @@ export default function MarketPricing() {
         <PageHeader
           icon={DollarSign}
           title="Market Pricing"
-          description="What crested geckos are listed for on MorphMarket, by trait. These are asking prices: animals often sell for less, and pattern quality moves the price more than any single trait."
+          description="What crested geckos are listed for, by trait. These are asking prices: animals often sell for less, and pattern quality moves the price more than any single trait."
         >
           {signedIn && (
             <Button onClick={() => setSaleOpen(true)}>

@@ -78,7 +78,7 @@ export default function MyStoreButton({ user }) {
                             <Crown className="w-5 h-5" /> Custom store pages are a Breeder perk
                         </DialogTitle>
                         <DialogDescription className="text-slate-300 pt-2">
-                            Breeder and Enterprise members can publish a dedicated store page on Geck Inspect, with a custom URL like
+                            Breeder members can publish a dedicated store page on Geck Inspect, with a custom URL like
                             <code className="text-emerald-300 mx-1">geckinspect.com/store/your-name</code>,
                             a header image, an about section, and one-click contact links you can share anywhere. Upgrade to unlock it.
                         </DialogDescription>

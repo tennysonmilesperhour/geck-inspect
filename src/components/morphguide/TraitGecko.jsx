@@ -66,11 +66,17 @@ export const BASE_TONES = {
   albino: { label: 'Albino', group: 'modifier', swatch: '#f2dec4', matrix: [1.08, 0.08, 0, 0, 0.08, 0.06, 0.98, 0.04, 0, 0.06, 0.04, 0.06, 0.88, 0, 0.05, 0, 0, 0, 1, 0] },
 };
 
+// Each group lists its tone ids, read from the group field on BASE_TONES, so
+// a tone added above shows up in the Pattern studio picker without a second
+// edit here.
 export const BASE_TONE_GROUPS = [
   { id: 'natural', label: 'Warm & Natural Bases' },
   { id: 'dark', label: 'Dark & Melanistic Genes' },
   { id: 'modifier', label: 'Hypo, Lavender, Axanthic & Albino' },
-];
+].map((group) => ({
+  ...group,
+  tones: Object.keys(BASE_TONES).filter((id) => BASE_TONES[id].group === group.id),
+}));
 
 function smoothstep(x) {
   const t = Math.max(0, Math.min(1, x));

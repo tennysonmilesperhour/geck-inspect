@@ -20,6 +20,9 @@ import { createPageUrl, getDisplayName } from '@/utils';
 import SignInRequired, { AccountOnly } from '@/components/shared/SignInRequired';
 import SignOutButton from '@/components/auth/SignOutButton';
 import { isQuietNotification } from '@/lib/notificationsApi';
+import { myRowIds } from '@/lib/memberReads';
+import { USER_BADGE_MEMBER_COLUMNS } from '@/lib/memberColumns';
+import { getSupabase } from '@/lib/supabaseLazy';
 
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
@@ -236,9 +239,23 @@ function MyProfileScreen() {
                 setUser(currentUser);
                 syncEditData(currentUser);
 
-                // Load user badges, geckos, and weight records
+                // Load user badges, geckos, and weight records. Badges are
+                // found by id (my_row_ids): members cannot filter on
+                // user_badges.user_email. Before that function exists, the
+                // old filter; a failed badge read never blocks the page.
+                const loadBadges = async () => {
+                    const ids = await myRowIds('user_badges');
+                    if (ids === null) return UserBadge.filter({ user_email: currentUser.email });
+                    if (!ids.length) return [];
+                    const supabase = await getSupabase();
+                    const { data, error } = await supabase.from('user_badges')
+                        .select(USER_BADGE_MEMBER_COLUMNS.join(','))
+                        .in('id', ids);
+                    if (error) throw error;
+                    return data || [];
+                };
                 const [badges, geckos, plans, weights] = await Promise.all([
-                    UserBadge.filter({ user_email: currentUser.email }),
+                    loadBadges().catch(() => []),
                     Gecko.filter({ created_by: currentUser.email }),
                     BreedingPlan.filter({ created_by: currentUser.email }).catch(() => []),
                     WeightRecord.filter({ created_by: currentUser.email }).catch(() => [])
@@ -264,9 +281,12 @@ function MyProfileScreen() {
                         // Use Promise.allSettled to prevent one failure from breaking everything
                         const results = await Promise.allSettled([
                             Gecko.filter({ created_by: currentUser.email }),
-                            GeckoImage.filter({ created_by: currentUser.email }),
-                            ForumPost.filter({ created_by: currentUser.email }),
-                            ForumComment.filter({ created_by: currentUser.email }),
+                            // Photos, posts and comments by the owner's profile
+                            // id, which the database keeps in step with
+                            // created_by (an email members cannot read).
+                            GeckoImage.filter({ owner_profile_id: currentUser.id }),
+                            ForumPost.filter({ owner_profile_id: currentUser.id }),
+                            ForumComment.filter({ owner_profile_id: currentUser.id }),
                             DirectMessage.filter({ sender_email: currentUser.email }),
                             Notification.filter({ user_email: currentUser.email }),
                             MorphReferenceImage.filter({ submitted_by_email: currentUser.email }),

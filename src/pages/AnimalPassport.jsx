@@ -1,5 +1,5 @@
 import GeckoImage from '@/components/shared/GeckoImage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
@@ -25,6 +25,7 @@ import OwnershipChain from '@/components/passport/OwnershipChain';
 import { exportProvenanceCertificate } from '@/lib/certificateExport';
 import { geckoSelect, PUBLIC_READ_COLUMNS } from '@/lib/publicColumns';
 import { requestPassportTransfer } from '@/lib/transfers';
+import { captureEvent } from '@/lib/posthog';
 import { toast } from '@/components/ui/use-toast';
 
 // The passport is the page buyers see when they scan a tub label or open a
@@ -401,9 +402,21 @@ export default function AnimalPassport() {
   const [vetRecords, setVetRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  // One passport_viewed per passport and visitor while the page is open.
+  const viewLogged = useRef(null);
 
   useEffect(() => {
     if (!passportCode) return;
+    // For the passport and transfer funnel: how the page answered and
+    // whether the visitor owns the gecko. No code, name or email is sent
+    // (the page column already says which passport it was).
+    const signedIn = Boolean(currentUser?.email);
+    const logView = (state, extra = {}) => {
+      const key = `${passportCode}:${currentUser?.email || ''}`;
+      if (viewLogged.current === key) return;
+      viewLogged.current = key;
+      captureEvent('passport_viewed', { state, signed_in: signedIn, is_owner: false, ...extra });
+    };
     const load = async () => {
       setIsLoading(true);
       try {
@@ -423,16 +436,22 @@ export default function AnimalPassport() {
           const { data: visibility } = await supabase
             .rpc('get_passport_visibility', { p_code: passportCode });
           setError(visibility === 'private' ? 'private' : 'not_found');
+          logView(visibility === 'private' ? 'private' : 'not_found');
           setIsLoading(false);
           return;
         }
         const g = geckos[0];
         if (!g.is_public && g.created_by !== currentUser?.email) {
           setError('private');
+          logView('private');
           setIsLoading(false);
           return;
         }
         setGecko(g);
+        logView('shown', {
+          is_owner: signedIn && g.created_by === currentUser.email,
+          for_sale: (g.status || '').toLowerCase() === 'for sale',
+        });
 
         const [
           sireRes, damRes, ownerRes, feedRes, weightRes, shedRes, vetRes
@@ -534,6 +553,7 @@ export default function AnimalPassport() {
   // and then opens the conversation.
   const askForTransfer = async () => {
     if (!currentUser) {
+      captureEvent('passport_transfer_requested', { outcome: 'sign_in_needed' });
       navigate(`/AuthPortal?redirect=${encodeURIComponent(`/passport/${passportCode}`)}`);
       return;
     }

@@ -1648,6 +1648,9 @@ async function handleStripeWebhook(req: Request, makeClient: () => any = default
           const customerId = stripeId(charge?.customer);
           if (decision === "restore") {
             if (lifetime.status === "refunded") break;
+            if (lifetime.tier === "keeper" || lifetime.tier === "breeder") {
+              await cancelPriorSubscriptions(customerId, profile.stripe_subscription_id || null);
+            }
             await markLifetimePayment(lifetime, "paid", {
               email: profile.email,
               customerId,

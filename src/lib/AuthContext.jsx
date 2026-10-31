@@ -13,7 +13,21 @@ import { queryClientInstance } from '@/lib/query-client';
 import { dataCache } from '@/lib/layoutCache';
 import { isOffline, readStoredSession, clearCachedProfiles } from '@/lib/offlineSession';
 import { startQueryPersistence, stopQueryPersistence, clearPersistedQueries } from '@/lib/offlineCache';
-import { setQueueOwner } from '@/lib/offlineQueue';
+
+// The offline queue (Field Mode logs kept with no signal, one list per
+// account) loads the first time a member signs in, so visitors never
+// download it. Every call waits on the same import, so the owner changes
+// in the order they were made. Before it has loaded, the queue has no
+// owner, so clearing one needs no download.
+let offlineQueue = null;
+function setQueueOwner(id) {
+  if (!id && !offlineQueue) return;
+  const loading = (offlineQueue ||= import('@/lib/offlineQueue'));
+  loading.then(
+    (queue) => queue.setQueueOwner(id),
+    () => { if (offlineQueue === loading) offlineQueue = null; },
+  );
+}
 
 const AuthContext = createContext();
 

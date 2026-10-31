@@ -58,6 +58,19 @@ describe('verified subscription state', () => {
     const customer = snapshot(); customer.subscriber.subscriptions.monthly.store = store; customer.subscriber.subscriptions.monthly.is_sandbox = true;
     expect(entitlementRow(user, customer, event, now).is_active).toBe(true);
   });
+  it('marks a sandbox purchase so the scoreboard can leave it out, without taking access away', () => {
+    const customer = snapshot(); customer.subscriber.subscriptions.monthly.is_sandbox = true;
+    expect(entitlementRow(user, customer, event, now)).toMatchObject({ is_active: true, is_sandbox: true });
+    expect(entitlementRow(user, snapshot(), event, now)).toMatchObject({ is_active: true, is_sandbox: false });
+    // No purchase behind the entitlement: say nothing, so the database
+    // keeps its flag or takes the webhook's environment.
+    expect(entitlementRow(user, { subscriber: { entitlements: {} } }, event, now).is_sandbox).toBeNull();
+    const lifetime = { subscriber: {
+      entitlements: { [PRO_ENTITLEMENT]: { product_identifier: 'lifetime', purchase_date: past, expires_date: null } },
+      non_subscriptions: { lifetime: [{ store: 'app_store', purchase_date: past, is_sandbox: true }] },
+    } };
+    expect(entitlementRow(user, lifetime, event, now).is_sandbox).toBe(true);
+  });
   it('rejects corrupt API responses so a transient upstream error cannot revoke access', () => {
     expect(() => entitlementRow(user, {} as never, event, now)).toThrow();
     const customer = snapshot(); customer.subscriber.entitlements[PRO_ENTITLEMENT].expires_date = 'invalid';

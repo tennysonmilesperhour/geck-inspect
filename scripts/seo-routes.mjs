@@ -107,10 +107,6 @@ function loadProjectLines() {
   return out;
 }
 
-function loadProjectLineSlugs() {
-  return loadProjectLines().map((l) => l.slug);
-}
-
 // Keeper's Guide series: title + description from each guide module.
 function loadKeepersGuide(id) {
   try {

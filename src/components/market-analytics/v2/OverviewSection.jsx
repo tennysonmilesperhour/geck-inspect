@@ -117,7 +117,7 @@ function IndexCard({ index, pinProps }) {
         right={
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] leading-none bg-amber-500/15 text-amber-200 border-amber-500/40">Asking prices</span>
-            <ConfidenceChip confidence={index.confidence} sampleSize={index.sample_size} sources={['external.morphmarket']} />
+            <ConfidenceChip confidence={index.confidence} sampleSize={index.sample_size} sources={['external.marketplace']} />
             <MethodologyPopover title="How this index is built">
               <p>Each week we take the median asking price of listings first seen that week and divide it by the {anchor} median (${index.anchor_median}). A reading of 900 means new listings are asking 10% less than that week.</p>
               <p>The first full week of tracking includes every listing that was already live. Later weeks are only new listings, so a season heavy on hatchlings pulls the median down.</p>
@@ -367,7 +367,7 @@ function TempCard({ t, onClick }) {
       </div>
       <div className="flex items-center justify-between mt-2">
         <span onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-          <ConfidenceChip confidence={t.confidence} sampleSize={t.sample_size} sources={['external.morphmarket']} size="xs" />
+          <ConfidenceChip confidence={t.confidence} sampleSize={t.sample_size} sources={['external.marketplace']} size="xs" />
         </span>
         <ArrowUpRight className="w-3 h-3 text-slate-500" />
       </div>
