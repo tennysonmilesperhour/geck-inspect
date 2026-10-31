@@ -8,8 +8,8 @@ import { supabase } from '@/lib/supabaseClient';
 
 /**
  * Photos and forum rows with their owner's email put back as `created_by`.
- * Signed-in accounts, admins included, are losing created_by on those
- * tables (supabase/pending/member_email_columns_revoke.sql), so admin
+ * Signed-in accounts, admins included, cannot read created_by on those
+ * tables (supabase/migrations/20261031061000_member_email_columns_revoke.sql), so admin
  * screens read owner_profile_id and look the address up in the profiles
  * list, which gives admins every address. A row whose owner has no
  * profile gets null. Keeps the `truncated` flag fetchAllRows sets.

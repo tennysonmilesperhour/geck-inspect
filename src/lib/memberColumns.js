@@ -5,9 +5,10 @@
  * Step 1 of taking those addresses away from members (comprehensive
  * review, Part E item E1 4): the app reads these tables with named
  * columns, never `select *` and never the column that holds the author's
- * or owner's email. Step 2, supabase/pending/member_email_columns_revoke.sql,
- * then takes those columns from the authenticated role; once it is applied
- * a signed-in `select *` on these tables fails. "Mine" is found by
+ * or owner's email. Step 2,
+ * supabase/migrations/20261031061000_member_email_columns_revoke.sql,
+ * takes those columns from the authenticated role, so a signed-in
+ * `select *` on these tables fails. "Mine" is found by
  * owner_profile_id, user_id or the database helpers in
  * supabase/migrations/20261028040000_member_email_reads.sql
  * (src/lib/memberReads.js).

@@ -9,7 +9,7 @@
 --
 -- Each block raises "FAIL: ..." when a rule is broken, and also checks the
 -- legitimate use next to it. Step 2 (the column revoke) has its own file,
--- supabase/pending/member_email_columns_revoke_regressions.sql.
+-- supabase/tests/member_email_columns_revoke_regressions.sql.
 begin;
 
 create temp table _who (

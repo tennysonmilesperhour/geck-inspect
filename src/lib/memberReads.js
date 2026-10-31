@@ -9,10 +9,12 @@
  * supabase/migrations/20261028040000_member_email_reads.sql, which answer
  * without handing anyone's address to the browser.
  *
- * The site can deploy before that migration runs. Each helper then falls
- * back to the old read, which still works until
- * supabase/pending/member_email_columns_revoke.sql is applied (3 days
- * after the migration, so the fallback is never needed by then).
+ * The site could deploy before that migration ran, so each helper falls
+ * back to the old read when the function is missing. That fallback no
+ * longer works since step 2
+ * (supabase/migrations/20261031061000_member_email_columns_revoke.sql)
+ * took the email columns away, but the functions have been live since
+ * 28 October 2026, so it is never reached.
  */
 // Loaded on first use, not with the page (src/lib/supabaseLazy.js).
 import { getSupabase } from '@/lib/supabaseLazy';

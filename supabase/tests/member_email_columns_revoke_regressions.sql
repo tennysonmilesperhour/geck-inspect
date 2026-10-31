@@ -1,16 +1,11 @@
 -- Members' email addresses off the rows other members read, step 2.
--- Regression checks for supabase/pending/member_email_columns_revoke.sql.
+-- Regression checks for
+-- supabase/migrations/20261031061000_member_email_columns_revoke.sql.
 --
--- Run it with psql on a scratch copy of the harness template (it needs
--- step 1, supabase/migrations/20261028040000_member_email_reads.sql, which
--- the template already has):
---
---   psql -X -v ON_ERROR_STOP=1 -d <scratch copy> -f supabase/pending/member_email_columns_revoke_regressions.sql
---
--- When the copy does not have step 2 yet, the file applies it first, inside
--- its own transaction, so everything rolls back. When step 2 moves to
--- supabase/migrations, move this file to supabase/tests in the same commit;
--- the template then has step 2 and the include below is skipped.
+-- The SQL harness runs it with every other file in supabase/tests, on a
+-- template that already has step 1 and step 2. On a database built before
+-- step 2, the file applies it first, inside its own transaction, so
+-- everything rolls back.
 --
 -- What it proves:
 --   * a signed-in read of gecko_images.created_by (and every other email
@@ -27,7 +22,7 @@ begin;
 
 select has_table_privilege('authenticated', 'public.gecko_images', 'select') as needs_step2 \gset
 \if :needs_step2
-\ir member_email_columns_revoke.sql
+\ir ../migrations/20261031061000_member_email_columns_revoke.sql
 \endif
 
 create temp table _who (
@@ -108,7 +103,7 @@ select pg_temp.mk('alice', 'Alice Keeper');
 select pg_temp.mk('bob', 'Bob Breeder');
 select pg_temp.mk('admin', 'Site Admin', 'admin');
 
--- The email columns step 2 takes away (the same list as the pending file
+-- The email columns step 2 takes away (the same list as the migration
 -- and MEMBER_HIDDEN_COLUMNS in src/lib/memberColumns.js).
 create temp table _hidden (tbl text primary key, cols text[] not null) on commit drop;
 grant all on _hidden to public;

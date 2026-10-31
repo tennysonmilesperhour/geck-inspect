@@ -55,8 +55,8 @@ describe('buildInfo', () => {
 });
 
 // Admin screens put the author's email back from the profiles list: signed-in
-// accounts, admins included, are losing created_by on photos and forum rows
-// (supabase/pending/member_email_columns_revoke.sql).
+// accounts, admins included, cannot read created_by on photos and forum rows
+// (supabase/migrations/20261031061000_member_email_columns_revoke.sql).
 describe('withOwnerEmails', () => {
   const profiles = [{ id: 'p1', email: 'lilly@example.test' }, { id: 'p2', email: null }];
 

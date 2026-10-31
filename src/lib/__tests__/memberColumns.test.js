@@ -1,8 +1,9 @@
 // Members' email addresses off the rows other members read (Part E item
 // E1 4). Step 1 is the app reading these tables with named columns and
 // finding "mine" without the email column; step 2
-// (supabase/pending/member_email_columns_revoke.sql) takes the columns away.
-// These tests keep the app's lists, the pending SQL and its regression file
+// (supabase/migrations/*_member_email_columns_revoke.sql, since 31 Oct 2026)
+// takes the columns away. These tests keep the app's lists, the step 2 SQL
+// and its regression file
 // in step, and fail when a page goes back to `select *` or to filtering on
 // another member's email.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -45,10 +46,13 @@ const entities = await import('@/api/supabaseEntities');
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
-const PENDING = read('supabase/pending/member_email_columns_revoke.sql');
-const PENDING_TEST = read('supabase/pending/member_email_columns_revoke_regressions.sql');
-// Found by its name, not its date: the date changes when the file is re-dated at merge.
-const STEP1 = read(`supabase/migrations/${readdirSync(resolve(ROOT, 'supabase/migrations')).find((f) => f.endsWith('_member_email_reads.sql'))}`);
+// Found by their names, not their dates: a date changes when a file is re-dated at merge.
+const MIGRATIONS = readdirSync(resolve(ROOT, 'supabase/migrations'));
+const STEP1_FILE = MIGRATIONS.find((f) => f.endsWith('_member_email_reads.sql'));
+const STEP2_FILE = MIGRATIONS.find((f) => f.endsWith('_member_email_columns_revoke.sql'));
+const STEP1 = read(`supabase/migrations/${STEP1_FILE}`);
+const STEP2 = read(`supabase/migrations/${STEP2_FILE}`);
+const STEP2_TEST = read('supabase/tests/member_email_columns_revoke_regressions.sql');
 
 /** The ('table', array['col', ...]) rows of a SQL values list. */
 function hiddenLists(sql) {
@@ -79,15 +83,15 @@ describe('the member column lists', () => {
   });
 
   it('match the lists the step 2 regression file proves members can still read', () => {
-    const block = PENDING_TEST.slice(PENDING_TEST.indexOf('insert into _member_lists values'));
+    const block = STEP2_TEST.slice(STEP2_TEST.indexOf('insert into _member_lists values'));
     const inSql = Object.fromEntries([...block.slice(0, block.indexOf(';')).matchAll(/\('(\w+)', '([^']*)'\)/g)]
       .map(([, table, cols]) => [table, cols.split(',').map((c) => c.trim())]));
     expect(inSql).toEqual(LISTS_BY_TABLE);
   });
 
-  it('hide exactly what the pending revoke and its test take away', () => {
-    expect(hiddenLists(PENDING)).toEqual(MEMBER_HIDDEN_COLUMNS);
-    expect(hiddenLists(PENDING_TEST.slice(PENDING_TEST.indexOf('insert into _hidden values')))).toEqual(MEMBER_HIDDEN_COLUMNS);
+  it('hide exactly what the step 2 revoke and its test take away', () => {
+    expect(hiddenLists(STEP2)).toEqual(MEMBER_HIDDEN_COLUMNS);
+    expect(hiddenLists(STEP2_TEST.slice(STEP2_TEST.indexOf('insert into _hidden values')))).toEqual(MEMBER_HIDDEN_COLUMNS);
   });
 
   it('are what the entity layer reads with (it builds them from the signed-out lists)', () => {
@@ -116,15 +120,16 @@ describe('the member column lists', () => {
   });
 });
 
-describe('the step 2 file waits in supabase/pending', () => {
-  it('is not a migration yet, and says when it may become one', () => {
-    expect(readdirSync(join(ROOT, 'supabase/migrations')).some((f) => f.includes('member_email_columns_revoke'))).toBe(false);
-    expect(PENDING).toMatch(/live for 3 days/);
-    expect(read('supabase/pending/README.md')).toMatch(/member_email_columns_revoke\.sql[\s\S]*live for 3 days/);
+describe('the step 2 migration', () => {
+  it('is one migration, dated after step 1, and no longer waits in supabase/pending', () => {
+    expect(MIGRATIONS.filter((f) => f.includes('member_email_columns_revoke'))).toEqual([STEP2_FILE]);
+    expect(STEP2_FILE.slice(0, 14) > STEP1_FILE.slice(0, 14)).toBe(true);
+    expect(readdirSync(join(ROOT, 'supabase/pending')).filter((f) => f.includes('member_email_columns_revoke'))).toEqual([]);
+    expect(STEP2_TEST).toContain(`\\ir ../migrations/${STEP2_FILE}`);
   });
 
   it('leaves geckos.created_by alone (it waits for the identity migration)', () => {
-    expect(Object.keys(hiddenLists(PENDING))).not.toContain('geckos');
+    expect(Object.keys(hiddenLists(STEP2))).not.toContain('geckos');
   });
 
   it('step 1 grants each new function only to the roles that call it', () => {
