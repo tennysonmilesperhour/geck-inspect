@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-10-26T17:03:45.657Z",
+  "lastUpdated": "2026-11-02T20:34:28.103Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -1549,6 +1549,134 @@
         "Direct-answer post titled to match the query phrasing: \"crested gecko morphs guide\"",
         "Foundation Genetics framing: what allele(s) underlie \"crested gecko morphs guide\", inheritance pattern, and breeding implications",
         "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko morphs guide\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20261102-gecko-care-guide",
+      "title": "Gecko care guide",
+      "slug": "gecko-care-guide",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 13,
+        "demand": 4,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-11-02T20:34:28.103Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"gecko care guide\" drove 58 impressions in the last 28 days at average position 29.7 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-11-02T20:34:28.103Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"gecko care guide\"",
+        "Foundation Genetics framing: what allele(s) underlie \"gecko care guide\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"gecko care guide\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20261102-reptile-calculator-leopard-gecko-morph",
+      "title": "Reptile calculator leopard gecko morph",
+      "slug": "reptile-calculator-leopard-gecko-morph",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 11,
+        "demand": 2,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-11-02T20:34:28.103Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"reptile calculator leopard gecko morph\" drove 33 impressions in the last 28 days at average position 7.1 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-11-02T20:34:28.103Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"reptile calculator leopard gecko morph\"",
+        "Foundation Genetics framing: what allele(s) underlie \"reptile calculator leopard gecko morph\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"reptile calculator leopard gecko morph\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20261102-crested-gecko-morph-chart",
+      "title": "Crested gecko morph chart",
+      "slug": "crested-gecko-morph-chart",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 11,
+        "demand": 2,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-11-02T20:34:28.103Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"crested gecko morph chart\" drove 23 impressions in the last 28 days at average position 25 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-11-02T20:34:28.103Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"crested gecko morph chart\"",
+        "Foundation Genetics framing: what allele(s) underlie \"crested gecko morph chart\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko morph chart\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20261102-crested-gecko-color-morphs",
+      "title": "Crested gecko color morphs",
+      "slug": "crested-gecko-color-morphs",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 11,
+        "demand": 2,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-11-02T20:34:28.103Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"crested gecko color morphs\" drove 22 impressions in the last 28 days at average position 28 (CTR 4.55%, 1 clicks) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-11-02T20:34:28.103Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"crested gecko color morphs\"",
+        "Foundation Genetics framing: what allele(s) underlie \"crested gecko color morphs\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko color morphs\" and related long-tails, then long-form explanation"
       ],
       "rejectionReason": null,
       "prUrl": null
