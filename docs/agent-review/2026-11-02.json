@@ -1,0 +1,1944 @@
+{
+  "generated_at": "2026-11-02T23:08:41.908Z",
+  "traffic": {
+    "last7": {
+      "to": "2026-11-02T23:08:42.553951+00:00",
+      "days": 7,
+      "from": "2026-10-26T23:08:42.553951+00:00",
+      "daily": [
+        {
+          "day": "2026-10-26",
+          "hits": 13
+        },
+        {
+          "day": "2026-10-27",
+          "hits": 383
+        },
+        {
+          "day": "2026-10-28",
+          "hits": 326
+        },
+        {
+          "day": "2026-10-29",
+          "hits": 1298
+        },
+        {
+          "day": "2026-10-30",
+          "hits": 513
+        },
+        {
+          "day": "2026-10-31",
+          "hits": 716
+        },
+        {
+          "day": "2026-11-01",
+          "hits": 429
+        },
+        {
+          "day": "2026-11-02",
+          "hits": 461
+        }
+      ],
+      "total": 4139,
+      "by_kind": {
+        "seo": 250,
+        "tool": 36,
+        "search": 1856,
+        "unknown": 1416,
+        "training": 397,
+        "assistant": 184
+      },
+      "by_agent": [
+        {
+          "hits": 956,
+          "kind": "unknown",
+          "agent": "ShapBot",
+          "previous": 21
+        },
+        {
+          "hits": 533,
+          "kind": "search",
+          "agent": "ExaSearchBot",
+          "previous": 637
+        },
+        {
+          "hits": 460,
+          "kind": "unknown",
+          "agent": "other-bot",
+          "previous": 46
+        },
+        {
+          "hits": 215,
+          "kind": "training",
+          "agent": "Bytespider",
+          "previous": 258
+        },
+        {
+          "hits": 214,
+          "kind": "search",
+          "agent": "bingbot",
+          "previous": 301
+        },
+        {
+          "hits": 179,
+          "kind": "search",
+          "agent": "PetalBot",
+          "previous": 8
+        },
+        {
+          "hits": 178,
+          "kind": "search",
+          "agent": "Amazonbot",
+          "previous": 173
+        },
+        {
+          "hits": 129,
+          "kind": "training",
+          "agent": "Reflectionbot",
+          "previous": 324
+        },
+        {
+          "hits": 121,
+          "kind": "search",
+          "agent": "Googlebot",
+          "previous": 84
+        },
+        {
+          "hits": 117,
+          "kind": "seo",
+          "agent": "AhrefsBot",
+          "previous": 375
+        },
+        {
+          "hits": 115,
+          "kind": "assistant",
+          "agent": "ChatGPT-User",
+          "previous": 117
+        },
+        {
+          "hits": 115,
+          "kind": "search",
+          "agent": "OAI-SearchBot",
+          "previous": 52
+        },
+        {
+          "hits": 99,
+          "kind": "search",
+          "agent": "Baiduspider",
+          "previous": 78
+        },
+        {
+          "hits": 97,
+          "kind": "search",
+          "agent": "DuckDuckBot",
+          "previous": 93
+        },
+        {
+          "hits": 95,
+          "kind": "search",
+          "agent": "YouBot",
+          "previous": 0
+        },
+        {
+          "hits": 71,
+          "kind": "search",
+          "agent": "meta-webindexer",
+          "previous": 2
+        },
+        {
+          "hits": 70,
+          "kind": "search",
+          "agent": "PerplexityBot",
+          "previous": 103
+        },
+        {
+          "hits": 61,
+          "kind": "assistant",
+          "agent": "ExaUser",
+          "previous": 19
+        },
+        {
+          "hits": 52,
+          "kind": "seo",
+          "agent": "Robauto",
+          "previous": 110
+        },
+        {
+          "hits": 46,
+          "kind": "seo",
+          "agent": "SemrushBot",
+          "previous": 16
+        },
+        {
+          "hits": 35,
+          "kind": "seo",
+          "agent": "MJ12bot",
+          "previous": 2
+        },
+        {
+          "hits": 31,
+          "kind": "search",
+          "agent": "Sogou",
+          "previous": 23
+        },
+        {
+          "hits": 24,
+          "kind": "search",
+          "agent": "LinkupBot",
+          "previous": 42
+        },
+        {
+          "hits": 23,
+          "kind": "training",
+          "agent": "GoogleOther",
+          "previous": 5
+        },
+        {
+          "hits": 17,
+          "kind": "tool",
+          "agent": "curl/",
+          "previous": 10
+        },
+        {
+          "hits": 15,
+          "kind": "search",
+          "agent": "Applebot",
+          "previous": 19
+        },
+        {
+          "hits": 14,
+          "kind": "search",
+          "agent": "Qwantbot",
+          "previous": 16
+        },
+        {
+          "hits": 12,
+          "kind": "training",
+          "agent": "meta-externalagent",
+          "previous": 4
+        },
+        {
+          "hits": 9,
+          "kind": "training",
+          "agent": "GPTBot",
+          "previous": 8
+        },
+        {
+          "hits": 9,
+          "kind": "training",
+          "agent": "ClaudeBot",
+          "previous": 177
+        },
+        {
+          "hits": 8,
+          "kind": "assistant",
+          "agent": "DuckAssistBot",
+          "previous": 18
+        },
+        {
+          "hits": 4,
+          "kind": "tool",
+          "agent": "Go-http-client",
+          "previous": 29
+        },
+        {
+          "hits": 4,
+          "kind": "tool",
+          "agent": "undici",
+          "previous": 1
+        },
+        {
+          "hits": 3,
+          "kind": "tool",
+          "agent": "python-httpx",
+          "previous": 1
+        },
+        {
+          "hits": 3,
+          "kind": "tool",
+          "agent": "empty-ua",
+          "previous": 0
+        },
+        {
+          "hits": 3,
+          "kind": "tool",
+          "agent": "python-requests",
+          "previous": 8
+        },
+        {
+          "hits": 2,
+          "kind": "tool",
+          "agent": "aiohttp",
+          "previous": 6
+        }
+      ],
+      "top_paths": [
+        {
+          "hits": 735,
+          "path": "/",
+          "agents": 27
+        },
+        {
+          "hits": 357,
+          "path": "/manifest.json",
+          "agents": 6
+        },
+        {
+          "hits": 295,
+          "path": "/robots.txt",
+          "agents": 23
+        },
+        {
+          "hits": 84,
+          "path": "/AuthPortal",
+          "agents": 8
+        },
+        {
+          "hits": 67,
+          "path": "/MorphGuideSubmission",
+          "agents": 5
+        },
+        {
+          "hits": 59,
+          "path": "/data",
+          "agents": 17
+        },
+        {
+          "hits": 51,
+          "path": "/data/price-index.json",
+          "agents": 17
+        },
+        {
+          "hits": 50,
+          "path": "/crested-gecko-price",
+          "agents": 13
+        },
+        {
+          "hits": 46,
+          "path": "/MorphGuide",
+          "agents": 15
+        },
+        {
+          "hits": 43,
+          "path": "/calculator",
+          "agents": 11
+        },
+        {
+          "hits": 42,
+          "path": "/CareGuide",
+          "agents": 10
+        },
+        {
+          "hits": 41,
+          "path": "/GeneticsGuide",
+          "agents": 9
+        },
+        {
+          "hits": 39,
+          "path": "/sitemap.xml",
+          "agents": 9
+        },
+        {
+          "hits": 35,
+          "path": "/MorphGuide/phantom",
+          "agents": 11
+        },
+        {
+          "hits": 33,
+          "path": "/CareGuide/feeding-schedules",
+          "agents": 11
+        },
+        {
+          "hits": 31,
+          "path": "/MorphGuide/lavender",
+          "agents": 8
+        },
+        {
+          "hits": 31,
+          "path": "/MorphGuide/albino",
+          "agents": 11
+        },
+        {
+          "hits": 29,
+          "path": "/blog/crested-gecko-diet-guide",
+          "agents": 7
+        },
+        {
+          "hits": 25,
+          "path": "/llms/care.md",
+          "agents": 10
+        },
+        {
+          "hits": 25,
+          "path": "/MarketplaceVerification",
+          "agents": 8
+        },
+        {
+          "hits": 25,
+          "path": "/blog/frappuccino-cappuccino-pairings",
+          "agents": 8
+        },
+        {
+          "hits": 25,
+          "path": "/llms/morphs.md",
+          "agents": 11
+        },
+        {
+          "hits": 24,
+          "path": "/blog/first-crested-gecko-breeding-season",
+          "agents": 7
+        },
+        {
+          "hits": 23,
+          "path": "/llms/prices.md",
+          "agents": 10
+        },
+        {
+          "hits": 23,
+          "path": "/MorphGuide/category/combo",
+          "agents": 6
+        },
+        {
+          "hits": 21,
+          "path": "/MorphGuide/sable",
+          "agents": 12
+        },
+        {
+          "hits": 19,
+          "path": "/calculator/sable",
+          "agents": 7
+        },
+        {
+          "hits": 19,
+          "path": "/MorphGuide/highway",
+          "agents": 11
+        },
+        {
+          "hits": 19,
+          "path": "/MorphGuide/super-sable",
+          "agents": 12
+        },
+        {
+          "hits": 19,
+          "path": "/blog/crested-gecko-enclosure-setup-guide",
+          "agents": 8
+        },
+        {
+          "hits": 19,
+          "path": "/MorphGuide/lilly-white",
+          "agents": 8
+        },
+        {
+          "hits": 19,
+          "path": "/PrivacyPolicy",
+          "agents": 9
+        },
+        {
+          "hits": 19,
+          "path": "/compare",
+          "agents": 12
+        },
+        {
+          "hits": 19,
+          "path": "/llms.txt",
+          "agents": 4
+        },
+        {
+          "hits": 18,
+          "path": "/MorphGuide/axanthic",
+          "agents": 9
+        },
+        {
+          "hits": 18,
+          "path": "/MorphGuide/tricolor",
+          "agents": 8
+        },
+        {
+          "hits": 17,
+          "path": "/MorphGuide/luwak",
+          "agents": 11
+        },
+        {
+          "hits": 17,
+          "path": "/MorphGuide/category/pattern",
+          "agents": 10
+        },
+        {
+          "hits": 17,
+          "path": "/compare/chatgpt-morph-id",
+          "agents": 11
+        },
+        {
+          "hits": 17,
+          "path": "/Recognition",
+          "agents": 9
+        },
+        {
+          "hits": 16,
+          "path": "/MorphGuide/moonglow",
+          "agents": 8
+        },
+        {
+          "hits": 16,
+          "path": "/compare/reptidex",
+          "agents": 11
+        },
+        {
+          "hits": 15,
+          "path": "/compare/spreadsheet",
+          "agents": 12
+        },
+        {
+          "hits": 15,
+          "path": "/Contact",
+          "agents": 10
+        },
+        {
+          "hits": 15,
+          "path": "/MorphGuide/harlequin",
+          "agents": 5
+        },
+        {
+          "hits": 15,
+          "path": "/MorphGuide/whiteout",
+          "agents": 11
+        },
+        {
+          "hits": 15,
+          "path": "/compare/husbandry-pro",
+          "agents": 12
+        },
+        {
+          "hits": 15,
+          "path": "/MorphGuide/super-highway",
+          "agents": 10
+        },
+        {
+          "hits": 15,
+          "path": "/MorphGuide/tiger",
+          "agents": 7
+        },
+        {
+          "hits": 15,
+          "path": "/MorphGuide/super-cappuccino",
+          "agents": 10
+        }
+      ],
+      "agent_files": [
+        {
+          "hits": 28,
+          "path": "/data",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 14,
+          "path": "/llms/care.md",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 10,
+          "path": "/llms.txt",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 10,
+          "path": "/data/price-index.json",
+          "agent": "ShapBot"
+        },
+        {
+          "hits": 10,
+          "path": "/data/price-index.json",
+          "agent": "Baiduspider"
+        },
+        {
+          "hits": 9,
+          "path": "/llms/morphs.md",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 8,
+          "path": "/llms/prices.md",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 7,
+          "path": "/llms.txt",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 6,
+          "path": "/MorphGuide/extreme-harlequin.md",
+          "agent": "bingbot"
+        },
+        {
+          "hits": 6,
+          "path": "/data",
+          "agent": "OAI-SearchBot"
+        },
+        {
+          "hits": 5,
+          "path": "/data/price-index.json",
+          "agent": "meta-webindexer"
+        },
+        {
+          "hits": 5,
+          "path": "/.well-known/mcp.json",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 4,
+          "path": "/data",
+          "agent": "meta-webindexer"
+        },
+        {
+          "hits": 4,
+          "path": "/llms/genetics.md",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 4,
+          "path": "/llms/prices.md",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 4,
+          "path": "/data/price-index.json",
+          "agent": "Reflectionbot"
+        },
+        {
+          "hits": 4,
+          "path": "/llms/prices.md",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 3,
+          "path": "/llms/morphs.md",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 3,
+          "path": "/data/price-index.json",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 3,
+          "path": "/data/price-index.json",
+          "agent": "Googlebot"
+        },
+        {
+          "hits": 3,
+          "path": "/llms/morphs.md",
+          "agent": "ExaUser"
+        },
+        {
+          "hits": 3,
+          "path": "/data/price-index.json",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 3,
+          "path": "/data",
+          "agent": "PerplexityBot"
+        },
+        {
+          "hits": 3,
+          "path": "/data/price-index.json",
+          "agent": "DuckDuckBot"
+        },
+        {
+          "hits": 2,
+          "path": "/MorphGuide/lavender.md",
+          "agent": "ExaUser"
+        },
+        {
+          "hits": 2,
+          "path": "/llms/care.md",
+          "agent": "ExaUser"
+        },
+        {
+          "hits": 2,
+          "path": "/.well-known/passkey-endpoints",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agent": "GoogleOther"
+        },
+        {
+          "hits": 2,
+          "path": "/llms/morphs.md",
+          "agent": "PetalBot"
+        },
+        {
+          "hits": 2,
+          "path": "/llms/care.md",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 2,
+          "path": "/data/genetics.json",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 2,
+          "path": "/llms/morphs.md",
+          "agent": "meta-webindexer"
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agent": "PetalBot"
+        },
+        {
+          "hits": 2,
+          "path": "/data/price-index.json",
+          "agent": "AhrefsBot"
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agent": "ExaUser"
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agent": "ShapBot"
+        },
+        {
+          "hits": 2,
+          "path": "/data/morphs.json",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/white-wall.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide/egg-laying.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/data/genetics.json",
+          "agent": "SemrushBot"
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/sable.md",
+          "agent": "OAI-SearchBot"
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide/senior-care.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/sable.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/.well-known/ucp",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide/feeding-schedules.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/super-highway.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/data/price-index.json",
+          "agent": "curl/"
+        },
+        {
+          "hits": 1,
+          "path": "/data/price-index.json",
+          "agent": "LinkupBot"
+        },
+        {
+          "hits": 1,
+          "path": "/CareGuide/tail-loss.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/llms/genetics.md",
+          "agent": "GoogleOther"
+        },
+        {
+          "hits": 1,
+          "path": "/data",
+          "agent": "bingbot"
+        },
+        {
+          "hits": 1,
+          "path": "/llms/prices.md",
+          "agent": "meta-webindexer"
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/tricolor.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/yellow-base.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/.well-known/agents.json",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/tiger-brindle.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/MorphGuide/super-whiteout.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/llms/genetics.md",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 1,
+          "path": "/llms/morphs.md",
+          "agent": "LinkupBot"
+        }
+      ],
+      "previous_total": 3190,
+      "unknown_user_agents": [
+        {
+          "ua": "Mozilla/5.0 (compatible; ElevenlabsCrawler/1.0; +https://elevenlabs.io/docs/bots)",
+          "hits": 358
+        },
+        {
+          "ua": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; KeenableBot/1.0; +https://keenable.ai/bot)",
+          "hits": 65
+        },
+        {
+          "ua": "PipericBot/1.0 (+https://piperic.com/bot)",
+          "hits": 6
+        },
+        {
+          "ua": "AgentTrustBot/1.0 (id=ae7e116ecd19; +https://agenttru.st/crawler; purpose=AI agent directory; contact=admin@agenttru.st)",
+          "hits": 6
+        },
+        {
+          "ua": "AdsBot-Google (+http://www.google.com/adsbot.html)",
+          "hits": 6
+        },
+        {
+          "ua": "ClueWeb-Crawler/1.0 (+https://boston.lti.cs.cmu.edu/CMU-ClueWeb-Crawler/; mailto:cmu-clueweb-crawler@andrew.cmu.edu)",
+          "hits": 6
+        },
+        {
+          "ua": "HatchFeed/1.0 (+https://agent.meta.ai; link preview)",
+          "hits": 5
+        },
+        {
+          "ua": null,
+          "hits": 3
+        },
+        {
+          "ua": "Mozilla/5.0 (compatible; KakaoBot/1.0; +https://developers.kakao.com/bot)",
+          "hits": 3
+        },
+        {
+          "ua": "2ip bot/1.1 (+https://2ip.io/bot/)",
+          "hits": 1
+        },
+        {
+          "ua": "com.apple.AuthenticationServicesCore.AuthenticationServicesAgent/8624.5.1.10.3 CFNetwork/3860.700.1 Darwin/25.6.0",
+          "hits": 1
+        },
+        {
+          "ua": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Bravebot/1.0; +https://search.brave.com/help/brave-search-crawler) Chrome/W.X.Y.Z Safari/537.36",
+          "hits": 1
+        },
+        {
+          "ua": "com.apple.AuthenticationServicesCore.AuthenticationServicesAgent/8625.1.29.10.33 CFNetwork/3896.100.1.2.1 Darwin/27.0.0",
+          "hits": 1
+        },
+        {
+          "ua": "domains-crawler/0.1 (+ads.txt survey; one request per domain)",
+          "hits": 1
+        }
+      ]
+    },
+    "last28": {
+      "to": "2026-11-02T23:08:43.679236+00:00",
+      "days": 28,
+      "from": "2026-10-05T23:08:43.679236+00:00",
+      "daily": [
+        {
+          "day": "2026-10-07",
+          "hits": 368
+        },
+        {
+          "day": "2026-10-08",
+          "hits": 447
+        },
+        {
+          "day": "2026-10-09",
+          "hits": 463
+        },
+        {
+          "day": "2026-10-10",
+          "hits": 1566
+        },
+        {
+          "day": "2026-10-11",
+          "hits": 302
+        },
+        {
+          "day": "2026-10-12",
+          "hits": 342
+        },
+        {
+          "day": "2026-10-13",
+          "hits": 564
+        },
+        {
+          "day": "2026-10-14",
+          "hits": 606
+        },
+        {
+          "day": "2026-10-15",
+          "hits": 471
+        },
+        {
+          "day": "2026-10-16",
+          "hits": 600
+        },
+        {
+          "day": "2026-10-17",
+          "hits": 455
+        },
+        {
+          "day": "2026-10-18",
+          "hits": 824
+        },
+        {
+          "day": "2026-10-19",
+          "hits": 651
+        },
+        {
+          "day": "2026-10-20",
+          "hits": 508
+        },
+        {
+          "day": "2026-10-21",
+          "hits": 355
+        },
+        {
+          "day": "2026-10-22",
+          "hits": 482
+        },
+        {
+          "day": "2026-10-23",
+          "hits": 560
+        },
+        {
+          "day": "2026-10-24",
+          "hits": 443
+        },
+        {
+          "day": "2026-10-25",
+          "hits": 402
+        },
+        {
+          "day": "2026-10-26",
+          "hits": 439
+        },
+        {
+          "day": "2026-10-27",
+          "hits": 383
+        },
+        {
+          "day": "2026-10-28",
+          "hits": 326
+        },
+        {
+          "day": "2026-10-29",
+          "hits": 1298
+        },
+        {
+          "day": "2026-10-30",
+          "hits": 513
+        },
+        {
+          "day": "2026-10-31",
+          "hits": 716
+        },
+        {
+          "day": "2026-11-01",
+          "hits": 429
+        },
+        {
+          "day": "2026-11-02",
+          "hits": 461
+        }
+      ],
+      "total": 14974,
+      "by_kind": {
+        "seo": 1370,
+        "tool": 264,
+        "search": 7249,
+        "unknown": 2734,
+        "training": 2834,
+        "assistant": 523
+      },
+      "by_agent": [
+        {
+          "hits": 2429,
+          "kind": "search",
+          "agent": "ExaSearchBot",
+          "previous": 0
+        },
+        {
+          "hits": 2164,
+          "kind": "unknown",
+          "agent": "ShapBot",
+          "previous": 0
+        },
+        {
+          "hits": 1283,
+          "kind": "search",
+          "agent": "bingbot",
+          "previous": 0
+        },
+        {
+          "hits": 906,
+          "kind": "training",
+          "agent": "Bytespider",
+          "previous": 0
+        },
+        {
+          "hits": 805,
+          "kind": "training",
+          "agent": "Reflectionbot",
+          "previous": 0
+        },
+        {
+          "hits": 704,
+          "kind": "search",
+          "agent": "Amazonbot",
+          "previous": 0
+        },
+        {
+          "hits": 661,
+          "kind": "seo",
+          "agent": "AhrefsBot",
+          "previous": 0
+        },
+        {
+          "hits": 579,
+          "kind": "training",
+          "agent": "ClaudeBot",
+          "previous": 0
+        },
+        {
+          "hits": 570,
+          "kind": "unknown",
+          "agent": "other-bot",
+          "previous": 0
+        },
+        {
+          "hits": 449,
+          "kind": "training",
+          "agent": "GPTBot",
+          "previous": 0
+        },
+        {
+          "hits": 434,
+          "kind": "search",
+          "agent": "PerplexityBot",
+          "previous": 0
+        },
+        {
+          "hits": 398,
+          "kind": "seo",
+          "agent": "Robauto",
+          "previous": 0
+        },
+        {
+          "hits": 386,
+          "kind": "search",
+          "agent": "LinkupBot",
+          "previous": 0
+        },
+        {
+          "hits": 383,
+          "kind": "assistant",
+          "agent": "ChatGPT-User",
+          "previous": 0
+        },
+        {
+          "hits": 341,
+          "kind": "search",
+          "agent": "Googlebot",
+          "previous": 0
+        },
+        {
+          "hits": 323,
+          "kind": "search",
+          "agent": "DuckDuckBot",
+          "previous": 0
+        },
+        {
+          "hits": 291,
+          "kind": "search",
+          "agent": "YouBot",
+          "previous": 0
+        },
+        {
+          "hits": 271,
+          "kind": "search",
+          "agent": "Baiduspider",
+          "previous": 0
+        },
+        {
+          "hits": 269,
+          "kind": "search",
+          "agent": "OAI-SearchBot",
+          "previous": 0
+        },
+        {
+          "hits": 197,
+          "kind": "search",
+          "agent": "PetalBot",
+          "previous": 0
+        },
+        {
+          "hits": 171,
+          "kind": "seo",
+          "agent": "serpstatbot",
+          "previous": 0
+        },
+        {
+          "hits": 150,
+          "kind": "tool",
+          "agent": "curl/",
+          "previous": 0
+        },
+        {
+          "hits": 99,
+          "kind": "search",
+          "agent": "Sogou",
+          "previous": 0
+        },
+        {
+          "hits": 98,
+          "kind": "assistant",
+          "agent": "ExaUser",
+          "previous": 0
+        },
+        {
+          "hits": 75,
+          "kind": "search",
+          "agent": "meta-webindexer",
+          "previous": 0
+        },
+        {
+          "hits": 74,
+          "kind": "training",
+          "agent": "GoogleOther",
+          "previous": 0
+        },
+        {
+          "hits": 68,
+          "kind": "search",
+          "agent": "Applebot",
+          "previous": 0
+        },
+        {
+          "hits": 64,
+          "kind": "seo",
+          "agent": "SemrushBot",
+          "previous": 0
+        },
+        {
+          "hits": 62,
+          "kind": "search",
+          "agent": "Qwantbot",
+          "previous": 0
+        },
+        {
+          "hits": 60,
+          "kind": "seo",
+          "agent": "MJ12bot",
+          "previous": 0
+        },
+        {
+          "hits": 55,
+          "kind": "tool",
+          "agent": "python-requests",
+          "previous": 0
+        },
+        {
+          "hits": 39,
+          "kind": "tool",
+          "agent": "Go-http-client",
+          "previous": 0
+        },
+        {
+          "hits": 21,
+          "kind": "training",
+          "agent": "meta-externalagent",
+          "previous": 0
+        },
+        {
+          "hits": 17,
+          "kind": "search",
+          "agent": "YandexBot",
+          "previous": 0
+        },
+        {
+          "hits": 8,
+          "kind": "tool",
+          "agent": "aiohttp",
+          "previous": 0
+        },
+        {
+          "hits": 5,
+          "kind": "tool",
+          "agent": "undici",
+          "previous": 0
+        },
+        {
+          "hits": 4,
+          "kind": "tool",
+          "agent": "python-httpx",
+          "previous": 0
+        },
+        {
+          "hits": 3,
+          "kind": "tool",
+          "agent": "empty-ua",
+          "previous": 0
+        },
+        {
+          "hits": 2,
+          "kind": "assistant",
+          "agent": "kagi-fetcher",
+          "previous": 0
+        },
+        {
+          "hits": 1,
+          "kind": "assistant",
+          "agent": "Claude-User",
+          "previous": 0
+        }
+      ],
+      "top_paths": [
+        {
+          "hits": 2827,
+          "path": "/",
+          "agents": 38
+        },
+        {
+          "hits": 1150,
+          "path": "/robots.txt",
+          "agents": 27
+        },
+        {
+          "hits": 790,
+          "path": "/manifest.json",
+          "agents": 11
+        },
+        {
+          "hits": 310,
+          "path": "/sitemap.xml",
+          "agents": 12
+        },
+        {
+          "hits": 184,
+          "path": "/MorphGuide",
+          "agents": 24
+        },
+        {
+          "hits": 155,
+          "path": "/AuthPortal",
+          "agents": 14
+        },
+        {
+          "hits": 145,
+          "path": "/data",
+          "agents": 26
+        },
+        {
+          "hits": 139,
+          "path": "/calculator",
+          "agents": 18
+        },
+        {
+          "hits": 134,
+          "path": "/CareGuide/feeding-schedules",
+          "agents": 19
+        },
+        {
+          "hits": 122,
+          "path": "/MorphGuideSubmission",
+          "agents": 6
+        },
+        {
+          "hits": 121,
+          "path": "/crested-gecko-price",
+          "agents": 23
+        },
+        {
+          "hits": 109,
+          "path": "/MorphGuide/axanthic",
+          "agents": 18
+        },
+        {
+          "hits": 106,
+          "path": "/MorphGuide/albino",
+          "agents": 21
+        },
+        {
+          "hits": 106,
+          "path": "/data/price-index.json",
+          "agents": 24
+        },
+        {
+          "hits": 101,
+          "path": "/MorphGuide/lilly-white",
+          "agents": 18
+        },
+        {
+          "hits": 99,
+          "path": "/CareGuide",
+          "agents": 20
+        },
+        {
+          "hits": 98,
+          "path": "/MarketplaceVerification",
+          "agents": 18
+        },
+        {
+          "hits": 96,
+          "path": "/calculator/sable",
+          "agents": 14
+        },
+        {
+          "hits": 96,
+          "path": "/blog/crested-gecko-enclosure-setup-guide",
+          "agents": 19
+        },
+        {
+          "hits": 96,
+          "path": "/blog/crested-gecko-diet-guide",
+          "agents": 18
+        },
+        {
+          "hits": 91,
+          "path": "/PrivacyPolicy",
+          "agents": 15
+        },
+        {
+          "hits": 88,
+          "path": "/GeneticsGuide",
+          "agents": 21
+        },
+        {
+          "hits": 87,
+          "path": "/MorphGuide/harlequin",
+          "agents": 18
+        },
+        {
+          "hits": 85,
+          "path": "/MorphGuide/tricolor",
+          "agents": 15
+        },
+        {
+          "hits": 85,
+          "path": "/Contact",
+          "agents": 18
+        },
+        {
+          "hits": 84,
+          "path": "/MorphGuide/moonglow",
+          "agents": 18
+        },
+        {
+          "hits": 83,
+          "path": "/Terms",
+          "agents": 18
+        },
+        {
+          "hits": 82,
+          "path": "/blog/axanthic-breeding-strategy",
+          "agents": 17
+        },
+        {
+          "hits": 76,
+          "path": "/About",
+          "agents": 16
+        },
+        {
+          "hits": 74,
+          "path": "/llms.txt",
+          "agents": 5
+        },
+        {
+          "hits": 73,
+          "path": "/MorphGuide/inheritance/line-bred",
+          "agents": 16
+        },
+        {
+          "hits": 72,
+          "path": "/blog/first-crested-gecko-breeding-season",
+          "agents": 21
+        },
+        {
+          "hits": 67,
+          "path": "/Membership",
+          "agents": 19
+        },
+        {
+          "hits": 62,
+          "path": "/llms/care.md",
+          "agents": 17
+        },
+        {
+          "hits": 61,
+          "path": "/blog/frappuccino-cappuccino-pairings",
+          "agents": 18
+        },
+        {
+          "hits": 60,
+          "path": "/Recognition",
+          "agents": 19
+        },
+        {
+          "hits": 58,
+          "path": "/MorphGuide/phantom",
+          "agents": 18
+        },
+        {
+          "hits": 57,
+          "path": "/MorphGuide/hypo",
+          "agents": 21
+        },
+        {
+          "hits": 56,
+          "path": "/MorphGuide/sable",
+          "agents": 21
+        },
+        {
+          "hits": 56,
+          "path": "/MorphGuide/lavender",
+          "agents": 15
+        },
+        {
+          "hits": 53,
+          "path": "/MorphGuide/translucent",
+          "agents": 16
+        },
+        {
+          "hits": 53,
+          "path": "/MorphGuide/category/combo",
+          "agents": 15
+        },
+        {
+          "hits": 53,
+          "path": "/MorphGuide/category/pattern",
+          "agents": 17
+        },
+        {
+          "hits": 52,
+          "path": "/MorphGuide/white-wall",
+          "agents": 16
+        },
+        {
+          "hits": 52,
+          "path": "/MorphGuide/dalmatian",
+          "agents": 17
+        },
+        {
+          "hits": 52,
+          "path": "/MorphGuide/frappuccino",
+          "agents": 19
+        },
+        {
+          "hits": 52,
+          "path": "/MorphGuide/highway",
+          "agents": 23
+        },
+        {
+          "hits": 52,
+          "path": "/llms/prices.md",
+          "agents": 19
+        },
+        {
+          "hits": 51,
+          "path": "/MorphGuide/soft-scale",
+          "agents": 17
+        },
+        {
+          "hits": 51,
+          "path": "/MorphGuide/orange-base",
+          "agents": 15
+        }
+      ],
+      "agent_files": [
+        {
+          "hits": 69,
+          "path": "/data",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 44,
+          "path": "/llms.txt",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 35,
+          "path": "/llms/care.md",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 28,
+          "path": "/.well-known/mcp.json",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 27,
+          "path": "/data/price-index.json",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 25,
+          "path": "/llms.txt",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 14,
+          "path": "/llms/prices.md",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 12,
+          "path": "/data/price-index.json",
+          "agent": "ShapBot"
+        },
+        {
+          "hits": 11,
+          "path": "/data/price-index.json",
+          "agent": "Baiduspider"
+        },
+        {
+          "hits": 11,
+          "path": "/data",
+          "agent": "bingbot"
+        },
+        {
+          "hits": 11,
+          "path": "/.well-known/agent-card.json",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 10,
+          "path": "/data",
+          "agent": "OAI-SearchBot"
+        },
+        {
+          "hits": 10,
+          "path": "/llms/morphs.md",
+          "agent": "ExaSearchBot"
+        },
+        {
+          "hits": 9,
+          "path": "/llms-full.txt",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 9,
+          "path": "/.well-known/mcp/server-card.json",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 9,
+          "path": "/data/price-index.json",
+          "agent": "AhrefsBot"
+        },
+        {
+          "hits": 9,
+          "path": "/llms/prices.md",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 9,
+          "path": "/llms/prices.md",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 9,
+          "path": "/.well-known/api-catalog",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 9,
+          "path": "/.well-known/ai-plugin.json",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/passkey-endpoints",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/agent-skills/index.json",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/acp.json",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/llms/genetics.md",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/oauth-authorization-server/auth/v1",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/ucp",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/auth.md",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/http-message-signatures-directory",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/x402.json",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/MorphGuide/extreme-harlequin.md",
+          "agent": "bingbot"
+        },
+        {
+          "hits": 8,
+          "path": "/data",
+          "agent": "PerplexityBot"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/oauth-protected-resource",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/security.txt",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 8,
+          "path": "/.well-known/oauth-authorization-server",
+          "agent": "Robauto"
+        },
+        {
+          "hits": 7,
+          "path": "/data/price-index.json",
+          "agent": "Reflectionbot"
+        },
+        {
+          "hits": 7,
+          "path": "/data/price-index.json",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 6,
+          "path": "/data",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 5,
+          "path": "/data/price-index.csv",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 5,
+          "path": "/data/price-index.json",
+          "agent": "meta-webindexer"
+        },
+        {
+          "hits": 5,
+          "path": "/data",
+          "agent": "ShapBot"
+        },
+        {
+          "hits": 5,
+          "path": "/llms/morphs.md",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 4,
+          "path": "/data",
+          "agent": "meta-webindexer"
+        },
+        {
+          "hits": 4,
+          "path": "/data/price-index.json",
+          "agent": "DuckDuckBot"
+        },
+        {
+          "hits": 4,
+          "path": "/llms/care.md",
+          "agent": "ExaUser"
+        },
+        {
+          "hits": 4,
+          "path": "/llms/genetics.md",
+          "agent": "curl/"
+        },
+        {
+          "hits": 4,
+          "path": "/data",
+          "agent": "Amazonbot"
+        },
+        {
+          "hits": 4,
+          "path": "/llms/care.md",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 3,
+          "path": "/data/price-index.json",
+          "agent": "bingbot"
+        },
+        {
+          "hits": 3,
+          "path": "/llms/morphs.md",
+          "agent": "ExaUser"
+        },
+        {
+          "hits": 3,
+          "path": "/data/price-index.json",
+          "agent": "Googlebot"
+        },
+        {
+          "hits": 3,
+          "path": "/data",
+          "agent": "Bytespider"
+        },
+        {
+          "hits": 3,
+          "path": "/data/price-index.json",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 2,
+          "path": "/llms/care.md",
+          "agent": "bingbot"
+        },
+        {
+          "hits": 2,
+          "path": "/MorphGuide/yellow-base.md",
+          "agent": "Amazonbot"
+        },
+        {
+          "hits": 2,
+          "path": "/.well-known/mcp",
+          "agent": "other-bot"
+        },
+        {
+          "hits": 2,
+          "path": "/data/price-index.csv",
+          "agent": "AhrefsBot"
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agent": "Reflectionbot"
+        },
+        {
+          "hits": 2,
+          "path": "/data/genetics.json",
+          "agent": "ChatGPT-User"
+        },
+        {
+          "hits": 2,
+          "path": "/llms/morphs.md",
+          "agent": "meta-webindexer"
+        },
+        {
+          "hits": 2,
+          "path": "/data",
+          "agent": "python-requests"
+        }
+      ],
+      "previous_total": 0,
+      "unknown_user_agents": [
+        {
+          "ua": "Mozilla/5.0 (compatible; ElevenlabsCrawler/1.0; +https://elevenlabs.io/docs/bots)",
+          "hits": 358
+        },
+        {
+          "ua": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; KeenableBot/1.0; +https://keenable.ai/bot)",
+          "hits": 75
+        },
+        {
+          "ua": "SEBot-WA",
+          "hits": 25
+        },
+        {
+          "ua": "AdsBot-Google (+http://www.google.com/adsbot.html)",
+          "hits": 11
+        },
+        {
+          "ua": "Mozilla/5.0 (compatible; KakaoBot/1.0; +https://developers.kakao.com/bot)",
+          "hits": 9
+        },
+        {
+          "ua": "ArnorBot/0.1 (+https://dealright.ai/bot)",
+          "hits": 7
+        },
+        {
+          "ua": "AgentTrustBot/1.0 (id=ebbe30b81eb5; +https://agenttru.st/crawler; purpose=AI agent directory; contact=admin@agenttru.st)",
+          "hits": 6
+        },
+        {
+          "ua": "ClueWeb-Crawler/1.0 (+https://boston.lti.cs.cmu.edu/CMU-ClueWeb-Crawler/; mailto:cmu-clueweb-crawler@andrew.cmu.edu)",
+          "hits": 6
+        },
+        {
+          "ua": "NetAPI/1.1 (+https://netapi.com/bot.html)",
+          "hits": 6
+        },
+        {
+          "ua": "AgentTrustBot/1.0 (id=ae7e116ecd19; +https://agenttru.st/crawler; purpose=AI agent directory; contact=admin@agenttru.st)",
+          "hits": 6
+        },
+        {
+          "ua": "PipericBot/1.0 (+https://piperic.com/bot)",
+          "hits": 6
+        },
+        {
+          "ua": "Mozilla/5.0 (compatible; TflowSitemapBot/1.0)",
+          "hits": 6
+        },
+        {
+          "ua": "Mozilla/5.0 (compatible; wpbot/1.4; +https://forms.gle/ajBaxygz9jSR8p8G9)",
+          "hits": 6
+        },
+        {
+          "ua": "HatchFeed/1.0 (+https://agent.meta.ai; link preview)",
+          "hits": 5
+        },
+        {
+          "ua": "Mozilla/5.0 (compatible; webXtrendBot/1.1; +https://webxtrend.com/crawler)",
+          "hits": 4
+        },
+        {
+          "ua": null,
+          "hits": 3
+        },
+        {
+          "ua": "com.apple.AuthenticationServicesCore.AuthenticationServicesAgent/8625.1.29.10.33 CFNetwork/3896.100.1.2.1 Darwin/27.0.0",
+          "hits": 3
+        },
+        {
+          "ua": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Bravebot/1.0; +https://search.brave.com/help/brave-search-crawler) Chrome/W.X.Y.Z Safari/537.36",
+          "hits": 3
+        },
+        {
+          "ua": "RecordedFuture Global Inventory Crawler",
+          "hits": 3
+        },
+        {
+          "ua": "Mozilla/5.0 (compatible; CT-WP-Scanner/1.0; +https://example.com/bot)",
+          "hits": 3
+        },
+        {
+          "ua": "Pandalytics/2.0 (+https://domainsbot.com/network-crawler-pandalytics-kdc68dhsbd/)",
+          "hits": 2
+        },
+        {
+          "ua": "com.apple.AuthenticationServicesCore.AuthenticationServicesAgent/8624.4.5.10.5 CFNetwork/3860.700.1 Darwin/25.6.0",
+          "hits": 2
+        },
+        {
+          "ua": "com.apple.AuthenticationServicesCore.AuthenticationServicesAgent/8624.5.1.10.3 CFNetwork/3860.700.1 Darwin/25.6.0",
+          "hits": 2
+        },
+        {
+          "ua": "Mozilla/5.0 (compatible; QlyzeBot/1.0; +https://app.qlyze.io/bot)",
+          "hits": 2
+        },
+        {
+          "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 (compatible; AionBot/1.0)",
+          "hits": 2
+        }
+      ]
+    }
+  },
+  "pruned": {
+    "cutoff": "2026-08-04T23:08:43.869Z",
+    "removed": 0
+  },
+  "priceIndex": {
+    "generated_at": "2026-10-31T06:37:30.127622+00:00",
+    "age_days": 2.7,
+    "fresh": true,
+    "file_fresh": true,
+    "stale_markets": [],
+    "latest_rows": 57,
+    "monthly_rows": 176,
+    "last_full_check_by_market": {
+      "EU": "2026-10-30",
+      "JP": "2026-10-30",
+      "KR": "2026-10-30",
+      "US": "2026-10-31"
+    }
+  },
+  "mcp": {
+    "status": 200,
+    "tools": [
+      "search_morphs",
+      "get_morph",
+      "list_care_topics",
+      "get_care_topic",
+      "get_prices",
+      "predict_pairing"
+    ],
+    "ok": true
+  }
+}
