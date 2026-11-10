@@ -8,7 +8,7 @@ Everything that can be done without the iPhone, Xcode or App Store Connect is do
 - **Content filtering is live** (guideline 1.2). Both migrations from 19 October are applied, 48 held terms are loaded, and the approval queue is empty (nothing waiting on a moderator).
 - **Account deletion** (`delete-my-account`) is deployed with sign-in required.
 - **Reviewer accounts exist and are confirmed:** `morphiclabsdata+geckreview-breeder@gmail.com` (Breeder plan, 3 geckos) and `morphiclabsdata+geckreview-free@gmail.com` (free plan, 2 geckos). Passwords are the ones already in App Store Connect.
-- **Sign-in rules** (guideline 4.8): Sign in with Apple was switched on in code on 10 Nov 2026, so from the next build the iPhone shows Continue with Apple, Continue with Google, and email and password. Builds up to 14 show email and password only.
+- **Sign-in rules** (guideline 4.8): Sign in with Apple was switched on in code on 10 Nov 2026, so from the next build the iPhone shows Continue with Apple, Continue with Google, and email and password. Builds up to 14 show email and password only. Deleting an account now revokes its Sign in with Apple token (guideline 5.1.1(v)) once the three Apple secrets are set (`docs/planning/deploy-queue-2026-10-03.md`, open item 8).
 - **Build number** in the Xcode project is now 14. The last submission used build 13 (builds 8 to 13 were numbered by hand in Xcode and never recorded here), and Apple only accepts a number higher than every earlier upload.
 - On `main`: lint has 0 errors, typecheck passes, 3,575 unit tests pass.
 

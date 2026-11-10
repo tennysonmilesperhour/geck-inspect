@@ -21,6 +21,7 @@ import { createClient } from "../_shared/supabase.ts";
 import { CORS_HEADERS, json as jsonWith, preflight } from "../_shared/http.ts";
 import { signedInCaller } from "../_shared/caller.ts";
 import { isEmptySocialLogin } from "../_shared/empty-account.ts";
+import { revokeStoredAppleToken } from "../_shared/apple-auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -44,6 +45,9 @@ Deno.serve(async (req) => {
     return json({ error: "not_empty", message: "This account has an email, so it can only be deleted from Settings." }, 409);
   }
 
+  // An empty Apple login can hold a stored token too; revoke it first,
+  // since it is deleted with the login (App Store guideline 5.1.1(v)).
+  await revokeStoredAppleToken(admin, data.user.id);
   const { error: deleteError } = await admin.auth.admin.deleteUser(data.user.id);
   if (deleteError) return json({ error: "failed", message: "Could not remove the empty sign-in. Try again." }, 500);
   return json({ ok: true });

@@ -3,7 +3,7 @@ import Capacitor
 import AuthenticationServices
 
 // Shows Apple's own Sign in with Apple sheet and hands the identity token
-// back to the web app, which passes it to Supabase (signInWithIdToken).
+// and the one-time authorization code back to the web app, which passes it to Supabase (signInWithIdToken).
 // The web side sends a SHA-256 hashed nonce; Supabase checks the raw one.
 @objc(AppleSignInPlugin)
 public class AppleSignInPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -44,10 +44,14 @@ extension AppleSignInPlugin: ASAuthorizationControllerDelegate {
             call.reject("Apple did not return an identity token.", "NO_TOKEN")
             return
         }
+        // The one-time authorization code: the server swaps it for a refresh
+        // token so deleting the account can revoke Sign in with Apple.
+        let code = credential.authorizationCode.flatMap { String(data: $0, encoding: .utf8) } ?? ""
         // Apple sends the name and email only the first time a person
         // signs in to this app; later sign-ins return them empty.
         call.resolve([
             "identityToken": token,
+            "authorizationCode": code,
             "givenName": credential.fullName?.givenName ?? "",
             "familyName": credential.fullName?.familyName ?? "",
             "email": credential.email ?? ""

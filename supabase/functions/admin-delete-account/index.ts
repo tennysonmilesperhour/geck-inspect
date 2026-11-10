@@ -25,7 +25,9 @@
 //      Storage refuses direct SQL deletes, so this has to go through the
 //      Storage API. Files still used by a surviving row (for example a
 //      photo on a gecko the member sold) are never in the list.
-//   5. Deletes the login through the Auth admin API. The cascade removes
+//   5. Revokes the member's stored Sign in with Apple token, if any (App
+//      Store guideline 5.1.1(v); a failed revoke is logged and noted, never
+//      blocks the erasure), then deletes the login through the Auth admin API. The cascade removes
 //      sessions, identities, and the rows keyed to the login.
 //   6. Closes every "Account deletion request" ticket from that member:
 //      status resolved, the email replaced, the body and notes replaced by
@@ -52,6 +54,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { filesToRemove } from "../_shared/erasure-files.ts";
+import { revokeStoredAppleToken } from "../_shared/apple-auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -251,7 +254,10 @@ Deno.serve(async (req) => {
 
   // 5. The login.
   let authUserDeleted = false;
+  let appleRevoke = "no_token";
   if (result.auth_user_id) {
+    // Before the login goes: the stored token is deleted with it.
+    appleRevoke = await revokeStoredAppleToken(admin, result.auth_user_id);
     const { error: delErr } = await admin.auth.admin.deleteUser(result.auth_user_id);
     if (delErr && !/not.?found/i.test(delErr.message || "")) {
       console.error("admin-delete-account: auth delete failed", delErr);
@@ -275,6 +281,7 @@ Deno.serve(async (req) => {
     `Photos deleted: ${result.photos_deleted}. Messages deleted: ${result.messages_deleted}.`,
     `Files removed: ${filesRemoved}.${filesFailed.length ? ` Files that could not be removed: ${filesFailed.join(", ")}.` : ""}`,
     `Login deleted: ${authUserDeleted ? "yes" : "no login found"}.`,
+    `Sign in with Apple token: ${appleRevoke}.`,
   ].join("\n");
   const { data: tickets } = await admin
     .from("support_messages")

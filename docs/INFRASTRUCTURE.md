@@ -28,6 +28,7 @@ On 28 October 2026 production ran 37 functions, all listed below. 33 are declare
 |---|---|---|---|
 | admin-delete-account | true | yes | A signed-in admin erasing an account |
 | admin-end-trial | true | no | Admin tool; not in use. Tennyson is deleting it (still live on 28 October) |
+| apple-token | true | yes | The iPhone app right after Sign in with Apple: swaps the one-time code for Apple's refresh token and stores it in `apple_sign_in_tokens` so deleting the account can revoke it (added 10 November, after the 28 October count above) |
 | csp-report | false | yes | Browsers posting Content-Security-Policy reports |
 | delete-my-account | true | yes | A member deleting their own account in Settings |
 | discard-empty-account | true | yes | "Use my existing account" on the Add your email screen: deletes the caller's login only when it is an empty social sign-in (no email, no phone) |

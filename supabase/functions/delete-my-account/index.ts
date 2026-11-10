@@ -11,7 +11,9 @@
 //   3. If a website (Stripe) subscription is still charging, cancel it
 //      first. If that cancel fails, nothing is deleted.
 //   4. Call public.admin_erase_account (service role only), then remove
-//      Storage files, delete the login, and close deletion-request tickets.
+//      Storage files, revoke a stored Sign in with Apple token (App Store
+//      guideline 5.1.1(v); a failed revoke is logged, never blocks the
+//      deletion), delete the login, and close deletion-request tickets.
 //      Store subscriptions cannot be cancelled from here. The response says
 //      so, and the Settings screen says so before the member confirms.
 //
@@ -25,6 +27,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { filesToRemove } from "../_shared/erasure-files.ts";
+import { revokeStoredAppleToken } from "../_shared/apple-auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -198,7 +201,10 @@ Deno.serve(async (req) => {
   }
 
   let authUserDeleted = false;
+  let appleRevoke = "no_token";
   if (result.auth_user_id) {
+    // Before the login goes: the stored token is deleted with it.
+    appleRevoke = await revokeStoredAppleToken(admin, result.auth_user_id);
     const { error: delErr } = await admin.auth.admin.deleteUser(result.auth_user_id);
     if (delErr && !/not.?found/i.test(delErr.message || "")) {
       console.error("delete-my-account: auth delete failed", delErr);
@@ -220,6 +226,7 @@ Deno.serve(async (req) => {
     `Files removed: ${filesRemoved}.${filesFailed.length ? ` Files that could not be removed: ${filesFailed.join(", ")}.` : ""}`,
     `Login deleted: ${authUserDeleted ? "yes" : "no login found"}.`,
     `Website subscription cancelled: ${stripeCancelled ? "yes" : "none"}.`,
+    `Sign in with Apple token: ${appleRevoke}.`,
   ].join("\n");
   const { data: tickets } = await admin
     .from("support_messages")
@@ -258,6 +265,7 @@ Deno.serve(async (req) => {
     photos_deleted: result.photos_deleted,
     messages_deleted: result.messages_deleted,
     stripe_cancelled: stripeCancelled,
+    apple_revoke: appleRevoke,
     store_billing_continues: true,
   });
 });

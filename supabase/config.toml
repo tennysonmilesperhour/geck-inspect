@@ -26,6 +26,12 @@ verify_jwt = true
 [functions.discard-empty-account]
 verify_jwt = true
 
+# Sign in with Apple on the iPhone: the app sends the one-time authorization
+# code, and the handler stores Apple's refresh token for the caller only, so
+# account deletion can revoke it. The gateway requires a session.
+[functions.apple-token]
+verify_jwt = true
+
 # Public waitlist signups and confirmation links. Buyers are signed out,
 # so the gateway lets anonymous calls through; the handler only acts
 # through service-role database functions and mails addresses read from

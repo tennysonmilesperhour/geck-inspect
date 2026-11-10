@@ -40,6 +40,13 @@ export async function signInWithApple() {
   const supabase = await getSupabase();
   const { data, error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: result.identityToken, nonce });
   if (error) throw error;
+  if (result.authorizationCode) {
+    // Lets account deletion revoke Sign in with Apple later (App Store
+    // guideline 5.1.1(v)). The server swaps the code for Apple's refresh
+    // token and keeps it there. Best effort: sign-in never waits on it.
+    supabase.functions.invoke('apple-token', { body: { authorization_code: result.authorizationCode } })
+      .then(({ error: storeError } = {}) => { if (storeError) console.warn('Apple token not stored', storeError); }, () => {});
+  }
   const fullName = appleFullName(result);
   if (fullName && data?.user) {
     // Best effort: the profile row already exists (created at signup with

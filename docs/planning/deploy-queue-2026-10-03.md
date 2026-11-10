@@ -15,6 +15,7 @@ Everything else in this file is done, decided or kept for history. Each item bel
 5. **Delete two dead functions** ("Also for Tennyson"). Still open: `rapid-api` (v25) and `admin-end-trial` (v15) are both still deployed, and `supabase/functions/admin-end-trial/` is still in the repo.
 6. **Admin two-factor, steps 1 to 3** of `docs/planning/admin-mfa-2026-10.md` (the last 28 October section below). Still open: no verified authenticator exists in `auth.mfa_factors`, and `admin_requires_mfa` is false (it must stay false until then).
 7. **Phone and real-email checks.** None is recorded as done: round 2, item 5 (weigh-in reminder link to `/log`, airplane-mode feeding, a Morph ID card in Messenger); round 3, items 1 and 5 (Today on a cold phone, the gecko record on an iPhone, link previews for passports and breeder pages); and the list under "Real-device and real-email checks".
+8. **Sign in with Apple key** (10 November, below). Create a Sign in with Apple key and paste three edge function secrets: `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`. Until then Apple sign-ins work but no token is stored, so deleting such an account cannot revoke it.
 
 Could not be checked from here, so left as written below: round 3, item 3 (delete PostHog persons whose id contains "@"), and the Morph ID speed steps (Replicate credit at $5 or more; the `embed` time after a cold start).
 
@@ -664,3 +665,17 @@ Migration: `20261031061000_member_email_columns_revoke.sql` (commit `d49e93ae`),
 **Checked after the push (06:37 UTC).** The integration recorded `20261031061000`. None of the 11 tables gives signed-in accounts a whole-table read any more, and none of the 18 columns is readable by them. As a signed-in account, `select created_by from gecko_images` and `select *` were refused with "permission denied for table gecko_images", while the app's own column list (`id, image_url`, ...) worked. The server still reads `created_by`. No "permission denied" errors in the database log from 06:30 to 06:45 UTC.
 
 **If a page breaks.** A signed-in page that still asks for one of these columns gets "permission denied for table <name>". The quick undo for one table is `grant select on public.<table> to authenticated;` in the SQL editor (it hands the email column back too, so fix the page's column list and run the migration's block again afterwards).
+
+## 10 November: revoke Sign in with Apple when an account is deleted
+
+Migration: `20261110183000_apple_sign_in_tokens.sql`, dated after `20261031061000`, the newest file in the repo when it was pushed (production could not be queried from the session). New edge function `apple-token` (declared, `verify_jwt = true`); `delete-my-account`, `admin-delete-account` and `discard-empty-account` changed. Merging applies the migration and deploys all four.
+
+**Why.** Sign in with Apple was switched on in the iPhone app on 10 November. App Store Review Guideline 5.1.1(v) asks an app with Sign in with Apple to revoke the member's Apple tokens through Apple's REST API when the account is deleted, and reviewers reject for it.
+
+**How it works.** The native plugin now also returns Apple's one-time authorization code. After `signInWithIdToken` succeeds, the app sends it to `apple-token` (best effort; sign-in never waits on it). The function swaps it at `appleid.apple.com/auth/token`, checks Apple's `sub` matches an Apple identity on the caller's own login, and stores the refresh token in `public.apple_sign_in_tokens` (one row per login, row level security on with no policies, no grants to anon or authenticated, deleted with the login). The three delete functions call `revokeStoredAppleToken` (`supabase/functions/_shared/apple-auth.ts`) just before deleting the login. A failed or unconfigured revoke is logged and noted on the deletion ticket, and never blocks the deletion. The client secret is an ES256 JWT signed with WebCrypto, so no new library.
+
+**Limits.** Only sign-ins from the first build with the new plugin (build 15) store a token. Anyone who signed in with Apple earlier has no stored token, so their deletion reports `no_token`; they get one the next time they sign in with Apple on build 15. Apple sign-in was hidden in every earlier build, so this should be nobody.
+
+**Checked before the push.** `deno check` on all four functions; the SQL harness built all 326 migrations on Postgres 16 and all 40 SQL test files passed; the table is RLS-on with no select for anon or authenticated; the migration reruns cleanly; 3,823 unit tests, including `src/lib/__tests__/appleAuthServer.test.js` (the client secret verifies with its key; exchange, revoke and every failure path).
+
+**Waiting on Tennyson.** The three secrets (open item 8). After pasting them, a signed-in Apple sign-in on build 15 should add one row to `apple_sign_in_tokens`.

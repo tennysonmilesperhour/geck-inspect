@@ -6,11 +6,13 @@ const mocks = vi.hoisted(() => ({
   idToken: vi.fn(),
   updateUser: vi.fn(),
   profileUpdate: vi.fn(),
+  invoke: vi.fn(),
 }));
 vi.mock('@capacitor/core', () => ({ registerPlugin: () => ({ authorize: mocks.authorize }) }));
 vi.mock('../supabaseLazy', () => ({
   getSupabase: async () => ({
     auth: { signInWithIdToken: mocks.idToken, updateUser: mocks.updateUser },
+    functions: { invoke: mocks.invoke },
     from: () => ({ update: (row) => ({ eq: (col, val) => ({ is: (c, v) => { mocks.profileUpdate(row, col, val, c, v); return Promise.resolve({}); } }) }) }),
   }),
 }));
@@ -20,6 +22,7 @@ import { appleFullName, isAppleCancel, signInWithApple } from '../appleSignIn';
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.updateUser.mockResolvedValue({});
+  mocks.invoke.mockResolvedValue({ data: { ok: true }, error: null });
   mocks.idToken.mockResolvedValue({ data: { user: { email: 'keeper@privaterelay.appleid.com' } }, error: null });
 });
 
@@ -40,6 +43,22 @@ describe('Sign in with Apple', () => {
     await signInWithApple();
     expect(mocks.updateUser).toHaveBeenCalledWith({ data: { full_name: 'Sam Rivera' } });
     expect(mocks.profileUpdate).toHaveBeenCalledWith({ full_name: 'Sam Rivera' }, 'email', 'keeper@privaterelay.appleid.com', 'full_name', null);
+  });
+
+  it('hands the authorization code to the server so deletion can revoke it', async () => {
+    mocks.authorize.mockResolvedValue({ identityToken: 'tok', authorizationCode: 'code1' });
+    await signInWithApple();
+    expect(mocks.invoke).toHaveBeenCalledWith('apple-token', { body: { authorization_code: 'code1' } });
+  });
+
+  it('signs in even when storing the code fails, and skips it with no code', async () => {
+    mocks.authorize.mockResolvedValue({ identityToken: 'tok', authorizationCode: 'code1' });
+    mocks.invoke.mockRejectedValue(new Error('offline'));
+    await expect(signInWithApple()).resolves.toBeTruthy();
+    mocks.invoke.mockClear();
+    mocks.authorize.mockResolvedValue({ identityToken: 'tok' });
+    await signInWithApple();
+    expect(mocks.invoke).not.toHaveBeenCalled();
   });
 
   it('throws when Supabase refuses the token', async () => {

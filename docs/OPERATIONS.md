@@ -56,6 +56,7 @@ These are shared by every function in the project.
 | `IP_HASH_SALT`, `EVAL_SHARED_SECRET`, `MORPH_VISUAL_RETRIEVAL`, `MORPH_RETRIEVAL_MIN_SIMILARITY`, `MORPH_RETRIEVAL_MAX_PHOTOS`, `FEW_SHOT_PER_MORPH`, `FEW_SHOT_MAX_TOTAL`, `FEW_SHOT_FILLER_URL_PREFIX`, `MORPH_WARM_IMAGE_URL` | `recognize-gecko-morph`. `MORPH_WARM_IMAGE_URL` is optional: the photo the warm-up embeds (default `https://geckinspect.com/demo-geckos/blush.webp`) |
 | `MORPH_EMBED_BACKFILL_KEY` | `embed-gecko-image` |
 | `REVENUECAT_API_KEY`, `REVENUECAT_WEBHOOK_AUTHORIZATION` | `revenuecat-sync`, `revenuecat-webhook` (the second must match the header set in the RevenueCat dashboard exactly) |
+| `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | `apple-token`, `delete-my-account`, `admin-delete-account`, `discard-empty-account` (Sign in with Apple token revocation; the key is the whole .p8 file from a Sign in with Apple key) |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | `send-push` |
 | `PLATFORM_CONNECTIONS_KEY` | Encrypts stored social tokens: `set-platform-connection`, `publish-social-post`, `meta-oauth-callback`, `reddit-oauth-callback` |
 | `META_APP_ID`, `META_APP_SECRET`, `META_OAUTH_REDIRECT`, `META_OAUTH_STATE_SECRET`, `META_OAUTH_SUCCESS_URL` | The Meta (Facebook, Instagram) connection |
