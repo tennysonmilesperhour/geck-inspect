@@ -67,12 +67,12 @@ function FacebookIcon() {
 // only show a "provider is not enabled" error.
 const FACEBOOK_SIGNIN_ENABLED = false;
 
-// Sign in with Apple (iPhone app only) stays off until the Apple provider
-// is enabled in Supabase with com.geckinspect.app as a client ID and a
-// build with the Sign in with Apple capability is on the device. App Store
-// Guideline 4.8 asks for it before Google or Facebook can show on iOS, so
-// those two follow this switch on iOS.
-const APPLE_SIGNIN_ENABLED = false;
+// Sign in with Apple (iPhone app only). The Apple provider is on in
+// Supabase, and the iOS project carries the Sign in with Apple capability.
+// App Store Guideline 4.8 asks for it before Google or Facebook can show on
+// iOS, so those two follow this switch on iOS. The app bundles the web build,
+// so this reaches iPhones only with the next uploaded build.
+const APPLE_SIGNIN_ENABLED = true;
 
 function AppleIcon() {
   return (
