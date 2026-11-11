@@ -44,6 +44,7 @@ import HomeCollection from '@/components/dashboard/HomeCollection';
 import { Card, CardContent } from '@/components/ui/card';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import FirstGeckoStarter from '@/components/onboarding/FirstGeckoStarter';
+import { useRoleQuestion } from '@/components/onboarding/RoleQuestion';
 import SignOutButton from '@/components/auth/SignOutButton';
 import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { createPageUrl, getDisplayName } from '@/utils';
@@ -164,6 +165,7 @@ export default function Dashboard() {
     // and coming back within staleTime renders from cache instead of
     // re-running the whole fan-out on every visit.
     const { user, isLoadingAuth } = useAuth();
+    const roleQuestion = useRoleQuestion(user);
     const email = user?.email || null;
 
     const communityQuery = useQuery({
@@ -405,6 +407,7 @@ export default function Dashboard() {
                         // its parents, then what it needs next and its value.
                         <FirstGeckoStarter
                             surface="dashboard"
+                            roleQuestion={roleQuestion}
                             startHref={`${createPageUrl('MyGeckos')}?add=1&how=type`}
                             importHref={`${createPageUrl('MyGeckos')}?import=1`}
                             pendingName={pendingGeckoName}

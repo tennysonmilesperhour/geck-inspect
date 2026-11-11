@@ -185,7 +185,7 @@ export default function ClaimAnimal() {
               <div className="space-y-3">
                 <Button asChild className="w-full"><Link to={`${signInPath}&mode=signup`} onClick={() => rememberPostAuthRedirect(claimPath)}>Create account</Link></Button>
                 <Button asChild variant="outline" className="w-full"><Link to={signInPath} onClick={() => rememberPostAuthRedirect(claimPath)}>Sign in</Link></Button>
-                <p className="text-xs text-slate-400">After email verification, you will return here to accept. If you lose this page, scan the QR code or open the original link again.</p>
+                <p className="text-xs text-slate-400">A new account confirms its email with a 6-digit code, then comes straight back here to accept. If you lose this page, scan the QR code or open the original link again.</p>
               </div>
             ) : (
               <div className="space-y-3">

@@ -7,7 +7,7 @@
 // and the funnel events. The sold step warns before it replaces the link
 // already emailed, and it never makes the gecko public.
 import { expect, test } from '@playwright/test';
-import { createFakeSupabase } from './support/fake-supabase.js';
+import { createFakeSupabase, SIGNUP_CODE } from './support/fake-supabase.js';
 import { openGeckoRecord, transferRpcHandlers } from './support/transfer-fixture.js';
 
 const MEMBER = { name: 'Sam Keeper', email: 'sam@example.com', password: 'correct-horse-battery' };
@@ -45,12 +45,15 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     await page.getByRole('button', { name: 'Create free account' }).click();
     await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
 
-    // The fake treats the first sign-in as the confirmed email.
-    await page.getByRole('button', { name: 'Back to sign in' }).click();
-    await page.getByLabel('Email').fill(MEMBER.email);
-    await page.getByLabel('Password').fill(MEMBER.password);
-    await page.getByRole('button', { name: 'Sign In', exact: true }).last().click();
-    await expect(page.getByRole('heading', { name: 'Welcome to Geck Inspect' })).toBeVisible();
+    // Confirm with the 6-digit code from the email, without leaving the
+    // tab (experience review WP-12).
+    await page.getByLabel('6-digit code').fill(SIGNUP_CODE);
+    await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+
+    // The first screen asks keeper or breeder as part of the page. Nothing
+    // pops up over it.
+    await expect(page.getByRole('heading', { name: 'How do you keep your crested geckos?' })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', { name: /I breed them/ }).click();
   });
 
@@ -215,4 +218,32 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     await context.setOffline(false);
     await expect(badge).toHaveCount(0);
   });
+});
+
+// A wrong or expired code keeps the member on the screen and says what to
+// do. (Its own test: the refused request is a console error, which the
+// flow above does not allow.)
+test('a wrong sign-up code is refused with a plain message, and a short one is not sent', async ({ context, page }) => {
+  const fake = createFakeSupabase();
+  await fake.install(context);
+  await keepOffline(context);
+  await page.goto('/AuthPortal?mode=signup');
+  await page.getByLabel('Display name').fill('Robin Keeper');
+  await page.getByLabel('Email').fill('robin@example.com');
+  await page.getByLabel('Password').fill('correct-horse-battery');
+  await page.getByRole('button', { name: 'Create free account' }).click();
+  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+
+  const verifyCalls = () => fake.calls.filter((call) => call.path === '/auth/v1/verify').length;
+  await page.getByLabel('6-digit code').fill('123');
+  await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Type the 6-digit code' })).toBeVisible();
+  expect(verifyCalls()).toBe(0);
+
+  await page.getByLabel('6-digit code').fill('111111');
+  await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'did not match or has expired' })).toBeVisible();
+  expect(verifyCalls()).toBe(1);
+  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+  expect(fake.account('robin@example.com').email_confirmed_at).toBeNull();
 });

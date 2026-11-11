@@ -15,11 +15,8 @@ import {
   Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
-import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
 import {
-  ONBOARDING_HOLD_EVENT,
   browserAnswersToUpload,
-  onboardingShouldWait,
   readOnboarding,
   saveOnboarding,
   syncOnboardingToBrowser,
@@ -109,7 +106,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const [appLogo, setAppLogo] = useState(null);
   const [pageConfigs, setPageConfigs] = useState([]);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [showRolePrompt, setShowRolePrompt] = useState(false);
   const [isSidebarLocked, setIsSidebarLocked] = useState(() => {
     try { return localStorage.getItem('sidebar_locked') === '1'; }
     catch { return false; }
@@ -243,15 +239,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     return () => window.removeEventListener('open_tutorial', handler);
   }, []);
 
-  // A hold (the add-a-gecko form, for one) re-runs the first-run check
-  // when it is released, so the question can follow once it closes.
-  const [onboardingHoldTick, setOnboardingHoldTick] = useState(0);
-  useEffect(() => {
-    const onHold = () => setOnboardingHoldTick((n) => n + 1);
-    window.addEventListener(ONBOARDING_HOLD_EVENT, onHold);
-    return () => window.removeEventListener(ONBOARDING_HOLD_EVENT, onHold);
-  }, []);
-
   // The profile is the source of truth for onboarding and Keeper mode, so
   // a second phone picks up the answers given on the first (audit step 32).
   useEffect(() => {
@@ -261,33 +248,18 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     if (syncOnboardingToBrowser(user)) setKeeperMode(user.keeper_mode === true);
   }, [isGuest, user?.email, user?.keeper_mode, user?.onboarding_completed_at, user?.onboarding_role]);
 
-  // Auto-open the first-run question once per account (on any device). A
-  // small delay avoids colliding with the initial page load.
+  // The keeper-or-breeder question is no longer a pop-up from here. It is
+  // part of the page: the first panel of the first-gecko card and a slim
+  // card above the list (src/components/onboarding/RoleQuestion.jsx).
+  // Nothing opens by itself on a new member's first screen any more, and
+  // the 24-step tour only opens when the member asks for it. An account
+  // that picked a role but was never marked done (it used to get the tour
+  // by itself) is marked done quietly.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    // Only real, signed-in accounts get the first-run prompt. Guests used
-    // to get it 1.5 seconds into the demo, and choosing a role there set
-    // the "seen" flag that then hid onboarding from the real account.
     if (isGuest || !user) return;
     const state = readOnboarding(user);
-    if (state.seen) return;
-    // Wait while an add form, invite or claim is in progress, so the
-    // question never opens on top of the thing the member came to do.
-    if (onboardingShouldWait(location)) return;
-    // First run: ask the keeper-vs-breeder question before the tour, so
-    // the tour (and the sidebar it walks) is already the right shape.
-    // Once a role is chosen we go straight to the tour on later first-runs.
-    const timer = setTimeout(() => {
-      if (onboardingShouldWait(window.location)) return;
-      if (state.roleChosen) {
-        setShowTutorial(true);
-        saveOnboarding(supabase, user.email, { completed: true });
-      } else {
-        setShowRolePrompt(true);
-      }
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [isGuest, user?.email, user?.onboarding_completed_at, location.pathname, location.search, onboardingHoldTick]);
+    if (!state.seen && state.roleChosen) saveOnboarding(supabase, user.email, { completed: true });
+  }, [isGuest, user?.email, user?.onboarding_completed_at, user?.onboarding_role]);
 
   // Web push: save the browser's current subscription on load, and save the
   // new one when the browser rotates it (the service worker posts a
@@ -297,27 +269,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     syncPushSubscription(user.email).catch(() => {});
     return listenForPushRotation(user.email);
   }, [isGuest, user?.email]);
-
-  // Closing the role prompt without choosing means "show me everything":
-  // mark onboarding seen so it never nags, but do not launch the tour.
-  const handleRoleDismissed = () => {
-    saveOnboarding(supabase, user?.email, { completed: true, role: 'everything' });
-    setShowRolePrompt(false);
-  };
-
-  // After the first-run role prompt, persist the choice and go straight
-  // to adding the first gecko (My Geckos opens the photo-first quick add
-  // when the collection is empty, with an "import a spreadsheet" link for
-  // breeders who already keep records). The tour stays one click away in
-  // the sidebar. (VIP audit P1.3: two of three new accounts never added a
-  // gecko. October 2026: breeders used to get the full sidebar tour here,
-  // about 30 steps before their first gecko, so they now get the same
-  // first step as keepers.)
-  const handleRoleChosen = (role) => {
-    saveOnboarding(supabase, user?.email, { completed: true, role, keeperMode: role === 'keeper' });
-    setShowRolePrompt(false);
-    navigate('/MyGeckos?add=1');
-  };
 
   const getUserLevel = (geckoCount) => {
     return [...USER_LEVELS].reverse().find((level) => geckoCount >= level.geckos) || USER_LEVELS[0];
@@ -1451,7 +1402,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </nav>
         <LogSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} />
       </div>
-      <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} onDismiss={handleRoleDismissed} />
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
       <AlertDialog

@@ -25,6 +25,7 @@ import { fieldModeQueryKey, loadWritableGeckos } from '@/lib/fieldModeData';
 import { readQueue } from '@/lib/offlineQueue';
 import { useOfflineQueue } from '@/lib/offlineSync';
 import { captureEvent } from '@/lib/posthog';
+import RoleQuestionCard, { RoleChoices, useRoleQuestion } from '@/components/onboarding/RoleQuestion';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import {
   isActiveGecko,
@@ -163,6 +164,7 @@ function GeckoStrip({ geckos, total, demo, linkable }) {
 export default function Today() {
   const { user, isGuest, enterGuestMode } = useAuth();
   const navigate = useNavigate();
+  const roleQuestion = useRoleQuestion(user);
   const queryClient = useQueryClient();
   const guest = Boolean(isGuest) || isGuestMode();
   const signedIn = Boolean(user?.email) && !guest;
@@ -404,7 +406,19 @@ export default function Today() {
         </>
       )}
 
-      {noGeckos && (
+      {noGeckos && roleQuestion.needed && (
+        // A new member's first screen on a phone: the keeper-or-breeder
+        // question is part of the card (it used to pop up over it), and
+        // the answer goes straight on to adding the first gecko.
+        <section className="mt-2 rounded-2xl border border-emerald-500/30 bg-slate-900 p-5" aria-labelledby="today-role-title">
+          <h2 id="today-role-title" className="text-base font-semibold text-slate-100">How do you keep your crested geckos?</h2>
+          <p className="mb-4 mt-1 text-sm text-slate-400">One answer sets up your menu. Next you add your first gecko: a photo and a name is enough.</p>
+          <RoleChoices onChoose={(role) => { roleQuestion.answer(role, 'today'); navigate('/MyGeckos?add=1'); }} />
+          <p className="mt-3 text-xs text-slate-500">You can change this any time in Settings.</p>
+        </section>
+      )}
+
+      {noGeckos && !roleQuestion.needed && (
         <div className="mt-2 rounded-2xl border border-slate-700 bg-slate-900 p-5 text-center">
           <p className="text-base font-semibold text-slate-100">Add your first gecko</p>
           <p className="mt-1 text-sm text-slate-400">Today fills in with its feedings and weigh-ins as soon as it is in.</p>
@@ -412,6 +426,10 @@ export default function Today() {
             <Link to="/MyGeckos?add=1"><Plus className="mr-2 h-4 w-4" aria-hidden="true" /> Add a gecko</Link>
           </Button>
         </div>
+      )}
+
+      {!noGeckos && signedIn && geckoQuery.isSuccess && (
+        <RoleQuestionCard question={roleQuestion} surface="today" className="mt-2" />
       )}
 
       <GeckoStrip geckos={geckos} total={allGeckos.length} demo={demo} linkable={!demoSignedOut} />

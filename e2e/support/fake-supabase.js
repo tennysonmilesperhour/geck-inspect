@@ -15,6 +15,8 @@
 export const FAKE_SUPABASE_URL = 'https://e2e.supabase.test';
 // supabase-js keeps the session under sb-<first label of the host>-auth-token.
 export const FAKE_STORAGE_KEY = 'sb-e2e-auth-token';
+// The 6-digit code the fake "emails" to every new account.
+export const SIGNUP_CODE = '246810';
 
 const b64url = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
 
@@ -380,7 +382,15 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
       return json({ error: 'invalid_grant', error_description: 'Invalid refresh token' }, 400);
     }
     if (path === '/auth/v1/verify') {
-      const account = [...accounts.values()].find(({ user }) => body?.token_hash === `confirmation-${user.id}`);
+      // Two ways to confirm, as in production: the token link in the email
+      // (token_hash), or the 6-digit code from the same email typed into
+      // the "Check your email" screen (email + token).
+      const byCode = body?.email && body?.token
+        ? accounts.get(String(body.email).toLowerCase())
+        : null;
+      const account = byCode
+        ? (String(body.token) === SIGNUP_CODE ? byCode : null)
+        : [...accounts.values()].find(({ user }) => body?.token_hash === `confirmation-${user.id}`);
       if (!account) return json({ code: 'otp_expired', msg: 'Email link is invalid or has expired' }, 403);
       account.user.email_confirmed_at ||= nowIso();
       currentUser = account.user;

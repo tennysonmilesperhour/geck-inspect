@@ -19,6 +19,7 @@ import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { isGuestMode } from '@/lib/guestMode';
 import { isPkceLinkFromAnotherBrowser, readEmailLink } from '@/lib/emailLinkAuth';
 import { SIGNUP_METADATA_KEY, signupBoxDefault } from '@/lib/weeklyNotesConsent';
+import { captureEvent } from '@/lib/posthog';
 
 // Supabase refuses a password sign-in for an unconfirmed address with
 // code email_not_confirmed (older versions only say so in the message).
@@ -124,6 +125,12 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   const [isForgot, setIsForgot] = useState(initialMode === 'forgot');
   const [signUpSent, setSignUpSent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  // The 6-digit code from the confirmation email, typed on the "Check
+  // your email" screen so a new member can finish without leaving this
+  // tab. The link in the email keeps working too.
+  const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState('');
+  const [verifyingCode, setVerifyingCode] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   // Weekly Gecko Notes: ticked by default, except for a browser in the EEA
   // or the UK, where the notes need the member's consent
@@ -277,9 +284,41 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     if (error) {
       toast({ title: 'Could not resend the email', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Sent again', description: `A fresh confirmation link is on its way to ${email}.` });
+      setCode('');
+      setCodeError('');
+      toast({ title: 'Sent again', description: `A fresh confirmation email is on its way to ${email}. Use the newest one.` });
     }
     setIsLoading(false);
+  };
+
+  // Confirm the email with the code instead of the link. On success
+  // Supabase signs this browser in, AuthContext re-renders the app, and
+  // the member lands where the link would have taken them (the first
+  // screen, or the claim or invite they came from).
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+    const token = code.replace(/\D/g, '');
+    if (token.length < 6) {
+      setCodeError('Type the 6-digit code from the email.');
+      return;
+    }
+    setVerifyingCode(true);
+    setCodeError('');
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token, type: 'email' });
+      if (error) {
+        captureEvent('signup_code_checked', { ok: false });
+        setCodeError('That code did not match or has expired. Use the newest email, or send a new one below.');
+      } else {
+        captureEvent('signup_code_checked', { ok: true });
+        // The same "stay signed in" default as a password sign-in.
+        sessionStorage.removeItem('geck_inspect_ephemeral_session');
+        localStorage.removeItem('geck_inspect_unload_ts');
+      }
+    } catch {
+      setCodeError('The code could not be checked. Check your connection and try again.');
+    }
+    setVerifyingCode(false);
   };
 
   const handleForgot = async (e) => {
@@ -321,7 +360,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center space-y-6">
           {continuation?.startsWith('/claim/') && (
-            <p className="text-sm text-slate-300">Your transfer is saved in the email link. After verifying your email, sign in and accept ownership. You can also scan the owner&apos;s QR code again.</p>
+            <p className="text-sm text-slate-300">Your transfer is saved. Confirm your email and you go straight back to accept it. You can also scan the owner&apos;s QR code again.</p>
           )}
           <img
             src={APP_LOGO_ICON_URL}
@@ -330,12 +369,45 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
           />
           <h1 className="text-3xl font-bold text-white">Check your email</h1>
           <p className="text-slate-300">
-            We sent {isReset ? 'a password reset link' : 'a confirmation link'} to{' '}
+            We sent {isReset ? 'a password reset link' : 'a confirmation email'} to{' '}
             <span className="text-emerald-400">{email}</span>.{' '}
             {isReset
               ? 'Open it on this device and you will be asked to choose a new password.'
-              : 'Click the link and we will bring you straight into the app.'}
+              : 'Type the 6-digit code from it here and you are in.'}
           </p>
+          {!isReset && (
+            <form onSubmit={handleVerifyCode} className="space-y-2 text-left" noValidate>
+              <Label htmlFor="signup-code" className="text-slate-300 text-sm">6-digit code</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="signup-code"
+                  name="code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]*"
+                  maxLength={8}
+                  value={code}
+                  onChange={(e) => { setCode(e.target.value.replace(/\D/g, '')); setCodeError(''); }}
+                  aria-invalid={codeError ? 'true' : undefined}
+                  aria-describedby="signup-code-help"
+                  placeholder="123456"
+                  className="h-11 flex-1 bg-slate-800 border-slate-600 text-center text-lg tracking-[0.3em] text-white placeholder:text-slate-600 placeholder:tracking-[0.3em]"
+                />
+                <Button type="submit" disabled={verifyingCode} className="h-11 shrink-0">
+                  {verifyingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {verifyingCode ? 'Checking' : 'Confirm'}
+                </Button>
+              </div>
+              <p
+                id="signup-code-help"
+                role={codeError ? 'alert' : undefined}
+                className={`text-xs ${codeError ? 'text-red-300' : 'text-slate-400'}`}
+              >
+                {codeError || 'No code in the email? Click the link in it instead. It does the same thing.'}
+              </p>
+            </form>
+          )}
           <p className="text-slate-500 text-sm">
             Nothing in your inbox after a minute? Check spam, or try again with the address you used.
           </p>
@@ -350,7 +422,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
             </button>
           )}
           <button
-            onClick={() => { setIsSignUp(false); setIsForgot(false); setSignUpSent(false); setResetSent(false); }}
+            onClick={() => { setIsSignUp(false); setIsForgot(false); setSignUpSent(false); setResetSent(false); setCode(''); setCodeError(''); }}
             className="text-emerald-400 hover:text-emerald-300 underline text-sm touch:min-h-11"
           >
             Back to sign in
@@ -540,18 +612,29 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                     <div role="alert" className="rounded-lg border border-amber-700 bg-amber-950/40 p-3 space-y-2">
                       <p className="text-sm font-semibold text-amber-100">Confirm your email first</p>
                       <p className="text-xs text-amber-200/80">
-                        Open the confirmation link we sent to {email || 'your email'}. Can&apos;t find it? Check spam, or send a new one.
+                        Use the code or the link in the email we sent to {email || 'your email'}. Can&apos;t find it? Check spam, or send a new one.
                       </p>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={isLoading || !email}
-                        onClick={handleResendConfirmation}
-                        className="border-amber-600 bg-transparent text-amber-100 hover:bg-amber-900/40"
-                      >
-                        {isLoading ? 'Sending...' : 'Resend confirmation email'}
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={!email}
+                          onClick={() => { setUnconfirmed(false); setSignUpSent(true); }}
+                          className="bg-amber-600 text-white hover:bg-amber-500"
+                        >
+                          Enter the code
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={isLoading || !email}
+                          onClick={handleResendConfirmation}
+                          className="border-amber-600 bg-transparent text-amber-100 hover:bg-amber-900/40"
+                        >
+                          {isLoading ? 'Sending...' : 'Resend confirmation email'}
+                        </Button>
+                      </div>
                     </div>
                   )}
                   {isSignUp && (

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Camera, FileSpreadsheet, GitBranch, Keyboard, Bell, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { flowEvent, markPhotoPath } from '@/lib/firstGeckoFlow';
+import { RoleChoices } from '@/components/onboarding/RoleQuestion';
 
 const STEPS = [
   { icon: Camera, title: 'Add your gecko', body: 'By photo (Morph ID names the morph) or by typing a name.' },
@@ -20,10 +21,31 @@ const STEPS = [
  *   pendingName: a gecko kept from the demo and not saved yet; the main
  *     button saves it instead.
  *   surface: 'my_geckos' | 'dashboard', for analytics.
+ *   roleQuestion: from useRoleQuestion(user). While it is `needed`, the
+ *     card opens on the keeper-or-breeder question and shows the ways to
+ *     start once it is answered. (It used to be a pop-up that opened over
+ *     this card 1.5 seconds after the page.) A gecko waiting from the demo
+ *     is never held up by it.
  */
-export default function FirstGeckoStarter({ onStart, startHref, onImport, importHref, pendingName = null, onSavePending, surface }) {
+export default function FirstGeckoStarter({ onStart, startHref, onImport, importHref, pendingName = null, onSavePending, surface, roleQuestion = null }) {
   const startProps = onStart ? { onClick: () => { flowEvent('add', 'start', { surface }); onStart(); } } : null;
   const photoClick = () => { flowEvent('add', 'choose_photo', { surface }); markPhotoPath(true); };
+
+  if (roleQuestion?.needed && !pendingName) {
+    return (
+      <section className="flex flex-col rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-900 p-5 md:p-6" aria-labelledby="first-gecko-title">
+        <p className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300">Getting started, about a minute</p>
+        <h2 id="first-gecko-title" className="text-xl md:text-2xl font-bold text-slate-100 mt-1">
+          How do you keep your crested geckos?
+        </h2>
+        <p className="text-sm text-slate-300 mt-1 mb-4 max-w-2xl">
+          One answer sets up your menu. Next you add your first gecko: a photo and a name is enough.
+        </p>
+        <RoleChoices onChoose={(role) => roleQuestion.answer(role, surface)} />
+        <p className="text-xs text-slate-500 mt-3">You can change this any time in Settings.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-900 p-5 md:p-6" aria-labelledby="first-gecko-title">

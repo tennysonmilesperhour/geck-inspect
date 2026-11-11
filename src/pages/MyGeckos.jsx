@@ -36,6 +36,7 @@ import QuickAddGecko from '../components/my-geckos/QuickAddGecko';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
 import { saveQuickGecko } from '../components/my-geckos/quickGeckoSave';
 import FirstGeckoStarter from '../components/onboarding/FirstGeckoStarter';
+import RoleQuestionCard, { useRoleQuestion } from '../components/onboarding/RoleQuestion';
 import FirstGeckoFlow from '../components/onboarding/FirstGeckoFlow';
 import { clearPendingGecko, flowEvent, markPhotoPath, readPendingGecko } from '@/lib/firstGeckoFlow';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
@@ -85,6 +86,8 @@ export default function MyGeckosPage() {
     const scrollPositionRef = React.useRef(0);
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
+    // The keeper-or-breeder question, asked on the page (see RoleQuestion).
+    const roleQuestion = useRoleQuestion(user);
     const location = useLocation();
     const navigate = useNavigate();
     // Guards the one-time consumption of an incoming AI Morph ID draft.
@@ -940,6 +943,7 @@ export default function MyGeckosPage() {
                 ) : isFirstRun ? (
                     <FirstGeckoStarter
                         surface="my_geckos"
+                        roleQuestion={roleQuestion}
                         onStart={() => openAddFlow({ type: true })}
                         onImport={() => setIsImportModalOpen(true)}
                         pendingName={pendingGecko?.name || null}
@@ -947,6 +951,9 @@ export default function MyGeckosPage() {
                     />
                 ) : (
                 <>
+                {!isLoading && !showArchived && (
+                    <RoleQuestionCard question={roleQuestion} surface="my_geckos" className="mb-4" />
+                )}
                 <div className="mb-4">
                     {/* Toolbar: one row on wider screens. On a phone the search
                         takes its own row and sort plus view share the next, so
