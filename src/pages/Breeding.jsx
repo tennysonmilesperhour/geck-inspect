@@ -228,6 +228,10 @@ export default function BreedingPage() {
             }
             
             setIsModalOpen(false);
+            toast({
+                title: 'Breeding plan created',
+                description: `${sire?.name || 'Sire'} x ${dam?.name || 'Dam'}. Log eggs on its card as they are laid.`,
+            });
             setNewPlan({
                 sire_id: '',
                 dam_id: '',

@@ -4,7 +4,7 @@
 // in jsdom; saving a new gecko sends one save with what the member typed;
 // a refused save keeps the form and says why. Only the network edges are
 // stubbed (Supabase, the entity layer, notifications, analytics).
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -168,5 +168,31 @@ describe('GeckoForm', () => {
     expect(args.p_record_weight).toBe(false);
     expect(args.p_record).toMatchObject({ name: 'Pumpkin Spice', gecko_id_code: 'SAM-007' });
     expect(onSubmit.mock.calls[0][1]).toBe(false);
+  });
+
+  // Experience review D3: a tap outside the form, Escape or Cancel used to
+  // throw away everything typed and every photo uploaded without asking.
+  it('closes an untouched form at once, and asks before discarding a changed one', async () => {
+    const untouched = renderForm();
+    await screen.findByLabelText(/^Name/);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(untouched.onCancel).toHaveBeenCalledTimes(1);
+    cleanup();
+
+    const changed = renderForm();
+    fireEvent.change(await screen.findByLabelText(/^Name/), { target: { value: 'Mango' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(changed.onCancel).not.toHaveBeenCalled();
+    expect(await screen.findByText('Discard your changes?')).toBeTruthy();
+
+    // Keep editing: the form and what was typed are still there.
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(changed.onCancel).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/^Name/).value).toBe('Mango');
+
+    // Discard: now it closes.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard' }));
+    expect(changed.onCancel).toHaveBeenCalledTimes(1);
   });
 });

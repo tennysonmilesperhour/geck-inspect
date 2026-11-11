@@ -14,7 +14,7 @@
  *
  * Detectors:
  *
- *   - page-2 queries   (position 11–20, impressions ≥ 10) → ranking
+ *   - page-2 queries   (position 11 to 20, impressions ≥ 10) → ranking
  *                        lift opportunities
  *   - low-CTR pages    (impressions ≥ 100, CTR ≤ 1.5%) → snippet
  *                        rewrite targets
@@ -169,15 +169,18 @@ function loadKnownSlugs() {
 // ---------- Claude-prompt templates --------------------------------------
 
 function promptForPage2Query(finding) {
-  return `Look at ${finding.page} on geckinspect.com. Search Console reports position ${finding.position} for the query "${finding.query}" with ${finding.impressions} impressions over the last 28 days. Goal: push this to page 1 (top 10). Audit the page's title, H1, first-paragraph keyword usage, internal link count to this page, and FAQ coverage for this query. Recommend 3–5 concrete changes that would ship in a single commit to main. If a new FAQ entry would capture this, draft it verbatim.`;
+  return `Look at ${finding.page} on geckinspect.com. Search Console reports position ${finding.position} for the query "${finding.query}" with ${finding.impressions} impressions over the last 28 days. Goal: push this to page 1 (top 10). Audit the page's title, H1, first-paragraph keyword usage, internal link count to this page, and FAQ coverage for this query. Recommend 3 to 5 concrete changes that would ship in a single commit to main. If a new FAQ entry would capture this, draft it verbatim.`;
 }
 
 function promptForLowCtr(finding) {
-  return `Rewrite the <title> and <meta name="description"> for ${finding.page} on geckinspect.com. Current CTR is ${finding.ctr}% on ${finding.impressions} impressions (avg position ${finding.position}), well below the 2%+ target. Read the current values in the relevant data file (src/data/morph-guide.js, care-guide.js, or blog-posts.js) and propose a new title ≤ 60 chars and description 140–155 chars that would earn higher CTR. Commit the change to main.`;
+  return `Rewrite the <title> and <meta name="description"> for ${finding.page} on geckinspect.com. Current CTR is ${finding.ctr}% on ${finding.impressions} impressions (avg position ${finding.position}), well below the 2%+ target. Read the current values in the relevant data file (src/data/morph-guide.js, care-guide.js, or blog-posts.js) and propose a new title ≤ 60 chars and description 140 to 155 chars that would earn higher CTR. Commit the change to main.`;
 }
 
 function promptForQueryGap(finding) {
-  return `Search Console shows "${finding.query}" drove ${finding.impressions} impressions over the last 28 days (position ${finding.position}, ${finding.clicks} clicks) but there's no page on geckinspect.com explicitly targeting this query. Draft a new blog post entry for src/data/blog-posts.js following the existing Cappuccino post shape: slug, keyphrase = "${finding.query}", TL;DR callout, 3–5 body sections with table + callout, 4–6 FAQ pairs, 3+ internal links to relevant /MorphGuide or /CareGuide pages, 2+ external citations. Commit to main.`;
+  // Blog and article work is shelved (CLAUDE.md, ROADMAP.md). This used to
+  // tell the reader to draft a new blog post and commit it to main, which
+  // put a paste-ready prompt against the shelf into every weekly report.
+  return `Search Console shows "${finding.query}" drove ${finding.impressions} impressions over the last 28 days (position ${finding.position}, ${finding.clicks} clicks) and no page on geckinspect.com targets this query. This is data, not a task: blog and article work is shelved, so do not draft a post. If an existing guide page (Morph Guide, Care Guide, Genetics Guide or a calculator page) could answer the query with a short addition, name the page.`;
 }
 
 function promptForEngagementLag(finding) {
@@ -245,7 +248,7 @@ function renderReport({ summary, trafficSources, topQueries, topPages, findings 
   renderFindingsSection(lines, 'Low-CTR pages (snippet rewrite targets)', findings.lowCtr, promptForLowCtr,
     (f) => `\`${f.page}\` · ${f.ctr}% CTR on ${f.impressions} impressions · avg position ${f.position}`);
 
-  renderFindingsSection(lines, 'Query gaps (write a new post)', findings.queryGaps, promptForQueryGap,
+  renderFindingsSection(lines, 'Query gaps (searches with no matching page; data, not tasks)', findings.queryGaps, promptForQueryGap,
     (f) => `**${f.query}** · ${f.impressions} impressions · position ${f.position} · ${f.ctr}% CTR`);
 
   renderFindingsSection(lines, 'Engagement laggards (content/UX fix)', findings.engagementLag, promptForEngagementLag,

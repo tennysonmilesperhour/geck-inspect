@@ -91,35 +91,54 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
     }
 
     setIsSaving(true);
-    try {
-      // Create all WeightRecord rows in parallel, then mirror the value
-      // onto the gecko row so cards/passport refresh immediately.
-      await Promise.all(
-        entries.map(({ geckoId, value }) =>
-          WeightRecord.create({
-            gecko_id: geckoId,
-            weight_grams: value,
-            record_date: recordDate,
-          }).then(() => Gecko.update(geckoId, { weight_grams: value }))
-        )
-      );
+    // Each weight is saved on its own and its row is cleared as soon as it
+    // is in. Saving them as one batch meant that when one failed, the whole
+    // save reported failure while the others were already stored, so
+    // pressing Save again stored those a second time.
+    const failed = [];
+    let saved = 0;
+    for (const { geckoId, value } of entries) {
+      try {
+        await WeightRecord.create({ gecko_id: geckoId, weight_grams: value, record_date: recordDate });
+        saved += 1;
+        setInputs((prev) => {
+          const next = { ...prev };
+          delete next[geckoId];
+          return next;
+        });
+        // Mirror the value onto the gecko row so cards and the passport
+        // refresh at once. The weigh-in itself is saved either way, so a
+        // failed mirror is not a reason to save it again.
+        try {
+          await Gecko.update(geckoId, { weight_grams: value });
+        } catch (error) {
+          console.error('Weigh-in saved, but the gecko weight was not updated:', error);
+        }
+      } catch (error) {
+        console.error('Weigh-in save failed:', error);
+        failed.push(geckoId);
+      }
+    }
+    setIsSaving(false);
 
+    const day = format(parseLocalDate(recordDate), 'MMM d, yyyy');
+    if (failed.length === 0) {
       toast({
         title: 'Weigh-in saved',
-        description: `${entries.length} ${entries.length === 1 ? 'weight' : 'weights'} recorded for ${format(parseLocalDate(recordDate), 'MMM d, yyyy')}.`,
+        description: `${saved} ${saved === 1 ? 'weight' : 'weights'} recorded for ${day}.`,
       });
       if (onSaved) onSaved();
       if (onClose) onClose();
-    } catch (error) {
-      console.error('Weigh-in save failed:', error);
-      toast({
-        title: 'Save failed',
-        description: error.message || 'Could not save weights. Try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
+      return;
     }
+    if (saved > 0 && onSaved) onSaved();
+    toast({
+      title: saved > 0 ? `${saved} saved, ${failed.length} not saved` : 'Save failed',
+      description: saved > 0
+        ? 'The ones that did not save are still filled in. Press Save again to retry only those.'
+        : 'Nothing was saved. Check your connection and press Save again.',
+      variant: 'destructive',
+    });
   };
 
   return (

@@ -2,7 +2,7 @@ import GeckoImage from '@/components/shared/GeckoImage';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { Egg, BreedingPlan, User } from '@/entities/all';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast, toast as notify } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader } from '@/components/ui/card';
 import {
@@ -125,9 +125,21 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
             const newCount = (plan.egg_check_count || 0) + 1;
             await BreedingPlan.update(plan.id, { egg_check_count: newCount });
 
+            // These buttons used to save with no word, and a failure was
+            // written only to the developer console.
+            notify({
+                title: count === 1 ? '1 egg added' : `${count} eggs added`,
+                description: `Laid today, expected to hatch around ${format(parseLocalDate(expectedHatch), 'MMM d')}. Open the plan to change the dates.`,
+            });
             onPlanUpdate();
         } catch (error) {
             console.error("Failed to add eggs:", error);
+            notify({
+                title: 'Eggs not added',
+                description: 'Nothing was saved, or only part of the clutch. Check the plan, then try again.',
+                variant: 'destructive',
+            });
+            onPlanUpdate();
         }
     };
 

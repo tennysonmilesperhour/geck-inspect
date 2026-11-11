@@ -591,6 +591,12 @@ export default function MyGeckosPage() {
         const source = morphDraftOpenRef.current ? 'morph_id_draft' : 'full_form';
         morphDraftOpenRef.current = false;
         announceSavedGecko(geckoData, isNew, source);
+        // The form used to close with no word that the save worked.
+        const savedName = geckoData?.name || 'Your gecko';
+        toast({
+            title: isNew ? `${savedName} is in your collection` : `${savedName} saved`,
+            description: isNew ? 'Open its card to add parents, a weight or a passport.' : undefined,
+        });
 
         if (user) {
             window.scrollTo({ top: savedScroll, behavior: 'instant' });

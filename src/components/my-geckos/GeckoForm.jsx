@@ -42,6 +42,18 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     const { toast } = useToast();
     const saveRequestId = useRef(crypto.randomUUID());
     const savingRef = useRef(false);
+    // Set by the first change the member makes (typing, a switch, a photo).
+    // Closing the form used to throw away everything entered, and every
+    // photo uploaded, without a word: a tap outside the window was enough.
+    // Now a changed form asks once before it closes.
+    const dirtyRef = useRef(false);
+    const [confirmDiscard, setConfirmDiscard] = useState(false);
+    const markDirty = () => { dirtyRef.current = true; };
+    const requestClose = () => {
+        if (savingRef.current) return;
+        if (dirtyRef.current) { setConfirmDiscard(true); return; }
+        onCancel();
+    };
     const isArchived = gecko?.archived;
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
@@ -577,7 +589,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
 
     return (
-        <Dialog open onOpenChange={(open) => { if (!open && !savingRef.current) onCancel(); }}>
+        <Dialog open onOpenChange={(open) => { if (!open) requestClose(); }}>
             <DialogContent hideCloseButton onEscapeKeyDown={(event) => { if (cropDialogOpen) { event.preventDefault(); setCropDialogOpen(false); } }} aria-describedby="gecko-form-description" className="w-[95vw] max-w-4xl h-[90svh] bg-slate-900 border-slate-700 flex flex-col gap-0 p-0 overflow-hidden">
                 <DialogDescription id="gecko-form-description" className="sr-only">Edit animal details and choose whether to publish them.</DialogDescription>
                 <CardHeader className="flex-shrink-0">
@@ -589,7 +601,17 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     )}
                 </CardHeader>
 
-                <form id="gecko-details-form" onSubmit={handleSave} className="flex-grow overflow-y-auto space-y-4 p-4">
+                <form
+                    id="gecko-details-form"
+                    onSubmit={handleSave}
+                    onChangeCapture={markDirty}
+                    onPointerDownCapture={(event) => {
+                        // Switches, selects and toggle buttons do not fire
+                        // a change event the form can hear.
+                        if (event.target.closest?.('button, [role="switch"], [role="combobox"]')) markDirty();
+                    }}
+                    className="flex-grow overflow-y-auto space-y-4 p-4"
+                >
                     {isArchived && (
                         <div className="space-y-4 mb-4">
                             <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3">
@@ -1307,7 +1329,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             Archived
                         </div>
                     )}
-                    <Button variant="outline" onClick={onCancel} disabled={isSaving} className="h-10 px-3 sm:px-4 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
+                    <Button variant="outline" onClick={requestClose} disabled={isSaving} className="h-10 px-3 sm:px-4 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
                     <Button type="submit" form="gecko-details-form" disabled={isSaving || isArchived} className="bg-emerald-600 hover:bg-emerald-700 h-10 px-3 sm:px-4">
                         {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         {getSaveButtonText()}
@@ -1344,6 +1366,26 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             onClick={() => setFormData(prev => ({ ...prev, is_public: false, gallery_display: false }))}
                         >
                             Make private
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
+                <AlertDialogContent className="bg-slate-900 border-slate-700">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-slate-100">Discard your changes?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-400">
+                            What you entered here, and any photos you added, have not been saved.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="border-slate-600">Keep editing</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-red-700 hover:bg-red-600 text-white"
+                            onClick={() => { setConfirmDiscard(false); onCancel(); }}
+                        >
+                            Discard
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
