@@ -1,5 +1,7 @@
 # Feature completeness audit and plan, 29 September 2026
 
+> **Status, 11 November 2026: Dated.** This was the plan from 29 September to 15 October 2026. The active plan is Part E of `docs/planning/comprehensive-review-2026-10-14.md`. Kept for its per-feature status lines and the phone and money checks in section 8 (also listed in `docs/OWNER-STEPS.md`, part F). Out of date in it: "this file is the roadmap now"; Guess the Price and Promote (both retired); the sensor check (sensors are hidden); the MorphMarket import check (done 24 October); enforcing the content security policy (done 14 October). The map of all documents is `docs/README.md`.
+
 Every feature in Geck Inspect was traced end to end: the screen, the button handler, the data call, the table rule or edge function behind it, and back to what the member sees. Production data, the API and database logs, the edge function list and the security advisors were checked alongside the code. About 60 small bugs were fixed on the spot (section 3). This document is the plan for everything else, ordered from the least finished feature to the most, so that working down it top to bottom ends with every feature either finished or deliberately retired.
 
 ## 1. How to continue

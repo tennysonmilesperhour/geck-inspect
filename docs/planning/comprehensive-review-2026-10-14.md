@@ -611,7 +611,7 @@ Findings:
 
 The docs are the project's memory and most of them are good. The problem is that the ones every session is told to read first are the wrong ones. The domain review tabulated 21 contradictions between documents and code; the important ones: CONTEXT.md says auth may still be on Base44, Keeper is $4 and Breeder $9, Enterprise is waitlist-only, the landing page has no hero or pricing, there is no Google Analytics, and Foundation Genetics is not integrated (every one is false today); STRATEGY.md is from May and still says Breed Ledger launches 15 May; ROADMAP.md says Morph ID accuracy is retired while three commits this week continued it; DESIGN-SYSTEM.md describes a light sage palette with DM Serif that the product never shipped, and CONTEXT.md describes a third palette; DECISIONS.md is still titled a landing-page decision log; PRODUCT.md is the Morph ID brief presented as the product brief; README and CLAUDE.md say no pull requests while a bot opens them nightly. All of these files carry a 6 October git date from the em-dash sweep, so file dates no longer signal staleness.
 
-Recommendation: rewrite CONTEXT.md sections 1 to 5 and 8 from the code (one page, one afternoon); fold the three palettes into one design document that matches the shipped tokens; retitle DECISIONS.md and move PRODUCT.md to `docs/specs/morph-id-product.md`; update STRATEGY.md from the October research; add a weekly "docs reconcile" step to whichever session runs on Mondays.
+Recommendation: rewrite CONTEXT.md sections 1 to 5 and 8 from the code (one page, one afternoon); fold the three palettes into one design document that matches the shipped tokens; retitle DECISIONS.md and move PRODUCT.md to `docs/specs/morph-id.md`; update STRATEGY.md from the October research; add a weekly "docs reconcile" step to whichever session runs on Mondays.
 
 ### C14. Operations: support, moderation, backups, costs
 
@@ -635,7 +635,7 @@ A completeness pass over the drafts found topics that no category above covers w
 8. **Photo handling and content safety.** Uploads are downscaled and re-encoded in the browser, which strips metadata as a side effect, but originals under 1,600 px and 400 KB, GIFs and decode failures are stored untouched, so about 600 older originals may carry camera GPS data; two buckets are public; there is no written procedure for illegal content in a public bucket, no report-handling target, and no stance on animal-welfare content. Needs: a sample with `exiftool` (production), a one-time re-encode job, a short moderation procedure. **Checked 31 Oct 2026 (read-only):** `scripts/photo-gps-audit.mjs` read every photo in `geck-inspect-media` and `promote-images` (thumbnails skipped). 273 of the 706 photos stored before 1 October carry a camera GPS position (latitude and longitude); none of the 176 stored since do. All 273 are JPEGs between 0.4 and 14 MB, 262 of them in the `base44.app/` folder (photos brought over from the old platform in April and May 2026, which never went through the browser re-encode) and 11 in `uploads/`. So the estimate above (small originals, GIFs, failed decodes) was the wrong group: the leak is the migrated originals. Nothing was changed. The same script has a `--strip` mode that saves each original before writing a copy with the GPS zeroed in place; it has not been run, because the database and photo backups are not running yet (`docs/OPERATIONS.md`, section 3). The steps and checks before running it are at the top of the script.
 9. **Tax and consumer law.** Checkout has no automatic tax, payouts go to a person, and there is no refund policy, auto-renewal disclosure or cancellation text, which auto-renewing plans need in several US states and which EU buyers' 14-day withdrawal right expects. Needs: Stripe Tax settings (production), the Terms sections in E2 item 22.
 10. **Scheduled-job health and unbounded tables.** Nineteen cron jobs run and only seven days of their history are kept, so a failing job is invisible after a week; `agent_hits`, `user_events`, `error_logs` and Stripe webhook payloads grow without retention. Needs: `cron.job_run_details` and table sizes (production), a weekly job-health line in the ops digest.
-11. **The founder's hours against the plan.** Part E assigns thirteen owner items in week one with no hour estimate, and E1 item 13 alone is forty messages and eight calls; the same person is listed on about twenty other projects in `docs/planning/agent-access-prompts.md`. Needs: Tennyson to write the number of hours a week this gets, and the plan to fit it.
+11. **The founder's hours against the plan.** Part E assigns thirteen owner items in week one with no hour estimate, and E1 item 13 alone is forty messages and eight calls; the same person is listed on about twenty other projects in `docs/planning/history/agent-access-prompts.md`. Needs: Tennyson to write the number of hours a week this gets, and the plan to fit it.
 12. **Import, export and print quality, which the hand-onboarding plan depends on.** The CSV importer's date formats, morph-tag parsing and parent linking were not reviewed; the MorphMarket export has never met MorphMarket's importer; there is no whole-account export although the Terms tell members to export what they want to keep; the rack labels and buyer packet have never been printed. Needs: one real spreadsheet import and one printed sheet before item 14 of the plan.
 13. **Production numbers carry two definitions.** "56 accounts" (5 October, logins) and "61 accounts" (14 October, admin excluded); "about 1 weekly active" (members logging care) and "7 weekly actives" (signed in). Every figure in this report should be read with its date and definition, and the admin Funnel card should show both activity definitions side by side.
 
@@ -810,6 +810,33 @@ Production only (could not be checked here):
 **What both reports missed**, per the panel: the `auth.role()` pattern in item 5 is checked for one caller and not the others; no storage policy is recorded in the repository at all; neither plan sizes the founder's hours, budgets the agent sessions, or tells a non-technical founder how to apply the week-one SQL safely. Item 11 of C15 and E1 item 8 are the nearest this report comes; they should be read with that gap in mind.
 
 ## Part E. The plan
+
+> **Where Part E stands, 11 November 2026.** Added by the documentation review; checked against the code, the git log and the other plans. The tables below are the plan as adopted on 15 October and are left as written. "Tennyson" items are gathered with links in `docs/OWNER-STEPS.md`.
+>
+> | Item | Status |
+> |---|---|
+> | E0.5 | Adopted on 15 October: this is the plan, not a proposal. The top ten in `docs/NOW.md` was last written on 31 October. |
+> | E1 1 to 5 | Shipped (round 1, live 15 October). The second step of item 4 went live on 31 October; `geckos.created_by` waits for item 32. |
+> | E1 6 | Open, Tennyson: the repository is still public. |
+> | E1 7 | Done: Enterprise is off sale. |
+> | E1 8 | Migration state settled (8 and 15 October). The reminder-reaches-a-phone check is not recorded. Ignore "retire the deploy queue": that document is the live record of dashboard steps. |
+> | E1 9 | Lilly White origin fixed. The Terms still name no state and support is still a Gmail address: waits on Tennyson. |
+> | E1 10 | Done in code (read-only database access for scheduled sessions, write tools on "ask", triage by hand only). Admin two-factor enrolment waits on Tennyson; its follow-up migration is a session task. |
+> | E1 11 | Open, Tennyson: spend alerts, uptime check, backups (the backup has never run). |
+> | E1 12 | Done: refunded 17 October. |
+> | E1 13, E2 14 | Open, Tennyson: no conversations and no hand imports recorded. Day 30 is 17 November. |
+> | E2 15, 16, 17, 19, 20 | Shipped (round 2, 15 October; the getting-started emails went on 17 October). Phone and real-email checks are not recorded. |
+> | E2 18 | Partly: triage files issues; branch protection is Tennyson's and not recorded. |
+> | E2 21 | Done, and extended on 11 November: one map of the documents (`docs/README.md`), an architecture page, a glossary, a rules page, and banners on every out-of-date document (`docs/planning/docs-review-2026-11-11.md`). |
+> | E2 22 | Open, Tennyson: the company was postponed on 16 October; DMCA agent and counsel not done. |
+> | E3 23 to 28, 30, 31 | Shipped (round 3, 16 October). For item 31, switching the website to PKCE waits on Tennyson's email templates. |
+> | E3 24, 25 | Shipped, then taken further on 11 November by the experience review: Share in the gecko record's top bar, sign-up by 6-digit code, the first-run question on the page (`docs/planning/experience-review-2026-11-11.md`, packages WP-0, WP-5, WP-12). |
+> | E3 29 | Partly: the seller-disjoint split and three baselines are committed; there is no breeder-labelled gold set, and no grading spend without Tennyson's OK. |
+> | E4 32 | Deferred until the breeder experiment works. |
+> | E4 33 | In progress: the iPhone app is in App Store review work; the project is at build 15. |
+> | E4 34 | Open: Tennyson's decision. The US feed has been down since 19 October. |
+> | E4 35 | 17 January 2027. |
+> | E6 | Two lines have been overtaken at Tennyson's request: a new review exists (the experience review, 11 November), and the agent review routine still runs weekly, not monthly. Retired code is kept with no deletion date (16 October), which overrules "delete after a month" in E0.3 and E3 23. |
 
 ### E0. Five rules the plan follows
 

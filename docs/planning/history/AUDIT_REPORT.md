@@ -1,5 +1,7 @@
 # Geck Inspect - Pre-Integration Audit
 
+> **Status, 11 November 2026: History.** An audit from about April 2026, before the genetics engine was integrated. The active plan is Part E of `docs/planning/comprehensive-review-2026-10-14.md`. The map of all documents is `docs/README.md`.
+
 > **Historical document, point in time.** This audit describes the repo as
 > of the commits listed below. It is kept as a record and is not a live
 > tracker, so some findings are already resolved. Notably, the legacy
@@ -7,7 +9,7 @@
 > "Active" is gone: `src/lib/constants.js` and `organization-schema.js`
 > now use `geckinspect.com/logo.png`, and the PWA manifest uses local
 > icons as of August 2026. For current database conventions see
-> [supabase/SCHEMA_CONVENTIONS.md](supabase/SCHEMA_CONVENTIONS.md).
+> [supabase/SCHEMA_CONVENTIONS.md](../../../supabase/SCHEMA_CONVENTIONS.md).
 
 **Repo:** `geck-inspect/` (root) on branch `claude/audit-geck-inspect-qw2Ua`, working tree clean (this audit creates one new untracked file: `AUDIT_REPORT.md`).
 **Most recent commits** (top of `git log --oneline`):
@@ -67,7 +69,7 @@ geck-inspect/
 │   └── functions/           Deno entry.ts files for each Base44 backend function.
 ├── docs/                    Internal product specs.
 │   ├── research/            iherp-competitive-analysis.md
-│   └── specs/               P1–P10 feature specs + DESIGN-SYSTEM, FEATURE-PRIORITY-MAP
+│   └── specs/               P1 to P10 feature specs + DESIGN-SYSTEM, FEATURE-PRIORITY-MAP
 ├── public/                  Static assets served as-is.
 ├── scripts/                 Build-time generators (sitemap, llms.txt, morphs CSV, vercel.json,
 │                            prerender, geo-followup PDF builder, deploy-morph-id, check-morph-id)

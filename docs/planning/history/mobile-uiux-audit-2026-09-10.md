@@ -1,5 +1,7 @@
 # Mobile UI/UX audit, 2026-09-10
 
+> **Status, 11 November 2026: History.** The phone audit of 10 September 2026. Its two open items were overtaken by the 16 October menu and by `docs/planning/experience-review-2026-11-11.md`. The map of all documents is `docs/README.md`.
+
 Scope: the authenticated app shell (`src/Layout.jsx`) and the ~57 pages
 registered in `src/pages.config.js`, reviewed at 390x844 (iPhone 14
 class) in guest mode with Playwright screenshots plus a code inventory of

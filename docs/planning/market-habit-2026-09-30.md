@@ -1,5 +1,7 @@
 # The market habit: what shipped and what is left (30 Sep 2026)
 
+> **Status, 11 November 2026: Dated.** Written 30 September 2026. Changed since: Guess the Price left the Market tabs on 6 October and was retired on 16 October (ignore the lines that describe it and the step asking Tennyson to play a round); the live Market tabs belong to the Enterprise plan, which is off sale, so new members see "not open to new members"; the US feed has been down since 19 October, and whether to restore it is a decision for Tennyson (Part E, item 34). The suggestion here to route around a marketplace's block with a proxy is warned against in the comprehensive review (sections A2 and B9): do not do it. The table locations near the end are still right. The map of all documents is `docs/README.md`.
+
 ## The question
 
 How do we make the market analytics useful and interesting enough that members come back at least a couple of times a week, and some of them every day?

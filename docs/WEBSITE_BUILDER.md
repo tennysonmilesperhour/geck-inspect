@@ -1,5 +1,7 @@
 # Member website builder
 
+> **Status, 11 November 2026: Shelved.** The visual website editor on My Store was retired on 16 October 2026. Its code is kept. This page describes how it worked; to switch it back on, read section 4 of `docs/planning/retired-features-2026-10.md`. The map of all documents is `docs/README.md`.
+
 My Store contains the visual website editor. Choose a template, then customize
 colors, heading font, hero layout and image crop, spacing, site width, card
 corners and gallery columns. Brand controls edit the business name, tagline,

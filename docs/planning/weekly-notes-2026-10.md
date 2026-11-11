@@ -1,5 +1,7 @@
 # Weekly Gecko Notes, 18 October 2026
 
+> **Corrections, 11 November 2026.** The subjects in the section 4 table for notes 1, 3 and 16 differ from the files in `content/weekly-notes/`; the files are the truth. The Resend webhook has been connected since 24 October, so delivery numbers are no longer "empty until the webhook is connected". The switch and the postal address were both set on 18 October.
+
 After a member's first two weeks (the five getting-started emails, `lifecycle-emails-2026-10.md`), each member gets **Weekly Gecko Notes**: one short email a week with one practical crested gecko tip and one button, in order, for as long as they stay subscribed. New notes are added over time by a scheduled Claude session, so a member who reaches the end simply waits for the next one.
 
 Everything here is built and tested. **The notes are on.** The migration adds the switch off, and the session that shipped it turned it on right after the deploy (18 October), since Tennyson asked for the notes to run without waiting on him. The postal address (`EMAIL_POSTAL_ADDRESS`) was set on 18 October at about 15:20 UTC, so nothing is left blocking them. The first notes are due from about 22:50 UTC that day: 52 members, 20 a run, as each member's 20-hour wait since the last check runs out (a run that starts a fraction of a second early leaves a group for the next hour).

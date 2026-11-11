@@ -1,5 +1,7 @@
 # Admin Analytics: prod setup
 
+> **Status, 11 November 2026: History.** This SQL was applied long ago and is now part of the baseline migration. **Do not run it by hand.** Database changes go through migrations (`docs/MIGRATIONS.md`).
+
 Apply this SQL **manually** in the Supabase SQL editor against production.
 It is not wired into the auto-applied migrations because preview branches
 don't have the dashboard-managed tables this script extends

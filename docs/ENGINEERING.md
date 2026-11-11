@@ -1,5 +1,7 @@
 # Engineering guide
 
+> **Corrections, 11 November 2026.** The Morph Visualizer and Promote are retired (their rows in the integration table describe switched-off features), and the Govee sensor integration is switched off in the app. On the iPhone, Sign in with Apple and Google have been on in code since 10 November (the lines saying iOS uses email and password only, and that the Apple switch is off, are out of date). Account deletion happens in the app from Settings; it no longer starts a support request. For the layout of the code, read `docs/ARCHITECTURE.md`.
+
 Start here after [README.md](../README.md). This guide describes the running
 application and its integration boundaries. Historical plans under `docs/planning`
 record intent; they are not evidence that a feature is deployed or verified.

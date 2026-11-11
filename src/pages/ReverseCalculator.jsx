@@ -35,7 +35,7 @@ import {
  * Reverse genetics calculator at /calculator/reverse: pick the gecko
  * you WANT, get the pairings that produce it, ranked by per-egg odds.
  * No reptile calculator anywhere offers this mode; see
- * docs/planning/MORPH_CALCULATOR_PLAN.md item 2.1.
+ * docs/planning/history/MORPH_CALCULATOR_PLAN.md item 2.1.
  *
  * The math lives in lib/genetics/reverseSolver.js (exact per-locus
  * gamete probabilities). Signed-in users additionally get their own

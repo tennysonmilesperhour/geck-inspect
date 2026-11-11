@@ -1,5 +1,7 @@
 # Launch offer tests, October 2026
 
+> **Corrections, 11 November 2026.** The Founding Breeder offer is $120 prepaid for a year, not a free Breeder year (Part E, item 14). "Before merging" steps are done: this shipped on 20 October. Whether the PostHog experiment and the App Store product page test were set up is not recorded (`docs/OWNER-STEPS.md`, step D6).
+
 Written 20 October 2026, for the App Store launch. It turns what we learned from One Peak Creative's Format Finder funnel into tests for Geck Inspect: which promised outcome sells the plans, which comparisons earn sign-ups, counted proof, and a free taste before the sale. One Peak's own pages could not be read from the sandbox, so the lessons come from search-indexed copy, their comparison pages, their App Store listing and Trustpilot.
 
 The homepage is not touched. The homepage A/B test (docs/planning/homepage-ab-test-2026-10.md) is still running, and its rules do not allow edits to either arm mid-run. Everything here runs on other surfaces.

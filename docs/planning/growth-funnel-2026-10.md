@@ -1,5 +1,7 @@
 # Growth and revenue funnel diagnosis, October 2026
 
+> **Status, 11 November 2026: Dated.** The funnel as measured on 5 October 2026, corrected 15 October. Use it as a baseline. Its open questions were answered later (the PostHog key, the getting-started emails). Its reference to "section D7, item 5" of the comprehensive review should read D3, item 5. The map of all documents is `docs/README.md`.
+
 Written 5 October 2026 from read-only queries against production (Supabase project `mmuglfphhwlaluyfyxsp`) plus a read of the app's analytics code. Everything here is aggregate. No member emails or names appear, and the three subscribers are called Member 1, 2 and 3 in the order they subscribed.
 
 ## 1. Summary in plain words

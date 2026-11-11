@@ -1,5 +1,7 @@
 # Ops scripts for the /recognition + /training pipeline
 
+> **Corrections, 11 November 2026.** This page covers the Morph ID operations scripts only; it is not an index of `scripts/`. `deploy-morph-id.sh` does not apply migrations (merging to `main` does, see `docs/MIGRATIONS.md`) and deploys three functions, not four. The note that `profiles.role` exists only in production is out of date: it has been in the baseline migration since 5 September.
+
 > Scope: this file documents only the Morph ID deploy helpers below. The
 > rest of `scripts/` is build-time tooling (sitemap, prerender, llms files,
 > SEO audit, content dates, genetics consistency check) and the scripts the

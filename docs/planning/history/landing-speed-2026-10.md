@@ -1,6 +1,8 @@
 # Landing screenshots, speed and content-page conversion, October 2026
 
-Written 5 October 2026. Builds on [first-impression-2026-10.md](first-impression-2026-10.md), [qa-2026-10-05.md](qa-2026-10-05.md) (items 7, 8 and 10) and [growth-funnel-2026-10.md](growth-funnel-2026-10.md) (leak 3 and change 5). Screenshots are in [landing-speed-2026-10/](landing-speed-2026-10/).
+> **Status, 11 November 2026: History.** Landing page screenshots and speed work from October 2026. Two items remain for Tennyson: measure on a real phone and capture the photo slides on production (`docs/OWNER-STEPS.md`, part F). The landing page is frozen while its test runs. The map of all documents is `docs/README.md`.
+
+Written 5 October 2026. Builds on [first-impression-2026-10.md](first-impression-2026-10.md), [qa-2026-10-05.md](qa-2026-10-05.md) (items 7, 8 and 10) and [growth-funnel-2026-10.md](../growth-funnel-2026-10.md) (leak 3 and change 5). Screenshots are in [landing-speed-2026-10/](landing-speed-2026-10/).
 
 Three jobs: give the landing page real pictures of the app, make the public pages load faster on a phone, and give the Morph Guide, Care Guide and calculator readers a reason to sign up.
 

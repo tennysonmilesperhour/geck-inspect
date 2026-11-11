@@ -1,5 +1,7 @@
 # SEO architecture
 
+> **Status, 11 November 2026: Dated.** Last fully updated in April 2026. Since then: the sitemap has about 180 addresses, not 97; `/Marketplace` redirects to `/Market`; IndexNow submission is live (`.github/workflows/indexnow-submit.yml`); public pages carry content dates and markdown twins (`docs/OPERATIONS.md`, `docs/planning/agent-access-2026-10.md`). The route map below is incomplete: `src/App.jsx` is the truth. The map of all documents is `docs/README.md`.
+
 > Last updated: 2026-04-17 · Owner: editorial / eng
 
 Geck Inspect's SEO layer is cross-cutting and data-driven: every
@@ -23,7 +25,7 @@ or public routes.
 | Per-page SEO component | `src/components/seo/Seo.jsx` | Runtime metadata via react-helmet-async, overrides the static HTML for JS-executing crawlers. |
 | Organization + WebSite JSON-LD | `src/lib/organization-schema.js` | Canonical Organization and WebSite schema, shared across pages. Also exports `breadcrumbSchema()`. |
 | Editorial metadata | `src/lib/editorial.js` | `author`, `reviewedBy`, `datePublished`, `dateModified` for every content path. `bylineText()` renders the visible E-E-A-T byline. |
-| Per-morph FAQPage | `src/lib/morphFaq.js` | Generates 3–6 Q&A pairs per morph from structured data; used for both visible FAQ section and FAQPage JSON-LD. |
+| Per-morph FAQPage | `src/lib/morphFaq.js` | Generates 3 to 6 Q&A pairs per morph from structured data; used for both visible FAQ section and FAQPage JSON-LD. |
 
 ## Public route map
 

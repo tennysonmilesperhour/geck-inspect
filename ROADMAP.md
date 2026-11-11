@@ -1,6 +1,6 @@
 # ROADMAP.md - Geck Inspect
 
-Last updated: 16 October 2026
+Last updated: 11 November 2026
 
 ## The plan
 
@@ -45,11 +45,11 @@ Everything left on the old roadmap no longer applies. The old item numbers are l
 | 13. Become institutional | Retired |
 | 14. Genetic testing partnership | Retired |
 | 15. International expansion | Retired |
-| 16. Apps in both stores | Plan step 9; store billing steps moved to `docs/app-store-billing.md` |
+| 16. Apps in both stores | Plan step 9; store billing is in `docs/BILLING.md`, and the App Store steps in `docs/planning/app-store-resubmission-2026-10-26.md` |
 | 17. Trademark and domains | Retired |
 | 18. Data export messaging | Done |
 | 19. Morph calculator plan | Done (18 Aug) |
 | NOW list A to F (29 Sep) | F became the plan above and C is its section 8; A, B, D and E are retired |
 | Launch review F43 and F55 | In the plan: F43 (enforce the CSP) is in step 34, F55 (real iPhone check) is in section 8 |
-| VIP audit phased plan | Complete 29 Sep (sections 2E and 2F of `docs/planning/vip-audit-2026-09-27.md`) |
+| VIP audit phased plan | Complete 29 Sep (sections 2E and 2F of `docs/planning/history/vip-audit-2026-09-27.md`) |
 | Morph ID accuracy (parked 29 Sep) | The roadmap item was retired; notes kept in section 2A of the VIP audit. Morph ID itself kept shipping: outage handling that hands the scan back (13 Oct), Sable and Highway labels (written 14 Oct, live 15 Oct when the Supabase GitHub integration deployed `recognize-gecko-morph` from `main`), and the `morph-id-eval` workflow that grades it on held-out listings |

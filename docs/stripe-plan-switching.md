@@ -1,5 +1,7 @@
 # Stripe plan switching
 
+> **Status, 11 November 2026: Dated.** The verification log is from early October 2026. One step is still open: adding the refund and dispute events to the Stripe webhook (`docs/OWNER-STEPS.md`, step C4). The map of all documents is `docs/README.md`.
+
 Status checked September 30, 2026. Code, overage removal, and both default portals are shipped. The live Keeper to Breeder test passed with one unchanged subscription id and the correct profile. Annual scheduling and portal cancellation also passed. Cleanup is in progress.
 
 ## Dashboard setup

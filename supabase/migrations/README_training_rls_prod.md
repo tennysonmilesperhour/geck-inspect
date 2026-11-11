@@ -1,5 +1,7 @@
 # Training-data RLS: prod setup
 
+> **Status, 11 November 2026: History.** This SQL was applied long ago and is now part of the baseline migration. **Do not run it by hand.** Database changes go through migrations (`docs/MIGRATIONS.md`).
+
 Apply this SQL **manually** in the Supabase SQL editor against production.
 Not wired into the auto-applied migrations because the policies reference
 `profiles.role`, which only exists in prod (preview branches don't have

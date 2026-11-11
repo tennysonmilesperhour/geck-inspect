@@ -1,5 +1,7 @@
 # First impression review, 5 October 2026
 
+> **Status, 11 November 2026: History.** The newcomer review of 5 October 2026. Its fixes shipped. Still open from it: a support address on the domain (`docs/OWNER-STEPS.md`, step C6). The current review of screens and flows is `docs/planning/experience-review-2026-11-11.md`. The map of all documents is `docs/README.md`.
+
 A newcomer's path through Geck Inspect, reviewed as a product designer and conversion copywriter would: the landing page, the pricing page, sign-up, the first-run question and tour, and the empty Dashboard and My Geckos. Every screen was captured with Playwright at 390 x 844 (phone) and 1440 x 900 (laptop) before and after the changes. The screenshots are in [first-impression-2026-10/](first-impression-2026-10/) (25 files, numbered in the order a newcomer meets them).
 
 How the screenshots were made, so they can be repeated: the local dev server with the production Supabase URL and public key in an uncommitted `.env.local`. The sandbox cannot reach Supabase or any image host, so the signed-in screens use a mocked brand new Free account with no geckos (every database call answered as empty), the landing page's live stats strip does not render, and logos or photos served from other domains show as broken. None of that is how production looks; the layout, copy and flow are.

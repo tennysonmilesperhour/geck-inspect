@@ -1,5 +1,7 @@
 # Deploy queue, 3 October 2026
 
+> **Corrections, 11 November 2026.** The open list just below is still right and is also gathered, with links and values, in `docs/OWNER-STEPS.md`. Two passages further down are out of date: the paragraph that says the Resend webhook and its secrets are still waiting (they were connected on 24 October, as the open list says), and the "first check" that asks an admin to open Promote (retired 16 October).
+
 The 2 and 3 October ship-ready work is on `main` and live on Vercel. This file records what went to production on 3 October and after.
 
 **Status 15 October: the SQL queue is cleared, and deploys go through merges.** Everything that was waiting on the SQL Editor run reached production on 8 October (details in "Cleared on 8 October" below). Merging to `main` does three things at once, through Vercel and the Supabase GitHub integration: Vercel deploys the site, Supabase applies every new file in `supabase/migrations/`, and Supabase deploys the edge functions declared in `supabase/config.toml`. The integration already did this before 15 October, alongside changes applied by hand; round 1 of the review fixes went out with nothing run by hand (below), and that is the rule now. How to write a migration for this is in `docs/MIGRATIONS.md`.

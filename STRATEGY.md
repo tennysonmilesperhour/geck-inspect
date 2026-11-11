@@ -1,5 +1,7 @@
 # STRATEGY.md - Geck Inspect
 
+> **Corrections, 11 November 2026.** The Word documents this file cites (`docs/landscape-analysis-vol1.docx` and `vol2.docx`) are not in the repository. The iPhone app has been submitted to the App Store and is in review work (not "no app in the stores" without qualification). The visual website editor was retired on 16 October. The Govee sensor integration is switched off in the app. Whether "Tenny's Crested Geckos" stays in the list of reference sources is a decision for Tennyson (`docs/OWNER-STEPS.md`, E7).
+
 Last updated: 15 October 2026 (plan item E2 21 of `docs/planning/comprehensive-review-2026-10-14.md`). The May 2026 version is in git history.
 
 Sources, newest first:

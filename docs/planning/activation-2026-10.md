@@ -1,5 +1,7 @@
 # Activation pass, 5 October 2026
 
+> **Status, 11 November 2026: Reference.** Shipped between 5 and 31 October. The day 1 email no longer waits for approval (it has been live since 17 October). The next onboarding work shipped on 11 November as package WP-12 of `docs/planning/experience-review-2026-11-11.md`: sign-up by 6-digit code, and the keeper-or-breeder question as part of the first-gecko card instead of a pop-up. The demo price snapshot (5 October) is due a refresh.
+
 Goal: raise activation. Today 68% of new members never add a gecko, and none of the September signups came back a week later (`growth-funnel-2026-10.md`). The working aha moment is: **"my geckos are in, I can see their parents, and the app tells me what each one needs next."** This pass builds the path to that moment inside the first session, gives the member a reason to come back, and fixes the guest demo problems from `qa-2026-10-05.md`. It builds on the first-impression changes already merged (`first-impression-2026-10.md`).
 
 Screenshots: [activation-2026-10/](activation-2026-10/) (22 files, numbered in the order a newcomer meets them; `m-` is a 390 x 844 phone, `d-` a 1440 x 900 laptop).

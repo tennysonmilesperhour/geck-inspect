@@ -1,5 +1,7 @@
 # Infrastructure that lives in production
 
+> **Corrections, 11 November 2026.** Counts: the repository holds 39 edge functions and `supabase/config.toml` declares 34 (the text below says 37 and 33; `apple-token` was added on 10 November). "Once round 3 is merged" is done: it merged on 16 October.
+
 What Geck Inspect runs on that the repository cannot rebuild by itself, and how the parts the repository does hold reach production.
 
 How this was checked: read-only queries against the production database (`mmuglfphhwlaluyfyxsp`) and its edge function list on 16 October 2026, plus a file-by-file comparison of each hand-deployed function's live code with the repo copy. Re-checked on 28 October 2026 (about 02:00 UTC): the newest migration, the edge function list and each `verify_jwt`, the scheduled jobs and the Vault secret names. Secret values were never read; only names. Re-run the queries in section 8 before relying on a number here.

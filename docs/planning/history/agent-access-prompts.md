@@ -1,5 +1,7 @@
 # Agent access prompts for Tennyson's other repos (7 Oct 2026)
 
+> **Status, 11 November 2026: History.** Prompts for copying the AI-agent work into Tennyson's other repositories (7 October 2026). It is about those repositories, not this one. The map of all documents is `docs/README.md`.
+
 How to use: open a new Claude Code session on the repo, paste the **master prompt** below, then paste that repo's **customization block** under it. The master prompt carries everything learned on Geck Inspect; the block says what fits that repo and what to avoid. Each session reads the repo itself before building, so a block that has gone stale gets corrected, not followed blindly.
 
 The reference build is Geck Inspect (public repo `tennysonmilesperhour/geck-inspect`, plan in `docs/planning/agent-access-2026-10.md`).
@@ -119,7 +121,7 @@ CUSTOMIZATION: mythic-labs
 - Rules from CLAUDE.md: skill descriptions are a contract, skill bodies stay under about 150 lines, bump the plugin version when behaviour changes.
 - Site: llms.txt plus a methodology topic file (Threefold Path, the comparison with traditional agencies), a markdown twin of the manifesto, Organization/ProfessionalService JSON-LD, Content Signals.
 - Marketplace: it is already agent-facing. Make marketplace.json and every skill description accurate and clean.
-- Good addition: a dev-workflows skill that packages this agent-access playbook (the master prompt in geck-inspect docs/planning/agent-access-prompts.md) so any repo can run it.
+- Good addition: a dev-workflows skill that packages this agent-access playbook (the master prompt in geck-inspect docs/planning/history/agent-access-prompts.md) so any repo can run it.
 - Skip: datasets and a site MCP (no data). Keep comms, inbox and client material out.
 - Review: light (monthly), first Tuesday 16:25 UTC.
 ```

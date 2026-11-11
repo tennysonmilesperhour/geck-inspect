@@ -1,5 +1,7 @@
 # Membership billing
 
+> **Corrections, 11 November 2026.** The header says "verified September 6" but the content runs to late October. Apple's purchase notifications have been observed in production (a sandbox Breeder annual purchase on 18 October and eight renewals; see the 26 October section of `docs/APP_STORE_REQUIREMENTS.md`), so the "no delivery has been observed yet" paragraph is out of date and `NATIVE_BILLING_WEBHOOK_VERIFIED` can be set for the store build. The open Stripe step (refund and dispute events) is `docs/OWNER-STEPS.md`, step C4.
+
 Current contract, verified September 6, 2026. This supersedes older instructions
 that every native product must grant `Geck Inspect Pro`.
 

@@ -1,5 +1,7 @@
 # Growth plan, October 2026
 
+> **Status, 11 November 2026: History.** The October growth plan. Its 30 days ended on 2 November 2026 and Part E replaced it on 15 October. It aimed at keepers first; the plan aims at breeders. It offers a free Breeder year; the offer is $120 prepaid. It says Promote, the AI Consultant and the store stay; all three are retired. For priorities read `docs/NOW.md`. Its leftover items for Tennyson are in `docs/OWNER-STEPS.md`, G1. The active plan is Part E of `docs/planning/comprehensive-review-2026-10-14.md`. The map of all documents is `docs/README.md`.
+
 This pulls together five reviews done on 5 October: the competitor research (`competitive-landscape-2026-10.md`), the funnel analysis from production data (`growth-funnel-2026-10.md`), a real-browser test of the app (`qa-2026-10-05.md`), the first-impression review (`first-impression-2026-10.md`) and the measurement work (`instrumentation-2026-10.md`). Read this first; the others hold the evidence.
 
 ## 1. Where Geck Inspect stands

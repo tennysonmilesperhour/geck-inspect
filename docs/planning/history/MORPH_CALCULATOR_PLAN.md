@@ -1,5 +1,7 @@
 # MORPH_CALCULATOR_PLAN.md - Geck Inspect
 
+> **Status, 11 November 2026: History.** Built: all three phases shipped on 18 August 2026. One item was never done: the engine data audit (1.9), which needs the genetics engine's source repository (`docs/OWNER-STEPS.md`, E8). The map of all documents is `docs/README.md`.
+
 Last updated: August 2026
 Status: Built. All three phases shipped August 18, 2026; the only open checkbox is the vendored engine package's own data review (1.9), which needs a rebuild in the package's source repo. Adoption targets (logged clutches, shared projects) accrue over the coming season. Companion to ROADMAP.md (see item 19).
 Research basis: five parallel research passes (competitors, reptile-wide calculator landscape, community feedback mining, crested gecko genetics science, calculator UX and education research), August 18, 2026. Source links inline.

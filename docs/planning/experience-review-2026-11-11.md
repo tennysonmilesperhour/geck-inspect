@@ -26,7 +26,7 @@ What stops it feeling smooth is everything around that core:
 2. **The second visit is worse than the first.** The first gecko gets a 6-field form; every gecko after that gets a flat 25 to 31 control form with photos at the very bottom and no warning before entered data is thrown away (D1 to D5).
 3. **There are six ways to log care and they disagree.** Undo, offline saving, back-dating and batch weights each exist in some and not others (E1 to E5).
 4. **There are three different home screens** depending on the device and how the member arrived, and the laptop one opens on other people's activity (C1 to C4).
-5. **The app often says nothing.** Saving a gecko, creating a pairing and adding eggs show no confirmation; some failures are written only to the developer console; 27 places still use the browser's own grey pop-ups, 11 of them in screens members use (F1 to F6).
+5. **The app often says nothing.** Saving a gecko, creating a pairing and adding eggs show no confirmation; some failures are written only to the developer console; 26 places still used the browser's own grey pop-ups, 11 of them in screens members use (F1 to F6).
 6. **The action that the 90-day plan counts, issuing a passport, sits at the bottom of a 3,900 pixel scroll** (G3).
 7. **Names drift.** The genetics calculator has six names, Batch Husbandry has three, My Geckos has four (H3).
 8. **Small visible defects remain**: a dead link on the Breeding page, a chip that prints `✕`, a toolbar that overlaps on phones, money shown as `$34975.00` (A1 to A9).
@@ -93,7 +93,7 @@ So the honest framing is this. Nothing below will bring in a paying breeder by i
 1. **How much of this to build before decision day.** Recommended: WP-0, WP-5 and WP-12 now; WP-1 to WP-4 next; the rest after 17 November's check. Blocks: everything after WP-0.
 2. **One home or two.** Recommended: Today becomes the home on every device and the Dashboard's useful parts (stats, values, quick links) become its second column on laptops. The lighter option keeps the Dashboard and only reorders it. Note that the Dashboard was rebuilt on 17 October at Tennyson's request, so this reverses part of a recent choice. Blocks: WP-8.
 3. **Market Intelligence for members who cannot buy it.** Enterprise is off sale, yet the sidebar link shows for every breeder and three of its tabs say "not open to new members". Recommended: the link opens the member's own collection value (Portfolio) by default and the closed tabs are hidden until Enterprise returns. Blocks: part of WP-8.
-4. **Email sign-up by 6-digit code in place of a link.** Needs one template change in the Supabase dashboard. Recommended: yes. Blocks: WP-12.
+4. **Email sign-up by 6-digit code in place of a link.** Answered yes on 11 November (Tennyson asked for WP-12 to be built). The code box is live; the template change is `docs/OWNER-STEPS.md`, step A3.
 5. **The emoji rank badges** (egg, lizard, trophy, crown by gecko count) and the 24-step sidebar tutorial. Recommended: hide both. Blocks: part of WP-10 and WP-8.
 6. **Messages on the phone header.** Two members opened Messages in 30 days. Recommended: fold it into the notifications bell and give its header slot to Morph ID. Blocks: part of WP-8.
 7. **Community Pulse at the top of the home screen.** Recommended: off by default until there are at least 25 weekly active members; "Customize home" can switch it back on. Blocks: part of WP-8.
@@ -202,7 +202,7 @@ Look at screenshot `01`. On Today, at rest, a member sees: the glass header, a f
 |---|---|---|---|---|
 | F1 | High | Adding eggs with the "1 Egg" and "2 Eggs" buttons shows no confirmation, cannot be undone, and a failure is written only to the developer console. | `src/components/breeding/BreedingPlanCard.jsx:102-131`. | Toast "2 eggs added to Onyx x Aria" with Undo for 8 seconds; a failure toast with Retry. |
 | F2 | Med | No confirmation after creating a breeding plan, or after logging the first weight in the first-gecko flow. Failures in Batch Husbandry loading and Hatchery archiving go to the console only. | `src/pages/Breeding.jsx:230-240`; `src/components/onboarding/FirstGeckoFlow.jsx:123-144`; `src/pages/BatchHusbandry.jsx:566-568`; `src/components/breeding/Hatchery.jsx:252-263`. | Every save answers; every failure is shown with a way to retry. |
-| F3 | Med | 21 browser `confirm()` boxes, 4 `alert()` boxes and 2 `prompt()` boxes remain. 11 are in screens members use (the rest are admin tools and retired features). The waitlist asks for a buyer's name and email through `prompt()`. | `confirm`: `src/components/settings/CollectionsCard.jsx:187, 342, 441`; `src/components/business/WaitlistsTab.jsx:337, 574`; `src/pages/MarketplaceSalesStats.jsx:550, 585, 596`; plus admin and retired files. `prompt`: `WaitlistsTab.jsx:349, 351`. `alert`: `Hatchery.jsx:279`, `src/components/store/StoreCart.jsx`. | One shared `ConfirmDialog` and one `useUndoToast`. Reversible actions use undo; permanent ones use the dialog. The waitlist gets a small form. Do the 11 member-facing calls first (Business Tools 3, Collections 3, Waitlists 4, Hatchery 1); admin tools can follow; skip retired features. |
+| F3 | Med | 26 browser pop-ups remained on 11 November: 20 `confirm()`, 4 `alert()` and 2 `prompt()` (one more `confirm()` sits in a `.js` file, `src/lib/aiConsent.js`). 11 are in screens members use (the rest are admin tools and retired features). The waitlist asks for a buyer's name and email through `prompt()`. | `confirm`: `src/components/settings/CollectionsCard.jsx:187, 342, 441`; `src/components/business/WaitlistsTab.jsx:337, 574`; `src/pages/MarketplaceSalesStats.jsx:550, 585, 596`; plus admin and retired files. `prompt`: `WaitlistsTab.jsx:349, 351`. `alert`: `Hatchery.jsx:279`, `src/components/store/StoreCart.jsx`. | One shared `ConfirmDialog` and one `useUndoToast`. Reversible actions use undo; permanent ones use the dialog. The waitlist gets a small form. Do the 11 member-facing calls first (Business Tools 3, Collections 3, Waitlists 4, Hatchery 1); admin tools can follow; skip retired features. |
 | F4 | Med | There is no undo for deleting a gecko, deleting a breeding plan, a batch feed or a batch weigh-in. | Flow sweep, section L. | Deleting a gecko is already limited to archived animals behind a dialog, which is right. Give the other three an undo toast. |
 | F5 | Med | Settings mixes two ways of saving. Some controls save at once; others wait for a "Save changes" bar; leaving the page with unsaved changes loses them silently. | `src/pages/Settings.jsx:675-691` (the bar); no navigation guard exists in `src/`. | Save everything as it changes, with a small "Saved" tick beside the control. Remove the bar. Text fields save when focus leaves them. |
 | F6 | Low | Several links reload the whole app. | `src/pages/Settings.jsx:1195`; `src/pages/MyGeckos.jsx:708-712`; `src/Layout.jsx:628-630`; `src/pages/Membership.jsx:630-635`; `src/pages/QuickLog.jsx:405`. | Use the router's `Link` or `navigate`. Sign-in redirects that must leave the page are fine. |
@@ -394,6 +394,8 @@ Findings: A1, A2, A3, A4, A5, A6, A8, A11, C3, J8.
 
 Done when: `/ClutchLab` is not linked anywhere in `src/`; no page shows "?geckoId="; a selected morph tag shows a cross; at 390 pixels the My Geckos sort control and view toggle do not overlap; Business Tools shows `$34,975`; `grep -rn "alert(" src --include=*.jsx` finds nothing outside retired features; tests pass.
 
+**Shipped 11 November 2026** (commit "Fix visible defects from the experience review (WP-0)"). All of the list above, with these differences. A2: the Pedigree page now lists the member's geckos with a search box when it is opened without one, so the two entry points were kept (they work now). A5: `formatMoney` in `src/lib/money.js` adds thousands separators and shows cents only when the amount has them (a ledger needs its cents; the "no cents at $100 and above" idea was dropped). A9: the launch colour was changed in `capacitor.config.ts` and `src/lib/nativeShell.js` and noted in the App Store document; it takes effect at the next iPhone build. A10 is queued in the homepage test document. Checks: lint, 3,838 unit tests, 40 browser tests.
+
 ### WP-1. Quiet the phone screen (S to M)
 
 Findings: B1 to B8.
@@ -437,6 +439,8 @@ Done when: the table in section E has "yes" in every cell for the one-tap log; `
 Findings: G1, G2, G3, G5. Serves the plan's passport numbers.
 
 Done when: from My Geckos, a passport can be made in 3 taps with no scrolling (open gecko, Share, Make a passport); the passport and QR card open inside the app; a gecko marked For Sale shows the passport line; `detail-record.e2e.js` and `transfer-continuation.e2e.js` pass.
+
+**Shipped 11 November 2026** (commit "Gecko record: Share in the top bar, passport opens in the app (WP-5)"). Share is in the record's top bar (`src/components/gecko/record/RecordShare.jsx`): Make a passport or View passport, QR card, Copy link, and Transfer to a new owner. View passport and QR card open in the same tab, and the passport page has a Back link to the record. A gecko marked For Sale with no passport shows the offer under its name. Both places say before the tap that a passport makes the record public (G5). The jump links are one row that scrolls sideways on a phone. **Not built, on purpose:** the wide hero photo in G1. The small photo is a decision of plan item E3 24 ("parents and value above the fold"), noted in the component, and the one-row jump links serve the same aim. A browser test covers the three-tap passport.
 
 ### WP-6. Breeding (M)
 
@@ -488,11 +492,27 @@ Findings: J1, J2, J3, G4.
 
 Done when: a new member can sign up, confirm and add a gecko without leaving the tab (`member-flow.e2e.js` extended); no pop-up appears in the first 10 seconds of a new account; the claim page accepts a code.
 
+**Shipped 11 November 2026** (commit "Sign-up by 6-digit code, and the first-run question on the page (WP-12)"). The "Check your email" screen takes the 6-digit code (`handleVerifyCode` in `src/components/auth/LoginPortal.jsx`); the link still works; a sign-in refused for an unconfirmed email offers "Enter the code". The keeper-or-breeder question is the first panel of the first-gecko card and a slim card above the list for members who have geckos and never answered (`src/components/onboarding/RoleQuestion.jsx`); the pop-up and its timer are gone, and the 24-step tour no longer opens by itself (the automatic half of H8). **Waiting on Tennyson:** the email shows no code until the template has one (`docs/OWNER-STEPS.md`, step A3). **Not built, on purpose:** J3 (an optional display name): the name was made required on purpose in an earlier audit so members do not appear as "Geck Inspect member", and falling back to part of the email address would show part of it to other members. The second half of G4 (the animal's photo on the claim page before sign-up): the transfer contract deliberately shows a signed-out visitor nothing about the animal (`docs/planning/qr-transfer-security-2026-10-17.md`). The buyer's path is still shorter: sign up, type the code, accept.
+
 ### WP-13. Plan limits (S to M)
 
 Findings: J4, J5, J6, I2.
 
 Done when: every limit is shown before the member does the work; checkout returns to the page it started from; one component renders every limit notice.
+
+### Also shipped on 11 November 2026 (small fixes outside the three packages)
+
+Commit "Small fixes from the experience review: saves that answer, no lost work".
+
+- **E2:** Weigh-in mode saves each weight on its own and clears its row as it goes, so a retry after a failure sends only the ones that failed. (Part of WP-2 and WP-4.)
+- **D3:** the long gecko form asks "Discard your changes?" before closing if anything was changed. The saved draft that survives a closed form is still to do. (Part of WP-2 and WP-3.)
+- **D5, F1, F2:** saving a gecko from the long form, creating a breeding plan and the quick egg buttons now say what happened, and a failed quick egg save is shown. Undo for quick eggs is still to do. (Part of WP-2.)
+- **B7:** phone tab labels are 11 pixels. (Part of WP-1.)
+- **C3:** the Dashboard's "Log care" opens the Log sheet (in WP-0).
+- The `scrollbar-none` class used by three chip rows was never defined; it is now.
+- The weekly growth report no longer writes a prompt to draft a blog post.
+
+Left alone although small, because each needs a decision or a real phone: B1 (the glass bottom bar's legibility is part of the liquid glass design, decision 39), H4 (hiding breeder pages from a keeper's quick search also removes their way to find them), K7 (the endless animations).
 
 ## 10. How to tell it worked
 
@@ -517,7 +537,7 @@ Done when: every limit is shown before the member does the work; checkout return
 |---|---|---|---|
 | 10 pixel text | `grep -rn "text-\[10px\]" src --include=*.jsx \| wc -l` | 289 | under 40 |
 | 11 pixel text | `grep -rn "text-\[11px\]" src --include=*.jsx \| wc -l` | 294 | under 80 |
-| Browser pop-ups | `grep -rnE "[^.[:alnum:]_](confirm\|alert\|prompt)\(" src --include=*.jsx \| grep -v __tests__ \| wc -l` | 26 (11 member-facing) | 0 member-facing |
+| Browser pop-ups | `grep -rnE "[^.[:alnum:]_](confirm\|alert\|prompt)[(]" src --include=*.jsx \| grep -v __tests__ \| wc -l` | 26 (11 member-facing); 25 and 10 after 11 November | 0 member-facing |
 | Spinners | `grep -rn "<Loader2" src --include=*.jsx \| wc -l` | 274 | under 120 |
 | Pages using the shared header | `grep -rln "PageHeader" src/pages \| wc -l` | 33 of 86 | every app page |
 | Optimistic saves | `grep -rn "useMutation" src \| wc -l` | 0 | 5 or more |

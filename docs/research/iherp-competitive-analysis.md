@@ -1,5 +1,7 @@
 # iHerp.com Competitive Analysis: Lessons for Geck Inspect
 
+> **Status, 11 November 2026: History.** Research from April 2026 that led to specs P1 to P10. Breeding loans and member blogs, which it recommends, were since retired and shelved. "What Geck Inspect has today" means April 2026. The map of all documents is `docs/README.md`.
+
 **Date:** April 2026
 **Purpose:** Identify features and patterns from iherp.com that can improve Geck Inspect as a gecko breeder/keeper/seller/buyer/education tool.
 

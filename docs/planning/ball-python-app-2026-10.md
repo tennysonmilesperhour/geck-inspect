@@ -1,5 +1,7 @@
 # Ball python app: plan (13 Oct 2026)
 
+> **Status, 11 November 2026: Shelved.** Paused by rule E6 of the plan until decision day, 17 January 2027. Do not build any of it. Other Reptiles, which this plan meant to migrate, was retired on 16 October with its code and tables kept. The Phase 0 decisions are Tennyson's. The map of all documents is `docs/README.md`.
+
 Status: planned, nothing built yet. Decision 43 in `docs/DECISIONS.md`.
 
 ## What we are building

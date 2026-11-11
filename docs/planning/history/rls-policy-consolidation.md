@@ -1,5 +1,7 @@
 # RLS policy consolidation (F46 remainder)
 
+> **Status, 11 November 2026: History.** The record of the database security policy batches applied on 4 and 5 September 2026. The map of all documents is `docs/README.md`.
+
 Proposed 4 September 2026 from the live performance advisor and applied
 the same night with Tennyson's approval, one batch at a time, as
 migrations 20260905010000 to 20260905017000 (rls_batch1 to rls_batch8).

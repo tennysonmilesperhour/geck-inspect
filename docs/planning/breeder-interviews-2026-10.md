@@ -1,5 +1,7 @@
 # Breeder conversations, October and November 2026
 
+> **Note, 11 November 2026.** The "Prepaid" entry kind on the scoreboard has been live since 28 October. No conversation is recorded yet, and the Day 30 check is 17 November.
+
 The 90-day plan's Day 30 check (17 November) needs 15 breeder conversations on record. Fewer than 15 means engineering pauses and the time goes to conversations (`docs/NOW.md`). On 28 October none were recorded. This file is where each one goes, so the answers are in one place when the Day 30 and Day 60 decisions are made.
 
 Two places to record each call:
@@ -18,7 +20,7 @@ This repository is public. Write each breeder as a short label you will recognis
 
 ## The conversation (15 minutes)
 
-From `docs/planning/growth-plan-2026-10.md`, section 5. Ask in this order, and listen more than you talk.
+From `docs/planning/history/growth-plan-2026-10.md`, section 5. Ask in this order, and listen more than you talk.
 
 1. How do you track your collection today (spreadsheet, MorphMarket, notebook, an app)? What do you hate about it?
 2. Walk me through the last gecko you sold. Where did the buyer find you, and what did they ask for?

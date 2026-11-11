@@ -1,5 +1,7 @@
 # P8: Enhanced Breeder Storefront
 
+> **Status, 11 November 2026: Partly built, and Dated.** The public page is `/Breeder/:slug` and the editor is `/MyStore`. There are no `/b/` routes and no embed widget. The visual website editor was retired on 16 October.
+
 > **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P8
@@ -20,7 +22,7 @@ Every Geck Inspect user who lists animals for sale gets an automatically-generat
 BreederProfile {
   user_id:          UUID → User  (one-to-one)
   display_name:     string
-  custom_slug:      string UNIQUE  (e.g. "tennys-crested-geckos" → geckinspect.com/b/tennys-crested-geckos)
+  custom_slug:      string UNIQUE  (e.g. "lakeside-cresties" → geckinspect.com/b/lakeside-cresties)
   bio:              text
   location:         string  (city/state)
   years_breeding:   integer

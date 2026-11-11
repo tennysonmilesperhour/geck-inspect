@@ -1,5 +1,7 @@
 # Funnel instrumentation and Morph ID credits, October 2026
 
+> **Corrections, 11 November 2026.** "Nothing here has been deployed" and the "What is pending" section are out of date: both migrations and the Morph ID function went live on 5 October. New on 11 November: `signup_code_checked` (ok true or false), `onboarding_role_selected` now carries a `surface`, and `onboarding_role_snoozed`.
+
 Written 5 October 2026. Follows `growth-funnel-2026-10.md`, which found that signups had no source, signup itself was not a first-party event, several gecko add paths sent nothing, and the admin account was most of every chart.
 
 Nothing here has been deployed. The app changes go live with the next push to `main`. Two migrations and one edge function deploy are waiting (see "What is pending" below). Everything in the app works without them; the new admin Funnel card says the migration is missing until it is applied.

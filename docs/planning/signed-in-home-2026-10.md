@@ -1,5 +1,7 @@
 # Signed-in homepage, 17 October 2026
 
+> **Status, 11 November 2026: Reference.** This is the Dashboard as built on 17 October. Decisions 2 and 7 of `docs/planning/experience-review-2026-11-11.md` propose making Today the one home and switching Community Pulse off by default; until Tennyson decides, this stands.
+
 Implemented after the October 16 update. Dashboard keeps the app's existing theme, navigation destinations and all enabled dashboard modules. Care appears first beside Community Pulse, followed by collection statistics, value summaries, recent animal records, community panels and breeding tools. Customize home updates the existing device preferences. Retired features stay retired.
 
 The menu's only changes are unread-event counts and accessible descriptions. In a collapsed desktop sidebar, the count disappears and the icon pulses gold. Reduced motion uses a steady glow. Counts reuse the notification bell's current unread rows and clear through its existing read/dismiss behavior. Child routes roll up to their current menu destination; care-log reminders belong to Today. No new polling or notification records.

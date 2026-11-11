@@ -1,5 +1,7 @@
 # P9: Breeding Journal / Blog
 
+> **Status, 11 November 2026: History.** Never built, and shelved with all blog work (30 September 2026). Do not build. The map of all documents is `docs/README.md`.
+
 **Priority:** P9 (Low, build only after P1-P8 are solid)
 **Dependencies:** P8 (Breeder Storefront, blogs linked from storefront)
 **Origin:** iHerp analysis, member blogs create engagement and organic content

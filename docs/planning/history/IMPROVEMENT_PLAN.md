@@ -1,5 +1,7 @@
 # Geck Inspect - Improvement Plan and Hand-Off Prompts
 
+> **Status, 11 November 2026: History.** A code audit from July 2026 with prompts meant to be pasted into agent sessions. **Do not paste its prompts or its "Standing Guardrails"**: several are now false (the Base44 client file no longer exists; it proposes raising Breeder to $9.99, which decision 27 rejected; its content plan is blog work, which is shelved; Other Reptiles and the store are retired). The rules now live in `CLAUDE.md` and `docs/RULES.md`. The active plan is Part E of `docs/planning/comprehensive-review-2026-10-14.md`. The map of all documents is `docs/README.md`.
+
 Date: 2026-07-07. Produced from a five-track code audit (routing/dead code, bugs and logic contradictions, UX/workflow, backend/build/infra, marketing surface) plus the strategy docs (STRATEGY.md, ROADMAP.md, docs/INTENT.md, docs/DECISIONS.md) and the latest growth reports.
 
 This file is written to be handed off. Every work item includes context, evidence with file:line references, a definition of done, and a copy-paste prompt you can give to Claude Opus 4.5, ChatGPT 5.5, or any capable coding agent with access to this repo.
@@ -538,7 +540,7 @@ Verification after each: pnpm lint && pnpm typecheck && pnpm build.
 **STATUS: COMPLETED 2026-07-07.** Notes:
 - 3.1: fresh greps caught two stale audit claims before deleting: `MorphGuideComment` the entity is still live (admin ContentModeration imports it from `@/entities/all`), so only the redundant shim file was removed; and removing `Passport.jsx` fully orphaned `innovations/GeckoPassport.jsx` (both its exports), which was deleted too. Also removed the four unused UI primitives + their four deps, and archived the root `base44/` snapshot to `docs/archive/base44/`. Build/tests/lint stayed green throughout.
 - 3.2: done as a safe first increment, NOT a big-bang rewrite. `KNOWN_MORPH_SLUGS` now derives from the morph guide (it had already drifted, missing `cream`). The six catalogues use three id schemes and genuinely different morph sets, and the genetics dimension is already CI-checked, so the full consolidation is staged in `docs/specs/morph-catalogue-consolidation.md` rather than forced in one risky pass.
-- 3.3: analysis only, delivered as `docs/specs/storefront-consolidation.md`. Recommends one public storefront (`Breeder.jsx`) + one editor (`MyStore.jsx`), with an ordered, publicly-safe execution plan. No storefront code was changed.
+- 3.3: analysis only, delivered as `docs/specs/history/storefront-consolidation.md`. Recommends one public storefront (`Breeder.jsx`) + one editor (`MyStore.jsx`), with an ordered, publicly-safe execution plan. No storefront code was changed.
 
 All findings verified by import-graph greps. The "do not remove" list at the end matters as much as the deletions.
 
@@ -668,7 +670,7 @@ src/lib/navItems.js and the command palette), (3) real usage signals if any
 public breeder page and ONE seller-management page, listing which files merge,
 which redirect, and which delete, (5) migration risk notes for any URLs already
 shared publicly (storefront slugs, QR codes). Write the report to
-docs/specs/storefront-consolidation.md.
+docs/specs/history/storefront-consolidation.md.
 ```
 
 ---
@@ -868,7 +870,7 @@ Verification: pnpm lint && pnpm typecheck && pnpm build.
 
 **STATUS (2026-07-09): 5.2, 5.4, 5.6 shipped; 5.5 mostly shipped. 5.1 and 5.3 need input/capability.**
 - 5.2 (funnel instrumentation) shipped: landing/guest/login/membership/checkout/upgrade/first-gecko events, with ProductAnalytics funnel descriptions updated to the real event names.
-- 5.4 (pricing memo) shipped: docs/specs/pricing-decision-2026-07.md plus proposed DECISIONS.md entry 27 (keep Keeper $2.99, raise Breeder to $9.99). Needs Tennyson's decision to execute.
+- 5.4 (pricing memo) shipped: docs/specs/history/pricing-decision-2026-07.md plus proposed DECISIONS.md entry 27 (keep Keeper $2.99, raise Breeder to $9.99). Needs Tennyson's decision to execute.
 - 5.5 (content) 2 of 3 posts shipped: "Your First Crested Gecko Breeding Season" and "Crested Gecko Breeding Records" (the "how to read a pedigree" post remains).
 - 5.6 (doc hygiene) shipped: banned-domain refs neutralized, cretti-briefing em dashes removed.
 - 5.1 (product screenshots) OPEN, NEEDS CAPTURE: requires driving the running app with demo data and capturing 8 real screens (Playwright). Highest single landing-page fix, but it needs a real UI to photograph.
@@ -1011,7 +1013,7 @@ src/lib/tierLimits.js (what each tier actually gates), STRATEGY.md pricing
 context (market clusters: hobbyist $4.99-7.99, serious breeder $9.99-19,
 ops $49-99), ROADMAP.md item 2, docs/DECISIONS.md.
 
-The memo (write to docs/specs/pricing-decision-2026-07.md) should cover:
+The memo (write to docs/specs/history/pricing-decision-2026-07.md) should cover:
 1. Value-per-tier audit: what a Keeper and a Breeder actually get today that
    Free lacks, feature by feature, flagging anything currently broken or facade
    (marketplace sync enforcement, market analytics) that must be fixed before a

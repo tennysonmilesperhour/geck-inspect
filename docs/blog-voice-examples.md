@@ -1,5 +1,7 @@
 # Blog Voice Examples
 
+> **Status, 11 November 2026: Shelved.** Blog and article work is shelved (30 September 2026). The excerpts marked "paraphrased in-style" are invented text in the manner of real writers; never quote them as theirs. The map of all documents is `docs/README.md`.
+
 **Status:** seeded by the pipeline author with three reference writers.
 Replace when Tennyson sends his preferred picks, just swap the files in
 §2 and rerun the pipeline; the draft agent reads whatever is in this file.

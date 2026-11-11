@@ -332,7 +332,7 @@ export const NAV_REGISTRY = [
   { page: 'Breeder', section: 'discover' },
 ];
 
-// Focus pass (27 Sep 2026, docs/planning/vip-audit-2026-09-27.md P7):
+// Focus pass (27 Sep 2026, docs/planning/history/vip-audit-2026-09-27.md P7):
 // Genetic Calculator Tool and Geck Answers no longer appear in the command
 // palette; the palette already links /calculator directly.
 //

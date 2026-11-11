@@ -1,5 +1,7 @@
 # Morph catalogue consolidation
 
+> **Status, 11 November 2026: Open proposal.** Step 0 was done on 7 July 2026; steps 1 to 6 have not started and are not in the plan. One of the lists it would merge belongs to the Morph Visualizer, which is retired.
+
 Status: partial. First safe step done 2026-07-07 (KNOWN_MORPH_SLUGS now
 derives from the morph guide). Full six-source consolidation is
 deliberately staged, see "Why not a big-bang rewrite" below.

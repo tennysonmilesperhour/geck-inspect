@@ -1,5 +1,7 @@
 # invoke-llm edge function
 
+> **Note, 11 November 2026.** The AI Consultant page, listed here as the main caller, was retired on 16 October 2026 (code kept), and the blog tools are shelved. The admin AI tools still call this function.
+
 Server-side proxy to Anthropic's Messages API. It exists so admin and
 content tooling, and GeckoGenius (the keeper-facing assistant), can call an
 LLM without ever putting `ANTHROPIC_API_KEY` in the browser bundle. This

@@ -1,5 +1,7 @@
 # Nightly error-triage agent
 
+> **Status, 11 November 2026: Dated.** Since 15 October 2026 the triage job runs only when started by hand, and it files GitHub issues with the proposed patch in the body. It does not run nightly, opens no pull requests and pushes no branch (`.github/workflows/error-triage.yml`). The sections below describe the earlier nightly design. The map of all documents is `docs/README.md`.
+
 An autonomous agent that reviews production errors and opens draft PRs with
 proposed fixes. Runs daily at **04:00 Arizona MST** (UTC-7, no DST).
 

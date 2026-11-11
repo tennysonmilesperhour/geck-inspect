@@ -1,5 +1,7 @@
 # QR transfer and gecko detail review
 
+> **Status, 11 November 2026: History.** Review notes written before the QR transfer change was merged. It merged on 24 October 2026 and is live. The contract is `docs/planning/qr-transfer-security-2026-10-17.md`. The map of all documents is `docs/README.md`.
+
 Prepared on `codex/qr-transfer-detail` from main `99e61bee`, with the native callback fix from `f64e5bae` incorporated. The existing checkouts and their work were preserved. This branch has not been merged and no production database, account permissions, Auth settings or ownership were changed.
 
 ## What changed

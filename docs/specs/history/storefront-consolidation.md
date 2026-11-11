@@ -1,5 +1,7 @@
 # Storefront / Selling-Surface Consolidation
 
+> **Status, 11 November 2026: History.** Done or overtaken between July and October 2026. My Store is the one editor and `/Breeder/:slug` is the public page. The supplies store and the old Marketplace page, which this plan kept, are both retired. The map of all documents is `docs/README.md`.
+
 > **UPDATE (2026-07-09, shipped on a preview branch for review):** steps 2, 3, 4,
 > 5, 6, and 8 are now implemented. MyStore is the single editor (it absorbed the
 > profile identity fields and the mini-site appearance settings, writing them on

@@ -1,5 +1,7 @@
 # Release readiness, 17 October 2026
 
+> **Status, 11 November 2026: History.** Release gates as they stood on 17 October 2026. Most are done. The current state of the App Store work is `docs/planning/app-store-resubmission-2026-10-26.md` and the newest section of `docs/APP_STORE_REQUIREMENTS.md`. The privacy answers in this file are still the ones to use. The map of all documents is `docs/README.md`.
+
 The live Apple account supersedes the older checklist below. Geck Inspect **was submitted** on 7 September as version **1.0 (6)** and rejected under **2.1, Information Needed**. The Paid Apps Agreement is now Active. See [the current requirement audit](APP_STORE_REQUIREMENTS.md) for evidence and remaining blockers.
 
 Do not submit or claim full compliance yet. A replacement build needs a number **greater than 6** (check App Store Connect again before choosing it), physical-device verification and recording, completed review notes, and the remaining content-safety and rights checks. The Xcode project still uses build 1; that is not the next upload number.

@@ -1,5 +1,7 @@
 # Lifecycle emails and the email delivery log, 16 October 2026
 
+> **Status, 11 November 2026: Reference.** These emails are live and have been since 17 October 2026; the copy went out without the approval step this document first planned. Headings that say "first shown here for approval" are leftovers.
+
 Plan items E2 16 (four lifecycle emails) and the email half of E2 20 (a Resend bounce and complaint webhook) from `comprehensive-review-2026-10-14.md`, plus two small email defects. Everything here is built and tested. **The lifecycle emails are on since 17 October 2026** (Tennyson asked for them to run without waiting on a copy review): the first day-14 email went at 16:35 UTC and the first two welcome emails that evening. The copy below is what members receive; change it in `supabase/functions/_shared/lifecycle-copy.ts`. **Rewritten 20 October 2026** as letters from Tennyson with a preview line each, new subjects and a reply question on day 0 and day 1 (shown only once `EMAIL_REPLY_TO` is set); the rules and the evidence are in `docs/marketing/email-brain.md`.
 
 ## 1. Status: on since 17 October

@@ -1,9 +1,12 @@
 # Production schema snapshot (documentation only)
 
+> **Status, 11 November 2026: Dated.** A snapshot taken on 5 September 2026. The counts below are out of date (there are more than 320 migrations now, and tables added since include the weekly notes tables, `morph_id_shares`, `membership_comps` and `apple_sign_in_tokens`). The migrations themselves are the truth. The map of all documents is `docs/README.md`.
+
 > Writing a migration or a new entity? Read
 > [SCHEMA_CONVENTIONS.md](./SCHEMA_CONVENTIONS.md) first: legacy tables use
-> TEXT ids and `created_date` / `created_by`, and merging a migration does
-> not apply it to production. How migrations are actually managed is in
+> TEXT ids and `created_date` / `created_by`. **Merging a migration to `main`
+> applies it to production** (this note used to say the opposite). How
+> migrations are managed is in
 > [docs/MIGRATIONS.md](../docs/MIGRATIONS.md).
 
 Snapshot date: 2026-09-05 (baseline and summary refreshed; detailed table

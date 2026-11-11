@@ -1,19 +1,21 @@
 # Feature Priority Map
 
+> **Status, 11 November 2026: History.** The build order from April and May 2026. It is not a build order now. P3, P4 and P5 were retired and P9 is shelved. The active plan is Part E of `docs/planning/comprehensive-review-2026-10-14.md`. The map of all documents is `docs/README.md`.
+
 Build in this order. Each feature depends on the ones above it.
 
 | Priority | Feature | Why This Order |
 |----------|---------|---------------|
-| **P1** | [Animal Passport + Ownership Transfer](./P1-animal-passport.md) | Core data model everything else depends on |
-| **P2** | [Market Pricing Intelligence](./P2-market-pricing.md) | Needs animals to exist before it's useful |
-| **P3** | [Breeding ROI Dashboard](./P3-breeding-roi.md) | Needs animals + pricing to be meaningful |
-| **P4** | [Breeding Loan Management](./P4-breeding-loans.md) | Needs transfer infrastructure from P1 |
-| **P5** | [Geck Answers (Q&A Knowledge Base)](./P5-geck-answers.md) | Standalone, no dependencies |
-| **P6** | [Batch Husbandry Operations](./P6-batch-husbandry.md) | Enhancement to existing feeding groups |
-| **P7** | [Printable Worksheets](./P7-printable-worksheets.md) | Enhancement to existing animal records |
-| **P8** | [Enhanced Breeder Storefront](./P8-breeder-storefront.md) | Enhancement to existing public profiles |
-| **P9** | [Breeding Journal / Blog](./P9-breeding-journal.md) | Nice-to-have, low leverage |
-| **P10** | [Community Morph Photo Contributions](./P10-morph-photos.md) | Nice-to-have, low leverage |
+| **P1** | [Animal Passport + Ownership Transfer](../P1-animal-passport.md) | Core data model everything else depends on |
+| **P2** | [Market Pricing Intelligence](../P2-market-pricing.md) | Needs animals to exist before it's useful |
+| **P3** | [Breeding ROI Dashboard](P3-breeding-roi.md) | Needs animals + pricing to be meaningful |
+| **P4** | [Breeding Loan Management](P4-breeding-loans.md) | Needs transfer infrastructure from P1 |
+| **P5** | [Geck Answers (Q&A Knowledge Base)](P5-geck-answers.md) | Standalone, no dependencies |
+| **P6** | [Batch Husbandry Operations](../P6-batch-husbandry.md) | Enhancement to existing feeding groups |
+| **P7** | [Printable Worksheets](../P7-printable-worksheets.md) | Enhancement to existing animal records |
+| **P8** | [Enhanced Breeder Storefront](../P8-breeder-storefront.md) | Enhancement to existing public profiles |
+| **P9** | [Breeding Journal / Blog](P9-breeding-journal.md) | Nice-to-have, low leverage |
+| **P10** | [Community Morph Photo Contributions](../P10-morph-photos.md) | Nice-to-have, low leverage |
 
 ---
 

@@ -1,5 +1,7 @@
 # Now: the scoreboard
 
+> **Not refreshed since 31 October 2026.** The numbers and the top ten below are from that day, and the top ten is still a session's draft; the Mondays of 3 and 10 November were missed. The Day 30 check is 17 November. Everything waiting on Tennyson, with links and values, is now in one list: `docs/OWNER-STEPS.md` (it holds about 37 items; this page's top ten carries 10). Shipped since 31 October: Sign in with Apple in the iPhone app (10 November); sign-up by 6-digit code, Share and passport in the gecko record's top bar, the first-run question on the page, and a batch of visible fixes (11 November, `docs/planning/experience-review-2026-11-11.md`).
+
 The 90-day plan (Part E5 of `docs/planning/comprehensive-review-2026-10-14.md`) asks one question: will crested gecko breeders pay for records, passports and transfers? These are the numbers that answer it. They live on the Weekly scoreboard card, just above the Growth funnel card (Admin panel, Overview, and again under Product analytics), and are copied here by hand once a week. The card reads `admin_scoreboard()` (migration `20261015151500_scoreboard.sql`, in production).
 
 ## Where the numbers stand

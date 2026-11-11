@@ -1,6 +1,8 @@
 # Competitive landscape and market research, October 2026
 
-Written 5 October 2026. This updates STRATEGY.md (last written May 2026) and the competitor snapshot in docs/planning/vip-audit-2026-09-27.md. It covers who Geck Inspect competes with today, how Geck Inspect compares feature by feature, what the crested gecko community still asks for, what to charge, where users come from in this niche, and ten moves ranked for a solo founder.
+> **Status, 11 November 2026: Dated.** A snapshot of 5 October 2026. Changed since: the Founding Breeder offer is $120 prepaid, not a free year (Part E, item 14); Free members get one Morph ID a month, not one ever; Enterprise is off sale; "apply the deploy queue" is done. Recheck any competitor fact before quoting it. The map of all documents is `docs/README.md`.
+
+Written 5 October 2026. This updates STRATEGY.md (last written May 2026) and the competitor snapshot in docs/planning/history/vip-audit-2026-09-27.md. It covers who Geck Inspect competes with today, how Geck Inspect compares feature by feature, what the crested gecko community still asks for, what to charge, where users come from in this niche, and ten moves ranked for a solo founder.
 
 ## How this was researched, and what could not be checked
 
@@ -108,7 +110,7 @@ These are the corrections that matter most. STRATEGY.md should be updated with t
 | Cltch | ball python breeders | Free; Keeper $9/mo | web, apps | in-app shed DNA tests through Rare Genetics ([pricing](https://cltch.io/pricing/)) |
 | Day56 | ball python breeders | free to start | web | waitlist pages, 236 breeders, imports from MorphMarket, Cltch, Husbandry.Pro ([site](https://www.day56.com/)) |
 | Gecko keeper | leopard gecko keepers | free, no account, data on device | iPhone | shows the "no account" niche ([App Store](https://apps.apple.com/tt/app/gecko-keeper/id6769392687)) |
-| Cretti (Korea) | crested gecko keepers | free | iOS, Android | registry, lineage with inbreeding check, AI pairing, social feed; English listing on the App Store ([App Store](https://apps.apple.com/ca/app/cretti/id6759623382)); see docs/planning/cretti-briefing.md |
+| Cretti (Korea) | crested gecko keepers | free | iOS, Android | registry, lineage with inbreeding check, AI pairing, social feed; English listing on the App Store ([App Store](https://apps.apple.com/ca/app/cretti/id6759623382)); see docs/planning/history/cretti-briefing.md |
 | Crested Gecko ID | crested keepers | free (**unverified** whether paid tiers exist) | Android | photo morph ID with user corrections ([Google Play](https://play.google.com/store/apps/details?id=se.grasberg.gecko_morph_app)) |
 
 Free crested gecko calculators also exist (IB Exotic, LM Reptiles' interactive morph guide). Calculators are commodity now. Sources: [IB Exotic](https://www.ibexotic.com/crested-gecko-morph-calculator), [LM Reptiles](https://lmreptiles.com/cg-img/).

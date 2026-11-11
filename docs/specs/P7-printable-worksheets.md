@@ -1,5 +1,7 @@
 # P7: Printable Worksheets
 
+> **Status, 11 November 2026: Built.** Live at `/PrintableWorksheets` with the four templates here plus rack labels. Ignore this spec's fonts and colours; they were never shipped.
+
 > **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P7

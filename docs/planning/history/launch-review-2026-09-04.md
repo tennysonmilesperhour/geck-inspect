@@ -1,5 +1,7 @@
 # Launch review, 4 September 2026
 
+> **Status, 11 November 2026: History.** Closed: 60 of 62 findings fixed, 2 partly, none open. The two remaining live checks are in `docs/OWNER-STEPS.md`, part F. Its working rules ("main only, no pull requests", "update ROADMAP.md") are superseded by `CLAUDE.md`. The active plan is Part E of `docs/planning/comprehensive-review-2026-10-14.md`. The map of all documents is `docs/README.md`.
+
 Read-only review of the whole repo and the live Supabase and Vercel setup, done the day before the 5 September launch, followed by five batches of fixes (A to E) pushed straight to main the same night. This file is the handoff copy of the interactive report so any session (desktop app, web, or the terminal CLI) can pick the work up. The interactive version, with the same data, is at https://claude.ai/code/artifact/6136b837-8feb-4df0-806b-f375095dc677.
 
 Totals: 62 findings. 60 closed (fixed, done, or decided), 2 partly fixed, 0 open.

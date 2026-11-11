@@ -1,5 +1,7 @@
 # Agent access: being the source AI cites for crested geckos (7 Oct 2026)
 
+> **Corrections, 11 November 2026.** The plan (rule E6) says the agent review is monthly; the routine still runs every Monday, and its prompt says the MCP directory listing is approved while this document holds it until counsel (`docs/OWNER-STEPS.md`, step C8). The Lilly White origin item in the backlog is done. The review log below has no entry after 7 October although the routine ran each week.
+
 Start here for anything about AI crawlers, AI assistants, llms.txt, the open data, the MCP server, or charging agents. The weekly agent review (below) updates the "Review log" at the end of this file.
 
 ## The goal

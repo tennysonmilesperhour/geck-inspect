@@ -1,5 +1,7 @@
 # Launch repair ledger, September 6, 2026
 
+> **Status, 11 November 2026: History.** The repair ledger of 6 September 2026. Its billing facts are replaced by `docs/BILLING.md` (plans are Keeper and Breeder, not "Pro"), and Sign in with Apple is now on. The map of all documents is `docs/README.md`.
+
 Source: fresh clone of GitHub main at d1b517c22a64036c2c1bce417ddfab5ed091fe28. The older checkout at the user's home directory was not modified. This ledger supersedes launch assumptions in the older roadmap, not historical product decisions.
 
 ## Changes implemented

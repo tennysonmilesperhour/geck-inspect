@@ -66,7 +66,8 @@ so the sitemap's lastmod values reflect real change dates.
   (CLAUDE.md names it under domain disambiguation).
 
 Start with [the engineering guide](docs/ENGINEERING.md), then the
-[billing runbook](docs/BILLING.md) and [current release evidence](docs/RELEASE_READINESS.md).
+[billing runbook](docs/BILLING.md) and the [App Store resubmission notes](docs/planning/app-store-resubmission-2026-10-26.md).
+The map of every document is [docs/README.md](docs/README.md).
 See CLAUDE.md for the full working agreement.
 
 ## Baseline checklist

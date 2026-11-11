@@ -1,5 +1,7 @@
 # Kaleidoscope Model Integration: Claude Code Handoff
 
+> **Status, 11 November 2026: Shelved.** Never built and not in the plan. The prices in it ("Keeper $4 / Breeder $9") are wrong, the guides it calls "parked" are live, and it names files that do not exist. Do not build from it or paste it. The map of all documents is `docs/README.md`.
+
 **Project:** Geck Inspect (`tennysonmilesperhour/geck-inspect`)
 **Local path:** `/Users/tennyson/dyad-apps/geck inspect`
 **Stack:** React + Vite, Supabase (Postgres + Auth + Storage), Vercel, Stripe

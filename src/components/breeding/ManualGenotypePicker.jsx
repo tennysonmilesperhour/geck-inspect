@@ -33,7 +33,7 @@ export { buildParentFromState } from '@/lib/genetics/calculatorCatalog';
  *
  * Polygenic traits are intentionally absent: Punnett math on Harlequin
  * or Dalmatian density would be fake precision. See
- * docs/planning/MORPH_CALCULATOR_PLAN.md for the expression-band plan.
+ * docs/planning/history/MORPH_CALCULATOR_PLAN.md for the expression-band plan.
  *
  * Stateless: the parent owns the state record ({ traitId: zygosity }),
  * we only emit onChange(next).

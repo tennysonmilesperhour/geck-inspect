@@ -23,7 +23,7 @@
  * Polygenic traits (Harlequin, Pinstripe coverage, Dalmatian density,
  * base colors) are deliberately NOT in this catalog: Punnett math on
  * them would be fake precision. They arrive in a later phase as
- * expression bands, per docs/planning/MORPH_CALCULATOR_PLAN.md.
+ * expression bands, per docs/planning/history/MORPH_CALCULATOR_PLAN.md.
  */
 // This file does not import the engine (./index.js). Pages that only need
 // the catalog, such as a Morph Guide page linking to its calculator

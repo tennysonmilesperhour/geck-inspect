@@ -1,5 +1,7 @@
 # QR transfer security and rollout review
 
+> **Status, 11 November 2026: Reference.** Merged and live since 24 October 2026. The paragraphs that say "before merging, approve" describe the approval that was then given. The contract and the private-notes decision are current. Since 11 November a new account can confirm its email with a 6-digit code on the sign-up screen and return to the claim page without opening a link.
+
 This change was prepared on `codex/qr-transfer-detail` and merged to main on 24 Oct 2026 when Tennyson asked for the open pull requests to be merged. The migration was written as `20261017200248_secure_qr_transfers.sql` and re-dated to `20261024203637_secure_qr_transfers.sql` so it runs after main's newest migration.
 
 ## Transfer contract

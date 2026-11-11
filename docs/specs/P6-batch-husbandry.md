@@ -1,5 +1,7 @@
 # P6: Batch Husbandry Operations
 
+> **Status, 11 November 2026: Built, and Dated.** Live as one page, `/BatchHusbandry` (`src/pages/BatchHusbandry.jsx`), on the Breeder plan. The routes and the table columns in this spec differ from what shipped. The experience review proposes folding it into the one-tap log (package WP-4).
+
 > **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P6

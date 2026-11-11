@@ -1,5 +1,7 @@
 # App Store requirement audit, 17 October 2026
 
+> **Status, 11 November 2026: Dated.** This is a log, oldest first. Read the newest section (the 26 October status) for the truth; the summary at the top describes 17 October. Since then: Sign in with Apple was switched on in code on 10 November and the Xcode project is at build 15. The owner steps are in `docs/planning/app-store-resubmission-2026-10-26.md`. The map of all documents is `docs/README.md`.
+
 **Not ready to resubmit.** This is an evidence checklist, not a claim that Apple will approve the app. The source changes below must be included in a new signed binary; the selected build 6 does not contain them.
 
 ## Live account facts

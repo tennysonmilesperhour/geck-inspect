@@ -1,5 +1,7 @@
 # Operations
 
+> **Corrections, 11 November 2026.** The repository holds 39 edge functions, 34 declared. Promote's uses of the AI and social services are retired. Since 1 November both revenue figures read $2.99 a month (`docs/NOW.md`). Reminder emails and pushes no longer go at fixed UTC times: since 31 October they run hourly and send at 7 am in each member's own time zone, so the fixed times in section 5's database job table are out of date and section 4 of `docs/INFRASTRUCTURE.md` is the truth. Steps waiting on Tennyson are gathered in `docs/OWNER-STEPS.md`.
+
 What Geck Inspect runs on, what it costs, where the secrets live, what is backed up, what runs on a schedule, and the weekly checklist. Written 15 October 2026 for plan item E2 21 (and the costs page that item A12 of the review asked for) in `docs/planning/comprehensive-review-2026-10-14.md`.
 
 How this was checked: the repository (code, workflows, function source) and read-only queries against the production database on 15 October 2026. Nothing in the Stripe, Vercel, Resend, Anthropic, Replicate, PostHog or RevenueCat dashboards was looked at, so plans and bills from those services are marked **unknown** until Tennyson fills them in. Secret values never go in this file; only their names.

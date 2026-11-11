@@ -1,5 +1,7 @@
 # Geck Inspect Blog: Style Guide
 
+> **Status, 11 November 2026: Shelved.** Blog and article work is shelved (30 September 2026). Do not write posts from this. Where it allows one em dash a paragraph, `CLAUDE.md` overrules it: none at all. It also asks for links to the Morph Visualizer, which is retired. The map of all documents is `docs/README.md`.
+
 This file is the **operating manual for the writer agent**. Every draft run
 pastes this guide in full into the prompt. Edits here propagate to the next
 post: change once, enforced everywhere.
@@ -43,10 +45,10 @@ Every post follows this skeleton. Deviate only with a reason.
 2. **The question the post answers** (1 sentence, ideally contrarian or
    non-obvious). Example: *"So why does every gecko guide still call
    Cappuccino 'codominant' when the math says otherwise?"*
-3. **Why it matters to the reader** (2–4 sentences, concrete stakes,
+3. **Why it matters to the reader** (2 to 4 sentences, concrete stakes,
    money, animal welfare, project timeline, something they'll lose
    if they're wrong).
-4. **Body**: 3–6 subsections, each ~150–350 words. Every subsection
+4. **Body**: 3 to 6 subsections, each ~150 to 350 words. Every subsection
    should make a distinct claim and support it with either a worked
    example, a named source, or a specific piece of evidence.
 5. **An opinionated section.** Take a position. If you can't defend a
@@ -55,7 +57,7 @@ Every post follows this skeleton. Deviate only with a reason.
    Monday? Concrete, action-oriented. No "consult a professional."
 7. **Closing callback.** Return to the image or stake from the hook.
    Do not write a paragraph called "Conclusion."
-8. **FAQ**: 4–8 question/answer pairs that target real "People Also
+8. **FAQ**: 4 to 8 question/answer pairs that target real "People Also
    Ask" queries. See §9.
 
 ## 4. Forbidden patterns
@@ -119,12 +121,12 @@ auto-rejected before the PR opens.
 
 ## 7. Reading-level targets
 
-- Flesch Reading Ease ≥ 50. (Roughly 10th–11th grade; approachable
+- Flesch Reading Ease ≥ 50. (Roughly 10th to 11th grade; approachable
   without being dumbed down.)
-- Average sentence length 15–22 words. Mix short and long, a
+- Average sentence length 15 to 22 words. Mix short and long, a
   2-word sentence next to a 35-word sentence is fine. Uniform
   25-word sentences read like a textbook.
-- Paragraphs 2–5 sentences. One-sentence paragraphs are allowed for
+- Paragraphs 2 to 5 sentences. One-sentence paragraphs are allowed for
   emphasis but not as the default.
 - No paragraph over 6 sentences. Break it up.
 
@@ -146,7 +148,7 @@ auto-rejected before the PR opens.
 
 ## 9. FAQ section
 
-4–8 question/answer pairs. Each answer ≤ 80 words.
+4 to 8 question/answer pairs. Each answer ≤ 80 words.
 
 - Pull questions from real search data. Google autocomplete, Google
   "People Also Ask," Reddit r/CrestedGecko top threads. Do not
@@ -169,16 +171,16 @@ When sources disagree, prefer in this order:
 5. MorphMarket Morphpedia.
 6. Consensus across ≥ 3 forum threads (Pangea, Reddit).
 
-Never cite #4–#6 over #1–#3 when they conflict. If #1–#3 don't
+Never cite #4 to #6 over #1 to #3 when they conflict. If #1 to #3 don't
 cover the topic, note that the claim rests on community consensus.
 
 ## 11. Post lengths
 
-- **Short post:** 800–1,200 words. Used for single-trait explainers,
+- **Short post:** 800 to 1,200 words. Used for single-trait explainers,
   mythbusters, and pairing-math posts.
-- **Standard post:** 1,500–2,200 words. The default. Most posts
+- **Standard post:** 1,500 to 2,200 words. The default. Most posts
   should land here.
-- **Deep dive:** 3,000–4,500 words. Used for foundational topics
+- **Deep dive:** 3,000 to 4,500 words. Used for foundational topics
   (the cappuccino post, "what does incomplete dominant mean").
   Max one deep-dive per month to avoid cannibalising mid-length
   posts.

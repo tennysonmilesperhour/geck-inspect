@@ -1559,7 +1559,7 @@ function injectNoscriptBody(html, route) {
 // ------- page chunk preload -------------------------------------------------
 //
 // Every public page, the landing page included, is a lazy chunk (October
-// 2026 code split, docs/planning/landing-speed-2026-10.md). Without a
+// 2026 code split, docs/planning/history/landing-speed-2026-10.md). Without a
 // hint the browser only learns about the page chunk after the main
 // script has downloaded and run, which adds a round trip to every first
 // visit. Each prerendered document names its page chunk (and that

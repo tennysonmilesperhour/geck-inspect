@@ -1,5 +1,7 @@
 # Pricing decision memo, 2026-07
 
+> **Status, 11 November 2026: History.** A proposal from July 2026 that was **not adopted** (decision 27 rejected the raise). Live prices are in `src/lib/stripe-config.js`: Keeper $2.99 and Breeder $5.99 a month, lifetime plans on sale, Enterprise off sale. Shipping and Breeding ROI, which it counts as plan features, are retired. The map of all documents is `docs/README.md`.
+
 Status: recommendation for review. Numbers are illustrative models, not
 forecasts. No prices are changed by this memo; it proposes a change and a
 migration path.

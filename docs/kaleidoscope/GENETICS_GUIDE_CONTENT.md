@@ -1,5 +1,7 @@
 # Genetics Guide: Page Content
 
+> **Status, 11 November 2026: Shelved.** Never published. It describes features Geck Inspect does not have (a genotype editor, a dual-model calculator, prediction scoring). Publishing it would make false claims. The map of all documents is `docs/README.md`.
+
 This file contains the body content for the Genetics Guide page. Each section below corresponds to one record in the `genetics_guide_section` table (or one block in a static page if you go the markdown route). Section order matches display order.
 
 All quotations from external sources are kept under 15 words and attributed inline. The bulk of the content is paraphrased.

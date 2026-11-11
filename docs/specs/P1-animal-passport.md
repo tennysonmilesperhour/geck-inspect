@@ -1,5 +1,7 @@
 # P1: Animal Passport + Ownership Transfer
 
+> **Status, 11 November 2026: Built, and Dated.** Passports, claims and QR cards are live (`src/pages/AnimalPassport.jsx`, `PassportQR.jsx`, `ClaimAnimal.jsx`, `src/lib/transfers.js`). This is the original spec and it does not match the code: the table is `geckos`, not `Animal`; the routes are `/passport/:passportCode` and `/MyGeckos`, not `/collection/...`; charts use recharts; the passport page shows no value card. **Do not paste the "Claude Code Prompt" block at the end**: its fonts and colours were never shipped. The transfer contract is `docs/planning/qr-transfer-security-2026-10-17.md`; design is `docs/specs/DESIGN-SYSTEM.md`.
+
 > **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P1 (Highest)

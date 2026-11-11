@@ -1,5 +1,7 @@
 # P11: Quality Scale (Geck Inspect Standard)
 
+> **Status, 11 November 2026: Built, with differences.** Live at `/QualityScale`. The scorecard is on that page (not a window on each passport) and uses 0, half and 1 point buttons, not sliders; the per-category breakdown is not stored; value estimates come from the trait value table. Code comments point at this file, so do not rename it.
+
 **Priority:** P11
 **Dependencies:** P1 Animal Passport (built), P2 Market Pricing (built)
 **Origin:** The `pattern_grade` field on `morph_price_entries` is self-reported with zero rubric. Sellers don't know which bucket their gecko belongs in, so price data is noisy and Free users get no help understanding what their gecko is worth.

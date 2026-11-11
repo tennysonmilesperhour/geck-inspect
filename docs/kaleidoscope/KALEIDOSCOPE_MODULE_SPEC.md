@@ -1,5 +1,7 @@
 # Kaleidoscope Inheritance Module: Implementation Spec
 
+> **Status, 11 November 2026: Shelved.** Never built and not in the plan. Do not build from it. The map of all documents is `docs/README.md`.
+
 This is the specification for a headless TypeScript module that implements Kaleidoscope-Model breeding predictions. It is designed to live alongside the existing "Foundation Genetics" module, not replace it.
 
 **Recommended location:** `src/lib/genetics/kaleidoscope/` in the Geck Inspect repo.

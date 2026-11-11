@@ -1,5 +1,7 @@
 # Morph observation review, October 14, 2026
 
+> **Status, 11 November 2026: History.** Notes for a developer-only morph study that was never in production. They apply only if that study resumes. The map of all documents is `docs/README.md`.
+
 ## Scope and status
 
 The revised notebook is local-review UI at `/DesignPreview#slider`. `App.jsx` imports that route only in development. The live `PatternSpectrum`, lessons and quiz are unchanged. The three new exports from `TraitGecko` share the existing asset loader and anatomical paths without changing its default rendering.

@@ -82,6 +82,12 @@ Round 3 of the review fixes (`docs/planning/comprehensive-review-2026-10-14.md`,
 
 **28 October 2026, first gecko by photo and the Morph ID permission step:** after signup only, nothing on the homepage. A member who picks "Add by photo" in the guided first gecko now gets "Add this gecko" straight under their Morph ID result, a short add form (a name and "Save and continue"), and no "used this month's free Morph ID" card on top of the result. Morph ID asks for permission on the page instead of in a browser pop-up, and the day 0 and day 1 getting-started emails for members with no gecko open the first gecko step (`/MyGeckos?add=1`). These changes reach both arms equally, but they are meant to raise first geckos, so they may move the secondary metric (`signup_completed` followed by `first_gecko_added`) for both arms from this date. Compare the arms with each other, not with the weeks before.
 
+**11 November 2026, site-wide changes that reach both arms equally** (experience review packages WP-0, WP-5 and WP-12; neither landing page, the split nor the theme defaults were touched):
+
+- **Sign-up:** the "Check your email" screen now takes the 6-digit code from the confirmation email, so a new member can finish without leaving the tab. The link still works. The code only shows in the email once the Supabase template includes it (`docs/OWNER-STEPS.md`, step A3). This sits between the primary metric's two events (exposure and `signup_completed`) for both arms, so it should lift both alike; treat exposure-to-signup rates before and after 11 November as different periods.
+- **First run:** the keeper-or-breeder question is part of the first-gecko card instead of a pop-up, which bears on the secondary metric (`first_gecko_added`) for both arms alike.
+- **Documentation move:** comments in `src/` that named moved planning documents were updated, except in `src/pages/HomeControl.jsx`, which was left untouched because of this test; two comments there still name `docs/planning/first-impression-2026-10.md` and `docs/planning/landing-speed-2026-10.md`, which now live in `docs/planning/history/`.
+
 ## Queued until the test ends
 
 Apply these in one change after the decision, to whichever page wins:
@@ -90,6 +96,9 @@ Apply these in one change after the decision, to whichever page wins:
 2. Hero buttons (review item UX2): one solid primary button, "Start free, no card needed", and a quieter text link, "Or see a sample gecko record", instead of two glass buttons that look like the same choice. The demo link opens one gecko's record (`startDemoAtRecord()` in `src/lib/guestTour.js`, already in the code and tested in `src/lib/__tests__/landingHero.test.js`) instead of the Dashboard. Add its tests back to `src/lib/__tests__/landingHero.test.js`: the demo handler calls `startDemoAtRecord()` and not the Dashboard; both demo entries (hero and bottom) are underlined text buttons without `home-glass-button`; both signup buttons are solid, without `home-glass-button`, and read "Start free, no card needed".
 3. A visible link on the homepage to the genetics guide, "Crested gecko genetics guide" to `/GeneticsGuide` (SEO).
 4. The hero image preload for `/` (`HERO_PRELOADS` in `scripts/prerender.mjs`): limit it to large screens (`media="(min-width: 1024px)"`) or drop it, if the winning page's phone layout does not show that image first. The performance pass measured the phone LCP at 2.60 s with it and 2.25 s without.
+
+5. On a phone, "look around the demo" opens the Dashboard, while every other phone entry opens Today (`handleContinueAsGuest` in `src/pages/HomeControl.jsx` navigates to the Dashboard). Use `memberHome()` from `src/lib/pwaLaunch.js`, in both arms. Finding A10 of `docs/planning/experience-review-2026-11-11.md`.
+6. Update the two comments in `src/pages/HomeControl.jsx` that name `docs/planning/first-impression-2026-10.md` and `docs/planning/landing-speed-2026-10.md`: both files are now under `docs/planning/history/`.
 
 ## Verification
 

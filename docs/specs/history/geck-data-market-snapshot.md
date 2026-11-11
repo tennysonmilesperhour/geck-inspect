@@ -1,5 +1,7 @@
 # Market snapshot fix: geck-data → Business Tools analytics
 
+> **Status, 11 November 2026: History.** The files this describes are gone: the Market Analytics page now reads aggregates through `src/lib/marketAnalytics/v2/`. The map of all documents is `docs/README.md`.
+
 Status: diagnosed, fix lives in the **geck-data** repo (not this one).
 
 ## Symptom

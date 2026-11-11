@@ -1,5 +1,7 @@
 # CRETTI: Comprehensive Competitive & Cultural Briefing
 
+> **Status, 11 November 2026: History.** Research from April 2026 on a Korean competitor. Useful for competitor facts. Its plan for entering the Korean market is not active: international expansion was retired on 30 September, breadth is frozen until 17 January 2027, and blog work is shelved. The map of all documents is `docs/README.md`.
+
 *Reference document for Geck Inspect competitive strategy and Korean market entry. Researched April 2026.*
 
 ---

@@ -1,5 +1,7 @@
 # Custom collector-card market scan
 
+> **Status, 11 November 2026: History.** For the sticker builder, which was retired with the supplies store on 16 October 2026. If the store ever returns, the trade-dress rule at the end still applies. The map of all documents is `docs/README.md`.
+
 Date: 5 September 2026
 
 ## What current sellers offer

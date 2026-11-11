@@ -1,5 +1,7 @@
 # Retired features and the smaller menu, October 2026
 
+> **Correction, 11 November 2026.** Section 3 says signing in with Google or an email link "still lands on My Geckos". Since the evening of 16 October sign-in lands on Today on a phone and on My Geckos on a wider screen (`memberHome()` in `src/lib/pwaLaunch.js`).
+
 Review item E3 23 ("retire breadth") and the menu half of E3 25 (the Today screen and the phone tabs), from Part E of `comprehensive-review-2026-10-14.md`. Built on 16 October 2026.
 
 The rule the review set: take what nobody uses out of the app behind a switch and keep every database table. On 16 October Tennyson approved the list and added one rule: every retired feature's code is kept too, to release again later (section 5). Nothing here deletes data or code. Every retired page redirects somewhere sensible, and a member who follows an old link sees one short note saying why.

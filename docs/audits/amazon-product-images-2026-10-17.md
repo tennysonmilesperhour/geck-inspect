@@ -1,5 +1,7 @@
 # Amazon product images and affiliate destinations
 
+> **Status, 11 November 2026: Shelved.** About the supplies store, which was retired on 16 October 2026 (code kept). The map of all documents is `docs/README.md`.
+
 This is a partial remediation. It hides confirmed generated artwork, resolves four verified product destinations, and corrects outbound Amazon attribution to the owner-designated `geckinspect-20` tag. Actual listing image replacements still require an authorized image delivery source.
 
 ## Affiliate destinations

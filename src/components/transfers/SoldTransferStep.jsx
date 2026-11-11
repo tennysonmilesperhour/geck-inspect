@@ -24,7 +24,7 @@ const dayOf = (iso) => {
  * can skip it with one tap. Sending opens the usual transfer form with the
  * sale price already in it, so the buyer gets a QR link or an email and
  * Mango arrives in their collection with its lineage and history. This is
- * the distribution loop in docs/planning/growth-plan-2026-10.md: every
+ * the distribution loop in docs/planning/history/growth-plan-2026-10.md: every
  * gecko a breeder sells carries Geck Inspect to the buyer.
  *
  * The step sends the transfer only. It never makes a passport and never

@@ -68,93 +68,119 @@ Preview environments run extra CI (Vercel preview build, Supabase
 preview branch migration), which has failed repeatedly and wastes time.
 Main goes straight to production, which is what I want by default.
 
-Project identity
+## What this project is
+
 Geck Inspect is the crested-gecko-first platform for breeders and keepers. Live at geckinspect.com.
-Core features: collection management, breeding planning, AI-powered morph identification, multi-generation lineage tracking, verified breeder community, morph guide, care guide, genetics guide, genetics calculator.
-Built and maintained by Tennyson, solo. Stack is Vite + React (single-page app) + Supabase + Vercel + GitHub. There is no Next.js in this repo; do not add server components or Next-style routing.
-How to think about feature decisions
-Geck Inspect competes in a real but specialized market. Before suggesting product direction, feature additions, or strategic pivots, read these files:
 
-STRATEGY.md - the competitive landscape, where Geck Inspect sits, and what the market gaps are
-ROADMAP.md - points to the active plan, lists what is shelved, and says what each old roadmap item became
-DECISIONS.md - log of important architectural and product choices already made
+- **What it does:** collection records, a daily care screen (Today) with one-tap logging, breeding plans and eggs, lineage, passports and ownership transfers, photo morph identification (Morph ID), value estimates from real listings, a genetics calculator, and the Morph, Care and Genetics guides.
+- **Who builds it:** Tennyson, solo, with Claude sessions.
+- **Stack:** Vite and React (a single-page app), Supabase (database, sign-in, storage, edge functions), Vercel, GitHub, and Capacitor for the iPhone and Android apps. There is no Next.js in this repo; do not add server components or Next-style routing.
+- **Position:** crested geckos only. The closest competitor is Dusty Mumphrey's three products (Geckistry, ReptiDex, Breed Ledger; Breed Ledger launched on 15 May 2026 and is multi-species). Every competitor is multi-species or marketplace-focused. Do not suggest features or messaging that dilute the species-first identity. Details: `STRATEGY.md`.
 
-The single most important strategic fact: the closest competitor is Dusty Mumphrey's three-product ecosystem (Geckistry, ReptiDex, Breed Ledger). Breed Ledger launches May 15, 2026. Geck Inspect's defensible position is being crested-gecko-FIRST, while every competitor is multi-species or marketplace-focused. Do not suggest features or messaging that dilute the species-first identity.
-Reference material (do not auto-load)
-The full deep-dive analysis lives in /docs/ as Word documents. These are for human reference and should not be pulled into context unless explicitly asked. They are large and the key takeaways are already captured in STRATEGY.md.
+## Read these first
 
-/docs/landscape-analysis-vol1.docx (34 pages, comprehensive competitor analysis)
-/docs/landscape-analysis-vol2.docx (18 pages, supplemental research, market sizing, unit economics)
-/docs/executive-summary.md (markdown summary, can be read if helpful)
+In this order. The first two are short.
 
-Working style preferences
+1. `ROADMAP.md`: points at the active plan and lists what is shelved.
+2. `docs/NOW.md`: this week's numbers and top ten.
+3. Part E of `docs/planning/comprehensive-review-2026-10-14.md`: the active 90-day plan. It opens with a table of where each item stands.
+4. `docs/RULES.md`: every rule that binds future work.
+5. `docs/README.md`: the map of every document, what each is for and how far to trust it. Use it to find the document for the job in hand.
+6. `docs/ARCHITECTURE.md`: how the code is laid out. `docs/GLOSSARY.md`: what the words mean.
 
-**Manual steps: lead with the link and the exact values.** When something only Tennyson can do by hand (a dashboard secret, a webhook, a DNS record, a setting) and no tool in the session can do it, open with the direct link and the exact values to paste, then any explanation, so he can do it in under a minute. Do not first try a tool that asks him to type the value into a prompt: the Supabase secret tool (`create_edge_function_secret`) times out in cloud sessions. Edge function secrets go at https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/functions/secrets. Afterwards, check the change took effect where you can (for example a probe that sends nothing) and say so.
+Before proposing product direction, features or priorities, also read `STRATEGY.md` and `docs/DECISIONS.md`.
 
-**No em dashes anywhere. This is a hard rule.** Em dashes (the long horizontal `—`, U+2014) are the single biggest "this was written by AI" giveaway in 2026 copy. Do not use them in:
+## Where things stand (11 November 2026)
+
+Check `docs/NOW.md` for anything newer.
+
+- **The plan** is a 90-day sales experiment that ends on decision day, 17 January 2027: will crested gecko breeders pay for records, passports and transfers? Checkpoints: 17 November (Day 30) and 17 December. Under the Day 30 rule, fewer than 15 breeder conversations means engineering pauses.
+- **Breadth is frozen:** no new pages, species, plan tiers, tools or integrations until weekly active breeders have grown four weeks in a row.
+- **The product today:** dark only, Emerald as the default theme, fonts self-hosted. The menu has 12 destinations (8 in Keeper mode); the phone tabs are Today, Geckos, Log, More. Plans are Free (10 geckos), Keeper, Breeder and Enterprise; Enterprise is off sale. Prices and limits live in `src/lib/stripe-config.js` and `src/lib/tierLimits.js`; quote them from there.
+- **The landing page is under an A/B test** (control against the "business assistant" page). `src/pages/Home.jsx`, `src/pages/HomeControl.jsx`, `src/components/landing/` and the theme defaults are frozen while it runs. Read `docs/planning/homepage-ab-test-2026-10.md` before going near them.
+- **The iPhone app** is in App Store review work; the project is at build 15. A change to the website reaches the iPhone only with the next uploaded build. Start with `docs/planning/app-store-resubmission-2026-10-26.md`.
+- **Retired, with code and tables kept:** Promote, the AI Consultant, Other Reptiles, the supplies store and sticker builders, the website builder, Guess the Price, Community Connect (all 16 October or earlier), the Morph Visualizer (2 October), and before those Breeding Loans, Breeding ROI, Geck Answers, Mentorship, Giveaways and Shipping. Do not delete retired code or tables without Tennyson's say. `docs/planning/retired-features-2026-10.md` says where each link goes and how to switch one back on.
+- **Shelved:** blog posts and articles (see below), the ball python site, the Korean market plan.
+- **Latest work:** the experience review (`docs/planning/experience-review-2026-11-11.md`) and its first three packages (visible fixes, Share and passport on the gecko record, sign-up by 6-digit code); the documentation review (`docs/planning/docs-review-2026-11-11.md`).
+- **Waiting on Tennyson:** everything is in `docs/OWNER-STEPS.md`.
+
+## Working with Tennyson
+
+**Manual steps: lead with the link and the exact values.** When something only Tennyson can do by hand (a dashboard secret, a webhook, a DNS record, a setting) and no tool in the session can do it, open with the direct link and the exact values to paste, then any explanation, so he can do it in under a minute. Do not first try a tool that asks him to type the value into a prompt: the Supabase secret tool (`create_edge_function_secret`) times out in cloud sessions. Edge function secrets go at https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/functions/secrets. Afterwards, check the change took effect where you can (for example a probe that sends nothing) and say so. Then add the step to `docs/OWNER-STEPS.md` if it is not done in the session, so it is not lost.
+
+**Explain the why.** Tennyson does not have a traditional coding background. When working through technical concepts, explain the why, not just the how. Plain language by default. Technical terms get a brief explanation on first use.
+
+**Be specific about crested geckos.** Crested gecko terminology should always be specific (Lilly White, Harlequin, Phantom, Cappuccino, Axanthic, Sable, Highway). Do not substitute generic reptile examples when crested gecko examples would be more on-brand. `docs/GLOSSARY.md` has the terms.
+
+**Domain disambiguation.** `tennyscrestedgeckos.com` is NOT Tennyson's site. Another breeder happens to share the first name. Do not put that domain on the landing page, in the founder section, in marketing copy, or anywhere a visitor could read it as Tennyson's brand. Older strategy documents used it as a "founder credibility" signal; that was a mistake based on the name collision and has been removed from them. If a future doc or generated copy reintroduces it, treat that as a bug. The right founder credibility signal is Tennyson's actual breeding operation under whatever brand name he chooses to publish; ask before assuming.
+
+**The repository is public.** Never write a member's or a breeder's email address or phone number in any file, and never put a secret's value in a file, a commit or a chat message.
+
+## Writing rules
+
+**No em dashes anywhere. This is a hard rule.** The em dash (the long horizontal dash, Unicode U+2014) is the single biggest "this was written by AI" giveaway in 2026 copy. Do not use it in:
+
 - Landing page copy (src/pages/Home.jsx and any marketing surface)
 - In-app UI strings (button labels, empty states, tooltips, modal titles, toasts, form copy, page headings, descriptions)
 - Blog posts (public/blog/*.md and the rendered HTML)
 - SEO metadata (title tags, meta descriptions, OpenGraph, JSON-LD)
 - Generated assets (sitemap.xml, llms-full.txt, RSS feeds)
 - Code comments that get pulled into user-facing docs (JSDoc on exported APIs, README sections)
-- These project docs (CLAUDE.md, INTENT.md, DECISIONS.md, etc.) so the project itself models the rule
+- These project docs (CLAUDE.md, DECISIONS.md and the rest) so the project itself models the rule. That includes this file: the character itself does not appear in it.
 
 When you'd reach for an em dash, do one of these instead:
+
 1. Use a comma if the clause naturally pauses ("Geck Inspect is fast, and it stays out of your way")
 2. Use a period and split the sentence ("Geck Inspect is fast. It stays out of your way.")
 3. Use parentheses for a true aside ("Geck Inspect is fast (and it stays out of your way)")
 4. Use a colon if you're introducing a list or expansion ("Geck Inspect is fast: under 2 seconds on mobile")
 5. Rewrite the sentence so the dash isn't needed at all
 
-Do not substitute en dashes (`–`, U+2013) or hyphen pairs (`--`). Both still read as em-dash voice. The point is to remove the structural "—" pause from the writing rhythm, not just to swap the character.
+Do not substitute the en dash (the shorter dash, U+2013) or a pair of hyphens. Both still read as em-dash voice. The point is to remove the structural dash pause from the writing rhythm, not just to swap the character. Write ranges with "to": "3 to 5", not a dash.
 
-Hyphens in compound words ("crested-gecko-first", "well-known", "drop-down") are fine. The rule is specifically about the em-dash punctuation mark used to set off clauses.
+Hyphens in compound words ("crested-gecko-first", "well-known", "drop-down") are fine. The rule is specifically about the dash used to set off clauses.
 
 If you find existing em dashes during any edit, fix them in the same commit. Don't open a separate "em dash sweep" task; it's part of the regular hygiene of this codebase now.
 
-Tennyson does not have traditional coding background. When working through technical concepts, explain the why, not just the how.
-Plain language by default. Technical terms get a brief explanation on first use.
-Crested gecko terminology should always be specific (Lilly White, Harlequin, Phantom, Cappuccino, Axanthic, Sable, Highway). Do not substitute generic reptile examples when crested gecko examples would be more on-brand.
+**Blog posts and articles are shelved** (30 Sep 2026) until Tennyson says otherwise. Do not write, draft, publish or suggest articles or blog posts, and do not re-enable the blog pipeline. That includes roadmap answers and SEO or growth-report follow-ups: the weekly growth report lists searches with no matching page, and those are data, not tasks.
 
-**Domain disambiguation.** `tennyscrestedgeckos.com` is NOT Tennyson's site. Another breeder happens to share the first name. Do not put that domain on the landing page, in the founder section, in marketing copy, or anywhere a visitor could read it as Tennyson's brand. The strategy docs (INTENT.md, DECISIONS.md, CONTEXT.md) historically referenced it as a "founder credibility" signal; that was a mistake based on the name collision and is being unwound. If a future doc or generated copy reintroduces it, treat that as a bug. The right founder credibility signal is Tennyson's actual breeding operation under whatever brand name he chooses to publish; ask before assuming.
+## Rules that always apply
 
-**Blog posts and articles are shelved** (30 Sep 2026) until Tennyson says otherwise. Do not write, draft, publish or suggest articles or blog posts, and do not re-enable the blog pipeline. That includes roadmap answers and SEO or growth-report follow-ups: the weekly growth report still lists blog topic ideas, and those are data, not tasks.
+The full list, with sources, is `docs/RULES.md`. The ones most often needed:
 
-Project files
-Where the project documentation actually lives:
+- **Merging to `main` applies new database migrations and deploys the edge functions declared in `supabase/config.toml`.** Every migration must be safe for the app version still open in members' browsers. Read `docs/MIGRATIONS.md` and `docs/INFRASTRUCTURE.md` before any database or function work, and check `docs/planning/deploy-queue-2026-10-03.md`.
+- **A human in the loop for money, sign-in, access and deletion.**
+- **Read `docs/marketing/email-brain.md` before writing or changing any email.**
+- **Size check:** CI fails a push to main that adds a picture over 200 KB to public/ or makes a public page load too much code. For pictures, run pnpm shrink:images and commit the result; the CI message says what to do for code.
+- **Artwork:** the Morph Guide's pattern-study drawings live in art/morph-guide/ink-studies-v3, not public/; after changing one, run node scripts/precompute-trait-layers.mjs and commit the layers it writes (a test fails until you do). See art/README.md.
+- **Before pushing code:** `pnpm lint`, `pnpm test`, and `pnpm test:e2e` for anything a member can see.
+- **After moving or renaming a document:** `node scripts/check-doc-links.mjs`, and update its row in `docs/README.md`.
 
-STRATEGY.md (root) - competitive landscape and market position
-ROADMAP.md (root) - points to the active plan and lists what is shelved
-docs/CONTEXT.md - what this project is and why it exists
-docs/INTENT.md - what we are trying to accomplish
-docs/DECISIONS.md - log of important choices
-docs/MIGRATIONS.md - how the database schema is managed: merging to main applies new migration files and deploys the edge functions declared in supabase/config.toml (Supabase GitHub integration), so every migration must be safe for the app version still open in members' browsers
-docs/planning/ - older audit and planning documents, kept for history
-docs/planning/launch-review-2026-09-04.md - the pre-launch review (62 findings with status) and its open items. Start here to continue that work.
-docs/planning/vip-audit-2026-09-27.md - post-launch audit: usage data, competitor research, and a phased plan that was completed 29 Sep. Kept for history.
-docs/planning/feature-completeness-audit-2026-09-29.md - the plan before 15 Oct, kept as reference: how finished each feature is, the decisions waiting on Tennyson, and its phone and money checks. Where it and Part E of the comprehensive review disagree, Part E wins.
-docs/planning/deploy-queue-2026-10-03.md - what each round of database migrations and edge functions changed, when it went live, and the dashboard steps still waiting on Tennyson. Check it before any database or function work.
-docs/planning/growth-plan-2026-10.md - the October growth plan: where the business stands, the three loops (activation, retention, distribution through breeders), the next 30 days and the decisions waiting. Start here for anything about growth, onboarding or priorities.
-docs/planning/activation-2026-10.md - the guided first gecko, default weigh-in and feeding reminders, and the guest demo fixes (5 Oct). Start here for onboarding and activation work.
-docs/planning/agent-access-2026-10.md - AI agents and crawlers: the open data at /data, the Geck Inspect Price Index, markdown twins, the MCP server at /mcp, the AI traffic log, why agents are not charged, and the weekly agent review with its log and backlog. Start here for anything about AI visibility or agent access.
-docs/planning/market-habit-2026-09-30.md - the Market page (brief, live feed, watchlists, Guess the Price, seller view): what shipped, what is left for Tennyson, and the habit number. Start here for market work.
-docs/planning/comprehensive-review-2026-10-14.md - the full review of the product on every front (39 scored categories, security findings, the reconciliation with the adversarial review, and a 90-day plan in Part E). Part E is the active plan: on 15 Oct Tennyson asked for all of it to be implemented. Read it before proposing priorities.
-docs/planning/experience-review-2026-11-11.md - the experience review (how smooth the main jobs are, the look, what to remove, merge, rename or add): findings with file references, 14 work packages with "done when" checks, gauges, and seven decisions waiting on Tennyson. It does not replace Part E. Read its sections 0 and 2 before building any of it.
-docs/planning/breeder-interviews-2026-10.md - the breeder conversations the Day 30 check counts: who to call first, the five questions, the $120 Founding Breeder offer and one block per call. Never write a breeder's email or phone number in it (the repo is public).
-docs/NOW.md - the weekly scoreboard (paying breeders, passports, weekly active breeders, monthly cost) and the current top ten.
-docs/INFRASTRUCTURE.md - what production runs that the repo cannot rebuild (storage buckets and policies, scheduled jobs, Vault secret names, every edge function with its verify_jwt) and how a merge deploys migrations and the functions declared in supabase/config.toml. Check it before declaring or deploying a function.
-docs/planning/retired-features-2026-10.md - what was retired on 16 Oct 2026 (Promote, the AI Consultant, Other Reptiles, the supplies store, the website builder, the Morph Visualizer), where its links go, and how to switch each back on. Retired code and tables are kept for a later release; do not delete them without Tennyson's say.
-docs/planning/homepage-ab-test-2026-10.md - the live homepage A/B test (control vs the business assistant page): its rules, what may change while it runs, and the changes queued until it ends. Read it before touching src/pages/Home.jsx, src/pages/HomeControl.jsx, src/components/landing/ or the theme defaults.
-docs/planning/app-store-resubmission-2026-10-26.md - the App Store resubmission after the September 2.1 and October EULA rejections: what was verified in production, the owner's steps in order (Sign in with Apple capability, build 14, the device recording, screenshots) and the paste-ready review notes and reply to Apple. Start here for any App Store work.
-docs/planning/launch-offer-tests-2026-10.md - the App Store launch tests: the promised-outcome headline test on /Membership and the iPhone paywall (PostHog flag paywall-outcome-v1), the /compare pages and how to read them, the Price Index proof line, and the pricing suggestions waiting on Tennyson.
-docs/morph-id-eval/README.md - how Morph ID is graded, why today's accuracy figure is not trustworthy yet (seller leakage), the plan for an honest gold set, and the log of graded runs.
-docs/OPERATIONS.md - the services the app runs on, what each costs, the scheduled jobs and secrets by name, and the production checks.
-docs/marketing/email-brain.md - how Geck Inspect writes and judges email: permission marketing rules, the checklist every email passes, how to measure (email_outcomes, not opens), who gets the weekly notes, the dashboard steps waiting on Tennyson and the weekly log. Read it before writing or changing any email.
-docs/planning/lifecycle-emails-2026-10.md - the getting-started emails (day 0 to day 14): the copy waiting for Tennyson's approval and the switch that turns them on.
-docs/planning/weekly-notes-2026-10.md - Weekly Gecko Notes, one short email a week after the first two weeks: how it works, the switch and the postal address it waits on, the 16 notes, the do-not-use list, how a scheduled session adds a note (one file in content/weekly-notes, then pnpm build:weekly-notes; keep at least 8 written notes ahead of the weeks since launch) and how to read the numbers. Start here for any weekly email work.
-docs/legal/terms-additions-draft.md - draft additions to the Terms (subscriptions, renewals, trials, refunds, lifetime plans, AI output). Not published; the decisions in it are Tennyson's.
-Size check: CI fails a push to main that adds a picture over 200 KB to public/ or makes a public page load too much code. For pictures, run pnpm shrink:images and commit the result; the CI message says what to do for code.
-art/README.md - source artwork that is not deployed. The Morph Guide's pattern-study drawings live in art/morph-guide/ink-studies-v3, not public/; after changing one, run node scripts/precompute-trait-layers.mjs and commit the layers it writes (a test fails until you do).
-docs/specs/morph-id.md - the Morph ID product brief (users, what a result must show, voice). docs/specs/DESIGN-SYSTEM.md - the one design document, written from the code; the code wins if they disagree.
-IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md, docs/specs/DESIGN-SYSTEM.md and this file; do not invent those documents' contents.
+## Where the documents are
+
+`docs/README.md` is the map: every document, what it is for, and whether it is live, reference, dated, history, shelved or generated. Use it; this list is only the shortcuts.
+
+| For | Start with |
+|---|---|
+| Priorities, what is next | `ROADMAP.md`, `docs/NOW.md`, Part E of `docs/planning/comprehensive-review-2026-10-14.md` |
+| Steps and decisions waiting on Tennyson | `docs/OWNER-STEPS.md` |
+| Any screen, flow or copy | `docs/planning/experience-review-2026-11-11.md` (sections 0 and 2 first), `docs/specs/DESIGN-SYSTEM.md` |
+| The landing page | `docs/planning/homepage-ab-test-2026-10.md` |
+| Onboarding and the first gecko | `docs/planning/activation-2026-10.md` |
+| Database and edge functions | `docs/MIGRATIONS.md`, `docs/INFRASTRUCTURE.md`, `docs/planning/deploy-queue-2026-10-03.md` |
+| Admin access and two-factor sign-in | `docs/planning/admin-mfa-2026-10.md` |
+| Plans, Stripe, App Store purchases | `docs/BILLING.md`, `docs/planning/launch-offer-tests-2026-10.md` |
+| The iPhone app | `docs/planning/app-store-resubmission-2026-10-26.md` |
+| Email | `docs/marketing/email-brain.md`, `docs/planning/lifecycle-emails-2026-10.md`, `docs/planning/weekly-notes-2026-10.md` |
+| Morph ID | `docs/specs/morph-id.md`, `docs/morph-id-eval/README.md` |
+| Market prices, AI crawlers, the MCP server | `docs/planning/agent-access-2026-10.md` |
+| Passports and transfers | `docs/planning/qr-transfer-security-2026-10-17.md` |
+| Retired features | `docs/planning/retired-features-2026-10.md` |
+| Breeder conversations | `docs/planning/breeder-interviews-2026-10.md` (never write a breeder's email or phone number in it) |
+| Services, costs, jobs, backups | `docs/OPERATIONS.md` |
+| The draft Terms additions | `docs/legal/terms-additions-draft.md` (not published; the decisions in it are Tennyson's) |
+| What the product is, in facts | `docs/CONTEXT.md`, `PRODUCT.md` |
+
+Finished plans and specs are in `docs/planning/history/` and `docs/specs/history/`. Each opens with a banner saying what replaced it. Do not act on them.
+
+`IDENTITY.md` does not exist. For brand voice, read `PRODUCT.md`, `docs/CONTEXT.md` and this file; do not invent its contents. The Word documents that older notes cite (a two-volume landscape analysis) are not in the repository; `STRATEGY.md` carries their conclusions.

@@ -1,5 +1,7 @@
 # Terms of Service additions: DRAFT, not published
 
+> **Note, 11 November 2026.** The AI Consultant, which some sections here cover, was retired on 16 October 2026; keep those lines only if it is switched back on. The support address is still a Gmail address (`docs/OWNER-STEPS.md`, step C6).
+
 **Status: draft for Tennyson and, ideally, a lawyer. Nothing here is live.** The published Terms are `src/pages/Terms.jsx` (last updated 8 September 2026), and this draft does not change them. This is not legal advice; it is a plain description of how the app behaves today, turned into Terms wording, with every policy choice marked for a decision.
 
 Written 15 October 2026 for plan item E2 22 of `docs/planning/comprehensive-review-2026-10-14.md` (and gaps C15 items 1 and 9: the Terms say nothing about subscriptions, renewals, trials, refunds, lifetime plans, AI output or value estimates).

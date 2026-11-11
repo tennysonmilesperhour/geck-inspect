@@ -1,5 +1,7 @@
 # Geck Inspect: native iOS / Android shell plan
 
+> **Status, 11 November 2026: History.** Written before the phone apps existed. They exist now (Capacitor 8; `ios/`, `android/`, `capacitor.config.ts`), sign-in includes Google and Apple, and reminders use local notifications, not push. Read section 8 of `docs/ARCHITECTURE.md` and `docs/ENGINEERING.md` instead. The map of all documents is `docs/README.md`.
+
 Status: planning. No code yet, this doc exists so the next session
 can execute against a decided path rather than rehashing trade-offs.
 
@@ -16,7 +18,7 @@ on the App Store / Play Store.
   18 + Vite + Supabase, Tailwind, ~104 prerendered SEO pages.
 - Existing PWA hooks: `<link rel="manifest">` in `index.html`,
   apple-touch-icon, theme-color. There's already a standalone-launch
-  redirect in `src/App.jsx` (~line 169–181), so the app behaves
+  redirect in `src/App.jsx` (~line 169 to 181), so the app behaves
   correctly when installed as a PWA.
 - Auth is Supabase email + password; tokens persist in localStorage.
 - ~10 surfaces use the camera via `<input type="file">`, all funneled
@@ -33,7 +35,7 @@ on the App Store / Play Store.
 | Path | Effort | Code reuse | App Store presence | Push notifications | Risk |
 |---|---|---|---|---|---|
 | **Capacitor wrap** (recommended) | ~1 week | 100%, same React tree runs in WebView | Yes | Yes (FCM + APNs via plugin) | Low. Apple has occasionally cracked down on "wrappers", but Capacitor apps with real native plugins (camera, push, share) are routinely approved. |
-| Expo / React Native rewrite | ~2–3 months | ~30%, share business logic, rebuild every screen with native components | Yes | Yes (native) | High. Throws away the prerendering work and the SEO-shared component tree. |
+| Expo / React Native rewrite | ~2 to 3 months | ~30%, share business logic, rebuild every screen with native components | Yes | Yes (native) | High. Throws away the prerendering work and the SEO-shared component tree. |
 | PWA-plus (no native shell) | ~1 week | 100% | **No** | Web push only (no iOS Safari support) | Low. But concedes the App Store credibility goal indefinitely. |
 
 **Recommendation: Capacitor wrap.** Closes the credibility gap fast,
@@ -77,7 +79,7 @@ later if specific surfaces need real native components.
   `Capacitor.isNativePlatform()` and switch to the plugin for the
   picker, while keeping the Blob upload path intact.
 
-### Phase 4: push notifications (~2–3 days)
+### Phase 4: push notifications (~2 to 3 days)
 - `pnpm add @capacitor/push-notifications`
 - iOS: APNs cert in Apple Developer portal, capability enabled in
   Xcode, `aps-environment` entitlement.
@@ -133,15 +135,15 @@ later if specific surfaces need real native components.
 
 ## Time estimate
 
-- Phases 0–1: 1 day (mostly waiting for store account approvals)
+- Phases 0 to 1: 1 day (mostly waiting for store account approvals)
 - Phase 2: 1 day
 - Phase 3: ½ day
-- Phase 4: 2–3 days
+- Phase 4: 2 to 3 days
 - Phase 5: ½ day
 - Phase 6: 2 days
 - Phase 7: 1 day
 
-**~7–9 days of Claude-time** plus 1–2 weeks of store review for the
+**~7 to 9 days of Claude-time** plus 1 to 2 weeks of store review for the
 first build of each app. Realistic ship-to-store-shelf: 3 weeks.
 
 ## What's NOT in scope here

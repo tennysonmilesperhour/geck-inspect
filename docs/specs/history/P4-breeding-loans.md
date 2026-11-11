@@ -1,5 +1,7 @@
 # P4: Breeding Loan Management
 
+> **Status, 11 November 2026: History.** Retired: no loan was ever recorded. `/BreedingLoans` redirects to `/Breeding`. Do not rebuild without Tennyson's say. The map of all documents is `docs/README.md`.
+
 > **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P4

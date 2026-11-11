@@ -1,5 +1,7 @@
 # Restore a database backup
 
+> **Status, 11 November 2026.** The weekly backup has never run, because its two secrets are not set (`docs/OWNER-STEPS.md`, step C1), so there is nothing to restore yet. When setting it up: the connection string must be the Session pooler one. GitHub's runners cannot reach the direct `db.` address (`docs/OPERATIONS.md`, section 2).
+
 The weekly workflow `.github/workflows/db-backup.yml` uploads one file,
 `backup.dump.gpg`, as a GitHub Actions artifact. The name starts with
 `db-backup-` and includes the UTC date. Artifacts are kept for 30 days.

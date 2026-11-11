@@ -9,6 +9,7 @@ Rewritten from the code on 15 October 2026 (plan item E2 21 of `docs/planning/co
 | The theme list, defaults and saving a member's choice | `src/lib/ThemeContext.jsx` |
 | The first-paint theme script and font loading | `index.html` |
 | App shell, glass bars, landing font | `src/styles/layout-theme.css`, `src/Layout.jsx` |
+| Font files and their declarations | `public/fonts/`, `src/styles/fonts.css` |
 | Shared components | `src/components/ui/*` (buttons, cards, tabs, dialogs), `src/components/shared/PageHeader.jsx`, `src/components/shared/EmptyState.jsx` |
 
 Superseded documents, kept for history only: the light sage palette with DM Serif Display and DM Sans that this file used to specify (never shipped; in git history before 15 October 2026), the charcoal and cream palette in decision 5 of `docs/DECISIONS.md` and in the old section 8.4 of `docs/CONTEXT.md` (never shipped), and the "DESIGN SYSTEM" lines inside the P1 to P8 feature specs in `docs/specs/`. Do not paste any of those into a prompt.
@@ -55,7 +56,7 @@ The `--gi-*` variables at the end of `src/index.css` (a "P1 design system" with 
 |---|---|---|
 | The app, everywhere | Inter | `body` in `src/index.css`, `.app-container-outline` in `layout-theme.css` |
 | The public landing page | Montserrat | `.landing-font` in `layout-theme.css` |
-| The "Geck Inspect" wordmark only | Righteous | inline in `src/Layout.jsx`, the store layout and sticker previews |
+| The retired store's wordmark and sticker previews only | Righteous | `src/components/store/StoreLayout.jsx`, `StickerThemePreviews.jsx`. The app shell's wordmark uses Montserrat (`src/Layout.jsx`). |
 
 All three are self-hosted: the files are in `public/fonts/`, declared in `src/styles/fonts.css`, and `index.html` preloads Inter (Montserrat on the landing page). Nothing loads from Google Fonts. A few components still name fonts that are not loaded and so fall back to the browser's serif: "Young Serif" in the retired sticker and shirt previews, and Tailwind's `font-serif` class in the care guide slides and the breeder store page. Do not add new fonts.
 

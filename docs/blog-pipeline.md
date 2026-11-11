@@ -1,5 +1,7 @@
 # Geck Inspect Blog Pipeline
 
+> **Status, 11 November 2026: Shelved.** Blog and article work is shelved (30 September 2026) and this pipeline has been paused since 15 July. Do not run it, switch it back on or follow it until Tennyson says otherwise. The map of all documents is `docs/README.md`.
+
 Fully autonomous blog system. Research, draft, sanitize, publish, and notify happen inside a single workflow run on a Mon/Wed/Fri cadence. No PR review step, no manual merge. An email lands when a post goes live.
 
 ## One-time setup (required before first run)

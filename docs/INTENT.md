@@ -1,5 +1,7 @@
 # Geck Inspect Landing Page: INTENT.md
 
+> **Status, 11 November 2026: History.** The April 2026 brief for the landing page redesign. The headline, the hero and the positioning have changed since (decision 32 in `docs/DECISIONS.md`, `STRATEGY.md`, and the test running now in `docs/planning/homepage-ab-test-2026-10.md`). "Crested-gecko-first" is described there as a positioning, not a moat. Do not build from this. The map of all documents is `docs/README.md`.
+
 > **Purpose of this file.** This captures the *why* behind the landing page redesign: the strategy, the positioning, the research-backed reasoning, and the principles that should guide every decision. `CONTEXT.md` tells a future collaborator what the landing page *is*. This file tells them why it is that way. When you're about to make a design or copy change and you're not sure which direction is right, the answer should be derivable from this file. If it isn't, update this file first, then make the change.
 
 ---
@@ -95,7 +97,7 @@ Nothing in the hero section matters more than passing the 5-second test. If any 
 
 ### 6.3 Mobile is the starting point, not an adaptation
 
-62–83% of visitors arrive on mobile. The page is designed mobile-first. Tap targets ≥48×48px. Thumb-zone CTAs. Vertical-first media. Desktop is the scale-up, not the other way around.
+62 to 83% of visitors arrive on mobile. The page is designed mobile-first. Tap targets ≥48×48px. Thumb-zone CTAs. Vertical-first media. Desktop is the scale-up, not the other way around.
 
 ### 6.4 Speed is a conversion lever, not a technical metric
 
@@ -119,13 +121,13 @@ These are explicit non-choices to prevent scope creep and off-thesis decisions l
 
 ## 8. How we'll know if it's working
 
-Primary metric: **started sign-up rate**: of visitors who land on the page, what percentage click the primary CTA and reach the sign-up form. Industry median for SaaS landing pages is ~3.8%. Top performers are at 8–12%. Target for first iteration: 5%+. Target after first round of A/B testing: 8%+.
+Primary metric: **started sign-up rate**: of visitors who land on the page, what percentage click the primary CTA and reach the sign-up form. Industry median for SaaS landing pages is ~3.8%. Top performers are at 8 to 12%. Target for first iteration: 5%+. Target after first round of A/B testing: 8%+.
 
 Secondary metrics:
 
 - **Completed sign-up rate**: of those who started, how many finish. If this is low, the problem is in the sign-up flow, not the landing page.
 - **Scroll depth to pricing**: are people actually engaging with the page, or bouncing from the hero?
-- **Time on page**: proxy for engagement. Expect ~1–2 minutes for genuinely interested visitors.
+- **Time on page**: proxy for engagement. Expect ~1 to 2 minutes for genuinely interested visitors.
 - **Bounce rate on mobile vs. desktop**: if mobile bounce is materially worse, there's a mobile-specific friction to fix.
 
 We do not chase vanity metrics: total visitors, page views per session, social shares. None of those convert to sign-ups.
