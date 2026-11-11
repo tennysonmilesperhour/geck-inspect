@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
-import { Edit } from 'lucide-react';
+import { Edit, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -16,7 +16,7 @@ import { ReadinessCard } from '@/components/breeding/BreedingReadiness';
 import MarketValueCard from '@/components/gecko/MarketValueCard';
 import EventTracker from '@/components/my-geckos/EventTracker';
 import useGeckoRecordData from './useGeckoRecordData';
-import { recordAccess, recordSections, latestWeighIn, isNewestDay } from './recordModel';
+import { recordAccess, recordSections, latestWeighIn, isNewestDay, myGeckosHandoff } from './recordModel';
 import { hasMorePhotos, PhotoLightbox, PhotosSection } from './RecordPhotos';
 import {
   BottomOffers, CareSection, DetailsCard, FamilyCard, HistorySection, JumpLinks,
@@ -24,6 +24,7 @@ import {
 } from './RecordSections';
 import RecordWeights from './RecordWeights';
 import RecordPassport from './RecordPassport';
+import RecordShare from './RecordShare';
 import RecordBreeding from './RecordBreeding';
 import RecordManage from './RecordManage';
 import { importWithRetry, isStaleChunkError, lazyOptional, RELOAD_HINT } from './loadOnDemand';
@@ -240,6 +241,12 @@ export default function GeckoRecord({
     }
   };
 
+  const openTransfer = () => { setTransferTo(''); setShowTransfer(true); };
+
+  // Where the passport page's Back link returns: this record, in the
+  // window over My Geckos or on its own page.
+  const backTo = variant === 'modal' ? myGeckosHandoff(view.id) : `/GeckoDetail?id=${view.id}`;
+
   const makePaper = async (kind) => {
     if (!view.id || busyPaper) return;
     setBusyPaper(kind);
@@ -322,6 +329,13 @@ export default function GeckoRecord({
               onHusbandryLogged={() => setHusbandryKey((k) => k + 1)}
             />
           )}
+          <RecordShare
+            gecko={view}
+            access={access}
+            backTo={backTo}
+            onCreatePassport={createPassport}
+            onTransfer={openTransfer}
+          />
           {access.canEdit && onEdit ? (
             <Button variant="outline" size="sm" onClick={() => onEdit(view)} aria-label={`Edit ${view.name || 'gecko'}`}>
               <Edit className="w-4 h-4" />
@@ -340,6 +354,18 @@ export default function GeckoRecord({
 
       <div className="p-4 sm:p-6 space-y-6">
         <RecordSummary gecko={view} latest={latest} headingAs={titleLevel} onOpenPhoto={() => setLightboxIndex(0)} />
+        {access.canEdit && !guest && !view.archived && view.status === 'For Sale' && !view.passport_code && (
+          <div className="flex flex-col gap-3 rounded-xl border border-emerald-700/50 bg-emerald-950/30 p-3 sm:flex-row sm:items-center">
+            <p className="min-w-0 flex-1 text-sm text-slate-200">
+              <span className="font-semibold">{view.name || 'This gecko'} is for sale.</span>{' '}
+              Give the buyer its full history: a passport is a public page and a QR card with its lineage and
+              weigh-ins. Making one makes the record public so the link works.
+            </p>
+            <Button onClick={createPassport} className="w-full shrink-0 sm:w-auto">
+              <QrCode className="w-4 h-4" /> Make a passport
+            </Button>
+          </div>
+        )}
         <JumpLinks sections={sections} />
 
         <RecordGroup id="overview" title="Overview" headingAs={sectionLevel}>
@@ -416,8 +442,9 @@ export default function GeckoRecord({
               busy={busyPaper}
               isPublic={isPublic}
               galleryDisplay={view.gallery_display}
+              backTo={backTo}
               onCreatePassport={createPassport}
-              onTransfer={() => { setTransferTo(''); setShowTransfer(true); }}
+              onTransfer={openTransfer}
               onPaper={makePaper}
               onTogglePublic={(checked) => setPublic(checked)}
               onToggleGallery={setGallery}

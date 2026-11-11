@@ -1,6 +1,6 @@
 import GeckoImage from '@/components/shared/GeckoImage';
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
@@ -11,7 +11,7 @@ import { parseLocalDate } from '@/lib/dateUtils';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import {
   Calendar, Scale, Droplets, Heart, Stethoscope, ChevronLeft, ChevronRight, QrCode, ArrowRightLeft,
-  ShieldCheck, Check, X, User as UserIcon, Utensils, FileDown, Pencil, Zap,
+  ShieldCheck, Check, X, User as UserIcon, Utensils, FileDown, Pencil, Zap, ArrowLeft,
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import { geckoSelect, PUBLIC_READ_COLUMNS } from '@/lib/publicColumns';
 import { requestPassportTransfer } from '@/lib/transfers';
 import { captureEvent } from '@/lib/posthog';
 import { toast } from '@/components/ui/use-toast';
+import { safeInternalPath } from '@/lib/safeInternalPath';
 
 // The passport is the page buyers see when they scan a tub label or open a
 // shared link. It used its own palette tokens and two display fonts; since
@@ -390,6 +391,7 @@ export default function AnimalPassport() {
   const auth = useAuth?.() || {};
   const currentUser = auth.user;
   const navigate = useNavigate();
+  const location = useLocation();
   const [requestingTransfer, setRequestingTransfer] = useState(false);
 
   const [gecko, setGecko] = useState(null);
@@ -540,6 +542,9 @@ export default function AnimalPassport() {
   const baseMorph = gecko.morphs_traits || null;
   const status = (gecko.status || 'owned').toLowerCase().replace(/\s/g, '_');
   const isOwner = Boolean(currentUser?.email) && gecko.created_by === currentUser.email;
+  // The record that opened this page says where to return; an owner who
+  // arrived by a link goes to the record page.
+  const backTo = safeInternalPath(location.state?.backTo, '') || (isOwner ? `/GeckoDetail?id=${gecko.id}` : '');
   const url = passportUrl(passportCode);
   const hasProvenance = ownershipRecords.length > 0
     || Boolean(gecko.sire_id || gecko.dam_id || gecko.sire_name || gecko.dam_name || gecko.breeder_name);
@@ -584,6 +589,18 @@ export default function AnimalPassport() {
 
       <div className="min-h-screen bg-slate-950 text-slate-100">
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+          {/* This page has no app menu, so a member who opened it from a
+              gecko's record (or the owner arriving by a link) needs a way
+              back. Visitors from a QR code see no link. */}
+          {backTo && (
+            <Link
+              to={backTo}
+              replace
+              className="touch:min-h-11 -mb-2 inline-flex items-center gap-1 text-sm text-emerald-400 transition-colors hover:text-emerald-300 print:hidden"
+            >
+              <ArrowLeft size={16} aria-hidden="true" /> Back to {isOwner ? 'your record' : 'the record'}
+            </Link>
+          )}
           <PhotoCarousel images={images} />
 
           <div className="flex items-start justify-between flex-wrap gap-3">

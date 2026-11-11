@@ -47,6 +47,15 @@ vi.mock('@/components/ui/alert-dialog', () => ({
   AlertDialogCancel: ({ children }) => <button type="button">{children}</button>,
   AlertDialogAction: ({ children, onClick }) => <button type="button" data-confirm-action onClick={onClick}>{children}</button>,
 }));
+// The Share menu in the top bar: every item is rendered, as a button that
+// runs its onSelect, inside one marked wrapper so a test can look there.
+vi.mock('@/components/ui/dropdown-menu', () => ({
+  DropdownMenu: ({ children }) => <div data-share-menu>{children}</div>,
+  DropdownMenuTrigger: ({ children }) => children,
+  DropdownMenuContent: ({ children }) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, asChild, onSelect }) =>
+    (asChild ? children : <button type="button" data-share-item onClick={onSelect}>{children}</button>),
+}));
 vi.mock('@/components/ui/use-toast', () => ({ toast: (t) => state.toasts.push(t) }));
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={typeof to === 'string' ? to : to?.pathname}>{children}</a> }));
 vi.mock('@/api/appClient', () => ({ api: { auth: { redirectToLogin: vi.fn() } } }));
@@ -364,6 +373,37 @@ describe('the gecko record, for its owner', () => {
     expect(textOf(tree)).toContain('View passport');
     // Counted for the passport funnel, with no code or name.
     expect(state.captured).toContainEqual(['passport_created', { surface: 'record', was_public: true }]);
+  });
+
+  it('offers the passport and the transfer from Share in the top bar', async () => {
+    const shareOf = (tree) => tree.root.findAll((n) => n.props?.['data-share-menu'] !== undefined)[0];
+    // No passport yet: making one is in the menu, and says it makes the
+    // record public before the tap.
+    const fresh = await mount({ gecko: { ...NIMBUS, passport_code: null } });
+    const menu = innerText(shareOf(fresh));
+    expect(menu).toContain('Make a passport');
+    expect(menu).toContain('public');
+    expect(menu).toContain('Transfer to a new owner');
+    expect(menu).not.toContain('View passport');
+    const make = shareOf(fresh).findAll((n) => n.type === 'button' && innerText(n).includes('Make a passport'))[0];
+    await act(async () => { make.props.onClick(); });
+    expect(state.updates.find(([kind]) => kind === 'gecko')[2]).toMatchObject({ is_public: true });
+
+    // With a passport: it opens inside the app (a link, not a new tab).
+    const withPassport = await mount({ gecko: { ...NIMBUS, passport_code: 'GI-2026-ABCD' } });
+    const links = shareOf(withPassport).findAll((n) => n.type === 'a').map((n) => n.props.href);
+    expect(links).toEqual(['/passport/GI-2026-ABCD', '/passport/GI-2026-ABCD/qr']);
+    expect(shareOf(withPassport).findAll((n) => n.type === 'a' && n.props.target === '_blank')).toHaveLength(0);
+    expect(innerText(shareOf(withPassport))).toContain('Copy passport link');
+  });
+
+  it('offers a passport under the name of a gecko that is for sale', async () => {
+    const forSale = await mount({ gecko: { ...NIMBUS, passport_code: null, status: 'For Sale' } });
+    expect(textOf(forSale)).toContain('is for sale');
+    const kept = await mount({ gecko: { ...NIMBUS, passport_code: null, status: 'Holdback' } });
+    expect(textOf(kept)).not.toContain('is for sale');
+    const hasOne = await mount({ gecko: { ...NIMBUS, passport_code: 'GI-2026-ABCD', status: 'For Sale' } });
+    expect(textOf(hasOne)).not.toContain('is for sale');
   });
 
   it('shows the owner transfer, archive and edit, and delete once archived', async () => {

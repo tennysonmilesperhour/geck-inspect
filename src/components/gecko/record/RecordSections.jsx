@@ -112,9 +112,11 @@ export function JumpLinks({ sections }) {
   };
   return (
     <nav aria-label="Parts of this record" className="border-y border-slate-800 py-3">
-      <ul className="flex flex-wrap gap-2">
+      {/* One row that scrolls sideways on a phone (five chips used to wrap
+          to two rows and push the parents down); wraps on wider screens. */}
+      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 scrollbar-none sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {sections.map((s) => (
-          <li key={s.id}>
+          <li key={s.id} className="shrink-0">
             <Button asChild variant="outline" size="sm">
               <a href={`#${sectionId(s.id)}`} onClick={go(s.id)}>{s.label}</a>
             </Button>

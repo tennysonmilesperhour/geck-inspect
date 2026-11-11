@@ -94,6 +94,12 @@ html, body {
   }
 }
 
+/* A row that scrolls sideways without drawing a scrollbar (chip rows on
+   Today, Breeding and the gecko record). The class was already used in
+   three places but had never been defined, so those rows showed a bar. */
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
 /* Inside the app shell "a screen" means the scroll area between the
    top bar and the bottom nav, not the full 100vh. Pages set
    min-h-screen for their background fill; resolving it against the

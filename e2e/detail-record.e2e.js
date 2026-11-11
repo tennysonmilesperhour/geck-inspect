@@ -77,3 +77,39 @@ test('an owner generates a QR code and can revoke the link from Transfers', asyn
   expect(transfer.status).toBe('cancelled');
   expect(fake.table('geckos')[0].created_by).toBe(owner.email);
 });
+
+// Experience review WP-5: making a passport used to sit near the bottom of
+// the record, about 3,900 px down on a phone. It is now in the top bar's
+// Share menu, and the passport opens inside the app with a way back.
+test('an owner makes a passport from the top bar and opens it in the app', async ({ context, page }) => {
+  const { fake, owner, gecko } = createTransferFixture({ withTransfer: false });
+  // The fixture gecko comes with a passport; this one starts without.
+  gecko.passport_code = null;
+  await installFixture(context, fake, owner);
+  await page.goto('/MyGeckos');
+  await openGeckoRecord(page, 'Mango');
+  const record = page.getByRole('dialog', { name: 'Mango', exact: true });
+
+  // Three taps from My Geckos, no scrolling: the gecko, Share, Make a passport.
+  const share = record.getByRole('button', { name: 'Share Mango' });
+  await expect(share).toBeInViewport();
+  await share.click();
+  const make = page.getByRole('menuitem', { name: /Make a passport/ });
+  await expect(make).toContainText('public');
+  await expect(page.getByRole('menuitem', { name: /Transfer to a new owner/ })).toBeVisible();
+  await make.click();
+  await expect(page.getByText('Passport made', { exact: true })).toBeVisible();
+  expect(gecko.passport_code).toMatch(/^GI-\d{4}-[A-Z2-9]{4}$/);
+  expect(gecko.is_public).toBe(true);
+
+  // The same menu now opens the passport in this tab, and the passport
+  // page leads back to the record.
+  await share.click();
+  await expect(page.getByRole('menuitem', { name: /Copy passport link/ })).toBeVisible();
+  await page.getByRole('menuitem', { name: /View passport/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/passport/${gecko.passport_code}$`));
+  expect(context.pages()).toHaveLength(1);
+  await page.getByRole('link', { name: /Back to your record/ }).click();
+  await expect(page).toHaveURL(/\/MyGeckos\?gecko=/);
+  await expect(page.getByRole('dialog', { name: 'Mango', exact: true })).toBeVisible();
+});

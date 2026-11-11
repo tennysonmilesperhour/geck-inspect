@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
-import { ArrowRightLeft, Award, ExternalLink, Eye, EyeOff, FileText, GitBranch, Loader2, QrCode } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRightLeft, Award, Eye, EyeOff, FileText, GitBranch, IdCard, Loader2, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -31,7 +32,7 @@ const PAPERS = [
  *   busy  the paper being made ('ownership', 'lineage' or 'packet'), or null
  */
 export default function RecordPassport({
-  gecko, access, busy = null, isPublic, galleryDisplay,
+  gecko, access, busy = null, isPublic, galleryDisplay, backTo,
   onCreatePassport, onTransfer, onPaper, onTogglePublic, onToggleGallery, headingAs,
 }) {
   const code = gecko.passport_code;
@@ -46,16 +47,18 @@ export default function RecordPassport({
             Passport <span className="font-mono text-slate-100">{code}</span>. Anyone with the link or the QR card sees {name}&apos;s public history.
           </p>
           <div className="flex flex-wrap gap-2">
+            {/* In the app, not a new tab: the iPhone app has no tabs, and the
+                passport page has a Back link to this record. */}
             <Button asChild variant="outline">
-              <a href={`/passport/${code}`} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4 mr-2" /> View passport
-              </a>
+              <Link to={`/passport/${code}`} state={{ backTo }}>
+                <IdCard className="w-4 h-4 mr-2" /> View passport
+              </Link>
             </Button>
             {access.keeper ? (
               <Button asChild variant="outline">
-                <a href={`/passport/${code}/qr`} target="_blank" rel="noopener noreferrer">
+                <Link to={`/passport/${code}/qr`} state={{ backTo }}>
                   <QrCode className="w-4 h-4 mr-2" /> QR card
-                </a>
+                </Link>
               </Button>
             ) : null}
           </div>
@@ -71,6 +74,7 @@ export default function RecordPassport({
         <div className="space-y-2">
           <p className="text-sm text-slate-400">
             A passport gives {name} a public page and a QR card with its lineage and weigh-ins.
+            Making one makes this record public so the link works.
           </p>
           <Button variant="outline" onClick={onCreatePassport} className="w-full sm:w-auto">
             <QrCode className="w-4 h-4 mr-2" /> Make a passport

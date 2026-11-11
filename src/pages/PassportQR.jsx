@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { passportUrl } from '@/lib/passportUtils';
 import { QRCodeSVG } from 'qrcode.react';
@@ -14,6 +14,8 @@ const LABEL_MUTED = '#475569';
 
 export default function PassportQR() {
   const { passportCode } = useParams();
+  // Carries "where the record is" on to the passport page's Back link.
+  const location = useLocation();
   const [gecko, setGecko] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -94,6 +96,7 @@ export default function PassportQR() {
         {/* Back link */}
         <Link
           to={`/passport/${passportCode}`}
+          state={location.state}
           className="touch:min-h-11 inline-flex items-center gap-1 text-sm mb-6 text-emerald-400 hover:text-emerald-300 transition-colors print:hidden"
         >
           <ArrowLeft size={16} /> Back to passport
