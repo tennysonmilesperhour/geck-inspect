@@ -4,6 +4,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Gecko } from '@/entities/all';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import PageHeader from '@/components/shared/PageHeader';
+import EmptyState from '@/components/shared/EmptyState';
+import { useAuth } from '@/lib/AuthContext';
+import { getVisibleGeckos } from '@/lib/geckoAccess';
 import PedigreePosterExport from '@/components/innovations/PedigreePosterExport';
 import {
   ArrowLeft,
@@ -13,6 +18,7 @@ import {
   ZoomOut,
   RotateCcw,
   Download,
+  Search,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { breederSlug, looksLikeBreederName } from '@/lib/breederUtils';
@@ -252,6 +258,117 @@ function Connector({ from, to }) {
 }
 
 // ---------------------------------------------------------------------------
+// Picker: shown when the page is opened without a gecko (from the quick
+// search or the Breeding page). It used to tell the member to add a
+// "?geckoId=" parameter to the address.
+// ---------------------------------------------------------------------------
+function PedigreeGeckoPicker() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [geckos, setGeckos] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.email) {
+      setGeckos([]);
+      return undefined;
+    }
+    getVisibleGeckos(user, {}, 'name')
+      .then((rows) => {
+        if (!cancelled) setGeckos((rows || []).filter((g) => !g.archived));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFailed(true);
+          setGeckos([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return geckos || [];
+    return (geckos || []).filter((g) =>
+      [g.name, g.gecko_id_code, g.morphs_traits].some((v) => String(v || '').toLowerCase().includes(q))
+    );
+  }, [geckos, query]);
+
+  return (
+    <div className="p-4 md:p-8">
+      <Seo title="Family tree" description="Pick a crested gecko to see its sire, dam, grandparents and great-grandparents." path="/Pedigree" noIndex />
+      <div className="mx-auto max-w-3xl">
+        <PageHeader
+          icon={GitBranch}
+          title="Family tree"
+          description="Pick a gecko to see its sire, dam, grandparents and great-grandparents."
+        />
+        {geckos === null ? (
+          <div className="flex justify-center py-16" role="status" aria-label="Loading your geckos">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-500" aria-hidden="true" />
+          </div>
+        ) : geckos.length === 0 ? (
+          <EmptyState
+            icon={GitBranch}
+            title={failed ? 'Your geckos could not be loaded' : 'No geckos yet'}
+            message={failed
+              ? 'Check your connection and open this page again.'
+              : 'Add a gecko and its parents, and its family tree builds itself.'}
+            action={{ label: 'Go to My Geckos', onClick: () => navigate(createPageUrl('MyGeckos')) }}
+          />
+        ) : (
+          <>
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+              <Input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name, ID or morph"
+                aria-label="Search your geckos"
+                className="h-11 border-slate-700 bg-slate-900 pl-9 text-slate-100"
+              />
+            </div>
+            {shown.length === 0 ? (
+              <p className="py-10 text-center text-sm text-slate-400">No gecko matches that search.</p>
+            ) : (
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {shown.map((g) => (
+                  <li key={g.id}>
+                    <Link
+                      to={`/Pedigree?geckoId=${g.id}`}
+                      className="flex min-h-14 items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 p-2 pr-3 transition-colors hover:border-emerald-600/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+                    >
+                      <GeckoImage
+                        gecko={g}
+                        src={g.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
+                        alt=""
+                        width={96}
+                        className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-slate-100">{g.name || 'Unnamed gecko'}</span>
+                        <span className="block truncate text-xs text-slate-400">
+                          {[g.gecko_id_code, g.morphs_traits].filter(Boolean).join(' · ') || 'No morph recorded'}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 export default function Pedigree() {
@@ -411,25 +528,8 @@ export default function Pedigree() {
     URL.revokeObjectURL(url);
   };
 
-  // --- Missing geckoId param ---
-  if (!geckoId) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 md:p-8">
-        <div className="text-center max-w-md">
-          <GitBranch className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold">No gecko selected</h1>
-          <p className="text-slate-400 mt-2">
-            Add a <code>?geckoId=</code> query parameter to view a gecko&rsquo;s pedigree.
-          </p>
-          <Button asChild className="mt-4">
-            <Link to={createPageUrl('MyGeckos')}>
-              Browse your geckos
-            </Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // --- No gecko chosen yet: offer the member's own geckos ---
+  if (!geckoId) return <PedigreeGeckoPicker />;
 
   // --- Loading ---
   if (isLoading) {

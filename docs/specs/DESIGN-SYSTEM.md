@@ -57,12 +57,12 @@ The `--gi-*` variables at the end of `src/index.css` (a "P1 design system" with 
 | The public landing page | Montserrat | `.landing-font` in `layout-theme.css` |
 | The "Geck Inspect" wordmark only | Righteous | inline in `src/Layout.jsx`, the store layout and sticker previews |
 
-All three load from Google Fonts in `index.html` with a non-blocking swap. One component, `src/components/passport/OwnershipChain.jsx`, still names DM Serif Display, which is not loaded, so it falls back to the browser's serif. Do not add new fonts.
+All three are self-hosted: the files are in `public/fonts/`, declared in `src/styles/fonts.css`, and `index.html` preloads Inter (Montserrat on the landing page). Nothing loads from Google Fonts. A few components still name fonts that are not loaded and so fall back to the browser's serif: "Young Serif" in the retired sticker and shirt previews, and Tailwind's `font-serif` class in the care guide slides and the breeder store page. Do not add new fonts.
 
 ## 5. Shape, spacing and touch
 
 - **Corners:** about 8% less rounded than Tailwind's defaults (`--radius: 0.46rem`; overrides in `tailwind.config.js`). `rounded-full` is unchanged for pills and avatars.
-- **Page padding:** `p-4 md:p-8` on app pages (43 page files use it).
+- **Page padding:** `p-4 md:p-8` on app pages (42 page files use it; 18 still use `p-4 md:p-6`).
 - **Cards:** one surface: `rounded-xl border border-slate-700 bg-slate-900` (`src/components/ui/card.jsx`). Card padding is 1.5rem, 1rem on phones (`[data-card-part]` rules in `src/index.css`). Pass a class only for a real variant such as an amber warning.
 - **Tap targets:** the `touch:` variant applies only on touch screens, and buttons grow to a 44 px minimum there (`touch:min-h-11` in `button.jsx`). For a small control that cannot grow, add `touch-hit` (an invisible 44 px hit area).
 - **Phone frame:** a glass header floats over the page and a glass bottom bar sits above the home indicator (decision 39). Their sizes are the `--top-bar-h` and `--bottom-bar-h` variables in `src/index.css`.
@@ -93,7 +93,7 @@ Recorded here so nobody mistakes them for the intended design. Fixes are propose
 
 - **Contrast (fixed 16 October 2026).** Text used to re-tint with the theme, so on the old Blizzard default muted paragraphs rendered mid-blue on near-black. Emerald is now the default, the text greys are neutral, `slate-500` is a step lighter, in-text links are underlined, the default button is `emerald-700`, and the Emerald accent's `emerald-600` is 26% lightness so white text on it passes. An axe pass on 20 main pages at phone and laptop size (40 loads) went from 402 failing contrast nodes on 32 loads to 4 on 2; what is left is the rose "New" badge in the Morph Guide index components.
 - **Colours that ignore the theme.** The header and sidebar tint stay emerald, the logo is copper, and some pages add their own accent (a purple calculator button, an amber Enterprise card, a green gradient on the Dashboard stat tiles), so one screen can show four accent colours.
-- **No solid fallback for the glass bars** where `backdrop-filter` is not supported (older Android web views). A `@supports` fallback is recommended.
+- **Glass bars without `backdrop-filter` (fixed).** Older Android web views drew the bars fully see-through. `src/styles/layout-theme.css` now has an `@supports not (backdrop-filter: ...)` block that gives them a solid background.
 - **Placeholder letters instead of drawings** for 28 of 36 morphs on the Morph Guide index.
 
 ## 9. Rules for new UI

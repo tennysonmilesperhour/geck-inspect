@@ -25,7 +25,13 @@ const PLAN_LIMITS = {
         geckos: 10,
         other_reptiles: 5,
         breeding_pairs: 1,
-        features: ['basic_breeding', 'public_profile', 'forum', 'ai_morph_id'],
+        // Weights, CSV export and the lineage tree are free: the pricing page
+        // says so and nothing in the app gates them. They used to be listed
+        // from Keeper up, which no code enforced.
+        features: [
+            'basic_breeding', 'public_profile', 'forum', 'ai_morph_id',
+            'weight_tracking', 'csv_export', 'lineage_tree',
+        ],
     },
     keeper: {
         geckos: 50,

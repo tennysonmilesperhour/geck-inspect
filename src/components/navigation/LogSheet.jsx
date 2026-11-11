@@ -161,7 +161,7 @@ export default function LogSheet({ open, onOpenChange }) {
           transition: isDragging ? 'none' : 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
           touchAction: 'pan-x',
         }}
-        className="rounded-t-2xl border-slate-700 bg-slate-950 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] text-slate-100"
+        className="rounded-t-2xl border-slate-700 bg-slate-950 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] text-slate-100 md:mx-auto md:max-w-lg md:border-x"
       >
         <div
           className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-600/80 cursor-grab active:cursor-grabbing"

@@ -552,7 +552,7 @@ export default function BreedingPage() {
                         ['/PairingPlanner', 'Pairing Planner'],
                         ['/ProjectManager', 'Season Planner'],
                         ['/BreedingSeason', 'Season Timeline'],
-                        ['/ClutchLab', 'Clutch Lab'],
+                        ['/calculator/learn', 'Clutch Lab'],
                         ['/Pedigree', 'Pedigree Chart'],
                     ].map(([to, label]) => (
                         <Link

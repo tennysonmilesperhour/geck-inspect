@@ -9,7 +9,7 @@ import { countNavNotifications } from '@/lib/navNotifications';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { loadedProfileId } from '@/lib/loadedProfileId';
-import { APP_LOGO_URL } from '@/lib/constants';
+import { APP_LOGO_ICON_URL } from '@/lib/constants';
 import { swapToFallback } from '@/lib/imgFallback';
 import {
   Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home
@@ -200,6 +200,14 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   // The Log tab's sheet (feeding, weigh-in, shed or Field Mode).
   const [logSheetOpen, setLogSheetOpen] = useState(false);
+  // Any page can open it: window.dispatchEvent(new CustomEvent('open_log_sheet')).
+  // The Dashboard's "Log care" button does, so a laptop gets the same four
+  // choices as the phone's Log tab.
+  useEffect(() => {
+    const open = () => setLogSheetOpen(true);
+    window.addEventListener('open_log_sheet', open);
+    return () => window.removeEventListener('open_log_sheet', open);
+  }, []);
   const [loginPromptFeature, setLoginPromptFeature] = useState(null);
   const bottomNavAway = bottomNavHidden && !logSheetOpen && !isMobileOpen;
 
@@ -328,7 +336,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   };
 
   useEffect(() => {
-    setAppLogo(APP_LOGO_URL);
+    setAppLogo(APP_LOGO_ICON_URL);
   }, []);
 
   useEffect(() => {
@@ -971,11 +979,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           {appLogo && (
             <img 
               src={appLogo}
-              alt="Geck Inspect Logo" 
+              alt="" 
               className="h-8 w-8 object-contain rounded-lg"
               loading="lazy"
               decoding="async"
-              onError={(e) => swapToFallback(e, APP_LOGO_URL)}
+              onError={(e) => swapToFallback(e, APP_LOGO_ICON_URL)}
             />
           )}
               <span className="text-lg font-extrabold tracking-tight text-emerald-100" style={{ fontFamily: "'Montserrat', system-ui, sans-serif", letterSpacing: '-0.02em' }}>Geck Inspect</span>
@@ -1134,11 +1142,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   {appLogo && (
                     <img
                       src={appLogo}
-                      alt="Geck Inspect Logo"
+                      alt=""
                       className="h-10 w-10 object-contain rounded-lg flex-shrink-0"
                       loading="lazy"
                       decoding="async"
-                      onError={(e) => swapToFallback(e, APP_LOGO_URL)}
+                      onError={(e) => swapToFallback(e, APP_LOGO_ICON_URL)}
                     />
                   )}
                   <span className="text-lg font-extrabold tracking-tight text-emerald-100 sidebar-collapse-hide whitespace-nowrap" style={{ fontFamily: "'Montserrat', system-ui, sans-serif", letterSpacing: '-0.02em' }}>Geck Inspect</span>

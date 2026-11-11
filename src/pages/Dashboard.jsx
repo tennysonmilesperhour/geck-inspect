@@ -336,7 +336,11 @@ export default function Dashboard() {
                                 </div>
 
                                 <div className="flex flex-wrap gap-2.5 home-hero-actions">
-                                    {user && !isFirstRun && <Button asChild><Link to="/BatchHusbandry"><Plus className="w-4 h-4 mr-2" />Log care</Link></Button>}
+                                    {user && !isFirstRun && (
+                                        <Button type="button" onClick={() => window.dispatchEvent(new CustomEvent('open_log_sheet'))}>
+                                            <Plus className="w-4 h-4 mr-2" />Log care
+                                        </Button>
+                                    )}
                                     {user && !isFirstRun && (
                                         <Link to={createPageUrl('MyGeckos')}>
                                             <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/20">

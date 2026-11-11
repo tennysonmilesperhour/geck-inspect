@@ -36,6 +36,7 @@ import { lazy } from '@/lib/lazyWithRetry';
 import { isGuestMode } from '@/lib/guestMode';
 import { DEMO_BREEDER_FINANCIAL_ASSUMPTIONS } from '@/lib/guestBreederDemo';
 import useModalOverlay from '@/hooks/useModalOverlay';
+import { formatMoney } from '@/lib/money';
 // Market analytics sits on the Pricing tab, so its code (and its charts)
 // download only when that tab is opened.
 const MarketAnalytics = lazy(() => import('@/components/market-analytics/v2/MarketAnalyticsLive'));
@@ -56,7 +57,7 @@ const COST_CATEGORIES = [
 ];
 
 const getCategoryLabel = (value) => COST_CATEGORIES.find(c => c.value === value)?.label || value || 'Other';
-const money = (n, currency = '$') => `${n < 0 ? '-' : ''}${currency}${Math.abs(Number(n) || 0).toFixed(2)}`;
+const money = (n, currency = '$') => formatMoney(n, { symbol: currency });
 
 // A select for tying a cost to a pairing or a gecko (optional).
 function CostLinkSelect({ value, onChange, linkOptions, className }) {
@@ -160,7 +161,7 @@ function CostRow({ cost, onDelete, onUpdate, linkOptions }) {
           {tiedTo && <span className="text-[11px] text-slate-400 truncate">for {tiedTo}</span>}
         </div>
       </div>
-      <p className="text-orange-400 font-semibold text-sm flex-shrink-0">${Number(cost.amount).toFixed(2)}</p>
+      <p className="text-orange-400 font-semibold text-sm flex-shrink-0">{formatMoney(cost.amount)}</p>
       <Button size="icon" variant="ghost" onClick={() => setEditing(true)} className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-slate-700 flex-shrink-0"><Edit2 className="w-3 h-3" /></Button>
       <Button size="icon" variant="ghost" onClick={() => onDelete(cost.id)} className="h-7 w-7 text-red-500 hover:bg-red-900/20 flex-shrink-0"><Trash2 className="w-3 h-3" /></Button>
     </div>
@@ -188,7 +189,7 @@ function QuarterSection({ quarterKey, items, renderItem, labelFor = getCategoryL
           <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-800/40 text-xs flex-shrink-0">{items.length} {items.length === 1 ? 'entry' : 'entries'}</Badge>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-emerald-400 font-bold tabular-nums">${total.toFixed(2)}</span>
+          <span className="text-emerald-400 font-bold tabular-nums">{formatMoney(total)}</span>
           {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </div>
       </button>
@@ -200,7 +201,7 @@ function QuarterSection({ quarterKey, items, renderItem, labelFor = getCategoryL
               <div className="flex items-center gap-2 mb-2">
                 <Tag className="w-3 h-3 text-emerald-600" />
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">{cat === 'none' ? 'Not set' : labelFor(cat)}</span>
-                <span className="text-xs text-slate-500">${catItems.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2)}</span>
+                <span className="text-xs text-slate-500">{formatMoney(catItems.reduce((s, i) => s + Number(i.amount || 0), 0))}</span>
               </div>
               <div className="space-y-2">
                 {catItems.map(item => renderItem(item))}
@@ -379,7 +380,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
             {sale.buyer_name && <p className="text-xs text-slate-400 mt-0.5">Buyer: {sale.buyer_name}</p>}
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-lg font-bold text-amber-400">${Number(sale.reserve_price).toFixed(2)}</p>
+            <p className="text-lg font-bold text-amber-400">{formatMoney(sale.reserve_price)}</p>
             <p className="text-[10px] text-slate-500">reserve price</p>
           </div>
         </div>
@@ -388,8 +389,8 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
         {Number(sale.reserve_price) > 0 && (
           <div className="mt-3">
             <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-              <span>${totalPaid.toFixed(2)} paid</span>
-              <span>${remaining > 0 ? remaining.toFixed(2) : '0.00'} remaining</span>
+              <span>{formatMoney(totalPaid)} paid</span>
+              <span>{formatMoney(remaining > 0 ? remaining : 0)} remaining</span>
             </div>
             <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
               <div
@@ -447,7 +448,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
                   {savingPayment === idx ? <Loader2 className="w-3 h-3 animate-spin text-slate-400" /> : <Check className="w-3 h-3" />}
                 </button>
                 <span className={`flex-1 ${p.paid ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
-                  ${Number(p.amount).toFixed(2)}
+                  {formatMoney(p.amount)}
                   {p.due_date && <span className="text-slate-500 ml-1.5">due {format(new Date(p.due_date), 'MMM d')}</span>}
                 </span>
                 {p.paid && p.paid_date && <span className="text-emerald-500/70 text-[10px]">Paid {format(new Date(p.paid_date), 'MMM d')}</span>}
@@ -526,7 +527,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
       };
       const created = await PendingSale.create(record);
       setPendingSales(prev => [created, ...prev]);
-      toast({ title: 'Reserve created', description: `${record.gecko_name}, $${record.reserve_price.toFixed(2)}` });
+      toast({ title: 'Reserve created', description: `${record.gecko_name}, ${formatMoney(record.reserve_price)}` });
       resetForm();
     } catch (err) {
       console.error('Failed to create pending sale:', err);
@@ -1151,7 +1152,7 @@ export default function MarketplaceSalesStats() {
       });
       setCosts(prev => [created, ...prev]);
       setNewCost({ description: '', amount: '', date: todayLocalISO(), category: 'other', link: '' });
-      toast({ title: "Cost Added", description: `${newCost.description}, $${parseFloat(newCost.amount).toFixed(2)}` });
+      toast({ title: "Cost Added", description: `${newCost.description}, ${formatMoney(parseFloat(newCost.amount))}` });
     } catch (error) {
       console.error('Failed to add cost:', error);
       toast({ title: "Error", description: "Could not add cost. Please try again.", variant: "destructive" });
@@ -1206,7 +1207,7 @@ export default function MarketplaceSalesStats() {
       });
 
       setManualSales((prev) => [created, ...prev]);
-      toast({ title: "Sale Added", description: `${newRevenue.name.trim()}, $${price.toFixed(2)}` });
+      toast({ title: "Sale Added", description: `${newRevenue.name.trim()}, ${formatMoney(price)}` });
       setNewRevenue({
         name: '',
         amount: '',
@@ -1605,7 +1606,7 @@ export default function MarketplaceSalesStats() {
                                   </div>
                                 )}
                                 <div className="min-w-[4rem] text-right">
-                                  <p className="text-emerald-400 font-semibold text-sm tabular-nums">${(item.amount || 0).toFixed(2)}</p>
+                                  <p className="text-emerald-400 font-semibold text-sm tabular-nums">{formatMoney(item.amount)}</p>
                                   {!item.confirmed && (
                                     <p className="text-[10px] text-amber-300/80">{item.kind === 'transfer' ? 'no price entered' : 'asking price'}</p>
                                   )}

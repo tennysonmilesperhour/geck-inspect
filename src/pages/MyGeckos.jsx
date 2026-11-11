@@ -948,9 +948,11 @@ export default function MyGeckosPage() {
                 ) : (
                 <>
                 <div className="mb-4">
-                    {/* Toolbar, single row on both mobile and desktop: search (grows) + sort + view */}
-                    <div className="flex items-center gap-2 p-2 rounded-xl border border-slate-700 bg-slate-900">
-                        <div className="relative flex-1 min-w-0">
+                    {/* Toolbar: one row on wider screens. On a phone the search
+                        takes its own row and sort plus view share the next, so
+                        the sort label never runs under the view toggle. */}
+                    <div className="flex flex-wrap items-center gap-2 p-2 rounded-xl border border-slate-700 bg-slate-900">
+                        <div className="relative basis-full sm:basis-0 sm:flex-1 min-w-0">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <Input
                                 type="text"
@@ -960,10 +962,10 @@ export default function MyGeckosPage() {
                                 className="pl-9 h-9 bg-slate-950 border-slate-700 text-slate-100 focus-visible:ring-emerald-500/40"
                             />
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0">
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger aria-label="Sort geckos" className="w-32 sm:w-44 !h-9 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
-                                    <div className="flex items-center gap-1.5 min-w-0">
+                                <SelectTrigger aria-label="Sort geckos" className="flex-1 min-w-0 sm:flex-none sm:w-44 !h-9 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
+                                    <div className="flex items-center gap-1.5 min-w-0 [&>span]:truncate">
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                         <SelectValue placeholder="Sort" />
                                     </div>
@@ -982,7 +984,7 @@ export default function MyGeckosPage() {
                                     {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
                                 </SelectContent>
                             </Select>
-                            <div className="flex items-center bg-slate-950 rounded-md p-0.5 border border-slate-700">
+                            <div className="flex shrink-0 items-center bg-slate-950 rounded-md p-0.5 border border-slate-700">
                                 <button
                                     type="button"
                                     onClick={() => setViewMode('card')}

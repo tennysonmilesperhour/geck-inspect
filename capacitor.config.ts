@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   ios: {
     contentInset: 'never',
-    backgroundColor: '#020617',
+    backgroundColor: '#0a1913',
   },
   server: {
     // Capacitor serves the bundled web app from inside the APK over
@@ -30,7 +30,7 @@ const config: CapacitorConfig = {
   plugins: {
     StatusBar: {
       style: 'DARK',
-      backgroundColor: '#020617',
+      backgroundColor: '#0a1913',
       overlaysWebView: false,
     },
   },

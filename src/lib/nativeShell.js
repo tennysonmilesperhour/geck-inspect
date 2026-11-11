@@ -9,7 +9,7 @@ export async function installNativeShell() {
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setStyle({ style: Style.Dark });
     if (detectPlatform() === 'android') {
-      await StatusBar.setBackgroundColor({ color: '#020617' });
+      await StatusBar.setBackgroundColor({ color: '#0a1913' });
     }
   } catch (error) {
     console.warn('Native status bar could not be set.', error);

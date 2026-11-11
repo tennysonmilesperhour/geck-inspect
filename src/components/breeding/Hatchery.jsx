@@ -259,6 +259,11 @@ export default function Hatchery() {
             await loadData();
         } catch (error) {
             console.error("Failed to archive egg:", error);
+            toast({
+                title: shouldArchive ? 'Egg could not be archived' : 'Egg could not be restored',
+                description: 'Nothing changed. Please try again.',
+                variant: 'destructive',
+            });
         }
     };
 
@@ -276,7 +281,11 @@ export default function Hatchery() {
             await loadData();
         } catch (error) {
             console.error('Failed to update egg status:', error);
-            alert(`Failed to update status: ${error.message || 'unknown error'}`);
+            toast({
+                title: 'Egg status could not be changed',
+                description: error.message || 'Nothing changed. Please try again.',
+                variant: 'destructive',
+            });
         }
     };
 

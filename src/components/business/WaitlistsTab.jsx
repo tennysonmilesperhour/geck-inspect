@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { GeckoWaitlist, GeckoWaitlistSignup, PendingSale } from '@/entities/all';
 import { todayLocalISO } from '@/lib/dateUtils';
+import { formatMoney } from '@/lib/money';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import { createPageUrl } from '@/utils';
 import {
@@ -33,7 +34,7 @@ import {
 // too). See src/lib/pairingWaitlist.js.
 
 const fieldClass = 'bg-slate-950/60 border-slate-700 text-slate-100';
-const money = (n, symbol) => `${symbol}${(Number(n) || 0).toFixed(2).replace(/\.00$/, '')}`;
+const money = (n, symbol) => formatMoney(n, { symbol: symbol || '$' });
 const pct = (p) => `${Math.round(p * 1000) / 10}%`;
 const linkFor = (slug) => `${window.location.origin}/waitlist/${slug}`;
 

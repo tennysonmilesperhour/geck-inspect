@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dna, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Dna, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 import { MORPH_CATEGORIES, ALL_MORPHS } from './morphTagCatalog';
 
 /**
@@ -65,10 +65,12 @@ export default function MorphIDSelector({ selectedMorphs = [], onMorphsChange, d
                   key={m}
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMorph(m); }}
-                  className="touch:min-h-11 text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full hover:bg-red-600 transition-colors"
-                  title="Click to remove"
+                  className="touch:min-h-11 inline-flex items-center gap-1 text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full hover:bg-red-600 transition-colors"
+                  aria-label={`Remove ${m}`}
+                  title="Remove"
                 >
-                  {m} \u2715
+                  {m}
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               ))}
             </div>
