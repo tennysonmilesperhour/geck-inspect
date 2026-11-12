@@ -88,7 +88,9 @@ So the honest framing is this. Nothing below will bring in a paying breeder by i
 - No blog or article work.
 - Database changes follow `docs/MIGRATIONS.md`. Only WP-2 (one idempotent weigh-in save) might need one.
 
-**Decisions waiting on Tennyson** (each blocks the package named)
+**Decisions: answered on 12 November 2026.** Tennyson asked for the rest of the recommendations to be built, so each decision below takes its recommended answer, and the remaining packages go ahead now. Decision 2 is built in its lighter form first: Today is the home on every device, and the Dashboard stays reachable as Today's "Overview".
+
+**The decisions as they were put** (each blocked the package named)
 
 1. **How much of this to build before decision day.** Recommended: WP-0, WP-5 and WP-12 now; WP-1 to WP-4 next; the rest after 17 November's check. Blocks: everything after WP-0.
 2. **One home or two.** Recommended: Today becomes the home on every device and the Dashboard's useful parts (stats, values, quick links) become its second column on laptops. The lighter option keeps the Dashboard and only reorders it. Note that the Dashboard was rebuilt on 17 October at Tennyson's request, so this reverses part of a recent choice. Blocks: WP-8.

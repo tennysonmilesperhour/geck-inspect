@@ -9,13 +9,12 @@ How to use it:
 - A session that finds a new step for Tennyson adds it here and links to it from its own document. It does not describe the step twice.
 - Statuses below were last checked on the date in the line. A session cannot see most dashboards, so "not recorded" means nobody wrote down that it happened.
 
-## A. This week (the plan's Day 30 check is 17 November)
+## A. This week
 
 | # | Step | Where and what | Source |
 |---|---|---|---|
 | A1 | **Breeder conversations: 15 by 17 November.** 0 recorded on 31 October. Under the Day 30 rule, fewer than 15 means engineering pauses. | Book the calls. After each, Admin panel, Overview, Weekly scoreboard, "Record by hand". The questions and the $120 Founding Breeder offer are in the source. | `planning/breeder-interviews-2026-10.md` |
 | A2 | **Hand-import 5 breeder collections.** 0 recorded. | Offer it in each call; record each under "Record by hand". | Part E, item 14 |
-| A3 | **Email template for sign-up by code.** The app now accepts a 6-digit code on the "Check your email" screen (shipped 11 November), but the email does not show a code until the template has one. | https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/auth/templates then "Confirm signup". Add these lines above the existing link, and save: `<p>Your Geck Inspect code is:</p>` `<p style="font-size:28px;font-weight:700;letter-spacing:6px">{{ .Token }}</p>` `<p>Type it into the sign-up screen you already have open. It works for one hour. Or use the link below.</p>` Optional: change the subject to `Your Geck Inspect code: {{ .Token }}`. Then sign up with a spare address and check the email shows six digits and the code signs you in. If the code has more than six digits, set "Email OTP Length" to 6 under Authentication, Sign In / Providers, Email. | `planning/experience-review-2026-11-11.md`, WP-12 |
 | A4 | **Rewrite the top ten in `NOW.md`.** It is still the 31 October draft; the Mondays of 3 and 10 November were missed. | Copy the scoreboard card's numbers into `docs/NOW.md` and rewrite the list. | Part E, rule E0.5 |
 | A5 | **Seven decisions from the experience review.** They block most of its remaining work. | Read section 2 of the source and answer each in a sentence. The two that unblock the most: how much to build before decision day, and whether Today replaces the Dashboard as the one home. | `planning/experience-review-2026-11-11.md`, section 2 |
 
@@ -99,4 +98,4 @@ Sources: `planning/deploy-queue-2026-10-03.md` (round 2 item 5, round 3 items 1 
 
 ## Done
 
-- (none recorded on this page yet)
+- 12 November 2026: A3, the 6-digit code in the "Confirm signup" email template (done by Tennyson; not checked from a session, which cannot read the templates. To check: sign up with a spare address and type the code).

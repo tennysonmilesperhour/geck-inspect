@@ -108,6 +108,8 @@ Check `docs/NOW.md` for anything newer.
 
 **Manual steps: lead with the link and the exact values.** When something only Tennyson can do by hand (a dashboard secret, a webhook, a DNS record, a setting) and no tool in the session can do it, open with the direct link and the exact values to paste, then any explanation, so he can do it in under a minute. Do not first try a tool that asks him to type the value into a prompt: the Supabase secret tool (`create_edge_function_secret`) times out in cloud sessions. Edge function secrets go at https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/functions/secrets. Afterwards, check the change took effect where you can (for example a probe that sends nothing) and say so. Then add the step to `docs/OWNER-STEPS.md` if it is not done in the session, so it is not lost.
 
+**Do not remind Tennyson about breeder conversations, hand imports or the Day 30 rule.** He knows the plan (asked on 12 November 2026). Do not open or close a reply with them, and do not list them under "before any of this". Mention them only if he asks about them.
+
 **Explain the why.** Tennyson does not have a traditional coding background. When working through technical concepts, explain the why, not just the how. Plain language by default. Technical terms get a brief explanation on first use.
 
 **Be specific about crested geckos.** Crested gecko terminology should always be specific (Lilly White, Harlequin, Phantom, Cappuccino, Axanthic, Sable, Highway). Do not substitute generic reptile examples when crested gecko examples would be more on-brand. `docs/GLOSSARY.md` has the terms.
