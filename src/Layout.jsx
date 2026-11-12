@@ -12,7 +12,7 @@ import { loadedProfileId } from '@/lib/loadedProfileId';
 import { APP_LOGO_ICON_URL } from '@/lib/constants';
 import { swapToFallback } from '@/lib/imgFallback';
 import {
-  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home
+  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home, Camera, MessageSquare
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import {
@@ -22,13 +22,15 @@ import {
   syncOnboardingToBrowser,
 } from '@/lib/onboardingState';
 import CommandPalette from "@/components/command-palette/CommandPalette";
-// Lazy: it drags framer-motion (about 145 KB, 49 kB compressed) into the shell otherwise.
+// Lazy: only a member who has a feeding due and has not answered the phone
+// notification ask needs it (the floating feeding cards are gone).
 const FeedingAlertSystem = lazy(() => import("@/components/feeding/FeedingAlertSystem"));
 import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import PaymentIssueBanner from "@/components/subscription/PaymentIssueBanner";
 import GuestDemoGuide from "@/components/auth/GuestDemoGuide";
 import FloatingNoticeStack from "@/components/shared/FloatingNoticeStack";
+import { phoneHeaderTitle } from "@/components/shared/phoneHeaderTitle";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 import MarketIntelligenceButton from "@/components/shared/MarketIntelligenceButton";
 import InstallAppButton from "@/components/shared/InstallAppButton";
@@ -207,8 +209,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const [loginPromptFeature, setLoginPromptFeature] = useState(null);
   const bottomNavAway = bottomNavHidden && !logSheetOpen && !isMobileOpen;
 
-  // Floating notices and the feedback button sit just above the bar, so they
-  // follow it down (see [data-follows-bottom-bar] in layout-theme.css).
+  // Floating notices sit just above the bar, so they follow it down (see
+  // [data-follows-bottom-bar] in layout-theme.css).
   useEffect(() => {
     const root = document.documentElement;
     if (bottomNavAway) root.dataset.bottomBarAway = '';
@@ -860,10 +862,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 {/* Guests keep `user` set (GUEST_USER) so the "Login"
                     marker below doesn't trigger; instead we flag pages
                     gated behind auth as view-only so the visitor knows
-                    upfront which tabs they can actually use.           */}
+                    upfront which tabs they can actually use. Not on the
+                    phone menu, which says it once, in a line at the top. */}
                 {isGuest && item.requires_auth && (
                   <span
-                    className="ml-auto shrink-0 text-xs font-bold uppercase tracking-wider text-yellow-200 bg-yellow-400/15 border border-yellow-300/30 rounded px-1.5 py-0.5"
+                    className="hidden md:inline ml-auto shrink-0 text-xs font-bold uppercase tracking-wider text-yellow-200 bg-yellow-400/15 border border-yellow-300/30 rounded px-1.5 py-0.5"
                     title="Guests can view this page but cannot save changes"
                   >
                     view only
@@ -902,6 +905,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     );
   });
 
+  // The phone header's title: the open page's menu name, or null on Today,
+  // where the wordmark shows (experience review B6).
+  const phoneTitle = phoneHeaderTitle(location.pathname);
+
   return (
     <>
       {/* Skip-to-content link for keyboard/screen-reader users */}
@@ -923,8 +930,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </filter>
       </svg>
       <div className="flex h-screen h-dvh bg-background font-sans app-container-outline">
-        {/* Mobile Sidebar */}
-        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm md:hidden z-50">
+        {/* Phone menu (the More tab opens it). Solid, not glass: the page
+            behind used to show through and collide with the menu's text,
+            and even 3% of see-through left ghost text on a dark surface. */}
+        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-slate-900 md:hidden z-50">
           <SidebarHeader className="border-b border-emerald-800/40 px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
           {appLogo && (
@@ -942,6 +951,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           </SidebarHeader>
 
           <SidebarBody ref={sidebarRef} className="flex-1 overflow-y-auto custom-scrollbar">
+            {/* The demo says once that nothing is saved, in place of a
+                "view only" pill on every item. */}
+            {isGuest && (
+              <p className="mx-4 mt-3 rounded-md border border-amber-300/25 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+                Demo: look around, nothing is saved.
+              </p>
+            )}
             <div className="px-4 pt-2 pb-3 md:hidden">
               <InstallAppButton />
             </div>
@@ -1012,7 +1028,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               into the last visible nav item. */}
           <div
             aria-hidden="true"
-            className="sidebar-scroll-hint pointer-events-none relative -mt-10 h-10 flex items-end justify-center bg-gradient-to-t from-emerald-950/70 via-emerald-950/25 to-transparent"
+            className="sidebar-scroll-hint pointer-events-none relative -mt-10 h-10 flex items-end justify-center bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"
           >
             <ChevronDown className="w-4 h-4 text-emerald-300/80 animate-bounce mb-1" />
           </div>
@@ -1036,6 +1052,24 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   App Tutorial
                 </Button>
               </div>
+              {/* Phones have no floating feedback button; this opens the
+                  same form (FeedbackWidget listens for the event). */}
+              {user && (
+                <div className="block">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      toggleSidebar();
+                      window.dispatchEvent(new CustomEvent('open_feedback'));
+                    }}
+                    className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2 flex-shrink-0" />
+                    Send feedback
+                  </Button>
+                </div>
+              )}
 
               {user ?
                 <div className="space-y-3">
@@ -1228,47 +1262,55 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </div>
 
         <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'md:pl-[13.6rem]' : 'md:pl-[3.4rem]'}`}>
-          {/* Phone header: liquid glass over the page (layout-theme.css). */}
+          {/* Phone header: liquid glass over the page (layout-theme.css).
+              Left: where the member is (the page's menu name, or the
+              wordmark on Today). The menu button that sat here is gone;
+              the More tab opens the same menu. Right: search, Morph ID
+              and the bell, which also carries Messages on phones. */}
           <header ref={mobileHeaderRef} className="liquid-glass liquid-glass--top px-[max(0.75rem,env(safe-area-inset-left))] pb-1.5 pt-[calc(0.375rem+env(safe-area-inset-top))] md:hidden fixed inset-x-0 top-0 z-[45] gecko-header--compact">
             <div className="flex items-center justify-between gap-3">
-              <button
-                onClick={toggleSidebar}
-                className="hover:bg-emerald-500/20 rounded-lg transition-colors duration-200 inline-flex items-center justify-center w-9 h-9 touch:w-11 touch:h-11 text-emerald-200 hover:text-emerald-50"
-                aria-label="Toggle Sidebar"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+              {phoneTitle ? (
+                <p className="gecko-header-title min-w-0 flex-1 truncate pl-1 text-base font-semibold text-emerald-50">{phoneTitle}</p>
+              ) : (
+                <p className="gecko-header-title min-w-0 flex-1 truncate pl-1 text-lg font-extrabold tracking-tight text-emerald-100" style={{ fontFamily: "'Montserrat', system-ui, sans-serif", letterSpacing: '-0.02em' }}>Geck Inspect</p>
+              )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 {user ? (
-                  <div className="gecko-header-actions">
-                    <button
-                      type="button"
-                      onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
-                      className="gecko-header-action"
-                      aria-label="Open quick search"
-                    >
-                      <Search />
-                    </button>
-                    <MarketIntelligenceButton user={user} />
-                    <Link to={createPageUrl("Messages")} className="gecko-header-action" aria-label="Messages">
-                      <Mail />
-                      {unreadMessages > 0 && (
-                        <span className="notification-badge">
-                          {unreadMessages > 99 ? '99+' : unreadMessages}
-                        </span>
-                      )}
-                    </Link>
-                    <NotificationPopover
-                      notifications={recentNotifications}
-                      unreadCount={unreadNotificationsCount}
-                      onMarkRead={handleMarkNotificationRead}
-                      onMarkAllRead={handleMarkAllNotificationsRead}
-                    />
-                    <Link to={createPageUrl("MyProfile")} className="gecko-header-action" aria-label="Profile">
-                      <Users />
-                    </Link>
-                  </div>
+                  <>
+                    <div className="gecko-header-actions">
+                      <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
+                        className="gecko-header-action"
+                        aria-label="Open quick search"
+                      >
+                        <Search />
+                      </button>
+                      <MarketIntelligenceButton user={user} />
+                      <Link to={createPageUrl("Recognition")} className="gecko-header-action" aria-label="Morph ID">
+                        <Camera />
+                      </Link>
+                      {/* Messages has no icon of its own here: the bell
+                          counts unread messages too and lists them first. */}
+                      <NotificationPopover
+                        notifications={recentNotifications}
+                        unreadCount={unreadNotificationsCount}
+                        unreadMessages={unreadMessages}
+                        onMarkRead={handleMarkNotificationRead}
+                        onMarkAllRead={handleMarkAllNotificationsRead}
+                      />
+                    </div>
+                    {/* The demo always has a way to an account in reach. */}
+                    {isGuest && (
+                      <Link
+                        to="/AuthPortal?mode=signup"
+                        className="inline-flex items-center min-h-9 touch:min-h-11 rounded-lg bg-emerald-700 hover:bg-emerald-600 px-3 text-xs font-semibold text-white transition-colors"
+                      >
+                        Sign up
+                      </Link>
+                    )}
+                  </>
                 ) : (
                   <>
                     <button
@@ -1279,6 +1321,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     >
                       <Search className="w-5 h-5" />
                     </button>
+                    <Link
+                      to={createPageUrl("Recognition")}
+                      className="hover:bg-emerald-500/20 rounded-lg transition-colors duration-200 inline-flex items-center justify-center w-9 h-9 touch:w-11 touch:h-11 text-emerald-200 hover:text-emerald-50"
+                      aria-label="Morph ID"
+                    >
+                      <Camera className="w-5 h-5" />
+                    </Link>
                     <Button onClick={handleLogin} size="sm" className="bg-gradient-to-r from-sage-600 to-earth-600 hover:from-sage-700 hover:to-earth-700">
                       <UserPlus className="w-4 h-4 mr-1" />
                       Login
@@ -1435,8 +1484,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {/* Feeding reminders and the guest demo card share one corner and
-          stack instead of overlapping. */}
+      {/* The two floating notices the shell mounts: the phone notification
+          ask beside a due feeding, and the guest demo card. They, and the
+          three App.jsx mounts, take turns: one floating notice at a time
+          (src/components/shared/floatingNoticeQueue.js). */}
       <FloatingNoticeStack>
         <Suspense fallback={null}>
           <FeedingAlertSystem

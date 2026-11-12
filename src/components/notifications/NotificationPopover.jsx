@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Bell, ArrowRight, Check, CheckCheck, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart, Egg, Utensils, Scale, Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope, UserX, ListChecks, ArrowRightLeft } from 'lucide-react';
+import { Bell, ArrowRight, Check, CheckCheck, Mail, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart, Egg, Utensils, Scale, Newspaper, ListOrdered, TrendingUp, Sunrise, Stethoscope, UserX, ListChecks, ArrowRightLeft } from 'lucide-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
 
@@ -39,12 +39,21 @@ const ICONS = {
 /**
  * Notification bell popover, shows the 5 most recent unread
  * notifications inline, with a "See all" link to the full page.
+ *
+ * `unreadMessages` folds Messages into the bell. The phone header passes
+ * it (the Messages icon left that header on 12 Nov 2026, experience review
+ * decision 6): the badge then counts unread notifications plus unread
+ * messages, and the list opens with a "Messages" row that links to the
+ * inbox. The laptop header keeps its own Messages icon and passes
+ * nothing, so its bell is unchanged.
  */
-export default function NotificationPopover({ notifications = [], unreadCount = 0, onMarkRead, onMarkAllRead }) {
+export default function NotificationPopover({ notifications = [], unreadCount = 0, unreadMessages, onMarkRead, onMarkAllRead }) {
   const [open, setOpen] = useState(false);
   const { anchorRef, panelRef, style } = useAnchoredPosition(open);
 
   const recent = notifications.slice(0, 5);
+  const withMessages = typeof unreadMessages === 'number';
+  const badgeCount = unreadCount + (withMessages ? unreadMessages : 0);
 
   return (
     <div className="relative">
@@ -55,9 +64,9 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
         aria-label="Notifications"
       >
         <Bell />
-        {unreadCount > 0 && (
+        {badgeCount > 0 && (
           <span className="notification-badge">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         )}
       </button>
@@ -94,6 +103,26 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
                 </button>
               )}
             </div>
+
+            {/* Messages, first, when the bell stands in for the Messages icon */}
+            {withMessages && (
+              <Link
+                to={createPageUrl('Messages')}
+                onClick={() => setOpen(false)}
+                className="touch:min-h-11 flex items-center gap-3 px-4 py-3 border-b border-emerald-900/30 hover:bg-emerald-950/30 transition-colors"
+              >
+                <Mail className="w-4 h-4 shrink-0 text-emerald-400" aria-hidden="true" />
+                <span className="flex-1 min-w-0 text-sm font-medium text-slate-100">Messages</span>
+                {unreadMessages > 0 ? (
+                  <span className="shrink-0 text-xs font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                    {unreadMessages > 99 ? '99+' : unreadMessages} unread
+                  </span>
+                ) : (
+                  <span className="shrink-0 text-xs text-slate-400">No unread</span>
+                )}
+                <ArrowRight className="w-3.5 h-3.5 shrink-0 text-slate-500" aria-hidden="true" />
+              </Link>
+            )}
 
             {/* List */}
             <div className="max-h-72 overflow-y-auto">

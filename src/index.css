@@ -1087,12 +1087,14 @@ button:focus-visible {
   }
 }
 
-/* Keep floating UI (feedback tab, guest notice, feeding alerts) out of
-   modal forms, the mobile drawer, and their focus flow. */
+/* Keep floating UI (the feedback tab and the floating notices: update,
+   consent, feeding, guest tour) out of modal forms, the mobile drawer, and
+   their focus flow. The offline badge is the exception: it is a status,
+   not a control, and a member saving from a dialog needs to see it. */
 body:has([role="dialog"][data-state="open"]) [data-feedback-trigger],
 body:has([role="alertdialog"][data-state="open"]) [data-feedback-trigger],
-body:has([role="dialog"][data-state="open"]) [data-floating-notice],
-body:has([role="alertdialog"][data-state="open"]) [data-floating-notice] { display: none; }
+body:has([role="dialog"][data-state="open"]) [data-floating-notice]:not([data-floating-notice="offline"]),
+body:has([role="alertdialog"][data-state="open"]) [data-floating-notice]:not([data-floating-notice="offline"]) { display: none; }
 
 /* Hand-built overlays (src/hooks/useModalOverlay.js) take keyboard focus
    when they open so the keyboard lands inside them. The overlay itself is
@@ -1100,6 +1102,7 @@ body:has([role="alertdialog"][data-state="open"]) [data-floating-notice] { displ
 [data-modal-overlay]:focus { outline: none; }
 
 /* Field Mode is a full-screen rack-side logger with its own bottom bar.
-   Floating UI would sit on its gecko list and its "Exit field mode" link. */
+   Floating UI would sit on its gecko list and its "Exit field mode" link.
+   That includes the offline badge: Field Mode shows its own status. */
 body:has([data-field-mode]) [data-feedback-trigger],
 body:has([data-field-mode]) [data-floating-notice] { display: none; }

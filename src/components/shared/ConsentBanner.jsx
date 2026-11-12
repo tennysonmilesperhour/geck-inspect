@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CONSENT_EVENT, needsConsentPrompt, setConsent } from '@/lib/analyticsConsent';
+import { useFloatingNotice } from '@/components/shared/floatingNoticeQueue';
 
 /**
  * The analytics question for visitors in the EEA and the UK.
@@ -19,9 +20,10 @@ import { CONSENT_EVENT, needsConsentPrompt, setConsent } from '@/lib/analyticsCo
  * must never say that nothing is counted. Section 5 of the privacy policy
  * describes that count.
  *
- * It sits bottom left so it does not cover the floating notices in the
- * bottom right corner, and it does not block the page: until the visitor
- * answers, Google Analytics and PostHog simply stay off.
+ * It does not block the page: until the visitor answers, Google Analytics
+ * and PostHog simply stay off. It is second in the floating notice queue
+ * (floatingNoticeQueue.js), so it waits behind an app update notice and
+ * shows ahead of the offline status and the guest tour.
  */
 export default function ConsentBanner() {
   const [open, setOpen] = useState(() => (typeof window === 'undefined' ? false : needsConsentPrompt()));
@@ -34,7 +36,8 @@ export default function ConsentBanner() {
     return () => window.removeEventListener(CONSENT_EVENT, recheck);
   }, []);
 
-  if (!open) return null;
+  const showing = useFloatingNotice('consent', open);
+  if (!showing) return null;
 
   const choose = (choice) => {
     setConsent(choice);
@@ -46,6 +49,8 @@ export default function ConsentBanner() {
       role="region"
       aria-label="Analytics choice"
       data-consent-banner
+      data-floating-notice="consent"
+      data-follows-bottom-bar
       className="fixed left-4 right-4 sm:right-auto sm:max-w-sm bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-4 z-[70] rounded-xl border border-slate-700 bg-slate-900/95 p-4 text-sm text-slate-300 shadow-xl shadow-black/40 backdrop-blur"
     >
       <p className="font-semibold text-slate-100">Allow analytics cookies?</p>

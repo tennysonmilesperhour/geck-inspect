@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useFloatingNotice } from '@/components/shared/floatingNoticeQueue';
 
 // Ten minutes, and only while the tab is visible. The old 60 second timer
 // re-downloaded the HTML shell in every open tab all day, which is real
@@ -58,10 +59,16 @@ export default function UpdateNotification() {
     };
   }, []);
 
-  if (!showBanner) return null;
+  // First in the floating notice queue: a new version outranks the rest.
+  const showing = useFloatingNotice('update', showBanner);
+  if (!showing) return null;
 
   return (
-    <div className="fixed bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-4 left-4 z-[99999] flex items-center gap-3 max-w-md bg-slate-800 border border-emerald-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-4 duration-300">
+    <div
+      data-floating-notice="update"
+      data-follows-bottom-bar
+      className="fixed bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-4 left-4 z-[99999] flex items-center gap-3 max-w-md bg-slate-800 border border-emerald-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-4 duration-300"
+    >
       <p className="text-sm text-slate-100 leading-snug">
         The app is shedding its old skin. Click Chomp to refresh and update to the new version.
       </p>

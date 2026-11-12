@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import { ChevronUp, Compass, Info, LogIn, UserPlus, X } from 'lucide-react';
+import { useFloatingNotice } from '@/components/shared/floatingNoticeQueue';
 
 /**
  * Bottom-right floating disclaimer shown throughout guest mode.
@@ -19,6 +20,10 @@ import { ChevronUp, Compass, Info, LogIn, UserPlus, X } from 'lucide-react';
  * The guest write-block toast lives in GuestDemoGuide, which is mounted
  * for the whole guest session (this notice is not, during the tour).
  * `onOpenTours` adds a button that reopens the guided demo's tour picker.
+ *
+ * It takes the tour card's place, last in the floating notice queue
+ * (src/components/shared/floatingNoticeQueue.js), so it waits while an
+ * update notice or the consent banner is on screen.
  */
 const DISMISS_KEY = 'geck_inspect_guest_disclaimer_dismissed';
 // Opens AuthPortal on the Create Account tab rather than Sign In.
@@ -36,7 +41,8 @@ export default function GuestMockDisclaimer({ onOpenTours }) {
     }
   });
 
-  if (!isGuest || dismissed) return null;
+  const showing = useFloatingNotice('tour', isGuest && !dismissed);
+  if (!showing) return null;
 
   const handleDismiss = () => {
     try {
@@ -51,7 +57,7 @@ export default function GuestMockDisclaimer({ onOpenTours }) {
     <div
       role="status"
       aria-live="polite"
-      data-floating-notice
+      data-floating-notice="tour"
       className="w-[min(22rem,calc(100vw-2rem))] pointer-events-auto"
     >
       <div

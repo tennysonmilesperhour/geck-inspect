@@ -215,6 +215,10 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     const badge = page.getByRole('status').filter({ hasText: /^Offline$/ });
     await context.setOffline(true);
     await expect(badge).toBeVisible();
+    // One floating notice at a time (experience review B3): the badge is
+    // the only one on screen, and no feedback bubble floats on a phone.
+    await expect(page.locator('[data-floating-notice]')).toHaveCount(1);
+    await expect(badge).toHaveAttribute('data-floating-notice', 'offline');
     await context.setOffline(false);
     await expect(badge).toHaveCount(0);
   });

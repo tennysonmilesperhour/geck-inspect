@@ -21,6 +21,7 @@ import {
   startTour,
   suggestedTour,
 } from '@/lib/guestTour';
+import { useFloatingNotice } from '@/components/shared/floatingNoticeQueue';
 import GuestMockDisclaimer from './GuestMockDisclaimer';
 import GuestTourHub from './GuestTourHub';
 import { TOUR_LOOK } from './guestTourLook';
@@ -33,8 +34,9 @@ import { TOUR_LOOK } from './guestTourLook';
 //
 // On phones the stop card is one slim line (progress, title, Next, close)
 // so it does not sit on top of what it describes; the full text is one
-// tap away. It lives in the shared floating-notice stack (Layout), so it
-// does not overlap the feeding reminders in the same corner.
+// tap away. It is last in the floating notice queue
+// (src/components/shared/floatingNoticeQueue.js): it waits while an update
+// notice or the consent banner is on screen, so only one thing floats.
 
 const cardClass =
   'relative w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-emerald-500/35 bg-slate-900/95 backdrop-blur-md shadow-xl shadow-black/50 text-slate-100';
@@ -98,6 +100,13 @@ export default function GuestDemoGuide() {
     return () => window.removeEventListener(GUEST_WRITE_BLOCKED_EVENT, onBlocked);
   }, [isGuest, toast]);
 
+  // The card's turn in the floating notice queue. The tour picker is a
+  // dialog, not a notice, so it opens whatever the queue says, and holds
+  // the slot so nothing floats in behind it. Once the tour is closed the
+  // guest notice asks for the same slot itself.
+  const onAuthPortal = location.pathname.toLowerCase().startsWith('/authportal');
+  const showCard = useFloatingNotice('tour', isGuest && tour.status !== 'closed' && !onAuthPortal);
+
   if (!isGuest) return null;
 
   const current = getTour(tour);
@@ -141,7 +150,7 @@ export default function GuestDemoGuide() {
   };
 
   if (tour.status === 'closed') return <GuestMockDisclaimer onOpenTours={() => hub('notice')} />;
-  if (location.pathname.toLowerCase().startsWith('/authportal')) return null;
+  if (onAuthPortal) return null;
 
   if (tour.status === 'hub') {
     return (
@@ -163,6 +172,8 @@ export default function GuestDemoGuide() {
       </AnimatePresence>
     );
   }
+
+  if (!showCard) return null;
 
   const look = TOUR_LOOK[current.id] || TOUR_LOOK.quick;
   const here = isOnStep(step, location.pathname, location.search);
@@ -285,7 +296,7 @@ export default function GuestDemoGuide() {
       role="dialog"
       aria-label="Guided demo"
       className={cardClass}
-      data-floating-notice
+      data-floating-notice="tour"
       data-guest-tour
       initial={reduce ? false : { opacity: 0, y: 16, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}

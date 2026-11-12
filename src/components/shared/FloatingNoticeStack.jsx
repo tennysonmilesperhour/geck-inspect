@@ -1,12 +1,16 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * One bottom-right corner for the app's floating notices (the guest demo
- * tour or notice, feeding reminders). Each used to position itself in the
- * same spot, so on a phone they sat on top of each other. Here they stack
- * in a column, newest-to-the-bottom, and the stack's height is published
- * as --floating-notices-h so the page can scroll its last content clear
- * of them (see .app-main-scroll in Layout).
+ * The bottom-right corner for the floating notices the app shell mounts
+ * (the guest demo tour or notice, and the phone notification ask beside a
+ * due feeding). Its height is published as --floating-notices-h so the
+ * page can scroll its last content clear of whatever is showing (see
+ * .app-main-scroll in Layout).
+ *
+ * Which notice shows is not decided here. Every floating notice in the
+ * app, these two and the three App.jsx mounts (update, consent, offline),
+ * takes its turn in one queue, floatingNoticeQueue.js, so this holds one
+ * notice at most.
  */
 export default function FloatingNoticeStack({ children }) {
   const ref = useRef(null);

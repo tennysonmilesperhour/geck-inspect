@@ -1,277 +1,141 @@
 import { useState, useEffect, useRef } from 'react';
 import { FeedingGroup, OtherReptile } from '@/entities/all';
-import { Button } from '@/components/ui/button';
-import { X, CheckCircle2, Clock } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { todayLocalISO, daysSinceLocal } from '@/lib/dateUtils';
-import { markGroupFed } from '@/lib/husbandryLog';
+import { daysSinceLocal } from '@/lib/dateUtils';
 import { startVisiblePolling } from '@/lib/pagePolling';
-import { isGuestMode } from '@/lib/guestMode';
-import { TOUR_CHANGED_EVENT, tourOnScreen } from '@/lib/guestTour';
 import { loadUnlessRetired } from '@/lib/retiredPages';
+import { getPushStatus, isPushSupported } from '@/lib/webPush';
+import { isIOSDevice, isStandaloneApp, pushAskState, readPushAskDismissed } from '@/lib/pushAsk';
 import PushAskCard from '@/components/notifications/PushAskCard';
+import { useFloatingNotice } from '@/components/shared/floatingNoticeQueue';
 
-// This component only drives the in-app banner. The feeding_due push and
-// email notifications come from the server (enqueue_feeding_reminders, a
-// daily pg_cron job since 27 Sep 2026) so they arrive with the app closed,
-// as one combined message a day. Creating them here too would duplicate them.
+// The floating feeding reminder cards are gone (experience review B4, 12
+// Nov 2026). They sat on top of the page, and a dismissed card came back
+// after every reload. Today lists what is due, and the menu shows a count
+// on Today.
+//
+// What is left here is the one thing that lived only in those cards: the
+// one-line ask to get feeding reminders as phone notifications. It shows
+// while a feeding is due, only to a member this device can still ask
+// (signed in, not subscribed, has not said "Not now"), and it takes the
+// "feeding" turn in the floating notice queue
+// (src/components/shared/floatingNoticeQueue.js). So this component loads
+// feeding groups only to learn whether one is due, and only when the ask
+// could show.
+//
+// The feeding_due push and email notifications come from the server
+// (enqueue_feeding_reminders, a daily pg_cron job since 27 Sep 2026) so
+// they arrive with the app closed, as one combined message a day.
+
+// Days past the feeding due date: 0 is due today, 1 is a day late.
+const daysOverdue = (lastFedDate, intervalDays) => {
+  if (!lastFedDate) return intervalDays;
+  return (daysSinceLocal(lastFedDate) ?? 0) - intervalDays;
+};
 
 export default function FeedingAlertSystem({ user, enabled }) {
-  const [alerts, setAlerts] = useState([]);
-  const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
-  // In-flight guard. AuthContext's setUser fires on profile-enrich, every
-  // auth state change, and every tab visibility change, so without this
-  // mutex two loadAlerts() can race past the read-then-write dedup and
-  // each insert their own notification row, fanning out to 2x pushes.
+  const email = user?.email;
+  const isGuest = Boolean(user?.is_guest);
+  const [mayAsk, setMayAsk] = useState(false);
+  const [feedingDue, setFeedingDue] = useState(false);
+  // In-flight guard: the profile object changes on every auth event, and
+  // two loads must not run at once.
   const loadingRef = useRef(false);
-  // In the guest demo the sample feeding reminders wait until the guided
-  // tour is closed; on a phone the two used to cover each other and most
-  // of the screen.
-  const [tourActive, setTourActive] = useState(() => isGuestMode() && tourOnScreen());
+
+  // Can this device still be asked? The same rule the card applies
+  // (src/lib/pushAsk.js), checked first so a member who is subscribed, or
+  // who said "Not now", costs no feeding query at all.
   useEffect(() => {
-    if (!isGuestMode()) return undefined;
-    const onChange = () => setTourActive(tourOnScreen());
-    window.addEventListener(TOUR_CHANGED_EVENT, onChange);
-    return () => window.removeEventListener(TOUR_CHANGED_EVENT, onChange);
-  }, []);
-
-  // Days past the feeding due date. 0 = due today (interval has just elapsed),
-  // 1 = a day late, etc. Negative values (not yet due) are filtered upstream
-  // by the `daysOverdue >= 0` check.
-  const calculateDaysOverdue = (lastFedDate, intervalDays) => {
-    if (!lastFedDate) return intervalDays;
-    const daysElapsed = daysSinceLocal(lastFedDate) ?? 0;
-    return daysElapsed - intervalDays;
-  };
-
-  // Get color based on days overdue. Order matters, check the most-overdue
-  // bucket first so a 30-day overdue alert doesn't fall through to yellow.
-  const getAlertColor = (daysOverdue) => {
-    if (daysOverdue > 21) return 'red';
-    if (daysOverdue > 14) return 'orange';
-    return 'yellow';
-  };
-
-  const getGlowClass = (color) => {
-    switch (color) {
-      case 'red':
-        return 'glow-red';
-      case 'orange':
-        return 'glow-orange';
-      case 'yellow':
-        return 'glow-yellow';
-      default:
-        return 'glow-yellow';
+    if (!enabled || !email || isGuest) {
+      setMayAsk(false);
+      return undefined;
     }
-  };
+    const supported = isPushSupported();
+    const askable = (status) => pushAskState({
+      user: { email, is_guest: isGuest },
+      hasReminder: true,
+      supported,
+      ios: isIOSDevice(),
+      standalone: isStandaloneApp(),
+      status,
+      dismissed: readPushAskDismissed(),
+    }) !== 'hidden';
+    if (!supported) {
+      setMayAsk(askable(null));
+      return undefined;
+    }
+    let cancelled = false;
+    getPushStatus()
+      .then((status) => { if (!cancelled) setMayAsk(askable(status)); })
+      .catch(() => { if (!cancelled) setMayAsk(false); });
+    return () => { cancelled = true; };
+  }, [enabled, email, isGuest]);
 
-  // Load alerts
   useEffect(() => {
-    if (!user?.email || !enabled) {
-      setAlerts([]);
-      return;
+    if (!mayAsk || !email) {
+      setFeedingDue(false);
+      return undefined;
     }
 
-    const loadAlerts = async () => {
+    const load = async () => {
       if (loadingRef.current) return;
       loadingRef.current = true;
       try {
         const [feedingGroups, otherReptiles] = await Promise.all([
-          FeedingGroup.filter({ created_by: user.email }),
-          // Other Reptiles is retired; its alerts come back with the page.
+          FeedingGroup.filter({ created_by: email }),
+          // Other Reptiles is retired; its reminders come back with the page.
           // (The emailed reminders have their own switch on the server.)
-          loadUnlessRetired('OtherReptiles', () => OtherReptile.filter({ created_by: user.email, archived: false })),
+          loadUnlessRetired('OtherReptiles', () => OtherReptile.filter({ created_by: email, archived: false })),
         ]);
-
-        const newAlerts = [];
-
-        // Check feeding groups. Skip any group the user has muted via the
-        // per-group toggle (feeding_reminder_enabled === false). Legacy
-        // rows that pre-date the column have the value default to true at
-        // the DB level, so undefined here also means "alerts on".
-        feedingGroups.forEach(group => {
-          if (group.feeding_reminder_enabled === false) return;
-          const daysOverdue = calculateDaysOverdue(group.last_fed_date, group.interval_days);
-          if (daysOverdue >= 0) {
-            newAlerts.push({
-              id: `group-${group.id}`,
-              type: 'feedingGroup',
-              entityId: group.id,
-              name: group.name || group.label,
-              daysOverdue,
-              intervalDays: group.interval_days,
-              lastFedDate: group.last_fed_date,
-              color: getAlertColor(daysOverdue),
-              group
-            });
-          }
-        });
-
-        // Check other reptiles with feeding reminders enabled
-        otherReptiles.forEach(reptile => {
-          if (reptile.feeding_reminder_enabled) {
-            const daysOverdue = calculateDaysOverdue(reptile.last_fed_date, reptile.feeding_interval_days || 7);
-            if (daysOverdue >= 0) {
-              newAlerts.push({
-                id: `reptile-${reptile.id}`,
-                type: 'otherReptile',
-                entityId: reptile.id,
-                name: reptile.name,
-                daysOverdue,
-                intervalDays: reptile.feeding_interval_days || 7,
-                lastFedDate: reptile.last_fed_date,
-                color: getAlertColor(daysOverdue),
-                reptile
-              });
-            }
-          }
-        });
-
-        setAlerts(newAlerts);
+        // A group the member muted (feeding_reminder_enabled === false) does
+        // not count. Rows older than that column default to on.
+        const groupDue = feedingGroups.some((group) =>
+          group.feeding_reminder_enabled !== false && daysOverdue(group.last_fed_date, group.interval_days) >= 0);
+        const reptileDue = otherReptiles.some((reptile) =>
+          reptile.feeding_reminder_enabled && daysOverdue(reptile.last_fed_date, reptile.feeding_interval_days || 7) >= 0);
+        setFeedingDue(groupDue || reptileDue);
       } catch (error) {
-        console.error('Failed to load feeding alerts:', error);
+        console.error('Failed to check for due feedings:', error);
       } finally {
         loadingRef.current = false;
       }
     };
 
-    loadAlerts();
-    // Refresh every 5 minutes while the tab is visible and the member is active.
-    return startVisiblePolling(loadAlerts, 5 * 60 * 1000);
-  }, [user?.email, enabled]);
+    load();
+    // Again every 5 minutes while the tab is visible and the member is active.
+    return startVisiblePolling(load, 5 * 60 * 1000);
+  }, [mayAsk, email]);
 
-  const handleFed = async (alert) => {
-    try {
-      const today = todayLocalISO();
+  if (!mayAsk || !feedingDue) return null;
+  return <FeedingPushAsk user={user} />;
+}
 
-      if (alert.type === 'feedingGroup') {
-        // A feeding row per gecko in the group, then the group schedule.
-        await markGroupFed({ group: alert.group || { id: alert.entityId, last_fed_date: alert.lastFedDate }, date: today });
-      } else {
-        await OtherReptile.update(alert.entityId, { last_fed_date: today });
-      }
+// The card decides for itself whether it has anything to show, and stops
+// showing after "Not now". This holder watches whether the card drew
+// anything, and asks for the queue's "feeding" turn only while it did.
+function FeedingPushAsk({ user }) {
+  const holderRef = useRef(null);
+  const [filled, setFilled] = useState(false);
 
-      setAlerts(alerts.filter(a => a.id !== alert.id));
-    } catch (error) {
-      console.error('Failed to log feeding:', error);
-    }
-  };
+  useEffect(() => {
+    const holder = holderRef.current;
+    if (!holder) return undefined;
+    const read = () => setFilled(holder.childElementCount > 0);
+    read();
+    if (typeof MutationObserver === 'undefined') return undefined;
+    const observer = new MutationObserver(read);
+    observer.observe(holder, { childList: true });
+    return () => observer.disconnect();
+  }, []);
 
-  const handleDismiss = (alertId) => {
-    setDismissedAlerts(new Set([...dismissedAlerts, alertId]));
-  };
-
-  // Most overdue first, and at most two cards at once: three or more
-  // stacked cards covered the whole phone screen on every page.
-  const MAX_SHOWN = 2;
-  const pendingAlerts = alerts
-    .filter(a => !dismissedAlerts.has(a.id))
-    .sort((a, b) => (b.daysOverdue || 0) - (a.daysOverdue || 0));
-  const visibleAlerts = pendingAlerts.slice(0, MAX_SHOWN);
-  const hiddenCount = pendingAlerts.length - visibleAlerts.length;
-
-  if (!enabled || tourActive || visibleAlerts.length === 0) return null;
+  const showing = useFloatingNotice('feeding', filled);
 
   return (
-    <div data-floating-notice className="w-[min(24rem,calc(100vw-2rem))] max-h-[45vh] md:max-h-[60vh] overflow-y-auto">
-      <style>{`
-        @keyframes feeding-glow-yellow {
-          0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.3), inset 0 0 10px rgba(234, 179, 8, 0.1); }
-          50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.6), inset 0 0 15px rgba(234, 179, 8, 0.2); }
-        }
-        @keyframes feeding-glow-orange {
-          0%, 100% { box-shadow: 0 0 15px rgba(249, 115, 22, 0.4), inset 0 0 10px rgba(249, 115, 22, 0.1); }
-          50% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.7), inset 0 0 15px rgba(249, 115, 22, 0.2); }
-        }
-        @keyframes feeding-glow-red {
-          0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), inset 0 0 10px rgba(239, 68, 68, 0.1); }
-          50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.8), inset 0 0 15px rgba(239, 68, 68, 0.2); }
-        }
-        .glow-yellow { animation: feeding-glow-yellow 2s infinite; }
-        .glow-orange { animation: feeding-glow-orange 2s infinite; }
-        .glow-red { animation: feeding-glow-red 2s infinite; }
-      `}</style>
-
-      <AnimatePresence mode="popLayout">
-        {visibleAlerts.map(alert => (
-          <motion.div
-            key={alert.id}
-            layout
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className={`p-4 rounded-lg border backdrop-blur-sm mb-2 ${getGlowClass(alert.color)} ${
-              alert.color === 'red'
-                ? 'bg-red-950/50 border-red-700'
-                : alert.color === 'orange'
-                ? 'bg-orange-950/50 border-orange-700'
-                : 'bg-yellow-950/50 border-yellow-700'
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 flex-1">
-                <Clock className={`w-5 h-5 flex-shrink-0 ${
-                  alert.color === 'red'
-                    ? 'text-red-400'
-                    : alert.color === 'orange'
-                    ? 'text-orange-400'
-                    : 'text-yellow-400'
-                }`} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-100 truncate">{alert.name}</p>
-                  <p className={`text-sm ${
-                    alert.color === 'red'
-                      ? 'text-red-300'
-                      : alert.color === 'orange'
-                      ? 'text-orange-300'
-                      : 'text-yellow-300'
-                  }`}>
-                    {alert.daysOverdue === 0
-                      ? `Due today (every ${alert.intervalDays} days)`
-                      : `${alert.daysOverdue} day${alert.daysOverdue !== 1 ? 's' : ''} overdue (every ${alert.intervalDays} days)`}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleDismiss(alert.id)}
-                aria-label={`Dismiss the feeding reminder for ${alert.name}`}
-                className="touch:min-h-11 touch:min-w-11 text-slate-400 hover:text-slate-200 flex-shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="flex gap-2 mt-3">
-              <Button
-                onClick={() => handleFed(alert)}
-                size="sm"
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-sm"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-1" />
-                Mark Fed
-              </Button>
-              <Button
-                onClick={() => handleDismiss(alert.id)}
-                variant="outline"
-                size="sm"
-                className="border-slate-600 text-slate-300 hover:bg-slate-800 text-sm"
-              >
-                Dismiss
-              </Button>
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-      {hiddenCount > 0 && (
-        <p className="text-xs text-slate-300 bg-slate-900/90 border border-slate-700 rounded-lg px-3 py-2">
-          {hiddenCount} more feeding {hiddenCount === 1 ? 'reminder' : 'reminders'} after these
-        </p>
-      )}
-      {/* A feeding reminder on screen is the moment a phone notification
-          makes sense, so the push ask lives here rather than on every page.
-          It hides itself for guests, after "Not now" and once subscribed. */}
+    <div
+      ref={holderRef}
+      hidden={!showing}
+      data-floating-notice={showing ? 'feeding' : undefined}
+      className="w-[min(24rem,calc(100vw-2rem))]"
+    >
       <PushAskCard user={user} hasReminder compact subject="feeding reminders" source="feeding_alert" />
     </div>
   );

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CloudOff, RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { syncNow, useOfflineQueue } from '@/lib/offlineSync';
+import { useFloatingNotice } from '@/components/shared/floatingNoticeQueue';
 
 const RETRY_MS = 60 * 1000;
 
@@ -10,6 +11,10 @@ const RETRY_MS = 60 * 1000;
  * "N waiting to sync" while Field Mode logs made offline are still on the
  * device, and sends them as soon as the connection is back (also on app
  * open and once a minute while any are waiting).
+ *
+ * The badge is third in the floating notice queue (floatingNoticeQueue.js)
+ * and hides in Field Mode, which shows its own status. The sending runs
+ * whether or not the badge is on screen.
  */
 export default function OfflineSyncStatus() {
   const { pending, online } = useOfflineQueue();
@@ -53,7 +58,8 @@ export default function OfflineSyncStatus() {
     return () => clearInterval(t);
   }, [online, hasPending, run]);
 
-  if (online && !hasPending) return null;
+  const showing = useFloatingNotice('offline', !online || hasPending);
+  if (!showing) return null;
 
   let label = 'Offline';
   if (!online && hasPending) label = `Offline, ${pending} waiting to sync`;
@@ -63,6 +69,8 @@ export default function OfflineSyncStatus() {
     <div
       role="status"
       aria-live="polite"
+      data-floating-notice="offline"
+      data-follows-bottom-bar
       className="fixed bottom-[calc(var(--bottom-bar-h)+1rem)] md:bottom-4 right-4 z-[9999] flex items-center gap-2 rounded-full border border-amber-500/40 bg-slate-900/95 px-3 py-1.5 text-xs font-semibold text-amber-200 shadow-lg"
     >
       {online ? (
