@@ -12,7 +12,7 @@
  * unmapped still shows up in the notes, and the user reviews everything
  * before saving.
  */
-import { labelFor } from '@/components/morph-id/morphTaxonomy';
+import { GENETIC_TRAITS, labelFor } from '@/components/morph-id/morphTaxonomy';
 import { morphHeadline } from '@/components/morph-id/morphHeadline';
 import { fitWord } from '@/components/morph-id/modelSignal';
 import { ALL_MORPHS } from '@/components/my-geckos/morphTagCatalog';
@@ -92,6 +92,56 @@ function analysisIds(analysis) {
   ].filter(Boolean);
 }
 
+// Ids that name a gene or a look only lineage can settle (Lilly White,
+// Axanthic, Cappuccino, Sable, Highway, Phantom and the rest of the
+// taxonomy's genetic list). A photo can show the look, never prove these.
+const GENE_IDS = new Set(GENETIC_TRAITS.map((trait) => trait.id));
+
+/**
+ * The morph tags a result suggests, in the order the add form receives
+ * them, each with whether it names a gene a photo cannot prove. Both ways
+ * of keeping a result read this one list: "Add to my collection" (the
+ * draft below) and "Save to a gecko you already have" (the confirm step
+ * in SaveToGeckoDialog), so they can never disagree about what a result
+ * maps to.
+ *
+ * @param {object} analysis - the recognize-gecko-morph result
+ * @returns {{ tag: string, gene: boolean }[]}
+ */
+export function suggestedTagsFromAnalysis(analysis) {
+  if (!analysis) return [];
+  const named = new Set(analysis.genetic_traits || analysis.genetics || []);
+  const byTag = new Map();
+  for (const id of analysisIds(analysis)) {
+    const tag = idToTag(id);
+    if (!tag) continue;
+    const entry = byTag.get(tag) || { tag, gene: false };
+    if (named.has(id) || GENE_IDS.has(id)) entry.gene = true;
+    byTag.set(tag, entry);
+  }
+  return [...byTag.values()];
+}
+
+/**
+ * A gecko's morph tags with the confirmed ones added. What the gecko
+ * already has stays exactly as it is, in its own order and spelling; a tag
+ * it already has (in any letter case) is not added twice.
+ *
+ * @param {string[]} existing - the gecko's morph_tags
+ * @param {string[]} added - the tags the member ticked
+ */
+export function mergeMorphTags(existing, added) {
+  const out = Array.isArray(existing) ? [...existing] : [];
+  const seen = new Set(out.map((tag) => String(tag).trim().toLowerCase()));
+  for (const tag of Array.isArray(added) ? added : []) {
+    const key = String(tag ?? '').trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(tag);
+  }
+  return out;
+}
+
 // The model signal the server calls strong (modelIsStrong in
 // supabase/functions/_shared/morph-evidence.ts). Below it the answer is a
 // guess the member should check, not a label to save unread.
@@ -128,7 +178,7 @@ export function buildGeckoDraftFromAnalysis(analysis, imageUrls = []) {
   if (!analysis) return null;
 
   const ids = analysisIds(analysis);
-  const morph_tags = [...new Set(ids.map(idToTag).filter(Boolean))];
+  const morph_tags = suggestedTagsFromAnalysis(analysis).map((entry) => entry.tag);
 
   const conf = Number(analysis.model_signal ?? analysis.confidence_score ?? analysis.confidence ?? 0);
   const labels = ids.map((id) => labelFor(id, null)).filter(Boolean);

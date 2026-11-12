@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -22,59 +22,90 @@ function openPolicyBeside(event) {
  * the member taps Allow and identify, and the yes covers this one set of
  * photos only. New photos ask again; nothing is stored.
  *
- * Props: onAllow(), onDecline(), disabled (photos still uploading).
+ * Since 12 Nov 2026 the step is on the page from the moment photos are
+ * in, with the button first and the notice under it, so identifying is
+ * one tap. It used to open only after a tap on "Identify morph", which
+ * read as that button failing. The promise is unchanged: this button is
+ * the only one that sends, and it sits with the notice it answers.
+ *
+ * Props:
+ *   onAllow(), onDecline()
+ *   disabled    the photos are still uploading, or a required view is missing
+ *   declined    the member tapped Not now for these photos (the button
+ *               goes; the page says nothing was sent)
+ *   focusToken  changes when another control (Try again) was tapped
+ *               without a yes: focus moves here, so that tap is answered
+ *   secondaryAction  a button to sit beside Allow and identify (Start over)
  */
-export default function AiConsentPanel({ onAllow, onDecline, disabled = false }) {
+export default function AiConsentPanel({
+  onAllow,
+  onDecline,
+  disabled = false,
+  declined = false,
+  focusToken = 0,
+  secondaryAction = null,
+}) {
   const headingRef = useRef(null);
+  const noticeId = useId();
 
-  // Move focus here when the step opens, so keyboard and screen reader
-  // users land on the question instead of the button that opened it.
+  // Not on first show: the step is on the page from the start now, and
+  // taking the focus then would pull a member away from the photo slots.
   useEffect(() => {
+    if (!focusToken) return;
     headingRef.current?.focus();
-  }, []);
+    headingRef.current?.scrollIntoView?.({ block: 'center' });
+  }, [focusToken]);
 
   return (
-    <section
-      aria-labelledby="morph-ai-consent-title"
-      className="rounded-xl border border-emerald-600/60 bg-slate-900/90 p-4 space-y-3 max-w-xl"
-    >
-      <h3
-        id="morph-ai-consent-title"
-        ref={headingRef}
-        tabIndex={-1}
-        className="font-semibold text-slate-100 flex items-center gap-2 focus:outline-none"
-      >
-        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
-        Before we send your photos
-      </h3>
-      <ul className="text-sm text-slate-300 space-y-1.5 list-disc pl-5">
-        <li>Your photos, with the life stage and fired state you picked, go to Anthropic, the AI that reads the morph.</li>
-        <li>When visual comparison is on, the photos also go to Replicate, which finds the closest breeder-tagged reference photos.</li>
-        <li>Only send photos you have permission to share.</li>
-      </ul>
-      <p className="text-xs text-slate-400">
-        Nothing is sent until you tap Allow and identify, and we ask again for every new set of photos.{' '}
-        {/* Opens beside this step, so the photos the member picked are still
-            here when they come back: a new tab on the web, and the in-app
-            browser sheet in the iPhone app (it does not leave the app). An
-            in-app route would unmount Morph ID and lose the photos. */}
-        <a
-          href="/PrivacyPolicy"
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={openPolicyBeside}
-          className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
-        >
-          Privacy Policy, Third-Party Services
-        </a>
-      </p>
+    <section aria-labelledby="morph-ai-consent-title" className="space-y-3 max-w-xl">
       <div className="flex flex-wrap gap-2">
-        <Button size="lg" onClick={onAllow} disabled={disabled} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button
+          size="lg"
+          onClick={onAllow}
+          disabled={disabled}
+          aria-describedby={noticeId}
+          className="bg-emerald-600 hover:bg-emerald-700"
+        >
           <Sparkles className="mr-2 h-5 w-5" aria-hidden="true" /> Allow and identify
         </Button>
-        <Button size="lg" variant="outline" onClick={onDecline}>
-          Not now
-        </Button>
+        {secondaryAction}
+      </div>
+      <div id={noticeId} className="rounded-xl border border-emerald-600/60 bg-slate-900/90 p-4 space-y-3">
+        <h3
+          id="morph-ai-consent-title"
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-semibold text-slate-100 flex items-center gap-2 focus:outline-none"
+        >
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
+          Before we send your photos
+        </h3>
+        <ul className="text-sm text-slate-300 space-y-1.5 list-disc pl-5">
+          <li>Your photos, with the life stage and fired state you picked, go to Anthropic, the AI that reads the morph.</li>
+          <li>When visual comparison is on, the photos also go to Replicate, which finds the closest breeder-tagged reference photos.</li>
+          <li>Only send photos you have permission to share.</li>
+        </ul>
+        <p className="text-xs text-slate-400">
+          Nothing is sent until you tap Allow and identify, and we ask again for every new set of photos.{' '}
+          {/* Opens beside this step, so the photos the member picked are still
+              here when they come back: a new tab on the web, and the in-app
+              browser sheet in the iPhone app (it does not leave the app). An
+              in-app route would unmount Morph ID and lose the photos. */}
+          <a
+            href="/PrivacyPolicy"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={openPolicyBeside}
+            className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
+          >
+            Privacy Policy, Third-Party Services
+          </a>
+        </p>
+        {!declined && (
+          <Button variant="outline" size="sm" onClick={onDecline}>
+            Not now
+          </Button>
+        )}
       </div>
     </section>
   );

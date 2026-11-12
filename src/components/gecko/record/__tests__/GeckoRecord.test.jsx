@@ -429,6 +429,41 @@ describe('the gecko record, for its owner', () => {
   });
 });
 
+describe('Identify by photo', () => {
+  const identifyLinks = (tree) => tree.root.findAll((n) => n.type === 'a' && innerText(n).includes('Identify by photo'));
+
+  it('opens Morph ID for this gecko, from the Details card, for someone who can edit', async () => {
+    const tree = await mount();
+    const links = identifyLinks(tree);
+    expect(links).toHaveLength(1);
+    expect(links[0].props.href).toBe('/Recognition?gecko=g1');
+    const details = tree.root.find((n) => n.props?.['data-record-section'] === 'details');
+    expect(innerText(details)).toContain('Identify by photo');
+
+    // A collection editor may change the gecko, so gets it too.
+    expect(identifyLinks(await mount({ currentUser: EDITOR }))).toHaveLength(1);
+  });
+
+  it('is not offered to a read-only member, a visitor, or on an archived gecko', async () => {
+    expect(identifyLinks(await mount({ currentUser: EDITOR, canEdit: false }))).toHaveLength(0);
+    state.geckosById = { 'sire-1': SPUD, 'dam-1': HARLEY };
+    const visitor = await mount({ gecko: { ...NIMBUS, created_by: undefined }, currentUser: null, canEdit: false, isMember: false, allGeckos: [] });
+    expect(identifyLinks(visitor)).toHaveLength(0);
+    expect(identifyLinks(await mount({ gecko: { ...NIMBUS, archived: true, archive_reason: 'sold' } }))).toHaveLength(0);
+  });
+
+  it('shows on a gecko with no details yet, where a morph is most needed, and only to its keeper', async () => {
+    const bare = { ...NIMBUS, hatch_date: null, morphs_traits: '', morph_tags: [], notes: '' };
+    const tree = await mount({ gecko: bare });
+    expect(identifyLinks(tree)).toHaveLength(1);
+    expect(textOf(tree)).toContain('No morph tags yet. Morph ID can suggest them from a top and a side photo.');
+
+    state.geckosById = { 'sire-1': SPUD, 'dam-1': HARLEY };
+    const visitor = await mount({ gecko: { ...bare, created_by: undefined }, currentUser: null, canEdit: false, isMember: false, allGeckos: [] });
+    expect(markers(visitor)).not.toContain('details');
+  });
+});
+
 describe('who sees which actions', () => {
   it('a collection editor can log, edit and archive, but not delete, transfer or see the value', async () => {
     const tree = await mount({ currentUser: EDITOR, gecko: { ...NIMBUS, archived: true, archive_reason: 'other' } });

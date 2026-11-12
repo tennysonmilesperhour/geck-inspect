@@ -377,7 +377,15 @@ export default function GeckoRecord({
             canEdit={access.canEdit}
             headingAs={cardLevel}
           />
-          <DetailsCard gecko={view} headingAs={cardLevel} />
+          {/* Morph ID for this gecko, for someone who may change it. The
+              result is saved back to its morph tags, then Morph ID
+              returns here (backTo). Not in the demo, which cannot run it. */}
+          <DetailsCard
+            gecko={view}
+            headingAs={cardLevel}
+            identifyTo={access.canEdit && !guest && !view.archived ? `/Recognition?gecko=${view.id}` : null}
+            identifyState={{ backTo }}
+          />
           {access.canSeeValue
             ? <MarketValueCard gecko={{ ...view, weight_grams: latest ? latest.grams : null }} />
             : !access.keeper && (

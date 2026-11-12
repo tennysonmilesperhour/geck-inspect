@@ -16,8 +16,12 @@ import { MAX_EXTRA_VIEWS, REQUIRED_VIEWS, orderedViewUrls, viewsReady } from './
 //
 // onChange({ urls, ready }) gets the uploaded urls in slot order and
 // whether both required views are in.
+//
+// disabled: the member has no scan left. The slots stay on the page,
+// greyed and untappable, so the page still shows what Morph ID asks for
+// and the notice above them says when the next scan arrives.
 
-function Slot({ label, hint, required, item, onPick, onRemove }) {
+function Slot({ label, hint, required, item, onPick, onRemove, disabled = false }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
@@ -42,24 +46,27 @@ function Slot({ label, hint, required, item, onPick, onRemove }) {
               Upload failed. Remove it and try again.
             </div>
           )}
-          <button
-            type="button"
-            onClick={onRemove}
-            className="absolute top-1 right-1 p-2 bg-black/70 hover:bg-rose-600 rounded-full min-w-11 min-h-11 grid place-items-center"
-            aria-label={`Remove ${label.toLowerCase()}`}
-          >
-            <X className="w-3.5 h-3.5 text-white" />
-          </button>
+          {!disabled && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="absolute top-1 right-1 p-2 bg-black/70 hover:bg-rose-600 rounded-full min-w-11 min-h-11 grid place-items-center"
+              aria-label={`Remove ${label.toLowerCase()}`}
+            >
+              <X className="w-3.5 h-3.5 text-white" />
+            </button>
+          )}
         </div>
       ) : (
         <button
           type="button"
           onClick={onPick}
-          className={`touch:min-h-11 w-full aspect-square flex flex-col items-center justify-center gap-1 rounded-lg border-2 px-3 text-center transition-[border-color,background-color,color,box-shadow] duration-200 hover:shadow-[0_0_12px_rgba(16,185,129,0.35)] ${
+          disabled={disabled}
+          className={`touch:min-h-11 w-full aspect-square flex flex-col items-center justify-center gap-1 rounded-lg border-2 px-3 text-center transition-[border-color,background-color,color,box-shadow] duration-200 enabled:hover:shadow-[0_0_12px_rgba(16,185,129,0.35)] disabled:cursor-not-allowed disabled:opacity-50 ${
             required
-              ? 'border-amber-600/60 hover:border-emerald-500 text-slate-300'
-              : 'border-slate-600 hover:border-emerald-500 text-slate-400'
-          } hover:bg-slate-800/50 hover:text-emerald-300`}
+              ? 'border-amber-600/60 enabled:hover:border-emerald-500 text-slate-300'
+              : 'border-slate-600 enabled:hover:border-emerald-500 text-slate-400'
+          } enabled:hover:bg-slate-800/50 enabled:hover:text-emerald-300`}
         >
           <Upload className="w-6 h-6" />
           <span className="text-xs font-medium">Add {label.toLowerCase()}</span>
@@ -70,7 +77,7 @@ function Slot({ label, hint, required, item, onPick, onRemove }) {
   );
 }
 
-export default function ViewPhotoUploader({ onChange, onBusyChange }) {
+export default function ViewPhotoUploader({ onChange, onBusyChange, disabled = false }) {
   const [slots, setSlots] = useState({ top: null, side: null, extras: [] });
   const inputRef = useRef(null);
   const targetRef = useRef(null); // 'top' | 'side' | 'extra'
@@ -97,6 +104,7 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
   }));
 
   const pick = async (target) => {
+    if (disabled) return;
     targetRef.current = target;
     // The top view is the photo the reference lookup embeds. Picking it is
     // the last moment to wake that model before Identify, for a member who
@@ -167,6 +175,7 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
             label={view.label}
             hint={view.hint}
             required
+            disabled={disabled}
             item={slots[view.key]}
             onPick={() => pick(view.key)}
             onRemove={() => remove(slots[view.key].id)}
@@ -187,6 +196,7 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
               key={item.id}
               label={`Photo ${i + 3}`}
               hint=""
+              disabled={disabled}
               item={item}
               onRemove={() => remove(item.id)}
             />
@@ -195,7 +205,8 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
             <button
               type="button"
               onClick={() => pick('extra')}
-              className="touch:min-h-11 aspect-square self-end flex flex-col items-center justify-center rounded-lg border-2 border-slate-600 hover:border-emerald-500 hover:bg-slate-800/50 transition-[border-color,background-color,color,box-shadow] duration-200 hover:shadow-[0_0_12px_rgba(16,185,129,0.35)] text-slate-400 hover:text-emerald-300"
+              disabled={disabled}
+              className="touch:min-h-11 aspect-square self-end flex flex-col items-center justify-center rounded-lg border-2 border-slate-600 enabled:hover:border-emerald-500 enabled:hover:bg-slate-800/50 transition-[border-color,background-color,color,box-shadow] duration-200 enabled:hover:shadow-[0_0_12px_rgba(16,185,129,0.35)] text-slate-400 enabled:hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Upload className="w-5 h-5 mb-1" />
               <span className="text-xs">Add photo</span>
@@ -204,7 +215,7 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
         </div>
       </div>
 
-      {!ready && (
+      {!ready && !disabled && (
         <p className="text-xs text-amber-200/90">Add a top view and a side view to identify the morph.</p>
       )}
 
@@ -213,6 +224,7 @@ export default function ViewPhotoUploader({ onChange, onBusyChange }) {
         type="file"
         accept="image/*"
         multiple
+        disabled={disabled}
         className="hidden"
         onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
       />

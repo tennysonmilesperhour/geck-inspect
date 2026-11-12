@@ -2,7 +2,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
-  Brush, Bug, ClipboardList, Droplets, GitBranch, History,
+  Brush, Bug, Camera, ClipboardList, Droplets, GitBranch, History,
   Info, PenLine, Sparkles, Utensils,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -206,8 +206,16 @@ export function FamilyCard({ gecko, sire, dam, offspringCount = 0, canEdit = fal
   );
 }
 
-/** Hatch date, incubation, tail, gravid dates, morph tags and notes. */
-export function DetailsCard({ gecko, headingAs }) {
+/**
+ * Hatch date, incubation, tail, gravid dates, morph tags and notes.
+ *
+ * identifyTo (with identifyState for the way back) is the Morph ID link
+ * for this gecko, given only to someone who may change it: "Identify by
+ * photo" sits beside the morph tags it can fill. With it the card shows
+ * even when it has nothing else yet, since a gecko with no morph recorded
+ * is the one that needs it most.
+ */
+export function DetailsCard({ gecko, headingAs, identifyTo = null, identifyState = undefined }) {
   const rows = [
     gecko.hatch_date && ['Hatched', day(gecko.hatch_date, 'MMMM d, yyyy')],
     gecko.incubation_days && ['Incubation', `${gecko.incubation_days} days`],
@@ -216,9 +224,28 @@ export function DetailsCard({ gecko, headingAs }) {
     gecko.sex === 'Female' && gecko.is_gravid && gecko.egg_drop_date && ['Eggs due', day(gecko.egg_drop_date)],
   ].filter(Boolean);
   const tags = Array.isArray(gecko.morph_tags) ? gecko.morph_tags : [];
-  if (!rows.length && !tags.length && !gecko.notes) return null;
+  const empty = !rows.length && !tags.length && !gecko.notes;
+  if (empty && !identifyTo) return null;
   return (
-    <RecordCard id="details" icon={Info} title="Details" headingAs={headingAs} contentClassName="space-y-3">
+    <RecordCard
+      id="details"
+      icon={Info}
+      title="Details"
+      headingAs={headingAs}
+      contentClassName="space-y-3"
+      action={identifyTo && (
+        <Button asChild variant="outline" size="sm">
+          <Link to={identifyTo} state={identifyState}>
+            <Camera className="w-4 h-4" aria-hidden="true" /> Identify by photo
+          </Link>
+        </Button>
+      )}
+    >
+      {empty && (
+        <p className="text-sm text-slate-400">
+          No morph tags yet. Morph ID can suggest them from a top and a side photo.
+        </p>
+      )}
       {rows.length > 0 && (
         <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           {rows.map(([label, value]) => (

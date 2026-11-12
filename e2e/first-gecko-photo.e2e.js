@@ -1,7 +1,9 @@
 // The guided first gecko by photo (28 Oct 2026), in a real browser: a new
-// free member picks "Add by photo" on the empty My Geckos page, adds a top
-// and a side photo, says yes on Morph ID's permission step (on the page,
-// not a browser pop-up), gets "Add this gecko" straight under the answer
+// free member picks "Add by photo" on the empty My Geckos page, finds the
+// photo slots on the first screen, adds a top and a side photo, says yes on
+// Morph ID's permission step (on the page from the moment the photos are
+// in, not a browser pop-up, and one tap since 12 Nov 2026), gets "Add this
+// gecko" straight under the answer
 // with no plans card on top, and saves the gecko from the short form with
 // one name and "Save and continue". A second member picks "Add by photo",
 // types the gecko in instead, and a later Morph ID visit is not step 1.
@@ -105,6 +107,23 @@ async function signUpAndChoosePhoto(page) {
   await expect(page.getByText('Your first gecko, step 1 of 3')).toBeVisible();
 }
 
+// The photo slots are on the first screen, above the phone's tab bar
+// (experience review I1: they used to sit under a wall of cautions).
+async function expectSlotsOnFirstScreen(page) {
+  const slot = page.getByRole('button', { name: /Add side view/ });
+  await expect(slot).toBeVisible();
+  // The scans-left read has settled, so nothing above the slots is still to come.
+  await expect(page.getByText('Your free identification this month is ready.')).toBeVisible();
+  const box = await slot.boundingBox();
+  const floor = await page.evaluate(() => {
+    const bar = document.querySelector('.gecko-bottom-nav');
+    const shown = bar && getComputedStyle(bar).display !== 'none' && bar.getBoundingClientRect().height > 0;
+    return shown ? Math.min(bar.getBoundingClientRect().top, window.innerHeight) : window.innerHeight;
+  });
+  expect(box.y + box.height).toBeLessThanOrEqual(floor);
+  await expect(page.getByText('Morph ID reads what is visible. A photo cannot prove a gene.')).toBeVisible();
+}
+
 const photoPathFlag = (page) => page.evaluate(() => sessionStorage.getItem('geck_first_gecko_photo_path'));
 
 test('a new member adds a first gecko by photo with one name and one tap', async ({ context, page }) => {
@@ -114,12 +133,18 @@ test('a new member adds a first gecko by photo with one name and one tap', async
     await signUpAndChoosePhoto(page);
   });
 
+  await test.step('the photo slots are on the first screen', async () => {
+    await expectSlotsOnFirstScreen(page);
+  });
+
   await test.step('photos, then the permission step on the page', async () => {
     await addPhoto(page, 'top view');
     await addPhoto(page, 'side view');
-    await page.getByRole('button', { name: /Identify morph/ }).click();
+    // The step is there without a tap, and its button is the only one
+    // that identifies.
     const ask = page.getByRole('region', { name: 'Before we send your photos' });
     await expect(ask).toBeVisible();
+    await expect(page.getByRole('button', { name: /Identify morph/ })).toHaveCount(0);
     await expect(ask).toContainText('Anthropic');
     await expect(ask).toContainText('Replicate');
     const identified = () => fake.calls.filter((c) => c.path === '/functions/v1/recognize-gecko-morph' && c.body?.action !== 'warm');
@@ -134,6 +159,8 @@ test('a new member adds a first gecko by photo with one name and one tap', async
     // the line under it says when the next free one comes.
     await expect(page.getByText("You have used this month's free Morph ID")).toHaveCount(0);
     await expect(page.getByText(/That was this month.s free identification/)).toBeVisible();
+    // The four cautions show in full with the answer.
+    await expect(page.getByTestId('morph-id-limits-full')).toContainText('Hidden genes never show');
   });
 
   await test.step('one name and Save and continue', async () => {

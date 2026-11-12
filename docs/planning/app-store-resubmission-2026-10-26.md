@@ -68,7 +68,7 @@ On a phone running the **newest iOS** (the iPhone 11 on 18.5 does not qualify). 
 2. Sign in with the Breeder reviewer account.
 3. Today, then My Geckos, then open a gecko.
 4. Add a gecko and take its photo with the **camera**.
-5. Morph ID: take or pick a photo, tap Identify morph, show the AI data notice (a panel on the page since 28 October, not a pop-up), tap **Allow and identify** and let the scan finish.
+5. Morph ID: take or pick a top and a side photo, show the AI data notice (a panel on the page since 28 October, not a pop-up), tap **Allow and identify** and let the scan finish. In build 15 the notice opens when you tap Identify morph. In a build made after 12 November 2026 it is already on the page, under the **Allow and identify** button, as soon as both photos are in, so there is no Identify morph tap first.
 6. Breeding: open a pair and show the clutch odds.
 7. Settings > **Phone reminders**: turn one on and accept the iOS notification prompt.
 8. Membership: show the store prices, **Restore purchases**, and the Terms and Privacy links.
