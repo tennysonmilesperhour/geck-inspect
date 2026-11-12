@@ -1,13 +1,20 @@
 # Membership billing
 
-> **Corrections, 11 November 2026.** The header says "verified September 6" but the content runs to late October. Apple's purchase notifications have been observed in production (a sandbox Breeder annual purchase on 18 October and eight renewals; see the 26 October section of `docs/APP_STORE_REQUIREMENTS.md`), so the "no delivery has been observed yet" paragraph is out of date and `NATIVE_BILLING_WEBHOOK_VERIFIED` can be set for the store build. The open Stripe step (refund and dispute events) is `docs/OWNER-STEPS.md`, step C4.
+The current contract for paid plans: Stripe on the website, RevenueCat and Apple
+in the iPhone app. The RevenueCat webhook was first verified on 6 September 2026;
+the sections below were added to through October 2026, and the Stripe section was
+moved here on 12 November 2026. This supersedes older instructions that every
+native product must grant `Geck Inspect Pro`.
 
-Current contract, verified September 6, 2026. This supersedes older instructions
-that every native product must grant `Geck Inspect Pro`.
+Prices and plan limits are not repeated here: the code is the source
+(`src/lib/stripe-config.js`, `src/lib/tierLimits.js`) and the one table of them is
+in section 5 of [CONTEXT.md](CONTEXT.md). The open Stripe step for Tennyson (adding
+the refund and dispute events) is step C4 of [OWNER-STEPS.md](OWNER-STEPS.md).
 
 ## Products and access
 
-Web membership purchases use the Stripe checkout and customer portal. Native
+Web membership purchases use the Stripe checkout and customer portal (the
+"Stripe" section below). Native
 membership purchases use RevenueCat and Apple StoreKit. Both providers grant
 access to the same account and feature limits.
 
@@ -20,10 +27,11 @@ access to the same account and feature limits.
 RevenueCat project: `20585b81`. Apple app: `app3838b2750d`.
 Bundle identifier: `com.geckinspect.app`. Offering: `default`.
 
-Web Keeper lifetime is $149 (`price_1UQV93LBdc4xGjxq4AvXpui4`) and web Breeder
-lifetime is $349 (`price_1UQV94LBdc4xGjxqwzNWvXyI`). Both are one-time Stripe
-Checkout payments. iOS and RevenueCat have no lifetime product. The Apple
-packages stay monthly and annual only.
+The website also sells a Keeper lifetime plan and a Breeder lifetime plan. Both
+are one-time Stripe Checkout payments; their prices and price ids are the
+`lifetime` rows of `TIER_PRICING` in `src/lib/stripe-config.js`. iOS and
+RevenueCat have no lifetime product. The Apple packages stay monthly and annual
+only.
 The four Apple packages have custom identifiers (`keeper_monthly`, etc.), so
 `packageType === CUSTOM` is expected. The native screen identifies the actual
 product and takes localized prices from the store. Unknown products are not sold
@@ -101,7 +109,7 @@ only the counting differs.
   though their access comes from the comp. Breeders are counted once by name, so a
   second entry for the same breeder adds money but not another breeder.
 
-## Live webhook setup
+## RevenueCat: live webhook setup
 
 Endpoint:
 `https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/revenuecat-webhook`
@@ -130,8 +138,9 @@ Free access for an unpaid customer, caller UUID isolation, owner-readable rows,
 429 rate limiting, denied anonymous sync, and denied client-forged writes. The
 Supabase fixture account and its rows were removed afterward.
 
-This proves delivery and reconciliation plumbing. It does not prove an Apple
-purchase or App Store review acceptance.
+This proved delivery and reconciliation plumbing. A real Apple sandbox purchase
+was observed later, on 18 October (see "Release checks"). Neither proves App
+Store review acceptance.
 
 ## Reliability and recovery
 
@@ -178,6 +187,134 @@ supabase functions deploy revenuecat-sync --project-ref mmuglfphhwlaluyfyxsp --u
 After changing shared mapping code, make sure both billing functions are
 redeployed.
 
+## Stripe
+
+Website memberships are sold through Stripe. Three edge functions do the work:
+`stripe-checkout` starts a purchase, `stripe-billing-portal` opens Stripe's
+customer portal (where a member switches plan, changes the card or cancels),
+and `stripe-webhook` turns Stripe's events into the member's plan. The live
+price ids are in `src/lib/stripe-config.js`.
+
+The setup and the rules in this section were moved here on 12 November 2026
+from the Stripe plan switching notes that used to sit at the top of `docs/`.
+The test log that proved them (30 September to 8 October 2026) is now
+`docs/planning/history/stripe-plan-switching-2026-10.md`.
+
+### Which Stripe account
+
+Use the Geck Inspect account, `acct_1TUx7dLBdc4xGjxq`. On 30 September 2026 the
+Stripe tool connected to Claude sessions showed only a different account
+("Apparently!"). Never use that account for Geck Inspect billing.
+
+### Customer portal setup
+
+A member changes plan in Stripe's customer portal, so the portal has to be set
+up to allow it. In both test mode and live mode, open Settings, Billing,
+Customer portal, select the Default configuration, and expand Subscriptions.
+
+1. Enable "Customers can switch plans".
+2. Include Keeper and Breeder only, each with its monthly and annual price.
+   Exclude Enterprise and Posting Overage. Test mode has its own price ids; use
+   the test catalog there.
+3. Allow billing interval changes. Prorate upgrades and invoice immediately.
+4. Schedule downgrades and shorter billing intervals at period end. Breeder
+   monthly to Keeper monthly waits for the period end. So does Breeder monthly
+   to Breeder annual, because the annual price is cheaper per month; the
+   member's profile stays monthly until the scheduled change happens.
+5. Under Business information, set Terms to https://geckinspect.com/Terms and
+   Privacy to https://geckinspect.com/PrivacyPolicy, keep the support address
+   (`SUPPORT_EMAIL` in `src/lib/supportContact.js`) as the support email, and
+   set the return link to https://geckinspect.com/Membership.
+6. Save, then open a portal session and look before calling it done.
+
+State when last verified (30 September to early October 2026): the live default
+configuration `bpc_1UC0v0LBdc4xGjxq2sqr5p86` and the test default
+`bpc_1ULQc0LBdc4xGjxqn7JSnJ4p` allow switching between the four Keeper and
+Breeder prices only, with quantity changes off, upgrades prorated and invoiced
+at once, and cheaper plans or shorter intervals changed at period end. Both
+return to Membership. A live Keeper to Breeder switch kept one subscription id
+and set the right plan on the profile.
+
+Stripe's own guides: https://docs.stripe.com/customer-management and
+https://docs.stripe.com/customer-management/configure-portal.
+
+Things the tests showed, which a future change must respect:
+
+- **One item per subscription.** The portal refuses to update a subscription
+  that has more than one item ("This PortalSession cannot update subscription
+  ... because it has multiple items"). That is why the social post overage
+  item stays off: checkout attaches it only when `STRIPE_OVERAGE_ENABLED` is
+  exactly `true`, `STRIPE_OVERAGE_PRICE_ID` is set and the cycle is monthly. Do
+  not switch it on again without reworking the plan-switch flow.
+- **Do not trust `metadata.tier`.** On a subscription it is the plan from the
+  original Checkout session. A switch in the portal does not update it, so a
+  subscription can say `tier: keeper` while its price is Breeder. The webhook
+  ignores the field and reads the price on the subscription item. Do not edit
+  the metadata by hand.
+- **Cancelling in the portal sets `cancel_at`**, with `cancel_at_period_end`
+  left false, so that flag alone does not show a cancellation. The membership
+  stays active until Stripe really cancels it.
+- **A used single-use coupon may not survive a scheduled plan change.** In the
+  live test a 100% coupon survived the immediate upgrade but was dropped when
+  the annual change was scheduled.
+- **Tax.** No tax rate is applied and Stripe Tax is not set up. Turning it on
+  needs the right registrations first.
+
+### Webhook events
+
+The membership webhook is
+`https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/stripe-webhook`. The
+list below is every event the function handles
+(`supabase/functions/stripe-webhook/index.ts`). The endpoint in the Stripe
+Dashboard (Developers, Webhooks, live mode) has to be subscribed to all of
+them.
+
+| Event | What the webhook does with it | Selected on the endpoint? |
+|---|---|---|
+| `checkout.session.completed` | Starts a membership bought through `stripe-checkout`. For a lifetime plan, grants it when the payment is marked paid | Yes |
+| `customer.subscription.created`, `customer.subscription.updated` | Sets the plan from the price on the subscription item, and records a cancellation the moment Stripe reports one | Yes |
+| `customer.subscription.deleted` | Ends the plan (sets the member to Free) when it is the member's current subscription | Yes |
+| `invoice.paid`, `invoice.payment_succeeded` | The same payment, delivered twice. It is applied once, so there is no second month and no second referral credit. Keep both selected | Yes |
+| `invoice.payment_failed` | Marks the subscription past due, which shows the "update your card" banner | Yes |
+| `charge.refunded` | See "Refunds and disputes" below | To add (step C4) |
+| `charge.dispute.created`, `charge.dispute.updated`, `charge.dispute.closed`, `charge.dispute.funds_withdrawn`, `charge.dispute.funds_reinstated` | See "Refunds and disputes" below | To add (step C4) |
+| `customer.subscription.trial_will_end` | Arrives about three days before a trial ends. Refreshes the plan and does not remove access | To add (step C4) |
+| `checkout.session.async_payment_succeeded` | Grants a lifetime plan paid with a delayed payment method | To add (step C4) |
+
+The last column is what the notes at the top of the function record: seven
+events already selected, eight to add. It was not read from the Stripe
+Dashboard. **The open step** is adding those eight by hand: step C4 of
+[OWNER-STEPS.md](OWNER-STEPS.md) has the link and the exact list. Until it is
+done a refund never reaches the app (the 17 October refund is not on the
+Revenue card for this reason). Add events; never remove one that is already
+selected. If test mode has its own endpoint, do the same there.
+
+Each event id is applied once: a redelivery or a replay from the Dashboard of
+an event that already finished is answered 200 and skipped. A database write
+that fails makes the whole event fail (500), so Stripe sends it again.
+
+### Refunds and disputes
+
+What these events do to a member's access once the endpoint receives them:
+
+- **A full refund of the subscription's latest membership invoice sets the
+  member to Free.** If the latest invoice cannot be read, a full refund that
+  still belongs to that subscription does the same. A partial refund does not.
+  A refund of an older invoice does not take away a plan the member has
+  already renewed; only the amount is recorded.
+- **A chargeback sets the member to Free** (dispute status `needs_response`,
+  `under_review` or `lost`, or the funds withdrawn). If the dispute is won, or
+  Stripe returns the funds, access comes back only while that subscription is
+  still active or trialing. An inquiry (`warning_needs_response`) does not
+  remove access.
+- **A lifetime plan** is removed by a full refund or a dispute of its payment.
+- **A trial ending** does not remove access by itself. Access ends when Stripe
+  marks the subscription `canceled`, `unpaid` or `incomplete_expired`, which
+  arrives as `customer.subscription.updated` or `customer.subscription.deleted`.
+- **A refund removes access in Geck Inspect. It does not cancel the Stripe
+  subscription.** If the refund should also stop the next bill, cancel that
+  subscription in the Stripe Dashboard by hand.
+
 ## Release checks
 
 - Run Vitest billing and identity tests, Deno checks for both entry points, and
@@ -188,8 +325,12 @@ redeployed.
   RevenueCat dashboard reports its in-app purchase key as valid.
 - On 17 October 2026, both production and sandbox Apple server notification
   URLs were configured with this app's receiver from RevenueCat settings.
-  No delivery has been observed yet. Send a test notification or run the
-  sandbox lifecycle test and verify receipt; configuration alone is not proof.
+  Delivery has since been observed in production: a sandbox Breeder annual
+  purchase on 18 October arrived through RevenueCat, 8 renewals followed, and
+  the member's `breeder` entitlement was active when checked on 26 October
+  (the 26 October section of [APP_STORE_REQUIREMENTS.md](APP_STORE_REQUIREMENTS.md)).
+  That was the last open billing proof, so `NATIVE_BILLING_WEBHOOK_VERIFIED=true`
+  can be set for the store build.
 - On the actual release binary, use an ordinary account for Keeper and Breeder
   sandbox purchases, restore after reinstall, upgrade, cancellation with paid
   time remaining, expiration/refund, and an account transfer. Verify both UI and

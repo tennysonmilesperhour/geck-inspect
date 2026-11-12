@@ -1,36 +1,39 @@
 # Infrastructure that lives in production
 
-> **Corrections, 11 November 2026.** Counts: the repository holds 39 edge functions and `supabase/config.toml` declares 34 (the text below says 37 and 33; `apple-token` was added on 10 November). "Once round 3 is merged" is done: it merged on 16 October.
-
 What Geck Inspect runs on that the repository cannot rebuild by itself, and how the parts the repository does hold reach production.
 
 How this was checked: read-only queries against the production database (`mmuglfphhwlaluyfyxsp`) and its edge function list on 16 October 2026, plus a file-by-file comparison of each hand-deployed function's live code with the repo copy. Re-checked on 28 October 2026 (about 02:00 UTC): the newest migration, the edge function list and each `verify_jwt`, the scheduled jobs and the Vault secret names. Secret values were never read; only names. Re-run the queries in section 8 before relying on a number here.
 
+On 12 November 2026 the counts in section 2 were re-counted from the repository (`supabase/functions` and `supabase/config.toml`). Production was not read on that day.
+
 ## 1. How a change reaches production
 
-A merge to `main` sets off three things at once, in no guaranteed order, usually within a minute:
+Merging to `main` deploys the site, applies new migration files and deploys the edge functions declared in `supabase/config.toml`, all at once; `docs/MIGRATIONS.md` tells the whole story and what it means for anyone writing a migration or changing a function.
 
-1. **Vercel** builds and deploys the site from that commit.
-2. **The Supabase GitHub integration applies new migration files.** Every root-level file in `supabase/migrations/` whose version production's history does not have yet runs, in filename order, and is recorded under the file's own version. On 28 October 2026, checked just before that day's merge (about 01:50 UTC), the newest recorded version was `20261024210200_weekly_notes_activity_and_erasure`. Two more were applied by the 28 October merge (commit `383ba6af`, recorded by 02:02 UTC):
-   - `20261028014800_quiet_morph_eval_account.sql` turns email off (Weekly Gecko Notes and notifications) for the Morph ID evaluation account, whose address has no mailbox. Data only.
-   - `20261028015600_market_health_full_pass.sql` makes `market_data_health()` report the last full market pass (`last_complete_pass_at`, `coverage_pct`, `us_last_full_day`). The daily canary then fails while that pass is more than 9 days old, so it will fail every day until the US feed runs again.
+What this file adds is the state of production when it was last read:
 
-   Details: `docs/planning/deploy-queue-2026-10-03.md`, 28 October. Query 8.1 shows the newest versions.
-3. **The same integration deploys the edge functions declared in `supabase/config.toml`**, each with the `verify_jwt` setting written there. A function with no `[functions.<name>]` block is never touched by a merge; it keeps whatever was last deployed by hand.
-
-Members keep old copies of the app open for hours, so every change has to work when the new database meets the old app and when the new app meets the old database (`docs/MIGRATIONS.md` explains how).
-
-A migration file must never be dated earlier than a version production has already recorded. The Supabase tools refuse to apply a file that sorts before something already applied (MIGRATIONS.md, "Never date it in the future"). Check the newest recorded version (query 8.1) before naming a new file.
+- **Newest migration recorded.** On 28 October 2026, just before that day's merge (about 01:50 UTC), it was `20261024210200_weekly_notes_activity_and_erasure`. That merge (commit `383ba6af`, recorded by 02:02 UTC) applied two more: `20261028014800_quiet_morph_eval_account.sql` (turns email off for the Morph ID evaluation account, whose address has no mailbox; data only) and `20261028015600_market_health_full_pass.sql` (makes `market_data_health()` report the last full market pass, so the daily canary fails while that pass is more than 9 days old). Migrations merged after that are in `supabase/migrations/` and in `docs/planning/deploy-queue-2026-10-03.md`; query 8.1 shows what production has recorded.
+- **Which functions a merge deploys** is section 2.
 
 ## 2. Edge functions
 
-On 28 October 2026 production ran 37 functions, all listed below. 33 are declared in `supabase/config.toml` (15 since round 1 and 2, 15 more on 16 October 2026 after their live code was compared with the repo, and three added since), so a merge deploys them. The four live but not declared are `admin-end-trial`, `embed-gecko-image`, `export-training-corpus` and `rapid-api`. The repo also holds two functions that have never been deployed. Every `verify_jwt` below matched production on 28 October.
+**The counts, and this is the one place they are written down.** Counted from the repository on 12 November 2026:
+
+- **39 function folders** in `supabase/functions` (the `_shared` folder is helper code, not a function).
+- **34 of them are declared** in `supabase/config.toml` (one `[functions.<name>]` block each), so a merge deploys them.
+- **5 are not declared**, so a merge never touches them: `admin-end-trial`, `embed-gecko-image` and `export-training-corpus` are live and were deployed by hand; `store-checkout` and `store-stripe-webhook` have never been deployed (the supplies store is retired).
+
+To count again: `ls -d supabase/functions/*/ | grep -vc _shared` and `grep -c '^\[functions\.' supabase/config.toml`.
+
+Production was last read on 28 October 2026. It ran 37 functions then: the 33 that were declared at the time, plus `admin-end-trial`, `embed-gecko-image`, `export-training-corpus` and `rapid-api` (which has no copy in the repository). `apple-token` was added and declared on 10 November, so production should now run 38; that has not been read back. Every `verify_jwt` below matched production on 28 October, and the `apple-token` row is from `supabase/config.toml`.
+
+The table lists every function production runs or should run, 38 rows. The two store functions that were never deployed are named under it.
 
 | Function | verify_jwt | Declared | Who calls it |
 |---|---|---|---|
 | admin-delete-account | true | yes | A signed-in admin erasing an account |
 | admin-end-trial | true | no | Admin tool; not in use. Tennyson is deleting it (still live on 28 October) |
-| apple-token | true | yes | The iPhone app right after Sign in with Apple: swaps the one-time code for Apple's refresh token and stores it in `apple_sign_in_tokens` so deleting the account can revoke it (added 10 November, after the 28 October count above) |
+| apple-token | true | yes | The iPhone app right after Sign in with Apple: swaps the one-time code for Apple's refresh token and stores it in `apple_sign_in_tokens` so deleting the account can revoke it (added 10 November, after production was last read) |
 | csp-report | false | yes | Browsers posting Content-Security-Policy reports |
 | delete-my-account | true | yes | A member deleting their own account in Settings |
 | discard-empty-account | true | yes | "Use my existing account" on the Add your email screen: deletes the caller's login only when it is an empty social sign-in (no email, no phone) |
@@ -67,7 +70,7 @@ On 28 October 2026 production ran 37 functions, all listed below. 33 are declare
 | verify-morphmarket-store | true | yes | A member proving they own a MorphMarket store (code in the store's About text); added 19 Oct 2026 |
 | waitlist-signup | false | yes | Public waitlist sign-ups and confirmations |
 
-In the repo but not deployed: `store-checkout` and `store-stripe-webhook` (the supplies store checkout is off).
+In the repo but not deployed: `store-checkout` and `store-stripe-webhook` (the supplies store is retired and its checkout is off).
 
 **Why two hand-deployed functions are not declared.** Declaring a function makes the next merge deploy the repo copy, whatever production had. These two differ from what runs, so declaring them would change behaviour:
 
@@ -122,36 +125,36 @@ Since 16 October 2026 each member photo in `geck-inspect-media` also has a small
 
 Notes: geck-inspect-media has each of its read, upload, update and delete rules twice under two naming styles; the copies are identical in effect. Only the uploader or an admin can change or delete a file. Tidying these rules (one copy of each, and narrower rules where the app's folder layout allows) is a follow-up, to be written as a migration so the repo holds them.
 
-The repo's migrations do not create these buckets or policies. The local test mirror recreates them by hand (`scripts/sql-harness/sql/99_post.sql` once round 3 is merged).
+The repo's migrations do not create these buckets or policies. The local test mirror recreates them by hand (`scripts/sql-harness/sql/99_post.sql`).
 
 ## 4. Scheduled jobs (pg_cron)
 
-Times are UTC. As found on 28 October 2026: 22 jobs, 20 active, and no failed run in the 8 days of history the database keeps. "In the repo" says whether a runnable migration creates the job; the ones marked "archive only" exist in production but only in `supabase/migrations/_pre_rebaseline_history/`, because the September schema dump does not carry `cron.job` rows.
+This table is the one home for database job schedules; `docs/OPERATIONS.md`, section 5, points here and adds how to run them. Times are UTC. As found on 28 October 2026, with the five reminder rows updated for the 31 October change from its migration: 22 jobs, 20 active, and no failed run in the 8 days of history the database keeps. "In the repo" says whether a runnable migration creates the job; the ones marked "archive only" exist in production but only in `supabase/migrations/_pre_rebaseline_history/`, because the September schema dump does not carry `cron.job` rows.
 
-| Job | Schedule | Active | Runs | In the repo |
-|---|---|---|---|---|
-| clear-lapsed-featured-breeders | 04:50 daily | yes | `clear_lapsed_featured_breeders()` | yes |
-| expire-referral-grants | 04:30 daily | yes | `expire_referral_grants()` | archive only |
-| feeding-reminders-daily | :10 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('feeding')`, which calls `enqueue_feeding_reminders()` | yes |
-| hatch-alerts-daily | :00 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('hatch')`, which calls `enqueue_hatch_alerts()` | yes (`20261031010000_reminder_time_zones.sql`) |
-| lifecycle-emails-hourly | :35 every hour | yes | `enqueue_lifecycle_emails()` | yes |
-| market-after-scrape-requests | every 5 minutes | yes | `geck_data.run_requested_after_scrape()` | yes |
-| market-brief-morning | :35, 13:00 to 20:00 | yes | `enqueue_market_briefs()` | yes |
-| market-value-daily | 12:40 daily | yes | `request_market_value_snapshot()` | yes |
-| personal-weighin-reminders-daily | :20 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('weigh_in')`, which calls `enqueue_personal_weighin_reminders()` | yes |
-| privacy-retention-daily | 04:05 daily | yes | `apply_privacy_retention(90)` | yes (`20261016090000_privacy.sql`) |
-| process-scheduled-blog-posts | every 5 minutes | **no** | `process_scheduled_blog_posts()` | yes |
-| promote_drain_scheduled | every 5 minutes | **no** | `publish_due_scheduled_posts()` | yes |
-| prune-stale-push-subscriptions | 03:17 daily | yes | `prune_stale_push_subscriptions()` | archive only |
-| purge-cron-run-details | 03:47 daily | yes | `purge_cron_run_details(7)` | yes |
-| refresh-market-matviews | :20 every hour | yes | `geck_data.after_scrape('hourly')` | yes |
-| season-planner-reminders-daily | :20 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('planner')`, which calls `enqueue_season_planner_reminders()` | yes |
-| vet-followups-daily | :25 every hour (7 am local per member, since 31 Oct) | yes | `run_reminders_local('vet')`, which calls `enqueue_vet_followups()` | yes |
-| weekly-digest-sunday | 16:00 Sunday | yes | `enqueue_weekly_digest()` | yes |
-| weekly-notes-hourly | :50 every hour | yes | `enqueue_weekly_notes()` (members, then confirmed visitors) | yes (`20261018002200_weekly_notes.sql`, `20261018120000_weekly_notes_visitors.sql`) |
-| weekly-notes-repermission-hourly | :55 every hour | yes | `enqueue_weekly_notes_repermission()` (the one-time re-permission email, 20 a run) | yes (`20261024150000_weekly_notes_personal_and_repermission.sql`) |
-| weekly-notes-visitor-cleanup | 04:25 daily | yes | `weekly_notes_visitor_cleanup()` | yes (`20261018120000_weekly_notes_visitors.sql`) |
-| weighin-reminders-weekly | 15:00 Sunday | yes | `enqueue_weighin_reminders()` | archive only |
+| Job | Schedule | Active | What it does | Runs | In the repo |
+|---|---|---|---|---|---|
+| clear-lapsed-featured-breeders | 04:50 daily | yes | Removes expired featured breeder slots | `clear_lapsed_featured_breeders()` | yes |
+| expire-referral-grants | 04:30 daily | yes | Ends referral free months | `expire_referral_grants()` | archive only |
+| feeding-reminders-daily | :10 every hour (7 am local per member, since 31 Oct) | yes | Feeding reminders | `run_reminders_local('feeding')`, which calls `enqueue_feeding_reminders()` | yes |
+| hatch-alerts-daily | :00 every hour (7 am local per member, since 31 Oct) | yes | Hatch window alerts: one a day per member while an egg is near its date, one every 6 days otherwise | `run_reminders_local('hatch')`, which calls `enqueue_hatch_alerts()` | yes (`20261031010000_reminder_time_zones.sql`) |
+| lifecycle-emails-hourly | :35 every hour | yes | The getting-started emails (day 0 to day 14). Switch: `app_settings` `lifecycle_emails_enabled` | `enqueue_lifecycle_emails()` | yes |
+| market-after-scrape-requests | every 5 minutes | yes | Follow-up work after a market scrape | `geck_data.run_requested_after_scrape()` | yes |
+| market-brief-morning | :35, 13:00 to 20:00 | yes | The Market page's daily brief | `enqueue_market_briefs()` | yes |
+| market-value-daily | 12:40 daily | yes | Value estimate snapshot | `request_market_value_snapshot()` | yes |
+| personal-weighin-reminders-daily | :20 every hour (7 am local per member, since 31 Oct) | yes | Weigh-in reminders that follow each gecko | `run_reminders_local('weigh_in')`, which calls `enqueue_personal_weighin_reminders()` | yes |
+| privacy-retention-daily | 04:05 daily | yes | Deletes `error_logs`, `geck_data.error_logs` and `agent_hits` rows older than 90 days; empties old Stripe, payment ledger and RevenueCat webhook payloads but keeps the rows | `apply_privacy_retention(90)` | yes (`20261016090000_privacy.sql`) |
+| process-scheduled-blog-posts | every 5 minutes | **no** | Inactive: the blog is shelved | `process_scheduled_blog_posts()` | yes |
+| promote_drain_scheduled | every 5 minutes | **no** | Inactive: scheduled social posts (Promote is retired) | `publish_due_scheduled_posts()` | yes |
+| prune-stale-push-subscriptions | 03:17 daily | yes | Drops dead web push subscriptions | `prune_stale_push_subscriptions()` | archive only |
+| purge-cron-run-details | 03:47 daily | yes | Deletes job history older than about 7 days | `purge_cron_run_details(7)` | yes |
+| refresh-market-matviews | :20 every hour | yes | Rebuilds the market summary views | `geck_data.after_scrape('hourly')` | yes |
+| season-planner-reminders-daily | :20 every hour (7 am local per member, since 31 Oct) | yes | Breeding season (Season Planner) reminders | `run_reminders_local('planner')`, which calls `enqueue_season_planner_reminders()` | yes |
+| vet-followups-daily | :25 every hour (7 am local per member, since 31 Oct) | yes | Vet follow-up reminders | `run_reminders_local('vet')`, which calls `enqueue_vet_followups()` | yes |
+| weekly-digest-sunday | 16:00 Sunday | yes | The weekly digest email | `enqueue_weekly_digest()` | yes |
+| weekly-notes-hourly | :50 every hour | yes | Weekly Gecko Notes, one short email a week after the first two weeks. Switch: `app_settings` `weekly_notes_enabled` | `enqueue_weekly_notes()` (members, then confirmed visitors) | yes (`20261018002200_weekly_notes.sql`, `20261018120000_weekly_notes_visitors.sql`) |
+| weekly-notes-repermission-hourly | :55 every hour | yes | The one-time "Still keeping crested geckos?" email to members the weekly notes gate leaves out, 20 a run. Switch: `app_settings` `weekly_notes_repermission_enabled` | `enqueue_weekly_notes_repermission()` | yes (`20261024150000_weekly_notes_personal_and_repermission.sql`) |
+| weekly-notes-visitor-cleanup | 04:25 daily | yes | Drops visitor sign-ups for Weekly Gecko Notes that were never confirmed after 30 days, and form log rows older than 30 days | `weekly_notes_visitor_cleanup()` | yes (`20261018120000_weekly_notes_visitors.sql`) |
+| weighin-reminders-weekly | 15:00 Sunday | yes | The older weekly weigh-in nudge | `enqueue_weighin_reminders()` | archive only |
 
 **Reminders in local time** (`20261031010000_reminder_time_zones.sql`). The five daily reminder jobs keep their names but run every hour. `run_reminders_local(job)` finds the time zones where it is now 7 am (each member's `profiles.time_zone`, and `America/Los_Angeles` for members with none saved), sets the session time zone to each in turn so "today" is the member's day, and runs the reminder function for members in that zone only (`reminder_recipient_due`). A reminder function called by hand still reminds everyone on the UTC day, as before. The app saves the browser's zone on the next sign-in when none is saved, and Settings, Feeding Alerts lets the member change it.
 
@@ -161,7 +164,7 @@ Jobs that call an edge function (the functions behind `market-value-daily`, the 
 
 **Weekly Gecko Notes** (`docs/planning/weekly-notes-2026-10.md`). `weekly-notes-hourly` runs `enqueue_weekly_notes()`, which does one lookup and stops while `app_settings` `weekly_notes_enabled` is false (the default). It has been true since 02:29 UTC on 18 October. When it is on, it asks send-email about up to 20 members a run and records each ask in `weekly_notes_polls` (one row per member, at most one ask in 20 hours). send-email claims each note with `claim_weekly_note()`, which writes `weekly_notes_sends` (unique on address and slug). `weekly_notes_candidates()` (read-only) shows who is due; `unsubscribe_weekly_notes_by_token()` (open to signed-out visitors, signature checked) turns off only `profiles.email_weekly_notes_enabled` and records the choice in `profiles.email_weekly_notes_choice_at`, and the trigger `profiles_weekly_notes_follow_email_off` turns it off whenever `email_notifications_enabled` goes from on to off. For the EEA and the UK (decision 58): `handle_new_auth_user` (the `on_auth_user_created` trigger) saves the sign-up box (`weekly_notes_at_signup` in the sign-up metadata) as the member's choice, and `weekly_notes_region_default()`, which signed-in members may run on their own profile only, turns the notes off for a member who never chose; the trigger `profiles_weekly_notes_stamp_choice` puts the database's clock on every choice. All but the unsubscribe and the region rule are service role only; admins can read both tables. The edge function secret `EMAIL_POSTAL_ADDRESS` now gates the notes: while it is empty, send-email skips every weekly note before claiming, so nothing is used up.
 
-**Weekly Gecko Notes for visitors** (section 9 of the plan, `20261018120000_weekly_notes_visitors.sql`). The form on the public guide pages posts to `subscribe-weekly-notes`, which calls `request_weekly_notes_signup()` (service role: rate limits, then a confirmation link whose sha256 is kept in `newsletter_subscribers.confirm_token_hash`; every email the form sends is logged in `weekly_notes_signup_sends`). `/WeeklyNotes?t=...` calls `confirm_weekly_notes_signup(p_token)` (open to signed-out visitors, the database's clock; `confirm_weekly_notes_signup_at` with a clock is service role only) on a button press. The per-inbox limit uses `email_inbox_key()` (`weekly_notes_signup_sends.inbox_key`). Confirmed visitors with no sign-in account are `weekly_notes_subscriber_candidates()`; the hourly job asks send-email about them with `weekly.audience = 'visitor'`, and send-email claims with `claim_weekly_note_subscriber()` (same lock and ledger as members). Their stop link is `weekly_notes_subscriber_token()` / `unsubscribe_weekly_notes_subscriber()`, which also turns off the member switch on any profile for the same inbox and records the choice. What counts as a visitor stop is one function, `weekly_notes_visitor_stop_at()` (any spelling of the inbox, after a request, not followed by a newer sign-up); the trigger `profiles_weekly_notes_visitor_stop` (before insert on profiles), `weekly_notes_region_default()`, `weekly_notes_candidates()` and the visitor candidates all use it. Suppressions are matched by `email_inbox_suppressed()` for visitors, the homepage guide form and members (`email_is_suppressed()`, send-email's check, now calls it). "Already signed up" is `weekly_notes_inbox_signed_up()`. Expression indexes on `email_inbox_key(email)` (`email_suppressions_inbox_idx`, `newsletter_subscribers_inbox_idx`, `weekly_notes_sends_inbox_idx`) and the generated column `guide_email_sends.inbox_key` keep the inbox lookups fast (with `profiles_email_lower_idx` on `profiles (lower(email))` once 20261024182000 is merged); because of them, only the service role and the database's own functions may write those tables (both can), and a change to `email_inbox_key()` needs a REINDEX and a rewrite of that column. `newsletter_subscribers` is closed to the public API (admins read it). `weekly-notes-visitor-cleanup` drops unconfirmed requests after 30 days and deletes rows older than 30 days from both form logs (`weekly_notes_signup_sends` and the homepage guide form's `guide_email_sends`). To erase a visitor on request: `select public.admin_erase_weekly_notes_visitor('name@example.com');` in the SQL console.
+**Weekly Gecko Notes for visitors** (section 9 of the plan, `20261018120000_weekly_notes_visitors.sql`). The form on the public guide pages posts to `subscribe-weekly-notes`, which calls `request_weekly_notes_signup()` (service role: rate limits, then a confirmation link whose sha256 is kept in `newsletter_subscribers.confirm_token_hash`; every email the form sends is logged in `weekly_notes_signup_sends`). `/WeeklyNotes?t=...` calls `confirm_weekly_notes_signup(p_token)` (open to signed-out visitors, the database's clock; `confirm_weekly_notes_signup_at` with a clock is service role only) on a button press. The per-inbox limit uses `email_inbox_key()` (`weekly_notes_signup_sends.inbox_key`). Confirmed visitors with no sign-in account are `weekly_notes_subscriber_candidates()`; the hourly job asks send-email about them with `weekly.audience = 'visitor'`, and send-email claims with `claim_weekly_note_subscriber()` (same lock and ledger as members). Their stop link is `weekly_notes_subscriber_token()` / `unsubscribe_weekly_notes_subscriber()`, which also turns off the member switch on any profile for the same inbox and records the choice. What counts as a visitor stop is one function, `weekly_notes_visitor_stop_at()` (any spelling of the inbox, after a request, not followed by a newer sign-up); the trigger `profiles_weekly_notes_visitor_stop` (before insert on profiles), `weekly_notes_region_default()`, `weekly_notes_candidates()` and the visitor candidates all use it. Suppressions are matched by `email_inbox_suppressed()` for visitors, the homepage guide form and members (`email_is_suppressed()`, send-email's check, now calls it). "Already signed up" is `weekly_notes_inbox_signed_up()`. Expression indexes on `email_inbox_key(email)` (`email_suppressions_inbox_idx`, `newsletter_subscribers_inbox_idx`, `weekly_notes_sends_inbox_idx`) and the generated column `guide_email_sends.inbox_key` keep the inbox lookups fast (with `profiles_email_lower_idx` on `profiles (lower(email))`, from `20261024182000`); because of them, only the service role and the database's own functions may write those tables (both can), and a change to `email_inbox_key()` needs a REINDEX and a rewrite of that column. `newsletter_subscribers` is closed to the public API (admins read it). `weekly-notes-visitor-cleanup` drops unconfirmed requests after 30 days and deletes rows older than 30 days from both form logs (`weekly_notes_signup_sends` and the homepage guide form's `guide_email_sends`). To erase a visitor on request: `select public.admin_erase_weekly_notes_visitor('name@example.com');` in the SQL console.
 
 ## 5. Vault secrets (names only)
 

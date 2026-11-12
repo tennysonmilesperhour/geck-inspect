@@ -32,7 +32,7 @@ Written 11 November 2026. If a name here and a name in the app disagree, the app
 | **Price Index** | The public table of crested gecko asking prices by trait (`/crested-gecko-price`, `/data`). Asking prices from listings, not sale prices. |
 | **Value estimate** | What a gecko is likely to list for, from the Price Index, shown on its record. An estimate, not an appraisal. |
 | **Portfolio** | The estimated value of a whole collection. |
-| **Plans** | Free (10 geckos), Keeper ($2.99 a month, 50 geckos), Breeder ($5.99 a month, unlimited), Enterprise ($99.99 a month, off sale). The code is the truth: `src/lib/tierLimits.js` and `src/lib/stripe-config.js`. |
+| **Plans** | Free (10 geckos), Keeper ($2.99 a month, 50 geckos), Breeder ($5.99 a month, unlimited), Enterprise ($99.99 a month, off sale). This line is a summary as of 12 November 2026. The code is the source: `src/lib/stripe-config.js` for prices and `src/lib/tierLimits.js` for limits. The full table, with yearly and lifetime prices, is `docs/CONTEXT.md`, section 5. |
 | **Comp** | A paid plan given free to a member. A comped account does not count as a paying breeder on the scoreboard. |
 | **Founding Breeder offer** | $120 prepaid for a year of Breeder, offered in breeder conversations. |
 | **Weekly active breeder** | A member who logged a weigh-in, feeding, shed, vet visit or event on their own gecko in the last 7 days. The plan's main number. Not the same as "weekly active member" (anyone who signed in). |

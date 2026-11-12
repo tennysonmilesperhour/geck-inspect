@@ -1,8 +1,8 @@
 # P6: Batch Husbandry Operations
 
-> **Status, 11 November 2026: Built, and Dated.** Live as one page, `/BatchHusbandry` (`src/pages/BatchHusbandry.jsx`), on the Breeder plan. The routes and the table columns in this spec differ from what shipped. The experience review proposes folding it into the one-tap log (package WP-4).
+> **Status, 11 November 2026: Built, and Dated.** Live as one page, `/BatchHusbandry` (`src/pages/BatchHusbandry.jsx`), on the Breeder plan. The routes and the table columns in this spec differ from what shipped. The experience review proposes folding it into the one-tap log (package WP-4). The paste-ready build prompt that ended this file was removed on 12 November 2026 (git keeps it).
 
-> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+> **Design note (15 October 2026, shortened 12 November 2026):** this spec was written for a set of fonts and a green colour palette that never shipped. The lines that set them out were in the build prompt, which has been removed. Any colour name still in the text below (sage, forest, ember gold) comes from that palette: ignore it. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P6
 **Dependencies:** P1 (Animal Passport. FeedingRecord and WeightRecord tables)
@@ -66,51 +66,4 @@ Same concept: select a group, enter weights for each animal in a list.
 
 ---
 
-## Claude Code Prompt
-
-```
-Build Batch Husbandry Operations for Geck Inspect.
-
-DESIGN SYSTEM: [PASTE GLOBAL DESIGN SYSTEM]
-
-CONTEXT: Animal Passport (P1) is built. Animals have FeedingRecord and WeightRecord tables.
-This is an enhancement to the existing collection UX, no new tables needed,
-just new UI that creates multiple records at once.
-
-New table needed:
-FeedingGroup {
-  id:            UUID
-  user_id:       UUID → User
-  name:          string
-  animal_ids:    array of UUID → Animal
-  default_food:  string
-  frequency_days: integer
-  created_at:    timestamp
-}
-
-BUILD:
-
-1. GROUPS TAB on /collection: alongside individual animal grid, "Groups" tab.
-   Group cards: name, animal count, "X due today" (count of animals past frequency_days
-   since last feed), "Feed group" CTA, edit/delete options.
-   "Create group" button: name, animal multi-select, frequency, default food type.
-
-2. BATCH FEED SCREEN (/groups/:id/feed):
-   Header: group name + "X animals due today".
-   Sorted list (most overdue first): animal photo + name | days since last feed (color coded)
-     | Fed / Refused toggle (default: Fed) | notes field (collapsed).
-   "Mark all as Fed" bulk toggle at top.
-   "Save log" → creates FeedingRecord for each toggled animal with today's date.
-   Post-save summary: "Logged X/Y. Z refused. View refusals →" with link to filter collection.
-
-3. BATCH WEIGHT SCREEN (/groups/:id/weigh):
-   Compact table: animal name | last weight (date) | new weight input.
-   Submit creates WeightRecord per row that has a value entered.
-   Inline amber flag for any new weight >10% below last weight.
-   "Skip" option per row for animals not being weighed that day.
-
-QUALITY:
-This feature is used daily, often on a phone in a gecko room.
-It must be extremely fast to interact with, large touch targets, minimal taps.
-The batch feed screen must load and save within 1 second.
-```
+The build prompt that stood here was removed on 12 November 2026 because its fonts, colours and routes were never shipped. Design is `docs/specs/DESIGN-SYSTEM.md`.

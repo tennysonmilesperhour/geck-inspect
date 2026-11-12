@@ -1,6 +1,6 @@
 # Weekly Gecko Notes, 18 October 2026
 
-> **Corrections, 11 November 2026.** The subjects in the section 4 table for notes 1, 3 and 16 differ from the files in `content/weekly-notes/`; the files are the truth. The Resend webhook has been connected since 24 October, so delivery numbers are no longer "empty until the webhook is connected". The switch and the postal address were both set on 18 October.
+> **Corrections, 11 November 2026.** The Resend webhook has been connected since 24 October, so delivery numbers are no longer "empty until the webhook is connected". The switch and the postal address were both set on 18 October.
 
 After a member's first two weeks (the five getting-started emails, `lifecycle-emails-2026-10.md`), each member gets **Weekly Gecko Notes**: one short email a week with one practical crested gecko tip and one button, in order, for as long as they stay subscribed. New notes are added over time by a scheduled Claude session, so a member who reaches the end simply waits for the next one.
 
@@ -129,9 +129,9 @@ The HTML version has "Change preferences" (Settings) next to the stop link. A me
 
 | Step | Slug | Subject | Button | Button with no gecko |
 |---|---|---|---|---|
-| 1 | `heat-is-the-bigger-risk` | Heat is the bigger risk for a crested gecko | Open the temperature guide (`/CareGuide/temperature`) | same button |
+| 1 | `heat-is-the-bigger-risk` | 82°F: the heat line for a crested gecko | Open the temperature guide (`/CareGuide/temperature`) | same button |
 | 2 | `watch-the-weight-trend` | One weight is a snapshot. The trend is the story. | Open your geckos (`/MyGeckos`) | Add a gecko (`/MyGeckos`) |
-| 3 | `today-tells-you-what-is-due` | Check each gecko's weigh-in reminder | Open My Geckos (`/MyGeckos`) | Add a gecko (`/MyGeckos`) |
+| 3 | `today-tells-you-what-is-due` | Is the weigh-in reminder on for each gecko? | Open My Geckos (`/MyGeckos`) | Add a gecko (`/MyGeckos`) |
 | 4 | `fresh-cgd-every-feeding` | Fresh CGD, every feeding | Open Today (`/Today`) | Read the CGD basics (`/CareGuide/cgd-basics`) |
 | 5 | `shed-rhythm-by-stage` | How often should your gecko shed? | Log a shed (`/FieldMode`) | Read about shedding (`/CareGuide/shedding`) |
 | 6 | `humidity-rises-at-night` | Humidity should rise at night and fall by day | Open the humidity guide (`/CareGuide/humidity`) | same button |
@@ -144,9 +144,9 @@ The HTML version has "Change preferences" (Settings) next to the stop link. A me
 | 13 | `a-lay-box-for-every-female` | Every adult female needs a lay box | Open Breeding (`/Breeding`) | Read about egg laying (`/CareGuide/egg-laying`) |
 | 14 | `pick-an-incubation-temperature` | Pick an incubation temperature, get a hatch window | Open Breeding (`/Breeding`) | Read about incubation (`/CareGuide/incubation`) |
 | 15 | `a-passport-before-it-leaves` | Give your gecko a passport before it leaves | Make a passport (`/MyGeckos`) | Read about hatchling records (`/CareGuide/hatching-and-record-keeping`) |
-| 16 | `start-from-the-gecko-you-want` | Start from the gecko you want | Plan backward (`/calculator/reverse`) | same button |
+| 16 | `start-from-the-gecko-you-want` | Plan a pairing backward, from the gecko you want | Plan backward (`/calculator/reverse`) | same button |
 
-The text is the copy from the workflow brief of 18 October, word for word. Tennyson asked for the notes to go out without waiting on his approval (section 1); any note can still be reworded by editing its body (section 6). Three changes were forced by the tests:
+The subject column was checked against the `subject:` line of each file in `content/weekly-notes/` on 12 November 2026; the files are the truth, and the subjects of notes 1, 3 and 16 were reworded there after the brief. Otherwise the text is the copy from the workflow brief of 18 October, word for word. Tennyson asked for the notes to go out without waiting on his approval (section 1); any note can still be reworded by editing its body (section 6). Three changes were forced by the tests:
 
 - Note 14's button opened `/Breeding?tab=hatchery`. Buttons may not carry a query string (the link rules in section 8), so it opens `/Breeding` and says "Open Breeding" instead of "Open the Hatchery". The body already tells the member to pick the Hatchery tab.
 - Notes 9 and 11 cited `src/data/keepers-guides/morph.js` lines 269 to 271 (and 270) as a source. Those lines are the "50% het, coin flip (visual x het)" badge on the do-not-use list, so the citation was dropped. The words of both notes did not change; the glossary lines they also cite support them.

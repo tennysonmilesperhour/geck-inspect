@@ -1,12 +1,12 @@
 # Operations
 
-> **Corrections, 11 November 2026.** The repository holds 39 edge functions, 34 declared. Promote's uses of the AI and social services are retired. Since 1 November both revenue figures read $2.99 a month (`docs/NOW.md`). Reminder emails and pushes no longer go at fixed UTC times: since 31 October they run hourly and send at 7 am in each member's own time zone, so the fixed times in section 5's database job table are out of date and section 4 of `docs/INFRASTRUCTURE.md` is the truth. Steps waiting on Tennyson are gathered in `docs/OWNER-STEPS.md`.
-
 What Geck Inspect runs on, what it costs, where the secrets live, what is backed up, what runs on a schedule, and the weekly checklist. Written 15 October 2026 for plan item E2 21 (and the costs page that item A12 of the review asked for) in `docs/planning/comprehensive-review-2026-10-14.md`.
 
 How this was checked: the repository (code, workflows, function source) and read-only queries against the production database on 15 October 2026. Nothing in the Stripe, Vercel, Resend, Anthropic, Replicate, PostHog or RevenueCat dashboards was looked at, so plans and bills from those services are marked **unknown** until Tennyson fills them in. Secret values never go in this file; only their names.
 
-Re-checked on 28 October 2026 (read-only): the Supabase plan, the edge function count, every scheduled job and its last 7 days, the newest migration, the secret names the function code reads, and the backup workflow's last run. Re-checked on 31 October 2026 (read-only): every scheduled job still runs with no failed run in its 7-day history, production still runs 37 functions (`rapid-api` and `admin-end-trial` among them), the Vault still holds only the two secrets in section 2, the storage counts in section 3, and the 25 October `db-backup` run still skipped for want of its secrets.
+Re-checked on 28 October 2026 (read-only): the Supabase plan, the edge function count, every scheduled job and its last 7 days, the newest migration, the secret names the function code reads, and the backup workflow's last run. Re-checked on 31 October 2026 (read-only): every scheduled job still runs with no failed run in its 7-day history, production's edge function list was unchanged (`rapid-api` and `admin-end-trial` still among them), the Vault still holds only the two secrets in section 2, the storage counts in section 3, and the 25 October `db-backup` run still skipped for want of its secrets.
+
+Corrected in the text on 12 November 2026 (no production access): the retired features, the revenue line, and the database job table, which now lives in one place (`docs/INFRASTRUCTURE.md`, section 4). Steps waiting on Tennyson are gathered in `docs/OWNER-STEPS.md`.
 
 Keep it true: when a service, secret, job or price changes, change this file in the same commit.
 
@@ -14,26 +14,26 @@ Keep it true: when a service, secret, job or price changes, change this file in 
 
 | Service | What Geck Inspect uses it for | Plan | Monthly cost |
 |---|---|---|---|
-| **Supabase** (project `mmuglfphhwlaluyfyxsp`) | The database (members, geckos, records, market data in `geck_data`), sign-in, photo storage, the edge functions (38 folders in `supabase/functions`; on 28 October production ran 37 functions, 33 of them declared in `supabase/config.toml`, and `docs/INFRASTRUCTURE.md` section 2 lists each one), scheduled jobs (pg_cron) and the secret store (Vault). Merging to `main` applies new migrations and deploys the functions declared in `supabase/config.toml` (`docs/MIGRATIONS.md`) | **Pro** (the organization's plan, read on 28 October). Storage held about 12.5 GB on 28 October, mostly market listing photos | **Unknown.** Pro lists at $25 a month before usage. Check Billing in the Supabase dashboard for the real bill |
+| **Supabase** (project `mmuglfphhwlaluyfyxsp`) | The database (members, geckos, records, market data in `geck_data`), sign-in, photo storage, the edge functions (`docs/INFRASTRUCTURE.md`, section 2, lists each one and says how many there are and which a merge deploys), scheduled jobs (pg_cron) and the secret store (Vault). Merging to `main` applies new migrations and deploys the functions declared in `supabase/config.toml` (`docs/MIGRATIONS.md`) | **Pro** (the organization's plan, read on 28 October). Storage held about 12.5 GB on 28 October, mostly market listing photos | **Unknown.** Pro lists at $25 a month before usage. Check Billing in the Supabase dashboard for the real bill |
 | **Vercel** | Hosts geckinspect.com: the app, prerendered pages, `middleware.js`, and four serverless routes in `api/` (`mcp.js`, `share.js`, `og-pairing.js`, and `morph-share.js` for shared Morph ID cards at `/morph-id/r/<id>`). Every push to `main` that changes more than `docs/` and top-level Markdown files deploys production (the `ignoreCommand` in `vercel.json` skips docs-only pushes). A second Vercel project hosts Geck Intellect (geck-data) | **Unknown** | **Unknown** |
-| **Stripe** | Website memberships: checkout, the billing portal, the membership webhook. The supplies store has its own checkout and webhook functions in the repo, but they are not deployed and store checkout is switched off (`src/lib/store/checkoutFlags.js`) | Pay as you go | No monthly fee. About 2.9% plus $0.30 a charge (about 12.9% of a $2.99 charge). Stripe Tax is not turned on in checkout |
+| **Stripe** | Website memberships: checkout, the billing portal, the membership webhook. The supplies store (retired on 16 October) has its own checkout and webhook functions in the repo, but they are not deployed and store checkout is switched off (`src/lib/store/checkoutFlags.js`) | Pay as you go | No monthly fee. About 2.9% plus $0.30 a charge (about 12.9% of a $2.99 charge). Stripe Tax is not turned on in checkout |
 | **RevenueCat** (project `20585b81`) | Store purchases inside the iPhone app; mirrors App Store entitlements into `revenuecat_entitlements` (`docs/BILLING.md`) | **Unknown** | **Unknown** |
 | **Apple Developer Program** | Needed to ship the iPhone app | $99 a year (`docs/native-shell-plan.md`) | About $8 a month, if enrolled (enrolment status not recorded) |
 | **Google Play Console** | Needed to ship the Android app | $25 once | None after sign-up (sign-up status not recorded) |
 | **Resend** | All email: reminders, digests, lifecycle emails, Weekly Gecko Notes, invites, inquiries, guide downloads, waitlist, the weekly reports. Senders seen in code: alerts@, invites@, hi@, system@, admin@ geckinspect.com, plus the personal sender in `EMAIL_FROM_PERSONAL` for the letters (section 2). Resend reports each email's delivery, opens, clicks, bounces and spam complaints back to the `resend-webhook` function, which records them in `email_deliveries` and stops mail to addresses that hard bounced or complained (`email_suppressions`). That needs the webhook set up in Resend (section 2) | **Unknown** | **Unknown** |
-| **Anthropic** (Claude API) | Morph ID, health screen, AI Consultant, Promote drafting, spreadsheet and photo import, the weekly changelog, the error-triage agent, Morph ID evaluation | Pay as you go (prepaid credit; it has run out once) | Usage based. Recorded: Morph ID about 3 cents a call; a full evaluation run about $6; the daily canary about 6 cents a day. Evaluation runs cost $23.84 in the 30 days before 14 October against $0.59 of member Morph ID use |
+| **Anthropic** (Claude API) | Morph ID, health screen, spreadsheet and photo import, the weekly changelog, the error-triage agent, Morph ID evaluation. The AI Consultant and Promote drafting used it too; both were retired for members on 16 October, and only admin tools still call `invoke-llm` | Pay as you go (prepaid credit; it has run out once) | Usage based. Recorded: Morph ID about 3 cents a call; a full evaluation run about $6; the daily canary about 6 cents a day. Evaluation runs cost $23.84 in the 30 days before 14 October against $0.59 of member Morph ID use |
 | **Replicate** | Photo fingerprints (embeddings) that Morph ID uses to find similar reference photos, plus the Morph ID page's warm-up (at most one a minute, a fraction of a cent each; it wakes the model before a member taps Identify, see `supabase/functions/recognize-gecko-morph/README.md`) | Pay as you go | Usage based, small. **Keep the credit at $5 or more.** Under $5, Replicate allows one request at a time, which slows evaluation runs and can make a warm-up and a member's identification wait on each other |
 | **PostHog** | Product analytics (the production build requires its key). Members are identified by account id, never email; EEA and UK visitors are asked first (section 7) | **Unknown** | **Unknown** |
 | **Google Analytics 4** and **Search Console** | Traffic and search data for the weekly growth report | Free | $0 |
 | **Google PageSpeed API** | The twice-monthly SEO audit | Free | $0 |
 | **GitHub** (Actions, Dependabot) | Code, CI, the scheduled bots in section 5 | Free for a public repository | $0 today. If the repository is made private (plan item E1 6), Actions minutes become limited on the Free plan; check usage after the switch |
-| **Govee API** | Enclosure sensor readings for members who connect a device (`iot-poll`) | Free API | $0 |
-| **Meta and Reddit apps** | Promote's social posting connections | Free | $0 |
+| **Govee API** | Enclosure sensor readings for members who connect a device (`iot-poll`). Switched off in the app (`IOT_SENSORS_ENABLED` in `src/lib/iotClient.js`), so nothing calls it today | Free API | $0 |
+| **Meta and Reddit apps** | Promote's social posting connections. Promote was retired on 16 October, so nothing uses them today; the apps and their secrets are kept | Free | $0 |
 | **Domain** (geckinspect.com) | The site and email sender domain | **Unknown registrar** | **Unknown** |
 | **Claude Code sessions** | Most of the building and the reviews | **Unknown** | **Unknown.** The adversarial review session alone cost over $100 |
 | **geck-data scraper** | Collects public crested gecko listings into `geck_data` (a separate repository; the adversarial review says it runs on Tennyson's Mac) | n/a | A residential proxy, if bought to restore the US feed, would add $5 to $15 a month |
 
-**Total:** unknown. The adversarial review estimated $60 to $300 a month, against $8.98 of monthly recurring revenue on 14 October (Stripe's figure, which the Revenue card shows; $2.99 with comped payers left out, and the comped $5.99 Breeder month ends about 1 November). The plan's day 30 target (Part E5) is a monthly cost under $100, and a tripwire fires at more than $150 a month with revenue under $50 at day 60. **Tennyson: please fill in each "Unknown" from the dashboards; that one table is what the scoreboard's "monthly cost" line needs.**
+**Total:** unknown. The adversarial review estimated $60 to $300 a month, against monthly recurring revenue of $2.99. That figure is from `docs/NOW.md`: on 31 October one Keeper paid $2.99 a month, and the Revenue card (Stripe's figure) still read $8.98 because of one $5.99 Breeder month that ended on 1 November and did not renew, so from that date both figures should read $2.99. It has not been re-read from production since. The plan's day 30 target (Part E5) is a monthly cost under $100, and a tripwire fires at more than $150 a month with revenue under $50 at day 60. **Tennyson: please fill in each "Unknown" from the dashboards; that one table is what the scoreboard's "monthly cost" line needs.**
 
 ## 2. Secrets: names and where they live
 
@@ -60,9 +60,9 @@ These are shared by every function in the project.
 | `REVENUECAT_API_KEY`, `REVENUECAT_WEBHOOK_AUTHORIZATION` | `revenuecat-sync`, `revenuecat-webhook` (the second must match the header set in the RevenueCat dashboard exactly) |
 | `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | `apple-token`, `delete-my-account`, `admin-delete-account`, `discard-empty-account` (Sign in with Apple token revocation; the key is the whole .p8 file from a Sign in with Apple key) |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | `send-push` |
-| `PLATFORM_CONNECTIONS_KEY` | Encrypts stored social tokens: `set-platform-connection`, `publish-social-post`, `meta-oauth-callback`, `reddit-oauth-callback` |
-| `META_APP_ID`, `META_APP_SECRET`, `META_OAUTH_REDIRECT`, `META_OAUTH_STATE_SECRET`, `META_OAUTH_SUCCESS_URL` | The Meta (Facebook, Instagram) connection |
-| `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_OAUTH_REDIRECT`, `REDDIT_OAUTH_STATE_SECRET`, `REDDIT_OAUTH_SUCCESS_URL`, `REDDIT_USER_AGENT` | The Reddit connection |
+| `PLATFORM_CONNECTIONS_KEY` | Promote (retired, kept). Encrypts stored social tokens: `set-platform-connection`, `publish-social-post`, `meta-oauth-callback`, `reddit-oauth-callback` |
+| `META_APP_ID`, `META_APP_SECRET`, `META_OAUTH_REDIRECT`, `META_OAUTH_STATE_SECRET`, `META_OAUTH_SUCCESS_URL` | The Meta (Facebook, Instagram) connection for Promote (retired, kept) |
+| `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_OAUTH_REDIRECT`, `REDDIT_OAUTH_STATE_SECRET`, `REDDIT_OAUTH_SUCCESS_URL`, `REDDIT_USER_AGENT` | The Reddit connection for Promote (retired, kept) |
 
 ### Supabase Vault (read by SQL, for the scheduled jobs)
 
@@ -109,7 +109,7 @@ Almost all are `VITE_` variables, which Vite builds into the public JavaScript. 
 | Edge function secrets, Vault, dashboard settings | No copy. Section 2 lists the names so they can be recreated |
 | A member's own data | Members can export their collection from the app; it is a collection archive, not a full account backup (`docs/launch-repairs-2026-09-06.md`, A13) |
 | Scheduled job history | `purge-cron-run-details` keeps about 7 days, so a job that fails for longer than a week leaves no trace |
-| Error reports, crawler hits, webhook payloads | Kept 90 days on purpose (`privacy-retention-daily`, section 5): older error reports and AI crawler hits are deleted, and old Stripe, payment ledger and RevenueCat webhook payloads are emptied while their rows stay. The weekly agent-traffic export also prunes `agent_hits` at 90 days. `public.user_events` (the first-party page and feature count) has no time limit; deleting an account removes that member's rows |
+| Error reports, crawler hits, webhook payloads | Kept 90 days on purpose (the `privacy-retention-daily` job): older error reports and AI crawler hits are deleted, and old Stripe, payment ledger and RevenueCat webhook payloads are emptied while their rows stay. The weekly agent-traffic export also prunes `agent_hits` at 90 days. `public.user_events` (the first-party page and feature count) has no time limit; deleting an account removes that member's rows |
 
 Plan item E1 11 asks for: the backup tier confirmed and written into `docs/MIGRATIONS.md`, a weekly copy of the storage buckets off the platform, one restore of one bucket tried, spend alerts in the Anthropic and Replicate consoles, and a free uptime check on `/`, `/AuthPortal`, `/Membership` and `/mcp`. All of these need Tennyson's accounts.
 
@@ -134,47 +134,26 @@ Deleting an account (`admin_erase_account`, migration `20261015151600_erase_emai
 
 ## 5. Scheduled jobs and bots
 
-### In the database (pg_cron), as found on 28 October 2026
+### In the database (pg_cron)
 
-Times are UTC. "Last 7 days" is the run history the database keeps (section 3); on 28 October it ran from 20 October, so a daily job shows 8 runs. 22 jobs, 20 active, and not one failed run in that history.
+The table of database jobs (each job, when it runs, what it does, and whether a migration in the repository creates it) is in section 4 of `docs/INFRASTRUCTURE.md`. That is the one place schedules are written down; this file does not repeat them.
 
-| Job | When | What it does | Last 7 days |
-|---|---|---|---|
-| `market-after-scrape-requests` | every 5 minutes | Follow-up work after a market scrape | 2,281 ok |
-| `refresh-market-matviews` | hourly at :20 | Rebuilds the market summary views | 190 ok, 0 failed (104 failed in the week to 15 October) |
-| `market-brief-morning` | :35 past each hour, 13:00 to 20:00 | The Market page's daily brief | 64 ok |
-| `market-value-daily` | 12:40 | Value estimate snapshot | 8 ok |
-| `hatch-alerts-daily` | 13:00 | Hatch window alerts (from round 2: one alert a day per member while an egg is near its date, one every 6 days otherwise) | 8 ok |
-| `feeding-reminders-daily` | 14:10 | Feeding reminders | 8 ok |
-| `personal-weighin-reminders-daily` | 14:20 | Weigh-in reminders that follow each gecko | 8 ok |
-| `season-planner-reminders-daily` | 14:20 | Breeding season reminders | 8 ok |
-| `vet-followups-daily` | 14:25 | Vet follow-up reminders | 8 ok |
-| `weighin-reminders-weekly` | Sunday 15:00 | The older weekly weigh-in nudge | 1 ok |
-| `weekly-digest-sunday` | Sunday 16:00 | The weekly digest email | 1 ok |
-| `expire-referral-grants` | 04:30 | Ends referral free months | 8 ok |
-| `clear-lapsed-featured-breeders` | 04:50 | Removes expired featured breeder slots | 8 ok |
-| `prune-stale-push-subscriptions` | 03:17 | Drops dead web push subscriptions | 7 ok |
-| `purge-cron-run-details` | 03:47 | Deletes job history older than about 7 days | 8 ok |
-| `process-scheduled-blog-posts` | every 5 minutes | **Inactive** (blog shelved) | |
-| `promote_drain_scheduled` | every 5 minutes | **Inactive** (scheduled social posts) | |
-| `privacy-retention-daily` | 04:05 | `apply_privacy_retention(90)`: deletes `error_logs`, `geck_data.error_logs` and `agent_hits` rows older than 90 days; empties old Stripe, payment ledger and RevenueCat webhook payloads but keeps the rows (`20261016090000_privacy.sql`) | 8 ok |
-| `weekly-notes-visitor-cleanup` | 04:25 | `weekly_notes_visitor_cleanup()`: drops visitor sign-ups for Weekly Gecko Notes that were never confirmed after 30 days, and form log rows older than 30 days (`20261018120000_weekly_notes_visitors.sql`) | 8 ok |
-| `lifecycle-emails-hourly` | :35 past each hour (`35 * * * *`) | The getting-started emails (day 0 to day 14). **On since 15:50 UTC on 17 October** (`app_settings` `lifecycle_emails_enabled` true). Setting it to false stops the next run (`docs/planning/lifecycle-emails-2026-10.md`, section 1) | 190 ok |
-| `weekly-notes-hourly` | :50 past each hour (`50 * * * *`) | Weekly Gecko Notes, one short email a week after the first two weeks. **Added 18 October** (`20261018002200_weekly_notes.sql`). On since 18 October (`app_settings` `weekly_notes_enabled` true, `EMAIL_POSTAL_ADDRESS` set); setting the switch to false makes it one lookup an hour (`docs/planning/weekly-notes-2026-10.md`) | 191 ok |
-| `weekly-notes-repermission-hourly` | :55 past each hour (`55 * * * *`) | `enqueue_weekly_notes_repermission()`: the one-time "Still keeping crested geckos?" email to members the weekly notes gate leaves out, 20 a run (`20261024150000_weekly_notes_personal_and_repermission.sql`). On since 18:26 UTC on 24 October (`app_settings` `weekly_notes_repermission_enabled` true); 22 went out on 25 and 26 October (`docs/marketing/email-brain.md`, section 5) | 79 ok (since 24 October) |
+What to know when running them:
 
-`monthly-overage-billing` (social post overage billing) is gone: `20261016090600_retire_overage_billing.sql` unscheduled it on 16 October with Promote retired, and it never ran.
-
-Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no time zone (review C15 item 3). Round 2 also changes what the reminder and digest jobs send (defaults by life stage, `/log` links, nothing for addresses that cannot sign in) without changing their schedules. Re-run the query in section 6 rather than trusting this table.
+- **Reminders go out at 7 am in each member's own time zone**, since 31 October 2026 (`20261031010000_reminder_time_zones.sql`). The five reminder jobs (feedings, weigh-ins, hatch alerts, vet follow-ups, Season Planner) keep their old names but run every hour, and each run reminds only the members for whom it is 7 am. A member with no time zone saved is treated as being on Pacific time. Before that date every reminder went at one fixed UTC hour. The Sunday weigh-in nudge, the Sunday digest and the market brief still run at fixed UTC times.
+- **What reminders send:** a gecko added since mid October 2026 gets default weigh-in and feeding reminders by its life stage, whichever way it was added (`docs/planning/activation-2026-10.md`, section 6, item 3); the links open the one-tap log at `/log`; and nothing goes to an address that cannot sign in.
+- **Three email programmes each have an on and off switch** in the `app_settings` table. Setting a switch to false stops the next run. Getting-started emails: `lifecycle_emails_enabled`, on since 17 October (`docs/planning/lifecycle-emails-2026-10.md`, section 1). Weekly Gecko Notes: `weekly_notes_enabled`, on since 18 October, and they also need the `EMAIL_POSTAL_ADDRESS` secret (`docs/planning/weekly-notes-2026-10.md`). The one-time "Still keeping crested geckos?" email: `weekly_notes_repermission_enabled`, on since 24 October (`docs/marketing/email-brain.md`, section 5).
+- **Two jobs are inactive on purpose:** `process-scheduled-blog-posts` (the blog is shelved) and `promote_drain_scheduled` (Promote is retired). `monthly-overage-billing` (social post overage billing) is gone: `20261016090600_retire_overage_billing.sql` unscheduled it on 16 October, and it never ran.
+- **Job history is short.** The database keeps about 7 days of run history (section 3). When it was last read, on 28 October 2026, there were 22 jobs, 20 of them active, and no failed run in that history. Re-run the query in section 6, item 3, rather than trusting a count written here.
 
 ### In GitHub Actions (`.github/workflows/`)
 
 | Workflow | When (UTC) | What it does |
 |---|---|---|
 | `ci` | Every push to `main` and every pull request | Lint, typecheck, tests, the same tests at other dates, genetics drift check, full build, size budget (section 7) |
-| `integration` | Every pull request | The Playwright member flow against a fake Supabase in the browser (`member-flow`), and every migration replayed on a fresh Postgres 16 followed by every `supabase/tests/*.sql` (`database`, `scripts/sql-harness/README.md`) |
+| `integration` | Every push to `main` and every pull request | The Playwright member flow against a fake Supabase in the browser (`member-flow`), and every migration replayed on a fresh Postgres 16 followed by every `supabase/tests/*.sql` (`database`, `scripts/sql-harness/README.md`) |
 | `deploy-watch` | When Vercel reports a failed production deploy | Opens or updates a `ci-failure` issue that emails Tennyson |
-| `daily-canary` | Daily 14:07 | Signs in as the evaluation account, checks the value estimates, runs two real Morph IDs; a failure emails the repo owner. Once `20261028015600_market_health_full_pass.sql` lands it also fails while the last full US market pass, or the Price Index's last full US day, is more than 9 days old |
+| `daily-canary` | Daily 14:07 | Signs in as the evaluation account, checks the value estimates, runs two real Morph IDs; a failure emails the repo owner. Since `20261028015600_market_health_full_pass.sql` (applied 28 October) it also fails while the last full US market pass, or the Price Index's last full US day, is more than 9 days old |
 | `growth-report` | Monday 11:00 | GA4 and Search Console report, committed to `docs/growth-reports/` |
 | `weekly-changelog` | Monday 13:00 | Summarizes the week's commits into the in-app "What's New" (`change_logs`), and emails it when the email secrets are set |
 | `seo-audit-weekly` | Monday 13:00 | Strict SEO audit |
@@ -221,8 +200,8 @@ Every reminder fires at a fixed UTC hour (about 7 am Pacific); profiles carry no
 ## 7. Build and site checks (added 16 October 2026, round 3)
 
 - **Tests and the clock.** `pnpm test` pins the time zone to UTC. `pnpm test:clock-drift` reruns the unit tests 400 days ahead and 400 days back (the CI step "Unit tests at other dates"). A failure there means a test reads today's date: freeze it with `vi.useFakeTimers({ toFake: ['Date'] })` and `vi.setSystemTime(...)`. `pnpm build` runs the tests too, so a test that reads the real date would break every deploy on the day it starts failing.
-- **Member flow.** `pnpm test:e2e` runs the Playwright flow (sign up, first gecko, feeding, transfer) against a fake Supabase in the browser. The `integration` workflow runs it on every pull request.
-- **Database.** `scripts/sql-harness/build.sh` replays every migration on a fresh Postgres 16 and `run-tests.sh` runs every `supabase/tests/*.sql`; the `integration` workflow does both on every pull request.
+- **Member flow.** `pnpm test:e2e` runs the Playwright flow (sign up, first gecko, feeding, transfer) against a fake Supabase in the browser. The `integration` workflow runs it on every push to `main` and every pull request.
+- **Database.** `scripts/sql-harness/build.sh` replays every migration on a fresh Postgres 16 and `run-tests.sh` runs every `supabase/tests/*.sql`; the `integration` workflow does both on every push to `main` and every pull request.
 - **Size budget.** CI runs `node scripts/check-bundle-size.mjs` after `pnpm build`: the main script plus files loaded up front 150 kB gzipped, any page 60 kB, public pages 200 kB, public images 200 kB. Agreed exceptions are in `scripts/bundle-budget.json`, each with its reason. When splitting a page so part of it loads later, check the page still has its own entry in `dist/.vite/manifest.json`: if the lazy part imports modules only that page uses, Rollup can fold the page into a shared file, and the size check then warns that the page has no entry of its own (it cannot measure it). To make a page smaller, load the part that is not on its first screen when it is needed (the calculator's engine, the Morph Guide quiz's animation library, the Care Guide's other Keeper's Guides and most Admin sections work this way). Such a lazy part may import library code or our modules other pages share, but not a module only that page uses: then the build lists the page only under a hashed name, its size goes unchecked, and the prerendered page loses its preload links. The check prints a warning when that happens (the retired Store page has it today).
 - **Fonts** are self-hosted in `public/fonts/` (Inter, Montserrat and Righteous; rules in `src/styles/fonts.css`). Google Fonts is no longer used or allowed by the Content Security Policy.
 - **Morph Guide pigment layers** are built by `node scripts/precompute-trait-layers.mjs` from `art/morph-guide/ink-studies-v3`.

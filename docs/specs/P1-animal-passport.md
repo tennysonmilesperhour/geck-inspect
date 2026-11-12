@@ -1,8 +1,8 @@
 # P1: Animal Passport + Ownership Transfer
 
-> **Status, 11 November 2026: Built, and Dated.** Passports, claims and QR cards are live (`src/pages/AnimalPassport.jsx`, `PassportQR.jsx`, `ClaimAnimal.jsx`, `src/lib/transfers.js`). This is the original spec and it does not match the code: the table is `geckos`, not `Animal`; the routes are `/passport/:passportCode` and `/MyGeckos`, not `/collection/...`; charts use recharts; the passport page shows no value card. **Do not paste the "Claude Code Prompt" block at the end**: its fonts and colours were never shipped. The transfer contract is `docs/planning/qr-transfer-security-2026-10-17.md`; design is `docs/specs/DESIGN-SYSTEM.md`.
+> **Status, 11 November 2026: Built, and Dated.** Passports, claims and QR cards are live (`src/pages/AnimalPassport.jsx`, `PassportQR.jsx`, `ClaimAnimal.jsx`, `src/lib/transfers.js`). This is the original spec and it does not match the code: the table is `geckos`, not `Animal`; the routes are `/passport/:passportCode` and `/MyGeckos`, not `/collection/...`; charts use recharts; the passport page shows no value card. The paste-ready "Claude Code Prompt" block that ended this file was removed on 12 November 2026 (git keeps it), because its fonts, colours and routes were never shipped; the two font names in the UI spec were replaced with "the heading font". The transfer contract is `docs/planning/qr-transfer-security-2026-10-17.md`; design is `docs/specs/DESIGN-SYSTEM.md`.
 
-> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+> **Design note (15 October 2026, shortened 12 November 2026):** this spec was written for a set of fonts and a green colour palette that never shipped. The lines that set them out were in the build prompt, which has been removed. Any colour name still in the text below (sage, forest, ember gold) comes from that palette: ignore it. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P1 (Highest)
 **Dependencies:** None, core data model everything else depends on
@@ -150,7 +150,7 @@ TransferRequest {
 
 **AnimalCard component:**
 - Profile photo (square, object-fit cover, click -> passport page)
-- Name in DM Serif Display 16px
+- Name in the heading font, 16px
 - Passport code in monospace 11px muted
 - Morph pill (sage bg) + pattern grade badge (gold if high_end/investment)
 - Sex + age in one chip
@@ -200,7 +200,7 @@ No auth required. This is a marketing asset, it must look exceptional.
 **Layout top to bottom:**
 
 1. **Hero**: full-width photo carousel (swipeable, dot nav, 400px max height)
-2. **Gecko name:** DM Serif Display 36px. **Passport code:** small monospace pill badge. **Status badge** top-right.
+2. **Gecko name:** the heading font, 36px. **Passport code:** small monospace pill badge. **Status badge** top-right.
 3. **Identity row**: 4 stat chips in a row: Species - Sex - Date of birth - Current weight
 4. **Morph card**: base morph as large pill (sage bg, forest text). Trait tags below in smaller pills. Pattern grade badge (ember gold for high_end/investment).
 5. **Market value card** (from P2, embed here once built): estimated value range, comparable sales, price trend. Show only if pattern_grade is set.
@@ -247,46 +247,4 @@ No auth required. This is a marketing asset, it must look exceptional.
 
 ---
 
-## Claude Code Prompt
-
-```
-Build the Animal Passport + Ownership Transfer system for Geck Inspect,
-a professional crested gecko breeding management app.
-
-DESIGN SYSTEM (apply to everything you build):
-Fonts: DM Serif Display (headings), DM Sans (UI): load from Google Fonts.
-Colors: Forest deep #1A2E1A, Moss mid #2D4A2D, Sage accent #4E7C4E,
-Pale sage #E8F0E8, Warm white #F7F9F4, Ember gold #C4860A,
-Ember light #FDF3E0, Alert red #C0392B, Slate text #3D4A3D, Muted text #6B7B6B.
-Cards: border-radius 12px, 1px border rgba(78,124,78,0.15), padding 24px.
-Status badges: pill shape (border-radius 999px), 12px, padding 4px 10px.
-Tone: professional, science-forward, a serious tool for serious breeders.
-Mobile-first responsive. Skeleton loading states, not spinners.
-All destructive actions require typing the animal name to confirm.
-
-DATABASE: create these tables:
-[PASTE FULL DATA MODEL FROM THIS DOCUMENT]
-
-BUILD THESE SCREENS:
-
-1. MY COLLECTION PAGE (/collection)
-[Full screen spec as documented above]
-
-2. ADD/EDIT FORM (/collection/new, /collection/:id/edit)
-[Full screen spec as documented above]
-
-3. PUBLIC PASSPORT PAGE (/passport/:passport_code): NO AUTH REQUIRED
-[Full screen spec as documented above]
-
-4. TRANSFER FLOW
-[Full screen spec as documented above]
-
-5. QR CODE PAGE (/collection/:id/qr)
-[Full screen spec as documented above]
-
-QUALITY BAR:
-The public passport page will be shared by breeders to sell their animals.
-It represents the Geck Inspect brand in the wild. Make it genuinely impressive.
-Weight chart must handle <3 data points gracefully (show "Add weight logs to see trends").
-Ownership timeline with a single entry should still look intentional, not broken.
-```
+The build prompt that stood here was removed on 12 November 2026 because its fonts, colours and routes were never shipped. Design is `docs/specs/DESIGN-SYSTEM.md`.

@@ -1,10 +1,12 @@
 # Engineering guide
 
-> **Corrections, 11 November 2026.** The Morph Visualizer and Promote are retired (their rows in the integration table describe switched-off features), and the Govee sensor integration is switched off in the app. On the iPhone, Sign in with Apple and Google have been on in code since 10 November (the lines saying iOS uses email and password only, and that the Apple switch is off, are out of date). Account deletion happens in the app from Settings; it no longer starts a support request. For the layout of the code, read `docs/ARCHITECTURE.md`.
-
 Start here after [README.md](../README.md). This guide describes the running
-application and its integration boundaries. Historical plans under `docs/planning`
+application and its integration boundaries. For the layout of the code, read
+[ARCHITECTURE.md](ARCHITECTURE.md). Historical plans under `docs/planning`
 record intent; they are not evidence that a feature is deployed or verified.
+
+Corrected in the text on 12 November 2026 for the retired features, sign-in on
+the iPhone and account deletion.
 
 ## The product
 
@@ -21,11 +23,11 @@ Companion tools contribute evidence and distribution:
 | Eye in the Sky | Collect listing observations | Feeds `geck_data`; observations are not confirmed sales or verified morph labels |
 | Geck Intellect / geck-data | Market analysis and reference ingestion | Same Supabase project, `geck_data` schema; separate web deployment at geckintellect.geckinspect.com |
 | Morph ID and training review | Identify candidate traits and review labeled examples | Uses metered edge functions, reference data and consented images; do not equate ingestion counts with a trained/evaluated model |
-| Genetics calculator and visualizer | Model inheritance and possible appearance | Shared trait data and pairing logic; predictions are not guarantees about an individual animal |
+| Genetics calculator | Model inheritance for a pairing | The vendored genetics engine, reached through `src/lib/genetics/`; predictions are odds, not guarantees about an individual animal. The Morph Visualizer that shared this row was retired on 2 October 2026; its code is kept in `src/components/morph-visualizer` |
 | Stripe | Web memberships, invoices, billing portal | Protected profile membership fields |
 | RevenueCat / Apple | Native memberships and store lifecycle | Verified entitlement mirror; see [BILLING.md](BILLING.md) |
-| Promote | Generate and publish approved social content | Supabase social tables and server-side provider connections; native membership uses the same server tier |
-| Govee integration | Enclosure readings | Paid, metered `iot-poll` function with caller-owned devices |
+| Promote (retired 16 October 2026) | Generated and published social content | The page redirects (`src/lib/retiredPages.js`). Its code, social tables and edge functions (`generate-social-post`, `publish-social-post`, the Meta and Reddit connections) are kept; only the retired page calls them |
+| Govee integration (switched off in the app) | Enclosure readings | `IOT_SENSORS_ENABLED` in `src/lib/iotClient.js` is false, so the Settings card and the Dashboard readings are hidden until one real device test passes. The metered `iot-poll` function and its table are kept |
 | Resend and web push | Notification delivery | Database notification dispatcher reads recipient preferences; clients do not send arbitrary email |
 | Vercel | Web hosting, SEO output and API routes | Main deploys production; native binaries bundle the built web assets |
 
@@ -200,8 +202,11 @@ deployment steps. Never infer that a file's presence means it is live.
 The native identifier is `com.geckinspect.app`. Supabase now allows these exact
 returns: `com.geckinspect.app://auth/callback` and the same URL with `?mode=reset`.
 The canonical web auth site is `https://geckinspect.com`; `/MyGeckos` and
-`/AuthPortal?mode=reset` are also allowed. iOS currently uses email/password;
-web and Android also expose Google sign-in. Facebook sign-in is built
+`/AuthPortal?mode=reset` are also allowed. The iPhone app shows Continue with
+Apple, Continue with Google, and email and password. That is in the code since
+10 November 2026 and reaches iPhones with build 15; builds up to 14 show email
+and password only. Web and Android show Google, and email and password.
+Facebook sign-in is built
 (`FACEBOOK_SIGNIN_ENABLED` in `src/components/auth/LoginPortal.jsx`) and
 stays off until the Facebook provider is enabled in Supabase.
 
@@ -213,8 +218,10 @@ identity token, and `src/lib/appleSignIn.js` passes it to Supabase with
 `signInWithIdToken`, so there is no browser hop and no Apple client secret to
 rotate. The app target carries the `com.apple.developer.applesignin`
 entitlement (`ios/App/App/App.entitlements`). `APPLE_SIGNIN_ENABLED` in
-`LoginPortal.jsx` turns it on; on iOS, Google and Facebook show only when it
-is on (Guideline 4.8). After editing the Swift code, run `pnpm install` so
+`LoginPortal.jsx` turns it on, and it has been `true` since 10 November 2026;
+on iOS, Google and Facebook show only when it is on (Guideline 4.8). The
+`apple-token` edge function stores Apple's refresh token after sign-in so that
+deleting the account can revoke it. After editing the Swift code, run `pnpm install` so
 the copy in node_modules picks it up.
 
 Build/sync uses `pnpm cap:sync`. `pnpm ios:release` checks the iOS SDK key, native
@@ -225,15 +232,26 @@ email/browser/app handoff, that purchases work, or that Apple accepts the build.
 
 Before submission, record a signed release build's purchase/restore and auth
 results, camera/HEIC upload, ordinary-account collection/care/transfer/export,
-private-data isolation and deletion. The in-app deletion card currently starts a
-tracked support request; the published privacy policy promises deletion or
-anonymization within 30 days. Assign ownership and verify actual fulfillment on
-a disposable account. An open ticket is not completed erasure.
+private-data isolation and deletion.
 
-Hidden or unavailable capabilities are intentional release limits: shipping
-provider checkout, supplies checkout, mentorship and giveaways are not complete
-live services; native push is not implemented. Do not advertise them in store
-screenshots. External publishing providers, moderation response operations,
+Account deletion happens in the app. The card in Settings
+(`src/components/settings/AccountDeletionCard.jsx`) asks the member to type
+DELETE and calls the `delete-my-account` edge function, which acts only on the
+signed-in caller: it cancels a website (Stripe) subscription that is still
+charging, erases the account's data (`admin_erase_account`), removes its files
+from Storage, revokes a stored Sign in with Apple token and deletes the login.
+An App Store or Google Play subscription cannot be cancelled from there, and
+the card says so before the member confirms. A support request is filed only
+as the fallback, when the function or its migration is not deployed. The
+published privacy policy promises deletion or anonymization within 30 days.
+Verify a real deletion on a disposable account before a submission.
+
+Retired or unavailable capabilities are intentional release limits: Shipping,
+the supplies store, Mentorship and Giveaways are retired
+(`src/lib/retiredPages.js`), and native push is not implemented. Do not
+advertise them, or any other retired feature, in store screenshots. External publishing providers, moderation response operations,
 refund/referral reconciliation and real device behavior require their own
-acceptance evidence. Use [RELEASE_READINESS.md](RELEASE_READINESS.md) for current
-verified results and remaining gates.
+acceptance evidence. For the current App Store state and the remaining steps, use
+[the resubmission kit](planning/app-store-resubmission-2026-10-26.md) and the newest
+section of [APP_STORE_REQUIREMENTS.md](APP_STORE_REQUIREMENTS.md).
+[RELEASE_READINESS.md](RELEASE_READINESS.md) is the 17 October gate list, kept as history.

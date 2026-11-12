@@ -99,6 +99,8 @@ The six runbooks carry a "Corrections" paragraph at the top. The stale sentences
 
 Done when: each fact in the banner is corrected where it appears, the banner is removed, and `grep -n "Corrections, 11 November" docs/*.md STRATEGY.md` returns nothing.
 
+Done 12 November 2026: all six runbooks corrected in the text and their banners removed. The Stripe portal setup, webhook events and refund rules are in the "Stripe" section of `docs/BILLING.md`, and the old file is `docs/planning/history/stripe-plan-switching-2026-10.md`. Production was not read, so the counts are from the repository and the last production readings (28 and 31 October) are dated as such.
+
 ### DOC-2. One home for each fact that drifts (S)
 
 - Edge function counts appear in four documents. Keep the number in `docs/INFRASTRUCTURE.md` only; elsewhere say "see INFRASTRUCTURE".
@@ -107,11 +109,15 @@ Done when: each fact in the banner is corrected where it appears, the banner is 
 
 Done when: a search for the function count, a price and "applies new migration" each finds one full statement.
 
+Done 12 November 2026: the counts live in `docs/INFRASTRUCTURE.md` section 2, the prices in `docs/CONTEXT.md` section 5 (`docs/GLOSSARY.md` keeps a one-line summary that names the code as the source), and the deploy story in `docs/MIGRATIONS.md`. The database job table also has one home now, `docs/INFRASTRUCTURE.md` section 4. Left as they are: prices quoted inside dated plans, old decisions and `docs/NOW.md`.
+
 ### DOC-3. A status index for the decision log (M)
 
 `docs/DECISIONS.md` has 60 entries and several carry a status that a later entry overturned (listed in its new opening note). Add a table at the top: number, title, one of live, replaced by N, or never built. Do not edit the entries. Add the two missing entries: reminders at 7 am local time (31 October) and Sign in with Apple (10 November).
 
 Done when: every entry number appears in the table with a status.
+
+Done 12 November 2026: the status index is at the top of `docs/DECISIONS.md` (62 rows), and decisions 61 (reminders at 7 am local time) and 62 (Sign in with Apple) are appended. No entry was edited, so the personal email address in decisions 18 and 21 is still there (DOC-9).
 
 ### DOC-4. Refresh the documents that are meant to be current (S, needs production numbers)
 
@@ -124,11 +130,15 @@ Done when: every entry number appears in the table with a status.
 
 Done when: each has a date from this month on it, or a line saying why not.
 
+Part done 12 November 2026: `supabase/migrations/_applied_by_hand/README.md` lists all nine files, and the section 4 table of `docs/planning/weekly-notes-2026-10.md` matches the note files. Not done, because they need production numbers or Tennyson: `docs/NOW.md`, `supabase/SCHEMA_SNAPSHOT.md`, the `docs/marketing/email-brain.md` log and the `docs/planning/agent-access-2026-10.md` review log.
+
 ### DOC-5. Specs: cut the paste-ready prompt blocks (S)
 
 `docs/specs/P1-animal-passport.md` and `P7-printable-worksheets.md` end with "Claude Code Prompt" blocks that carry fonts, colours and routes that never shipped. The banners warn about them. Better: delete the blocks (git keeps them) and leave a one-line pointer to `docs/specs/DESIGN-SYSTEM.md`.
 
 Done when: `grep -rn "Google Fonts\|DM Serif" docs/specs/*.md` finds only the design document's own history note.
+
+Done 12 November 2026: the build prompt blocks were cut from P1, P2, P6, P7, P8 and P10 (P11 had none), each leaving the one-line pointer, and the two font names in P1's UI spec became "the heading font". The grep now finds only `docs/specs/DESIGN-SYSTEM.md`.
 
 ### DOC-6. Routine prompts (owner step, with a session's help)
 
@@ -140,9 +150,13 @@ Three routines read these documents: the Monday agent review, the Thursday Weekl
 
 Done when: every entry in `scripts/` has a row.
 
+Done 12 November 2026: `scripts/README.md` is the index (54 rows), with the Morph ID operations below it and its three errors fixed. Two things it turned up are in code and were not changed: `scripts/deploy-morph-id.sh` still says in its own comments that it applies migrations and deploys four functions, and the weekly growth report still adds search gaps to `docs/blog-queue.json`.
+
 ### DOC-8. A route map (S)
 
 Old specs name addresses that never existed (`/collection`, `/b/:slug`, `/answers`, `/loans`). A short table in `docs/ARCHITECTURE.md`, old spec address against real address, would stop a session building from them.
+
+Done 12 November 2026: section 12 of `docs/ARCHITECTURE.md`, 17 rows, each real address checked in `src/App.jsx`, `src/pages.config.js` or `src/lib/retiredPages.js`.
 
 ### DOC-9. Decide about personal details in history (owner decision)
 

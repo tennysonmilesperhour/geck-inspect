@@ -1,8 +1,8 @@
 # P7: Printable Worksheets
 
-> **Status, 11 November 2026: Built.** Live at `/PrintableWorksheets` with the four templates here plus rack labels. Ignore this spec's fonts and colours; they were never shipped.
+> **Status, 11 November 2026: Built.** Live at `/PrintableWorksheets` with the four templates here plus rack labels. The paste-ready build prompt that ended this file, with its line about fonts and colours, was removed on 12 November 2026 (git keeps it); they were never shipped.
 
-> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+> **Design note (15 October 2026, shortened 12 November 2026):** this spec was written for a set of fonts and a green colour palette that never shipped. The lines that set them out were in the build prompt, which has been removed. Any colour name still in the text below (sage, forest, ember gold) comes from that palette: ignore it. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P7
 **Dependencies:** P1 (Animal Passport, all animal data, care logs, and lineage)
@@ -24,38 +24,4 @@ Print-ready documents generated from existing animal data. Four document types:
 
 ---
 
-## Claude Code Prompt
-
-```
-Build Printable Worksheets for Geck Inspect.
-
-DESIGN SYSTEM: [PASTE GLOBAL DESIGN SYSTEM]
-For print: use black text on white background regardless of app theme.
-Geck Inspect logo in Forest deep. Clean serif typography (DM Serif Display for headers).
-
-CONTEXT: Animal Passport (P1) is built. All animal data, care logs, and lineage exist.
-This feature generates PDFs or print-optimized HTML from that data.
-
-BUILD FOUR PRINT LAYOUTS (accessible from animal detail page → "Print" menu):
-
-1. FEEDING LOG SHEET (weekly): animal name/morph/DOB header, 7-column table (Mon to Sun),
-   each cell has Food type line + Accepted checkbox. Minimal, fits one page, printable.
-
-2. VET HEALTH CARD: professional one-pager. Header with animal name, species, DOB, sex.
-   Weight table: last 10 weights with dates. Recent shed quality summary (last 5).
-   Feeding acceptance rate last 30 days. Known health issues (from vet_log). QR code.
-   Make it look like a real medical document, a vet should take it seriously.
-
-3. EXPO PRICE TAG: small format (3×4 inch). Animal photo, name, morph, pattern grade,
-   price (large, prominent), breeder name, QR code. Clean, professional.
-   Offer as 2-up and 4-up layouts for printing multiple on one sheet.
-
-4. LINEAGE CARD: buyer takeaway document. Animal photo, name, morph.
-   Parents: sire name/morph + photo thumbnail, dam name/morph + photo thumbnail.
-   Grandparents if available. Original breeder. QR code to live passport.
-   Styled like a certificate, this is a premium product and the document should feel like it.
-
-All four: "Print" button opens browser print dialog with correct @media print styles.
-"Download PDF" button generates PDF (use browser print-to-PDF or a server-side PDF lib).
-All documents: Geck Inspect branding in footer, document generated date.
-```
+The build prompt that stood here was removed on 12 November 2026 because its fonts, colours and routes were never shipped. Design is `docs/specs/DESIGN-SYSTEM.md`.

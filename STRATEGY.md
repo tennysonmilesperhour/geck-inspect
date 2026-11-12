@@ -1,18 +1,16 @@
 # STRATEGY.md - Geck Inspect
 
-> **Corrections, 11 November 2026.** The Word documents this file cites (`docs/landscape-analysis-vol1.docx` and `vol2.docx`) are not in the repository. The iPhone app has been submitted to the App Store and is in review work (not "no app in the stores" without qualification). The visual website editor was retired on 16 October. The Govee sensor integration is switched off in the app. Whether "Tenny's Crested Geckos" stays in the list of reference sources is a decision for Tennyson (`docs/OWNER-STEPS.md`, E7).
-
-Last updated: 15 October 2026 (plan item E2 21 of `docs/planning/comprehensive-review-2026-10-14.md`). The May 2026 version is in git history.
+Last updated: 15 October 2026 (plan item E2 21 of `docs/planning/comprehensive-review-2026-10-14.md`). Corrected in the text on 12 November 2026: the app stores, the website editor, the sensor integration, the missing Word documents, and Geck Inspect's own prices, which are now written in one place (`docs/CONTEXT.md`, section 5). The competitor facts were not re-researched. The May 2026 version is in git history.
 
 Sources, newest first:
 
 - The adversarial review of 14 October 2026, as reconciled in Part D of `docs/planning/comprehensive-review-2026-10-14.md` (the market-size correction below comes from its section 03).
 - `docs/planning/competitive-landscape-2026-10.md` (5 October 2026): competitor facts with a source link for each. Read it for detail; this file keeps the conclusions.
-- The May 2026 landscape deep dive (`/docs/landscape-analysis-vol1.docx` and `vol2.docx`). Where it disagrees with the two above, the newer sources win.
+- The May 2026 landscape deep dive, a two-volume Word document. It is not in this repository; this file carries its conclusions. Where it disagrees with the two above, the newer sources win.
 
 ## The market in one paragraph
 
-Geck Inspect sells record-keeping, lineage and pricing tools to people who breed and sell crested geckos. That is a niche, and it can be a good small business. The best count available is Geck Inspect's own listing data, in aggregate: about **975 sellers had active US crested gecko listings in a 45-day window**, of whom **279 had 10 or more listings**, 83 had 25 or more and 22 had 50 or more; the median seller had 4. Those are the counts from 15 October 2026; the adversarial review's earlier count was about 970, with the same 279 and the same median. Treat them as orders of magnitude, because the US listing feed has been unreliable since September. Built up from those counts, the paying candidates are **roughly 400 to 850 serious breeders**, plus 1,000 to 2,000 small sellers across North America and part of Europe. The adversarial review estimated a revenue ceiling of about $7K to $36K a year at realistic shares and today's prices ($2.99 and $5.99 a month), or about $12K to $90K at value-based prices. Those ceilings are its estimates; the arithmetic behind them is not in this repository, so quote them as estimates, not as findings. Keepers who are not breeders have not paid so far (0 of 5 who said so), so they are users and future buyers of passported animals, not the revenue base.
+Geck Inspect sells record-keeping, lineage and pricing tools to people who breed and sell crested geckos. That is a niche, and it can be a good small business. The best count available is Geck Inspect's own listing data, in aggregate: about **975 sellers had active US crested gecko listings in a 45-day window**, of whom **279 had 10 or more listings**, 83 had 25 or more and 22 had 50 or more; the median seller had 4. Those are the counts from 15 October 2026; the adversarial review's earlier count was about 970, with the same 279 and the same median. Treat them as orders of magnitude, because the US listing feed has been unreliable since September. Built up from those counts, the paying candidates are **roughly 400 to 850 serious breeders**, plus 1,000 to 2,000 small sellers across North America and part of Europe. The adversarial review estimated a revenue ceiling of about $7K to $36K a year at realistic shares and the Keeper and Breeder prices of 14 October 2026 (unchanged since; `docs/CONTEXT.md`, section 5), or about $12K to $90K at value-based prices. Those ceilings are its estimates; the arithmetic behind them is not in this repository, so quote them as estimates, not as findings. Keepers who are not breeders have not paid so far (0 of 5 who said so), so they are users and future buyers of passported animals, not the revenue base.
 
 ### Figures from the May 2026 version that have no source
 
@@ -52,22 +50,22 @@ Where he is exposed (these still hold): the genetics engine and morph identifier
 - Geck Inspect is the only product built crested-gecko-first. Everyone else is multi-species or marketplace-first. This is the right **positioning**: a tight community, a specific vocabulary, credibility.
 - But it is a positioning, not a moat (the adversarial review's point, which the comprehensive review accepts). A moat makes customers stay or competitors fail. The one feature shaped like a moat is the **passport, transfer and buyer packet**, because every sold animal carries the product to a new owner. On 14 October there were 5 passport codes and 2 transfers in total. Part E makes passports issued and claimed a headline number.
 
-**Where it leads (October):** crested gecko depth in one place (a crested-specific genetics engine with reverse calculation and clutch odds, Morph Guide, Care Guide, growth bands, breeding readiness); Morph ID that admits uncertainty and asks for a second photo; the lowest paid prices among serious tools; waitlists with written deposit terms on a $5.99 plan.
+**Where it leads (October):** crested gecko depth in one place (a crested-specific genetics engine with reverse calculation and clutch odds, Morph Guide, Care Guide, growth bands, breeding readiness); Morph ID that admits uncertainty and asks for a second photo; the lowest paid prices among serious tools; waitlists with written deposit terms on the Breeder plan.
 
 **Where it is at parity:** pedigrees, calculators, care and morph guides, QR labels, husbandry logs, collaborators. These are category baseline now.
 
 **Where it is behind:**
 
-- No app in the stores (ReptiDex, MorphMarket, Husbandry.Pro and most keeper apps have one).
+- No app in the stores yet (ReptiDex, MorphMarket, Husbandry.Pro and most keeper apps have one). The iPhone app has been submitted to the App Store and is in review work (`docs/planning/app-store-resubmission-2026-10-26.md`); nothing has been submitted to Google Play.
 - Not where the buyers are (MorphMarket, Palmstreet, Facebook groups).
 - No money handling (Breed Ledger takes deposits and e-signs contracts; Geck Inspect chose not to, decision 33).
-- No custom-domain breeder site and no registry partnership (GSGC is on Breed Ledger). The breeder page and visual website editor shipped (`docs/WEBSITE_BUILDER.md`) but without a custom domain.
+- No custom-domain breeder site and no registry partnership (GSGC is on Breed Ledger). The breeder page and the store page are live, without a custom domain. The visual website editor that shipped with them was retired on 16 October 2026; its code is kept (`docs/WEBSITE_BUILDER.md`).
 - Reliability is unproven, and lost records and silent reminders are the category's top complaint.
-- Shipped since May and no longer gaps: Business Tools records sales and costs and shows profit by season and by pairing; the breeder page and website editor; vet records.
+- Shipped since May and no longer gaps: Business Tools records sales and costs and shows profit by season and by pairing; the breeder page; vet records.
 
 ## Open opportunities, and the freeze
 
-The May list of seven open opportunities still describes real gaps: structure and conformation grading, enclosure sensors (a Govee integration exists, metered), keeper tools, provenance certificates, live market analytics, education, and photo grading. Two October corrections:
+The May list of seven open opportunities still describes real gaps: structure and conformation grading, enclosure sensors (a Govee integration was built and is switched off in the app: `IOT_SENSORS_ENABLED` in `src/lib/iotClient.js`), keeper tools, provenance certificates, live market analytics, education, and photo grading. Two October corrections:
 
 - The market is small (above), so each of these multiplies surface area against a low ceiling. **None is to be started before decision day, 17 January 2027** (Part E, rules E0 and E6: no new pages, species, tiers, tools or integrations until weekly active breeders grow four weeks in a row).
 - Provenance (passports and transfers) is already mostly built and is the one to finish, as the core of the product, not as an extra.
@@ -76,14 +74,16 @@ The May list of seven open opportunities still describes real gaps: structure an
 
 | Product | Entry paid plan | Breeder plan | Top plan |
 |---|---|---|---|
-| Geck Inspect | Keeper $2.99 a month, $30 a year | Breeder $5.99 a month, $60 a year | Enterprise off sale |
+| Geck Inspect (prices: `docs/CONTEXT.md`, section 5) | Keeper | Breeder | Enterprise, off sale |
 | ReptiDex | $4.99 | $9.99 | |
 | Breed Ledger | | Starter $29 | $49 |
 | MorphMarket (seller memberships) | $3 to $5 | $11 to $19 | $45 to $125 |
 | Husbandry.Pro | $4, $9 | $18 | $39, $99 |
 | HatchLedger | | $39 | $79, $179 |
 
-Two readings exist and Tennyson decides between them. The October research recommended keeping $2.99 and $5.99 and changing the packaging (annual first, a founding breeder offer). The adversarial review argued the prices are too low to matter to a breeder grossing about $12,500 a year (its estimate; the figure's source is not in this repository) and too complicated (about ten metered quotas, an overage, lifetime rows), and proposed two plans with Breeder at $12 to $15 a month. Part E's rule (E6): no price changes before five breeders have answered the $120 prepaid Founding Breeder offer.
+Geck Inspect's own prices are not repeated in this table, so that they are written in one place: the code is the source (`src/lib/stripe-config.js`) and `docs/CONTEXT.md`, section 5, has the table. On 12 November 2026 Keeper and Breeder were each cheaper than every other product's plan in the same column.
+
+Two readings exist and Tennyson decides between them. The October research recommended keeping the Keeper and Breeder prices as they are and changing the packaging (annual first, a founding breeder offer). The adversarial review argued the prices are too low to matter to a breeder grossing about $12,500 a year (its estimate; the figure's source is not in this repository) and too complicated (about ten metered quotas, an overage, lifetime rows), and proposed two plans with Breeder at $12 to $15 a month. Part E's rule (E6): no price changes before five breeders have answered the $120 prepaid Founding Breeder offer.
 
 ## User sentiment patterns
 
@@ -128,7 +128,7 @@ Published references the hobby treats as authoritative. Geck Inspect should alig
 - NEHERP (care)
 - Pangea Reptile (diet brand and content)
 - Repashy (diet brand and content)
-- Tenny's Crested Geckos (market data). Not a sister site: an unrelated breeder who shares Tennyson's first name (see CLAUDE.md).
+- Tenny's Crested Geckos (market data). Not a sister site: an unrelated breeder who shares Tennyson's first name (see CLAUDE.md). Whether it stays on this list is Tennyson's decision (`docs/OWNER-STEPS.md`, E7).
 
 ## What this means for product decisions
 

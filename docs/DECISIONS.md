@@ -1,6 +1,84 @@
 # Geck Inspect: DECISIONS.md, the product and engineering decision log
 
-> **How to read this log (11 November 2026).** Entries are never rewritten, so an old entry can carry a status that a later one overturned. Read the newest entry on a topic. Known cases: the prices in decisions 8, 9 and 18 ($4 and $9) were never the live prices (the code has $2.99 and $5.99, `src/lib/stripe-config.js`); decision 5's light mode was never built (the app is dark only, decision 53); decision 2's separate landing project was never done (it is one prerendered app); decision 13 is replaced by 32; the phone bar and page count in decision 36 are replaced by 48 and 49; decision 38 (Enterprise on sale) is replaced by 45 (off sale); decisions 17 to 24 still read "in progress" for work that finished. Not yet logged here: reminders moved to 7 am in each member's time zone (31 October) and Sign in with Apple switched on (10 November).
+> **How to read this log (11 November 2026).** Entries are never rewritten, so an old entry can carry a status that a later one overturned. Read the newest entry on a topic. Known cases: the prices in decisions 8, 9 and 18 ($4 and $9) were never the live prices (the code has $2.99 and $5.99, `src/lib/stripe-config.js`); decision 5's light mode was never built (the app is dark only, decision 53); decision 2's separate landing project was never done (it is one prerendered app); decision 13 is replaced by 32; the phone bar and page count in decision 36 are replaced by 48 and 49; decision 38 (Enterprise on sale) is replaced by 45 (off sale); decisions 17 to 24 still read "in progress" for work that finished. Reminders at 7 am in each member's time zone (31 October) and Sign in with Apple (10 November) were logged on 12 November 2026 as decisions 61 and 62. The status index below says where every entry stands today.
+
+## Status index
+
+Added 12 November 2026. One row per decision, so nobody has to read 60 entries to learn which ones still hold. The entries themselves are not changed. When you add an entry, add its row; when an entry is overturned, change its row.
+
+What the status means:
+
+- **Live:** it still holds, and the product or a check follows it.
+- **Replaced by N:** a later entry overturned it. Read entry N.
+- **Never built:** it was decided or proposed, and it was not carried out.
+- **Done:** it was a piece of work, and the work is finished.
+
+Each status was set by reading the entry and checking the code or the later entries on 12 November 2026. The note says what was checked or what to read next.
+
+| No. | Decision | Status | Note |
+|---|---|---|---|
+| 1 | Crested geckos only, not reptiles in general | Live | Still the position (`CLAUDE.md`, `STRATEGY.md`). |
+| 2 | Separate the landing page from the app | Never built | The landing page is a prerendered page of the same app, not a separate project (`scripts/prerender.mjs`). |
+| 3 | Lead with founder credibility | Live | The control landing page has a founder section. Read the 10 June amendment in the entry about whose brand it is. |
+| 4 | "Start Free" as the primary button | Live | The control landing page's button reads "Start free". |
+| 5 | Dark mode with a charcoal and cream palette | Never built | That palette and the light mode toggle never shipped. The app is dark only; the real themes are in `docs/specs/DESIGN-SYSTEM.md` and decision 53. |
+| 6 | The seven-objection map as the framework | Done | It shaped the April 2026 landing page plan (`docs/INTENT.md`, now history). No current rule refers to it. |
+| 7 | Animated product visuals, a looping hero video | Never built | Neither landing page has a video. The control page shows a product screenshot and a product tour. |
+| 8 | Show pricing on the landing page | Never built | Prices are public on `/Membership`, not on the landing page. The $4 and $9 in the entry were never the live prices. For Enterprise see 45. |
+| 9 | No chatbots, no fake urgency, no stock photos | Live |  |
+| 10 | Testimonials with names, faces and outcomes | Live | The testimonial block stays hidden until three approved quotes exist. |
+| 11 | "Your data, always exportable" under the button | Live | The control page says "Export your records any time" under its button. |
+| 12 | One primary button, repeated | Live | "Start free" is still the one primary button. A quieter demo link now sits beside it. |
+| 13 | Three feature sections, not a grid of nine | Replaced by 32 | Still three sections; 32 changed which three. |
+| 14 | Mobile first, under 2 seconds | Live | Still the aim. The size budget in 56 enforces part of it. |
+| 15 | Plausible or PostHog, not Google Analytics | Replaced by 47 | Google Analytics 4 runs beside PostHog; read the note under the entry. |
+| 16 | Split CONTEXT, INTENT and DECISIONS | Done | `CONTEXT.md` and this file are in use. `INTENT.md` is history. The map of all documents is `docs/README.md`. |
+| 17 | Move sign-in from Base44 to Supabase Auth | Done | The entry still reads "In progress". |
+| 18 | Complete the Stripe integration | Done | The entry still reads "In progress". Its $4 and $9 were never live; prices are in `src/lib/stripe-config.js`. |
+| 19 | Integrate the Foundation Genetics module | Done | The entry still reads "Pending". The engine is the vendored `crested-gecko-app` package, reached through `src/lib/genetics/`. |
+| 20 | Build Market Analytics for Business Tools | Done | The entry still reads "In progress". For where it lives and who can use it, read 35, 38 and 45. |
+| 21 | Enterprise waitlist-to-conversion flow | Replaced by 38 | 38 says so. 38 was then replaced by 45: Enterprise is off sale. |
+| 22 | Gather launch assets before the build | Never built | The landing page shipped without the hero video or named testimonials (see 7 and 10). |
+| 23 | Analytics before launch | Done | PostHog is in. Google Analytics 4 was added as well; see the note under 15, and 47. |
+| 24 | Plan the first round of A/B tests | Never built | That order of tests was not run. The one test running is a whole-page test: `docs/planning/homepage-ab-test-2026-10.md`. |
+| 25 | Never store secrets on the profiles table | Live |  |
+| 26 | The Morph Guide explains both genetics models | Live | `scripts/check-genetics-consistency.mjs` enforces it. |
+| 27 | Proposed: raise Breeder to $9.99 | Never built | Rejected by Tennyson on 9 July 2026. |
+| 28 | Install prompt yes, offline caching deferred | Replaced by 29 |  |
+| 29 | Offline caching service worker, network first | Live | Read the 15 October note in the entry about cache versions. |
+| 30 | Referral reward is a free month of Keeper | Live |  |
+| 31 | Value estimates from listing asking prices | Live |  |
+| 32 | Positioning: the business side of breeding | Live | The control landing page leads with it ("Price right. Pair smart."). |
+| 33 | Waitlist deposits are records, not payments | Live |  |
+| 34 | The feature audit is the roadmap; the blog is shelved | Replaced (the roadmap half), Live (the blog half) | Part E of the comprehensive review became the plan on 15 October 2026 (`ROADMAP.md`); no entry records that. The blog is still shelved. |
+| 35 | The Market page as a daily habit | Live | The page is live. Guess the Price left it (36, 48), its market tabs became Enterprise only (38), and Enterprise is off sale (45). |
+| 36 | Market Intelligence absorbs the Marketplace; one grouped sidebar | Replaced by 48 and 49 | Only the sidebar size and the phone bar were replaced. The Market Intelligence tabs and the `/Marketplace` redirect are live. |
+| 37 | The iPhone home screen app uses the opaque status bar | Live | 39 changed the status bar colour. |
+| 38 | Market Intelligence is Enterprise only, and Enterprise goes on sale | Replaced by 45 | The Enterprise-only gate stands. Enterprise is off sale. |
+| 39 | Liquid glass phone bars | Live |  |
+| 40 | Time to sell estimates | Live | Enterprise only, so no plan on sale includes them today (45). |
+| 41 | Season projection and production value | Live |  |
+| 42 | Open data and an MCP server; no paywall for agents | Live | 52 replaced the licence wording for price data. |
+| 43 | Other species as separate sites; ball pythons first | Never built | Paused until 17 January 2027 (`docs/planning/ball-python-app-2026-10.md`). |
+| 44 | Listings, photos and sellers are members only | Live |  |
+| 45 | Enterprise is off sale | Live | `ENTERPRISE_ON_SALE` is false in `src/lib/stripe-config.js`. |
+| 46 | Free gets one Morph ID a month | Live |  |
+| 47 | Analytics wait for consent in the EEA and UK | Live |  |
+| 48 | Retire breadth, keep every retired feature | Live | The list is `docs/planning/retired-features-2026-10.md`. |
+| 49 | Phones open on Today | Live |  |
+| 50 | One gecko record | Live |  |
+| 51 | Husbandry numbers in one file | Live |  |
+| 52 | The Price Index is an asking-price snapshot | Live |  |
+| 53 | Emerald default, neutral text, one meaning of Verified breeder | Live |  |
+| 54 | The AI Consultant's rules live on the server; Morph ID shows Price Index prices | Live | The AI Consultant is retired for members (48) but kept working. |
+| 55 | Edge functions deploy from the repo once compared | Live | Today's counts are in `docs/INFRASTRUCTURE.md`, section 2. |
+| 56 | Testing gates and the size budget | Live |  |
+| 57 | Photo thumbnails, the free route | Live |  |
+| 58 | Weekly Gecko Notes for members | Live |  |
+| 59 | Weekly Gecko Notes for visitors | Live |  |
+| 60 | New package versions wait 7 days | Live |  |
+| 61 | Reminders at 7 am in each member's own time zone | Live |  |
+| 62 | Sign in with Apple in the iPhone app | Live | In the code; it reaches iPhones with build 15. |
 
 > **Title note (15 October 2026).** This file was titled "Geck Inspect Landing Page: DECISIONS.md" because entries 1 to 16 were written in an April 2026 landing page session. From entry 17 on it records decisions about the whole product: pricing, billing, data, security, positioning and process. The title now says so. No entry's text was changed.
 
@@ -666,3 +744,21 @@ The Privacy Policy (18 Oct) says the sign-up box starts unticked in the EEA and 
 **Decision:** `.npmrc` sets `minimum-release-age=10080`, so pnpm refuses any package version published less than 7 days ago when it picks versions. pnpm 10 already blocks dependency install scripts by default. Builds keep using `pnpm install --frozen-lockfile` in CI and on Vercel.
 **Reasoning:** A hijacked release is usually spotted and pulled within days. Waiting a week costs nothing on normal upgrades and keeps the worst case out of the lockfile. The same change patched the build and test tooling the audit flagged (vite 6.4.4, js-yaml, brace-expansion, source-map-js, undici through overrides); none of it ships to members, but it keeps the audit quiet enough to spot a real finding.
 **Consequences:** An urgent security fix newer than 7 days will not install. When that happens, add `minimum-release-age-exclude=<package>` to `.npmrc` for that upgrade and remove it afterwards. Two build-only findings remain: `uuid` under the iOS tooling (`@capacitor/cli`) and `postcss-selector-parser` under Tailwind 3, both of which need a major-version jump their parent does not support. **To reverse:** delete the line from `.npmrc`.
+
+### 61. Reminders go out at 7 am in each member's own time zone
+
+**Date:** 2026-10-31
+**Status:** Accepted (built and live; logged here on 12 November 2026)
+**Context:** Every reminder job ran once a day at one fixed UTC hour (14:10 to 14:25, and the hatch alerts at 13:00). That is about 7 am Pacific in summer, 6 am Pacific in winter and 11 pm in Seoul, and "today" in the reminder queries was the UTC day. The comprehensive review (Part C15, item 3) asked for time zones before any member outside the US is asked to rely on reminders.
+**Decision:** Each member has a time zone (`profiles.time_zone`). The app saves the browser's zone on the member's next visit when none is saved, and Settings, Feeding Alerts lets the member change it. The five reminder jobs (feedings, weigh-ins, hatch alerts, vet follow-ups, Season Planner) keep their names but run every hour and call `run_reminders_local`, which reminds only the members for whom it is now 7 am and treats "today" as their local day. A member with no zone saved is treated as `America/Los_Angeles`, which is what everyone got before. Migration `20261031010000_reminder_time_zones.sql`.
+**Reasoning:** A fixed UTC hour is morning only on the US west coast. Running the same jobs every hour and filtering by zone leaves each reminder function's own rules as they were: the migration changes one call in each.
+**Consequences:** The Sunday weigh-in line, the Sunday digest, the market brief and the email programmes still run at fixed UTC times. A reminder function called by hand still reminds everyone on the UTC day. The table of job schedules is `docs/INFRASTRUCTURE.md`, section 4.
+
+### 62. Sign in with Apple is switched on in the iPhone app
+
+**Date:** 2026-11-10
+**Status:** Accepted (in the code; it reaches iPhones with build 15)
+**Context:** Sign in with Apple was built but switched off, so the iPhone app offered email and password only. App Store Guideline 4.8 asks for it before Google or Facebook sign-in can show on iOS. The Apple provider is enabled in Supabase and the iOS project already carried the capability.
+**Decision:** `APPLE_SIGNIN_ENABLED` in `src/components/auth/LoginPortal.jsx` is `true` (commit `2c42d5c`). The iPhone sign-in screen shows Continue with Apple, Continue with Google, and email and password. The Xcode project went to build 15 for this release. Deleting an account revokes the member's Sign in with Apple token (Guideline 5.1.1(v)): the new `apple-token` edge function stores Apple's refresh token after sign-in, and `delete-my-account`, `admin-delete-account` and `discard-empty-account` revoke it before deleting the login (commit `8ec549a`, migration `20261110183000_apple_sign_in_tokens.sql`).
+**Reasoning:** Apple requires it of an iPhone app that offers another company's sign-in (Guideline 4.8), and requires the token to be revoked when the account is deleted (Guideline 5.1.1(v)).
+**Consequences:** The app bundles the website, so this reaches iPhones only with the next uploaded build. The revoke needs the edge function secrets `APPLE_TEAM_ID`, `APPLE_KEY_ID` and `APPLE_PRIVATE_KEY`; a failed revoke is logged and never blocks a deletion. Web and Android are unchanged. The steps left for Tennyson are in `docs/planning/app-store-resubmission-2026-10-26.md`.

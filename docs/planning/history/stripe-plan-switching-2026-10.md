@@ -1,6 +1,6 @@
 # Stripe plan switching
 
-> **Status, 11 November 2026: Dated.** The verification log is from early October 2026. One step is still open: adding the refund and dispute events to the Stripe webhook (`docs/OWNER-STEPS.md`, step C4). The map of all documents is `docs/README.md`.
+> **Status, 12 November 2026: History.** The test log for Stripe plan switching, 30 September to 8 October 2026. Its tests passed. The parts that still matter (the customer portal setup, the webhook events list and what refunds and disputes do) now live in the "Stripe" section of `docs/BILLING.md`; read that, not this. The one step still open, adding the refund and dispute events to the Stripe webhook, is `docs/OWNER-STEPS.md`, step C4, and its list of events is one longer than the list at the foot of this file. This file was `docs/stripe-plan-switching.md` until 12 November 2026. The map of all documents is `docs/README.md`.
 
 Status checked September 30, 2026. Code, overage removal, and both default portals are shipped. The live Keeper to Breeder test passed with one unchanged subscription id and the correct profile. Annual scheduling and portal cancellation also passed. Cleanup is in progress.
 
@@ -14,7 +14,7 @@ In both test mode and live mode, open Settings > Billing > Customer portal, sele
 2. Include Keeper and Breeder only, with each plan's monthly and annual prices. Exclude Enterprise and Posting Overage. Test mode has separate price IDs; use the test catalog there.
 3. Allow billing interval changes. Prorate upgrades and invoice immediately.
 4. Schedule eligible downgrades and shorter billing intervals at period end. The actual sandbox preview schedules Breeder monthly to Keeper monthly at period end even though they are separate products. Breeder monthly to annual also schedules at period end because the annual price is cheaper on a monthly basis; the profile must remain monthly until the scheduled change occurs.
-5. Under Business information, check legal links. Both are now saved. Set Terms to https://geckinspect.com/Terms and Privacy to https://geckinspect.com/PrivacyPolicy in Public business information. Keep support email morphiclabsdata@gmail.com. Set the return link to https://geckinspect.com/Membership.
+5. Under Business information, check legal links. Both are now saved. Set Terms to https://geckinspect.com/Terms and Privacy to https://geckinspect.com/PrivacyPolicy in Public business information. Keep the support address as the support email (`SUPPORT_EMAIL` in `src/lib/supportContact.js`; the address itself was removed from this file on 12 November 2026). Set the return link to https://geckinspect.com/Membership.
 6. Save and inspect a portal session before calling this complete.
 
 Live catalog:

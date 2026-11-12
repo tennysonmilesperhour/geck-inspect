@@ -17,8 +17,8 @@ Geck Inspect is one single-page web app (Vite and React) that talks straight to 
 | 1 | `index.html` | Sets the theme before anything paints, preloads one font. |
 | 2 | `src/main.jsx` | Starts React, the service worker, the global error boundary. |
 | 3 | `src/App.jsx` | Chooses one of two route sets: **signed-out** (public pages) or **signed-in and guest** (the app). |
-| 4 | `src/Layout.jsx` | The app shell for signed-in members and guests: sidebar, phone header, phone tab bar, Log sheet, quick search, floating notices. |
-| 5 | `src/pages/*.jsx` | One file per page (86 files). |
+| 4 | `src/Layout.jsx` | The app shell for signed-in members and guests: sidebar, phone header (the page's title, or the wordmark on Today, with Search, Morph ID and the bell), phone tab bar, Log sheet, quick search, floating notices. |
+| 5 | `src/pages/*.jsx` | One file per page (about 90 files). |
 
 How a page gets its address:
 
@@ -47,7 +47,7 @@ Where a member lands: `memberHome()` in `src/lib/pwaLaunch.js` (Today on a phone
 | `supabase/migrations/` | Every database change, in order. |
 | `supabase/functions/` | Edge functions (section 5). |
 | `supabase/tests/` | SQL tests for the security rules (40 files). |
-| `scripts/` | Build steps, checks and scheduled jobs. |
+| `scripts/` | Build steps, checks and scheduled jobs. `scripts/README.md` is the index: every script, what runs it and what it writes. |
 | `e2e/` | Browser tests. |
 | `content/weekly-notes/` | The Weekly Gecko Notes emails, one file each. |
 | `public/` | Files served as they are: images, fonts, the service worker, the manifest. |
@@ -73,8 +73,8 @@ Where a member lands: `memberHome()` in `src/lib/pwaLaunch.js` (Today on a phone
 | Piece | Where | How it gets to production |
 |---|---|---|
 | Database changes | `supabase/migrations/*.sql` | Merging to `main` applies new files (Supabase's GitHub integration). Read `docs/MIGRATIONS.md` first. |
-| Edge functions | `supabase/functions/<name>/` (39 functions; 34 declared in `supabase/config.toml`) | Declared functions deploy on merge. Two (`embed-gecko-image`, `export-training-corpus`) are deployed by hand. |
-| Scheduled database jobs | Defined in migrations, run by pg_cron | Listed in `docs/INFRASTRUCTURE.md`, section 4. |
+| Edge functions | `supabase/functions/<name>/`, one folder per function. How many there are and which are declared in `supabase/config.toml` is in `docs/INFRASTRUCTURE.md`, section 2 | Declared functions deploy on merge. Two (`embed-gecko-image`, `export-training-corpus`) are deployed by hand. |
+| Scheduled database jobs | Defined in migrations, run by pg_cron | Listed in `docs/INFRASTRUCTURE.md`, section 4 (the one table of job schedules). |
 | Scheduled repository jobs | `.github/workflows/` (14 workflows: CI, integration, backup, growth report, SEO audit, agent traffic, canary and others) | Listed in `docs/OPERATIONS.md`, section 5. |
 | The website | Vercel builds `main` | `pnpm build`, then deploy. Documentation-only commits skip the build. |
 
@@ -82,7 +82,7 @@ What the main edge functions do: `recognize-gecko-morph` (Morph ID), `send-email
 
 ## 6. Money and plans
 
-- Plan limits: `src/lib/tierLimits.js`. Prices and Stripe price ids: `src/lib/stripe-config.js`. Which plan a member is on: `resolveTier` in `tierLimits.js`.
+- Plan limits: `src/lib/tierLimits.js`. Prices and Stripe price ids: `src/lib/stripe-config.js`. Which plan a member is on: `resolveTier` in `tierLimits.js`. The one table of today's prices and limits in the documents is `docs/CONTEXT.md`, section 5.
 - Limit checks in the app: `src/components/subscription/PlanLimitChecker.jsx`. The database also refuses a gecko over the limit.
 - Web purchases go through Stripe; iPhone purchases through Apple and RevenueCat. The contract is `docs/BILLING.md`.
 
@@ -110,7 +110,7 @@ Capacitor wraps the built website. `capacitor.config.ts` holds the app id and co
 | `pnpm test` | About 3,800 unit tests (Vitest), in a minute. |
 | `pnpm test:e2e` | Browser tests (Playwright) on a laptop size and a phone size. Supabase is answered inside the browser by `e2e/support/fake-supabase.js`, so no keys or network are needed. |
 | `pnpm check:genetics` | Checks that every page tells the same genetics story. |
-| `pnpm build` | Everything above except the browser tests, then the sitemap, the open data, the site build, prerendering of public pages and the SEO audit. |
+| `pnpm build` | The environment check, lint and the unit tests, then the sitemap, the open data, the site build, prerendering of public pages and the SEO audit. It does not run `pnpm check:genetics` or the browser tests; CI runs those. `scripts/README.md` lists every step. |
 | `node scripts/check-doc-links.mjs` | Finds broken links between documents. |
 
 SQL tests for the security rules run in CI (`.github/workflows/integration.yml`) and locally through `scripts/sql-harness/`.
@@ -135,3 +135,31 @@ CI fails a push to `main` that adds a picture over 200 KB to `public/` or makes 
 | An email | `supabase/functions/_shared/lifecycle-copy.ts`, `content/weekly-notes/`, `supabase/functions/send-email/` |
 | Money formatting | `src/lib/money.js` |
 | The landing page | Frozen while the homepage test runs (`docs/planning/homepage-ab-test-2026-10.md`) |
+
+## 12. Old addresses in specs, and the real ones
+
+Old specs (the `P` files in `docs/specs/` and `docs/specs/history/`) were written before the app's addresses were settled, and they name addresses that never existed or were renamed. Do not build from them. This table gives the real address for each, checked on 12 November 2026 against `src/App.jsx`, `src/pages.config.js` and `src/lib/retiredPages.js`.
+
+Real addresses of app pages are capitalised, because each comes from its key in `src/pages.config.js` (section 2).
+
+| Address in an old spec | Spec | The real address, or what happened |
+|---|---|---|
+| `/collection` | P1, P6, P3 | `/MyGeckos` |
+| `/collection/new` | P1 | Adding a gecko is a window on `/MyGeckos`, not an address of its own (`/MyGeckos?add=1` opens the first-gecko step) |
+| `/collection/:id/edit` | P1 | Editing is a window on `/MyGeckos` (`/MyGeckos?gecko=<id>&open=edit`). The record as a page is `/GeckoDetail?id=<id>` |
+| `/collection/:id/qr` | P1 | `/passport/:passportCode/qr` (the QR card belongs to the passport, not the collection) |
+| `/passport/:passport_code`, `/passport/:code` | P1, storefront consolidation | `/passport/:passportCode` |
+| `/claim/:token` | P1 | `/claim/:token` (this one is real as written) |
+| `/b/:slug` | P8, the feature priority map | `/Breeder/:slug` (the breeder's public page). The store page is `/store/:slug`, lower case |
+| `/b/:slug/widget` | P8 | Never built: there is no embed widget |
+| `/b/:slug/journal` | P9 | Never built, and shelved with all blog work |
+| `/settings/storefront` | P8 | `/MyStore`. An older `/BreederStorefront` redirects there |
+| `/market` | P2 | `/Market` (Market Intelligence). The older price page is `/MarketPricing` |
+| `/settings/alerts` | P2 | Never built: there are no price alerts. The nearest thing is the Watchlist tab on `/Market` |
+| `/answers`, `/answers/new`, `/answers/:id` | P5 | Never existed. Geck Answers was folded into the Forum: `/GeckAnswers` redirects to `/Forum` |
+| `/loans`, `/loans/:id`, `/loans/accept/:token` | P4 | Never existed. Breeding Loans is retired: `/BreedingLoans` redirects to `/Breeding` |
+| `/breeding`, `/breeding/new`, `/breeding/:id` | P3 | `/Breeding`. A plan has no address of its own. Breeding ROI is retired: `/BreedingROI` redirects to `/Breeding` |
+| `/groups/:id/feed`, `/groups/:id/weigh` | P6 | `/BatchHusbandry`, one page |
+| `/admin/photo-submissions` | P10 | Never built as an address. Review is a tab inside `/AdminPanel`; members submit at `/MorphGuideSubmission` |
+
+Addresses that did exist and now redirect (retired pages such as `/Promote`, `/Store`, `/OtherReptiles`, `/Marketplace`) are listed in `src/lib/retiredPages.js`, with where each goes.

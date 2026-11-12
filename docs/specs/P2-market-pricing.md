@@ -1,8 +1,8 @@
 # P2: Market Pricing Intelligence
 
-> **Status, 11 November 2026: Partly built, and Dated.** Prices now come from asking-price listings (the trait value table), not from seeded guide data. The seed price table in this spec was deleted from the database on 28 September; do not use or re-seed it, and the guide it names belongs to an unrelated breeder. The portfolio banner and price alerts were never built. What shipped: `/Market`, `src/pages/MarketPricing.jsx`, `src/pages/Portfolio.jsx`, the value card on the gecko record.
+> **Status, 11 November 2026: Partly built, and Dated.** Prices now come from asking-price listings (the trait value table), not from seeded guide data. The seed price table in this spec was deleted from the database on 28 September; do not use or re-seed it, and the guide it names belongs to an unrelated breeder. The portfolio banner and price alerts were never built. What shipped: `/Market`, `src/pages/MarketPricing.jsx`, `src/pages/Portfolio.jsx`, the value card on the gecko record. The paste-ready build prompt that ended this file was removed on 12 November 2026 (git keeps it).
 
-> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+> **Design note (15 October 2026, shortened 12 November 2026):** this spec was written for a set of fonts and a green colour palette that never shipped. The lines that set them out were in the build prompt, which has been removed. Any colour name still in the text below (sage, forest, ember gold) comes from that palette: ignore it. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P2
 **Dependencies:** P1 (Animal Passport, animals must exist)
@@ -109,40 +109,4 @@ CollectionValuation {
 
 ---
 
-## Claude Code Prompt
-
-```
-Build the Market Pricing Intelligence feature for Geck Inspect.
-
-DESIGN SYSTEM: [PASTE GLOBAL DESIGN SYSTEM]
-
-CONTEXT: Animal Passport (P1) is already built. The animals table exists with morph,
-pattern_grade, sex, and care log data. This feature adds market pricing on top.
-When a transfer is completed (P1 flow), there is already a prompt asking the user
-to contribute the sale price to market data, that contribution lands in morph_price_entries.
-
-DATABASE: create these tables:
-[PASTE MorphPriceEntry, PriceAlert, CollectionValuation models]
-
-BUILD:
-1. MARKET PAGE (/market): 4 stat cards, filterable morph price table with sparkline trend
-   column, expandable rows showing price histogram + recent anonymized sales.
-   "Log a sale" button top right.
-
-2. MarketValueCard COMPONENT: embed in passport page (P1). Shows value range, 3 comps,
-   asking vs market gap, 6-month trend chart. Graceful empty state if <3 comps.
-
-3. PortfolioBanner COMPONENT: embed at top of collection page. Total value, donut chart
-   by morph category, month-over-month delta, "Refresh valuation" button.
-
-4. LOG A SALE MODAL: animal select or manual, auto-populate morph/sex/age,
-   sale price + date + location, anonymous checkbox (default ON).
-
-5. PRICE ALERTS (/settings/alerts): list of user alerts, "Add alert" form (morph,
-   price, above/below direction), active toggle per alert.
-
-QUALITY: Price table must be scannable, breeders compare morphs at a glance.
-Trend indicators: green arrow >5% up, red arrow >5% down, gray dash +/-5%.
-All prices in USD $X,XXX.XX format. Charts handle sparse data gracefully.
-Anonymous means anonymous, never expose submitted_by on any public view.
-```
+The build prompt that stood here was removed on 12 November 2026 because its fonts, colours and routes were never shipped. Design is `docs/specs/DESIGN-SYSTEM.md`.

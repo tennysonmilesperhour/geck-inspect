@@ -2,6 +2,8 @@
 
 Read this before writing a migration, changing an edge function, or running any `supabase db ...` command against production.
 
+This page is the one full account of how a merge reaches production. Other documents (`README.md`, `docs/ENGINEERING.md`, `docs/INFRASTRUCTURE.md`, `docs/CONTEXT.md`) keep one sentence and link here; if the story changes, change it here.
+
 ## How a change reaches production
 
 The Supabase GitHub integration watches `main`. When a commit lands there (a direct push or a merged pull request) it:
@@ -9,7 +11,7 @@ The Supabase GitHub integration watches `main`. When a commit lands there (a dir
 1. **Applies every new migration file.** Each root-level file in `supabase/migrations/` that production's history does not have yet runs, in filename order, and is recorded under the file's own version. Round 1 of the review fixes went out this way on 15 October: production's history shows `20261015120000_ownership_checks`, `20261015130000_comms_and_exposure` and the rest, exactly as the files are named.
 2. **Deploys the edge functions declared in `supabase/config.toml`.** A function with a `[functions.<name>]` block there is deployed from `main` with that block's `verify_jwt` setting. A function that is not declared is never touched by a merge; it stays whatever was last deployed by hand. `docs/INFRASTRUCTURE.md`, section 2, lists every production function, whether `config.toml` declares it, and why the undeclared ones are not.
 
-Vercel deploys the site from the same commit at the same time. Nothing guarantees which of the three finishes first.
+Vercel deploys the site from the same commit at the same time, unless the commit changes only `docs/` or top-level Markdown files, in which case the site build is skipped (`ignoreCommand` in `vercel.json`). Nothing guarantees which of the three finishes first; it usually all happens within a minute.
 
 ## What that means when you write a migration
 

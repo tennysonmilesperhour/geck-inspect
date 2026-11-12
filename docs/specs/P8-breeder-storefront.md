@@ -1,8 +1,8 @@
 # P8: Enhanced Breeder Storefront
 
-> **Status, 11 November 2026: Partly built, and Dated.** The public page is `/Breeder/:slug` and the editor is `/MyStore`. There are no `/b/` routes and no embed widget. The visual website editor was retired on 16 October.
+> **Status, 11 November 2026: Partly built, and Dated.** The public page is `/Breeder/:slug` and the editor is `/MyStore`. There are no `/b/` routes and no embed widget. The visual website editor was retired on 16 October. The paste-ready build prompt that ended this file was removed on 12 November 2026 (git keeps it).
 
-> **Design note (15 October 2026):** the "DESIGN SYSTEM" lines in this spec (DM Serif Display, DM Sans, the forest and sage hex palette, or "[PASTE GLOBAL DESIGN SYSTEM]") are superseded. That palette never shipped. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
+> **Design note (15 October 2026, shortened 12 November 2026):** this spec was written for a set of fonts and a green colour palette that never shipped. The lines that set them out were in the build prompt, which has been removed. Any colour name still in the text below (sage, forest, ember gold) comes from that palette: ignore it. Use `docs/specs/DESIGN-SYSTEM.md`, which describes the shipped theme tokens.
 
 **Priority:** P8
 **Dependencies:** P1 (Animal Passport), P2 (Market Pricing)
@@ -82,45 +82,4 @@ BreederReview {
 
 ---
 
-## Claude Code Prompt
-
-```
-Build the Enhanced Breeder Storefront for Geck Inspect.
-
-DESIGN SYSTEM: [PASTE GLOBAL DESIGN SYSTEM]
-
-CONTEXT: Animal Passport (P1) and Market Pricing (P2) are built. Users already exist.
-This enhances user profiles into proper business pages.
-
-DATABASE:
-[PASTE BreederProfile and BreederReview models]
-
-BUILD:
-
-1. STOREFRONT PAGE (/b/:slug): PUBLIC
-Banner photo (full-width hero), profile photo overlaid bottom-left.
-Header: display name, location, verified badge (sage checkmark if is_verified),
-specialty morphs as pills, bio, years breeding, social links, "Contact" button.
-Stats row: X animals sold | X reviews | Member since [year] | Ships to [list].
-"For Sale" grid: AnimalCards for all animals with status = for_sale.
-Reviews section: summary (avg stars + count), review cards (title, body, rating stars,
-verified badge if is_verified, transaction type, date).
-
-2. PROFILE SETTINGS (/settings/storefront)
-Edit all BreederProfile fields. Custom slug input with availability check (live).
-Preview button shows storefront as buyers see it.
-
-3. REVIEW SYSTEM
-Buyers can leave a review for a seller after a confirmed transfer (OwnershipRecord exists).
-Review form: rating (1 to 5 stars), title, body, transaction type.
-Reviews display on storefront and in animal passport ownership timeline.
-
-4. EMBED WIDGET (/b/:slug/widget)
-Generate iframe embed code for "Available animals from [breeder]".
-Minimal widget: 2-col grid of for_sale animals with price and passport link.
-Must work on external sites, no auth, public data only.
-
-QUALITY: Breeders will share this URL on Instagram, Facebook, at expos.
-It is Geck Inspect's public face in the wild. Make it look like a real business page,
-not a web app profile. Verified badge matters, make it clearly visible.
-```
+The build prompt that stood here was removed on 12 November 2026 because its fonts, colours and routes were never shipped. Design is `docs/specs/DESIGN-SYSTEM.md`.

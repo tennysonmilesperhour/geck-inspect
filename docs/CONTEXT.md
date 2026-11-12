@@ -1,16 +1,14 @@
 # Geck Inspect: CONTEXT.md
 
-> **Corrections, 11 November 2026.** True when reconciled on 15 October, changed since: Other Reptiles, the AI Consultant and Promote were retired on 16 October (sections 1 to 5 still mention them, including a Keeper promo "offered on the Promote page"); the repository holds 39 edge functions, 34 of them declared; section 7's competitor list is April 2026 data (`STRATEGY.md` is current); section 8 describes the control landing page only, and a second page is under test (`docs/planning/homepage-ab-test-2026-10.md`). Not covered here: Today and the phone tabs, Weekly Gecko Notes, the 12-item menu, dark only with Emerald as the default theme. For those, read the "Current state" section of `CLAUDE.md`.
+> **Purpose of this file.** This is the factual, long-lived context for Geck Inspect. It answers the question *"what is this project, and what's the state of it right now?"* for any future collaborator (human or AI). It should not contain aspirational goals, strategy, or reasoning for decisions. The reasons behind decisions live in `docs/DECISIONS.md`; the plan lives where `ROADMAP.md` points. When something material changes (stack, schema, pricing, ownership, critical file paths), update this file.
 
-> **Purpose of this file.** This is the factual, long-lived context for Geck Inspect. It answers the question *"what is this project, and what's the state of it right now?"* for any future collaborator (human or AI). It should not contain aspirational goals, strategy, or reasoning for decisions. Those live in `INTENT.md` and `DECISIONS.md`. When something material changes (stack, schema, pricing, ownership, critical file paths), update this file.
-
-> **Last reconciled with the code: 15 October 2026** (sections 1 to 5 and 8, plan item E2 21 of `docs/planning/comprehensive-review-2026-10-14.md`). Each statement names the file it comes from, so the next reconcile can check it quickly. When the code and this file disagree, the code wins and this file gets fixed.
+> **Last reconciled with the code: 15 October 2026** (sections 1 to 5 and 8, plan item E2 21 of `docs/planning/comprehensive-review-2026-10-14.md`). **Corrected in the text on 12 November 2026** for what changed after that: the features retired on 16 October, the menu and phone tabs, the two landing pages under test, and the facts that now have one home elsewhere (edge function counts, how a merge deploys, the competitor list). Each statement names the file it comes from, so the next reconcile can check it quickly. When the code and this file disagree, the code wins and this file gets fixed.
 
 ---
 
 ## 1. What Geck Inspect is
 
-Geck Inspect is a web app for crested gecko (*Correlophus ciliatus*) keepers and breeders at `geckinspect.com`. It is built around crested gecko traits, genetics and records, not reptiles in general. One small exception exists: an "Other Reptiles" list (`src/pages/OtherReptiles.jsx`) lets members keep simple records for animals that are not geckos.
+Geck Inspect is a web app for crested gecko (*Correlophus ciliatus*) keepers and breeders at `geckinspect.com`. It is built around crested gecko traits, genetics and records, not reptiles in general. The one exception there used to be, an "Other Reptiles" list for animals that are not geckos, was retired on 16 October 2026; its records are kept (`src/lib/retiredPages.js`).
 
 What a member can do today (pages in `src/pages`, menus in `src/lib/navItems.js`):
 
@@ -24,7 +22,16 @@ What a member can do today (pages in `src/pages`, menus in `src/lib/navItems.js`
 8. **Join the community.** Forum, gallery, direct messages and notifications, with report and block buttons.
 9. **Let AI agents read the open data.** `/data` files, `llms.txt`, markdown twins of public pages and a read-only MCP server at `/mcp` (`api/mcp.js`). See `docs/planning/agent-access-2026-10.md`.
 
-Optional tools that make paid AI calls and are metered per plan (`src/lib/tierLimits.js`): the AI Consultant chat, the photo health screen, visual search, growth reels and Promote (social posts). Plan item 23 of the comprehensive review proposes retiring several of these behind flags.
+Optional tools that are metered per plan (`src/lib/tierLimits.js`, `src/lib/usageMeter.js`): the photo health screen, visual search and growth reels on the gecko record. Morph ID has its own monthly allowance (section 5). The AI Consultant chat and Promote (social posts) used to be on this list; both were retired on 16 October 2026.
+
+**The shape of the app** (`src/lib/navItems.js`, `src/lib/ThemeContext.jsx`, `index.html`):
+
+- The sidebar has 12 destinations, 8 in Keeper mode (a menu setting that hides the breeding and selling pages). A test holds both numbers (`src/lib/navItems.derived.test.js`).
+- On a phone the bottom tabs are Today, Geckos, Log and More, and the app opens on Today: what is due today, the week ahead, then the collection (`src/pages/Today.jsx`).
+- The app is dark only. New visitors start on the Emerald theme; a member can pick one of six.
+- Members get the getting-started emails for their first two weeks and then Weekly Gecko Notes, one short care email a week (`content/weekly-notes/`, `docs/planning/weekly-notes-2026-10.md`).
+
+**Retired, with code and tables kept** (`src/lib/retiredPages.js`; what each did, where its links go and how to switch one back on is in `docs/planning/retired-features-2026-10.md`): Promote (social posts), the AI Consultant, Other Reptiles, the supplies store with its sticker builders, and the visual website editor on My Store, all on 16 October 2026; Guess the Price, the Morph Visualizer and Community Connect earlier in October; Breeding Loans, Mentorship, Giveaways and Shipping before that. The enclosure sensor screens (Govee) are switched off in the app (`IOT_SENSORS_ENABLED` in `src/lib/iotClient.js`). Do not describe any of these as live.
 
 Historical pricing benchmarks in older docs (entry $50 to $250, mid $120 to $450, high-end $400 to $800+, Lilly White $250 to $1,200, Axanthic up to $2,500, average about $350) came from an external guide written by an unrelated breeder who happens to share Tennyson's first name. That site is NOT Tennyson's brand and its address is deliberately not repeated here (see the domain disambiguation note in CLAUDE.md). The app's own prices come from its listing data.
 
@@ -42,13 +49,13 @@ What the evidence says about who pays, as of 14 October 2026 (the comprehensive 
 
 - **Web app:** React 18 and Vite 6, a single-page app with build-time prerendered public pages (`package.json`, `scripts/prerender.mjs`). Tailwind CSS 3 with Radix-based shadcn primitives (`src/components/ui`). There is no Next.js in this repo.
 - **Hosting:** Vercel, production domain `geckinspect.com`. Every push to `main` deploys production, except a push that only changes `docs/` or top-level Markdown files (`ignoreCommand` in `vercel.json`). Vercel also serves four serverless routes (`api/mcp.js`, `api/share.js`, `api/og-pairing.js`, and `api/morph-share.js` for shared Morph ID cards at `/morph-id/r/<id>`) and the routing middleware (`middleware.js`), which logs crawler visits to `agent_hits` and returns real 404 pages.
-- **Backend:** one Supabase project, `mmuglfphhwlaluyfyxsp` (Postgres, Auth, Storage, Edge Functions, pg_cron, Vault). On 15 October 2026 the `public` schema had 128 tables and 197 functions, and the `geck_data` schema (market and reference data, written by the separate geck-data repo) had 62 tables. `supabase/functions` holds 35 edge functions; 33 functions were deployed on 15 October: 32 of the repo's 35 (not the two store functions, and not `resend-webhook`, which is new in round 2 and deploys with that merge) plus `rapid-api`, which has no repo copy. Merging to `main` applies new migration files and deploys the functions declared in `supabase/config.toml`, through the Supabase GitHub integration; the rest are deployed by hand. Details in `docs/MIGRATIONS.md` and `docs/planning/deploy-queue-2026-10-03.md`.
+- **Backend:** one Supabase project, `mmuglfphhwlaluyfyxsp` (Postgres, Auth, Storage, Edge Functions, pg_cron, Vault). On 15 October 2026 the `public` schema had 128 tables and 197 functions, and the `geck_data` schema (market and reference data, written by the separate geck-data repo) had 62 tables. The edge functions live in `supabase/functions`; how many there are, which ones a merge deploys and which are deployed by hand is in `docs/INFRASTRUCTURE.md`, section 2. Merging to `main` also changes the database and the edge functions; `docs/MIGRATIONS.md` tells how.
 - **Auth:** Supabase Auth everywhere (`src/lib/AuthContext.jsx`, `src/lib/supabaseClient.js`). Nothing routes through Base44 any more.
 - **Source control and CI:** GitHub, `tennysonmilesperhour/geck-inspect`. GitHub Actions runs CI and the scheduled bots, listed in `docs/OPERATIONS.md`.
 - **Payments:** Stripe on the web (`supabase/functions/stripe-checkout`, `stripe-webhook`, `stripe-billing-portal`; live price ids in `src/lib/stripe-config.js`). RevenueCat with Apple StoreKit inside the native app (`docs/BILLING.md`).
 - **Native app:** Capacitor 8 projects for iOS and Android (`capacitor.config.ts`, app id `com.geckinspect.app`). The iPhone app has been submitted to the App Store and is in review work: rejected twice, build 13 resubmitted on 26 October, and the project is now at build 15 with Sign in with Apple switched on (`docs/planning/app-store-resubmission-2026-10-26.md`). Nothing has been submitted to Google Play.
 - **Email and push:** Resend sends email from the edge functions (`send-email` and others) and reports deliveries, opens, clicks and bounces back to `resend-webhook`; web push uses VAPID keys (`send-push`).
-- **AI:** Anthropic Claude for Morph ID, the health screen, the AI Consultant, Promote drafting and import parsing. Replicate makes the photo fingerprints that Morph ID uses to find similar reference photos (`supabase/functions/_shared/visual-embedding.ts`).
+- **AI:** Anthropic Claude for Morph ID, the health screen and import parsing (and for the AI Consultant and Promote drafting, which are retired for members but kept). Replicate makes the photo fingerprints that Morph ID uses to find similar reference photos (`supabase/functions/_shared/visual-embedding.ts`).
 - **Analytics:** Google Analytics 4 is started by the app on production hostnames only (`src/lib/ga.js`, called from `src/lib/GA4PageTracker.jsx`). PostHog is on in production: the production build refuses to finish without `VITE_POSTHOG_KEY` (`scripts/check-env.mjs`), and the client loads it after the first paint, except in guest mode (`src/lib/posthog.js`); it identifies members by their auth id with plan and role only, never by email. Neither loads under Do Not Track or Global Privacy Control, after a visitor turns analytics off, or, for visitors in the EEA and the UK, before they accept on the consent banner (`src/lib/analyticsConsent.js`; `middleware.js` sets the `gi_analytics_region` cookie from Vercel's country header, and a European browser time zone also counts). First-party product events go to `public.user_events` (`src/lib/telemetry.js`); they set no cookie and do not wait for the consent choice, which covers Google Analytics and PostHog only, so the banner and the privacy policy's switch name those two and never say "nothing is counted" (privacy policy section 5 describes the first-party count, and `src/lib/__tests__/privacyPolicy.test.js` keeps the wording and the code in step). The Robauto.ai pixel was removed on 16 October 2026. The weekly growth report reads GA4 and Google Search Console.
 - **Services, costs and secrets:** every outside service, what it costs where that is written down, and where each secret lives is in `docs/OPERATIONS.md`.
 - **History:** the app started on Base44 and moved to this stack in early April 2026 (at the time: 38 Base44 entities, about 88 registered users, about 250 gecko records).
@@ -72,7 +79,7 @@ The genetics engine is the vendored package `crested-gecko-app` (`vendor/crested
 
 ## 5. Membership tiers (current pricing)
 
-The source of truth is `TIER_PRICING` and `ENTERPRISE_ON_SALE` in `src/lib/stripe-config.js` and `TIER_LIMITS` in `src/lib/tierLimits.js`. As of 15 October 2026:
+This table is the one place in the documents where prices are written out; other documents point here. The source of truth is the code: `TIER_PRICING` and `ENTERPRISE_ON_SALE` in `src/lib/stripe-config.js` for prices, and `TIER_LIMITS` in `src/lib/tierLimits.js` for limits. If the table and the code disagree, the code wins; fix the table. Read from the code on 12 November 2026:
 
 | Plan | Price | Gecko limit | Morph ID |
 |---|---|---|---|
@@ -83,8 +90,8 @@ The source of truth is `TIER_PRICING` and `ENTERPRISE_ON_SALE` in `src/lib/strip
 
 - Enterprise is off sale (`ENTERPRISE_ON_SALE = false`, decision 45). Existing Enterprise members and complimentary grants keep access. Admins are treated as Enterprise.
 - Lifetime plans are one-time Stripe payments on the website only. The iPhone app sells monthly and yearly Keeper and Breeder through the App Store (`docs/BILLING.md`).
-- Trials are opt-in: a 7-day trial (`TRIAL_DAYS`) from its own button, once per account, and a one-time 30-day Keeper promo offered on the Promote page (`KEEPER_PROMO_TRIAL_DAYS`). A plain purchase is billed the same day.
-- Each plan also has monthly allowances for the AI Consultant, health screens, visual searches, growth reels, enclosure sensor reads and social posts (`TIER_LIMITS`).
+- Trials are opt-in: a 7-day trial (`TRIAL_DAYS`) from its own button, once per account. A plain purchase is billed the same day. A one-time 30-day Keeper promo (`KEEPER_PROMO_TRIAL_DAYS`) also exists in the code: the Membership page still honours its link (`?intent=keeper_trial`), but the only page that offered it was Promote, which is retired, so nothing in the live app leads to it.
+- Each plan also has monthly allowances for health screens, visual searches and growth reels (`TIER_LIMITS`). The allowances for AI Consultant messages, enclosure sensor reads and social posts are still in that file, for features that are retired or switched off.
 - Morph ID allowances reset at midnight UTC on the 1st. Free had one identification, ever, until plan item 17 of the comprehensive review made it one a month (decision 46). `monthlyMorphIDCredits` in `tierLimits.js` and the `consume_morph_id_credit` SQL function (which uses 1 for Free) are the truth, not this table. Extra scans in `morph_id_bonus_credits` sit on top.
 
 A member's plan is the highest of: the Stripe plan on their profile, a verified App Store purchase, an active complimentary plan, and a grandfathered Breeder grant (`resolveTier` in `src/lib/tierLimits.js`, mirrored in SQL by `effective_tier_for_current_user()`).
@@ -98,25 +105,23 @@ Goals: the old "1,000 users" target is retired. The current scoreboard (paying b
 - Live app: `https://geckinspect.com` (and `https://geck-inspect.vercel.app`)
 - Enterprise waitlist: the button on the Membership page
 
-## 7. Known competitors in the space
+## 7. Competitors
 
-Geck Inspect's competitive landscape as of April 2026. The current picture is `docs/planning/competitive-landscape-2026-10.md` (5 October 2026).
-
-- **Husbandry Pro**: configurable, species-agnostic, enterprise-leaning. Dated UI.
-- **ReptiDex**: newer entrant, AI + pedigree angle, broad species coverage. Spread thin.
-- **HerpTracker**: fast logging focus (3-tap), team collaboration. Generic, not breeder-first.
-- **Breed Ledger**: built by a crestie breeder (Geckistry). Positions as storefront + records.
-- **MorphMarket Animal Manager**: bundled with the MorphMarket marketplace. User complaints about stability.
-
-Geck Inspect's differentiation: **the only platform built specifically for crested geckos**, with genetics and morph taxonomy modeling that the generalist tools don't have.
+The competitor picture, the market size and the positioning are in `STRATEGY.md` (the conclusions) and `docs/planning/competitive-landscape-2026-10.md` (the 5 October 2026 research, with a source for each fact). The April 2026 list this section used to hold is in git history.
 
 ---
 
 ## 8. The landing page
 
-The landing page is `src/pages/Home.jsx`, served at `/` and prerendered to static HTML at build time (`scripts/prerender.mjs`), so it can be read without JavaScript and loads fast on a phone. It is part of the same Vite app, not a separate site.
+Two landing pages are being tested against each other, so what a signed-out visitor sees at `/` depends on which one their browser was given. `docs/planning/homepage-ab-test-2026-10.md` is the authority on the test: who is enrolled, what is measured and what is frozen. This section only says what the two pages are. The files named here must not be changed while the test runs (`docs/RULES.md`, section 3).
 
-What is on it, top to bottom:
+- **The chooser** is `src/pages/Home.jsx`, served at `/` and `/Home`. It picks one of the two pages below. Visitors who are not enrolled in the test see the control page.
+- **The control page** is `src/pages/HomeControl.jsx`: the landing page as it was before the test.
+- **The "business assistant" page** is `src/components/landing/business/BusinessHome.jsx`: a different design built around sample pricing, a single-gene pairing, an expense ledger and a buyer packet, with real product screenshots. Its sample interactions never create member records.
+
+Both pages lead to the same sign-up, the same app and the same prices. The page at `/` is prerendered to static HTML at build time (`scripts/prerender.mjs`), so it can be read without JavaScript and loads fast on a phone. It is part of the same Vite app, not a separate site.
+
+What is on the control page, top to bottom:
 
 1. The hero: "Price right. Pair smart." with one "Start free" button. Larger screens also show a product screenshot; phones skip downloading it.
 2. Free tools usable before signing up: the genetics calculator and Morph ID.
@@ -126,11 +131,11 @@ What is on it, top to bottom:
 6. An email capture card and testimonials (`Testimonials.jsx` stays hidden until at least three approved quotes exist).
 7. Free crested gecko tools and guides, a short "About the crested gecko" section, an FAQ (the same list feeds the FAQPage structured data) and a closing call to action ("Start with one gecko.").
 
-Pricing is not on the landing page. It lives on `/Membership`, linked from the navigation and the footer.
+Pricing is not on the control page. It lives on `/Membership`, linked from the navigation and the footer.
 
-How it looks: the landing page uses Montserrat (`.landing-font` in `src/styles/layout-theme.css`) and the app uses Inter. Colours come from the theme tokens described in `docs/specs/DESIGN-SYSTEM.md`. The April 2026 design brief (charcoal with a cream accent, Satoshi and JetBrains Mono) was never built and does not describe the current look.
+How it looks: the control page uses Montserrat (`.landing-font` in `src/styles/layout-theme.css`) and the app uses Inter. The business page has its own stylesheet (`src/components/landing/business/business-home.css`). While the test runs, a signed-out visit that opens on the homepage keeps the look the test launched with, not the Emerald default (decision 53; the test document says how). The April 2026 design brief (charcoal with a cream accent, Satoshi and JetBrains Mono) was never built and does not describe the current look.
 
-How it is measured: GA4 page views and events, PostHog, and first-party events in `public.user_events` (section 3). Signups by first-touch source are on the admin Funnel card.
+How it is measured: the test's own metrics are in PostHog and are described in the test document. Outside the test: GA4 page views and events, and first-party events in `public.user_events` (section 3). Signups by first-touch source are on the admin Funnel card.
 
 The April 2026 brief this section used to hold (the state at the time, a target architecture, a section plan, a design direction, an asset list and metrics) is in git history before 15 October 2026. The reasoning behind it is in `docs/INTENT.md` and decisions 1 to 16 in `docs/DECISIONS.md`.
 
