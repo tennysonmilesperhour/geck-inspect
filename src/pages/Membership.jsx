@@ -44,6 +44,7 @@ import {
   takeCheckoutReturn,
 } from '@/lib/checkoutReturn';
 import { isGuestMode } from '@/lib/guestMode';
+import { takeUpgradeReturn } from '@/components/subscription/upgradeReturn';
 
 /**
  * Membership / pricing page.
@@ -587,6 +588,18 @@ export default function MembershipPage() {
   );
   const [portalBusy, setPortalBusy] = useState(false);
 
+  // A member sent here by a plan limit goes back to where they were once
+  // the new plan shows on the account (experience review, finding J5).
+  // The page is remembered by the upgrade link and offered once. With
+  // nothing remembered the confirmation reads as it always has.
+  const [returnTo, setReturnTo] = useState(null);
+  const paidAfterCheckout = checkoutReturn.status === 'success' && hasPaidPlan;
+  useEffect(() => {
+    if (!paidAfterCheckout) return;
+    const path = takeUpgradeReturn();
+    if (path) setReturnTo(path);
+  }, [paidAfterCheckout]);
+
   const handleManageBilling = async () => {
     captureEvent('billing_portal_opened', { tier: currentTier });
     setPortalBusy(true);
@@ -848,6 +861,19 @@ export default function MembershipPage() {
               className="mx-auto max-w-xl flex items-start gap-3 rounded-2xl border border-emerald-400/50 bg-emerald-500/10 px-5 py-4 text-left text-sm text-emerald-100"
             >
               <CheckCircle2 className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5" />
+              {returnTo && paidAfterCheckout && currentTierMeta ? (
+                <div data-checkout-return>
+                  <p className="font-semibold text-emerald-200">
+                    {`You're on ${currentTierMeta.name.charAt(0)}${currentTierMeta.name.slice(1).toLowerCase()}. Carry on.`}
+                  </p>
+                  <p className="mt-1 text-emerald-100/80">Everything in your plan is unlocked now.</p>
+                  {/* A full page load, like this page's other links, so
+                      the page they return to reads the new plan fresh. */}
+                  <Button asChild size="sm" className="mt-3">
+                    <a href={returnTo}>Back to where you were</a>
+                  </Button>
+                </div>
+              ) : (
               <div>
                 <p className="font-semibold text-emerald-200">
                   {planConfirmed && currentTierMeta
@@ -862,6 +888,7 @@ export default function MembershipPage() {
                       : 'Your plan switches on within a minute. If this page still shows Free after that, refresh it, or message support below and we will sort it out.'}
                 </p>
               </div>
+              )}
             </div>
           )}
 

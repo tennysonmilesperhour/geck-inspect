@@ -12,6 +12,8 @@ import {
   profitBySeason, profitByPairing, costLinkOptions, costLinkValue, parseCostLink,
 } from '@/lib/businessLedger';
 import { toast } from '@/components/ui/use-toast';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import { undoToast } from '@/lib/undoToast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import PageHeader from '@/components/shared/PageHeader';
@@ -474,7 +476,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
           <X className="w-3 h-3 mr-1" />Cancel
         </Button>
         <div className="flex-1" />
-        <Button size="icon" variant="ghost" onClick={() => onDelete(sale.id)}
+        <Button size="icon" variant="ghost" onClick={() => onDelete(sale.id)} aria-label="Delete reserve"
           className="h-7 w-7 text-red-500 hover:bg-red-900/20">
           <Trash2 className="w-3 h-3" />
         </Button>
@@ -483,7 +485,8 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
   );
 }
 
-function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, allGeckos }) {
+// Exported for its test (src/pages/__tests__/pendingSalesTab.test.jsx).
+export function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, allGeckos }) {
   const [creating, setCreating] = useState(false);
   const [geckoPickerOpen, setGeckoPickerOpen] = useState(false);
   const [newSale, setNewSale] = useState({
@@ -547,8 +550,17 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
     }
   };
 
+  // Completing a sale writes the revenue record and archives the gecko as
+  // Sold, so it is asked about first. Cancelling and deleting a reserve
+  // can both be put back exactly, so they happen at once with Undo.
+  // The sale stays in state after the dialog closes, so its name does not
+  // blank out while the dialog fades.
+  const [completeAsk, setCompleteAsk] = useState({ open: false, sale: null });
+  const [completeBusy, setCompleteBusy] = useState(false);
+  const closeCompleteAsk = () => setCompleteAsk(ask => ({ ...ask, open: false }));
+
   const handleComplete = async (sale) => {
-    if (!confirm(`Complete sale for "${sale.gecko_name}"? This will move it to revenue and archive the gecko.`)) return;
+    setCompleteBusy(true);
     try {
       await PendingSale.update(sale.id, { status: 'completed', completed_date: new Date().toISOString() });
       // A reserve on a gecko in the collection becomes that gecko's sale
@@ -580,25 +592,57 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
+    setCompleteBusy(false);
+    closeCompleteAsk();
   };
 
+  // Put a reserve back where it was in the list (newest first).
+  const putBack = (sale, index) => setPendingSales(prev => {
+    if (prev.some(s => s.id === sale.id)) return prev;
+    const next = [...prev];
+    next.splice(Math.min(Math.max(index, 0), next.length), 0, sale);
+    return next;
+  });
+
   const handleCancel = async (sale) => {
-    if (!confirm(`Cancel reserve for "${sale.gecko_name}"? The gecko will remain in your collection.`)) return;
+    const index = pendingSales.findIndex(s => s.id === sale.id);
     try {
       await PendingSale.update(sale.id, { status: 'cancelled' });
       setPendingSales(prev => prev.filter(s => s.id !== sale.id));
-      toast({ title: 'Reserve cancelled' });
+      undoToast({
+        title: `Reserve for ${sale.gecko_name} cancelled`,
+        description: sale.gecko_id ? 'The gecko stays in your collection.' : undefined,
+        undo: async () => {
+          await PendingSale.update(sale.id, { status: sale.status || 'pending' });
+          putBack(sale, index);
+        },
+        undone: 'Reserve restored',
+      });
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Permanently delete this pending sale record?')) return;
+    const index = pendingSales.findIndex(s => s.id === id);
+    const held = pendingSales[index];
     try {
-      await PendingSale.delete(id);
+      // The delete hands back the row it removed, so Undo can save the
+      // same record again under the same id.
+      const removed = (await PendingSale.delete(id)) || held;
       setPendingSales(prev => prev.filter(s => s.id !== id));
-      toast({ title: 'Deleted' });
+      if (!removed) {
+        toast({ title: 'Reserve deleted' });
+        return;
+      }
+      undoToast({
+        title: `Reserve for ${removed.gecko_name} deleted`,
+        undo: async () => {
+          const restored = await PendingSale.create(removed);
+          putBack(restored || removed, index);
+        },
+        undone: 'Reserve restored',
+      });
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
@@ -822,13 +866,24 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
               key={sale.id}
               sale={sale}
               onUpdate={handleUpdate}
-              onComplete={handleComplete}
+              onComplete={(sale) => setCompleteAsk({ open: true, sale })}
               onCancel={handleCancel}
               onDelete={handleDelete}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={completeAsk.open}
+        onOpenChange={(open) => { if (!open && !completeBusy) closeCompleteAsk(); }}
+        title={`Complete the sale of ${completeAsk.sale?.gecko_name || 'this gecko'}?`}
+        description={`${formatMoney(parseFloat(completeAsk.sale?.reserve_price) || 0)} moves to revenue${
+          completeAsk.sale?.gecko_id ? ', and the gecko is archived as sold.' : ' as a sale.'}`}
+        confirmLabel="Complete sale"
+        busy={completeBusy}
+        onConfirm={() => handleComplete(completeAsk.sale)}
+      />
     </div>
   );
 }

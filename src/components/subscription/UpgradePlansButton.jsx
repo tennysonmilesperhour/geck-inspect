@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { openUpgradePlans, upgradeMembershipPath, upgradePromptShown } from '@/lib/upgradePrompt';
+import { rememberUpgradeReturn } from '@/components/subscription/upgradeReturn';
 
 /**
  * Plans control on a locked feature.
@@ -15,6 +16,10 @@ import { openUpgradePlans, upgradeMembershipPath, upgradePromptShown } from '@/l
  * trackShown records upgrade_prompt_shown while the control is on screen.
  * Parents that already record the view (the plan limit modal, the Morph ID
  * locked card) pass false so the same prompt is not counted twice.
+ *
+ * Both controls also remember the page they were on, so the Membership
+ * page can offer the way back once the new plan is confirmed
+ * (upgradeReturn.js).
  */
 export default function UpgradePlansButton({
   limitType,
@@ -38,6 +43,7 @@ export default function UpgradePlansButton({
       size={size}
       className={className}
       onClick={() => {
+        rememberUpgradeReturn();
         openUpgradePlans(limitType, surface || limitType, navigate);
         if (onAfter) onAfter();
       }}
@@ -69,7 +75,10 @@ export function UpgradePlansLink({
     <Link
       to={path}
       className={className}
-      onClick={() => openUpgradePlans(limitType, face)}
+      onClick={() => {
+        rememberUpgradeReturn();
+        openUpgradePlans(limitType, face);
+      }}
     >
       {children}
     </Link>

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -10,14 +10,17 @@ import {
     Upload, Download, FileSpreadsheet, AlertTriangle, Loader2,
     ArrowLeft, ArrowRight, Check, Columns3, Sparkles,
 } from 'lucide-react';
+import { Gecko } from '@/entities/all';
 import { importGeckosFromCSV } from '@/functions/importGeckosFromCSV';
 import { recordGeckoAdded } from '@/lib/activation';
 import { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
 import { geckoLimitFor } from '@/lib/geckoLimit';
+import { upgradePromptShown } from '@/lib/upgradePrompt';
 import { generateCSVTemplate } from '@/functions/generateCSVTemplate';
 import { parseCSV, readFileAsText, transformRows } from './csv/csvParser';
 import { autoMapColumns, TEMPLATE_FIELDS, requiredFieldsCovered } from './csv/columnMapper';
 import CSVColumnMapper from './csv/CSVColumnMapper';
+import { importLimitNotice, previewImport } from './csv/importPreview';
 
 // ---------- step labels for the stepper ----------
 const STEPS = [
@@ -26,6 +29,28 @@ const STEPS = [
     { key: 'import',  label: 'Import' },
     { key: 'results', label: 'Results' },
 ];
+const TEMPLATE_KEYS = TEMPLATE_FIELDS.map(f => f.key);
+
+// Said before the import starts, where the member can still archive a
+// gecko or change plan (finding J4). It used to appear only afterwards.
+// The modal counts the prompt as shown once per file, so the link here
+// does not count it again each time the notice is drawn.
+function ImportLimitNotice({ text }) {
+    if (!text) return null;
+    return (
+        <div role="status" data-import-limit-notice className="rounded-lg border border-amber-600/40 bg-amber-950/30 p-3 text-sm text-amber-200">
+            {text} Archived geckos do not count.{' '}
+            <UpgradePlansLink
+                limitType="geckos"
+                surface="plan_limit_geckos"
+                trackShown={false}
+                className="relative touch-hit underline underline-offset-2 hover:text-amber-100"
+            >
+                See plans
+            </UpgradePlansLink>
+        </div>
+    );
+}
 
 export default function CSVImportModal({ isOpen, onClose, onImportComplete, user = null }) {
     const { toast } = useToast();
@@ -41,6 +66,28 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
     const [importEggs, setImportEggs] = useState(false);
     const [importResults, setImportResults] = useState(null);
     const [useDirectFormat, setUseDirectFormat] = useState(false); // skip mapping for exact-template CSVs
+    // The member's own geckos, read only on plans with a gecko limit, so
+    // the limit can be explained before the import. null until read.
+    const [ownGeckos, setOwnGeckos] = useState(null);
+    const [importRuns, setImportRuns] = useState(0);
+    // True when the limit notice was on screen before this import, so the
+    // results step does not count the same upgrade prompt a second time.
+    const [warnedBeforeImport, setWarnedBeforeImport] = useState(false);
+    const noticeCounted = useRef(false);
+    const geckoLimit = geckoLimitFor(user);
+    const hasGeckoLimit = Number.isFinite(geckoLimit);
+    const ownerEmail = user?.email || null;
+
+    useEffect(() => {
+        if (!isOpen || !hasGeckoLimit || !ownerEmail) return undefined;
+        let cancelled = false;
+        Gecko.filter({ created_by: ownerEmail })
+            .then((rows) => { if (!cancelled) setOwnGeckos(rows || []); })
+            // Without the count nothing is said here; the import still
+            // skips rows past the limit and reports them at the end.
+            .catch(() => { if (!cancelled) setOwnGeckos(null); });
+        return () => { cancelled = true; };
+    }, [isOpen, hasGeckoLimit, ownerEmail, importRuns]);
 
     // ------------------------------------------------------------------ helpers
     const reset = useCallback(() => {
@@ -50,6 +97,8 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
         setSourceRows([]);
         setMapping({});
         setImportResults(null);
+        setWarnedBeforeImport(false);
+        noticeCounted.current = false;
         setUseDirectFormat(false);
         setCreateBreedingPairs(false);
         setImportEggs(false);
@@ -99,12 +148,12 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
 
     // ------------------------------------------- step 2 → 3: run the import
     const handleImport = async () => {
+        setWarnedBeforeImport(Boolean(limitNotice));
         setStep('import');
 
         try {
             // Build row objects from the mapping
-            const templateKeys = TEMPLATE_FIELDS.map(f => f.key);
-            const rowObjects = transformRows(mapping, sourceHeaders, sourceRows, templateKeys);
+            const rowObjects = transformRows(mapping, sourceHeaders, sourceRows, TEMPLATE_KEYS);
 
             const { data } = await importGeckosFromCSV({
                 rows: rowObjects,
@@ -113,7 +162,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
                 importEggs,
                 // Free 10, Keeper 50. The database refuses a free account's
                 // 11th gecko anyway; this skips those rows with a clear note.
-                geckoLimit: geckoLimitFor(user),
+                geckoLimit,
             });
 
             setImportResults(data.results);
@@ -135,6 +184,9 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
             });
             setStep('results');
         }
+        // The collection changed, so the count behind the limit notice is
+        // read again before another file.
+        setImportRuns((n) => n + 1);
     };
 
     // ------------------------------------------------- template download
@@ -159,6 +211,29 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
     // --------------------------------------------------- derived state
     const coverage = requiredFieldsCovered(mapping);
     const canProceedToImport = coverage.mapped === coverage.total;
+    // What the import will do under the plan limit, before it runs.
+    const importPreview = useMemo(() => {
+        if (!hasGeckoLimit || !ownGeckos || sourceRows.length === 0) return null;
+        return previewImport({
+            rows: transformRows(mapping, sourceHeaders, sourceRows, TEMPLATE_KEYS),
+            existingGeckos: ownGeckos,
+            limit: geckoLimit,
+            importMode,
+            nameMapped: mapping.name != null,
+        });
+    }, [hasGeckoLimit, ownGeckos, geckoLimit, mapping, sourceHeaders, sourceRows, importMode]);
+    const limitNotice = importLimitNotice(importPreview);
+    // The number on the import button: what will really be written when
+    // the limit cuts the file short, otherwise every row.
+    const importCount = limitNotice ? importPreview.willImport : sourceRows.length;
+    // The limit leaves nothing to write, and the notice says why.
+    const nothingToImport = Boolean(limitNotice) && importCount === 0;
+    const noticeOnScreen = Boolean(limitNotice) && (step === 'map' || (step === 'upload' && useDirectFormat));
+    useEffect(() => {
+        if (!noticeOnScreen || noticeCounted.current) return;
+        noticeCounted.current = true;
+        upgradePromptShown('geckos', 'plan_limit_geckos');
+    }, [noticeOnScreen]);
     const stepIndex = STEPS.findIndex(s => s.key === step);
 
     // ================================================================= RENDER
@@ -388,6 +463,10 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
                                     </AlertDescription>
                                 </Alert>
 
+                                {/* A file in our own format can be imported from this
+                                    step, so the limit is said here too. */}
+                                {useDirectFormat && <ImportLimitNotice text={limitNotice} />}
+
                                 {/* Navigation */}
                                 <div className="flex gap-2">
                                     {useDirectFormat ? (
@@ -403,7 +482,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
                                             </Button>
                                             <Button
                                                 onClick={handleImport}
-                                                disabled={!file || sourceHeaders.length === 0}
+                                                disabled={!file || sourceHeaders.length === 0 || nothingToImport}
                                                 className="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white"
                                             >
                                                 <Upload className="w-4 h-4 mr-2" />
@@ -446,6 +525,8 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
                                     onMappingChange={setMapping}
                                 />
 
+                                <ImportLimitNotice text={limitNotice} />
+
                                 {/* Navigation */}
                                 <div className="flex gap-2">
                                     <Button
@@ -458,11 +539,11 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
                                     </Button>
                                     <Button
                                         onClick={handleImport}
-                                        disabled={!canProceedToImport}
+                                        disabled={!canProceedToImport || nothingToImport}
                                         className="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white disabled:bg-slate-700 disabled:text-slate-500"
                                     >
                                         <Upload className="w-4 h-4 mr-2" />
-                                        Import {sourceRows.length} Geckos
+                                        Import {importCount} {importCount === 1 ? 'gecko' : 'geckos'}
                                     </Button>
                                 </div>
 
@@ -513,7 +594,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
                                         <UpgradePlansLink
                                             limitType="geckos"
                                             surface="plan_limit_geckos"
-                                            trackShown
+                                            trackShown={!warnedBeforeImport}
                                             className="underline underline-offset-2 hover:text-amber-100"
                                         >
                                             See plans

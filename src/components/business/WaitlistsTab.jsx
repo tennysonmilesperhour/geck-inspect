@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import { undoToast } from '@/lib/undoToast';
 import { GeckoWaitlist, GeckoWaitlistSignup, PendingSale } from '@/entities/all';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { formatMoney } from '@/lib/money';
@@ -37,6 +39,25 @@ const fieldClass = 'bg-slate-950/60 border-slate-700 text-slate-100';
 const money = (n, symbol) => formatMoney(n, { symbol: symbol || '$' });
 const pct = (p) => `${Math.round(p * 1000) / 10}%`;
 const linkFor = (slug) => `${window.location.origin}/waitlist/${slug}`;
+// The same shape the public join form asks for (join_waitlist in the database).
+const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+/** What deleting a waitlist takes with it, for the delete dialog. */
+function deleteWaitlistWarning(signups, summary, currency) {
+  const lines = [
+    signups.length === 0
+      ? 'Nobody has joined it yet, and the link stops working.'
+      : `Its ${plural(signups.length, 'signup')} ${signups.length === 1 ? 'is' : 'are'} deleted with it, and the link stops working.`,
+  ];
+  if (summary.depositTotal > 0) {
+    lines.push(
+      `You are holding ${money(summary.depositTotal, currency)} in deposits from ${plural(summary.deposits, 'buyer')}: that record goes too, so refund them or note them down first.`,
+    );
+  }
+  lines.push('This cannot be undone.');
+  return lines.join(' ');
+}
 
 const STATUS_CLASS = {
   waiting: 'bg-slate-700 text-slate-200',
@@ -308,6 +329,8 @@ function WaitlistCard({
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [askDelete, setAskDelete] = useState(false);
+  const [adding, setAdding] = useState(false);
   const summary = waitlistSummary(signups);
   const rows = orderedSignups(signups);
   const hatchlings = matchableHatchlings(plan, geckos);
@@ -335,7 +358,6 @@ function WaitlistCard({
   };
 
   const remove = async () => {
-    if (!confirm(`Delete "${waitlist.title}" and its ${signups.length} signup${signups.length === 1 ? '' : 's'}? The link stops working.`)) return;
     setBusy(true);
     try {
       await GeckoWaitlist.delete(waitlist.id);
@@ -343,19 +365,7 @@ function WaitlistCard({
     } catch (e) {
       toast({ title: 'Could not delete the waitlist', description: e.message, variant: 'destructive' });
       setBusy(false);
-    }
-  };
-
-  const addByHand = async () => {
-    const name = prompt('Buyer name');
-    if (!name?.trim()) return;
-    const email = prompt('Buyer email');
-    if (!email?.trim()) return;
-    try {
-      const row = await GeckoWaitlistSignup.create({ waitlist_id: waitlist.id, name: name.trim(), email: email.trim(), status: 'waiting' });
-      onSignupAdded(row);
-    } catch (e) {
-      toast({ title: 'Could not add the buyer', description: e.message, variant: 'destructive' });
+      setAskDelete(false);
     }
   };
 
@@ -399,7 +409,7 @@ function WaitlistCard({
           <Button variant="ghost" size="sm" onClick={toggleOpen} disabled={busy} className="text-slate-300 hover:text-emerald-300">
             {waitlist.is_open ? 'Close' : 'Reopen'}
           </Button>
-          <Button variant="ghost" size="icon" onClick={remove} disabled={busy} className="text-slate-400 hover:text-red-300 h-8 w-8" aria-label="Delete waitlist">
+          <Button variant="ghost" size="icon" onClick={() => setAskDelete(true)} disabled={busy} className="text-slate-400 hover:text-red-300 h-8 w-8" aria-label="Delete waitlist">
             <Trash2 className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setOpen((v) => !v)} className="text-slate-300 h-8 w-8" aria-label={open ? 'Hide buyers' : 'Show buyers'} aria-expanded={open}>
@@ -438,12 +448,115 @@ function WaitlistCard({
               ))}
             </ul>
           )}
-          <Button variant="ghost" size="sm" onClick={addByHand} className="text-slate-300 hover:text-emerald-300 px-2">
-            <Plus className="w-4 h-4 mr-1" /> Add a buyer by hand
-          </Button>
+          {adding ? (
+            <AddBuyerForm
+              waitlist={waitlist}
+              onCancel={() => setAdding(false)}
+              onAdded={(row) => { onSignupAdded(row); setAdding(false); }}
+            />
+          ) : (
+            <Button variant="ghost" size="sm" onClick={() => setAdding(true)} className="text-slate-300 hover:text-emerald-300 px-2">
+              <Plus className="w-4 h-4 mr-1" /> Add a buyer by hand
+            </Button>
+          )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={askDelete}
+        onOpenChange={(next) => { if (!next && !busy) setAskDelete(false); }}
+        title={`Delete "${waitlist.title}"?`}
+        description={deleteWaitlistWarning(signups, summary, currency)}
+        confirmLabel="Delete waitlist"
+        destructive
+        busy={busy}
+        onConfirm={remove}
+      />
     </div>
+  );
+}
+
+// A buyer who asked in person or by message. Both fields are needed: the
+// database keeps an email for every signup, and it is how the breeder
+// reaches them when a baby hatches.
+function AddBuyerForm({ waitlist, onCancel, onAdded }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const nameId = `buyer-name-${waitlist.id}`;
+  const emailId = `buyer-email-${waitlist.id}`;
+
+  const submit = async (event) => {
+    event.preventDefault();
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+    const found = {};
+    if (!cleanName) found.name = 'Enter the buyer\'s name.';
+    else if (cleanName.length > 120) found.name = 'Keep the name under 120 characters.';
+    if (!cleanEmail) found.email = 'Enter the buyer\'s email.';
+    else if (!EMAIL_PATTERN.test(cleanEmail) || cleanEmail.length > 200) found.email = 'That does not look like an email address.';
+    setErrors(found);
+    if (found.name || found.email) {
+      document.getElementById(found.name ? nameId : emailId)?.focus();
+      return;
+    }
+    setSaving(true);
+    try {
+      const row = await GeckoWaitlistSignup.create({ waitlist_id: waitlist.id, name: cleanName, email: cleanEmail, status: 'waiting' });
+      toast({ title: 'Buyer added', description: `${cleanName} joins the end of the line.` });
+      onAdded(row);
+    } catch (e) {
+      toast({ title: 'Could not add the buyer', description: e.message, variant: 'destructive' });
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} noValidate className="rounded-lg border border-slate-800 bg-slate-950/40 p-3 space-y-3" data-add-buyer-form>
+      <p className="text-sm font-medium text-slate-100">Add a buyer by hand</p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label htmlFor={nameId} className="text-xs text-slate-300">Buyer name</Label>
+          <Input
+            id={nameId}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+            autoComplete="off"
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? `${nameId}-error` : undefined}
+            className={fieldClass}
+          />
+          {errors.name && <p id={`${nameId}-error`} className="text-xs text-red-300">{errors.name}</p>}
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={emailId} className="text-xs text-slate-300">Buyer email</Label>
+          <Input
+            id={emailId}
+            type="email"
+            inputMode="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="off"
+            autoCapitalize="none"
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? `${emailId}-error` : undefined}
+            className={fieldClass}
+          />
+          {errors.email && <p id={`${emailId}-error`} className="text-xs text-red-300">{errors.email}</p>}
+        </div>
+      </div>
+      <p className="text-xs text-slate-500">
+        They join the end of the line.{waitlist.deposit_terms ? ' They will not have agreed to your deposit terms online, so send those yourself.' : ''}
+      </p>
+      <div className="flex gap-2 justify-end">
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={saving} className="text-slate-300">Cancel</Button>
+        <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add buyer'}
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -493,6 +606,21 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
     } else {
       toast({ title: 'Matched', description: `${gecko.name || 'The hatchling'} is set aside for ${signup.name}.` });
     }
+  });
+
+  // Withdrawing only changes the status, so it can be put straight back:
+  // do it at once and offer Undo, in place of an "are you sure" box.
+  const withdraw = () => run(async () => {
+    const before = signup.status;
+    await onPatch({ status: 'withdrawn' });
+    undoToast({
+      title: `${signup.name} marked as withdrawn`,
+      description: signup.deposit_paid > 0
+        ? `Their ${money(signup.deposit_paid, currency)} deposit stays recorded; use Refunded once you send it back.`
+        : 'They are out of the line.',
+      undo: () => onPatch({ status: before }),
+      undone: `${signup.name} is back in line`,
+    });
   });
 
   return (
@@ -570,10 +698,7 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
               size="sm"
               variant="ghost"
               disabled={saving}
-              onClick={() => {
-                const note = signup.deposit_paid > 0 ? ` Their ${money(signup.deposit_paid, currency)} deposit stays recorded; use Refunded once you send it back.` : '';
-                if (confirm(`Mark ${signup.name} as withdrawn?${note}`)) run(() => onPatch({ status: 'withdrawn' }));
-              }}
+              onClick={withdraw}
               className="h-8 text-slate-400 hover:text-red-300"
             >
               Withdrawn
