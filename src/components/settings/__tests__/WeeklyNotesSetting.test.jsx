@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 // The Weekly Gecko Notes switch in Settings saves on its own call
-// (User.setWeeklyNotes) and is never part of the Settings form, so the
-// form's Save button, or a Settings tab left open from before the switch
-// existed, can never write the column.
+// (User.setWeeklyNotes) and is never one of the fields the Settings page
+// saves as they change, so no save from that page, or from a Settings tab
+// left open from before the switch existed, can ever write the column.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
@@ -92,7 +92,7 @@ describe('Settings never puts the column in the form', () => {
 
   it('not in the defaults, the load mapping or the old preference list', () => {
     const defaults = block('const initialFormData = {', '\n};');
-    const mapping = block('setFormData({', '});');
+    const mapping = block('loadSaved({', '});');
     const prefs = block('const notificationTypes = [', '];');
     for (const text of [defaults, mapping, prefs]) {
       expect(text).not.toMatch(/weekly/i);
@@ -106,13 +106,16 @@ describe('Settings never puts the column in the form', () => {
     expect(SETTINGS.match(/email_weekly_notes_enabled/g)).toHaveLength(1);
   });
 
-  it('the whole-form save sends formData, which has no weekly key', () => {
-    expect(SETTINGS).toContain('await User.updateMyUserData(formData);');
+  it('a save sends one changed field of the form, which has no weekly key', () => {
+    // The only write the page makes for its form: the field that changed.
+    expect(SETTINGS).toContain('save: (patch) => User.updateMyUserData(patch),');
+    expect(SETTINGS.match(/User\.updateMyUserData\(/g)).toHaveLength(1);
+    // There is no whole-form save left to carry a stale value.
+    expect(SETTINGS).not.toContain('updateMyUserData(formData)');
   });
 
   it('saving with all email off shows the weekly switch off, as the database trigger left it', () => {
-    const save = block('const handleSave = async () => {', 'setIsSaving(false);');
-    expect(save).toContain('if (formData.email_notifications_enabled === false) setWeeklyNotesEnabled(false);');
-    expect(save.indexOf('setWeeklyNotesEnabled(false)')).toBeGreaterThan(save.indexOf('await User.updateMyUserData(formData);'));
+    const saved = block('onSaved: (field, value) => {', '\n        },');
+    expect(saved).toContain("if (field === 'email_notifications_enabled' && value === false) setWeeklyNotesEnabled(false);");
   });
 });

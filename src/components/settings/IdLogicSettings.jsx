@@ -180,6 +180,7 @@ export default function IdLogicSettings({ value, onChange }) {
         <CardDescription className="text-slate-400">
           Pick how gecko IDs are built, and how offspring inherit lineage prefixes.
           Your existing IDs are never rewritten, this only affects new geckos.
+          Changes here save as you make them, on this device.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -25,24 +25,24 @@ const isIOS = () => {
 };
 
 /**
- * Settings card for push notifications.
- *
- * Shows the current browser's subscription state, provides subscribe /
- * unsubscribe buttons, and, when subscribed, exposes the per-type
- * allowlist via checkboxes. The allowlist is controlled by the parent
- * `formData`/`onToggleType` pair so saves happen together with the
- * rest of Settings on the main "Save Changes" button.
+ * Whether this browser can take web push at all. The Reminders tab shows
+ * the Push column of the notices table, and the push master switch, only
+ * when it can: the same rule this card used when it held those switches.
  */
-export default function PushNotificationsCard({
-  pushEnabled,
-  pushTypes,
-  onToggleEnabled,
-  onToggleType,
-  notificationTypes,
-  userEmail,
-  renderSwitch,
-  renderNotificationSwitch,
-}) {
+export function pushControlsAvailable() {
+  return isPushSupported() && !(isIOS() && !isStandalone());
+}
+
+/**
+ * Settings, Reminders: push on this device.
+ *
+ * Shows the current browser's subscription state and the subscribe and
+ * unsubscribe buttons. The push master switch and the per-kind switches
+ * moved to the notices table on the same tab (NoticesTable.jsx), beside
+ * their email twins. `onToggleEnabled(true)` runs after a successful
+ * subscribe so the master switch comes on, and saves, with it.
+ */
+export default function PushNotificationsCard({ onToggleEnabled, userEmail }) {
   const { toast } = useToast();
   const [supported] = useState(isPushSupported());
   const [permission, setPermission] = useState('default');
@@ -123,7 +123,7 @@ export default function PushNotificationsCard({
         <CardHeader>
           <CardTitle className="text-slate-100 flex items-center gap-2">
             <Bell className="w-5 h-5" />
-            Push Notifications
+            Push on this device
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -158,7 +158,6 @@ export default function PushNotificationsCard({
 
           {supported && !iosNeedsInstall && (
             <>
-              {/* Device subscription state */}
               <div className="flex items-start justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-3">
                 <div className="flex items-start gap-3">
                   {subscribedHere ? (
@@ -209,32 +208,6 @@ export default function PushNotificationsCard({
                   </Button>
                 )}
               </div>
-
-              {/* Master toggle, lets the user pause pushes without
-                  tearing down the subscription on every device. */}
-              {renderSwitch(
-                'push-enabled',
-                'Send push notifications',
-                'Master toggle for all push notifications across your subscribed devices',
-                pushEnabled,
-                (checked) => onToggleEnabled?.(checked)
-              )}
-
-              {/* Per-type allowlist */}
-              {pushEnabled && (
-                <div className="space-y-3 pt-2 border-t border-slate-800">
-                  <p className="text-sm text-slate-400">
-                    Choose which alerts fire a push notification:
-                  </p>
-                  {notificationTypes.map((t) =>
-                    renderNotificationSwitch(
-                      t,
-                      pushTypes.includes(t.key),
-                      () => onToggleType(t.key)
-                    )
-                  )}
-                </div>
-              )}
             </>
           )}
         </CardContent>

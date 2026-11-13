@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // The Settings page shows the Security section (two-factor sign-in) to
-// admins only, under the name a reminder sends Tennyson to: "Settings,
-// Security". Members get no Security link and never download the card.
+// admins only, on the Account tab, which is the tab Settings opens on.
+// Members get no Security section and never download the card.
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,7 +14,7 @@ vi.mock('@/components/settings/AccountDeletionCard', stub);
 vi.mock('@/components/settings/StorageUsageCard', stub);
 vi.mock('@/components/settings/CollectionsCard', stub);
 vi.mock('@/components/settings/BreederStoreCard', stub);
-vi.mock('@/components/settings/PushNotificationsCard', stub);
+vi.mock('@/components/settings/PushNotificationsCard', () => ({ default: () => null, pushControlsAvailable: () => false }));
 vi.mock('@/components/settings/PhoneRemindersCard', stub);
 vi.mock('@/components/settings/DataExportCard', stub);
 vi.mock('@/components/support/MySupportTickets', stub);
@@ -34,7 +34,12 @@ vi.mock('@/lib/ThemeContext', () => ({
   useTheme: () => ({ theme: 'a', setTheme: () => {}, themes: [], secondary: 'b', setSecondary: () => {}, secondaryColors: [] }),
 }));
 vi.mock('@/lib/AuthContext', () => ({ useAuth: () => ({ logout: async () => {}, isAuthenticated: true }) }));
-vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: () => {} }), toast: () => {} }));
+// One toast function for every render, as the real hook gives: the page
+// reloads the profile whenever it changes.
+vi.mock('@/components/ui/use-toast', () => {
+  const toast = () => {};
+  return { useToast: () => ({ toast }), toast };
+});
 vi.mock('@/lib/supabaseClient', () => ({
   supabase: {
     auth: {
@@ -57,14 +62,13 @@ beforeEach(() => {
 });
 
 describe('Settings, Security section', () => {
-  it('is shown to an admin, with a Security link in the section list', async () => {
+  it('is shown to an admin on the Account tab, and /Settings#security lands on it', async () => {
     fx.me = { id: 'a1', email: 'admin@example.test', role: 'admin', membership_tier: 'free' };
-    renderSettings();
-    expect(await screen.findByRole('link', { name: 'Security' }, { timeout: 8000 })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Security' }).getAttribute('href')).toBe('#security');
+    render(<MemoryRouter initialEntries={['/Settings#security']}><SettingsPage /></MemoryRouter>);
     // The section loads its factors after the page renders; on a busy build
     // machine that took longer than findBy's default 1 s (31 Oct 2026).
     expect(await screen.findByRole('button', { name: 'Set up an authenticator app' }, { timeout: 8000 })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Account' }).getAttribute('aria-selected')).toBe('true');
     expect(document.getElementById('security')).toBeTruthy();
     expect(fx.listFactors).toBeGreaterThan(0);
   });
@@ -72,8 +76,7 @@ describe('Settings, Security section', () => {
   it('is not shown to a member', async () => {
     fx.me = { id: 'm1', email: 'keeper@example.test', role: 'user', membership_tier: 'free' };
     renderSettings();
-    expect(await screen.findByRole('link', { name: 'Danger Zone' }, { timeout: 8000 })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Security' })).toBeNull();
+    expect(await screen.findByRole('button', { name: 'Log out' }, { timeout: 8000 })).toBeTruthy();
     expect(document.getElementById('security')).toBeNull();
     expect(screen.queryByText(/authenticator app/i)).toBeNull();
     expect(fx.listFactors).toBe(0);
