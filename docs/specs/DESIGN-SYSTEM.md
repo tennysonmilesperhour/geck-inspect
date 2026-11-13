@@ -48,7 +48,9 @@ Every colour is an HSL triplet in a CSS variable, so Tailwind's opacity syntax w
 4. **`emerald-*`** (50 to 950), driven by the accent setting. With the `normal` accent it equals Tailwind's stock emerald. About 1,900 class names use it, so changing the accent re-tints them all without touching components.
 5. **Fixed colours**: `earth-*` stays orange in every theme (alerts, breeder perks, hatchling badges), and Tailwind's own `green-*`, `red-*` and `amber-*` keep their meaning (success, error, warning) whatever the accent.
 
-The `--gi-*` variables at the end of `src/index.css` (a "P1 design system" with forest, sage and ember hex values) are not used by any component. They are left over from the spec this document replaces. Do not use them in new code.
+**Five roles in app screens, and nothing else** (experience review K2, applied on 13 November 2026 to My Geckos, Today, the gecko record, Morph ID, Breeding, the Overview and the Genetics Calculator): accent (`emerald-*`, which follows the member's choice), success (green), warning (amber), danger (red), neutral (`slate-*`). Purple, violet, blue, sky, pink, teal, cyan and indigo are not used for controls, chips or links. The exceptions are charts, illustrations, the male and female markers, and Field Mode's four colour-coded tiles. `src/lib/__tests__/visualGauges.test.js` holds a ceiling on each off-palette colour so the count can only fall; lower the ceiling when you remove more.
+
+The old `--gi-*` variables were deleted from `src/index.css` on 13 November 2026.
 
 ## 4. Type
 
@@ -58,7 +60,9 @@ The `--gi-*` variables at the end of `src/index.css` (a "P1 design system" with 
 | The public landing page | Montserrat | `.landing-font` in `layout-theme.css` |
 | The retired store's wordmark and sticker previews only | Righteous | `src/components/store/StoreLayout.jsx`, `StickerThemePreviews.jsx`. The app shell's wordmark uses Montserrat (`src/Layout.jsx`). |
 
-All three are self-hosted: the files are in `public/fonts/`, declared in `src/styles/fonts.css`, and `index.html` preloads Inter (Montserrat on the landing page). Nothing loads from Google Fonts. A few components still name fonts that are not loaded and so fall back to the browser's serif: "Young Serif" in the retired sticker and shirt previews, and Tailwind's `font-serif` class in the care guide slides and the breeder store page. Do not add new fonts.
+All three are self-hosted: the files are in `public/fonts/`, declared in `src/styles/fonts.css`, and `index.html` preloads Inter (Montserrat on the landing page). Nothing loads from Google Fonts. The retired sticker and shirt previews still name "Young Serif", which is not loaded; the `font-serif` class was removed from the care guide slides and the breeder store page on 13 November 2026, so their headings are Inter. Do not add new fonts.
+
+**Size floor:** anything a member reads is at least 12 px (`text-xs`). 11 px is for uppercase eyebrow labels and the phone tab labels only. The same gauges test holds a ceiling on `text-[10px]` and smaller.
 
 ## 5. Shape, spacing and touch
 
@@ -71,7 +75,7 @@ All three are self-hosted: the files are in `public/fonts/`, declared in `src/st
 
 ## 6. Components to reuse
 
-- **Page header:** `src/components/shared/PageHeader.jsx` (icon, title, one-line description, settings gear, actions with the primary action last). Used by 33 app pages. New app pages use it.
+- **Page header:** `src/components/shared/PageHeader.jsx` (icon, title, one-line description, settings gear, actions with the primary action last). Used by 32 of 88 pages (Today joined on 13 November 2026). New app pages use it. The Overview, Lineage, My Profile and the gecko record keep their own designed headers.
 - **Buttons:** `src/components/ui/button.jsx`. `default` is flat accent (`bg-emerald-700`, darker on hover, white text); `outline` is a dark accent-tinted outline; also `secondary`, `ghost`, `destructive` and `link`.
 - **Tabs:** `src/components/ui/tabs.jsx`, the house tab bar (dark strip, hairline border, scrolls sideways on phones instead of clipping).
 - **Empty states:** `src/components/shared/EmptyState.jsx`. One primary action, an optional second (for example "Import a spreadsheet" beside "Add your first gecko"), an optional hint line.
@@ -83,7 +87,7 @@ All three are self-hosted: the files are in `public/fonts/`, declared in `src/st
 These carried over from the old document. They are the standard for new work; the 14 October review (sections B4 and B6) found places where existing pages fall short, for example hand-built overlays without Escape or focus handling.
 
 - Inline form validation, never `alert()`.
-- Skeletons for loading lists (`CardGridSkeleton`), not bare spinners.
+- Skeletons for loading lists (`CardGridSkeleton`), not bare spinners. Moving between signed-in pages shows a page-shaped skeleton (`PageSuspenseFallback` in `src/App.jsx`); the full-screen fallback for public pages stays a spinner until the landing page test ends. Spinners otherwise belong inside buttons.
 - A confirmation dialog for what cannot be undone (delete, transfer, removing someone's access): `src/components/shared/ConfirmDialog.jsx`, never the browser's `confirm()`. For anything that can be reversed, do it at once and offer Undo for 8 seconds: `undoToast` in `src/lib/undoToast.jsx`.
 - Every save says what happened (a toast or a "Saved" tick beside the control), and a failed save says so and offers a way to try again.
 - Animations respect the operating system's reduced-motion setting (`@media (prefers-reduced-motion: reduce)` in `src/index.css`, and `src/lib/reducedMotion.js`).
@@ -95,7 +99,7 @@ These carried over from the old document. They are the standard for new work; th
 Recorded here so nobody mistakes them for the intended design. Fixes are proposed in the review; none is part of this document change.
 
 - **Contrast (fixed 16 October 2026).** Text used to re-tint with the theme, so on the old Blizzard default muted paragraphs rendered mid-blue on near-black. Emerald is now the default, the text greys are neutral, `slate-500` is a step lighter, in-text links are underlined, the default button is `emerald-700`, and the Emerald accent's `emerald-600` is 26% lightness so white text on it passes. An axe pass on 20 main pages at phone and laptop size (40 loads) went from 402 failing contrast nodes on 32 loads to 4 on 2; what is left is the rose "New" badge in the Morph Guide index components.
-- **Colours that ignore the theme.** The header and sidebar tint stay emerald, the logo is copper, and some pages add their own accent (a purple calculator button, an amber Enterprise card, a green gradient on the Dashboard stat tiles), so one screen can show four accent colours.
+- **Colours that ignore the theme.** The header and sidebar tint stay emerald, the logo is copper, and some pages added their own accent (a purple calculator button, an amber Enterprise card, a green gradient on the Dashboard stat tiles), so one screen could show four accent colours. The purple button and the gradient went on 13 November 2026 (see section 3); pages outside that pass (Lineage, My Profile, Settings, Business) still carry some.
 - **Glass bars without `backdrop-filter` (fixed).** Older Android web views drew the bars fully see-through. `src/styles/layout-theme.css` now has an `@supports not (backdrop-filter: ...)` block that gives them a solid background.
 - **Placeholder letters instead of drawings** for 28 of 36 morphs on the Morph Guide index.
 

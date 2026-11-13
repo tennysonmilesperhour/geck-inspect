@@ -68,6 +68,7 @@ How to use it:
 | E11 | **Ball python site, Phase 0 decisions.** Paused until 17 January 2027; nothing to do now. | `planning/ball-python-app-2026-10.md` |
 | E12 | **Quick Add and feeding groups.** Since 13 November every new gecko starts in Quick Add. With "Remind me on feeding days" on, it goes into your first feeding group. For a breeder with several groups that may be the wrong one. Choose: keep it, show a group picker when there is more than one group, or leave the gecko ungrouped. | `planning/experience-review-2026-11-11.md`, WP-3 |
 | E13 | **A hatch year on its own.** The gecko form saves a hatch date only when year, month and day are all filled in, and says so. Saving the year alone needs a small database change. Say yes and a session will do it. | Same, WP-3 |
+| E14 | **Sold prices on public geckos.** Any signed-in member can read the sold price (and the owner's email) of a gecko that is public, through the database's own interface. The app does not show it, but someone with an account and some skill could read it. This is why the new sold sheet does not offer a passport. Fixing it means moving the sold price somewhere only the owner can read (a database change with a careful rollout, about a day). Say yes and a session will plan it. Until then, a gecko that already has a passport shows its sold price this way once it is marked sold with a price. | `planning/instrumentation-2026-10.md`, "The step after Archive as sold"; checked against production on 13 November 2026 |
 
 ## F. Checks on a real phone or with real email
 
