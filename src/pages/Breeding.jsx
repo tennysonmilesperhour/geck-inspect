@@ -465,10 +465,14 @@ export default function BreedingPage() {
     const filterAndSortPlans = (plans) => {
         // Filter by search term
         let filtered = plans.filter(plan => {
+            const searchLower = debouncedSearchTerm.toLowerCase();
+            // No search: every plan. (A plan whose sire and dam are not
+            // among the member's geckos, deleted or transferred, used to
+            // vanish here even with the box empty.)
+            if (!searchLower) return true;
             const sire = allGeckos.find(g => g.id === plan.sire_id);
             const dam = allGeckos.find(g => g.id === plan.dam_id);
-            const searchLower = debouncedSearchTerm.toLowerCase();
-            
+
             return (
                 sire?.name?.toLowerCase().includes(searchLower) ||
                 dam?.name?.toLowerCase().includes(searchLower) ||
@@ -535,18 +539,11 @@ export default function BreedingPage() {
         return plansWithData;
     };
     
-    const [filteredActivePlans, setFilteredActivePlans] = useState([]);
-    const [filteredArchivedPlans, setFilteredArchivedPlans] = useState([]);
-    
-    useEffect(() => {
-        const active = breedingPlans.filter(plan => !plan.archived);
-        const archived = breedingPlans.filter(plan => plan.archived);
-        setFilteredActivePlans(filterAndSortPlans(active));
-        setFilteredArchivedPlans(filterAndSortPlans(archived));
-    }, [breedingPlans, allEggs, debouncedSearchTerm, sortBy, allGeckos]);
-    
-    const activePlans = filteredActivePlans;
-    const archivedPlans = filteredArchivedPlans;
+    // Worked out while the page draws, not in an effect afterwards: the
+    // effect left one frame in which the tab bar read "Plans (0)" although
+    // the plans had loaded (a test caught it on a busy machine).
+    const activePlans = filterAndSortPlans(breedingPlans.filter(plan => !plan.archived));
+    const archivedPlans = filterAndSortPlans(breedingPlans.filter(plan => plan.archived));
 
     // The archive groups plans by season, which is the calendar year
     // (decision D17). Older "2025 Spring" style labels group under 2025.

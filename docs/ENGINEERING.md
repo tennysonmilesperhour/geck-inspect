@@ -169,8 +169,8 @@ pnpm check:genetics
 pnpm build
 ```
 
-`pnpm lint` allows at most 54 warnings (`--max-warnings` in `package.json`; lowered from 57 on 13 November 2026, after that week's work removed three). The number only goes down: when you remove a warning, lower it.
-All 54 are `react-hooks/exhaustive-deps` from before the cap. Adding a missing
+`pnpm lint` allows at most 53 warnings (`--max-warnings` in `package.json`; lowered from 57 on 13 November 2026, as that day's work removed four). The number only goes down: when you remove a warning, lower it.
+All 53 are `react-hooks/exhaustive-deps` from before the cap. Adding a missing
 hook dependency without reading the effect can start a render loop, so they are
 fixed one at a time. A new warning of any kind fails CI and `pnpm build` (which
 runs lint), so fix it rather than raising the number. When you fix an old one,

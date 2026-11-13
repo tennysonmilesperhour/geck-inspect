@@ -101,14 +101,23 @@ beforeEach(() => {
 describe('the Breeding page', () => {
   it('is headed "Breeding" and has one tab bar with the six tabs, in place of the "Breeding Tools" row', async () => {
     open('/Breeding');
-    const tabs = await screen.findAllByRole('tab');
-    expect(tabs.map((tab) => tab.textContent)).toEqual([
+    // The counts used to follow the tab bar by one frame, and a busy CI
+    // machine read "Plans (0)" (13 November; fixed in Breeding.jsx). Waiting
+    // for the labels keeps the test from depending on timing either way.
+    await waitFor(() => expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
       'Plans (1)', 'Hatchery', 'Pairing ideas', 'Season', 'Genetics', 'Archive (0)',
-    ]);
+    ]));
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Breeding');
     expect(screen.getAllByRole('tablist')).toHaveLength(1);
     expect(screen.queryByText('Breeding Tools')).toBeNull();
     expect(screen.queryByText(/Breeding Management|Project Manager/)).toBeNull();
+  });
+
+  it('lists a plan whose sire and dam are no longer in the collection', async () => {
+    // Deleted or transferred parents: the plan stays, with an empty search.
+    fx.plans = [ONYX_ARIA, { ...ONYX_ARIA, id: 'plan-2', sire_id: 'g-gone', dam_id: 'g-gone-too' }];
+    open('/Breeding');
+    expect(await screen.findByRole('tab', { name: 'Plans (2)' })).toBeTruthy();
   });
 
   it('still opens the tabs that Today and the guided demo link to', async () => {
@@ -182,7 +191,8 @@ describe('the pair limit (a Free member may have 1 active pair)', () => {
 
   it('at the limit, "New Breeding Plan" shows the notice at once and never the form', async () => {
     open('/Breeding');
-    await screen.findAllByRole('tab');
+    // Wait for the plans, so the limit check has the one active pair.
+    await screen.findByRole('tab', { name: 'Plans (1)' });
     fireEvent.click(screen.getByRole('button', { name: 'New Breeding Plan' }));
     expect(await screen.findByText('Breeding Pair Limit Reached')).toBeTruthy();
     expect(screen.queryByText('Create New Breeding Plan')).toBeNull();
@@ -210,7 +220,8 @@ describe('the pair limit (a Free member may have 1 active pair)', () => {
   it('an archived plan does not count toward the limit', async () => {
     fx.plans = [{ ...ONYX_ARIA, archived: true }];
     open('/Breeding');
-    await screen.findAllByRole('tab');
+    // Wait for the plans, so the check really sees the archived one.
+    await screen.findByRole('tab', { name: 'Archive (1)' });
     fireEvent.click(screen.getByRole('button', { name: 'New Breeding Plan' }));
     expect(await screen.findByText('Create New Breeding Plan')).toBeTruthy();
   });
