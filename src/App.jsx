@@ -1,5 +1,5 @@
 import './App.css'
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, lazy as lazyPlain } from 'react';
 // Retry-wrapped drop-in for React.lazy: recovers from transient chunk
 // fetch failures and stale-deploy hash mismatches. See lazyWithRetry.js.
 import { lazy } from '@/lib/lazyWithRetry';
@@ -24,7 +24,15 @@ import { isGuestMode } from '@/lib/guestMode';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { RevenueCatProvider } from '@/lib/RevenueCatContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
-import UpdateNotification from '@/components/ui/UpdateNotification';
+// The "a new version is ready" notice. It is needed minutes after the page
+// opens, never before it can draw, so it loads as its own small file
+// (this keeps it out of the code every page waits for; the size check in
+// CI counts that code against every public page). Plain React.lazy, not
+// the retrying one above: if this file cannot be fetched the notice is
+// left out, where the retrying loader would reload the page.
+const UpdateNotification = lazyPlain(() =>
+  import('@/components/ui/UpdateNotification').catch(() => ({ default: () => null })),
+);
 import MemberOfflineSync from '@/components/shared/MemberOfflineSync';
 // Sign-in, password reset and the public page shell are lazy: a visitor
 // reading the Morph Guide never needs them up front.
@@ -589,7 +597,9 @@ function App() {
                   <VisualEditAgent />
                 </Suspense>
               )}
-              <UpdateNotification />
+              <Suspense fallback={null}>
+                <UpdateNotification />
+              </Suspense>
               <MemberOfflineSync />
             </QueryClientProvider>
           </RevenueCatProvider>
