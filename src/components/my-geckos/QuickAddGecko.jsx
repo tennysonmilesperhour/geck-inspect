@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { UploadFile } from '@/integrations/Core';
+import { FeedingGroup } from '@/entities/all';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { captureEvent } from '@/lib/posthog';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
 import { saveQuickGecko } from './quickGeckoSave';
 import { readGeckoFormDraft } from './form/draft';
+import { feedingGroupForWeight } from './form/helpers';
 import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 import { DEFAULT_FEEDING_INTERVAL_DAYS, flowEvent, savePendingGecko } from '@/lib/firstGeckoFlow';
 import { isNativePlatform } from '@/lib/revenuecat';
@@ -22,6 +24,13 @@ import { captureDevicePhoto } from '@/lib/devicePhoto';
 // where the saved draft becomes the first gecko in the collection.
 const GUEST_SIGNUP_URL = `/AuthPortal?mode=signup&redirect=${encodeURIComponent('/MyGeckos')}`;
 const SEXES = ['Unsexed', 'Female', 'Male'];
+
+// "Group B: Subadults", the way the long form names a feeding group.
+const groupName = (g) => [g.label && `Group ${g.label}`, g.name].filter(Boolean).join(': ') || 'Unnamed group';
+// In the choice, with the weight range that makes a group the default.
+const groupOption = (g) => (g.auto_weight_min_g != null && g.auto_weight_max_g != null
+  ? `${groupName(g)} (${g.auto_weight_min_g} to ${g.auto_weight_max_g} g)`
+  : groupName(g));
 
 /**
  * Quick add for a crested gecko (VIP audit P1.2, 27 Sep 2026). First built
@@ -70,6 +79,14 @@ const SEXES = ['Unsexed', 'Female', 'Male'];
  * payoff screen asks for the first weight anyway. The morph is labelled a
  * suggestion the member can change on the record, and when Morph ID was
  * unsure (the draft's check_morph) it is a field to check, not a line.
+ *
+ * Feeding group (owner decision E12, 13 Nov 2026): with reminders on, a
+ * member with two or more feeding groups chooses the gecko's group under
+ * the switch. The default is the group whose weight range holds the weight
+ * typed in (the rule the long form uses), else the first group, and it
+ * follows the weight until the member picks one. With one group or none
+ * the gecko goes into the first group, created if need be, as before. The
+ * demo offers the choice with its sample groups and saves nothing.
  */
 export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onResumeDraft, onLogWeight, onOpenRecord, onImport, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null, offerPhotoChoice = false, onChoosePhoto, initialDraft = null, stepLabel = null, onContinue, guest = false, saveSource = 'quick_add' }) {
   const { toast } = useToast();
@@ -96,6 +113,11 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
   const [morph, setMorph] = useState(() => initialDraft?.morphs_traits || '');
   const [weight, setWeight] = useState(() => (initialDraft?.weight_grams != null ? String(initialDraft.weight_grams) : ''));
   const [remind, setRemind] = useState(true);
+  // The member's feeding groups (the demo's sample ones for a guest), and
+  // the one they picked, if they did. Until the groups arrive the save
+  // falls back to the first group, as it always has.
+  const [groups, setGroups] = useState([]);
+  const [pickedGroupId, setPickedGroupId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(null);
   // 'choose' shows the photo-or-type choice first; 'form' is the form.
@@ -121,6 +143,29 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
     flowEvent('add', 'shown', { choice: mode === 'choose', from_draft: Boolean(initialDraft), guest, short });
     // Once per opening.
   }, [open]);
+
+  const email = user?.email;
+  useEffect(() => {
+    if (!open || !email) return undefined;
+    let live = true;
+    // The same rows the save would pick its first group from. A failed
+    // read only means no choice is offered.
+    Promise.resolve()
+      .then(() => FeedingGroup.filter({ created_by: email }))
+      .then((rows) => { if (live) setGroups(Array.isArray(rows) ? rows : []); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [open, email]);
+  const offerGroups = remind && groups.length >= 2;
+  const groupId = (pickedGroupId && groups.some((g) => g.id === pickedGroupId))
+    ? pickedGroupId
+    : (feedingGroupForWeight(groups, weight) || groups[0])?.id || null;
+  // The group the gecko joins with reminders on, once the groups are known:
+  // the one chosen, or the only one. Its own feeding days apply.
+  const joinGroup = groups.length >= 2 ? groups.find((g) => g.id === groupId) : groups[0] || null;
+  const reminderHint = !joinGroup
+    ? `Every ${DEFAULT_FEEDING_INTERVAL_DAYS} days, starting today. One message, even with the app closed.`
+    : `Every ${joinGroup.interval_days || DEFAULT_FEEDING_INTERVAL_DAYS} days, with ${groups.length >= 2 ? 'the group below' : groupName(joinGroup)}. One message, even with the app closed.`;
   const [addedCount, setAddedCount] = useState(0);
   // Geckos saved in this dialog, so "Add another" counts them when it
   // numbers the next ID code even before the collection reloads.
@@ -139,6 +184,8 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
     setHatchDate('');
     setMorph('');
     setWeight('');
+    // The next gecko's group follows its own weight again.
+    setPickedGroupId(null);
     setSaved(null);
     draftExtrasRef.current = { morph_tags: null, notes: null, extraPhotos: [] };
   };
@@ -213,6 +260,8 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
       const { gecko, feedingGroupId } = await saveQuickGecko({
         user,
         remind,
+        // Only when there was a choice; otherwise the first group, as before.
+        feedingGroupId: offerGroups ? groupId : null,
         pool,
         idSettings,
         requestId: requestIdRef.current,
@@ -243,7 +292,8 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
       if (onContinue) {
         onContinue(gecko, { feedingGroupId, hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });
       } else {
-        setSaved({ gecko, remind: Boolean(feedingGroupId), hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });
+        const everyDays = groups.find((g) => g.id === feedingGroupId)?.interval_days || DEFAULT_FEEDING_INTERVAL_DAYS;
+        setSaved({ gecko, remind: Boolean(feedingGroupId), everyDays, hadWeight: grams !== null, hadMorph: Boolean(morph.trim()) });
       }
     } catch (err) {
       console.error('Quick add failed:', err);
@@ -256,6 +306,35 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
     }
     setSaving(false);
   };
+
+  // The reminder switch (not in the demo, which saves nothing) and, under
+  // it, the feeding group choice when there is one to make.
+  const reminderBlock = (showSwitch) => (showSwitch || offerGroups) && (
+    <div className="space-y-3 rounded-lg border border-slate-700 bg-slate-800/60 p-3">
+      {showSwitch && (
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <Label htmlFor="qa-remind" className="text-slate-100">Remind me on feeding days</Label>
+            <p className="text-xs text-slate-400 mt-0.5">{reminderHint}</p>
+          </div>
+          <Switch id="qa-remind" checked={remind} onCheckedChange={setRemind} />
+        </div>
+      )}
+      {offerGroups && (
+        <div>
+          <Label htmlFor="qa-group" className="text-slate-200">Feeding group</Label>
+          <select
+            id="qa-group"
+            value={groupId || ''}
+            onChange={(e) => setPickedGroupId(e.target.value)}
+            className="mt-1 flex h-9 touch:min-h-11 w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-1 text-base md:text-sm text-slate-100 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            {groups.map((g) => <option key={g.id} value={g.id}>{groupOption(g)}</option>)}
+          </select>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next && !saving) onClose?.(); }}>
@@ -332,7 +411,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               <DialogTitle className="text-xl text-slate-100">{saved.gecko.name} is in your collection</DialogTitle>
               <DialogDescription className="text-slate-400">
                 {saved.remind
-                  ? `We will remind you on feeding days, every ${DEFAULT_FEEDING_INTERVAL_DAYS} days. Change the schedule in the Season Planner, on the Feeding tab.`
+                  ? `We will remind you on feeding days, every ${saved.everyDays} days. Change the schedule in the Season Planner, on the Feeding tab.`
                   : 'Weights, sheds, photos and lineage now have a home.'}
               </DialogDescription>
             </div>
@@ -425,13 +504,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               />
             </div>
 
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/60 p-3">
-              <div>
-                <Label htmlFor="qa-remind" className="text-slate-100">Remind me on feeding days</Label>
-                <p className="text-xs text-slate-400 mt-0.5">Every {DEFAULT_FEEDING_INTERVAL_DAYS} days, starting today. One message, even with the app closed.</p>
-              </div>
-              <Switch id="qa-remind" checked={remind} onCheckedChange={setRemind} />
-            </div>
+            {reminderBlock(true)}
 
             <div className="space-y-2 pt-1">
               <Button className="min-h-11 w-full" disabled={saving || uploading} onClick={handleSave}>
@@ -562,15 +635,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               <Input id="qa-morph" value={morph} onChange={(e) => setMorph(e.target.value)} placeholder="e.g. Lilly White Harlequin" className="mt-1 bg-slate-800 border-slate-600 text-slate-100" autoComplete="off" />
             </div>
 
-            {!guest && (
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/60 p-3">
-              <div>
-                <Label htmlFor="qa-remind" className="text-slate-100">Remind me on feeding days</Label>
-                <p className="text-xs text-slate-400 mt-0.5">Every {DEFAULT_FEEDING_INTERVAL_DAYS} days, starting today. One message, even with the app closed.</p>
-              </div>
-              <Switch id="qa-remind" checked={remind} onCheckedChange={setRemind} />
-            </div>
-            )}
+            {reminderBlock(!guest)}
 
             <div className="flex flex-col-reverse sm:flex-row gap-2 pt-1">
               {guest ? (

@@ -30,14 +30,16 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { inferSeasonLabel, compareSeasonLabels } from '@/lib/seasons';
 import { formatHetTag } from '@/lib/hetUtils';
 
-// Status → color palette for status dot + badge
+// Status → color palette for status dot + badge. Five roles only (experience
+// review K2), matching the gecko record: Ready to Breed is success, and
+// Future Breeder, For Sale and Pet are neutral. The badge names the status.
 const STATUS_COLORS = {
     'Proven': { dot: 'bg-emerald-400', text: 'text-emerald-300', ring: 'ring-emerald-400/50', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
-    'Ready to Breed': { dot: 'bg-blue-400', text: 'text-blue-300', ring: 'ring-blue-400/50', badge: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
-    'Future Breeder': { dot: 'bg-violet-400', text: 'text-violet-300', ring: 'ring-violet-400/50', badge: 'bg-violet-500/20 text-violet-300 border-violet-500/40' },
+    'Ready to Breed': { dot: 'bg-green-400', text: 'text-green-300', ring: 'ring-green-400/50', badge: 'bg-green-500/20 text-green-300 border-green-500/40' },
+    'Future Breeder': { dot: 'bg-slate-400', text: 'text-slate-300', ring: 'ring-slate-400/50', badge: 'bg-slate-500/20 text-slate-300 border-slate-500/40' },
     'Holdback': { dot: 'bg-amber-400', text: 'text-amber-300', ring: 'ring-amber-400/50', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
-    'For Sale': { dot: 'bg-cyan-400', text: 'text-cyan-300', ring: 'ring-cyan-400/50', badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
-    'Pet': { dot: 'bg-pink-400', text: 'text-pink-300', ring: 'ring-pink-400/50', badge: 'bg-pink-500/20 text-pink-300 border-pink-500/40' },
+    'For Sale': { dot: 'bg-slate-400', text: 'text-slate-300', ring: 'ring-slate-400/50', badge: 'bg-slate-500/20 text-slate-300 border-slate-500/40' },
+    'Pet': { dot: 'bg-slate-400', text: 'text-slate-300', ring: 'ring-slate-400/50', badge: 'bg-slate-500/20 text-slate-300 border-slate-500/40' },
     'Sold': { dot: 'bg-slate-500', text: 'text-slate-400', ring: 'ring-slate-500/50', badge: 'bg-slate-500/20 text-slate-400 border-slate-500/40' },
 };
 
@@ -225,7 +227,7 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
                     <div className="text-slate-400 italic">{placeholderData.notes}</div>
                 )}
                 {isEditable && (
-                    <div className="text-emerald-400 text-[10px] pt-1 border-t border-slate-700">
+                    <div className="text-emerald-400 text-xs pt-1 border-t border-slate-700">
                         Click to edit parent info
                     </div>
                 )}
@@ -261,11 +263,14 @@ const GeckoCardNode = ({
     }
     const hasImage = gecko.image_urls && gecko.image_urls.length > 0;
 
+    // Small and normal cards read at 12 px or more (experience review K1).
+    // Tiny and nano cards (96 and 56 px wide) keep smaller type: at 12 px
+    // their names and traits are cut short.
     const sizes = {
         nano: { card: 'w-14 h-20', name: 'text-[8px]', id: 'text-[7px]', width: 'w-14', traits: 'text-[8px] line-clamp-2' },
         tiny: { card: 'w-24 h-28', name: 'text-[10px]', id: 'text-[9px]', width: 'w-24', traits: 'text-[9px] line-clamp-3' },
-        small: { card: 'w-28 h-32', name: 'text-xs', id: 'text-[10px]', width: 'w-28', traits: 'text-[10px] line-clamp-3' },
-        normal: { card: 'w-36 h-44', name: 'text-sm', id: 'text-xs', width: 'w-36', traits: 'text-[11px] line-clamp-4' },
+        small: { card: 'w-28 h-32', name: 'text-xs', id: 'text-xs', width: 'w-28', traits: 'text-xs line-clamp-3' },
+        normal: { card: 'w-36 h-44', name: 'text-sm', id: 'text-xs', width: 'w-36', traits: 'text-xs line-clamp-4' },
     };
     const { card: cardSize, name: nameTextSize, id: idTextSize, width: cardWidth, traits: traitsClass } = sizes[size] || sizes.normal;
     const traitText = showTraits ? getTraitText(gecko) : '';
@@ -316,7 +321,7 @@ const GeckoCardNode = ({
 
                 {/* Age badge (top-left) */}
                 {showAgeBadge && (
-                    <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[9px] font-semibold text-white/90 leading-none">
+                    <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-xs font-semibold text-white/90 leading-none">
                         {age}
                     </div>
                 )}
@@ -383,10 +388,10 @@ const GeckoCardNode = ({
                     <span className={sexColor}>{sexIcon}</span>
                 </div>
                 {gecko.gecko_id_code && (
-                    <div className="text-slate-400 font-mono text-[10px]">{gecko.gecko_id_code}</div>
+                    <div className="text-slate-400 font-mono text-xs">{gecko.gecko_id_code}</div>
                 )}
                 {gecko.status && statusColor && (
-                    <div className={`inline-block px-1.5 py-0.5 rounded border text-[10px] font-semibold ${statusColor.badge}`}>
+                    <div className={`inline-block px-1.5 py-0.5 rounded border text-xs font-semibold ${statusColor.badge}`}>
                         {gecko.status}
                     </div>
                 )}
@@ -404,7 +409,7 @@ const GeckoCardNode = ({
                 )}
                 {gecko.morphs_traits && (
                     <div className="flex items-start gap-1.5 text-slate-300">
-                        <Dna className="w-3 h-3 mt-0.5 text-violet-400 flex-shrink-0" />
+                        <Dna className="w-3 h-3 mt-0.5 text-emerald-400 flex-shrink-0" />
                         <span className="italic">{gecko.morphs_traits}</span>
                     </div>
                 )}
@@ -416,7 +421,7 @@ const GeckoCardNode = ({
                 )}
                 {gecko.weight_grams != null && gecko.weight_grams !== '' && (
                     <div className="flex items-center gap-1.5 text-slate-300">
-                        <Scale className="w-3 h-3 text-cyan-400" />
+                        <Scale className="w-3 h-3 text-emerald-400" />
                         <span>{gecko.weight_grams}g</span>
                     </div>
                 )}
@@ -1333,7 +1338,7 @@ export default function Lineage() {
                                     )}
                                     {selectedGecko.weight_grams != null && selectedGecko.weight_grams !== '' && (
                                         <span className="flex items-center gap-1 font-mono tabular-nums">
-                                            <Scale className="w-3 h-3 text-cyan-400" />
+                                            <Scale className="w-3 h-3 text-emerald-400" />
                                             {selectedGecko.weight_grams}g
                                         </span>
                                     )}
@@ -1478,7 +1483,7 @@ export default function Lineage() {
                             <div className="flex-shrink-0 order-2 md:order-1">
                                 {mates.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
-                                        <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-pink-400">
+                                        <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-emerald-400">
                                             <Heart className="w-4 h-4" /> Mates
                                         </h2>
                                         <div className="grid grid-cols-1 gap-2 justify-items-center">
@@ -1517,7 +1522,7 @@ export default function Lineage() {
                             <div className="flex-shrink-0 order-3">
                                 {offspring.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
-                                        <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-blue-400">
+                                        <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-emerald-400">
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
                                         <div className="flex flex-row flex-wrap items-start gap-2">
@@ -1528,9 +1533,9 @@ export default function Lineage() {
                                                         key={season}
                                                         className="rounded-md bg-slate-900/40 border border-emerald-900/50 p-1.5"
                                                     >
-                                                        <h3 className="text-[11px] font-semibold text-blue-300 mb-1 text-center">
+                                                        <h3 className="text-xs font-semibold text-emerald-300 mb-1 text-center">
                                                             {season}
-                                                            <span className="ml-1 font-normal text-blue-400/60">({kids.length})</span>
+                                                            <span className="ml-1 font-normal text-emerald-400/60">({kids.length})</span>
                                                         </h3>
                                                         <div
                                                             className="grid grid-flow-col auto-cols-max gap-1 justify-items-center"

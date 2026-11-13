@@ -533,7 +533,7 @@ function CollectionRow({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-base font-semibold text-white">{collection.name}</span>
             {isOwner && collection.is_default && (
-              <Badge className="bg-emerald-700 text-emerald-100 text-[10px]">
+              <Badge className="bg-emerald-700 text-emerald-100 text-xs">
                 Default
               </Badge>
             )}
@@ -542,7 +542,7 @@ function CollectionRow({
                 {others.length} collaborator{others.length === 1 ? '' : 's'}
               </span>
             ) : (
-              <Badge className="bg-sky-800 text-sky-100 text-[10px] capitalize">
+              <Badge className="bg-slate-700 text-slate-100 text-xs capitalize">
                 {mySeat?.role || 'Shared'}
               </Badge>
             )}
@@ -598,10 +598,10 @@ function CollectionRow({
                   <Badge
                     className={
                       m.status === 'accepted'
-                        ? 'bg-emerald-700 text-emerald-100 text-[10px]'
+                        ? 'bg-emerald-700 text-emerald-100 text-xs'
                         : m.status === 'pending'
-                          ? 'bg-amber-700 text-amber-100 text-[10px]'
-                          : 'bg-slate-700 text-slate-300 text-[10px]'
+                          ? 'bg-amber-700 text-amber-100 text-xs'
+                          : 'bg-slate-700 text-slate-300 text-xs'
                     }
                   >
                     {isInviteExpired(m) ? 'expired' : m.status}

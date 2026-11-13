@@ -109,7 +109,9 @@ export default function RecordBreeding({ gecko, plans, eggs, offspring, weights,
                     <span className="block text-slate-200 font-medium text-sm truncate">{child.name || 'Unnamed'}</span>
                     {child.sex && <span className="block text-slate-400 text-xs">{child.sex}</span>}
                   </span>
-                  {child.hatch_date && <span className="text-slate-400 text-xs shrink-0">{day(child.hatch_date, 'MMM yyyy')}</span>}
+                  {child.hatch_date
+                    ? <span className="text-slate-400 text-xs shrink-0">{day(child.hatch_date, 'MMM yyyy')}</span>
+                    : child.estimated_hatch_year ? <span className="text-slate-400 text-xs shrink-0">{child.estimated_hatch_year}</span> : null}
                 </Link>
               </li>
             ))}

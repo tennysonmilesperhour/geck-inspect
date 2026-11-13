@@ -27,9 +27,9 @@ import { patternGradeForScore } from '@/lib/quality';
 // Extracted helpers / constants / sub-components, keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
 import { MONTHS, INITIAL_FORM_DATA, LIFE_STAGES } from './form/constants';
-import { generateNextGeckoId } from './form/helpers';
+import { feedingGroupForWeight, generateNextGeckoId } from './form/helpers';
 import FormSection from './form/FormSection';
-import { hatchDateFromParts, hatchDateStatus, parseDateText } from './form/hatchDate';
+import { hatchDateFromParts, hatchDateStatus, hatchFieldsFromParts, hatchYearOnly, parseDateText } from './form/hatchDate';
 import { clearGeckoFormDraft, readGeckoFormDraft, saveGeckoFormDraft } from './form/draft';
 import ImageCropDialog from './form/ImageCropDialog';
 import ParentAutocomplete from './form/ParentAutocomplete';
@@ -270,14 +270,16 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     .catch((err) => console.warn('ID code not generated for draft:', err));
             }
 
-            // Also, parse the date parts for the UI inputs.
+            // Also, parse the date parts for the UI inputs. A gecko with a
+            // hatch year and no date shows the year alone.
             const date = gecko.hatch_date ? parseLocalDate(gecko.hatch_date) : null;
             if (date && !isNaN(date.getTime())) {
                 setHatchYear(date.getFullYear().toString());
                 setHatchMonth((date.getMonth() + 1).toString());
                 setHatchDay(date.getDate().toString());
             } else {
-                setHatchYear('');
+                const yearOnly = hatchYearOnly(gecko);
+                setHatchYear(yearOnly ? String(yearOnly) : '');
                 setHatchMonth('');
                 setHatchDay('');
             }
@@ -329,12 +331,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     }, [gecko, currentUser, userGeckos, isHatching, formData.gecko_id_code, breedingPlan]);
 
     // Effect 3: Construct date from parts. Only a real, complete date is
-    // saved (see ./form/hatchDate.js); anything less saves no hatch date.
+    // saved as the hatch date (see ./form/hatchDate.js); anything less keeps
+    // just the year, when there is one.
     useEffect(() => {
         handleChange('hatch_date', hatchDateFromParts(hatchYear, hatchMonth, hatchDay));
     }, [hatchYear, hatchMonth, hatchDay, handleChange]);
     const hatchDateNow = hatchDateFromParts(hatchYear, hatchMonth, hatchDay);
     const hatchStatus = hatchDateStatus(hatchYear, hatchMonth, hatchDay);
+    // The year a save keeps when the row holds less than a whole date.
+    const hatchYearKept = hatchFieldsFromParts(hatchYear, hatchMonth, hatchDay).estimated_hatch_year;
 
     // A full date pasted, autofilled or dropped into Year or Day fills all
     // three boxes (2026-02-24, 02/24/2026, 24 Feb 2026).
@@ -614,12 +619,14 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             const weightValue = formData.weight_grams !== '' && formData.weight_grams !== null
                 ? parseFloat(formData.weight_grams)
                 : null;
+            // A whole date, or the year alone (./form/hatchDate.js).
+            const hatch = hatchFieldsFromParts(hatchYear, hatchMonth, hatchDay);
             const dataToSave = {
                 name: formData.name.trim(),
                 is_public: formData.is_public === true,
                 gallery_display: formData.is_public === true && formData.gallery_display === true,
                 gecko_id_code: formData.gecko_id_code,
-                hatch_date: formData.hatch_date ? format(formData.hatch_date, 'yyyy-MM-dd') : null,
+                hatch_date: hatch.hatch_date,
                 // Mirror the latest weight onto the gecko row so cards and
                 // the detail page show it immediately, without waiting for
                 // the WeightRecord query to resolve. The WeightRecord row
@@ -667,6 +674,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 tail_status: formData.tail_status || null,
                 growth_slideshow_enabled: !!formData.growth_slideshow_enabled,
             };
+            // Sent when it keeps a year, or clears the year this gecko had
+            // because a whole date replaces it or the row was emptied. So a
+            // save with no year in it never depends on the database knowing
+            // the field, and a year typed half-way never wipes a saved one.
+            const hatchRowEmpty = !hatchYear && !hatchMonth && !hatchDay;
+            if (hatch.estimated_hatch_year != null
+                || (gecko?.estimated_hatch_year != null && (hatch.hatch_date || hatchRowEmpty))) {
+                dataToSave.estimated_hatch_year = hatch.estimated_hatch_year;
+            }
 
             const isNew = !gecko?.id || isHatching;
             if (!dataToSave.name) {
@@ -679,19 +695,28 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             }
             // Include automatic group assignment in the same transaction.
             if (weightValue !== null && !dataToSave.feeding_group_id) {
-                const group = feedingGroups.find(g => g.auto_weight_min_g != null &&
-                    g.auto_weight_max_g != null && weightValue >= g.auto_weight_min_g && weightValue <= g.auto_weight_max_g);
+                const group = feedingGroupForWeight(feedingGroups, weightValue);
                 if (group) dataToSave.feeding_group_id = group.id;
             }
             const recordWeight = weightValue !== null &&
                 (isNew || gecko.weight_grams == null || Number(gecko.weight_grams) !== weightValue);
-            const { data: savedGecko, error: saveError } = await supabase.rpc('save_gecko_record', {
-                p_record: dataToSave,
+            const saveRecord = (record) => supabase.rpc('save_gecko_record', {
+                p_record: record,
                 p_gecko_id: isNew ? null : gecko.id,
                 p_request_id: saveRequestId.current,
                 p_record_weight: recordWeight,
                 p_record_date: todayLocalISO(),
             });
+            let { data: savedGecko, error: saveError } = await saveRecord(dataToSave);
+            // The database learns the hatch year in the same release, and the
+            // site can go live a minute before it. Until then a year is
+            // refused, so save the rest, as the form did before, and say so.
+            let yearHeldBack = false;
+            if (saveError && 'estimated_hatch_year' in dataToSave && /Unsupported animal field/i.test(saveError.message || '')) {
+                const { estimated_hatch_year: _held, ...withoutYear } = dataToSave;
+                ({ data: savedGecko, error: saveError } = await saveRecord(withoutYear));
+                yearHeldBack = !saveError;
+            }
             if (saveError) throw saveError;
             // The saved row reads no sale price (it is kept apart, see
             // src/lib/geckoSalePrices.js); put it back before handing on.
@@ -716,6 +741,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     notifyFollowersNewGecko(savedGecko, currentUser.email, currentUser.full_name).catch(console.error);
                 }
                 checkAndNotifyLevelUp(currentUser.email).catch(console.error);
+            }
+            if (yearHeldBack && hatch.estimated_hatch_year != null) {
+                toast({ title: `${savedGecko.name || 'Your gecko'} is saved, without the hatch year`, description: `An update is still finishing. Edit the gecko in a few minutes to add ${hatch.estimated_hatch_year} again.` });
             }
 
             if (onSubmit) {
@@ -1200,8 +1228,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 </div>
                                 <p id="hatch_date_hint" aria-live="polite" className={`mt-1.5 text-xs ${hatchStatus === 'invalid' ? 'text-amber-300' : 'text-slate-400'}`}>
                                     {hatchStatus === 'complete' && `Hatched ${format(hatchDateNow, 'MMMM d, yyyy')}.`}
-                                    {hatchStatus === 'invalid' && 'That day does not exist. Check the month and the day.'}
-                                    {hatchStatus === 'partial' && 'A hatch date is saved once all three are filled in. If you only know the month, you can enter the 1st and say so in the notes.'}
+                                    {hatchStatus === 'invalid' && `That day does not exist. Check the month and the day.${hatchYearKept ? ` Until then, only ${hatchYearKept} is saved.` : ''}`}
+                                    {hatchStatus === 'partial' && (hatchYearKept
+                                        ? `Saved as hatched in ${hatchYearKept}. ${hatchMonth && !hatchDay ? 'The month is kept once you add the day.' : hatchDay && !hatchMonth ? 'The day is kept once you add the month.' : 'Add the month and day when you know them.'}`
+                                        : 'A hatch date needs a four-digit year, such as 2025.')}
                                     {hatchStatus === 'empty' && 'You can paste a full date, such as 24 Feb 2026, into Year.'}
                                 </p>
                             </div>

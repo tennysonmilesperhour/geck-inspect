@@ -65,10 +65,6 @@ How to use it:
 | E9 | **The unused `isHatching` mode of the gecko form:** keep or delete. | `planning/experience-review-2026-11-11.md`, section 6 |
 | E10 | **Founder hours a week for the plan**, and the founder brand name to publish. | Part C15; `../CLAUDE.md` |
 | E11 | **Ball python site, Phase 0 decisions.** Paused until 17 January 2027; nothing to do now. | `planning/ball-python-app-2026-10.md` |
-| E12 | **Quick Add and feeding groups.** Since 13 November every new gecko starts in Quick Add. With "Remind me on feeding days" on, it goes into your first feeding group. For a breeder with several groups that may be the wrong one. Choose: keep it, show a group picker when there is more than one group, or leave the gecko ungrouped. | `planning/experience-review-2026-11-11.md`, WP-3 |
-| E13 | **A hatch year on its own.** The gecko form saves a hatch date only when year, month and day are all filled in, and says so. Saving the year alone needs a small database change. Say yes and a session will do it. | Same, WP-3 |
-| E15 | **The passport step when a gecko is sold.** The sold sheet has a "Make its passport" step, built and switched off because a passport would have shown the sale price to other members. Since 13 November the sale price is private (E14 is done), so that reason is gone. A public gecko still shows other members its owner's email address, as every public gecko does today (E16). Choose: switch the step on now (one line, `OFFER_PASSPORT_AT_SALE` in `src/components/transfers/SellHandoverSheet.jsx`, plus its tests), or wait for E16. | `planning/private-sale-prices-2026-11.md`, section 6 |
-| E16 | **Owner email addresses on public rows.** Any signed-in member can read the owner's email on every public gecko, and on public breeding plans and the weight, feeding, shed, vet and ownership records of public passports (the app never shows it; the data is readable). Signed-out visitors cannot. Holding it back is the same two-step change done for photos and forum posts on 31 October, larger for geckos because the app checks `created_by` to decide who may edit. About two to three days. Say yes and a session will plan it. | Same, section 6 |
 
 ## F. Checks on a real phone or with real email
 
@@ -103,6 +99,8 @@ Sources: `planning/deploy-queue-2026-10-03.md` (round 2 item 5, round 3 items 1 
 
 ## Done
 
+- 13 November 2026: E15 and E16, decided (Tennyson took the recommendations). E16: owner email addresses are being held back from other members in two steps; the database part of step 1 is live, the app part and step 2 follow, then E15 switches the passport step on the sold sheet. Live status: `planning/owner-emails-2026-11.md`, section 6. Nothing for Tennyson to do.
+- 13 November 2026: E12 and E13, built. Quick Add offers a feeding group choice when a breeder has two or more groups, defaulting to the one whose weight range fits; the gecko form saves a hatch year on its own. `planning/experience-review-2026-11-11.md`, WP-3. Nothing for Tennyson to do.
 - 12 November 2026: A5, the seven decisions from the experience review. Tennyson asked for the recommendations to be built; each decision took its recommended answer (section 2 of `planning/experience-review-2026-11-11.md`), and every package was built 11 to 13 November.
 - 13 November 2026: E14, sold prices on public geckos. What a gecko sold for, and what a buyer paid on a claimed transfer, now sit in tables only the owner (and a shared collection's members, and admins) can read. Migration `20261113172624_private_sale_prices.sql`; the plan and checks are `planning/private-sale-prices-2026-11.md`. Nothing for Tennyson to do.
 - 12 November 2026: A3, the 6-digit code in the "Confirm signup" email template (done by Tennyson; not checked from a session, which cannot read the templates. To check: sign up with a spare address and type the code).

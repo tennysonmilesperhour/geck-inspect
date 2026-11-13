@@ -11,8 +11,9 @@
 //       left only where they carry meaning: the male and female markers,
 //       charts and illustrations.
 //
-// Each number below is today's count after the first pass (My Geckos,
-// Today, the gecko record, Morph ID, Breeding and the Overview). A count
+// Each number below is today's count after two passes: the first (My
+// Geckos, Today, the gecko record, Morph ID, Breeding and the Overview)
+// and the second (Business, Settings, My Profile and Lineage). A count
 // may only go down. WHEN YOU REMOVE MORE, LOWER THE NUMBER to the new
 // count in the same commit, so the next person cannot add them back. If
 // this fails because you added one: use `text-xs`, or the accent or
@@ -66,14 +67,15 @@ describe('visual gauges (experience review K1 and K2)', () => {
     // text-[9px], text-[9.5px], text-[8px].
     const small = (SOURCE.match(/text-\[(\d+(?:\.\d+)?)px\]/g) || [])
       .filter((cls) => Number(cls.slice(6, -3)) <= 10);
-    expect(small.length).toBeLessThanOrEqual(188); // was 232; lower me when you remove more
+    expect(small.length).toBeLessThanOrEqual(162); // was 232, then 188, then 164; lower me when you remove more
   });
 
   it('K2: off-palette colour classes do not grow', () => {
     // One ceiling per family, so a fall in one cannot hide a rise in
     // another. Lower each when you remove more.
     // Before the first pass: purple 136, violet 71, pink 89, sky 118, blue 124.
-    const ceilings = { purple: 78, violet: 61, pink: 75, sky: 99, blue: 96 };
+    // After it: purple 78, violet 61, pink 75, sky 99, blue 96.
+    const ceilings = { purple: 72, violet: 54, pink: 65, sky: 94, blue: 77 };
     const counts = Object.fromEntries(
       Object.keys(ceilings).map((family) => [family, count(new RegExp(`\\b${family}-\\d{2,3}\\b`, 'g'))]),
     );

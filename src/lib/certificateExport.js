@@ -195,7 +195,10 @@ export async function exportProvenanceCertificate(gecko, ownershipRecords, passp
   const factBits = [
     `Species: ${safeText(gecko?.species || 'Correlophus ciliatus')}`,
     gecko?.sex ? `Sex: ${safeText(gecko.sex)}` : null,
-    `Hatched: ${fmtDate(gecko?.hatch_date || gecko?.date_of_birth)}`,
+    // A gecko with only a hatch year prints the year, never a made-up day.
+    `Hatched: ${!(gecko?.hatch_date || gecko?.date_of_birth) && gecko?.estimated_hatch_year
+      ? `${gecko.estimated_hatch_year} (year only)`
+      : fmtDate(gecko?.hatch_date || gecko?.date_of_birth)}`,
   ].filter(Boolean).join('    ');
   doc.text(factBits, innerX, y);
   y += 6;

@@ -477,6 +477,7 @@ function MyProfileScreen() {
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => handleImageUpload(e.target.files[0], 'profile')}
+                                aria-label="Change profile photo"
                                 className="sr-only"
                                 disabled={isUploading}
                             />
@@ -641,7 +642,7 @@ function MyProfileScreen() {
                                     />
                                     <AchievementProgress
                                         title="Community Level"
-                                        icon={<MessageSquare className="w-5 h-5 text-purple-400" />}
+                                        icon={<MessageSquare className="w-5 h-5 text-emerald-400" />}
                                         currentCount={userStats.forumPosts + userStats.comments} // Sum posts and comments for community points
                                         levels={COMMUNITY_LEVELS}
                                         levelKey="points"
@@ -655,21 +656,21 @@ function MyProfileScreen() {
                                     />
                                     <AchievementProgress
                                         title="Hatchery Progress"
-                                        icon={<EggIcon className="w-5 h-5 text-rose-300" />}
+                                        icon={<EggIcon className="w-5 h-5 text-emerald-300" />}
                                         currentCount={userStats.eggsHatched}
                                         levels={HATCHERY_LEVELS}
                                         levelKey="hatched"
                                     />
                                     <AchievementProgress
                                         title="Gallery Contributor"
-                                        icon={<ImageIcon className="w-5 h-5 text-sky-400" />}
+                                        icon={<ImageIcon className="w-5 h-5 text-emerald-400" />}
                                         currentCount={userStats.galleryUploads}
                                         levels={GALLERY_LEVELS}
                                         levelKey="uploads"
                                     />
                                     <AchievementProgress
                                         title="Morph Diversity"
-                                        icon={<Palette className="w-5 h-5 text-fuchsia-400" />}
+                                        icon={<Palette className="w-5 h-5 text-emerald-400" />}
                                         currentCount={userStats.distinctMorphs}
                                         levels={MORPH_DIVERSITY_LEVELS}
                                         levelKey="morphs"
@@ -722,21 +723,21 @@ function MyProfileScreen() {
                                             )}
                                             {user.instagram_handle && (
                                                 <a href={`https://instagram.com/${user.instagram_handle}`} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" aria-label="Instagram" className="touch:min-w-11 border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
+                                                    <Button size="sm" variant="outline" aria-label="Instagram" className="touch:min-w-11 border-slate-500/50 hover:bg-slate-700 text-slate-200">
                                                         <Instagram className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.facebook_url && (
                                                 <a href={user.facebook_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" aria-label="Facebook" className="touch:min-w-11 border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
+                                                    <Button size="sm" variant="outline" aria-label="Facebook" className="touch:min-w-11 border-slate-500/50 hover:bg-slate-700 text-slate-200">
                                                         <Facebook className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.youtube_url && (
                                                 <a href={user.youtube_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" aria-label="YouTube" className="touch:min-w-11 border-red-500/50 hover:bg-red-500/20 text-red-400">
+                                                    <Button size="sm" variant="outline" aria-label="YouTube" className="touch:min-w-11 border-slate-500/50 hover:bg-slate-700 text-slate-200">
                                                         <Youtube className="w-4 h-4" />
                                                     </Button>
                                                 </a>
@@ -750,14 +751,14 @@ function MyProfileScreen() {
                                             )}
                                             {user.morphmarket_url && (
                                                 <a href={user.morphmarket_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" aria-label="MorphMarket" className="border-orange-500/50 hover:bg-orange-500/20 text-orange-400 text-xs font-semibold px-2">
+                                                    <Button size="sm" variant="outline" aria-label="MorphMarket" className="border-slate-500/50 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-2">
                                                         MM
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.palm_street_url && (
                                                 <a href={user.palm_street_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" aria-label="Palm Street" className="border-green-500/50 hover:bg-green-500/20 text-green-400 text-xs font-semibold px-2">
+                                                    <Button size="sm" variant="outline" aria-label="Palm Street" className="border-slate-500/50 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-2">
                                                         PS
                                                     </Button>
                                                 </a>

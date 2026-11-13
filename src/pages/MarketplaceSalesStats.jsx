@@ -200,8 +200,8 @@ export function CostRow({ cost, onDelete, onUpdate, linkOptions }) {
         <p className="font-medium text-slate-100 text-sm truncate">{cost.description}</p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs text-slate-500">{cost.date ? format(new Date(cost.date), 'MMM d, yyyy') : '-'}</span>
-          <Badge className="text-[10px] px-1.5 py-0 bg-emerald-900/50 text-emerald-300 border-emerald-800/50">{getCategoryLabel(cost.category)}</Badge>
-          {tiedTo && <span className="text-[11px] text-slate-400 truncate">for {tiedTo}</span>}
+          <Badge className="text-xs px-1.5 py-0 bg-emerald-900/50 text-emerald-300 border-emerald-800/50">{getCategoryLabel(cost.category)}</Badge>
+          {tiedTo && <span className="text-xs text-slate-400 truncate">for {tiedTo}</span>}
         </div>
       </div>
       <p className="text-orange-400 font-semibold text-sm flex-shrink-0">{formatMoney(cost.amount)}</p>
@@ -418,20 +418,20 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-slate-100 text-sm truncate">{sale.gecko_name}</h3>
-              {allPaid && <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-700/40 text-[10px]">Fully Paid</Badge>}
+              {allPaid && <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-700/40 text-xs">Fully Paid</Badge>}
             </div>
             {sale.buyer_name && <p className="text-xs text-slate-400 mt-0.5">Buyer: {sale.buyer_name}</p>}
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-lg font-bold text-amber-400">{formatMoney(sale.reserve_price)}</p>
-            <p className="text-[10px] text-slate-500">reserve price</p>
+            <p className="text-xs text-slate-500">reserve price</p>
           </div>
         </div>
 
         {/* Progress bar */}
         {Number(sale.reserve_price) > 0 && (
           <div className="mt-3">
-            <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+            <div className="flex justify-between text-xs text-slate-400 mb-1">
               <span>{formatMoney(totalPaid)} paid</span>
               <span>{formatMoney(remaining > 0 ? remaining : 0)} remaining</span>
             </div>
@@ -447,28 +447,28 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
         {/* Requirement chips */}
         <div className="flex flex-wrap gap-2 mt-3">
           {payments.length > 0 && (
-            <div className="flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
+            <div className="flex items-center gap-1 text-xs rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
               <DollarSign className="w-3 h-3 text-amber-400" />
               <span className="text-slate-300">{payments.filter(p => p.paid).length}/{payments.length} payments</span>
             </div>
           )}
           {sale.target_weight_grams && (
-            <div className="flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
-              <Weight className="w-3 h-3 text-blue-400" />
+            <div className="flex items-center gap-1 text-xs rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
+              <Weight className="w-3 h-3 text-emerald-400" />
               <span className="text-slate-300">
                 {sale.current_weight_grams ? `${sale.current_weight_grams}g / ` : ''}{sale.target_weight_grams}g
               </span>
             </div>
           )}
           {(sale.temp_change_from || sale.temp_change_to) && (
-            <div className="flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
+            <div className="flex items-center gap-1 text-xs rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
               <Thermometer className="w-3 h-3 text-orange-400" />
               <span className="text-slate-300">{sale.temp_change_from || '?'} → {sale.temp_change_to || '?'}</span>
             </div>
           )}
           {sale.projected_ship_date && (
-            <div className="flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
-              <Package className="w-3 h-3 text-purple-400" />
+            <div className="flex items-center gap-1 text-xs rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
+              <Package className="w-3 h-3 text-emerald-400" />
               <span className="text-slate-300">Ship: {format(new Date(sale.projected_ship_date), 'MMM d, yyyy')}</span>
             </div>
           )}
@@ -496,7 +496,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
                   {formatMoney(p.amount)}
                   {p.due_date && <span className="text-slate-500 ml-1.5">due {format(new Date(p.due_date), 'MMM d')}</span>}
                 </span>
-                {p.paid && p.paid_date && <span className="text-emerald-500/70 text-[10px]">Paid {format(new Date(p.paid_date), 'MMM d')}</span>}
+                {p.paid && p.paid_date && <span className="text-emerald-500/70 text-xs">Paid {format(new Date(p.paid_date), 'MMM d')}</span>}
               </div>
             ))}
           </div>
@@ -804,9 +804,9 @@ export function PendingSalesTab({ user, pendingSales, setPendingSales, onComplet
             <div className="flex flex-wrap gap-2">
               {[
                 { key: '_usePayments', label: 'Payment Schedule', icon: DollarSign, active: 'bg-amber-900/40 border-amber-600/50 text-amber-300' },
-                { key: '_useWeight', label: 'Weight Requirement', icon: Weight, active: 'bg-blue-900/40 border-blue-600/50 text-blue-300' },
+                { key: '_useWeight', label: 'Weight Requirement', icon: Weight, active: 'bg-emerald-900/40 border-emerald-600/50 text-emerald-300' },
                 { key: '_useTemp', label: 'Temperature Change', icon: Thermometer, active: 'bg-orange-900/40 border-orange-600/50 text-orange-300' },
-                { key: '_useShipDate', label: 'Projected Ship Date', icon: Package, active: 'bg-purple-900/40 border-purple-600/50 text-purple-300' },
+                { key: '_useShipDate', label: 'Projected Ship Date', icon: Package, active: 'bg-emerald-900/40 border-emerald-600/50 text-emerald-300' },
               ].map(({ key, label, icon: Icon, active }) => (
                 <button key={key} onClick={() => setNewSale(f => ({ ...f, [key]: !f[key] }))}
                   className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 touch:min-h-11 border transition-colors ${
@@ -825,7 +825,7 @@ export function PendingSalesTab({ user, pendingSales, setPendingSales, onComplet
             <div className="space-y-2 bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
               <div className="flex items-center justify-between">
                 <Label className="text-xs text-amber-400 font-semibold flex items-center gap-1"><DollarSign className="w-3 h-3" />Payment Schedule</Label>
-                <Button size="sm" variant="ghost" onClick={addPaymentToNew} className="h-9 md:h-6 text-[10px] text-emerald-400"><Plus className="w-3 h-3 mr-1" />Add</Button>
+                <Button size="sm" variant="ghost" onClick={addPaymentToNew} className="h-9 md:h-6 text-xs text-emerald-400"><Plus className="w-3 h-3 mr-1" />Add</Button>
               </div>
               {newSale.payment_schedule.map((p, idx) => (
                 <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2">
@@ -839,20 +839,20 @@ export function PendingSalesTab({ user, pendingSales, setPendingSales, onComplet
                   </Button>
                 </div>
               ))}
-              {newSale.payment_schedule.length === 0 && <p className="text-[10px] text-slate-500">Click "Add" to schedule payments</p>}
+              {newSale.payment_schedule.length === 0 && <p className="text-xs text-slate-500">Click "Add" to schedule payments</p>}
             </div>
           )}
 
           {newSale._useWeight && (
             <div className="grid grid-cols-2 gap-3 bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
               <div>
-                <Label className="text-xs text-blue-400 flex items-center gap-1"><Weight className="w-3 h-3" />Target Weight (g)</Label>
+                <Label className="text-xs text-emerald-400 flex items-center gap-1"><Weight className="w-3 h-3" />Target Weight (g)</Label>
                 <Input type="number" step="0.1" value={newSale.target_weight_grams} onChange={e => setNewSale(f => ({ ...f, target_weight_grams: e.target.value }))}
                   placeholder="e.g. 35"
                   className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               </div>
               <div>
-                <Label className="text-xs text-blue-400 flex items-center gap-1"><Weight className="w-3 h-3" />Current Weight (g)</Label>
+                <Label className="text-xs text-emerald-400 flex items-center gap-1"><Weight className="w-3 h-3" />Current Weight (g)</Label>
                 <Input type="number" step="0.1" value={newSale.current_weight_grams} onChange={e => setNewSale(f => ({ ...f, current_weight_grams: e.target.value }))}
                   placeholder="e.g. 22"
                   className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
@@ -879,7 +879,7 @@ export function PendingSalesTab({ user, pendingSales, setPendingSales, onComplet
 
           {newSale._useShipDate && (
             <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
-              <Label className="text-xs text-purple-400 flex items-center gap-1"><Package className="w-3 h-3" />Projected Ship Date</Label>
+              <Label className="text-xs text-emerald-400 flex items-center gap-1"><Package className="w-3 h-3" />Projected Ship Date</Label>
               <Input type="date" value={newSale.projected_ship_date} onChange={e => setNewSale(f => ({ ...f, projected_ship_date: e.target.value }))}
                 className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs mt-1 max-w-xs" />
             </div>
@@ -1011,7 +1011,7 @@ function ProfitTab({ seasons, pairings, currency, hasPlans, isDemo }) {
                     <td className="py-2 px-2 sm:px-3 text-right text-slate-300 tabular-nums hidden sm:table-cell">{r.sales}</td>
                     <td className="py-2 px-2 sm:px-3 text-right text-emerald-300 tabular-nums">
                       {money(r.revenue, currency)}
-                      {r.unconfirmed > 0 && <span className="block text-[10px] text-amber-300/80">{r.unconfirmed} at asking price</span>}
+                      {r.unconfirmed > 0 && <span className="block text-xs text-amber-300/80">{r.unconfirmed} at asking price</span>}
                     </td>
                     <td className="py-2 px-2 sm:px-3 text-right text-orange-300 tabular-nums">{money(r.costs, currency)}</td>
                     <td className={`py-2 px-2 sm:px-3 text-right font-semibold tabular-nums ${profitClass(r.profit)}`}>{money(r.profit, currency)}</td>
@@ -1053,7 +1053,7 @@ function ProfitTab({ seasons, pairings, currency, hasPlans, isDemo }) {
                   <span>Costs <span className="text-orange-300 tabular-nums">{money(row.costs, currency)}</span></span>
                 </div>
                 {row.unconfirmed > 0 && (
-                  <p className="text-[11px] text-amber-300/80">{row.unconfirmed} sale{row.unconfirmed === 1 ? '' : 's'} counted at the asking price</p>
+                  <p className="text-xs text-amber-300/80">{row.unconfirmed} sale{row.unconfirmed === 1 ? '' : 's'} counted at the asking price</p>
                 )}
               </div>
             ))}
@@ -1412,7 +1412,7 @@ export default function MarketplaceSalesStats() {
           {[
             { label: 'Total Revenue', value: money(totals.revenue, statsPrefs.currency), sub: [`${soldCount} sold`, manualSales.length && `${manualSales.length} manual`, transferCount && `${transferCount} transferred`].filter(Boolean).join(' + '), color: 'text-emerald-400', Icon: DollarSign },
             { label: 'Pending', value: money(pendingSales.reduce((s, p) => s + Number(p.reserve_price || 0), 0), statsPrefs.currency), sub: `${pendingSales.length} reserve${pendingSales.length !== 1 ? 's' : ''}`, color: 'text-amber-400', Icon: Clock },
-            { label: 'YTD Revenue', value: money(totals.ytdRevenue, statsPrefs.currency), sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
+            { label: 'YTD Revenue', value: money(totals.ytdRevenue, statsPrefs.currency), sub: 'Year to date', color: 'text-emerald-400', Icon: TrendingUp },
             { label: 'Total Costs', value: money(totals.costs, statsPrefs.currency), sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
             { label: isDemo ? 'Demo balance' : 'Net Profit', value: money(totals.profit, statsPrefs.currency), sub: isDemo ? 'After listed sample costs' : 'All time', color: totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
           ].map(({ label, value, sub, color, Icon }, i, all) => (
@@ -1491,7 +1491,7 @@ export default function MarketplaceSalesStats() {
                       <Label className="text-xs text-slate-400">Tied to (optional)</Label>
                       <CostLinkSelect value={newCost.link} onChange={link => setNewCost(f => ({ ...f, link }))} linkOptions={linkOptions}
                         className="w-full h-9 touch:min-h-11 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2" />
-                      <p className="text-[11px] text-slate-500 mt-1">Tie a cost to a pairing (incubation, the female&apos;s extra food) or to one gecko (a vet visit) to see profit per pairing.</p>
+                      <p className="text-xs text-slate-500 mt-1">Tie a cost to a pairing (incubation, the female&apos;s extra food) or to one gecko (a vet visit) to see profit per pairing.</p>
                     </div>
                   </div>
                   <div className="pt-2">
@@ -1704,7 +1704,7 @@ export default function MarketplaceSalesStats() {
                                 <div className="min-w-[4rem] text-right">
                                   <p className="text-emerald-400 font-semibold text-sm tabular-nums">{formatMoney(item.amount)}</p>
                                   {!item.confirmed && (
-                                    <p className="text-[10px] text-amber-300/80">{item.kind === 'transfer' ? 'no price entered' : 'asking price'}</p>
+                                    <p className="text-xs text-amber-300/80">{item.kind === 'transfer' ? 'no price entered' : 'asking price'}</p>
                                   )}
                                 </div>
                               </div>

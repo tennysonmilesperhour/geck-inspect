@@ -577,6 +577,26 @@ describe('who sees which actions', () => {
   });
 });
 
+// Owner decision E13: a hatch year on its own is kept, and shown as a year.
+describe('a gecko with a hatch year and no date', () => {
+  it('shows the year, never an age or a made-up day, on the record and its offspring', async () => {
+    state.offspring = [{ id: 'k1', name: 'Pip', sire_id: 'g1', hatch_date: null, estimated_hatch_year: 2025 }];
+    const tree = await mount({ gecko: { ...NIMBUS, hatch_date: null, estimated_hatch_year: 2024 } });
+    const text = textOf(tree);
+    expect(text).toContain('Hatched 2024');
+    expect(text).toContain('2024 (year only)');
+    expect(text).not.toMatch(/\d+(y|mo|d)( \d+mo)? old/);
+    expect(text).not.toMatch(/(January|June|July) \d+, 2024/);
+    const pip = tree.root.find((n) => n.type === 'a' && innerText(n).includes('Pip'));
+    expect(innerText(pip)).toContain('2025');
+
+    // A whole date wins over a year left from a spreadsheet import.
+    const dated = textOf(await mount({ gecko: { ...NIMBUS, estimated_hatch_year: 2024 } }));
+    expect(dated).toContain('June 1, 2025');
+    expect(dated).not.toContain('(year only)');
+  });
+});
+
 describe('the empty weight panel', () => {
   it('suggests the same weigh-in rhythm as the reminders and the care guide', async () => {
     // It said "every two to four weeks", against the care guide's every 1

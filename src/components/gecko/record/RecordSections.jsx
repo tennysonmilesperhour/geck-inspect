@@ -74,6 +74,9 @@ export function DeferUntilVisible({ children, margin = '400px', minHeight = 1 })
 /** Name, photo and the facts a keeper checks first. */
 export function RecordSummary({ gecko, latest, headingAs: Heading = 'h2', onOpenPhoto }) {
   const age = formatAge(gecko.hatch_date);
+  // A hatch year with no date (a year alone) is shown as the year, never
+  // as an age or a made-up day.
+  const yearOnly = gecko.hatch_date ? null : gecko.estimated_hatch_year || null;
   const morphLine = gecko.morphs_traits
     || (Array.isArray(gecko.morph_tags) && gecko.morph_tags.length ? gecko.morph_tags.map(formatHetTag).join(', ') : '');
   return (
@@ -87,6 +90,7 @@ export function RecordSummary({ gecko, latest, headingAs: Heading = 'h2', onOpen
           {gecko.sex && <Badge variant="secondary">{gecko.sex}</Badge>}
           {latest && <Badge variant="outline" className="border-slate-600">{latest.grams} g</Badge>}
           {age && <Badge variant="outline" className="border-slate-600">{age === 'today' ? 'Hatched today' : `${age} old`}</Badge>}
+          {yearOnly && <Badge variant="outline" className="border-slate-600">Hatched {yearOnly}</Badge>}
           {gecko.sex === 'Female' && gecko.is_gravid && <Badge className="bg-emerald-800 text-emerald-100">Gravid</Badge>}
           {/* Why it left the collection, in the same words as its card:
               "In memory" for a gecko that died, "Sold", or "Archived". */}
@@ -216,8 +220,10 @@ export function FamilyCard({ gecko, sire, dam, offspringCount = 0, canEdit = fal
  * is the one that needs it most.
  */
 export function DetailsCard({ gecko, headingAs, identifyTo = null, identifyState = undefined }) {
+  const yearOnly = gecko.hatch_date ? null : gecko.estimated_hatch_year || null;
   const rows = [
     gecko.hatch_date && ['Hatched', day(gecko.hatch_date, 'MMMM d, yyyy')],
+    yearOnly && ['Hatched', `${yearOnly} (year only)`],
     gecko.incubation_days && ['Incubation', `${gecko.incubation_days} days`],
     gecko.tail_status && ['Tail', String(gecko.tail_status).replace(/^\w/, (c) => c.toUpperCase())],
     gecko.sex === 'Female' && gecko.is_gravid && gecko.gravid_since && ['Gravid since', day(gecko.gravid_since)],

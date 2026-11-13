@@ -62,7 +62,7 @@ export default function MySupportTickets({ user }) {
                         <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
                     </div>
                 ) : error ? (
-                    <p role="alert" className="text-sm text-rose-300">{error}</p>
+                    <p role="alert" className="text-sm text-red-300">{error}</p>
                 ) : tickets.length === 0 ? (
                     <p className="text-sm text-slate-500">
                         Nothing yet. Messages you send from the Membership page, the feedback button or a
@@ -79,11 +79,11 @@ export default function MySupportTickets({ user }) {
                                         <p className="text-sm font-semibold text-slate-100">{memberFacingSubject(ticket)}</p>
                                         <div className="flex items-center gap-1.5">
                                             {answered && (
-                                                <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-500/10 text-[10px] uppercase tracking-wider">
+                                                <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-500/10 text-[11px] uppercase tracking-wider">
                                                     Answered
                                                 </Badge>
                                             )}
-                                            <Badge variant="outline" className={`${STATUS_STYLES[ticket.status] || STATUS_STYLES.new} text-[10px] uppercase tracking-wider`}>
+                                            <Badge variant="outline" className={`${STATUS_STYLES[ticket.status] || STATUS_STYLES.new} text-[11px] uppercase tracking-wider`}>
                                                 {MEMBER_STATUS_LABELS[ticket.status] || MEMBER_STATUS_LABELS.new}
                                             </Badge>
                                         </div>

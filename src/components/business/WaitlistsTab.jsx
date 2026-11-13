@@ -62,7 +62,7 @@ function deleteWaitlistWarning(signups, summary, currency) {
 const STATUS_CLASS = {
   waiting: 'bg-slate-700 text-slate-200',
   deposit_paid: 'bg-emerald-700 text-emerald-50',
-  matched: 'bg-sky-700 text-sky-50',
+  matched: 'bg-emerald-800 text-emerald-50',
   completed: 'bg-emerald-900 text-emerald-200',
   withdrawn: 'bg-slate-800 text-slate-500',
   refunded: 'bg-amber-900 text-amber-100',

@@ -221,3 +221,17 @@ export async function generateNextGeckoId(user, allGeckos, sire = null, dam = nu
 
   return generateFounderGeckoId(user, allGeckos);
 }
+
+/**
+ * The feeding group whose weight range (auto_weight_min_g to
+ * auto_weight_max_g, set in the Season Planner) holds this weight in
+ * grams, or null. The long form places a gecko by weight with it, and
+ * Quick Add uses it to choose its default group.
+ */
+export function feedingGroupForWeight(groups, grams) {
+  if (grams === null || grams === undefined || grams === '') return null;
+  const weight = Number(grams);
+  if (!Number.isFinite(weight)) return null;
+  return (groups || []).find((g) => g.auto_weight_min_g != null && g.auto_weight_max_g != null
+    && weight >= Number(g.auto_weight_min_g) && weight <= Number(g.auto_weight_max_g)) || null;
+}

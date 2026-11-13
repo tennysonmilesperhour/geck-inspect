@@ -3,8 +3,9 @@
  * box. Pure functions, no React, so tests can check them without a browser.
  *
  * A hatch date is only saved when the three parts make a real calendar
- * day. A year alone, or a year and a month, saves no date: the app never
- * turns part of a date into an invented birthday.
+ * day. A year without a whole date (owner decision E13, 13 Nov 2026) is
+ * kept as the year alone, in estimated_hatch_year: the app never turns
+ * part of a date into an invented birthday.
  */
 
 const MONTH_NAMES = [
@@ -104,4 +105,38 @@ export function hatchDateStatus(year, month, day) {
   if (!year && !month && !day) return 'empty';
   if (hatchDateFromParts(year, month, day)) return 'complete';
   return year && String(year).length === 4 && month && day ? 'invalid' : 'partial';
+}
+
+/** The year in the Year box as a number, when it is four digits from 1900 to 2100; else null. */
+export function hatchYearFromParts(year) {
+  if (!/^\d{4}$/.test(String(year ?? ''))) return null;
+  const y = Number(year);
+  return y >= 1900 && y <= 2100 ? y : null;
+}
+
+/**
+ * What a save writes for the three boxes. A real date goes in hatch_date
+ * and clears estimated_hatch_year, since the date says more. Anything less
+ * with a year in it (the year alone, a year and a month, a day that does
+ * not exist) keeps only the year: there is no column for a month on its
+ * own, and no day is ever made up.
+ */
+export function hatchFieldsFromParts(year, month, day) {
+  const date = hatchDateFromParts(year, month, day);
+  if (date) {
+    const two = (n) => String(n).padStart(2, '0');
+    return { hatch_date: `${date.getFullYear()}-${two(date.getMonth() + 1)}-${two(date.getDate())}`, estimated_hatch_year: null };
+  }
+  return { hatch_date: null, estimated_hatch_year: hatchYearFromParts(year) };
+}
+
+/**
+ * The year to show for a gecko that has a hatch year but no hatch date
+ * (saved by the form or a spreadsheet import), or null. Screens show it
+ * as a year, never as a day or a month.
+ */
+export function hatchYearOnly(gecko) {
+  if (!gecko || gecko.hatch_date) return null;
+  const year = Number(gecko.estimated_hatch_year);
+  return Number.isInteger(year) && year > 0 ? year : null;
 }

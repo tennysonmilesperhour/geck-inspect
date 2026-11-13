@@ -259,7 +259,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
               <WeightHealthBadge weightRecords={weightRecords.filter(w => w.gecko_id === gecko.id)} />
             </div>
           )}
-          {gecko.hatch_date && (
+          {gecko.hatch_date ? (
             <div className="inline-flex items-center gap-1 text-slate-400">
               <Calendar className="w-3 h-3 shrink-0" />
               <span>{format(parseLocalDate(gecko.hatch_date), 'MM/dd/yy')}</span>
@@ -267,7 +267,13 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
                 <span className="text-slate-500">· {formatAge(gecko.hatch_date)}</span>
               )}
             </div>
-          )}
+          ) : gecko.estimated_hatch_year ? (
+            // A hatch year with no date: the year, never a made-up day.
+            <div className="inline-flex items-center gap-1 text-slate-400">
+              <Calendar className="w-3 h-3 shrink-0" />
+              <span>{gecko.estimated_hatch_year} (year only)</span>
+            </div>
+          ) : null}
         </div>
 
         {/* Actionable breeding state badges + quiet inline metadata for passive traits */}

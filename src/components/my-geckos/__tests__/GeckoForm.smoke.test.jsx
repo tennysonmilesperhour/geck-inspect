@@ -303,17 +303,94 @@ describe('GeckoForm', () => {
     await user.click(screen.getByRole('button', { name: 'Add gecko' }));
     await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(fx.rpc.mock.calls[0][1].p_record.hatch_date).toBe('2026-02-24');
+    // No year to keep or clear, so the save does not send the field.
+    expect(fx.rpc.mock.calls[0][1].p_record).not.toHaveProperty('estimated_hatch_year');
   });
 
-  it('still saves a gecko whose hatch date is unfinished, without inventing a day', async () => {
+  // Owner decision E13: a hatch year on its own is kept.
+  it('saves a year alone as the hatch year, without inventing a day, and says so under the row', async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderForm();
     await user.type(await screen.findByLabelText('Name *'), 'Mango');
     await user.type(screen.getByLabelText('Hatch year'), '2025');
-    expect(screen.getByText(/A hatch date is saved once all three are filled in/)).toBeTruthy();
+    expect(screen.getByText('Saved as hatched in 2025. Add the month and day when you know them.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Add gecko' }));
     await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    expect(fx.rpc.mock.calls[0][1].p_record.hatch_date).toBeNull();
+    expect(fx.rpc.mock.calls[0][1].p_record).toMatchObject({ hatch_date: null, estimated_hatch_year: 2025 });
+  });
+
+  it('keeps only the year of a year and a month', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm();
+    await user.type(await screen.findByLabelText('Name *'), 'Mango');
+    // A month and a year pasted into Year fill those two boxes.
+    await user.click(screen.getByLabelText('Hatch year'));
+    await user.paste('Mar 2025');
+    expect(screen.getByLabelText('Hatch year').value).toBe('2025');
+    expect(screen.getByText('Saved as hatched in 2025. The month is kept once you add the day.')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Add gecko' }));
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(fx.rpc.mock.calls[0][1].p_record).toMatchObject({ hatch_date: null, estimated_hatch_year: 2025 });
+  });
+
+  it('shows a saved year alone in the Year box, and a whole date then replaces it', async () => {
+    const user = userEvent.setup();
+    const existing = { id: 'g-8', name: 'Kiwi', created_by: MEMBER.email, image_urls: [], hatch_date: null, estimated_hatch_year: 2024 };
+    const { onSubmit } = renderForm({ gecko: existing });
+    await vi.waitFor(() => expect(screen.getByLabelText('Hatch year').value).toBe('2024'));
+    expect(screen.getByLabelText('Hatch day').value).toBe('');
+    expect(screen.getByText('Saved as hatched in 2024. Add the month and day when you know them.')).toBeTruthy();
+
+    // An untouched save keeps the year as it is.
+    await user.click(screen.getByRole('button', { name: 'Update gecko' }));
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(fx.rpc.mock.calls[0][1].p_record).toMatchObject({ hatch_date: null, estimated_hatch_year: 2024 });
+
+    // The whole date is better information: it is saved and the year is cleared.
+    const year = screen.getByLabelText('Hatch year');
+    await user.clear(year);
+    await user.paste('24 Feb 2024');
+    expect(screen.getByText('Hatched February 24, 2024.')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Update gecko' }));
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+    expect(fx.rpc.mock.calls[1][1].p_record).toMatchObject({ hatch_date: '2024-02-24', estimated_hatch_year: null });
+  });
+
+  it('clears a saved year when the row is emptied, and leaves it alone for a year typed half-way', async () => {
+    const user = userEvent.setup();
+    const existing = { id: 'g-8', name: 'Kiwi', created_by: MEMBER.email, image_urls: [], hatch_date: null, estimated_hatch_year: 2024 };
+    const { onSubmit } = renderForm({ gecko: existing });
+    await vi.waitFor(() => expect(screen.getByLabelText('Hatch year').value).toBe('2024'));
+    const year = screen.getByLabelText('Hatch year');
+    await user.clear(year);
+    await user.type(year, '202');
+    expect(screen.getByText('A hatch date needs a four-digit year, such as 2025.')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Update gecko' }));
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(fx.rpc.mock.calls[0][1].p_record).not.toHaveProperty('estimated_hatch_year');
+
+    await user.clear(year);
+    await user.click(screen.getByRole('button', { name: 'Update gecko' }));
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+    expect(fx.rpc.mock.calls[1][1].p_record).toMatchObject({ hatch_date: null, estimated_hatch_year: null });
+  });
+
+  // The site can go live a minute before the database accepts the year.
+  it('saves the rest when the database does not take a hatch year yet, and says the year is not kept', async () => {
+    const user = userEvent.setup();
+    fx.rpc = vi.fn(async (fn, args) => ('estimated_hatch_year' in args.p_record
+      ? { data: null, error: { message: 'Unsupported animal field' } }
+      : { data: { id: 'g-new', ...args.p_record }, error: null }));
+    const { onSubmit } = renderForm();
+    await user.type(await screen.findByLabelText('Name *'), 'Mango');
+    await user.type(screen.getByLabelText('Hatch year'), '2025');
+    await user.click(screen.getByRole('button', { name: 'Add gecko' }));
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(fx.rpc).toHaveBeenCalledTimes(2);
+    // The same request both times, so a retry can never make two geckos.
+    expect(fx.rpc.mock.calls[1][1].p_request_id).toBe(fx.rpc.mock.calls[0][1].p_request_id);
+    expect(fx.rpc.mock.calls[1][1].p_record).toMatchObject({ name: 'Mango', hatch_date: null });
+    expect(await screen.findByText('Mango is saved, without the hatch year')).toBeTruthy();
   });
 
   // Experience review D3, second half: a draft that survives a closed tab.
@@ -347,7 +424,8 @@ describe('GeckoForm', () => {
     // A successful save clears it.
     await user.click(screen.getByRole('button', { name: 'Add gecko' }));
     await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    expect(fx.rpc.mock.calls[0][1].p_record).toMatchObject({ name: 'Mango', morphs_traits: 'cream dorsal' });
+    // The year the draft kept is saved with it.
+    expect(fx.rpc.mock.calls[0][1].p_record).toMatchObject({ name: 'Mango', morphs_traits: 'cream dorsal', hatch_date: null, estimated_hatch_year: 2025 });
     expect(draftKeys()).toEqual([]);
   });
 

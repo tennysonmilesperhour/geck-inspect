@@ -9,8 +9,10 @@ import { generateNextGeckoId } from './form/helpers';
 
 /**
  * Save one crested gecko through save_gecko_record (the same atomic RPC
- * the full form uses), optionally putting it in the member's first
- * feeding group with reminders on (created if they have none).
+ * the full form uses), optionally putting it in a feeding group with
+ * reminders on: the one the member chose in Quick Add (feedingGroupId,
+ * offered when they have two or more), else their first group (created
+ * if they have none).
  *
  *   fields: { name, sex, hatch_date, morphs_traits, weight_grams,
  *             image_urls, morph_tags, notes }
@@ -18,9 +20,11 @@ import { generateNextGeckoId } from './form/helpers';
  * Returns { gecko, feedingGroupId }. Throws on failure (the gecko-limit
  * error included, see isGeckoLimitError).
  */
-export async function saveQuickGecko({ user, fields, remind = true, pool = [], idSettings = null, requestId }) {
+export async function saveQuickGecko({ user, fields, remind = true, feedingGroupId: chosenGroupId = null, pool = [], idSettings = null, requestId }) {
   let feedingGroupId = null;
-  if (remind) {
+  if (remind && chosenGroupId) {
+    feedingGroupId = chosenGroupId;
+  } else if (remind) {
     const groups = await FeedingGroup.filter({ created_by: user.email }).catch(() => []);
     const group = groups[0] || await FeedingGroup.create({
       label: 'A',

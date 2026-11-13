@@ -98,4 +98,14 @@ describe('the gecko card', () => {
     expect(screen.getByAltText('Nimbus').getAttribute('src')).toBe(photoUrl);
     vi.unstubAllEnvs();
   });
+
+  // Owner decision E13: a hatch year on its own is kept, and shown as a year.
+  it('shows a hatch year with no date as the year only, and a whole date as before', () => {
+    const { unmount } = render(<GeckoCard gecko={{ ...NIMBUS, hatch_date: null, estimated_hatch_year: 2025 }} onView={() => {}} canEdit />);
+    expect(screen.getByText('2025 (year only)')).toBeTruthy();
+    unmount();
+    render(<GeckoCard gecko={{ ...NIMBUS, hatch_date: '2025-06-01', estimated_hatch_year: 2025 }} onView={() => {}} canEdit />);
+    expect(screen.getByText('06/01/25')).toBeTruthy();
+    expect(screen.queryByText(/year only/)).toBeNull();
+  });
 });

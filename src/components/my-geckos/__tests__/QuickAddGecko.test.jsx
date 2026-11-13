@@ -130,6 +130,92 @@ describe('QuickAddGecko', () => {
     expect(state.rpcCalls[0].args.p_record.feeding_group_id).toBeNull();
   });
 
+  // Owner decision E12: a member with several feeding groups chooses one.
+  describe('the feeding group choice', () => {
+    const GROUPS = [
+      { id: 'adults', label: 'A', name: 'Adults', interval_days: 4 },
+      { id: 'hatchlings', label: 'B', name: 'Hatchlings', interval_days: 2, auto_weight_min_g: 1, auto_weight_max_g: 10 },
+      { id: 'subadults', label: 'C', name: 'Subadults', interval_days: 3, auto_weight_min_g: 10.1, auto_weight_max_g: 30 },
+    ];
+    const choice = (tree) => tree.root.findAll((n) => n.type === 'select' && n.props.id === 'qa-group')[0] || null;
+    const typeWeight = (tree, value) => act(async () => { byId(tree, 'qa-weight').props.onChange({ target: { value } }); });
+
+    it('is not offered with one group or none, and the gecko joins the first group as before', async () => {
+      const none = await mount();
+      expect(choice(none.tree)).toBeNull();
+
+      state.groups = [GROUPS[1]];
+      const one = await mount();
+      expect(choice(one.tree)).toBeNull();
+      expect(textOf(one.tree)).toContain('Every 2 days, with Group B: Hatchlings.');
+      await act(async () => { byId(one.tree, 'qa-name').props.onChange({ target: { value: 'Pip' } }); });
+      await act(async () => { buttonWithText(one.tree, 'Save gecko').props.onClick(); });
+      expect(state.rpcCalls[0].args.p_record.feeding_group_id).toBe('hatchlings');
+      expect(state.groupCreates).toHaveLength(0);
+      expect(textOf(one.tree)).toContain('We will remind you on feeding days, every 2 days.');
+    });
+
+    it('defaults to the group whose weight range holds the weight, else the first, and follows the weight', async () => {
+      state.groups = GROUPS;
+      const { tree } = await mount();
+      expect(choice(tree).props.value).toBe('adults');
+      expect(tree.root.findAll((n) => n.type === 'option').map((o) => innerText(o))).toEqual([
+        'Group A: Adults', 'Group B: Hatchlings (1 to 10 g)', 'Group C: Subadults (10.1 to 30 g)',
+      ]);
+      await typeWeight(tree, '4');
+      expect(choice(tree).props.value).toBe('hatchlings');
+      await typeWeight(tree, '22.5');
+      expect(choice(tree).props.value).toBe('subadults');
+      await typeWeight(tree, '45');
+      expect(choice(tree).props.value).toBe('adults');
+    });
+
+    it("saves the member's choice, which stays put when the weight changes", async () => {
+      state.groups = GROUPS;
+      const { tree } = await mount();
+      await act(async () => { choice(tree).props.onChange({ target: { value: 'subadults' } }); });
+      await typeWeight(tree, '4');
+      expect(choice(tree).props.value).toBe('subadults');
+      expect(textOf(tree)).toContain('Every 3 days, with the group below.');
+      await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
+      await act(async () => { buttonWithText(tree, 'Save gecko').props.onClick(); });
+      expect(state.rpcCalls[0].args.p_record).toMatchObject({ name: 'Mango', weight_grams: 4, feeding_group_id: 'subadults' });
+      expect(state.groupCreates).toHaveLength(0);
+
+      // The next gecko's group follows its own weight again.
+      await act(async () => { buttonWithText(tree, 'Add another gecko').props.onClick(); });
+      await typeWeight(tree, '4');
+      expect(choice(tree).props.value).toBe('hatchlings');
+    });
+
+    it('goes away with reminders off, and the gecko joins no group', async () => {
+      state.groups = GROUPS;
+      const { tree } = await mount();
+      await act(async () => { byId(tree, 'qa-remind').props.onChange({ target: { checked: false } }); });
+      expect(choice(tree)).toBeNull();
+      await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Kiwi' } }); });
+      await act(async () => { buttonWithText(tree, 'Save gecko').props.onClick(); });
+      expect(state.rpcCalls[0].args.p_record.feeding_group_id).toBeNull();
+    });
+
+    it("shows in the demo with the demo's groups, and saves nothing", async () => {
+      const mem = new Map();
+      globalThis.localStorage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: (k) => mem.delete(k) };
+      state.groups = GROUPS;
+      const { tree, onSaved } = await mount({ guest: true, user: { id: '', email: 'guest@local', is_guest: true } });
+      expect(choice(tree).props.value).toBe('adults');
+      await act(async () => { choice(tree).props.onChange({ target: { value: 'hatchlings' } }); });
+      expect(choice(tree).props.value).toBe('hatchlings');
+      await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Mango' } }); });
+      await act(async () => { buttonWithText(tree, 'Keep this gecko').props.onClick(); });
+      expect(state.rpcCalls).toHaveLength(0);
+      expect(state.groupCreates).toHaveLength(0);
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(textOf(tree)).toContain('Create a free account to keep Mango');
+      delete globalThis.localStorage;
+    });
+  });
+
   it('offers photo or typing first, and the photo choice hands off', async () => {
     const onChoosePhoto = vi.fn();
     const { tree } = await mount({ offerPhotoChoice: true, onChoosePhoto, stepLabel: 'Step 1 of 3' });

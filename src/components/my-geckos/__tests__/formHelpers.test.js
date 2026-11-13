@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 // The plain functions behind the long gecko form (experience review WP-3):
-// reading a pasted hatch date, searching the morph catalogue, and the
-// draft of an unsaved new gecko kept in the browser.
+// reading a pasted hatch date, what a save keeps of it, searching the morph
+// catalogue, the feeding group a weight falls in, and the draft of an
+// unsaved new gecko kept in the browser.
 import { afterEach, describe, expect, it } from 'vitest';
-import { hatchDateFromParts, hatchDateStatus, parseDateText } from '../form/hatchDate';
+import { hatchDateFromParts, hatchDateStatus, hatchFieldsFromParts, hatchYearFromParts, hatchYearOnly, parseDateText } from '../form/hatchDate';
+import { feedingGroupForWeight } from '../form/helpers';
 import { countMorphMatches, searchMorphTags } from '../form/morphSearch';
 import { clearGeckoFormDraft, readGeckoFormDraft, saveGeckoFormDraft } from '../form/draft';
 import { ALL_MORPHS } from '../morphTagCatalog';
@@ -67,6 +69,64 @@ describe('hatchDateFromParts and hatchDateStatus', () => {
     expect(hatchDateStatus('202', '2', '24')).toBe('partial');
     expect(hatchDateStatus('2026', '2', '31')).toBe('invalid');
     expect(hatchDateStatus('2026', '2', '24')).toBe('complete');
+  });
+});
+
+// Owner decision E13: a year on its own is kept, as estimated_hatch_year.
+describe('hatchFieldsFromParts: what a save keeps of the hatch row', () => {
+  it('keeps a year alone as the year, with no date', () => {
+    expect(hatchFieldsFromParts('2025', '', '')).toEqual({ hatch_date: null, estimated_hatch_year: 2025 });
+  });
+
+  it('keeps only the year of a year and a month, never a made-up day', () => {
+    expect(hatchFieldsFromParts('2025', '3', '')).toEqual({ hatch_date: null, estimated_hatch_year: 2025 });
+    // A day with no month, or a day that does not exist, keeps the year too.
+    expect(hatchFieldsFromParts('2025', '', '14')).toEqual({ hatch_date: null, estimated_hatch_year: 2025 });
+    expect(hatchFieldsFromParts('2025', '2', '30')).toEqual({ hatch_date: null, estimated_hatch_year: 2025 });
+  });
+
+  it('saves a whole date as the hatch date and clears the year, since the date says more', () => {
+    expect(hatchFieldsFromParts('2025', '3', '7')).toEqual({ hatch_date: '2025-03-07', estimated_hatch_year: null });
+    expect(hatchFieldsFromParts('2024', '12', '31')).toEqual({ hatch_date: '2024-12-31', estimated_hatch_year: null });
+  });
+
+  it('keeps nothing without a four-digit year', () => {
+    expect(hatchFieldsFromParts('', '', '')).toEqual({ hatch_date: null, estimated_hatch_year: null });
+    expect(hatchFieldsFromParts('202', '', '')).toEqual({ hatch_date: null, estimated_hatch_year: null });
+    expect(hatchFieldsFromParts('', '3', '7')).toEqual({ hatch_date: null, estimated_hatch_year: null });
+    expect(hatchYearFromParts('1850')).toBeNull();
+    expect(hatchYearFromParts('20251')).toBeNull();
+    expect(hatchYearFromParts('2025')).toBe(2025);
+  });
+
+  it('reads back a year alone from a saved gecko, and nothing when it has a date', () => {
+    expect(hatchYearOnly({ hatch_date: null, estimated_hatch_year: 2025 })).toBe(2025);
+    expect(hatchYearOnly({ hatch_date: '2025-03-07', estimated_hatch_year: 2025 })).toBeNull();
+    expect(hatchYearOnly({ hatch_date: null, estimated_hatch_year: null })).toBeNull();
+    expect(hatchYearOnly(null)).toBeNull();
+  });
+});
+
+describe('feedingGroupForWeight', () => {
+  const GROUPS = [
+    { id: 'adults', label: 'A' },
+    { id: 'hatchlings', label: 'B', auto_weight_min_g: 1, auto_weight_max_g: 10 },
+    { id: 'subadults', label: 'C', auto_weight_min_g: 10.1, auto_weight_max_g: 30 },
+  ];
+
+  it('finds the group whose weight range holds the weight, ends included', () => {
+    expect(feedingGroupForWeight(GROUPS, 4)?.id).toBe('hatchlings');
+    expect(feedingGroupForWeight(GROUPS, '10')?.id).toBe('hatchlings');
+    expect(feedingGroupForWeight(GROUPS, 22.5)?.id).toBe('subadults');
+    expect(feedingGroupForWeight(GROUPS, 30)?.id).toBe('subadults');
+  });
+
+  it('finds none outside every range, and none for no weight', () => {
+    expect(feedingGroupForWeight(GROUPS, 45)).toBeNull();
+    expect(feedingGroupForWeight(GROUPS, '')).toBeNull();
+    expect(feedingGroupForWeight(GROUPS, null)).toBeNull();
+    expect(feedingGroupForWeight(GROUPS, 'abc')).toBeNull();
+    expect(feedingGroupForWeight([], 4)).toBeNull();
   });
 });
 

@@ -2,6 +2,8 @@
  * Passport utility functions for the Animal Passport system (P1).
  */
 
+import { parseLocalDate } from '@/lib/dateUtils';
+
 /**
  * Generate a unique passport code in format: GI-YYYY-XXXX
  * where XXXX is a random alphanumeric string (uppercase, no ambiguous chars).
@@ -45,7 +47,9 @@ export function passportUrl(passportCode) {
  */
 export function calculateAge(dateOfBirth, estimatedHatchYear) {
   if (dateOfBirth) {
-    const dob = new Date(dateOfBirth);
+    // Read '2025-11-01' as that day where the member is, not as midnight
+    // UTC, which is the evening before in the Americas.
+    const dob = parseLocalDate(dateOfBirth);
     const now = new Date();
     const months = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth());
     if (months < 1) return 'Hatchling';
@@ -56,8 +60,12 @@ export function calculateAge(dateOfBirth, estimatedHatchYear) {
     return `${years}y ${rem}m`;
   }
   if (estimatedHatchYear) {
-    const years = new Date().getFullYear() - estimatedHatchYear;
-    if (years <= 0) return 'Hatchling';
+    // Only the year is known, so the age is in whole years at best. A gecko
+    // hatched this year may be ten months old, so it is "Under 1 year", not
+    // a hatchling; a year still to come is a typing slip.
+    const years = new Date().getFullYear() - Number(estimatedHatchYear);
+    if (!Number.isFinite(years) || years < 0) return 'Unknown';
+    if (years === 0) return 'Under 1 year';
     return `~${years} year${years !== 1 ? 's' : ''}`;
   }
   return 'Unknown';
