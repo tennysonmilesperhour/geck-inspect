@@ -79,6 +79,10 @@ Each status was set by reading the entry and checking the code or the later entr
 | 60 | New package versions wait 7 days | Live |  |
 | 61 | Reminders at 7 am in each member's own time zone | Live |  |
 | 62 | Sign in with Apple in the iPhone app | Live | In the code; it reaches iPhones with build 15. |
+| 63 | Today is the home screen on every device | Live |  |
+| 64 | One screen for logging care | Live |  |
+| 65 | Five colour roles and a 12 px text floor in app screens | Live | Applied to seven pages so far. |
+| 66 | A sale never offers to make the gecko public | Live | Until sold prices are hidden from other members (owner decision E14). |
 
 > **Title note (15 October 2026).** This file was titled "Geck Inspect Landing Page: DECISIONS.md" because entries 1 to 16 were written in an April 2026 landing page session. From entry 17 on it records decisions about the whole product: pricing, billing, data, security, positioning and process. The title now says so. No entry's text was changed.
 
@@ -763,3 +767,39 @@ The Privacy Policy (18 Oct) says the sign-up box starts unticked in the EEA and 
 **Decision:** `APPLE_SIGNIN_ENABLED` in `src/components/auth/LoginPortal.jsx` is `true` (commit `2c42d5c`). The iPhone sign-in screen shows Continue with Apple, Continue with Google, and email and password. The Xcode project went to build 15 for this release. Deleting an account revokes the member's Sign in with Apple token (Guideline 5.1.1(v)): the new `apple-token` edge function stores Apple's refresh token after sign-in, and `delete-my-account`, `admin-delete-account` and `discard-empty-account` revoke it before deleting the login (commit `8ec549a`, migration `20261110183000_apple_sign_in_tokens.sql`).
 **Reasoning:** Apple requires it of an iPhone app that offers another company's sign-in (Guideline 4.8), and requires the token to be revoked when the account is deleted (Guideline 5.1.1(v)).
 **Consequences:** The app bundles the website, so this reaches iPhones only with the next uploaded build. The revoke needs the edge function secrets `APPLE_TEAM_ID`, `APPLE_KEY_ID` and `APPLE_PRIVATE_KEY`; a failed revoke is logged and never blocks a deletion. Web and Android are unchanged. The steps left for Tennyson are in `docs/planning/app-store-resubmission-2026-10-26.md`.
+
+### 63. Today is the home screen on every device
+
+**Date:** 2026-11-13
+**Status:** Accepted (Tennyson asked on 12 November for the experience review's recommendations to be built; this is its decision 2, in the lighter form)
+**Context:** Where a member landed depended on the device and the route: Today on a phone, My Geckos on a laptop after sign-in, the Dashboard at `/` or from the logo. The Dashboard had been rebuilt on 17 October and opened on a greeting and a feed of other members' activity.
+**Decision:** `memberHome()` in `src/lib/pwaLaunch.js` returns Today everywhere and is the only place that names the home. The Dashboard stays as a page called Overview, reached from Today's toggle and the quick search. It left the menu; the Genetics Calculator took its slot. Community Pulse is off by default.
+**Reasoning:** Today answers the question a keeper opens the app with (what needs doing), and one home means every entry behaves the same.
+**Consequences:** The menu holds 12 destinations and 7 in Keeper mode (`src/lib/navItems.derived.test.js`). Page names are fixed in `docs/GLOSSARY.md`: Overview, Business, Prices. Code and addresses keep the old names (`Dashboard`, `MarketplaceSalesStats`, `Market`). `/` for a signed-out visitor did not change.
+
+### 64. One screen for logging care
+
+**Date:** 2026-11-13
+**Status:** Accepted (experience review, findings E1 to E5)
+**Context:** Six tools logged care and disagreed about undo, offline use, back-dating and batch size: the one-tap log, Field Mode, Batch Husbandry, Weigh-in mode, the Log sheet and the gecko record.
+**Decision:** The log screen (`/log`, `src/pages/QuickLog.jsx`) is the one engine for feedings and weights. Batch Husbandry's address and the Weigh-in buttons open it; their old code is kept and unused. Field Mode stays, as the one-gecko-at-a-time tool for the rack, and walks the due list in order.
+**Reasoning:** A member should not have to learn which tool can do what. One screen can carry every ability: a date, a batch, Undo, offline.
+**Consequences:** New logging features go on the log screen, not on a new page. Reminder links keep their address format (at most 10 ids); inside the app the list travels in router state and is not capped. A weight more than 30 percent away from the last one asks before saving.
+
+### 65. Five colour roles and a 12 px text floor in app screens
+
+**Date:** 2026-11-13
+**Status:** Accepted (experience review, findings K1 and K2); applied to My Geckos, Today, the gecko record, Morph ID, Breeding, the log screen and the Overview
+**Context:** Twenty colour families were in use and one screen could show four accents. 10 and 11 px text appeared about 580 times.
+**Decision:** App screens use accent, success, warning, danger and neutral, and nothing else, for controls, chips and links. Anything a member reads is at least 12 px; 11 px is for uppercase eyebrow labels and the phone tab labels. Charts, illustrations, the male and female markers and Field Mode's four tiles keep their colours.
+**Reasoning:** The accent is the member's own choice of theme; a purple or blue control ignores it. Small text fails on a phone held at arm's length over a tub.
+**Consequences:** `src/lib/__tests__/visualGauges.test.js` holds a ceiling on each count, so they can only fall. `docs/specs/DESIGN-SYSTEM.md`, sections 3 and 4, has the rule.
+
+### 66. A sale never offers to make the gecko public
+
+**Date:** 2026-11-13
+**Status:** Accepted (confirms the rule written on 28 October in `docs/planning/instrumentation-2026-10.md`)
+**Context:** The sold sheet built on 13 November first had three steps: sale price, make the passport, hand over. A passport makes the gecko public. A check of production that day showed that any signed-in member can read `sold_price` and `created_by` on a public gecko through the database's own interface.
+**Decision:** The sheet has two steps, sale price and hand-over. The passport step is written and switched off (`OFFER_PASSPORT_AT_SALE` in `src/components/transfers/SellHandoverSheet.jsx`). The transfer works on a private gecko, and the buyer can make a passport once the gecko is theirs.
+**Reasoning:** A flow that saves a sale price and then offers to publish the gecko would lead sellers into showing that price to every member. A warning sentence is not enough for money.
+**Consequences:** The exposure already exists for a gecko that has a passport and is later given a sold price. Closing it means moving the sold price where only the owner can read it: decision E14 in `docs/OWNER-STEPS.md`. Switch the step on only after that.

@@ -81,7 +81,7 @@ Then the document for the job in hand, from the table below.
 | `GLOSSARY.md` | Product and crested gecko terms | Reference |
 | `ARCHITECTURE.md` | Map of the code; section 12 maps addresses in old specs to the real ones | Reference |
 | `CONTEXT.md` | What the product is, facts and state. Section 5 is the one table of prices and plan limits | Reference (sections 1 to 5 and 8 corrected 12 November) |
-| `DECISIONS.md` | Decision log, entries 1 to 62, with a status index at the top | Reference (entries are never rewritten; the index says which still hold) |
+| `DECISIONS.md` | Decision log, entries 1 to 66, with a status index at the top | Reference (entries are never rewritten; the index says which still hold) |
 | `ENGINEERING.md` | Integration boundaries, entry points, verification | Reference |
 | `OPERATIONS.md` | Services, costs, secrets by name, jobs, weekly checklist | Reference |
 | `INFRASTRUCTURE.md` | What production runs that the repo cannot rebuild. The one home for the edge function counts (section 2) and the database job schedules (section 4) | Reference (production last read 28 and 31 October) |
