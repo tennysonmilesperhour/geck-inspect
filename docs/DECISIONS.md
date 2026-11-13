@@ -82,7 +82,8 @@ Each status was set by reading the entry and checking the code or the later entr
 | 63 | Today is the home screen on every device | Live |  |
 | 64 | One screen for logging care | Live |  |
 | 65 | Five colour roles and a 12 px text floor in app screens | Live | Applied to seven pages so far. |
-| 66 | A sale never offers to make the gecko public | Live | Until sold prices are hidden from other members (owner decision E14). |
+| 66 | A sale never offers to make the gecko public | Live | Sold prices were made private the same day (67); switching the passport step on is owner decision E15. |
+| 67 | Sale prices live in tables only the owner can read | Live |  |
 
 > **Title note (15 October 2026).** This file was titled "Geck Inspect Landing Page: DECISIONS.md" because entries 1 to 16 were written in an April 2026 landing page session. From entry 17 on it records decisions about the whole product: pricing, billing, data, security, positioning and process. The title now says so. No entry's text was changed.
 
@@ -803,3 +804,13 @@ The Privacy Policy (18 Oct) says the sign-up box starts unticked in the EEA and 
 **Decision:** The sheet has two steps, sale price and hand-over. The passport step is written and switched off (`OFFER_PASSPORT_AT_SALE` in `src/components/transfers/SellHandoverSheet.jsx`). The transfer works on a private gecko, and the buyer can make a passport once the gecko is theirs.
 **Reasoning:** A flow that saves a sale price and then offers to publish the gecko would lead sellers into showing that price to every member. A warning sentence is not enough for money.
 **Consequences:** The exposure already exists for a gecko that has a passport and is later given a sold price. Closing it means moving the sold price where only the owner can read it: decision E14 in `docs/OWNER-STEPS.md`. Switch the step on only after that.
+**Update, 13 November 2026:** the sold price was moved the same day (entry 67), and the check behind this entry was wider than it says: 325 of 391 geckos are public with or without a passport, so all 9 recorded sale prices were readable. The owner's email (`created_by`) is still readable on a public gecko. Whether to switch the passport step on now is owner decision E15; hiding the email is E16.
+
+### 67. Sale prices live in tables only the owner can read
+
+**Date:** 2026-11-13
+**Status:** Accepted (Tennyson asked for owner decision E14 to be built)
+**Context:** `geckos.sold_price` sat on a row every signed-in member can read when the gecko is public, and 325 of 391 geckos are. All 9 recorded sale prices were readable. `ownership_records.sale_price` was readable by anyone, signed in or not, on a gecko with a public passport. Taking the column away from members would have failed every `select *` on geckos in tabs that were already open.
+**Decision:** The prices live in `gecko_sale_prices` and `ownership_record_prices` (migration `20261113172624_private_sale_prices.sql`). A gecko's price is read by its owner, the members of a shared collection it sits in, and admins, and cleared by the owner, collection editors and admins. An ownership record's price is read by that record's member and admins. Triggers move a price written to the old columns and leave them null; a gecko's price goes when it is unarchived or changes owner. The app puts the price back on the gecko objects it reads (`src/lib/geckoSalePrices.js`).
+**Reasoning:** Nothing an older open tab asks for is refused, and the app saves a price exactly as before. A price is money and the seller's business; a warning is not enough.
+**Consequences:** A new money column never goes on a row other members can read (`docs/RULES.md`, section 5). The old columns stay, always null. A save that takes a price away must name `sold_price: null` through the Gecko entity, which deletes the row; the database cannot tell it from a save that left the price alone. The plan and checks are `docs/planning/private-sale-prices-2026-11.md`.

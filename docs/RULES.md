@@ -52,6 +52,7 @@ Source: `docs/planning/launch-offer-tests-2026-10.md`.
 3. Secret values never go in a document, a commit or a chat message. Name the secret and say where it is set.
 4. `MORPH_SHARE_VIEW_KEY` never gets a `VITE_` name (that would publish it). Source: `docs/planning/deploy-queue-2026-10-03.md`.
 5. `tennyscrestedgeckos.com` is not Tennyson's site. It never appears as his brand or as founder credibility. Source: `CLAUDE.md`.
+6. **What someone paid or was paid never sits on a row other members can read.** A gecko's sale price lives in `gecko_sale_prices` and a claimed transfer's price in `ownership_record_prices`, which only the owner (and a shared collection's members, and admins) can read; the old `geckos.sold_price` and `ownership_records.sale_price` columns are always null. A new money column goes in a table like those. Source: `docs/DECISIONS.md`, entry 67; `docs/planning/private-sale-prices-2026-11.md`.
 
 ## 6. The database and edge functions
 

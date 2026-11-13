@@ -17,7 +17,7 @@ What is left, and why:
 | The 12 pixel floor and the five colour roles on Lineage, My Profile, Settings and Business | WP-10, K1 and K2 | Not reached. `src/lib/__tests__/visualGauges.test.js` holds the counts; lower its ceilings as you go |
 | One Stat component for the 15 hand-written number cards | WP-10, K5 | Left out as not worth the churn |
 | One notice for every plan limit (the modal, Breeding, My Geckos, Waitlists) | WP-13, J6 | The modal's button and benefit list are what the running paywall test measures |
-| A passport step when a gecko is sold | Section 8, idea 2 | Switched off: a public gecko's sold price is readable by other signed-in members. Decision E14 in `docs/OWNER-STEPS.md` |
+| A passport step when a gecko is sold | Section 8, idea 2 | Switched off because a public gecko's sold price was readable by other signed-in members. Since 13 November the price is private (`docs/planning/private-sale-prices-2026-11.md`); switching the step on is decision E15 in `docs/OWNER-STEPS.md` |
 | Saving a hatch year without a month and day | WP-3 | Needs a small database change. Decision E13 |
 | Which feeding group Quick Add uses when a breeder has several | WP-3 | Decision E12 |
 | A new gecko's card appearing before the save | WP-11, L2 | The plan-limit count and ID numbering read the same list |
@@ -389,7 +389,7 @@ Ranked by how much smoother they make a real job. "Inside the freeze" means the 
 7. **A draft that survives** (D3): close the gecko form by accident, open it again, and the entries are there.
 8. **Tub labels that open the log.** The passport QR card already exists and Printable Worksheets already prints. Add a worksheet of small labels, one per gecko, whose code opens that gecko's log page when scanned with the phone camera. No new page.
 
-**Status, 13 November 2026.** Built: 1 (rack walk, WP-4), 3 (WP-7), 4 (WP-12), 5 (WP-2), 6 (WP-4), 7 (WP-3), 8 (tub labels: a third option on Printable Worksheets, 62 by 29 mm, each with a QR code that opens that gecko's log). Built in a narrower form: 2. Marking a gecko Sold opens one sheet (`src/components/transfers/SellHandoverSheet.jsx`) with two steps, the sale price and date, then the transfer link and QR code for the buyer. The passport step was built and is switched off (`OFFER_PASSPORT_AT_SALE`): a passport makes the gecko public, and any signed-in member can read a public gecko's sold price through the database, so a sale must not lead the seller there. See decision E14 in `docs/OWNER-STEPS.md`.
+**Status, 13 November 2026.** Built: 1 (rack walk, WP-4), 3 (WP-7), 4 (WP-12), 5 (WP-2), 6 (WP-4), 7 (WP-3), 8 (tub labels: a third option on Printable Worksheets, 62 by 29 mm, each with a QR code that opens that gecko's log). Built in a narrower form: 2. Marking a gecko Sold opens one sheet (`src/components/transfers/SellHandoverSheet.jsx`) with two steps, the sale price and date, then the transfer link and QR code for the buyer. The passport step was built and is switched off (`OFFER_PASSPORT_AT_SALE`): a passport makes the gecko public, and on 13 November any signed-in member could read a public gecko's sold price through the database, so a sale must not lead the seller there. The price was made private the same day (`docs/planning/private-sale-prices-2026-11.md`); switching the step on is decision E15 in `docs/OWNER-STEPS.md`.
 
 **After decision day (new surface, or needs native work)**
 

@@ -681,3 +681,16 @@ Migration: `20261110183000_apple_sign_in_tokens.sql`, dated after `2026103106100
 **Checked before the push.** `deno check` on all four functions; the SQL harness built all 326 migrations on Postgres 16 and all 40 SQL test files passed; the table is RLS-on with no select for anon or authenticated; the migration reruns cleanly; 3,823 unit tests, including `src/lib/__tests__/appleAuthServer.test.js` (the client secret verifies with its key; exchange, revoke and every failure path).
 
 **Waiting on Tennyson.** The three secrets (open item 8). After pasting them, a signed-in Apple sign-in on build 15 should add one row to `apple_sign_in_tokens`.
+
+## 13 November: sale prices kept from other members
+
+Migration: `20261113172624_private_sale_prices.sql`, dated after `20261110183000`, production's newest when it was written. No edge function changed. The plan, what was weighed and the checks are `docs/planning/private-sale-prices-2026-11.md`.
+
+**Why.** Every signed-in member could read `geckos.sold_price` on any public gecko (all 9 recorded sale prices, since 325 of 391 geckos are public), and anyone, signed in or not, could read `ownership_records.sale_price` on a gecko with a public passport (none had a price yet).
+
+**What it does.** Two new tables, `gecko_sale_prices` and `ownership_record_prices`, readable only by the owner (plus a shared collection's members, and admins, for geckos) and by the record's member (plus admins) respectively. Triggers move a price written to the old columns into them and leave the columns null; a gecko's price goes when it is unarchived or changes owner. The 9 prices are moved by the migration, with the "last changed" stamp and the activity feed paused for that statement. Nothing an open tab asks for is refused.
+
+**Checked before the push.** Locally: the harness built all 327 migrations; all 41 SQL test files passed, `supabase/tests/private_sale_prices_regressions.sql` included (it fails, as it should, against a copy that lets every member read and against one without the insert guard); the transfer race checks passed; a second run of the migration changed nothing. Lint, the whole unit suite, the unit suite with the clock moved 400 days each way, all browser tests and the size check passed.
+
+**If something breaks.** A page that shows no sale price where it should: the read of `gecko_sale_prices` failed or the merge did not run; the price is still in the table (`select * from gecko_sale_prices`). To stop the trigger in an emergency: `alter table public.geckos disable trigger geckos_keep_sale_price_private;` in the SQL editor (prices written after that stay on the public row again, so turn it back on once fixed).
+
