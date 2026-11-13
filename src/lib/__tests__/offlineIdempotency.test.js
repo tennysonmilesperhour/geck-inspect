@@ -251,6 +251,33 @@ describe('a log the server saved after the phone gave up is saved once', () => {
     expect(db.tables.feeding).toHaveLength(1);
   });
 
+  // The log screen's "Save all" (experience review WP-4): each weight is
+  // its own log, so a rack weighed with no signal is kept one by one.
+  it('a batch of weigh-ins made with no signal is kept one log each and each is saved once', async () => {
+    const rack = ['g1', 'g2', 'g3', 'g4'];
+    const kept = [];
+    for (const [i, geckoId] of rack.entries()) {
+      const out = await saveFieldLog({ kind: 'weight', geckoId, grams: 40 + i, date: '2026-11-13', mirror: false }, { offline: true });
+      expect(out.result).toBeNull();
+      kept.push(out.queued);
+    }
+    expect(db.tables.weight).toHaveLength(0);
+    expect(readQueue().map((item) => item.data.geckoId)).toEqual(rack);
+    expect(new Set(readQueue().map((item) => item.data.requestId)).size).toBe(4);
+
+    // The batch Undo takes one back out before the signal returns.
+    expect(takeBackQueued(kept[3].id)).toBe('removed');
+
+    // The signal comes back, and drops again just after the first weight
+    // reached the database: the queue stops there and tries again later.
+    db.state.abortAfterCommit = 1;
+    const first = await flushQueue(executeQueuedWrite);
+    expect(first).toMatchObject({ saved: 0, remaining: 3 });
+    const second = await flushQueue(executeQueuedWrite);
+    expect(second.remaining).toBe(0);
+    expect(db.tables.weight.map((row) => [row.gecko_id, row.weight_grams])).toEqual([['g1', 40], ['g2', 41], ['g3', 42]]);
+  });
+
   it('a care record queued through writeOrQueue gets an id too', async () => {
     db.state.abortAfterCommit = 1;
     const out = await writeOrQueue({ entity: 'ShedRecord', op: 'create', data: { animal_id: 'g3', date: '2026-10-16', quality: 'unknown' } });

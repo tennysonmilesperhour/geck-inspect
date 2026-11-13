@@ -28,6 +28,12 @@ const mocks = vi.hoisted(() => ({
   rows: { FeedingRecord: [], ShedRecord: [], WeightRecord: [] },
   geckos: [],
   me: null,
+  // Batch Undo toasts ("Mark all", "Save all"), as undoToast was called.
+  undoToasts: [],
+  // weight_records rows for "last: 15.1 g on 25 Oct".
+  weights: [],
+  // Today's list, for links that name no geckos and for "Show them here".
+  today: { items: [] },
 }));
 
 vi.mock('@/api/appClient', () => ({
@@ -80,6 +86,14 @@ vi.mock('@/entities/all', () => {
   };
 });
 vi.mock('@/lib/posthog', () => ({ captureEvent: vi.fn() }));
+vi.mock('@/lib/undoToast', () => ({
+  undoToast: (options) => { mocks.undoToasts.push(options); return { dismiss() {} }; },
+}));
+vi.mock('@/lib/recentWeights', () => ({ loadRecentWeights: async () => mocks.weights }));
+vi.mock('@/lib/today', async (importOriginal) => ({
+  ...(await importOriginal()),
+  loadMemberToday: async (today) => ({ today, feedingReminders: true, weighInReminders: true, ...mocks.today }),
+}));
 vi.mock('@/lib/guestMode', () => ({ isGuestMode: () => false }));
 vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: mocks.toast }) }));
 vi.mock('@/components/seo/Seo', () => ({ default: () => null }));
@@ -87,6 +101,8 @@ vi.mock('@/components/shared/GeckoImage', () => ({ default: () => null }));
 
 import QuickLog from './QuickLog';
 import { todayLocalISO } from '@/lib/dateUtils';
+import { quickLogLink } from '@/lib/quickLog';
+import { addDays, shortDate } from '@/lib/today';
 import { FeedingRecord, Gecko, WeightRecord } from '@/entities/all';
 
 let here = null;
@@ -98,7 +114,12 @@ function Where() {
 
 const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 0)); });
 
-async function open(url) {
+// `url` is an address, or what a screen inside the app passes to the
+// router: quickLogLink's { to, state }.
+async function open(link) {
+  const url = typeof link === 'string'
+    ? link
+    : { pathname: '/log', search: link.to.slice('/log'.length), state: link.state };
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   let tree;
   await act(async () => {
@@ -148,6 +169,9 @@ beforeEach(() => {
   mocks.group = { id: 'grp', name: 'Rack A', last_fed_date: '2026-10-10' };
   mocks.rows = { FeedingRecord: [], ShedRecord: [], WeightRecord: [] };
   mocks.me = async () => ({ email: 'keeper@example.test' });
+  mocks.undoToasts = [];
+  mocks.weights = [];
+  mocks.today = { items: [] };
   mocks.takeBack.mockImplementation(() => 'removed');
   mocks.leftQueue.mockImplementation(() => false);
   mocks.save.mockImplementation(async (data) => ({ result: { records: [{ id: 'r1' }], advanced: [] }, queued: null, data }));
@@ -478,8 +502,341 @@ describe('plain words on the page', () => {
   it('says how many more geckos are due when the reminder covered more than fit', async () => {
     const tree = await open('/log?type=weight&gecko=g1,g2&more=12');
     expect(textOf(tree.root)).toContain('12 more geckos are due');
-    const link = tree.root.findAll((n) => n.props && n.props.to === '/FieldMode' && textOf(n).includes('Log the rest'));
-    expect(link).toHaveLength(1);
+    // The rest load into this same screen, not Field Mode.
+    expect(buttons(tree, 'Show them here')).toHaveLength(1);
+    expect(textOf(tree.root)).not.toContain('Log the rest');
+    await act(async () => tree.unmount());
+  });
+});
+
+// Experience review WP-4 (13 Nov 2026): one log flow.
+const rack = (count, extra = {}) => Array.from({ length: count }, (_, i) => ({
+  id: `r${i + 1}`, name: `Gecko ${String(i + 1).padStart(2, '0')}`, feeding_group_id: null, weight_grams: null, ...extra,
+}));
+const weightBox = (tree, id) => tree.root.findByProps({ id: `ql-w-${id}` });
+const type = (tree, id, value) => act(async () => { weightBox(tree, id).props.onChange({ target: { value } }); });
+const saveAllButton = (tree) => tree.root.findAll((n) => n.type === 'button' && /^Save( all| 1 weight|$)/.test(textOf(n).trim()))[0];
+
+describe('how many geckos the log holds', () => {
+  it('from inside the app there is no cap: 20 ungrouped geckos, one "Mark all 20 fed", one Undo', async () => {
+    mocks.geckos = rack(20);
+    let n = 0;
+    mocks.save.mockImplementation(async (data) => ({ result: { records: [{ id: `f${++n}` }], advanced: [] }, queued: null, data }));
+    const link = quickLogLink({ type: 'feeding', geckoIds: mocks.geckos.map((g) => g.id), from: '/Today' });
+    // More than 10 do not fit in the address, and it never says "more".
+    expect(link.to).toBe('/log?type=feeding&from=%2FToday');
+    const tree = await open(link);
+    expect(buttons(tree, 'Fed')).toHaveLength(20);
+    expect(textOf(tree.root)).not.toContain('more geckos are due');
+
+    await act(async () => { await buttons(tree, 'Mark all 20 fed')[0].props.onClick(); });
+    await settle();
+    expect(savedIds()).toEqual(mocks.geckos.map((g) => g.id));
+    expect(buttons(tree, 'Fed')).toHaveLength(0);
+    expect(buttons(tree, 'Done')).toHaveLength(1);
+    // One toast with Undo for the whole batch.
+    expect(mocks.undoToasts).toHaveLength(1);
+    expect(mocks.undoToasts[0].title).toBe('20 fed');
+    await act(async () => tree.unmount());
+  });
+
+  it('a reminder link is still held to 10, and one tap lists the rest here', async () => {
+    mocks.geckos = rack(14);
+    mocks.today = { items: mocks.geckos.map((g) => ({ kind: 'weigh_in', key: `gecko:${g.id}`, geckoId: g.id, groupId: null, name: g.name, due: todayLocalISO(), extra: {} })) };
+    const ids = mocks.geckos.map((g) => g.id).join(',');
+    const tree = await open(`/log?type=weight&gecko=${ids}&more=4`);
+    expect(tree.root.findAllByType('form')).toHaveLength(10);
+    expect(textOf(tree.root)).toContain('4 more geckos are due');
+
+    await act(async () => { buttons(tree, 'Show them here')[0].props.onClick(); });
+    await settle();
+    await settle();
+    expect(tree.root.findAllByType('form')).toHaveLength(14);
+    expect(textOf(tree.root)).toContain('Gecko 14');
+    expect(textOf(tree.root)).not.toContain('more geckos are due');
+    await act(async () => tree.unmount());
+  });
+
+  it('a link that names no geckos lists what is due, and "Show all my geckos" lists everyone', async () => {
+    mocks.geckos = rack(3);
+    mocks.today = { items: [{ kind: 'feeding', key: 'gecko:r2', geckoId: 'r2', groupId: null, name: 'Gecko 02', due: todayLocalISO(), extra: {} }] };
+    const tree = await open('/log?type=feeding');
+    await settle();
+    expect(buttons(tree, 'Fed')).toHaveLength(1);
+    expect(textOf(tree.root)).toContain('Gecko 02');
+    await act(async () => { buttons(tree, 'Show all my geckos')[0].props.onClick(); });
+    expect(buttons(tree, 'Fed')).toHaveLength(3);
+    await act(async () => tree.unmount());
+  });
+
+  it('all=1 (My Geckos\' Weigh-in button, the old Batch Husbandry address) lists every active gecko, racks first', async () => {
+    mocks.geckos = [
+      { id: 'g1', name: 'Mango', feeding_group_id: 'grp' },
+      { id: 'g2', name: 'Kiwi', feeding_group_id: null },
+      { id: 'g3', name: 'Sold one', feeding_group_id: null, status: 'Sold' },
+    ];
+    let tree = await open('/log?type=weight&all=1&from=%2FMyGeckos');
+    expect(tree.root.findAllByType('form')).toHaveLength(2);
+    await act(async () => tree.unmount());
+
+    tree = await open('/log?type=feeding&all=1');
+    const text = textOf(tree.root);
+    expect(text.indexOf('Rack A')).toBeGreaterThan(-1);
+    expect(text.indexOf('Rack A')).toBeLessThan(text.indexOf('In no group'));
+    expect(text).not.toContain('Sold one');
+    await act(async () => tree.unmount());
+  });
+
+  it('with no feeding groups, the whole-collection feeding list points to where groups are made', async () => {
+    mocks.geckos = rack(2);
+    const tree = await open('/log?type=feeding&all=1');
+    const link = tree.root.findAll((n) => n.props && n.props.to === '/ProjectManager?tab=feeding');
+    expect(link.length).toBeGreaterThan(0);
+    await act(async () => tree.unmount());
+  });
+});
+
+describe('Save all for weights', () => {
+  it('20 weights are typed and saved with one Save, each on its own request', async () => {
+    mocks.geckos = rack(20);
+    let n = 0;
+    mocks.save.mockImplementation(async (data) => ({ result: { id: `w${++n}` }, queued: null, data }));
+    const tree = await open('/log?type=weight&all=1');
+    for (const g of mocks.geckos) await type(tree, g.id, '41.5');
+    expect(textOf(saveAllButton(tree))).toBe('Save all 20 weights');
+    await act(async () => { await saveAllButton(tree).props.onClick(); });
+    await settle();
+    expect(mocks.save).toHaveBeenCalledTimes(20);
+    expect(mocks.save.mock.calls.every(([data]) => data.kind === 'weight' && data.grams === 41.5)).toBe(true);
+    expect(tree.root.findAllByType('form')).toHaveLength(0);
+    expect(mocks.undoToasts[0].title).toBe('20 weights saved');
+    await act(async () => tree.unmount());
+  });
+
+  it('one failure leaves the others saved, and a second Save sends only the one that failed', async () => {
+    mocks.geckos = rack(3);
+    let failR2 = true;
+    mocks.save.mockImplementation(async (data) => {
+      if (data.geckoId === 'r2' && failR2) throw new TypeError('Failed to fetch');
+      return { result: { id: `w-${data.geckoId}` }, queued: null, data };
+    });
+    const tree = await open('/log?type=weight&all=1');
+    await type(tree, 'r1', '40');
+    await type(tree, 'r2', '41');
+    await type(tree, 'r3', '42');
+    await act(async () => { await saveAllButton(tree).props.onClick(); });
+    await settle();
+    // r1 and r3 are saved and marked; r2 keeps its box, still filled in.
+    expect(savedIds()).toEqual(['r1', 'r2', 'r3']);
+    expect(textOf(tree.root)).toContain('40 g, saved');
+    expect(textOf(tree.root)).toContain('42 g, saved');
+    expect(tree.root.findAllByType('form')).toHaveLength(1);
+    expect(weightBox(tree, 'r2').props.value).toBe('41');
+    expect(textOf(tree.root)).toContain('Not saved');
+    expect(mocks.undoToasts[0].title).toBe('2 weights saved');
+    expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ title: '1 not saved', variant: 'destructive' }));
+    expect(textOf(saveAllButton(tree))).toBe('Save 1 weight');
+
+    failR2 = false;
+    mocks.save.mockClear();
+    await act(async () => { await saveAllButton(tree).props.onClick(); });
+    await settle();
+    expect(savedIds()).toEqual(['r2']);
+    expect(textOf(tree.root)).toContain('41 g, saved');
+    await act(async () => tree.unmount());
+  });
+
+  it('with no signal every weight is kept on the phone once, and the batch Undo takes them all back out', async () => {
+    mocks.geckos = rack(3);
+    let n = 0;
+    mocks.save.mockImplementation(async (data) => {
+      n += 1;
+      return { result: null, queued: { id: `q${n}` }, data: { ...data, requestId: `req-${n}` } };
+    });
+    const tree = await open('/log?type=weight&all=1');
+    await type(tree, 'r1', '40');
+    await type(tree, 'r3', '42');
+    await act(async () => { await saveAllButton(tree).props.onClick(); });
+    await settle();
+    // An empty box is skipped, not saved as nothing.
+    expect(savedIds()).toEqual(['r1', 'r3']);
+    expect(textOf(tree.root)).toContain('40 g, kept on this phone');
+    expect(textOf(tree.root)).toContain('42 g, kept on this phone');
+    expect(mocks.undoToasts[0].description).toContain('Kept on this phone');
+
+    await act(async () => { await mocks.undoToasts[0].undo(); });
+    expect(mocks.takeBack.mock.calls.map(([id]) => id)).toEqual(['q1', 'q2']);
+    expect(textOf(tree.root)).not.toContain('kept on this phone');
+    expect(tree.root.findAllByType('form')).toHaveLength(3);
+    // The typed weights are still in their boxes, for a correction.
+    expect(weightBox(tree, 'r1').props.value).toBe('40');
+    await act(async () => tree.unmount());
+  });
+});
+
+describe('the weight check', () => {
+  beforeEach(() => {
+    mocks.geckos = [
+      { id: 'g1', name: 'Mango', feeding_group_id: null, weight_grams: 15.1 },
+      { id: 'g2', name: 'Kiwi', feeding_group_id: null, weight_grams: null },
+    ];
+    mocks.weights = [
+      { gecko_id: 'g1', weight_grams: 14.2, record_date: '2026-09-25' },
+      { gecko_id: 'g1', weight_grams: 15.1, record_date: '2026-10-25' },
+    ];
+  });
+
+  it('shows the last weight and its date beside the box', async () => {
+    const tree = await open('/log?type=weight&gecko=g1,g2');
+    await settle();
+    expect(textOf(tree.root)).toContain('last: 15.1 g on 25 Oct');
+    expect(textOf(tree.root)).toContain('No weight yet');
+    await act(async () => tree.unmount());
+  });
+
+  it('an entry more than 30 percent from the last weight is not saved on the first tap', async () => {
+    const tree = await open('/log?type=weight&gecko=g1');
+    await settle();
+    await type(tree, 'g1', '151');
+    await act(async () => { tree.root.findByType('form').props.onSubmit({ preventDefault() {} }); });
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(textOf(tree.root)).toContain('That is a big change from 15.1 g. Save 151 g?');
+
+    // Fix: the question goes and nothing is saved.
+    await act(async () => { buttons(tree, 'Fix')[0].props.onClick(); });
+    expect(textOf(tree.root)).not.toContain('big change');
+    expect(mocks.save).not.toHaveBeenCalled();
+
+    // Asked again, and Save on the question saves it as typed.
+    await act(async () => { tree.root.findByType('form').props.onSubmit({ preventDefault() {} }); });
+    await act(async () => { await buttons(tree, 'Save')[0].props.onClick(); });
+    expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ kind: 'weight', geckoId: 'g1', grams: 151 }));
+    expect(textOf(tree.root)).toContain('151 g, saved');
+    await act(async () => tree.unmount());
+  });
+
+  it('Save all holds back a big change and saves the rest; no check without an earlier weight', async () => {
+    const tree = await open('/log?type=weight&gecko=g1,g2');
+    await settle();
+    await type(tree, 'g1', '1.51');
+    await type(tree, 'g2', '151');
+    await act(async () => { await saveAllButton(tree).props.onClick(); });
+    await settle();
+    // Kiwi has no earlier weight, so 151 g goes straight in.
+    expect(savedIds()).toEqual(['g2']);
+    expect(textOf(tree.root)).toContain('That is a big change from 15.1 g. Save 1.5 g?');
+    expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'One weight needs a look' }));
+    await act(async () => tree.unmount());
+  });
+
+  it('a change of 30 percent or less saves on the first tap', async () => {
+    const tree = await open('/log?type=weight&gecko=g1');
+    await settle();
+    await type(tree, 'g1', '19.6');
+    await act(async () => { tree.root.findByType('form').props.onSubmit({ preventDefault() {} }); });
+    expect(mocks.save).toHaveBeenCalledTimes(1);
+    await act(async () => tree.unmount());
+  });
+});
+
+describe('the date chips', () => {
+  const chip = (tree, label) => tree.root.findAll((n) => n.type === 'button' && n.props['aria-pressed'] !== undefined && textOf(n) === label)[0];
+
+  it('everything saved after "Yesterday" is for yesterday, and says so', async () => {
+    const yesterday = addDays(todayLocalISO(), -1);
+    const tree = await open('/log?type=feeding&gecko=g1,g2');
+    expect(chip(tree, 'Today').props['aria-pressed']).toBe(true);
+    await act(async () => { chip(tree, 'Yesterday').props.onClick(); });
+    expect(chip(tree, 'Yesterday').props['aria-pressed']).toBe(true);
+    expect(textOf(tree.root)).toContain(`Logging for ${shortDate(yesterday)}, not today.`);
+
+    await act(async () => { buttons(tree, 'Fed')[0].props.onClick(); });
+    expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ kind: 'fed', geckoId: 'g1', date: yesterday }));
+    expect(textOf(tree.root)).toContain(`Fed for ${shortDate(yesterday)}, saved`);
+    await act(async () => tree.unmount());
+  });
+
+  it('the date box takes an earlier day and never a future one', async () => {
+    const today = todayLocalISO();
+    const tree = await open('/log?type=shed&gecko=g1');
+    const box = tree.root.findByProps({ 'aria-label': 'Pick another date' });
+    expect(box.props.max).toBe(today);
+    await act(async () => { box.props.onChange({ target: { value: addDays(today, 3) } }); });
+    await act(async () => { buttons(tree, 'Shed today')[0].props.onClick(); });
+    expect(mocks.save).toHaveBeenLastCalledWith(expect.objectContaining({ date: today }));
+    await act(async () => tree.unmount());
+  });
+
+  it('a weigh-in for an earlier day leaves the gecko\'s shown weight alone, also on Undo', async () => {
+    const earlier = addDays(todayLocalISO(), -5);
+    const tree = await open('/log?type=weight&gecko=g1');
+    await act(async () => { tree.root.findByProps({ 'aria-label': 'Pick another date' }).props.onChange({ target: { value: earlier } }); });
+    await type(tree, 'g1', '17');
+    await act(async () => { tree.root.findByType('form').props.onSubmit({ preventDefault() {} }); });
+    expect(mocks.save).toHaveBeenCalledWith({ kind: 'weight', geckoId: 'g1', grams: 17, date: earlier, mirror: false });
+    await act(async () => { await undoButtons(tree)[0].props.onClick(); });
+    expect(Gecko.update).not.toHaveBeenCalled();
+    await act(async () => tree.unmount());
+  });
+});
+
+describe('Undo for a whole batch', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-16T12:00:00.000Z'));
+    mocks.geckos = [
+      { id: 'g1', name: 'Alder', feeding_group_id: 'grp' },
+      { id: 'g2', name: 'Birch', feeding_group_id: 'grp' },
+      { id: 'g3', name: 'Cedar', feeding_group_id: 'grp' },
+    ];
+    mocks.save.mockImplementation(async (data) => realisticSave(data));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('"Mark all fed" ends with an Undo that removes only what that tap saved, and puts the group back', async () => {
+    const tree = await open('/log?type=feeding&group=grp');
+    // Alder is logged on its own first, as refused: not part of the batch.
+    await act(async () => { await buttons(tree, 'Refused')[0].props.onClick(); });
+    await act(async () => { await buttons(tree, 'Mark all 2 fed')[0].props.onClick(); });
+    await settle();
+    expect(mocks.rows.FeedingRecord.map((r) => r.animal_id)).toEqual(['g1', 'g2', 'g3']);
+    expect(mocks.group.last_fed_date).toBe(todayLocalISO());
+    expect(mocks.undoToasts).toHaveLength(1);
+    expect(mocks.undoToasts[0].title).toBe('2 fed');
+
+    await act(async () => { await mocks.undoToasts[0].undo(); });
+    // Birch and Cedar are gone and the group is back where it was; Alder's
+    // own log stays.
+    expect(mocks.rows.FeedingRecord.map((r) => r.animal_id)).toEqual(['g1']);
+    expect(mocks.group.last_fed_date).toBe('2026-10-10');
+    expect(textOf(tree.root)).toContain('Refused, saved');
+    expect(buttons(tree, 'Fed')).toHaveLength(2);
+    await act(async () => tree.unmount());
+  });
+
+  it('leaves alone a gecko already undone on its own card', async () => {
+    const tree = await open('/log?type=feeding&group=grp');
+    await act(async () => { await buttons(tree, 'Mark all 3 fed')[0].props.onClick(); });
+    await settle();
+    await act(async () => { await undoButtons(tree)[2].props.onClick(); });
+    FeedingRecord.delete.mockClear();
+    await act(async () => { await mocks.undoToasts[0].undo(); });
+    expect(FeedingRecord.delete).toHaveBeenCalledTimes(2);
+    expect(mocks.rows.FeedingRecord).toEqual([]);
+    expect(mocks.group.last_fed_date).toBe('2026-10-10');
+    await act(async () => tree.unmount());
+  });
+
+  it('says so when nothing could be taken back', async () => {
+    const tree = await open('/log?type=feeding&group=grp');
+    await act(async () => { await buttons(tree, 'Mark all 3 fed')[0].props.onClick(); });
+    await settle();
+    FeedingRecord.delete.mockImplementation(async () => { throw new TypeError('Failed to fetch'); });
+    let failure = null;
+    await act(async () => { await mocks.undoToasts[0].undo().catch((error) => { failure = error; }); });
+    // undoToast tells the member the undo did not work when undo() throws.
+    expect(failure).toBeTruthy();
+    expect(textOf(tree.root)).toContain('Fed, saved');
     await act(async () => tree.unmount());
   });
 });

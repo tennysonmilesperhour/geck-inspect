@@ -63,6 +63,8 @@ vi.mock('@/entities/all', () => ({
   WeightRecord: { delete: vi.fn(), filter: vi.fn(async () => []) },
 }));
 vi.mock('@/lib/posthog', () => ({ captureEvent: vi.fn() }));
+vi.mock('@/lib/undoToast', () => ({ undoToast: vi.fn(() => ({ dismiss() {} })) }));
+vi.mock('@/lib/recentWeights', () => ({ loadRecentWeights: async () => [] }));
 vi.mock('@/lib/guestMode', () => ({ isGuestMode: () => false }));
 vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: mocks.toast }) }));
 vi.mock('@/components/seo/Seo', () => ({ default: () => null }));

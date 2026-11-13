@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import useModalOverlay from '@/hooks/useModalOverlay';
 
+// Unused since 12 November 2026: the Weigh-in buttons on My Geckos open the log screen (/log?type=weight&all=1), which adds undo, offline saving and a weight check; kept in case it is wanted back.
 /**
  * Weigh-in mode, one-row-per-gecko batch weight entry.
  *

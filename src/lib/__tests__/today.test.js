@@ -4,7 +4,9 @@ import {
   addDays,
   buildTodayFromRecords,
   collectionLogLinks,
+  collectionLogLists,
   daysFrom,
+  dueLogLists,
   isTodayUnavailable,
   loadDemoToday,
   normalizeToday,
@@ -13,7 +15,7 @@ import {
   whenLabel,
 } from '@/lib/today';
 import { CARE_DEFAULTS_FROM } from '@/lib/careReminders';
-import { parseQuickLogParams } from '@/lib/quickLog';
+import { parseQuickLogParams, readQuickLog } from '@/lib/quickLog';
 
 const TODAY = '2026-11-20';
 // The defaults start 60 days before "today", as in
@@ -167,6 +169,8 @@ describe('what the screen shows', () => {
     // Two taps from the Today tab: this button, then "Fed" on /log.
     const [path, search] = view.cards[0].action.to.split('?');
     expect(path).toBe('/log');
+    // The same list goes with the link, for the log page.
+    expect(view.cards[0].action.state).toEqual({ quickLog: { geckoIds: ['mango'], groupIds: ['grp'] } });
     const params = parseQuickLogParams(`?${search}`);
     expect(params.type).toBe('feeding');
     expect(params.geckoIds).toEqual(['mango']);
@@ -240,21 +244,62 @@ describe('the Log tab', () => {
   it('logs feedings by group, with the geckos due soonest first', () => {
     const data = buildTodayFromRecords(collection());
     const links = collectionLogLinks({ geckos: collection().geckos, todayData: data, from: '/MyGeckos' });
-    const feeding = parseQuickLogParams(`?${links.feeding.split('?')[1]}`);
+    const feeding = parseQuickLogParams(`?${links.feeding.to.split('?')[1]}`);
     expect(feeding.type).toBe('feeding');
     expect(feeding.groupIds).toEqual(['grp']);
     // Mango (due yesterday) before Nimbus (in 3 days) and Harley (no
     // feeding reminder); the group's gecko is covered by the group.
     expect(feeding.geckoIds).toEqual(['mango', 'nimbus', 'harley', 'off']);
     expect(feeding.from).toBe('/MyGeckos');
-    const weight = parseQuickLogParams(`?${links.weight.split('?')[1]}`);
+    const weight = parseQuickLogParams(`?${links.weight.to.split('?')[1]}`);
     expect(weight.geckoIds.slice(0, 2)).toEqual(['harley', 'mango']);
     // Sold and archived geckos are not offered.
-    expect(links.shed).not.toMatch(/sold|arch/);
+    expect(JSON.stringify(links.shed)).not.toMatch(/sold|arch/);
   });
 
   it('still opens the log page with an empty collection', () => {
-    expect(collectionLogLinks({}).feeding).toBe('/log?type=feeding');
+    expect(collectionLogLinks({}).feeding).toEqual({ to: '/log?type=feeding&all=1', state: null });
+  });
+});
+
+// Experience review E3 (13 Nov 2026): inside the app the log is not held
+// to the 10 ids that fit in a reminder link.
+describe('more than 10 geckos', () => {
+  const rack = Array.from({ length: 24 }, (_, i) => ({
+    id: `r${String(i + 1).padStart(2, '0')}`, name: `Gecko ${String(i + 1).padStart(2, '0')}`, created_date: '2026-10-10T12:00:00.000Z',
+  }));
+  const data = buildTodayFromRecords({ today: TODAY, defaultsFrom: '2026-10-01', geckos: rack });
+
+  it('Today\'s feeding button takes every due gecko to the log, with no "more"', () => {
+    const view = todayView(data, { today: TODAY });
+    const feeding = view.cards.find((card) => card.kind === 'feeding');
+    expect(feeding.action.state.quickLog.geckoIds).toHaveLength(24);
+    expect(feeding.action.to).toBe('/log?type=feeding&from=%2FToday');
+    expect(readQuickLog(feeding.action.to.slice(4), feeding.action.state)).toMatchObject({ scope: 'named', inApp: true, more: 0 });
+  });
+
+  it('the Log tab lists the whole collection', () => {
+    const links = collectionLogLinks({ geckos: rack, todayData: data, from: '/Today' });
+    for (const kind of ['feeding', 'weight', 'shed']) {
+      expect(links[kind].state.quickLog.geckoIds).toHaveLength(24);
+      expect(links[kind].to).toBe(`/log?type=${kind}&all=1&from=%2FToday`);
+    }
+  });
+
+  it('the log page can work out the same lists itself', () => {
+    const due = dueLogLists(data, { today: TODAY });
+    expect(due.feeding.geckoIds).toHaveLength(24);
+    expect(due.weight.geckoIds).toHaveLength(24);
+    const all = collectionLogLists({ geckos: [...rack, { id: 'sold', name: 'Sold', status: 'Sold' }], todayData: data });
+    expect(all.weight.geckoIds).toHaveLength(24);
+    expect(all.shed.geckoIds[0]).toBe('r01');
+  });
+
+  it('leaves out of the due lists what is already logged on this phone', () => {
+    const pending = pendingLogs([{ entity: 'FieldLog', op: 'create', data: { kind: 'fed', geckoId: 'r01', accepted: true, date: TODAY } }]);
+    const due = dueLogLists(data, { today: TODAY, pending });
+    expect(due.feeding.geckoIds).toHaveLength(23);
+    expect(due.feeding.geckoIds).not.toContain('r01');
   });
 });
 

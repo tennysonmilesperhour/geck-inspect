@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isBigWeightChange,
+  latestWeights,
+  parseGrams,
   parseQuickLogParams,
   pickQuickLogGeckos,
+  quickLogLink,
   quickLogPath,
   quickLogReturnTarget,
   quickLogTitle,
+  readQuickLog,
 } from '@/lib/quickLog';
 
 // What public.care_log_link writes into reminder notifications
@@ -66,6 +71,95 @@ describe('building a link', () => {
     expect(link).toBe('/log?type=weight&gecko=g0,g1,g2,g3,g4,g5,g6,g7,g8,g9&more=3');
     expect(SAFE_LINK.test(link)).toBe(true);
     expect(parseQuickLogParams(link.slice(4)).more).toBe(3);
+  });
+});
+
+// Experience review E3: the 10-id cap is for links that travel in an
+// email or a notification. Inside the app the list goes in router state.
+describe('a link from inside the app', () => {
+  const many = Array.from({ length: 23 }, (_, i) => `g${i}`);
+
+  it('carries the whole list in state, however long', () => {
+    const link = quickLogLink({ type: 'feeding', geckoIds: many, groupIds: ['grp-1'], from: '/Today' });
+    expect(link.state.quickLog.geckoIds).toEqual(many);
+    expect(link.state.quickLog.groupIds).toEqual(['grp-1']);
+    // Too many for the address: no ids there, and never "more".
+    expect(link.to).toBe('/log?type=feeding&from=%2FToday');
+    expect(SAFE_LINK.test(link.to)).toBe(true);
+    const read = readQuickLog(link.to.slice(4), link.state);
+    expect(read).toMatchObject({ type: 'feeding', scope: 'named', inApp: true, more: 0, from: '/Today' });
+    expect(read.geckoIds).toEqual(many);
+  });
+
+  it('keeps a short list in the address too, so a reload shows the same geckos', () => {
+    const link = quickLogLink({ type: 'weight', geckoIds: ['g1', 'g2'], from: '/Today' });
+    expect(link.to).toBe('/log?type=weight&gecko=g1,g2&from=%2FToday');
+    expect(readQuickLog(link.to.slice(4), null).geckoIds).toEqual(['g1', 'g2']);
+  });
+
+  it('marks a whole-collection list with all=1 when it does not fit, and with no geckos at all', () => {
+    expect(quickLogLink({ type: 'shed', geckoIds: many, all: true }).to).toBe('/log?type=shed&all=1');
+    expect(quickLogLink({ type: 'feeding', all: true })).toEqual({ to: '/log?type=feeding&all=1', state: null });
+    expect(quickLogLink({ type: 'feeding' })).toEqual({ to: '/log?type=feeding', state: null });
+  });
+
+  it('drops unsafe and repeated ids from state as it does from an address', () => {
+    const read = readQuickLog('?type=weight', { quickLog: { geckoIds: ['a', 'a', '<x>', 'b c', 'ok_1'], groupIds: 'nope' } });
+    expect(read.geckoIds).toEqual(['a', 'ok_1']);
+    expect(read.groupIds).toEqual([]);
+  });
+});
+
+describe('what the log page is asked for', () => {
+  it('a reminder link names its geckos, capped at 10, and may say how many were left out', () => {
+    const ids = Array.from({ length: 14 }, (_, i) => `g${i}`).join(',');
+    const read = readQuickLog(`?type=weight&gecko=${ids}&more=4`);
+    expect(read.scope).toBe('named');
+    expect(read.inApp).toBe(false);
+    expect(read.geckoIds).toHaveLength(10);
+    expect(read.more).toBe(4);
+  });
+
+  it('no ids means everything due, and all=1 means every active gecko', () => {
+    expect(readQuickLog('?type=feeding')).toMatchObject({ scope: 'due', inApp: true, geckoIds: [], more: 0 });
+    expect(readQuickLog('?type=weight&all=1&from=/MyGeckos')).toMatchObject({ scope: 'all', type: 'weight', from: '/MyGeckos' });
+    // An empty list in state is no list.
+    expect(readQuickLog('?type=feeding', { quickLog: { geckoIds: [], groupIds: [] } }).scope).toBe('due');
+  });
+});
+
+describe('weights', () => {
+  it('reads what was typed, with a comma or a point, to one decimal', () => {
+    expect(parseGrams('18.5')).toBe(18.5);
+    expect(parseGrams(' 18,54 ')).toBe(18.5);
+    expect(parseGrams('')).toBeNull();
+    expect(parseGrams('abc')).toBeNull();
+    expect(parseGrams('0')).toBeNull();
+    expect(parseGrams('500')).toBeNull();
+  });
+
+  it('asks again only when an entry is more than 30 percent from the last weight', () => {
+    expect(isBigWeightChange(151, 15.1)).toBe(true);
+    expect(isBigWeightChange(1.5, 15.1)).toBe(true);
+    expect(isBigWeightChange(19.6, 15.1)).toBe(false);
+    expect(isBigWeightChange(10.6, 15.1)).toBe(false);
+    expect(isBigWeightChange(10.5, 15.1)).toBe(true);
+    // No earlier weight: nothing to compare with.
+    expect(isBigWeightChange(151, null)).toBe(false);
+    expect(isBigWeightChange(151, undefined)).toBe(false);
+    expect(isBigWeightChange(151, 0)).toBe(false);
+  });
+
+  it('finds each gecko\'s newest weigh-in', () => {
+    const latest = latestWeights([
+      { gecko_id: 'g1', weight_grams: 14.2, record_date: '2026-09-25' },
+      { gecko_id: 'g1', weight_grams: '15.1', record_date: '2026-10-25' },
+      { gecko_id: 'g2', weight_grams: 40, record_date: '2026-10-01' },
+      { gecko_id: 'g3', weight_grams: null, record_date: '2026-10-02' },
+    ]);
+    expect(latest.get('g1')).toEqual({ grams: 15.1, date: '2026-10-25' });
+    expect(latest.get('g2')).toEqual({ grams: 40, date: '2026-10-01' });
+    expect(latest.has('g3')).toBe(false);
   });
 });
 

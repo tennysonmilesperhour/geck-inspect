@@ -79,6 +79,8 @@ vi.mock('@/lib/husbandryLog', () => ({
 }));
 vi.mock('@/lib/postAuthRedirect', () => ({ rememberPostAuthRedirect: () => {} }));
 vi.mock('@/lib/posthog', () => ({ captureEvent: () => {} }));
+vi.mock('@/lib/undoToast', () => ({ undoToast: () => ({ dismiss() {} }) }));
+vi.mock('@/lib/recentWeights', () => ({ loadRecentWeights: async () => [] }));
 vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: () => {} }) }));
 vi.mock('@/components/seo/Seo', () => ({ default: () => null }));
 vi.mock('@/components/shared/GeckoImage', () => ({ default: () => null }));

@@ -18,11 +18,13 @@
 // each clutch, vet follow-up and task), each with one button, and a short
 // "coming up" list. The feeding and weigh-in buttons open the one-tap log
 // (/log, src/pages/QuickLog.jsx), so a feeding takes two taps from the
-// Today tab: "Log feeding", then "Fed".
+// Today tab: "Log feeding", then "Fed" (or "Mark all fed" for a rack).
+// The buttons carry the whole due list in the router's state, so the log
+// is not held to the 10 ids that fit in a reminder link.
 //
 // Nothing here talks to the network except the two loaders at the end,
 // so the rules can be tested on their own.
-import { quickLogPath } from '@/lib/quickLog';
+import { quickLogLink } from '@/lib/quickLog';
 import { weighInIntervalDays } from '@/lib/lifeStage';
 
 export const TODAY_PATH = '/Today';
@@ -476,7 +478,8 @@ export function todayView(data, { today, pending = null, from = TODAY_PATH } = {
       detail: feedings.length === 1 ? null : `${list(feedings.map((i) => i.name))} are due for feeding.`,
       lines,
       late: lines.some((l) => l.late),
-      action: { label: 'Log feeding', to: quickLogPath({ type: 'feeding', geckoIds, groupIds, from }) },
+      // { label, to, state }: the screen passes `state` to its link.
+      action: { label: 'Log feeding', ...quickLogLink({ type: 'feeding', geckoIds, groupIds, from }) },
     });
   }
 
@@ -492,7 +495,7 @@ export function todayView(data, { today, pending = null, from = TODAY_PATH } = {
       late: lines.some((l) => l.late),
       action: {
         label: weighIns.length === 1 ? 'Log weigh-in' : 'Log weigh-ins',
-        to: quickLogPath({ type: 'weight', geckoIds: weighIns.map((i) => i.geckoId), from }),
+        ...quickLogLink({ type: 'weight', geckoIds: weighIns.map((i) => i.geckoId), from }),
       },
     });
   }
@@ -516,18 +519,41 @@ export function todayView(data, { today, pending = null, from = TODAY_PATH } = {
   return { cards, comingUp, savedOnPhone, dueCount: cards.length };
 }
 
-// ---- The Log tab -----------------------------------------------------------
+// ---- The Log tab and the log page ------------------------------------------
 
 /**
- * The Log tab's links for the whole collection: { feeding, weight, shed }.
- *
- * The one-tap log lists at most 10 geckos by name and points to Field
- * Mode for the rest, so the geckos due soonest (from the Today list, when
- * the phone has it) come first. A feeding goes by feeding group where
- * there is one: the log page lists every gecko in a group, so a rack of
- * 40 in four groups still fits, and geckos in no group follow.
+ * What is due now, as lists for the log page:
+ *   { feeding: { geckoIds, groupIds }, weight: { geckoIds, groupIds: [] } }
+ * The same due items Today's cards show, less the ones already logged on
+ * this phone. Sheds have no due day, so there is no list for them.
  */
-export function collectionLogLinks({ geckos = [], todayData = null, from = null } = {}) {
+export function dueLogLists(data, { today, pending = null } = {}) {
+  const day = dayPart(today) || data?.today;
+  const due = (Array.isArray(data?.items) ? data.items : [])
+    .filter((item) => item.due <= day && !isPending(item, pending));
+  const feedings = due.filter((item) => item.kind === 'feeding');
+  return {
+    feeding: {
+      geckoIds: feedings.filter((i) => i.geckoId).map((i) => String(i.geckoId)),
+      groupIds: feedings.filter((i) => i.groupId).map((i) => String(i.groupId)),
+    },
+    weight: {
+      geckoIds: due.filter((item) => item.kind === 'weigh_in' && item.geckoId).map((i) => String(i.geckoId)),
+      groupIds: [],
+    },
+  };
+}
+
+/**
+ * The whole collection as lists for the log page:
+ *   { feeding, weight, shed }, each { geckoIds, groupIds }.
+ *
+ * The geckos due soonest (from the Today list, when the phone has it)
+ * come first. A feeding goes by feeding group where there is one: the log
+ * page lists every gecko in a group under "Mark all fed", and geckos in no
+ * group follow.
+ */
+export function collectionLogLists({ geckos = [], todayData = null } = {}) {
   const active = (geckos || []).filter(isActive);
   const due = new Map();
   for (const item of todayData?.items || []) {
@@ -560,10 +586,22 @@ export function collectionLogLinks({ geckos = [], todayData = null, from = null 
     .map((g) => String(g.id));
 
   return {
-    feeding: quickLogPath({ type: 'feeding', geckoIds: looseIds, groupIds, from }),
-    weight: quickLogPath({ type: 'weight', geckoIds: weighIds, from }),
-    shed: quickLogPath({ type: 'shed', geckoIds: shedIds, from }),
+    feeding: { geckoIds: looseIds, groupIds },
+    weight: { geckoIds: weighIds, groupIds: [] },
+    shed: { geckoIds: shedIds, groupIds: [] },
   };
+}
+
+/**
+ * The Log tab's links for the whole collection: { feeding, weight, shed },
+ * each { to, state } (see quickLogLink). The lists are not capped: the
+ * log page shows every gecko, so nobody is sent on to Field Mode for the
+ * rest.
+ */
+export function collectionLogLinks({ geckos = [], todayData = null, from = null } = {}) {
+  const lists = collectionLogLists({ geckos, todayData });
+  const link = (type) => quickLogLink({ type, ...lists[type], from, all: true });
+  return { feeding: link('feeding'), weight: link('weight'), shed: link('shed') };
 }
 
 // ---- Loaders --------------------------------------------------------------

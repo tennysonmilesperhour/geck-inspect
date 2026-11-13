@@ -21,9 +21,11 @@ const noSignal = () => !onlineManager.isOnline() || (typeof navigator !== 'undef
 
 /**
  * The phone's Log tab (review item E3 25): what to log, then the one-tap
- * log page (/log) for the collection, or Field Mode for everything else
- * (notes, another day, a different weight scale). The collection is the
- * copy Field Mode keeps on the phone, so this works with no signal.
+ * log page (/log) for the whole collection, or Field Mode for notes and
+ * for one gecko at a time in the hand. The collection is the copy Field
+ * Mode keeps on the phone, so this works with no signal. The whole list
+ * goes with the link (in the router's state), so the log page shows every
+ * gecko, however many there are.
  *
  * The links name the geckos, so they are only as good as that copy. When
  * the phone has no copy yet, or a gecko was added since it was made, a
@@ -123,7 +125,7 @@ export default function LogSheet({ open, onOpenChange }) {
   const go = async (kind, pick) => {
     if (waiting) return;
     captureEvent('log_tab', { action: 'choose', kind });
-    let to = '/FieldMode';
+    let link = { to: '/FieldMode', state: null };
     if (pick) {
       let geckos = geckoQuery.data;
       if (email && copyOutdated() && !noSignal()) {
@@ -135,17 +137,17 @@ export default function LogSheet({ open, onOpenChange }) {
         }
         if (!openRef.current) return;
       }
-      to = pick(linksFor(geckos));
+      link = pick(linksFor(geckos));
     }
     onOpenChange(false);
-    navigate(to);
+    navigate(link.to, { state: link.state });
   };
 
   const options = [
-    { kind: 'feeding', label: 'Feeding', hint: 'Fed or refused, one tap each', Icon: Utensils, pick: (links) => links.feeding },
-    { kind: 'weight', label: 'Weigh-in', hint: 'Type the grams and save', Icon: Scale, pick: (links) => links.weight },
-    { kind: 'shed', label: 'Shed', hint: 'One tap for a shed today', Icon: Sparkles, pick: (links) => links.shed },
-    { kind: 'field_mode', label: 'Field Mode', hint: 'Notes, another day, or one gecko at a time', Icon: Wrench, pick: null },
+    { kind: 'feeding', label: 'Feeding', hint: 'Fed or refused, one tap each, or a whole rack', Icon: Utensils, pick: (links) => links.feeding },
+    { kind: 'weight', label: 'Weigh-in', hint: 'Type the grams, then one Save for all', Icon: Scale, pick: (links) => links.weight },
+    { kind: 'shed', label: 'Shed', hint: 'One tap for a shed', Icon: Sparkles, pick: (links) => links.shed },
+    { kind: 'field_mode', label: 'Field Mode', hint: 'Notes, or one gecko at a time in your hand', Icon: Wrench, pick: null },
   ];
 
   return (
@@ -170,7 +172,7 @@ export default function LogSheet({ open, onOpenChange }) {
         <SheetHeader className="text-left">
           <SheetTitle className="text-lg text-slate-100">Log</SheetTitle>
           <SheetDescription className="text-slate-400">
-            {guest ? 'This is the demo, so nothing is saved.' : 'Saved for today. Works with no signal.'}
+            {guest ? 'This is the demo, so nothing is saved.' : 'Saved for today, or the day you pick. Works with no signal.'}
           </SheetDescription>
         </SheetHeader>
         <ul className="mt-4 space-y-2">

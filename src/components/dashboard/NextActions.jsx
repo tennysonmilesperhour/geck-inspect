@@ -54,7 +54,8 @@ export function buildActions({ geckos, eggs, plans, weights, futurePlans, feedin
             iconTint: 'text-emerald-400',
             label: `Feed ${t.name}`,
             detail: overdue === 0 ? 'Due today' : `${overdue} day${overdue === 1 ? '' : 's'} overdue`,
-            href: t.kind === 'group' ? '/BatchHusbandry' : '/OtherReptiles',
+            // Batch Husbandry became the log screen on 13 November 2026.
+            href: t.kind === 'group' ? '/log?type=feeding&all=1' : '/OtherReptiles',
             priority: 0,
         });
     }

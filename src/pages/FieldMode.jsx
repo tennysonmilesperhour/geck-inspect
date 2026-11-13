@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import {
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   Delete,
   Layers,
@@ -29,6 +30,10 @@ import {
 import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent } from '@/entities/all';
 import { api } from '@/api/appClient';
 import { fieldModeQueryKey, loadWritableGeckos } from '@/lib/fieldModeData';
+import { handledIds, nextInWalk, sessionSummary, walkOrder } from '@/lib/fieldWalk';
+import { isGuestMode } from '@/lib/guestMode';
+import { isBigWeightChange } from '@/lib/quickLog';
+import { isTodayUnavailable, loadDemoToday, loadMemberToday, todayQueryKey } from '@/lib/today';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { format, subDays } from 'date-fns';
 import {
@@ -67,6 +72,14 @@ import { createCareRecordOnce, newClientRequestId } from '@/lib/careLogOnce';
  * schedule (D21). Every log can be backdated with the date chips above
  * the buttons; the date resets to today when Field Mode opens.
  *
+ * The rack walk (experience review E4, 13 Nov 2026): the list is in due
+ * order (what Today lists first, then everyone else by name; the rules
+ * are in src/lib/fieldWalk.js). After a save the main button is
+ * "Next: <name>", so feeding a rack is one tap per gecko to move on and
+ * no trips back to the list, which stays one tap away. Leaving after at
+ * least one log shows what the session came to ("12 fed, 3 weighed,
+ * 1 refused").
+ *
  * Offline: the collection comes from the copy kept in this browser
  * (src/lib/offlineCache.js, query key 'field-mode'). A log made with no
  * signal (or whose request never reached the server) is kept on the phone
@@ -75,8 +88,6 @@ import { createCareRecordOnce, newClientRequestId } from '@/lib/careLogOnce';
  * and the group schedule move. An expired sign-in still shows "Sign in".
  */
 
-const RECENT_KEY = 'geckinspect_field_mode_recent';
-const RECENT_MAX = 24;
 const UNDO_WINDOW_MS = 10000;
 
 // UI label -> shed_records.quality value (DB CHECK constraint).
@@ -89,30 +100,6 @@ const SHED_QUALITIES = [
 
 const shedQualityLabel = (value) =>
   SHED_QUALITIES.find((q) => q.value === value)?.label || 'Not noted';
-
-// ---------------------------------------------------------------------------
-// Recent-handled list (localStorage)
-// ---------------------------------------------------------------------------
-
-function getRecentIds() {
-  try {
-    const raw = localStorage.getItem(RECENT_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function pushRecentId(id) {
-  try {
-    const next = [id, ...getRecentIds().filter((x) => x !== id)].slice(0, RECENT_MAX);
-    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-    return next;
-  } catch {
-    return [id];
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Voice utterance parser
@@ -208,16 +195,23 @@ export default function FieldModePage() {
   // The day the next log is for. Today unless the keeper backdates it.
   const [logDate, setLogDate] = useState(todayLocalISO);
 
-  const [recentIds, setRecentIds] = useState(getRecentIds);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGecko, setSelectedGecko] = useState(null);
   const [activePanel, setActivePanel] = useState(null); // 'weight' | 'note' | null
   const [isSaving, setIsSaving] = useState(false);
 
   const [weightInput, setWeightInput] = useState('');
+  // A weight far from the gecko's last one waits here for a second tap.
+  const [bigWeightAsk, setBigWeightAsk] = useState(null);
   const [noteInput, setNoteInput] = useState('');
 
-  const [sessionCount, setSessionCount] = useState(0);
+  // Every log of this session that has not been undone:
+  // { key, kind, accepted, geckoId }. It gives the count in the footer,
+  // which geckos "Next" skips, and the summary on leaving.
+  const [sessionLogs, setSessionLogs] = useState([]);
+  const sessionKeyRef = useRef(0);
+  const [showSummary, setShowSummary] = useState(false);
+  const scrollRef = useRef(null);
   const [showCheck, setShowCheck] = useState(false);
   const [undoEntry, setUndoEntry] = useState(null);
   const undoTimerRef = useRef(null);
@@ -263,6 +257,17 @@ export default function FieldModePage() {
     if (geckoQuery.data) setGeckos(geckoQuery.data);
   }, [geckoQuery.data]);
 
+  // Today's list, for the order of the walk: the same copy the Today
+  // screen keeps on the phone, so it is there with no signal too. Without
+  // it the walk is simply by name.
+  const guest = isGuestMode();
+  const todayQuery = useQuery({
+    queryKey: todayQueryKey(guest ? 'demo' : user?.email),
+    enabled: Boolean(user?.email),
+    retry: (count, error) => !isTodayUnavailable(error) && !isAuthFailure(error) && count < 2,
+    queryFn: () => (guest ? loadDemoToday(todayLocalISO()) : loadMemberToday(todayLocalISO())),
+  });
+
   useEffect(() => {
     if (geckoQuery.isError && isAuthFailure(geckoQuery.error)) setSessionExpired(true);
   }, [geckoQuery.isError, geckoQuery.error]);
@@ -291,29 +296,33 @@ export default function FieldModePage() {
 
   // ----- picker ordering -----------------------------------------------
 
+  // Due today or overdue first, then everyone else by name. The list and
+  // "Next" use this one order, so the walk is predictable.
+  const walk = useMemo(
+    () => walkOrder(geckos, todayQuery.data || null, todayLocalISO()),
+    [geckos, todayQuery.data],
+  );
+  const handled = useMemo(() => handledIds(sessionLogs), [sessionLogs]);
+  const nextGecko = selectedGecko ? nextInWalk(walk.order, selectedGecko.id, handled) : null;
+
   const orderedGeckos = useMemo(() => {
-    const rank = new Map(recentIds.map((id, i) => [id, i]));
     const term = searchTerm.trim().toLowerCase();
-    const filtered = term
-      ? geckos.filter(
-          (g) =>
-            (g.name || '').toLowerCase().includes(term) ||
-            (g.gecko_id_code || '').toLowerCase().includes(term)
-        )
-      : geckos;
-    return [...filtered].sort((a, b) => {
-      const ra = rank.has(a.id) ? rank.get(a.id) : Infinity;
-      const rb = rank.has(b.id) ? rank.get(b.id) : Infinity;
-      if (ra !== rb) return ra - rb;
-      return (a.name || '').localeCompare(b.name || '');
-    });
-  }, [geckos, recentIds, searchTerm]);
+    if (!term) return walk.order;
+    return walk.order.filter(
+      (g) =>
+        (g.name || '').toLowerCase().includes(term) ||
+        (g.gecko_id_code || '').toLowerCase().includes(term)
+    );
+  }, [walk, searchTerm]);
 
   const selectGecko = (gecko) => {
     setSelectedGecko(gecko);
     setActivePanel(null);
     setPendingVoice(null);
-    setRecentIds(pushRecentId(gecko.id));
+    setWeightInput('');
+    setBigWeightAsk(null);
+    setNoteInput('');
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
   };
 
   const backToPicker = () => {
@@ -322,6 +331,7 @@ export default function FieldModePage() {
     setActivePanel(null);
     setPendingVoice(null);
     setWeightInput('');
+    setBigWeightAsk(null);
     setNoteInput('');
   };
 
@@ -346,7 +356,7 @@ export default function FieldModePage() {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     try {
       await entry.undo();
-      setSessionCount((c) => Math.max(0, c - 1));
+      setSessionLogs((prev) => prev.filter((log) => log.key !== entry.sessionKey));
       toast({ title: 'Undone', description: entry.message });
     } catch (error) {
       console.error('Undo failed:', error);
@@ -359,9 +369,11 @@ export default function FieldModePage() {
   };
 
   const afterLog = (entry) => {
-    setSessionCount((c) => c + 1);
+    sessionKeyRef.current += 1;
+    const sessionKey = sessionKeyRef.current;
+    setSessionLogs((prev) => [...prev, { key: sessionKey, kind: entry.kind, accepted: entry.accepted !== false, geckoId: entry.geckoId }]);
     flashCheck();
-    registerUndo(entry);
+    registerUndo({ ...entry, sessionKey });
   };
 
   // ----- log actions -----------------------------------------------------
@@ -391,10 +403,19 @@ export default function FieldModePage() {
   // Offline: a log that cannot reach the server is kept on the phone and
   // sent later. An auth error is not a network error, so an expired
   // sign-in still gets "Sign in" above instead of being queued.
+  // The demo: nothing is saved, and the visitor is told so in plain words
+  // (a blocked write used to surface as "Save failed").
+  const blockedInDemo = () => {
+    if (!guest) return false;
+    toast({ title: 'This is the demo', description: 'Nothing is saved here. Create a free account to log your own geckos.' });
+    return true;
+  };
+
   const shouldQueue = (error) => isDeviceOffline() || (error && isNetworkError(error) && !isAuthFailure(error));
   const savedLabel = (queued, text) => (queued ? `${text} kept on this phone` : `${text} saved`);
 
   const logWeight = async (gecko, grams, date = logDate) => {
+    if (blockedInDemo()) return;
     setIsSaving(true);
     // One id for the try and any queued copy, so a weigh-in the server
     // saved after the phone gave up is not saved twice (careLogOnce.js).
@@ -411,6 +432,7 @@ export default function FieldModePage() {
       if (mirror) showWeight(grams);
       afterLog({
         kind: 'weight',
+        geckoId: gecko.id,
         queued: Boolean(entry.queued),
         message: savedLabel(Boolean(entry.queued), `${grams} g for ${gecko.name}`),
         undo: async () => {
@@ -419,6 +441,7 @@ export default function FieldModePage() {
         },
       });
       setWeightInput('');
+      setBigWeightAsk(null);
       setActivePanel(null);
     };
     const queueWhole = () => {
@@ -474,12 +497,14 @@ export default function FieldModePage() {
   };
 
   const logShed = async (gecko, quality = 'unknown', date = logDate) => {
+    if (blockedInDemo()) return;
     setIsSaving(true);
     const requestId = newClientRequestId();
     const queueShed = () => {
       const item = queueFieldLog({ kind: 'shed', geckoId: gecko.id, date, quality, requestId });
       afterLog({
         kind: 'shed',
+        geckoId: gecko.id,
         queueId: item.id,
         quality,
         queued: true,
@@ -495,6 +520,7 @@ export default function FieldModePage() {
       const record = await writeShed({ gecko, date, quality, clientRequestId: requestId });
       afterLog({
         kind: 'shed',
+        geckoId: gecko.id,
         recordId: record.id,
         quality,
         message: `Shed for ${gecko.name}`,
@@ -515,6 +541,7 @@ export default function FieldModePage() {
   };
 
   const logFed = async (gecko, accepted = true, date = logDate) => {
+    if (blockedInDemo()) return;
     setIsSaving(true);
     const requestId = newClientRequestId();
     // Kept offline as a whole log; it replays through logFeedings, which
@@ -530,6 +557,7 @@ export default function FieldModePage() {
       });
       afterLog({
         kind: 'fed',
+        geckoId: gecko.id,
         queueId: item.id,
         gecko,
         date,
@@ -549,6 +577,7 @@ export default function FieldModePage() {
       const result = await logFeedings({ entries: [{ gecko, accepted, clientRequestId: requestId }], date });
       afterLog({
         kind: 'fed',
+        geckoId: gecko.id,
         recordId: result.records[0]?.id,
         gecko,
         date,
@@ -587,7 +616,6 @@ export default function FieldModePage() {
     const match = wanted ? geckos.find((g) => g.id === wanted) : null;
     if (!match) return;
     setSelectedGecko(match);
-    setRecentIds(pushRecentId(match.id));
     if (log === 'weight') setActivePanel('weight');
     else if (log === 'fed') logFed(match, true, todayLocalISO());
     else if (log === 'shed') logShed(match, 'unknown', todayLocalISO());
@@ -598,11 +626,12 @@ export default function FieldModePage() {
   const logNote = async (gecko, text, date = logDate) => {
     const trimmed = (text || '').trim();
     if (!trimmed) return;
+    if (blockedInDemo()) return;
     setIsSaving(true);
     // A backdated note lands at noon on that day.
     const when = date === todayLocalISO() ? new Date() : new Date(`${date}T12:00:00`);
     const done = (entry) => {
-      afterLog({ kind: 'note', ...entry });
+      afterLog({ kind: 'note', geckoId: gecko.id, ...entry });
       setNoteInput('');
       setActivePanel(null);
     };
@@ -664,6 +693,12 @@ export default function FieldModePage() {
     }
   };
 
+  // A feeding switched between accepted and refused counts the new way in
+  // the session summary.
+  const retally = (sessionKey, accepted) => {
+    setSessionLogs((prev) => prev.map((log) => (log.key === sessionKey ? { ...log, accepted } : log)));
+  };
+
   const toggleFedAccepted = async () => {
     if (!undoEntry || undoEntry.kind !== 'fed') return;
     const entry = undoEntry;
@@ -680,6 +715,7 @@ export default function FieldModePage() {
         return;
       }
       setUndoEntry((e) => (e && e.kind === 'fed' ? { ...e, accepted: next } : e));
+      retally(entry.sessionKey, next);
       return;
     }
     try {
@@ -700,6 +736,7 @@ export default function FieldModePage() {
         result,
         undo: async () => { await undoFeedings(result); },
       } : e));
+      retally(entry.sessionKey, next);
     } catch (error) {
       console.error('Feeding update failed:', error);
       toast({ title: 'Update failed', description: 'Could not update the feeding.', variant: 'destructive' });
@@ -709,6 +746,7 @@ export default function FieldModePage() {
   // ----- numeric pad -----------------------------------------------------
 
   const pressPadKey = (key) => {
+    setBigWeightAsk(null);
     setWeightInput((prev) => {
       if (key === 'del') return prev.slice(0, -1);
       if (key === '.') {
@@ -724,6 +762,21 @@ export default function FieldModePage() {
 
   const weightValue = parseFloat(weightInput);
   const weightValid = !isNaN(weightValue) && weightValue > 0;
+
+  // The same check as the log screen (experience review E5): an entry
+  // more than 30 percent from the last weight is saved on the second tap,
+  // because a slipped decimal point is the usual cause.
+  const savePadWeight = () => {
+    const grams = Math.round(weightValue * 10) / 10;
+    if (bigWeightAsk !== grams && isBigWeightChange(grams, selectedGecko.weight_grams)) {
+      setBigWeightAsk(grams);
+      return;
+    }
+    setBigWeightAsk(null);
+    logWeight(selectedGecko, grams);
+  };
+
+  const sessionLine = sessionSummary(sessionLogs);
 
   // ----- voice -----------------------------------------------------------
 
@@ -874,7 +927,7 @@ export default function FieldModePage() {
       )}
       <RefusedLogsNotice refused={refusedLogs} geckos={geckos} onDismiss={dismissRefusedLogs} />
 
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-24">
         {sessionExpired || (!user && !loadError) ? (
           <div className="p-6 text-center">
             <p className="text-xl text-slate-300 mt-16 mb-6">
@@ -897,11 +950,39 @@ export default function FieldModePage() {
           <div className="p-6 text-center">
             <p className="text-xl text-slate-300 mt-16">Could not load your collection. Check your connection and reload.</p>
           </div>
+        ) : showSummary ? (
+          /* ------------------------------ Session summary ------------------------------ */
+          // The Undo bar for the last log can still be up; the summary
+          // starts below it.
+          <div className={`p-6 text-center ${undoEntry ? 'pt-44' : ''}`}>
+            <CheckCircle2 className="mx-auto mt-10 w-16 h-16 text-emerald-400" aria-hidden="true" />
+            <h1 className="mt-4 text-2xl font-bold">This session</h1>
+            <p className="mt-3 text-2xl font-semibold text-slate-100">{sessionLine || 'Nothing logged'}</p>
+            {sessionLine && (
+              <p className="mt-2 text-lg text-slate-400">
+                {handled.size === 1 ? '1 gecko' : `${handled.size} geckos`}.
+                {pendingSync > 0 ? ` ${pendingSync === 1 ? '1 log is' : `${pendingSync} logs are`} kept on this phone and will send when you have a signal.` : ''}
+              </p>
+            )}
+            <Link
+              to={createPageUrl('MyGeckos')}
+              className="mt-8 flex min-h-16 w-full items-center justify-center rounded-2xl bg-emerald-600 text-xl font-bold text-slate-50 active:bg-emerald-700"
+            >
+              Done
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowSummary(false)}
+              className="mt-3 min-h-14 w-full rounded-2xl border border-slate-700 bg-slate-900 text-lg font-semibold text-slate-200"
+            >
+              Keep logging
+            </button>
+          </div>
         ) : !selectedGecko ? (
           /* ------------------------------ Animal picker ------------------------------ */
           <div className="p-4">
             <h1 className="text-2xl font-bold mb-1">Field Mode</h1>
-            <p className="text-lg text-slate-400 mb-4">Pick the gecko in your hand.</p>
+            <p className="text-lg text-slate-400 mb-4">Pick the gecko in your hand. The ones due today come first.</p>
             <div className="relative mb-4">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-500" />
               <Input
@@ -935,10 +1016,17 @@ export default function FieldModePage() {
                       width={128}
                       className="w-16 h-16 rounded-xl object-cover border border-slate-700 flex-shrink-0"
                     />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-xl font-bold truncate">{gecko.name}</p>
                       <p className="text-base text-slate-400 truncate">{gecko.gecko_id_code || 'No ID code'}</p>
                     </div>
+                    {handled.has(String(gecko.id)) ? (
+                      <span className="flex flex-shrink-0 items-center gap-1 text-base font-semibold text-emerald-300">
+                        <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> Logged
+                      </span>
+                    ) : walk.due.has(String(gecko.id)) ? (
+                      <span className="flex-shrink-0 rounded-full border border-amber-500/50 px-3 py-1 text-base font-semibold text-amber-300">Due</span>
+                    ) : null}
                   </button>
                 ))}
               </div>
@@ -1098,6 +1186,41 @@ export default function FieldModePage() {
               </div>
             )}
 
+            {/* The rack walk: once this gecko has a log, the main button
+                moves on to the next one in due order. The buttons above
+                stay, for a second log on the same gecko, and the whole
+                list is one tap away. */}
+            {activePanel === null && handled.has(String(selectedGecko.id)) && (
+              <div className="mt-4 space-y-3">
+                {nextGecko ? (
+                  <button
+                    type="button"
+                    onClick={() => selectGecko(nextGecko)}
+                    disabled={isSaving}
+                    className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-xl font-bold text-slate-50 active:bg-emerald-700"
+                  >
+                    <span className="truncate">Next: {nextGecko.name}</span>
+                    <ArrowRight className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowSummary(true)}
+                    className="flex min-h-16 w-full items-center justify-center rounded-2xl bg-emerald-600 px-4 text-xl font-bold text-slate-50 active:bg-emerald-700"
+                  >
+                    Every gecko is logged. Finish
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={backToPicker}
+                  className="min-h-14 w-full rounded-2xl border border-slate-700 bg-slate-900 text-lg font-semibold text-slate-200"
+                >
+                  Pick another gecko
+                </button>
+              </div>
+            )}
+
             {/* Weight numeric pad */}
             {activePanel === 'weight' && (
               <div className="rounded-3xl bg-slate-900 border border-slate-700 p-4">
@@ -1108,6 +1231,7 @@ export default function FieldModePage() {
                     onClick={() => {
                       setActivePanel(null);
                       setWeightInput('');
+                      setBigWeightAsk(null);
                     }}
                     className="min-h-14 min-w-14 flex items-center justify-center rounded-xl bg-slate-800 border border-slate-600"
                     aria-label="Cancel weight entry"
@@ -1132,13 +1256,18 @@ export default function FieldModePage() {
                     </button>
                   ))}
                 </div>
+                {bigWeightAsk != null && (
+                  <p role="alert" className="mb-3 text-lg text-amber-300">
+                    That is a big change from {selectedGecko.weight_grams} g. Fix it above, or tap again to save {bigWeightAsk} g.
+                  </p>
+                )}
                 <Button
-                  onClick={() => logWeight(selectedGecko, Math.round(weightValue * 10) / 10)}
+                  onClick={savePadWeight}
                   disabled={!weightValid || isSaving}
                   className="w-full min-h-16 text-xl font-bold bg-emerald-600 hover:bg-emerald-700 rounded-2xl"
                 >
                   {isSaving && <Loader2 className="w-6 h-6 mr-2 animate-spin" />}
-                  Save weight
+                  {bigWeightAsk != null ? `Save ${bigWeightAsk} g` : 'Save weight'}
                 </Button>
               </div>
             )}
@@ -1181,20 +1310,33 @@ export default function FieldModePage() {
         )}
       </div>
 
-      {/* Sticky footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-slate-900 border-t border-slate-700 px-4 py-3 flex items-center justify-between gap-3">
-        <span className="min-w-0 text-base sm:text-lg text-slate-300">
-          {sessionCount === 0
-            ? 'No logs yet this session'
-            : `${sessionCount} ${sessionCount === 1 ? 'log' : 'logs'} this session`}
-        </span>
-        <Link
-          to={createPageUrl('MyGeckos')}
-          className="shrink-0 whitespace-nowrap min-h-14 px-5 flex items-center rounded-2xl bg-slate-800 border border-slate-600 text-lg font-semibold text-slate-100"
-        >
-          Exit field mode
-        </Link>
-      </div>
+      {/* Sticky footer. Leaving after a log shows the session's summary
+          first; the summary has its own way out, so the footer steps aside. */}
+      {!showSummary && (
+        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-slate-900 border-t border-slate-700 px-4 py-3 flex items-center justify-between gap-3">
+          <span className="min-w-0 text-base sm:text-lg text-slate-300">
+            {sessionLogs.length === 0
+              ? 'No logs yet this session'
+              : `${sessionLogs.length} ${sessionLogs.length === 1 ? 'log' : 'logs'} this session`}
+          </span>
+          {sessionLogs.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowSummary(true)}
+              className="shrink-0 whitespace-nowrap min-h-14 px-5 flex items-center rounded-2xl bg-slate-800 border border-slate-600 text-lg font-semibold text-slate-100"
+            >
+              Exit field mode
+            </button>
+          ) : (
+            <Link
+              to={createPageUrl('MyGeckos')}
+              className="shrink-0 whitespace-nowrap min-h-14 px-5 flex items-center rounded-2xl bg-slate-800 border border-slate-600 text-lg font-semibold text-slate-100"
+            >
+              Exit field mode
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }
