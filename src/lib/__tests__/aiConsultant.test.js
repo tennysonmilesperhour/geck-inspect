@@ -4,7 +4,10 @@
 // invoke-llm handler against a fake database and a fake Anthropic API.
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/lib/aiConsent', () => ({ requireAiConsent: vi.fn() }));
+// The real consent check runs; only its dialog is stood in for. The
+// member says yes unless a test says otherwise.
+const consent = vi.hoisted(() => ({ ask: vi.fn(async () => true) }));
+vi.mock('@/lib/aiConsentDialog', () => ({ askAiConsent: (...args) => consent.ask(...args) }));
 
 vi.mock('@/entities/all', () => ({
   Gecko: {}, WeightRecord: {}, ShedRecord: {}, Egg: {}, BreedingPlan: {}, FeedingGroup: {},
@@ -301,6 +304,29 @@ describe('askConsultant against an older invoke-llm', () => {
     const second = supabase.functions.invoke.mock.calls[1][1].body;
     expect(second.mode).toBeUndefined();
     expect(second.prompt).toBe('The conversation so far:\nMember: hi\n\nGeckoGenius: Hello\n\nFACTS FROM GECK INSPECT: none\n\nMember: How warm?');
+  });
+
+  it('sends nothing, and takes no credit, when the member says no', async () => {
+    supabase.functions.invoke.mockReset();
+    consent.ask.mockClear();
+    consent.ask.mockResolvedValueOnce(false);
+    await expect(askConsultant({ question: 'hello' })).rejects.toMatchObject({ code: 'ai_consent_declined' });
+    expect(consent.ask).toHaveBeenCalledTimes(1);
+    expect(consent.ask.mock.calls[0][0]).toContain('Anthropic');
+    expect(supabase.functions.invoke).not.toHaveBeenCalled();
+  });
+
+  it('asks before each request, the retry for an older function included', async () => {
+    supabase.functions.invoke.mockReset();
+    consent.ask.mockClear();
+    supabase.functions.invoke
+      .mockResolvedValueOnce({ data: null, error: httpError(400, { error: 'prompt is required' }) })
+      .mockResolvedValueOnce({ data: { text: 'Answer', credits: null }, error: null });
+    // Yes to the first request, no to the second: the second is not sent.
+    consent.ask.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    await expect(askConsultant({ question: 'How warm?' })).rejects.toMatchObject({ code: 'ai_consent_declined' });
+    expect(consent.ask).toHaveBeenCalledTimes(2);
+    expect(supabase.functions.invoke).toHaveBeenCalledTimes(1);
   });
 
   it('does not retry any other failure (no second charge)', async () => {

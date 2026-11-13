@@ -13,7 +13,7 @@ import {
 import { Gecko } from '@/entities/all';
 import { importGeckosFromCSV } from '@/functions/importGeckosFromCSV';
 import { recordGeckoAdded } from '@/lib/activation';
-import { UpgradePlansLink } from '@/components/subscription/UpgradePlansButton';
+import PlanLimitNotice from '@/components/subscription/PlanLimitNotice';
 import { geckoLimitFor } from '@/lib/geckoLimit';
 import { upgradePromptShown } from '@/lib/upgradePrompt';
 import { generateCSVTemplate } from '@/functions/generateCSVTemplate';
@@ -38,17 +38,9 @@ const TEMPLATE_KEYS = TEMPLATE_FIELDS.map(f => f.key);
 function ImportLimitNotice({ text }) {
     if (!text) return null;
     return (
-        <div role="status" data-import-limit-notice className="rounded-lg border border-amber-600/40 bg-amber-950/30 p-3 text-sm text-amber-200">
-            {text} Archived geckos do not count.{' '}
-            <UpgradePlansLink
-                limitType="geckos"
-                surface="plan_limit_geckos"
-                trackShown={false}
-                className="relative touch-hit underline underline-offset-2 hover:text-amber-100"
-            >
-                See plans
-            </UpgradePlansLink>
-        </div>
+        <PlanLimitNotice data-import-limit-notice limitType="geckos" surface="plan_limit_geckos">
+            {text} Archived geckos do not count.
+        </PlanLimitNotice>
     );
 }
 
@@ -589,17 +581,9 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete, user
                                 )}
 
                                 {importResults.skippedForLimit > 0 && (
-                                    <div className="rounded-lg border border-amber-600/40 bg-amber-950/30 p-3 text-sm text-amber-200">
-                                        {importResults.skippedForLimit} new {importResults.skippedForLimit === 1 ? 'gecko was' : 'geckos were'} not added because your plan&apos;s gecko limit is full.{' '}
-                                        <UpgradePlansLink
-                                            limitType="geckos"
-                                            surface="plan_limit_geckos"
-                                            trackShown={!warnedBeforeImport}
-                                            className="underline underline-offset-2 hover:text-amber-100"
-                                        >
-                                            See plans
-                                        </UpgradePlansLink>
-                                    </div>
+                                    <PlanLimitNotice limitType="geckos" surface="plan_limit_geckos" trackShown={!warnedBeforeImport}>
+                                        {importResults.skippedForLimit} new {importResults.skippedForLimit === 1 ? 'gecko was' : 'geckos were'} not added because your plan&apos;s gecko limit is full.
+                                    </PlanLimitNotice>
                                 )}
 
                                 {/* Errors */}

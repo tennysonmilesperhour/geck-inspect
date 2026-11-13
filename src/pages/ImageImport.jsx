@@ -1,4 +1,4 @@
-import { requireAiConsent } from '@/lib/aiConsent';
+import { requireAiConsentInApp } from '@/lib/aiConsent';
 import React, { useState, useEffect, Suspense } from 'react';
 import { User, Gecko, BreedingPlan, Egg } from '@/entities/all';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
@@ -10,12 +10,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Camera, Loader2, Check, X, Lock, ArrowRight, ImagePlus, Sparkles } from 'lucide-react';
+import { Camera, Loader2, Check, X, Lock, ImagePlus, Sparkles } from 'lucide-react';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import PageHeader from '@/components/shared/PageHeader';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { recordGeckoAdded } from '@/lib/activation';
-import UpgradePlansButton from '@/components/subscription/UpgradePlansButton';
+import PlanLimitNotice from '@/components/subscription/PlanLimitNotice';
 
 const LoginPortal = React.lazy(() => import('@/components/auth/LoginPortal'));
 
@@ -115,16 +115,14 @@ export default function ImageImport() {
                     <Card>
                         <CardContent className="p-6 md:p-8 text-center">
                             <Lock className="w-10 h-10 text-amber-400 mx-auto mb-4" />
-                            <p className="text-sm md:text-base text-slate-300">
-                                This feature is included with the Breeder plan.
-                            </p>
-                            <UpgradePlansButton
+                            <PlanLimitNotice
+                                shape="modal"
                                 limitType="image_import"
                                 surface="image_import_locked"
-                                className="mt-4"
+                                trackShown
                             >
-                                View Plans <ArrowRight className="w-4 h-4 ml-2" />
-                            </UpgradePlansButton>
+                                This feature is included with the Breeder plan.
+                            </PlanLimitNotice>
                         </CardContent>
                     </Card>
                 </div>
@@ -159,7 +157,7 @@ export default function ImageImport() {
         setStep('processing');
 
         try {
-            requireAiConsent('recognize-import-data');
+            await requireAiConsentInApp('recognize-import-data');
             const batches = [];
             for (let i = 0; i < images.length; i += 10) {
                 batches.push(images.slice(i, i + 10).map(img => img.url));

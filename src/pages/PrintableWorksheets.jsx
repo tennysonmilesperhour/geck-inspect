@@ -13,6 +13,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import RackLabelSheet from '@/components/worksheets/RackLabelSheet';
+import TubLabelSheet from '@/components/worksheets/TubLabelSheet';
 
 /* ─── Print CSS (injected once) ─────────────────────────────────── */
 
@@ -490,7 +491,9 @@ function TemplateButton({ icon: Icon, label, description, active, onClick }) {
   );
 }
 
-function RackLabelPicker({ geckos, selected, onChange, search, onSearch, onPrint }) {
+// kind: 'rack' (the passport note applies) or 'tub' (every label gets a
+// code, passport or not).
+function RackLabelPicker({ geckos, selected, onChange, search, onSearch, onPrint, kind = 'rack' }) {
   const q = search.trim().toLowerCase();
   const shown = q
     ? geckos.filter((g) => [g.name, g.gecko_id_code, g.morphs_traits].filter(Boolean).join(' ').toLowerCase().includes(q))
@@ -528,7 +531,7 @@ function RackLabelPicker({ geckos, selected, onChange, search, onSearch, onPrint
         </Button>
       </div>
       {geckos.length === 0 ? (
-        <p className="text-sm text-slate-400">Add a gecko to your collection to print rack labels.</p>
+        <p className="text-sm text-slate-400">Add a gecko to your collection to print {kind === 'tub' ? 'tub' : 'rack'} labels.</p>
       ) : (
         <div className="max-h-72 overflow-y-auto rounded-xl border border-slate-700 divide-y divide-slate-800">
           {shown.map((g) => (
@@ -542,7 +545,12 @@ function RackLabelPicker({ geckos, selected, onChange, search, onSearch, onPrint
           ))}
         </div>
       )}
-      {withoutPassport > 0 && (
+      {kind === 'tub' && (
+        <p className="text-xs text-slate-400">
+          Each code opens that gecko&apos;s log on your phone. Scan it with the camera, sign in if asked, and tap Fed.
+        </p>
+      )}
+      {kind === 'rack' && withoutPassport > 0 && (
         <p className="text-xs text-slate-500">
           {withoutPassport} selected {withoutPassport === 1 ? 'gecko has' : 'geckos have'} no passport yet, so {withoutPassport === 1 ? 'its label prints' : 'their labels print'} without a QR code.
         </p>
@@ -657,10 +665,10 @@ export default function PrintableWorksheets() {
         <PageHeader
           icon={Printer}
           title="Printable Worksheets"
-          description="Print-ready documents for your geckos: rack label sheets, feeding logs, vet cards, expo tags and lineage certificates."
+          description="Print-ready documents for your geckos: rack label sheets, tub labels that open the log, feeding logs, vet cards, expo tags and lineage certificates."
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           <TemplateButton
             icon={FileText}
             label="One gecko"
@@ -675,10 +683,30 @@ export default function PrintableWorksheets() {
             active={mode === 'labels'}
             onClick={() => setMode('labels')}
           />
+          <TemplateButton
+            icon={Tag}
+            label="Tub labels"
+            description="Small labels (62 x 29 mm): name, ID and a QR code that opens that gecko's log"
+            active={mode === 'tubs'}
+            onClick={() => setMode('tubs')}
+          />
         </div>
 
         {mode === 'labels' && (
           <RackLabelPicker
+            geckos={geckos}
+            selected={labelIds}
+            onChange={setLabelIds}
+            search={labelSearch}
+            onSearch={setLabelSearch}
+            onPrint={handlePrint}
+          />
+        )}
+
+        {/* The same list and the same ticks as the rack labels. */}
+        {mode === 'tubs' && (
+          <RackLabelPicker
+            kind="tub"
             geckos={geckos}
             selected={labelIds}
             onChange={setLabelIds}
@@ -778,6 +806,19 @@ export default function PrintableWorksheets() {
           </div>
           <div className="rounded-xl overflow-hidden border border-slate-700 bg-white print:rounded-none print:border-0">
             <RackLabelSheet geckos={geckos.filter((g) => labelIds.has(g.id))} />
+          </div>
+        </div>
+      )}
+
+      {mode === 'tubs' && labelIds.size > 0 && (
+        <div id="printable-area" className="max-w-4xl mx-auto">
+          <div className="no-print mb-3 pb-3 border-b border-slate-800">
+            <p className="text-xs font-medium text-emerald-400">
+              PREVIEW: {labelIds.size} tub {labelIds.size === 1 ? 'label' : 'labels'}, 62 x 29 mm each, on A4 or US Letter
+            </p>
+          </div>
+          <div className="rounded-xl overflow-hidden border border-slate-700 bg-white print:rounded-none print:border-0">
+            <TubLabelSheet geckos={geckos.filter((g) => labelIds.has(g.id))} />
           </div>
         </div>
       )}

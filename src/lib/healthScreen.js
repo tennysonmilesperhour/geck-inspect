@@ -1,4 +1,4 @@
-import { requireAiConsent } from '@/lib/aiConsent';
+import { requireAiConsentInApp } from '@/lib/aiConsent';
 /**
  * Client helper for the AI photo health screen.
  *
@@ -122,7 +122,7 @@ export async function runHealthScreen(gecko) {
   let data;
   let error;
   try {
-    requireAiConsent('health-screen');
+    await requireAiConsentInApp('health-screen');
     ({ data, error } = await supabase.functions.invoke('health-screen', {
       body: { image_url: imageUrl, context },
     }));

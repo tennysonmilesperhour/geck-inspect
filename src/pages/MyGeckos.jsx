@@ -63,13 +63,14 @@ import { isGuestMode } from '@/lib/guestMode';
 import { lazyOptional } from '@/components/gecko/record/loadOnDemand';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
-// "Send <name> to the buyer", offered after "Archive as sold". Loaded only
-// then. It is optional, so if its file cannot be downloaded the step is
-// simply skipped and the archive stands.
-const SoldTransferStep = lazyOptional(
-    () => import('../components/transfers/SoldTransferStep'),
-    function SoldStepUnavailable({ onClose }) {
-        useEffect(() => { onClose?.(); }, [onClose]);
+// The sold sheet: sale price, then the hand-over to the buyer, in two
+// steps. Loaded only when a gecko is marked sold. If its file cannot be
+// downloaded, a sale not saved yet falls back to the archive dialog on
+// Sold, and a sale already saved simply stands.
+const SellHandoverSheet = lazyOptional(
+    () => import('../components/transfers/SellHandoverSheet'),
+    function SoldSheetUnavailable({ onUnavailable }) {
+        useEffect(() => { onUnavailable?.(); }, [onUnavailable]);
         return null;
     },
 );
@@ -142,7 +143,9 @@ export default function MyGeckosPage() {
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     // 'sold' when the dialog was opened by choosing Sold in the gecko form.
     const [archiveDialogReason, setArchiveDialogReason] = useState(null);
-    // The gecko just archived as sold, while "Send <name> to the buyer" shows.
+    // The gecko being sold while the sold sheet shows: { gecko, saleSaved,
+    // returnTo }. saleSaved is true once it is archived as sold; returnTo is
+    // the gecko page the member came from, if they did.
     const [soldFollowUp, setSoldFollowUp] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
     const [idSettings] = usePageSettings('gecko_id_settings', {
@@ -345,6 +348,8 @@ export default function MyGeckosPage() {
             }
         }
 
+        // What was saved, handed back to the sold sheet (null when nothing was).
+        let saved = null;
         try {
             const current = geckos.find((g) => g.id === geckoId) || null;
             // Archiving as sold also saves the sold price and sale type
@@ -355,6 +360,7 @@ export default function MyGeckosPage() {
                 : { archived: false, archived_date: null, archive_reason: null, sold_price: null, sale_category: null };
 
             await retryApiCall(async () => Gecko.update(geckoId, updateData));
+            saved = { ...current, ...updateData };
 
             // Close the reason dialog plus any open detail/edit surface so
             // the user sees the action complete even if the follow-up reload
@@ -366,9 +372,10 @@ export default function MyGeckosPage() {
             setSelectedGecko(null);
 
             // A sale is the moment the buyer can get the gecko's records:
-            // offer the transfer (the owner only; skippable).
-            if (shouldArchive && shouldOfferSoldTransfer({ gecko: current, user, reason, guest: isGuestMode() })) {
-                setSoldFollowUp({ ...current, ...updateData });
+            // the sold sheet carries on with the hand-over (it can be
+            // skipped).
+            if (shouldArchive && reason === 'sold' && current && !isGuestMode()) {
+                setSoldFollowUp((prev) => ({ gecko: saved, saleSaved: true, returnTo: prev?.returnTo || null }));
             }
 
             await loadGeckos();
@@ -377,6 +384,7 @@ export default function MyGeckosPage() {
                 title: shouldArchive ? "Gecko Archived" : "Gecko Unarchived",
                 description: shouldArchive ? "Moved to archive" : "Restored to collection"
             });
+            return saved;
         } catch (error) {
             console.error("Failed to archive gecko:", error);
             setArchiveDialogGeckoId(null);
@@ -389,7 +397,15 @@ export default function MyGeckosPage() {
                 description: error?.message || "Failed to archive gecko. Please try again.",
                 variant: "destructive",
             });
+            return saved;
         }
+    };
+
+    // Marking a gecko Sold (the form's status, the record's Sold action)
+    // opens the sold sheet on its first step: price and date.
+    const openSoldSheet = (geckoId, returnTo = null) => {
+        const target = geckos.find((g) => g.id === geckoId);
+        if (target) setSoldFollowUp({ gecko: target, saleSaved: false, returnTo });
     };
 
     const handleArchiveReasonConfirm = (reason, saleFields) => {
@@ -532,8 +548,11 @@ export default function MyGeckosPage() {
         setSelectedGecko(match);
         setIsFormOpen(false);
         setIsDetailModalOpen(true);
-        if (steps.archiveDialog) {
-            setArchiveDialogReason(steps.archiveDialog === 'sold' ? 'sold' : null);
+        if (steps.archiveDialog === 'sold') {
+            // From the gecko page: closing the sheet goes back there.
+            setSoldFollowUp({ gecko: match, saleSaved: false, returnTo: `/GeckoDetail?id=${match.id}` });
+        } else if (steps.archiveDialog) {
+            setArchiveDialogReason(null);
             setArchiveDialogGeckoId(match.id);
         }
     }, [isLoading, user, geckos, memberships, location.search, location.pathname]);
@@ -750,7 +769,7 @@ export default function MyGeckosPage() {
                             </div>
                             <div className="border-t border-slate-700 pt-3 mt-1">
                                 <Label className="text-slate-300 text-sm font-medium block mb-1">Gecko ID Format</Label>
-                                <p className="text-[11px] text-slate-500 leading-snug mb-2">
+                                <p className="text-xs text-slate-500 leading-snug mb-2">
                                     The full customizer, inheritance modes, presets, and live preview, lives in Settings.
                                 </p>
                                 <a
@@ -1173,8 +1192,8 @@ export default function MyGeckosPage() {
                                         <div className="space-y-8">
                                             {Object.entries(bySpecies).sort(([a],[b]) => a.localeCompare(b)).map(([species, speciesGeckos]) => (
                                                 <div key={species}>
-                                                    <h2 className="text-xl font-bold text-teal-400 mb-3 flex items-center gap-2">
-                                                        <span className="w-2 h-2 rounded-full bg-teal-400 inline-block"></span>
+                                                    <h2 className="text-xl font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                                                        <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
                                                         {species} <span className="text-slate-500 text-base font-normal">({speciesGeckos.length})</span>
                                                     </h2>
                                                     {viewMode === 'card' ? (
@@ -1305,10 +1324,10 @@ export default function MyGeckosPage() {
                                                                         </span>
                                                                     )}
                                                                     {gecko.sex === 'Female' && gecko.is_gravid && (
-                                                                       <span className="text-xs bg-pink-900/40 border border-pink-700 text-pink-300 px-2 py-0.5 rounded-full">💕 Gravid</span>
+                                                                       <span className="text-xs bg-emerald-900/40 border border-emerald-700 text-emerald-300 px-2 py-0.5 rounded-full">💕 Gravid</span>
                                                                     )}
                                                                     {gecko.species && gecko.species !== 'Crested Gecko' && (
-                                                                       <span className="text-xs bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-0.5 rounded-full">{gecko.species}</span>
+                                                                       <span className="text-xs bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{gecko.species}</span>
                                                                     )}
                                                                     {showArchived && gecko.archive_reason && (
                                                                         <ArchiveStatusChip reason={gecko.archive_reason} />
@@ -1385,10 +1404,7 @@ export default function MyGeckosPage() {
                                         onSubmit={handleFormSubmit}
                                         onCancel={handleFormCancel}
                                         onArchive={handleArchiveGecko}
-                                        onMarkSold={(geckoId) => {
-                                            setArchiveDialogReason('sold');
-                                            setArchiveDialogGeckoId(geckoId);
-                                        }}
+                                        onMarkSold={(geckoId) => openSoldSheet(geckoId)}
                                         feedingGroups={feedingGroups}
                                         idSettings={idSettings}
                                         restoreDraftOnOpen={restoreDraftOnOpen}
@@ -1489,10 +1505,7 @@ export default function MyGeckosPage() {
                         onUpdate={() => loadGeckos()}
                         onEdit={(gecko) => handleEdit(gecko, true)}
                         onArchive={handleArchiveGecko}
-                        onMarkSold={(geckoId) => {
-                            setArchiveDialogReason('sold');
-                            setArchiveDialogGeckoId(geckoId);
-                        }}
+                        onMarkSold={(geckoId) => openSoldSheet(geckoId)}
                         onDelete={handleDelete}
                     />
                 )}
@@ -1510,10 +1523,30 @@ export default function MyGeckosPage() {
 
                 {soldFollowUp && (
                     <React.Suspense fallback={null}>
-                        <SoldTransferStep
-                            key={soldFollowUp.id}
-                            gecko={soldFollowUp}
-                            onClose={() => setSoldFollowUp(null)}
+                        <SellHandoverSheet
+                            key={soldFollowUp.gecko.id}
+                            gecko={soldFollowUp.gecko}
+                            saleSaved={soldFollowUp.saleSaved}
+                            defaultSaleCategory={saleCategoryFor(soldFollowUp.gecko, bredInHouseIds({ geckos })) || ''}
+                            onSaveSale={(saleFields) => handleArchiveGecko(soldFollowUp.gecko.id, true, 'sold', saleFields)}
+                            onChanged={() => loadGeckos()}
+                            canTransfer={shouldOfferSoldTransfer({ gecko: soldFollowUp.gecko, user, reason: 'sold', guest: isGuestMode() })}
+                            guest={isGuestMode()}
+                            onClose={() => {
+                                const back = soldFollowUp.returnTo;
+                                setSoldFollowUp(null);
+                                if (back) navigate(back);
+                            }}
+                            onUnavailable={() => {
+                                // The sheet could not be loaded: ask the sale
+                                // questions in the archive dialog instead.
+                                const pending = soldFollowUp;
+                                setSoldFollowUp(null);
+                                if (!pending.saleSaved) {
+                                    setArchiveDialogReason('sold');
+                                    setArchiveDialogGeckoId(pending.gecko.id);
+                                }
+                            }}
                         />
                     </React.Suspense>
                 )}

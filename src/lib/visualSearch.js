@@ -1,4 +1,4 @@
-import { requireAiConsent } from '@/lib/aiConsent';
+import { requireAiConsentInApp } from '@/lib/aiConsent';
 /**
  * Visual similarity search over the gecko_images embedding index.
  *
@@ -38,7 +38,7 @@ async function embedOnMiss(imageUrl) {
     .maybeSingle();
   if (lookupError || !row?.id) return false;
 
-  requireAiConsent('embed-gecko-image');
+  await requireAiConsentInApp('embed-gecko-image');
   const { data, error } = await supabase.functions.invoke('embed-gecko-image', {
     body: { imageUrl, geckoImageId: row.id },
   });

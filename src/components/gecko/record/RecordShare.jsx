@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/components/ui/use-toast';
 import { passportUrl } from '@/lib/passportUtils';
+import { passportPublicNote } from '@/lib/makePassport';
 
 const ITEM = 'cursor-pointer items-start gap-3 rounded-md px-3 py-2.5 focus:bg-slate-800 focus:text-white';
 
@@ -84,7 +85,7 @@ export default function RecordShare({ gecko, access, backTo, onCreatePassport, o
             <Row
               icon={QrCode}
               title="Make a passport"
-              hint={`A public page and QR card with its lineage and weigh-ins. This makes ${name}'s record public so the link works.`}
+              hint={passportPublicNote(name)}
             />
           </DropdownMenuItem>
         ) : null}

@@ -18,6 +18,11 @@ import {
 } from '../../../supabase/functions/_shared/visual-embedding.ts';
 import { WARM_GAP_MS, resetMorphIdWarmup, warmMorphId } from '../morphIdWarmup.js';
 
+// The in-app consent dialog (src/lib/aiConsentDialog.jsx). The warm-up
+// sends no member data, so it must not ask with it or with the browser.
+const consentDialog = vi.hoisted(() => ({ ask: vi.fn(async () => true) }));
+vi.mock('@/lib/aiConsentDialog', () => ({ askAiConsent: consentDialog.ask }));
+
 const MEMBER_PHOTO = 'https://mmuglfphhwlaluyfyxsp.supabase.co/storage/v1/object/public/uploads/member-top.webp';
 const OPTIONS = { token: 'r8_test', model: DEFAULT_VISUAL_EMBEDDING_MODEL, imageUrl: DEFAULT_WARM_IMAGE_URL };
 
@@ -95,6 +100,7 @@ describe('warmMorphId (page side)', () => {
     invoke = vi.fn(async () => ({ data: { warmed: true }, error: null }));
     client = { functions: { invoke } };
     confirm = vi.fn(() => true);
+    consentDialog.ask.mockClear();
     vi.stubGlobal('window', { confirm });
   });
 
@@ -123,6 +129,7 @@ describe('warmMorphId (page side)', () => {
   it('never asks for AI consent, because no member data is sent', () => {
     warmMorphId({ client });
     expect(confirm).not.toHaveBeenCalled();
+    expect(consentDialog.ask).not.toHaveBeenCalled();
   });
 
   it('ignores a rejected or throwing call', async () => {

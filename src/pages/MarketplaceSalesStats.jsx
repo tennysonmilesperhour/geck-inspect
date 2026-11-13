@@ -96,7 +96,48 @@ function parseQuarterKey(key) {
   return { year: parseInt(year), quarter: parseInt(q) };
 }
 
-function CostRow({ cost, onDelete, onUpdate, linkOptions }) {
+/**
+ * Delete a cost at once, with Undo (experience review, finding F4). The
+ * row leaves the screen first and a failed delete puts it back. Undo
+ * saves the same record again, in its old place. Exported for its test.
+ */
+export async function deleteCostWithUndo(id, costs, setCosts) {
+  const index = costs.findIndex(c => c.id === id);
+  const held = costs[index];
+  const putBack = (cost) => setCosts(prev => {
+    if (prev.some(c => c.id === cost.id)) return prev;
+    const next = [...prev];
+    next.splice(Math.min(Math.max(index, 0), next.length), 0, cost);
+    return next;
+  });
+  setCosts(prev => prev.filter(c => c.id !== id));
+  try {
+    // The delete hands back the row it removed, so Undo can save the
+    // same record again under the same id.
+    const removed = (await MarketplaceCost.delete(id)) || held;
+    if (!removed) {
+      toast({ title: 'Cost deleted' });
+      return;
+    }
+    undoToast({
+      title: 'Cost deleted',
+      description: `${removed.description || 'Cost'}, ${formatMoney(removed.amount)}`,
+      undo: async () => {
+        const restored = await MarketplaceCost.create(removed);
+        putBack(restored || removed);
+      },
+      undone: 'Cost restored',
+    });
+  } catch (error) {
+    if (held) putBack(held);
+    // A guest already gets the "create an account" notice from the app.
+    if (!error?.isGuestBlock) {
+      toast({ title: 'Error', description: 'Could not delete the cost. Please try again.', variant: 'destructive' });
+    }
+  }
+}
+
+export function CostRow({ cost, onDelete, onUpdate, linkOptions }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     description: cost.description,
@@ -146,7 +187,7 @@ function CostRow({ cost, onDelete, onUpdate, linkOptions }) {
           </div>
         </div>
         <div className="flex gap-2 justify-end">
-          <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="touch:min-w-11 h-7 text-slate-400"><X className="w-3 h-3" /></Button>
+          <Button size="sm" variant="ghost" onClick={() => setEditing(false)} aria-label="Cancel editing cost" className="touch:min-w-11 h-7 text-slate-400"><X className="w-3 h-3" /></Button>
           <Button size="sm" onClick={handleSave} className="h-9 md:h-7 bg-slate-600 hover:bg-slate-500 text-white"><Check className="w-3 h-3 mr-1" />Save</Button>
         </div>
       </div>
@@ -164,8 +205,8 @@ function CostRow({ cost, onDelete, onUpdate, linkOptions }) {
         </div>
       </div>
       <p className="text-orange-400 font-semibold text-sm flex-shrink-0">{formatMoney(cost.amount)}</p>
-      <Button size="icon" variant="ghost" onClick={() => setEditing(true)} className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-slate-700 flex-shrink-0"><Edit2 className="w-3 h-3" /></Button>
-      <Button size="icon" variant="ghost" onClick={() => onDelete(cost.id)} className="h-7 w-7 text-red-500 hover:bg-red-900/20 flex-shrink-0"><Trash2 className="w-3 h-3" /></Button>
+      <Button size="icon" variant="ghost" onClick={() => setEditing(true)} aria-label={`Edit cost: ${cost.description || 'no description'}`} className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-slate-700 flex-shrink-0"><Edit2 className="w-3 h-3" /></Button>
+      <Button size="icon" variant="ghost" onClick={() => onDelete(cost.id)} aria-label={`Delete cost: ${cost.description || 'no description'}`} className="h-7 w-7 text-red-500 hover:bg-red-900/20 flex-shrink-0"><Trash2 className="w-3 h-3" /></Button>
     </div>
   );
 }
@@ -280,7 +321,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
       <div className="bg-slate-800/80 border border-amber-700/40 rounded-xl p-5 space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-bold text-slate-100">Edit Reserve, {form.gecko_name}</h3>
-          <button onClick={() => { setForm(sale); setEditing(false); }} className="relative touch-hit text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
+          <button onClick={() => { setForm(sale); setEditing(false); }} aria-label="Cancel editing reserve" className="relative touch-hit text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -355,7 +396,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
                 <Input type="date" value={p.due_date || ''} onChange={e => updatePayment(idx, 'due_date', e.target.value)}
                   className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs" />
               </div>
-              <Button size="icon" variant="ghost" onClick={() => removePayment(idx)} className="h-8 w-8 text-red-400 hover:bg-red-900/20">
+              <Button size="icon" variant="ghost" onClick={() => removePayment(idx)} aria-label={`Remove payment ${idx + 1}`} className="h-8 w-8 text-red-400 hover:bg-red-900/20">
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>
@@ -441,6 +482,8 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
                 <button
                   onClick={() => togglePayment(idx)}
                   disabled={savingPayment === idx}
+                  aria-label={p.paid ? `Mark payment ${idx + 1} as not paid` : `Mark payment ${idx + 1} as paid`}
+                  aria-pressed={Boolean(p.paid)}
                   className={`relative touch-hit w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
                     p.paid
                       ? 'bg-emerald-600 border-emerald-500 text-white'
@@ -690,7 +733,7 @@ export function PendingSalesTab({ user, pendingSales, setPendingSales, onComplet
         <div className="bg-slate-800/50 border border-amber-700/40 rounded-xl p-5 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-bold text-slate-100">Create Reserve / Pending Sale</h3>
-            <button onClick={resetForm} className="relative touch-hit text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
+            <button onClick={resetForm} aria-label="Close the new reserve form" className="relative touch-hit text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -791,7 +834,7 @@ export function PendingSalesTab({ user, pendingSales, setPendingSales, onComplet
                     className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                   <Input type="date" value={p.due_date || ''} onChange={e => updateNewPayment(idx, 'due_date', e.target.value)}
                     className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs" />
-                  <Button size="icon" variant="ghost" onClick={() => removeNewPayment(idx)} className="h-8 w-8 text-red-400 hover:bg-red-900/20">
+                  <Button size="icon" variant="ghost" onClick={() => removeNewPayment(idx)} aria-label={`Remove payment ${idx + 1}`} className="h-8 w-8 text-red-400 hover:bg-red-900/20">
                     <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
@@ -1215,10 +1258,7 @@ export default function MarketplaceSalesStats() {
     }
   };
 
-  const handleDeleteCost = async (id) => {
-    await MarketplaceCost.delete(id);
-    setCosts(prev => prev.filter(c => c.id !== id));
-  };
+  const handleDeleteCost = (id) => deleteCostWithUndo(id, costs, setCosts);
 
   const handleUpdateCost = async (id, data) => {
     await MarketplaceCost.update(id, data);
@@ -1550,7 +1590,7 @@ export default function MarketplaceSalesStats() {
                   <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 space-y-3">
                     <div className="flex justify-between items-center">
                       <h3 className="text-sm font-semibold text-slate-200">Add Gecko Sale</h3>
-                      <button onClick={() => setSaleMode(null)} className="relative touch-hit text-slate-400 hover:text-slate-200">
+                      <button onClick={() => setSaleMode(null)} aria-label="Close the add sale form" className="relative touch-hit text-slate-400 hover:text-slate-200">
                         <X className="w-4 h-4" />
                       </button>
                     </div>

@@ -166,11 +166,20 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     await archive.getByLabel('Sold for ($)').fill('300');
     await archive.getByRole('button', { name: 'Archive as sold' }).click();
 
-    // The skippable step. The link emailed to the buyer a moment ago is
-    // still open, so the step says plainly that a new one replaces it and
-    // offers to keep it. It says nothing about a passport or going public.
-    const step = page.getByRole('dialog', { name: 'Send Mango to the buyer' });
-    await expect(step).toBeVisible();
+    // The sold sheet carries on from the sale just saved (its step 1) with
+    // its second and last step, the hand-over, which can be skipped. The
+    // link emailed to the buyer a moment ago is still open, so the step
+    // says plainly that a new one replaces it and offers to keep it. The
+    // sheet says nothing about a passport or going public: a public gecko
+    // shows its sold price to other members.
+    const sheet = page.getByRole('dialog', { name: 'Sell and hand over Mango' });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.locator('[data-sell-step-state]')).toHaveCount(2);
+    await expect(sheet.locator('[data-sell-step-state="done"]')).toHaveCount(1);
+    await expect(sheet.locator('[data-sell-step="passport"]')).toHaveCount(0);
+    await expect(sheet.getByText(/passport|public/i)).toHaveCount(0);
+    const step = sheet.locator('[data-sell-step="handover"]');
+    await expect(step.getByRole('heading', { name: 'Send Mango to the buyer' })).toBeVisible();
     await expect(step.getByText(new RegExp(`You already emailed ${BUYER} a transfer link for Mango on [A-Z][a-z]+ \\d{1,2}\\.`))).toBeVisible();
     await expect(step.getByText('A new link replaces it, and the one you sent stops working.', { exact: false })).toBeVisible();
     await expect(step.getByRole('button', { name: 'Keep the link I sent' })).toBeVisible();
@@ -180,9 +189,11 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     expect(fake.table('transfer_requests').map((t) => t.status)).toEqual(['pending']);
     await step.getByRole('button', { name: 'Send a new link' }).click();
 
-    // The usual transfer form, with the sale price carried over and the
-    // warning repeated next to the button that replaces the link.
-    const transfer = page.getByRole('dialog', { name: 'Transfer Mango' });
+    // The usual transfer form, in the same sheet, with the sale price
+    // carried over and the warning repeated next to the button that
+    // replaces the link.
+    const transfer = step;
+    await expect(transfer.getByRole('heading', { name: 'Transfer Mango' })).toBeVisible();
     await expect(transfer.getByLabel('Sale price (optional)')).toHaveValue('300');
     await expect(transfer.getByText('This replaces the link you sent on', { exact: false })).toBeVisible();
     await transfer.getByRole('button', { name: 'Create QR link' }).click();
@@ -197,7 +208,7 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     expect(fake.table('transfer_requests').map((t) => t.status)).toEqual(['cancelled', 'pending']);
 
     // The funnel events, with no email, name or code in them, and no
-    // passport_created: the step never makes one.
+    // passport_created: the sheet never makes one.
     const funnel = ['sold_transfer_step', 'passport_created', 'transfer_started'];
     // Events are written after the page is idle, so wait for the last one.
     await expect.poll(() => fake.table('user_events')
@@ -227,9 +238,9 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
   await test.step('with no signal the signed-in member sees the offline badge', async () => {
     // The badge loads after sign-in, not with the startup script
     // (src/components/shared/MemberOfflineSync.jsx).
-    // Close the transfer window first; while it is open the rest of the
+    // Close the sold sheet first; while it is open the rest of the
     // page is hidden from screen readers, the badge included.
-    await page.getByRole('dialog', { name: 'Transfer started' }).getByRole('button', { name: 'Done' }).click();
+    await page.getByRole('dialog', { name: 'Sell and hand over Mango' }).getByRole('button', { name: 'Done' }).click();
     const badge = page.getByRole('status').filter({ hasText: /^Offline$/ });
     await context.setOffline(true);
     await expect(badge).toBeVisible();

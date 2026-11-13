@@ -1,11 +1,15 @@
 // Ask before each AI request; declining never reaches a provider or consumes a credit.
 //
-// Two ways to ask, with the same promise (Privacy Policy, Third-Party
+// Three ways to ask, with the same promise (Privacy Policy, Third-Party
 // Services): name what is sent and to whom, send nothing without a yes,
 // and never keep the yes as a lasting preference.
 //
-// - requireAiConsent(feature) asks with the browser's confirm box. Most
-//   AI features use it.
+// - requireAiConsentInApp(feature) asks in the app's own dialog
+//   (src/lib/aiConsentDialog.jsx, loaded only when it is needed). The
+//   health screen, visual search, the text request and AI Image Import
+//   use it. If the dialog cannot be loaded, the confirm box asks.
+// - requireAiConsent(feature) asks with the browser's confirm box. Only
+//   the retired Promote feature still asks this way.
 // - Morph ID asks on the page instead (src/components/morph-id/
 //   AiConsentPanel.jsx), because the iPhone app's web view does not
 //   reliably show a confirm box. The member's yes there becomes a grant
@@ -29,6 +33,11 @@ function declined() {
   error.code = 'ai_consent_declined';
   error.user_message = error.message;
   return error;
+}
+
+function confirmInBrowser(disclosure) {
+  return typeof window !== 'undefined' && typeof window.confirm === 'function'
+    && window.confirm(`${disclosure}\n\nOnly continue with photos and information you have permission to share. See Privacy Policy > Third-Party Services for details. Cancel keeps this request from being sent to AI providers.`);
 }
 
 /** The member said yes on the page: a grant for this feature and this one request. */
@@ -59,7 +68,32 @@ export function requireAiConsent(feature, options) {
     if (hasAiConsent(options.grant, feature, options.scope)) return;
     throw declined();
   }
-  const approved = typeof window !== 'undefined' && typeof window.confirm === 'function'
-    && window.confirm(`${disclosure}\n\nOnly continue with photos and information you have permission to share. See Privacy Policy > Third-Party Services for details. Cancel keeps this request from being sent to AI providers.`);
+  if (!confirmInBrowser(disclosure)) throw declined();
+}
+
+/**
+ * The same rules as requireAiConsent, asked in the app's own dialog:
+ * an unknown feature throws, a grant in options must match or it fails
+ * closed without asking, a no throws ai_consent_declined, and a yes is
+ * never kept. Resolves only when the member said yes.
+ *
+ * The dialog is loaded here, on demand. If it cannot be loaded or shown
+ * (offline with the file not cached, say), the browser's confirm box
+ * asks instead, so the answer is still the member's own.
+ */
+export async function requireAiConsentInApp(feature, options) {
+  const disclosure = DISCLOSURES[feature];
+  if (!disclosure) throw new Error('Unknown AI data-sharing request.');
+  if (options && Object.prototype.hasOwnProperty.call(options, 'grant')) {
+    if (hasAiConsent(options.grant, feature, options.scope)) return;
+    throw declined();
+  }
+  let approved;
+  try {
+    const { askAiConsent } = await import('@/lib/aiConsentDialog');
+    approved = (await askAiConsent(disclosure)) === true;
+  } catch {
+    approved = confirmInBrowser(disclosure);
+  }
   if (!approved) throw declined();
 }

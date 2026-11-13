@@ -8,7 +8,11 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { installDomHarness } from '@/lib/__tests__/domHarness';
 
-const fx = vi.hoisted(() => ({ invoke: null, rpc: null }));
+const fx = vi.hoisted(() => ({ invoke: null, rpc: null, ask: null }));
+
+// The in-app consent dialog that took the confirm box's place for visual
+// search (13 Nov 2026). This strip must not ask with either.
+vi.mock('@/lib/aiConsentDialog', () => ({ askAiConsent: (...args) => fx.ask(...args) }));
 
 vi.mock('@/lib/supabaseClient', () => ({
   supabase: {
@@ -30,6 +34,7 @@ installDomHarness();
 beforeEach(() => {
   fx.invoke = vi.fn(async () => ({ data: { embedding: [0.1, 0.2] }, error: null }));
   fx.rpc = vi.fn(async () => ({ data: [], error: null }));
+  fx.ask = vi.fn(async () => true);
   window.confirm = vi.fn(() => true);
 });
 
@@ -52,6 +57,7 @@ describe('SimilarGeckosStrip', () => {
     await Promise.resolve();
     expect(container.textContent).toBe('');
     expect(window.confirm).not.toHaveBeenCalled();
+    expect(fx.ask).not.toHaveBeenCalled();
     expect(fx.invoke).not.toHaveBeenCalled();
     expect(fx.rpc).not.toHaveBeenCalled();
   });

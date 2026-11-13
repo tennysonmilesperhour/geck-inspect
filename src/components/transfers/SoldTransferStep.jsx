@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRightLeft, Check, Copy } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { captureEvent } from '@/lib/posthog';
 import { claimUrlFor, copyText, findPendingTransfer, transferPriceDefault } from '@/lib/transfers';
 import TransferDialog from './TransferDialog';
+import StepFrame, { frameParts } from './StepFrame';
 
 const money = (value) => `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
@@ -37,11 +37,17 @@ const dayOf = (iso) => {
  * plainly that a new link replaces the one sent on that day, and lets the
  * seller keep it (and see it again) instead.
  *
+ * Since 13 November 2026 it is the last step of the sold sheet
+ * (SellHandoverSheet), which shows it inline. That sheet makes no
+ * passport either (its OFFER_PASSPORT_AT_SALE says why).
+ *
  * Props:
  *   gecko    the gecko as just saved (archived, status Sold, sold_price)
  *   onClose  the step is finished: skipped, kept, cancelled or sent
+ *   inline   a plain block inside the sold sheet, not a dialog of its own
  */
-export default function SoldTransferStep({ gecko, onClose }) {
+export default function SoldTransferStep({ gecko, onClose, inline = false }) {
+  const { Header: DialogHeader, Title: DialogTitle, Description: DialogDescription, Footer: DialogFooter } = frameParts(inline);
   // checking (nothing shown yet), offer, existing (the link already sent)
   // or transfer (the transfer form).
   const [stage, setStage] = useState('checking');
@@ -107,6 +113,7 @@ export default function SoldTransferStep({ gecko, onClose }) {
         animal={gecko}
         animalType="gecko"
         surface="sold_step"
+        inline={inline}
         notice={pending
           ? `This replaces the link you sent${sentOn ? ` on ${sentOn}` : ''}. That link stops working.`
           : null}
@@ -117,8 +124,7 @@ export default function SoldTransferStep({ gecko, onClose }) {
   if (stage === 'existing' && pending) {
     const claimUrl = claimUrlFor(pending.token);
     return (
-      <Dialog open onOpenChange={(open) => { if (!open) onClose?.(); }}>
-        <DialogContent className="bg-slate-900 border-slate-700 max-w-sm">
+      <StepFrame inline={inline} onOpenChange={(open) => { if (!open) onClose?.(); }} className="bg-slate-900 border-slate-700 max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-slate-100">The link you sent for {name}</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -149,14 +155,12 @@ export default function SoldTransferStep({ gecko, onClose }) {
           <DialogFooter>
             <Button type="button" onClick={() => onClose?.()}>Done</Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </StepFrame>
     );
   }
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) skip(); }}>
-      <DialogContent className="bg-slate-900 border-slate-700 max-w-sm">
+    <StepFrame inline={inline} onOpenChange={(open) => { if (!open) skip(); }} className="bg-slate-900 border-slate-700 max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-slate-100 flex items-center gap-2">
             <ArrowRightLeft className="w-5 h-5 text-emerald-400" aria-hidden="true" />
@@ -207,7 +211,6 @@ export default function SoldTransferStep({ gecko, onClose }) {
             </>
           )}
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </StepFrame>
   );
 }

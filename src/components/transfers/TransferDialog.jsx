@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { ArrowRightLeft, Check, Copy, Loader2, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { TRANSFER_TTL_HOURS, copyText, isValidEmail, parseSalePrice, startTransfer, transferPriceDefault } from '@/lib/transfers';
+import StepFrame, { frameParts } from './StepFrame';
 
 /**
  * Seller's transfer form. Replaces the three browser pop-ups the gecko and
@@ -24,8 +24,11 @@ import { TRANSFER_TTL_HOURS, copyText, isValidEmail, parseSalePrice, startTransf
  *            default; 'request' when initialEmail came from a buyer)
  *   notice   a line shown above the buttons (what sending will change,
  *            such as replacing a link already sent)
+ *   inline   show the form as a plain block inside the sold sheet
+ *            (SellHandoverSheet) instead of a dialog of its own
  */
-export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', initialEmail = '', onTransferred, surface, notice = null }) {
+export default function TransferDialog({ open, onOpenChange, animal, animalType = 'gecko', initialEmail = '', onTransferred, surface, notice = null, inline = false }) {
+  const { Header: DialogHeader, Title: DialogTitle, Description: DialogDescription, Footer: DialogFooter } = frameParts(inline);
   const [mode, setMode] = useState('link');
   const [email, setEmail] = useState('');
   const [price, setPrice] = useState('');
@@ -81,8 +84,7 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
   };
 
   return (
-    <Dialog open={open} onOpenChange={submitting ? undefined : onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90dvh] overflow-y-auto">
+    <StepFrame inline={inline} open={open} onOpenChange={submitting ? undefined : onOpenChange} className="max-w-md max-h-[90dvh] overflow-y-auto">
         {!result ? (
           <form onSubmit={handleSubmit} noValidate>
             <DialogHeader>
@@ -152,7 +154,6 @@ export default function TransferDialog({ open, onOpenChange, animal, animalType 
             <DialogFooter><Button type="button" onClick={() => onOpenChange(false)}>Done</Button></DialogFooter>
           </>
         )}
-      </DialogContent>
-    </Dialog>
+    </StepFrame>
   );
 }

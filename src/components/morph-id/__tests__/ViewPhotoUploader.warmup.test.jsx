@@ -12,7 +12,11 @@ import { installDomHarness } from '@/lib/__tests__/domHarness';
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(async () => ({ data: { warmed: true }, error: null })),
   upload: vi.fn(async () => ({ file_url: 'https://mmuglfphhwlaluyfyxsp.supabase.co/storage/v1/object/public/uploads/top.webp' })),
+  ask: vi.fn(async () => true),
 }));
+
+// The in-app consent dialog; the warm-up must not ask with it either.
+vi.mock('@/lib/aiConsentDialog', () => ({ askAiConsent: mocks.ask }));
 
 vi.mock('@/lib/supabaseClient', () => ({ supabase: { functions: { invoke: mocks.invoke } } }));
 vi.mock('@/integrations/Core', () => ({ UploadFile: mocks.upload }));
@@ -32,6 +36,7 @@ describe('ViewPhotoUploader warm-up', () => {
     resetMorphIdWarmup();
     mocks.invoke.mockClear();
     mocks.upload.mockClear();
+    mocks.ask.mockClear();
     confirm = vi.spyOn(window, 'confirm').mockImplementation(() => true);
     URL.createObjectURL = vi.fn(() => 'blob:https://geckinspect.com/preview-1');
     URL.revokeObjectURL = vi.fn();
@@ -61,6 +66,7 @@ describe('ViewPhotoUploader warm-up', () => {
     expect(sent).not.toContain('storage/v1');
     expect(sent).not.toContain('top.jpg');
     expect(confirm).not.toHaveBeenCalled();
+    expect(mocks.ask).not.toHaveBeenCalled();
   });
 
   it('does not warm for the side view or the extra photos', async () => {

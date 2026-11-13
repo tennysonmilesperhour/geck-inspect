@@ -3,13 +3,22 @@ import { captureEvent } from '@/lib/posthog';
 import { generatePassportCode } from '@/lib/passportUtils';
 
 /**
+ * What a passport is and what making one changes, in the words every
+ * place that offers one uses (today the record's Share menu).
+ */
+export const passportPublicNote = (name) =>
+  `A public page and QR card with its lineage and weigh-ins. This makes ${name}'s record public so the link works.`;
+
+/**
  * Give a gecko a passport: a code for its public page and QR card.
  *
  * A passport link only works while the gecko is public, so this also
  * turns Public display on, and the record's toast says so. Only the
- * member's own "Make a passport" on the gecko record calls this. The step
- * after "Archive as sold" never does: it sends the transfer only, so a
- * sale never makes a gecko public.
+ * member's own "Make a passport" on the gecko record calls this. Marking
+ * a gecko sold and sending a transfer never do, so a sale never makes a
+ * gecko public: other members can read a public gecko's sold price. The
+ * sold sheet has a passport step written but switched off for that
+ * reason (OFFER_PASSPORT_AT_SALE in SellHandoverSheet.jsx).
  *
  * surface says where it was made, for the passport and transfer funnel
  * ('record', Make a passport on the gecko record).
