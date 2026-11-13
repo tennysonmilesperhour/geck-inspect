@@ -1,7 +1,5 @@
 import GeckoImage from '@/components/shared/GeckoImage';
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
-import Seo from '@/components/seo/Seo';
-import { api } from '@/api/appClient';
+import { useState, useEffect, useMemo } from 'react';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { basicHatchlingValue } from '@/lib/traitValuation';
 import { predictGeckoPair, eggValue } from '@/lib/pairingValue';
@@ -19,7 +17,7 @@ import {
   outcomeTraits,
   TRAITS,
 } from '@/lib/genetics';
-import { createPageUrl } from '@/utils';
+import BreedingTabRedirect from '@/components/breeding/BreedingTabRedirect';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -31,10 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
-import PageHeader from '../components/shared/PageHeader';
-import { Link } from 'react-router-dom';
 import {
   Target,
   DollarSign,
@@ -43,12 +38,10 @@ import {
   Ban,
   ArrowRight,
   Heart,
-  Sparkles,
   ChevronDown,
   CalendarRange,
+  Check,
 } from 'lucide-react';
-
-const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
 // How many sire x dam pairs we are willing to evaluate eagerly. Beyond
 // this we switch to "per selected sire" mode so the browser never has to
@@ -108,11 +101,29 @@ function isBlocked(warnings) {
   return warnings.some((w) => w.severity === 'critical');
 }
 
-export default function PairingPlannerPage() {
-  const [user, setUser] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [geckos, setGeckos] = useState([]);
+/**
+ * /PairingPlanner was a page of its own until November 2026. It is now
+ * the "Pairing ideas" tab of the Breeding page (experience review, finding
+ * H5), so the old address only forwards there. The planner itself is
+ * PairingIdeas below, which the Breeding page loads when the tab opens.
+ */
+export default function PairingPlannerRedirect() {
+  return <BreedingTabRedirect tab="pairing-ideas" />;
+}
+
+/**
+ * The "Pairing ideas" tab of Breeding: pick a goal and every sire and dam
+ * pairing in the collection is ranked for it.
+ *
+ * The Breeding page hands in what it has already loaded, so the tab opens
+ * without a second round of requests and always agrees with the Plans tab:
+ *   user           the member, for the Enterprise sell-time model gate
+ *   geckos         their live geckos (not archived, no manual-sale records)
+ *   plans          their breeding plans, to mark pairings that have one
+ *   onPlanPairing  (sire, dam): open the new-plan form with both chosen
+ *   onViewPlan     (plan): show an existing plan on the Plans tab
+ */
+export function PairingIdeas({ user = null, geckos = [], plans = [], onPlanPairing, onViewPlan }) {
   const [priceIndex, setPriceIndex] = useState(null); // listing price table, see traitValuation.js
   const [priceLoaded, setPriceLoaded] = useState(false);
 
@@ -120,31 +131,6 @@ export default function PairingPlannerPage() {
   const [targetMorph, setTargetMorph] = useState('');
   const [showRisky, setShowRisky] = useState(false);
   const [selectedSireId, setSelectedSireId] = useState('all');
-
-  useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-      try {
-        const currentUser = await api.auth.me();
-        setUser(currentUser);
-        setAuthChecked(true);
-        if (!currentUser) {
-          setIsLoading(false);
-          return;
-        }
-        const { getVisibleGeckos } = await import('@/lib/geckoAccess');
-        const data = await getVisibleGeckos(currentUser);
-        const live = (data || []).filter(
-          (g) => !g.archived && !g.notes?.startsWith('[Manual sale]')
-        );
-        setGeckos(live);
-      } catch (error) {
-        console.error('Failed to load pairing planner data:', error);
-        setAuthChecked(true);
-      }
-      setIsLoading(false);
-    })();
-  }, []);
 
   // Asking-price bands per trait from the scraped MorphMarket listings, the
   // same table the Portfolio and gecko value estimates use.
@@ -323,43 +309,21 @@ export default function PairingPlannerPage() {
     [results]
   );
 
-  if (authChecked && !user) {
-    return (
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-            <LoadingSpinner />
-          </div>
-        }
-      >
-        <LoginPortal requiredFeature="Pairing Planner" />
-      </Suspense>
-    );
-  }
+  // Pairings that already have a plan on the Plans tab, so a card can say
+  // so in place of offering to plan the same pair twice.
+  const planByPair = useMemo(() => {
+    const map = new Map();
+    for (const plan of plans) {
+      if (!plan.archived) map.set(`${plan.sire_id}|${plan.dam_id}`, plan);
+    }
+    return map;
+  }, [plans]);
 
   const hasEnoughStock = males.length >= 1 && females.length >= 1;
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-      <Seo
-        title="Pairing Planner for Crested Geckos"
-        description="Pick a goal and let the Pairing Planner rank every sire and dam in your crested gecko collection by predicted morph, value, or safety."
-        path="/PairingPlanner"
-        noIndex
-        keywords={['crested gecko pairing', 'breeding planner', 'inverse genetics', 'morph calculator']}
-      />
-      <div className="max-w-7xl mx-auto">
-        <PageHeader
-          icon={Sparkles}
-          title="Pairing Planner"
-          description="Tell us what you are breeding toward. We rank every possible pairing in your collection so you can plan the next clutch with confidence."
-        />
-
-        {isLoading ? (
-          <div className="text-center py-20">
-            <LoadingSpinner />
-          </div>
-        ) : !hasEnoughStock ? (
+    <div>
+        {!hasEnoughStock ? (
           <EmptyState
             icon={Heart}
             title="Not enough geckos to plan a pairing"
@@ -367,6 +331,9 @@ export default function PairingPlannerPage() {
           />
         ) : (
           <>
+            <p className="text-sm text-slate-400 mb-4 max-w-3xl">
+              Tell us what you are breeding toward. Every possible pairing in your collection is ranked for it.
+            </p>
             {/* Goal + controls */}
             <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 mb-6 space-y-5">
               <div>
@@ -499,13 +466,24 @@ export default function PairingPlannerPage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {visibleRows.map((row, i) => (
-                  <PairingCard key={`${row.sire.id}-${row.dam.id}`} row={row} rank={i + 1} goal={goal} usingStaticWeights={usingStaticWeights} readiness={damReadiness(row.dam)} priceIndex={priceIndex} sellModel={sellModel} />
+                  <PairingCard
+                    key={`${row.sire.id}-${row.dam.id}`}
+                    row={row}
+                    rank={i + 1}
+                    goal={goal}
+                    usingStaticWeights={usingStaticWeights}
+                    readiness={damReadiness(row.dam)}
+                    priceIndex={priceIndex}
+                    sellModel={sellModel}
+                    existingPlan={planByPair.get(`${row.sire.id}|${row.dam.id}`) || null}
+                    onPlanPairing={onPlanPairing}
+                    onViewPlan={onViewPlan}
+                  />
                 ))}
               </div>
             )}
           </>
         )}
-      </div>
     </div>
   );
 }
@@ -514,7 +492,7 @@ function Thumb({ gecko, ring }) {
   return <GeckoImage src={gecko.image_urls?.[0]} alt={gecko.name} width={96} className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-lg object-cover border ${ring}`} />;
 }
 
-function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceIndex, sellModel }) {
+function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceIndex, sellModel, existingPlan, onPlanPairing, onViewPlan }) {
   const [showSeason, setShowSeason] = useState(false);
   const damNotReady = readiness && (readiness.level === 'not_yet' || readiness.level === 'nearly');
   const { sire, dam, top, warnings, blocked, score, morphLabel, unusedTags = [] } = row;
@@ -640,17 +618,35 @@ function PairingCard({ row, rank, goal, usingStaticWeights, readiness, priceInde
             <ShieldCheck className="w-4 h-4 text-emerald-400" /> No risk flags
           </span>
         )}
-        <Button
-          asChild
-          size="sm"
-          variant="outline"
-          className="border-slate-600 hover:bg-slate-800"
-        >
-          {/* Link, not <a>: a plain href reloaded the whole app. */}
-          <Link to={createPageUrl('Breeding')}>
+        {existingPlan ? (
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+              <Check className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" /> In your plans
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="border-slate-600 hover:bg-slate-800"
+              onClick={() => onViewPlan?.(existingPlan)}
+            >
+              View plan
+            </Button>
+          </span>
+        ) : (
+          // Opens the new-plan form with this sire and dam already chosen.
+          // It used to link to the Breeding page, where both had to be
+          // picked a second time.
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="border-slate-600 hover:bg-slate-800"
+            onClick={() => onPlanPairing?.(sire, dam)}
+          >
             Plan this pairing <ArrowRight className="w-3.5 h-3.5 ml-1" />
-          </Link>
-        </Button>
+          </Button>
+        )}
       </div>
     </div>
   );

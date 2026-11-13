@@ -1,8 +1,10 @@
 import GeckoImage from '@/components/shared/GeckoImage';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Egg, BreedingPlan, User } from '@/entities/all';
 import { useToast, toast as notify } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
+import { undoToast } from '@/lib/undoToast';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader } from '@/components/ui/card';
 import {
@@ -58,10 +60,21 @@ import { DEFAULT_INCUBATION_PROFILE_ID, getEstimatedHatchDates } from '@/lib/inc
  * renders <PlanDetails/> inline. Extracted from src/pages/Breeding.jsx as
  * part of the hairball cleanup. Body unchanged; only the imports are new.
  */
-export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, onPlanArchive, isExpanded, onToggleExpanded, showArchiveButton = true }) {
+export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, onPlanArchive, isExpanded, onToggleExpanded, showArchiveButton = true, reveal = false, onRevealed }) {
     const getGecko = (id) => geckos.find(g => g.id === id);
     const sire = getGecko(plan.sire_id);
     const dam = getGecko(plan.dam_id);
+
+    // `reveal`: this card was opened from another tab (a pair on the Season
+    // timeline, "View plan" on a pairing idea), so scroll to it once it is
+    // on screen. The card does it because only the card knows when it has
+    // drawn; the page clears the request through onRevealed.
+    const cardRef = useRef(null);
+    useEffect(() => {
+        if (!reveal) return;
+        cardRef.current?.scrollIntoView?.({ block: 'start' });
+        onRevealed?.();
+    }, [reveal, onRevealed]);
 
     const [isCopulationModalOpen, setIsCopulationModalOpen] = useState(false);
     const [copulationDate, setCopulationDate] = useState(todayLocalISO());
@@ -70,6 +83,9 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isGeneticsOpen, setIsGeneticsOpen] = useState(false);
     const [isAddEggsOpen, setIsAddEggsOpen] = useState(false);
+    // True while a quick add is saving, so a second tap cannot add a
+    // second clutch before the first one has answered.
+    const [isAddingEggs, setIsAddingEggs] = useState(false);
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
 
     // Derive egg data from hoisted prop, no individual fetches
@@ -100,46 +116,78 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
     };
 
     const handleQuickAddEggs = async (count) => {
-        const newLayDate = todayLocalISO();
-
-        // Load the user's incubation profile so the expected hatch date
-        // represents the middle of that temperature range's typical window.
-        const currentUser = await User.me();
-        const incubationProfileId = currentUser?.incubation_temperature_range || DEFAULT_INCUBATION_PROFILE_ID;
-        const expectedHatch = format(
-            getEstimatedHatchDates(newLayDate, incubationProfileId).estimated,
-            'yyyy-MM-dd',
-        );
-
+        if (isAddingEggs) return;
+        setIsAddingEggs(true);
+        const pairName = `${sire?.name || 'Sire'} x ${dam?.name || 'Dam'}`;
+        // The eggs this tap made, so Undo (or a failure part way through)
+        // removes exactly these and nothing else.
+        const created = [];
         try {
+            const newLayDate = todayLocalISO();
+
+            // Load the user's incubation profile so the expected hatch date
+            // represents the middle of that temperature range's typical window.
+            const currentUser = await User.me();
+            const incubationProfileId = currentUser?.incubation_temperature_range || DEFAULT_INCUBATION_PROFILE_ID;
+            const expectedHatch = format(
+                getEstimatedHatchDates(newLayDate, incubationProfileId).estimated,
+                'yyyy-MM-dd',
+            );
+
             for (let i = 0; i < count; i++) {
-                await Egg.create({
+                created.push(await Egg.create({
                     breeding_plan_id: plan.id,
                     lay_date: newLayDate,
                     hatch_date_expected: expectedHatch,
                     status: 'Incubating'
-                });
+                }));
             }
 
             // Update egg check count
-            const newCount = (plan.egg_check_count || 0) + 1;
-            await BreedingPlan.update(plan.id, { egg_check_count: newCount });
+            const countBefore = plan.egg_check_count || 0;
+            await BreedingPlan.update(plan.id, { egg_check_count: countBefore + 1 });
 
-            // These buttons used to save with no word, and a failure was
-            // written only to the developer console.
-            notify({
-                title: count === 1 ? '1 egg added' : `${count} eggs added`,
+            // A one-tap save is easy to hit by mistake while holding a
+            // gecko, so it can be taken back for a few seconds.
+            undoToast({
+                title: `${count === 1 ? '1 egg' : `${count} eggs`} added to ${pairName}`,
                 description: `Laid today, expected to hatch around ${format(parseLocalDate(expectedHatch), 'MMM d')}. Open the plan to change the dates.`,
+                undone: count === 1 ? 'Egg removed' : `${count} eggs removed`,
+                undo: async () => {
+                    try {
+                        for (const egg of created) await Egg.delete(egg.id);
+                        // Read the count again: another clutch may have been
+                        // added to this plan since the tap.
+                        const latest = await BreedingPlan.get(plan.id).catch(() => null);
+                        const countNow = latest?.egg_check_count ?? countBefore + 1;
+                        await BreedingPlan.update(plan.id, { egg_check_count: Math.max(0, countNow - 1) });
+                    } finally {
+                        onPlanUpdate();
+                    }
+                },
             });
             onPlanUpdate();
         } catch (error) {
+            // A guest's save is refused with its own "view-only" notice.
+            if (error?.isGuestBlock) return;
             console.error("Failed to add eggs:", error);
+            // Take back a clutch that was only partly saved, so "Try again"
+            // cannot leave three eggs where two were laid.
+            const leftBehind = (await Promise.allSettled(created.map((egg) => Egg.delete(egg.id))))
+                .filter((result) => result.status === 'rejected').length;
             notify({
                 title: 'Eggs not added',
-                description: 'Nothing was saved, or only part of the clutch. Check the plan, then try again.',
+                description: leftBehind > 0
+                    ? 'Part of the clutch may have been saved. Check the plan before you try again.'
+                    : 'Nothing was saved. Check your connection, then try again.',
                 variant: 'destructive',
+                action: leftBehind > 0 ? undefined : (
+                    <ToastAction altText="Try again" onClick={() => handleQuickAddEggs(count)}>Try again</ToastAction>
+                ),
             });
             onPlanUpdate();
+        } finally {
+            setIsAddingEggs(false);
         }
     };
 
@@ -262,7 +310,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
 
     return (
         <>
-            <Card key={plan.id} className={`bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden transition-all ${shouldGlow ? 'ring-2 ring-white/30 shadow-[0_0_20px_4px_rgba(255,255,255,0.12)]' : ''}`}>
+            <Card key={plan.id} ref={cardRef} className={`scroll-mt-24 bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden transition-all ${shouldGlow ? 'ring-2 ring-white/30 shadow-[0_0_20px_4px_rgba(255,255,255,0.12)]' : ''}`}>
                 <CardHeader className="p-0 relative">
                     <div className="flex flex-col lg:flex-row min-w-0">
                         {/* Portraits: sire and dam side by side, large, with role labels */}
@@ -301,7 +349,8 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                         key={n}
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(n); }}
-                                        className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2 sm:px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                        disabled={isAddingEggs}
+                                        className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2 sm:px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
                                         aria-label={`Add ${n} egg${n > 1 ? 's' : ''}`}
                                     >
                                         <PlusCircle size={14} className="drop-shadow" /> {n} Egg{n > 1 ? 's' : ''}

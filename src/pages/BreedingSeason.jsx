@@ -1,15 +1,12 @@
 import GeckoImage from '@/components/shared/GeckoImage';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
-import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, Suspense } from 'react';
+import { useState, useLayoutEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import Seo from '@/components/seo/Seo';
-import { BreedingPlan, Egg } from '@/entities/all';
-import { api } from '@/api/appClient';
+import BreedingTabRedirect from '@/components/breeding/BreedingTabRedirect';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     Select,
     SelectContent,
@@ -17,9 +14,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
 import {
     CalendarRange,
+    CalendarDays,
     Heart,
     Egg as EggIcon,
     Sparkles,
@@ -27,10 +24,6 @@ import {
 } from 'lucide-react';
 import { format, addDays, getDayOfYear, getDaysInYear, differenceInCalendarDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import PageHeader from '@/components/shared/PageHeader';
-
-const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
 // Season model (v1, intentionally simple): a "season" is a calendar year.
 // Crested gecko breeding activity in most collections runs roughly
@@ -206,23 +199,7 @@ function CountStrip({ laid, hatched, incubating }) {
     );
 }
 
-function PairRowSkeleton() {
-    return (
-        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 py-3 border-b border-slate-800">
-            <div className="md:w-56 flex items-center gap-3 flex-shrink-0">
-                <Skeleton className="w-9 h-9 rounded-full bg-slate-800" />
-                <Skeleton className="w-9 h-9 rounded-full bg-slate-800 -ml-5" />
-                <div className="space-y-1.5 flex-1">
-                    <Skeleton className="h-3.5 w-28 bg-slate-800" />
-                    <Skeleton className="h-3 w-20 bg-slate-800" />
-                </div>
-            </div>
-            <Skeleton className="h-14 w-full md:w-auto md:flex-1 bg-slate-800" />
-        </div>
-    );
-}
-
-function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
+function PairRow({ plan, sire, dam, seasonEggs, year, today, onOpenPlan }) {
     const bars = useMemo(() => buildClutchBars(seasonEggs, year, today), [seasonEggs, year, today]);
     const locks = useMemo(() => lockTicks(plan, year), [plan, year]);
 
@@ -236,13 +213,14 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
 
     return (
         <div className="flex flex-col md:flex-row md:items-stretch gap-2 md:gap-4 py-3 border-b border-slate-800 last:border-b-0">
-            {/* Pair identity, links back to the Breeding page. On phones it
+            {/* Pair identity, opens the pair's plan card. On phones it
                 sits above its timeline and stays pinned to the left edge
                 while the timeline scrolls sideways. */}
-            <Link
-                to={createPageUrl('Breeding')}
-                className="touch:min-h-11 sticky left-0 self-start max-w-[calc(100vw-4.5rem)] md:static md:self-auto md:w-56 flex-shrink-0 flex items-start gap-3 group pt-1"
-                title="Open Breeding Management"
+            <button
+                type="button"
+                onClick={() => onOpenPlan?.(plan)}
+                className="touch:min-h-11 sticky left-0 self-start max-w-[calc(100vw-4.5rem)] md:static md:self-auto md:w-56 flex-shrink-0 flex items-start gap-3 group pt-1 text-left"
+                title="Open this pair's plan"
             >
                 <div className="flex flex-shrink-0">
                     <GeckoImage
@@ -266,7 +244,7 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
                     </div>
                     <CountStrip laid={laid} hatched={hatched} incubating={incubating} />
                 </div>
-            </Link>
+            </button>
 
             {/* Year timeline: month bands, lock rail, one labelled bar per clutch */}
             <div className="md:flex-1 relative rounded-md overflow-hidden bg-slate-900/60" style={{ height }}>
@@ -342,50 +320,29 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
     );
 }
 
-export default function BreedingSeasonPage() {
-    const { toast } = useToast();
-    const [user, setUser] = useState(null);
-    const [authChecked, setAuthChecked] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [plans, setPlans] = useState([]);
-    const [eggs, setEggs] = useState([]);
-    const [geckos, setGeckos] = useState([]);
+/**
+ * /BreedingSeason was a page of its own until November 2026, headed
+ * "Breeding Season". It is now the "Season" tab of the Breeding page
+ * (experience review, finding H5), so the old address only forwards
+ * there. The timeline itself is SeasonTimeline below, which the Breeding
+ * page loads when the tab opens.
+ */
+export default function BreedingSeasonRedirect() {
+    return <BreedingTabRedirect tab="season" />;
+}
+
+/**
+ * The "Season" tab of Breeding: every lock, clutch and hatch of a year on
+ * one timeline, one row per pair.
+ *
+ * The Breeding page hands in the plans, eggs and geckos it has already
+ * loaded, so the tab opens at once and always agrees with the Plans tab:
+ *   onNewPlan   open the new-plan form (the empty state's button)
+ *   onOpenPlan  (plan): show that pair's plan card on its tab
+ */
+export function SeasonTimeline({ plans = [], eggs = [], geckos = [], onNewPlan, onOpenPlan }) {
     const today = useMemo(() => new Date(), []);
     const [selectedYear, setSelectedYear] = useState(today.getFullYear());
-
-    useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
-            try {
-                const currentUser = await api.auth.me();
-                setUser(currentUser);
-                setAuthChecked(true);
-                if (!currentUser) {
-                    setIsLoading(false);
-                    return;
-                }
-                const { getVisibleGeckos } = await import('@/lib/geckoAccess');
-                const [geckosData, plansData, eggsData] = await Promise.all([
-                    getVisibleGeckos(currentUser),
-                    BreedingPlan.filter({ created_by: currentUser.email }, '-created_date'),
-                    Egg.filter({ created_by: currentUser.email }),
-                ]);
-                setGeckos(geckosData);
-                setPlans(plansData);
-                setEggs(eggsData);
-            } catch (error) {
-                console.error('Failed to load breeding season data:', error);
-                setAuthChecked(true);
-                toast({
-                    title: 'Could not load your season',
-                    description: 'Something went wrong fetching your breeding data. Please try again.',
-                    variant: 'destructive',
-                });
-            }
-            setIsLoading(false);
-        };
-        loadData();
-    }, []);
 
     const eggsByPlan = useMemo(() => {
         const map = new Map();
@@ -472,54 +429,38 @@ export default function BreedingSeasonPage() {
         return { laid, hatched, incubating };
     }, [seasonRows]);
 
-    if (authChecked && !user) {
-        return (
-            <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><LoadingSpinner /></div>}>
-                <LoginPortal requiredFeature="Breeding Season Timeline" />
-            </Suspense>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-            <Seo
-                title="Breeding Season"
-                description="See your whole crested gecko breeding season on one timeline: locks, clutches, incubation, and hatches for every pair."
-                path="/BreedingSeason"
-                noIndex
-                keywords={['breeding season', 'gecko breeding timeline', 'hatch tracker']}
-            />
-            <div className="max-w-7xl mx-auto">
-                <PageHeader
-                    icon={CalendarRange}
-                    title="Breeding Season"
-                    description="Your whole season on one timeline: every lock, clutch, and hatch."
-                >
-                    <Select
-                        value={String(selectedYear)}
-                        onValueChange={(v) => setSelectedYear(parseInt(v, 10))}
-                    >
-                        <SelectTrigger className="w-full md:w-44 bg-slate-900 border-slate-700 text-slate-200">
-                            <SelectValue>{selectedYear} season</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                            {availableYears.map(year => (
-                                <SelectItem key={year} value={String(year)}>{year} season</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </PageHeader>
+        <div>
+                {/* The year picker, and the one way into the Season Planner.
+                    The planner keeps its own page: it has five tabs of its
+                    own, and a second tab bar inside this one would be a maze. */}
+                <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                        <Select
+                            value={String(selectedYear)}
+                            onValueChange={(v) => setSelectedYear(parseInt(v, 10))}
+                        >
+                            <SelectTrigger aria-label="Season" className="w-full sm:w-44 bg-slate-900 border-slate-700 text-slate-200">
+                                <SelectValue>{selectedYear} season</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                                {availableYears.map(year => (
+                                    <SelectItem key={year} value={String(year)}>{year} season</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-sm text-slate-400">Every lock, clutch and hatch on one timeline.</p>
+                    </div>
+                    <Button asChild variant="outline" className="h-auto min-h-9 whitespace-normal py-2 text-left justify-start border-slate-600 hover:bg-slate-800">
+                        <Link to={createPageUrl('ProjectManager')}>
+                            <CalendarDays className="w-4 h-4" aria-hidden="true" />
+                            <span>Open the Season Planner: tasks, feeding groups and notes</span>
+                            <ArrowRight className="w-4 h-4 ml-auto md:ml-0" aria-hidden="true" />
+                        </Link>
+                    </Button>
+                </div>
 
-                {isLoading ? (
-                    <Card>
-                        <CardContent className="p-4 md:p-6">
-                            <Skeleton className="h-5 w-64 bg-slate-800 mb-6" />
-                            <PairRowSkeleton />
-                            <PairRowSkeleton />
-                            <PairRowSkeleton />
-                        </CardContent>
-                    </Card>
-                ) : plans.length === 0 ? (
+                {plans.length === 0 ? (
                     /* Empty state: no breeding plans at all */
                     <Card>
                         <CardContent className="p-8 md:p-12 text-center">
@@ -530,11 +471,9 @@ export default function BreedingSeasonPage() {
                                 project you've been planning), every lock, clutch, and hatch will
                                 show up here on one timeline.
                             </p>
-                            <Button asChild className="mt-4">
-                                <Link to={createPageUrl('Breeding')}>
-                                    Create your first pairing
-                                    <ArrowRight className="w-4 h-4 ml-2" />
-                                </Link>
+                            <Button type="button" className="mt-4" onClick={() => onNewPlan?.()}>
+                                Create your first pairing
+                                <ArrowRight className="w-4 h-4 ml-2" />
                             </Button>
                         </CardContent>
                     </Card>
@@ -573,7 +512,7 @@ export default function BreedingSeasonPage() {
                                         No breeding activity recorded for the {selectedYear} season.
                                     </p>
                                     <p className="text-slate-500 text-sm mt-1">
-                                        Pick another season above, or log a lock or clutch from the Breeding page.
+                                        Pick another season above, or log a lock or clutch on the Plans tab.
                                     </p>
                                 </div>
                             ) : (
@@ -599,6 +538,7 @@ export default function BreedingSeasonPage() {
                                                 seasonEggs={row.seasonEggs}
                                                 year={selectedYear}
                                                 today={today}
+                                                onOpenPlan={onOpenPlan}
                                             />
                                         ))}
                                     </div>
@@ -607,7 +547,6 @@ export default function BreedingSeasonPage() {
                         </CardContent>
                     </Card>
                 )}
-            </div>
         </div>
     );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Project, Task, BreedingPlan, FeedingGroup, OtherReptile, User } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -206,6 +207,16 @@ export default function ProjectManager() {
                     icon={CalendarDays}
                     title="Season Planner"
                     description="Plan breeding seasons, prep for expos, and track gecko care tasks"
+                    // The planner is reached from the Season tab of Breeding
+                    // (it left the Breeding page's own row of links), so say
+                    // where it sits and offer the way back.
+                    eyebrow={
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            <Link to="/Breeding?tab=season" className="relative touch-hit hover:text-slate-300">Breeding</Link>
+                            <span aria-hidden="true">/</span>
+                            <span className="text-slate-400">Season Planner</span>
+                        </div>
+                    }
                     settings={
                         <PageSettingsPanel title="Planner Settings">
                             <div>
@@ -403,7 +414,7 @@ export default function ProjectManager() {
                             </div>
                             <div>
                                 <Label>Description</Label>
-                                <Textarea value={newProject.description} onChange={(e) => setNewProject({...newProject, description: e.target.value})} placeholder="Project details..." className="bg-slate-800 border-slate-600" />
+                                <Textarea value={newProject.description} onChange={(e) => setNewProject({...newProject, description: e.target.value})} placeholder="What this plan is for..." className="bg-slate-800 border-slate-600" />
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
@@ -454,7 +465,7 @@ export default function ProjectManager() {
                             {newProject.category === 'custom' && (
                                 <div>
                                     <Label>Related To (Optional)</Label>
-                                    <Input value={newProject.custom_relation} onChange={(e) => setNewProject({...newProject, custom_relation: e.target.value})} placeholder="What this project relates to..." className="bg-slate-800 border-slate-600" />
+                                    <Input value={newProject.custom_relation} onChange={(e) => setNewProject({...newProject, custom_relation: e.target.value})} placeholder="What this plan relates to..." className="bg-slate-800 border-slate-600" />
                                 </div>
                             )}
                         </div>
