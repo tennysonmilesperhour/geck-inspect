@@ -2,7 +2,7 @@ import { RETIRED_PAGES } from '@/lib/retiredPages';
 
 const PARENT_PAGE = {
   GeckoDetail: 'MyGeckos', ForumPost: 'Forum',
-  MarketplaceBuy: 'Market', MarketplaceSell: 'Market',
+  MarketplaceBuy: 'Market', MarketplaceSell: 'Market', Portfolio: 'Market',
   BatchHusbandry: 'Today', FieldMode: 'Today', log: 'Today',
 };
 
