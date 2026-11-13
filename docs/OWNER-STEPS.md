@@ -66,6 +66,8 @@ How to use it:
 | E9 | **The unused `isHatching` mode of the gecko form:** keep or delete. | `planning/experience-review-2026-11-11.md`, section 6 |
 | E10 | **Founder hours a week for the plan**, and the founder brand name to publish. | Part C15; `../CLAUDE.md` |
 | E11 | **Ball python site, Phase 0 decisions.** Paused until 17 January 2027; nothing to do now. | `planning/ball-python-app-2026-10.md` |
+| E12 | **Quick Add and feeding groups.** Since 13 November every new gecko starts in Quick Add. With "Remind me on feeding days" on, it goes into your first feeding group. For a breeder with several groups that may be the wrong one. Choose: keep it, show a group picker when there is more than one group, or leave the gecko ungrouped. | `planning/experience-review-2026-11-11.md`, WP-3 |
+| E13 | **A hatch year on its own.** The gecko form saves a hatch date only when year, month and day are all filled in, and says so. Saving the year alone needs a small database change. Say yes and a session will do it. | Same, WP-3 |
 
 ## F. Checks on a real phone or with real email
 

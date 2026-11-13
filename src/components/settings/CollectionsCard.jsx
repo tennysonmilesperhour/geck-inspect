@@ -31,6 +31,7 @@ import { Collection, CollectionMember } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits } from '@/lib/tierLimits';
 import { invitePlan, isInviteExpired, reopenedInviteFields, tokenForResend } from '@/lib/collectionInvites';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import CollectionActivity from './CollectionActivity';
 
 /**
@@ -99,6 +100,8 @@ export default function CollectionsCard({ user }) {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
+  const [askDelete, setAskDelete] = useState(null); // the collection being asked about
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
   const limits = getTierLimits(user);
@@ -184,9 +187,15 @@ export default function CollectionsCard({ user }) {
       });
       return;
     }
-    if (!confirm(`Delete collection "${col.name}"? Its geckos move to your default collection (a gecko someone else added goes back to theirs), and anyone you shared it with loses access.`)) {
-      return;
-    }
+    // Deleting takes other people's access away, so it asks first, in the
+    // app's own dialog (it used to be the browser's confirm box).
+    setAskDelete(col);
+  };
+
+  const confirmDelete = async () => {
+    const col = askDelete;
+    if (!col) return;
+    setDeleting(true);
     try {
       await Collection.delete(col.id);
       await load();
@@ -198,6 +207,8 @@ export default function CollectionsCard({ user }) {
         variant: 'destructive',
       });
     }
+    setDeleting(false);
+    setAskDelete(null);
   };
 
   return (
@@ -302,6 +313,16 @@ export default function CollectionsCard({ user }) {
           </>
         )}
       </CardContent>
+      <ConfirmDialog
+        open={Boolean(askDelete)}
+        onOpenChange={(open) => { if (!open && !deleting) setAskDelete(null); }}
+        title={`Delete the collection "${askDelete?.name || ''}"?`}
+        description="Its geckos move to your default collection (a gecko someone else added goes back to theirs), and anyone you shared it with loses access."
+        confirmLabel="Delete collection"
+        destructive
+        busy={deleting}
+        onConfirm={confirmDelete}
+      />
     </Card>
   );
 }
@@ -323,6 +344,10 @@ function CollectionRow({
   const [resendingId, setResendingId] = useState(null);
   const [showActivity, setShowActivity] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  // What is being asked about: null, { kind: 'leave' } or { kind: 'revoke', member }.
+  // Both change who can see the collection, so both ask first.
+  const [ask, setAsk] = useState(null);
 
   const owner = memberships.find((m) => m.role === 'owner');
   const others = memberships.filter((m) => m.role !== 'owner');
@@ -339,7 +364,6 @@ function CollectionRow({
 
   const leaveCollection = async () => {
     if (!mySeat) return;
-    if (!confirm(`Leave "${collection.name}"? You will stop seeing its geckos until the owner invites you again.`)) return;
     setLeaving(true);
     try {
       await CollectionMember.update(mySeat.id, { status: 'declined', declined_at: new Date().toISOString() });
@@ -348,6 +372,7 @@ function CollectionRow({
       toast({ title: 'Could not leave the collection', description: e.message, variant: 'destructive' });
     }
     setLeaving(false);
+    setAsk(null);
   };
 
   const sendInvite = async () => {
@@ -438,7 +463,7 @@ function CollectionRow({
   };
 
   const revokeMember = async (m) => {
-    if (!confirm(`Revoke ${m.member_email} from "${collection.name}"?`)) return;
+    setRevoking(true);
     try {
       await CollectionMember.delete(m.id);
       onChange?.();
@@ -449,6 +474,8 @@ function CollectionRow({
         variant: 'destructive',
       });
     }
+    setRevoking(false);
+    setAsk(null);
   };
 
   const resendInvite = async (m) => {
@@ -536,7 +563,7 @@ function CollectionRow({
           <Button
             variant="ghost"
             size="sm"
-            onClick={leaveCollection}
+            onClick={() => setAsk({ kind: 'leave' })}
             disabled={leaving}
             className="text-slate-400 hover:text-red-300"
           >
@@ -623,7 +650,7 @@ function CollectionRow({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => revokeMember(m)}
+                  onClick={() => setAsk({ kind: 'revoke', member: m })}
                   className="text-slate-400 hover:text-red-300 h-8 w-8"
                   title="Revoke"
                 >
@@ -693,6 +720,20 @@ function CollectionRow({
           </Button>
         </div>
       )}
+      <ConfirmDialog
+        open={Boolean(ask)}
+        onOpenChange={(open) => { if (!open && !leaving && !revoking) setAsk(null); }}
+        title={ask?.kind === 'revoke'
+          ? `Remove ${ask.member?.member_email || 'this person'} from "${collection.name}"?`
+          : `Leave "${collection.name}"?`}
+        description={ask?.kind === 'revoke'
+          ? 'They stop seeing its geckos at once. You can invite them again later.'
+          : 'You will stop seeing its geckos until the owner invites you again.'}
+        confirmLabel={ask?.kind === 'revoke' ? 'Remove access' : 'Leave collection'}
+        destructive
+        busy={leaving || revoking}
+        onConfirm={() => (ask?.kind === 'revoke' ? revokeMember(ask.member) : leaveCollection())}
+      />
     </li>
   );
 }

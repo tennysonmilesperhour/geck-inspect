@@ -410,6 +410,8 @@ Findings: B1 to B8.
 
 Done when: on every phone screenshot, no page text is readable through the bottom bar; nothing floats over a list row; at most one floating notice is visible in any state (add an e2e check that counts elements marked `data-floating-notice`); the e2e phone project still passes.
 
+**Shipped 12 November 2026** (commit "Quiet the phone screen (WP-1)"). The bottom bar and the header carry the page colour at 85% under the glass (`--glass-tint`), with a short fade above the bar; the blur and the glass edge stay, so this adjusts decision 39 without dropping it. The phone header is the page's name, then Search, Morph ID and the bell; the hamburger is gone (the More tab opens the same menu) and Messages moved into the bell. Floating notices take turns through one queue (`src/components/shared/floatingNoticeQueue.js`): app update, analytics consent, offline status, the feeding reminder ask, the demo tour. The floating feeding cards are gone; one line offering reminders on this device is what is left of them. No floating feedback button on phones ("Send feedback" is in the menu and on Settings, Account). The menu is solid, and the demo shows one line in place of a pill on every item. A browser test counts the floating notices.
+
 ### WP-2. Every action answers, nothing is lost (M)
 
 Findings: F1 to F6, D3, D5, E2.
@@ -424,11 +426,15 @@ Findings: F1 to F6, D3, D5, E2.
 
 Done when: the browser pop-ups gauge in section 10 lists only admin and retired-feature files; closing a changed gecko form asks first; a test proves a retried weigh-in does not create a second row; each of the four saves named shows a toast in an e2e or component test.
 
+**Shipped 12 and 13 November 2026** (commits "Shared Undo toast and confirmation dialog", "No browser pop-ups on waitlists and reserves; plan limits said up front (WP-2, WP-13)", and the WP-3, WP-6 and WP-9 commits). The two shared pieces are `src/components/shared/ConfirmDialog.jsx` and `src/lib/undoToast.jsx` (a function, not the hook named above). Waitlists: adding a buyer is a small form, deleting a waitlist asks in a styled dialog, withdrawing a sign-up happens at once with Undo. Reserves: cancel and delete happen at once with Undo; completing a sale still asks, because it records revenue. Quick eggs have Undo and deleting a breeding plan asks in the styled dialog (WP-6). The long gecko form keeps a draft of an unsaved new gecko in the browser for 14 days and offers it back (WP-3). Settings saves as it changes (WP-9). **Still to do:** the cost delete on the Money tab has no Undo.
+
 ### WP-3. Adding a gecko (M)
 
 Findings: D1, D2, D4, D6, D7.
 
 Done when: "Add Gecko" opens Quick Add for any collection size; the long form shows five headed sections with Photos first; there is one morph field; Edit on the record page saves and stays on the record; the existing first-gecko e2e flows pass unchanged.
+
+**Shipped 13 November 2026** (commit "Adding a gecko: Quick Add for everyone, a long form in sections (WP-3)"). "Add Gecko" opens Quick Add for any collection size; the first gecko keeps its guided flow, and "More details" still leads to the long form. The long form has six headed sections, Photos first, that fold; on a phone Photos and Identity start open, and a folded section holding an invalid field opens before the save. The Species select is gone (the record still carries "Crested Gecko"). One Morph group: a search box over the catalogue that forgives "lily" and "capuccino", chips, one free-text line, and "Browse all". The hatch date is one labelled row, and a full date pasted into Year fills all three. Edit on the record page opens the form over the page and returns to the record. The draft from D3 is described under WP-2. **Left out:** saving a hatch year alone. The form never saved one, and the row now says so; storing it needs `estimated_hatch_year` added to what `save_gecko_record` accepts, which is a migration. A Morph ID result on a collection that already has geckos still opens the long form. **A decision for Tennyson:** Quick Add with reminders on puts the gecko in the member's first feeding group, which a breeder with several groups now meets on every add (`docs/OWNER-STEPS.md`).
 
 ### WP-4. One log flow (M to L)
 
@@ -454,11 +460,15 @@ Findings: H5, J4 (pairs), F1, and the hand-off below.
 
 Done when: a pairing chosen in the planner needs no re-picking; `/PairingPlanner`, `/ProjectManager` and `/BreedingSeason` land on the right tab; a Free member at the pair limit sees the notice before any field.
 
+**Shipped 13 November 2026** (commit "Breeding: the planners are tabs, and a chosen pairing carries over (WP-6)"). Breeding has six tabs: Plans, Hatchery, Pairing ideas, Season, Genetics, Archive (`src/components/breeding/breedingTabs.js`). `/PairingPlanner` and `/BreedingSeason` forward to their tabs and keep any query. "Plan this pairing" opens the new-plan dialog with the sire and dam filled in. The pair limit is checked when the dialog opens. Quick eggs have Undo; deleting a plan asks in the styled dialog. **Different from the list above:** `/ProjectManager` (the Season Planner) stays a page of its own, linked from the Season tab with a way back, because it is a task planner with its own dialogs and not a view of the pairings.
+
 ### WP-7. Morph ID (M)
 
 Findings: I1 to I4, H2.
 
 Done when: at 390 by 844 the upload control is fully on the first screen for a signed-in member with a scan left; a result can be saved to an existing gecko; the gecko record offers "Identify by photo"; the Morph ID tests pass and no caution text has been deleted, only moved.
+
+**Shipped 12 November 2026** (commit "Morph ID: upload first, and save a result to a gecko you already have (WP-7)"). The uploader comes first, under one line ("Morph ID reads what is visible. A photo cannot prove a gene.") that unfolds the four cautions; the full cautions show again beside the result, and no caution text was removed. A result can be saved to a gecko the member already has (`SaveToGeckoDialog.jsx`): the suggested traits are offered unticked and are added to the gecko's morph tags. The gecko record has "Identify by photo" (`/Recognition?gecko=<id>`), and saving returns to the record. A member with no scan left sees the uploader disabled with the date the next one arrives. The consent notice sits under the button, which reads "Allow and identify"; nothing is sent before the member agrees.
 
 ### WP-8. Home, menu and names (M). Needs decisions 2, 3, 5, 6, 7.
 
@@ -471,6 +481,8 @@ Done when: every page in the names table shows its one name in the menu, the tit
 Findings: J7, F5, J3 (name field).
 
 Done when: Settings has five tabs; no "Save changes" bar; reminders are one table; a display name can be changed there; a deep link such as `/Settings#id-logic` still lands on the right control.
+
+**Shipped 13 November 2026** (commit "Settings in five tabs, saving as you go (WP-9)"). Five tabs: Account, Look, Reminders, Breeder profile, Data and privacy. All 28 old links into Settings still open the right tab at the right control. Everything saves as it changes, with a "Saved" tick beside the control and "Try again" on a failure; each save sends only the field that changed. Reminders are one table with an Email column and a Push column. The display name can be changed on Account, where "Send feedback" and Log out also sit. Favorite Pages is hidden; its code and the saved favourites are kept. All 74 settings are still there.
 
 ### WP-10. Visual tightening (M to L, can be done page by page)
 
@@ -501,6 +513,8 @@ Done when: a new member can sign up, confirm and add a gecko without leaving the
 Findings: J4, J5, J6, I2.
 
 Done when: every limit is shown before the member does the work; checkout returns to the page it started from; one component renders every limit notice.
+
+**Shipped 12 and 13 November 2026**, in part. The spreadsheet import says before anything is imported how many rows the plan has room for (`src/components/my-geckos/csv/importPreview.js`). After paying, the Membership page offers one button back to the page where the limit stopped the member (`src/components/subscription/upgradeReturn.js`); no headline, plan card or price changed, because the paywall test is running. The pair limit is checked when the new-plan dialog opens (WP-6). Morph ID shows the date the next free identification arrives (WP-7). **Still to do:** J6, one component for every limit notice.
 
 ### Also shipped on 11 November 2026 (small fixes outside the three packages)
 
