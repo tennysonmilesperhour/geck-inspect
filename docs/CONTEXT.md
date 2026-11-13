@@ -18,7 +18,7 @@ What a member can do today (pages in `src/pages`, menus in `src/lib/navItems.js`
 4. **Ask Morph ID.** Upload photos and get a ranked, evidence-first shortlist of visible traits, what the photos cannot confirm and which photo would help next (`src/pages/Recognition.jsx`, `supabase/functions/recognize-gecko-morph`). It is an identification aid, not a genetic test, and its scores are rankings, not calibrated probabilities. A member can share a result as a public card at `/morph-id/r/<id>` (`src/components/morph-id/MorphShareCard.jsx`, `api/morph-share.js`). The Morph ID brief is `docs/specs/morph-id.md`.
 5. **Read the reference guides.** Morph Guide, Care Guide, Genetics Guide and the Quality Scale. They are public and prerendered for search engines.
 6. **See prices.** A value estimate on each gecko record, pairing value on breeding plans, the public Geck Inspect Price Index, and the members-only Market page (`src/pages/Market.jsx`, `src/lib/marketAnalytics/`). Prices come from asking prices on public crested gecko listings collected into the `geck_data` schema, not from confirmed sales. Market Intelligence (Enterprise) is off sale (section 5).
-7. **Run the breeder side.** A public breeder page and store page, waitlists with written deposit terms (no money is taken online, decision 33), Business Tools for sales and costs with profit by season and by pairing (`src/pages/MarketplaceSalesStats.jsx`), printable worksheets, rack labels, buyer packets and a MorphMarket CSV export.
+7. **Run the breeder side.** A public breeder page and store page, waitlists with written deposit terms (no money is taken online, decision 33), Business (called Business Tools until 13 November 2026) for sales and costs with profit by season and by pairing (`src/pages/MarketplaceSalesStats.jsx`), printable worksheets, rack labels, buyer packets and a MorphMarket CSV export.
 8. **Join the community.** Forum, gallery, direct messages and notifications, with report and block buttons.
 9. **Let AI agents read the open data.** `/data` files, `llms.txt`, markdown twins of public pages and a read-only MCP server at `/mcp` (`api/mcp.js`). See `docs/planning/agent-access-2026-10.md`.
 
@@ -26,7 +26,7 @@ Optional tools that are metered per plan (`src/lib/tierLimits.js`, `src/lib/usag
 
 **The shape of the app** (`src/lib/navItems.js`, `src/lib/ThemeContext.jsx`, `index.html`):
 
-- The sidebar has 12 destinations, 8 in Keeper mode (a menu setting that hides the breeding and selling pages). A test holds both numbers (`src/lib/navItems.derived.test.js`).
+- The sidebar has 12 destinations, 7 in Keeper mode (a menu setting that hides the breeding and selling pages). A test holds both numbers (`src/lib/navItems.derived.test.js`).
 - On a phone the bottom tabs are Today, Geckos, Log and More, and the app opens on Today: what is due today, the week ahead, then the collection (`src/pages/Today.jsx`).
 - The app is dark only. New visitors start on the Emerald theme; a member can pick one of six.
 - Members get the getting-started emails for their first two weeks and then Weekly Gecko Notes, one short care email a week (`content/weekly-notes/`, `docs/planning/weekly-notes-2026-10.md`).

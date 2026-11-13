@@ -83,6 +83,7 @@ None of these is recorded as done. Each takes a minute or two; do them in one si
 8. A waitlist end to end; report and hide a post; hatch an egg into a gecko.
 9. Delete a disposable account from Settings; the Gmail one-click unsubscribe; rack labels from Printable Worksheets; an iPhone HEIC photo upload; a Stripe upgrade with a test card.
 10. PageSpeed on a real phone for the landing page, and capture the product photo slides on production (about an hour).
+11. New on 13 November, on an iPhone: open Log, Weigh-in. Type two weights: the "Save all" bar should sit just above the tab bar and not cover the last row. Type a weight ten times too big: it should ask before saving. In Field Mode, log a feeding and tap "Next". Open More: Log out is beside Settings.
 
 Sources: `planning/deploy-queue-2026-10-03.md` (round 2 item 5, round 3 items 1 and 5, "Real-device and real-email checks"); `planning/feature-completeness-audit-2026-09-29.md`, section 8; `planning/history/landing-speed-2026-10.md`.
 

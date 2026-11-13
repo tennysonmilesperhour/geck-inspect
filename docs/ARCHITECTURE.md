@@ -27,9 +27,9 @@ How a page gets its address:
 - **Retired pages** are listed in `src/lib/retiredPages.js`. Each becomes a redirect. `scripts/build-vercel-json.mjs` writes the same redirects into `vercel.json` so they also work before the app loads.
 - **A page an admin switched off** in the Pages tool shows an "unavailable" notice.
 
-What is in the menu is a separate list: `src/lib/navItems.js`. One registry (`NAV_REGISTRY`) feeds the sidebar (`NAV_GROUPS`, 12 destinations, 8 in Keeper mode), the phone tabs (`PHONE_TABS`: Today, Geckos, Log, More) and the quick search (`PALETTE_ITEMS`). A test, `src/lib/navItems.derived.test.js`, holds the menu's size.
+What is in the menu is a separate list: `src/lib/navItems.js`. One registry (`NAV_REGISTRY`) feeds the sidebar (`NAV_GROUPS`, 12 destinations, 7 in Keeper mode), the phone tabs (`PHONE_TABS`: Today, Geckos, Log, More) and the quick search (`PALETTE_ITEMS`). A test, `src/lib/navItems.derived.test.js`, holds the menu's size.
 
-Where a member lands: `memberHome()` in `src/lib/pwaLaunch.js` (Today on a phone, My Geckos on a wider screen after sign-in; `/` on a wide screen shows the Dashboard).
+Where a member lands: `memberHome()` in `src/lib/pwaLaunch.js`, the only place that names the home. Since 13 November 2026 it is Today on every device: after sign-in, at `/`, from the logo and in the installed app. The Dashboard page is called Overview and is reached from Today's toggle.
 
 ## 3. Folders
 
@@ -154,7 +154,7 @@ Real addresses of app pages are capitalised, because each comes from its key in 
 | `/b/:slug/widget` | P8 | Never built: there is no embed widget |
 | `/b/:slug/journal` | P9 | Never built, and shelved with all blog work |
 | `/settings/storefront` | P8 | `/MyStore`. An older `/BreederStorefront` redirects there |
-| `/market` | P2 | `/Market` (Market Intelligence). The older price page is `/MarketPricing` |
+| `/market` | P2 | `/Market` (Prices; called Market Intelligence until 13 November 2026). The older price page is `/MarketPricing` |
 | `/settings/alerts` | P2 | Never built: there are no price alerts. The nearest thing is the Watchlist tab on `/Market` |
 | `/answers`, `/answers/new`, `/answers/:id` | P5 | Never existed. Geck Answers was folded into the Forum: `/GeckAnswers` redirects to `/Forum` |
 | `/loans`, `/loans/:id`, `/loans/accept/:token` | P4 | Never existed. Breeding Loans is retired: `/BreedingLoans` redirects to `/Breeding` |

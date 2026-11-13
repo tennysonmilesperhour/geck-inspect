@@ -90,18 +90,18 @@ In this order. The first two are short.
 
 Before proposing product direction, features or priorities, also read `STRATEGY.md` and `docs/DECISIONS.md`.
 
-## Where things stand (11 November 2026)
+## Where things stand (13 November 2026)
 
 Check `docs/NOW.md` for anything newer.
 
 - **The plan** is a 90-day sales experiment that ends on decision day, 17 January 2027: will crested gecko breeders pay for records, passports and transfers? Checkpoints: 17 November (Day 30) and 17 December. Under the Day 30 rule, fewer than 15 breeder conversations means engineering pauses.
 - **Breadth is frozen:** no new pages, species, plan tiers, tools or integrations until weekly active breeders have grown four weeks in a row.
-- **The product today:** dark only, Emerald as the default theme, fonts self-hosted. The menu has 12 destinations (8 in Keeper mode); the phone tabs are Today, Geckos, Log, More. Plans are Free (10 geckos), Keeper, Breeder and Enterprise; Enterprise is off sale. Prices and limits live in `src/lib/stripe-config.js` and `src/lib/tierLimits.js`; quote them from there.
+- **The product today:** dark only, Emerald as the default theme, fonts self-hosted. Today is the home screen on every device. The menu has 12 destinations (7 in Keeper mode); the phone tabs are Today, Geckos, Log, More. Page names are fixed in `docs/GLOSSARY.md` (Overview, Business and Prices are the names since 13 November for what code calls Dashboard, MarketplaceSalesStats and Market). Plans are Free (10 geckos), Keeper, Breeder and Enterprise; Enterprise is off sale. Prices and limits live in `src/lib/stripe-config.js` and `src/lib/tierLimits.js`; quote them from there.
 - **The landing page is under an A/B test** (control against the "business assistant" page). `src/pages/Home.jsx`, `src/pages/HomeControl.jsx`, `src/components/landing/` and the theme defaults are frozen while it runs. Read `docs/planning/homepage-ab-test-2026-10.md` before going near them.
 - **The iPhone app** is in App Store review work; the project is at build 15. A change to the website reaches the iPhone only with the next uploaded build. Start with `docs/planning/app-store-resubmission-2026-10-26.md`.
 - **Retired, with code and tables kept:** Promote, the AI Consultant, Other Reptiles, the supplies store and sticker builders, the website builder, Guess the Price, Community Connect (all 16 October or earlier), the Morph Visualizer (2 October), and before those Breeding Loans, Breeding ROI, Geck Answers, Mentorship, Giveaways and Shipping. Do not delete retired code or tables without Tennyson's say. `docs/planning/retired-features-2026-10.md` says where each link goes and how to switch one back on.
 - **Shelved:** blog posts and articles (see below), the ball python site, the Korean market plan.
-- **Latest work:** the experience review (`docs/planning/experience-review-2026-11-11.md`) and its first three packages (visible fixes, Share and passport on the gecko record, sign-up by 6-digit code); the documentation review (`docs/planning/docs-review-2026-11-11.md`).
+- **Latest work:** the experience review (`docs/planning/experience-review-2026-11-11.md`) and its packages, built 11 to 13 November. Section 9 of that file has a dated note under each package saying what shipped and what was left out; read it before changing a screen. Also the documentation review (`docs/planning/docs-review-2026-11-11.md`).
 - **Waiting on Tennyson:** everything is in `docs/OWNER-STEPS.md`.
 
 ## Working with Tennyson

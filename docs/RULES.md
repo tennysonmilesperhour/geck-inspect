@@ -22,7 +22,7 @@ Source: Part E of `docs/planning/comprehensive-review-2026-10-14.md`, sections E
 
 1. **Blog posts and articles are shelved** (30 September 2026). Do not write, draft, publish or suggest them, and do not switch the blog pipeline back on. Search queries with no matching page are data, not tasks. Source: `ROADMAP.md`.
 2. **Retired features keep their code and their tables.** Nothing is deleted without Tennyson's say, and there is no deletion date. The list and how to switch each back on: `docs/planning/retired-features-2026-10.md`. (The comprehensive review's "delete after a month" is overruled by this.)
-3. **The menu stays at 12 destinations, 8 in Keeper mode.** `src/lib/navItems.derived.test.js` fails if it grows.
+3. **The menu stays at 12 destinations, and 8 or fewer in Keeper mode (7 today).** `src/lib/navItems.derived.test.js` fails if it grows.
 4. **Geck Inspect is crested geckos only.** The website and the phone apps do not take other species. Source: `docs/planning/ball-python-app-2026-10.md`, `CLAUDE.md`.
 5. **International expansion and the Korean market plan are not active.** Source: `ROADMAP.md` (old item 15).
 

@@ -2,7 +2,7 @@
 
 The words this project uses, in one place. Two kinds: product words (what things in Geck Inspect are called) and crested gecko words (what the hobby calls things). When a document or a prompt uses one of these, it means what this page says.
 
-Written 11 November 2026. If a name here and a name in the app disagree, the app wins; fix this page.
+Written 11 November 2026; names brought up to date on 13 November 2026. If a name here and a name in the app disagree, the app wins; fix this page.
 
 ## Product words
 
@@ -11,14 +11,17 @@ Written 11 November 2026. If a name here and a name in the app disagree, the app
 | **Member** | Anyone with an account. "Keeper" and "breeder" are kinds of member. |
 | **Keeper** | A member who keeps crested geckos as pets. Also the name of the first paid plan. Context tells which. |
 | **Breeder** | A member who pairs and sells. Also the name of the second paid plan. |
-| **Keeper mode** | A menu setting that hides the breeding and selling pages (8 destinations in place of 12). A preference, not a permission. Set by the first-run question, changed in Settings. |
+| **Keeper mode** | A menu setting that hides the breeding and selling pages (7 destinations in place of 12). A preference, not a permission. Set by the first-run question, changed in Settings. |
 | **Guest, the demo** | A visitor looking around without an account. They see a sample collection and nothing they do is saved. |
 | **Collection** | A member's geckos. Collections can be shared with another member as an editor or a viewer. |
 | **Gecko record** | Everything about one animal on one screen: photo, parents, value, weights, feeding, sheds, vet visits, breeding, passport. Opens as a window over My Geckos or as its own page (`/GeckoDetail`). |
-| **Today** | The first tab on a phone: what is due today (feedings, weigh-ins, hatch windows), the week ahead, then the collection. |
+| **Today** | The home screen on every device since 13 November 2026, and the first tab on a phone: what is due today (feedings, weigh-ins, hatch windows), the week ahead, then the collection. |
+| **Overview** | The member's numbers, values and quick links (`/Dashboard`). Reached from Today's toggle and the quick search. Called the Dashboard until 13 November 2026; code still calls it Dashboard. |
 | **Log** | Recording a care event. The Log tab opens a sheet with Feeding, Weigh-in, Shed and Field Mode. |
-| **One-tap log** | The page behind every "Log feeding" button and reminder link (`/log`): Fed or Refused in one tap. Code calls it QuickLog. |
+| **One-tap log, the log screen** | The one place care is logged (`/log`), behind every "Log" button, reminder link, the Weigh-in buttons and the old Batch Husbandry address: Fed or Refused in one tap, "Mark all fed", a weight per row with "Save all", a date chip for yesterday, Undo. Code calls it QuickLog. |
 | **Field Mode** | A full-screen logger for use with a gecko in the other hand: big rows, a number pad, works with no signal. |
+| **Rack walk** | Field Mode's order since 13 November 2026: due geckos first, "Next: {name}" after each save, a tally at the end. |
+| **Quick Add** | The short form every new gecko starts in (photo, name, sex, three optional fields). "More details" opens the long form. |
 | **Passport** | A gecko's public page and QR card, showing its lineage and weigh-ins. Has a code like `GI-2026-AB3K`. Making one makes the gecko public. The 90-day plan counts passports issued and claimed. |
 | **QR card** | The printable card with the passport's QR code, for the tub or the buyer. |
 | **Transfer** | Handing a gecko's whole record to a new owner. The seller creates a link or QR code; it expires after 72 hours. |
@@ -26,12 +29,15 @@ Written 11 November 2026. If a name here and a name in the app disagree, the app
 | **Morph ID** | Photo identification of a gecko's visible traits. The page is `/Recognition`. It reads what is visible; it cannot prove a gene. Free members get one a month. |
 | **Genetics Calculator** | Offspring odds for a pairing (`/calculator`). Public, no account needed. |
 | **Breeding plan, pairing** | A sire and a dam put together, with their eggs. "Pair" and "plan" mean the same thing in the app. |
-| **Hatchery** | The Breeding tab that lists eggs in incubation. |
-| **Business Tools** | Money in and out, sales, pricing and waitlists (`/MarketplaceSalesStats`). |
-| **Market Intelligence** | The Market page: asking prices across listing sites. The live tabs belong to the Enterprise plan, which is off sale. |
+| **Breeding tabs** | Plans, Hatchery, Pairing ideas, Season, Genetics, Archive. Hatchery lists eggs in incubation. Pairing ideas ranks possible pairings for a goal. Season is the timeline, and links to the Season Planner. |
+| **Season Planner** | The task planner for a breeding season, expos and feeding groups (`/ProjectManager`). A page of its own, linked from the Season tab. |
+| **Business** | Money in and out, sales, pricing and waitlists (`/MarketplaceSalesStats`). Called Business Tools until 13 November 2026. |
+| **Prices** | The Market page (`/Market`). It opens on "My collection", the estimated value of the member's own geckos; then In-app listings and Your listings. The live tabs (Today, Live, Watchlist) show only with the Enterprise plan, which is off sale. Called Market Intelligence until 13 November 2026; that name is now only the Enterprise feature's. |
 | **Price Index** | The public table of crested gecko asking prices by trait (`/crested-gecko-price`, `/data`). Asking prices from listings, not sale prices. |
 | **Value estimate** | What a gecko is likely to list for, from the Price Index, shown on its record. An estimate, not an appraisal. |
-| **Portfolio** | The estimated value of a whole collection. |
+| **Portfolio** | The estimated value of a whole collection. Shown as the "My collection" tab of Prices. |
+| **Family tree** | One gecko's ancestors as a chart (`/Pedigree`). |
+| **Quick search** | The search box that opens pages and actions (the magnifier in the header, or Ctrl or Cmd and K). Code calls it the command palette. |
 | **Plans** | Free (10 geckos), Keeper ($2.99 a month, 50 geckos), Breeder ($5.99 a month, unlimited), Enterprise ($99.99 a month, off sale). This line is a summary as of 12 November 2026. The code is the source: `src/lib/stripe-config.js` for prices and `src/lib/tierLimits.js` for limits. The full table, with yearly and lifetime prices, is `docs/CONTEXT.md`, section 5. |
 | **Comp** | A paid plan given free to a member. A comped account does not count as a paying breeder on the scoreboard. |
 | **Founding Breeder offer** | $120 prepaid for a year of Breeder, offered in breeder conversations. |
@@ -52,10 +58,17 @@ Names that used to mean something else, so old documents make sense:
 |---|---|
 | Recognition, AI Morph Recognition | Morph ID |
 | Project Manager | Season Planner (`/ProjectManager`) |
-| Marketplace Sales Stats | Business Tools |
+| Marketplace Sales Stats, Business Tools | Business |
+| Market Intelligence (as a page name) | Prices |
+| Dashboard | Overview |
+| Batch Husbandry, Batch Care, Weigh-in mode | The log screen (`/log`) |
+| Pairing Planner, Season Timeline, Breeding Season | The Pairing ideas and Season tabs of Breeding |
+| Pedigree, Pedigree Chart | Family tree |
+| Image Gallery | Community Gallery |
+| AI Training Center, Morph ID Evidence Lab | Morph ID review (admin only) |
 | Geck Answers | Folded into the Forum on 29 September 2026 |
 | Breeding ROI | Folded into Breeding (the pairing value box) and Business Tools |
-| Marketplace | The "In-app listings" tab of Market |
+| Marketplace | The "In-app listings" tab of Prices |
 | Lifecycle emails | Getting-started emails |
 
 ## Crested gecko words
