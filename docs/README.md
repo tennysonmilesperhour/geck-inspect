@@ -119,6 +119,7 @@ Then the document for the job in hand, from the table below.
 | `retired-features-2026-10.md` | What was retired and how to switch it back | Reference |
 | `qr-transfer-security-2026-10-17.md` | The transfer contract and its security review | Reference |
 | `private-sale-prices-2026-11.md` | Sale prices kept from other members: why, how, checks, what is left (owner emails) | Reference |
+| `owner-emails-2026-11.md` | Owner email addresses kept from other members (E16): the two steps, checks, status | Live |
 | `morphmarket-import-reference-2026-10-24.md` | MorphMarket's import fields | Reference |
 | `instrumentation-2026-10.md` | Analytics events and the funnel | Reference |
 | `activation-2026-10.md` | Guided first gecko, default reminders | Reference |

@@ -11,8 +11,9 @@
 -- It checks that recent_weight_records() gives each gecko its true latest
 -- weigh-in even when the member has far more than the API's 1,000-row
 -- page, returns only the member's own records, keeps the per-gecko count
--- in range, runs as the member (so the read rules still apply), and is
--- not callable by signed-out visitors.
+-- in range, and is not callable by signed-out visitors. (It ran as the
+-- member until 13 November 2026; it now runs as its owner and filters on
+-- the member's email itself, see 20261113215000_owner_emails_step1.sql.)
 begin;
 
 create temp table _who (
@@ -99,9 +100,16 @@ declare
   v_max int;
   v_old_read int;
 begin
-  -- Runs as the member, with an explicit execute grant.
-  if (select prosecdef from pg_proc where oid = 'public.recent_weight_records(integer)'::regprocedure) then
-    raise exception 'FAIL: recent_weight_records must be SECURITY INVOKER so the read rules apply';
+  -- Since 13 November 2026 it runs as its owner, so it can still match
+  -- created_by once members cannot read that column
+  -- (20261113215000_owner_emails_step1.sql). Its own filter is the
+  -- member's email, so the checks below on whose records come back are
+  -- what keeps it safe; it keeps an empty search_path and an explicit
+  -- execute grant.
+  if not exists (select 1 from pg_proc
+                  where oid = 'public.recent_weight_records(integer)'::regprocedure
+                    and proconfig @> array['search_path=""']) then
+    raise exception 'FAIL: recent_weight_records must pin an empty search_path';
   end if;
   if has_function_privilege('anon', 'public.recent_weight_records(integer)', 'execute') then
     raise exception 'FAIL: signed-out visitors must not be able to call recent_weight_records';
