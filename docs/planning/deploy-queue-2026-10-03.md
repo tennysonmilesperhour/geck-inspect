@@ -692,5 +692,7 @@ Migration: `20261113172624_private_sale_prices.sql`, dated after `20261110183000
 
 **Checked before the push.** Locally: the harness built all 327 migrations; all 41 SQL test files passed, `supabase/tests/private_sale_prices_regressions.sql` included (it fails, as it should, against a copy that lets every member read and against one without the insert guard); the transfer race checks passed; a second run of the migration changed nothing. Lint, the whole unit suite, the unit suite with the clock moved 400 days each way, all browser tests and the size check passed.
 
+**Checked after the push (17:58 UTC).** The integration recorded `20261113172624` about two minutes after the push. No gecko row and no ownership record holds a price; `gecko_sale_prices` holds the 9 moved prices; the new triggers and the two paused during the move are all on. Read-only, as a signed-in account that owns none of them: 325 public geckos readable, 0 prices on their rows, 0 rows in either price table. As the owner of one of the sold geckos: their 1 price readable, nobody else's.
+
 **If something breaks.** A page that shows no sale price where it should: the read of `gecko_sale_prices` failed or the merge did not run; the price is still in the table (`select * from gecko_sale_prices`). To stop the trigger in an emergency: `alter table public.geckos disable trigger geckos_keep_sale_price_private;` in the SQL editor (prices written after that stay on the public row again, so turn it back on once fixed).
 

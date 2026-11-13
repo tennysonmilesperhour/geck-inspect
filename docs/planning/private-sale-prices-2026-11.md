@@ -46,7 +46,7 @@ A trigger runs before an insert is checked for a duplicate id. So a member could
 - **SQL harness**, on Postgres 16 with every migration replayed (327): `supabase/tests/private_sale_prices_regressions.sql` and all 40 other SQL test files pass, the transfer race checks pass, and a second run of the migration changes nothing. The new test fails, as it should, against a copy whose read rule lets every member in and against a copy without the insert guard.
 - **Unit tests**: `src/lib/__tests__/geckoSalePrices.test.js` (the store) and `src/api/__tests__/geckoSalePrices.entity.test.js` (the Gecko entity against a fake database that behaves like the triggers), plus the whole suite.
 - **Browser tests**: the fake database in `e2e/support/fake-supabase.js` now moves prices the way the triggers do, and `e2e/member-flow.e2e.js` checks that marking Mango sold for $300 leaves the gecko's row at null and puts 300 in `gecko_sale_prices`.
-- **After the merge**, read-only in production: no gecko or ownership record holds a price in the old column; `gecko_sale_prices` holds the 9 moved prices; a signed-in account that owns none of them reads none.
+- **After the merge** (applied 13 November, about 17:58 UTC), read-only in production: no gecko or ownership record holds a price in the old column; `gecko_sale_prices` holds the 9 moved prices; a signed-in account that owns none of them reads none of them (it still sees the 325 public geckos); the owner of one sold gecko reads that one price.
 
 ## 6. What it does not cover, and what is next
 
