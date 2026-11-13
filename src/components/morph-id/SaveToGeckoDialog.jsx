@@ -168,7 +168,7 @@ export default function SaveToGeckoDialog({ open, onOpenChange, user, analysis, 
               </p>
             ) : geckosQuery.isError ? (
               <div className="space-y-3 py-2">
-                <p className="text-sm text-rose-200">Your geckos could not load. Check your connection and try again.</p>
+                <p className="text-sm text-red-200">Your geckos could not load. Check your connection and try again.</p>
                 <Button variant="outline" onClick={() => geckosQuery.refetch()}>Try again</Button>
               </div>
             ) : geckos.length === 0 ? (

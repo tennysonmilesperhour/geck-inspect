@@ -59,6 +59,7 @@ export default function PhotoSlideshow({
         variant="secondary"
         size="icon"
         onClick={() => step(-1)}
+        aria-label="Previous photo"
         className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full"
       >
         <ChevronLeft className="w-4 h-4" />
@@ -67,6 +68,7 @@ export default function PhotoSlideshow({
         variant="secondary"
         size="icon"
         onClick={() => step(1)}
+        aria-label="Next photo"
         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
       >
         <ChevronRight className="w-4 h-4" />

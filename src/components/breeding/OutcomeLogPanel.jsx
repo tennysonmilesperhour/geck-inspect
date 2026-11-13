@@ -188,14 +188,14 @@ export default function OutcomeLogPanel({ sire, dam, outcomes }) {
                 {row.observed}x {row.label}
                 <span className="text-slate-500"> · expected {row.expected.toFixed(1)}</span>
                 {Math.abs(delta) >= 0.75 && (
-                  <span className={delta > 0 ? 'text-emerald-400' : 'text-pink-300'}>
+                  <span className={delta > 0 ? 'text-emerald-400' : 'text-amber-300'}>
                     {' '}({delta > 0 ? 'running hot' : 'running cold'})
                   </span>
                 )}
               </p>
             );
           })}
-          <p className="text-[11px] text-slate-500">
+          <p className="text-xs text-slate-500">
             Small samples swing hard; the odds win over full seasons. Nothing here is ever "due."
           </p>
         </div>

@@ -120,7 +120,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
                 text: egg.hatch_date_actual ? `Hatched ${format(parseLocalDate(egg.hatch_date_actual), 'MM/dd/yy')}` : 'Hatched'
             },
             'Incubating': {
-                className: "bg-transparent text-blue-400 border-blue-400 hover:bg-blue-900/20",
+                className: "bg-transparent text-emerald-400 border-emerald-400 hover:bg-emerald-900/20",
                 text: "Incubating"
             },
             'Slug': {
@@ -259,6 +259,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulati
                                     onClick={() => handleAddToCalendar(egg)}
                                     className="border-slate-600 hover:bg-slate-700 h-9 w-9 flex-shrink-0 ml-auto sm:ml-0"
                                     title="Add to Calendar"
+                                    aria-label="Add to calendar"
                                 >
                                     <CalendarIcon className="w-4 h-4" />
                                 </Button>

@@ -70,19 +70,19 @@ export default function BreedingHistory({
       {/* Lifetime totals */}
       <div className="grid grid-cols-4 gap-2 mb-4 text-center">
         <div className="bg-slate-800 rounded-lg p-2">
-          <p className="text-[10px] uppercase tracking-wider text-slate-500">Seasons</p>
+          <p className="text-[11px] uppercase tracking-wider text-slate-500">Seasons</p>
           <p className="text-slate-100 font-semibold">{totals.seasons}</p>
         </div>
         <div className="bg-slate-800 rounded-lg p-2">
-          <p className="text-[10px] uppercase tracking-wider text-slate-500">Laid</p>
+          <p className="text-[11px] uppercase tracking-wider text-slate-500">Laid</p>
           <p className="text-slate-100 font-semibold">{totals.eggsLaid}</p>
         </div>
         <div className="bg-slate-800 rounded-lg p-2">
-          <p className="text-[10px] uppercase tracking-wider text-slate-500">Hatched</p>
+          <p className="text-[11px] uppercase tracking-wider text-slate-500">Hatched</p>
           <p className="text-emerald-400 font-semibold">{totals.hatched}</p>
         </div>
         <div className="bg-slate-800 rounded-lg p-2">
-          <p className="text-[10px] uppercase tracking-wider text-slate-500">Hatch Rate</p>
+          <p className="text-[11px] uppercase tracking-wider text-slate-500">Hatch Rate</p>
           <p className="text-emerald-400 font-semibold">{formatPct(totals.hatchRate)}</p>
         </div>
       </div>
@@ -114,19 +114,19 @@ export default function BreedingHistory({
 
               <div className="grid grid-cols-4 gap-1 text-center text-xs">
                 <div className="bg-slate-900/60 rounded px-1 py-1">
-                  <p className="text-[10px] text-slate-500">Laid</p>
+                  <p className="text-xs text-slate-500">Laid</p>
                   <p className="text-slate-200 font-semibold">{row.eggsLaid}</p>
                 </div>
                 <div className="bg-slate-900/60 rounded px-1 py-1">
-                  <p className="text-[10px] text-slate-500">Hatched</p>
+                  <p className="text-xs text-slate-500">Hatched</p>
                   <p className="text-emerald-400 font-semibold">{row.hatched}</p>
                 </div>
                 <div className="bg-slate-900/60 rounded px-1 py-1" title={`Infertile: ${row.infertile} · Slug/Stillborn: ${row.failed}`}>
-                  <p className="text-[10px] text-slate-500">Inf/Fail</p>
+                  <p className="text-xs text-slate-500">Inf/Fail</p>
                   <p className="text-red-400 font-semibold">{row.failedOrInfertile}</p>
                 </div>
                 <div className="bg-slate-900/60 rounded px-1 py-1">
-                  <p className="text-[10px] text-slate-500">Pending</p>
+                  <p className="text-xs text-slate-500">Pending</p>
                   <p className="text-amber-400 font-semibold">{pending}</p>
                 </div>
               </div>

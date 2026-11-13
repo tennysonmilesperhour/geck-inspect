@@ -149,7 +149,7 @@ export default function VisualSiblings({ gecko, user }) {
                     width={240}
                   />
                 </a>
-                <Badge variant="secondary" className="text-[10px] bg-slate-800 text-slate-300">
+                <Badge variant="secondary" className="text-xs bg-slate-800 text-slate-300">
                   {Math.round((m.similarity ?? 0) * 100)}% match
                 </Badge>
                 {m.primary_morph && (

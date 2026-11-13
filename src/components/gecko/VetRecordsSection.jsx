@@ -27,7 +27,7 @@ import { toast } from '@/components/ui/use-toast';
 const fmtDay = (iso) => (iso ? format(parseLocalDate(iso), 'MMM d, yyyy') : '');
 
 const FOLLOW_UP_BADGE = {
-  upcoming: 'border-sky-700 text-sky-300',
+  upcoming: 'border-emerald-700 text-emerald-300',
   today: 'border-amber-600 text-amber-300',
   past: 'border-slate-600 text-slate-400',
 };
@@ -196,7 +196,7 @@ export default function VetRecordsSection({ gecko, canEdit = true, currentUserEm
                       {record.vet_name && `, ${record.vet_name}`}
                     </p>
                     {status && status !== 'past' && (
-                      <Badge variant="outline" className={`mt-1.5 text-[11px] ${FOLLOW_UP_BADGE[status]}`}>
+                      <Badge variant="outline" className={`mt-1.5 text-xs ${FOLLOW_UP_BADGE[status]}`}>
                         <BellRing className="w-3 h-3 mr-1" />
                         {status === 'today' ? 'Follow-up today' : `Follow-up ${fmtDay(record.follow_up)}`}
                       </Badge>
@@ -286,7 +286,7 @@ export default function VetRecordsSection({ gecko, canEdit = true, currentUserEm
           <div className="space-y-1">
             <Label htmlFor="vet-follow-up" className="text-xs text-slate-400">Follow-up date (optional)</Label>
             <Input id="vet-follow-up" type="date" value={form.follow_up} min={form.date || undefined} onChange={(e) => setField('follow_up', e.target.value)} className="bg-slate-800 text-sm" />
-            <p className="text-[11px] text-slate-500">You get a reminder that morning.</p>
+            <p className="text-xs text-slate-500">You get a reminder that morning.</p>
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Attachments (photos of results, X-rays or paperwork)</Label>
@@ -320,7 +320,7 @@ export default function VetRecordsSection({ gecko, canEdit = true, currentUserEm
             </Button>
           </div>
           {onPassport && (
-            <p className="text-[11px] text-slate-500">This visit shows on the gecko&apos;s public passport, without the attachments.</p>
+            <p className="text-xs text-slate-500">This visit shows on the gecko&apos;s public passport, without the attachments.</p>
           )}
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={isSaving || isUploading} className="flex-1">

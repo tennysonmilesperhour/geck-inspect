@@ -52,6 +52,7 @@ export default function TraitPicker({ value = [], onChange, compact = false }) {
               <button
                 type="button"
                 onClick={() => toggle(id)}
+                aria-label={`Remove ${TRAIT_BY_ID[id]?.label || id}`}
                 className="relative touch-hit ml-2 hover:text-white"
               >
                 <X className="w-3 h-3" />

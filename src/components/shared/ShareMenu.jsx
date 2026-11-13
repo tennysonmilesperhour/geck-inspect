@@ -132,7 +132,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
             onClick={() => setOpen(false)}
             className="w-full flex items-center gap-3 px-4 py-2.5 touch:min-h-11 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
           >
-            <Twitter className="w-4 h-4 text-sky-300" />
+            <Twitter className="w-4 h-4 text-slate-300" />
             <span className="flex-1 text-left">X (Twitter)</span>
             <ExternalLink className="w-3 h-3 text-slate-500" />
           </a>
@@ -145,7 +145,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
             onClick={() => setOpen(false)}
             className="w-full flex items-center gap-3 px-4 py-2.5 touch:min-h-11 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
           >
-            <Facebook className="w-4 h-4 text-blue-400" />
+            <Facebook className="w-4 h-4 text-slate-300" />
             <span className="flex-1 text-left">Facebook</span>
             <ExternalLink className="w-3 h-3 text-slate-500" />
           </a>
@@ -156,10 +156,10 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
             role="menuitem"
             className="w-full flex items-center gap-3 px-4 py-2.5 touch:min-h-11 text-sm text-slate-100 hover:bg-emerald-500/15 transition-colors"
           >
-            <Instagram className="w-4 h-4 text-pink-400" />
+            <Instagram className="w-4 h-4 text-slate-300" />
             <span className="flex-1 text-left">
               Instagram
-              <span className="block text-[10px] text-slate-500 leading-tight">Link copied, paste into a story or post</span>
+              <span className="block text-xs text-slate-500 leading-tight">Link copied, paste into a story or post</span>
             </span>
           </button>
 

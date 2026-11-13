@@ -575,6 +575,7 @@ function CollectionRow({
             variant="ghost"
             size="sm"
             onClick={onDelete}
+            aria-label="Delete this collection"
             className="touch:min-w-11 text-slate-400 hover:text-red-300"
           >
             <Trash2 className="w-4 h-4" />
@@ -653,6 +654,7 @@ function CollectionRow({
                   onClick={() => setAsk({ kind: 'revoke', member: m })}
                   className="text-slate-400 hover:text-red-300 h-8 w-8"
                   title="Revoke"
+                  aria-label="Revoke access"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>

@@ -29,7 +29,7 @@ const pct = (p) => {
 
 function NumberField({ label, value, onChange, min, max, step = 1, suffix }) {
   return (
-    <label className="flex flex-col gap-1 text-[11px] text-slate-500">
+    <label className="flex flex-col gap-1 text-xs text-slate-500">
       {label}
       <span className="flex items-center gap-1">
         <Input
@@ -139,7 +139,7 @@ export default function SeasonProjectionPanel({ phenotypes, priceIndex, seed, se
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3 space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <p className="text-[11px] uppercase tracking-wide text-slate-500">Season worth, sold as {age.label.toLowerCase()}s</p>
-          <div className="flex rounded-md border border-slate-700 overflow-hidden text-[11px]" role="tablist">
+          <div className="flex rounded-md border border-slate-700 overflow-hidden text-xs" role="tablist">
             {[['value', 'By value'], ['outcome', 'By outcome']].map(([key, label]) => (
               <button
                 key={key}
@@ -171,13 +171,13 @@ export default function SeasonProjectionPanel({ phenotypes, priceIndex, seed, se
               onValueChange={([v]) => setValuePos(v)}
               aria-label="Season value, lowest to highest"
             />
-            <div className="flex justify-between text-[11px] text-slate-500">
+            <div className="flex justify-between text-xs text-slate-500">
               <span>Lowest</span>
               <span>Highest</span>
             </div>
             <p className="text-sm text-slate-200">
               <strong className="tabular-nums">{money(atValue)}</strong> or more:{' '}
-              <strong className="text-violet-200">{pct(chanceAtLeast(sim, atValue))} chance</strong>
+              <strong className="text-emerald-200">{pct(chanceAtLeast(sim, atValue))} chance</strong>
             </p>
           </div>
         ) : (
@@ -191,17 +191,17 @@ export default function SeasonProjectionPanel({ phenotypes, priceIndex, seed, se
               aria-label="Outcome, most likely to least likely"
               disabled={ranked.length < 2}
             />
-            <div className="flex justify-between text-[11px] text-slate-500">
+            <div className="flex justify-between text-xs text-slate-500">
               <span>Most likely</span>
               <span>Least likely</span>
             </div>
             <div className="text-sm text-slate-200 space-y-0.5">
-              <p className={`font-medium ${outcome.lethal ? 'text-rose-300' : ''}`}>{outcome.label || 'Wild-type'}</p>
+              <p className={`font-medium ${outcome.lethal ? 'text-red-300' : ''}`}>{outcome.label || 'Wild-type'}</p>
               <p className="text-xs text-slate-400">
                 {pct(outcome.probability)} of eggs.{' '}
                 {outcome.lethal
                   ? 'This combination does not survive.'
-                  : <>About {odds.expected.toFixed(1)} a season, a <strong className="text-violet-200">{pct(odds.atLeastOne)} chance</strong> of at least one, {money(outcome.prices[ageKey])} each as a {age.label.toLowerCase()}.</>}
+                  : <>About {odds.expected.toFixed(1)} a season, a <strong className="text-emerald-200">{pct(odds.atLeastOne)} chance</strong> of at least one, {money(outcome.prices[ageKey])} each as a {age.label.toLowerCase()}.</>}
               </p>
             </div>
           </div>
@@ -235,8 +235,8 @@ export default function SeasonProjectionPanel({ phenotypes, priceIndex, seed, se
           </p>
         ) : sell ? (
           <p className="text-sm text-slate-200">
-            Listed as {age.label.toLowerCase()}s, half sell within <strong className="text-violet-200">{formatSellDays(sell.halfDays)}</strong> and
-            most (8 in 10) within <strong className="text-violet-200">{formatSellDays(sell.mostDays)}</strong>.
+            Listed as {age.label.toLowerCase()}s, half sell within <strong className="text-emerald-200">{formatSellDays(sell.halfDays)}</strong> and
+            most (8 in 10) within <strong className="text-emerald-200">{formatSellDays(sell.mostDays)}</strong>.
           </p>
         ) : (
           <p className="text-xs text-slate-500">Not enough sales data for these outcomes.</p>
@@ -278,7 +278,7 @@ export default function SeasonProjectionPanel({ phenotypes, priceIndex, seed, se
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-500 leading-relaxed">
+      <p className="text-xs text-slate-500 leading-relaxed">
         Played out {sim.totals.length.toLocaleString()} times from the genetics odds: each egg hatches or not, then
         becomes one outcome, priced at the median marketplace asking price for its traits at that age. Upkeep
         {enterprise ? ' includes the typical wait for a buyer. ' : ' covers the months you keep each one. '}

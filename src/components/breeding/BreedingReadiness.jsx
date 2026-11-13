@@ -16,7 +16,7 @@ export function ReadinessBadge({ readiness, className = '' }) {
   if (!readiness) return null;
   return (
     <Badge
-      className={`text-[10px] h-5 px-1.5 py-0 font-medium ${TONE[readiness.level]} ${className}`}
+      className={`text-xs h-5 px-1.5 py-0 font-medium ${TONE[readiness.level]} ${className}`}
       title={readiness.reason}
     >
       {readiness.label}

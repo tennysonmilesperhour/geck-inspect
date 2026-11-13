@@ -84,7 +84,7 @@ export default function MarketValueCard({ gecko, showSellTime = true }) {
     <CardHeader className="pb-2 pt-4 px-4">
       <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
         <Wallet className="w-4 h-4 text-emerald-400" /> Estimated Value
-        <Badge variant="outline" className="ml-auto text-[10px] font-medium bg-teal-900/40 border-teal-700 text-teal-200">
+        <Badge variant="outline" className="ml-auto text-xs font-medium bg-slate-800 border-slate-600 text-slate-300">
           Market
         </Badge>
       </CardTitle>
@@ -166,7 +166,7 @@ export default function MarketValueCard({ gecko, showSellTime = true }) {
 
         {/* Typical range (p25 to p75) with the estimate and asking price marked. */}
         <div>
-          <div className="relative h-2 rounded-full bg-gradient-to-r from-teal-900 via-teal-700 to-teal-900">
+          <div className="relative h-2 rounded-full bg-gradient-to-r from-slate-800 via-slate-600 to-slate-800">
             <span
               className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-slate-900"
               style={{ left: pct(estimate.value) }}
@@ -180,7 +180,7 @@ export default function MarketValueCard({ gecko, showSellTime = true }) {
               />
             )}
           </div>
-          <div className="flex justify-between text-[11px] text-slate-500 mt-1.5">
+          <div className="flex justify-between text-xs text-slate-500 mt-1.5">
             <span>{formatCurrency(band.p25)} typical low</span>
             <span>{formatCurrency(band.p75)} typical high</span>
           </div>
@@ -213,7 +213,7 @@ export default function MarketValueCard({ gecko, showSellTime = true }) {
           </div>
         )}
 
-        <p className="text-[11px] text-slate-500">
+        <p className="text-xs text-slate-500">
           Based on asking prices from public crested gecko listings. An estimate, not an appraisal.
           {isGuestMode() && ' Demo: prices from a snapshot taken 5 Oct 2026; members see them updated with each market check.'}
         </p>

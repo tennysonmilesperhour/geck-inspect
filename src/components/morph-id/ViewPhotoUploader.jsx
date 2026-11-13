@@ -34,7 +34,7 @@ function Slot({ label, hint, required, item, onPick, onRemove, disabled = false 
         {item?.status === 'ready' && <Check className="w-4 h-4 text-emerald-400" />}
       </div>
       {item ? (
-        <div className={`relative rounded-lg overflow-hidden border ${item.status === 'failed' ? 'border-rose-500' : 'border-slate-700'}`}>
+        <div className={`relative rounded-lg overflow-hidden border ${item.status === 'failed' ? 'border-red-500' : 'border-slate-700'}`}>
           <img src={item.previewUrl || item.url} alt={label} className="w-full aspect-square object-cover bg-slate-800" />
           {item.status === 'pending' && (
             <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center">
@@ -42,7 +42,7 @@ function Slot({ label, hint, required, item, onPick, onRemove, disabled = false 
             </div>
           )}
           {item.status === 'failed' && (
-            <div className="absolute inset-0 bg-rose-950/70 flex items-center justify-center text-rose-200 text-xs p-2 text-center">
+            <div className="absolute inset-0 bg-red-950/70 flex items-center justify-center text-red-200 text-xs p-2 text-center">
               Upload failed. Remove it and try again.
             </div>
           )}
@@ -50,7 +50,7 @@ function Slot({ label, hint, required, item, onPick, onRemove, disabled = false 
             <button
               type="button"
               onClick={onRemove}
-              className="absolute top-1 right-1 p-2 bg-black/70 hover:bg-rose-600 rounded-full min-w-11 min-h-11 grid place-items-center"
+              className="absolute top-1 right-1 p-2 bg-black/70 hover:bg-red-600 rounded-full min-w-11 min-h-11 grid place-items-center"
               aria-label={`Remove ${label.toLowerCase()}`}
             >
               <X className="w-3.5 h-3.5 text-white" />
@@ -70,7 +70,7 @@ function Slot({ label, hint, required, item, onPick, onRemove, disabled = false 
         >
           <Upload className="w-6 h-6" />
           <span className="text-xs font-medium">Add {label.toLowerCase()}</span>
-          <span className="text-[11px] text-slate-500 leading-snug">{hint}</span>
+          <span className="text-xs text-slate-500 leading-snug">{hint}</span>
         </button>
       )}
     </div>

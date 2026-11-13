@@ -7,7 +7,7 @@ import SaleDetailsFields, { initialSaleDetails, saleDetailsPatch } from '@/compo
 const REASONS = [
   // A quiet flower in neutral colours: this is a loss, not an error.
   { value: 'death', label: 'Passed away', icon: Flower2, color: 'border-slate-400 text-slate-100 bg-slate-800 hover:bg-slate-700' },
-  { value: 'sold', label: 'Sold', icon: DollarSign, color: 'border-blue-500 text-blue-400 bg-blue-900/20 hover:bg-blue-900/40' },
+  { value: 'sold', label: 'Sold', icon: DollarSign, color: 'border-emerald-500 text-emerald-400 bg-emerald-900/20 hover:bg-emerald-900/40' },
   { value: 'other', label: 'Other', icon: HelpCircle, color: 'border-slate-500 text-slate-300 bg-slate-800 hover:bg-slate-700' },
 ];
 

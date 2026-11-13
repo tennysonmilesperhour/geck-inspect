@@ -715,49 +715,49 @@ function MyProfileScreen() {
                                         <div className="flex flex-wrap gap-2 pt-2">
                                             {user.website_url && (
                                                 <a href={user.website_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="touch:min-w-11 border-slate-600 hover:bg-slate-700">
+                                                    <Button size="sm" variant="outline" aria-label="Website" className="touch:min-w-11 border-slate-600 hover:bg-slate-700">
                                                         <Globe className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.instagram_handle && (
                                                 <a href={`https://instagram.com/${user.instagram_handle}`} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="touch:min-w-11 border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
+                                                    <Button size="sm" variant="outline" aria-label="Instagram" className="touch:min-w-11 border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
                                                         <Instagram className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.facebook_url && (
                                                 <a href={user.facebook_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="touch:min-w-11 border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
+                                                    <Button size="sm" variant="outline" aria-label="Facebook" className="touch:min-w-11 border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
                                                         <Facebook className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.youtube_url && (
                                                 <a href={user.youtube_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="touch:min-w-11 border-red-500/50 hover:bg-red-500/20 text-red-400">
+                                                    <Button size="sm" variant="outline" aria-label="YouTube" className="touch:min-w-11 border-red-500/50 hover:bg-red-500/20 text-red-400">
                                                         <Youtube className="w-4 h-4" />
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.tiktok_handle && (
                                                 <a href={`https://tiktok.com/@${user.tiktok_handle}`} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="border-slate-500/50 hover:bg-slate-700 text-slate-200">
+                                                    <Button size="sm" variant="outline" aria-label="TikTok" className="border-slate-500/50 hover:bg-slate-700 text-slate-200">
                                                         <span className="text-xs font-bold">TT</span>
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.morphmarket_url && (
                                                 <a href={user.morphmarket_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="border-orange-500/50 hover:bg-orange-500/20 text-orange-400 text-xs font-semibold px-2">
+                                                    <Button size="sm" variant="outline" aria-label="MorphMarket" className="border-orange-500/50 hover:bg-orange-500/20 text-orange-400 text-xs font-semibold px-2">
                                                         MM
                                                     </Button>
                                                 </a>
                                             )}
                                             {user.palm_street_url && (
                                                 <a href={user.palm_street_url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="border-green-500/50 hover:bg-green-500/20 text-green-400 text-xs font-semibold px-2">
+                                                    <Button size="sm" variant="outline" aria-label="Palm Street" className="border-green-500/50 hover:bg-green-500/20 text-green-400 text-xs font-semibold px-2">
                                                         PS
                                                     </Button>
                                                 </a>

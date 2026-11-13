@@ -95,9 +95,9 @@ export default function WeighInReminderSwitch({ gecko, email, lastWeighDate = nu
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <Label htmlFor={`weigh-remind-${gecko.id}`} className="text-sm text-slate-100 flex items-center gap-1.5">
-              <Bell className="w-3.5 h-3.5 text-sky-400" /> Weigh-in reminder
+              <Bell className="w-3.5 h-3.5 text-emerald-400" /> Weigh-in reminder
             </Label>
-            <p className="text-[11px] text-slate-400 mt-0.5">{weighDetail}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{weighDetail}</p>
           </div>
           <Switch
             id={`weigh-remind-${gecko.id}`}
@@ -129,7 +129,7 @@ export default function WeighInReminderSwitch({ gecko, email, lastWeighDate = nu
               <Label htmlFor={`feed-remind-${gecko.id}`} className="text-sm text-slate-100 flex items-center gap-1.5">
                 <Utensils className="w-3.5 h-3.5 text-emerald-400" /> Feeding reminder
               </Label>
-              <p className="text-[11px] text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 {feed.on
                   ? `Every ${feed.everyDays} days from its last feeding. Feeding alerts in Settings turn all of them off.`
                   : 'Turn on for a note on feeding days. A gecko in a feeding group follows the group instead.'}

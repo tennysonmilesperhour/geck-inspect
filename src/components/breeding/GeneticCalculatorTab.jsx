@@ -69,7 +69,7 @@ function ParentPicker({ label, accent, geckos, selectedId, onSelect, excludeId }
                       onSelect('');
                       setOpen(false);
                     }}
-                    className="text-rose-300 aria-selected:bg-slate-700 aria-selected:text-rose-200"
+                    className="text-red-300 aria-selected:bg-slate-700 aria-selected:text-red-200"
                   >
                     <X className="w-4 h-4 mr-2" /> Clear selection
                   </CommandItem>
@@ -98,7 +98,7 @@ function ParentPicker({ label, accent, geckos, selectedId, onSelect, excludeId }
                           {g.sex ? <span className="text-slate-400"> · {g.sex}</span> : null}
                         </div>
                         {morphs && (
-                          <div className="text-[11px] text-slate-400 truncate">{morphs}</div>
+                          <div className="text-xs text-slate-400 truncate">{morphs}</div>
                         )}
                       </div>
                       {g.id === selectedId && <Check className="w-4 h-4 ml-2 text-emerald-400" />}

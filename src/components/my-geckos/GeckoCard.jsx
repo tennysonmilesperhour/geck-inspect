@@ -275,7 +275,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
             {showReadiness && <ReadinessBadge readiness={readiness} />}
             {showGravidBadge && (
-              <Badge className="bg-pink-900/60 text-pink-200 border border-pink-700/50 text-xs h-5 px-2 py-0 font-medium flex items-center gap-1">
+              <Badge className="bg-emerald-900/60 text-emerald-200 border border-emerald-700/50 text-xs h-5 px-2 py-0 font-medium flex items-center gap-1">
                 <Heart className="w-3 h-3" /> Gravid
               </Badge>
             )}

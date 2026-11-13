@@ -31,6 +31,8 @@ vi.mock('@/components/ui/button', () => ({
     asChild ? children : <button type="button" onClick={onClick} aria-label={rest['aria-label']}>{children}</button>,
 }));
 vi.mock('@/components/ui/use-toast', () => ({ toast: (t) => state.toasts.push(t) }));
+// The page's loading skeleton; the real one reads `window` when imported.
+vi.mock('@/components/ui/skeleton', () => ({ Skeleton: () => <div data-skeleton /> }));
 vi.mock('react-router-dom', () => ({
   Link: ({ children, to }) => <a href={to}>{children}</a>,
   useNavigate: () => (to, opts) => state.navigations.push([to, opts]),

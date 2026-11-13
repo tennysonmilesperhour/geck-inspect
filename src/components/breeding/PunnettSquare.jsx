@@ -35,8 +35,8 @@ export default function PunnettSquare({ sirePair, damPair, outcomes }) {
   };
 
   const headCls = (active) =>
-    `text-[11px] px-2 py-1.5 text-center font-mono rounded transition-colors ${
-      active ? 'bg-purple-600/40 text-purple-100' : 'bg-slate-700/60 text-slate-300'
+    `text-xs px-2 py-1.5 text-center font-mono rounded transition-colors ${
+      active ? 'bg-emerald-600/40 text-emerald-100' : 'bg-slate-700/60 text-slate-300'
     }`;
 
   return (
@@ -50,7 +50,7 @@ export default function PunnettSquare({ sirePair, damPair, outcomes }) {
         style={{ gridTemplateColumns: 'minmax(60px, auto) 1fr 1fr', maxWidth: '24rem' }}
         onMouseLeave={() => setHover(null)}
       >
-        <div className="text-[10px] text-slate-500 flex items-end justify-center pb-1">
+        <div className="text-xs text-slate-500 flex items-end justify-center pb-1">
           <span>♀ \ ♂</span>
         </div>
         {sirePair.map((a, col) => (
@@ -77,7 +77,7 @@ export default function PunnettSquare({ sirePair, damPair, outcomes }) {
                   onBlur={() => setHover(null)}
                   className={`touch:min-h-11 rounded border px-2 py-2 text-left transition-colors cursor-default ${
                     active
-                      ? 'border-purple-400 bg-purple-950/50'
+                      ? 'border-emerald-400 bg-emerald-950/50'
                       : 'border-slate-700 bg-slate-900/50'
                   }`}
                 >
@@ -88,7 +88,7 @@ export default function PunnettSquare({ sirePair, damPair, outcomes }) {
                   >
                     {label}
                   </span>
-                  <span className="block text-[10px] font-mono text-slate-500 mt-0.5">
+                  <span className="block text-xs font-mono text-slate-500 mt-0.5">
                     {alleleShort(a)} / {alleleShort(b)} · 25%
                   </span>
                 </button>

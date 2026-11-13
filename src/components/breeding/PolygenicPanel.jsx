@@ -23,7 +23,7 @@ import {
 
 function Meter({ value }) {
   return (
-    <div className="relative h-2 flex-1 rounded-full bg-gradient-to-r from-slate-700 via-purple-800/70 to-purple-400/90">
+    <div className="relative h-2 flex-1 rounded-full bg-gradient-to-r from-slate-700 via-emerald-800/70 to-emerald-400/90">
       <div
         className="absolute -top-1 w-1 h-4 rounded bg-slate-100 shadow"
         style={{ left: `calc(${Math.max(0, Math.min(100, value))}% - 2px)` }}
@@ -56,7 +56,7 @@ export default function PolygenicPanel({ sireTags, damTags }) {
         className="flex items-center gap-1.5 touch:min-h-11 text-sm text-left text-slate-300 hover:text-slate-100 w-full"
       >
         {open ? <ChevronDown className="w-4 h-4 flex-shrink-0" /> : <ChevronRight className="w-4 h-4 flex-shrink-0" />}
-        <Brush className="w-4 h-4 flex-shrink-0 text-purple-400" />
+        <Brush className="w-4 h-4 flex-shrink-0 text-emerald-400" />
         Polygenic looks (Harlequin, Pinstripe, Dalmatian, Tiger)
         <span className="ml-auto text-right text-xs text-slate-500">
           {anyExpression ? 'expression bands, not odds' : 'optional'}
@@ -98,7 +98,7 @@ export default function PolygenicPanel({ sireTags, damTags }) {
                   <div className="flex items-center gap-3">
                     <Meter value={band.mid} />
                     <p className="text-xs text-slate-300 flex-1">
-                      <span className="text-purple-200 font-medium">{band.headline}.</span>{' '}
+                      <span className="text-emerald-200 font-medium">{band.headline}.</span>{' '}
                       <span className="text-slate-500">{band.detail}</span>
                     </p>
                   </div>

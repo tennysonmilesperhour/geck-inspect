@@ -94,7 +94,7 @@ export default function FeaturedBreeders() {
             <Crown className="w-5 h-5 text-emerald-400" />
             Featured Breeders
           </CardTitle>
-          <span className="text-[10px] uppercase tracking-wider text-emerald-300/70">
+          <span className="text-[11px] uppercase tracking-wider text-emerald-300/70">
             Breeder tier
           </span>
         </div>
@@ -140,12 +140,12 @@ export default function FeaturedBreeders() {
                       <Sparkles className="w-3 h-3 text-emerald-400 shrink-0" />
                     </div>
                     {b.location && (
-                      <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 truncate">
+                      <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 truncate">
                         <MapPin className="w-2.5 h-2.5" />
                         {b.location}
                       </p>
                     )}
-                    <p className="text-[11px] text-slate-400 mt-1">
+                    <p className="text-xs text-slate-400 mt-1">
                       {sales > 0 ? `${sales} listed for sale` : 'No active listings'}
                     </p>
                   </div>

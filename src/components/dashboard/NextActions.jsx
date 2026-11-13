@@ -101,7 +101,7 @@ export function buildActions({ geckos, eggs, plans, weights, futurePlans, feedin
         actions.push({
             id: 'weight-check',
             icon: Scale2,
-            iconTint: 'text-blue-400',
+            iconTint: 'text-emerald-400',
             label:
                 staleWeightGeckos.length === 1
                     ? `Weigh ${staleWeightGeckos[0].name}`
@@ -137,7 +137,7 @@ export function buildActions({ geckos, eggs, plans, weights, futurePlans, feedin
             actions.push({
                 id: `stale-plan-${plan.id}`,
                 icon: Calendar,
-                iconTint: 'text-rose-400',
+                iconTint: 'text-amber-400',
                 label: `Check in on breeding plan "${plan.breeding_id || 'untitled'}"`,
                 detail: `No updates in ${differenceInDays(now, lastTouch)} days`,
                 href: '/Breeding',
@@ -251,7 +251,7 @@ export default function NextActions({ currentUserEmail }) {
                                         <Icon className={`w-4 h-4 shrink-0 ${a.iconTint}`} />
                                         <Link to={a.href} className="flex-1 min-w-0 touch:min-h-11 touch:flex touch:flex-col touch:justify-center hover:underline">
                                             <p className="text-sm font-medium text-slate-100 truncate">{a.label}</p>
-                                            <p className="text-[11px] text-slate-500 truncate">{a.detail}</p>
+                                            <p className="text-xs text-slate-500 truncate">{a.detail}</p>
                                         </Link>
                                         <button
                                             type="button"
@@ -278,7 +278,7 @@ export default function NextActions({ currentUserEmail }) {
                                         <p className="text-sm font-medium text-slate-100 truncate">
                                             {a.label}
                                         </p>
-                                        <p className="text-[11px] text-slate-500 truncate">{a.detail}</p>
+                                        <p className="text-xs text-slate-500 truncate">{a.detail}</p>
                                     </div>
                                     <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-emerald-400 shrink-0" />
                                 </Link>
@@ -287,7 +287,7 @@ export default function NextActions({ currentUserEmail }) {
                     </div>
                 )}
                 {actions.length > 0 && (
-                    <p className="text-[10px] text-slate-500 mt-3 flex items-center gap-1">
+                    <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
                         Calculated from your feeding schedules, collection, eggs, weights, and breeding plans.
                     </p>

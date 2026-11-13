@@ -231,7 +231,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                         </p>
                     </div>
                     <div className="text-right shrink-0">
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Session</p>
+                        <p className="text-[11px] uppercase tracking-wider text-slate-500">Session</p>
                         <p className="text-sm font-semibold text-emerald-300 tabular-nums">{votedCount} voted</p>
                     </div>
                 </div>
@@ -317,7 +317,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                                                 type="button"
                                                 onClick={() => toggleTrait(m.slug)}
                                                 aria-pressed={on}
-                                                className={`touch:min-h-11 rounded-full border px-2.5 py-1 text-[11px] leading-none transition-colors ${
+                                                className={`touch:min-h-11 rounded-full border px-2.5 py-1 text-xs leading-none transition-colors ${
                                                     on
                                                         ? 'border-emerald-500 bg-emerald-500/20 text-emerald-100'
                                                         : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500'
@@ -360,7 +360,7 @@ export default function IdNeedsPanel({ currentUserEmail }) {
                         onClick={() => submitVote('reject')}
                         disabled={submitting}
                         variant="outline"
-                        className="flex-1 h-8 text-xs border-rose-500/40 text-rose-300 hover:bg-rose-950/30 hover:text-rose-200"
+                        className="flex-1 h-8 text-xs border-red-500/40 text-red-300 hover:bg-red-950/30 hover:text-red-200"
                     >
                         <ThumbsDown className="w-3.5 h-3.5 mr-1" /> Wrong
                     </Button>

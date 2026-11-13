@@ -61,7 +61,7 @@ export default function BreedingValueStats({ plans, eggs, geckos, visible, onTog
         <span className="text-sm font-semibold text-emerald-300 tabular-nums">
           {value ? money(value.season) : failed ? 'n/a' : '...'}
         </span>
-        {value && <span className="text-[11px] text-slate-500">({value.seasonEggs} {value.seasonEggs === 1 ? 'egg' : 'eggs'})</span>}
+        {value && <span className="text-xs text-slate-500">({value.seasonEggs} {value.seasonEggs === 1 ? 'egg' : 'eggs'})</span>}
       </div>
       <div className="ml-auto">{toggle}</div>
     </div>

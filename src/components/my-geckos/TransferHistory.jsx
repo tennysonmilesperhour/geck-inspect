@@ -136,7 +136,7 @@ function TransferRow({ transfer, animal, direction, onChanged, privateNotes }) {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-slate-100 truncate">{animal?.name || 'Unknown animal'}</span>
           <span
-            className={`inline-flex items-center gap-1 text-xs ${isOutgoing ? 'text-sky-400' : 'text-violet-400'}`}
+            className={`inline-flex items-center gap-1 text-xs ${isOutgoing ? 'text-slate-400' : 'text-emerald-400'}`}
           >
             {isOutgoing ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownLeft className="w-3 h-3" />}
             {isOutgoing ? 'Sent to' : 'Received from'} {counterparty}
@@ -290,7 +290,7 @@ export default function TransferHistory({ user }) {
       {outgoing.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
-            <ArrowUpRight className="w-4 h-4 text-sky-400" />
+            <ArrowUpRight className="w-4 h-4 text-slate-400" />
             Transferred out ({outgoing.length})
           </h2>
           <p className="text-xs text-slate-500 mb-3">
@@ -307,7 +307,7 @@ export default function TransferHistory({ user }) {
       {incoming.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
-            <ArrowDownLeft className="w-4 h-4 text-violet-400" />
+            <ArrowDownLeft className="w-4 h-4 text-emerald-400" />
             Received ({incoming.length})
           </h2>
           <div className="space-y-2">

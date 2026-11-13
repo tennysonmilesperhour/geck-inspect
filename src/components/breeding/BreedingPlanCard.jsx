@@ -326,7 +326,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                         decoding="async"
                                     />
                                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-2 pt-6 pb-1.5">
-                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-white/90">
+                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-white/90">
                                             {symbol} {role}
                                         </span>
                                     </div>
@@ -363,7 +363,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                             <div className="min-w-0">
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
                                     {daysSinceLastEgg !== null ? (
-                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${shouldGlow ? 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30' : 'bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/20'}`}>
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${shouldGlow ? 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30' : 'bg-slate-500/10 text-slate-300 ring-1 ring-slate-500/20'}`}>
                                             {daysSinceLastEgg} day{daysSinceLastEgg !== 1 ? 's' : ''} since last egg
                                         </span>
                                     ) : <span />}
@@ -375,7 +375,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                     {sire?.name || 'N/A'} <span className="text-slate-500 font-normal">&</span> {dam?.name || 'N/A'}
                                 </h3>
                                 {sire?.species && sire.species !== 'Crested Gecko' && (
-                                    <div className="text-xs text-teal-400 font-medium truncate mt-0.5">{sire.species}</div>
+                                    <div className="text-xs text-slate-400 font-medium truncate mt-0.5">{sire.species}</div>
                                 )}
                             </div>
 
@@ -388,7 +388,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 >
                                     <CalendarIcon className="w-4 h-4 text-emerald-300 flex-shrink-0" />
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">Monthly egg check</div>
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">Monthly egg check</div>
                                         <div className="text-sm font-semibold text-emerald-50">
                                             Day {plan.egg_check_day}
                                             <span className="ml-2 text-xs font-normal text-emerald-200/70">
@@ -404,7 +404,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-9 text-xs sm:text-sm border-purple-700/70 text-purple-300 hover:bg-purple-900/30 px-3 w-full sm:w-auto"
+                                    className="h-9 text-xs sm:text-sm border-emerald-700/70 text-emerald-300 hover:bg-emerald-900/30 px-3 w-full sm:w-auto"
                                     onClick={(e) => { e.stopPropagation(); setIsGeneticsOpen(true); }}
                                     title="Genetics calculator"
                                 >
@@ -605,7 +605,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                             an invalid date), and new Date('YYYY-MM-DD') read it as UTC,
                             a day early in the Americas. */}
                         {copulationDate && (
-                        <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-3 text-sm text-blue-300">
+                        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3 text-sm text-slate-300">
                             <p className="font-semibold mb-1">📅 Estimated Timeline</p>
                             <p>Lay Date: ~{format(addDays(parseLocalDate(copulationDate), 30), 'MMM dd, yyyy')}</p>
                             <p>Hatch Date: ~{format(addDays(parseLocalDate(copulationDate), 90), 'MMM dd, yyyy')}</p>
@@ -669,7 +669,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 </p>
                             </div>
                         )}
-                        <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-3 text-sm text-blue-300">
+                        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3 text-sm text-slate-300">
                             <p className="font-semibold mb-2">💡 Tips:</p>
                             <ul className="list-disc list-inside space-y-1">
                                 <li>Female geckos typically lay eggs every 30 days during breeding season</li>

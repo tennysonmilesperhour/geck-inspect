@@ -16,7 +16,7 @@ function GuideCard({ guide }) {
       <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-2">
         Guide {guide.number}
       </div>
-      <h3 className="font-serif text-xl md:text-2xl font-bold text-slate-100 mb-2 group-hover:text-emerald-200">
+      <h3 className="text-xl md:text-2xl font-bold text-slate-100 mb-2 group-hover:text-emerald-200">
         {guide.title}
       </h3>
       <p className="text-sm text-slate-400 leading-relaxed flex-1">
@@ -140,7 +140,7 @@ function SeriesGuide({ guideId }) {
             <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-2">
               Guide {guide.number}
             </div>
-            <h1 className="font-serif text-3xl md:text-4xl font-bold text-slate-100 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-100 mb-2">
               {guide.title}
             </h1>
             <p className="text-slate-400 max-w-3xl">{guide.description}</p>

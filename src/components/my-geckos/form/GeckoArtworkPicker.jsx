@@ -17,7 +17,7 @@ export default function GeckoArtworkPicker({ gecko, onChange, disabled = false, 
     <div className="mb-4 flex items-center gap-4">
       <GeckoPlaceholder gecko={gecko} className="h-28 w-28 shrink-0 rounded-xl shadow-lg sm:h-32 sm:w-32" />
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-emerald-300">{collectionDefault ? 'Your collection, your style' : 'Their collection card'}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-emerald-300">{collectionDefault ? 'Your collection, your style' : 'Their collection card'}</p>
         <p className="mt-1 text-base font-semibold text-slate-100" aria-live="polite" aria-atomic="true">
           {selected ? profile.style.label : defaultLabel}
         </p>
@@ -45,7 +45,7 @@ export default function GeckoArtworkPicker({ gecko, onChange, disabled = false, 
         />
         <div className="h-full rounded-xl border border-slate-600 bg-slate-900/60 p-1.5 transition-colors peer-checked:border-emerald-300 peer-checked:bg-emerald-950/50 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-slate-900 hover:border-slate-400">
           <GeckoPlaceholder gecko={gecko} artStyle={option.artStyle} aria-hidden="true" className="w-full rounded-lg" />
-          <span className="mt-2 flex min-h-8 items-center justify-center px-0.5 text-center text-[11px] font-medium leading-tight text-slate-200">{option.label}</span>
+          <span className="mt-2 flex min-h-8 items-center justify-center px-0.5 text-center text-xs font-medium leading-tight text-slate-200">{option.label}</span>
           {option.id === null && <Shuffle aria-hidden="true" className="absolute left-2.5 top-2.5 h-5 w-5 rounded-full bg-slate-900/90 p-1 text-white" />}
           {selected === option.id && <Check aria-hidden="true" className="absolute right-2.5 top-2.5 h-5 w-5 rounded-full bg-emerald-300 p-1 text-emerald-950 shadow-sm" />}
         </div>

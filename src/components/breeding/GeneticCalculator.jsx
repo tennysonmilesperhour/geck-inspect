@@ -47,8 +47,8 @@ import {
 
 function dominanceBadge(trait) {
   switch (trait?.dominance) {
-    case 'incomplete_dominant': return { label: 'Incomplete dominant', cls: 'bg-purple-700 text-xs' };
-    case 'codominant':          return { label: 'Co-dominant',          cls: 'bg-purple-700 text-xs' };
+    case 'incomplete_dominant': return { label: 'Incomplete dominant', cls: 'bg-emerald-700 text-xs' };
+    case 'codominant':          return { label: 'Co-dominant',          cls: 'bg-emerald-700 text-xs' };
     case 'dominant':            return { label: 'Dominant',             cls: 'bg-slate-600 text-xs' };
     case 'fixed_dominant':      return { label: 'Fixed dominant',       cls: 'bg-slate-600 text-xs' };
     case 'recessive':           return { label: 'Recessive',            cls: 'bg-emerald-800 text-xs' };
@@ -105,7 +105,7 @@ function TagsNotUsed({ sire, dam }) {
         </details>
       )}
       {notes.map((n) => (
-        <p key={n} className="text-xs text-purple-200">{n}</p>
+        <p key={n} className="text-xs text-emerald-200">{n}</p>
       ))}
     </div>
   );
@@ -165,7 +165,7 @@ function EggArray({ eggs, hits, seed }) {
         />
       ))}
       {eggs > shown && (
-        <span className="text-[11px] text-slate-500 self-center ml-1">
+        <span className="text-xs text-slate-500 self-center ml-1">
           showing {shown} of {eggs} eggs
         </span>
       )}
@@ -260,7 +260,7 @@ export default function GeneticCalculator({ sire, dam }) {
             )) : <span className="text-xs text-slate-500">No genes selected</span>}
           </div>
           {(sire.inferred_hets || []).map((h) => (
-            <p key={h.trait} className="text-[11px] text-purple-300 mt-1">
+            <p key={h.trait} className="text-xs text-emerald-300 mt-1">
               {h.probability >= 1
                 ? `lineage proves het ${h.trait}`
                 : `lineage suggests ${pct(h.probability)} poss het ${h.trait}`}
@@ -275,7 +275,7 @@ export default function GeneticCalculator({ sire, dam }) {
             )) : <span className="text-xs text-slate-500">No genes selected</span>}
           </div>
           {(dam.inferred_hets || []).map((h) => (
-            <p key={h.trait} className="text-[11px] text-purple-300 mt-1">
+            <p key={h.trait} className="text-xs text-emerald-300 mt-1">
               {h.probability >= 1
                 ? `lineage proves het ${h.trait}`
                 : `lineage suggests ${pct(h.probability)} poss het ${h.trait}`}
@@ -432,7 +432,7 @@ export default function GeneticCalculator({ sire, dam }) {
                 onClick={() => setSelectedKey(o.phenotype_description)}
                 className={`touch:min-h-11 w-full text-left rounded-lg border px-3 py-2 transition-colors ${
                   isActive
-                    ? 'border-purple-500/70 bg-purple-950/30'
+                    ? 'border-emerald-500/70 bg-emerald-950/30'
                     : 'border-slate-700 bg-slate-900/40 hover:border-slate-500'
                 }`}
               >
@@ -478,7 +478,7 @@ export default function GeneticCalculator({ sire, dam }) {
                         key={l.slug}
                         to={`/MorphGuide/${l.slug}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-xs text-purple-300 hover:text-purple-200 underline inline-flex items-center gap-0.5 touch:min-h-11"
+                        className="text-xs text-emerald-300 hover:text-emerald-200 underline inline-flex items-center gap-0.5 touch:min-h-11"
                       >
                         {l.name} in the Morph Guide
                         <ExternalLink className="w-3 h-3" />
@@ -632,11 +632,11 @@ export default function GeneticCalculator({ sire, dam }) {
               return (
                 <div key={lp.locus} className="bg-slate-800 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Dna className="w-4 h-4 text-purple-400" />
+                    <Dna className="w-4 h-4 text-emerald-400" />
                     <span className="font-semibold text-slate-100">{trait?.name || lp.locus}</span>
                     <Badge className={badge.cls}>{badge.label}</Badge>
                     {slug && (
-                      <Link to={`/MorphGuide/${slug}`} className="text-xs text-purple-300 underline ml-auto touch:inline-flex touch:items-center touch:min-h-11">
+                      <Link to={`/MorphGuide/${slug}`} className="text-xs text-emerald-300 underline ml-auto touch:inline-flex touch:items-center touch:min-h-11">
                         Morph Guide
                       </Link>
                     )}

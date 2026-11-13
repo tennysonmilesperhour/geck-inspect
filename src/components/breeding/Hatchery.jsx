@@ -196,7 +196,7 @@ export default function Hatchery() {
     const getStatusColor = (status) => {
         const colors = {
             'Hatched': 'bg-green-600',
-            'Incubating': 'bg-blue-600',
+            'Incubating': 'bg-emerald-600',
             'Slug': 'bg-red-600',
             'Infertile': 'bg-red-600',
             'Stillbirth': 'bg-gray-600'
@@ -330,9 +330,9 @@ export default function Hatchery() {
         <div className="space-y-6">
             {/* Stats Bar */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-blue-400">{stats.incubating}</p>
-                    <p className="text-xs text-blue-300 mt-1">Incubating</p>
+                <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-slate-100">{stats.incubating}</p>
+                    <p className="text-xs text-slate-400 mt-1">Incubating</p>
                 </div>
                 <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center">
                     <p className="text-2xl font-bold text-green-400">{stats.hatchedTotal}</p>
@@ -539,7 +539,7 @@ export default function Hatchery() {
                                     <EggIcon className="w-6 h-6 text-emerald-400" />
                                     <div className="flex items-center gap-1">
                                         {egg.grade && (
-                                            <Badge className={`text-xs font-bold px-1.5 ${egg.grade === 'A+' ? 'bg-emerald-500 text-white' : egg.grade === 'A' ? 'bg-green-500 text-white' : egg.grade === 'B' ? 'bg-blue-500 text-white' : egg.grade === 'C' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white'}`}>
+                                            <Badge className={`text-xs font-bold px-1.5 ${egg.grade === 'A+' ? 'bg-emerald-500 text-white' : egg.grade === 'A' ? 'bg-green-500 text-white' : egg.grade === 'B' ? 'bg-slate-500 text-white' : egg.grade === 'C' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white'}`}>
                                                 {egg.grade}
                                             </Badge>
                                         )}
@@ -590,7 +590,7 @@ export default function Hatchery() {
                                         </p>
                                     )}
                                     {incubationDays !== null && (
-                                        <p className="text-blue-400 font-semibold">{incubationDays} days incubated</p>
+                                        <p className="text-emerald-400 font-semibold">{incubationDays} days incubated</p>
                                     )}
                                 </div>
 
@@ -645,7 +645,7 @@ export default function Hatchery() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={(e) => handleArchiveEgg(egg.id, true, e)}
-                                        className="relative h-5 touch:min-h-0 touch:min-w-0 touch-hit text-[10px] md:text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700 px-1.5 md:px-2"
+                                        className="relative h-5 touch:min-h-0 touch:min-w-0 touch-hit text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700 px-1.5 md:px-2"
                                     >
                                         <Archive className="w-2.5 h-2.5 md:w-3 md:h-3 md:mr-1" />
                                         <span className="hidden md:inline">Archive</span>
@@ -657,7 +657,7 @@ export default function Hatchery() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={(e) => handleArchiveEgg(egg.id, false, e)}
-                                        className="relative h-5 touch:min-h-0 touch:min-w-0 touch-hit text-[10px] md:text-xs text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 px-1.5 md:px-2"
+                                        className="relative h-5 touch:min-h-0 touch:min-w-0 touch-hit text-xs text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 px-1.5 md:px-2"
                                     >
                                         <ArchiveRestore className="w-2.5 h-2.5 md:w-3 md:h-3 md:mr-1" />
                                         <span className="hidden md:inline">Restore</span>

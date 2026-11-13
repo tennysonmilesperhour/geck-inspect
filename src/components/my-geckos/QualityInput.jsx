@@ -86,7 +86,7 @@ export default function QualityInput({ value, onChange }) {
               title={`${tier.label} grade: ${formatScore(tier.min)} to ${formatScore(tier.max)}`}
             >
               <span>{tier.label}</span>
-              <span className="text-[10px] font-mono opacity-75 mt-0.5">
+              <span className="text-xs font-mono opacity-75 mt-0.5">
                 {formatScore(tier.min)}-{formatScore(tier.max)}
               </span>
             </button>
@@ -109,7 +109,7 @@ export default function QualityInput({ value, onChange }) {
             aria-label="Quality score, 0 to 10"
           />
         </div>
-        <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
+        <div className="flex items-center justify-between text-xs font-mono text-slate-500">
           <span>0.0</span>
           <span>2.5</span>
           <span>5.0</span>
@@ -145,7 +145,7 @@ export default function QualityInput({ value, onChange }) {
         )}
       </div>
 
-      <p className="text-[11px] text-slate-500 leading-relaxed">
+      <p className="text-xs text-slate-500 leading-relaxed">
         Be honest. Optimistic scoring of your own animal is the most common source of mispriced listings. The full rubric, eligibility floor, and per-morph standards are at <Link to="/QualityScale" className="text-emerald-400 underline">/QualityScale</Link>.
       </p>
     </div>

@@ -66,7 +66,7 @@ export default function ParentAutocomplete({
           style={{ maxHeight: 'min(60vh, 420px)' }}
         >
           {filtered.length > 0 && (
-            <div className="sticky top-0 bg-slate-800 border-b border-slate-700 px-3 py-1.5 text-[10px] uppercase tracking-wider text-slate-500 flex items-center justify-between">
+            <div className="sticky top-0 bg-slate-800 border-b border-slate-700 px-3 py-1.5 text-[11px] uppercase tracking-wider text-slate-500 flex items-center justify-between">
               <span>{filtered.length} {filtered.length === 1 ? 'match' : 'matches'} in collection</span>
               {filtered.length > 6 && <span className="text-slate-500">scroll for more</span>}
             </div>

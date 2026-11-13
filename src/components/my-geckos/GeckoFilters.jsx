@@ -76,7 +76,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
                     <Filter className="w-4 h-4 text-slate-400" />
                     Advanced Filters
                     {hasActiveFilters && (
-                        <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0 h-4">
+                        <Badge className="bg-emerald-600 text-white text-xs px-1.5 py-0 h-4">
                             Active
                         </Badge>
                     )}
@@ -115,7 +115,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
                         <div className="flex flex-wrap gap-2">
                             {SPECIES_OPTIONS.map(species => (
                                 <button key={species} onClick={() => handleSpeciesToggle(species)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(filters.species || []).includes(species) ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(filters.species || []).includes(species) ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
                                     {species}
                                 </button>
                             ))}
@@ -173,7 +173,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
                         {(filters.morphTags?.length > 0) && (
                             <div className="flex flex-wrap gap-1 mb-3">
                                 {filters.morphTags.map(tag => (
-                                    <Badge key={tag} className="bg-purple-600 hover:bg-red-600 cursor-pointer text-white" onClick={() => toggleMorphTag(tag)}>
+                                    <Badge key={tag} className="bg-emerald-600 hover:bg-red-600 cursor-pointer text-white" onClick={() => toggleMorphTag(tag)}>
                                         {tag} <X className="w-3 h-3 ml-1" />
                                     </Badge>
                                 ))}
@@ -188,7 +188,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
                                             <button key={m} type="button" onClick={() => toggleMorphTag(m)}
                                                 className={`text-xs px-2 py-0.5 rounded-full transition-all ${
                                                     (filters.morphTags || []).includes(m)
-                                                        ? 'bg-purple-600 text-white'
+                                                        ? 'bg-emerald-600 text-white'
                                                         : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                                                 }`}>
                                                 {m}
@@ -223,7 +223,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
                         {filters.traits.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-3">
                                 {filters.traits.map((trait, idx) => (
-                                    <Badge key={idx} className="bg-blue-600 hover:bg-blue-700 cursor-pointer" onClick={() => removeTrait(trait)}>
+                                    <Badge key={idx} className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer" onClick={() => removeTrait(trait)}>
                                         {trait} <X className="w-3 h-3 ml-1" />
                                     </Badge>
                                 ))}

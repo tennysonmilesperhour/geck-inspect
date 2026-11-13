@@ -50,7 +50,7 @@ export default function KeepersGuideTabs({ categoryId }) {
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
-        <h2 className="font-serif text-2xl md:text-3xl font-bold text-slate-100">
+        <h2 className="text-2xl md:text-3xl font-bold text-slate-100">
           {guide.title}
         </h2>
         {guide.description && (

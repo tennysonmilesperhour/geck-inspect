@@ -77,7 +77,7 @@ export default function WelcomeShelf({ currentUser }) {
     if (!keepers || keepers.length === 0) return null;
 
     return (
-        <Card className="bg-gradient-to-br from-emerald-950/30 via-slate-900/60 to-cyan-950/30 border-emerald-500/20 backdrop-blur-sm">
+        <Card className="bg-gradient-to-br from-emerald-950/30 via-slate-900/60 to-emerald-950/30 border-emerald-500/20 backdrop-blur-sm">
             <CardContent className="p-5">
                 <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-4 h-4 text-emerald-300" />
@@ -118,7 +118,7 @@ export default function WelcomeShelf({ currentUser }) {
                                     </p>
                                 </Link>
                                 {isMe ? (
-                                    <p className="text-center text-[10px] text-slate-500 mt-2 italic">
+                                    <p className="text-center text-xs text-slate-500 mt-2 italic">
                                         That's you
                                     </p>
                                 ) : (

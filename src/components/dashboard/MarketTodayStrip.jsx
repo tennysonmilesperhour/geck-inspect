@@ -41,7 +41,7 @@ export default function MarketTodayStrip() {
               <Icon className="w-4 h-4 shrink-0 text-emerald-400" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-100 truncate">{l.label}</p>
-                <p className="text-[11px] text-slate-500 truncate">
+                <p className="text-xs text-slate-500 truncate">
                   {l.detail}{l.stale ? `. ${l.stale}` : ''}
                 </p>
               </div>

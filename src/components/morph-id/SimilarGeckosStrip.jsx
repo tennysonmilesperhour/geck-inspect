@@ -25,7 +25,7 @@ function EvidenceStrip({ matches, error, isAdmin }) {
         </div>
         {error && (
           isAdmin ? (
-            <p className="text-xs font-mono text-rose-300 break-words">[admin] {error}</p>
+            <p className="text-xs font-mono text-red-300 break-words">[admin] {error}</p>
           ) : (
             <p className="text-xs text-slate-400">{friendlyEmbedError(error)}</p>
           )
@@ -49,7 +49,7 @@ function EvidenceStrip({ matches, error, isAdmin }) {
                 <p className="text-xs font-medium text-slate-200 truncate">
                   {labelFor(match.primary_morph)}
                 </p>
-                <Badge variant="secondary" className="text-[10px] bg-slate-800 text-slate-300">
+                <Badge variant="secondary" className="text-xs bg-slate-800 text-slate-300">
                   neighbor {index + 1}
                 </Badge>
               </div>

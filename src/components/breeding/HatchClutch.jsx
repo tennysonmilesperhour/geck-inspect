@@ -105,7 +105,7 @@ export default function HatchClutch({ phenotypes, labelFor }) {
           <button
             type="button"
             onClick={hatchClutch}
-            className="text-xs font-semibold px-3 py-1.5 touch:min-h-11 rounded-full border border-purple-500/60 bg-purple-600/20 text-purple-200 hover:bg-purple-600/30 inline-flex items-center gap-1.5"
+            className="text-xs font-semibold px-3 py-1.5 touch:min-h-11 rounded-full border border-emerald-500/60 bg-emerald-600/20 text-emerald-200 hover:bg-emerald-600/30 inline-flex items-center gap-1.5"
           >
             <Egg className="w-3.5 h-3.5" />
             Hatch a clutch
@@ -129,7 +129,7 @@ export default function HatchClutch({ phenotypes, labelFor }) {
                   <>
                     {labelFor ? labelFor(o) : o.phenotype_description}
                     {o.health_risk === 'lethal' && (
-                      <span className="block text-[10px] text-red-400">did not develop</span>
+                      <span className="block text-xs text-red-400">did not develop</span>
                     )}
                   </>
                 ) : (

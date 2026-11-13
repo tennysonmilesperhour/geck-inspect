@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import GeckoImage from '@/components/shared/GeckoImage';
+import PageHeader from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 import { isGuestMode } from '@/lib/guestMode';
@@ -249,19 +250,21 @@ export default function Today() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-4 md:p-8 text-slate-100">
+    <div className="mx-auto max-w-3xl p-4 md:p-8 text-slate-100">
       <Seo title="Today" description="What your crested geckos need today: feedings, weigh-ins, eggs and vet follow-ups." path="/Today" noIndex />
 
-      <header className="mb-5 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Today</h1>
-            <p className="text-sm text-slate-400">{dateLine}</p>
-          </div>
-          {/* The same pair of names as the toggle on the Overview
-              (src/pages/Dashboard.jsx). A signed-out visitor has no
-              Overview to open, so the toggle is left out for them. */}
-          {!demoSignedOut && (
+      <div className="mb-5 space-y-3">
+        {/* The shared page header (review finding K3). The Today and
+            Overview toggle rides in its title-row slot, so it stays
+            beside the title on a phone as it did before. It is the same
+            pair of names as the toggle on the Overview
+            (src/pages/Dashboard.jsx). A signed-out visitor has no
+            Overview to open, so the toggle is left out for them. */}
+        <PageHeader
+          title="Today"
+          description={dateLine}
+          className="mb-0 md:mb-0"
+          settings={!demoSignedOut && (
             <nav aria-label="Home views" className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/90 p-1 text-xs font-semibold">
               <span aria-current="page" className="rounded-full bg-emerald-600 px-3 py-1.5 text-white shadow-sm">
                 Today
@@ -274,7 +277,7 @@ export default function Today() {
               </Link>
             </nav>
           )}
-        </div>
+        />
         {signedIn && (
           <nav aria-label="Husbandry tools" className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             <Link
@@ -302,7 +305,7 @@ export default function Today() {
             </Link>
           </nav>
         )}
-      </header>
+      </div>
 
       {demoSignedOut && (
         <div className="mb-5 rounded-2xl border border-emerald-700/50 bg-emerald-950/40 p-4">

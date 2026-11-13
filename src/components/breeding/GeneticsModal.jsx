@@ -22,7 +22,7 @@ export default function GeneticsModal({ isOpen, onClose, sire, dam }) {
             >
                 <div className="flex items-center justify-between p-5 border-b border-slate-700 flex-shrink-0">
                     <div className="flex items-center gap-2">
-                        <Dna className="w-5 h-5 text-purple-400" />
+                        <Dna className="w-5 h-5 text-emerald-400" />
                         <div>
                             <h2 className="text-slate-100 font-semibold text-lg">
                                 Genetic Calculator

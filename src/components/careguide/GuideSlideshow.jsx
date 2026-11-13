@@ -47,7 +47,7 @@ export default function GuideSlideshow({ guide }) {
           <div className="text-[10px] uppercase tracking-[0.2em] text-emerald-400/80 font-bold">
             Keeper's Guide {guide.number}
           </div>
-          <div className="font-serif text-lg md:text-xl font-bold text-slate-100 truncate">
+          <div className="text-lg md:text-xl font-bold text-slate-100 truncate">
             {guide.title}
           </div>
         </div>

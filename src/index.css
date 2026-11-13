@@ -141,76 +141,6 @@ html, body {
 }
 
 
-/* :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-family: 'Outfit', system-ui, sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 9px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-} */
-
 
 
 @layer base {
@@ -959,20 +889,6 @@ button:focus-visible {
     --emerald-800: 40 82% 24%;
     --emerald-900: 40 76% 18%;
     --emerald-950: 40 80% 10%;
-  }
-
-  /* P1 Design System, Passport & new feature pages */
-  :root {
-    --gi-forest-deep: #1A2E1A;
-    --gi-moss-mid: #2D4A2D;
-    --gi-sage-accent: #4E7C4E;
-    --gi-pale-sage: #E8F0E8;
-    --gi-warm-white: #F7F9F4;
-    --gi-ember-gold: #C4860A;
-    --gi-ember-light: #FDF3E0;
-    --gi-alert-red: #C0392B;
-    --gi-slate-text: #3D4A3D;
-    --gi-muted-text: #6B7B6B;
   }
 }
 

@@ -61,7 +61,7 @@ function ConfidenceBadge({ confidence, traitId }) {
 
   const chip = (
     <span
-      className={`text-[10px] uppercase tracking-wider border px-1.5 py-0.5 rounded-full ${badge.cls} ${sources.length ? 'cursor-pointer' : ''}`}
+      className={`text-[11px] uppercase tracking-wider border px-1.5 py-0.5 rounded-full ${badge.cls} ${sources.length ? 'cursor-pointer' : ''}`}
     >
       {badge.label}
     </span>
@@ -82,7 +82,7 @@ function ConfidenceBadge({ confidence, traitId }) {
             {trait?.proven_year ? ` (${trait.proven_year})` : ''}
           </p>
         )}
-        <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Sources</p>
+        <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Sources</p>
         <ul className="space-y-1">
           {sources.map((s) => (
             <li key={s.url}>
@@ -90,7 +90,7 @@ function ConfidenceBadge({ confidence, traitId }) {
                 href={s.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-300 hover:text-purple-200 underline"
+                className="text-emerald-300 hover:text-emerald-200 underline"
               >
                 {displayText(s.name)}
               </a>
@@ -165,7 +165,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
       <span id={parentId} className="sr-only">{parentLabel}</span>
       {/* Proven Mendelian genes */}
       <div className="space-y-2">
-        <p className="text-[10px] uppercase tracking-widest text-slate-500">Proven genes</p>
+        <p className="text-[11px] uppercase tracking-widest text-slate-500">Proven genes</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {proven.map((trait) => (
             <TraitRow
@@ -182,7 +182,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
 
       {/* The Cappuccino complex: one locus, one allele-pair slot */}
       <div className="space-y-1">
-        <p className="text-[10px] uppercase tracking-widest text-slate-500">
+        <p className="text-[11px] uppercase tracking-widest text-slate-500">
           Cappuccino complex (one gene, allelic)
         </p>
         <Label className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
@@ -205,7 +205,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
             ))}
           </SelectContent>
         </Select>
-        <p className="text-[11px] text-slate-500 leading-snug">
+        <p className="text-xs text-slate-500 leading-snug">
           Cappuccino and Sable are versions of the same gene, so one parent holds at most two
           complex alleles. Cappuccino x Sable makes Luwak and can never make a super.
         </p>
@@ -219,7 +219,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
 
       {/* Emerging genes */}
       <div className="space-y-2">
-        <p className="text-[10px] uppercase tracking-widest text-slate-500">Emerging genes</p>
+        <p className="text-[11px] uppercase tracking-widest text-slate-500">Emerging genes</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {emerging.map((trait) => (
             <TraitRow

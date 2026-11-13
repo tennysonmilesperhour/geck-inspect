@@ -220,14 +220,21 @@ const HomeRedirect = () => {
   return <Navigate to={`${memberHome()}${search}`} replace />;
 };
 
-// Spinner used for the in-Layout Suspense boundary, fills whatever
-// space the page slot has rather than the whole viewport, so the
-// sidebar + header stay visible while a lazy page chunk loads.
-const PageSuspenseFallback = (
-  <div className="flex-1 flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+// Shown while a page's code loads: grey blocks in the shape of a page
+// (a title, a toolbar, the content), not a centred spinner, so the
+// screen does not jump when the page arrives (review finding K6).
+// Markup and classes only: this file is downloaded by every page.
+const pageSkeleton = (
+  <div className="animate-pulse p-4 md:p-8" aria-hidden="true">
+    <div className="mb-6 h-8 w-48 rounded-md bg-primary/10" />
+    <div className="mb-4 h-12 rounded-xl bg-primary/10" />
+    <div className="h-64 rounded-xl bg-primary/10" />
   </div>
 );
+
+// In-Layout Suspense boundary: fills the page slot rather than the
+// whole viewport, so the sidebar + header stay visible meanwhile.
+const PageSuspenseFallback = <div className="flex-1">{pageSkeleton}</div>;
 
 // Parent-route element that wraps authenticated pages in a single
 // Layout instance and renders the matched child via <Outlet/>. This
@@ -251,6 +258,10 @@ const LayoutOutlet = () => Layout ? (
   </Layout>
 ) : <Outlet />;
 
+// Full-screen fallback, used outside the Layout: public pages, the
+// landing page and sign-in. It stays a spinner on purpose. The landing
+// page is under an A/B test, so what a visitor sees while it loads does
+// not change until that test ends.
 const LazyFallback = (
   <div className="fixed inset-0 flex items-center justify-center bg-slate-950">
     <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />

@@ -98,7 +98,7 @@ export default function CSVColumnMapper({
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-sm text-slate-200 truncate">{label}</span>
                   {required && (
-                    <Badge className="bg-amber-900/40 text-amber-300 border-amber-700/50 text-[10px] px-1.5 py-0 shrink-0">
+                    <Badge className="bg-amber-900/40 text-amber-300 border-amber-700/50 text-xs px-1.5 py-0 shrink-0">
                       req
                     </Badge>
                   )}
@@ -154,7 +154,7 @@ export default function CSVColumnMapper({
               <Badge
                 key={index}
                 variant="outline"
-                className="text-[10px] text-slate-500 border-slate-700"
+                className="text-xs text-slate-500 border-slate-700"
               >
                 {header}
               </Badge>

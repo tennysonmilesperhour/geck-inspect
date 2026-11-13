@@ -918,7 +918,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                             {/* Primary badge / make-primary action */}
                                                             {isPrimary ? (
                                                                 <div
-                                                                    className="absolute bottom-[5.25rem] left-1 px-1.5 py-0.5 rounded bg-emerald-700/90 text-emerald-50 text-[10px] font-semibold flex items-center gap-1"
+                                                                    className="absolute bottom-[5.25rem] left-1 px-1.5 py-0.5 rounded bg-emerald-700/90 text-emerald-50 text-xs font-semibold flex items-center gap-1"
                                                                     title="Primary display photo (shown on cards)"
                                                                 >
                                                                     <Star className="w-3 h-3 fill-current" /> Primary
@@ -927,7 +927,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => makePrimary(url)}
-                                                                    className="touch-hit absolute bottom-[5.25rem] left-1 px-1.5 py-0.5 rounded bg-slate-900/70 backdrop-blur-sm text-slate-300 hover:text-emerald-300 text-[10px] font-medium flex items-center gap-1"
+                                                                    className="touch-hit absolute bottom-[5.25rem] left-1 px-1.5 py-0.5 rounded bg-slate-900/70 backdrop-blur-sm text-slate-300 hover:text-emerald-300 text-xs font-medium flex items-center gap-1"
                                                                     title="Make this the primary display photo"
                                                                 >
                                                                     <Star className="w-3 h-3" /> Set primary
@@ -940,7 +940,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                                     value={lifeStage}
                                                                     onChange={(e) => setLifeStage(url, e.target.value)}
                                                                     disabled={isArchived}
-                                                                    className="w-full text-[11px] bg-slate-800 border border-slate-600 text-slate-200 rounded px-1.5 py-1 disabled:opacity-50"
+                                                                    className="w-full text-xs bg-slate-800 border border-slate-600 text-slate-200 rounded px-1.5 py-1 disabled:opacity-50"
                                                                     aria-label="Life stage tag"
                                                                 >
                                                                     <option value="">No life-stage tag</option>
@@ -952,7 +952,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                                     value={photoFireState(cropData, url)}
                                                                     onChange={(e) => setFireState(url, e.target.value)}
                                                                     disabled={isArchived}
-                                                                    className="w-full text-[11px] bg-slate-800 border border-slate-600 text-slate-200 rounded px-1.5 py-1 disabled:opacity-50"
+                                                                    className="w-full text-xs bg-slate-800 border border-slate-600 text-slate-200 rounded px-1.5 py-1 disabled:opacity-50"
                                                                     aria-label="Fired up or fired down"
                                                                 >
                                                                     <option value="">No fire-state tag</option>
@@ -1067,7 +1067,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                         )}
                                         <div className="px-2 py-1.5 border-t border-slate-700">
                                             <p className="text-xs font-semibold text-slate-200">{slot.label}</p>
-                                            <p className="text-[11px] leading-snug text-slate-500">{slot.hint}</p>
+                                            <p className="text-xs leading-snug text-slate-500">{slot.hint}</p>
                                         </div>
                                     </div>
                                 );

@@ -115,7 +115,7 @@ export default function MorphShareCard({ analysis, imageUrl, requestKey, isAdmin
               <ShieldQuestion className="w-4 h-4 shrink-0" />
               This makes a public page with this photo and the result. Anyone with the link can see it. Your name and email are not on it, and you can stop sharing at any time.
             </p>
-            {error && <p role="alert" className="text-sm text-rose-300">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
             <div className="flex flex-wrap gap-2">
               <Button onClick={create} disabled={step === 'working'} className="bg-emerald-600 hover:bg-emerald-500 touch:min-h-11">
                 {step === 'working' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Share2 className="w-4 h-4 mr-2" />}
@@ -132,13 +132,13 @@ export default function MorphShareCard({ analysis, imageUrl, requestKey, isAdmin
           <div className="space-y-3">
             <p className="text-sm text-emerald-200">Your card is live. Anyone with this link can see it.</p>
             <p className="text-sm font-mono break-all text-slate-200 bg-slate-950/60 border border-slate-700 rounded-md px-3 py-2">{url}</p>
-            {error && <p role="alert" className="text-sm text-rose-300">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
             <div className="flex flex-wrap items-center gap-2">
               <ShareMenu url={url} title={`${view.headline} crested gecko`} subtitle="Morph ID on Geck Inspect" />
               <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-300 underline underline-offset-4 touch:min-h-11 inline-flex items-center">
                 Open the card
               </a>
-              <Button variant="ghost" onClick={stopSharing} className="text-rose-300 hover:text-rose-200 touch:min-h-11">
+              <Button variant="ghost" onClick={stopSharing} className="text-red-300 hover:text-red-200 touch:min-h-11">
                 <Trash2 className="w-4 h-4 mr-2" /> Stop sharing
               </Button>
             </div>
@@ -210,14 +210,14 @@ export function MyMorphShares({ userId }) {
                   <span className="inline-flex items-center gap-1"><UserPlus className="w-3 h-3" /> {row.signup_count} {row.signup_count === 1 ? 'sign-up' : 'sign-ups'}</span>
                 </p>
                 {removeError === row.id && (
-                  <p role="alert" className="text-xs text-rose-300 mt-1">
+                  <p role="alert" className="text-xs text-red-300 mt-1">
                     Could not stop sharing this card just now, so it is still public. Please try again.
                   </p>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-300 underline underline-offset-4 touch:min-h-11 inline-flex items-center">Open</a>
-                <Button variant="ghost" size="sm" onClick={() => remove(row.id)} disabled={removing === row.id} className="text-rose-300 hover:text-rose-200 touch:min-h-11">
+                <Button variant="ghost" size="sm" onClick={() => remove(row.id)} disabled={removing === row.id} className="text-red-300 hover:text-red-200 touch:min-h-11">
                   {removing === row.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />} Stop sharing
                 </Button>
               </div>

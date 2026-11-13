@@ -57,7 +57,7 @@ function Kicker({ children }) {
 
 function SlideTitle({ children }) {
   return (
-    <h3 className="font-serif text-2xl md:text-4xl font-bold leading-tight text-slate-50 mb-3">
+    <h3 className="text-2xl md:text-4xl font-bold leading-tight text-slate-50 mb-3">
       {children}
     </h3>
   );
@@ -92,7 +92,7 @@ function Cards({ cols = 3, items, tone }) {
               </div>
             )}
             {item.title && (
-              <div className={`font-serif text-lg font-semibold mb-2 ${t.heading}`}>
+              <div className={`text-lg font-semibold mb-2 ${t.heading}`}>
                 {item.title}
               </div>
             )}
@@ -163,7 +163,7 @@ function Ladder({ items }) {
             className={`rounded-lg border border-slate-800 bg-slate-900/40 border-l-4 ${bar} p-4 md:grid md:grid-cols-[140px_1fr] md:gap-5`}
           >
             {rung.badge && (
-              <div className="text-lg md:text-xl font-bold font-serif text-slate-100 mb-1 md:mb-0">
+              <div className="text-lg md:text-xl font-bold text-slate-100 mb-1 md:mb-0">
                 {rung.badge}
               </div>
             )}
@@ -211,7 +211,7 @@ function Compare({ columns }) {
         return (
           <div key={i} className={`rounded-xl border p-4 md:p-5 ${t.card}`}>
             {col.heading && (
-              <div className={`font-serif text-lg font-bold mb-3 ${t.heading}`}>
+              <div className={`text-lg font-bold mb-3 ${t.heading}`}>
                 {col.heading}
               </div>
             )}
@@ -240,7 +240,7 @@ function StatRow({ items }) {
     <div className={`grid grid-cols-2 ${items.length >= 3 ? 'md:grid-cols-3' : ''} ${items.length >= 4 ? 'lg:grid-cols-4' : ''} gap-3`}>
       {items.map((stat, i) => (
         <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-          <div className="font-serif text-2xl md:text-3xl font-bold text-emerald-300">{stat.value}</div>
+          <div className="text-2xl md:text-3xl font-bold text-emerald-300">{stat.value}</div>
           <div className="text-xs uppercase tracking-wider text-slate-400 mt-1">{stat.label}</div>
           {stat.note && <div className="text-xs text-slate-500 mt-1">{stat.note}</div>}
         </div>
@@ -254,7 +254,7 @@ function Timeline({ items }) {
     <ol className="space-y-2">
       {items.map((stage, i) => (
         <li key={i} className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 md:grid md:grid-cols-[140px_180px_1fr] md:gap-4 md:items-baseline">
-          <div className="text-sm font-bold text-emerald-300 font-serif mb-1 md:mb-0">{stage.when}</div>
+          <div className="text-sm font-bold text-emerald-300 mb-1 md:mb-0">{stage.when}</div>
           {stage.label && (
             <div className="text-sm font-semibold text-slate-100 mb-1 md:mb-0">{stage.label}</div>
           )}
@@ -331,7 +331,7 @@ function Callout({ tone = 'info', title, text, items }) {
 function Punnett({ title, parents, cells, outcome }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 md:p-5">
-      {title && <div className="font-serif text-base font-bold text-slate-100 mb-3">{title}</div>}
+      {title && <div className="text-base font-bold text-slate-100 mb-3">{title}</div>}
       <div className="inline-grid grid-cols-[auto_auto_auto] gap-0.5 bg-slate-800 p-0.5 rounded-lg">
         <div />
         {parents[1].map((p, i) => (
@@ -371,7 +371,7 @@ function Punnett({ title, parents, cells, outcome }) {
 function Tree({ root, branches }) {
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-4 text-center font-serif text-lg text-emerald-100 font-semibold">
+      <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-4 text-center text-lg text-emerald-100 font-semibold">
         {root}
       </div>
       <div className="space-y-2 pl-4 md:pl-8 border-l-2 border-slate-800">
@@ -401,7 +401,7 @@ function Tree({ root, branches }) {
 function Principle({ text }) {
   return (
     <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 to-slate-900/60 p-8 md:p-12 text-center">
-      <p className="font-serif text-2xl md:text-4xl font-bold leading-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-emerald-200 max-w-3xl mx-auto">
+      <p className="text-2xl md:text-4xl font-bold leading-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-emerald-200 max-w-3xl mx-auto">
         {text}
       </p>
     </div>
@@ -446,7 +446,7 @@ function Block({ block }) {
     case 'divider':
       return <Divider />;
     case 'heading':
-      return <div className="font-serif text-xl md:text-2xl font-bold text-slate-100 pt-2">{block.text}</div>;
+      return <div className="text-xl md:text-2xl font-bold text-slate-100 pt-2">{block.text}</div>;
     default:
       return null;
   }
@@ -461,7 +461,7 @@ export default function GuideSlide({ slide, number, total }) {
         <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-400/80 mb-6">
           {slide.kicker}
         </div>
-        <h3 className="font-serif text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent">
+        <h3 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent">
           {slide.title}
         </h3>
         {slide.lead && (
@@ -489,7 +489,7 @@ export default function GuideSlide({ slide, number, total }) {
     return (
       <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/50 via-slate-900 to-slate-950 p-8 md:p-14 text-center">
         {slide.kicker && <Kicker>{slide.kicker}</Kicker>}
-        <h3 className="font-serif text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-6 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent max-w-3xl mx-auto">
+        <h3 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-6 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent max-w-3xl mx-auto">
           {slide.title}
         </h3>
         {slide.lead && (

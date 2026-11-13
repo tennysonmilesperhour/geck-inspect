@@ -126,7 +126,7 @@ export default function IncubatorTimeline({ email }) {
         </p>
 
         {/* Month ticks */}
-        <div className="relative h-4 text-[10px] uppercase tracking-wide text-slate-500">
+        <div className="relative h-4 text-[11px] uppercase tracking-wide text-slate-500">
           {win.ticks.map((t) => (
             <span key={t.label + t.frac} className="absolute -translate-x-1/2" style={{ left: `${t.frac * 100}%` }}>
               {t.label}
@@ -146,7 +146,7 @@ export default function IncubatorTimeline({ email }) {
                   </div>
                   <div className="relative h-5 mt-1 rounded bg-slate-800/60 overflow-hidden">
                     <div
-                      className="absolute top-0.5 bottom-0.5 rounded bg-amber-500/25 border border-amber-400/70 text-amber-50 text-[10px] leading-none flex items-center px-1.5 whitespace-nowrap overflow-hidden"
+                      className="absolute top-0.5 bottom-0.5 rounded bg-amber-500/25 border border-amber-400/70 text-amber-50 text-xs leading-none flex items-center px-1.5 whitespace-nowrap overflow-hidden"
                       style={{ left: `${left}%`, width: `${width}%` }}
                       title={`Laid ${format(c.lay, 'MMM d')}, expected ${format(c.due, 'MMM d')}`}
                     >

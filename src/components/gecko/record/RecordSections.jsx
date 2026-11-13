@@ -35,13 +35,13 @@ const HEADING_CLASS = 'text-base font-semibold text-slate-100 mb-3 flex items-ce
 const ICON_CLASS = 'w-4 h-4 text-emerald-400';
 
 const STATUS_COLORS = {
-  'Ready to Breed': 'bg-teal-700',
+  'Ready to Breed': 'bg-green-700',
   Proven: 'bg-emerald-700',
-  Holdback: 'bg-blue-700',
+  Holdback: 'bg-slate-700',
   'For Sale': 'bg-yellow-700',
   Sold: 'bg-gray-700',
-  Pet: 'bg-purple-700',
-  'Future Breeder': 'bg-indigo-700',
+  Pet: 'bg-slate-700',
+  'Future Breeder': 'bg-slate-700',
 };
 
 const day = (iso, pattern = 'MMM d, yyyy') => {
@@ -87,7 +87,7 @@ export function RecordSummary({ gecko, latest, headingAs: Heading = 'h2', onOpen
           {gecko.sex && <Badge variant="secondary">{gecko.sex}</Badge>}
           {latest && <Badge variant="outline" className="border-slate-600">{latest.grams} g</Badge>}
           {age && <Badge variant="outline" className="border-slate-600">{age === 'today' ? 'Hatched today' : `${age} old`}</Badge>}
-          {gecko.sex === 'Female' && gecko.is_gravid && <Badge className="bg-pink-800 text-pink-100">Gravid</Badge>}
+          {gecko.sex === 'Female' && gecko.is_gravid && <Badge className="bg-emerald-800 text-emerald-100">Gravid</Badge>}
           {/* Why it left the collection, in the same words as its card:
               "In memory" for a gecko that died, "Sold", or "Archived". */}
           {gecko.archived && <ArchiveStatusChip reason={gecko.archive_reason || 'other'} />}

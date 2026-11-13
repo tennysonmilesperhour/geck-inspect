@@ -12,14 +12,14 @@ const POLL_MS = 30000;
 
 const TYPE_META = {
     upload:         { icon: Camera,        tint: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
-    forum_post:     { icon: MessageSquare, tint: 'text-violet-300',  bg: 'bg-violet-500/10 border-violet-500/20' },
-    breeding_plan:  { icon: GitBranch,     tint: 'text-pink-300',    bg: 'bg-pink-500/10 border-pink-500/20' },
+    forum_post:     { icon: MessageSquare, tint: 'text-slate-300',   bg: 'bg-slate-500/10 border-slate-500/20' },
+    breeding_plan:  { icon: GitBranch,     tint: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/20' },
     hatched:        { icon: Egg,           tint: 'text-lime-300',    bg: 'bg-lime-500/10 border-lime-500/30' },
     join:           { icon: UserPlus,      tint: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/20' },
 };
 
 const REACTION_META = {
-    heart:    { icon: Heart,    label: 'Heart',    color: 'text-rose-400' },
+    heart:    { icon: Heart,    label: 'Heart',    color: 'text-red-400' },
     congrats: { icon: Sparkles, label: 'Congrats', color: 'text-emerald-300' },
     fire:     { icon: Flame,    label: 'Fire',     color: 'text-amber-400' },
 };
@@ -192,7 +192,7 @@ export default function LiveFeed({ currentUserEmail }) {
                                             </Link>{' '}
                                             <span className="text-slate-400">{ev.summary}</span>
                                         </p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">
+                                        <p className="text-xs text-slate-500 mt-0.5">
                                             {formatDistanceToNowStrict(new Date(ev.created_date), { addSuffix: true })}
                                             {ev.event_type !== 'join' && (
                                                 <>

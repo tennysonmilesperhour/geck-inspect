@@ -74,20 +74,20 @@ export default function PairingValuePanel({ plan, sire, dam, eggs = [] }) {
         </div>
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="rounded-md bg-slate-900/70 border border-slate-700/60 p-2">
-            <p className="text-[11px] text-slate-500">Viable eggs</p>
+            <p className="text-xs text-slate-500">Viable eggs</p>
             <p className="text-sm font-semibold text-slate-100 tabular-nums">{viable} <span className="text-slate-400 font-normal">({money(eggsValue)})</span></p>
           </div>
           <div className="rounded-md bg-slate-900/70 border border-slate-700/60 p-2">
-            <p className="text-[11px] text-slate-500">Tied costs</p>
+            <p className="text-xs text-slate-500">Tied costs</p>
             <p className="text-sm font-semibold text-orange-300 tabular-nums">{money(costTotal)}</p>
           </div>
           <div className="rounded-md bg-slate-900/70 border border-slate-700/60 p-2">
-            <p className="text-[11px] text-slate-500">Expected net</p>
+            <p className="text-xs text-slate-500">Expected net</p>
             <p className={`text-sm font-semibold tabular-nums ${net >= 0 ? 'text-emerald-300' : 'text-red-400'}`}>{money(net)}</p>
           </div>
         </div>
         <div>
-          <p className="text-[11px] text-slate-500 mb-1">Share of eggs by the trait that sets the price</p>
+          <p className="text-xs text-slate-500 mb-1">Share of eggs by the trait that sets the price</p>
           <ul className="space-y-1">
             {value.groups.slice(0, 5).map((g) => (
               <li key={g.key} className="flex justify-between gap-2 text-xs">
@@ -119,7 +119,7 @@ export default function PairingValuePanel({ plan, sire, dam, eggs = [] }) {
         <DollarSign className="w-4 h-4 text-emerald-400" /> Pairing value
       </h4>
       {body}
-      <p className="text-[11px] text-slate-500 leading-relaxed">
+      <p className="text-xs text-slate-500 leading-relaxed">
         Median hatchling asking prices from public marketplace listings for each outcome&apos;s traits. Babies often sell for less,
         and pattern quality moves the price most. Tie costs to this pairing and see real sales in{' '}
         <Link to={`${createPageUrl('MarketplaceSalesStats')}`} className="text-emerald-400 hover:text-emerald-300">Business</Link>.

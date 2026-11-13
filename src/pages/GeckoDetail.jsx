@@ -1,7 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 import { api } from '@/api/appClient';
 import { Gecko, CollectionMember } from '@/entities/all';
@@ -100,9 +101,25 @@ export default function GeckoDetail() {
   }, [geckoId]);
 
   if (state.status === 'loading') {
+    // Grey blocks in the shape of the record (its bar, the photo beside
+    // the name, two cards), so the page does not jump when it arrives.
     return (
-      <div className="flex justify-center items-center min-h-[60vh] bg-slate-950" role="status" aria-label="Loading the gecko record">
-        <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+      <div className="min-h-screen bg-slate-950 md:p-8" role="status" aria-label="Loading the gecko record">
+        <div className="max-w-5xl mx-auto p-4 space-y-4">
+          <Skeleton className="h-9 w-full" />
+          <div className="flex gap-3 sm:gap-5">
+            <Skeleton className="h-28 w-28 shrink-0 rounded-xl" />
+            <div className="flex-1 space-y-3 pt-1">
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-5 w-2/3" />
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-40 rounded-xl" />
+            <Skeleton className="h-40 rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }

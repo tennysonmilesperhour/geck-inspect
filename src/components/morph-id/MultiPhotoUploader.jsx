@@ -154,7 +154,7 @@ export default function MultiPhotoUploader({
             key={item.id}
             className={`relative rounded-lg overflow-hidden border ${
               item.status === 'failed'
-                ? 'border-rose-500'
+                ? 'border-red-500'
                 : i === 0
                   ? 'border-emerald-500'
                   : 'border-slate-700'
@@ -171,20 +171,20 @@ export default function MultiPhotoUploader({
               </div>
             )}
             {item.status === 'failed' && (
-              <div className="absolute inset-0 bg-rose-950/70 flex items-center justify-center text-rose-200 text-xs p-2 text-center">
+              <div className="absolute inset-0 bg-red-950/70 flex items-center justify-center text-red-200 text-xs p-2 text-center">
                 upload failed
               </div>
             )}
             <button
               type="button"
               onClick={() => remove(item.id)}
-              className="absolute top-1 right-1 p-2 bg-black/70 hover:bg-rose-600 rounded-full min-w-11 min-h-11 grid place-items-center"
+              className="absolute top-1 right-1 p-2 bg-black/70 hover:bg-red-600 rounded-full min-w-11 min-h-11 grid place-items-center"
               aria-label="Remove photo"
             >
               <X className="w-3.5 h-3.5 text-white" />
             </button>
             {i === 0 ? (
-              <span className="absolute bottom-1 left-1 text-[10px] uppercase tracking-wide bg-emerald-600 text-white px-1.5 py-0.5 rounded">
+              <span className="absolute bottom-1 left-1 text-[11px] uppercase tracking-wide bg-emerald-600 text-white px-1.5 py-0.5 rounded">
                 primary
               </span>
             ) : (
@@ -223,7 +223,7 @@ export default function MultiPhotoUploader({
           >
             <Upload className="w-6 h-6 mb-1" />
             <span className="text-xs">Add photo</span>
-            <span className="text-[10px] text-slate-500">{max - items.length} remaining</span>
+            <span className="text-xs text-slate-500">{max - items.length} remaining</span>
           </button>
         )}
       </div>

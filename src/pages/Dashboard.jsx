@@ -253,7 +253,7 @@ export default function Dashboard() {
             {/* Ambient background */}
             <div className="absolute inset-0 gecko-scale-pattern opacity-5 pointer-events-none" />
             <div className="absolute top-0 right-0 w-[32rem] h-[32rem] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[32rem] h-[32rem] bg-gradient-radial from-teal-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[32rem] h-[32rem] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 p-4 md:p-8">
                 <div className="max-w-7xl mx-auto space-y-6 dashboard-home">
@@ -263,7 +263,7 @@ export default function Dashboard() {
                         should answer an action). */}
                     <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/60 via-slate-900/80 to-slate-950/80 backdrop-blur-sm dashboard-card-hover">
                         <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-                        <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
                         <div className="relative z-10 p-5 md:p-6">
                             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -315,7 +315,9 @@ export default function Dashboard() {
                                                     </>
                                                 )}
                                             </>
-                                        ) : (!user || isGuestMode()) ? (
+                                        ) : (!user || isGuestMode()) && stats.users > 0 && stats.geckos > 0 ? (
+                                            // Only with real counts: before they load, or if they
+                                            // fail to, this read "0 keepers are tracking 0 geckos".
                                             <>
                                                 Right now,{' '}
                                                 <span className="font-bold text-white">{stats.users.toLocaleString()}</span>{' '}
@@ -323,6 +325,8 @@ export default function Dashboard() {
                                                 <span className="font-bold text-white">{stats.geckos.toLocaleString()}</span>{' '}
                                                 crested geckos together.
                                             </>
+                                        ) : (!user || isGuestMode()) ? (
+                                            'This is the demo collection. Look around; nothing you do here is saved.'
                                         ) : (
                                             'Welcome to Geck Inspect. Everything on this page fills in as your collection grows.'
                                         )}
@@ -413,28 +417,24 @@ export default function Dashboard() {
                                 title="Your Geckos"
                                 value={personalStats.geckos.toLocaleString()}
                                 icon={GitBranch}
-                                gradient="from-emerald-500 to-green-600"
                                 description={dashPrefs.compactStats ? '' : 'In your collection'}
                             />
                             <StatsCard
                                 title="Your Pairings"
                                 value={personalStats.pairings.toLocaleString()}
                                 icon={Egg}
-                                gradient="from-pink-500 to-rose-600"
                                 description={dashPrefs.compactStats ? '' : 'Active breeding plans'}
                             />
                             <StatsCard
                                 title="Eggs Incubating"
                                 value={hatcheryStats.incubating.toLocaleString()}
                                 icon={Egg}
-                                gradient="from-amber-500 to-orange-600"
                                 description={dashPrefs.compactStats ? '' : 'In your incubator'}
                             />
                             <StatsCard
                                 title="Hatched"
                                 value={hatcheryStats.hatched.toLocaleString()}
                                 icon={GitBranch}
-                                gradient="from-cyan-500 to-blue-600"
                                 description={dashPrefs.compactStats ? '' : 'Eggs you have hatched'}
                             />
                         </div>
@@ -445,28 +445,24 @@ export default function Dashboard() {
                                 title="Keepers"
                                 value={stats.users.toLocaleString()}
                                 icon={Users}
-                                gradient="from-cyan-500 to-blue-600"
                                 description={dashPrefs.compactStats ? '' : 'In the community'}
                             />
                             <StatsCard
                                 title="Crested Geckos"
                                 value={stats.geckos.toLocaleString()}
                                 icon={GitBranch}
-                                gradient="from-emerald-500 to-green-600"
                                 description={dashPrefs.compactStats ? '' : 'Tracked together'}
                             />
                             <StatsCard
                                 title="Fresh Photos"
                                 value={stats.images.toLocaleString()}
                                 icon={Camera}
-                                gradient="from-amber-500 to-orange-600"
                                 description={dashPrefs.compactStats ? '' : 'Just uploaded'}
                             />
                             <StatsCard
                                 title="Forum Threads"
                                 value={stats.posts.toLocaleString()}
                                 icon={MessageSquare}
-                                gradient="from-violet-500 to-purple-600"
                                 description={dashPrefs.compactStats ? '' : 'Buzzing now'}
                             />
                         </div>
@@ -534,7 +530,7 @@ export default function Dashboard() {
                                     </div>
                                     <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
                                         <div
-                                            className="bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 h-full rounded-full transition-all duration-700"
+                                            className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 h-full rounded-full transition-all duration-700"
                                             style={{
                                                 width:
                                                     hatcheryStats.total > 0

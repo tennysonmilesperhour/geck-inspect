@@ -354,7 +354,7 @@ export default function GeneticCalculatorTool({
 
                 {isLoading || !engine ? (
                     <div className="text-center py-20">
-                        <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto" />
+                        <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto" />
                     </div>
                 ) : (
                     <>
@@ -369,7 +369,7 @@ export default function GeneticCalculatorTool({
                               onClick={() => setMode('manual')}
                               className={`touch:min-h-11 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                                 mode === 'manual'
-                                  ? 'bg-purple-600/20 border-purple-500/60 text-purple-200'
+                                  ? 'bg-emerald-600/20 border-emerald-500/60 text-emerald-200'
                                   : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
                               }`}
                             >
@@ -381,7 +381,7 @@ export default function GeneticCalculatorTool({
                               onClick={() => setMode('collection')}
                               className={`touch:min-h-11 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                                 mode === 'collection'
-                                  ? 'bg-purple-600/20 border-purple-500/60 text-purple-200'
+                                  ? 'bg-emerald-600/20 border-emerald-500/60 text-emerald-200'
                                   : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
                               }`}
                             >
@@ -403,10 +403,10 @@ export default function GeneticCalculatorTool({
                               value={omniboxText}
                               onChange={(e) => setOmniboxText(e.target.value)}
                               placeholder='Type a pairing: "lilly white het axanthic x sable"'
-                              className="flex-1 min-w-0 h-10 touch:h-11 rounded-md bg-slate-800 border border-slate-600 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                              className="flex-1 min-w-0 h-10 touch:h-11 rounded-md bg-slate-800 border border-slate-600 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                               aria-label="Type a pairing in breeder shorthand"
                             />
-                            <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white text-sm h-10">
+                            <Button type="submit" className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm h-10">
                               Fill parents
                             </Button>
                           </div>
@@ -428,17 +428,17 @@ export default function GeneticCalculatorTool({
                         )}
 
                         {/* Reverse-mode and learn-mode cross-links */}
-                        <div className="mb-4 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                        <div className="mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
                           <p className="text-sm text-slate-300">
                             Have a dream gecko in mind? Work backwards from the target. New to
                             genetics? Learn by playing.
                           </p>
                           <span className="flex items-center gap-4 whitespace-nowrap">
-                            <Link to="/calculator/reverse" className="inline-flex items-center touch:min-h-11 text-sm text-purple-300 hover:text-purple-200 underline">
+                            <Link to="/calculator/reverse" className="inline-flex items-center touch:min-h-11 text-sm text-emerald-300 hover:text-emerald-200 underline">
                               Reverse calculator
                               <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
                             </Link>
-                            <Link to="/calculator/learn" className="inline-flex items-center touch:min-h-11 text-sm text-purple-300 hover:text-purple-200 underline">
+                            <Link to="/calculator/learn" className="inline-flex items-center touch:min-h-11 text-sm text-emerald-300 hover:text-emerald-200 underline">
                               Clutch Lab
                               <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
                             </Link>
@@ -548,12 +548,12 @@ export default function GeneticCalculatorTool({
                   <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <Dna className="w-4 h-4 text-purple-400" />
+                        <Dna className="w-4 h-4 text-emerald-400" />
                         <h2 className="text-sm font-semibold text-slate-100">Built crested-gecko-first</h2>
                       </div>
                       <p className="text-xs text-slate-400 leading-relaxed">
                         The inheritance rules here are tuned for crested geckos (Correlophus ciliatus), not adapted from a general reptile calculator. Lilly White, Cappuccino and Soft Scale are modeled as incomplete dominant (Super Lilly White is lethal, Super Cappuccino has serious health problems) and Axanthic as recessive, so the outcomes match how these traits actually pass in the hobby. Learn the underlying rules in the{' '}
-                        <Link to="/GeneticsGuide" className="text-purple-300 hover:text-purple-200">genetics guide</Link>.
+                        <Link to="/GeneticsGuide" className="text-emerald-300 hover:text-emerald-200">genetics guide</Link>.
                       </p>
                     </div>
                     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
@@ -569,15 +569,15 @@ export default function GeneticCalculatorTool({
                     </div>
                     <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <ArrowRight className="w-4 h-4 text-sky-400" />
+                        <ArrowRight className="w-4 h-4 text-emerald-400" />
                         <h2 className="text-sm font-semibold text-slate-100">Free, no account needed</h2>
                       </div>
                       <p className="text-xs text-slate-400 leading-relaxed">
                         Run any pairing right now without signing up. Explore per-trait calculators for{' '}
-                        <Link to="/calculator/lilly-white" className="text-sky-300 hover:text-sky-200">Lilly White</Link>,{' '}
-                        <Link to="/calculator/cappuccino" className="text-sky-300 hover:text-sky-200">Cappuccino</Link>, and{' '}
-                        <Link to="/calculator/axanthic" className="text-sky-300 hover:text-sky-200">Axanthic</Link>, or browse the full{' '}
-                        <Link to="/MorphGuide" className="text-sky-300 hover:text-sky-200">morph guide</Link>.
+                        <Link to="/calculator/lilly-white" className="text-emerald-300 hover:text-emerald-200">Lilly White</Link>,{' '}
+                        <Link to="/calculator/cappuccino" className="text-emerald-300 hover:text-emerald-200">Cappuccino</Link>, and{' '}
+                        <Link to="/calculator/axanthic" className="text-emerald-300 hover:text-emerald-200">Axanthic</Link>, or browse the full{' '}
+                        <Link to="/MorphGuide" className="text-emerald-300 hover:text-emerald-200">morph guide</Link>.
                       </p>
                     </div>
                   </div>

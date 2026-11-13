@@ -891,9 +891,9 @@ export default function Recognition() {
           // keyed off the structured error code from the edge function.
           if (isAdmin) {
             return (
-              <Card className="bg-rose-950/40 border-rose-800">
-                <CardContent className="p-4 text-rose-200 space-y-1">
-                  <div className="text-xs uppercase tracking-wide text-rose-300/80">
+              <Card className="bg-red-950/40 border-red-800">
+                <CardContent className="p-4 text-red-200 space-y-1">
+                  <div className="text-xs uppercase tracking-wide text-red-300/80">
                     [admin] {error.code || 'error'}{error.failure_kind === 'provider_billing' ? ' (provider billing)' : ''}
                   </div>
                   <div className="font-mono text-sm whitespace-pre-wrap break-words">
@@ -913,20 +913,20 @@ export default function Recognition() {
           return (
             <Card className={isExhausted
               ? 'bg-amber-950/40 border-amber-800'
-              : 'bg-rose-950/40 border-rose-800'
+              : 'bg-red-950/40 border-red-800'
             }>
               <CardContent className="p-5 flex flex-col items-center text-center gap-3">
                 {isExhausted && <Lock className="w-6 h-6 text-amber-300" />}
                 <div>
-                  <p className={`font-semibold ${isExhausted ? 'text-amber-100' : 'text-rose-100'}`}>
+                  <p className={`font-semibold ${isExhausted ? 'text-amber-100' : 'text-red-100'}`}>
                     {friendly.title}
                   </p>
-                  <p className={`text-sm mt-1 ${isExhausted ? 'text-amber-200/80' : 'text-rose-200/80'}`}>
+                  <p className={`text-sm mt-1 ${isExhausted ? 'text-amber-200/80' : 'text-red-200/80'}`}>
                     {friendly.body}
                   </p>
                 </div>
                 {canRetry && viewsComplete && (
-                  <Button onClick={analyze} disabled={isAnalyzing} className="bg-rose-500 hover:bg-rose-400 text-white">
+                  <Button onClick={analyze} disabled={isAnalyzing} className="bg-red-600 hover:bg-red-500 text-white">
                     <RotateCcw className="w-4 h-4 mr-2" /> Try again
                   </Button>
                 )}
@@ -944,7 +944,7 @@ export default function Recognition() {
                   <Button
                     type="button"
                     onClick={() => navigate(friendly.cta.href)}
-                    className="bg-rose-500 hover:bg-rose-400 text-white"
+                    className="bg-red-600 hover:bg-red-500 text-white"
                   >
                     {friendly.cta.label}
                   </Button>

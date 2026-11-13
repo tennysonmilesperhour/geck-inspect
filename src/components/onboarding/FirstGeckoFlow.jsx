@@ -274,7 +274,7 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
               </div>
               <div className="rounded-lg border border-emerald-500/50 bg-emerald-950/30 px-3 py-2 text-center">
                 <p className="font-semibold text-slate-100 truncate">{name}</p>
-                <p className="text-[11px] text-slate-400 truncate">{[gecko.sex === 'Unsexed' ? 'Not sexed yet' : gecko.sex, gecko.morphs_traits].filter(Boolean).join(', ')}</p>
+                <p className="text-xs text-slate-400 truncate">{[gecko.sex === 'Unsexed' ? 'Not sexed yet' : gecko.sex, gecko.morphs_traits].filter(Boolean).join(', ')}</p>
                 {/* The value card is below the fold on a phone; this line puts the estimate where it is seen. */}
                 <ValueEstimateLine gecko={gecko} name={name} />
               </div>
@@ -296,7 +296,7 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
 
               <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-3 space-y-2">
                 <div className="flex items-start gap-2.5">
-                  <Scale className="w-4 h-4 mt-0.5 text-sky-400 shrink-0" />
+                  <Scale className="w-4 h-4 mt-0.5 text-emerald-400 shrink-0" />
                   <div className="flex-1 min-w-0">
                     {schedule.weighIn.hasWeight ? (
                       <>
@@ -449,7 +449,7 @@ function ParentBox({ role, name, tone }) {
   const toneClass = tone === 'pink' ? 'border-pink-500/40 text-pink-300' : 'border-sky-500/40 text-sky-300';
   return (
     <div className={`rounded-lg border bg-slate-900/60 px-3 py-2 min-w-0 ${toneClass}`}>
-      <p className="text-[10px] uppercase tracking-wider">{role}</p>
+      <p className="text-[11px] uppercase tracking-wider">{role}</p>
       <p className={`text-sm font-semibold truncate ${name ? 'text-slate-100' : 'text-slate-500'}`}>{name || 'Unknown'}</p>
     </div>
   );
@@ -460,7 +460,7 @@ function ReminderSwitch({ id, label, detail, checked, disabled, onChange }) {
     <div className="flex items-start justify-between gap-3 border-t border-slate-700/70 pt-2">
       <div className="min-w-0">
         <Label htmlFor={id} className="text-sm text-slate-100">{label}</Label>
-        <p className="text-[11px] text-slate-400 mt-0.5">{detail}</p>
+        <p className="text-xs text-slate-400 mt-0.5">{detail}</p>
       </div>
       <Switch id={id} checked={checked} disabled={disabled} onCheckedChange={onChange} />
     </div>

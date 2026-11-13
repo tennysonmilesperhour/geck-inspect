@@ -889,16 +889,17 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             )}
           </SidebarBody>
 
-          {/* Scroll hint, a fade + bouncing chevron that overlaps the
+          {/* Scroll hint, a fade and a still chevron that overlaps the
               end of the scrollable nav so users see, at a glance,
               that there's more content above the footer. Pulled up
               with negative margin so the gradient visually blends
-              into the last visible nav item. */}
+              into the last visible nav item. The chevron does not
+              bounce: motion answers an action (review finding K7). */}
           <div
             aria-hidden="true"
             className="sidebar-scroll-hint pointer-events-none relative -mt-10 h-10 flex items-end justify-center bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"
           >
-            <ChevronDown className="w-4 h-4 text-emerald-300/80 animate-bounce mb-1" />
+            <ChevronDown className="w-4 h-4 text-emerald-300/80 mb-1" />
           </div>
 
           <SidebarFooter className="px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-emerald-900/40">

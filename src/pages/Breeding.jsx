@@ -19,6 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, GitBranch, Heart, ChevronDown, ChevronUp, Calendar as CalendarIcon, CalendarRange, Archive, ListTree, Search, Dna, Moon, AlertTriangle, Sparkles, ArrowRight } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
+import { Skeleton } from '@/components/ui/skeleton';
 import EmptyState from '../components/shared/EmptyState';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import PageHeader from '@/components/shared/PageHeader';
@@ -74,9 +75,11 @@ const TAB_ICONS = {
     archive: Archive,
 };
 
+// Shown while the plans (or a tab's code) load: grey blocks in the shape
+// of the plan cards, not a centred spinner.
 const TAB_LOADING = (
-    <div className="text-center py-20">
-        <LoadingSpinner />
+    <div className="space-y-4" role="status" aria-label="Loading">
+        {[0, 1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
     </div>
 );
 
@@ -656,11 +659,7 @@ export default function BreedingPage() {
                     />
                 )}
 
-                {isLoading ? (
-                    <div className="text-center py-20">
-                        <LoadingSpinner />
-                    </div>
-                ) : (
+                {isLoading ? TAB_LOADING : (
                     <Tabs value={activeTab} onValueChange={(value) => {
                         setActiveTab(value);
                         setExpandedPlanIds(new Set());
@@ -754,8 +753,8 @@ export default function BreedingPage() {
                                                 <div className="space-y-6">
                                                     {Object.entries(bySpecies).sort(([a],[b]) => a.localeCompare(b)).map(([species, plans]) => (
                                                         <div key={species}>
-                                                            <h2 className="text-xl font-bold text-teal-400 mb-3 flex items-center gap-2">
-                                                                <span className="w-2 h-2 rounded-full bg-teal-400 inline-block"></span>
+                                                            <h2 className="text-xl font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                                                                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
                                                                 {species} <span className="text-slate-500 text-base font-normal">({plans.length})</span>
                                                             </h2>
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -102,12 +102,12 @@ export default function MorphPicker({
                   title={g.notes}
                   className={`px-3 py-1.5 touch:min-h-11 rounded-full text-xs transition-colors border ${
                     selected
-                      ? 'bg-purple-600 text-white border-purple-500'
+                      ? 'bg-emerald-600 text-white border-emerald-500'
                       : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
                   }`}
                 >
                   {g.label}
-                  <span className={`ml-2 ${selected ? 'text-purple-100' : 'text-slate-500'}`}>
+                  <span className={`ml-2 ${selected ? 'text-emerald-100' : 'text-slate-500'}`}>
                     · {g.inheritance.split(' ')[0]}
                   </span>
                 </button>

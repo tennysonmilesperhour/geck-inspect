@@ -106,7 +106,7 @@ function GeckoLightbox({ gecko, onClose }) {
                         <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-300/80 mb-1">
                             {gecko.gecko_id_code || 'Crested gecko'}
                         </p>
-                        <h2 className="font-serif text-3xl font-bold leading-tight">{gecko.name}</h2>
+                        <h2 className="text-3xl font-bold leading-tight">{gecko.name}</h2>
                     </div>
                     {gecko.morphs_traits && (
                         <p className="text-sm text-slate-300 leading-relaxed">{gecko.morphs_traits}</p>
@@ -299,7 +299,7 @@ export default function StorePage() {
                 <GeckInspectPill />
                 <div className="text-center max-w-md">
                     <Store className="w-12 h-12 mx-auto text-stone-500 mb-4" />
-                    <h1 className="font-serif text-3xl font-bold mb-2 text-white">Not here yet</h1>
+                    <h1 className="text-3xl font-bold mb-2 text-white">Not here yet</h1>
                     <p className="text-stone-400 mb-6">
                         No published store at <code className="text-emerald-400">/store/{slug}</code>.
                     </p>
@@ -315,7 +315,7 @@ export default function StorePage() {
         return (
             <div className="min-h-screen bg-stone-950 text-stone-200 flex items-center justify-center p-6">
                 <div className="text-center max-w-md space-y-3">
-                    <h1 className="font-serif text-3xl font-bold text-white">You blocked this breeder</h1>
+                    <h1 className="text-3xl font-bold text-white">You blocked this breeder</h1>
                     <p className="text-stone-400 text-sm">Their store, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
                     {/* Straight to the blocked list (Data and privacy tab). */}
                     <Button onClick={() => navigate('/Settings#blocked-users')} className="bg-emerald-600 hover:bg-emerald-500">Open Settings</Button>

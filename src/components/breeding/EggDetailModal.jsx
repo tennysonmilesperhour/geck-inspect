@@ -160,7 +160,7 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, pairEggs 
                         {egg.status === 'Incubating' ? (
                             <p className="text-emerald-400 text-lg font-semibold">Day {daysIncubating}</p>
                         ) : incubationDays !== null ? (
-                            <p className="text-blue-400 text-lg font-semibold">{incubationDays} days incubated</p>
+                            <p className="text-emerald-400 text-lg font-semibold">{incubationDays} days incubated</p>
                         ) : null}
                     </div>
 

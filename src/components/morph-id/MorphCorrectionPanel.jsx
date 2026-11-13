@@ -43,7 +43,7 @@ const STATUS = {
   insufficient_evidence: {
     label: 'Better photos needed',
     icon: ImagePlus,
-    className: 'border-rose-800 bg-rose-950/40 text-rose-100',
+    className: 'border-red-800 bg-red-950/40 text-red-100',
     detail: 'The current photos do not support a responsible visual identification.',
   },
 };
@@ -355,7 +355,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                   </div>
                   <div className="mt-2 ml-8 h-1.5 rounded-full bg-slate-900/80 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-700 ease-out"
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-700 ease-out"
                       style={{ width: `${pctWidth}%` }}
                     />
                   </div>

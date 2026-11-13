@@ -25,9 +25,9 @@ import { formatDistanceToNowStrict } from 'date-fns';
 
 const TYPE_META = {
     gecko: { icon: GitBranch, tint: 'text-emerald-400', verb: 'added a new gecko' },
-    image: { icon: Camera, tint: 'text-purple-400', verb: 'uploaded a photo' },
+    image: { icon: Camera, tint: 'text-slate-300', verb: 'uploaded a photo' },
     post: { icon: MessageSquare, tint: 'text-amber-400', verb: 'started a forum discussion' },
-    plan: { icon: Sparkles, tint: 'text-rose-400', verb: 'started a breeding plan' },
+    plan: { icon: Sparkles, tint: 'text-emerald-300', verb: 'started a breeding plan' },
 };
 
 export default function CommunityPulse() {
@@ -168,7 +168,7 @@ export default function CommunityPulse() {
                                                 <span className="text-slate-300">· {item.detail}</span>
                                             </p>
                                         </div>
-                                        <span className="text-[10px] text-slate-500 shrink-0">
+                                        <span className="text-xs text-slate-500 shrink-0">
                                             {formatDistanceToNowStrict(new Date(item.ts), { addSuffix: true })}
                                         </span>
                                     </Link>
